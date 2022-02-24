@@ -196,46 +196,50 @@ bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensit
 
 RefPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    auto display = style->display();
-
     if (local_name() == "noscript" && document().is_scripting_enabled())
         return nullptr;
 
+    auto display = style->display();
+    return create_layout_node_for_display_type(document(), display, move(style), this);
+}
+
+RefPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document& document, CSS::Display const& display, NonnullRefPtr<CSS::StyleProperties> style, Element* element)
+{
     if (display.is_table_inside())
-        return adopt_ref(*new Layout::TableBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::TableBox(document, element, move(style)));
 
     if (display.is_list_item())
-        return adopt_ref(*new Layout::ListItemBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::ListItemBox(document, element, move(style)));
 
     if (display.is_table_row())
-        return adopt_ref(*new Layout::TableRowBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::TableRowBox(document, element, move(style)));
 
     if (display.is_table_cell())
-        return adopt_ref(*new Layout::TableCellBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::TableCellBox(document, element, move(style)));
 
     if (display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group())
-        return adopt_ref(*new Layout::TableRowGroupBox(document(), this, move(style)));
+        return adopt_ref(*new Layout::TableRowGroupBox(document, element, move(style)));
 
     if (display.is_table_column() || display.is_table_column_group() || display.is_table_caption()) {
         // FIXME: This is just an incorrect placeholder until we improve table layout support.
-        return adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
+        return adopt_ref(*new Layout::BlockContainer(document, element, move(style)));
     }
 
     if (display.is_inline_outside()) {
         if (display.is_flow_root_inside()) {
-            auto block = adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
+            auto block = adopt_ref(*new Layout::BlockContainer(document, element, move(style)));
             block->set_inline(true);
             return block;
         }
         if (display.is_flow_inside())
-            return adopt_ref(*new Layout::InlineNode(document(), this, move(style)));
+            return adopt_ref(*new Layout::InlineNode(document, element, move(style)));
 
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Support display: {}", display.to_string());
-        return adopt_ref(*new Layout::InlineNode(document(), this, move(style)));
+        return adopt_ref(*new Layout::InlineNode(document, element, move(style)));
     }
 
     if (display.is_flow_inside() || display.is_flow_root_inside() || display.is_flex_inside())
-        return adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
+        return adopt_ref(*new Layout::BlockContainer(document, element, move(style)));
 
     TODO();
 }
