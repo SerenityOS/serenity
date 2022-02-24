@@ -68,6 +68,8 @@ ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> 
     }
     if (user_act) {
         auto act = TRY(copy_typed_from_user(user_act));
+        if (act.sa_flags & SA_SIGINFO)
+            return ENOTSUP;
         action.mask = act.sa_mask;
         action.flags = act.sa_flags;
         action.handler_or_sigaction = VirtualAddress { reinterpret_cast<void*>(act.sa_sigaction) };
