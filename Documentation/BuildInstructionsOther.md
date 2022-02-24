@@ -3,7 +3,7 @@
 ### Fedora
 
 ```console
-sudo dnf install binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch ccache rsync @"C Development Tools and Libraries" @Virtualization
+sudo dnf install texinfo binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch ccache rsync @"C Development Tools and Libraries" @Virtualization
 ```
 
 ## openSUSE
@@ -97,6 +97,6 @@ doas pkg_add bash cmake g++ gcc git gmake gmp ninja ccache rsync coreutils qemu 
 ## FreeBSD prerequisites
 
 ```console
-pkg install bash cmake coreutils e2fsprogs fusefs-ext2 gcc git gmake ninja sudo gmp mpc mpfr ccache rsync
+pkg install qemu bash cmake coreutils e2fsprogs fusefs-ext2 gcc11 git gmake ninja sudo gmp mpc mpfr ccache rsync
 ```
 

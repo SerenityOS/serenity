@@ -36,15 +36,15 @@ NonnullRefPtr<StyleProperties> StyleProperties::clone() const
 
 void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue> value)
 {
-    m_property_values.set(id, move(value));
+    m_property_values[to_underlying(id)] = move(value);
 }
 
 Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID property_id) const
 {
-    auto it = m_property_values.find(property_id);
-    if (it == m_property_values.end())
+    auto value = m_property_values[to_underlying(property_id)];
+    if (!value)
         return {};
-    return it->value;
+    return value.release_nonnull();
 }
 
 Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fallback) const
@@ -65,9 +65,14 @@ Length StyleProperties::length_or_fallback(CSS::PropertyID id, Length const& fal
 
 LengthPercentage StyleProperties::length_percentage_or_fallback(CSS::PropertyID id, LengthPercentage const& fallback) const
 {
+    return length_percentage(id).value_or(fallback);
+}
+
+Optional<LengthPercentage> StyleProperties::length_percentage(CSS::PropertyID id) const
+{
     auto maybe_value = property(id);
     if (!maybe_value.has_value())
-        return fallback;
+        return {};
     auto& value = maybe_value.value();
 
     if (value->is_calculated())
@@ -79,7 +84,7 @@ LengthPercentage StyleProperties::length_percentage_or_fallback(CSS::PropertyID 
     if (value->has_length())
         return value->to_length();
 
-    return fallback;
+    return {};
 }
 
 LengthBox StyleProperties::length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id, const CSS::Length& default_value) const
@@ -126,7 +131,7 @@ float StyleProperties::line_height(Layout::Node const& layout_node) const
 
         if (line_height->is_length()) {
             auto line_height_length = line_height->to_length();
-            if (!line_height_length.is_undefined_or_auto())
+            if (!line_height_length.is_auto())
                 return line_height_length.to_px(layout_node);
         }
 
@@ -264,6 +269,21 @@ float StyleProperties::flex_shrink() const
     return value.value()->to_number();
 }
 
+Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
+{
+    auto value = property(CSS::PropertyID::ImageRendering);
+    if (!value.has_value())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Auto:
+        return CSS::ImageRendering::Auto;
+    case CSS::ValueID::Pixelated:
+        return CSS::ImageRendering::Pixelated;
+    default:
+        return {};
+    }
+}
+
 Optional<CSS::JustifyContent> StyleProperties::justify_content() const
 {
     auto value = property(CSS::PropertyID::JustifyContent);
@@ -370,12 +390,18 @@ bool StyleProperties::operator==(const StyleProperties& other) const
     if (m_property_values.size() != other.m_property_values.size())
         return false;
 
-    for (auto& it : m_property_values) {
-        auto jt = other.m_property_values.find(it.key);
-        if (jt == other.m_property_values.end())
+    for (size_t i = 0; i < m_property_values.size(); ++i) {
+        auto const& my_ptr = m_property_values[i];
+        auto const& other_ptr = m_property_values[i];
+        if (!my_ptr) {
+            if (other_ptr)
+                return false;
+            continue;
+        }
+        if (!other_ptr)
             return false;
-        auto& my_value = *it.value;
-        auto& other_value = *jt->value;
+        auto const& my_value = *my_ptr;
+        auto const& other_value = *other_ptr;
         if (my_value.type() != other_value.type())
             return false;
         if (my_value != other_value)

@@ -44,6 +44,12 @@ void Clipboard::initialize(Badge<Application>)
 
 Clipboard& Clipboard::the()
 {
+    static bool s_destructed = false;
+    static ScopeGuard destructed_guard([] {
+        s_destructed = true;
+    });
+    VERIFY(!s_destructed); // Catch use-after-free
+
     static Clipboard s_the;
     return s_the;
 }

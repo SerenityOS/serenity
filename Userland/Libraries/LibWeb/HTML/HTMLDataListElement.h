@@ -14,7 +14,7 @@ class HTMLDataListElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLDataListElementWrapper;
 
-    HTMLDataListElement(DOM::Document&, QualifiedName);
+    HTMLDataListElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLDataListElement() override;
 };
 

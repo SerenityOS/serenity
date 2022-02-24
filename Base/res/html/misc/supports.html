@@ -25,6 +25,23 @@
             }
         }
 
+        /* Selectors */
+        @supports selector(.simple) {
+            .p5 {
+                background-color: lime;
+            }
+        }
+        @supports selector(a#more > .complicated.case:nth-child(42)) {
+            .p6 {
+                background-color: lime;
+            }
+        }
+        @supports selector(.easy) or selector(.....nope) {
+            .p7 {
+                background-color: lime;
+            }
+        }
+
         .negative {
             background-color: red;
         }
@@ -48,6 +65,21 @@
                 background-color: lime;
             }
         }
+        @supports selector(.....nope) {
+            .n5 {
+                background-color: lime;
+            }
+        }
+        @supports selector(::-webkit-input-placeholder) {
+            .n6 {
+                background-color: lime;
+            }
+        }
+        @supports selector(32) or selector(thing[foo??????bar]) {
+            .n7 {
+                background-color: lime;
+            }
+        }
 
         .success {
             background-color: lime;
@@ -63,16 +95,24 @@
     <p class="p2">@supports (color: green) and (width: 50px)</p>
     <p class="p3">@supports (color: green) or (flogwizzle: purple)</p>
     <p class="p4">@supports (not (flogwizzle: purple))</p>
+    <p class="p5">@supports selector(.simple)</p>
+    <p class="p6">@supports selector(a#more > .complicated.case:nth-child(42))</p>
+    <p class="p7">@supports selector(.easy) or selector(.....nope)</p>
 
     <h1>These should all be red</h1>
     <p class="negative n1">@supports (not (color: green))</p>
     <p class="negative n2">@supports (color: green) and (width: 50px) or (color: green)</p>
     <p class="negative n3">@supports (width: yellow) or (height: green)</p>
     <p class="negative n4">@supports (flogwizzle: purple)</p>
+    <p class="negative n5">@supports selector(.....nope)</p>
+    <p class="negative n6">@supports selector(::-webkit-input-placeholder)</p>
+    <p class="negative n7">@supports selector(32) or selector(thing[foo??????bar])</p>
 
     <h1>Testing CSS.supports(property, value)</h1>
+    <p>These should all be green, meaning they returned true</p>
     <ul id="property-success">
     </ul>
+    <p>These should all be red, meaning they returned false</p>
     <ul id="property-failure">
     </ul>
 
@@ -118,7 +158,10 @@
         "color: green",
         "(color: green) and (width: 50px)",
         "(color: green) or (flogwizzle: purple)",
-        "not (flogwizzle: purple)"
+        "not (flogwizzle: purple)",
+        "selector(.simple)",
+        "selector(a#more > .complicated.case:nth-child(42))",
+        "selector(.easy) or selector(.....nope)"
     ];
     for (let text of should_succeed) {
         let success = CSS.supports(text);
@@ -133,7 +176,10 @@
         "not (color: green)",
         "(color: green) and (width: 50px) or (color: green)",
         "(width: yellow) or (height: green)",
-        "flogwizzle: purple"
+        "flogwizzle: purple",
+        "selector(.....nope)",
+        "selector(::-webkit-input-placeholder)",
+        "selector(32) or selector(thing[foo??????bar])"
     ];
     for (let text of should_fail) {
         let success = CSS.supports(text);

@@ -140,6 +140,11 @@ enum class Float {
     Right,
 };
 
+enum class ImageRendering {
+    Auto,
+    Pixelated
+};
+
 enum class JustifyContent {
     FlexStart,
     FlexEnd,
@@ -406,7 +411,7 @@ public:
 
     virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
     virtual CSS::ValueID to_identifier() const { return ValueID::Invalid; }
-    virtual Length to_length() const { return {}; }
+    virtual Length to_length() const { VERIFY_NOT_REACHED(); }
     virtual float to_number() const { return 0; }
     virtual float to_integer() const { return 0; }
     virtual String to_string() const = 0;
@@ -691,21 +696,23 @@ public:
         float value;
     };
 
+    using PercentageBasis = Variant<Empty, Length>;
+
     class CalculationResult {
     public:
         CalculationResult(Variant<Number, Length, Percentage> value)
             : m_value(move(value))
         {
         }
-        void add(CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
-        void subtract(CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
+        void add(CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
+        void subtract(CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
         void multiply_by(CalculationResult const& other, Layout::Node const*);
         void divide_by(CalculationResult const& other, Layout::Node const*);
 
         Variant<Number, Length, Percentage> const& value() const { return m_value; }
 
     private:
-        void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, Length const& percentage_basis);
+        void add_or_subtract_internal(SumOperation op, CalculationResult const& other, Layout::Node const*, PercentageBasis const& percentage_basis);
         Variant<Number, Length, Percentage> m_value;
     };
 
@@ -722,14 +729,14 @@ public:
         Variant<Number, NonnullOwnPtr<CalcNumberSum>> value;
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcValue {
         Variant<Number, Length, Percentage, NonnullOwnPtr<CalcSum>> value;
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     // This represents that: https://www.w3.org/TR/css-values-3/#calc-syntax
@@ -743,7 +750,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcNumberSum {
@@ -756,7 +763,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcProduct {
@@ -765,7 +772,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcSumPartWithOperator {
@@ -778,7 +785,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcProductPartWithOperator {
@@ -787,7 +794,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcNumberProduct {
@@ -796,7 +803,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcNumberProductPartWithOperator {
@@ -805,7 +812,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcNumberSumPartWithOperator {
@@ -818,7 +825,7 @@ public:
 
         String to_string() const;
         Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, Length const& percentage_basis) const;
+        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     static NonnullRefPtr<CalculatedStyleValue> create(NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
@@ -849,10 +856,7 @@ private:
 
 class ColorStyleValue : public StyleValue {
 public:
-    static NonnullRefPtr<ColorStyleValue> create(Color color)
-    {
-        return adopt_ref(*new ColorStyleValue(color));
-    }
+    static NonnullRefPtr<ColorStyleValue> create(Color color);
     virtual ~ColorStyleValue() override { }
 
     Color color() const { return m_color; }
@@ -1094,10 +1098,7 @@ private:
 
 class LengthStyleValue : public StyleValue {
 public:
-    static NonnullRefPtr<LengthStyleValue> create(Length const& length)
-    {
-        return adopt_ref(*new LengthStyleValue(length));
-    }
+    static NonnullRefPtr<LengthStyleValue> create(Length const&);
     virtual ~LengthStyleValue() override { }
 
     Length const& length() const { return m_length; }

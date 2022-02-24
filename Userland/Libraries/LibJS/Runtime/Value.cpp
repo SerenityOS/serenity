@@ -6,6 +6,7 @@
  */
 
 #include <AK/AllOf.h>
+#include <AK/Assertions.h>
 #include <AK/CharacterTypes.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -30,6 +31,7 @@
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
@@ -475,7 +477,7 @@ ThrowCompletionOr<Value> Value::to_number(GlobalObject& global_object) const
     case Type::Double:
         return *this;
     case Type::String: {
-        auto string = as_string().string().trim_whitespace();
+        String string = Utf8View(as_string().string()).trim(whitespace_characters, AK::TrimMode::Both).as_string();
         if (string.is_empty())
             return Value(0);
         if (string == "Infinity" || string == "+Infinity")
@@ -1192,6 +1194,58 @@ ThrowCompletionOr<Value> mod(GlobalObject& global_object, Value lhs, Value rhs)
     return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "modulo");
 }
 
+static Value exp_double(Value base, Value exponent)
+{
+    VERIFY(both_number(base, exponent));
+    if (exponent.is_nan())
+        return js_nan();
+    if (exponent.is_positive_zero() || exponent.is_negative_zero())
+        return Value(1);
+    if (base.is_nan())
+        return js_nan();
+    if (base.is_positive_infinity())
+        return exponent.as_double() > 0 ? js_infinity() : Value(0);
+    if (base.is_negative_infinity()) {
+        auto is_odd_integral_number = exponent.is_integral_number() && (exponent.as_i32() % 2 != 0);
+        if (exponent.as_double() > 0)
+            return is_odd_integral_number ? js_negative_infinity() : js_infinity();
+        else
+            return is_odd_integral_number ? Value(-0.0) : Value(0);
+    }
+    if (base.is_positive_zero())
+        return exponent.as_double() > 0 ? Value(0) : js_infinity();
+    if (base.is_negative_zero()) {
+        auto is_odd_integral_number = exponent.is_integral_number() && (exponent.as_i32() % 2 != 0);
+        if (exponent.as_double() > 0)
+            return is_odd_integral_number ? Value(-0.0) : Value(0);
+        else
+            return is_odd_integral_number ? js_negative_infinity() : js_infinity();
+    }
+    VERIFY(base.is_finite_number() && !base.is_positive_zero() && !base.is_negative_zero());
+    if (exponent.is_positive_infinity()) {
+        auto absolute_base = fabs(base.as_double());
+        if (absolute_base > 1)
+            return js_infinity();
+        else if (absolute_base == 1)
+            return js_nan();
+        else if (absolute_base < 1)
+            return Value(0);
+    }
+    if (exponent.is_negative_infinity()) {
+        auto absolute_base = fabs(base.as_double());
+        if (absolute_base > 1)
+            return Value(0);
+        else if (absolute_base == 1)
+            return js_nan();
+        else if (absolute_base < 1)
+            return js_infinity();
+    }
+    VERIFY(exponent.is_finite_number() && !exponent.is_positive_zero() && !exponent.is_negative_zero());
+    if (base.as_double() < 0 && !exponent.is_integral_number())
+        return js_nan();
+    return Value(::pow(base.as_double(), exponent.as_double()));
+}
+
 // 13.6 Exponentiation Operator, https://tc39.es/ecma262/#sec-exp-operator
 ThrowCompletionOr<Value> exp(GlobalObject& global_object, Value lhs, Value rhs)
 {
@@ -1199,7 +1253,7 @@ ThrowCompletionOr<Value> exp(GlobalObject& global_object, Value lhs, Value rhs)
     auto lhs_numeric = TRY(lhs.to_numeric(global_object));
     auto rhs_numeric = TRY(rhs.to_numeric(global_object));
     if (both_number(lhs_numeric, rhs_numeric))
-        return Value(pow(lhs_numeric.as_double(), rhs_numeric.as_double()));
+        return exp_double(lhs_numeric, rhs_numeric);
     if (both_bigint(lhs_numeric, rhs_numeric)) {
         if (rhs_numeric.as_bigint().big_integer().is_negative())
             return vm.throw_completion<RangeError>(global_object, ErrorType::NegativeExponent);

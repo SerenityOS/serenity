@@ -14,7 +14,7 @@ class HTMLLabelElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLLabelElementWrapper;
 
-    HTMLLabelElement(DOM::Document&, QualifiedName);
+    HTMLLabelElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLLabelElement() override;
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;

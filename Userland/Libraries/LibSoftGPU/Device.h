@@ -9,7 +9,7 @@
 
 #include <AK/Array.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/OwnPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix3x3.h>
@@ -17,9 +17,10 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/AlphaBlendFactors.h>
+#include <LibSoftGPU/Buffer/FrameBuffer.h>
+#include <LibSoftGPU/Buffer/Typed2DBuffer.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/Config.h>
-#include <LibSoftGPU/DepthBuffer.h>
 #include <LibSoftGPU/DeviceInfo.h>
 #include <LibSoftGPU/Enums.h>
 #include <LibSoftGPU/Image.h>
@@ -27,7 +28,6 @@
 #include <LibSoftGPU/Light/Light.h>
 #include <LibSoftGPU/Light/Material.h>
 #include <LibSoftGPU/Sampler.h>
-#include <LibSoftGPU/StencilBuffer.h>
 #include <LibSoftGPU/Triangle.h>
 #include <LibSoftGPU/Vertex.h>
 
@@ -100,13 +100,13 @@ struct RasterPosition {
 
 struct StencilConfiguration {
     StencilTestFunction test_function;
-    u8 reference_value;
-    u8 test_mask;
+    StencilType reference_value;
+    StencilType test_mask;
 
     StencilOperation on_stencil_test_fail;
     StencilOperation on_depth_test_fail;
     StencilOperation on_pass;
-    u8 write_mask;
+    StencilType write_mask;
 };
 
 class Device final {
@@ -116,22 +116,21 @@ public:
     DeviceInfo info() const;
 
     void draw_primitives(PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix3x3 const& normal_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
-    void resize(const Gfx::IntSize& min_size);
-    void clear_color(const FloatVector4&);
-    void clear_depth(float);
-    void clear_stencil(u8);
-    void blit_to(Gfx::Bitmap&);
+    void resize(Gfx::IntSize const& min_size);
+    void clear_color(FloatVector4 const&);
+    void clear_depth(DepthType);
+    void clear_stencil(StencilType);
+    void blit_color_buffer_to(Gfx::Bitmap& target);
     void blit_to_color_buffer_at_raster_position(Gfx::Bitmap const&);
-    void blit_to_depth_buffer_at_raster_position(Vector<float> const&, size_t, size_t);
-    void wait_for_all_threads() const;
+    void blit_to_depth_buffer_at_raster_position(Vector<DepthType> const&, int, int);
     void set_options(const RasterizerOptions&);
     void set_light_model_params(const LightModelParameters&);
     RasterizerOptions options() const { return m_options; }
     LightModelParameters light_model() const { return m_lighting_model; }
-    Gfx::RGBA32 get_backbuffer_pixel(int x, int y);
-    float get_depthbuffer_value(int x, int y);
+    ColorType get_color_buffer_pixel(int x, int y);
+    DepthType get_depthbuffer_value(int x, int y);
 
-    NonnullRefPtr<Image> create_image(ImageFormat, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers);
+    NonnullRefPtr<Image> create_image(ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers);
 
     void set_sampler_config(unsigned, SamplerConfig const&);
     void set_light_state(unsigned, Light const&);
@@ -144,17 +143,14 @@ public:
 
 private:
     void draw_statistics_overlay(Gfx::Bitmap&);
-    Gfx::IntRect raster_rect_in_target_coordinates(Gfx::IntSize size);
-    Gfx::IntRect window_coordinates_to_target_coordinates(Gfx::IntRect const&);
+    Gfx::IntRect get_rasterization_rect_of_size(Gfx::IntSize size);
 
     void rasterize_triangle(const Triangle& triangle);
     void setup_blend_factors();
     void shade_fragments(PixelQuad&);
     bool test_alpha(PixelQuad&);
 
-    RefPtr<Gfx::Bitmap> m_render_target;
-    NonnullOwnPtr<DepthBuffer> m_depth_buffer;
-    NonnullOwnPtr<StencilBuffer> m_stencil_buffer;
+    RefPtr<FrameBuffer<ColorType, DepthType, StencilType>> m_frame_buffer {};
     RasterizerOptions m_options;
     LightModelParameters m_lighting_model;
     Clipper m_clipper;

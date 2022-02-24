@@ -650,23 +650,23 @@ void Window::invalidate(bool invalidate_frame, bool re_render_frame)
     Compositor::the().invalidate_window();
 }
 
-void Window::invalidate(Gfx::IntRect const& rect)
+void Window::invalidate(Gfx::IntRect const& rect, bool invalidate_frame)
 {
     if (type() == WindowType::Applet) {
         AppletManager::the().invalidate_applet(*this, rect);
         return;
     }
 
-    if (invalidate_no_notify(rect))
+    if (invalidate_no_notify(rect, invalidate_frame))
         Compositor::the().invalidate_window();
 }
 
-bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame)
+bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool invalidate_frame)
 {
     if (rect.is_empty())
         return false;
     if (m_invalidated_all) {
-        if (with_frame)
+        if (invalidate_frame)
             m_invalidated_frame |= true;
         return false;
     }
@@ -680,7 +680,7 @@ bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame)
         return false;
 
     m_invalidated = true;
-    if (with_frame)
+    if (invalidate_frame)
         m_invalidated_frame |= true;
     m_dirty_rects.add(inner_rect.translated(-outer_rect.location()));
     return true;

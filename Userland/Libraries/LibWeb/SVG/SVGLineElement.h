@@ -14,7 +14,7 @@ class SVGLineElement final : public SVGGeometryElement {
 public:
     using WrapperType = Bindings::SVGLineElementWrapper;
 
-    SVGLineElement(DOM::Document&, QualifiedName);
+    SVGLineElement(DOM::Document&, DOM::QualifiedName);
     virtual ~SVGLineElement() override = default;
 
     virtual void parse_attribute(FlyString const& name, String const& value) override;

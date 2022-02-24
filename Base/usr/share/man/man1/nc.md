@@ -5,7 +5,7 @@ nc
 ## Synopsis
 
 ```sh
-$ nc [--listen] [--verbose] [--udp] [-N] <target> <port>
+$ nc [--listen] [--verbose] [--udp] [-N] [--length ] <target> <port>
 ```
 
 ## Description
@@ -20,6 +20,7 @@ Network cat: Connect to network sockets as if it were a file.
 * `-v`, `--verbose`: Log everything that's happening
 * `-u`, `--udp`: UDP mode
 * `-N`: Close connection after reading stdin to the end
+* `-I`, `--length`: Set maximum tcp receive buffer size
 
 ## Arguments:
 

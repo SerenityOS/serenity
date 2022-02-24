@@ -211,9 +211,9 @@ public:
     Gfx::IntSize size() const { return m_rect.size(); }
 
     void invalidate(bool with_frame = true, bool re_render_frame = false);
-    void invalidate(Gfx::IntRect const&);
+    void invalidate(Gfx::IntRect const&, bool invalidate_frame = false);
     void invalidate_menubar();
-    bool invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame = false);
+    bool invalidate_no_notify(const Gfx::IntRect& rect, bool invalidate_frame = false);
     void invalidate_last_rendered_screen_rects();
     void invalidate_last_rendered_screen_rects_now();
     [[nodiscard]] bool should_invalidate_last_rendered_screen_rects() { return exchange(m_invalidate_last_render_rects, false); }

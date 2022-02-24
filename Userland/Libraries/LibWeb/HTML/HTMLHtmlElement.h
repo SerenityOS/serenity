@@ -14,7 +14,7 @@ class HTMLHtmlElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLHtmlElementWrapper;
 
-    HTMLHtmlElement(DOM::Document&, QualifiedName);
+    HTMLHtmlElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLHtmlElement() override;
 
     bool should_use_body_background_properties() const;

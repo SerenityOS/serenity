@@ -14,7 +14,7 @@ class HTMLMeterElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLMeterElementWrapper;
 
-    HTMLMeterElement(DOM::Document&, QualifiedName);
+    HTMLMeterElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLMeterElement() override;
 };
 

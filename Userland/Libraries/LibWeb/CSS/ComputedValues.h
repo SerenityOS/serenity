@@ -14,6 +14,8 @@ namespace Web::CSS {
 
 class InitialValues {
 public:
+    static float font_size() { return 10; }
+    static int font_weight() { return 400; }
     static CSS::Float float_() { return CSS::Float::None; }
     static CSS::Clear clear() { return CSS::Clear::None; }
     static CSS::Cursor cursor() { return CSS::Cursor::Auto; }
@@ -29,6 +31,7 @@ public:
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
     static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
+    static CSS::ImageRendering image_rendering() { return CSS::ImageRendering::Auto; }
     static CSS::JustifyContent justify_content() { return CSS::JustifyContent::FlexStart; }
     static CSS::AlignItems align_items() { return CSS::AlignItems::Stretch; }
     static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
@@ -77,10 +80,10 @@ struct FlexBasisData {
 
 struct BoxShadowData {
     Color color {};
-    CSS::Length offset_x {};
-    CSS::Length offset_y {};
-    CSS::Length blur_radius {};
-    CSS::Length spread_distance {};
+    CSS::Length offset_x { Length::make_px(0) };
+    CSS::Length offset_y { Length::make_px(0) };
+    CSS::Length blur_radius { Length::make_px(0) };
+    CSS::Length spread_distance { Length::make_px(0) };
     CSS::BoxShadowPlacement placement { CSS::BoxShadowPlacement::Outer };
 };
 
@@ -105,15 +108,16 @@ public:
     float flex_shrink() const { return m_noninherited.flex_shrink; }
     CSS::AlignItems align_items() const { return m_noninherited.align_items; }
     float opacity() const { return m_noninherited.opacity; }
+    CSS::ImageRendering image_rendering() const { return m_inherited.image_rendering; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     Vector<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
-    CSS::LengthPercentage const& width() const { return m_noninherited.width; }
-    CSS::LengthPercentage const& min_width() const { return m_noninherited.min_width; }
-    CSS::LengthPercentage const& max_width() const { return m_noninherited.max_width; }
-    CSS::LengthPercentage const& height() const { return m_noninherited.height; }
-    CSS::LengthPercentage const& min_height() const { return m_noninherited.min_height; }
-    CSS::LengthPercentage const& max_height() const { return m_noninherited.max_height; }
+    Optional<CSS::LengthPercentage> const& width() const { return m_noninherited.width; }
+    Optional<CSS::LengthPercentage> const& min_width() const { return m_noninherited.min_width; }
+    Optional<CSS::LengthPercentage> const& max_width() const { return m_noninherited.max_width; }
+    Optional<CSS::LengthPercentage> const& height() const { return m_noninherited.height; }
+    Optional<CSS::LengthPercentage> const& min_height() const { return m_noninherited.min_height; }
+    Optional<CSS::LengthPercentage> const& max_height() const { return m_noninherited.max_height; }
 
     const CSS::LengthBox& offset() const { return m_noninherited.offset; }
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
@@ -144,6 +148,9 @@ public:
 
     Vector<CSS::Transformation> transformations() const { return m_noninherited.transformations; }
 
+    float font_size() const { return m_inherited.font_size; }
+    int font_weight() const { return m_inherited.font_weight; }
+
     ComputedValues clone_inherited_values() const
     {
         ComputedValues clone;
@@ -153,8 +160,11 @@ public:
 
 protected:
     struct {
+        float font_size { InitialValues::font_size() };
+        int font_weight { InitialValues::font_weight() };
         Color color { InitialValues::color() };
         CSS::Cursor cursor { InitialValues::cursor() };
+        CSS::ImageRendering image_rendering { InitialValues::image_rendering() };
         CSS::PointerEvents pointer_events { InitialValues::pointer_events() };
         CSS::TextAlign text_align { InitialValues::text_align() };
         CSS::TextTransform text_transform { InitialValues::text_transform() };
@@ -174,12 +184,12 @@ protected:
         CSS::TextDecorationLine text_decoration_line { InitialValues::text_decoration_line() };
         CSS::TextDecorationStyle text_decoration_style { InitialValues::text_decoration_style() };
         CSS::Position position { InitialValues::position() };
-        CSS::LengthPercentage width { Length::make_auto() };
-        CSS::LengthPercentage min_width { Length::make_auto() };
-        CSS::LengthPercentage max_width { Length::make_auto() };
-        CSS::LengthPercentage height { Length::make_auto() };
-        CSS::LengthPercentage min_height { Length::make_auto() };
-        CSS::LengthPercentage max_height { Length::make_auto() };
+        Optional<CSS::LengthPercentage> width;
+        Optional<CSS::LengthPercentage> min_width;
+        Optional<CSS::LengthPercentage> max_width;
+        Optional<CSS::LengthPercentage> height;
+        Optional<CSS::LengthPercentage> min_height;
+        Optional<CSS::LengthPercentage> max_height;
         CSS::LengthBox offset;
         CSS::LengthBox margin;
         CSS::LengthBox padding;
@@ -214,8 +224,11 @@ class ImmutableComputedValues final : public ComputedValues {
 
 class MutableComputedValues final : public ComputedValues {
 public:
+    void set_font_size(float font_size) { m_inherited.font_size = font_size; }
+    void set_font_weight(int font_weight) { m_inherited.font_weight = font_weight; }
     void set_color(const Color& color) { m_inherited.color = color; }
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
+    void set_image_rendering(CSS::ImageRendering value) { m_inherited.image_rendering = value; }
     void set_pointer_events(CSS::PointerEvents value) { m_inherited.pointer_events = value; }
     void set_background_color(const Color& color) { m_noninherited.background_color = color; }
     void set_background_layers(Vector<BackgroundLayerData>&& layers) { m_noninherited.background_layers = move(layers); }

@@ -14,7 +14,7 @@ class HTMLTableColElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTableColElementWrapper;
 
-    HTMLTableColElement(DOM::Document&, QualifiedName);
+    HTMLTableColElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTableColElement() override;
 };
 

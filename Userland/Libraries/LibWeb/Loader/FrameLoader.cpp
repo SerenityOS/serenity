@@ -46,8 +46,8 @@ static bool build_markdown_document(DOM::Document& document, const ByteBuffer& d
     if (!markdown_document)
         return false;
 
-    HTML::HTMLParser parser(document, markdown_document->render_to_html(), "utf-8");
-    parser.run(document.url());
+    auto parser = HTML::HTMLParser::create(document, markdown_document->render_to_html(), "utf-8");
+    parser->run(document.url());
     return true;
 }
 
@@ -116,8 +116,8 @@ static bool build_gemini_document(DOM::Document& document, const ByteBuffer& dat
     dbgln_if(GEMINI_DEBUG, "Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
     dbgln_if(GEMINI_DEBUG, "Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
 
-    HTML::HTMLParser parser(document, html_data, "utf-8");
-    parser.run(document.url());
+    auto parser = HTML::HTMLParser::create(document, html_data, "utf-8");
+    parser->run(document.url());
     return true;
 }
 
@@ -159,6 +159,18 @@ bool FrameLoader::load(LoadRequest& request, Type type)
         if (auto* page = browsing_context().page())
             page->client().page_did_start_loading(url);
     }
+
+    // https://fetch.spec.whatwg.org/#concept-fetch
+    // Step 12: If request’s header list does not contain `Accept`, then:
+    //          1. Let value be `*/*`. (NOTE: Not necessary as we're about to override it)
+    //          2. A user agent should set value to the first matching statement, if any, switching on request’s destination:
+    //              -> "document"
+    //              -> "frame"
+    //              -> "iframe"
+    //                   `text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8`
+    // FIXME: This should be case-insensitive.
+    if (!request.headers().contains("Accept"))
+        request.set_header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 
@@ -214,9 +226,9 @@ bool FrameLoader::load(const AK::URL& url, Type type)
 void FrameLoader::load_html(StringView html, const AK::URL& url)
 {
     auto document = DOM::Document::create(url);
-    HTML::HTMLParser parser(document, html, "utf-8");
-    parser.run(url);
-    browsing_context().set_active_document(&parser.document());
+    auto parser = HTML::HTMLParser::create(document, html, "utf-8");
+    parser->run(url);
+    browsing_context().set_active_document(&parser->document());
 }
 
 // FIXME: Use an actual templating engine (our own one when it's built, preferably

@@ -16,7 +16,7 @@
 
 namespace Web::HTML {
 
-HTMLFormElement::HTMLFormElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLFormElement::HTMLFormElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }
@@ -137,6 +137,19 @@ void HTMLFormElement::add_associated_element(Badge<FormAssociatedElement>, HTMLE
 void HTMLFormElement::remove_associated_element(Badge<FormAssociatedElement>, HTMLElement& element)
 {
     m_associated_elements.remove_first_matching([&](auto& entry) { return entry.ptr() == &element; });
+}
+
+// https://html.spec.whatwg.org/#dom-fs-action
+String HTMLFormElement::action() const
+{
+    auto value = attribute(HTML::AttributeNames::action);
+
+    // Return the current URL if the action attribute is null or an empty string
+    if (value.is_null() || value.is_empty()) {
+        return document().url().to_string();
+    }
+
+    return value;
 }
 
 }

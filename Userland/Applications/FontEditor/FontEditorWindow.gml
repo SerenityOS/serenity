@@ -59,6 +59,8 @@
             }
 
             @GUI::HorizontalSplitter {
+                fixed_resizee: "Second"
+
                 @GUI::Widget {
                     layout: @GUI::VerticalBoxLayout {}
 
@@ -219,9 +221,19 @@
                     }
                 }
 
-                @GUI::ListView {
-                    name: "unicode_block_listview"
-                    max_width: 175
+                @GUI::Widget {
+                    name: "unicode_block_container"
+                    fixed_width: 175
+                    layout: @GUI::VerticalBoxLayout {}
+
+                    @GUI::TextBox {
+                        name: "search_textbox"
+                        placeholder: "Search"
+                    }
+
+                    @GUI::ListView {
+                        name: "unicode_block_listview"
+                    }
                 }
             }
         }

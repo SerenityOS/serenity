@@ -28,6 +28,21 @@
 // output to stderr to allow for commands like:
 //
 // nc -l someport > out.file
+//
+// Below man page was considered to come up default bounds
+// for SO_RCVBUF
+// https://man7.org/linux/man-pages/man7/socket.7.html
+static constexpr size_t maximum_tcp_receive_buffer_size_upper_bound = 212992;
+static constexpr size_t maximum_tcp_receive_buffer_size_lower_bound = 256;
+
+static size_t get_maximum_tcp_buffer_size(size_t input_buf_size)
+{
+    if (input_buf_size < maximum_tcp_receive_buffer_size_lower_bound)
+        return maximum_tcp_receive_buffer_size_lower_bound;
+    if (input_buf_size > maximum_tcp_receive_buffer_size_upper_bound)
+        return maximum_tcp_receive_buffer_size_upper_bound;
+    return input_buf_size;
+};
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -37,6 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool udp_mode = false;
     const char* target = nullptr;
     int port = 0;
+    int maximum_tcp_receive_buffer_size_input = -1;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Network cat: Connect to network sockets as if it were a file.");
@@ -44,6 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(verbose, "Log everything that's happening", "verbose", 'v');
     args_parser.add_option(udp_mode, "UDP mode", "udp", 'u');
     args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N');
+    args_parser.add_option(maximum_tcp_receive_buffer_size_input, "Set maximum tcp receive buffer size", "length", 'I', nullptr);
     args_parser.add_positional_argument(target, "Address to listen on, or the address or hostname to connect to", "target");
     args_parser.add_positional_argument(port, "Port to connect to or listen on", "port");
     args_parser.parse(arguments);
@@ -138,6 +155,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     fd_set readfds, writefds, exceptfds;
 
+    size_t receive_buffer_size = get_maximum_tcp_buffer_size(maximum_tcp_receive_buffer_size_input);
+    if (verbose && (maximum_tcp_receive_buffer_size_input != -1)) {
+        warnln("receive_buffer_size set to {}", receive_buffer_size);
+    }
+
     while (!stdin_closed || !fd_closed || !listen_fd_closed) {
         FD_ZERO(&readfds);
         FD_ZERO(&writefds);
@@ -211,8 +233,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         if (!fd_closed && FD_ISSET(fd, &readfds)) {
-            Array<u8, 1024> buffer;
-            Bytes buffer_span = buffer.span();
+            auto buffer = TRY(ByteBuffer::create_uninitialized(receive_buffer_size));
+            Bytes buffer_span = buffer.bytes();
             auto nread = TRY(Core::System::read(fd, buffer_span));
             buffer_span = buffer_span.trim(nread);
 

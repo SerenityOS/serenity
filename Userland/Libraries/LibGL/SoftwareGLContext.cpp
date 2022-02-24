@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,8 +20,7 @@
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Device.h>
 #include <LibSoftGPU/Enums.h>
-
-using AK::dbgln;
+#include <LibSoftGPU/ImageFormat.h>
 
 namespace GL {
 
@@ -250,7 +250,7 @@ void SoftwareGLContext::gl_begin(GLenum mode)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_begin, mode);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(mode < GL_TRIANGLES || mode > GL_POLYGON, GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(mode > GL_POLYGON, GL_INVALID_ENUM);
 
     m_current_draw_mode = mode;
     m_in_draw_state = true; // Certain commands will now generate an error
@@ -267,7 +267,7 @@ void SoftwareGLContext::gl_clear(GLbitfield mask)
         m_rasterizer.clear_color(m_clear_color);
 
     if (mask & GL_DEPTH_BUFFER_BIT)
-        m_rasterizer.clear_depth(static_cast<float>(m_clear_depth));
+        m_rasterizer.clear_depth(m_clear_depth);
 
     if (mask & GL_STENCIL_BUFFER_BIT)
         m_rasterizer.clear_stencil(m_clear_stencil);
@@ -280,6 +280,7 @@ void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf bl
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     m_clear_color = { red, green, blue, alpha };
+    m_clear_color.clamp(0.f, 1.f);
 }
 
 void SoftwareGLContext::gl_clear_depth(GLdouble depth)
@@ -288,7 +289,7 @@ void SoftwareGLContext::gl_clear_depth(GLdouble depth)
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    m_clear_depth = depth;
+    m_clear_depth = clamp(static_cast<float>(depth), 0.f, 1.f);
 }
 
 void SoftwareGLContext::gl_clear_stencil(GLint s)
@@ -330,7 +331,7 @@ void SoftwareGLContext::gl_end()
         && m_current_draw_mode != GL_POLYGON) {
 
         m_vertex_list.clear_with_capacity();
-        dbgln_if(GL_DEBUG, "gl_end: draw mode {:#x} unsupported", m_current_draw_mode);
+        dbgln_if(GL_DEBUG, "gl_end(): draw mode {:#x} unsupported", m_current_draw_mode);
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
@@ -381,17 +382,18 @@ void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble botto
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_frustum, left, right, bottom, top, near_val, far_val);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(near_val < 0 || far_val < 0, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(left == right || bottom == top || near_val == far_val, GL_INVALID_VALUE);
 
     // Let's do some math!
-    // FIXME: Are we losing too much precision by doing this?
-    float a = static_cast<float>((right + left) / (right - left));
-    float b = static_cast<float>((top + bottom) / (top - bottom));
-    float c = static_cast<float>(-((far_val + near_val) / (far_val - near_val)));
-    float d = static_cast<float>(-((2 * (far_val * near_val)) / (far_val - near_val)));
+    auto a = static_cast<float>((right + left) / (right - left));
+    auto b = static_cast<float>((top + bottom) / (top - bottom));
+    auto c = static_cast<float>(-((far_val + near_val) / (far_val - near_val)));
+    auto d = static_cast<float>(-((2 * far_val * near_val) / (far_val - near_val)));
 
     FloatMatrix4x4 frustum {
-        ((2 * (float)near_val) / ((float)right - (float)left)), 0, a, 0,
-        0, ((2 * (float)near_val) / ((float)top - (float)bottom)), b, 0,
+        static_cast<float>(2 * near_val / (right - left)), 0, a, 0,
+        0, static_cast<float>(2 * near_val / (top - bottom)), b, 0,
         0, 0, c, d,
         0, 0, -1, 0
     };
@@ -399,7 +401,7 @@ void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble botto
     if (m_current_matrix_mode == GL_PROJECTION)
         m_projection_matrix = m_projection_matrix * frustum;
     else if (m_current_matrix_mode == GL_MODELVIEW)
-        m_projection_matrix = m_model_view_matrix * frustum;
+        m_model_view_matrix = m_model_view_matrix * frustum;
     else if (m_current_matrix_mode == GL_TEXTURE)
         m_texture_matrix = m_texture_matrix * frustum;
     else
@@ -430,7 +432,7 @@ void SoftwareGLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom,
     if (m_current_matrix_mode == GL_PROJECTION)
         m_projection_matrix = m_projection_matrix * projection;
     else if (m_current_matrix_mode == GL_MODELVIEW)
-        m_projection_matrix = m_model_view_matrix * projection;
+        m_model_view_matrix = m_model_view_matrix * projection;
     else if (m_current_matrix_mode == GL_TEXTURE)
         m_texture_matrix = m_texture_matrix * projection;
     else
@@ -972,8 +974,8 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
     // Check if width and height are a power of 2
     if (!m_device_info.supports_npot_textures) {
-        RETURN_WITH_ERROR_IF((width & (width - 1)) != 0, GL_INVALID_VALUE);
-        RETURN_WITH_ERROR_IF((height & (height - 1)) != 0, GL_INVALID_VALUE);
+        RETURN_WITH_ERROR_IF(!is_power_of_two(width), GL_INVALID_VALUE);
+        RETURN_WITH_ERROR_IF(!is_power_of_two(height), GL_INVALID_VALUE);
     }
     RETURN_WITH_ERROR_IF(border != 0, GL_INVALID_VALUE);
 
@@ -984,28 +986,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
         // that constructing GL textures in any but the default mipmap order, going from level 0 upwards will cause mip levels to stay uninitialized.
         // To be spec compliant we should create the device image once the texture has become complete and is used for rendering the first time.
         // All images that were attached before the device image was created need to be stored somewhere to be used to initialize the device image once complete.
-        SoftGPU::ImageFormat device_format;
-        switch (internal_format) {
-        case GL_RGB:
-            device_format = SoftGPU::ImageFormat::RGB888;
-            break;
-
-        case GL_RGBA:
-            device_format = SoftGPU::ImageFormat::RGBA8888;
-            break;
-
-        case GL_LUMINANCE8:
-            device_format = SoftGPU::ImageFormat::L8;
-            break;
-
-        case GL_LUMINANCE8_ALPHA8:
-            device_format = SoftGPU::ImageFormat::L8A8;
-            break;
-
-        default:
-            VERIFY_NOT_REACHED();
-        }
-        m_active_texture_unit->bound_texture_2d()->set_device_image(m_rasterizer.create_image(device_format, width, height, 1, 999, 1));
+        m_active_texture_unit->bound_texture_2d()->set_device_image(m_rasterizer.create_image(SoftGPU::ImageFormat::BGRA8888, width, height, 1, 999, 1));
         m_sampler_config_is_dirty = true;
     }
 
@@ -1732,7 +1713,7 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
                 else
                     color = m_frontbuffer->scanline(y + i)[x + j];
             } else {
-                color = m_rasterizer.get_backbuffer_pixel(x + j, y + i);
+                color = m_rasterizer.get_color_buffer_pixel(x + j, y + i);
             }
 
             float red = ((color >> 24) & 0xff) / 255.0f;
@@ -1953,20 +1934,10 @@ void SoftwareGLContext::get_floating_point(GLenum pname, T* params)
     };
     switch (pname) {
     case GL_MODELVIEW_MATRIX:
-        if (m_current_matrix_mode == GL_MODELVIEW)
-            flatten_and_assign_matrix(m_model_view_matrix);
-        else if (m_model_view_matrix_stack.is_empty())
-            flatten_and_assign_matrix(FloatMatrix4x4::identity());
-        else
-            flatten_and_assign_matrix(m_model_view_matrix_stack.last());
+        flatten_and_assign_matrix(m_model_view_matrix);
         return;
     case GL_PROJECTION_MATRIX:
-        if (m_current_matrix_mode == GL_PROJECTION)
-            flatten_and_assign_matrix(m_projection_matrix);
-        else if (m_projection_matrix_stack.is_empty())
-            flatten_and_assign_matrix(FloatMatrix4x4::identity());
-        else
-            flatten_and_assign_matrix(m_projection_matrix_stack.last());
+        flatten_and_assign_matrix(m_projection_matrix);
         return;
     }
 
@@ -2363,8 +2334,8 @@ void SoftwareGLContext::gl_depth_range(GLdouble min, GLdouble max)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     auto options = m_rasterizer.options();
-    options.depth_min = clamp(min, 0.f, 1.f);
-    options.depth_max = clamp(max, 0.f, 1.f);
+    options.depth_min = clamp<float>(min, 0.f, 1.f);
+    options.depth_max = clamp<float>(max, 0.f, 1.f);
     m_rasterizer.set_options(options);
 }
 
@@ -2981,7 +2952,7 @@ void SoftwareGLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat co
 
 void SoftwareGLContext::present()
 {
-    m_rasterizer.blit_to(*m_frontbuffer);
+    m_rasterizer.blit_color_buffer_to(*m_frontbuffer);
 }
 
 void SoftwareGLContext::sync_device_config()

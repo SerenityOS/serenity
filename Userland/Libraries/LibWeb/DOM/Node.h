@@ -90,6 +90,8 @@ public:
     ExceptionOr<NonnullRefPtr<Node>> pre_remove(NonnullRefPtr<Node>);
 
     ExceptionOr<NonnullRefPtr<Node>> append_child(NonnullRefPtr<Node>);
+    ExceptionOr<NonnullRefPtr<Node>> remove_child(NonnullRefPtr<Node>);
+
     void insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool suppress_observers = false);
     void remove(bool suppress_observers = false);
     void remove_all_children(bool suppress_observers = false);
@@ -110,6 +112,9 @@ public:
     String descendant_text_content() const;
     String text_content() const;
     void set_text_content(String const&);
+
+    String node_value() const;
+    void set_node_value(String const&);
 
     Document& document() { return *m_document; }
     const Document& document() const { return *m_document; }

@@ -721,6 +721,7 @@ u32 Thread::pending_signals_for_state() const
 void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
 {
     VERIFY(signal < 32);
+    VERIFY(process().is_user_process());
     SpinlockLocker scheduler_lock(g_scheduler_lock);
 
     // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
@@ -974,8 +975,6 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         return DispatchSignalResult::Deferred;
     }
 
-    VERIFY(previous_mode() == PreviousMode::UserMode);
-
     auto& action = m_signal_action_data[signal];
     // FIXME: Implement SA_SIGINFO signal handlers.
     VERIFY(!(action.flags & SA_SIGINFO));
@@ -1036,8 +1035,12 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         return DispatchSignalResult::Continue;
     }
 
-    VERIFY(previous_mode() == PreviousMode::UserMode);
-    VERIFY(current_trap());
+    if (!current_trap()) {
+        // We're trying dispatch a signal to a user process that was scheduled after
+        // a yielding/blocking kernel thread, we don't have a register capture of the
+        // thread, so just defer processing the signal to later.
+        return DispatchSignalResult::Deferred;
+    }
 
     ScopedAddressSpaceSwitcher switcher(m_process);
 

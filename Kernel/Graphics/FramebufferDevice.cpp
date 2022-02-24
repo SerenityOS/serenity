@@ -59,8 +59,10 @@ ErrorOr<Memory::Region*> FramebufferDevice::mmap(Process& process, OpenFileDescr
         "Framebuffer",
         prot,
         shared));
-    if (auto result = m_userspace_framebuffer_region->set_write_combine(true); result.is_error())
-        dbgln("FramebufferDevice: Failed to enable Write-Combine on Framebuffer: {}", result.error());
+    if (m_write_combine) {
+        if (auto result = m_userspace_framebuffer_region->set_write_combine(true); result.is_error())
+            dbgln("FramebufferDevice: Failed to enable Write-Combine on Framebuffer: {}", result.error());
+    }
     return m_userspace_framebuffer_region;
 }
 

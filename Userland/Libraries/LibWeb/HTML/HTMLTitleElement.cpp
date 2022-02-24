@@ -10,7 +10,7 @@
 
 namespace Web::HTML {
 
-HTMLTitleElement::HTMLTitleElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLTitleElement::HTMLTitleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

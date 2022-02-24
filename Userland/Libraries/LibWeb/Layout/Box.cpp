@@ -46,6 +46,16 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         context.painter().draw_rect(enclosing_int_rect(margin_rect), Color::Yellow);
         context.painter().draw_rect(enclosing_int_rect(absolute_padding_box_rect()), Color::Cyan);
         context.painter().draw_rect(enclosing_int_rect(content_rect), Color::Magenta);
+
+        auto size_text_rect = absolute_rect();
+        auto size_text = String::formatted("{}x{}", content_rect.width(), content_rect.height());
+        size_text_rect.set_y(content_rect.y() + content_rect.height());
+        size_text_rect.set_top(size_text_rect.top());
+        size_text_rect.set_width((float)context.painter().font().width(size_text));
+        size_text_rect.set_height(context.painter().font().glyph_height());
+
+        context.painter().fill_rect(enclosing_int_rect(size_text_rect), Color::Cyan);
+        context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text);
     }
 
     if (phase == PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && verify_cast<DOM::Element>(*dom_node()).is_focused()) {
@@ -107,10 +117,10 @@ void Box::paint_box_shadow(PaintContext& context)
     for (auto const& layer : box_shadow_data) {
         resolved_box_shadow_data.empend(
             layer.color,
-            static_cast<int>(layer.offset_x.resolved_or_zero(*this).to_px(*this)),
-            static_cast<int>(layer.offset_y.resolved_or_zero(*this).to_px(*this)),
-            static_cast<int>(layer.blur_radius.resolved_or_zero(*this).to_px(*this)),
-            static_cast<int>(layer.spread_distance.resolved_or_zero(*this).to_px(*this)),
+            static_cast<int>(layer.offset_x.to_px(*this)),
+            static_cast<int>(layer.offset_y.to_px(*this)),
+            static_cast<int>(layer.blur_radius.to_px(*this)),
+            static_cast<int>(layer.spread_distance.to_px(*this)),
             layer.placement == CSS::BoxShadowPlacement::Outer ? Painting::BoxShadowPlacement::Outer : Painting::BoxShadowPlacement::Inner);
     }
     Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), resolved_box_shadow_data);

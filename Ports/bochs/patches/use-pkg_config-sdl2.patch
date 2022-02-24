@@ -1,0 +1,31 @@
+diff --git a/configure b/configure
+index 5cc4088..d2bff12 100755
+--- a/configure
++++ b/configure
+@@ -24060,7 +24060,7 @@ fi
+     fi
+     $as_echo "#define BX_HAVE_SOUND_SDL 1" >>confdefs.h
+ 
+-    SDL2_VERSION=`sdl2-config --version`
++    SDL2_VERSION=`pkg-config sdl2 --version`
+     # SDL version >= 2.0.5 supports audio capture
+     sdl2_audio_capture=0
+ 
+@@ -24703,14 +24703,14 @@ if test "$with_sdl2" = yes; then
+   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_SDL2)"
+   # GUI_*FLAGS are added to the compilation of every bochs file, not just
+   # the files in gui/*.cc.
+-  SDL2_CFLAGS=`sdl2-config --cflags`
++  SDL2_CFLAGS=`pkg-config sdl2 --cflags`
+   GUI_CFLAGS="$GUI_CFLAGS $SDL2_CFLAGS"
+   GUI_CXXFLAGS="$GUI_CXXFLAGS $SDL2_CFLAGS"
+-  GUI_LINK_OPTS_SDL2="`sdl2-config --libs`"
++  GUI_LINK_OPTS_SDL2="`pkg-config sdl2 --libs`"
+   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL2)"
+   # The plugin version uses multi-threading support in Bochs core
+   if test "$bx_plugins" = 1; then
+-    NONPLUGIN_GUI_LINK_OPTS="`sdl2-config --libs`"
++    NONPLUGIN_GUI_LINK_OPTS="`pkg-config sdl2 --libs`"
+   fi
+   # The enhanced X debugger depends on GTK2
+   if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then

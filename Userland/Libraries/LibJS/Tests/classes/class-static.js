@@ -70,3 +70,14 @@ test("static method overriding", () => {
     expect(Parent.method()).toBe(3);
     expect(Child.method()).toBe(10);
 });
+
+test("static function named 'async'", () => {
+    class A {
+        static async() {
+            return "static function named async";
+        }
+    }
+
+    expect("async" in A).toBeTrue();
+    expect(A.async()).toBe("static function named async");
+});

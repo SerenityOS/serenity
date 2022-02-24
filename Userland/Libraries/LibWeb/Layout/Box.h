@@ -71,22 +71,6 @@ public:
         return content_height() + border_box.top + border_box.bottom;
     }
 
-    Gfx::FloatRect content_box_as_relative_rect() const
-    {
-        return { m_offset, m_content_size };
-    }
-
-    Gfx::FloatRect margin_box_as_relative_rect() const
-    {
-        auto rect = content_box_as_relative_rect();
-        auto margin_box = box_model().margin_box();
-        rect.set_x(rect.x() - margin_box.left);
-        rect.set_width(rect.width() + margin_box.left + margin_box.right);
-        rect.set_y(rect.y() - margin_box.top);
-        rect.set_height(rect.height() + margin_box.top + margin_box.bottom);
-        return rect;
-    }
-
     float absolute_x() const { return absolute_rect().x(); }
     float absolute_y() const { return absolute_rect().y(); }
     Gfx::FloatPoint absolute_position() const { return absolute_rect().location(); }
@@ -129,31 +113,10 @@ public:
         return m_overflow_data->scrollable_overflow_rect;
     }
 
-    OverflowData& ensure_overflow_data()
-    {
-        if (!m_overflow_data)
-            m_overflow_data = make<OverflowData>();
-        return *m_overflow_data;
-    }
-
-    void clear_overflow_data() { m_overflow_data = nullptr; }
+    void set_overflow_data(OwnPtr<OverflowData> data) { m_overflow_data = move(data); }
 
     virtual void before_children_paint(PaintContext&, PaintPhase) override;
     virtual void after_children_paint(PaintContext&, PaintPhase) override;
-
-    Gfx::FloatRect margin_box_rect_in_ancestor_coordinate_space(Box const& ancestor_box) const
-    {
-        auto rect = margin_box_as_relative_rect();
-        for (auto const* current = parent(); current; current = current->parent()) {
-            if (current == &ancestor_box)
-                break;
-            if (is<Box>(*current)) {
-                auto offset = static_cast<Box const&>(*current).effective_offset();
-                rect.translate_by(offset);
-            }
-        }
-        return rect;
-    }
 
 protected:
     Box(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)

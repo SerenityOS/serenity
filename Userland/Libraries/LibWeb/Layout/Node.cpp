@@ -322,6 +322,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     computed_values.set_box_sizing(specified_style.box_sizing());
 
+    computed_values.set_font_size(specified_style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(*this));
+    computed_values.set_font_weight(specified_style.property(CSS::PropertyID::FontWeight).value()->to_integer());
+
     // FIXME: BorderXRadius properties are now BorderRadiusStyleValues, so make use of that.
     auto border_bottom_left_radius = specified_style.property(CSS::PropertyID::BorderBottomLeftRadius);
     if (border_bottom_left_radius.has_value() && border_bottom_left_radius.value()->is_border_radius())
@@ -396,6 +399,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (cursor.has_value())
         computed_values.set_cursor(cursor.value());
 
+    auto image_rendering = specified_style.image_rendering();
+    if (image_rendering.has_value())
+        computed_values.set_image_rendering(image_rendering.value());
+
     auto pointer_events = specified_style.pointer_events();
     if (pointer_events.has_value())
         computed_values.set_pointer_events(pointer_events.value());
@@ -430,15 +437,21 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     if (auto width = specified_style.property(CSS::PropertyID::Width); width.has_value() && !width.value()->has_auto())
         m_has_definite_width = true;
-    computed_values.set_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::Width, CSS::Length {}));
-    computed_values.set_min_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::MinWidth, CSS::Length {}));
-    computed_values.set_max_width(specified_style.length_percentage_or_fallback(CSS::PropertyID::MaxWidth, CSS::Length {}));
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::Width); maybe_length_percentage.has_value())
+        computed_values.set_width(maybe_length_percentage.release_value());
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MinWidth); maybe_length_percentage.has_value())
+        computed_values.set_min_width(maybe_length_percentage.release_value());
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MaxWidth); maybe_length_percentage.has_value())
+        computed_values.set_max_width(maybe_length_percentage.release_value());
 
     if (auto height = specified_style.property(CSS::PropertyID::Height); height.has_value() && !height.value()->has_auto())
         m_has_definite_height = true;
-    computed_values.set_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::Height, CSS::Length {}));
-    computed_values.set_min_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::MinHeight, CSS::Length {}));
-    computed_values.set_max_height(specified_style.length_percentage_or_fallback(CSS::PropertyID::MaxHeight, CSS::Length {}));
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::Height); maybe_length_percentage.has_value())
+        computed_values.set_height(maybe_length_percentage.release_value());
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MinHeight); maybe_length_percentage.has_value())
+        computed_values.set_min_height(maybe_length_percentage.release_value());
+    if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MaxHeight); maybe_length_percentage.has_value())
+        computed_values.set_max_height(maybe_length_percentage.release_value());
 
     computed_values.set_offset(specified_style.length_box(CSS::PropertyID::Left, CSS::PropertyID::Top, CSS::PropertyID::Right, CSS::PropertyID::Bottom, CSS::Length::make_auto()));
     computed_values.set_margin(specified_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom, CSS::Length::make_px(0)));
@@ -457,7 +470,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         if (border.line_style == CSS::LineStyle::None)
             border.width = 0;
         else
-            border.width = specified_style.length_or_fallback(width_property, {}).resolved_or_zero(*this).to_px(*this);
+            border.width = specified_style.length_or_fallback(width_property, CSS::Length::make_px(0)).to_px(*this);
     };
 
     do_border_style(computed_values.border_left(), CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftStyle);
@@ -515,6 +528,25 @@ bool Node::is_root_element() const
 String Node::class_name() const
 {
     return demangle(typeid(*this).name());
+}
+
+String Node::debug_description() const
+{
+    StringBuilder builder;
+    builder.append(class_name().substring_view(13));
+    if (dom_node()) {
+        builder.appendff("<{}>", dom_node()->node_name());
+        if (dom_node()->is_element()) {
+            auto& element = static_cast<DOM::Element const&>(*dom_node());
+            if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null())
+                builder.appendff("#{}", id);
+            for (auto const& class_name : element.class_names())
+                builder.appendff(".{}", class_name);
+        }
+    } else {
+        builder.append("(anonymous)");
+    }
+    return builder.to_string();
 }
 
 bool Node::is_inline_block() const

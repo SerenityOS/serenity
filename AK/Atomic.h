@@ -138,6 +138,10 @@ static inline bool atomic_is_lock_free(volatile T* ptr = nullptr) noexcept
 
 template<typename T, MemoryOrder DefaultMemoryOrder = AK::MemoryOrder::memory_order_seq_cst>
 class Atomic {
+    // FIXME: This should work through concepts/requires clauses, but according to the compiler,
+    //        "IsIntegral is not more specialized than IsFundamental".
+    //        Additionally, Enums are not fundamental types except that they behave like them in every observable way.
+    static_assert(IsFundamental<T> | IsEnum<T>, "Atomic doesn't support non-primitive types, because it relies on compiler intrinsics. If you put non-primitives into it, you'll get linker errors like \"undefined reference to __atomic_store\".");
     T m_value { 0 };
 
 public:

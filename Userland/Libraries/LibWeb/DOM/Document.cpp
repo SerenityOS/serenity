@@ -53,6 +53,7 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/HTML/MessageEvent.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
@@ -148,15 +149,151 @@ void Document::removed_last_ref()
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
-void Document::write(Vector<String> const& strings)
+ExceptionOr<void> Document::write(Vector<String> const& strings)
 {
-    dbgln("TODO: document.write({})", strings);
+    // 1. If document is an XML document, then throw an "InvalidStateError" DOMException.
+    if (doctype() && doctype()->name() == "xml")
+        return DOM::InvalidStateError::create("write() called on XML document.");
+
+    // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
+    if (m_throw_on_dynamic_markup_insertion_counter > 0)
+        return DOM::InvalidStateError::create("throw-on-dynamic-markup-insertion-counter greater than zero.");
+
+    // 3. If document's active parser was aborted is true, then return.
+    if (m_active_parser_was_aborted)
+        return {};
+
+    // 4. If the insertion point is undefined, then:
+    if (!(m_parser && m_parser->tokenizer().is_insertion_point_defined())) {
+        // 1. If document's unload counter is greater than 0 or document's ignore-destructive-writes counter is greater than 0, then return.
+        if (m_unload_counter > 0 || m_ignore_destructive_writes_counter > 0)
+            return {};
+
+        // 2. Run the document open steps with document.
+        open();
+    }
+
+    // 5. Insert input into the input stream just before the insertion point.
+    StringBuilder builder;
+    builder.join("", strings);
+    m_parser->tokenizer().insert_input_at_insertion_point(builder.build());
+
+    // 6. If there is no pending parsing-blocking script, have the HTML parser process input, one code point at a time, processing resulting tokens as they are emitted, and stopping when the tokenizer reaches the insertion point or when the processing of the tokenizer is aborted by the tree construction stage (this can happen if a script end tag token is emitted by the tokenizer).
+    if (!pending_parsing_blocking_script())
+        m_parser->run();
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
-void Document::writeln(Vector<String> const& strings)
+ExceptionOr<void> Document::writeln(Vector<String> const& strings)
 {
-    dbgln("TODO: document.writeln({})", strings);
+
+    // FIXME: No need to allocate a new vector
+    Vector<String> new_strings;
+    for (auto const& element : strings) {
+        new_strings.append(String::formatted("{}\n", element));
+    }
+
+    return write(strings);
+}
+
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-open
+ExceptionOr<Document*> Document::open(String const&, String const&)
+{
+    // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
+    if (doctype() && doctype()->name() == "xml")
+        return DOM::InvalidStateError::create("open() called on XML document.");
+
+    // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
+    if (m_throw_on_dynamic_markup_insertion_counter > 0)
+        return DOM::InvalidStateError::create("throw-on-dynamic-markup-insertion-counter greater than zero.");
+
+    // FIXME: 3. Let entryDocument be the entry global object's associated Document.
+    auto& entry_document = *this;
+
+    // 4. If document's origin is not same origin to entryDocument's origin, then throw a "SecurityError" DOMException.
+    if (origin() != entry_document.origin())
+        return DOM::SecurityError::create("Document.origin() not the same as entryDocument's.");
+
+    // 5. If document has an active parser whose script nesting level is greater than 0, then return document.
+    if (m_parser && m_parser->script_nesting_level() > 0)
+        return this;
+
+    // 6. Similarly, if document's unload counter is greater than 0, then return document.
+    if (m_unload_counter > 0)
+        return this;
+
+    // 7. If document's active parser was aborted is true, then return document.
+    if (m_active_parser_was_aborted)
+        return this;
+
+    // FIXME: 8. If document's browsing context is non-null and there is an existing attempt to navigate document's browsing context, then stop document loading given document.
+
+    // FIXME: 9. For each shadow-including inclusive descendant node of document, erase all event listeners and handlers given node.
+
+    // FIXME 10. If document is the associated Document of document's relevant global object, then erase all event listeners and handlers given document's relevant global object.
+
+    // 11. Replace all with null within document, without firing any mutation events.
+    replace_all(nullptr);
+
+    // 12. If document is fully active, then:
+    if (is_fully_active()) {
+        // 1. Let newURL be a copy of entryDocument's URL.
+        auto new_url = entry_document.url();
+        // 2. If entryDocument is not document, then set newURL's fragment to null.
+        if (&entry_document != this)
+            new_url.set_fragment("");
+
+        // FIXME: 3. Run the URL and history update steps with document and newURL.
+    }
+
+    // FIXME: 13. Set document's is initial about:blank to false.
+
+    // FIXME: 14. If document's iframe load in progress flag is set, then set document's mute iframe load flag.
+
+    // 15. Set document to no-quirks mode.
+    set_quirks_mode(QuirksMode::No);
+
+    // 16. Create a new HTML parser and associate it with document. This is a script-created parser (meaning that it can be closed by the document.open() and document.close() methods, and that the tokenizer will wait for an explicit call to document.close() before emitting an end-of-file token). The encoding confidence is irrelevant.
+    m_parser = HTML::HTMLParser::create_for_scripting(*this);
+
+    // 17. Set the insertion point to point at just before the end of the input stream (which at this point will be empty).
+    m_parser->tokenizer().update_insertion_point();
+
+    // 18. Update the current document readiness of document to "loading".
+    update_readiness(HTML::DocumentReadyState::Loading);
+
+    // 19. Return document.
+    return this;
+}
+
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#closing-the-input-stream
+ExceptionOr<void> Document::close()
+{
+    // 1. If document is an XML document, then throw an "InvalidStateError" DOMException exception.
+    if (doctype() && doctype()->name() == "xml")
+        return DOM::InvalidStateError::create("close() called on XML document.");
+
+    // 2. If document's throw-on-dynamic-markup-insertion counter is greater than 0, then throw an "InvalidStateError" DOMException.
+    if (m_throw_on_dynamic_markup_insertion_counter > 0)
+        return DOM::InvalidStateError::create("throw-on-dynamic-markup-insertion-counter greater than zero.");
+
+    // 3. If there is no script-created parser associated with the document, then return.
+    if (!m_parser)
+        return {};
+
+    // FIXME: 4. Insert an explicit "EOF" character at the end of the parser's input stream.
+    m_parser->tokenizer().insert_eof();
+
+    // 5. If there is a pending parsing-blocking script, then return.
+    if (pending_parsing_blocking_script())
+        return {};
+
+    // FIXME: 6. Run the tokenizer, processing resulting tokens as they are emitted, and stopping when the tokenizer reaches the explicit "EOF" character or spins the event loop.
+    m_parser->run();
+
+    return {};
 }
 
 Origin Document::origin() const
@@ -426,11 +563,16 @@ void Document::update_layout()
         m_layout_root = static_ptr_cast<Layout::InitialContainingBlock>(tree_builder.build(*this));
     }
 
-    Layout::BlockFormattingContext root_formatting_context(*m_layout_root, nullptr);
+    Layout::FormattingState formatting_state;
+    Layout::BlockFormattingContext root_formatting_context(formatting_state, *m_layout_root, nullptr);
     m_layout_root->build_stacking_context_tree();
-    m_layout_root->set_content_size(viewport_rect.size().to_type<float>());
+
+    auto& icb_state = formatting_state.get_mutable(*m_layout_root);
+    icb_state.content_width = viewport_rect.width();
+    icb_state.content_height = viewport_rect.height();
 
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
+    formatting_state.commit();
 
     browsing_context()->set_needs_display();
 
@@ -1161,13 +1303,14 @@ void Document::evaluate_media_queries_and_report_changes()
     }
 
     // Also not in the spec, but this is as good a place as any to evaluate @media rules!
+    bool any_media_queries_changed_match_state = false;
     for (auto& style_sheet : style_sheets().sheets()) {
-        style_sheet.evaluate_media_queries(window());
+        if (style_sheet.evaluate_media_queries(window()))
+            any_media_queries_changed_match_state = true;
     }
 
-    // FIXME: This invalidates too often!
-    //        We should only invalidate when one or more @media rules changes evaluation status.
-    style_computer().invalidate_rule_cache();
+    if (any_media_queries_changed_match_state)
+        style_computer().invalidate_rule_cache();
 }
 
 NonnullRefPtr<DOMImplementation> Document::implementation() const
@@ -1179,6 +1322,16 @@ bool Document::has_focus() const
 {
     // FIXME: Return whether we actually have focus.
     return true;
+}
+
+void Document::set_parser(Badge<HTML::HTMLParser>, HTML::HTMLParser& parser)
+{
+    m_parser = parser;
+}
+
+void Document::detach_parser(Badge<HTML::HTMLParser>)
+{
+    m_parser = nullptr;
 }
 
 }

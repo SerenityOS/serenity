@@ -632,13 +632,6 @@ protected:
 
     void dump(int indent, String const& class_name) const;
 
-protected:
-    void set_name(FlyString name)
-    {
-        VERIFY(m_name.is_empty());
-        m_name = move(name);
-    }
-
 private:
     FlyString m_name;
     String m_source_text;

@@ -17,21 +17,24 @@
 
 namespace Web::Layout {
 
-static float get_pixel_size(Box const& box, CSS::LengthPercentage const& length_percentage)
+static float get_pixel_size(FormattingState const& state, Box const& box, Optional<CSS::LengthPercentage> const& length_percentage)
 {
-    auto inner_main_size = CSS::Length::make_px(box.containing_block()->content_width());
-    return length_percentage.resolved(box, inner_main_size)
-        .resolved(CSS::Length::make_px(0), box)
-        .to_px(box);
+    if (!length_percentage.has_value())
+        return 0;
+    auto inner_main_size = CSS::Length::make_px(state.get(*box.containing_block()).content_width);
+    return length_percentage->resolved(box, inner_main_size).to_px(box);
 }
 
-static bool is_undefined_or_auto(CSS::LengthPercentage const& length_percentage)
+static bool is_undefined_or_auto(Optional<CSS::LengthPercentage> const& length_percentage)
 {
-    return length_percentage.is_length() && length_percentage.length().is_undefined_or_auto();
+    if (!length_percentage.has_value())
+        return true;
+    return length_percentage->is_length() && length_percentage->length().is_auto();
 }
 
-FlexFormattingContext::FlexFormattingContext(Box& flex_container, FormattingContext* parent)
-    : FormattingContext(Type::Flex, flex_container, parent)
+FlexFormattingContext::FlexFormattingContext(FormattingState& state, Box const& flex_container, FormattingContext* parent)
+    : FormattingContext(Type::Flex, state, flex_container, parent)
+    , m_flex_container_state(m_state.get_mutable(flex_container))
     , m_flex_direction(flex_container.computed_values().flex_direction())
 {
 }
@@ -40,7 +43,7 @@ FlexFormattingContext::~FlexFormattingContext()
 {
 }
 
-void FlexFormattingContext::run(Box& run_box, LayoutMode)
+void FlexFormattingContext::run(Box const& run_box, LayoutMode)
 {
     VERIFY(&run_box == &flex_container());
 
@@ -114,25 +117,26 @@ void FlexFormattingContext::run(Box& run_box, LayoutMode)
 
 void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::FlexDirection flex_direction) const
 {
-    auto width_of_containing_block = item.box.containing_block()->content_width();
+    auto width_of_containing_block = m_state.get(*item.box.containing_block()).content_width;
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     // FIXME: This should also take reverse-ness into account
     if (flex_direction == CSS::FlexDirection::Row || flex_direction == CSS::FlexDirection::RowReverse) {
-        item.margins.main_before = item.box.computed_values().margin().left.resolved(item.box, width_of_containing_block_as_length).resolved_or_zero(item.box).to_px(item.box);
-        item.margins.main_after = item.box.computed_values().margin().right.resolved(item.box, width_of_containing_block_as_length).resolved_or_zero(item.box).to_px(item.box);
-        item.margins.cross_before = item.box.computed_values().margin().top.resolved(item.box, width_of_containing_block_as_length).resolved_or_zero(item.box).to_px(item.box);
-        item.margins.cross_after = item.box.computed_values().margin().bottom.resolved(item.box, width_of_containing_block_as_length).resolved_or_zero(item.box).to_px(item.box);
+        item.margins.main_before = item.box.computed_values().margin().left.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.margins.main_after = item.box.computed_values().margin().right.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.margins.cross_before = item.box.computed_values().margin().top.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.margins.cross_after = item.box.computed_values().margin().bottom.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
     } else {
-        item.margins.main_before = item.box.computed_values().margin().top.resolved(item.box, width_of_containing_block_as_length).resolved_or_zero(item.box).to_px(item.box);
-        item.margins.main_after = item.box.computed_values().margin().bottom.resolved(item.box, width_of_containing_block_as_length).resolved_or_zero(item.box).to_px(item.box);
-        item.margins.cross_before = item.box.computed_values().margin().left.resolved(item.box, width_of_containing_block_as_length).resolved_or_zero(item.box).to_px(item.box);
-        item.margins.cross_after = item.box.computed_values().margin().right.resolved(item.box, width_of_containing_block_as_length).resolved_or_zero(item.box).to_px(item.box);
+        item.margins.main_before = item.box.computed_values().margin().top.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.margins.main_after = item.box.computed_values().margin().bottom.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.margins.cross_before = item.box.computed_values().margin().left.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.margins.cross_after = item.box.computed_values().margin().right.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
     }
 };
 
 // https://www.w3.org/TR/css-flexbox-1/#flex-items
 void FlexFormattingContext::generate_anonymous_flex_items()
 {
+    auto& containing_block_state = m_state.get(*flex_container().containing_block());
     // More like, sift through the already generated items.
     // After this step no items are to be added or removed from flex_items!
     // It holds every item we need to consider and there should be nothing in the following
@@ -140,19 +144,30 @@ void FlexFormattingContext::generate_anonymous_flex_items()
     // This is particularly important since we take references to the items stored in flex_items
     // later, whose addresses won't be stable if we added or removed any items.
     if (!flex_container().has_definite_width()) {
-        flex_container().set_content_width(flex_container().containing_block()->content_width());
+        m_flex_container_state.content_width = containing_block_state.content_width;
     } else {
-        auto container_width = flex_container().containing_block()->content_width();
-        auto width = flex_container().computed_values().width().resolved(flex_container(), CSS::Length::make_px(container_width)).resolved_or_zero(flex_container()).to_px(flex_container());
-        flex_container().set_content_width(width);
+        auto container_width = containing_block_state.content_width;
+
+        auto& maybe_width = flex_container().computed_values().width();
+        if (maybe_width.has_value()) {
+            auto width = maybe_width->resolved(flex_container(), CSS::Length::make_px(container_width)).to_px(flex_container());
+            m_flex_container_state.content_width = width;
+        } else {
+            m_flex_container_state.content_width = 0;
+        }
     }
 
     if (!flex_container().has_definite_height()) {
-        flex_container().set_content_height(flex_container().containing_block()->content_height());
+        m_flex_container_state.content_height = containing_block_state.content_height;
     } else {
-        auto container_height = flex_container().containing_block()->content_height();
-        auto height = flex_container().computed_values().height().resolved(flex_container(), CSS::Length::make_px(container_height)).resolved_or_zero(flex_container()).to_px(flex_container());
-        flex_container().set_content_height(height);
+        auto container_height = containing_block_state.content_height;
+        auto& maybe_height = flex_container().computed_values().height();
+        if (maybe_height.has_value()) {
+            auto height = maybe_height->resolved(flex_container(), CSS::Length::make_px(container_height)).to_px(flex_container());
+            m_flex_container_state.content_height = height;
+        } else {
+            m_flex_container_state.content_height = 0;
+        }
     }
 
     flex_container().for_each_child_of_type<Box>([&](Box& child_box) {
@@ -190,12 +205,14 @@ bool FlexFormattingContext::has_definite_main_size(Box const& box) const
 
 float FlexFormattingContext::specified_main_size(Box const& box) const
 {
-    return is_row_layout() ? box.content_width() : box.content_height();
+    auto const& box_state = m_state.get(box);
+    return is_row_layout() ? box_state.content_width : box_state.content_height;
 }
 
 float FlexFormattingContext::specified_cross_size(Box const& box) const
 {
-    return is_row_layout() ? box.content_height() : box.content_width();
+    auto const& box_state = m_state.get(box);
+    return is_row_layout() ? box_state.content_height : box_state.content_width;
 }
 
 bool FlexFormattingContext::has_main_min_size(Box const& box) const
@@ -219,17 +236,21 @@ bool FlexFormattingContext::cross_size_is_absolute_or_resolved_nicely(NodeWithSt
 {
     auto length_percentage = is_row_layout() ? box.computed_values().height() : box.computed_values().width();
 
-    if (length_percentage.is_length()) {
-        auto& length = length_percentage.length();
+    if (!length_percentage.has_value())
+        return false;
+
+    // FIXME: Handle calc here.
+    if (length_percentage->is_length()) {
+        auto& length = length_percentage->length();
         if (length.is_absolute() || length.is_relative())
             return true;
-        if (length.is_undefined_or_auto())
+        if (length.is_auto())
             return false;
     }
 
     if (!box.parent())
         return false;
-    if (length_percentage.is_percentage() && cross_size_is_absolute_or_resolved_nicely(*box.parent()))
+    if (length_percentage->is_percentage() && cross_size_is_absolute_or_resolved_nicely(*box.parent()))
         return true;
     return false;
 }
@@ -237,22 +258,24 @@ bool FlexFormattingContext::cross_size_is_absolute_or_resolved_nicely(NodeWithSt
 float FlexFormattingContext::specified_main_size_of_child_box(Box const& child_box) const
 {
     auto main_size_of_parent = specified_main_size(flex_container());
-    auto value = is_row_layout() ? child_box.computed_values().width() : child_box.computed_values().height();
-    return value.resolved(child_box, CSS::Length::make_px(main_size_of_parent)).resolved_or_zero(child_box).to_px(child_box);
+    auto& value = is_row_layout() ? child_box.computed_values().width() : child_box.computed_values().height();
+    if (!value.has_value())
+        return 0;
+    return value->resolved(child_box, CSS::Length::make_px(main_size_of_parent)).to_px(child_box);
 }
 
 float FlexFormattingContext::specified_main_min_size(Box const& box) const
 {
     return is_row_layout()
-        ? get_pixel_size(box, box.computed_values().min_width())
-        : get_pixel_size(box, box.computed_values().min_height());
+        ? get_pixel_size(m_state, box, box.computed_values().min_width())
+        : get_pixel_size(m_state, box, box.computed_values().min_height());
 }
 
 float FlexFormattingContext::specified_cross_min_size(Box const& box) const
 {
     return is_row_layout()
-        ? get_pixel_size(box, box.computed_values().min_height())
-        : get_pixel_size(box, box.computed_values().min_width());
+        ? get_pixel_size(m_state, box, box.computed_values().min_height())
+        : get_pixel_size(m_state, box, box.computed_values().min_width());
 }
 
 bool FlexFormattingContext::has_main_max_size(Box const& box) const
@@ -272,27 +295,27 @@ bool FlexFormattingContext::has_cross_max_size(Box const& box) const
 float FlexFormattingContext::specified_main_max_size(Box const& box) const
 {
     return is_row_layout()
-        ? get_pixel_size(box, box.computed_values().max_width())
-        : get_pixel_size(box, box.computed_values().max_height());
+        ? get_pixel_size(m_state, box, box.computed_values().max_width())
+        : get_pixel_size(m_state, box, box.computed_values().max_height());
 }
 
 float FlexFormattingContext::specified_cross_max_size(Box const& box) const
 {
     return is_row_layout()
-        ? get_pixel_size(box, box.computed_values().max_height())
-        : get_pixel_size(box, box.computed_values().max_width());
+        ? get_pixel_size(m_state, box, box.computed_values().max_height())
+        : get_pixel_size(m_state, box, box.computed_values().max_width());
 }
 
 float FlexFormattingContext::calculated_main_size(Box const& box) const
 {
-    return is_row_layout() ? box.content_width() : box.content_height();
+    auto const& box_state = m_state.get(box);
+    return is_row_layout() ? box_state.content_width : box_state.content_height;
 }
 
 bool FlexFormattingContext::is_cross_auto(Box const& box) const
 {
-    if (is_row_layout())
-        return box.computed_values().height().is_length() && box.computed_values().height().length().is_auto();
-    return box.computed_values().width().is_length() && box.computed_values().width().length().is_auto();
+    auto& cross_length = is_row_layout() ? box.computed_values().height() : box.computed_values().width();
+    return cross_length.has_value() && cross_length->is_length() && cross_length->length().is_auto();
 }
 
 bool FlexFormattingContext::is_main_axis_margin_first_auto(Box const& box) const
@@ -309,60 +332,58 @@ bool FlexFormattingContext::is_main_axis_margin_second_auto(Box const& box) cons
     return box.computed_values().margin().bottom.is_length() && box.computed_values().margin().bottom.length().is_auto();
 }
 
-void FlexFormattingContext::set_main_size(Box& box, float size)
+void FlexFormattingContext::set_main_size(Box const& box, float size)
 {
     if (is_row_layout())
-        box.set_content_width(size);
+        m_state.get_mutable(box).content_width = size;
     else
-        box.set_content_height(size);
+        m_state.get_mutable(box).content_height = size;
 }
 
-void FlexFormattingContext::set_cross_size(Box& box, float size)
+void FlexFormattingContext::set_cross_size(Box const& box, float size)
 {
     if (is_row_layout())
-        box.set_content_height(size);
+        m_state.get_mutable(box).content_height = size;
     else
-        box.set_content_width(size);
+        m_state.get_mutable(box).content_width = size;
 }
 
-void FlexFormattingContext::set_offset(Box& box, float main_offset, float cross_offset)
+void FlexFormattingContext::set_offset(Box const& box, float main_offset, float cross_offset)
 {
     if (is_row_layout())
-        box.set_offset(main_offset, cross_offset);
+        m_state.get_mutable(box).offset = Gfx::FloatPoint { main_offset, cross_offset };
     else
-        box.set_offset(cross_offset, main_offset);
+        m_state.get_mutable(box).offset = Gfx::FloatPoint { cross_offset, main_offset };
 }
 
-void FlexFormattingContext::set_main_axis_first_margin(Box& box, float margin)
+void FlexFormattingContext::set_main_axis_first_margin(Box const& box, float margin)
 {
     if (is_row_layout())
-        box.box_model().margin.left = margin;
+        m_state.get_mutable(box).margin_left = margin;
     else
-        box.box_model().margin.top = margin;
+        m_state.get_mutable(box).margin_top = margin;
 }
 
-void FlexFormattingContext::set_main_axis_second_margin(Box& box, float margin)
+void FlexFormattingContext::set_main_axis_second_margin(Box const& box, float margin)
 {
     if (is_row_layout())
-        box.box_model().margin.right = margin;
+        m_state.get_mutable(box).margin_right = margin;
     else
-        box.box_model().margin.bottom = margin;
+        m_state.get_mutable(box).margin_bottom = margin;
 }
 
 float FlexFormattingContext::sum_of_margin_padding_border_in_main_axis(Box const& box) const
 {
-    auto& margin = box.box_model().margin;
-    auto& padding = box.box_model().padding;
-    auto& border = box.box_model().border;
+    auto const& box_state = m_state.get(box);
 
     if (is_row_layout()) {
-        return margin.left + margin.right
-            + padding.left + padding.right
-            + border.left + border.right;
+        return box_state.margin_left + box_state.margin_right
+            + box_state.padding_left + box_state.padding_right
+            + box_state.border_left + box_state.border_right;
     } else {
-        return margin.top + margin.bottom
-            + padding.top + padding.bottom
-            + border.top + border.bottom;
+        return box_state.margin_top + box_state.margin_bottom
+            + box_state.padding_top + box_state.padding_bottom
+            + box_state.border_top + box_state.border_bottom;
     }
 }
 
@@ -370,14 +391,15 @@ float FlexFormattingContext::sum_of_margin_padding_border_in_main_axis(Box const
 FlexFormattingContext::AvailableSpace FlexFormattingContext::determine_available_main_and_cross_space(bool& main_size_is_infinite, bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size) const
 {
     auto containing_block_effective_main_size = [&](Box const& box) {
+        auto& containing_block = *box.containing_block();
         if (is_row_layout()) {
-            if (box.containing_block()->has_definite_width())
-                return box.containing_block()->content_width();
+            if (containing_block.has_definite_width())
+                return m_state.get(containing_block).content_width;
             main_size_is_infinite = true;
             return NumericLimits<float>::max();
         } else {
-            if (box.containing_block()->has_definite_height())
-                return box.containing_block()->content_height();
+            if (containing_block.has_definite_height())
+                return m_state.get(containing_block).content_height;
             main_size_is_infinite = true;
             return NumericLimits<float>::max();
         }
@@ -438,7 +460,7 @@ FlexFormattingContext::AvailableSpace FlexFormattingContext::determine_available
     return AvailableSpace { .main = main_available_space, .cross = cross_available_space };
 }
 
-float FlexFormattingContext::layout_for_maximum_main_size(Box& box)
+float FlexFormattingContext::layout_for_maximum_main_size(Box const& box)
 {
     bool main_constrained = false;
     if (is_row_layout()) {
@@ -453,23 +475,23 @@ float FlexFormattingContext::layout_for_maximum_main_size(Box& box)
 
     if (!main_constrained && box.children_are_inline()) {
         auto& block_container = verify_cast<BlockContainer>(box);
-        BlockFormattingContext bfc(block_container, this);
+        BlockFormattingContext bfc(m_state, block_container, this);
         bfc.run(box, LayoutMode::Default);
-        InlineFormattingContext ifc(block_container, bfc);
+        InlineFormattingContext ifc(m_state, block_container, bfc);
 
         if (is_row_layout()) {
             ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
-            return box.content_width();
+            return m_state.get(box).content_width;
         } else {
             ifc.run(box, LayoutMode::AllPossibleLineBreaks);
-            return box.content_height();
+            return m_state.get(box).content_height;
         }
     }
     if (is_row_layout()) {
         (void)layout_inside(box, LayoutMode::OnlyRequiredLineBreaks);
-        return box.content_width();
+        return m_state.get(box).content_width;
     } else {
-        return BlockFormattingContext::compute_theoretical_height(box);
+        return BlockFormattingContext::compute_theoretical_height(m_state, box);
     }
 }
 
@@ -483,7 +505,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
 
         // A. If the item has a definite used flex basis, that’s the flex base size.
         if (used_flex_basis.is_definite()) {
-            auto specified_base_size = get_pixel_size(child_box, used_flex_basis.length_percentage.value());
+            auto specified_base_size = get_pixel_size(m_state, child_box, used_flex_basis.length_percentage.value());
             if (specified_base_size == 0)
                 return calculated_main_size(flex_item.box);
             return specified_base_size;
@@ -788,7 +810,7 @@ void FlexFormattingContext::resolve_flexible_lengths(float const main_available_
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-cross-item
-float FlexFormattingContext::determine_hypothetical_cross_size_of_item(Box& box)
+float FlexFormattingContext::determine_hypothetical_cross_size_of_item(Box const& box)
 {
     bool cross_constrained = false;
     if (is_row_layout()) {
@@ -803,19 +825,20 @@ float FlexFormattingContext::determine_hypothetical_cross_size_of_item(Box& box)
 
     if (!cross_constrained && box.children_are_inline()) {
         auto& block_container = verify_cast<BlockContainer>(box);
-        BlockFormattingContext bfc(block_container, this);
+        BlockFormattingContext bfc(m_state, block_container, this);
         bfc.run(box, LayoutMode::Default);
-        InlineFormattingContext ifc(block_container, bfc);
+        InlineFormattingContext ifc(m_state, block_container, bfc);
         ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
 
-        return is_row_layout() ? box.content_height() : box.content_width();
+        auto const& box_state = m_state.get(box);
+        return is_row_layout() ? box_state.content_height : box_state.content_width;
     }
     if (is_row_layout())
-        return BlockFormattingContext::compute_theoretical_height(box);
+        return BlockFormattingContext::compute_theoretical_height(m_state, box);
 
-    BlockFormattingContext context(verify_cast<BlockContainer>(box), this);
+    BlockFormattingContext context(m_state, verify_cast<BlockContainer>(box), this);
     context.compute_width(box);
-    return box.content_width();
+    return m_state.get(box).content_width;
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-cross-line

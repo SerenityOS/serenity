@@ -73,3 +73,15 @@ test("inherited getter overriding", () => {
 
     expect(new Child().x).toBe(10);
 });
+
+test("static getter named 'async'", () => {
+    class A {
+        get async() {
+            return "getter named async";
+        }
+    }
+
+    const a = new A();
+    expect("async" in a).toBeTrue();
+    expect(a.async).toBe("getter named async");
+});

@@ -8,7 +8,7 @@
 
 namespace Web::HTML {
 
-HTMLFrameSetElement::HTMLFrameSetElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLFrameSetElement::HTMLFrameSetElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

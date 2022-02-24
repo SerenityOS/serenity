@@ -230,7 +230,8 @@ void AttributeParser::parse_elliptical_arc()
 
 float AttributeParser::parse_length()
 {
-    return parse_sign() * parse_number();
+    // https://www.w3.org/TR/SVG11/types.html#DataTypeLength
+    return parse_number();
 }
 
 float AttributeParser::parse_coordinate()
@@ -302,10 +303,10 @@ Vector<float> AttributeParser::parse_coordinate_pair_triplet()
 Vector<float> AttributeParser::parse_elliptical_arg_argument()
 {
     Vector<float> numbers;
-    numbers.append(parse_number());
+    numbers.append(parse_nonnegative_number());
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    numbers.append(parse_number());
+    numbers.append(parse_nonnegative_number());
     if (match_comma_whitespace())
         parse_comma_whitespace();
     numbers.append(parse_number());
@@ -368,7 +369,15 @@ float AttributeParser::parse_fractional_constant()
     return builder.to_string().to_int().value();
 }
 
+// https://www.w3.org/TR/SVG11/types.html#DataTypeNumber
 float AttributeParser::parse_number()
+{
+    auto sign = parse_sign();
+    return sign * parse_nonnegative_number();
+}
+
+// https://www.w3.org/TR/SVG11/paths.html#PathDataBNF
+float AttributeParser::parse_nonnegative_number()
 {
     auto number = parse_fractional_constant();
 

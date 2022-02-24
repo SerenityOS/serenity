@@ -89,7 +89,10 @@ Tab::Tab(BrowserWindow& window)
     auto& webview_container = *find_descendant_of_type_named<GUI::Widget>("webview_container");
 
     m_web_content_view = webview_container.add<Web::OutOfProcessWebView>();
-    m_web_content_view->set_content_filters(g_content_filters);
+    if (g_content_filters_enabled)
+        m_web_content_view->set_content_filters(g_content_filters);
+    else
+        m_web_content_view->set_content_filters({});
 
     auto& go_back_button = toolbar.add_action(window.go_back_action());
     go_back_button.on_context_menu_request = [this](auto& context_menu_event) {
@@ -440,6 +443,14 @@ void Tab::did_become_active()
 void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)
 {
     m_tab_context_menu->popup(screen_position);
+}
+
+void Tab::content_filters_changed()
+{
+    if (g_content_filters_enabled)
+        m_web_content_view->set_content_filters(g_content_filters);
+    else
+        m_web_content_view->set_content_filters({});
 }
 
 GUI::AbstractScrollableWidget& Tab::view()

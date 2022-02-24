@@ -53,6 +53,24 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
     return false;
 }
 
+static inline DOM::Element const* previous_sibling_with_same_tag_name(DOM::Element const& element)
+{
+    for (auto const* sibling = element.previous_element_sibling(); sibling; sibling = sibling->previous_element_sibling()) {
+        if (sibling->tag_name() == element.tag_name())
+            return sibling;
+    }
+    return nullptr;
+}
+
+static inline DOM::Element const* next_sibling_with_same_tag_name(DOM::Element const& element)
+{
+    for (auto const* sibling = element.next_element_sibling(); sibling; sibling = sibling->next_element_sibling()) {
+        if (sibling->tag_name() == element.tag_name())
+            return sibling;
+    }
+    return nullptr;
+}
+
 static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass const& pseudo_class, DOM::Element const& element)
 {
     switch (pseudo_class.type) {
@@ -80,17 +98,11 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
         return is<HTML::HTMLHtmlElement>(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
-        for (auto* sibling = element.previous_element_sibling(); sibling; sibling = sibling->previous_element_sibling()) {
-            if (sibling->tag_name() == element.tag_name())
-                return false;
-        }
-        return true;
+        return !previous_sibling_with_same_tag_name(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::LastOfType:
-        for (auto* sibling = element.next_element_sibling(); sibling; sibling = sibling->next_element_sibling()) {
-            if (sibling->tag_name() == element.tag_name())
-                return false;
-        }
-        return true;
+        return !next_sibling_with_same_tag_name(element);
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:
+        return !previous_sibling_with_same_tag_name(element) && !next_sibling_with_same_tag_name(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Disabled:
         if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
             return false;

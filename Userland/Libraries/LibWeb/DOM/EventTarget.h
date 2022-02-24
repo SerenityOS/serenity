@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/FlyString.h>
-#include <AK/Function.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
@@ -30,8 +29,12 @@ public:
 
     virtual bool is_focusable() const { return false; }
 
-    void add_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, bool use_capture = false);
-    void remove_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, bool use_capture = false);
+    void add_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, Variant<AddEventListenerOptions, bool> const& options);
+    void remove_event_listener(FlyString const& type, RefPtr<IDLEventListener> callback, Variant<EventListenerOptions, bool> const& options);
+
+    // NOTE: These are for internal use only. They operate as though addEventListener(type, callback) was called instead of addEventListener(type, callback, options).
+    void add_event_listener_without_options(FlyString const& type, RefPtr<IDLEventListener> callback);
+    void remove_event_listener_without_options(FlyString const& type, RefPtr<IDLEventListener> callback);
 
     virtual bool dispatch_event(NonnullRefPtr<Event>);
     ExceptionOr<bool> dispatch_event_binding(NonnullRefPtr<Event>);
@@ -50,8 +53,8 @@ public:
     Function<void(const Event&)> activation_behavior;
 
     // NOTE: These only exist for checkbox and radio input elements.
-    Function<void()> legacy_pre_activation_behavior;
-    Function<void()> legacy_cancelled_activation_behavior;
+    virtual void legacy_pre_activation_behavior() { }
+    virtual void legacy_cancelled_activation_behavior() { }
 
     Bindings::CallbackType* event_handler_attribute(FlyString const& name);
     void set_event_handler_attribute(FlyString const& name, Optional<Bindings::CallbackType>);

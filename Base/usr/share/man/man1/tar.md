@@ -5,7 +5,7 @@ tar - file archiving utility
 ## Synopsis
 
 ```**sh
-$ tar [--create] [--extract] [--list] [--verbose] [--gzip] [--file FILE] [PATHS...]
+$ tar [--create] [--extract] [--list] [--verbose] [--gzip] [--no-auto-compress] [--directory DIRECTORY] [--file FILE] [PATHS...]
 ```
 
 ## Description
@@ -21,8 +21,10 @@ Files may also be compressed and decompressed using GNU Zip (GZIP) compression.
 * `-x`, `--extract`: Extract archive
 * `-t`, `--list`: List contents
 * `-v`, `--verbose`: Print paths
-* `-z`, `--gzip`: compress or uncompress file using gzip
-* `-f`, `--file`: Archive file
+* `-z`, `--gzip`: Compress or decompress file using gzip
+* `--no-auto-compress`: Do not use the archive suffix to select the compression algorithm
+* `-C DIRECTORY`, `--directory DIRECTORY`: Directory to extract to/create from
+* `-f FILE`, `--file FILE`: Archive file
 
 ## Examples
 

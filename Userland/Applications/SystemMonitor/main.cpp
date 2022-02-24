@@ -124,6 +124,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (auto result = Core::System::unveil("/usr/local/lib", "r"); result.is_error() && result.error().code() != ENOENT)
         return result.release_error();
 
+    // This file is only accesible when running as root
+    if (auto result = Core::System::unveil("/boot/Kernel.debug", "r"); result.is_error() && result.error().code() != EACCES)
+        return result.release_error();
+
     TRY(Core::System::unveil("/bin/Profiler", "rx"));
     TRY(Core::System::unveil("/bin/Inspector", "rx"));
     TRY(Core::System::unveil(nullptr, nullptr));
@@ -405,6 +409,9 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
     auto window = GUI::Window::construct();
     window->resize(480, 360);
     window->set_title(String::formatted("PID {} - System Monitor", pid));
+
+    auto app_icon = GUI::Icon::default_icon("app-system-monitor");
+    window->set_icon(app_icon.bitmap_for_size(16));
 
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);

@@ -187,9 +187,25 @@ Optional<u32> HTMLTokenizer::next_code_point()
 {
     if (m_utf8_iterator == m_utf8_view.end())
         return {};
-    skip(1);
-    dbgln_if(TOKENIZER_TRACE_DEBUG, "(Tokenizer) Next code_point: {}", (char)*m_prev_utf8_iterator);
-    return *m_prev_utf8_iterator;
+
+    u32 code_point;
+    // https://html.spec.whatwg.org/multipage/parsing.html#preprocessing-the-input-stream:tokenization
+    // https://infra.spec.whatwg.org/#normalize-newlines
+    if (peek_code_point(0).value_or(0) == '\r' && peek_code_point(1).value_or(0) == '\n') {
+        // replace every U+000D CR U+000A LF code point pair with a single U+000A LF code point,
+        skip(2);
+        code_point = '\n';
+    } else if (peek_code_point(0).value_or(0) == '\r') {
+        // replace every remaining U+000D CR code point with a U+000A LF code point.
+        skip(1);
+        code_point = '\n';
+    } else {
+        skip(1);
+        code_point = *m_prev_utf8_iterator;
+    }
+
+    dbgln_if(TOKENIZER_TRACE_DEBUG, "(Tokenizer) Next code_point: {}", code_point);
+    return code_point;
 }
 
 void HTMLTokenizer::skip(size_t count)
@@ -231,7 +247,7 @@ Optional<HTMLToken> HTMLTokenizer::next_token()
 {
     {
         auto last_position = m_source_positions.last();
-        m_source_positions.clear();
+        m_source_positions.clear_with_capacity();
         m_source_positions.append(move(last_position));
     }
 _StartOfFunction:
@@ -1467,7 +1483,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_builder.append('-');
+                    m_current_builder.append("--");
                     RECONSUME_IN(Comment);
                 }
             }
@@ -1617,7 +1633,7 @@ _StartOfFunction:
             {
                 size_t byte_offset = m_utf8_view.byte_offset_of(m_prev_utf8_iterator);
 
-                auto match = HTML::code_points_from_entity(m_decoded_input.substring_view(byte_offset, m_decoded_input.length() - byte_offset - 1));
+                auto match = HTML::code_points_from_entity(m_decoded_input.substring_view(byte_offset, m_decoded_input.length() - byte_offset));
 
                 if (match.has_value()) {
                     skip(match->entity.length() - 1);
@@ -2764,6 +2780,15 @@ void HTMLTokenizer::create_new_token(HTMLToken::Type type)
     m_current_token.set_start_position({}, nth_last_position(offset));
 }
 
+HTMLTokenizer::HTMLTokenizer()
+{
+    m_decoded_input = "";
+    m_utf8_view = Utf8View(m_decoded_input);
+    m_utf8_iterator = m_utf8_view.begin();
+    m_prev_utf8_iterator = m_utf8_view.begin();
+    m_source_positions.empend(0u, 0u);
+}
+
 HTMLTokenizer::HTMLTokenizer(StringView input, String const& encoding)
 {
     auto* decoder = TextCodec::decoder_for(encoding);
@@ -2771,7 +2796,35 @@ HTMLTokenizer::HTMLTokenizer(StringView input, String const& encoding)
     m_decoded_input = decoder->to_utf8(input);
     m_utf8_view = Utf8View(m_decoded_input);
     m_utf8_iterator = m_utf8_view.begin();
+    m_prev_utf8_iterator = m_utf8_view.begin();
     m_source_positions.empend(0u, 0u);
+}
+
+void HTMLTokenizer::insert_input_at_insertion_point(String const& input)
+{
+    auto utf8_iterator_byte_offset = m_utf8_view.byte_offset_of(m_utf8_iterator);
+
+    // FIXME: Implement a InputStream to handle insertion_point and iterators.
+    StringBuilder builder {};
+    builder.append(m_decoded_input.substring(0, m_insertion_point.position));
+    builder.append(input);
+    builder.append(m_decoded_input.substring(m_insertion_point.position));
+    m_decoded_input = builder.build();
+
+    m_utf8_view = Utf8View(m_decoded_input);
+    m_utf8_iterator = m_utf8_view.iterator_at_byte_offset(utf8_iterator_byte_offset);
+
+    m_insertion_point.position += input.length();
+}
+
+void HTMLTokenizer::insert_eof()
+{
+    m_explicit_eof_inserted = true;
+}
+
+bool HTMLTokenizer::is_eof_inserted()
+{
+    return m_explicit_eof_inserted;
 }
 
 void HTMLTokenizer::will_switch_to([[maybe_unused]] State new_state)

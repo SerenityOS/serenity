@@ -26,7 +26,7 @@
 
 namespace Web::HTML {
 
-HTMLElement::HTMLElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLElement::HTMLElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : Element(document, move(qualified_name))
     , m_dataset(DOMStringMap::create(*this))
 {

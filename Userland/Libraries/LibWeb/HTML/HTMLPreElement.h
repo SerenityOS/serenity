@@ -14,7 +14,7 @@ class HTMLPreElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLPreElementWrapper;
 
-    HTMLPreElement(DOM::Document&, QualifiedName);
+    HTMLPreElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLPreElement() override;
 };
 

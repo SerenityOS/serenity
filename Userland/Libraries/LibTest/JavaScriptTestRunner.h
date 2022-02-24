@@ -89,14 +89,14 @@
 #define TEST_ROOT(path) \
     String Test::JS::g_test_root_fragment = path
 
-#define TESTJS_RUN_FILE_FUNCTION(...)                                                       \
-    struct __TestJS_run_file {                                                              \
-        __TestJS_run_file()                                                                 \
-        {                                                                                   \
-            ::Test::JS::g_run_file = hook;                                                  \
-        }                                                                                   \
-        static ::Test::JS::IntermediateRunFileResult hook(const String&, JS::Interpreter&); \
-    } __testjs_common_run_file {};                                                          \
+#define TESTJS_RUN_FILE_FUNCTION(...)                                                                              \
+    struct __TestJS_run_file {                                                                                     \
+        __TestJS_run_file()                                                                                        \
+        {                                                                                                          \
+            ::Test::JS::g_run_file = hook;                                                                         \
+        }                                                                                                          \
+        static ::Test::JS::IntermediateRunFileResult hook(const String&, JS::Interpreter&, JS::ExecutionContext&); \
+    } __testjs_common_run_file {};                                                                                 \
     ::Test::JS::IntermediateRunFileResult __TestJS_run_file::hook(__VA_ARGS__)
 
 #define TESTJS_CREATE_INTERPRETER_HOOK(...)               \
@@ -163,7 +163,7 @@ enum class RunFileHookResult {
 };
 
 using IntermediateRunFileResult = AK::Result<JSFileResult, RunFileHookResult>;
-extern IntermediateRunFileResult (*g_run_file)(const String&, JS::Interpreter&);
+extern IntermediateRunFileResult (*g_run_file)(const String&, JS::Interpreter&, JS::ExecutionContext&);
 
 class TestRunner : public ::Test::TestRunner {
 public:
@@ -300,7 +300,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
     interpreter->heap().set_should_collect_on_every_allocation(g_collect_on_every_allocation);
 
     if (g_run_file) {
-        auto result = g_run_file(test_path, *interpreter);
+        auto result = g_run_file(test_path, *interpreter, global_execution_context);
         if (result.is_error() && result.error() == RunFileHookResult::SkipFile) {
             return {
                 test_path,

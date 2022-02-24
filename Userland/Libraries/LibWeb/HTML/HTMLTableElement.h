@@ -18,7 +18,7 @@ class HTMLTableElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTableElementWrapper;
 
-    HTMLTableElement(DOM::Document&, QualifiedName);
+    HTMLTableElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTableElement() override;
 
     RefPtr<HTMLTableCaptionElement> caption();

@@ -15,7 +15,6 @@ namespace Web::CSS {
 class Length {
 public:
     enum class Type {
-        Undefined,
         Calculated,
         Auto,
         Cm,
@@ -37,7 +36,6 @@ public:
 
     // We have a RefPtr<CalculatedStyleValue> member, but can't include the header StyleValue.h as it includes
     // this file already. To break the cyclic dependency, we must move all method definitions out.
-    Length();
     Length(int value, Type type);
     Length(float value, Type type);
 
@@ -46,14 +44,11 @@ public:
     static Length make_calculated(NonnullRefPtr<CalculatedStyleValue>);
     Length percentage_of(Percentage const&) const;
 
-    Length resolved(Length const& fallback_for_undefined, Layout::Node const& layout_node) const;
-    Length resolved_or_auto(Layout::Node const& layout_node) const;
-    Length resolved_or_zero(Layout::Node const& layout_node) const;
+    Length resolved(Layout::Node const& layout_node) const;
 
-    bool is_undefined_or_auto() const { return m_type == Type::Undefined || m_type == Type::Auto; }
-    bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_auto() const { return m_type == Type::Auto; }
     bool is_calculated() const { return m_type == Type::Calculated; }
+    bool is_px() const { return m_type == Type::Px; }
 
     bool is_absolute() const
     {
@@ -82,12 +77,14 @@ public:
 
     float to_px(Layout::Node const&) const;
 
-    ALWAYS_INLINE float to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const
+    ALWAYS_INLINE float to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
     {
         if (is_auto())
             return 0;
         if (is_relative())
-            return relative_length_to_px(viewport_rect, font_metrics, root_font_size);
+            return relative_length_to_px(viewport_rect, font_metrics, font_size, root_font_size);
+        if (is_calculated())
+            VERIFY_NOT_REACHED(); // We can't resolve a calculated length from here. :^(
         return absolute_length_to_px();
     }
 
@@ -132,12 +129,12 @@ public:
         return !(*this == other);
     }
 
-    float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float root_font_size) const;
+    float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const;
 
 private:
     const char* unit_name() const;
 
-    Type m_type { Type::Undefined };
+    Type m_type;
     float m_value { 0 };
 
     RefPtr<CalculatedStyleValue> m_calculated_style;

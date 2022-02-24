@@ -200,6 +200,11 @@ public:
     }
 #endif
 
+    inline HashKind kind() const
+    {
+        return m_kind;
+    }
+
     inline bool is(HashKind kind) const
     {
         return m_kind == kind;

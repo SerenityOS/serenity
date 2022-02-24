@@ -14,7 +14,7 @@ class HTMLButtonElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLButtonElementWrapper;
 
-    HTMLButtonElement(DOM::Document&, QualifiedName);
+    HTMLButtonElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLButtonElement() override;
 };
 

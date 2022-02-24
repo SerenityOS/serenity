@@ -10,7 +10,7 @@
 
 namespace GL {
 
-void Texture2D::upload_texture_data(GLuint lod, GLint internal_format, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels, GLsizei pixels_per_row, u8 byte_alignment)
+void Texture2D::upload_texture_data(GLuint lod, GLint internal_format, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* pixels, GLsizei pixels_per_row, u8 byte_alignment)
 {
     // NOTE: Some target, format, and internal formats are currently unsupported.
     // Considering we control this library, and `gl.h` itself, we don't need to add any
@@ -29,7 +29,7 @@ void Texture2D::upload_texture_data(GLuint lod, GLint internal_format, GLsizei w
     replace_sub_texture_data(lod, 0, 0, width, height, format, type, pixels, pixels_per_row, byte_alignment);
 }
 
-void Texture2D::replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels, GLsizei pixels_per_row, u8 byte_alignment)
+void Texture2D::replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* pixels, GLsizei pixels_per_row, u8 byte_alignment)
 {
     auto& mip = m_mipmaps[lod];
 

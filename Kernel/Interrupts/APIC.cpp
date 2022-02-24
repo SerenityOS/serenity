@@ -211,13 +211,19 @@ void APIC::write_icr(const ICRReg& icr)
 
 extern "C" void apic_ap_start(void);
 extern "C" u16 apic_ap_start_size;
-extern "C" u32 ap_cpu_init_stacks;
-extern "C" u32 ap_cpu_init_processor_info_array;
+extern "C" FlatPtr ap_cpu_init_stacks;
+extern "C" FlatPtr ap_cpu_init_processor_info_array;
 extern "C" u32 ap_cpu_init_cr0;
-extern "C" u32 ap_cpu_init_cr3;
+extern "C" FlatPtr ap_cpu_init_cr3;
 extern "C" u32 ap_cpu_init_cr4;
-extern "C" u32 ap_cpu_gdtr;
-extern "C" u32 ap_cpu_idtr;
+extern "C" FlatPtr ap_cpu_gdtr;
+extern "C" FlatPtr ap_cpu_idtr;
+#if ARCH(X86_64)
+extern "C" FlatPtr ap_cpu_kernel_map_base;
+extern "C" FlatPtr ap_cpu_kernel_entry_function;
+#endif
+
+extern "C" [[noreturn]] void init_ap(FlatPtr, Processor*);
 
 void APIC::eoi()
 {
@@ -339,9 +345,11 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     // * aps_to_enable u32 values for ap_cpu_init_stacks
     // * aps_to_enable u32 values for ap_cpu_init_processor_info_array
     constexpr u64 apic_startup_region_base = 0x8000;
-    VERIFY(apic_startup_region_base + apic_ap_start_size < USER_RANGE_BASE);
-    auto apic_startup_region = create_identity_mapped_region(PhysicalAddress(apic_startup_region_base), Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))).release_value_but_fixme_should_propagate_errors());
-    memcpy(apic_startup_region->vaddr().as_ptr(), reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
+    auto apic_startup_region_size = Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(FlatPtr))).release_value_but_fixme_should_propagate_errors();
+    VERIFY(apic_startup_region_size < USER_RANGE_BASE);
+    auto apic_startup_region = create_identity_mapped_region(PhysicalAddress(apic_startup_region_base), apic_startup_region_size);
+    u8* apic_startup_region_ptr = apic_startup_region->vaddr().as_ptr();
+    memcpy(apic_startup_region_ptr, reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
 
     // Allocate enough stacks for all APs
     m_ap_temporary_boot_stacks.ensure_capacity(aps_to_enable);
@@ -357,7 +365,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     }
 
     // Store pointers to all stacks for the APs to use
-    auto* ap_stack_array = APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_stacks);
+    auto* ap_stack_array = APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_init_stacks);
     VERIFY(aps_to_enable == m_ap_temporary_boot_stacks.size());
     for (size_t i = 0; i < aps_to_enable; i++) {
         ap_stack_array[i] = m_ap_temporary_boot_stacks[i]->vaddr().get() + Thread::default_kernel_stack_size;
@@ -373,20 +381,26 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
         ap_processor_info_array[i] = FlatPtr(m_ap_processor_info[i].ptr());
         dbgln_if(APIC_DEBUG, "APIC: CPU[{}] processor at {}", i + 1, VirtualAddress { ap_processor_info_array[i] });
     }
-    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_processor_info_array) = FlatPtr(&ap_processor_info_array[0]);
+    *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_init_processor_info_array) = FlatPtr(&ap_processor_info_array[0]);
 
     // Store the BSP's CR3 value for the APs to use
-    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr3) = MM.kernel_page_directory().cr3();
+    *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_init_cr3) = MM.kernel_page_directory().cr3();
 
     // Store the BSP's GDT and IDT for the APs to use
     const auto& gdtr = Processor::current().get_gdtr();
-    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_gdtr) = FlatPtr(&gdtr);
+    *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_gdtr) = FlatPtr(&gdtr);
     const auto& idtr = get_idtr();
-    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_idtr) = FlatPtr(&idtr);
+    *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_idtr) = FlatPtr(&idtr);
+
+#if ARCH(X86_64)
+    // TODO: Use these also in i686 builds
+    *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_kernel_map_base) = FlatPtr(kernel_mapping_base);
+    *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_kernel_entry_function) = FlatPtr(&init_ap);
+#endif
 
     // Store the BSP's CR0 and CR4 values for the APs to use
-    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr0) = read_cr0();
-    *APIC_INIT_VAR_PTR(u32, apic_startup_region->vaddr().as_ptr(), ap_cpu_init_cr4) = read_cr4();
+    *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_init_cr0) = read_cr0();
+    *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_init_cr4) = read_cr4();
 
     m_ap_boot_environment = move(apic_startup_region);
 }

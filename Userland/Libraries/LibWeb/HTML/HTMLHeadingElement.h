@@ -14,7 +14,7 @@ class HTMLHeadingElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLHeadingElementWrapper;
 
-    HTMLHeadingElement(DOM::Document&, QualifiedName);
+    HTMLHeadingElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLHeadingElement() override;
 };
 

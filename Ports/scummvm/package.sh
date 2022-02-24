@@ -4,9 +4,10 @@ useconfigure="true"
 version="2.5.1"
 files="https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz scummvm-${version}.tar.xz 9fd8db38e4456144bf8c34dacdf7f204e75f18e8e448ec01ce08ce826a035f01"
 auth_type=sha256
-depends=("freetype" "libiconv" "libjpeg" "libpng" "libtheora" "SDL2")
+depends=("freetype" "libiconv" "libjpeg" "libmad" "libmpeg2" "libpng" "libtheora" "SDL2")
 configopts=(
     "--enable-c++11"
+    "--enable-engine=monkey4"
     "--enable-optimizations"
     "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
 )

@@ -12,6 +12,10 @@ namespace Web::Bindings {
 
 static CSS::PropertyID property_id_from_name(StringView name)
 {
+    // FIXME: Perhaps this should go in the code generator.
+    if (name == "cssFloat"sv)
+        return CSS::PropertyID::Float;
+
     if (auto property_id = CSS::property_id_from_camel_case_string(name); property_id != CSS::PropertyID::Invalid)
         return property_id;
 

@@ -1,9 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libjpeg
-version=9d
+version=9e
 useconfigure=true
-use_fresh_config_sub=true
-files="https://ijg.org/files/jpegsrc.v${version}.tar.gz jpeg-${version}.tar.gz 2303a6acfb6cc533e0e86e8a9d29f7e6079e118b9de3f96e07a71a11c082fa6a"
+files="https://ijg.org/files/jpegsrc.v${version}.tar.gz jpeg-${version}.tar.gz 4077d6a6a75aeb01884f708919d25934c93305e49f7e3f36db9129320e6f4f3d"
 auth_type=sha256
 workdir="jpeg-$version"
 

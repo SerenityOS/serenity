@@ -125,8 +125,9 @@ public:
     virtual bool is_function() const { return false; }
     virtual bool is_namespace() const { return false; }
     bool is_member() const { return parent() != nullptr && parent()->is_declaration() && verify_cast<Declaration>(parent())->is_struct_or_class(); }
-    StringView name() const { return m_name; }
-    void set_name(StringView name) { m_name = move(name); }
+    const Name* name() const { return m_name; }
+    StringView full_name() const;
+    void set_name(RefPtr<Name> name) { m_name = move(name); }
 
 protected:
     Declaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
@@ -134,7 +135,8 @@ protected:
     {
     }
 
-    StringView m_name;
+    RefPtr<Name> m_name;
+    mutable Optional<String> m_full_name;
 };
 
 class InvalidDeclaration : public Declaration {
@@ -204,7 +206,7 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual bool is_parameter() const override { return true; }
 
-    Parameter(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename, StringView name)
+    Parameter(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename, RefPtr<Name> name)
         : VariableOrParameterDeclaration(parent, start, end, filename)
     {
         m_name = name;
@@ -436,7 +438,7 @@ public:
         : Expression(parent, start, end, filename)
     {
     }
-    virtual String full_name() const;
+    virtual StringView full_name() const;
 
     const Identifier* name() const { return m_name.ptr(); }
     void set_name(RefPtr<Identifier>&& name) { m_name = move(name); }
@@ -447,6 +449,7 @@ public:
 private:
     RefPtr<Identifier> m_name;
     NonnullRefPtrVector<Identifier> m_scope;
+    mutable Optional<String> m_full_name;
 };
 
 class TemplatizedName : public Name {
@@ -454,7 +457,7 @@ public:
     virtual ~TemplatizedName() override = default;
     virtual const char* class_name() const override { return "TemplatizedName"; }
     virtual bool is_templatized() const override { return true; }
-    virtual String full_name() const override;
+    virtual StringView full_name() const override;
 
     TemplatizedName(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : Name(parent, start, end, filename)
@@ -465,6 +468,7 @@ public:
 
 private:
     NonnullRefPtrVector<Type> m_template_arguments;
+    mutable Optional<String> m_full_name;
 };
 
 class NumericLiteral : public Expression {

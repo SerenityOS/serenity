@@ -6,7 +6,6 @@
  */
 
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/FunctionObject.h>
 
@@ -62,7 +61,7 @@ void FunctionObject::set_function_name(Variant<PropertyKey, PrivateName> const& 
     // 4. If F has an [[InitialName]] internal slot, then
     if (is<NativeFunction>(this)) {
         // a. Set F.[[InitialName]] to name.
-        // TODO: Remove FunctionObject::name(), implement NativeFunction::initial_name(), and then do this.
+        static_cast<NativeFunction&>(*this).set_initial_name({}, name);
     }
 
     // 5. If prefix is present, then
@@ -73,7 +72,7 @@ void FunctionObject::set_function_name(Variant<PropertyKey, PrivateName> const& 
         // b. If F has an [[InitialName]] internal slot, then
         if (is<NativeFunction>(this)) {
             // i. Optionally, set F.[[InitialName]] to name.
-            // TODO: See above.
+            static_cast<NativeFunction&>(*this).set_initial_name({}, name);
         }
     }
 

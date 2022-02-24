@@ -8,7 +8,7 @@
 
 namespace Web::HTML {
 
-HTMLDataListElement::HTMLDataListElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLDataListElement::HTMLDataListElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

@@ -18,6 +18,12 @@ On Ubuntu gcc-11 is available in the repositories of 21.04 (Hirsuite) and later 
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 ```
 
+Next, update your local package information from this repository:
+
+```console
+sudo apt update
+```
+
 Now on Ubuntu or Debian you can install gcc-11 with apt like this:
 
 ```console

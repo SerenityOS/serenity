@@ -31,22 +31,64 @@ UNMAP_AFTER_INIT I8042Controller::I8042Controller()
 {
 }
 
-UNMAP_AFTER_INIT bool I8042Controller::check_existence(Badge<HIDManagement>)
+UNMAP_AFTER_INIT bool I8042Controller::check_existence_via_probing(Badge<HIDManagement>)
 {
     {
+        u8 configuration = 0;
         SpinlockLocker lock(m_lock);
+
+        // This drains the output buffer and serves as an existence test.
+        if (auto result = drain_output_buffer(); result.is_error()) {
+            dbgln("I8042: Trying to flush output buffer as an existence test failed, error {}", result.error());
+            return false;
+        }
+
         // Note: Perform controller self-test before touching the controller
         // Try to probe the controller for 10 times and give up if nothing
         // responded.
-        for (int attempt = 0; attempt < 10; attempt++) {
+        // Some controllers will reset and behave abnormally on this, so let's ensure
+        // we keep the configuration before initiating this command.
+
+        if (auto result = do_wait_then_write(I8042Port::Command, I8042Command::ReadConfiguration); result.is_error()) {
+            dbgln("I8042: Trying to read configuration failed during the existence test, error {}", result.error());
+            return false;
+        }
+
+        {
+            auto result = do_wait_then_read(I8042Port::Buffer);
+            if (result.is_error()) {
+                dbgln("I8042: Trying to read configuration failed during the existence test, error {}", result.error());
+                return false;
+            }
+            configuration = result.release_value();
+        }
+
+        bool successful_self_test = false;
+        for (int attempt = 0; attempt < 20; attempt++) {
             do_write(I8042Port::Command, I8042Command::TestPS2Controller);
-            if (do_read(I8042Port::Buffer) == I8042Response::ControllerTestPassed)
-                return true;
+            if (do_read(I8042Port::Buffer) == I8042Response::ControllerTestPassed) {
+                successful_self_test = true;
+                break;
+            }
             // Note: Wait 500 microseconds in case the controller couldn't respond
             IO::delay(500);
         }
-        dbgln("I8042: Trying to probe for existence of controller failed");
-        return false;
+        if (!successful_self_test) {
+            dbgln("I8042: Trying to probe for existence of controller failed");
+            return false;
+        }
+
+        if (auto result = do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration); result.is_error()) {
+            dbgln("I8042: Trying to restore configuration after self-test failed with error {}", result.error());
+            return false;
+        }
+
+        if (auto result = do_wait_then_write(I8042Port::Buffer, configuration); result.is_error()) {
+            dbgln("I8042: Trying to write restored configuration after self-test failed with error {}", result.error());
+            return false;
+        }
+
+        return true;
     }
 }
 
@@ -56,7 +98,7 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
     u8 configuration;
     {
         SpinlockLocker lock(m_lock);
-
+        // Note: This flushes all the garbage left in the controller registers
         TRY(drain_output_buffer());
 
         TRY(do_wait_then_write(I8042Port::Command, I8042Command::DisableFirstPS2Port));
@@ -179,7 +221,7 @@ bool I8042Controller::irq_process_input_buffer(HIDDevice::Type instrument_type)
 
 ErrorOr<void> I8042Controller::drain_output_buffer()
 {
-    for (int attempt = 0; attempt < 5; attempt++) {
+    for (int attempt = 0; attempt < 50; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::OutputBuffer))
             return {};
@@ -268,7 +310,7 @@ ErrorOr<void> I8042Controller::prepare_for_input(HIDDevice::Type device)
 {
     VERIFY(m_lock.is_locked());
     u8 const second_port_flag = device == HIDDevice::Type::Keyboard ? 0 : I8042StatusFlag::SecondPS2PortOutputBuffer;
-    for (int attempt = 0; attempt < 50; attempt++) {
+    for (int attempt = 0; attempt < 250; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::OutputBuffer)) {
             IO::delay(1000);
@@ -286,7 +328,7 @@ ErrorOr<void> I8042Controller::prepare_for_input(HIDDevice::Type device)
 ErrorOr<void> I8042Controller::prepare_for_output()
 {
     VERIFY(m_lock.is_locked());
-    for (int attempt = 0; attempt < 50; attempt++) {
+    for (int attempt = 0; attempt < 250; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::InputBuffer))
             return {};

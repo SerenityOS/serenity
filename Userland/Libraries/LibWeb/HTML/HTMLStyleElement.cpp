@@ -11,7 +11,7 @@
 
 namespace Web::HTML {
 
-HTMLStyleElement::HTMLStyleElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLStyleElement::HTMLStyleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

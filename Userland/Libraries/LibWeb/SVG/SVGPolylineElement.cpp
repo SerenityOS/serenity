@@ -10,7 +10,7 @@
 
 namespace Web::SVG {
 
-SVGPolylineElement::SVGPolylineElement(DOM::Document& document, QualifiedName qualified_name)
+SVGPolylineElement::SVGPolylineElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
 }

@@ -14,7 +14,7 @@ class HTMLTableSectionElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTableSectionElementWrapper;
 
-    HTMLTableSectionElement(DOM::Document&, QualifiedName);
+    HTMLTableSectionElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTableSectionElement() override;
 };
 

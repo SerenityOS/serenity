@@ -280,7 +280,7 @@ if(NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
         add_link_options(-fuse-ld=mold)
     endif()
 
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$" OR USE_MOLD_LINKER)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$" OR ENABLE_MOLD_LINKER)
         add_link_options(LINKER:--pack-dyn-relocs=relr)
     else()
         add_link_options(LINKER:-z,pack-relative-relocs)

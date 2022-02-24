@@ -67,8 +67,35 @@ test("allow binding patterns", () => {
     expect(counter).toBe(3);
 });
 
-test("allow member expression as variable", () => {
-    const f = {};
-    for (f.a in "abc");
-    expect(f.a).toBe("2");
+describe("special left hand sides", () => {
+    test("allow member expression as variable", () => {
+        const f = {};
+        for (f.a in "abc");
+        expect(f.a).toBe("2");
+    });
+
+    test("allow member expression of function call", () => {
+        const b = {};
+        function f() {
+            return b;
+        }
+
+        for (f().a in "abc");
+
+        expect(f().a).toBe("2");
+        expect(b.a).toBe("2");
+    });
+
+    test("call function is allowed in parsing but fails in runtime", () => {
+        function f() {
+            expect().fail();
+        }
+
+        // Does not fail since it does not iterate
+        expect("for (f() in []);").toEvalTo(undefined);
+
+        expect(() => {
+            eval("for (f() in [0]) { expect().fail() }");
+        }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");
+    });
 });

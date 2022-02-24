@@ -16,6 +16,9 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
+#include <LibJS/Runtime/Intl/Collator.h>
+#include <LibJS/Runtime/Intl/CollatorCompareFunction.h>
+#include <LibJS/Runtime/Intl/CollatorConstructor.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringIterator.h>
@@ -452,7 +455,6 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
     return pad_string(global_object, move(string), PadPlacement::End);
 }
 
-static constexpr Utf8View whitespace_characters = Utf8View("\x09\x0A\x0B\x0C\x0D\x20\xC2\xA0\xE1\x9A\x80\xE2\x80\x80\xE2\x80\x81\xE2\x80\x82\xE2\x80\x83\xE2\x80\x84\xE2\x80\x85\xE2\x80\x86\xE2\x80\x87\xE2\x80\x88\xE2\x80\x89\xE2\x80\x8A\xE2\x80\xAF\xE2\x81\x9F\xE3\x80\x80\xE2\x80\xA8\xE2\x80\xA9\xEF\xBB\xBF"sv);
 ThrowCompletionOr<String> trim_string(GlobalObject& global_object, Value input_value, TrimMode where)
 {
     // 1. Let str be ? RequireObjectCoercible(string).
@@ -1003,19 +1005,24 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sup)
 }
 
 // 22.1.3.11 String.prototype.localeCompare ( that [ , reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.localecompare
-// NOTE: This is the minimum localeCompare implementation for engines without ECMA-402.
+// 19.1.1 String.prototype.localeCompare ( that [ , locales [ , options ] ] ), https://tc39.es/ecma402/#sup-String.prototype.localeCompare
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::locale_compare)
 {
-    auto string = TRY(ak_string_from(vm, global_object));
-    auto that_string = TRY(vm.argument(0).to_string(global_object));
+    // FIXME: This can throw (spec issue)
+    // 1. Let O be RequireObjectCoercible(this value).
+    auto object = TRY(require_object_coercible(global_object, vm.this_value(global_object)));
 
-    // FIXME: Actually compare the string not just according to their bits.
-    if (string == that_string)
-        return Value(0);
-    if (string < that_string)
-        return Value(-1);
+    // 2. Let S be ? ToString(O).
+    auto string = TRY(object.to_string(global_object));
 
-    return Value(1);
+    // 3. Let thatValue be ? ToString(that).
+    auto that_value = TRY(vm.argument(0).to_string(global_object));
+
+    // 4. Let collator be ? Construct(%Collator%, « locales, options »).
+    auto* collator = TRY(construct(global_object, *global_object.intl_collator_constructor(), vm.argument(1), vm.argument(2)));
+
+    // 5. Return CompareStrings(collator, S, thatValue).
+    return Intl::compare_strings(static_cast<Intl::Collator&>(*collator), Utf8View(string), Utf8View(that_value));
 }
 
 }

@@ -29,18 +29,21 @@ public:
     template<typename Callback>
     inline void for_each_property(Callback callback) const
     {
-        for (auto& it : m_property_values)
-            callback((CSS::PropertyID)it.key, *it.value);
+        for (size_t i = 0; i < m_property_values.size(); ++i) {
+            if (m_property_values[i])
+                callback((CSS::PropertyID)i, *m_property_values[i]);
+        }
     }
 
-    HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue>>& properties() { return m_property_values; }
-    HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue>> const& properties() const { return m_property_values; }
+    auto& properties() { return m_property_values; }
+    auto const& properties() const { return m_property_values; }
 
     void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue> value);
     Optional<NonnullRefPtr<StyleValue>> property(CSS::PropertyID) const;
 
     Length length_or_fallback(CSS::PropertyID, Length const& fallback) const;
     LengthPercentage length_percentage_or_fallback(CSS::PropertyID, LengthPercentage const& fallback) const;
+    Optional<LengthPercentage> length_percentage(CSS::PropertyID) const;
     LengthBox length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id, const CSS::Length& default_value) const;
     Color color_or_fallback(CSS::PropertyID, Layout::NodeWithStyle const&, Color fallback) const;
     Optional<CSS::TextAlign> text_align() const;
@@ -61,6 +64,7 @@ public:
     float flex_shrink() const;
     Optional<CSS::AlignItems> align_items() const;
     float opacity() const;
+    Optional<CSS::ImageRendering> image_rendering() const;
     Optional<CSS::JustifyContent> justify_content() const;
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;
@@ -94,7 +98,7 @@ public:
 private:
     friend class StyleComputer;
 
-    HashMap<CSS::PropertyID, NonnullRefPtr<StyleValue>> m_property_values;
+    Array<RefPtr<StyleValue>, to_underlying(CSS::last_property_id) + 1> m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
 
     mutable RefPtr<Gfx::Font> m_font;

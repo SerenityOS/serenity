@@ -220,6 +220,19 @@ public:
     }
 };
 
+template<typename T>
+struct Traits<Span<T>> : public GenericTraits<Span<T>> {
+    static unsigned hash(Span<T> const& span)
+    {
+        unsigned hash = 0;
+        for (auto const& value : span) {
+            auto value_hash = Traits<T>::hash(value);
+            hash = pair_int_hash(hash, value_hash);
+        }
+        return hash;
+    }
+};
+
 using ReadonlyBytes = Span<u8 const>;
 using Bytes = Span<u8>;
 

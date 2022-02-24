@@ -130,17 +130,4 @@ bool BlockContainer::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&
     return true;
 }
 
-LineBox& BlockContainer::ensure_last_line_box()
-{
-    if (m_line_boxes.is_empty())
-        return add_line_box();
-    return m_line_boxes.last();
-}
-
-LineBox& BlockContainer::add_line_box()
-{
-    m_line_boxes.append(LineBox());
-    return m_line_boxes.last();
-}
-
 }

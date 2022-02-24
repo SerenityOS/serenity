@@ -27,11 +27,12 @@
 
 using namespace HackStudio;
 
-static RefPtr<HackStudioWidget> s_hack_studio_widget;
+static WeakPtr<HackStudioWidget> s_hack_studio_widget;
 
 static bool make_is_available();
 static void notify_make_not_available();
 static void update_path_environment_variable();
+static Optional<String> last_opened_project_path();
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -59,28 +60,33 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto argument_absolute_path = Core::File::real_path_for(path_argument);
 
-    auto project_path = argument_absolute_path;
-    if (argument_absolute_path.is_null() || mode_coredump)
-        project_path = Core::File::real_path_for(".");
+    auto project_path = Core::File::real_path_for(".");
+    if (!mode_coredump) {
+        if (!argument_absolute_path.is_null())
+            project_path = argument_absolute_path;
+        else if (auto path = last_opened_project_path(); path.has_value())
+            project_path = path.release_value();
+    }
 
-    s_hack_studio_widget = TRY(window->try_set_main_widget<HackStudioWidget>(project_path));
+    auto hack_studio_widget = TRY(window->try_set_main_widget<HackStudioWidget>(project_path));
+    s_hack_studio_widget = hack_studio_widget;
 
-    window->set_title(String::formatted("{} - Hack Studio", s_hack_studio_widget->project().name()));
+    window->set_title(String::formatted("{} - Hack Studio", hack_studio_widget->project().name()));
 
-    s_hack_studio_widget->initialize_menubar(*window);
+    hack_studio_widget->initialize_menubar(*window);
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        s_hack_studio_widget->locator().close();
-        if (s_hack_studio_widget->warn_unsaved_changes("There are unsaved changes, do you want to save before exiting?") == HackStudioWidget::ContinueDecision::Yes)
+        hack_studio_widget->locator().close();
+        if (hack_studio_widget->warn_unsaved_changes("There are unsaved changes, do you want to save before exiting?") == HackStudioWidget::ContinueDecision::Yes)
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
     window->show();
-    s_hack_studio_widget->update_actions();
+    hack_studio_widget->update_actions();
 
     if (mode_coredump)
-        s_hack_studio_widget->open_coredump(argument_absolute_path);
+        hack_studio_widget->open_coredump(argument_absolute_path);
 
     return app->exec();
 }
@@ -120,6 +126,18 @@ static void update_path_environment_variable()
         path.append(":");
     path.append("/usr/local/bin:/usr/bin:/bin");
     setenv("PATH", path.to_string().characters(), true);
+}
+
+static Optional<String> last_opened_project_path()
+{
+    auto projects = HackStudioWidget::read_recent_projects();
+    if (projects.size() == 0)
+        return {};
+
+    if (!Core::File::exists(projects[0]))
+        return {};
+
+    return { projects[0] };
 }
 
 namespace HackStudio {

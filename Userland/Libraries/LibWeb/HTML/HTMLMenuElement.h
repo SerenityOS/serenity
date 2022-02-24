@@ -14,7 +14,7 @@ class HTMLMenuElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLMenuElementWrapper;
 
-    HTMLMenuElement(DOM::Document&, QualifiedName);
+    HTMLMenuElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLMenuElement() override;
 };
 

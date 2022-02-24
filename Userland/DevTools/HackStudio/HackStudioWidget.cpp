@@ -23,6 +23,7 @@
 #include "ProjectDeclarations.h"
 #include "TerminalWrapper.h"
 #include "ToDoEntries.h"
+#include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/API/InodeWatcherEvent.h>
@@ -90,10 +91,10 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
     auto& toolbar_container = add<GUI::ToolbarContainer>();
 
     auto& outer_splitter = add<GUI::HorizontalSplitter>();
-    outer_splitter.layout()->set_spacing(5);
+    outer_splitter.layout()->set_spacing(4);
 
     auto& left_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
-    left_hand_splitter.layout()->set_spacing(5);
+    left_hand_splitter.layout()->set_spacing(6);
     left_hand_splitter.set_fixed_width(150);
     create_project_tab(left_hand_splitter);
     m_project_tree_view_context_menu = create_project_tree_view_context_menu();
@@ -109,7 +110,6 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
     m_diff_viewer = m_right_hand_stack->add<DiffViewer>();
 
     m_editors_splitter = m_right_hand_stack->add<GUI::VerticalSplitter>();
-    m_editors_splitter->layout()->set_spacing(5);
     m_editors_splitter->layout()->set_margins({ 3, 0, 0 });
     add_new_editor(*m_editors_splitter);
 
@@ -192,6 +192,28 @@ void HackStudioWidget::on_action_tab_change()
     }
 }
 
+Vector<String> HackStudioWidget::read_recent_projects()
+{
+    auto json = Config::read_string("HackStudio", "Global", "RecentProjects");
+    AK::JsonParser parser(json);
+    auto value_or_error = parser.parse();
+    if (value_or_error.is_error())
+        return {};
+
+    auto value = value_or_error.release_value();
+    if (!value.is_array())
+        return {};
+
+    Vector<String> paths;
+    for (auto& json_value : value.as_array().values()) {
+        if (!json_value.is_string())
+            return {};
+        paths.append(json_value.as_string());
+    }
+
+    return paths;
+}
+
 void HackStudioWidget::open_project(const String& root_path)
 {
     if (warn_unsaved_changes("There are unsaved changes, do you want to save before closing current project?") == ContinueDecision::No)
@@ -229,6 +251,15 @@ void HackStudioWidget::open_project(const String& root_path)
             LexicalPath::relative_path(absolute_old_path, m_project->root_path()),
             LexicalPath::relative_path(absolute_new_path, m_project->root_path()));
     };
+
+    auto recent_projects = read_recent_projects();
+    recent_projects.remove_all_matching([&](auto& p) { return p == root_path; });
+    recent_projects.insert(0, root_path);
+    if (recent_projects.size() > recent_projects_history_size)
+        recent_projects.shrink(recent_projects_history_size);
+
+    Config::write_string("HackStudio", "Global", "RecentProjects", JsonArray(recent_projects).to_string());
+    update_recent_projects_submenu();
 }
 
 Vector<String> HackStudioWidget::selected_file_paths() const
@@ -661,18 +692,6 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_editor_action
         auto wrapper = m_current_editor_wrapper;
         m_switch_to_next_editor->activate();
         m_editors_splitter->remove_child(*wrapper);
-
-        auto child_editors = m_editors_splitter->child_widgets();
-        bool has_child_to_fill_space = false;
-        for (auto& editor : child_editors) {
-            if (editor.max_height() == -1) {
-                has_child_to_fill_space = true;
-                break;
-            }
-        }
-        if (!has_child_to_fill_space)
-            child_editors.last().set_max_height(-1);
-
         m_all_editor_wrappers.remove_first_matching([&wrapper](auto& entry) { return entry == wrapper.ptr(); });
         update_actions();
     });
@@ -1142,11 +1161,36 @@ void HackStudioWidget::create_project_tab(GUI::Widget& parent)
     };
 }
 
+void HackStudioWidget::update_recent_projects_submenu()
+{
+    if (!m_recent_projects_submenu)
+        return;
+
+    m_recent_projects_submenu->remove_all_actions();
+    auto recent_projects = read_recent_projects();
+
+    if (recent_projects.size() <= 1) {
+        auto empty_action = GUI::Action::create("Empty...", [](auto&) {});
+        empty_action->set_enabled(false);
+        m_recent_projects_submenu->add_action(empty_action);
+        return;
+    }
+
+    for (size_t i = 1; i < recent_projects.size(); i++) {
+        auto project_path = recent_projects[i];
+        m_recent_projects_submenu->add_action(GUI::Action::create(recent_projects[i], [this, project_path](auto&) {
+            open_project(project_path);
+        }));
+    }
+}
+
 void HackStudioWidget::create_file_menu(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File");
     file_menu.add_action(*m_new_project_action);
     file_menu.add_action(*m_open_action);
+    m_recent_projects_submenu = &file_menu.add_submenu("Open Recent");
+    update_recent_projects_submenu();
     file_menu.add_action(*m_save_action);
     file_menu.add_action(*m_save_as_action);
     file_menu.add_separator();

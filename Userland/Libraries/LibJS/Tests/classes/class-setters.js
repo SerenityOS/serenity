@@ -106,3 +106,18 @@ test("inherited static setter overriding", () => {
     c.x = 10;
     expect(c.x).toBe(30);
 });
+
+test("static setter named 'async'", () => {
+    let called = false;
+    class A {
+        set async(value) {
+            called = true;
+            expect(value).toBe("value set on setter named async");
+        }
+    }
+
+    const a = new A();
+    expect("async" in a).toBeTrue();
+    a.async = "value set on setter named async";
+    expect(called).toBeTrue();
+});

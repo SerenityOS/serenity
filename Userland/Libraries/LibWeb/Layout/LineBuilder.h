@@ -15,12 +15,12 @@ class LineBuilder {
     AK_MAKE_NONMOVABLE(LineBuilder);
 
 public:
-    explicit LineBuilder(InlineFormattingContext&);
+    LineBuilder(InlineFormattingContext&, FormattingState&);
     ~LineBuilder();
 
     void break_line();
-    void append_box(Box&, float leading_size, float trailing_size);
-    void append_text_chunk(TextNode&, size_t offset_in_node, size_t length_in_node, float leading_size, float trailing_size, float content_width, float content_height);
+    void append_box(Box const&, float leading_size, float trailing_size);
+    void append_text_chunk(TextNode const&, size_t offset_in_node, size_t length_in_node, float leading_size, float trailing_size, float content_width, float content_height);
 
     void break_if_needed(LayoutMode layout_mode, float next_item_width, bool should_force_break)
     {
@@ -39,7 +39,11 @@ private:
 
     bool should_break(LayoutMode, float next_item_width, bool should_force_break);
 
+    LineBox& ensure_last_line_box();
+
     InlineFormattingContext& m_context;
+    FormattingState& m_formatting_state;
+    FormattingState::NodeState& m_containing_block_state;
     float m_available_width_for_current_line { 0 };
     float m_current_y { 0 };
     float m_max_height_on_current_line { 0 };

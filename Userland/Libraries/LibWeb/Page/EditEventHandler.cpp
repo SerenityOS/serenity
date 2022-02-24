@@ -33,6 +33,11 @@ void EditEventHandler::handle_delete_character_after(const DOM::Position& cursor
     builder.append(text.substring_view(cursor_position.offset() + code_point_length));
     node.set_data(builder.to_string());
 
+    // FIXME: When nodes are removed from the DOM, the associated layout nodes become stale and still
+    //        remain in the layout tree. This has to be fixed, this just causes everything to be recomputed
+    //        which really hurts performance.
+    m_browsing_context.active_document()->force_layout();
+
     m_browsing_context.did_edit({});
 }
 

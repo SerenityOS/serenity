@@ -1,9 +1,20 @@
+#import <DOM/AbortSignal.idl>
+
 interface EventTarget {
 
-    // FIXME: Both of these should take in options
-    undefined addEventListener(DOMString type, EventListener? callback, optional boolean useCapture = false);
-    undefined removeEventListener(DOMString type, EventListener? callback, optional boolean useCapture = false);
+    undefined addEventListener(DOMString type, EventListener? callback, optional (AddEventListenerOptions or boolean) options = {});
+    undefined removeEventListener(DOMString type, EventListener? callback, optional (EventListenerOptions or boolean) options = {});
 
     [ImplementedAs=dispatch_event_binding] boolean dispatchEvent(Event event);
 
+};
+
+dictionary EventListenerOptions {
+    boolean capture = false;
+};
+
+dictionary AddEventListenerOptions : EventListenerOptions {
+    boolean passive = false;
+    boolean once = false;
+    AbortSignal signal;
 };

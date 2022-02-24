@@ -16,7 +16,7 @@ class HTMLSelectElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLSelectElementWrapper;
 
-    HTMLSelectElement(DOM::Document&, QualifiedName);
+    HTMLSelectElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLSelectElement() override;
 
 private:

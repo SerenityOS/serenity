@@ -15,7 +15,7 @@ class HTMLTemplateElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLTemplateElementWrapper;
 
-    HTMLTemplateElement(DOM::Document&, QualifiedName);
+    HTMLTemplateElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTemplateElement() override;
 
     NonnullRefPtr<DOM::DocumentFragment> content() { return *m_content; }

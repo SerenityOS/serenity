@@ -47,7 +47,8 @@ public:
     DOM::ExceptionOr<void> delete_rule(unsigned index);
 
     void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
-    void evaluate_media_queries(DOM::Window const&);
+    // Returns whether the match state of any media queries changed after evaluation.
+    bool evaluate_media_queries(DOM::Window const&);
 
 private:
     explicit CSSStyleSheet(NonnullRefPtrVector<CSSRule>);

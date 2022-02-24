@@ -42,6 +42,8 @@ public:
 
     virtual ErrorOr<ByteBuffer> get_edid(size_t head) const override;
 
+    void enable_write_combine(bool write_combine) { m_write_combine = write_combine; }
+
 private:
     virtual ErrorOr<void> set_head_resolution(size_t head, size_t width, size_t height, size_t pitch) override;
     virtual ErrorOr<void> set_head_buffer(size_t head, bool second_buffer) override;
@@ -64,6 +66,7 @@ private:
     OwnPtr<Memory::Region> m_swapped_framebuffer_region;
 
     bool m_graphical_writes_enabled { true };
+    bool m_write_combine { true };
 
     RefPtr<Memory::AnonymousVMObject> m_userspace_real_framebuffer_vmobject;
     Memory::Region* m_userspace_framebuffer_region { nullptr };

@@ -145,6 +145,32 @@ void Node::set_text_content(String const& content)
     set_needs_style_update(true);
 }
 
+// https://dom.spec.whatwg.org/#dom-node-nodevalue
+String Node::node_value() const
+{
+    if (is<Attribute>(this)) {
+        return verify_cast<Attribute>(this)->value();
+    }
+    if (is<CharacterData>(this)) {
+        return verify_cast<CharacterData>(this)->data();
+    }
+
+    return {};
+}
+
+// https://dom.spec.whatwg.org/#ref-for-dom-node-nodevalue%E2%91%A0
+void Node::set_node_value(const String& value)
+{
+
+    if (is<Attribute>(this)) {
+        verify_cast<Attribute>(this)->set_value(value);
+    } else if (is<CharacterData>(this)) {
+        verify_cast<CharacterData>(this)->set_data(value);
+    }
+
+    // Otherwise: Do nothing.
+}
+
 void Node::invalidate_style()
 {
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
@@ -322,6 +348,12 @@ ExceptionOr<NonnullRefPtr<Node>> Node::pre_insert(NonnullRefPtr<Node> node, RefP
     return node;
 }
 
+// https://dom.spec.whatwg.org/#dom-node-removechild
+ExceptionOr<NonnullRefPtr<Node>> Node::remove_child(NonnullRefPtr<Node> child)
+{
+    return pre_remove(child);
+}
+
 // https://dom.spec.whatwg.org/#concept-node-pre-remove
 ExceptionOr<NonnullRefPtr<Node>> Node::pre_remove(NonnullRefPtr<Node> child)
 {
@@ -357,7 +389,7 @@ void Node::remove(bool suppress_observers)
     // FIXME: Let oldPreviousSibling be node’s previous sibling. (Currently unused so not included)
     // FIXME: Let oldNextSibling be node’s next sibling. (Currently unused so not included)
 
-    parent->remove_child(*this);
+    parent->TreeNode::remove_child(*this);
 
     // FIXME: If node is assigned, then run assign slottables for node’s assigned slot.
 

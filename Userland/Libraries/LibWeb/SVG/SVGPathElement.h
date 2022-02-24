@@ -17,7 +17,7 @@ class SVGPathElement final : public SVGGeometryElement {
 public:
     using WrapperType = Bindings::SVGPathElementWrapper;
 
-    SVGPathElement(DOM::Document&, QualifiedName);
+    SVGPathElement(DOM::Document&, DOM::QualifiedName);
     virtual ~SVGPathElement() override = default;
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;

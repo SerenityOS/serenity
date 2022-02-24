@@ -60,11 +60,10 @@ struct ReadElementConcrete {
 
 template<typename ApT, ReadKind kind>
 struct ReadElementConcrete<int, ApT, kind> {
-    bool operator()(GenericLexer& lexer, va_list* ap)
+    bool operator()(GenericLexer& lexer, va_list* ap, bool suppress_assignment)
     {
         lexer.ignore_while(isspace);
 
-        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
         long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -87,37 +86,38 @@ struct ReadElementConcrete<int, ApT, kind> {
         VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
-        if (ptr)
+        if (!suppress_assignment) {
+            auto* ptr = va_arg(*ap, ApT*);
             *ptr = value;
+        }
         return true;
     }
 };
 
 template<typename ApT, ReadKind kind>
 struct ReadElementConcrete<char, ApT, kind> {
-    bool operator()(GenericLexer& lexer, va_list* ap)
+    bool operator()(GenericLexer& lexer, va_list* ap, bool suppress_assignment)
     {
         static_assert(kind == ReadKind::Normal, "Can't read a non-normal character");
-
-        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
 
         if (lexer.is_eof())
             return false;
 
         auto ch = lexer.consume();
-        if (ptr)
+        if (!suppress_assignment) {
+            auto* ptr = va_arg(*ap, ApT*);
             *ptr = ch;
+        }
         return true;
     }
 };
 
 template<typename ApT, ReadKind kind>
 struct ReadElementConcrete<unsigned, ApT, kind> {
-    bool operator()(GenericLexer& lexer, va_list* ap)
+    bool operator()(GenericLexer& lexer, va_list* ap, bool suppress_assignment)
     {
         lexer.ignore_while(isspace);
 
-        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
         unsigned long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -140,19 +140,20 @@ struct ReadElementConcrete<unsigned, ApT, kind> {
         VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
-        if (ptr)
+        if (!suppress_assignment) {
+            auto* ptr = va_arg(*ap, ApT*);
             *ptr = value;
+        }
         return true;
     }
 };
 
 template<typename ApT, ReadKind kind>
 struct ReadElementConcrete<long long, ApT, kind> {
-    bool operator()(GenericLexer& lexer, va_list* ap)
+    bool operator()(GenericLexer& lexer, va_list* ap, bool suppress_assignment)
     {
         lexer.ignore_while(isspace);
 
-        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
         long long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -175,19 +176,20 @@ struct ReadElementConcrete<long long, ApT, kind> {
         VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
-        if (ptr)
+        if (!suppress_assignment) {
+            auto* ptr = va_arg(*ap, ApT*);
             *ptr = value;
+        }
         return true;
     }
 };
 
 template<typename ApT, ReadKind kind>
 struct ReadElementConcrete<unsigned long long, ApT, kind> {
-    bool operator()(GenericLexer& lexer, va_list* ap)
+    bool operator()(GenericLexer& lexer, va_list* ap, bool suppress_assignment)
     {
         lexer.ignore_while(isspace);
 
-        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
         unsigned long long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -210,19 +212,19 @@ struct ReadElementConcrete<unsigned long long, ApT, kind> {
         VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
-        if (ptr)
+        if (!suppress_assignment) {
+            auto* ptr = va_arg(*ap, ApT*);
             *ptr = value;
+        }
         return true;
     }
 };
 
 template<typename ApT, ReadKind kind>
 struct ReadElementConcrete<float, ApT, kind> {
-    bool operator()(GenericLexer& lexer, va_list* ap)
+    bool operator()(GenericLexer& lexer, va_list* ap, bool suppress_assignment)
     {
         lexer.ignore_while(isspace);
-
-        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
 
         double value = 0;
         char* endptr = nullptr;
@@ -242,50 +244,52 @@ struct ReadElementConcrete<float, ApT, kind> {
         VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
-        if (ptr)
+        if (!suppress_assignment) {
+            auto* ptr = va_arg(*ap, ApT*);
             *ptr = value;
+        }
         return true;
     }
 };
 
 template<typename T, ReadKind kind>
 struct ReadElement {
-    bool operator()(LengthModifier length_modifier, GenericLexer& input_lexer, va_list* ap)
+    bool operator()(LengthModifier length_modifier, GenericLexer& input_lexer, va_list* ap, bool suppress_assignment)
     {
         switch (length_modifier) {
         default:
         case LengthModifier::None:
             VERIFY_NOT_REACHED();
         case LengthModifier::Default:
-            return ReadElementConcrete<T, T, kind> {}(input_lexer, ap);
+            return ReadElementConcrete<T, T, kind> {}(input_lexer, ap, suppress_assignment);
         case LengthModifier::Char:
-            return ReadElementConcrete<T, char, kind> {}(input_lexer, ap);
+            return ReadElementConcrete<T, char, kind> {}(input_lexer, ap, suppress_assignment);
         case LengthModifier::Short:
-            return ReadElementConcrete<T, short, kind> {}(input_lexer, ap);
+            return ReadElementConcrete<T, short, kind> {}(input_lexer, ap, suppress_assignment);
         case LengthModifier::Long:
             if constexpr (IsSame<T, int>)
-                return ReadElementConcrete<T, long, kind> {}(input_lexer, ap);
+                return ReadElementConcrete<T, long, kind> {}(input_lexer, ap, suppress_assignment);
             if constexpr (IsSame<T, unsigned>)
-                return ReadElementConcrete<T, unsigned, kind> {}(input_lexer, ap);
+                return ReadElementConcrete<T, unsigned, kind> {}(input_lexer, ap, suppress_assignment);
             if constexpr (IsSame<T, float>)
-                return ReadElementConcrete<int, double, kind> {}(input_lexer, ap);
+                return ReadElementConcrete<int, double, kind> {}(input_lexer, ap, suppress_assignment);
             return false;
         case LengthModifier::LongLong:
             if constexpr (IsSame<T, int>)
-                return ReadElementConcrete<long long, long long, kind> {}(input_lexer, ap);
+                return ReadElementConcrete<long long, long long, kind> {}(input_lexer, ap, suppress_assignment);
             if constexpr (IsSame<T, unsigned>)
-                return ReadElementConcrete<unsigned long long, unsigned long long, kind> {}(input_lexer, ap);
+                return ReadElementConcrete<unsigned long long, unsigned long long, kind> {}(input_lexer, ap, suppress_assignment);
             if constexpr (IsSame<T, float>)
-                return ReadElementConcrete<long long, double, kind> {}(input_lexer, ap);
+                return ReadElementConcrete<long long, double, kind> {}(input_lexer, ap, suppress_assignment);
             return false;
         case LengthModifier::IntMax:
-            return ReadElementConcrete<T, intmax_t, kind> {}(input_lexer, ap);
+            return ReadElementConcrete<T, intmax_t, kind> {}(input_lexer, ap, suppress_assignment);
         case LengthModifier::Size:
-            return ReadElementConcrete<T, size_t, kind> {}(input_lexer, ap);
+            return ReadElementConcrete<T, size_t, kind> {}(input_lexer, ap, suppress_assignment);
         case LengthModifier::PtrDiff:
-            return ReadElementConcrete<T, ptrdiff_t, kind> {}(input_lexer, ap);
+            return ReadElementConcrete<T, ptrdiff_t, kind> {}(input_lexer, ap, suppress_assignment);
         case LengthModifier::LongDouble:
-            return ReadElementConcrete<T, long double, kind> {}(input_lexer, ap);
+            return ReadElementConcrete<T, long double, kind> {}(input_lexer, ap, suppress_assignment);
         }
     }
 };
@@ -299,7 +303,7 @@ struct ReadElement<char*, ReadKind::Normal> {
     {
     }
 
-    bool operator()(LengthModifier length_modifier, GenericLexer& input_lexer, va_list* ap)
+    bool operator()(LengthModifier length_modifier, GenericLexer& input_lexer, va_list* ap, bool suppress_assignment)
     {
         // FIXME: Implement wide strings and such.
         if (length_modifier != LengthModifier::Default)
@@ -308,13 +312,15 @@ struct ReadElement<char*, ReadKind::Normal> {
         if (was_null)
             input_lexer.ignore_while(isspace);
 
-        auto* ptr = ap ? va_arg(*ap, char*) : nullptr;
         auto str = input_lexer.consume_while([this](auto c) { return this->matches(c); });
         if (str.is_empty())
             return false;
 
-        memcpy(ptr, str.characters_without_null_termination(), str.length());
-        ptr[str.length()] = 0;
+        if (!suppress_assignment) {
+            auto* ptr = va_arg(*ap, char*);
+            memcpy(ptr, str.characters_without_null_termination(), str.length());
+            ptr[str.length()] = 0;
+        }
 
         return true;
     }
@@ -332,14 +338,13 @@ private:
 
 template<>
 struct ReadElement<void*, ReadKind::Normal> {
-    bool operator()(LengthModifier length_modifier, GenericLexer& input_lexer, va_list* ap)
+    bool operator()(LengthModifier length_modifier, GenericLexer& input_lexer, va_list* ap, bool suppress_assignment)
     {
         if (length_modifier != LengthModifier::Default)
             return false;
 
         input_lexer.ignore_while(isspace);
 
-        auto* ptr = ap ? va_arg(*ap, void**) : nullptr;
         auto str = input_lexer.consume_while([this](auto c) { return this->should_consume(c); });
 
         if (count != 8) {
@@ -358,7 +363,10 @@ struct ReadElement<void*, ReadKind::Normal> {
         if (endptr != &buf[8])
             goto fail;
 
-        memcpy(ptr, &value, sizeof(value));
+        if (!suppress_assignment) {
+            auto* ptr = va_arg(*ap, void**);
+            memcpy(ptr, &value, sizeof(value));
+        }
         return true;
     }
 
@@ -542,8 +550,6 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
             }
         }
 
-        auto* ap_or_null = !suppress_assignment ? (va_list*)&copy : nullptr;
-
         // Now try to read.
         switch (conversion_specifier) {
         case ConversionSpecifier::Invalid:
@@ -553,63 +559,63 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
             dbgln("Invalid conversion specifier {} in scanf!", (int)conversion_specifier);
             VERIFY_NOT_REACHED();
         case ConversionSpecifier::Decimal:
-            if (!ReadElement<int, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
+            if (!ReadElement<int, ReadKind::Normal> {}(length_modifier, input_lexer, &copy, suppress_assignment))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Integer:
-            if (!ReadElement<int, ReadKind::Infer> {}(length_modifier, input_lexer, ap_or_null))
+            if (!ReadElement<int, ReadKind::Infer> {}(length_modifier, input_lexer, &copy, suppress_assignment))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Octal:
-            if (!ReadElement<unsigned, ReadKind::Octal> {}(length_modifier, input_lexer, ap_or_null))
+            if (!ReadElement<unsigned, ReadKind::Octal> {}(length_modifier, input_lexer, &copy, suppress_assignment))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Unsigned:
-            if (!ReadElement<unsigned, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
+            if (!ReadElement<unsigned, ReadKind::Normal> {}(length_modifier, input_lexer, &copy, suppress_assignment))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Hex:
-            if (!ReadElement<unsigned, ReadKind::Hex> {}(length_modifier, input_lexer, ap_or_null))
+            if (!ReadElement<unsigned, ReadKind::Hex> {}(length_modifier, input_lexer, &copy, suppress_assignment))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Floating:
-            if (!ReadElement<float, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
+            if (!ReadElement<float, ReadKind::Normal> {}(length_modifier, input_lexer, &copy, suppress_assignment))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::String:
-            if (!ReadElement<char*, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
+            if (!ReadElement<char*, ReadKind::Normal> {}(length_modifier, input_lexer, &copy, suppress_assignment))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::UseScanList:
-            if (!ReadElement<char*, ReadKind::Normal> { scanlist, invert_scanlist }(length_modifier, input_lexer, ap_or_null))
+            if (!ReadElement<char*, ReadKind::Normal> { scanlist, invert_scanlist }(length_modifier, input_lexer, &copy, suppress_assignment))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Character:
-            if (!ReadElement<char, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
+            if (!ReadElement<char, ReadKind::Normal> {}(length_modifier, input_lexer, &copy, suppress_assignment))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::Pointer:
-            if (!ReadElement<void*, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
+            if (!ReadElement<void*, ReadKind::Normal> {}(length_modifier, input_lexer, &copy, suppress_assignment))
                 format_lexer.consume_all();
-            else
+            else if (!suppress_assignment)
                 ++elements_matched;
             break;
         case ConversionSpecifier::OutputNumberOfBytes: {

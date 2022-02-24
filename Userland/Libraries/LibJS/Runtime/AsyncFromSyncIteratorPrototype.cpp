@@ -52,7 +52,7 @@ static ThrowCompletionOr<Object*> async_from_sync_iterator_continuation(GlobalOb
     };
 
     // 8. Let onFulfilled be ! CreateBuiltinFunction(unwrap, 1, "", « »).
-    auto on_fulfilled = NativeFunction::create(global_object, "", move(unwrap));
+    auto* on_fulfilled = NativeFunction::create(global_object, move(unwrap), 1, "");
     // 9. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
     VERIFY(is<Promise>(value_wrapper));
     auto* value_wrapper_promise = static_cast<Promise*>(value_wrapper);

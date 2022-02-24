@@ -100,7 +100,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto toolbar = TRY(toolbar_container->try_add<GUI::Toolbar>());
 
     auto splitter = TRY(widget->try_add<GUI::HorizontalSplitter>());
-    splitter->layout()->set_spacing(5);
+    splitter->layout()->set_spacing(4);
 
     auto manual_model = ManualModel::create();
 

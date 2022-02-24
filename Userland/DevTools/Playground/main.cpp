@@ -175,18 +175,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
-
-        if (!open_path.has_value())
-            return;
-
         if (window->is_modified()) {
-            auto save_document_first_result = GUI::MessageBox::show(window, "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
-            if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
+            auto result = GUI::MessageBox::ask_about_unsaved_changes(window, file_path, editor->document().undo_stack().last_unmodified_timestamp());
+            if (result == GUI::MessageBox::ExecYes)
                 save_action->activate();
-            if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && window->is_modified())
+            if (result != GUI::MessageBox::ExecNo && window->is_modified())
                 return;
         }
+
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
+        if (!open_path.has_value())
+            return;
 
         auto file = Core::File::construct(open_path.value());
         if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
@@ -257,7 +256,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!window->is_modified())
             return GUI::Window::CloseRequestDecision::Close;
 
-        auto result = GUI::MessageBox::show(window, "The document has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+        auto result = GUI::MessageBox::ask_about_unsaved_changes(window, file_path, editor->document().undo_stack().last_unmodified_timestamp());
         if (result == GUI::MessageBox::ExecYes) {
             save_action->activate();
             if (window->is_modified())

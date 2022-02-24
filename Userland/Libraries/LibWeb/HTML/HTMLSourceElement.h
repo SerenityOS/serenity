@@ -14,7 +14,7 @@ class HTMLSourceElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLSourceElementWrapper;
 
-    HTMLSourceElement(DOM::Document&, QualifiedName);
+    HTMLSourceElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLSourceElement() override;
 };
 

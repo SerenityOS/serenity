@@ -6,5 +6,8 @@
 
 #pragma once
 
+struct RegisterState {
+};
+
 struct DebugRegisterState {
 };

@@ -70,6 +70,7 @@ private:
     void parse_comma_whitespace();
     float parse_fractional_constant();
     float parse_number();
+    float parse_nonnegative_number();
     float parse_flag();
     // -1 if negative, +1 otherwise
     int parse_sign();

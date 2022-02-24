@@ -127,6 +127,8 @@ UNMAP_AFTER_INIT void BochsGraphicsAdapter::initialize_framebuffer_devices()
 {
     // FIXME: Find a better way to determine default resolution...
     m_framebuffer_device = FramebufferDevice::create(*this, PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
+    // While write-combine helps greatly on actual hardware, it greatly reduces performance in QEMU
+    m_framebuffer_device->enable_write_combine(false);
     // FIXME: Would be nice to be able to return a ErrorOr<void> here.
     VERIFY(!m_framebuffer_device->try_to_initialize().is_error());
 }

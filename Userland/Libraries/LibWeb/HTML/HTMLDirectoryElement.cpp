@@ -8,7 +8,7 @@
 
 namespace Web::HTML {
 
-HTMLDirectoryElement::HTMLDirectoryElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLDirectoryElement::HTMLDirectoryElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }

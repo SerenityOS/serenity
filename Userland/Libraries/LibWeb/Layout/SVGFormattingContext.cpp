@@ -11,8 +11,8 @@
 
 namespace Web::Layout {
 
-SVGFormattingContext::SVGFormattingContext(Box& box, FormattingContext* parent)
-    : FormattingContext(Type::SVG, box, parent)
+SVGFormattingContext::SVGFormattingContext(FormattingState& state, Box const& box, FormattingContext* parent)
+    : FormattingContext(Type::SVG, state, box, parent)
 {
 }
 
@@ -20,20 +20,22 @@ SVGFormattingContext::~SVGFormattingContext()
 {
 }
 
-void SVGFormattingContext::run(Box& box, LayoutMode)
+void SVGFormattingContext::run(Box const& box, LayoutMode)
 {
-    box.for_each_in_subtree_of_type<SVGBox>([&](auto& descendant) {
+    box.for_each_in_subtree_of_type<SVGBox>([&](auto const& descendant) {
         if (is<SVGGeometryBox>(descendant)) {
-            auto& geometry_box = static_cast<SVGGeometryBox&>(descendant);
-            auto& path = geometry_box.dom_node().get_path();
+            auto const& geometry_box = static_cast<SVGGeometryBox const&>(descendant);
+            auto& path = const_cast<SVGGeometryBox&>(geometry_box).dom_node().get_path();
             auto bounding_box = path.bounding_box();
 
             // Stroke increases the path's size by stroke_width/2 per side.
             auto stroke_width = geometry_box.dom_node().stroke_width().value_or(0);
             bounding_box.inflate(stroke_width, stroke_width);
 
-            geometry_box.set_offset(bounding_box.top_left());
-            geometry_box.set_content_size(bounding_box.size());
+            auto& geometry_box_state = m_state.get_mutable(geometry_box);
+            geometry_box_state.offset = bounding_box.top_left();
+            geometry_box_state.content_width = bounding_box.width();
+            geometry_box_state.content_height = bounding_box.height();
         }
 
         return IterationDecision::Continue;

@@ -49,3 +49,15 @@ test("extended name syntax", () => {
     expect(a[12]()).toBe(2);
     expect(a.hello()).toBe(3);
 });
+
+test("method named 'async'", () => {
+    class A {
+        async() {
+            return "function named async";
+        }
+    }
+
+    const a = new A();
+    expect("async" in a).toBeTrue();
+    expect(a.async()).toBe("function named async");
+});

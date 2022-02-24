@@ -14,7 +14,7 @@ class HTMLSpanElement final : public HTMLElement {
 public:
     using WrapperType = Bindings::HTMLSpanElementWrapper;
 
-    HTMLSpanElement(DOM::Document&, QualifiedName);
+    HTMLSpanElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLSpanElement() override;
 };
 

@@ -156,7 +156,7 @@ void Text::LinkNode::render_for_terminal(StringBuilder& builder) const
 {
     bool is_linked = href.contains("://");
     if (is_linked) {
-        builder.append("\e]8;;");
+        builder.append("\033[0;34m\e]8;;");
         builder.append(href);
         builder.append("\e\\");
     }
@@ -165,7 +165,7 @@ void Text::LinkNode::render_for_terminal(StringBuilder& builder) const
 
     if (is_linked) {
         builder.appendff(" <{}>", href);
-        builder.append("\033]8;;\033\\");
+        builder.append("\033]8;;\033\\\033[0m");
     }
 }
 

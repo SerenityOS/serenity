@@ -148,7 +148,9 @@ void AbstractTableView::update_content_size()
     int content_height = item_count() * row_height();
 
     set_content_size({ content_width, content_height });
-    set_size_occupied_by_fixed_elements({ row_header().width(), column_header().height() });
+    int row_width = row_header().is_visible() ? row_header().width() : 0;
+    int column_height = column_header().is_visible() ? column_header().height() : 0;
+    set_size_occupied_by_fixed_elements({ row_width, column_height });
     layout_headers();
 }
 

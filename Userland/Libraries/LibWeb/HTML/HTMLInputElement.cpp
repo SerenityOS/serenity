@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Adam Hodgen <ant1441@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,7 @@
 
 namespace Web::HTML {
 
-HTMLInputElement::HTMLInputElement(DOM::Document& document, QualifiedName qualified_name)
+HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : FormAssociatedElement(document, move(qualified_name))
 {
 }
@@ -33,7 +34,7 @@ void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
     // FIXME: This should be a PointerEvent.
     dispatch_event(DOM::Event::create(EventNames::click));
 
-    if (type().equals_ignoring_case("submit")) {
+    if (type() == "submit") {
         if (auto* form = first_ancestor_of_type<HTMLFormElement>()) {
             form->submit_form(this);
         }
@@ -41,12 +42,20 @@ void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
     }
 }
 
+void HTMLInputElement::did_click_checkbox(Badge<Layout::CheckBox>)
+{
+    // FIXME: This should be a PointerEvent.
+    auto click_event = DOM::Event::create(EventNames::click);
+    click_event->set_bubbles(true);
+    dispatch_event(move(click_event));
+}
+
 RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
     if (type() == "hidden")
         return nullptr;
 
-    if (type().equals_ignoring_case("submit") || type().equals_ignoring_case("button"))
+    if (type() == "submit" || type() == "button" || type() == "reset")
         return adopt_ref(*new Layout::ButtonBox(document(), *this, move(style)));
 
     if (type() == "checkbox")
@@ -92,7 +101,7 @@ void HTMLInputElement::run_activation_behavior()
 // https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
 void HTMLInputElement::run_input_activation_behavior()
 {
-    if (type().equals_ignoring_case("checkbox")) {
+    if (type() == "checkbox") {
         // 1. If the element is not connected, then return.
         if (!is_connected())
             return;
@@ -112,6 +121,23 @@ void HTMLInputElement::run_input_activation_behavior()
     }
 }
 
+void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
+{
+    // NOTE: This is a bit ad-hoc, but basically implements part of "4.10.5.5 Common event behaviors"
+    //       https://html.spec.whatwg.org/multipage/input.html#common-input-element-events
+    queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
+        auto input_event = DOM::Event::create(HTML::EventNames::input);
+        input_event->set_bubbles(true);
+        input_event->set_composed(true);
+        dispatch_event(move(input_event));
+
+        // FIXME: This should only fire when the input is "committed", whatever that means.
+        auto change_event = DOM::Event::create(HTML::EventNames::change);
+        change_event->set_bubbles(true);
+        dispatch_event(move(change_event));
+    });
+}
+
 bool HTMLInputElement::enabled() const
 {
     return !has_attribute(HTML::AttributeNames::disabled);
@@ -126,11 +152,13 @@ String HTMLInputElement::value() const
 
 void HTMLInputElement::set_value(String value)
 {
+    auto sanitised_value = value_sanitization_algorithm(move(value));
+
     if (m_text_node) {
-        m_text_node->set_data(move(value));
+        m_text_node->set_data(sanitised_value);
         return;
     }
-    set_attribute(HTML::AttributeNames::value, move(value));
+    set_attribute(HTML::AttributeNames::value, sanitised_value);
 }
 
 void HTMLInputElement::create_shadow_tree_if_needed()
@@ -144,9 +172,10 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     if (initial_value.is_null())
         initial_value = String::empty();
     auto element = document().create_element(HTML::TagNames::div);
-    element->set_attribute(HTML::AttributeNames::style, "white-space: pre");
+    element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px");
     m_text_node = adopt_ref(*new DOM::Text(document(), initial_value));
     m_text_node->set_always_editable(true);
+    m_text_node->set_owner_input_element({}, *this);
     element->append_child(*m_text_node);
     shadow_root->append_child(move(element));
     set_shadow_root(move(shadow_root));
@@ -199,6 +228,78 @@ void HTMLInputElement::did_remove_attribute(FlyString const& name)
         if (!m_dirty_checkedness)
             set_checked(false, ChangeSource::Programmatic, ShouldRunActivationBehavior::No);
     }
+}
+
+String HTMLInputElement::type() const
+{
+    auto value = attribute(HTML::AttributeNames::type);
+
+#define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, _) \
+    if (value.equals_ignoring_case(#keyword))             \
+        return #keyword;
+    ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
+#undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
+
+    // The missing value default and the invalid value default are the Text state.
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:missing-value-default
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:invalid-value-default
+    return "text";
+}
+
+HTMLInputElement::TypeAttributeState HTMLInputElement::type_state() const
+{
+    auto value = attribute(HTML::AttributeNames::type);
+
+#define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, state) \
+    if (value.equals_ignoring_case(#keyword))                 \
+        return HTMLInputElement::TypeAttributeState::state;
+    ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
+#undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
+
+    // The missing value default and the invalid value default are the Text state.
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:missing-value-default
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:invalid-value-default
+    return HTMLInputElement::TypeAttributeState::Text;
+}
+
+void HTMLInputElement::set_type(String const& type)
+{
+    set_attribute(HTML::AttributeNames::type, type);
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
+String HTMLInputElement::value_sanitization_algorithm(String value) const
+{
+    if (type_state() == HTMLInputElement::TypeAttributeState::Text || type_state() == HTMLInputElement::TypeAttributeState::Search || type_state() == HTMLInputElement::TypeAttributeState::Telephone || type_state() == HTMLInputElement::TypeAttributeState::Password) {
+        // Strip newlines from the value.
+        if (value.contains('\r') || value.contains('\n')) {
+            StringBuilder builder;
+            for (auto c : value) {
+                if (!(c == '\r' || c == '\n'))
+                    builder.append(c);
+            }
+            return builder.to_string();
+        }
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::URL) {
+        // Strip newlines from the value, then strip leading and trailing ASCII whitespace from the value.
+        if (value.contains('\r') || value.contains('\n')) {
+            StringBuilder builder;
+            for (auto c : value) {
+                if (!(c == '\r' || c == '\n'))
+                    builder.append(c);
+            }
+            return builder.to_string().trim_whitespace();
+        }
+    } else if (type_state() == HTMLInputElement::TypeAttributeState::Number) {
+        // If the value of the element is not a valid floating-point number, then set it to the empty string instead.
+        char* end_ptr;
+        auto val = strtod(value.characters(), &end_ptr);
+        if (!isfinite(val) || *end_ptr)
+            return "";
+    }
+
+    // FIXME: Implement remaining value sanitation algorithms
+    return value;
 }
 
 }

@@ -14,7 +14,7 @@ class SVGGElement final : public SVGGraphicsElement {
 public:
     using WrapperType = Bindings::SVGPathElementWrapper;
 
-    SVGGElement(DOM::Document&, QualifiedName);
+    SVGGElement(DOM::Document&, DOM::QualifiedName);
     virtual ~SVGGElement() override = default;
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;

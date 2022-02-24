@@ -49,6 +49,7 @@ public:
 
     void did_become_active();
     void context_menu_requested(const Gfx::IntPoint& screen_position);
+    void content_filters_changed();
 
     void action_entered(GUI::Action&);
     void action_left(GUI::Action&);

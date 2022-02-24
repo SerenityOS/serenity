@@ -108,6 +108,8 @@ class Text;
 class Timer;
 class Window;
 enum class QuirksMode;
+struct EventListenerOptions;
+struct AddEventListenerOptions;
 
 template<typename ValueType>
 class ExceptionOr;
@@ -215,11 +217,13 @@ class MessageEvent;
 class MessagePort;
 class PageTransitionEvent;
 class PromiseRejectionEvent;
+class WorkerDebugConsoleClient;
 class Storage;
 class SubmitEvent;
 class TextMetrics;
-class WebSocket;
 class WindowEnvironmentSettingsObject;
+class Worker;
+class WorkerEnvironmentSettingsObject;
 class WorkerGlobalScope;
 class WorkerLocation;
 class WorkerNavigator;
@@ -267,6 +271,10 @@ namespace Web::Selection {
 class Selection;
 }
 
+namespace Web::WebSockets {
+class WebSocket;
+}
+
 namespace Web::Layout {
 enum class LayoutMode;
 enum class PaintPhase;
@@ -283,6 +291,8 @@ class Label;
 class LabelableNode;
 class LineBox;
 class LineBoxFragment;
+class ListItemBox;
+class ListItemMarkerBox;
 class Node;
 class NodeWithStyle;
 class NodeWithStyleAndBoxModelMetrics;
@@ -488,6 +498,7 @@ class URLSearchParamsWrapper;
 class URLWrapper;
 class WebSocketWrapper;
 class WindowObject;
+class WorkerWrapper;
 class WorkerGlobalScopeWrapper;
 class WorkerLocationWrapper;
 class WorkerNavigatorWrapper;
@@ -497,5 +508,6 @@ class XMLHttpRequestConstructor;
 class XMLHttpRequestEventTargetWrapper;
 class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
+enum class DOMParserSupportedType;
 enum class XMLHttpRequestResponseType;
 }
