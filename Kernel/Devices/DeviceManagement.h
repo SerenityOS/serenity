@@ -44,6 +44,7 @@ public:
     void before_device_removal(Badge<Device>, Device&);
 
     void for_each(Function<void(Device&)>);
+    ErrorOr<void> try_for_each(Function<ErrorOr<void>(Device&)>);
     Device* get_device(MajorNumber major, MinorNumber minor);
 
     NullDevice const& null_device() const;
