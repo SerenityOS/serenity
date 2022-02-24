@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -131,7 +131,7 @@ public:
     ~Selector();
 
     Vector<CompoundSelector> const& compound_selectors() const { return m_compound_selectors; }
-
+    Optional<PseudoElement> pseudo_element() const;
     u32 specificity() const;
     String serialize() const;
 
