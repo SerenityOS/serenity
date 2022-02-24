@@ -53,6 +53,7 @@ public:
     }
     u8 glyph_height() const override { return m_glyph_height; }
     int x_height() const override { return m_x_height; }
+    int preferred_line_height() const override { return glyph_height() + m_line_gap; }
 
     u8 glyph_width(u32 code_point) const override;
     u8 raw_glyph_width(u32 code_point) const { return m_glyph_widths[code_point]; }
@@ -143,6 +144,7 @@ private:
     u8 m_presentation_size { 0 };
     u16 m_weight { 0 };
     u8 m_slope { 0 };
+    u8 m_line_gap { 4 };
 
     bool m_fixed_width { false };
     bool m_owns_arrays { false };

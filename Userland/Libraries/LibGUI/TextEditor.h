@@ -116,7 +116,6 @@ public:
     TextDocumentLine const& line(size_t index) const { return document().line(index); }
     NonnullOwnPtrVector<TextDocumentLine>& lines() { return document().lines(); }
     NonnullOwnPtrVector<TextDocumentLine> const& lines() const { return document().lines(); }
-    int line_spacing() const { return m_line_spacing; }
     int line_height() const;
     TextPosition cursor() const { return m_cursor; }
     TextRange normalized_selection() const { return m_selection.normalized(); }
@@ -351,7 +350,6 @@ private:
     bool m_visualize_trailing_whitespace { true };
     bool m_visualize_leading_whitespace { false };
     bool m_cursor_line_highlighting { true };
-    int m_line_spacing { 4 };
     size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 3 };
     TextRange m_selection;

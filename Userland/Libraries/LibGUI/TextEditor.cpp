@@ -465,10 +465,10 @@ void TextEditor::paint_event(PaintEvent& event)
             auto ruler_line_rect = ruler_content_rect(i);
             // NOTE: Use Painter::draw_text() directly here, as we want to always draw the line numbers in clear text.
             painter.draw_text(
-                ruler_line_rect.shrunken(2, 0).translated(0, m_line_spacing / 2),
+                ruler_line_rect.shrunken(2, 0),
                 String::number(i + 1),
                 is_current_line ? font().bold_variant() : font(),
-                Gfx::TextAlignment::TopRight,
+                Gfx::TextAlignment::CenterRight,
                 is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
         }
     }
@@ -1977,7 +1977,7 @@ void TextEditor::set_editing_engine(OwnPtr<EditingEngine> editing_engine)
 
 int TextEditor::line_height() const
 {
-    return font().glyph_height() + m_line_spacing;
+    return font().preferred_line_height();
 }
 
 int TextEditor::fixed_glyph_width() const
