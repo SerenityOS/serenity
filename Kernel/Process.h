@@ -237,6 +237,7 @@ public:
     IterationDecision for_each_thread(Callback);
     template<IteratorFunction<Thread&> Callback>
     IterationDecision for_each_thread(Callback callback) const;
+    ErrorOr<void> try_for_each_thread(Function<ErrorOr<void>(Thread const&)>) const;
 
     // Non-breakable iteration functions
     template<VoidFunction<Process&> Callback>
@@ -937,6 +938,15 @@ inline IterationDecision Process::for_each_thread(Callback callback) const
             callback(thread);
     });
     return IterationDecision::Continue;
+}
+
+inline ErrorOr<void> Process::try_for_each_thread(Function<ErrorOr<void>(Thread const&)> callback) const
+{
+    return thread_list().with([&](auto& thread_list) -> ErrorOr<void> {
+        for (auto& thread : thread_list)
+            TRY(callback(thread));
+        return {};
+    });
 }
 
 template<VoidFunction<Thread&> Callback>
