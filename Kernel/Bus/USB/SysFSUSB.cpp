@@ -27,24 +27,24 @@ SysFSUSBDeviceInformation::~SysFSUSBDeviceInformation()
 ErrorOr<void> SysFSUSBDeviceInformation::try_generate(KBufferBuilder& builder)
 {
     VERIFY(m_lock.is_locked());
-    JsonArraySerializer array { builder };
+    auto array = TRY(JsonArraySerializer<>::try_create(builder));
 
-    auto obj = array.add_object();
-    obj.add("device_address", m_device->address());
-    obj.add("usb_spec_compliance_bcd", m_device->device_descriptor().usb_spec_compliance_bcd);
-    obj.add("device_class", m_device->device_descriptor().device_class);
-    obj.add("device_sub_class", m_device->device_descriptor().device_sub_class);
-    obj.add("device_protocol", m_device->device_descriptor().device_protocol);
-    obj.add("max_packet_size", m_device->device_descriptor().max_packet_size);
-    obj.add("vendor_id", m_device->device_descriptor().vendor_id);
-    obj.add("product_id", m_device->device_descriptor().product_id);
-    obj.add("device_release_bcd", m_device->device_descriptor().device_release_bcd);
-    obj.add("manufacturer_id_descriptor_index", m_device->device_descriptor().manufacturer_id_descriptor_index);
-    obj.add("product_string_descriptor_index", m_device->device_descriptor().product_string_descriptor_index);
-    obj.add("serial_number_descriptor_index", m_device->device_descriptor().serial_number_descriptor_index);
-    obj.add("num_configurations", m_device->device_descriptor().num_configurations);
-    obj.finish();
-    array.finish();
+    auto obj = TRY(array.add_object());
+    TRY(obj.add("device_address", m_device->address()));
+    TRY(obj.add("usb_spec_compliance_bcd", m_device->device_descriptor().usb_spec_compliance_bcd));
+    TRY(obj.add("device_class", m_device->device_descriptor().device_class));
+    TRY(obj.add("device_sub_class", m_device->device_descriptor().device_sub_class));
+    TRY(obj.add("device_protocol", m_device->device_descriptor().device_protocol));
+    TRY(obj.add("max_packet_size", m_device->device_descriptor().max_packet_size));
+    TRY(obj.add("vendor_id", m_device->device_descriptor().vendor_id));
+    TRY(obj.add("product_id", m_device->device_descriptor().product_id));
+    TRY(obj.add("device_release_bcd", m_device->device_descriptor().device_release_bcd));
+    TRY(obj.add("manufacturer_id_descriptor_index", m_device->device_descriptor().manufacturer_id_descriptor_index));
+    TRY(obj.add("product_string_descriptor_index", m_device->device_descriptor().product_string_descriptor_index));
+    TRY(obj.add("serial_number_descriptor_index", m_device->device_descriptor().serial_number_descriptor_index));
+    TRY(obj.add("num_configurations", m_device->device_descriptor().num_configurations));
+    TRY(obj.finish());
+    TRY(array.finish());
     return {};
 }
 

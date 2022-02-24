@@ -198,14 +198,14 @@ template<typename Serializer>
 ErrorOr<void> PerformanceEventBuffer::to_json_impl(Serializer& object) const
 {
     {
-        auto strings = object.add_array("strings");
-        for (auto const& it : m_strings) {
-            strings.add(it->view());
-        }
+        auto strings = TRY(object.add_array("strings"));
+        for (auto const& it : m_strings)
+            TRY(strings.add(it->view()));
+        TRY(strings.finish());
     }
 
     bool show_kernel_addresses = Process::current().is_superuser();
-    auto array = object.add_array("events");
+    auto array = TRY(object.add_array("events"));
     bool seen_first_sample = false;
     for (size_t i = 0; i < m_count; ++i) {
         auto const& event = at(i);
@@ -215,109 +215,109 @@ ErrorOr<void> PerformanceEventBuffer::to_json_impl(Serializer& object) const
                 continue;
         }
 
-        auto event_object = array.add_object();
+        auto event_object = TRY(array.add_object());
         switch (event.type) {
         case PERF_EVENT_SAMPLE:
-            event_object.add("type", "sample");
+            TRY(event_object.add("type", "sample"));
             break;
         case PERF_EVENT_MALLOC:
-            event_object.add("type", "malloc");
-            event_object.add("ptr", static_cast<u64>(event.data.malloc.ptr));
-            event_object.add("size", static_cast<u64>(event.data.malloc.size));
+            TRY(event_object.add("type", "malloc"));
+            TRY(event_object.add("ptr", static_cast<u64>(event.data.malloc.ptr)));
+            TRY(event_object.add("size", static_cast<u64>(event.data.malloc.size)));
             break;
         case PERF_EVENT_FREE:
-            event_object.add("type", "free");
-            event_object.add("ptr", static_cast<u64>(event.data.free.ptr));
+            TRY(event_object.add("type", "free"));
+            TRY(event_object.add("ptr", static_cast<u64>(event.data.free.ptr)));
             break;
         case PERF_EVENT_MMAP:
-            event_object.add("type", "mmap");
-            event_object.add("ptr", static_cast<u64>(event.data.mmap.ptr));
-            event_object.add("size", static_cast<u64>(event.data.mmap.size));
-            event_object.add("name", event.data.mmap.name);
+            TRY(event_object.add("type", "mmap"));
+            TRY(event_object.add("ptr", static_cast<u64>(event.data.mmap.ptr)));
+            TRY(event_object.add("size", static_cast<u64>(event.data.mmap.size)));
+            TRY(event_object.add("name", event.data.mmap.name));
             break;
         case PERF_EVENT_MUNMAP:
-            event_object.add("type", "munmap");
-            event_object.add("ptr", static_cast<u64>(event.data.munmap.ptr));
-            event_object.add("size", static_cast<u64>(event.data.munmap.size));
+            TRY(event_object.add("type", "munmap"));
+            TRY(event_object.add("ptr", static_cast<u64>(event.data.munmap.ptr)));
+            TRY(event_object.add("size", static_cast<u64>(event.data.munmap.size)));
             break;
         case PERF_EVENT_PROCESS_CREATE:
-            event_object.add("type", "process_create");
-            event_object.add("parent_pid", static_cast<u64>(event.data.process_create.parent_pid));
-            event_object.add("executable", event.data.process_create.executable);
+            TRY(event_object.add("type", "process_create"));
+            TRY(event_object.add("parent_pid", static_cast<u64>(event.data.process_create.parent_pid)));
+            TRY(event_object.add("executable", event.data.process_create.executable));
             break;
         case PERF_EVENT_PROCESS_EXEC:
-            event_object.add("type", "process_exec");
-            event_object.add("executable", event.data.process_exec.executable);
+            TRY(event_object.add("type", "process_exec"));
+            TRY(event_object.add("executable", event.data.process_exec.executable));
             break;
         case PERF_EVENT_PROCESS_EXIT:
-            event_object.add("type", "process_exit");
+            TRY(event_object.add("type", "process_exit"));
             break;
         case PERF_EVENT_THREAD_CREATE:
-            event_object.add("type", "thread_create");
-            event_object.add("parent_tid", static_cast<u64>(event.data.thread_create.parent_tid));
+            TRY(event_object.add("type", "thread_create"));
+            TRY(event_object.add("parent_tid", static_cast<u64>(event.data.thread_create.parent_tid)));
             break;
         case PERF_EVENT_THREAD_EXIT:
-            event_object.add("type", "thread_exit");
+            TRY(event_object.add("type", "thread_exit"));
             break;
         case PERF_EVENT_CONTEXT_SWITCH:
-            event_object.add("type", "context_switch");
-            event_object.add("next_pid", static_cast<u64>(event.data.context_switch.next_pid));
-            event_object.add("next_tid", static_cast<u64>(event.data.context_switch.next_tid));
+            TRY(event_object.add("type", "context_switch"));
+            TRY(event_object.add("next_pid", static_cast<u64>(event.data.context_switch.next_pid)));
+            TRY(event_object.add("next_tid", static_cast<u64>(event.data.context_switch.next_tid)));
             break;
         case PERF_EVENT_KMALLOC:
-            event_object.add("type", "kmalloc");
-            event_object.add("ptr", static_cast<u64>(event.data.kmalloc.ptr));
-            event_object.add("size", static_cast<u64>(event.data.kmalloc.size));
+            TRY(event_object.add("type", "kmalloc"));
+            TRY(event_object.add("ptr", static_cast<u64>(event.data.kmalloc.ptr)));
+            TRY(event_object.add("size", static_cast<u64>(event.data.kmalloc.size)));
             break;
         case PERF_EVENT_KFREE:
-            event_object.add("type", "kfree");
-            event_object.add("ptr", static_cast<u64>(event.data.kfree.ptr));
-            event_object.add("size", static_cast<u64>(event.data.kfree.size));
+            TRY(event_object.add("type", "kfree"));
+            TRY(event_object.add("ptr", static_cast<u64>(event.data.kfree.ptr)));
+            TRY(event_object.add("size", static_cast<u64>(event.data.kfree.size)));
             break;
         case PERF_EVENT_PAGE_FAULT:
-            event_object.add("type", "page_fault");
+            TRY(event_object.add("type", "page_fault"));
             break;
         case PERF_EVENT_SYSCALL:
-            event_object.add("type", "syscall");
+            TRY(event_object.add("type", "syscall"));
             break;
         case PERF_EVENT_SIGNPOST:
-            event_object.add("type"sv, "signpost"sv);
-            event_object.add("arg1"sv, event.data.signpost.arg1);
-            event_object.add("arg2"sv, event.data.signpost.arg2);
+            TRY(event_object.add("type"sv, "signpost"sv));
+            TRY(event_object.add("arg1"sv, event.data.signpost.arg1));
+            TRY(event_object.add("arg2"sv, event.data.signpost.arg2));
             break;
         case PERF_EVENT_READ:
-            event_object.add("type", "read");
-            event_object.add("fd", event.data.read.fd);
-            event_object.add("size"sv, event.data.read.size);
-            event_object.add("filename_index"sv, event.data.read.filename_index);
-            event_object.add("start_timestamp"sv, event.data.read.start_timestamp);
-            event_object.add("success"sv, event.data.read.success);
+            TRY(event_object.add("type", "read"));
+            TRY(event_object.add("fd", event.data.read.fd));
+            TRY(event_object.add("size"sv, event.data.read.size));
+            TRY(event_object.add("filename_index"sv, event.data.read.filename_index));
+            TRY(event_object.add("start_timestamp"sv, event.data.read.start_timestamp));
+            TRY(event_object.add("success"sv, event.data.read.success));
             break;
         }
-        event_object.add("pid", event.pid);
-        event_object.add("tid", event.tid);
-        event_object.add("timestamp", event.timestamp);
-        event_object.add("lost_samples", seen_first_sample ? event.lost_samples : 0);
+        TRY(event_object.add("pid", event.pid));
+        TRY(event_object.add("tid", event.tid));
+        TRY(event_object.add("timestamp", event.timestamp));
+        TRY(event_object.add("lost_samples", seen_first_sample ? event.lost_samples : 0));
         if (event.type == PERF_EVENT_SAMPLE)
             seen_first_sample = true;
-        auto stack_array = event_object.add_array("stack");
+        auto stack_array = TRY(event_object.add_array("stack"));
         for (size_t j = 0; j < event.stack_size; ++j) {
             auto address = event.stack[j];
             if (!show_kernel_addresses && !Memory::is_user_address(VirtualAddress { address }))
                 address = 0xdeadc0de;
-            stack_array.add(address);
+            TRY(stack_array.add(address));
         }
-        stack_array.finish();
-        event_object.finish();
+        TRY(stack_array.finish());
+        TRY(event_object.finish());
     }
-    array.finish();
-    object.finish();
+    TRY(array.finish());
+    TRY(object.finish());
     return {};
 }
 
 ErrorOr<void> PerformanceEventBuffer::to_json(KBufferBuilder& builder) const
 {
-    JsonObjectSerializer object(builder);
+    auto object = TRY(JsonObjectSerializer<>::try_create(builder));
     return to_json_impl(object);
 }
 

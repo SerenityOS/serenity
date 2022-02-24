@@ -85,8 +85,9 @@ private:
 template<typename Builder>
 inline void JsonArray::serialize(Builder& builder) const
 {
-    JsonArraySerializer serializer { builder };
-    for_each([&](auto& value) { serializer.add(value); });
+    auto serializer = MUST(JsonArraySerializer<>::try_create(builder));
+    for_each([&](auto& value) { MUST(serializer.add(value)); });
+    MUST(serializer.finish());
 }
 
 template<typename Builder>
