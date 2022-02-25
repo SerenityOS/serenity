@@ -113,7 +113,7 @@ set(SOURCES
     Widget.cpp
     Window.cpp
     WindowServerConnection.cpp
-    WindowManagerServerConnection.cpp
+        ConnectionToWindowMangerServer.cpp
     Wizards/WizardDialog.cpp
     Wizards/AbstractWizardPage.cpp
     Wizards/CoverWizardPage.cpp

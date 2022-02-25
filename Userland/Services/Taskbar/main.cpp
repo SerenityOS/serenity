@@ -20,8 +20,8 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/ConnectionToWindowMangerServer.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/WindowManagerServerConnection.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibMain/Main.h>
 #include <WindowServer/Window.h>
@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix"));
 
-    GUI::WindowManagerServerConnection::the();
+    GUI::ConnectionToWindowMangerServer::the();
     Desktop::Launcher::ensure_connection();
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
