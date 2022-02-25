@@ -135,6 +135,13 @@ public:
         invalidate();
     }
 
+    String const& active_keymap() { return m_active_keymap; }
+
+    String const& keymap_at(size_t index)
+    {
+        return m_data[index];
+    }
+
     Vector<String> const& keymaps() const { return m_data; }
 
 private:
@@ -173,6 +180,15 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
 
     keymaps_list_model.set_active_keymap(m_initial_active_keymap);
 
+    m_activate_keymap_button = find_descendant_of_type_named<GUI::Button>("activate_keymap_button");
+    m_activate_keymap_button->on_click = [&](auto) {
+        auto& selection = m_selected_keymaps_listview->selection();
+        if (!selection.is_empty()) {
+            auto& selected_keymap = keymaps_list_model.keymap_at(selection.first().row());
+            keymaps_list_model.set_active_keymap(selected_keymap);
+        }
+    };
+
     m_add_keymap_button = find_descendant_of_type_named<GUI::Button>("add_keymap_button");
 
     m_add_keymap_button->on_click = [&](auto) {
@@ -185,23 +201,29 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
 
     m_remove_keymap_button->on_click = [&](auto) {
         auto& selection = m_selected_keymaps_listview->selection();
+        bool active_keymap_deleted = false;
         for (auto& index : selection.indices()) {
+            if (keymaps_list_model.keymap_at(index.row()) == keymaps_list_model.active_keymap())
+                active_keymap_deleted = true;
             keymaps_list_model.remove_at(index.row());
         }
+        if (active_keymap_deleted)
+            keymaps_list_model.set_active_keymap(keymaps_list_model.keymap_at(0));
     };
 
     m_selected_keymaps_listview->on_selection_change = [&]() {
         auto& selection = m_selected_keymaps_listview->selection();
         m_remove_keymap_button->set_enabled(!selection.is_empty() && keymaps_list_model.keymaps().size() > 1);
+        m_activate_keymap_button->set_enabled(!selection.is_empty());
     };
 
     m_test_typing_area = *find_descendant_of_type_named<GUI::TextEditor>("test_typing_area");
     m_test_typing_area->on_focusin = [&]() {
-        set_keymaps(keymaps_list_model.keymaps());
+        set_keymaps(keymaps_list_model.keymaps(), keymaps_list_model.active_keymap());
     };
 
     m_test_typing_area->on_focusout = [&]() {
-        set_keymaps(m_initial_keymap_list);
+        set_keymaps(m_initial_keymap_list, m_initial_active_keymap);
     };
 
     m_clear_test_typing_area_button = find_descendant_of_type_named<GUI::Button>("button_clear_test_typing_area");
@@ -216,36 +238,37 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
 
 KeyboardSettingsWidget::~KeyboardSettingsWidget()
 {
-    set_keymaps(m_initial_keymap_list);
+    set_keymaps(m_initial_keymap_list, m_initial_active_keymap);
 }
 
 void KeyboardSettingsWidget::window_activated(bool is_active_window)
 {
     if (is_active_window && m_test_typing_area->is_focused()) {
         auto& keymaps_list_model = static_cast<KeymapModel&>(*m_selected_keymaps_listview->model());
-        set_keymaps(keymaps_list_model.keymaps());
+        set_keymaps(keymaps_list_model.keymaps(), keymaps_list_model.active_keymap());
     } else {
-        set_keymaps(m_initial_keymap_list);
+        set_keymaps(m_initial_keymap_list, m_initial_active_keymap);
     }
 }
 
 void KeyboardSettingsWidget::apply_settings()
 {
     auto& m_keymaps_list_model = static_cast<KeymapModel&>(*m_selected_keymaps_listview->model());
-    set_keymaps(m_keymaps_list_model.keymaps());
+    set_keymaps(m_keymaps_list_model.keymaps(), m_keymaps_list_model.active_keymap());
     m_initial_keymap_list.clear();
     for (auto& keymap : m_keymaps_list_model.keymaps()) {
         m_initial_keymap_list.append(keymap);
     }
+    m_initial_active_keymap = m_keymaps_list_model.active_keymap();
     Config::write_bool("KeyboardSettings", "StartupEnable", "NumLock", m_num_lock_checkbox->is_checked());
 }
 
-void KeyboardSettingsWidget::set_keymaps(Vector<String> const& keymaps)
+void KeyboardSettingsWidget::set_keymaps(Vector<String> const& keymaps, String const& active_keymap)
 {
     pid_t child_pid;
 
     auto keymaps_string = String::join(',', keymaps);
-    const char* argv[] = { "/bin/keymap", "-s", keymaps_string.characters(), nullptr };
+    const char* argv[] = { "/bin/keymap", "-s", keymaps_string.characters(), "-m", active_keymap.characters(), nullptr };
     if ((errno = posix_spawn(&child_pid, "/bin/keymap", nullptr, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
         exit(1);

@@ -40,6 +40,12 @@
                 }
 
                 @GUI::Button {
+                    name: "activate_keymap_button"
+                    text: "Activate keymap"
+                    enabled: false
+                }
+
+                @GUI::Button {
                     name: "add_keymap_button"
                     text: "Add keymap"
                 }

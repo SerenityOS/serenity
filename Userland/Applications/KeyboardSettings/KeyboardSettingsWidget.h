@@ -26,14 +26,16 @@ public:
 private:
     KeyboardSettingsWidget();
 
-    void set_keymaps(Vector<String> const& keymaps);
+    void set_keymaps(Vector<String> const& keymaps, String const& active_keymap);
 
     Vector<String> m_initial_keymap_list;
 
     String m_initial_active_keymap;
 
     RefPtr<GUI::ListView> m_selected_keymaps_listview;
+    RefPtr<GUI::Label> m_active_keymap_label;
     RefPtr<GUI::CheckBox> m_num_lock_checkbox;
+    RefPtr<GUI::Button> m_activate_keymap_button;
     RefPtr<GUI::Button> m_add_keymap_button;
     RefPtr<GUI::Button> m_remove_keymap_button;
     RefPtr<GUI::TextEditor> m_test_typing_area;
