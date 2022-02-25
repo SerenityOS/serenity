@@ -84,9 +84,14 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     SmapDisabler disabler;
 
 #if ARCH(I386)
+    // Stack state (created by the signal trampoline):
+    //    ret flags, ret ip, register dump,
+    //    signal mask, signal, handler (alignment = 16),
+    //    0, ebp, eax
+
     // Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
-    u32* stack_ptr = (u32*)registers.userspace_esp;
-    u32 smuggled_eax = *stack_ptr;
+    FlatPtr* stack_ptr = bit_cast<FlatPtr*>(registers.userspace_esp);
+    FlatPtr smuggled_eax = *stack_ptr;
 
     // pop the stored eax, ebp, return address, handler and signal code
     stack_ptr += 5;
@@ -107,6 +112,11 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     registers.userspace_esp = registers.esp;
     return smuggled_eax;
 #else
+    // Stack state (created by the signal trampoline):
+    //    ret flags, ret ip, register dump,
+    //    signal mask, signal, handler (alignment = 16),
+    //    0, ebp, eax
+
     // Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
     FlatPtr* stack_ptr = (FlatPtr*)registers.userspace_rsp;
     FlatPtr smuggled_rax = *stack_ptr;
