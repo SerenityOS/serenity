@@ -65,7 +65,9 @@ configscript=configure
 configopts=()
 useconfigure=false
 config_sub_path=config.sub
+config_guess_path=config.guess
 use_fresh_config_sub=false
+use_fresh_config_guess=false
 depends=()
 patchlevel=1
 auth_type=
@@ -122,8 +124,19 @@ get_new_config_sub() {
     fi
 }
 
+get_new_config_guess() {
+    config_guess="${1:-config.guess}"
+    if ! run grep -q SerenityOS "$config_guess"; then
+        run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess" "${1:-config_guess}" false
+    fi
+}
+
 ensure_new_config_sub() {
     get_new_config_sub "$config_sub_path"
+}
+
+ensure_new_config_guess() {
+    get_new_config_guess "$config_guess_path"
 }
 
 ensure_build() {
@@ -515,6 +528,9 @@ do_configure() {
         echo "Configuring $port..."
         if "$use_fresh_config_sub"; then
             ensure_new_config_sub
+        fi
+        if "$use_fresh_config_guess"; then
+            ensure_new_config_guess
         fi
         pre_configure
         configure
