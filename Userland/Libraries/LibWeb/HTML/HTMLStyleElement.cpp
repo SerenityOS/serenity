@@ -27,6 +27,12 @@ void HTMLStyleElement::children_changed()
     HTMLElement::children_changed();
 }
 
+void HTMLStyleElement::inserted()
+{
+    update_a_style_block();
+    return HTMLElement::inserted();
+}
+
 void HTMLStyleElement::removed_from(Node* old_parent)
 {
     update_a_style_block();
@@ -93,7 +99,7 @@ static void create_a_css_style_sheet(DOM::Document& document, String type, DOM::
 // NOTE: This is basically done by children_changed() today:
 // The element's children changed steps run.
 //
-// NOTE: This is basically done by removed_from() today:
+// NOTE: This is basically done by inserted() and removed_from() today:
 // The element is not on the stack of open elements of an HTML parser or XML parser, and it becomes connected or disconnected.
 //
 // https://html.spec.whatwg.org/multipage/semantics.html#update-a-style-block

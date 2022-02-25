@@ -19,6 +19,7 @@ public:
     virtual ~HTMLStyleElement() override;
 
     virtual void children_changed() override;
+    virtual void inserted() override;
     virtual void removed_from(Node*) override;
 
     void update_a_style_block();
