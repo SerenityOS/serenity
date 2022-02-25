@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -7,6 +7,7 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/Base64.h>
 #include <AK/URL.h>
 
 TEST_CASE(construct)
@@ -278,6 +279,20 @@ TEST_CASE(data_url_base64_encoded_with_whitespace)
     EXPECT_EQ(url.data_payload(), " test with whitespace ");
     EXPECT(url.data_payload_is_base64());
     EXPECT_EQ(url.serialize(), "data:text/html;base64, test with whitespace ");
+}
+
+TEST_CASE(data_url_base64_encoded_with_inline_whitespace)
+{
+    URL url("data:text/javascript;base64,%20ZD%20Qg%0D%0APS%20An%20Zm91cic%0D%0A%207%20");
+    EXPECT(url.is_valid());
+    EXPECT_EQ(url.scheme(), "data");
+    EXPECT(url.host().is_null());
+    EXPECT_EQ(url.data_mime_type(), "text/javascript");
+    EXPECT(url.data_payload_is_base64());
+    EXPECT_EQ(url.data_payload(), " ZD Qg\r\nPS An Zm91cic\r\n 7 "sv);
+    auto decode_result = decode_base64(url.data_payload());
+    EXPECT_EQ(decode_result.is_error(), false);
+    EXPECT_EQ(StringView(decode_result.value()), "d4 = 'four';"sv);
 }
 
 TEST_CASE(trailing_slash_with_complete_url)

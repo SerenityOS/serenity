@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Array.h>
 #include <AK/Base64.h>
+#include <AK/CharacterTypes.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -50,17 +51,21 @@ size_t calculate_base64_encoded_length(ReadonlyBytes input)
 
 ErrorOr<ByteBuffer> decode_base64(StringView input)
 {
-    auto get = [&](const size_t offset, bool* is_padding) -> ErrorOr<u8> {
+    auto get = [&](size_t& offset, bool* is_padding, bool& parsed_something) -> ErrorOr<u8> {
         constexpr auto table = make_lookup_table();
+        while (offset < input.length() && is_ascii_space(input[offset]))
+            ++offset;
         if (offset >= input.length())
             return 0;
-        if (input[offset] == '=') {
+        auto ch = static_cast<unsigned char>(input[offset++]);
+        parsed_something = true;
+        if (ch == '=') {
             if (!is_padding)
                 return Error::from_string_literal("Invalid '=' character outside of padding in base64 data");
             *is_padding = true;
             return 0;
         }
-        i16 result = table[static_cast<unsigned char>(input[offset])];
+        i16 result = table[ch];
         if (result < 0)
             return Error::from_string_literal("Invalid character in base64 data");
         VERIFY(result < 256);
@@ -70,14 +75,20 @@ ErrorOr<ByteBuffer> decode_base64(StringView input)
     Vector<u8> output;
     output.ensure_capacity(calculate_base64_decoded_length(input));
 
-    for (size_t i = 0; i < input.length(); i += 4) {
+    size_t offset = 0;
+    while (offset < input.length()) {
         bool in2_is_padding = false;
         bool in3_is_padding = false;
 
-        const u8 in0 = TRY(get(i, nullptr));
-        const u8 in1 = TRY(get(i + 1, nullptr));
-        const u8 in2 = TRY(get(i + 2, &in2_is_padding));
-        const u8 in3 = TRY(get(i + 3, &in3_is_padding));
+        bool parsed_something = false;
+
+        const u8 in0 = TRY(get(offset, nullptr, parsed_something));
+        const u8 in1 = TRY(get(offset, nullptr, parsed_something));
+        const u8 in2 = TRY(get(offset, &in2_is_padding, parsed_something));
+        const u8 in3 = TRY(get(offset, &in3_is_padding, parsed_something));
+
+        if (!parsed_something)
+            break;
 
         const u8 out0 = (in0 << 2) | ((in1 >> 4) & 3);
         const u8 out1 = ((in1 & 0xf) << 4) | ((in2 >> 2) & 0xf);
