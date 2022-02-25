@@ -453,6 +453,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::PseudoElement::FirstLetter:
                     pseudo_element_description = "first-letter";
                     break;
+                case CSS::Selector::PseudoElement::Marker:
+                    pseudo_element_description = "marker";
+                    break;
                 }
 
                 builder.appendff(" pseudo_element={}", pseudo_element_description);

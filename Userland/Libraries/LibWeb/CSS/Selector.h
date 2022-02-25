@@ -26,6 +26,7 @@ public:
         After,
         FirstLine,
         FirstLetter,
+        Marker,
     };
 
     struct SimpleSelector {

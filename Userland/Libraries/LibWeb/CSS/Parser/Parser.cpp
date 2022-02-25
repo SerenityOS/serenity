@@ -504,6 +504,8 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 simple_selector.pseudo_element = Selector::PseudoElement::FirstLetter;
             } else if (pseudo_name.equals_ignoring_case("first-line")) {
                 simple_selector.pseudo_element = Selector::PseudoElement::FirstLine;
+            } else if (pseudo_name.equals_ignoring_case("marker")) {
+                simple_selector.pseudo_element = Selector::PseudoElement::Marker;
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
                 return ParsingResult::SyntaxError;

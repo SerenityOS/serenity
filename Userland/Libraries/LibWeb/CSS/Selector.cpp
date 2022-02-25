@@ -272,6 +272,8 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
         return "first-line"sv;
     case Selector::PseudoElement::FirstLetter:
         return "first-letter"sv;
+    case Selector::PseudoElement::Marker:
+        return "marker"sv;
     case Selector::PseudoElement::None:
         break;
     }
