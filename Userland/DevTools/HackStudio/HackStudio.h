@@ -7,7 +7,7 @@
 #pragma once
 
 #include "EditorWrapper.h"
-#include "LanguageClients/ServerConnections.h"
+#include "LanguageClients/ConnectionsToServer.h"
 #include "Project.h"
 #include <AK/String.h>
 #include <LibGUI/TextEditor.h>
