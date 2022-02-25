@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, the SerenityOS developers.
+ * Copyright (c) 2018-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,7 +28,7 @@ using MaybeLoaderError = Result<void, LoaderError>;
 
 class LoaderPlugin {
 public:
-    virtual ~LoaderPlugin() { }
+    virtual ~LoaderPlugin() = default;
 
     virtual MaybeLoaderError initialize() = 0;
 
