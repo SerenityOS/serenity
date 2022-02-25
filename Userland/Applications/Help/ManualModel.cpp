@@ -11,14 +11,14 @@
 #include <AK/Try.h>
 
 static ManualSectionNode s_sections[] = {
-    { "1", "User programs" },
-    { "2", "System calls" },
-    { "3", "Library functions" },
-    { "4", "Special files" },
-    { "5", "File formats" },
+    { "1", "User Programs" },
+    { "2", "System Calls" },
+    { "3", "Library Functions" },
+    { "4", "Special Files" },
+    { "5", "File Formats" },
     { "6", "Games" },
     { "7", "Miscellanea" },
-    { "8", "Sysadmin tools" }
+    { "8", "Sysadmin Tools" }
 };
 
 ManualModel::ManualModel()
