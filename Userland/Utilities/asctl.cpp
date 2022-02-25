@@ -9,7 +9,7 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibAudio/Buffer.h>
-#include <LibAudio/ClientConnection.h>
+#include <LibAudio/ConnectionFromClient.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -29,7 +29,7 @@ enum AudioVariable : u32 {
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::EventLoop loop;
-    auto audio_client = TRY(Audio::ClientConnection::try_create());
+    auto audio_client = TRY(Audio::ConnectionFromClient::try_create());
 
     String command = String::empty();
     Vector<StringView> command_arguments;

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include <LibJS/Console.h>
 #include <LibJS/Forward.h>
 #include <LibWeb/Forward.h>
@@ -18,7 +18,7 @@ namespace WebContent {
 
 class WebContentConsoleClient final : public JS::ConsoleClient {
 public:
-    WebContentConsoleClient(JS::Console&, WeakPtr<JS::Interpreter>, ClientConnection&);
+    WebContentConsoleClient(JS::Console&, WeakPtr<JS::Interpreter>, ConnectionFromClient&);
 
     void handle_input(String const& js_source);
     void send_messages(i32 start_index);
@@ -27,7 +27,7 @@ private:
     virtual void clear() override;
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, PrinterArguments) override;
 
-    ClientConnection& m_client;
+    ConnectionFromClient& m_client;
     WeakPtr<JS::Interpreter> m_interpreter;
     JS::Handle<ConsoleGlobalObject> m_console_global_object;
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Clipboard/ClientConnection.h>
+#include <Clipboard/ConnectionFromClient.h>
 #include <Clipboard/Storage.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
@@ -17,10 +17,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Core::EventLoop event_loop;
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto server = TRY(IPC::MultiServer<Clipboard::ClientConnection>::try_create());
+    auto server = TRY(IPC::MultiServer<Clipboard::ConnectionFromClient>::try_create());
 
     Clipboard::Storage::the().on_content_change = [&] {
-        Clipboard::ClientConnection::for_each_client([&](auto& client) {
+        Clipboard::ConnectionFromClient::for_each_client([&](auto& client) {
             client.notify_about_clipboard_change();
         });
     };

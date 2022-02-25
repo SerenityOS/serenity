@@ -17,7 +17,7 @@ namespace RequestServer {
 class HttpRequest final : public Request {
 public:
     virtual ~HttpRequest() override;
-    static NonnullOwnPtr<HttpRequest> create_with_job(Badge<HttpProtocol>&&, ClientConnection&, NonnullRefPtr<HTTP::Job>, NonnullOwnPtr<Core::Stream::File>&&);
+    static NonnullOwnPtr<HttpRequest> create_with_job(Badge<HttpProtocol>&&, ConnectionFromClient&, NonnullRefPtr<HTTP::Job>, NonnullOwnPtr<Core::Stream::File>&&);
 
     HTTP::Job& job() { return m_job; }
     HTTP::Job const& job() const { return m_job; }
@@ -25,7 +25,7 @@ public:
     virtual URL url() const override { return m_job->url(); }
 
 private:
-    explicit HttpRequest(ClientConnection&, NonnullRefPtr<HTTP::Job>, NonnullOwnPtr<Core::Stream::File>&&);
+    explicit HttpRequest(ConnectionFromClient&, NonnullRefPtr<HTTP::Job>, NonnullOwnPtr<Core::Stream::File>&&);
 
     NonnullRefPtr<HTTP::Job> m_job;
 };

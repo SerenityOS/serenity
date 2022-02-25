@@ -8,7 +8,7 @@ compile_ipc(SQLServer.ipc SQLServerEndpoint.h)
 compile_ipc(SQLClient.ipc SQLClientEndpoint.h)
 
 set(SOURCES
-    ClientConnection.cpp
+    ConnectionFromClient.cpp
     DatabaseConnection.cpp
     main.cpp
     SQLClientEndpoint.h

@@ -8,7 +8,7 @@
  */
 
 #include <AK/Array.h>
-#include <LibAudio/ClientConnection.h>
+#include <LibAudio/ConnectionFromClient.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
@@ -43,14 +43,14 @@ public:
                 { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png")) },
                 { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png")) } }
         };
-        auto audio_client = TRY(Audio::ClientConnection::try_create());
+        auto audio_client = TRY(Audio::ConnectionFromClient::try_create());
         NonnullRefPtr<AudioWidget> audio_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(audio_client), move(volume_level_bitmaps))));
         TRY(audio_widget->try_initialize_graphical_elements());
         return audio_widget;
     }
 
 private:
-    AudioWidget(NonnullRefPtr<Audio::ClientConnection> audio_client, Array<VolumeBitmapPair, 5> volume_level_bitmaps)
+    AudioWidget(NonnullRefPtr<Audio::ConnectionFromClient> audio_client, Array<VolumeBitmapPair, 5> volume_level_bitmaps)
         : m_audio_client(move(audio_client))
         , m_volume_level_bitmaps(move(volume_level_bitmaps))
         , m_show_percent(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false))
@@ -222,7 +222,7 @@ private:
             height);
     }
 
-    NonnullRefPtr<Audio::ClientConnection> m_audio_client;
+    NonnullRefPtr<Audio::ConnectionFromClient> m_audio_client;
     Array<VolumeBitmapPair, 5> m_volume_level_bitmaps;
     bool m_show_percent { false };
     bool m_audio_muted { false };

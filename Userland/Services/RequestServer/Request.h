@@ -44,10 +44,10 @@ public:
     const Core::Stream::File& output_stream() const { return *m_output_stream; }
 
 protected:
-    explicit Request(ClientConnection&, NonnullOwnPtr<Core::Stream::File>&&);
+    explicit Request(ConnectionFromClient&, NonnullOwnPtr<Core::Stream::File>&&);
 
 private:
-    ClientConnection& m_client;
+    ConnectionFromClient& m_client;
     i32 m_id { 0 };
     int m_request_fd { -1 }; // Passed to client.
     Optional<u32> m_status_code;

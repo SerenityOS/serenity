@@ -27,7 +27,7 @@ AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, bool& need_to_writ
     , m_need_to_write_wav(need_to_write_wav)
     , m_wav_writer(wav_writer)
 {
-    m_audio_client = Audio::ClientConnection::try_create().release_value_but_fixme_should_propagate_errors();
+    m_audio_client = Audio::ConnectionFromClient::try_create().release_value_but_fixme_should_propagate_errors();
     m_audio_client->on_finish_playing_buffer = [this](int buffer_id) {
         (void)buffer_id;
         enqueue_audio();

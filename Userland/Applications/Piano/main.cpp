@@ -12,7 +12,7 @@
 #include "TrackManager.h"
 #include <AK/Queue.h>
 #include <LibAudio/Buffer.h>
-#include <LibAudio/ClientConnection.h>
+#include <LibAudio/ConnectionFromClient.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>

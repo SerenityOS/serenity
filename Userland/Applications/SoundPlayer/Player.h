@@ -30,7 +30,7 @@ public:
         Shuffling,
     };
 
-    explicit Player(Audio::ClientConnection& audio_client_connection);
+    explicit Player(Audio::ConnectionFromClient& audio_client_connection);
     virtual ~Player() = default;
 
     void play_file_path(String const& path);
@@ -90,7 +90,7 @@ private:
     LoopMode m_loop_mode;
     ShuffleMode m_shuffle_mode;
 
-    Audio::ClientConnection& m_audio_client_connection;
+    Audio::ConnectionFromClient& m_audio_client_connection;
     PlaybackManager m_playback_manager;
 
     String m_loaded_filename;

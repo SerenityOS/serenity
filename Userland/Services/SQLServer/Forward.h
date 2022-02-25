@@ -7,7 +7,7 @@
 #pragma once
 
 namespace SQLServer {
-class ClientConnection;
+class ConnectionFromClient;
 class DatabaseConnection;
 class SQLStatement;
 }

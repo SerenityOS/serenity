@@ -14,7 +14,7 @@
 
 namespace LanguageServers {
 
-class ClientConnection;
+class ConnectionFromClient;
 
 class CodeComprehensionEngine {
 public:

@@ -1,6 +1,6 @@
 set(SOURCES
     Buffer.cpp
-    ClientConnection.cpp
+    ConnectionFromClient.cpp
     Loader.cpp
     WavLoader.cpp
     FlacLoader.cpp

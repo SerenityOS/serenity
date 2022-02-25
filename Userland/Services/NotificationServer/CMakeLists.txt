@@ -8,7 +8,7 @@ compile_ipc(NotificationServer.ipc NotificationServerEndpoint.h)
 compile_ipc(NotificationClient.ipc NotificationClientEndpoint.h)
 
 set(SOURCES
-    ClientConnection.cpp
+    ConnectionFromClient.cpp
     main.cpp
     NotificationWindow.cpp
     NotificationServerEndpoint.h

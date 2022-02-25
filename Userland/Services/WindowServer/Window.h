@@ -22,7 +22,7 @@
 namespace WindowServer {
 
 class Animation;
-class ClientConnection;
+class ConnectionFromClient;
 class Cursor;
 class KeyEvent;
 class Menu;
@@ -143,8 +143,8 @@ public:
 
     Window* blocking_modal_window();
 
-    ClientConnection* client() { return m_client; }
-    const ClientConnection* client() const { return m_client; }
+    ConnectionFromClient* client() { return m_client; }
+    const ConnectionFromClient* client() const { return m_client; }
 
     WindowType type() const { return m_type; }
     int window_id() const { return m_window_id; }
@@ -296,7 +296,7 @@ public:
 
     IntrusiveListNode<Window> m_list_node;
 
-    void detach_client(Badge<ClientConnection>);
+    void detach_client(Badge<ConnectionFromClient>);
 
     Window* parent_window() { return m_parent_window; }
     const Window* parent_window() const { return m_parent_window; }
@@ -381,7 +381,7 @@ public:
     bool is_stealable_by_client(i32 client_id) const { return m_stealable_by_client_ids.contains_slow(client_id); }
 
 private:
-    Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
+    Window(ConnectionFromClient&, WindowType, int window_id, bool modal, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
 
     virtual void event(Core::Event&) override;
@@ -393,7 +393,7 @@ private:
     void update_window_menu_items();
     void modal_unparented();
 
-    ClientConnection* m_client { nullptr };
+    ConnectionFromClient* m_client { nullptr };
 
     WeakPtr<Window> m_parent_window;
     Vector<WeakPtr<Window>> m_child_windows;

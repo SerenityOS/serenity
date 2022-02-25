@@ -7,7 +7,7 @@ compile_ipc(WebSocketServer.ipc WebSocketServerEndpoint.h)
 compile_ipc(WebSocketClient.ipc WebSocketClientEndpoint.h)
 
 set(SOURCES
-    ClientConnection.cpp
+    ConnectionFromClient.cpp
     main.cpp
     WebSocketClientEndpoint.h
     WebSocketServerEndpoint.h

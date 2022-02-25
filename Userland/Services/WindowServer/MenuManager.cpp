@@ -6,7 +6,7 @@
  */
 
 #include <AK/Badge.h>
-#include <WindowServer/ClientConnection.h>
+#include <WindowServer/ConnectionFromClient.h>
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
@@ -41,7 +41,7 @@ bool MenuManager::is_open(const Menu& menu) const
 
 void MenuManager::refresh()
 {
-    ClientConnection::for_each_client([&](ClientConnection& client) {
+    ConnectionFromClient::for_each_client([&](ConnectionFromClient& client) {
         client.for_each_menu([&](Menu& menu) {
             menu.redraw();
             return IterationDecision::Continue;
@@ -213,7 +213,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
     }
 }
 
-void MenuManager::close_all_menus_from_client(Badge<ClientConnection>, ClientConnection& client)
+void MenuManager::close_all_menus_from_client(Badge<ConnectionFromClient>, ConnectionFromClient& client)
 {
     if (!has_open_menu())
         return;

@@ -5,7 +5,7 @@
  */
 
 #include "PageHost.h"
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include <LibGfx/Painter.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibGfx/SystemTheme.h>
@@ -16,7 +16,7 @@
 
 namespace WebContent {
 
-PageHost::PageHost(ClientConnection& client)
+PageHost::PageHost(ConnectionFromClient& client)
     : m_client(client)
     , m_page(make<Web::Page>(*this))
 {

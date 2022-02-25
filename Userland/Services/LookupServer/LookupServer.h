@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include "DNSName.h"
 #include "DNSPacket.h"
 #include "DNSServer.h"
@@ -34,7 +34,7 @@ private:
 
     ErrorOr<Vector<DNSAnswer>> lookup(const DNSName& hostname, const String& nameserver, bool& did_get_response, DNSRecordType record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
-    OwnPtr<IPC::MultiServer<ClientConnection>> m_server;
+    OwnPtr<IPC::MultiServer<ConnectionFromClient>> m_server;
     RefPtr<DNSServer> m_dns_server;
     RefPtr<MulticastDNS> m_mdns;
     Vector<String> m_nameservers;

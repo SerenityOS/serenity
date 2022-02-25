@@ -8,7 +8,7 @@
 
 namespace WebContent {
 
-class ClientConnection;
+class ConnectionFromClient;
 class PageHost;
 
 }

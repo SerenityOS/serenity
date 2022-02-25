@@ -16,7 +16,7 @@
 
 namespace WebContent {
 
-WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<JS::Interpreter> interpreter, ClientConnection& client)
+WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<JS::Interpreter> interpreter, ConnectionFromClient& client)
     : ConsoleClient(console)
     , m_client(client)
     , m_interpreter(interpreter)
