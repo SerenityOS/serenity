@@ -69,56 +69,60 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
     return true;
 }
 
-bool Process::validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Memory::Region const* region) const
+ErrorOr<void> Process::validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Memory::Region const* region) const
 {
     bool make_readable = prot & PROT_READ;
     bool make_writable = prot & PROT_WRITE;
     bool make_executable = prot & PROT_EXEC;
 
     if (map_anonymous && make_executable)
-        return false;
+        return EINVAL;
 
     if (map_stack && make_executable)
-        return false;
+        return EINVAL;
 
     if (executable()->mount_flags() & MS_WXALLOWED)
-        return true;
+        return {};
 
     if (make_writable && make_executable)
-        return false;
+        return EINVAL;
 
     if (region) {
         if (make_writable && region->has_been_executable())
-            return false;
+            return EINVAL;
 
         if (make_executable && region->has_been_writable()) {
-            return should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region);
+            if (should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region)) {
+                return {};
+            } else {
+                return EINVAL;
+            };
         }
     }
 
-    return true;
+    return {};
 }
 
-bool Process::validate_inode_mmap_prot(int prot, const Inode& inode, bool map_shared) const
+ErrorOr<void> Process::validate_inode_mmap_prot(int prot, const Inode& inode, bool map_shared) const
 {
     auto metadata = inode.metadata();
     if ((prot & PROT_READ) && !metadata.may_read(*this))
-        return false;
+        return EACCES;
 
     if (map_shared) {
         // FIXME: What about readonly filesystem mounts? We cannot make a
         // decision here without knowing the mount flags, so we would need to
         // keep a Custody or something from mmap time.
         if ((prot & PROT_WRITE) && !metadata.may_write(*this))
-            return false;
+            return EACCES;
         if (auto shared_vmobject = inode.shared_vmobject()) {
             if ((prot & PROT_EXEC) && shared_vmobject->writable_mappings())
-                return false;
+                return EACCES;
             if ((prot & PROT_WRITE) && shared_vmobject->executable_mappings())
-                return false;
+                return EACCES;
         }
     }
-    return true;
+    return {};
 }
 
 ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
@@ -180,8 +184,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
     if ((map_fixed || map_fixed_noreplace) && map_randomized)
         return EINVAL;
 
-    if (!validate_mmap_prot(prot, map_stack, map_anonymous))
-        return EINVAL;
+    TRY(validate_mmap_prot(prot, map_stack, map_anonymous));
 
     if (map_stack && (!map_private || !map_anonymous))
         return EINVAL;
@@ -231,10 +234,8 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
             if ((prot & PROT_WRITE) && !description->is_writable())
                 return EACCES;
         }
-        if (description->inode()) {
-            if (!validate_inode_mmap_prot(prot, *description->inode(), map_shared))
-                return EACCES;
-        }
+        if (description->inode())
+            TRY(validate_inode_mmap_prot(prot, *description->inode(), map_shared));
 
         region = TRY(description->mmap(*this, range, static_cast<u64>(offset), prot, map_shared));
     }
@@ -273,14 +274,11 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
     if (auto* whole_region = address_space().find_region_from_range(range_to_mprotect)) {
         if (!whole_region->is_mmap())
             return EPERM;
-        if (!validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region))
-            return EINVAL;
+        TRY(validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region));
         if (whole_region->access() == Memory::prot_to_region_access_flags(prot))
             return 0;
-        if (whole_region->vmobject().is_inode()
-            && !validate_inode_mmap_prot(prot, static_cast<Memory::InodeVMObject const&>(whole_region->vmobject()).inode(), whole_region->is_shared())) {
-            return EACCES;
-        }
+        if (whole_region->vmobject().is_inode())
+            TRY(validate_inode_mmap_prot(prot, static_cast<Memory::InodeVMObject const&>(whole_region->vmobject()).inode(), whole_region->is_shared()));
         whole_region->set_readable(prot & PROT_READ);
         whole_region->set_writable(prot & PROT_WRITE);
         whole_region->set_executable(prot & PROT_EXEC);
@@ -293,14 +291,11 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
     if (auto* old_region = address_space().find_region_containing(range_to_mprotect)) {
         if (!old_region->is_mmap())
             return EPERM;
-        if (!validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region))
-            return EINVAL;
+        TRY(validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region));
         if (old_region->access() == Memory::prot_to_region_access_flags(prot))
             return 0;
-        if (old_region->vmobject().is_inode()
-            && !validate_inode_mmap_prot(prot, static_cast<Memory::InodeVMObject const&>(old_region->vmobject()).inode(), old_region->is_shared())) {
-            return EACCES;
-        }
+        if (old_region->vmobject().is_inode())
+            TRY(validate_inode_mmap_prot(prot, static_cast<Memory::InodeVMObject const&>(old_region->vmobject()).inode(), old_region->is_shared()));
 
         // Remove the old region from our regions tree, since were going to add another region
         // with the exact same start address, but do not deallocate it yet
@@ -333,12 +328,9 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
         for (const auto* region : regions) {
             if (!region->is_mmap())
                 return EPERM;
-            if (!validate_mmap_prot(prot, region->is_stack(), region->vmobject().is_anonymous(), region))
-                return EINVAL;
-            if (region->vmobject().is_inode()
-                && !validate_inode_mmap_prot(*this, prot, static_cast<Memory::InodeVMObject const&>(region->vmobject()).inode(), region->is_shared())) {
-                return EACCES;
-            }
+            TRY(validate_mmap_prot(prot, region->is_stack(), region->vmobject().is_anonymous(), region));
+            if (region->vmobject().is_inode())
+                TRY(validate_inode_mmap_prot(prot, static_cast<Memory::InodeVMObject const&>(region->vmobject()).inode(), region->is_shared()));
             full_size_found += region->range().intersect(range_to_mprotect).size();
         }
 
