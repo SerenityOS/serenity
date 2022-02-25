@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <FileSystemAccessServer/ClientConnection.h>
+#include <FileSystemAccessServer/ConnectionFromClient.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibIPC/SingleServer.h>
@@ -17,6 +17,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto app = GUI::Application::construct(0, nullptr);
     app->set_quit_when_last_window_deleted(false);
 
-    auto client = TRY(IPC::take_over_accepted_client_from_system_server<FileSystemAccessServer::ClientConnection>());
+    auto client = TRY(IPC::take_over_accepted_client_from_system_server<FileSystemAccessServer::ConnectionFromClient>());
     return app->exec();
 }

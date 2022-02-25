@@ -7,7 +7,7 @@ compile_ipc(RequestServer.ipc RequestServerEndpoint.h)
 compile_ipc(RequestClient.ipc RequestClientEndpoint.h)
 
 set(SOURCES
-    ClientConnection.cpp
+    ConnectionFromClient.cpp
     ConnectionCache.cpp
     Request.cpp
     RequestClientEndpoint.h

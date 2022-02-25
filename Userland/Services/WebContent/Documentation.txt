@@ -7,7 +7,7 @@ Server                                                 Client
 WebContent                                             GUI process (OutOfProcessWebView embedder)
 
                                                        OutOfProcessWebView (this is a GUI::Widget)
-WebContent::ClientConnection               <--->         WebContentClient
+WebContent::ConnectionFromClient               <--->         WebContentClient
   WebContent::PageHost (Web::PageClient)
     Web::Page
       Web::Frame

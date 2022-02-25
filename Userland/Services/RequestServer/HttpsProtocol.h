@@ -12,7 +12,7 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <LibHTTP/HttpsJob.h>
-#include <RequestServer/ClientConnection.h>
+#include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/HttpsRequest.h>
 #include <RequestServer/Protocol.h>
 #include <RequestServer/Request.h>
@@ -27,7 +27,7 @@ public:
     HttpsProtocol();
     ~HttpsProtocol() override = default;
 
-    virtual OwnPtr<Request> start_request(ClientConnection&, const String& method, const URL&, const HashMap<String, String>& headers, ReadonlyBytes body) override;
+    virtual OwnPtr<Request> start_request(ConnectionFromClient&, const String& method, const URL&, const HashMap<String, String>& headers, ReadonlyBytes body) override;
 };
 
 }

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <ImageDecoder/ClientConnection.h>
+#include <ImageDecoder/ConnectionFromClient.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
 #include <LibIPC/SingleServer.h>
@@ -16,7 +16,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd unix"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto client = TRY(IPC::take_over_accepted_client_from_system_server<ImageDecoder::ClientConnection>());
+    auto client = TRY(IPC::take_over_accepted_client_from_system_server<ImageDecoder::ConnectionFromClient>());
 
     TRY(Core::System::pledge("stdio recvfd sendfd"));
     return event_loop.exec();

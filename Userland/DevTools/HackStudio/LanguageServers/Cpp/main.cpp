@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include "Tests.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -34,7 +34,7 @@ ErrorOr<int> mode_server()
     Core::EventLoop event_loop;
     TRY(Core::System::pledge("stdio unix recvfd rpath"));
 
-    auto client = TRY(IPC::take_over_accepted_client_from_system_server<LanguageServers::Cpp::ClientConnection>());
+    auto client = TRY(IPC::take_over_accepted_client_from_system_server<LanguageServers::Cpp::ConnectionFromClient>());
 
     TRY(Core::System::pledge("stdio recvfd rpath"));
     TRY(Core::System::unveil("/usr/include", "r"));

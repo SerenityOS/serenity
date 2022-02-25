@@ -7,7 +7,7 @@
 
 #include "Player.h"
 
-Player::Player(Audio::ClientConnection& audio_client_connection)
+Player::Player(Audio::ConnectionFromClient& audio_client_connection)
     : m_audio_client_connection(audio_client_connection)
     , m_playback_manager(audio_client_connection)
 {

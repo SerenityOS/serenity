@@ -11,14 +11,14 @@
 
 namespace WebContent {
 
-class ClientConnection;
+class ConnectionFromClient;
 
 class PageHost final : public Web::PageClient {
     AK_MAKE_NONCOPYABLE(PageHost);
     AK_MAKE_NONMOVABLE(PageHost);
 
 public:
-    static NonnullOwnPtr<PageHost> create(ClientConnection& client) { return adopt_own(*new PageHost(client)); }
+    static NonnullOwnPtr<PageHost> create(ConnectionFromClient& client) { return adopt_own(*new PageHost(client)); }
     virtual ~PageHost();
 
     Web::Page& page() { return *m_page; }
@@ -65,12 +65,12 @@ private:
     virtual String page_did_request_cookie(const URL&, Web::Cookie::Source) override;
     virtual void page_did_set_cookie(const URL&, const Web::Cookie::ParsedCookie&, Web::Cookie::Source) override;
 
-    explicit PageHost(ClientConnection&);
+    explicit PageHost(ConnectionFromClient&);
 
     Web::Layout::InitialContainingBlock* layout_root();
     void setup_palette();
 
-    ClientConnection& m_client;
+    ConnectionFromClient& m_client;
     NonnullOwnPtr<Web::Page> m_page;
     RefPtr<Gfx::PaletteImpl> m_palette_impl;
     Gfx::IntRect m_screen_rect;

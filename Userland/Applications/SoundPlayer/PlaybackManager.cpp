@@ -7,7 +7,7 @@
 
 #include "PlaybackManager.h"
 
-PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ClientConnection> connection)
+PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ConnectionFromClient> connection)
     : m_connection(connection)
 {
     m_timer = Core::Timer::construct(PlaybackManager::update_rate_ms, [&]() {

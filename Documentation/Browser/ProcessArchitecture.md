@@ -42,7 +42,7 @@ In the GUI application process, a `OutOfProcessWebView` widget is placed somewhe
 
 Internally, the `OutOfProcessWebView` has a `WebContentClient` object that implements the client side of the **WebContent** IPC protocol.
 
-The `WebContentClient` speaks to a `WebContent::ClientConnection` in the **WebContent** process. Internally, the `WebContent::ClientConnection` has a `WebContent::PageHost` which hosts the **LibWeb** engine's main `Web::Page` object.
+The `WebContentClient` speaks to a `WebContent::ConnectionFromClient` in the **WebContent** process. Internally, the `WebContent::ConnectionFromClient` has a `WebContent::PageHost` which hosts the **LibWeb** engine's main `Web::Page` object.
 
 Inside **LibWeb**, a `Web::Page` has a main `Web::Frame`, which may have subframes corresponding to `<frame>` or `<iframe>` HTML elements. Each `Web::Frame` has a `Web::Document`, which is the root node of the DOM tree.
 

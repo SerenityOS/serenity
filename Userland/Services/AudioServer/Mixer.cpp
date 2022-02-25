@@ -10,7 +10,7 @@
 #include <AK/Array.h>
 #include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
-#include <AudioServer/ClientConnection.h>
+#include <AudioServer/ConnectionFromClient.h>
 #include <AudioServer/Mixer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Timer.h>
@@ -48,7 +48,7 @@ Mixer::~Mixer()
 {
 }
 
-NonnullRefPtr<ClientAudioStream> Mixer::create_queue(ClientConnection& client)
+NonnullRefPtr<ClientAudioStream> Mixer::create_queue(ConnectionFromClient& client)
 {
     auto queue = adopt_ref(*new ClientAudioStream(client));
     m_pending_mutex.lock();
@@ -149,7 +149,7 @@ void Mixer::set_main_volume(double volume)
     m_config->write_num_entry("Master", "Volume", static_cast<int>(volume * 100));
     request_setting_sync();
 
-    ClientConnection::for_each([&](ClientConnection& client) {
+    ConnectionFromClient::for_each([&](ConnectionFromClient& client) {
         client.did_change_main_mix_volume({}, main_volume());
     });
 }
@@ -163,7 +163,7 @@ void Mixer::set_muted(bool muted)
     m_config->write_bool_entry("Master", "Mute", m_muted);
     request_setting_sync();
 
-    ClientConnection::for_each([muted](ClientConnection& client) {
+    ConnectionFromClient::for_each([muted](ConnectionFromClient& client) {
         client.did_change_main_mix_muted_state({}, muted);
     });
 }
@@ -199,7 +199,7 @@ void Mixer::request_setting_sync()
     }
 }
 
-ClientAudioStream::ClientAudioStream(ClientConnection& client)
+ClientAudioStream::ClientAudioStream(ConnectionFromClient& client)
     : m_client(client)
 {
 }

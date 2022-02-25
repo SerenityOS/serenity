@@ -14,8 +14,8 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibHTTP/HttpRequest.h>
-#include <RequestServer/ClientConnection.h>
 #include <RequestServer/ConnectionCache.h>
+#include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/Request.h>
 
 namespace RequestServer::Detail {
@@ -61,7 +61,7 @@ void init(TSelf* self, TJob job)
 }
 
 template<typename TBadgedProtocol, typename TPipeResult>
-OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body, TPipeResult&& pipe_result)
+OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ConnectionFromClient& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body, TPipeResult&& pipe_result)
 {
     using TJob = typename TBadgedProtocol::Type::JobType;
     using TRequest = typename TBadgedProtocol::Type::RequestType;

@@ -8,7 +8,7 @@ compile_ipc(ClipboardServer.ipc ClipboardServerEndpoint.h)
 compile_ipc(ClipboardClient.ipc ClipboardClientEndpoint.h)
 
 set(SOURCES
-    ClientConnection.cpp
+    ConnectionFromClient.cpp
     ClipboardClientEndpoint.h
     ClipboardServerEndpoint.h
     Storage.cpp

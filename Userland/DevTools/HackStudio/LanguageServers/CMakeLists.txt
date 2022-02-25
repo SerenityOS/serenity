@@ -3,7 +3,7 @@ compile_ipc(LanguageClient.ipc LanguageClientEndpoint.h)
 
 set(SOURCES
         CodeComprehensionEngine.cpp
-        ClientConnection.cpp
+        ConnectionFromClient.cpp
         FileDB.cpp)
 set(GENERATED_SOURCES
         LanguageClientEndpoint.h

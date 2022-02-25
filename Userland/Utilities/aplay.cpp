@@ -6,7 +6,7 @@
  */
 
 #include <AK/Types.h>
-#include <LibAudio/ClientConnection.h>
+#include <LibAudio/ConnectionFromClient.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::EventLoop loop;
 
-    auto audio_client = TRY(Audio::ClientConnection::try_create());
+    auto audio_client = TRY(Audio::ConnectionFromClient::try_create());
     auto maybe_loader = Audio::Loader::create(path);
     if (maybe_loader.is_error()) {
         warnln("Failed to load audio file: {}", maybe_loader.error().description);
