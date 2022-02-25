@@ -1069,14 +1069,15 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
         dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to IP {:p}, SP {:p}", ret_ip, old_sp);
 
+        FlatPtr start_of_stack;
 #if ARCH(I386)
         // Align the stack to 16 bytes.
-        // Note that we push 52 bytes (4 * 13) on to the stack
-        // before the return address, so we need to account for this here.
-        // 56 % 16 = 4, so we only need to take 4 bytes into consideration for
-        // the stack alignment.
-        FlatPtr stack_alignment = (stack - 4) % 16;
+        // Note that we push some elements on to the stack before the return address,
+        // so we need to account for this here.
+        constexpr static FlatPtr elements_pushed_on_stack_before_return_address = 13;
+        FlatPtr stack_alignment = (stack - elements_pushed_on_stack_before_return_address * sizeof(FlatPtr)) % 16;
         stack -= stack_alignment;
+        start_of_stack = stack;
 
         TRY(push_value_on_user_stack(stack, ret_flags));
 
@@ -1091,13 +1092,13 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         TRY(push_value_on_user_stack(stack, state.edi));
 #else
         // Align the stack to 16 bytes.
-        // Note that we push 168 bytes (8 * 21) on to the stack
-        // before the return address, so we need to account for this here.
-        // 168 % 16 = 8, so we only need to take 8 bytes into consideration for
-        // the stack alignment.
+        // Note that we push some elements on to the stack before the return address,
+        // so we need to account for this here.
         // We also are not allowed to touch the thread's red-zone of 128 bytes
-        FlatPtr stack_alignment = (stack - 8) % 16;
+        constexpr static FlatPtr elements_pushed_on_stack_before_return_address = 21;
+        FlatPtr stack_alignment = (stack - elements_pushed_on_stack_before_return_address * sizeof(FlatPtr)) % 16;
         stack -= 128 + stack_alignment;
+        start_of_stack = stack;
 
         TRY(push_value_on_user_stack(stack, ret_flags));
 
@@ -1126,7 +1127,11 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         TRY(push_value_on_user_stack(stack, signal));
         TRY(push_value_on_user_stack(stack, handler_vaddr.get()));
 
-        VERIFY((stack % 16) == 0);
+        // Make sure we actually pushed as many elements as we claimed to have pushed.
+        if (start_of_stack - stack != elements_pushed_on_stack_before_return_address * sizeof(FlatPtr))
+            PANIC("Stack in invalid state after signal trampoline, expected {:x} but got {:x}", start_of_stack - elements_pushed_on_stack_before_return_address * sizeof(FlatPtr), stack);
+
+        VERIFY(stack % 16 == 0);
 
         TRY(push_value_on_user_stack(stack, 0)); // push fake return address
 
