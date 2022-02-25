@@ -13,14 +13,14 @@
 #include <LibCore/Promise.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Window.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 
 namespace FileSystemAccessClient {
 
 using Result = ErrorOr<NonnullRefPtr<Core::File>>;
 
 class Client final
-    : public IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>
+    : public IPC::ConnectionToServer<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>
     , public FileSystemAccessClientEndpoint {
     IPC_CLIENT_CONNECTION(Client, "/tmp/portal/filesystemaccess")
 
@@ -37,7 +37,7 @@ protected:
 
 private:
     explicit Client(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
-        : IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, move(socket))
+        : IPC::ConnectionToServer<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, move(socket))
     {
     }
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 #include <WindowServer/ScreenLayout.h>
 #include <WindowServer/WindowManagerClientEndpoint.h>
 #include <WindowServer/WindowManagerServerEndpoint.h>
@@ -14,7 +14,7 @@
 namespace GUI {
 
 class WindowManagerServerConnection final
-    : public IPC::ServerConnection<WindowManagerClientEndpoint, WindowManagerServerEndpoint>
+    : public IPC::ConnectionToServer<WindowManagerClientEndpoint, WindowManagerServerEndpoint>
     , public WindowManagerClientEndpoint {
     IPC_CLIENT_CONNECTION(WindowManagerServerConnection, "/tmp/portal/wm")
 
@@ -23,7 +23,7 @@ public:
 
 private:
     WindowManagerServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
-        : IPC::ServerConnection<WindowManagerClientEndpoint, WindowManagerServerEndpoint>(*this, move(socket))
+        : IPC::ConnectionToServer<WindowManagerClientEndpoint, WindowManagerServerEndpoint>(*this, move(socket))
     {
     }
 

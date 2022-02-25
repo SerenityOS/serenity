@@ -9,7 +9,7 @@
 #include <AK/HashMap.h>
 #include <ImageDecoder/ImageDecoderClientEndpoint.h>
 #include <ImageDecoder/ImageDecoderServerEndpoint.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 
 namespace ImageDecoderClient {
 
@@ -25,7 +25,7 @@ struct DecodedImage {
 };
 
 class Client final
-    : public IPC::ServerConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>
+    : public IPC::ConnectionToServer<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>
     , public ImageDecoderClientEndpoint {
     IPC_CLIENT_CONNECTION(Client, "/tmp/portal/image");
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 #include <WindowServer/ScreenLayout.h>
 #include <WindowServer/WindowClientEndpoint.h>
 #include <WindowServer/WindowServerEndpoint.h>
@@ -14,7 +14,7 @@
 namespace GUI {
 
 class WindowServerConnection final
-    : public IPC::ServerConnection<WindowClientEndpoint, WindowServerEndpoint>
+    : public IPC::ConnectionToServer<WindowClientEndpoint, WindowServerEndpoint>
     , public WindowClientEndpoint {
     IPC_CLIENT_CONNECTION(WindowServerConnection, "/tmp/portal/window")
 public:

@@ -5,14 +5,14 @@
  */
 
 #include <LibGUI/Notification.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 #include <NotificationServer/NotificationClientEndpoint.h>
 #include <NotificationServer/NotificationServerEndpoint.h>
 
 namespace GUI {
 
 class NotificationServerConnection final
-    : public IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>
+    : public IPC::ConnectionToServer<NotificationClientEndpoint, NotificationServerEndpoint>
     , public NotificationClientEndpoint {
     IPC_CLIENT_CONNECTION(NotificationServerConnection, "/tmp/portal/notify")
 
@@ -26,7 +26,7 @@ public:
 
 private:
     explicit NotificationServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, Notification* notification)
-        : IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>(*this, move(socket))
+        : IPC::ConnectionToServer<NotificationClientEndpoint, NotificationServerEndpoint>(*this, move(socket))
         , m_notification(notification)
     {
     }

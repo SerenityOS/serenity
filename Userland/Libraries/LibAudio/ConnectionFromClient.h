@@ -8,14 +8,14 @@
 
 #include <AudioServer/AudioClientEndpoint.h>
 #include <AudioServer/AudioServerEndpoint.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 
 namespace Audio {
 
 class Buffer;
 
 class ConnectionFromClient final
-    : public IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>
+    : public IPC::ConnectionToServer<AudioClientEndpoint, AudioServerEndpoint>
     , public AudioClientEndpoint {
     IPC_CLIENT_CONNECTION(ConnectionFromClient, "/tmp/portal/audio")
 public:

@@ -25,14 +25,14 @@ public:                                                                         
     }
 
 template<typename ClientEndpoint, typename ServerEndpoint>
-class ServerConnection : public IPC::Connection<ClientEndpoint, ServerEndpoint>
+class ConnectionToServer : public IPC::Connection<ClientEndpoint, ServerEndpoint>
     , public ClientEndpoint::Stub
     , public ServerEndpoint::template Proxy<ClientEndpoint> {
 public:
     using ClientStub = typename ClientEndpoint::Stub;
     using IPCProxy = typename ServerEndpoint::template Proxy<ClientEndpoint>;
 
-    ServerConnection(ClientStub& local_endpoint, NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    ConnectionToServer(ClientStub& local_endpoint, NonnullOwnPtr<Core::Stream::LocalSocket> socket)
         : Connection<ClientEndpoint, ServerEndpoint>(local_endpoint, move(socket))
         , ServerEndpoint::template Proxy<ClientEndpoint>(*this, {})
     {
