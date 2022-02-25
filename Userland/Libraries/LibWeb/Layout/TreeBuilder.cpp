@@ -202,7 +202,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
 
     if (is<ListItemBox>(*layout_node)) {
         int child_index = layout_node->parent()->index_of_child<ListItemBox>(*layout_node).value();
-        auto marker_style = static_cast<DOM::Element const&>(dom_node).specified_css_values();
+        auto marker_style = style_computer.compute_style(static_cast<DOM::Element&>(dom_node), CSS::Selector::PseudoElement::Marker);
         auto list_item_marker = adopt_ref(*new ListItemMarkerBox(document, layout_node->computed_values().list_style_type(), child_index + 1, *marker_style));
         if (layout_node->first_child())
             list_item_marker->set_inline(layout_node->first_child()->is_inline());
