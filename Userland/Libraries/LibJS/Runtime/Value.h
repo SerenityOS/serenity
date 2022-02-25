@@ -28,40 +28,119 @@ static constexpr u64 NEGATIVE_ZERO_BITS = ((u64)1 << 63);
 
 namespace JS {
 
+static_assert(sizeof(double) == 8);
+static_assert(sizeof(void*) == sizeof(double) || sizeof(void*) == sizeof(u32));
+// To make our Value representation compact we can use the fact that IEEE
+// doubles have a lot (2^52 - 2) of NaN bit patterns. The canonical form being
+// just 0x7FF8000000000000 i.e. sign = 0 exponent is all ones and the top most
+// bit of the mantissa set.
+static constexpr u64 CANON_NAN_BITS = bit_cast<u64>(__builtin_nan(""));
+static_assert(CANON_NAN_BITS == 0x7FF8000000000000);
+// (Unfortunately all the other values are valid so we have to convert any
+// incoming NaNs to this pattern although in practice it seems only the negative
+// version of these CANON_NAN_BITS)
+// +/- Infinity are represented by a full exponent but without any bits of the
+// mantissa set.
+static constexpr u64 POSITIVE_INFINITY_BITS = bit_cast<u64>(__builtin_huge_val());
+static constexpr u64 NEGATIVE_INFINITY_BITS = bit_cast<u64>(-__builtin_huge_val());
+static_assert(POSITIVE_INFINITY_BITS == 0x7FF0000000000000);
+static_assert(NEGATIVE_INFINITY_BITS == 0xFFF0000000000000);
+// However as long as any bit is set in the mantissa with the exponent of all
+// ones this value is a NaN, and it even ignores the sign bit.
+static_assert(isnan(bit_cast<double>(0x7FF0000000000001)));
+static_assert(isnan(bit_cast<double>(0xFFF0000000040000)));
+// This means we can use all of these NaNs to store all other options for Value.
+// To make sure all of these other representations we use 0x7FF8 as the base top
+// 2 bytes which ensures the value is always a NaN.
+static constexpr u64 BASE_TAG = 0x7FF8;
+// This leaves the sign bit and the three lower bits for tagging a value and then
+// 48 bits of potential payload.
+// First the pointer backed types (Object, String etc.), to signify this category
+// and make stack scanning easier we use the sign bit (top most bit) of 1 to
+// signify that it is a pointer backed type.
+static constexpr u64 IS_CELL_BIT = 0x8000 | BASE_TAG;
+// On all current 64-bit systems this code runs pointer actually only use the
+// lowest 6 bytes which fits neatly into our NaN payload with the top two bytes
+// left over for marking it as a NaN and tagging the type.
+// Note that we do need to take care when extracting the pointer value but this
+// is explained in the extract_pointer method.
+
+// This leaves us 3 bits to tag the type of pointer:
+static constexpr u64 OBJECT_TAG = 0b001 | IS_CELL_BIT;
+static constexpr u64 STRING_TAG = 0b010 | IS_CELL_BIT;
+static constexpr u64 SYMBOL_TAG = 0b011 | IS_CELL_BIT;
+static constexpr u64 ACCESSOR_TAG = 0b100 | IS_CELL_BIT;
+static constexpr u64 BIGINT_TAG = 0b101 | IS_CELL_BIT;
+
+// We can then by extracting the top 13 bits quickly check if a Value is
+// pointer backed.
+static constexpr u64 IS_CELL_PATTERN = 0xFFF8ULL;
+static_assert((OBJECT_TAG & IS_CELL_PATTERN) == IS_CELL_PATTERN);
+static_assert((STRING_TAG & IS_CELL_PATTERN) == IS_CELL_PATTERN);
+static_assert((CANON_NAN_BITS & IS_CELL_PATTERN) != IS_CELL_PATTERN);
+static_assert((NEGATIVE_INFINITY_BITS & IS_CELL_PATTERN) != IS_CELL_PATTERN);
+
+// Then for the non pointer backed types we don't set the sign bit and use the
+// three lower bits for tagging as well.
+static constexpr u64 UNDEFINED_TAG = 0b110 | BASE_TAG;
+static constexpr u64 NULL_TAG = 0b111 | BASE_TAG;
+static constexpr u64 BOOLEAN_TAG = 0b001 | BASE_TAG;
+static constexpr u64 INT32_TAG = 0b010 | BASE_TAG;
+static constexpr u64 EMPTY_TAG = 0b011 | BASE_TAG;
+// Notice how only undefined and null have the top bit set, this mean we can
+// quickly check for nullish values by checking if the top and bottom bits are set
+// but the middle one isn't.
+static constexpr u64 IS_NULLISH_EXTRACT_PATTERN = 0xFFFEULL;
+static constexpr u64 IS_NULLISH_PATTERN = 0x7FFEULL;
+static_assert((UNDEFINED_TAG & IS_NULLISH_EXTRACT_PATTERN) == IS_NULLISH_PATTERN);
+static_assert((NULL_TAG & IS_NULLISH_EXTRACT_PATTERN) == IS_NULLISH_PATTERN);
+static_assert((BOOLEAN_TAG & IS_NULLISH_EXTRACT_PATTERN) != IS_NULLISH_PATTERN);
+static_assert((INT32_TAG & IS_NULLISH_EXTRACT_PATTERN) != IS_NULLISH_PATTERN);
+static_assert((EMPTY_TAG & IS_NULLISH_EXTRACT_PATTERN) != IS_NULLISH_PATTERN);
+// We also have the empty tag to represent array holes however since empty
+// values are not valid anywhere else we can use this "value" to our advantage
+// in Optional<Value> to represent the empty optional.
+
+static constexpr u64 TAG_EXTRACTION = 0xFFFF000000000000;
+static constexpr u64 TAG_SHIFT = 48;
+static constexpr u64 SHIFTED_INT32_TAG = INT32_TAG << TAG_SHIFT;
+static constexpr u64 SHIFTED_IS_CELL_PATTERN = IS_CELL_PATTERN << TAG_SHIFT;
+
+// Summary:
+// To pack all the different value in to doubles we use the following schema:
+// s = sign, e = exponent, m = mantissa
+// The top part is the tag and the bottom the payload.
+// 0bseeeeeeeeeeemmmm mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm
+// 0b0111111111111000 0... is the only real NaN
+// 0b1111111111111xxx yyy... xxx = pointer type, yyy = pointer value
+// 0b0111111111111xxx yyy... xxx = non-pointer type, yyy = value or 0 if just type
+
+// Future expansion: We are not fully utilizing all the possible bit patterns
+// yet, these choices were made to make it easy to implement and understand.
+// We can for example drop the always 1 top bit of the mantissa expanding our
+// options from 8 tags to 15 but since we currently only use 5 for both sign bits
+// this is not needed.
+
 class Value {
 public:
-    enum class Type {
-        Empty,
-        Undefined,
-        Null,
-        Int32,
-        Double,
-        String,
-        Object,
-        Boolean,
-        Symbol,
-        Accessor,
-        BigInt,
-    };
-
     enum class PreferredType {
         Default,
         String,
         Number,
     };
 
-    bool is_empty() const { return m_type == Type::Empty; }
-    bool is_undefined() const { return m_type == Type::Undefined; }
-    bool is_null() const { return m_type == Type::Null; }
-    bool is_number() const { return m_type == Type::Int32 || m_type == Type::Double; }
-    bool is_string() const { return m_type == Type::String; }
-    bool is_object() const { return m_type == Type::Object; }
-    bool is_boolean() const { return m_type == Type::Boolean; }
-    bool is_symbol() const { return m_type == Type::Symbol; }
-    bool is_accessor() const { return m_type == Type::Accessor; };
-    bool is_bigint() const { return m_type == Type::BigInt; };
-    bool is_nullish() const { return is_null() || is_undefined(); }
-    bool is_cell() const { return is_string() || is_accessor() || is_object() || is_bigint() || is_symbol(); }
+    bool is_empty() const { return m_value.tag == EMPTY_TAG; }
+    bool is_undefined() const { return m_value.tag == UNDEFINED_TAG; }
+    bool is_null() const { return m_value.tag == NULL_TAG; }
+    bool is_number() const { return is_double() || is_int32(); }
+    bool is_string() const { return m_value.tag == STRING_TAG; }
+    bool is_object() const { return m_value.tag == OBJECT_TAG; }
+    bool is_boolean() const { return m_value.tag == BOOLEAN_TAG; }
+    bool is_symbol() const { return m_value.tag == SYMBOL_TAG; }
+    bool is_accessor() const { return m_value.tag == ACCESSOR_TAG; };
+    bool is_bigint() const { return m_value.tag == BIGINT_TAG; };
+    bool is_nullish() const { return (m_value.tag & IS_NULLISH_EXTRACT_PATTERN) == IS_NULLISH_PATTERN; }
+    bool is_cell() const { return (m_value.tag & IS_CELL_PATTERN) == IS_CELL_PATTERN; }
     ThrowCompletionOr<bool> is_array(GlobalObject&) const;
     bool is_function() const;
     bool is_constructor() const;
@@ -69,84 +148,73 @@ public:
 
     bool is_nan() const
     {
-        if (type() == Type::Int32)
-            return false;
-        return is_number() && __builtin_isnan(as_double());
+        return m_value.encoded == CANON_NAN_BITS;
     }
 
     bool is_infinity() const
     {
-        if (type() == Type::Int32)
-            return false;
-        return is_number() && __builtin_isinf(as_double());
+        static_assert(NEGATIVE_INFINITY_BITS == (0x1ULL << 63 | POSITIVE_INFINITY_BITS));
+        return (0x1ULL << 63 | m_value.encoded) == NEGATIVE_INFINITY_BITS;
     }
 
     bool is_positive_infinity() const
     {
-        if (type() == Type::Int32)
-            return false;
-        return is_number() && __builtin_isinf_sign(as_double()) > 0;
+        return m_value.encoded == POSITIVE_INFINITY_BITS;
     }
 
     bool is_negative_infinity() const
     {
-        if (type() == Type::Int32)
-            return false;
-        return is_number() && __builtin_isinf_sign(as_double()) < 0;
+        return m_value.encoded == NEGATIVE_INFINITY_BITS;
     }
 
     bool is_positive_zero() const
     {
-        if (type() == Type::Int32)
-            return as_i32() == 0;
-        return is_number() && bit_cast<u64>(as_double()) == 0;
+        return m_value.encoded == 0 || (is_int32() && as_i32() == 0);
     }
 
     bool is_negative_zero() const
     {
-        if (type() == Type::Int32)
-            return false;
-        return is_number() && bit_cast<u64>(as_double()) == NEGATIVE_ZERO_BITS;
+        return m_value.encoded == NEGATIVE_ZERO_BITS;
     }
 
     bool is_integral_number() const
     {
-        if (type() == Type::Int32)
+        if (is_int32())
             return true;
         return is_finite_number() && trunc(as_double()) == as_double();
     }
 
     bool is_finite_number() const
     {
-        if (type() == Type::Int32)
-            return true;
         if (!is_number())
             return false;
-        auto number = as_double();
-        return !__builtin_isnan(number) && !__builtin_isinf(number);
+        if (is_int32())
+            return true;
+        return !is_nan() && !is_infinity();
     }
 
     Value()
-        : m_type(Type::Empty)
+        : Value(EMPTY_TAG << TAG_SHIFT, (u64)0)
     {
     }
 
     template<typename T>
     requires(IsSameIgnoringCV<T, bool>) explicit Value(T value)
-        : m_type(Type::Boolean)
+        : Value(BOOLEAN_TAG << TAG_SHIFT, (u64)value)
     {
-        m_value.as_bool = value;
     }
 
     explicit Value(double value)
     {
         bool is_negative_zero = bit_cast<u64>(value) == NEGATIVE_ZERO_BITS;
         if (value >= NumericLimits<i32>::min() && value <= NumericLimits<i32>::max() && trunc(value) == value && !is_negative_zero) {
-            m_type = Type::Int32;
-            m_value.as_i32 = static_cast<i32>(value);
+            VERIFY(!(SHIFTED_INT32_TAG & (static_cast<i32>(value) & 0xFFFFFFFFul)));
+            m_value.encoded = SHIFTED_INT32_TAG | (static_cast<i32>(value) & 0xFFFFFFFFul);
         } else {
-            m_type = Type::Double;
-            m_value.as_double = value;
+            if (isnan(value)) [[unlikely]]
+                m_value.encoded = CANON_NAN_BITS;
+            else
+                m_value.as_double = value;
         }
     }
 
@@ -159,142 +227,129 @@ public:
     {
         if (value > NumericLimits<i32>::max()) {
             m_value.as_double = static_cast<double>(value);
-            m_type = Type::Double;
         } else {
-            m_value.as_i32 = static_cast<i32>(value);
-            m_type = Type::Int32;
+            VERIFY(!(SHIFTED_INT32_TAG & (static_cast<i32>(value) & 0xFFFFFFFFul)));
+            m_value.encoded = SHIFTED_INT32_TAG | (static_cast<i32>(value) & 0xFFFFFFFFul);
+        }
+    }
+
+    explicit Value(unsigned value)
+    {
+        if (value > NumericLimits<i32>::max()) {
+            m_value.as_double = static_cast<double>(value);
+        } else {
+            VERIFY(!(SHIFTED_INT32_TAG & (static_cast<i32>(value) & 0xFFFFFFFFul)));
+            m_value.encoded = SHIFTED_INT32_TAG | (static_cast<i32>(value) & 0xFFFFFFFFul);
         }
     }
 
     explicit Value(i32 value)
-        : m_type(Type::Int32)
+        : Value(SHIFTED_INT32_TAG, (u32)value)
     {
-        m_value.as_i32 = value;
     }
 
     Value(Object const* object)
-        : m_type(object ? Type::Object : Type::Null)
+        : Value(object ? (OBJECT_TAG << TAG_SHIFT) : (NULL_TAG << TAG_SHIFT), reinterpret_cast<void const*>(object))
     {
-        m_value.as_object = const_cast<Object*>(object);
     }
 
     Value(PrimitiveString const* string)
-        : m_type(Type::String)
+        : Value(STRING_TAG << TAG_SHIFT, reinterpret_cast<void const*>(string))
     {
-        m_value.as_string = const_cast<PrimitiveString*>(string);
     }
 
     Value(Symbol const* symbol)
-        : m_type(Type::Symbol)
+        : Value(SYMBOL_TAG << TAG_SHIFT, reinterpret_cast<void const*>(symbol))
     {
-        m_value.as_symbol = const_cast<Symbol*>(symbol);
     }
 
     Value(Accessor const* accessor)
-        : m_type(Type::Accessor)
+        : Value(ACCESSOR_TAG << TAG_SHIFT, reinterpret_cast<void const*>(accessor))
     {
-        m_value.as_accessor = const_cast<Accessor*>(accessor);
     }
 
     Value(BigInt const* bigint)
-        : m_type(Type::BigInt)
-    {
-        m_value.as_bigint = const_cast<BigInt*>(bigint);
-    }
-
-    explicit Value(Type type)
-        : m_type(type)
+        : Value(BIGINT_TAG << TAG_SHIFT, reinterpret_cast<void const*>(bigint))
     {
     }
-
-    Type type() const { return m_type; }
 
     double as_double() const
     {
         VERIFY(is_number());
-        if (m_type == Type::Int32)
-            return m_value.as_i32;
+        if (is_int32())
+            return static_cast<i32>(m_value.encoded);
         return m_value.as_double;
     }
 
     bool as_bool() const
     {
-        VERIFY(type() == Type::Boolean);
-        return m_value.as_bool;
+        VERIFY(is_boolean());
+        return static_cast<bool>(m_value.encoded & 0x1);
     }
 
     Object& as_object()
     {
-        VERIFY(type() == Type::Object);
-        return *m_value.as_object;
+        VERIFY(is_object());
+        return *extract_pointer<Object>();
     }
 
     Object const& as_object() const
     {
-        VERIFY(type() == Type::Object);
-        return *m_value.as_object;
+        VERIFY(is_object());
+        return *extract_pointer<Object>();
     }
 
     PrimitiveString& as_string()
     {
         VERIFY(is_string());
-        return *m_value.as_string;
+        return *extract_pointer<PrimitiveString>();
     }
 
     PrimitiveString const& as_string() const
     {
         VERIFY(is_string());
-        return *m_value.as_string;
+        return *extract_pointer<PrimitiveString>();
     }
 
     Symbol& as_symbol()
     {
         VERIFY(is_symbol());
-        return *m_value.as_symbol;
+        return *extract_pointer<Symbol>();
     }
 
     Symbol const& as_symbol() const
     {
         VERIFY(is_symbol());
-        return *m_value.as_symbol;
+        return *extract_pointer<Symbol>();
     }
 
     Cell& as_cell()
     {
         VERIFY(is_cell());
-        return *m_value.as_cell;
+        return *extract_pointer<Cell>();
     }
 
     Accessor& as_accessor()
     {
         VERIFY(is_accessor());
-        return *m_value.as_accessor;
+        return *extract_pointer<Accessor>();
+    }
+
+    BigInt const& as_bigint() const
+    {
+        VERIFY(is_bigint());
+        return *extract_pointer<BigInt>();
     }
 
     BigInt& as_bigint()
     {
         VERIFY(is_bigint());
-        return *m_value.as_bigint;
+        return *extract_pointer<BigInt>();
     }
 
     Array& as_array();
     FunctionObject& as_function();
     FunctionObject const& as_function() const;
-
-    // FIXME: These two conversions are wrong for JS, and seem likely to be footguns
-    i32 as_i32() const
-    {
-        if (m_type == Type::Int32)
-            return m_value.as_i32;
-        return static_cast<i32>(as_double());
-    }
-    u32 as_u32() const
-    {
-        if (m_type == Type::Int32 && m_value.as_i32 >= 0)
-            return m_value.as_i32;
-        VERIFY(as_double() >= 0);
-        return (u32)min(as_double(), (double)NumericLimits<u32>::max());
-    }
 
     u64 encoded() const { return m_value.encoded; }
 
@@ -343,35 +398,86 @@ public:
     [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> invoke(GlobalObject& global_object, PropertyKey const& property_key, Args... args);
 
 private:
-    Type m_type { Type::Empty };
+    Value(u64 tag, u64 val)
+    {
+        VERIFY((tag & ~TAG_EXTRACTION) == 0);
+        VERIFY(!(tag & val));
+        m_value.encoded = tag | val;
+    }
+
+    template<typename PointerType>
+    Value(u64 tag, PointerType const* ptr)
+    {
+        VERIFY((tag & ~TAG_EXTRACTION) == 0);
+        VERIFY((tag & TAG_EXTRACTION) != 0);
+        // Cell tag bit must be set or this is a nullptr
+        VERIFY((tag & 0x8000000000000000ul) == 0x8000000000000000ul || !ptr);
+
+        if constexpr (sizeof(PointerType*) < sizeof(u64)) {
+            m_value.encoded = tag | reinterpret_cast<u32>(ptr);
+        } else {
+            VERIFY(!(reinterpret_cast<u64>(ptr) & TAG_EXTRACTION));
+            m_value.encoded = tag | reinterpret_cast<u64>(ptr);
+        }
+    }
+
+    // A double is any Value which does not have the full exponent and top mantissa bit set or has
+    // exactly only those bits set.
+    bool is_double() const { return (m_value.encoded & CANON_NAN_BITS) != CANON_NAN_BITS || (m_value.encoded == CANON_NAN_BITS); }
+    bool is_int32() const { return m_value.tag == INT32_TAG; }
+
+    i32 as_i32() const
+    {
+        VERIFY(is_int32());
+        return static_cast<i32>(m_value.encoded & 0xFFFFFFFF);
+    }
+
+    template<typename PointerType>
+    PointerType* extract_pointer() const
+    {
+        VERIFY(is_cell());
+
+        // For 32-bit system the pointer fully fits so we can just return it directly.
+        if constexpr (sizeof(PointerType*) < sizeof(u64))
+            return reinterpret_cast<PointerType*>(static_cast<u32>(m_value.encoded & 0xffffffff));
+
+        // For x86_64 the top 16 bits should be sign extending the "real" top bit (47th).
+        // So first shift the top 16 bits away then using the right shift it sign extends the top 16 bits.
+        u64 ptr_val = (u64)(((i64)(m_value.encoded << 16)) >> 16);
+        return reinterpret_cast<PointerType*>(ptr_val);
+    }
 
     [[nodiscard]] ThrowCompletionOr<Value> invoke_internal(GlobalObject& global_object, PropertyKey const&, Optional<MarkedVector<Value>> arguments);
 
     ThrowCompletionOr<i32> to_i32_slow_case(GlobalObject&) const;
 
     union {
-        bool as_bool;
-        i32 as_i32;
         double as_double;
-        PrimitiveString* as_string;
-        Symbol* as_symbol;
-        Object* as_object;
-        Cell* as_cell;
-        Accessor* as_accessor;
-        BigInt* as_bigint;
-
+        struct {
+            u64 payload : 48;
+            u64 tag : 16;
+        };
         u64 encoded;
     } m_value { .encoded = 0 };
+
+    friend Value js_undefined();
+    friend Value js_null();
+    friend ThrowCompletionOr<Value> greater_than(GlobalObject&, Value lhs, Value rhs);
+    friend ThrowCompletionOr<Value> greater_than_equals(GlobalObject&, Value lhs, Value rhs);
+    friend ThrowCompletionOr<Value> less_than(GlobalObject&, Value lhs, Value rhs);
+    friend ThrowCompletionOr<Value> less_than_equals(GlobalObject&, Value lhs, Value rhs);
+    friend ThrowCompletionOr<Value> add(GlobalObject&, Value lhs, Value rhs);
+    friend bool same_value_non_numeric(Value lhs, Value rhs);
 };
 
 inline Value js_undefined()
 {
-    return Value(Value::Type::Undefined);
+    return Value(UNDEFINED_TAG << TAG_SHIFT, (u64)0);
 }
 
 inline Value js_null()
 {
-    return Value(Value::Type::Null);
+    return Value(NULL_TAG << TAG_SHIFT, (u64)0);
 }
 
 inline Value js_nan()
@@ -432,6 +538,8 @@ inline bool Value::operator==(Value const& value) const { return same_value(*thi
 }
 
 namespace AK {
+
+static_assert(sizeof(JS::Value) == sizeof(double));
 
 template<>
 class Optional<JS::Value> {

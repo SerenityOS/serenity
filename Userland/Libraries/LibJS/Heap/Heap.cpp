@@ -136,15 +136,32 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
 
     auto* raw_jmp_buf = reinterpret_cast<FlatPtr const*>(buf);
 
+    auto add_possible_value = [&](FlatPtr data) {
+        if constexpr (sizeof(FlatPtr*) == sizeof(Value)) {
+            // Because Value stores pointers in non-canonical form we have to check if the top bytes
+            // match any pointer-backed tag, in that case we have to extract the pointer to its
+            // canonical form and add that as a possible pointer.
+            if ((data & SHIFTED_IS_CELL_PATTERN) == SHIFTED_IS_CELL_PATTERN)
+                possible_pointers.set((u64)(((i64)data << 16) >> 16));
+            else
+                possible_pointers.set(data);
+        } else {
+            static_assert((sizeof(Value) % sizeof(FlatPtr*)) == 0);
+            // In the 32-bit case we will look at the top and bottom part of Value separately we just
+            // add both the upper and lower bytes as possible pointers.
+            possible_pointers.set(data);
+        }
+    };
+
     for (size_t i = 0; i < ((size_t)sizeof(buf)) / sizeof(FlatPtr); i += sizeof(FlatPtr))
-        possible_pointers.set(raw_jmp_buf[i]);
+        add_possible_value(raw_jmp_buf[i]);
 
     auto stack_reference = bit_cast<FlatPtr>(&dummy);
     auto& stack_info = m_vm.stack_info();
 
     for (FlatPtr stack_address = stack_reference; stack_address < stack_info.top(); stack_address += sizeof(FlatPtr)) {
         auto data = *reinterpret_cast<FlatPtr*>(stack_address);
-        possible_pointers.set(data);
+        add_possible_value(data);
     }
 
     HashTable<HeapBlock*> all_live_heap_blocks;

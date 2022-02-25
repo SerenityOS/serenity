@@ -41,10 +41,16 @@ namespace JS {
 
 static inline bool same_type_for_equality(Value const& lhs, Value const& rhs)
 {
-    if (lhs.type() == rhs.type())
+    // If the top two bytes are identical then either:
+    // both are NaN boxed Values with the same type
+    // or they are doubles which happen to have the same top bytes.
+    if ((lhs.encoded() & TAG_EXTRACTION) == (rhs.encoded() & TAG_EXTRACTION))
         return true;
+
     if (lhs.is_number() && rhs.is_number())
         return true;
+
+    // One of the Values is not a number and they do not have the same tag
     return false;
 }
 
@@ -210,7 +216,7 @@ ThrowCompletionOr<bool> Value::is_array(GlobalObject& global_object) const
 Array& Value::as_array()
 {
     VERIFY(is_object() && is<Array>(as_object()));
-    return static_cast<Array&>(*m_value.as_object);
+    return static_cast<Array&>(as_object());
 }
 
 // 7.2.3 IsCallable ( argument ), https://tc39.es/ecma262/#sec-iscallable
@@ -263,28 +269,28 @@ ThrowCompletionOr<bool> Value::is_regexp(GlobalObject& global_object) const
 // 13.5.3 The typeof Operator, https://tc39.es/ecma262/#sec-typeof-operator
 String Value::typeof() const
 {
-    switch (m_type) {
-    case Value::Type::Undefined:
-        return "undefined";
-    case Value::Type::Null:
-        return "object";
-    case Value::Type::Int32:
-    case Value::Type::Double:
+    if (is_number())
         return "number";
-    case Value::Type::String:
+
+    switch (m_value.tag) {
+    case UNDEFINED_TAG:
+        return "undefined";
+    case NULL_TAG:
+        return "object";
+    case STRING_TAG:
         return "string";
-    case Value::Type::Object:
+    case OBJECT_TAG:
         // B.3.7.3 Changes to the typeof Operator, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-typeof
         if (as_object().is_htmldda())
             return "undefined";
         if (is_function())
             return "function";
         return "object";
-    case Value::Type::Boolean:
+    case BOOLEAN_TAG:
         return "boolean";
-    case Value::Type::Symbol:
+    case SYMBOL_TAG:
         return "symbol";
-    case Value::Type::BigInt:
+    case BIGINT_TAG:
         return "bigint";
     default:
         VERIFY_NOT_REACHED();
@@ -293,26 +299,27 @@ String Value::typeof() const
 
 String Value::to_string_without_side_effects() const
 {
-    switch (m_type) {
-    case Type::Undefined:
-        return "undefined";
-    case Type::Null:
-        return "null";
-    case Type::Boolean:
-        return m_value.as_bool ? "true" : "false";
-    case Type::Int32:
-        return String::number(m_value.as_i32);
-    case Type::Double:
+    if (is_double())
         return double_to_string(m_value.as_double);
-    case Type::String:
-        return m_value.as_string->string();
-    case Type::Symbol:
-        return m_value.as_symbol->to_string();
-    case Type::BigInt:
-        return m_value.as_bigint->to_string();
-    case Type::Object:
+
+    switch (m_value.tag) {
+    case UNDEFINED_TAG:
+        return "undefined";
+    case NULL_TAG:
+        return "null";
+    case BOOLEAN_TAG:
+        return as_bool() ? "true" : "false";
+    case INT32_TAG:
+        return String::number(as_i32());
+    case STRING_TAG:
+        return as_string().string();
+    case SYMBOL_TAG:
+        return as_symbol().to_string();
+    case BIGINT_TAG:
+        return as_bigint().to_string();
+    case OBJECT_TAG:
         return String::formatted("[object {}]", as_object().class_name());
-    case Type::Accessor:
+    case ACCESSOR_TAG:
         return "<accessor>";
     default:
         VERIFY_NOT_REACHED();
@@ -330,25 +337,26 @@ ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(GlobalObject& glo
 // 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
 ThrowCompletionOr<String> Value::to_string(GlobalObject& global_object) const
 {
-    auto& vm = global_object.vm();
-    switch (m_type) {
-    case Type::Undefined:
-        return "undefined"sv;
-    case Type::Null:
-        return "null"sv;
-    case Type::Boolean:
-        return m_value.as_bool ? "true"sv : "false"sv;
-    case Type::Int32:
-        return String::number(m_value.as_i32);
-    case Type::Double:
+    if (is_double())
         return double_to_string(m_value.as_double);
-    case Type::String:
-        return m_value.as_string->string();
-    case Type::Symbol:
+
+    auto& vm = global_object.vm();
+    switch (m_value.tag) {
+    case UNDEFINED_TAG:
+        return "undefined"sv;
+    case NULL_TAG:
+        return "null"sv;
+    case BOOLEAN_TAG:
+        return as_bool() ? "true"sv : "false"sv;
+    case INT32_TAG:
+        return String::number(as_i32());
+    case STRING_TAG:
+        return as_string().string();
+    case SYMBOL_TAG:
         return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "symbol", "string");
-    case Type::BigInt:
-        return m_value.as_bigint->big_integer().to_base(10);
-    case Type::Object: {
+    case BIGINT_TAG:
+        return as_bigint().big_integer().to_base(10);
+    case OBJECT_TAG: {
         auto primitive_value = TRY(to_primitive(global_object, PreferredType::String));
         return primitive_value.to_string(global_object);
     }
@@ -359,8 +367,8 @@ ThrowCompletionOr<String> Value::to_string(GlobalObject& global_object) const
 
 ThrowCompletionOr<Utf16String> Value::to_utf16_string(GlobalObject& global_object) const
 {
-    if (m_type == Type::String)
-        return m_value.as_string->utf16_string();
+    if (is_string())
+        return as_string().utf16_string();
 
     auto utf8_string = TRY(to_string(global_object));
     return Utf16String(utf8_string);
@@ -369,27 +377,29 @@ ThrowCompletionOr<Utf16String> Value::to_utf16_string(GlobalObject& global_objec
 // 7.1.2 ToBoolean ( argument ), https://tc39.es/ecma262/#sec-toboolean
 bool Value::to_boolean() const
 {
-    switch (m_type) {
-    case Type::Undefined:
-    case Type::Null:
-        return false;
-    case Type::Boolean:
-        return m_value.as_bool;
-    case Type::Int32:
-        return m_value.as_i32 != 0;
-    case Type::Double:
+    if (is_double()) {
         if (is_nan())
             return false;
         return m_value.as_double != 0;
-    case Type::String:
-        return !m_value.as_string->is_empty();
-    case Type::Symbol:
+    }
+
+    switch (m_value.tag) {
+    case UNDEFINED_TAG:
+    case NULL_TAG:
+        return false;
+    case BOOLEAN_TAG:
+        return as_bool();
+    case INT32_TAG:
+        return as_i32() != 0;
+    case STRING_TAG:
+        return !as_string().is_empty();
+    case SYMBOL_TAG:
         return true;
-    case Type::BigInt:
-        return m_value.as_bigint->big_integer() != BIGINT_ZERO;
-    case Type::Object:
+    case BIGINT_TAG:
+        return as_bigint().big_integer() != BIGINT_ZERO;
+    case OBJECT_TAG:
         // B.3.7.1 Changes to ToBoolean, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-to-boolean
-        if (m_value.as_object->is_htmldda())
+        if (as_object().is_htmldda())
             return false;
         return true;
     default:
@@ -432,22 +442,23 @@ ThrowCompletionOr<Value> Value::to_primitive(GlobalObject& global_object, Prefer
 // 7.1.18 ToObject ( argument ), https://tc39.es/ecma262/#sec-toobject
 ThrowCompletionOr<Object*> Value::to_object(GlobalObject& global_object) const
 {
-    switch (m_type) {
-    case Type::Undefined:
-    case Type::Null:
-        return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
-    case Type::Boolean:
-        return BooleanObject::create(global_object, m_value.as_bool);
-    case Type::Int32:
-    case Type::Double:
+    VERIFY(!is_empty());
+    if (is_number())
         return NumberObject::create(global_object, as_double());
-    case Type::String:
-        return StringObject::create(global_object, *m_value.as_string, *global_object.string_prototype());
-    case Type::Symbol:
-        return SymbolObject::create(global_object, *m_value.as_symbol);
-    case Type::BigInt:
-        return BigIntObject::create(global_object, *m_value.as_bigint);
-    case Type::Object:
+
+    switch (m_value.tag) {
+    case UNDEFINED_TAG:
+    case NULL_TAG:
+        return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
+    case BOOLEAN_TAG:
+        return BooleanObject::create(global_object, as_bool());
+    case STRING_TAG:
+        return StringObject::create(global_object, const_cast<JS::PrimitiveString&>(as_string()), *global_object.string_prototype());
+    case SYMBOL_TAG:
+        return SymbolObject::create(global_object, const_cast<JS::Symbol&>(as_symbol()));
+    case BIGINT_TAG:
+        return BigIntObject::create(global_object, const_cast<JS::BigInt&>(as_bigint()));
+    case OBJECT_TAG:
         return &const_cast<Object&>(as_object());
     default:
         VERIFY_NOT_REACHED();
@@ -466,17 +477,18 @@ FLATTEN ThrowCompletionOr<Value> Value::to_numeric(GlobalObject& global_object) 
 // 7.1.4 ToNumber ( argument ), https://tc39.es/ecma262/#sec-tonumber
 ThrowCompletionOr<Value> Value::to_number(GlobalObject& global_object) const
 {
-    switch (m_type) {
-    case Type::Undefined:
-        return js_nan();
-    case Type::Null:
-        return Value(0);
-    case Type::Boolean:
-        return Value(m_value.as_bool ? 1 : 0);
-    case Type::Int32:
-    case Type::Double:
+    VERIFY(!is_empty());
+    if (is_number())
         return *this;
-    case Type::String: {
+
+    switch (m_value.tag) {
+    case UNDEFINED_TAG:
+        return js_nan();
+    case NULL_TAG:
+        return Value(0);
+    case BOOLEAN_TAG:
+        return Value(as_bool() ? 1 : 0);
+    case STRING_TAG: {
         String string = Utf8View(as_string().string()).trim(whitespace_characters, AK::TrimMode::Both).as_string();
         if (string.is_empty())
             return Value(0);
@@ -490,11 +502,11 @@ ThrowCompletionOr<Value> Value::to_number(GlobalObject& global_object) const
             return js_nan();
         return Value(parsed_double);
     }
-    case Type::Symbol:
+    case SYMBOL_TAG:
         return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::Convert, "symbol", "number");
-    case Type::BigInt:
+    case BIGINT_TAG:
         return global_object.vm().throw_completion<TypeError>(global_object, ErrorType::Convert, "BigInt", "number");
-    case Type::Object: {
+    case OBJECT_TAG: {
         auto primitive = TRY(to_primitive(global_object, PreferredType::Number));
         return primitive.to_number(global_object);
     }
@@ -508,22 +520,24 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(GlobalObject& global_object) const
 {
     auto& vm = global_object.vm();
     auto primitive = TRY(to_primitive(global_object, PreferredType::Number));
-    switch (primitive.type()) {
-    case Type::Undefined:
+
+    VERIFY(!primitive.is_empty());
+    if (primitive.is_number())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "number", "BigInt");
+
+    switch (primitive.m_value.tag) {
+    case UNDEFINED_TAG:
         return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "undefined", "BigInt");
-    case Type::Null:
+    case NULL_TAG:
         return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "null", "BigInt");
-    case Type::Boolean: {
+    case BOOLEAN_TAG: {
         auto value = primitive.as_bool() ? 1 : 0;
         return js_bigint(vm, Crypto::SignedBigInteger { value });
     }
-    case Type::BigInt:
+    case BIGINT_TAG:
         return &primitive.as_bigint();
-    case Type::Int32:
-    case Type::Double:
-        return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "number", "BigInt");
-    case Type::String: {
-        // 1. Let n be StringToBigInt(prim).
+    case STRING_TAG: {
+        // 1. Let n be ! StringToBigInt(prim).
         auto bigint = primitive.string_to_bigint(global_object);
 
         // 2. If n is undefined, throw a SyntaxError exception.
@@ -533,7 +547,7 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(GlobalObject& global_object) const
         // 3. Return n.
         return bigint.release_value();
     }
-    case Type::Symbol:
+    case SYMBOL_TAG:
         return vm.throw_completion<TypeError>(global_object, ErrorType::Convert, "symbol", "BigInt");
     default:
         VERIFY_NOT_REACHED();
@@ -632,7 +646,7 @@ ThrowCompletionOr<double> Value::to_double(GlobalObject& global_object) const
 // 7.1.19 ToPropertyKey ( argument ), https://tc39.es/ecma262/#sec-topropertykey
 ThrowCompletionOr<PropertyKey> Value::to_property_key(GlobalObject& global_object) const
 {
-    if (type() == Type::Int32 && as_i32() >= 0)
+    if (is_int32() && as_i32() >= 0)
         return PropertyKey { as_i32() };
     auto key = TRY(to_primitive(global_object, PreferredType::String));
     if (key.is_symbol())
@@ -642,7 +656,7 @@ ThrowCompletionOr<PropertyKey> Value::to_property_key(GlobalObject& global_objec
 
 ThrowCompletionOr<i32> Value::to_i32_slow_case(GlobalObject& global_object) const
 {
-    VERIFY(type() != Type::Int32);
+    VERIFY(!is_int32());
     double value = TRY(to_number(global_object)).as_double();
     if (!isfinite(value) || value == 0)
         return 0;
@@ -659,8 +673,8 @@ ThrowCompletionOr<i32> Value::to_i32_slow_case(GlobalObject& global_object) cons
 
 ThrowCompletionOr<i32> Value::to_i32(GlobalObject& global_object) const
 {
-    if (m_type == Type::Int32)
-        return m_value.as_i32;
+    if (is_int32())
+        return as_i32();
     return to_i32_slow_case(global_object);
 }
 
@@ -872,7 +886,7 @@ ThrowCompletionOr<FunctionObject*> Value::get_method(GlobalObject& global_object
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 ThrowCompletionOr<Value> greater_than(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
+    if (lhs.is_int32() && rhs.is_int32())
         return lhs.as_i32() > rhs.as_i32();
 
     TriState relation = TRY(is_less_than(global_object, lhs, rhs, false));
@@ -884,7 +898,7 @@ ThrowCompletionOr<Value> greater_than(GlobalObject& global_object, Value lhs, Va
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 ThrowCompletionOr<Value> greater_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
+    if (lhs.is_int32() && rhs.is_int32())
         return lhs.as_i32() >= rhs.as_i32();
 
     TriState relation = TRY(is_less_than(global_object, lhs, rhs, true));
@@ -896,7 +910,7 @@ ThrowCompletionOr<Value> greater_than_equals(GlobalObject& global_object, Value 
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 ThrowCompletionOr<Value> less_than(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
+    if (lhs.is_int32() && rhs.is_int32())
         return lhs.as_i32() < rhs.as_i32();
 
     TriState relation = TRY(is_less_than(global_object, lhs, rhs, true));
@@ -908,7 +922,7 @@ ThrowCompletionOr<Value> less_than(GlobalObject& global_object, Value lhs, Value
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 ThrowCompletionOr<Value> less_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32)
+    if (lhs.is_int32() && rhs.is_int32())
         return lhs.as_i32() <= rhs.as_i32();
 
     TriState relation = TRY(is_less_than(global_object, lhs, rhs, false));
@@ -1078,7 +1092,7 @@ ThrowCompletionOr<Value> unsigned_right_shift(GlobalObject& global_object, Value
 ThrowCompletionOr<Value> add(GlobalObject& global_object, Value lhs, Value rhs)
 {
     if (both_number(lhs, rhs)) {
-        if (lhs.type() == Value::Type::Int32 && rhs.type() == Value::Type::Int32) {
+        if (lhs.is_int32() && rhs.is_int32()) {
             Checked<i32> result;
             result = MUST(lhs.to_i32(global_object));
             result += MUST(rhs.to_i32(global_object));
@@ -1112,8 +1126,12 @@ ThrowCompletionOr<Value> sub(GlobalObject& global_object, Value lhs, Value rhs)
     auto& vm = global_object.vm();
     auto lhs_numeric = TRY(lhs.to_numeric(global_object));
     auto rhs_numeric = TRY(rhs.to_numeric(global_object));
-    if (both_number(lhs_numeric, rhs_numeric))
-        return Value(lhs_numeric.as_double() - rhs_numeric.as_double());
+    if (both_number(lhs_numeric, rhs_numeric)) {
+        double lhsd = lhs_numeric.as_double();
+        double rhsd = rhs_numeric.as_double();
+        double interm = lhsd - rhsd;
+        return Value(interm);
+    }
     if (both_bigint(lhs_numeric, rhs_numeric))
         return Value(js_bigint(vm, lhs_numeric.as_bigint().big_integer().minus(rhs_numeric.as_bigint().big_integer())));
     return vm.throw_completion<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "subtraction");
@@ -1182,7 +1200,7 @@ static Value exp_double(Value base, Value exponent)
     if (base.is_positive_infinity())
         return exponent.as_double() > 0 ? js_infinity() : Value(0);
     if (base.is_negative_infinity()) {
-        auto is_odd_integral_number = exponent.is_integral_number() && (exponent.as_i32() % 2 != 0);
+        auto is_odd_integral_number = exponent.is_integral_number() && (static_cast<i32>(exponent.as_double()) % 2 != 0);
         if (exponent.as_double() > 0)
             return is_odd_integral_number ? js_negative_infinity() : js_infinity();
         else
@@ -1191,7 +1209,7 @@ static Value exp_double(Value base, Value exponent)
     if (base.is_positive_zero())
         return exponent.as_double() > 0 ? Value(0) : js_infinity();
     if (base.is_negative_zero()) {
-        auto is_odd_integral_number = exponent.is_integral_number() && (exponent.as_i32() % 2 != 0);
+        auto is_odd_integral_number = exponent.is_integral_number() && (static_cast<i32>(exponent.as_double()) % 2 != 0);
         if (exponent.as_double() > 0)
             return is_odd_integral_number ? Value(-0.0) : Value(0);
         else
@@ -1342,21 +1360,10 @@ bool same_value_non_numeric(Value lhs, Value rhs)
     VERIFY(!lhs.is_number() && !lhs.is_bigint());
     VERIFY(same_type_for_equality(lhs, rhs));
 
-    switch (lhs.type()) {
-    case Value::Type::Undefined:
-    case Value::Type::Null:
-        return true;
-    case Value::Type::String:
+    if (lhs.is_string())
         return lhs.as_string().string() == rhs.as_string().string();
-    case Value::Type::Symbol:
-        return &lhs.as_symbol() == &rhs.as_symbol();
-    case Value::Type::Boolean:
-        return lhs.as_bool() == rhs.as_bool();
-    case Value::Type::Object:
-        return &lhs.as_object() == &rhs.as_object();
-    default:
-        VERIFY_NOT_REACHED();
-    }
+
+    return lhs.m_value.encoded == rhs.m_value.encoded;
 }
 
 // 7.2.15 IsStrictlyEqual ( x, y ), https://tc39.es/ecma262/#sec-isstrictlyequal

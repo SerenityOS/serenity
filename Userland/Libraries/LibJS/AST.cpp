@@ -356,7 +356,7 @@ static ThrowCompletionOr<void> argument_list_evaluation(Interpreter& interpreter
     for (auto& argument : arguments) {
         auto value = TRY(argument.value->execute(interpreter, global_object)).release_value();
         if (argument.is_spread) {
-            auto result = TRY(get_iterator_values(global_object, value, [&](Value iterator_value) -> Optional<Completion> {
+            TRY(get_iterator_values(global_object, value, [&](Value iterator_value) -> Optional<Completion> {
                 list.append(iterator_value);
                 return {};
             }));
