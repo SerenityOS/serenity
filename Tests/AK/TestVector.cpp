@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/ReverseIterator.h"
 #include <LibTest/TestCase.h>
 
 #include <AK/NonnullOwnPtrVector.h>
@@ -552,10 +553,18 @@ TEST_CASE(rend)
     EXPECT_EQ(*expected, *expected_in_reverse);
 }
 
-TEST_CASE(reverse_loop)
+TEST_CASE(reverse_iterator_for_loop)
 {
     Vector<int> v { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     int index = 9;
     for (auto rev = v.rbegin(); rev != v.rend(); ++rev)
         EXPECT_EQ(*rev, index--);
+}
+
+TEST_CASE(reverse_range_for_loop)
+{
+    Vector<int> v { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    int index = 9;
+    for (auto item : AK::ReverseWrapper::in_reverse(v))
+        EXPECT_EQ(item, index--);
 }
