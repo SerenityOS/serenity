@@ -55,6 +55,8 @@ public:
     NonnullRefPtr<Range> normalized() const;
     NonnullRefPtr<Range> clone_range() const;
 
+    NonnullRefPtr<Node> common_ancestor_container() const;
+
 private:
     explicit Range(Document&);
 

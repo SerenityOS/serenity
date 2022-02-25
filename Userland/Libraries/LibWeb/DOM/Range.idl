@@ -6,6 +6,8 @@ interface Range {
 
     readonly attribute boolean collapsed;
 
+    readonly attribute Node commonAncestorContainer;
+
     readonly attribute Node startContainer;
     readonly attribute unsigned long startOffset;
     readonly attribute Node endContainer;
