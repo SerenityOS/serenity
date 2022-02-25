@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Definitions.h>
@@ -113,7 +114,7 @@ private:
     u32 read_from_register(IntelGraphics::RegisterIndex) const;
 
     // ^GenericGraphicsAdapter
-    virtual void initialize_framebuffer_devices() override;
+    virtual ErrorOr<void> initialize_framebuffer_devices() override;
     virtual ErrorOr<ByteBuffer> get_edid(size_t output_port_index) const override;
 
     bool pipe_a_enabled() const;

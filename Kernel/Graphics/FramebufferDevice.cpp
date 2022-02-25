@@ -5,6 +5,7 @@
  */
 
 #include <AK/Checked.h>
+#include <AK/Error.h>
 #include <AK/Try.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
@@ -19,12 +20,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GenericGraphicsAdapter& adapter, PhysicalAddress paddr, size_t width, size_t height, size_t pitch)
+ErrorOr<NonnullRefPtr<FramebufferDevice>> FramebufferDevice::create(const GenericGraphicsAdapter& adapter, PhysicalAddress paddr, size_t width, size_t height, size_t pitch)
 {
-    auto framebuffer_device_or_error = DeviceManagement::try_create_device<FramebufferDevice>(adapter, paddr, width, height, pitch);
-    // FIXME: Find a way to propagate errors
-    VERIFY(!framebuffer_device_or_error.is_error());
-    return framebuffer_device_or_error.release_value();
+    return TRY(DeviceManagement::try_create_device<FramebufferDevice>(adapter, paddr, width, height, pitch));
 }
 
 ErrorOr<Memory::Region*> FramebufferDevice::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)

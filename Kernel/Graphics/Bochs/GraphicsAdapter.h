@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
@@ -43,7 +44,7 @@ private:
     virtual bool try_to_set_resolution(size_t output_port_index, size_t width, size_t height) override;
     virtual bool set_y_offset(size_t output_port_index, size_t y) override;
 
-    virtual void initialize_framebuffer_devices() override;
+    virtual ErrorOr<void> initialize_framebuffer_devices() override;
 
     virtual void enable_consoles() override;
     virtual void disable_consoles() override;

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Types.h>
 #include <AK/Weakable.h>
 #include <Kernel/Bus/PCI/Definitions.h>
@@ -18,7 +19,7 @@ class GenericGraphicsAdapter
     , public Weakable<GenericGraphicsAdapter> {
 public:
     virtual ~GenericGraphicsAdapter() = default;
-    virtual void initialize_framebuffer_devices() = 0;
+    virtual ErrorOr<void> initialize_framebuffer_devices() = 0;
     virtual void enable_consoles() = 0;
     virtual void disable_consoles() = 0;
     bool consoles_enabled() const { return m_consoles_enabled; }

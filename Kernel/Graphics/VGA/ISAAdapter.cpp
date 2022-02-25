@@ -34,8 +34,9 @@ void ISAVGAAdapter::disable_consoles()
     m_framebuffer_console->disable();
 }
 
-void ISAVGAAdapter::initialize_framebuffer_devices()
+ErrorOr<void> ISAVGAAdapter::initialize_framebuffer_devices()
 {
+    return {};
 }
 
 bool ISAVGAAdapter::try_to_set_resolution(size_t, size_t, size_t)

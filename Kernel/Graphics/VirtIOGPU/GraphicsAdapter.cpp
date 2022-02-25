@@ -5,6 +5,7 @@
  */
 
 #include <AK/BinaryBufferWriter.h>
+#include <AK/Error.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
@@ -36,7 +37,7 @@ GraphicsAdapter::GraphicsAdapter(PCI::DeviceIdentifier const& device_identifier)
     m_scratch_space = region_or_error.release_value();
 }
 
-void GraphicsAdapter::initialize_framebuffer_devices()
+ErrorOr<void> GraphicsAdapter::initialize_framebuffer_devices()
 {
     dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Initializing framebuffer devices");
     VERIFY(!m_created_framebuffer_devices);
@@ -44,6 +45,7 @@ void GraphicsAdapter::initialize_framebuffer_devices()
     m_created_framebuffer_devices = true;
 
     GraphicsManagement::the().set_console(*default_console());
+    return {};
 }
 
 void GraphicsAdapter::enable_consoles()

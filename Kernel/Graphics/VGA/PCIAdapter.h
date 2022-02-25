@@ -30,7 +30,7 @@ private:
     PCIVGACompatibleAdapter(PCI::Address, PhysicalAddress, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch);
 
     // ^GenericGraphicsAdapter
-    virtual void initialize_framebuffer_devices() override;
+    virtual ErrorOr<void> initialize_framebuffer_devices() override;
 
     virtual void enable_consoles() override;
     virtual void disable_consoles() override;

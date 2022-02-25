@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Error.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
@@ -640,17 +641,16 @@ void IntelNativeGraphicsAdapter::disable_all_planes()
     write_to_register(IntelGraphics::RegisterIndex::DisplayPlaneAControl, read_from_register(IntelGraphics::RegisterIndex::DisplayPlaneAControl) & ~(1 << 31));
 }
 
-void IntelNativeGraphicsAdapter::initialize_framebuffer_devices()
+ErrorOr<void> IntelNativeGraphicsAdapter::initialize_framebuffer_devices()
 {
     auto address = PhysicalAddress(PCI::get_BAR2(pci_address()) & 0xfffffff0);
     VERIFY(!address.is_null());
     VERIFY(m_framebuffer_pitch != 0);
     VERIFY(m_framebuffer_height != 0);
     VERIFY(m_framebuffer_width != 0);
-    m_framebuffer_device = FramebufferDevice::create(*this, address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch);
-    // FIXME: Would be nice to be able to return a ErrorOr<void> here.
-    auto framebuffer_result = m_framebuffer_device->try_to_initialize();
-    VERIFY(!framebuffer_result.is_error());
+    m_framebuffer_device = TRY(FramebufferDevice::create(*this, address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch));
+    TRY(m_framebuffer_device->try_to_initialize());
+    return {};
 }
 
 ErrorOr<ByteBuffer> IntelNativeGraphicsAdapter::get_edid(size_t output_port_index) const

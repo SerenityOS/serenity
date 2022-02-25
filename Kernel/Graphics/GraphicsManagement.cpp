@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Error.h>
 #include <AK/Singleton.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
@@ -78,26 +79,27 @@ static inline bool is_display_controller_pci_device(PCI::DeviceIdentifier const&
     return device_identifier.class_code().value() == 0x3;
 }
 
-UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_isa_graphics_device()
+UNMAP_AFTER_INIT ErrorOr<void> GraphicsManagement::determine_and_initialize_isa_graphics_device()
 {
     dmesgln("Graphics: Using a ISA VGA compatible generic adapter");
     auto adapter = ISAVGAAdapter::initialize();
     m_graphics_devices.append(*adapter);
     adapter->enable_consoles();
     m_vga_adapter = adapter;
-    return true;
+    return {};
 }
 
-UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
+UNMAP_AFTER_INIT ErrorOr<void> GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
-    auto add_and_configure_adapter = [&](GenericGraphicsAdapter& graphics_device) {
+    auto add_and_configure_adapter = [&](GenericGraphicsAdapter& graphics_device) -> ErrorOr<void> {
         m_graphics_devices.append(graphics_device);
         if (framebuffer_devices_console_only()) {
             graphics_device.enable_consoles();
-            return;
+            return {};
         }
-        graphics_device.initialize_framebuffer_devices();
+        TRY(graphics_device.initialize_framebuffer_devices());
+        return {};
     };
 
     RefPtr<GenericGraphicsAdapter> adapter;
@@ -165,8 +167,8 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
     }
 
     if (!adapter)
-        return false;
-    add_and_configure_adapter(*adapter);
+        return Error::from_string_literal("Graphics device could not be initalized.");
+    TRY(add_and_configure_adapter(*adapter));
 
     // Note: If IO space is enabled, this VGA adapter is operating in VGA mode.
     // Note: If no other VGA adapter is attached as m_vga_adapter, we should attach it then.
@@ -174,10 +176,10 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
         dbgln("Graphics adapter @ {} is operating in VGA mode", device_identifier.address());
         m_vga_adapter = static_ptr_cast<VGACompatibleAdapter>(adapter);
     }
-    return true;
+    return {};
 }
 
-UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> GraphicsManagement::initialize()
 {
 
     /* Explanation on the flow when not requesting to force not creating any
@@ -222,8 +224,8 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
      */
 
     if (PCI::Access::is_disabled()) {
-        determine_and_initialize_isa_graphics_device();
-        return true;
+        TRY(determine_and_initialize_isa_graphics_device());
+        return {};
     }
 
     if (framebuffer_devices_console_only())
@@ -237,7 +239,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         // framebuffer console will take the control instead.
         if (!is_vga_compatible_pci_device(device_identifier) && !is_display_controller_pci_device(device_identifier))
             return;
-        determine_and_initialize_graphics_device(device_identifier);
+        MUST(determine_and_initialize_graphics_device(device_identifier));
     });
 
     if (!m_console) {
@@ -251,9 +253,9 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
 
     if (m_graphics_devices.is_empty()) {
         dbgln("No graphics adapter was initialized.");
-        return false;
+        return Error::from_string_literal("No graphics adapter was initialized.");
     }
-    return true;
+    return {};
 }
 
 bool GraphicsManagement::framebuffer_devices_exist() const

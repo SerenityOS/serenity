@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Error.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/Console/TextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
@@ -22,18 +23,18 @@ UNMAP_AFTER_INIT NonnullRefPtr<PCIVGACompatibleAdapter> PCIVGACompatibleAdapter:
     return adopt_ref(*new PCIVGACompatibleAdapter(pci_device_identifier.address()));
 }
 
-UNMAP_AFTER_INIT void PCIVGACompatibleAdapter::initialize_framebuffer_devices()
+UNMAP_AFTER_INIT ErrorOr<void> PCIVGACompatibleAdapter::initialize_framebuffer_devices()
 {
     // We might not have any pre-set framebuffer, so if that's the case - don't try to initialize one.
     if (m_framebuffer_address.is_null())
-        return;
+        return {};
     VERIFY(m_framebuffer_width);
     VERIFY(m_framebuffer_width != 0);
     VERIFY(m_framebuffer_height != 0);
     VERIFY(m_framebuffer_pitch != 0);
-    m_framebuffer_device = FramebufferDevice::create(*this, m_framebuffer_address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch);
-    // FIXME: Would be nice to be able to return ErrorOr<void> here.
-    VERIFY(!m_framebuffer_device->try_to_initialize().is_error());
+    m_framebuffer_device = TRY(FramebufferDevice::create(*this, m_framebuffer_address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch));
+    TRY(m_framebuffer_device->try_to_initialize());
+    return {};
 }
 
 UNMAP_AFTER_INIT PCIVGACompatibleAdapter::PCIVGACompatibleAdapter(PCI::Address address)

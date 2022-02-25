@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Graphics/GenericFramebufferDevice.h>
@@ -20,7 +21,7 @@ class FramebufferDevice final : public GenericFramebufferDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<FramebufferDevice> create(const GenericGraphicsAdapter&, PhysicalAddress, size_t, size_t, size_t);
+    static ErrorOr<NonnullRefPtr<FramebufferDevice>> create(const GenericGraphicsAdapter&, PhysicalAddress, size_t, size_t, size_t);
 
     virtual ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
 

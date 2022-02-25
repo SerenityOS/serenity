@@ -8,6 +8,7 @@
 
 #include <AK/BinaryBufferWriter.h>
 #include <AK/DistinctNumeric.h>
+#include <AK/Error.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Devices/BlockDevice.h>
@@ -87,7 +88,7 @@ private:
 
     void create_framebuffer_devices();
 
-    virtual void initialize_framebuffer_devices() override;
+    virtual ErrorOr<void> initialize_framebuffer_devices() override;
     virtual void enable_consoles() override;
     virtual void disable_consoles() override;
 

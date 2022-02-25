@@ -31,7 +31,7 @@ private:
     ISAVGAAdapter();
 
     // ^GenericGraphicsAdapter
-    virtual void initialize_framebuffer_devices() override;
+    virtual ErrorOr<void> initialize_framebuffer_devices() override;
 
     virtual void enable_consoles() override;
     virtual void disable_consoles() override;

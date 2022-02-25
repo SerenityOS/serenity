@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Try.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/BootInfo.h>
@@ -315,7 +316,7 @@ void init_stage2(void*)
     VMWareBackdoor::the(); // don't wait until first mouse packet
     HIDManagement::initialize();
 
-    GraphicsManagement::the().initialize();
+    MUST(GraphicsManagement::the().initialize());
     ConsoleManagement::the().initialize();
 
     SyncTask::spawn();

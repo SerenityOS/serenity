@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
@@ -24,7 +25,7 @@ class GraphicsManagement {
 public:
     static GraphicsManagement& the();
     static bool is_initialized();
-    bool initialize();
+    ErrorOr<void> initialize();
 
     unsigned allocate_minor_device_number() { return m_current_minor_number++; };
     GraphicsManagement();
@@ -41,8 +42,8 @@ public:
     void activate_graphical_mode();
 
 private:
-    bool determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
-    bool determine_and_initialize_isa_graphics_device();
+    ErrorOr<void> determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
+    ErrorOr<void> determine_and_initialize_isa_graphics_device();
     NonnullRefPtrVector<GenericGraphicsAdapter> m_graphics_devices;
     RefPtr<Graphics::Console> m_console;
 
