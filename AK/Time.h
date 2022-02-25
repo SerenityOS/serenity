@@ -26,7 +26,7 @@ concept TimeSpecType = requires(T t)
     t.tv_nsec;
 };
 
-constexpr bool is_leap_year(int year)
+constexpr bool is_leap_year(i64 year)
 {
     return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 }
@@ -35,14 +35,14 @@ constexpr bool is_leap_year(int year)
 // The return value is 0-indexed, that is 0 is Sunday, 1 is Monday, etc.
 // Day may be negative or larger than the number of days
 // in the given month.
-unsigned day_of_week(int year, unsigned month, int day);
+unsigned day_of_week(i64 year, unsigned month, int day);
 
 // Month and day start at 1. Month must be >= 1 and <= 12.
 // The return value is 0-indexed, that is Jan 1 is day 0.
 // Day may be negative or larger than the number of days
 // in the given month. If day is negative enough, the result
 // can be negative.
-constexpr int day_of_year(int year, unsigned month, int day)
+constexpr int day_of_year(i64 year, unsigned month, int day)
 {
     VERIFY(month >= 1 && month <= 12);
 
@@ -56,24 +56,40 @@ constexpr int day_of_year(int year, unsigned month, int day)
 }
 
 // Month starts at 1. Month must be >= 1 and <= 12.
-int days_in_month(int year, unsigned month);
+int days_in_month(i64 year, unsigned month);
 
-constexpr int days_in_year(int year)
+constexpr int days_in_year(i64 year)
 {
     return 365 + (is_leap_year(year) ? 1 : 0);
 }
 
-constexpr int years_to_days_since_epoch(int year)
+constexpr i64 years_to_days_since_epoch(i64 year)
 {
-    int days = 0;
-    for (int current_year = 1970; current_year < year; ++current_year)
-        days += days_in_year(current_year);
-    for (int current_year = year; current_year < 1970; ++current_year)
-        days -= days_in_year(current_year);
-    return days;
+    constexpr i64 days_in_400_years = 303 * 365 + 97 * 366;
+    constexpr i64 days_in_100_years = 76 * 365 + 24 * 366;
+    constexpr i64 days_in_4_years = 3 * 365 + 366;
+    constexpr i64 days_between_1970_and_2000 = 23 * 365 + 7 * 366;
+
+    i64 days = 0;
+    year -= 2000;
+    days += days_in_400_years * (year / 400);
+    year %= 400;
+    days += days_in_100_years * (year / 100);
+    year %= 100;
+    days += days_in_4_years * (year / 4);
+    year %= 4;
+    while (year > 0) {
+        days += days_in_year(year - 1 + 2000);
+        --year;
+    }
+    while (year < 0) {
+        days -= days_in_year(year + 2000);
+        ++year;
+    }
+    return days + days_between_1970_and_2000;
 }
 
-constexpr int days_since_epoch(int year, int month, int day)
+constexpr i64 days_since_epoch(i64 year, int month, int day)
 {
     return years_to_days_since_epoch(year) + day_of_year(year, month, day);
 }

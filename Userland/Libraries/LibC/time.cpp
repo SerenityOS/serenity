@@ -89,15 +89,37 @@ char* ctime_r(const time_t* t, char* buf)
     return asctime_r(localtime_r(t, &tm_buf), buf);
 }
 
-static const int __seconds_per_day = 60 * 60 * 24;
+static constexpr i64 __seconds_per_day = 60 * 60 * 24;
+static constexpr i64 __seconds_per_4_years = (3 * 365 + 366) * __seconds_per_day;
+static constexpr i64 __seconds_per_100_years = (76 * 365 + 24 * 366) * __seconds_per_day;
+static constexpr i64 __seconds_per_400_years = (303 * 365 + 97 * 366) * __seconds_per_day;
 
-static void time_to_tm(struct tm* tm, time_t t)
+static struct tm* time_to_tm(struct tm* tm, time_t t)
 {
-    int year = 1970;
+    constexpr i64 days_between_1970_and_2000 = 23 * 365 + 7 * 366;
+    auto t_orig = t;
+    i64 year = 2000;
+
+    t -= days_between_1970_and_2000 * __seconds_per_day;
+
+    year += 400 * (t / __seconds_per_400_years);
+    t %= __seconds_per_400_years;
+
+    year += 100 * (t / __seconds_per_100_years);
+    t %= __seconds_per_100_years;
+
+    year += 4 * (t / __seconds_per_4_years);
+    t %= __seconds_per_4_years;
+
     for (; t >= days_in_year(year) * __seconds_per_day; ++year)
         t -= days_in_year(year) * __seconds_per_day;
     for (; t < 0; --year)
         t += days_in_year(year - 1) * __seconds_per_day;
+
+    if (year > (time_t)INT_MAX + 1900 || year < (time_t)INT_MIN + 1900) {
+        errno = EOVERFLOW;
+        return nullptr;
+    }
     tm->tm_year = year - 1900;
 
     VERIFY(t >= 0);
@@ -116,6 +138,10 @@ static void time_to_tm(struct tm* tm, time_t t)
     tm->tm_mday = days + 1;
     tm->tm_wday = day_of_week(year, month, tm->tm_mday);
     tm->tm_mon = month - 1;
+    if (t_orig > INT32_MAX || t_orig < INT32_MIN) {
+        dbgln("time_t {} = {}.{}.{}", t_orig, tm->tm_year + 1900, tm->tm_mon, tm->tm_mday);
+    }
+    return tm;
 }
 
 static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
@@ -139,7 +165,7 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
 
     tm->tm_yday = day_of_year(1900 + tm->tm_year, tm->tm_mon + 1, tm->tm_mday);
     time_t days_since_epoch = years_to_days_since_epoch(1900 + tm->tm_year) + tm->tm_yday;
-    auto timestamp = ((days_since_epoch * 24 + tm->tm_hour) * 60 + tm->tm_min) * 60 + tm->tm_sec + timezone_adjust_seconds;
+    time_t timestamp = ((days_since_epoch * 24 + tm->tm_hour) * 60 + tm->tm_min) * 60 + tm->tm_sec + timezone_adjust_seconds;
     time_to_tm(tm, timestamp);
     return timestamp;
 }
@@ -163,8 +189,7 @@ struct tm* localtime_r(const time_t* t, struct tm* tm)
     if (!t)
         return nullptr;
 
-    time_to_tm(tm, *t - (daylight ? altzone : timezone));
-    return tm;
+    return time_to_tm(tm, *t - (daylight ? altzone : timezone));
 }
 
 time_t timegm(struct tm* tm)
@@ -182,8 +207,7 @@ struct tm* gmtime_r(const time_t* t, struct tm* tm)
 {
     if (!t)
         return nullptr;
-    time_to_tm(tm, *t);
-    return tm;
+    return time_to_tm(tm, *t);
 }
 
 char* asctime(const struct tm* tm)

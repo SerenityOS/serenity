@@ -18,7 +18,7 @@
 
 namespace AK {
 
-int days_in_month(int year, unsigned month)
+int days_in_month(i64 year, unsigned month)
 {
     VERIFY(month >= 1 && month <= 12);
     if (month == 2)
@@ -28,7 +28,7 @@ int days_in_month(int year, unsigned month)
     return is_long_month ? 31 : 30;
 }
 
-unsigned day_of_week(int year, unsigned month, int day)
+unsigned day_of_week(i64 year, unsigned month, int day)
 {
     VERIFY(month >= 1 && month <= 12);
     constexpr Array seek_table = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
