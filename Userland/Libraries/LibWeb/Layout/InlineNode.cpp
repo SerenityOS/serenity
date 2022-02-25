@@ -112,7 +112,9 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
         });
     }
 
-    if (phase == PaintPhase::Foreground && document().inspected_node() == dom_node()) {
+    // FIXME: We check for a non-null dom_node(), since pseudo-elements have a null one and were getting
+    //        highlighted incorrectly. A better solution will be needed if we want to inspect them too.
+    if (phase == PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
         // FIXME: This paints a double-thick border between adjacent fragments, where ideally there
         //        would be none. Once we implement non-rectangular outlines for the `outline` CSS
         //        property, we can use that here instead.
