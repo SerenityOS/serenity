@@ -12,10 +12,10 @@
 
 #pragma once
 
-class ClipboardServerConnection final
+class ConnectionToClipboardServer final
     : public IPC::ConnectionToServer<ClipboardClientEndpoint, ClipboardServerEndpoint>
     , public ClipboardClientEndpoint {
-    IPC_CLIENT_CONNECTION(ClipboardServerConnection, "/tmp/portal/clipboard")
+    IPC_CLIENT_CONNECTION(ConnectionToClipboardServer, "/tmp/portal/clipboard")
 
 public:
     Function<void()> on_data_changed;
@@ -23,7 +23,7 @@ public:
     void set_bitmap(Gfx::Bitmap const& bitmap);
 
 private:
-    ClipboardServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    ConnectionToClipboardServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
         : IPC::ConnectionToServer<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, move(socket))
     {
     }

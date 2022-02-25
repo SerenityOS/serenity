@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ClipboardServerConnection.h"
+#include "ConnectionToClipboardServer.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
 #include <LibGfx/Bitmap.h>
 
 // Copied from LibGUI/Clipboard.cpp
-RefPtr<Gfx::Bitmap> ClipboardServerConnection::get_bitmap()
+RefPtr<Gfx::Bitmap> ConnectionToClipboardServer::get_bitmap()
 {
     auto clipping = get_clipboard_data();
 
@@ -58,7 +58,7 @@ RefPtr<Gfx::Bitmap> ClipboardServerConnection::get_bitmap()
 }
 
 // Copied from LibGUI/Clipboard.cpp
-void ClipboardServerConnection::set_bitmap(Gfx::Bitmap const& bitmap)
+void ConnectionToClipboardServer::set_bitmap(Gfx::Bitmap const& bitmap)
 {
     HashMap<String, String> metadata;
     metadata.set("width", String::number(bitmap.width()));

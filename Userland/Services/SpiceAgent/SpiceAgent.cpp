@@ -5,7 +5,7 @@
  */
 
 #include "SpiceAgent.h"
-#include "ClipboardServerConnection.h"
+#include "ConnectionToClipboardServer.h"
 #include <AK/String.h>
 #include <LibC/memory.h>
 #include <LibC/unistd.h>
@@ -16,7 +16,7 @@
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PNGWriter.h>
 
-SpiceAgent::SpiceAgent(int fd, ClipboardServerConnection& connection)
+SpiceAgent::SpiceAgent(int fd, ConnectionToClipboardServer& connection)
     : m_fd(fd)
     , m_clipboard_connection(connection)
 {

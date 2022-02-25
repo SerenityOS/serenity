@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     int serial_port_fd = TRY(Core::System::open(SPICE_DEVICE, O_RDWR));
 
-    auto conn = TRY(ClipboardServerConnection::try_create());
+    auto conn = TRY(ConnectionToClipboardServer::try_create());
     auto agent = SpiceAgent(serial_port_fd, conn);
 
     return loop.exec();
