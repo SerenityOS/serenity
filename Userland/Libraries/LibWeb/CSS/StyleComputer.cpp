@@ -73,19 +73,23 @@ void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback c
 Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& element, CascadeOrigin cascade_origin, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     if (cascade_origin == CascadeOrigin::Author) {
-        // FIXME: Cache pseudo-element rules and look at only those if pseudo_element is set.
         Vector<MatchingRule> rules_to_run;
-        for (auto const& class_name : element.class_names()) {
-            if (auto it = m_rule_cache->rules_by_class.find(class_name); it != m_rule_cache->rules_by_class.end())
+        if (pseudo_element.has_value()) {
+            if (auto it = m_rule_cache->rules_by_pseudo_element.find(pseudo_element.value()); it != m_rule_cache->rules_by_pseudo_element.end())
                 rules_to_run.extend(it->value);
-        }
-        if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null()) {
-            if (auto it = m_rule_cache->rules_by_id.find(id); it != m_rule_cache->rules_by_id.end())
+        } else {
+            for (auto const& class_name : element.class_names()) {
+                if (auto it = m_rule_cache->rules_by_class.find(class_name); it != m_rule_cache->rules_by_class.end())
+                    rules_to_run.extend(it->value);
+            }
+            if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null()) {
+                if (auto it = m_rule_cache->rules_by_id.find(id); it != m_rule_cache->rules_by_id.end())
+                    rules_to_run.extend(it->value);
+            }
+            if (auto it = m_rule_cache->rules_by_tag_name.find(element.local_name()); it != m_rule_cache->rules_by_tag_name.end())
                 rules_to_run.extend(it->value);
+            rules_to_run.extend(m_rule_cache->other_rules);
         }
-        if (auto it = m_rule_cache->rules_by_tag_name.find(element.local_name()); it != m_rule_cache->rules_by_tag_name.end())
-            rules_to_run.extend(it->value);
-        rules_to_run.extend(m_rule_cache->other_rules);
 
         Vector<MatchingRule> matching_rules;
         for (auto const& rule_to_run : rules_to_run) {
@@ -1037,6 +1041,7 @@ void StyleComputer::build_rule_cache()
     size_t num_class_rules = 0;
     size_t num_id_rules = 0;
     size_t num_tag_name_rules = 0;
+    size_t num_pseudo_element_rules = 0;
 
     Vector<MatchingRule> matching_rules;
     size_t style_sheet_index = 0;
@@ -1049,23 +1054,33 @@ void StyleComputer::build_rule_cache()
 
                 bool added_to_bucket = false;
                 for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
-                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Id) {
-                        m_rule_cache->rules_by_id.ensure(simple_selector.value).append(move(matching_rule));
-                        ++num_id_rules;
+                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoElement) {
+                        m_rule_cache->rules_by_pseudo_element.ensure(simple_selector.pseudo_element).append(move(matching_rule));
+                        ++num_pseudo_element_rules;
                         added_to_bucket = true;
                         break;
                     }
-                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Class) {
-                        m_rule_cache->rules_by_class.ensure(simple_selector.value).append(move(matching_rule));
-                        ++num_class_rules;
-                        added_to_bucket = true;
-                        break;
-                    }
-                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::TagName) {
-                        m_rule_cache->rules_by_tag_name.ensure(simple_selector.value).append(move(matching_rule));
-                        ++num_tag_name_rules;
-                        added_to_bucket = true;
-                        break;
+                }
+                if (!added_to_bucket) {
+                    for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
+                        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Id) {
+                            m_rule_cache->rules_by_id.ensure(simple_selector.value).append(move(matching_rule));
+                            ++num_id_rules;
+                            added_to_bucket = true;
+                            break;
+                        }
+                        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Class) {
+                            m_rule_cache->rules_by_class.ensure(simple_selector.value).append(move(matching_rule));
+                            ++num_class_rules;
+                            added_to_bucket = true;
+                            break;
+                        }
+                        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::TagName) {
+                            m_rule_cache->rules_by_tag_name.ensure(simple_selector.value).append(move(matching_rule));
+                            ++num_tag_name_rules;
+                            added_to_bucket = true;
+                            break;
+                        }
                     }
                 }
                 if (!added_to_bucket)
@@ -1080,11 +1095,12 @@ void StyleComputer::build_rule_cache()
 
     if constexpr (LIBWEB_CSS_DEBUG) {
         dbgln("Built rule cache!");
-        dbgln("     ID: {}", num_id_rules);
-        dbgln("  Class: {}", num_class_rules);
-        dbgln("TagName: {}", num_tag_name_rules);
-        dbgln("  Other: {}", m_rule_cache->other_rules.size());
-        dbgln("  Total: {}", num_class_rules + num_id_rules + num_tag_name_rules + m_rule_cache->other_rules.size());
+        dbgln("           ID: {}", num_id_rules);
+        dbgln("        Class: {}", num_class_rules);
+        dbgln("      TagName: {}", num_tag_name_rules);
+        dbgln("PseudoElement: {}", num_pseudo_element_rules);
+        dbgln("        Other: {}", m_rule_cache->other_rules.size());
+        dbgln("        Total: {}", num_class_rules + num_id_rules + num_tag_name_rules + m_rule_cache->other_rules.size());
     }
 
     m_rule_cache->generation = m_document.style_sheets().generation();
