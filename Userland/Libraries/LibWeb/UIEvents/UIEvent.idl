@@ -4,6 +4,9 @@ interface UIEvent : Event {
     constructor(DOMString type, optional UIEventInit eventInitDict = {});
     readonly attribute Window? view;
     readonly attribute long detail;
+
+    // NOTE: This is "deprecated, but supported for backwards-compatibility with widely-deployed implementations."
+    [ImplementedAs=init_ui_event] undefined initUIEvent(DOMString typeArg, optional boolean bubblesArg = false, optional boolean cancelableArg = false, optional Window? viewArg = null, optional long detailArg = 0);
 };
 
 dictionary UIEventInit : EventInit {
