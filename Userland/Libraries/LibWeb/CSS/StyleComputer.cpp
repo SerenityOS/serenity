@@ -841,7 +841,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         if (auto found_font = FontCache::the().get(font_selector))
             return found_font;
 
-        if (auto found_font = Gfx::FontDatabase::the().get(family, size, weight, slope))
+        if (auto found_font = Gfx::FontDatabase::the().get(family, size, weight, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
             return found_font;
 
         return {};
