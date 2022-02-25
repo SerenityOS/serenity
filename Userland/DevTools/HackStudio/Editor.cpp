@@ -658,10 +658,10 @@ void Editor::set_language_client_for(const CodeDocument& document)
         return;
 
     if (document.language() == Language::Cpp)
-        m_language_client = get_language_client<LanguageClients::Cpp::ServerConnection>(project().root_path());
+        m_language_client = get_language_client<LanguageClients::Cpp::ConnectionToServer>(project().root_path());
 
     if (document.language() == Language::Shell)
-        m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_path());
+        m_language_client = get_language_client<LanguageClients::Shell::ConnectionToServer>(project().root_path());
 
     if (m_language_client) {
         m_language_client->on_tokens_info_result = [this](Vector<GUI::AutocompleteProvider::TokenInfo> const& tokens_info) {
