@@ -32,6 +32,7 @@ Optional<Selector::PseudoElement> Selector::pseudo_element() const
     return {};
 }
 
+// https://www.w3.org/TR/selectors-4/#specificity-rules
 u32 Selector::specificity() const
 {
     if (m_specificity.has_value())
@@ -48,9 +49,12 @@ u32 Selector::specificity() const
                 ++ids;
                 break;
             case SimpleSelector::Type::Class:
+            case SimpleSelector::Type::Attribute:
+            case SimpleSelector::Type::PseudoClass:
                 ++classes;
                 break;
             case SimpleSelector::Type::TagName:
+            case SimpleSelector::Type::PseudoElement:
                 ++tag_names;
                 break;
             default:
@@ -179,6 +183,9 @@ String Selector::SimpleSelector::serialize() const
         default:
             VERIFY_NOT_REACHED();
         }
+        break;
+    case Selector::SimpleSelector::Type::PseudoElement:
+        // Note: Pseudo-elements are dealt with in Selector::serialize()
         break;
     default:
         dbgln("FIXME: Unsupported simple selector serialization for type {}", to_underlying(type));
