@@ -174,8 +174,19 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
             return RecursionDecision::Recurse;
         }
         if (url.scheme() == "help") {
-            // TODO: Check that the man page actually exists. (That check would also fail because we are currently referring to some nonexistent man pages.)
-            outln("Not checking man page link {}", href);
+            if (url.host() != "man") {
+                warnln("help:// URL without 'man': {}", href);
+                m_has_invalid_link = true;
+                return RecursionDecision::Recurse;
+            }
+            if (url.paths().size() < 2) {
+                warnln("help://man URL is missing section or page: {}", href);
+                m_has_invalid_link = true;
+                return RecursionDecision::Recurse;
+            }
+            auto file = String::formatted("../man{}/{}.md", url.paths()[0], url.paths()[1]);
+
+            m_file_links.append({ file, String(), StringCollector::from(*link_node.text) });
             return RecursionDecision::Recurse;
         }
         if (url.scheme() == "file") {
