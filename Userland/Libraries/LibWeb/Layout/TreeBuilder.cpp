@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -115,13 +116,14 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     if (!layout_node)
         return;
 
-    if (!dom_node.parent_or_shadow_host()) {
-        m_layout_root = layout_node;
-    } else {
-        if (layout_node->is_inline() && !(layout_node->is_inline_block() && m_parent_stack.last()->computed_values().display().is_flex_inside())) {
+    auto insert_node_into_inline_or_block_ancestor = [this](auto& node, bool prepend = false) {
+        if (node->is_inline() && !(node->is_inline_block() && m_parent_stack.last()->computed_values().display().is_flex_inside())) {
             // Inlines can be inserted into the nearest ancestor.
             auto& insertion_point = insertion_parent_for_inline_node(*m_parent_stack.last());
-            insertion_point.append_child(*layout_node);
+            if (prepend)
+                insertion_point.prepend_child(*node);
+            else
+                insertion_point.append_child(*node);
             insertion_point.set_children_are_inline(true);
         } else {
             // Non-inlines can't be inserted into an inline parent, so find the nearest non-inline ancestor.
@@ -132,10 +134,19 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
                 }
                 VERIFY_NOT_REACHED();
             }();
-            auto& insertion_point = insertion_parent_for_block_node(nearest_non_inline_ancestor, *layout_node);
-            insertion_point.append_child(*layout_node);
+            auto& insertion_point = insertion_parent_for_block_node(nearest_non_inline_ancestor, *node);
+            if (prepend)
+                insertion_point.prepend_child(*node);
+            else
+                insertion_point.append_child(*node);
             insertion_point.set_children_are_inline(false);
         }
+    };
+
+    if (!dom_node.parent_or_shadow_host()) {
+        m_layout_root = layout_node;
+    } else {
+        insert_node_into_inline_or_block_ancestor(layout_node);
     }
 
     auto* shadow_root = is<DOM::Element>(dom_node) ? verify_cast<DOM::Element>(dom_node).shadow_root() : nullptr;
@@ -147,6 +158,45 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         verify_cast<DOM::ParentNode>(dom_node).for_each_child([&](auto& dom_child) {
             create_layout_tree(dom_child, context);
         });
+        pop_parent();
+    }
+
+    // Add nodes for the ::before and ::after pseudo-elements.
+    if (is<DOM::Element>(dom_node)) {
+        auto& element = static_cast<DOM::Element&>(dom_node);
+        auto create_pseudo_element_if_needed = [&](CSS::Selector::PseudoElement pseudo_element) -> RefPtr<Node> {
+            auto pseudo_element_style = style_computer.compute_style(element, pseudo_element);
+            auto pseudo_element_content = pseudo_element_style->content();
+            auto pseudo_element_display = pseudo_element_style->display();
+            // ::before and ::after only exist if they have content. `content: normal` computes to `none` for them.
+            // We also don't create them if they are `display: none`.
+            if (pseudo_element_display.is_none()
+                || pseudo_element_content.type == CSS::ContentData::Type::Normal
+                || pseudo_element_content.type == CSS::ContentData::Type::None)
+                return nullptr;
+
+            if (auto pseudo_element_node = DOM::Element::create_layout_node_for_display_type(document, pseudo_element_display, move(pseudo_element_style), nullptr)) {
+                // FIXME: Handle images, and multiple values
+                if (pseudo_element_content.type == CSS::ContentData::Type::String) {
+                    auto text = adopt_ref(*new DOM::Text(document, pseudo_element_content.data));
+                    auto text_node = adopt_ref(*new TextNode(document, text));
+                    push_parent(verify_cast<NodeWithStyle>(*pseudo_element_node));
+                    insert_node_into_inline_or_block_ancestor(text_node);
+                    pop_parent();
+                } else {
+                    TODO();
+                }
+                return pseudo_element_node;
+            }
+
+            return nullptr;
+        };
+
+        push_parent(verify_cast<NodeWithStyle>(*layout_node));
+        if (auto before_node = create_pseudo_element_if_needed(CSS::Selector::PseudoElement::Before))
+            insert_node_into_inline_or_block_ancestor(before_node, true);
+        if (auto after_node = create_pseudo_element_if_needed(CSS::Selector::PseudoElement::After))
+            insert_node_into_inline_or_block_ancestor(after_node);
         pop_parent();
     }
 
