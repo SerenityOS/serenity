@@ -7,6 +7,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/FlyString.h>
 #include <AK/Format.h>
+#include <AK/Function.h>
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
@@ -123,7 +124,7 @@ Vector<String> String::split_limit(char separator, size_t limit, bool keep_empty
     return v;
 }
 
-Vector<StringView> String::split_view(const char separator, bool keep_empty) const
+Vector<StringView> String::split_view(Function<bool(char)> separator, bool keep_empty) const
 {
     if (is_empty())
         return {};
@@ -132,7 +133,7 @@ Vector<StringView> String::split_view(const char separator, bool keep_empty) con
     size_t substart = 0;
     for (size_t i = 0; i < length(); ++i) {
         char ch = characters()[i];
-        if (ch == separator) {
+        if (separator(ch)) {
             size_t sublen = i - substart;
             if (sublen != 0 || keep_empty)
                 v.append(substring_view(substart, sublen));
@@ -143,6 +144,11 @@ Vector<StringView> String::split_view(const char separator, bool keep_empty) con
     if (taillen != 0 || keep_empty)
         v.append(substring_view(substart, taillen));
     return v;
+}
+
+Vector<StringView> String::split_view(const char separator, bool keep_empty) const
+{
+    return split_view([separator](char ch) { return ch == separator; }, keep_empty);
 }
 
 ByteBuffer String::to_byte_buffer() const
