@@ -71,6 +71,7 @@ public:
 
     bool has_anchor(String const& anchor) const { return m_anchors.contains(anchor); }
     HashTable<String> const& anchors() const { return m_anchors; }
+    bool has_invalid_link() const { return m_has_invalid_link; }
     Vector<FileLink> const& file_links() const { return m_file_links; }
 
 private:
@@ -81,6 +82,7 @@ private:
 
     HashTable<String> m_anchors;
     Vector<FileLink> m_file_links;
+    bool m_has_invalid_link { false };
 };
 
 MarkdownLinkage MarkdownLinkage::analyze(Markdown::Document const& document)
@@ -231,6 +233,12 @@ int main(int argc, char** argv)
     outln("Checking links ...");
     bool any_problems = false;
     for (auto const& file_item : files) {
+        if (file_item.value.has_invalid_link()) {
+            outln("File '{}' has invalid links.", file_item.key);
+            any_problems = true;
+            continue;
+        }
+
         auto file_lexical_path = LexicalPath(file_item.key);
         auto file_dir = file_lexical_path.dirname();
         for (auto const& file_link : file_item.value.file_links()) {
