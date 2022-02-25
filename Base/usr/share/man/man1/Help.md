@@ -22,7 +22,7 @@ The SerenityOS manual is split into the following *sections*, or *chapters*:
 
 1. User Programs
 2. System Calls
-3. Libraries
+3. Library Functions
 4. Special Files
 5. File Formats
 6. Games
