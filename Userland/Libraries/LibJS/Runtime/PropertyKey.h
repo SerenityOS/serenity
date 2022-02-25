@@ -33,7 +33,7 @@ public:
         if (value.is_symbol())
             return PropertyKey { value.as_symbol() };
         if (value.is_integral_number() && value.as_double() >= 0 && value.as_double() < NumericLimits<u32>::max())
-            return value.as_u32();
+            return static_cast<u32>(value.as_double());
         return TRY(value.to_string(global_object));
     }
 
