@@ -24,6 +24,8 @@ void CharacterData::set_data(String data)
     if (m_data == data)
         return;
     m_data = move(data);
+    if (parent())
+        parent()->children_changed();
     set_needs_style_update(true);
 }
 
