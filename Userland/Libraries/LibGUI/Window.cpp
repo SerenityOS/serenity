@@ -14,6 +14,7 @@
 #include <LibCore/MimeData.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/ConnectionToWindowMangerServer.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/MenuItem.h>
@@ -21,7 +22,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowManagerServerConnection.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 #include <fcntl.h>
@@ -320,8 +320,8 @@ void Window::set_window_type(WindowType window_type)
 
 void Window::make_window_manager(unsigned event_mask)
 {
-    GUI::WindowManagerServerConnection::the().async_set_event_mask(event_mask);
-    GUI::WindowManagerServerConnection::the().async_set_manager_window(m_window_id);
+    GUI::ConnectionToWindowMangerServer::the().async_set_event_mask(event_mask);
+    GUI::ConnectionToWindowMangerServer::the().async_set_manager_window(m_window_id);
 }
 
 bool Window::are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& left, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& right) const

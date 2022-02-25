@@ -9,10 +9,10 @@
 #include <AK/Vector.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
+#include <LibGUI/ConnectionToWindowMangerServer.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/SettingsWindow.h>
 #include <LibGUI/TextEditor.h>
-#include <LibGUI/WindowManagerServerConnection.h>
 
 class KeyboardSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT(KeyboardSettingsWidget)
