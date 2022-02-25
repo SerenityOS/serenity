@@ -18,6 +18,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RecursionDecision.h>
 #include <AK/StdLibExtras.h>
+#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibMarkdown/Document.h>
@@ -166,25 +167,27 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
         // Nothing to do here.
         return RecursionDecision::Recurse;
     }
-    if (href.starts_with("https://") || href.starts_with("http://")) {
-        outln("Not checking external link {}", href);
-        return RecursionDecision::Recurse;
-    }
-    if (href.starts_with("help://")) {
-        // TODO: Check that the man page actually exists. (That check would also fail because we are currently referring to some nonexistent man pages.)
-        outln("Not checking man page link {}", href);
-        return RecursionDecision::Recurse;
-    }
-    if (href.starts_with("file://")) {
-        // TODO: Resolve relative to $SERENITY_SOURCE_DIR/Base/
-        // Currently, this affects only one link, so it's not worth the effort.
-        outln("Not checking local link {}", href);
-        return RecursionDecision::Recurse;
-    }
-    if (href.starts_with("/res/icons/")) {
-        // TODO: Resolve relative to $SERENITY_SOURCE_DIR/Base/
-        outln("Not checking icon link {}", href);
-        return RecursionDecision::Recurse;
+    auto url = URL::create_with_url_or_path(href);
+    if (url.is_valid()) {
+        if (url.scheme() == "https" || url.scheme() == "http") {
+            outln("Not checking external link {}", href);
+            return RecursionDecision::Recurse;
+        }
+        if (url.scheme() == "help") {
+            // TODO: Check that the man page actually exists. (That check would also fail because we are currently referring to some nonexistent man pages.)
+            outln("Not checking man page link {}", href);
+            return RecursionDecision::Recurse;
+        }
+        if (url.scheme() == "file") {
+            // TODO: Resolve relative to $SERENITY_SOURCE_DIR/Base/, though we might refer to build-only files like binaries.
+
+            if (url.path().starts_with("/res/icons/")) {
+                outln("Not checking icon link {}", href);
+                return RecursionDecision::Recurse;
+            }
+            outln("Not checking local link {}", href);
+            return RecursionDecision::Recurse;
+        }
     }
 
     String label = StringCollector::from(*link_node.text);
