@@ -297,16 +297,25 @@ void signal_trampoline_dummy()
         ".intel_syntax noprefix\n"
         ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
+        // stack state: ret flags, ret ip, register dump, signal mask, signal, handler (alignment = 16), 0
+
+        // save ebp
         "push ebp\n"
         "mov ebp, esp\n"
-        "push eax\n"          // we have to store eax 'cause it might be the return value from a syscall
-        "sub esp, 4\n"        // align the stack to 16 bytes
-        "mov eax, [ebp+12]\n" // push the signal code
+        // we have to save eax 'cause it might be the return value from a syscall
         "push eax\n"
-        "call [ebp+8]\n" // call the signal handler
+        // align the stack to 16 bytes (as our current offset is 12 from the fake return addr, saved ebp and saved eax)
+        "sub esp, 4\n"
+        // push the signal code
+        "mov eax, [ebp+12]\n"
+        "push eax\n"
+        // call the signal handler
+        "call [ebp+8]\n"
+        // Unroll stack back to the saved eax
         "add esp, 8\n"
+        // syscall SC_sigreturn
         "mov eax, %P0\n"
-        "int 0x82\n" // sigreturn syscall
+        "int 0x82\n"
         ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
         ".att_syntax" ::"i"(Syscall::SC_sigreturn));
@@ -320,15 +329,24 @@ void signal_trampoline_dummy()
         ".intel_syntax noprefix\n"
         ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
+        // stack state: ret flags, ret ip, register dump, signal mask, signal, handler (alignment = 16), 0
+
+        // save rbp
         "push rbp\n"
         "mov rbp, rsp\n"
-        "push rax\n"          // we have to store rax 'cause it might be the return value from a syscall
-        "sub rsp, 8\n"        // align the stack to 16 bytes
-        "mov rdi, [rbp+24]\n" // push the signal code
-        "call [rbp+16]\n"     // call the signal handler
+        // we have to save rax 'cause it might be the return value from a syscall
+        "push rax\n"
+        // align the stack to 16 bytes (our offset is 24 bytes from the fake return addr, saved rbp and saved rax).
+        "sub rsp, 8\n"
+        // push the signal code
+        "mov rdi, [rbp+24]\n"
+        // call the signal handler
+        "call [rbp+16]\n"
+        // unroll stack back to the saved rax
         "add rsp, 8\n"
+        // syscall SC_sigreturn
         "mov rax, %P0\n"
-        "int 0x82\n" // sigreturn syscall
+        "int 0x82\n"
         ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
         ".att_syntax" ::"i"(Syscall::SC_sigreturn));
