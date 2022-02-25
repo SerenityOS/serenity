@@ -5,6 +5,7 @@
  */
 
 #include <AK/AnyOf.h>
+#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibWeb/CSS/Parser/Parser.h>
@@ -247,7 +248,7 @@ RefPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document&
 void Element::parse_attribute(const FlyString& name, const String& value)
 {
     if (name == HTML::AttributeNames::class_) {
-        auto new_classes = value.split_view(' ');
+        auto new_classes = value.split_view(is_ascii_space);
         m_classes.clear();
         m_classes.ensure_capacity(new_classes.size());
         for (auto& new_class : new_classes) {
