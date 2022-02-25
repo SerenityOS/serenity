@@ -13,13 +13,13 @@
 
 namespace GUI {
 
-class ClipboardServerConnection final
+class ConnectionToClipboardServer final
     : public IPC::ConnectionToServer<ClipboardClientEndpoint, ClipboardServerEndpoint>
     , public ClipboardClientEndpoint {
-    IPC_CLIENT_CONNECTION(ClipboardServerConnection, "/tmp/portal/clipboard")
+    IPC_CLIENT_CONNECTION(ConnectionToClipboardServer, "/tmp/portal/clipboard")
 
 private:
-    ClipboardServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    ConnectionToClipboardServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
         : IPC::ConnectionToServer<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, move(socket))
     {
     }
@@ -30,16 +30,16 @@ private:
     }
 };
 
-static RefPtr<ClipboardServerConnection> s_connection;
+static RefPtr<ConnectionToClipboardServer> s_connection;
 
-static ClipboardServerConnection& connection()
+static ConnectionToClipboardServer& connection()
 {
     return *s_connection;
 }
 
 void Clipboard::initialize(Badge<Application>)
 {
-    s_connection = ClipboardServerConnection::try_create().release_value_but_fixme_should_propagate_errors();
+    s_connection = ConnectionToClipboardServer::try_create().release_value_but_fixme_should_propagate_errors();
 }
 
 Clipboard& Clipboard::the()
@@ -153,7 +153,7 @@ void Clipboard::clear()
     connection().async_set_clipboard_data({}, {}, {});
 }
 
-void Clipboard::clipboard_data_changed(Badge<ClipboardServerConnection>, String const& mime_type)
+void Clipboard::clipboard_data_changed(Badge<ConnectionToClipboardServer>, String const& mime_type)
 {
     if (on_change)
         on_change(mime_type);
