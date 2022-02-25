@@ -14,7 +14,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
-#include <LibGUI/Label.h>
+#include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Slider.h>
 #include <LibGUI/Widget.h>
@@ -86,17 +86,14 @@ private:
                 close();
         };
 
-        m_root_container = TRY(m_slider_window->try_set_main_widget<GUI::Label>());
+        m_root_container = TRY(m_slider_window->try_set_main_widget<GUI::Frame>());
         m_root_container->set_fill_with_background_color(true);
         m_root_container->set_layout<GUI::VerticalBoxLayout>();
-        m_root_container->layout()->set_margins({ 4, 0 });
+        m_root_container->layout()->set_margins({ 4 });
         m_root_container->layout()->set_spacing(0);
-        m_root_container->set_frame_thickness(2);
-        m_root_container->set_frame_shape(Gfx::FrameShape::Container);
-        m_root_container->set_frame_shadow(Gfx::FrameShadow::Raised);
+        m_root_container->set_frame_shape(Gfx::FrameShape::Window);
 
         m_percent_box = m_root_container->add<GUI::CheckBox>("\xE2\x84\xB9");
-        m_percent_box->set_fixed_size(27, 16);
         m_percent_box->set_tooltip(m_show_percent ? "Hide percent" : "Show percent");
         m_percent_box->set_checked(m_show_percent);
         m_percent_box->on_checked = [&](bool show_percent) {
@@ -122,7 +119,6 @@ private:
         };
 
         m_mute_box = m_root_container->add<GUI::CheckBox>("\xE2\x9D\x8C");
-        m_mute_box->set_fixed_size(27, 16);
         m_mute_box->set_checked(m_audio_muted);
         m_mute_box->set_tooltip(m_audio_muted ? "Unmute" : "Mute");
         m_mute_box->on_checked = [&](bool is_muted) {
@@ -214,8 +210,16 @@ private:
 
     void reposition_slider_window()
     {
+        constexpr auto width { 50 };
+        constexpr auto height { 125 };
+        constexpr auto tray_and_taskbar_padding { 6 };
+        constexpr auto icon_offset { (width - 16) / 2 };
         auto applet_rect = window()->applet_rect_on_screen();
-        m_slider_window->set_rect(applet_rect.x() - 20, applet_rect.y() - 106, 50, 100);
+        m_slider_window->set_rect(
+            applet_rect.x() - icon_offset,
+            applet_rect.y() - height - tray_and_taskbar_padding,
+            width,
+            height);
     }
 
     NonnullRefPtr<Audio::ClientConnection> m_audio_client;
@@ -228,7 +232,7 @@ private:
     RefPtr<GUI::Window> m_slider_window;
     RefPtr<GUI::CheckBox> m_mute_box;
     RefPtr<GUI::CheckBox> m_percent_box;
-    RefPtr<GUI::Label> m_root_container;
+    RefPtr<GUI::Frame> m_root_container;
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
