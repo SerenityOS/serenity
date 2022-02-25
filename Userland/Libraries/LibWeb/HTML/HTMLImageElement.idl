@@ -13,4 +13,7 @@ interface HTMLImageElement : HTMLElement {
     [Reflect] attribute DOMString align;
     [LegacyNullToEmptyString, Reflect] attribute DOMString border;
 
+    [CEReactions] attribute unsigned long width;
+    [CEReactions] attribute unsigned long height;
+
 };
