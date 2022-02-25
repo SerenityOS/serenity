@@ -26,6 +26,18 @@
 static bool is_missing_file_acceptable(String const& filename)
 {
     const StringView acceptable_missing_files[] = {
+        // FIXME: Please write these manpages!
+        "/usr/share/man/man2/accept.md",
+        "/usr/share/man/man2/exec.md",
+        "/usr/share/man/man2/fcntl.md",
+        "/usr/share/man/man2/fork.md",
+        "/usr/share/man/man2/ioctl.md",
+        "/usr/share/man/man2/listen.md",
+        "/usr/share/man/man2/mmap.md",
+        "/usr/share/man/man2/mprotect.md",
+        "/usr/share/man/man2/open.md",
+        "/usr/share/man/man2/ptrace.md",
+        "/usr/share/man/man5/perfcore.md",
         // These ones are okay:
         "/home/anon/js-tests/test-common.js",
         "/man1/index.html",
