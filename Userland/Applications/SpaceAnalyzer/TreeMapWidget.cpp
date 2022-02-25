@@ -6,8 +6,8 @@
 
 #include "TreeMapWidget.h"
 #include <AK/NumberFormat.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Font.h>
 #include <WindowServer/WindowManager.h>
 
@@ -309,7 +309,7 @@ void TreeMapWidget::mousewheel_event(GUI::MouseEvent& event)
 {
     int delta = event.wheel_delta_y();
     // FIXME: The wheel_delta_y is premultiplied in the window server, we actually want a raw value here.
-    int step_size = GUI::WindowServerConnection::the().get_scroll_step_size();
+    int step_size = GUI::ConnectionToWindowServer::the().get_scroll_step_size();
     if (delta > 0) {
         size_t step_back = delta / step_size;
         if (step_back > m_viewpoint)

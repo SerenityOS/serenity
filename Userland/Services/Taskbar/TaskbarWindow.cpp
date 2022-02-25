@@ -14,13 +14,13 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ConnectionToWindowMangerServer.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <serenity.h>
@@ -210,7 +210,7 @@ void TaskbarWindow::event(Core::Event& event)
         Gfx::IntPoint adjusted_point = { adjusted_x, adjusted_y };
 
         if (adjusted_point != mouse_event.position()) {
-            GUI::WindowServerConnection::the().async_set_global_cursor_position(position() + adjusted_point);
+            GUI::ConnectionToWindowServer::the().async_set_global_cursor_position(position() + adjusted_point);
             GUI::MouseEvent adjusted_event = { (GUI::Event::Type)mouse_event.type(), adjusted_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta_x(), mouse_event.wheel_delta_y() };
             Window::event(adjusted_event);
             return;

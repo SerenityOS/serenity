@@ -14,10 +14,10 @@
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/PNGWriter.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
@@ -133,7 +133,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (screen >= 0)
         screen_index = (u32)screen;
     dbgln("getting screenshot...");
-    auto shared_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap(crop_region, screen_index);
+    auto shared_bitmap = GUI::ConnectionToWindowServer::the().get_screen_bitmap(crop_region, screen_index);
     dbgln("got screenshot");
 
     RefPtr<Gfx::Bitmap> bitmap = shared_bitmap.bitmap();

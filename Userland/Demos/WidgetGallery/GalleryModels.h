@@ -10,8 +10,8 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Model.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/CursorParams.h>
 
 class MouseCursorModel final : public GUI::Model {
@@ -60,7 +60,7 @@ public:
     {
         m_cursors.clear();
 
-        Core::DirIterator iterator(String::formatted("/res/cursor-themes/{}", GUI::WindowServerConnection::the().get_cursor_theme()), Core::DirIterator::Flags::SkipDots);
+        Core::DirIterator iterator(String::formatted("/res/cursor-themes/{}", GUI::ConnectionToWindowServer::the().get_cursor_theme()), Core::DirIterator::Flags::SkipDots);
 
         while (iterator.has_next()) {
             auto path = iterator.next_full_path();

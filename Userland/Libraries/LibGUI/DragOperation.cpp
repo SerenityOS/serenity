@@ -7,8 +7,8 @@
 #include <AK/Badge.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/DragOperation.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 
 namespace GUI {
@@ -37,7 +37,7 @@ DragOperation::Outcome DragOperation::exec()
         drag_bitmap = bitmap->to_shareable_bitmap();
     }
 
-    auto started = WindowServerConnection::the().start_drag(
+    auto started = ConnectionToWindowServer::the().start_drag(
         m_mime_data->text(),
         m_mime_data->all_data(),
         drag_bitmap);
@@ -64,13 +64,13 @@ void DragOperation::done(Outcome outcome)
     m_event_loop->quit(0);
 }
 
-void DragOperation::notify_accepted(Badge<WindowServerConnection>)
+void DragOperation::notify_accepted(Badge<ConnectionToWindowServer>)
 {
     VERIFY(s_current_drag_operation);
     s_current_drag_operation->done(Outcome::Accepted);
 }
 
-void DragOperation::notify_cancelled(Badge<WindowServerConnection>)
+void DragOperation::notify_cancelled(Badge<ConnectionToWindowServer>)
 {
     if (s_current_drag_operation)
         s_current_drag_operation->done(Outcome::Cancelled);

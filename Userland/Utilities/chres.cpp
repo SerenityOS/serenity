@@ -6,7 +6,7 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/WindowServerConnection.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -24,10 +24,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(scale, "Scale Factor", "scale", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    // A Core::EventLoop is all we need, but WindowServerConnection needs a full Application object.
+    // A Core::EventLoop is all we need, but ConnectionToWindowServer needs a full Application object.
     char* dummy_argv[] = { arguments.argv[0] };
     auto app = GUI::Application::construct(1, dummy_argv);
-    auto screen_layout = GUI::WindowServerConnection::the().get_screen_layout();
+    auto screen_layout = GUI::ConnectionToWindowServer::the().get_screen_layout();
     if (screen < 0 || (size_t)screen >= screen_layout.screens.size()) {
         warnln("invalid screen index: {}", screen);
         return 1;
@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_screen.resolution = { width, height };
     if (scale != -1)
         main_screen.scale_factor = scale;
-    auto set_result = GUI::WindowServerConnection::the().set_screen_layout(screen_layout, true);
+    auto set_result = GUI::ConnectionToWindowServer::the().set_screen_layout(screen_layout, true);
     if (!set_result.success()) {
         warnln("failed to set resolution: {}", set_result.error_msg());
         return 1;

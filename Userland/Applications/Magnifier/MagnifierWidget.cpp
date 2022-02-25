@@ -6,10 +6,10 @@
  */
 
 #include "MagnifierWidget.h"
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/DisplayLink.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Rect.h>
 
 MagnifierWidget::MagnifierWidget()
@@ -53,7 +53,7 @@ void MagnifierWidget::sync()
 
     auto size = frame_inner_rect().size();
     Gfx::IntSize grab_size { size.width() / m_scale_factor, size.height() / m_scale_factor };
-    m_grabbed_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap_around_cursor(grab_size).bitmap();
+    m_grabbed_bitmap = GUI::ConnectionToWindowServer::the().get_screen_bitmap_around_cursor(grab_size).bitmap();
     m_grabbed_bitmaps.enqueue(m_grabbed_bitmap);
     update();
 }

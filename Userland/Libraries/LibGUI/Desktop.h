@@ -42,7 +42,7 @@ public:
 
     int taskbar_height() const { return TaskbarWindow::taskbar_height(); }
 
-    void did_receive_screen_rects(Badge<WindowServerConnection>, const Vector<Gfx::IntRect, 4>&, size_t, unsigned, unsigned);
+    void did_receive_screen_rects(Badge<ConnectionToWindowServer>, const Vector<Gfx::IntRect, 4>&, size_t, unsigned, unsigned);
 
     template<typename F>
     void on_receive_screen_rects(F&& callback)

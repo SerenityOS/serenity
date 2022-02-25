@@ -8,8 +8,8 @@
 #include "WindowList.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/ConnectionToWindowMangerServer.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>

@@ -33,8 +33,8 @@ public:
     Outcome exec();
     Outcome outcome() const { return m_outcome; }
 
-    static void notify_accepted(Badge<WindowServerConnection>);
-    static void notify_cancelled(Badge<WindowServerConnection>);
+    static void notify_accepted(Badge<ConnectionToWindowServer>);
+    static void notify_cancelled(Badge<ConnectionToWindowServer>);
 
 protected:
     explicit DragOperation(Core::Object* parent = nullptr);

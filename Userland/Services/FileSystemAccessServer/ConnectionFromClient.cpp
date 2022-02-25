@@ -6,7 +6,7 @@
 
 // FIXME: LibIPC Decoder and Encoder are sensitive to include order here
 // clang-format off
-#include <LibGUI/WindowServerConnection.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 // clang-format on
 #include <AK/Debug.h>
 #include <FileSystemAccessServer/ConnectionFromClient.h>
@@ -41,10 +41,10 @@ RefPtr<GUI::Window> ConnectionFromClient::create_dummy_child_window(i32 window_s
     auto window = GUI::Window::construct();
     window->set_opacity(0);
     window->set_frameless(true);
-    auto rect = GUI::WindowServerConnection::the().get_window_rect_from_client(window_server_client_id, parent_window_id);
+    auto rect = GUI::ConnectionToWindowServer::the().get_window_rect_from_client(window_server_client_id, parent_window_id);
     window->set_rect(rect);
     window->show();
-    GUI::WindowServerConnection::the().async_set_window_parent_from_client(window_server_client_id, parent_window_id, window->window_id());
+    GUI::ConnectionToWindowServer::the().async_set_window_parent_from_client(window_server_client_id, parent_window_id, window->window_id());
 
     return window;
 }
@@ -171,7 +171,7 @@ void ConnectionFromClient::prompt_helper(Optional<String> const& user_picked_fil
 
 Messages::FileSystemAccessServer::ExposeWindowServerClientIdResponse ConnectionFromClient::expose_window_server_client_id()
 {
-    return GUI::WindowServerConnection::the().expose_client_id();
+    return GUI::ConnectionToWindowServer::the().expose_client_id();
 }
 
 }
