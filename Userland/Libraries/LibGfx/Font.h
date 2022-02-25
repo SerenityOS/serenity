@@ -95,6 +95,11 @@ struct FontMetrics {
 
 class Font : public RefCounted<Font> {
 public:
+    enum class AllowInexactSizeMatch {
+        No,
+        Yes,
+    };
+
     virtual NonnullRefPtr<Font> clone() const = 0;
     virtual ~Font() {};
 

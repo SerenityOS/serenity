@@ -164,20 +164,20 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
     return it->value;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigned weight, unsigned slope)
+RefPtr<Gfx::Font> FontDatabase::get(String const& family, unsigned size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->weight() == weight && typeface->slope() == slope)
-            return typeface->get_font(size);
+            return typeface->get_font(size, allow_inexact_size_match);
     }
     return nullptr;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(const String& family, const String& variant, unsigned size)
+RefPtr<Gfx::Font> FontDatabase::get(String const& family, const String& variant, unsigned size, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->variant() == variant)
-            return typeface->get_font(size);
+            return typeface->get_font(size, allow_inexact_size_match);
     }
     return nullptr;
 }
