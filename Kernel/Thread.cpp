@@ -938,6 +938,13 @@ static ErrorOr<void> push_value_on_user_stack(FlatPtr& stack, FlatPtr data)
     return copy_to_user((FlatPtr*)stack, &data);
 }
 
+template<typename T>
+static ErrorOr<void> copy_value_on_user_stack(FlatPtr& stack, T const& data)
+{
+    stack -= sizeof(data);
+    return copy_to_user((RemoveCVReference<T>*)stack, &data);
+}
+
 void Thread::resume_from_stopped()
 {
     VERIFY(is_stopped());
@@ -976,8 +983,6 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     }
 
     auto& action = m_process->m_signal_action_data[signal];
-    // FIXME: Implement SA_SIGINFO signal handlers.
-    VERIFY(!(action.flags & SA_SIGINFO));
 
     if (!current_trap() && !action.handler_or_sigaction.is_null()) {
         // We're trying dispatch a handled signal to a user process that was scheduled
@@ -1057,83 +1062,89 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     bool use_alternative_stack = ((action.flags & SA_ONSTACK) != 0) && has_alternative_signal_stack() && !is_in_alternative_signal_stack();
 
     auto setup_stack = [&](RegisterState& state) -> ErrorOr<void> {
-        FlatPtr old_sp = state.userspace_sp();
         FlatPtr stack;
         if (use_alternative_stack)
             stack = m_alternative_signal_stack + m_alternative_signal_stack_size;
         else
-            stack = old_sp;
+            stack = state.userspace_sp();
 
-        FlatPtr ret_ip = state.ip();
-        FlatPtr ret_flags = state.flags();
+        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to IP {:p}, SP {:p}", state.ip(), state.userspace_sp());
 
-        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to IP {:p}, SP {:p}", ret_ip, old_sp);
+        __ucontext ucontext {
+            .uc_link = nullptr,
+            .uc_sigmask = old_signal_mask,
+            .uc_stack = {
+                .ss_sp = nullptr,
+                .ss_flags = 0,
+                .ss_size = 0,
+            },
+            .uc_mcontext = {},
+        };
+        copy_kernel_registers_into_ptrace_registers(static_cast<PtraceRegisters&>(ucontext.uc_mcontext), state);
 
-        FlatPtr start_of_stack;
+        siginfo signal_info {
+            .si_signo = signal,
+            .si_code = 0, // FIXME: Signal-specific value, fill this in.
+            .si_errno = 0,
+            // FIXME: Plumb sender information here.
+            .si_pid = 0,
+            .si_uid = 0,
+            // FIXME: Fill these in.
+            .si_addr = 0,
+            .si_status = 0,
+            .si_band = 0,
+            .si_value = {
+                .sival_int = 0,
+            },
+        };
+
 #if ARCH(I386)
-        // Align the stack to 16 bytes.
-        // Note that we push some elements on to the stack before the return address,
-        // so we need to account for this here.
-        constexpr static FlatPtr elements_pushed_on_stack_before_return_address = 13;
-        FlatPtr stack_alignment = (stack - elements_pushed_on_stack_before_return_address * sizeof(FlatPtr)) % 16;
-        stack -= stack_alignment;
-        start_of_stack = stack;
-
-        TRY(push_value_on_user_stack(stack, ret_flags));
-
-        TRY(push_value_on_user_stack(stack, ret_ip));
-        TRY(push_value_on_user_stack(stack, state.eax));
-        TRY(push_value_on_user_stack(stack, state.ecx));
-        TRY(push_value_on_user_stack(stack, state.edx));
-        TRY(push_value_on_user_stack(stack, state.ebx));
-        TRY(push_value_on_user_stack(stack, old_sp));
-        TRY(push_value_on_user_stack(stack, state.ebp));
-        TRY(push_value_on_user_stack(stack, state.esi));
-        TRY(push_value_on_user_stack(stack, state.edi));
+        constexpr static FlatPtr thread_red_zone_size = 0;
+#elif ARCH(X86_64)
+        constexpr static FlatPtr thread_red_zone_size = 128;
 #else
-        // Align the stack to 16 bytes.
-        // Note that we push some elements on to the stack before the return address,
-        // so we need to account for this here.
-        // We also are not allowed to touch the thread's red-zone of 128 bytes
-        constexpr static FlatPtr elements_pushed_on_stack_before_return_address = 21;
-        FlatPtr stack_alignment = (stack - elements_pushed_on_stack_before_return_address * sizeof(FlatPtr)) % 16;
-        stack -= 128 + stack_alignment;
-        start_of_stack = stack;
-
-        TRY(push_value_on_user_stack(stack, ret_flags));
-
-        TRY(push_value_on_user_stack(stack, ret_ip));
-        TRY(push_value_on_user_stack(stack, state.r15));
-        TRY(push_value_on_user_stack(stack, state.r14));
-        TRY(push_value_on_user_stack(stack, state.r13));
-        TRY(push_value_on_user_stack(stack, state.r12));
-        TRY(push_value_on_user_stack(stack, state.r11));
-        TRY(push_value_on_user_stack(stack, state.r10));
-        TRY(push_value_on_user_stack(stack, state.r9));
-        TRY(push_value_on_user_stack(stack, state.r8));
-        TRY(push_value_on_user_stack(stack, state.rax));
-        TRY(push_value_on_user_stack(stack, state.rcx));
-        TRY(push_value_on_user_stack(stack, state.rdx));
-        TRY(push_value_on_user_stack(stack, state.rbx));
-        TRY(push_value_on_user_stack(stack, old_sp));
-        TRY(push_value_on_user_stack(stack, state.rbp));
-        TRY(push_value_on_user_stack(stack, state.rsi));
-        TRY(push_value_on_user_stack(stack, state.rdi));
+#    error Unknown architecture in dispatch_signal
 #endif
 
-        // PUSH old_signal_mask
-        TRY(push_value_on_user_stack(stack, old_signal_mask));
+        // Align the stack to 16 bytes.
+        // Note that we push some elements on to the stack before the return address,
+        // so we need to account for this here.
+        constexpr static FlatPtr elements_pushed_on_stack_before_handler_address = 1; // one slot for a saved register
+        FlatPtr const extra_bytes_pushed_on_stack_before_handler_address = sizeof(ucontext) + sizeof(signal_info);
+        FlatPtr stack_alignment = (stack - elements_pushed_on_stack_before_handler_address * sizeof(FlatPtr) + extra_bytes_pushed_on_stack_before_handler_address) % 16;
+        // Also note that we have to skip the thread red-zone (if needed), so do that here.
+        stack -= thread_red_zone_size + stack_alignment;
+        auto start_of_stack = stack;
 
-        TRY(push_value_on_user_stack(stack, signal));
-        TRY(push_value_on_user_stack(stack, handler_vaddr.get()));
+        TRY(push_value_on_user_stack(stack, 0)); // syscall return value slot
+
+        TRY(copy_value_on_user_stack(stack, ucontext));
+        auto pointer_to_ucontext = stack;
+
+        TRY(copy_value_on_user_stack(stack, signal_info));
+        auto pointer_to_signal_info = stack;
 
         // Make sure we actually pushed as many elements as we claimed to have pushed.
-        if (start_of_stack - stack != elements_pushed_on_stack_before_return_address * sizeof(FlatPtr))
-            PANIC("Stack in invalid state after signal trampoline, expected {:x} but got {:x}", start_of_stack - elements_pushed_on_stack_before_return_address * sizeof(FlatPtr), stack);
+        if (start_of_stack - stack != elements_pushed_on_stack_before_handler_address * sizeof(FlatPtr) + extra_bytes_pushed_on_stack_before_handler_address) {
+            PANIC("Stack in invalid state after signal trampoline, expected {:x} but got {:x}",
+                start_of_stack - elements_pushed_on_stack_before_handler_address * sizeof(FlatPtr) - extra_bytes_pushed_on_stack_before_handler_address, stack);
+        }
 
         VERIFY(stack % 16 == 0);
 
-        TRY(push_value_on_user_stack(stack, 0)); // push fake return address
+#if ARCH(I386)
+        // Leave one empty slot to align the stack for a handler call.
+        TRY(push_value_on_user_stack(stack, 0));
+#endif
+        TRY(push_value_on_user_stack(stack, pointer_to_ucontext));
+        TRY(push_value_on_user_stack(stack, pointer_to_signal_info));
+        TRY(push_value_on_user_stack(stack, signal));
+
+#if ARCH(I386)
+        VERIFY(stack % 16 == 0);
+#endif
+
+        TRY(push_value_on_user_stack(stack, handler_vaddr.get()));
 
         // We write back the adjusted stack value into the register state.
         // We have to do this because we can't just pass around a reference to a packed field, as it's UB.
