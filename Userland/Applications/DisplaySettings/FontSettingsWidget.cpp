@@ -9,8 +9,8 @@
 #include "FontSettingsWidget.h"
 #include <Applications/DisplaySettings/FontSettingsGML.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/FontPicker.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/FontDatabase.h>
 
 namespace DisplaySettings {
@@ -54,7 +54,7 @@ static void update_label_with_font(GUI::Label& label, Gfx::Font const& font)
 
 void FontSettingsWidget::apply_settings()
 {
-    GUI::WindowServerConnection::the().set_system_fonts(m_default_font_label->font().qualified_name(), m_fixed_width_font_label->font().qualified_name());
+    GUI::ConnectionToWindowServer::the().set_system_fonts(m_default_font_label->font().qualified_name(), m_fixed_width_font_label->font().qualified_name());
 }
 
 }

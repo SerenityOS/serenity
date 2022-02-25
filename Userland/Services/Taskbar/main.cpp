@@ -21,8 +21,8 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowMangerServer.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Menu.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibMain/Main.h>
 #include <WindowServer/Window.h>
 #include <serenity.h>
@@ -224,7 +224,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
         quick_sort(g_themes, [](auto& a, auto& b) { return a.name < b.name; });
     }
 
-    auto current_theme_name = GUI::WindowServerConnection::the().get_system_theme();
+    auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
 
     {
         int theme_identifier = 0;
@@ -232,7 +232,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
             auto action = GUI::Action::create_checkable(theme.name, [theme_identifier](auto&) {
                 auto& theme = g_themes[theme_identifier];
                 dbgln("Theme switched to {} at path {}", theme.name, theme.path);
-                auto success = GUI::WindowServerConnection::the().set_system_theme(theme.path, theme.name);
+                auto success = GUI::ConnectionToWindowServer::the().set_system_theme(theme.path, theme.name);
                 VERIFY(success);
             });
             if (theme.name == current_theme_name)

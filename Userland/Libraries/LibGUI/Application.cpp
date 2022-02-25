@@ -9,12 +9,12 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
@@ -73,7 +73,7 @@ Application::Application(int argc, char** argv, Core::EventLoop::MakeInspectable
     VERIFY(!*s_the);
     *s_the = *this;
     m_event_loop = make<Core::EventLoop>(make_inspectable);
-    WindowServerConnection::the();
+    ConnectionToWindowServer::the();
     Clipboard::initialize({});
     if (argc > 0)
         m_invoked_as = argv[0];
@@ -222,7 +222,7 @@ void Application::request_tooltip_show()
     Gfx::IntRect desktop_rect = Desktop::the().rect();
 
     const int margin = 30;
-    Gfx::IntPoint adjusted_pos = WindowServerConnection::the().get_global_cursor_position();
+    Gfx::IntPoint adjusted_pos = ConnectionToWindowServer::the().get_global_cursor_position();
 
     adjusted_pos.translate_by(0, 18);
 
@@ -293,7 +293,7 @@ void Application::set_drag_hovered_widget_impl(Widget* widget, const Gfx::IntPoi
     }
 }
 
-void Application::notify_drag_cancelled(Badge<WindowServerConnection>)
+void Application::notify_drag_cancelled(Badge<ConnectionToWindowServer>)
 {
     set_drag_hovered_widget_impl(nullptr);
 }

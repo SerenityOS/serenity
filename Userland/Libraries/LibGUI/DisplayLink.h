@@ -16,7 +16,7 @@ public:
     static i32 register_callback(Function<void(i32)>);
     static bool unregister_callback(i32 callback_id);
 
-    static void notify(Badge<WindowServerConnection>);
+    static void notify(Badge<ConnectionToWindowServer>);
 };
 
 }

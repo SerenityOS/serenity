@@ -548,7 +548,7 @@ void WindowManager::tell_wms_super_space_key_pressed()
 
 void WindowManager::tell_wms_super_digit_key_pressed(u8 digit)
 {
-    for_each_window_manager([digit](WMClientConnection& conn) {
+    for_each_window_manager([digit](WMConnectionFromClient& conn) {
         if (conn.window_id() < 0)
             return IterationDecision::Continue;
 

@@ -30,7 +30,7 @@ ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(String name)
     auto menu = TRY(m_menubar->try_add_menu({}, move(name)));
     if (m_window_id) {
         menu->realize_menu_if_needed();
-        WindowServerConnection::the().async_add_menu(m_window_id, menu->menu_id());
+        ConnectionToWindowServer::the().async_add_menu(m_window_id, menu->menu_id());
     }
     return menu;
 }

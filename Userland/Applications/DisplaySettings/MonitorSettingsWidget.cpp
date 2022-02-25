@@ -10,11 +10,11 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RadioButton.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/SystemTheme.h>
 
 namespace DisplaySettings {
@@ -140,7 +140,7 @@ static String display_name_from_edid(EDID::Parser const& edid)
 
 void MonitorSettingsWidget::load_current_settings()
 {
-    m_screen_layout = GUI::WindowServerConnection::the().get_screen_layout();
+    m_screen_layout = GUI::ConnectionToWindowServer::the().get_screen_layout();
 
     m_screens.clear();
     m_screen_edids.clear();
@@ -214,9 +214,9 @@ void MonitorSettingsWidget::apply_settings()
 {
     // Fetch the latest configuration again, in case it has been changed by someone else.
     // This isn't technically race free, but if the user automates changing settings we can't help...
-    auto current_layout = GUI::WindowServerConnection::the().get_screen_layout();
+    auto current_layout = GUI::ConnectionToWindowServer::the().get_screen_layout();
     if (m_screen_layout != current_layout) {
-        auto result = GUI::WindowServerConnection::the().set_screen_layout(m_screen_layout, false);
+        auto result = GUI::ConnectionToWindowServer::the().set_screen_layout(m_screen_layout, false);
         if (result.success()) {
             load_current_settings(); // Refresh
 
@@ -243,13 +243,13 @@ void MonitorSettingsWidget::apply_settings()
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.
             if (box->exec() == GUI::MessageBox::ExecYes) {
-                auto save_result = GUI::WindowServerConnection::the().save_screen_layout();
+                auto save_result = GUI::ConnectionToWindowServer::the().save_screen_layout();
                 if (!save_result.success()) {
                     GUI::MessageBox::show(window(), String::formatted("Error saving settings: {}", save_result.error_msg()),
                         "Unable to save setting", GUI::MessageBox::Type::Error);
                 }
             } else {
-                auto restore_result = GUI::WindowServerConnection::the().set_screen_layout(current_layout, false);
+                auto restore_result = GUI::ConnectionToWindowServer::the().set_screen_layout(current_layout, false);
                 if (!restore_result.success()) {
                     GUI::MessageBox::show(window(), String::formatted("Error restoring settings: {}", restore_result.error_msg()),
                         "Unable to restore setting", GUI::MessageBox::Type::Error);
@@ -269,7 +269,7 @@ void MonitorSettingsWidget::show_screen_numbers(bool show)
     if (m_showing_screen_numbers == show)
         return;
     m_showing_screen_numbers = show;
-    GUI::WindowServerConnection::the().async_show_screen_numbers(show);
+    GUI::ConnectionToWindowServer::the().async_show_screen_numbers(show);
 }
 
 void MonitorSettingsWidget::show_event(GUI::ShowEvent&)

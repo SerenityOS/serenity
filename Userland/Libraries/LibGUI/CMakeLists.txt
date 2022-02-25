@@ -112,7 +112,7 @@ set(SOURCES
     VimEditingEngine.cpp
     Widget.cpp
     Window.cpp
-    WindowServerConnection.cpp
+        ConnectionToWindowServer.cpp
         ConnectionToWindowMangerServer.cpp
     Wizards/WizardDialog.cpp
     Wizards/AbstractWizardPage.cpp
