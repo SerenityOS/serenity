@@ -28,7 +28,8 @@ Frame::Frame()
         { Gfx::FrameShape::NoFrame, "NoFrame" },
         { Gfx::FrameShape::Box, "Box" },
         { Gfx::FrameShape::Container, "Container" },
-        { Gfx::FrameShape::Panel, "Panel" });
+        { Gfx::FrameShape::Panel, "Panel" },
+        { Gfx::FrameShape::Window, "Window" });
 }
 
 Frame::~Frame()
