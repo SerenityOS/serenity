@@ -122,7 +122,7 @@ chmod 755 mnt/res/devel/templates/*.postcreate
 echo "done"
 
 printf "creating initial filesystem structure... "
-for dir in bin etc proc mnt tmp boot mod var/run; do
+for dir in bin etc proc mnt tmp boot mod var/run usr/local; do
     mkdir -p mnt/$dir
 done
 chmod 700 mnt/boot
