@@ -21,6 +21,11 @@ class UIEvent : public DOM::Event {
 public:
     using WrapperType = Bindings::UIEventWrapper;
 
+    static NonnullRefPtr<UIEvent> create(FlyString const& type)
+    {
+        return adopt_ref(*new UIEvent(type));
+    }
+
     static NonnullRefPtr<UIEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, UIEventInit const& event_init)
     {
         return adopt_ref(*new UIEvent(event_name, event_init));
