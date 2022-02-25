@@ -56,6 +56,10 @@
             content: "This should appear as a block, last.";
             color: red;
         }
+
+        .fancy-list li::marker {
+            color: green;
+        }
     </style>
 </head>
 <body>
@@ -66,5 +70,15 @@
     </p>
     <p class="inline">There should be a sentence before this, and one after, forming a single paragraph.</p>
     <p class="block">There should be a sentence before this, and one after, each as its own block.</p>
+
+    <ul class="fancy-list">
+        <li>This</li>
+        <li>Is</li>
+        <li>A</li>
+        <li>List</li>
+        <li>With</li>
+        <li>Green</li>
+        <li>Markers</li>
+    </ul>
 </body>
 </html>
