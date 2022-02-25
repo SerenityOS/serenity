@@ -30,7 +30,7 @@ private:
 
     Vector<String> m_initial_keymap_list;
 
-    String m_current_applied_keymap;
+    String m_initial_active_keymap;
 
     RefPtr<GUI::ListView> m_selected_keymaps_listview;
     RefPtr<GUI::CheckBox> m_num_lock_checkbox;

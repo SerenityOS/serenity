@@ -153,8 +153,8 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     auto json = JsonValue::from_string(proc_keymap->read_all()).release_value_but_fixme_should_propagate_errors();
     auto const& keymap_object = json.as_object();
     VERIFY(keymap_object.has("keymap"));
-    m_current_applied_keymap = keymap_object.get("keymap").to_string();
-    dbgln("KeyboardSettings thinks the current keymap is: {}", m_current_applied_keymap);
+    m_initial_active_keymap = keymap_object.get("keymap").to_string();
+    dbgln("KeyboardSettings thinks the current keymap is: {}", m_initial_active_keymap);
 
     auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini").release_value_but_fixme_should_propagate_errors());
     auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
@@ -171,7 +171,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
         keymaps_list_model.add_keymap(keymap);
     }
 
-    keymaps_list_model.set_active_keymap(m_current_applied_keymap);
+    keymaps_list_model.set_active_keymap(m_initial_active_keymap);
 
     m_add_keymap_button = find_descendant_of_type_named<GUI::Button>("add_keymap_button");
 
