@@ -35,7 +35,7 @@ ClockWidget::ClockWidget()
     });
 
     m_calendar_window = add<GUI::Window>(window());
-    m_calendar_window->resize(152, 186);
+    m_calendar_window->resize(m_window_size.width(), m_window_size.height());
     m_calendar_window->set_frameless(true);
     m_calendar_window->set_resizable(false);
     m_calendar_window->set_minimizable(false);
@@ -44,19 +44,17 @@ ClockWidget::ClockWidget()
             close();
     };
 
-    auto& root_container = m_calendar_window->set_main_widget<GUI::Label>();
+    auto& root_container = m_calendar_window->set_main_widget<GUI::Frame>();
     root_container.set_fill_with_background_color(true);
     root_container.set_layout<GUI::VerticalBoxLayout>();
     root_container.layout()->set_margins({ 2, 0 });
     root_container.layout()->set_spacing(0);
-    root_container.set_frame_thickness(2);
-    root_container.set_frame_shape(Gfx::FrameShape::Container);
-    root_container.set_frame_shadow(Gfx::FrameShadow::Raised);
+    root_container.set_frame_shape(Gfx::FrameShape::Window);
 
     auto& navigation_container = root_container.add<GUI::Widget>();
     navigation_container.set_fixed_height(24);
     navigation_container.set_layout<GUI::HorizontalBoxLayout>();
-    navigation_container.layout()->set_margins({ 2, 3, 2, 2 });
+    navigation_container.layout()->set_margins({ 2 });
 
     m_prev_date = navigation_container.add<GUI::Button>();
     m_prev_date->set_button_style(Gfx::ButtonStyle::Coolbar);
@@ -120,7 +118,7 @@ ClockWidget::ClockWidget()
 
     auto& calendar_container = root_container.add<GUI::Widget>();
     calendar_container.set_layout<GUI::HorizontalBoxLayout>();
-    calendar_container.layout()->set_margins({ 4, 5, 4, 4 });
+    calendar_container.layout()->set_margins({ 2 });
 
     m_calendar = calendar_container.add<GUI::Calendar>();
     m_selected_calendar_button->set_text(m_calendar->formatted_date());
@@ -139,7 +137,7 @@ ClockWidget::ClockWidget()
     auto& settings_container = root_container.add<GUI::Widget>();
     settings_container.set_fixed_height(24);
     settings_container.set_layout<GUI::HorizontalBoxLayout>();
-    settings_container.layout()->set_margins({ 2, 3, 2, 2 });
+    settings_container.layout()->set_margins({ 2 });
     settings_container.layout()->add_spacer();
 
     m_jump_to_button = settings_container.add<GUI::Button>();
@@ -210,11 +208,12 @@ void ClockWidget::close()
 
 void ClockWidget::position_calendar_window()
 {
+    constexpr auto taskbar_top_padding { 4 };
     m_calendar_window->set_rect(
-        screen_relative_rect().right() - m_calendar_window->width() + 4,
-        screen_relative_rect().top() - m_calendar_window->height() - 3,
-        152,
-        186);
+        screen_relative_rect().right() - m_calendar_window->width() + 1,
+        screen_relative_rect().top() - taskbar_top_padding - m_calendar_window->height(),
+        m_window_size.width(),
+        m_window_size.height());
 }
 
 void ClockWidget::jump_to_current_date()

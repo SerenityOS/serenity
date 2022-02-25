@@ -51,6 +51,7 @@ private:
     RefPtr<GUI::Button> m_calendar_launcher;
     RefPtr<Core::Timer> m_timer;
     int m_time_width { 0 };
+    Gfx::IntSize m_window_size { 158, 186 };
 };
 
 }
