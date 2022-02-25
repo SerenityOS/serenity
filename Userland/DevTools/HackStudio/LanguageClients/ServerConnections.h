@@ -10,7 +10,7 @@
 #include <AK/LexicalPath.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 
 #define LANGUAGE_CLIENT(language_name_, socket_name)                                                  \
     namespace language_name_ {                                                                        \

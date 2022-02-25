@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 #include <RequestServer/RequestClientEndpoint.h>
 #include <RequestServer/RequestServerEndpoint.h>
 
@@ -16,7 +16,7 @@ namespace Protocol {
 class Request;
 
 class RequestClient final
-    : public IPC::ServerConnection<RequestClientEndpoint, RequestServerEndpoint>
+    : public IPC::ConnectionToServer<RequestClientEndpoint, RequestServerEndpoint>
     , public RequestClientEndpoint {
     IPC_CLIENT_CONNECTION(RequestClient, "/tmp/portal/request")
 

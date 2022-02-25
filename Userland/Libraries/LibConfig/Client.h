@@ -11,12 +11,12 @@
 #include <LibCore/File.h>
 #include <LibCore/Promise.h>
 #include <LibCore/StandardPaths.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 
 namespace Config {
 
 class Client final
-    : public IPC::ServerConnection<ConfigClientEndpoint, ConfigServerEndpoint>
+    : public IPC::ConnectionToServer<ConfigClientEndpoint, ConfigServerEndpoint>
     , public ConfigClientEndpoint {
     IPC_CLIENT_CONNECTION(Client, "/tmp/portal/config")
 
@@ -40,7 +40,7 @@ public:
 
 private:
     explicit Client(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
-        : IPC::ServerConnection<ConfigClientEndpoint, ConfigServerEndpoint>(*this, move(socket))
+        : IPC::ConnectionToServer<ConfigClientEndpoint, ConfigServerEndpoint>(*this, move(socket))
     {
     }
 

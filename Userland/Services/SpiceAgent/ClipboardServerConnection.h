@@ -8,12 +8,12 @@
 #include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/ClipboardServerEndpoint.h>
 #include <LibGfx/Bitmap.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 
 #pragma once
 
 class ClipboardServerConnection final
-    : public IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>
+    : public IPC::ConnectionToServer<ClipboardClientEndpoint, ClipboardServerEndpoint>
     , public ClipboardClientEndpoint {
     IPC_CLIENT_CONNECTION(ClipboardServerConnection, "/tmp/portal/clipboard")
 
@@ -24,7 +24,7 @@ public:
 
 private:
     ClipboardServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
-        : IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, move(socket))
+        : IPC::ConnectionToServer<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, move(socket))
     {
     }
     virtual void clipboard_data_changed(String const&) override

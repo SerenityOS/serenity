@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 #include <WebSocket/WebSocketClientEndpoint.h>
 #include <WebSocket/WebSocketServerEndpoint.h>
 
@@ -16,7 +16,7 @@ namespace Protocol {
 class WebSocket;
 
 class WebSocketClient final
-    : public IPC::ServerConnection<WebSocketClientEndpoint, WebSocketServerEndpoint>
+    : public IPC::ConnectionToServer<WebSocketClientEndpoint, WebSocketServerEndpoint>
     , public WebSocketClientEndpoint {
     IPC_CLIENT_CONNECTION(WebSocketClient, "/tmp/portal/websocket")
 

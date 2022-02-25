@@ -15,7 +15,7 @@
 #include <AK/Weakable.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCpp/Preprocessor.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 
 #include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
@@ -26,13 +26,13 @@ class LanguageClient;
 class ServerConnectionWrapper;
 
 class ServerConnection
-    : public IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>
+    : public IPC::ConnectionToServer<LanguageClientEndpoint, LanguageServerEndpoint>
     , public LanguageClientEndpoint {
     friend class ServerConnectionWrapper;
 
 public:
     ServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, const String& project_path)
-        : IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket))
+        : IPC::ConnectionToServer<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket))
     {
         m_project_path = project_path;
         async_greet(m_project_path);

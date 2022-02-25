@@ -9,7 +9,7 @@
 #include <LaunchServer/LaunchClientEndpoint.h>
 #include <LaunchServer/LaunchServerEndpoint.h>
 #include <LibDesktop/Launcher.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 #include <stdlib.h>
 
 namespace Desktop {
@@ -34,12 +34,12 @@ auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRe
 }
 
 class LaunchServerConnection final
-    : public IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>
+    : public IPC::ConnectionToServer<LaunchClientEndpoint, LaunchServerEndpoint>
     , public LaunchClientEndpoint {
     IPC_CLIENT_CONNECTION(LaunchServerConnection, "/tmp/portal/launch")
 private:
     LaunchServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
-        : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, move(socket))
+        : IPC::ConnectionToServer<LaunchClientEndpoint, LaunchServerEndpoint>(*this, move(socket))
     {
     }
 };

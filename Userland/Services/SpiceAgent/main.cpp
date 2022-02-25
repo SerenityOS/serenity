@@ -7,7 +7,7 @@
 #include "SpiceAgent.h"
 #include <LibC/fcntl.h>
 #include <LibCore/System.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 #include <LibMain/Main.h>
 
 static constexpr auto SPICE_DEVICE = "/dev/hvc0p1"sv;

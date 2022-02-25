@@ -262,7 +262,7 @@ void ServerConnectionWrapper::try_respawn_connection()
     if (!m_respawn_allowed)
         return;
 
-    dbgln("Respawning ServerConnection");
+    dbgln("Respawning ConnectionToServer");
     create_connection();
 
     // After respawning the language-server, we have to send the content of open project files

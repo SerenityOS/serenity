@@ -42,7 +42,7 @@ static void set_system_theme_from_anonymous_buffer(Core::AnonymousBuffer buffer)
 }
 
 WindowServerConnection::WindowServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
-    : IPC::ServerConnection<WindowClientEndpoint, WindowServerEndpoint>(*this, move(socket))
+    : IPC::ConnectionToServer<WindowClientEndpoint, WindowServerEndpoint>(*this, move(socket))
 {
     // NOTE: WindowServer automatically sends a "fast_greet" message to us when we connect.
     //       All we have to do is wait for it to arrive. This avoids a round-trip during application startup.
