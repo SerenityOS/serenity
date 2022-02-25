@@ -68,8 +68,6 @@ ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> 
     }
     if (user_act) {
         auto act = TRY(copy_typed_from_user(user_act));
-        if (act.sa_flags & SA_SIGINFO)
-            return ENOTSUP;
         action.mask = act.sa_mask;
         action.flags = act.sa_flags;
         action.handler_or_sigaction = VirtualAddress { reinterpret_cast<void*>(act.sa_sigaction) };
@@ -83,63 +81,36 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     TRY(require_promise(Pledge::stdio));
     SmapDisabler disabler;
 
-#if ARCH(I386)
-    // Stack state (created by the signal trampoline):
-    //    ret flags, ret ip, register dump,
-    //    signal mask, signal, handler (alignment = 16),
-    //    0, ebp, eax
-
     // Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
-    FlatPtr* stack_ptr = bit_cast<FlatPtr*>(registers.userspace_esp);
-    FlatPtr smuggled_eax = *stack_ptr;
+    auto stack_ptr = registers.userspace_sp();
 
-    // pop the stored eax, ebp, return address, handler and signal code
-    stack_ptr += 5;
-
-    Thread::current()->m_signal_mask = *stack_ptr;
-    stack_ptr++;
-
-    // pop edi, esi, ebp, esp, ebx, edx, ecx and eax
-    memcpy(&registers.edi, stack_ptr, 8 * sizeof(FlatPtr));
-    stack_ptr += 8;
-
-    registers.eip = *stack_ptr;
-    stack_ptr++;
-
-    registers.eflags = (registers.eflags & ~safe_eflags_mask) | (*stack_ptr & safe_eflags_mask);
-    stack_ptr++;
-
-    registers.userspace_esp = registers.esp;
-    return smuggled_eax;
-#else
     // Stack state (created by the signal trampoline):
-    //    ret flags, ret ip, register dump,
-    //    signal mask, signal, handler (alignment = 16),
-    //    0, ebp, eax
+    // saved_ax, ucontext, signal_info.
+    stack_ptr += sizeof(siginfo); // We don't need this here.
 
-    // Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
-    FlatPtr* stack_ptr = (FlatPtr*)registers.userspace_rsp;
-    FlatPtr smuggled_rax = *stack_ptr;
+    auto ucontext = TRY(copy_typed_from_user<__ucontext>(stack_ptr));
+    stack_ptr += sizeof(__ucontext);
 
-    // pop the stored rax, rbp, return address, handler and signal code
-    stack_ptr += 5;
+    auto saved_ax = TRY(copy_typed_from_user<FlatPtr>(stack_ptr));
 
-    Thread::current()->m_signal_mask = *stack_ptr;
-    stack_ptr++;
-
-    // pop rdi, rsi, rbp, rsp, rbx, rdx, rcx, rax, r8, r9, r10, r11, r12, r13, r14 and r15
-    memcpy(&registers.rdi, stack_ptr, 16 * sizeof(FlatPtr));
-    stack_ptr += 16;
-
-    registers.rip = *stack_ptr;
-    stack_ptr++;
-
-    registers.rflags = (registers.rflags & ~safe_eflags_mask) | (*stack_ptr & safe_eflags_mask);
-    stack_ptr++;
-
-    registers.userspace_rsp = registers.rsp;
-    return smuggled_rax;
+    Thread::current()->m_signal_mask = ucontext.uc_sigmask;
+#if ARCH(X86_64)
+    auto sp = registers.rsp;
+#elif ARCH(I386)
+    auto sp = registers.esp;
 #endif
+
+    copy_ptrace_registers_into_kernel_registers(registers, static_cast<PtraceRegisters const&>(ucontext.uc_mcontext));
+
+#if ARCH(X86_64)
+    registers.set_userspace_sp(registers.rsp);
+    registers.rsp = sp;
+#elif ARCH(I386)
+    registers.set_userspace_sp(registers.esp);
+    registers.esp = sp;
+#endif
+
+    return saved_ax;
 }
 
 ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)

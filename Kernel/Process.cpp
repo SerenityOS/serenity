@@ -293,63 +293,69 @@ void signal_trampoline_dummy()
     // blocking syscall, that syscall may return some special error code in eax;
     // This error code would likely be overwritten by the signal handler, so it's
     // necessary to preserve it here.
+    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + 5 * sizeof(FlatPtr);
     asm(
         ".intel_syntax noprefix\n"
         ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        // stack state: ret flags, ret ip, register dump, signal mask, signal, handler (alignment = 16), 0
+        // stack state: 0, ucontext, signal_info, (alignment = 16), 0, ucontext*, siginfo*, signal, (alignment = 16), handler
 
-        // save ebp
-        "push ebp\n"
-        "mov ebp, esp\n"
+        // Pop the handler into ecx
+        "pop ecx\n" // save handler
         // we have to save eax 'cause it might be the return value from a syscall
-        "push eax\n"
-        // align the stack to 16 bytes (as our current offset is 12 from the fake return addr, saved ebp and saved eax)
-        "sub esp, 4\n"
-        // push the signal code
-        "mov eax, [ebp+12]\n"
-        "push eax\n"
+        "mov [esp+%P1], eax\n"
+        // Note that the stack is currently aligned to 16 bytes as we popped the extra entries above.
+        // and it's already setup to call the handler with the expected values on the stack.
         // call the signal handler
-        "call [ebp+8]\n"
-        // Unroll stack back to the saved eax
-        "add esp, 8\n"
+        "call ecx\n"
+        // drop the 4 arguments
+        "add esp, 16\n"
+        // Current stack state is just saved_eax, ucontext, signal_info.
         // syscall SC_sigreturn
         "mov eax, %P0\n"
         "int 0x82\n"
         ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
-        ".att_syntax" ::"i"(Syscall::SC_sigreturn));
+        ".att_syntax"
+        :
+        : "i"(Syscall::SC_sigreturn),
+        "i"(offset_to_first_register_slot));
 #elif ARCH(X86_64)
     // The trampoline preserves the current rax, pushes the signal code and
     // then calls the signal handler. We do this because, when interrupting a
     // blocking syscall, that syscall may return some special error code in eax;
     // This error code would likely be overwritten by the signal handler, so it's
     // necessary to preserve it here.
+    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + 4 * sizeof(FlatPtr);
     asm(
         ".intel_syntax noprefix\n"
         ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        // stack state: ret flags, ret ip, register dump, signal mask, signal, handler (alignment = 16), 0
+        // stack state: 0, ucontext, signal_info (alignment = 16), ucontext*, siginfo*, signal, handler
 
-        // save rbp
-        "push rbp\n"
-        "mov rbp, rsp\n"
+        // Pop the handler into rcx
+        "pop rcx\n" // save handler
         // we have to save rax 'cause it might be the return value from a syscall
-        "push rax\n"
-        // align the stack to 16 bytes (our offset is 24 bytes from the fake return addr, saved rbp and saved rax).
-        "sub rsp, 8\n"
-        // push the signal code
-        "mov rdi, [rbp+24]\n"
+        "mov [rsp+%P1], rax\n"
+        // pop signal number into rdi (first param)
+        "pop rdi\n"
+        // pop siginfo* into rsi (second param)
+        "pop rsi\n"
+        // pop ucontext* into rdx (third param)
+        "pop rdx\n"
+        // Note that the stack is currently aligned to 16 bytes as we popped the extra entries above.
         // call the signal handler
-        "call [rbp+16]\n"
-        // unroll stack back to the saved rax
-        "add rsp, 8\n"
+        "call rcx\n"
+        // Current stack state is just saved_rax, ucontext, signal_info.
         // syscall SC_sigreturn
         "mov rax, %P0\n"
         "int 0x82\n"
         ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
-        ".att_syntax" ::"i"(Syscall::SC_sigreturn));
+        ".att_syntax"
+        :
+        : "i"(Syscall::SC_sigreturn),
+        "i"(offset_to_first_register_slot));
 #endif
 }
 
