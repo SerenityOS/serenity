@@ -87,4 +87,22 @@ private:
     int m_index { 0 };
 };
 
+namespace ReverseWrapper {
+
+template<typename Container>
+struct ReverseWrapper {
+    Container& container;
+};
+
+template<typename Container>
+auto begin(ReverseWrapper<Container> wrapper) { return wrapper.container.rbegin(); }
+
+template<typename Container>
+auto end(ReverseWrapper<Container> wrapper) { return wrapper.container.rend(); }
+
+template<typename Container>
+ReverseWrapper<Container> in_reverse(Container&& container) { return { container }; }
+
+}
+
 }
