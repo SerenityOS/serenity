@@ -92,7 +92,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         m_workbook->add_sheet("Sheet 1");
 
     m_tab_context_menu = GUI::Menu::construct();
-    m_rename_action = GUI::Action::create("Rename...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/rename.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_rename_action = GUI::CommonActions::make_rename_action([this](auto&) {
         VERIFY(m_tab_context_menu_sheet_view);
 
         auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
@@ -245,6 +245,11 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
 
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
+
+    m_tab_widget->on_change = [this](auto& selected_widget) {
+        // for keyboard shortcuts and command palette
+        m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(selected_widget);
+    };
 
     m_tab_widget->on_context_menu_request = [&](auto& widget, auto& event) {
         m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
