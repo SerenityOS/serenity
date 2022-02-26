@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include "FadingProperty.h"
 #include <AK/Atomic.h>
 #include <AK/Badge.h>
@@ -30,11 +30,11 @@ namespace AudioServer {
 // This is to prevent clipping when two streams with low headroom (e.g. normalized & compressed) are playing.
 constexpr double SAMPLE_HEADROOM = 0.7;
 
-class ClientConnection;
+class ConnectionFromClient;
 
 class ClientAudioStream : public RefCounted<ClientAudioStream> {
 public:
-    explicit ClientAudioStream(ClientConnection&);
+    explicit ClientAudioStream(ConnectionFromClient&);
     ~ClientAudioStream() { }
 
     bool is_full() const { return m_queue.size() >= 3; }
@@ -64,7 +64,7 @@ public:
         return true;
     }
 
-    ClientConnection* client() { return m_client.ptr(); }
+    ConnectionFromClient* client() { return m_client.ptr(); }
 
     void clear(bool paused = false)
     {
@@ -105,7 +105,7 @@ private:
     bool m_paused { false };
     bool m_muted { false };
 
-    WeakPtr<ClientConnection> m_client;
+    WeakPtr<ConnectionFromClient> m_client;
     FadingProperty<double> m_volume { 1 };
 };
 
@@ -114,7 +114,7 @@ class Mixer : public Core::Object {
 public:
     virtual ~Mixer() override;
 
-    NonnullRefPtr<ClientAudioStream> create_queue(ClientConnection&);
+    NonnullRefPtr<ClientAudioStream> create_queue(ConnectionFromClient&);
 
     // To the outside world, we pretend that the target volume is already reached, even though it may be still fading.
     double main_volume() const { return m_main_volume.target(); }

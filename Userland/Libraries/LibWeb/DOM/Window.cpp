@@ -329,11 +329,12 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(FlyString const& na
         return CSS::MediaFeatureValue("hover");
     if (name.equals_ignoring_case("monochrome"sv))
         return CSS::MediaFeatureValue(0);
-    if (name.equals_ignoring_case("hover"sv))
+    if (name.equals_ignoring_case("orientation"sv))
         return CSS::MediaFeatureValue(inner_height() >= inner_width() ? "portrait" : "landscape");
     if (name.equals_ignoring_case("overflow-block"sv))
         return CSS::MediaFeatureValue("scroll");
-    // FIXME: overflow-inline
+    if (name.equals_ignoring_case("overflow-inline"sv))
+        return CSS::MediaFeatureValue("scroll");
     if (name.equals_ignoring_case("pointer"sv))
         return CSS::MediaFeatureValue("fine");
     // FIXME: resolution

@@ -9,7 +9,7 @@
 #include <LibCore/System.h>
 #include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>
-#include <WebContent/ClientConnection.h>
+#include <WebContent/ConnectionFromClient.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
@@ -22,6 +22,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/tmp/portal/websocket", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto client = TRY(IPC::take_over_accepted_client_from_system_server<WebContent::ClientConnection>());
+    auto client = TRY(IPC::take_over_accepted_client_from_system_server<WebContent::ConnectionFromClient>());
     return event_loop.exec();
 }

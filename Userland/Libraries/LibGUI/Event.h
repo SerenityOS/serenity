@@ -66,6 +66,7 @@ public:
         WM_AppletAreaSizeChanged,
         WM_SuperKeyPressed,
         WM_SuperSpaceKeyPressed,
+        WM_SuperDigitKeyPressed,
         WM_WorkspaceChanged,
         WM_KeymapChanged,
         __End_WM_Events,
@@ -113,6 +114,20 @@ public:
         : WMEvent(Event::Type::WM_SuperSpaceKeyPressed, client_id, 0)
     {
     }
+};
+
+class WMSuperDigitKeyPressedEvent : public WMEvent {
+public:
+    WMSuperDigitKeyPressedEvent(int client_id, u8 digit)
+        : WMEvent(Event::Type::WM_SuperDigitKeyPressed, client_id, 0)
+        , m_digit(digit)
+    {
+    }
+
+    u8 digit() const { return m_digit; }
+
+private:
+    u8 m_digit { 0 };
 };
 
 class WMAppletAreaSizeChangedEvent : public WMEvent {
@@ -376,7 +391,7 @@ public:
     }
 
 private:
-    friend class WindowServerConnection;
+    friend class ConnectionToWindowServer;
     KeyCode m_key { KeyCode::Key_Invalid };
     u8 m_modifiers { 0 };
     u32 m_code_point { 0 };

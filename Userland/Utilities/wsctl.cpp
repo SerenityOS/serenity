@@ -6,7 +6,7 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/WindowServerConnection.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -18,6 +18,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (flash_flush != -1)
-        GUI::WindowServerConnection::the().async_set_flash_flush(flash_flush);
+        GUI::ConnectionToWindowServer::the().async_set_flash_flush(flash_flush);
     return 0;
 }

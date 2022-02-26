@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 #include <SQLServer/SQLClientEndpoint.h>
 #include <SQLServer/SQLServerEndpoint.h>
 
 namespace SQL {
 
 class SQLClient
-    : public IPC::ServerConnection<SQLClientEndpoint, SQLServerEndpoint>
+    : public IPC::ConnectionToServer<SQLClientEndpoint, SQLServerEndpoint>
     , public SQLClientEndpoint {
     IPC_CLIENT_CONNECTION(SQLClient, "/tmp/portal/sql")
     virtual ~SQLClient();
@@ -28,7 +28,7 @@ class SQLClient
 
 private:
     SQLClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
-        : IPC::ServerConnection<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket))
+        : IPC::ConnectionToServer<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket))
     {
     }
 

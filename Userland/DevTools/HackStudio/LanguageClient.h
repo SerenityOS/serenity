@@ -15,7 +15,7 @@
 #include <AK/Weakable.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCpp/Preprocessor.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 
 #include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
@@ -23,16 +23,16 @@
 namespace HackStudio {
 
 class LanguageClient;
-class ServerConnectionWrapper;
+class ConnectionToServerWrapper;
 
-class ServerConnection
-    : public IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>
+class ConnectionToServer
+    : public IPC::ConnectionToServer<LanguageClientEndpoint, LanguageServerEndpoint>
     , public LanguageClientEndpoint {
-    friend class ServerConnectionWrapper;
+    friend class ConnectionToServerWrapper;
 
 public:
-    ServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, const String& project_path)
-        : IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket))
+    ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket, const String& project_path)
+        : IPC::ConnectionToServer<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket))
     {
         m_project_path = project_path;
         async_greet(m_project_path);
@@ -52,25 +52,25 @@ protected:
     virtual void todo_entries_in_document(String const&, Vector<Cpp::Parser::TodoEntry> const&) override;
     virtual void parameters_hint_result(Vector<String> const&, int index) override;
     virtual void tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> const&) override;
-    void set_wrapper(ServerConnectionWrapper& wrapper) { m_wrapper = &wrapper; }
+    void set_wrapper(ConnectionToServerWrapper& wrapper) { m_wrapper = &wrapper; }
 
     String m_project_path;
     WeakPtr<LanguageClient> m_current_language_client;
-    ServerConnectionWrapper* m_wrapper { nullptr };
+    ConnectionToServerWrapper* m_wrapper { nullptr };
 };
 
-class ServerConnectionWrapper {
-    AK_MAKE_NONCOPYABLE(ServerConnectionWrapper);
+class ConnectionToServerWrapper {
+    AK_MAKE_NONCOPYABLE(ConnectionToServerWrapper);
 
 public:
-    explicit ServerConnectionWrapper(const String& language_name, Function<NonnullRefPtr<ServerConnection>()> connection_creator);
-    ~ServerConnectionWrapper() = default;
+    explicit ConnectionToServerWrapper(const String& language_name, Function<NonnullRefPtr<ConnectionToServer>()> connection_creator);
+    ~ConnectionToServerWrapper() = default;
 
     template<typename LanguageServerType>
-    static ServerConnectionWrapper& get_or_create(const String& project_path);
+    static ConnectionToServerWrapper& get_or_create(const String& project_path);
 
     Language language() const { return m_language; }
-    ServerConnection* connection();
+    ConnectionToServer* connection();
     void on_crash();
     void try_respawn_connection();
 
@@ -84,27 +84,27 @@ private:
     void show_frequent_crashes_notification() const;
 
     Language m_language;
-    Function<NonnullRefPtr<ServerConnection>()> m_connection_creator;
-    RefPtr<ServerConnection> m_connection;
+    Function<NonnullRefPtr<ConnectionToServer>()> m_connection_creator;
+    RefPtr<ConnectionToServer> m_connection;
 
     Core::ElapsedTimer m_last_crash_timer;
     bool m_respawn_allowed { true };
 };
 
-class ServerConnectionInstances {
+class ConnectionToServerInstances {
 public:
-    static void set_instance_for_language(const String& language_name, NonnullOwnPtr<ServerConnectionWrapper>&& connection_wrapper);
+    static void set_instance_for_language(const String& language_name, NonnullOwnPtr<ConnectionToServerWrapper>&& connection_wrapper);
     static void remove_instance_for_language(const String& language_name);
 
-    static ServerConnectionWrapper* get_instance_wrapper(const String& language_name);
+    static ConnectionToServerWrapper* get_instance_wrapper(const String& language_name);
 
 private:
-    static HashMap<String, NonnullOwnPtr<ServerConnectionWrapper>> s_instance_for_language;
+    static HashMap<String, NonnullOwnPtr<ConnectionToServerWrapper>> s_instance_for_language;
 };
 
 class LanguageClient : public Weakable<LanguageClient> {
 public:
-    explicit LanguageClient(ServerConnectionWrapper& connection_wrapper)
+    explicit LanguageClient(ConnectionToServerWrapper& connection_wrapper)
         : m_connection_wrapper(connection_wrapper)
     {
         if (m_connection_wrapper.connection()) {
@@ -148,26 +148,26 @@ public:
     Function<void(Vector<GUI::AutocompleteProvider::TokenInfo> const&)> on_tokens_info_result;
 
 private:
-    ServerConnectionWrapper& m_connection_wrapper;
+    ConnectionToServerWrapper& m_connection_wrapper;
     WeakPtr<LanguageClient> m_previous_client;
 };
 
-template<typename ServerConnectionT>
+template<typename ConnectionToServerT>
 static inline NonnullOwnPtr<LanguageClient> get_language_client(const String& project_path)
 {
-    return make<LanguageClient>(ServerConnectionWrapper::get_or_create<ServerConnectionT>(project_path));
+    return make<LanguageClient>(ConnectionToServerWrapper::get_or_create<ConnectionToServerT>(project_path));
 }
 
 template<typename LanguageServerType>
-ServerConnectionWrapper& ServerConnectionWrapper::get_or_create(const String& project_path)
+ConnectionToServerWrapper& ConnectionToServerWrapper::get_or_create(const String& project_path)
 {
-    auto* wrapper = ServerConnectionInstances::get_instance_wrapper(LanguageServerType::language_name());
+    auto* wrapper = ConnectionToServerInstances::get_instance_wrapper(LanguageServerType::language_name());
     if (wrapper)
         return *wrapper;
 
-    auto connection_wrapper_ptr = make<ServerConnectionWrapper>(LanguageServerType::language_name(), [project_path]() { return LanguageServerType::try_create(project_path).release_value_but_fixme_should_propagate_errors(); });
+    auto connection_wrapper_ptr = make<ConnectionToServerWrapper>(LanguageServerType::language_name(), [project_path]() { return LanguageServerType::try_create(project_path).release_value_but_fixme_should_propagate_errors(); });
     auto& connection_wrapper = *connection_wrapper_ptr;
-    ServerConnectionInstances::set_instance_for_language(LanguageServerType::language_name(), move(connection_wrapper_ptr));
+    ConnectionToServerInstances::set_instance_for_language(LanguageServerType::language_name(), move(connection_wrapper_ptr));
     return connection_wrapper;
 }
 

@@ -79,7 +79,7 @@ public:
     {
         set_drag_hovered_widget_impl(widget, position, move(mime_types));
     }
-    void notify_drag_cancelled(Badge<WindowServerConnection>);
+    void notify_drag_cancelled(Badge<ConnectionToWindowServer>);
 
     Function<void(Action&)> on_action_enter;
     Function<void(Action&)> on_action_leave;

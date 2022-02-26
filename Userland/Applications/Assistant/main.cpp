@@ -216,7 +216,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& container = window->set_main_widget<GUI::Frame>();
     container.set_fill_with_background_color(true);
-    container.set_frame_shadow(Gfx::FrameShadow::Raised);
+    container.set_frame_shape(Gfx::FrameShape::Window);
     auto& layout = container.set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins({ 8, 8, 0 });
 

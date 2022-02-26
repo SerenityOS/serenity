@@ -5,11 +5,11 @@
  */
 
 #include "InspectableProcess.h"
-#include <InspectorServer/ClientConnection.h>
+#include <InspectorServer/ConnectionFromClient.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
-#include <LibIPC/ClientConnection.h>
+#include <LibIPC/ConnectionFromClient.h>
 #include <LibIPC/MultiServer.h>
 #include <LibMain/Main.h>
 
@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     TRY(Core::System::pledge("stdio unix accept"));
 
-    auto server = TRY(IPC::MultiServer<InspectorServer::ClientConnection>::try_create("/tmp/portal/inspector"));
+    auto server = TRY(IPC::MultiServer<InspectorServer::ConnectionFromClient>::try_create("/tmp/portal/inspector"));
 
     auto inspectables_server = TRY(Core::LocalServer::try_create());
     TRY(inspectables_server->take_over_from_system_server("/tmp/portal/inspectables"));

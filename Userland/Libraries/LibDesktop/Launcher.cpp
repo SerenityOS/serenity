@@ -9,7 +9,7 @@
 #include <LaunchServer/LaunchClientEndpoint.h>
 #include <LaunchServer/LaunchServerEndpoint.h>
 #include <LibDesktop/Launcher.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 #include <stdlib.h>
 
 namespace Desktop {
@@ -33,20 +33,20 @@ auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRe
     return details;
 }
 
-class LaunchServerConnection final
-    : public IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>
+class ConnectionToLaunchServer final
+    : public IPC::ConnectionToServer<LaunchClientEndpoint, LaunchServerEndpoint>
     , public LaunchClientEndpoint {
-    IPC_CLIENT_CONNECTION(LaunchServerConnection, "/tmp/portal/launch")
+    IPC_CLIENT_CONNECTION(ConnectionToLaunchServer, "/tmp/portal/launch")
 private:
-    LaunchServerConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
-        : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, move(socket))
+    ConnectionToLaunchServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+        : IPC::ConnectionToServer<LaunchClientEndpoint, LaunchServerEndpoint>(*this, move(socket))
     {
     }
 };
 
-static LaunchServerConnection& connection()
+static ConnectionToLaunchServer& connection()
 {
-    static auto connection = LaunchServerConnection::try_create().release_value_but_fixme_should_propagate_errors();
+    static auto connection = ConnectionToLaunchServer::try_create().release_value_but_fixme_should_propagate_errors();
     return connection;
 }
 

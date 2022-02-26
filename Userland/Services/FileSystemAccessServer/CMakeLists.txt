@@ -8,7 +8,7 @@ compile_ipc(FileSystemAccessServer.ipc FileSystemAccessServerEndpoint.h)
 compile_ipc(FileSystemAccessClient.ipc FileSystemAccessClientEndpoint.h)
 
 set(SOURCES
-    ClientConnection.cpp
+    ConnectionFromClient.cpp
     main.cpp
     FileSystemAccessServerEndpoint.h
     FileSystemAccessClientEndpoint.h

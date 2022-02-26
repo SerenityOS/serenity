@@ -6,8 +6,8 @@
 
 #include <AK/Badge.h>
 #include <AK/TemporaryChange.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Desktop.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <string.h>
 
 // Including this after to avoid LibIPC errors
@@ -25,7 +25,7 @@ Desktop::Desktop()
 {
 }
 
-void Desktop::did_receive_screen_rects(Badge<WindowServerConnection>, const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index, unsigned workspace_rows, unsigned workspace_columns)
+void Desktop::did_receive_screen_rects(Badge<ConnectionToWindowServer>, const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index, unsigned workspace_rows, unsigned workspace_columns)
 {
     m_main_screen_index = main_screen_index;
     m_rects = rects;
@@ -46,12 +46,12 @@ void Desktop::did_receive_screen_rects(Badge<WindowServerConnection>, const Vect
 
 void Desktop::set_background_color(StringView background_color)
 {
-    WindowServerConnection::the().async_set_background_color(background_color);
+    ConnectionToWindowServer::the().async_set_background_color(background_color);
 }
 
 void Desktop::set_wallpaper_mode(StringView mode)
 {
-    WindowServerConnection::the().async_set_wallpaper_mode(mode);
+    ConnectionToWindowServer::the().async_set_wallpaper_mode(mode);
 }
 
 String Desktop::wallpaper_path() const
@@ -61,7 +61,7 @@ String Desktop::wallpaper_path() const
 
 RefPtr<Gfx::Bitmap> Desktop::wallpaper_bitmap() const
 {
-    return WindowServerConnection::the().get_wallpaper().bitmap();
+    return ConnectionToWindowServer::the().get_wallpaper().bitmap();
 }
 
 bool Desktop::set_wallpaper(RefPtr<Gfx::Bitmap> wallpaper_bitmap, Optional<String> path)
@@ -70,8 +70,8 @@ bool Desktop::set_wallpaper(RefPtr<Gfx::Bitmap> wallpaper_bitmap, Optional<Strin
         return false;
 
     TemporaryChange is_setting_desktop_wallpaper_change(m_is_setting_desktop_wallpaper, true);
-    WindowServerConnection::the().async_set_wallpaper(wallpaper_bitmap ? wallpaper_bitmap->to_shareable_bitmap() : Gfx::ShareableBitmap {});
-    auto ret_val = WindowServerConnection::the().wait_for_specific_message<Messages::WindowClient::SetWallpaperFinished>()->success();
+    ConnectionToWindowServer::the().async_set_wallpaper(wallpaper_bitmap ? wallpaper_bitmap->to_shareable_bitmap() : Gfx::ShareableBitmap {});
+    auto ret_val = ConnectionToWindowServer::the().wait_for_specific_message<Messages::WindowClient::SetWallpaperFinished>()->success();
 
     if (ret_val && path.has_value()) {
         dbgln("Saving wallpaper path '{}' to ConfigServer", *path);

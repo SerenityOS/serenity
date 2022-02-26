@@ -135,12 +135,20 @@ void LineBuilder::update_last_line()
         line_box_baseline = max(line_box_baseline, fragment_baseline);
     }
 
+    // Now we're going to align our fragments on the inline axis.
+    // We need to remember how much the last fragment on the line was moved by this process,
+    // since that is used to compute the final width of the entire line box.
+    float last_fragment_x_adjustment = 0;
+
     for (size_t i = 0; i < line_box.fragments().size(); ++i) {
         auto& fragment = line_box.fragments()[i];
 
         // Vertically align everyone's bottom to the baseline.
         // FIXME: Support other kinds of vertical alignment.
-        fragment.set_offset({ roundf(x_offset + fragment.offset().x()), m_current_y + (line_box_baseline - fragment.height()) });
+        float new_fragment_x = roundf(x_offset + fragment.offset().x());
+        float new_fragment_y = m_current_y + (line_box_baseline - fragment.height());
+        last_fragment_x_adjustment = new_fragment_x - fragment.offset().x();
+        fragment.set_offset({ new_fragment_x, new_fragment_y });
 
         if (text_align == CSS::TextAlign::Justify
             && fragment.is_justifiable_whitespace()
@@ -156,12 +164,8 @@ void LineBuilder::update_last_line()
         }
     }
 
-    if (!line_box.fragments().is_empty()) {
-        float left_edge = line_box.fragments().first().offset().x();
-        float right_edge = line_box.fragments().last().offset().x() + line_box.fragments().last().width();
-        float final_line_box_width = right_edge - left_edge;
-        line_box.m_width = final_line_box_width;
-    }
+    if (!line_box.fragments().is_empty())
+        line_box.m_width += last_fragment_x_adjustment;
 }
 
 void LineBuilder::remove_last_line_if_empty()

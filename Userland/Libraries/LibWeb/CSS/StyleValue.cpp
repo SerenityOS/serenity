@@ -27,6 +27,12 @@ StyleValue::~StyleValue()
 {
 }
 
+AngleStyleValue const& StyleValue::as_angle() const
+{
+    VERIFY(is_angle());
+    return static_cast<AngleStyleValue const&>(*this);
+}
+
 BackgroundStyleValue const& StyleValue::as_background() const
 {
     VERIFY(is_background());
@@ -75,6 +81,12 @@ ColorStyleValue const& StyleValue::as_color() const
     return static_cast<ColorStyleValue const&>(*this);
 }
 
+ContentStyleValue const& StyleValue::as_content() const
+{
+    VERIFY(is_content());
+    return static_cast<ContentStyleValue const&>(*this);
+}
+
 FlexStyleValue const& StyleValue::as_flex() const
 {
     VERIFY(is_flex());
@@ -91,6 +103,12 @@ FontStyleValue const& StyleValue::as_font() const
 {
     VERIFY(is_font());
     return static_cast<FontStyleValue const&>(*this);
+}
+
+FrequencyStyleValue const& StyleValue::as_frequency() const
+{
+    VERIFY(is_frequency());
+    return static_cast<FrequencyStyleValue const&>(*this);
 }
 
 IdentifierStyleValue const& StyleValue::as_identifier() const
@@ -153,6 +171,12 @@ PositionStyleValue const& StyleValue::as_position() const
     return static_cast<PositionStyleValue const&>(*this);
 }
 
+ResolutionStyleValue const& StyleValue::as_resolution() const
+{
+    VERIFY(is_resolution());
+    return static_cast<ResolutionStyleValue const&>(*this);
+}
+
 StringStyleValue const& StyleValue::as_string() const
 {
     VERIFY(is_string());
@@ -163,6 +187,12 @@ TextDecorationStyleValue const& StyleValue::as_text_decoration() const
 {
     VERIFY(is_text_decoration());
     return static_cast<TextDecorationStyleValue const&>(*this);
+}
+
+TimeStyleValue const& StyleValue::as_time() const
+{
+    VERIFY(is_time());
+    return static_cast<TimeStyleValue const&>(*this);
 }
 
 TransformationStyleValue const& StyleValue::as_transformation() const
@@ -309,6 +339,42 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
                 };
             }
         },
+        [&](Angle const& angle) {
+            auto this_degrees = angle.to_degrees();
+            if (other.m_value.has<Angle>()) {
+                auto other_degrees = other.m_value.get<Angle>().to_degrees();
+                if (op == SumOperation::Add)
+                    m_value = Angle::make_degrees(this_degrees + other_degrees);
+                else
+                    m_value = Angle::make_degrees(this_degrees - other_degrees);
+            } else {
+                VERIFY(percentage_basis.has<Angle>());
+
+                auto other_degrees = percentage_basis.get<Angle>().percentage_of(other.m_value.get<Percentage>()).to_degrees();
+                if (op == SumOperation::Add)
+                    m_value = Angle::make_degrees(this_degrees + other_degrees);
+                else
+                    m_value = Angle::make_degrees(this_degrees - other_degrees);
+            }
+        },
+        [&](Frequency const& frequency) {
+            auto this_hertz = frequency.to_hertz();
+            if (other.m_value.has<Frequency>()) {
+                auto other_hertz = other.m_value.get<Frequency>().to_hertz();
+                if (op == SumOperation::Add)
+                    m_value = Frequency::make_hertz(this_hertz + other_hertz);
+                else
+                    m_value = Frequency::make_hertz(this_hertz - other_hertz);
+            } else {
+                VERIFY(percentage_basis.has<Frequency>());
+
+                auto other_hertz = percentage_basis.get<Frequency>().percentage_of(other.m_value.get<Percentage>()).to_hertz();
+                if (op == SumOperation::Add)
+                    m_value = Frequency::make_hertz(this_hertz + other_hertz);
+                else
+                    m_value = Frequency::make_hertz(this_hertz - other_hertz);
+            }
+        },
         [&](Length const& length) {
             auto this_px = length.to_px(*layout_node);
             if (other.m_value.has<Length>()) {
@@ -325,6 +391,24 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
                     m_value = Length::make_px(this_px + other_px);
                 else
                     m_value = Length::make_px(this_px - other_px);
+            }
+        },
+        [&](Time const& time) {
+            auto this_seconds = time.to_seconds();
+            if (other.m_value.has<Time>()) {
+                auto other_seconds = other.m_value.get<Time>().to_seconds();
+                if (op == SumOperation::Add)
+                    m_value = Time::make_seconds(this_seconds + other_seconds);
+                else
+                    m_value = Time::make_seconds(this_seconds - other_seconds);
+            } else {
+                VERIFY(percentage_basis.has<Time>());
+
+                auto other_seconds = percentage_basis.get<Time>().percentage_of(other.m_value.get<Percentage>()).to_seconds();
+                if (op == SumOperation::Add)
+                    m_value = Time::make_seconds(this_seconds + other_seconds);
+                else
+                    m_value = Time::make_seconds(this_seconds - other_seconds);
             }
         },
         [&](Percentage const& percentage) {
@@ -369,9 +453,18 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
                 *this = new_value;
             }
         },
+        [&](Angle const& angle) {
+            m_value = Angle::make_degrees(angle.to_degrees() * other.m_value.get<Number>().value);
+        },
+        [&](Frequency const& frequency) {
+            m_value = Frequency::make_hertz(frequency.to_hertz() * other.m_value.get<Number>().value);
+        },
         [&](Length const& length) {
             VERIFY(layout_node);
             m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<Number>().value);
+        },
+        [&](Time const& time) {
+            m_value = Time::make_seconds(time.to_seconds() * other.m_value.get<Number>().value);
         },
         [&](Percentage const& percentage) {
             m_value = Percentage { percentage.value() * other.m_value.get<Number>().value };
@@ -393,9 +486,18 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
                 .value = number.value / denominator
             };
         },
+        [&](Angle const& angle) {
+            m_value = Angle::make_degrees(angle.to_degrees() / denominator);
+        },
+        [&](Frequency const& frequency) {
+            m_value = Frequency::make_hertz(frequency.to_hertz() / denominator);
+        },
         [&](Length const& length) {
             VERIFY(layout_node);
             m_value = Length::make_px(length.to_px(*layout_node) / denominator);
+        },
+        [&](Time const& time) {
+            m_value = Time::make_seconds(time.to_seconds() / denominator);
         },
         [&](Percentage const& percentage) {
             m_value = Percentage { percentage.value() / denominator };
@@ -418,9 +520,8 @@ String CalculatedStyleValue::CalcValue::to_string() const
 {
     return value.visit(
         [](Number const& number) { return String::number(number.value); },
-        [](Length const& length) { return length.to_string(); },
-        [](Percentage const& percentage) { return percentage.to_string(); },
-        [](NonnullOwnPtr<CalcSum> const& sum) { return String::formatted("({})", sum->to_string()); });
+        [](NonnullOwnPtr<CalcSum> const& sum) { return String::formatted("({})", sum->to_string()); },
+        [](auto const& v) { return v.to_string(); });
 }
 
 String CalculatedStyleValue::CalcSum::to_string() const
@@ -482,20 +583,63 @@ String CalculatedStyleValue::CalcNumberSumPartWithOperator::to_string() const
     return String::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, value->to_string());
 }
 
+Optional<Angle> CalculatedStyleValue::resolve_angle() const
+{
+    auto result = m_expression->resolve(nullptr, {});
+
+    if (result.value().has<Angle>())
+        return result.value().get<Angle>();
+    return {};
+}
+
+Optional<AnglePercentage> CalculatedStyleValue::resolve_angle_percentage(Angle const& percentage_basis) const
+{
+    auto result = m_expression->resolve(nullptr, percentage_basis);
+
+    return result.value().visit(
+        [&](Angle const& angle) -> Optional<AnglePercentage> {
+            return angle;
+        },
+        [&](Percentage const& percentage) -> Optional<AnglePercentage> {
+            return percentage;
+        },
+        [&](auto const&) -> Optional<AnglePercentage> {
+            return {};
+        });
+}
+
+Optional<Frequency> CalculatedStyleValue::resolve_frequency() const
+{
+    auto result = m_expression->resolve(nullptr, {});
+
+    if (result.value().has<Frequency>())
+        return result.value().get<Frequency>();
+    return {};
+}
+
+Optional<FrequencyPercentage> CalculatedStyleValue::resolve_frequency_percentage(Frequency const& percentage_basis) const
+{
+    auto result = m_expression->resolve(nullptr, percentage_basis);
+
+    return result.value().visit(
+        [&](Frequency const& frequency) -> Optional<FrequencyPercentage> {
+            return frequency;
+        },
+        [&](Percentage const& percentage) -> Optional<FrequencyPercentage> {
+            return percentage;
+        },
+        [&](auto const&) -> Optional<FrequencyPercentage> {
+            return {};
+        });
+}
+
 Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout_node) const
 {
     auto result = m_expression->resolve(&layout_node, {});
 
-    return result.value().visit(
-        [&](Number) -> Optional<Length> {
-            return {};
-        },
-        [&](Length const& length) -> Optional<Length> {
-            return length;
-        },
-        [&](Percentage const&) -> Optional<Length> {
-            return {};
-        });
+    if (result.value().has<Length>())
+        return result.value().get<Length>();
+    return {};
 }
 
 Optional<LengthPercentage> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
@@ -503,14 +647,14 @@ Optional<LengthPercentage> CalculatedStyleValue::resolve_length_percentage(Layou
     auto result = m_expression->resolve(&layout_node, percentage_basis);
 
     return result.value().visit(
-        [&](Number) -> Optional<LengthPercentage> {
-            return {};
-        },
         [&](Length const& length) -> Optional<LengthPercentage> {
             return length;
         },
         [&](Percentage const& percentage) -> Optional<LengthPercentage> {
             return percentage;
+        },
+        [&](auto const&) -> Optional<LengthPercentage> {
+            return {};
         });
 }
 
@@ -520,6 +664,31 @@ Optional<Percentage> CalculatedStyleValue::resolve_percentage() const
     if (result.value().has<Percentage>())
         return result.value().get<Percentage>();
     return {};
+}
+
+Optional<Time> CalculatedStyleValue::resolve_time() const
+{
+    auto result = m_expression->resolve(nullptr, {});
+
+    if (result.value().has<Time>())
+        return result.value().get<Time>();
+    return {};
+}
+
+Optional<TimePercentage> CalculatedStyleValue::resolve_time_percentage(Time const& percentage_basis) const
+{
+    auto result = m_expression->resolve(nullptr, percentage_basis);
+
+    return result.value().visit(
+        [&](Time const& time) -> Optional<TimePercentage> {
+            return time;
+        },
+        [&](Percentage const& percentage) -> Optional<TimePercentage> {
+            return percentage;
+        },
+        [&](auto const&) -> Optional<TimePercentage> {
+            return {};
+        });
 }
 
 Optional<float> CalculatedStyleValue::resolve_number()
@@ -697,8 +866,11 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::re
         [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
             return { number.is_integer ? ResolvedType::Integer : ResolvedType::Number };
         },
+        [](Angle const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Angle }; },
+        [](Frequency const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Frequency }; },
         [](Length const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Length }; },
         [](Percentage const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Percentage }; },
+        [](Time const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Time }; },
         [](NonnullOwnPtr<CalcSum> const& sum) { return sum->resolved_type(); });
 }
 
@@ -725,17 +897,11 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberValue::r
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcValue::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value.visit(
-        [&](Number const& number) -> CalculatedStyleValue::CalculationResult {
-            return CalculatedStyleValue::CalculationResult { number };
-        },
-        [&](Length const& length) -> CalculatedStyleValue::CalculationResult {
-            return CalculatedStyleValue::CalculationResult { length };
-        },
-        [&](Percentage const& percentage) -> CalculatedStyleValue::CalculationResult {
-            return CalculatedStyleValue::CalculationResult { percentage };
-        },
         [&](NonnullOwnPtr<CalcSum> const& sum) -> CalculatedStyleValue::CalculationResult {
             return sum->resolve(layout_node, percentage_basis);
+        },
+        [&](auto const& v) -> CalculatedStyleValue::CalculationResult {
+            return CalculatedStyleValue::CalculationResult { v };
         });
 }
 
@@ -853,6 +1019,13 @@ String ColorStyleValue::to_string() const
 String CombinedBorderRadiusStyleValue::to_string() const
 {
     return String::formatted("{} {} {} {} / {} {} {} {}", m_top_left->horizontal_radius().to_string(), m_top_right->horizontal_radius().to_string(), m_bottom_right->horizontal_radius().to_string(), m_bottom_left->horizontal_radius().to_string(), m_top_left->vertical_radius().to_string(), m_top_right->vertical_radius().to_string(), m_bottom_right->vertical_radius().to_string(), m_bottom_left->vertical_radius().to_string());
+}
+
+String ContentStyleValue::to_string() const
+{
+    if (has_alt_text())
+        return String::formatted("{} / {}", m_content->to_string(), m_alt_text->to_string());
+    return m_content->to_string();
 }
 
 String FlexStyleValue::to_string() const

@@ -15,7 +15,7 @@ set(SOURCES
     Bindings/Wrappable.cpp
     Crypto/Crypto.cpp
     Crypto/SubtleCrypto.cpp
-    CSS/Serialize.cpp
+    CSS/Angle.cpp
     CSS/CSSConditionRule.cpp
     CSS/CSSGroupingRule.cpp
     CSS/CSSImportRule.cpp
@@ -26,9 +26,9 @@ set(SOURCES
     CSS/CSSStyleRule.cpp
     CSS/CSSStyleSheet.cpp
     CSS/CSSSupportsRule.cpp
-    CSS/ResolvedCSSStyleDeclaration.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Display.cpp
+    CSS/Frequency.cpp
     CSS/Length.cpp
     CSS/MediaList.cpp
     CSS/MediaQuery.cpp
@@ -42,9 +42,12 @@ set(SOURCES
     CSS/PropertyID.cpp
     CSS/PropertyID.h
     CSS/QuirksModeStyleSheetSource.cpp
+    CSS/Resolution.cpp
+    CSS/ResolvedCSSStyleDeclaration.cpp
     CSS/Screen.cpp
     CSS/Selector.cpp
     CSS/SelectorEngine.cpp
+    CSS/Serialize.cpp
     CSS/StyleComputer.cpp
     CSS/StyleProperties.cpp
     CSS/StyleSheet.cpp
@@ -52,6 +55,7 @@ set(SOURCES
     CSS/StyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
+    CSS/Time.cpp
     CSS/ValueID.cpp
     CSS/ValueID.h
     Cookie/ParsedCookie.cpp

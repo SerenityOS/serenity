@@ -178,6 +178,16 @@ private:
 
     class Dimension {
     public:
+        Dimension(Angle&& value)
+            : m_value(move(value))
+        {
+        }
+
+        Dimension(Frequency&& value)
+            : m_value(move(value))
+        {
+        }
+
         Dimension(Length&& value)
             : m_value(move(value))
         {
@@ -187,17 +197,48 @@ private:
         {
         }
 
+        Dimension(Resolution&& value)
+            : m_value(move(value))
+        {
+        }
+
+        Dimension(Time&& value)
+            : m_value(move(value))
+        {
+        }
+
+        bool is_angle() const;
+        Angle angle() const;
+
+        bool is_angle_percentage() const;
+        AnglePercentage angle_percentage() const;
+
+        bool is_frequency() const;
+        Frequency frequency() const;
+
+        bool is_frequency_percentage() const;
+        FrequencyPercentage frequency_percentage() const;
+
         bool is_length() const;
         Length length() const;
-
-        bool is_percentage() const;
-        Percentage percentage() const;
 
         bool is_length_percentage() const;
         LengthPercentage length_percentage() const;
 
+        bool is_percentage() const;
+        Percentage percentage() const;
+
+        bool is_resolution() const;
+        Resolution resolution() const;
+
+        bool is_time() const;
+        Time time() const;
+
+        bool is_time_percentage() const;
+        TimePercentage time_percentage() const;
+
     private:
-        Variant<Length, Percentage> m_value;
+        Variant<Angle, Frequency, Length, Percentage, Resolution, Time> m_value;
     };
     Optional<Dimension> parse_dimension(StyleComponentValueRule const&);
     Optional<Color> parse_color(StyleComponentValueRule const&);
@@ -233,6 +274,7 @@ private:
     RefPtr<StyleValue> parse_border_radius_shorthand_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_box_shadow_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_single_box_shadow_value(TokenStream<StyleComponentValueRule>&);
+    RefPtr<StyleValue> parse_content_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_flex_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_flex_flow_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_font_value(Vector<StyleComponentValueRule> const&);

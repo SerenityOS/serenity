@@ -16,7 +16,7 @@
 
 namespace GUI {
 
-class ClipboardServerConnection;
+class ConnectionToClipboardServer;
 
 class Clipboard {
 public:
@@ -47,7 +47,7 @@ public:
     void set_bitmap(Gfx::Bitmap const&);
     void clear();
 
-    void clipboard_data_changed(Badge<ClipboardServerConnection>, String const& mime_type);
+    void clipboard_data_changed(Badge<ConnectionToClipboardServer>, String const& mime_type);
 
     void register_client(Badge<ClipboardClient>, ClipboardClient& client) { m_clients.set(&client); }
     void unregister_client(Badge<ClipboardClient>, ClipboardClient& client) { m_clients.remove(&client); }

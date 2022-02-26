@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,6 +19,20 @@ Selector::~Selector()
 {
 }
 
+Optional<Selector::PseudoElement> Selector::pseudo_element() const
+{
+    // Note: This assumes that only one pseudo-element is allowed in a selector, and that it appears at the end.
+    //       This is true currently, and there are no current proposals to change this, but you never know!
+    if (compound_selectors().is_empty())
+        return {};
+    for (auto const& simple_selector : compound_selectors().last().simple_selectors) {
+        if (simple_selector.type == SimpleSelector::Type::PseudoElement)
+            return simple_selector.pseudo_element;
+    }
+    return {};
+}
+
+// https://www.w3.org/TR/selectors-4/#specificity-rules
 u32 Selector::specificity() const
 {
     if (m_specificity.has_value())
@@ -34,9 +49,12 @@ u32 Selector::specificity() const
                 ++ids;
                 break;
             case SimpleSelector::Type::Class:
+            case SimpleSelector::Type::Attribute:
+            case SimpleSelector::Type::PseudoClass:
                 ++classes;
                 break;
             case SimpleSelector::Type::TagName:
+            case SimpleSelector::Type::PseudoElement:
                 ++tag_names;
                 break;
             default:
@@ -166,6 +184,9 @@ String Selector::SimpleSelector::serialize() const
             VERIFY_NOT_REACHED();
         }
         break;
+    case Selector::SimpleSelector::Type::PseudoElement:
+        // Note: Pseudo-elements are dealt with in Selector::serialize()
+        break;
     default:
         dbgln("FIXME: Unsupported simple selector serialization for type {}", to_underlying(type));
         break;
@@ -240,18 +261,20 @@ String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selec
     return builder.to_string();
 }
 
-constexpr StringView pseudo_element_name(Selector::SimpleSelector::PseudoElement pseudo_element)
+constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
 {
     switch (pseudo_element) {
-    case Selector::SimpleSelector::PseudoElement::Before:
+    case Selector::PseudoElement::Before:
         return "before"sv;
-    case Selector::SimpleSelector::PseudoElement::After:
+    case Selector::PseudoElement::After:
         return "after"sv;
-    case Selector::SimpleSelector::PseudoElement::FirstLine:
+    case Selector::PseudoElement::FirstLine:
         return "first-line"sv;
-    case Selector::SimpleSelector::PseudoElement::FirstLetter:
+    case Selector::PseudoElement::FirstLetter:
         return "first-letter"sv;
-    case Selector::SimpleSelector::PseudoElement::None:
+    case Selector::PseudoElement::Marker:
+        return "marker"sv;
+    case Selector::PseudoElement::None:
         break;
     }
     VERIFY_NOT_REACHED();

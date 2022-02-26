@@ -57,6 +57,6 @@
 
     @GUI::Statusbar {
         name: "statusbar"
-        label_count: 2
+        segment_count: 2
     }
 }

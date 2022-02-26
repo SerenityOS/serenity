@@ -16,7 +16,7 @@
 #include <LibCpp/Parser.h>
 #include <LibCpp/Preprocessor.h>
 #include <LibRegex/Regex.h>
-#include <Userland/DevTools/HackStudio/LanguageServers/ClientConnection.h>
+#include <Userland/DevTools/HackStudio/LanguageServers/ConnectionFromClient.h>
 
 namespace LanguageServers::Cpp {
 

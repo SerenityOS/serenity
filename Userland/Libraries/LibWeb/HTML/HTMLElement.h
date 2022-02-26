@@ -44,6 +44,8 @@ public:
 
     void click();
 
+    bool fire_a_synthetic_pointer_event(FlyString const& type, DOM::Element& target, bool not_trusted);
+
 protected:
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 

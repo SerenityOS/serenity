@@ -8,6 +8,6 @@
 
 namespace SymbolServer {
 
-class ClientConnection;
+class ConnectionFromClient;
 
 }

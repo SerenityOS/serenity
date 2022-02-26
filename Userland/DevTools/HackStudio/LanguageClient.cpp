@@ -14,7 +14,7 @@
 
 namespace HackStudio {
 
-void ServerConnection::auto_complete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>& suggestions)
+void ConnectionToServer::auto_complete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>& suggestions)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
@@ -23,7 +23,7 @@ void ServerConnection::auto_complete_suggestions(const Vector<GUI::AutocompleteP
     m_current_language_client->provide_autocomplete_suggestions(suggestions);
 }
 
-void ServerConnection::declaration_location(const GUI::AutocompleteProvider::ProjectLocation& location)
+void ConnectionToServer::declaration_location(const GUI::AutocompleteProvider::ProjectLocation& location)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
@@ -32,7 +32,7 @@ void ServerConnection::declaration_location(const GUI::AutocompleteProvider::Pro
     m_current_language_client->declaration_found(location.file, location.line, location.column);
 }
 
-void ServerConnection::parameters_hint_result(Vector<String> const& params, int argument_index)
+void ConnectionToServer::parameters_hint_result(Vector<String> const& params, int argument_index)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
@@ -43,7 +43,7 @@ void ServerConnection::parameters_hint_result(Vector<String> const& params, int 
     m_current_language_client->parameters_hint_result(params, static_cast<size_t>(argument_index));
 }
 
-void ServerConnection::tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> const& tokens_info)
+void ConnectionToServer::tokens_info_result(Vector<GUI::AutocompleteProvider::TokenInfo> const& tokens_info)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
@@ -53,7 +53,7 @@ void ServerConnection::tokens_info_result(Vector<GUI::AutocompleteProvider::Toke
     m_current_language_client->on_tokens_info_result(tokens_info);
 }
 
-void ServerConnection::die()
+void ConnectionToServer::die()
 {
     VERIFY(m_wrapper);
     // Wrapper destructs us here
@@ -118,14 +118,14 @@ bool LanguageClient::is_active_client() const
     return m_connection_wrapper.connection()->active_client() == this;
 }
 
-HashMap<String, NonnullOwnPtr<ServerConnectionWrapper>> ServerConnectionInstances::s_instance_for_language;
+HashMap<String, NonnullOwnPtr<ConnectionToServerWrapper>> ConnectionToServerInstances::s_instance_for_language;
 
-void ServerConnection::declarations_in_document(const String& filename, const Vector<GUI::AutocompleteProvider::Declaration>& declarations)
+void ConnectionToServer::declarations_in_document(const String& filename, const Vector<GUI::AutocompleteProvider::Declaration>& declarations)
 {
     ProjectDeclarations::the().set_declared_symbols(filename, declarations);
 }
 
-void ServerConnection::todo_entries_in_document(String const& filename, Vector<Cpp::Parser::TodoEntry> const& todo_entries)
+void ConnectionToServer::todo_entries_in_document(String const& filename, Vector<Cpp::Parser::TodoEntry> const& todo_entries)
 {
     ToDoEntries::the().set_entries(filename, move(todo_entries));
 }
@@ -172,25 +172,25 @@ void LanguageClient::parameters_hint_result(Vector<String> const& params, size_t
     on_function_parameters_hint_result(params, argument_index);
 }
 
-void ServerConnectionInstances::set_instance_for_language(const String& language_name, NonnullOwnPtr<ServerConnectionWrapper>&& connection_wrapper)
+void ConnectionToServerInstances::set_instance_for_language(const String& language_name, NonnullOwnPtr<ConnectionToServerWrapper>&& connection_wrapper)
 {
     s_instance_for_language.set(language_name, move(connection_wrapper));
 }
 
-void ServerConnectionInstances::remove_instance_for_language(const String& language_name)
+void ConnectionToServerInstances::remove_instance_for_language(const String& language_name)
 {
     s_instance_for_language.remove(language_name);
 }
 
-ServerConnectionWrapper* ServerConnectionInstances::get_instance_wrapper(const String& language_name)
+ConnectionToServerWrapper* ConnectionToServerInstances::get_instance_wrapper(const String& language_name)
 {
     if (auto instance = s_instance_for_language.get(language_name); instance.has_value()) {
-        return const_cast<ServerConnectionWrapper*>(instance.value());
+        return const_cast<ConnectionToServerWrapper*>(instance.value());
     }
     return nullptr;
 }
 
-void ServerConnectionWrapper::on_crash()
+void ConnectionToServerWrapper::on_crash()
 {
     show_crash_notification();
     m_connection.clear();
@@ -206,7 +206,7 @@ void ServerConnectionWrapper::on_crash()
         try_respawn_connection();
     }
 }
-void ServerConnectionWrapper::show_frequent_crashes_notification() const
+void ConnectionToServerWrapper::show_frequent_crashes_notification() const
 {
     auto notification = GUI::Notification::construct();
     notification->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-hack-studio.png").release_value_but_fixme_should_propagate_errors());
@@ -214,7 +214,7 @@ void ServerConnectionWrapper::show_frequent_crashes_notification() const
     notification->set_text("LanguageServer aided features will not be available in this session");
     notification->show();
 }
-void ServerConnectionWrapper::show_crash_notification() const
+void ConnectionToServerWrapper::show_crash_notification() const
 {
     auto notification = GUI::Notification::construct();
     notification->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-hack-studio.png").release_value_but_fixme_should_propagate_errors());
@@ -223,46 +223,46 @@ void ServerConnectionWrapper::show_crash_notification() const
     notification->show();
 }
 
-ServerConnectionWrapper::ServerConnectionWrapper(const String& language_name, Function<NonnullRefPtr<ServerConnection>()> connection_creator)
+ConnectionToServerWrapper::ConnectionToServerWrapper(const String& language_name, Function<NonnullRefPtr<ConnectionToServer>()> connection_creator)
     : m_language(language_from_name(language_name))
     , m_connection_creator(move(connection_creator))
 {
     create_connection();
 }
 
-void ServerConnectionWrapper::create_connection()
+void ConnectionToServerWrapper::create_connection()
 {
     VERIFY(m_connection.is_null());
     m_connection = m_connection_creator();
     m_connection->set_wrapper(*this);
 }
 
-ServerConnection* ServerConnectionWrapper::connection()
+ConnectionToServer* ConnectionToServerWrapper::connection()
 {
     return m_connection.ptr();
 }
 
-void ServerConnectionWrapper::attach(LanguageClient& client)
+void ConnectionToServerWrapper::attach(LanguageClient& client)
 {
     m_connection->m_current_language_client = &client;
 }
 
-void ServerConnectionWrapper::detach()
+void ConnectionToServerWrapper::detach()
 {
     m_connection->m_current_language_client.clear();
 }
 
-void ServerConnectionWrapper::set_active_client(LanguageClient& client)
+void ConnectionToServerWrapper::set_active_client(LanguageClient& client)
 {
     m_connection->m_current_language_client = &client;
 }
 
-void ServerConnectionWrapper::try_respawn_connection()
+void ConnectionToServerWrapper::try_respawn_connection()
 {
     if (!m_respawn_allowed)
         return;
 
-    dbgln("Respawning ServerConnection");
+    dbgln("Respawning ConnectionToServer");
     create_connection();
 
     // After respawning the language-server, we have to send the content of open project files

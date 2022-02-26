@@ -7,13 +7,13 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ColorPicker.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextBox.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Palette.h>
 
 namespace GUI {
@@ -158,7 +158,7 @@ private:
     virtual void mousedown_event(GUI::MouseEvent&) override { m_event_loop->quit(1); }
     virtual void mousemove_event(GUI::MouseEvent&) override
     {
-        auto new_col = WindowServerConnection::the().get_color_under_cursor();
+        auto new_col = ConnectionToWindowServer::the().get_color_under_cursor();
         if (!new_col.has_value())
             return;
         if (new_col == m_col)

@@ -93,8 +93,23 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         return !element.next_element_sibling();
     case CSS::Selector::SimpleSelector::PseudoClass::Type::OnlyChild:
         return !(element.previous_element_sibling() || element.next_element_sibling());
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::Empty:
-        return !(element.first_child_of_type<DOM::Element>() || element.first_child_of_type<DOM::Text>());
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Empty: {
+        if (!element.has_children())
+            return true;
+        if (element.first_child_of_type<DOM::Element>())
+            return false;
+        // NOTE: CSS Selectors level 4 changed ":empty" to also match whitespace-only text nodes.
+        //       However, none of the major browser supports this yet, so let's just hang back until they do.
+        bool has_nonempty_text_child = false;
+        element.for_each_child_of_type<DOM::Text>([&](auto const& text_child) {
+            if (!text_child.data().is_empty()) {
+                has_nonempty_text_child = true;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+        return !has_nonempty_text_child;
+    }
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
         return is<HTML::HTMLHtmlElement>(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
@@ -192,8 +207,8 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, DOM::
     case CSS::Selector::SimpleSelector::Type::PseudoClass:
         return matches_pseudo_class(component.pseudo_class, element);
     case CSS::Selector::SimpleSelector::Type::PseudoElement:
-        // FIXME: Implement pseudo-elements.
-        return false;
+        // Pseudo-element matching/not-matching is handled in the top level matches().
+        return true;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -241,9 +256,13 @@ static inline bool matches(CSS::Selector const& selector, int component_list_ind
     VERIFY_NOT_REACHED();
 }
 
-bool matches(CSS::Selector const& selector, DOM::Element const& element)
+bool matches(CSS::Selector const& selector, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
     VERIFY(!selector.compound_selectors().is_empty());
+    if (pseudo_element.has_value() && selector.pseudo_element() != pseudo_element)
+        return false;
+    if (!pseudo_element.has_value() && selector.pseudo_element().has_value())
+        return false;
     return matches(selector, selector.compound_selectors().size() - 1, element);
 }
 

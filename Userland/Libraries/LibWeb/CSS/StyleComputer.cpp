@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -70,26 +70,31 @@ void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback c
     }
 }
 
-Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& element, CascadeOrigin cascade_origin) const
+Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& element, CascadeOrigin cascade_origin, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     if (cascade_origin == CascadeOrigin::Author) {
         Vector<MatchingRule> rules_to_run;
-        for (auto const& class_name : element.class_names()) {
-            if (auto it = m_rule_cache->rules_by_class.find(class_name); it != m_rule_cache->rules_by_class.end())
+        if (pseudo_element.has_value()) {
+            if (auto it = m_rule_cache->rules_by_pseudo_element.find(pseudo_element.value()); it != m_rule_cache->rules_by_pseudo_element.end())
                 rules_to_run.extend(it->value);
-        }
-        if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null()) {
-            if (auto it = m_rule_cache->rules_by_id.find(id); it != m_rule_cache->rules_by_id.end())
+        } else {
+            for (auto const& class_name : element.class_names()) {
+                if (auto it = m_rule_cache->rules_by_class.find(class_name); it != m_rule_cache->rules_by_class.end())
+                    rules_to_run.extend(it->value);
+            }
+            if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null()) {
+                if (auto it = m_rule_cache->rules_by_id.find(id); it != m_rule_cache->rules_by_id.end())
+                    rules_to_run.extend(it->value);
+            }
+            if (auto it = m_rule_cache->rules_by_tag_name.find(element.local_name()); it != m_rule_cache->rules_by_tag_name.end())
                 rules_to_run.extend(it->value);
+            rules_to_run.extend(m_rule_cache->other_rules);
         }
-        if (auto it = m_rule_cache->rules_by_tag_name.find(element.local_name()); it != m_rule_cache->rules_by_tag_name.end())
-            rules_to_run.extend(it->value);
-        rules_to_run.extend(m_rule_cache->other_rules);
 
         Vector<MatchingRule> matching_rules;
         for (auto const& rule_to_run : rules_to_run) {
             auto const& selector = rule_to_run.rule->selectors()[rule_to_run.selector_index];
-            if (SelectorEngine::matches(selector, element))
+            if (SelectorEngine::matches(selector, element, pseudo_element))
                 matching_rules.append(rule_to_run);
         }
         return matching_rules;
@@ -102,7 +107,7 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
         static_cast<CSSStyleSheet const&>(sheet).for_each_effective_style_rule([&](auto const& rule) {
             size_t selector_index = 0;
             for (auto& selector : rule.selectors()) {
-                if (SelectorEngine::matches(selector, element)) {
+                if (SelectorEngine::matches(selector, element, pseudo_element)) {
                     matching_rules.append({ rule, style_sheet_index, rule_index, selector_index, selector.specificity() });
                     break;
                 }
@@ -593,13 +598,13 @@ static HashMap<String, StyleProperty const*> cascade_custom_properties(DOM::Elem
 }
 
 // https://www.w3.org/TR/css-cascade/#cascading
-void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element) const
+void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     // First, we collect all the CSS rules whose selectors match `element`:
     MatchingRuleSet matching_rule_set;
-    matching_rule_set.user_agent_rules = collect_matching_rules(element, CascadeOrigin::UserAgent);
+    matching_rule_set.user_agent_rules = collect_matching_rules(element, CascadeOrigin::UserAgent, pseudo_element);
     sort_matching_rules(matching_rule_set.user_agent_rules);
-    matching_rule_set.author_rules = collect_matching_rules(element, CascadeOrigin::Author);
+    matching_rule_set.author_rules = collect_matching_rules(element, CascadeOrigin::Author, pseudo_element);
     sort_matching_rules(matching_rule_set.author_rules);
 
     // Then we resolve all the CSS custom properties ("variables") for this element:
@@ -631,21 +636,35 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     // FIXME: Transition declarations [css-transitions-1]
 }
 
-static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, DOM::Element const* element)
+static DOM::Element const* get_parent_element(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
-    if (!element || !element->parent_element() || !element->parent_element()->specified_css_values())
+    // Pseudo-elements treat their originating element as their parent.
+    DOM::Element const* parent_element = nullptr;
+    if (pseudo_element.has_value()) {
+        parent_element = element;
+    } else if (element) {
+        parent_element = element->parent_element();
+    }
+    return parent_element;
+}
+
+static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
+{
+    auto* parent_element = get_parent_element(element, pseudo_element);
+
+    if (!parent_element || !parent_element->specified_css_values())
         return property_initial_value(property_id);
-    return element->parent_element()->specified_css_values()->property(property_id).release_value();
+    return parent_element->specified_css_values()->property(property_id).release_value();
 };
 
-void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id) const
+void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     // FIXME: If we don't know the correct initial value for a property, we fall back to InitialStyleValue.
 
     auto& value_slot = style.m_property_values[to_underlying(property_id)];
     if (!value_slot) {
         if (is_inherited_property(property_id))
-            style.m_property_values[to_underlying(property_id)] = get_inherit_value(property_id, element);
+            style.m_property_values[to_underlying(property_id)] = get_inherit_value(property_id, element, pseudo_element);
         else
             style.m_property_values[to_underlying(property_id)] = property_initial_value(property_id);
         return;
@@ -657,31 +676,33 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
     }
 
     if (value_slot->is_inherit()) {
-        value_slot = get_inherit_value(property_id, element);
+        value_slot = get_inherit_value(property_id, element, pseudo_element);
         return;
     }
 }
 
 // https://www.w3.org/TR/css-cascade/#defaulting
-void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Element const* element) const
+void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     // Walk the list of all known CSS properties and:
     // - Add them to `style` if they are missing.
     // - Resolve `inherit` and `initial` as needed.
     for (auto i = to_underlying(CSS::first_longhand_property_id); i <= to_underlying(CSS::last_longhand_property_id); ++i) {
         auto property_id = (CSS::PropertyID)i;
-        compute_defaulted_property_value(style, element, property_id);
+        compute_defaulted_property_value(style, element, property_id, pseudo_element);
     }
 }
 
-void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element) const
+void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     // To compute the font, first ensure that we've defaulted the relevant CSS font properties.
     // FIXME: This should be more sophisticated.
-    compute_defaulted_property_value(style, element, CSS::PropertyID::FontFamily);
-    compute_defaulted_property_value(style, element, CSS::PropertyID::FontSize);
-    compute_defaulted_property_value(style, element, CSS::PropertyID::FontStyle);
-    compute_defaulted_property_value(style, element, CSS::PropertyID::FontWeight);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontFamily, pseudo_element);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontSize, pseudo_element);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontStyle, pseudo_element);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontWeight, pseudo_element);
+
+    auto* parent_element = get_parent_element(element, pseudo_element);
 
     auto viewport_rect = document().browsing_context()->viewport_rect();
 
@@ -755,8 +776,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         float root_font_size = 10;
 
         Gfx::FontMetrics font_metrics;
-        if (element && element->parent_element() && element->parent_element()->specified_css_values())
-            font_metrics = element->parent_element()->specified_css_values()->computed_font().metrics('M');
+        if (parent_element && parent_element->specified_css_values())
+            font_metrics = parent_element->specified_css_values()->computed_font().metrics('M');
         else
             font_metrics = Gfx::FontDatabase::default_font().metrics('M');
 
@@ -765,8 +786,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             // Percentages refer to parent element's font size
             auto percentage = font_size->as_percentage().percentage();
             auto parent_font_size = size;
-            if (element && element->parent_element() && element->parent_element()->layout_node() && element->parent_element()->specified_css_values()) {
-                auto value = element->parent_element()->specified_css_values()->property(CSS::PropertyID::FontSize).value();
+            if (parent_element && parent_element->layout_node() && parent_element->specified_css_values()) {
+                auto value = parent_element->specified_css_values()->property(CSS::PropertyID::FontSize).value();
                 if (value->is_length()) {
                     auto length = static_cast<LengthStyleValue const&>(*value).to_length();
                     if (length.is_absolute() || length.is_relative())
@@ -820,7 +841,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         if (auto found_font = FontCache::the().get(font_selector))
             return found_font;
 
-        if (auto found_font = Gfx::FontDatabase::the().get(family, size, weight, slope))
+        if (auto found_font = Gfx::FontDatabase::the().get(family, size, weight, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
             return found_font;
 
         return {};
@@ -880,7 +901,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     style.set_computed_font(found_font.release_nonnull());
 }
 
-void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const*) const
+void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const
 {
     auto viewport_rect = document().browsing_context()->viewport_rect();
     auto font_metrics = style.computed_font().metrics('M');
@@ -903,7 +924,7 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
 }
 
 // https://drafts.csswg.org/css-display/#transformations
-void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::Element const&) const
+void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::Element const&, Optional<CSS::Selector::PseudoElement>) const
 {
     // 2.7. Automatic Box Type Transformations
 
@@ -940,9 +961,9 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
 NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
 {
     auto style = StyleProperties::create();
-    compute_font(style, nullptr);
-    compute_defaulted_values(style, nullptr);
-    absolutize_values(style, nullptr);
+    compute_font(style, nullptr, {});
+    compute_defaulted_values(style, nullptr, {});
+    absolutize_values(style, nullptr, {});
     if (auto* browsing_context = m_document.browsing_context()) {
         auto viewport_rect = browsing_context->viewport_rect();
         style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect.width())));
@@ -951,25 +972,25 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     return style;
 }
 
-NonnullRefPtr<StyleProperties> StyleComputer::compute_style(DOM::Element& element) const
+NonnullRefPtr<StyleProperties> StyleComputer::compute_style(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     build_rule_cache_if_needed();
 
     auto style = StyleProperties::create();
     // 1. Perform the cascade. This produces the "specified style"
-    compute_cascaded_values(style, element);
+    compute_cascaded_values(style, element, pseudo_element);
 
     // 2. Compute the font, since that may be needed for font-relative CSS units
-    compute_font(style, &element);
+    compute_font(style, &element, pseudo_element);
 
     // 3. Absolutize values, turning font/viewport relative lengths into absolute lengths
-    absolutize_values(style, &element);
+    absolutize_values(style, &element, pseudo_element);
 
     // 4. Default the values, applying inheritance and 'initial' as needed
-    compute_defaulted_values(style, &element);
+    compute_defaulted_values(style, &element, pseudo_element);
 
     // 5. Run automatic box type transformations
-    transform_box_type_if_needed(style, element);
+    transform_box_type_if_needed(style, element, pseudo_element);
 
     return style;
 }
@@ -1020,6 +1041,7 @@ void StyleComputer::build_rule_cache()
     size_t num_class_rules = 0;
     size_t num_id_rules = 0;
     size_t num_tag_name_rules = 0;
+    size_t num_pseudo_element_rules = 0;
 
     Vector<MatchingRule> matching_rules;
     size_t style_sheet_index = 0;
@@ -1032,23 +1054,33 @@ void StyleComputer::build_rule_cache()
 
                 bool added_to_bucket = false;
                 for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
-                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Id) {
-                        m_rule_cache->rules_by_id.ensure(simple_selector.value).append(move(matching_rule));
-                        ++num_id_rules;
+                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoElement) {
+                        m_rule_cache->rules_by_pseudo_element.ensure(simple_selector.pseudo_element).append(move(matching_rule));
+                        ++num_pseudo_element_rules;
                         added_to_bucket = true;
                         break;
                     }
-                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Class) {
-                        m_rule_cache->rules_by_class.ensure(simple_selector.value).append(move(matching_rule));
-                        ++num_class_rules;
-                        added_to_bucket = true;
-                        break;
-                    }
-                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::TagName) {
-                        m_rule_cache->rules_by_tag_name.ensure(simple_selector.value).append(move(matching_rule));
-                        ++num_tag_name_rules;
-                        added_to_bucket = true;
-                        break;
+                }
+                if (!added_to_bucket) {
+                    for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
+                        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Id) {
+                            m_rule_cache->rules_by_id.ensure(simple_selector.value).append(move(matching_rule));
+                            ++num_id_rules;
+                            added_to_bucket = true;
+                            break;
+                        }
+                        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Class) {
+                            m_rule_cache->rules_by_class.ensure(simple_selector.value).append(move(matching_rule));
+                            ++num_class_rules;
+                            added_to_bucket = true;
+                            break;
+                        }
+                        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::TagName) {
+                            m_rule_cache->rules_by_tag_name.ensure(simple_selector.value).append(move(matching_rule));
+                            ++num_tag_name_rules;
+                            added_to_bucket = true;
+                            break;
+                        }
                     }
                 }
                 if (!added_to_bucket)
@@ -1063,11 +1095,12 @@ void StyleComputer::build_rule_cache()
 
     if constexpr (LIBWEB_CSS_DEBUG) {
         dbgln("Built rule cache!");
-        dbgln("     ID: {}", num_id_rules);
-        dbgln("  Class: {}", num_class_rules);
-        dbgln("TagName: {}", num_tag_name_rules);
-        dbgln("  Other: {}", m_rule_cache->other_rules.size());
-        dbgln("  Total: {}", num_class_rules + num_id_rules + num_tag_name_rules + m_rule_cache->other_rules.size());
+        dbgln("           ID: {}", num_id_rules);
+        dbgln("        Class: {}", num_class_rules);
+        dbgln("      TagName: {}", num_tag_name_rules);
+        dbgln("PseudoElement: {}", num_pseudo_element_rules);
+        dbgln("        Other: {}", m_rule_cache->other_rules.size());
+        dbgln("        Total: {}", num_class_rules + num_id_rules + num_tag_name_rules + m_rule_cache->other_rules.size());
     }
 
     m_rule_cache->generation = m_document.style_sheets().generation();

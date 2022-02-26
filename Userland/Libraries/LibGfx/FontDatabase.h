@@ -44,8 +44,8 @@ public:
     static void set_fixed_width_font_query(String);
     static void set_default_fonts_lookup_path(String);
 
-    RefPtr<Gfx::Font> get(const String& family, unsigned size, unsigned weight, unsigned slope);
-    RefPtr<Gfx::Font> get(const String& family, const String& variant, unsigned size);
+    RefPtr<Gfx::Font> get(const String& family, unsigned size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
+    RefPtr<Gfx::Font> get(const String& family, const String& variant, unsigned size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
     RefPtr<Gfx::Font> get_by_name(StringView);
     void for_each_font(Function<void(const Gfx::Font&)>);
     void for_each_fixed_width_font(Function<void(const Gfx::Font&)>);

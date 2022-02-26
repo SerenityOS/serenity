@@ -95,6 +95,11 @@ struct FontMetrics {
 
 class Font : public RefCounted<Font> {
 public:
+    enum class AllowInexactSizeMatch {
+        No,
+        Yes,
+    };
+
     virtual NonnullRefPtr<Font> clone() const = 0;
     virtual ~Font() {};
 
@@ -111,6 +116,7 @@ public:
     virtual int glyph_or_emoji_width(u32 code_point) const = 0;
     virtual u8 glyph_height() const = 0;
     virtual int x_height() const = 0;
+    virtual int preferred_line_height() const = 0;
 
     virtual u8 min_glyph_width() const = 0;
     virtual u8 max_glyph_width() const = 0;

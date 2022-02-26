@@ -7,10 +7,10 @@
 #include "MouseWidget.h"
 
 #include <Applications/MouseSettings/MouseWidgetGML.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Slider.h>
 #include <LibGUI/SpinBox.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
 
@@ -28,12 +28,12 @@ MouseWidget::MouseWidget()
     m_speed_slider->on_change = [&](int value) {
         m_speed_label->set_text(String::formatted("{} %", value));
     };
-    int const slider_value = float { speed_slider_scale } * GUI::WindowServerConnection::the().get_mouse_acceleration();
+    int const slider_value = float { speed_slider_scale } * GUI::ConnectionToWindowServer::the().get_mouse_acceleration();
     m_speed_slider->set_value(slider_value);
 
     m_scroll_length_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("scroll_length_spinbox");
     m_scroll_length_spinbox->set_min(WindowServer::scroll_step_size_min);
-    m_scroll_length_spinbox->set_value(GUI::WindowServerConnection::the().get_scroll_step_size());
+    m_scroll_length_spinbox->set_value(GUI::ConnectionToWindowServer::the().get_scroll_step_size());
 
     m_double_click_arrow_widget = *find_descendant_of_type_named<MouseSettings::DoubleClickArrowWidget>("double_click_arrow_widget");
     m_double_click_speed_label = *find_descendant_of_type_named<GUI::Label>("double_click_speed_label");
@@ -44,18 +44,18 @@ MouseWidget::MouseWidget()
         m_double_click_arrow_widget->set_double_click_speed(speed);
         m_double_click_speed_label->set_text(String::formatted("{} ms", speed));
     };
-    m_double_click_speed_slider->set_value(GUI::WindowServerConnection::the().get_double_click_speed());
+    m_double_click_speed_slider->set_value(GUI::ConnectionToWindowServer::the().get_double_click_speed());
     m_switch_buttons_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("switch_buttons_input");
-    m_switch_buttons_checkbox->set_checked(GUI::WindowServerConnection::the().get_buttons_switched());
+    m_switch_buttons_checkbox->set_checked(GUI::ConnectionToWindowServer::the().get_buttons_switched());
 }
 
 void MouseWidget::apply_settings()
 {
     float const factor = m_speed_slider->value() / speed_slider_scale;
-    GUI::WindowServerConnection::the().async_set_mouse_acceleration(factor);
-    GUI::WindowServerConnection::the().async_set_scroll_step_size(m_scroll_length_spinbox->value());
-    GUI::WindowServerConnection::the().async_set_double_click_speed(m_double_click_speed_slider->value());
-    GUI::WindowServerConnection::the().async_set_buttons_switched(m_switch_buttons_checkbox->is_checked());
+    GUI::ConnectionToWindowServer::the().async_set_mouse_acceleration(factor);
+    GUI::ConnectionToWindowServer::the().async_set_scroll_step_size(m_scroll_length_spinbox->value());
+    GUI::ConnectionToWindowServer::the().async_set_double_click_speed(m_double_click_speed_slider->value());
+    GUI::ConnectionToWindowServer::the().async_set_buttons_switched(m_switch_buttons_checkbox->is_checked());
 }
 
 void MouseWidget::reset_default_values()

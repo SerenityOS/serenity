@@ -34,6 +34,8 @@ public:
         Vmin,
     };
 
+    static Optional<Type> unit_from_name(StringView);
+
     // We have a RefPtr<CalculatedStyleValue> member, but can't include the header StyleValue.h as it includes
     // this file already. To break the cyclic dependency, we must move all method definitions out.
     Length(int value, Type type);
@@ -112,15 +114,12 @@ public:
         }
     }
 
-    String to_string() const
-    {
-        if (is_auto())
-            return "auto";
-        return String::formatted("{}{}", m_value, unit_name());
-    }
+    String to_string() const;
 
     bool operator==(const Length& other) const
     {
+        if (is_calculated())
+            return m_calculated_style == other.m_calculated_style;
         return m_type == other.m_type && m_value == other.m_value;
     }
 

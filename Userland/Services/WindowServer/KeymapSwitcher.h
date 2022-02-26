@@ -12,7 +12,7 @@
 #include <LibCore/FileWatcher.h>
 #include <LibCore/Object.h>
 #include <LibKeyboard/CharacterMap.h>
-#include <WindowServer/WMClientConnection.h>
+#include <WindowServer/WMConnectionFromClient.h>
 
 namespace WindowServer {
 

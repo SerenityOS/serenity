@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include "Launcher.h"
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
@@ -15,7 +15,7 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    auto server = TRY(IPC::MultiServer<LaunchServer::ClientConnection>::try_create());
+    auto server = TRY(IPC::MultiServer<LaunchServer::ConnectionFromClient>::try_create());
 
     auto launcher = LaunchServer::Launcher();
     launcher.load_handlers();

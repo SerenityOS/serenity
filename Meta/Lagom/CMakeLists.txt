@@ -287,7 +287,7 @@ if (BUILD_LAGOM)
 
     # Audio
     file(GLOB LIBAUDIO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibAudio/*.cpp")
-    list(REMOVE_ITEM LIBAUDIO_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibAudio/ClientConnection.cpp")
+    list(REMOVE_ITEM LIBAUDIO_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibAudio/ConnectionFromClient.cpp")
     lagom_lib(Audio audio
         SOURCES ${LIBAUDIO_SOURCES}
     )

@@ -16,13 +16,13 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/ComboBox.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 

@@ -8,8 +8,14 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/HTMLButtonElement.h>
+#include <LibWeb/HTML/HTMLFieldSetElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/HTMLObjectElement.h>
+#include <LibWeb/HTML/HTMLOutputElement.h>
+#include <LibWeb/HTML/HTMLSelectElement.h>
+#include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/HTML/SubmitEvent.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/URL/URL.h>
@@ -150,6 +156,42 @@ String HTMLFormElement::action() const
     }
 
     return value;
+}
+
+static bool is_form_control(DOM::Element const& element)
+{
+    if (is<HTMLButtonElement>(element)
+        || is<HTMLFieldSetElement>(element)
+        || is<HTMLObjectElement>(element)
+        || is<HTMLOutputElement>(element)
+        || is<HTMLSelectElement>(element)
+        || is<HTMLTextAreaElement>(element)) {
+        return true;
+    }
+
+    if (is<HTMLInputElement>(element)
+        && !element.get_attribute(HTML::AttributeNames::type).equals_ignoring_case("image")) {
+        return true;
+    }
+
+    return false;
+}
+
+// https://html.spec.whatwg.org/multipage/forms.html#dom-form-elements
+NonnullRefPtr<DOM::HTMLCollection> HTMLFormElement::elements() const
+{
+    // FIXME: This should return the same HTMLFormControlsCollection object every time,
+    //        but that would cause a reference cycle since HTMLCollection refs the root.
+    return DOM::HTMLCollection::create(const_cast<HTMLFormElement&>(*this), [this](Element const& element) {
+        return is_form_control(element);
+    });
+}
+
+// https://html.spec.whatwg.org/multipage/forms.html#dom-form-length
+unsigned HTMLFormElement::length() const
+{
+    // The length IDL attribute must return the number of nodes represented by the elements collection.
+    return elements()->length();
 }
 
 }

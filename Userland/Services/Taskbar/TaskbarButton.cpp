@@ -7,9 +7,9 @@
 #include "TaskbarButton.h"
 #include "WindowList.h"
 #include <LibGUI/Action.h>
+#include <LibGUI/ConnectionToWindowMangerServer.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/WindowManagerServerConnection.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
@@ -25,7 +25,7 @@ TaskbarButton::~TaskbarButton()
 
 void TaskbarButton::context_menu_event(GUI::ContextMenuEvent&)
 {
-    GUI::WindowManagerServerConnection::the().async_popup_window_menu(
+    GUI::ConnectionToWindowMangerServer::the().async_popup_window_menu(
         m_identifier.client_id(),
         m_identifier.window_id(),
         screen_relative_rect().location());
@@ -33,7 +33,7 @@ void TaskbarButton::context_menu_event(GUI::ContextMenuEvent&)
 
 void TaskbarButton::update_taskbar_rect()
 {
-    GUI::WindowManagerServerConnection::the().async_set_window_taskbar_rect(
+    GUI::ConnectionToWindowMangerServer::the().async_set_window_taskbar_rect(
         m_identifier.client_id(),
         m_identifier.window_id(),
         screen_relative_rect());
@@ -41,7 +41,7 @@ void TaskbarButton::update_taskbar_rect()
 
 void TaskbarButton::clear_taskbar_rect()
 {
-    GUI::WindowManagerServerConnection::the().async_set_window_taskbar_rect(
+    GUI::ConnectionToWindowMangerServer::the().async_set_window_taskbar_rect(
         m_identifier.client_id(),
         m_identifier.window_id(),
         {});

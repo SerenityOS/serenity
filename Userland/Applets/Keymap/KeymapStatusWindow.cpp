@@ -7,8 +7,8 @@
 
 #include "KeymapStatusWindow.h"
 #include <LibCore/Process.h>
+#include <LibGUI/ConnectionToWindowMangerServer.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/WindowManagerServerConnection.h>
 #include <LibKeyboard/CharacterMap.h>
 
 void KeymapStatusWidget::mousedown_event(GUI::MouseEvent& event)

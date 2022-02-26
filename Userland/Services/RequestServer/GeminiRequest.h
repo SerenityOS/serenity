@@ -16,14 +16,14 @@ namespace RequestServer {
 class GeminiRequest final : public Request {
 public:
     virtual ~GeminiRequest() override;
-    static NonnullOwnPtr<GeminiRequest> create_with_job(Badge<GeminiProtocol>, ClientConnection&, NonnullRefPtr<Gemini::Job>, NonnullOwnPtr<Core::Stream::File>&&);
+    static NonnullOwnPtr<GeminiRequest> create_with_job(Badge<GeminiProtocol>, ConnectionFromClient&, NonnullRefPtr<Gemini::Job>, NonnullOwnPtr<Core::Stream::File>&&);
 
     Gemini::Job const& job() const { return *m_job; }
 
     virtual URL url() const override { return m_job->url(); }
 
 private:
-    explicit GeminiRequest(ClientConnection&, NonnullRefPtr<Gemini::Job>, NonnullOwnPtr<Core::Stream::File>&&);
+    explicit GeminiRequest(ConnectionFromClient&, NonnullRefPtr<Gemini::Job>, NonnullOwnPtr<Core::Stream::File>&&);
 
     virtual void set_certificate(String certificate, String key) override;
 

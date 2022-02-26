@@ -9,6 +9,7 @@ endpoint WindowManagerClient
     applet_area_size_changed(i32 wm_id, Gfx::IntSize size) =|
     super_key_pressed(i32 wm_id) =|
     super_space_key_pressed(i32 wm_id) =|
+    super_digit_key_pressed(i32 wm_id, u8 digit) =|
     workspace_changed(i32 wm_id, u32 row, u32 column) =|
     keymap_changed(i32 wm_id, [UTF8] String keymap) =|
 }

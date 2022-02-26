@@ -5,7 +5,7 @@
  */
 
 #include "LookupServer.h"
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include "DNSPacket.h"
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
@@ -72,7 +72,7 @@ LookupServer::LookupServer()
     }
     m_mdns = MulticastDNS::construct(this);
 
-    m_server = MUST(IPC::MultiServer<ClientConnection>::try_create());
+    m_server = MUST(IPC::MultiServer<ConnectionFromClient>::try_create());
 }
 
 void LookupServer::load_etc_hosts()

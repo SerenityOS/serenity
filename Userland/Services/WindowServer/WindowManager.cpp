@@ -20,7 +20,7 @@
 #include <LibGfx/SystemTheme.h>
 #include <WindowServer/AppletManager.h>
 #include <WindowServer/Button.h>
-#include <WindowServer/ClientConnection.h>
+#include <WindowServer/ConnectionFromClient.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/WindowClientEndpoint.h>
 
@@ -54,7 +54,7 @@ WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
     reload_config();
 
     m_keymap_switcher->on_keymap_change = [&](String const& keymap) {
-        for_each_window_manager([&keymap](WMClientConnection& conn) {
+        for_each_window_manager([&keymap](WMConnectionFromClient& conn) {
             if (!(conn.event_mask() & WMEventMask::KeymapChanged))
                 return IterationDecision::Continue;
             if (conn.window_id() < 0)
@@ -409,7 +409,7 @@ void WindowManager::remove_window(Window& window)
 
     Compositor::the().invalidate_occlusions();
 
-    for_each_window_manager([&](WMClientConnection& conn) {
+    for_each_window_manager([&](WMConnectionFromClient& conn) {
         if (conn.window_id() < 0 || !(conn.event_mask() & WMEventMask::WindowRemovals))
             return IterationDecision::Continue;
         if (!window.is_internal() && !was_modal)
@@ -418,7 +418,7 @@ void WindowManager::remove_window(Window& window)
     });
 }
 
-void WindowManager::greet_window_manager(WMClientConnection& conn)
+void WindowManager::greet_window_manager(WMConnectionFromClient& conn)
 {
     if (conn.window_id() < 0)
         return;
@@ -437,7 +437,7 @@ void WindowManager::greet_window_manager(WMClientConnection& conn)
         tell_wms_applet_area_size_changed(applet_area_window->size());
 }
 
-void WindowManager::tell_wm_about_window(WMClientConnection& conn, Window& window)
+void WindowManager::tell_wm_about_window(WMConnectionFromClient& conn, Window& window)
 {
     if (conn.window_id() < 0)
         return;
@@ -450,7 +450,7 @@ void WindowManager::tell_wm_about_window(WMClientConnection& conn, Window& windo
     conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window_stack.row(), window_stack.column(), window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
 }
 
-void WindowManager::tell_wm_about_window_rect(WMClientConnection& conn, Window& window)
+void WindowManager::tell_wm_about_window_rect(WMConnectionFromClient& conn, Window& window)
 {
     if (conn.window_id() < 0)
         return;
@@ -461,7 +461,7 @@ void WindowManager::tell_wm_about_window_rect(WMClientConnection& conn, Window& 
     conn.async_window_rect_changed(conn.window_id(), window.client_id(), window.window_id(), window.rect());
 }
 
-void WindowManager::tell_wm_about_window_icon(WMClientConnection& conn, Window& window)
+void WindowManager::tell_wm_about_window_icon(WMConnectionFromClient& conn, Window& window)
 {
     if (conn.window_id() < 0)
         return;
@@ -472,7 +472,7 @@ void WindowManager::tell_wm_about_window_icon(WMClientConnection& conn, Window& 
     conn.async_window_icon_bitmap_changed(conn.window_id(), window.client_id(), window.window_id(), window.icon().to_shareable_bitmap());
 }
 
-void WindowManager::tell_wm_about_current_window_stack(WMClientConnection& conn)
+void WindowManager::tell_wm_about_current_window_stack(WMConnectionFromClient& conn)
 {
     if (conn.window_id() < 0)
         return;
@@ -484,7 +484,7 @@ void WindowManager::tell_wm_about_current_window_stack(WMClientConnection& conn)
 
 void WindowManager::tell_wms_window_state_changed(Window& window)
 {
-    for_each_window_manager([&](WMClientConnection& conn) {
+    for_each_window_manager([&](WMConnectionFromClient& conn) {
         tell_wm_about_window(conn, window);
         return IterationDecision::Continue;
     });
@@ -492,7 +492,7 @@ void WindowManager::tell_wms_window_state_changed(Window& window)
 
 void WindowManager::tell_wms_window_icon_changed(Window& window)
 {
-    for_each_window_manager([&](WMClientConnection& conn) {
+    for_each_window_manager([&](WMConnectionFromClient& conn) {
         tell_wm_about_window_icon(conn, window);
         return IterationDecision::Continue;
     });
@@ -500,7 +500,7 @@ void WindowManager::tell_wms_window_icon_changed(Window& window)
 
 void WindowManager::tell_wms_window_rect_changed(Window& window)
 {
-    for_each_window_manager([&](WMClientConnection& conn) {
+    for_each_window_manager([&](WMConnectionFromClient& conn) {
         tell_wm_about_window_rect(conn, window);
         return IterationDecision::Continue;
     });
@@ -508,14 +508,14 @@ void WindowManager::tell_wms_window_rect_changed(Window& window)
 
 void WindowManager::tell_wms_screen_rects_changed()
 {
-    ClientConnection::for_each_client([&](ClientConnection& client) {
+    ConnectionFromClient::for_each_client([&](ConnectionFromClient& client) {
         client.notify_about_new_screen_rects();
     });
 }
 
 void WindowManager::tell_wms_applet_area_size_changed(Gfx::IntSize const& size)
 {
-    for_each_window_manager([&](WMClientConnection& conn) {
+    for_each_window_manager([&](WMConnectionFromClient& conn) {
         if (conn.window_id() < 0)
             return IterationDecision::Continue;
 
@@ -526,7 +526,7 @@ void WindowManager::tell_wms_applet_area_size_changed(Gfx::IntSize const& size)
 
 void WindowManager::tell_wms_super_key_pressed()
 {
-    for_each_window_manager([](WMClientConnection& conn) {
+    for_each_window_manager([](WMConnectionFromClient& conn) {
         if (conn.window_id() < 0)
             return IterationDecision::Continue;
 
@@ -537,7 +537,7 @@ void WindowManager::tell_wms_super_key_pressed()
 
 void WindowManager::tell_wms_super_space_key_pressed()
 {
-    for_each_window_manager([](WMClientConnection& conn) {
+    for_each_window_manager([](WMConnectionFromClient& conn) {
         if (conn.window_id() < 0)
             return IterationDecision::Continue;
 
@@ -546,9 +546,20 @@ void WindowManager::tell_wms_super_space_key_pressed()
     });
 }
 
+void WindowManager::tell_wms_super_digit_key_pressed(u8 digit)
+{
+    for_each_window_manager([digit](WMConnectionFromClient& conn) {
+        if (conn.window_id() < 0)
+            return IterationDecision::Continue;
+
+        conn.async_super_digit_key_pressed(conn.window_id(), digit);
+        return IterationDecision::Continue;
+    });
+}
+
 void WindowManager::tell_wms_current_window_stack_changed()
 {
-    for_each_window_manager([&](WMClientConnection& conn) {
+    for_each_window_manager([&](WMConnectionFromClient& conn) {
         tell_wm_about_current_window_stack(conn);
         return IterationDecision::Continue;
     });
@@ -1278,7 +1289,7 @@ void WindowManager::process_mouse_event(MouseEvent& event)
         return;
 
     // 2. Send the mouse event to all clients with global cursor tracking enabled.
-    ClientConnection::for_each_client([&](ClientConnection& conn) {
+    ConnectionFromClient::for_each_client([&](ConnectionFromClient& conn) {
         if (conn.does_global_mouse_tracking()) {
             conn.async_track_mouse_move(event.position());
         }
@@ -1603,6 +1614,12 @@ void WindowManager::process_key_event(KeyEvent& event)
             tell_wms_super_space_key_pressed();
             return;
         }
+
+        if (event.type() == Event::KeyDown && event.key() >= Key_0 && event.key() <= Key_9) {
+            auto digit = event.key() - Key_0;
+            tell_wms_super_digit_key_pressed(digit);
+            return;
+        }
     }
 
     if (MenuManager::the().current_menu() && event.key() != Key_Super) {
@@ -1900,7 +1917,7 @@ bool WindowManager::set_hovered_window(Window* window)
     return true;
 }
 
-ClientConnection const* WindowManager::active_client() const
+ConnectionFromClient const* WindowManager::active_client() const
 {
     if (auto* window = const_cast<WindowManager*>(this)->current_window_stack().active_window())
         return window->client();
@@ -2035,7 +2052,7 @@ Gfx::IntRect WindowManager::tiled_window_rect(Window const& window, WindowTileTy
     return rect;
 }
 
-void WindowManager::start_dnd_drag(ClientConnection& client, String const& text, Gfx::Bitmap const* bitmap, Core::MimeData const& mime_data)
+void WindowManager::start_dnd_drag(ConnectionFromClient& client, String const& text, Gfx::Bitmap const* bitmap, Core::MimeData const& mime_data)
 {
     VERIFY(!m_dnd_client);
     m_dnd_client = client;
@@ -2067,7 +2084,7 @@ void WindowManager::invalidate_after_theme_or_font_change()
         });
         return IterationDecision::Continue;
     });
-    ClientConnection::for_each_client([&](ClientConnection& client) {
+    ConnectionFromClient::for_each_client([&](ConnectionFromClient& client) {
         client.async_update_system_theme(Gfx::current_system_theme_buffer());
     });
     MenuManager::the().did_change_theme();

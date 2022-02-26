@@ -8,7 +8,7 @@ compile_ipc(ConfigServer.ipc ConfigServerEndpoint.h)
 compile_ipc(ConfigClient.ipc ConfigClientEndpoint.h)
 
 set(SOURCES
-    ClientConnection.cpp
+    ConnectionFromClient.cpp
     main.cpp
     ConfigServerEndpoint.h
     ConfigClientEndpoint.h

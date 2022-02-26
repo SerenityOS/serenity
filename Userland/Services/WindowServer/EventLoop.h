@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "ClientConnection.h"
-#include "WMClientConnection.h"
+#include "ConnectionFromClient.h"
+#include "WMConnectionFromClient.h"
 #include <AK/ByteBuffer.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
@@ -15,7 +15,7 @@
 
 namespace WindowServer {
 
-class ClientConnection;
+class ConnectionFromClient;
 
 class EventLoop {
 public:
@@ -33,8 +33,8 @@ private:
     RefPtr<Core::Notifier> m_keyboard_notifier;
     int m_mouse_fd { -1 };
     RefPtr<Core::Notifier> m_mouse_notifier;
-    OwnPtr<IPC::MultiServer<ClientConnection>> m_window_server;
-    OwnPtr<IPC::MultiServer<WMClientConnection>> m_wm_server;
+    OwnPtr<IPC::MultiServer<ConnectionFromClient>> m_window_server;
+    OwnPtr<IPC::MultiServer<WMConnectionFromClient>> m_wm_server;
 };
 
 }

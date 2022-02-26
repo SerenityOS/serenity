@@ -6,7 +6,7 @@
 
 #include <LibCore/Object.h>
 #include <LibSQL/AST/Parser.h>
-#include <SQLServer/ClientConnection.h>
+#include <SQLServer/ConnectionFromClient.h>
 #include <SQLServer/DatabaseConnection.h>
 #include <SQLServer/SQLStatement.h>
 
@@ -37,7 +37,7 @@ void SQLStatement::report_error(SQL::Result result)
 {
     dbgln_if(SQLSERVER_DEBUG, "SQLStatement::report_error(statement_id {}, error {}", statement_id(), result.error_string());
 
-    auto client_connection = ClientConnection::client_connection_for(connection()->client_id());
+    auto client_connection = ConnectionFromClient::client_connection_for(connection()->client_id());
 
     s_statements.remove(statement_id());
     remove_from_parent();
@@ -54,7 +54,7 @@ void SQLStatement::report_error(SQL::Result result)
 void SQLStatement::execute()
 {
     dbgln_if(SQLSERVER_DEBUG, "SQLStatement::execute(statement_id {}", statement_id());
-    auto client_connection = ClientConnection::client_connection_for(connection()->client_id());
+    auto client_connection = ConnectionFromClient::client_connection_for(connection()->client_id());
     if (!client_connection) {
         warnln("Cannot yield next result. Client disconnected");
         return;
@@ -75,7 +75,7 @@ void SQLStatement::execute()
             return;
         }
 
-        auto client_connection = ClientConnection::client_connection_for(connection()->client_id());
+        auto client_connection = ConnectionFromClient::client_connection_for(connection()->client_id());
         if (!client_connection) {
             warnln("Cannot return statement execution results. Client disconnected");
             return;
@@ -122,7 +122,7 @@ bool SQLStatement::should_send_result_rows() const
 void SQLStatement::next()
 {
     VERIFY(!m_result->is_empty());
-    auto client_connection = ClientConnection::client_connection_for(connection()->client_id());
+    auto client_connection = ConnectionFromClient::client_connection_for(connection()->client_id());
     if (!client_connection) {
         warnln("Cannot yield next result. Client disconnected");
         return;

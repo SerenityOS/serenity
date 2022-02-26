@@ -15,7 +15,7 @@ set(SOURCES
     LookupServer.cpp
     LookupServerEndpoint.h
     LookupClientEndpoint.h
-    ClientConnection.cpp
+    ConnectionFromClient.cpp
     MulticastDNS.cpp
     main.cpp
 )

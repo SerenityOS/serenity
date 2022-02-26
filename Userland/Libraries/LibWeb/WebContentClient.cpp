@@ -12,7 +12,7 @@
 namespace Web {
 
 WebContentClient::WebContentClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket, OutOfProcessWebView& view)
-    : IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>(*this, move(socket))
+    : IPC::ConnectionToServer<WebContentClientEndpoint, WebContentServerEndpoint>(*this, move(socket))
     , m_view(view)
 {
 }

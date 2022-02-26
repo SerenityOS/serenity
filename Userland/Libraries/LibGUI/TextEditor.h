@@ -107,6 +107,7 @@ public:
     Function<void()> on_selection_change;
     Function<void()> on_focusin;
     Function<void()> on_focusout;
+    Function<void()> on_highlighter_change;
 
     void set_text(StringView, AllowCallback = AllowCallback::Yes);
     void scroll_cursor_into_view();
@@ -116,7 +117,6 @@ public:
     TextDocumentLine const& line(size_t index) const { return document().line(index); }
     NonnullOwnPtrVector<TextDocumentLine>& lines() { return document().lines(); }
     NonnullOwnPtrVector<TextDocumentLine> const& lines() const { return document().lines(); }
-    int line_spacing() const { return m_line_spacing; }
     int line_height() const;
     TextPosition cursor() const { return m_cursor; }
     TextRange normalized_selection() const { return m_selection.normalized(); }
@@ -347,11 +347,10 @@ private:
     bool m_needs_rehighlight { false };
     bool m_has_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
-    WrappingMode m_wrapping_mode { WrappingMode::NoWrap };
+    WrappingMode m_wrapping_mode { WrappingMode::WrapAtWords };
     bool m_visualize_trailing_whitespace { true };
     bool m_visualize_leading_whitespace { false };
     bool m_cursor_line_highlighting { true };
-    int m_line_spacing { 4 };
     size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 3 };
     TextRange m_selection;

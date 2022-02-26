@@ -11,7 +11,7 @@
 namespace Protocol {
 
 RequestClient::RequestClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
-    : IPC::ServerConnection<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket))
+    : IPC::ConnectionToServer<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket))
 {
 }
 

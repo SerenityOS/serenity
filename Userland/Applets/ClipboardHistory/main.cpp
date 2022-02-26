@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     table_view->set_model(model);
 
     table_view->on_activation = [&](GUI::ModelIndex const& index) {
-        auto& data_and_type = model->item_at(index.row());
+        auto& data_and_type = model->item_at(index.row()).data_and_type;
         GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type, data_and_type.metadata);
     };
 

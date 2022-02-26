@@ -497,13 +497,15 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 return ParsingResult::IncludesIgnoredVendorPrefix;
 
             if (pseudo_name.equals_ignoring_case("after")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::After;
+                simple_selector.pseudo_element = Selector::PseudoElement::After;
             } else if (pseudo_name.equals_ignoring_case("before")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::Before;
+                simple_selector.pseudo_element = Selector::PseudoElement::Before;
             } else if (pseudo_name.equals_ignoring_case("first-letter")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLetter;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLetter;
             } else if (pseudo_name.equals_ignoring_case("first-line")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLine;
+            } else if (pseudo_name.equals_ignoring_case("marker")) {
+                simple_selector.pseudo_element = Selector::PseudoElement::Marker;
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
@@ -561,19 +563,19 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             } else if (pseudo_name.equals_ignoring_case("after")) {
                 // Single-colon syntax allowed for compatibility. https://www.w3.org/TR/selectors/#pseudo-element-syntax
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::After;
+                simple_selector.pseudo_element = Selector::PseudoElement::After;
             } else if (pseudo_name.equals_ignoring_case("before")) {
                 // See :after
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::Before;
+                simple_selector.pseudo_element = Selector::PseudoElement::Before;
             } else if (pseudo_name.equals_ignoring_case("first-letter")) {
                 // See :after
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLetter;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLetter;
             } else if (pseudo_name.equals_ignoring_case("first-line")) {
                 // See :after
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLine;
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class: ':{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
@@ -1149,8 +1151,12 @@ Optional<MediaFeatureValue> Parser::parse_media_feature_value(TokenStream<StyleC
         return MediaFeatureValue(first.token().number_value());
 
     // `<dimension>`
-    if (auto length = parse_length(first); length.has_value())
-        return MediaFeatureValue(length.release_value());
+    if (auto dimension = parse_dimension(first); dimension.has_value()) {
+        if (dimension->is_length())
+            return MediaFeatureValue(dimension->length());
+        if (dimension->is_resolution())
+            return MediaFeatureValue(dimension->resolution());
+    }
 
     // `<ident>`
     if (first.is(Token::Type::Ident))
@@ -2165,45 +2171,21 @@ Optional<Parser::Dimension> Parser::parse_dimension(StyleComponentValueRule cons
     if (component_value.is(Token::Type::Dimension)) {
         float numeric_value = component_value.token().dimension_value();
         auto unit_string = component_value.token().dimension_unit();
-        Optional<Length::Type> length_type;
 
-        if (unit_string.equals_ignoring_case("px"sv)) {
-            length_type = Length::Type::Px;
-        } else if (unit_string.equals_ignoring_case("pt"sv)) {
-            length_type = Length::Type::Pt;
-        } else if (unit_string.equals_ignoring_case("pc"sv)) {
-            length_type = Length::Type::Pc;
-        } else if (unit_string.equals_ignoring_case("mm"sv)) {
-            length_type = Length::Type::Mm;
-        } else if (unit_string.equals_ignoring_case("rem"sv)) {
-            length_type = Length::Type::Rem;
-        } else if (unit_string.equals_ignoring_case("em"sv)) {
-            length_type = Length::Type::Em;
-        } else if (unit_string.equals_ignoring_case("ex"sv)) {
-            length_type = Length::Type::Ex;
-        } else if (unit_string.equals_ignoring_case("ch"sv)) {
-            length_type = Length::Type::Ch;
-        } else if (unit_string.equals_ignoring_case("vw"sv)) {
-            length_type = Length::Type::Vw;
-        } else if (unit_string.equals_ignoring_case("vh"sv)) {
-            length_type = Length::Type::Vh;
-        } else if (unit_string.equals_ignoring_case("vmax"sv)) {
-            length_type = Length::Type::Vmax;
-        } else if (unit_string.equals_ignoring_case("vmin"sv)) {
-            length_type = Length::Type::Vmin;
-        } else if (unit_string.equals_ignoring_case("cm"sv)) {
-            length_type = Length::Type::Cm;
-        } else if (unit_string.equals_ignoring_case("in"sv)) {
-            length_type = Length::Type::In;
-        } else if (unit_string.equals_ignoring_case("Q"sv)) {
-            length_type = Length::Type::Q;
-        } else if (unit_string.equals_ignoring_case("%"sv)) {
-            // A number followed by `%` must always result in a Percentage token.
-            VERIFY_NOT_REACHED();
-        }
+        if (auto length_type = Length::unit_from_name(unit_string); length_type.has_value())
+            return Length { numeric_value, length_type.release_value() };
 
-        if (length_type.has_value())
-            return Length { numeric_value, length_type.value() };
+        if (auto angle_type = Angle::unit_from_name(unit_string); angle_type.has_value())
+            return Angle { numeric_value, angle_type.release_value() };
+
+        if (auto frequency_type = Frequency::unit_from_name(unit_string); frequency_type.has_value())
+            return Frequency { numeric_value, frequency_type.release_value() };
+
+        if (auto resolution_type = Resolution::unit_from_name(unit_string); resolution_type.has_value())
+            return Resolution { numeric_value, resolution_type.release_value() };
+
+        if (auto time_type = Time::unit_from_name(unit_string); time_type.has_value())
+            return Time { numeric_value, time_type.release_value() };
     }
 
     if (component_value.is(Token::Type::Percentage))
@@ -2258,10 +2240,18 @@ RefPtr<StyleValue> Parser::parse_dimension_value(StyleComponentValueRule const& 
     if (!dimension.has_value())
         return {};
 
+    if (dimension->is_angle())
+        return AngleStyleValue::create(dimension->angle());
+    if (dimension->is_frequency())
+        return FrequencyStyleValue::create(dimension->frequency());
     if (dimension->is_length())
         return LengthStyleValue::create(dimension->length());
     if (dimension->is_percentage())
         return PercentageStyleValue::create(dimension->percentage());
+    if (dimension->is_resolution())
+        return ResolutionStyleValue::create(dimension->resolution());
+    if (dimension->is_time())
+        return TimeStyleValue::create(dimension->time());
     VERIFY_NOT_REACHED();
 }
 
@@ -3292,6 +3282,66 @@ RefPtr<StyleValue> Parser::parse_single_box_shadow_value(TokenStream<StyleCompon
     return BoxShadowStyleValue::create(color.release_value(), offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), spread_distance.release_value(), placement.release_value());
 }
 
+RefPtr<StyleValue> Parser::parse_content_value(Vector<StyleComponentValueRule> const& component_values)
+{
+    // FIXME: `content` accepts several kinds of function() type, which we don't handle in property_accepts_value() yet.
+
+    auto is_single_value_identifier = [](ValueID identifier) -> bool {
+        switch (identifier) {
+        case ValueID::None:
+        case ValueID::Normal:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    if (component_values.size() == 1) {
+        if (auto identifier = parse_identifier_value(component_values.first())) {
+            if (is_single_value_identifier(identifier->to_identifier()))
+                return identifier;
+        }
+    }
+
+    NonnullRefPtrVector<StyleValue> content_values;
+    NonnullRefPtrVector<StyleValue> alt_text_values;
+    bool in_alt_text = false;
+
+    for (auto const& value : component_values) {
+        if (value.is(Token::Type::Delim) && value.token().delim() == "/"sv) {
+            if (in_alt_text || content_values.is_empty())
+                return {};
+            in_alt_text = true;
+            continue;
+        }
+        auto style_value = parse_css_value(value);
+        if (style_value && property_accepts_value(PropertyID::Content, *style_value)) {
+            if (is_single_value_identifier(style_value->to_identifier()))
+                return {};
+
+            if (in_alt_text) {
+                alt_text_values.append(style_value.release_nonnull());
+            } else {
+                content_values.append(style_value.release_nonnull());
+            }
+            continue;
+        }
+
+        return {};
+    }
+
+    if (content_values.is_empty())
+        return {};
+    if (in_alt_text && alt_text_values.is_empty())
+        return {};
+
+    RefPtr<StyleValueList> alt_text;
+    if (!alt_text_values.is_empty())
+        alt_text = StyleValueList::create(move(alt_text_values), StyleValueList::Separator::Space);
+
+    return ContentStyleValue::create(StyleValueList::create(move(content_values), StyleValueList::Separator::Space), move(alt_text));
+}
+
 RefPtr<StyleValue> Parser::parse_flex_value(Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() == 1) {
@@ -3876,6 +3926,10 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
         if (auto parsed_value = parse_box_shadow_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
+    case PropertyID::Content:
+        if (auto parsed_value = parse_content_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParsingResult::SyntaxError;
     case PropertyID::Flex:
         if (auto parsed_value = parse_flex_value(component_values))
             return parsed_value.release_nonnull();
@@ -4298,10 +4352,20 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<S
             return {};
         auto& dimension = maybe_dimension.value();
 
+        if (dimension.is_angle())
+            return CalculatedStyleValue::CalcValue { dimension.angle() };
+        if (dimension.is_frequency())
+            return CalculatedStyleValue::CalcValue { dimension.frequency() };
         if (dimension.is_length())
             return CalculatedStyleValue::CalcValue { dimension.length() };
         if (dimension.is_percentage())
             return CalculatedStyleValue::CalcValue { dimension.percentage() };
+        if (dimension.is_resolution()) {
+            // Resolution is not allowed in calc()
+            return {};
+        }
+        if (dimension.is_time())
+            return CalculatedStyleValue::CalcValue { dimension.time() };
         VERIFY_NOT_REACHED();
     }
 
@@ -4561,6 +4625,54 @@ RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext 
     return result.release_value();
 }
 
+bool Parser::Dimension::is_angle() const
+{
+    return m_value.has<Angle>();
+}
+
+Angle Parser::Dimension::angle() const
+{
+    return m_value.get<Angle>();
+}
+
+bool Parser::Dimension::is_angle_percentage() const
+{
+    return is_angle() || is_percentage();
+}
+
+AnglePercentage Parser::Dimension::angle_percentage() const
+{
+    if (is_angle())
+        return angle();
+    if (is_percentage())
+        return percentage();
+    VERIFY_NOT_REACHED();
+}
+
+bool Parser::Dimension::is_frequency() const
+{
+    return m_value.has<Frequency>();
+}
+
+Frequency Parser::Dimension::frequency() const
+{
+    return m_value.get<Frequency>();
+}
+
+bool Parser::Dimension::is_frequency_percentage() const
+{
+    return is_frequency() || is_percentage();
+}
+
+FrequencyPercentage Parser::Dimension::frequency_percentage() const
+{
+    if (is_frequency())
+        return frequency();
+    if (is_percentage())
+        return percentage();
+    VERIFY_NOT_REACHED();
+}
+
 bool Parser::Dimension::is_length() const
 {
     return m_value.has<Length>();
@@ -4569,6 +4681,20 @@ bool Parser::Dimension::is_length() const
 Length Parser::Dimension::length() const
 {
     return m_value.get<Length>();
+}
+
+bool Parser::Dimension::is_length_percentage() const
+{
+    return is_length() || is_percentage();
+}
+
+LengthPercentage Parser::Dimension::length_percentage() const
+{
+    if (is_length())
+        return length();
+    if (is_percentage())
+        return percentage();
+    VERIFY_NOT_REACHED();
 }
 
 bool Parser::Dimension::is_percentage() const
@@ -4581,15 +4707,35 @@ Percentage Parser::Dimension::percentage() const
     return m_value.get<Percentage>();
 }
 
-bool Parser::Dimension::is_length_percentage() const
+bool Parser::Dimension::is_resolution() const
 {
-    return is_length() || is_percentage();
+    return m_value.has<Resolution>();
 }
 
-LengthPercentage Parser::Dimension::length_percentage() const
+Resolution Parser::Dimension::resolution() const
 {
-    if (is_length())
-        return length();
+    return m_value.get<Resolution>();
+}
+
+bool Parser::Dimension::is_time() const
+{
+    return m_value.has<Time>();
+}
+
+Time Parser::Dimension::time() const
+{
+    return m_value.get<Time>();
+}
+
+bool Parser::Dimension::is_time_percentage() const
+{
+    return is_time() || is_percentage();
+}
+
+TimePercentage Parser::Dimension::time_percentage() const
+{
+    if (is_time())
+        return time();
     if (is_percentage())
         return percentage();
     VERIFY_NOT_REACHED();

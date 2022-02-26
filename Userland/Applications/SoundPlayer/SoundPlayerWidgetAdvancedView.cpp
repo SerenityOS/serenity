@@ -24,7 +24,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
-SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window, Audio::ClientConnection& connection)
+SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window, Audio::ConnectionFromClient& connection)
     : Player(connection)
     , m_window(window)
 {

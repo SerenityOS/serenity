@@ -13,14 +13,14 @@
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ConnectionToWindowMangerServer.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowManagerServerConnection.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <serenity.h>
@@ -105,7 +105,7 @@ TaskbarWindow::~TaskbarWindow()
 
 void TaskbarWindow::show_desktop_button_clicked(unsigned)
 {
-    GUI::WindowManagerServerConnection::the().async_toggle_show_desktop();
+    GUI::ConnectionToWindowMangerServer::the().async_toggle_show_desktop();
 }
 
 void TaskbarWindow::on_screen_rects_change(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index)
@@ -124,7 +124,7 @@ void TaskbarWindow::update_applet_area()
         return;
     main_widget()->do_layout();
     auto new_rect = Gfx::IntRect({}, m_applet_area_size).centered_within(m_applet_area_container->screen_relative_rect());
-    GUI::WindowManagerServerConnection::the().async_set_applet_area_position(new_rect.location());
+    GUI::ConnectionToWindowMangerServer::the().async_set_applet_area_position(new_rect.location());
 }
 
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
@@ -151,9 +151,9 @@ void TaskbarWindow::add_window_button(::Window& window, const WindowIdentifier& 
         // false because window is the modal window's owner (which is not
         // active)
         if (window->is_minimized() || !button->is_checked()) {
-            GUI::WindowManagerServerConnection::the().async_set_active_window(identifier.client_id(), identifier.window_id());
+            GUI::ConnectionToWindowMangerServer::the().async_set_active_window(identifier.client_id(), identifier.window_id());
         } else {
-            GUI::WindowManagerServerConnection::the().async_set_window_minimized(identifier.client_id(), identifier.window_id(), true);
+            GUI::ConnectionToWindowMangerServer::the().async_set_window_minimized(identifier.client_id(), identifier.window_id(), true);
         }
     };
 }
@@ -210,7 +210,7 @@ void TaskbarWindow::event(Core::Event& event)
         Gfx::IntPoint adjusted_point = { adjusted_x, adjusted_y };
 
         if (adjusted_point != mouse_event.position()) {
-            GUI::WindowServerConnection::the().async_set_global_cursor_position(position() + adjusted_point);
+            GUI::ConnectionToWindowServer::the().async_set_global_cursor_position(position() + adjusted_point);
             GUI::MouseEvent adjusted_event = { (GUI::Event::Type)mouse_event.type(), adjusted_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta_x(), mouse_event.wheel_delta_y() };
             Window::event(adjusted_event);
             return;
@@ -332,6 +332,24 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     case GUI::Event::WM_SuperSpaceKeyPressed: {
         if (!m_assistant_app_file->spawn())
             warnln("failed to spawn 'Assistant' when requested via Super+Space");
+        break;
+    }
+    case GUI::Event::WM_SuperDigitKeyPressed: {
+        auto& digit_event = static_cast<GUI::WMSuperDigitKeyPressedEvent&>(event);
+        auto index = digit_event.digit() != 0 ? digit_event.digit() - 1 : 9;
+
+        for (auto& widget : m_task_button_container->child_widgets()) {
+            // NOTE: The button might be invisible depending on the current workspace
+            if (!widget.is_visible())
+                continue;
+
+            if (index == 0) {
+                static_cast<TaskbarButton&>(widget).click();
+                break;
+            }
+
+            --index;
+        }
         break;
     }
     case GUI::Event::WM_WorkspaceChanged: {

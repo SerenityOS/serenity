@@ -48,6 +48,8 @@ Length Length::make_calculated(NonnullRefPtr<CalculatedStyleValue> calculated_st
 
 Length Length::percentage_of(Percentage const& percentage) const
 {
+    VERIFY(!is_calculated());
+
     if (is_auto()) {
         dbgln("Attempting to get percentage of an auto length, this seems wrong? But for now we just return the original length.");
         return *this;
@@ -104,6 +106,15 @@ float Length::to_px(Layout::Node const& layout_node) const
     return to_px(viewport_rect, layout_node.font().metrics('M'), layout_node.computed_values().font_size(), root_element->layout_node()->computed_values().font_size());
 }
 
+String Length::to_string() const
+{
+    if (is_calculated())
+        return m_calculated_style->to_string();
+    if (is_auto())
+        return "auto";
+    return String::formatted("{}{}", m_value, unit_name());
+}
+
 const char* Length::unit_name() const
 {
     switch (m_type) {
@@ -143,6 +154,43 @@ const char* Length::unit_name() const
         return "calculated";
     }
     VERIFY_NOT_REACHED();
+}
+
+Optional<Length::Type> Length::unit_from_name(StringView name)
+{
+    if (name.equals_ignoring_case("px"sv)) {
+        return Length::Type::Px;
+    } else if (name.equals_ignoring_case("pt"sv)) {
+        return Length::Type::Pt;
+    } else if (name.equals_ignoring_case("pc"sv)) {
+        return Length::Type::Pc;
+    } else if (name.equals_ignoring_case("mm"sv)) {
+        return Length::Type::Mm;
+    } else if (name.equals_ignoring_case("rem"sv)) {
+        return Length::Type::Rem;
+    } else if (name.equals_ignoring_case("em"sv)) {
+        return Length::Type::Em;
+    } else if (name.equals_ignoring_case("ex"sv)) {
+        return Length::Type::Ex;
+    } else if (name.equals_ignoring_case("ch"sv)) {
+        return Length::Type::Ch;
+    } else if (name.equals_ignoring_case("vw"sv)) {
+        return Length::Type::Vw;
+    } else if (name.equals_ignoring_case("vh"sv)) {
+        return Length::Type::Vh;
+    } else if (name.equals_ignoring_case("vmax"sv)) {
+        return Length::Type::Vmax;
+    } else if (name.equals_ignoring_case("vmin"sv)) {
+        return Length::Type::Vmin;
+    } else if (name.equals_ignoring_case("cm"sv)) {
+        return Length::Type::Cm;
+    } else if (name.equals_ignoring_case("in"sv)) {
+        return Length::Type::In;
+    } else if (name.equals_ignoring_case("Q"sv)) {
+        return Length::Type::Q;
+    }
+
+    return {};
 }
 
 }
