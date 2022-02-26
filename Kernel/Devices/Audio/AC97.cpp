@@ -145,6 +145,10 @@ ErrorOr<void> AC97::set_pcm_output_sample_rate(u32 sample_rate)
 
     dbgln("AC97 @ {}: PCM front DAC rate set to {} Hz", pci_address(), m_sample_rate);
 
+    // Setting the sample rate stops a running DMA engine, so restart it
+    if (m_pcm_out_channel.dma_running())
+        m_pcm_out_channel.start_dma();
+
     return {};
 }
 
