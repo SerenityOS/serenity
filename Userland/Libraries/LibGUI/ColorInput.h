@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@ class ColorInput final : public TextEditor {
     C_OBJECT(ColorInput);
 
 public:
-    virtual ~ColorInput() override;
+    virtual ~ColorInput() override = default;
 
     bool has_alpha_channel() const { return m_color_has_alpha_channel; }
     void set_color_has_alpha_channel(bool has_alpha) { m_color_has_alpha_channel = has_alpha; }

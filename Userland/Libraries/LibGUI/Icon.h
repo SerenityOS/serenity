@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +18,7 @@ namespace GUI {
 class IconImpl : public RefCounted<IconImpl> {
 public:
     static NonnullRefPtr<IconImpl> create() { return adopt_ref(*new IconImpl); }
-    ~IconImpl() { }
+    ~IconImpl() = default;
 
     const Gfx::Bitmap* bitmap_for_size(int) const;
     void set_bitmap_for_size(int, RefPtr<Gfx::Bitmap>&&);
@@ -31,7 +32,7 @@ public:
     }
 
 private:
-    IconImpl() { }
+    IconImpl() = default;
     HashMap<int, RefPtr<Gfx::Bitmap>> m_bitmaps;
 };
 
@@ -42,7 +43,7 @@ public:
     explicit Icon(RefPtr<Gfx::Bitmap>&&, RefPtr<Gfx::Bitmap>&&);
     explicit Icon(const IconImpl&);
     Icon(const Icon&);
-    ~Icon() { }
+    ~Icon() = default;
 
     static Icon default_icon(StringView);
     static ErrorOr<Icon> try_create_default_icon(StringView);

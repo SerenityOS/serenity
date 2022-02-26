@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +24,7 @@ public:
 
 private:
     ColumnsView();
-    virtual ~ColumnsView() override;
+    virtual ~ColumnsView() override = default;
     void push_column(const ModelIndex& parent_index);
     void update_column_sizes();
 

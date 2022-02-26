@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,12 +9,14 @@
 #pragma once
 
 #include <LibGUI/AbstractView.h>
+#include <LibGUI/Button.h>
+#include <LibGUI/HeaderView.h>
 
 namespace GUI {
 
 class TableCellPaintingDelegate {
 public:
-    virtual ~TableCellPaintingDelegate() { }
+    virtual ~TableCellPaintingDelegate() = default;
 
     virtual bool should_paint(ModelIndex const&) { return true; }
     virtual void paint(Painter&, const Gfx::IntRect&, const Gfx::Palette&, const ModelIndex&) = 0;
@@ -82,7 +85,7 @@ public:
     virtual void model_did_update(unsigned flags) override;
 
 protected:
-    virtual ~AbstractTableView() override;
+    virtual ~AbstractTableView() override = default;
     AbstractTableView();
 
     virtual void mousedown_event(MouseEvent&) override;

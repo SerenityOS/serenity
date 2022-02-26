@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -83,10 +84,6 @@ AboutDialog::AboutDialog(StringView name, const Gfx::Bitmap* icon, Window* paren
     ok_button.on_click = [this](auto) {
         done(Dialog::ExecOK);
     };
-}
-
-AboutDialog::~AboutDialog()
-{
 }
 
 }

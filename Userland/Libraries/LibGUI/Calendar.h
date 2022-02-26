@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -73,7 +73,7 @@ public:
 
 private:
     Calendar(Core::DateTime date_time = Core::DateTime::now(), Mode mode = Month);
-    virtual ~Calendar() override;
+    virtual ~Calendar() override = default;
 
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;

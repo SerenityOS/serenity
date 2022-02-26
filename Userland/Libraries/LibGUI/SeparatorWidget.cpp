@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,10 +21,6 @@ SeparatorWidget::SeparatorWidget(Gfx::Orientation orientation)
         set_fixed_width(8);
     else
         set_fixed_height(8);
-}
-
-SeparatorWidget::~SeparatorWidget()
-{
 }
 
 void SeparatorWidget::paint_event(PaintEvent& event)

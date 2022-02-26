@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +24,7 @@ public:
         Cancelled,
     };
 
-    virtual ~DragOperation() override;
+    virtual ~DragOperation() override = default;
 
     void set_mime_data(RefPtr<Core::MimeData> mime_data) { m_mime_data = move(mime_data); }
     void set_text(const String& text);

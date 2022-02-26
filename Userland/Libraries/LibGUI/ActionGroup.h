@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,8 +15,8 @@ namespace GUI {
 
 class ActionGroup : public Weakable<ActionGroup> {
 public:
-    ActionGroup() { }
-    ~ActionGroup() { }
+    ActionGroup() = default;
+    ~ActionGroup() = default;
 
     void add_action(Action&);
     void remove_action(Action&);

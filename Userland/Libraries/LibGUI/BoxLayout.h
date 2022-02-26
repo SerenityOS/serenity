@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,7 @@ class BoxLayout : public Layout {
     C_OBJECT(BoxLayout);
 
 public:
-    virtual ~BoxLayout() override { }
+    virtual ~BoxLayout() override = default;
 
     Gfx::Orientation orientation() const { return m_orientation; }
 
@@ -41,7 +42,7 @@ private:
         : BoxLayout(Gfx::Orientation::Vertical)
     {
     }
-    virtual ~VerticalBoxLayout() override { }
+    virtual ~VerticalBoxLayout() override = default;
 };
 
 class HorizontalBoxLayout final : public BoxLayout {
@@ -52,7 +53,7 @@ private:
         : BoxLayout(Gfx::Orientation::Horizontal)
     {
     }
-    virtual ~HorizontalBoxLayout() override { }
+    virtual ~HorizontalBoxLayout() override = default;
 };
 
 }

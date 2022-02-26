@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,7 @@ public:
         Second
     };
 
-    virtual ~Splitter() override;
+    virtual ~Splitter() override = default;
 
     int first_resizee_minimum_size() { return m_first_resizee_minimum_size; }
     void set_first_resizee_minimum_size(int minimum_size) { m_first_resizee_minimum_size = minimum_size; }
@@ -84,7 +85,7 @@ private:
 class VerticalSplitter final : public Splitter {
     C_OBJECT(VerticalSplitter)
 public:
-    virtual ~VerticalSplitter() override { }
+    virtual ~VerticalSplitter() override = default;
 
 private:
     VerticalSplitter()
@@ -96,7 +97,7 @@ private:
 class HorizontalSplitter final : public Splitter {
     C_OBJECT(HorizontalSplitter)
 public:
-    virtual ~HorizontalSplitter() override { }
+    virtual ~HorizontalSplitter() override = default;
 
 private:
     HorizontalSplitter()

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ class Breadcrumbbar : public GUI::Widget {
     C_OBJECT(Breadcrumbbar);
 
 public:
-    virtual ~Breadcrumbbar() override;
+    virtual ~Breadcrumbbar() override = default;
 
     void clear_segments();
     void append_segment(String text, Gfx::Bitmap const* icon = nullptr, String data = {}, String tooltip = {});

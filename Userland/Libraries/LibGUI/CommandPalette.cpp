@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Jakob-Niklas See <git@nwex.de>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,7 +35,7 @@ AK_ENUM_BITWISE_OPERATORS(IconFlags);
 
 class ActionIconDelegate final : public GUI::TableCellPaintingDelegate {
 public:
-    virtual ~ActionIconDelegate() override { }
+    virtual ~ActionIconDelegate() override = default;
 
     bool should_paint(ModelIndex const& index) override
     {
@@ -76,7 +77,7 @@ public:
     {
     }
 
-    virtual ~ActionModel() override { }
+    virtual ~ActionModel() override = default;
 
     virtual int row_count(ModelIndex const& parent_index) const override
     {
@@ -216,10 +217,6 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
     };
 
     m_text_box->set_focus(true);
-}
-
-CommandPalette::~CommandPalette()
-{
 }
 
 void CommandPalette::collect_actions(GUI::Window& parent_window)

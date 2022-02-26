@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -83,8 +83,6 @@ public:
 private:
     Vector<AutocompleteProvider::Entry> m_suggestions;
 };
-
-AutocompleteBox::~AutocompleteBox() { }
 
 AutocompleteBox::AutocompleteBox(TextEditor& editor)
     : m_editor(editor)

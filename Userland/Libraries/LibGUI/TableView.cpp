@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Glenford Williams <gw_dev@outlook.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,10 +26,6 @@ TableView::TableView()
     set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
-}
-
-TableView::~TableView()
-{
 }
 
 void TableView::paint_event(PaintEvent& event)

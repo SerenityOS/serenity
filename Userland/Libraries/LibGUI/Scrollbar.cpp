@@ -88,10 +88,6 @@ Scrollbar::Scrollbar(Orientation orientation)
     };
 }
 
-Scrollbar::~Scrollbar()
-{
-}
-
 Gfx::IntRect Scrollbar::decrement_button_rect() const
 {
     return { 0, 0, button_width(), button_height() };

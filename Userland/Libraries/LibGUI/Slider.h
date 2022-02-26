@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,7 @@ public:
         Proportional,
     };
 
-    virtual ~Slider() override;
+    virtual ~Slider() override = default;
 
     void set_knob_size_mode(KnobSizeMode mode) { m_knob_size_mode = mode; }
     KnobSizeMode knob_size_mode() const { return m_knob_size_mode; }
@@ -64,7 +65,7 @@ class VerticalSlider final : public Slider {
     C_OBJECT(VerticalSlider);
 
 public:
-    virtual ~VerticalSlider() override { }
+    virtual ~VerticalSlider() override = default;
 
 private:
     VerticalSlider()
@@ -77,7 +78,7 @@ class HorizontalSlider final : public Slider {
     C_OBJECT(HorizontalSlider);
 
 public:
-    virtual ~HorizontalSlider() override { }
+    virtual ~HorizontalSlider() override = default;
 
 private:
     HorizontalSlider()

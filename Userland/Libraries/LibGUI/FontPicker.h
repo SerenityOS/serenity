@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,7 @@ class FontPicker final : public GUI::Dialog {
     C_OBJECT(FontPicker);
 
 public:
-    virtual ~FontPicker() override;
+    virtual ~FontPicker() override = default;
 
     RefPtr<Gfx::Font> font() const { return m_font; }
     void set_font(const Gfx::Font*);

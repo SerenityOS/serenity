@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Jesse Buhgaiar <jooster669@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,7 +35,7 @@ public:
         return adopt_ref(*new ItemListModel<T, Container>(data, row_count));
     }
 
-    virtual ~ItemListModel() override { }
+    virtual ~ItemListModel() override = default;
 
     virtual int row_count(ModelIndex const& index) const override
     {

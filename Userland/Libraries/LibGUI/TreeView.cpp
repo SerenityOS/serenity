@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -41,10 +42,6 @@ TreeView::TreeView()
     set_column_headers_visible(false);
     m_expand_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/serenity/treeview-expand.png").release_value_but_fixme_should_propagate_errors();
     m_collapse_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/serenity/treeview-collapse.png").release_value_but_fixme_should_propagate_errors();
-}
-
-TreeView::~TreeView()
-{
 }
 
 ModelIndex TreeView::index_at_event_position(const Gfx::IntPoint& a_position, bool& is_toggle) const

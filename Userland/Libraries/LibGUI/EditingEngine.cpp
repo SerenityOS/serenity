@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,10 +19,6 @@ constexpr bool is_vim_alphanumeric(u32 code_point)
 constexpr bool is_vim_punctuation(u32 code_point)
 {
     return is_ascii_punctuation(code_point) && code_point != '_';
-}
-
-EditingEngine::~EditingEngine()
-{
 }
 
 void EditingEngine::attach(TextEditor& editor)

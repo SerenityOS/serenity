@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +21,7 @@ public:
 
 private:
     explicit CommandPalette(GUI::Window& parent_window, ScreenPosition screen_position = CenterWithinParent);
-    virtual ~CommandPalette() override;
+    virtual ~CommandPalette() override = default;
 
     void collect_actions(GUI::Window& parent_window);
     void finish_with_index(GUI::ModelIndex const&);

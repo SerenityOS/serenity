@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +24,7 @@ public:
     static constexpr size_t default_screen_rect_count = 4;
 
     static Desktop& the();
-    Desktop();
+    Desktop() = default;
 
     void set_background_color(StringView background_color);
 

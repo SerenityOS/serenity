@@ -35,10 +35,6 @@ ColumnsView::ColumnsView()
     m_columns.append({ {}, 0 });
 }
 
-ColumnsView::~ColumnsView()
-{
-}
-
 void ColumnsView::select_all()
 {
     Vector<Column> columns_for_selection;

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,7 +41,7 @@ public:
 
     class Client {
     public:
-        virtual ~Client();
+        virtual ~Client() = default;
         virtual void document_did_append_line() = 0;
         virtual void document_did_insert_line(size_t) = 0;
         virtual void document_did_remove_line(size_t) = 0;
@@ -55,7 +56,7 @@ public:
     };
 
     static NonnullRefPtr<TextDocument> create(Client* client = nullptr);
-    virtual ~TextDocument();
+    virtual ~TextDocument() = default;
 
     size_t line_count() const { return m_lines.size(); }
     const TextDocumentLine& line(size_t line_index) const { return m_lines[line_index]; }
@@ -187,7 +188,7 @@ private:
 class TextDocumentUndoCommand : public Command {
 public:
     TextDocumentUndoCommand(TextDocument&);
-    virtual ~TextDocumentUndoCommand();
+    virtual ~TextDocumentUndoCommand() = default;
     virtual void perform_formatting(const TextDocument::Client&) { }
 
     void execute_from(const TextDocument::Client& client)

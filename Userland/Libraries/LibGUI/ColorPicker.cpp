@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,7 +23,7 @@ class ColorButton : public AbstractButton {
     C_OBJECT(ColorButton);
 
 public:
-    virtual ~ColorButton() override;
+    virtual ~ColorButton() override = default;
 
     void set_selected(bool selected);
     Color color() const { return m_color; }
@@ -146,7 +147,7 @@ public:
         return m_col;
     }
 
-    virtual ~ColorSelectOverlay() override { }
+    virtual ~ColorSelectOverlay() override = default;
     Function<void(Color)> on_color_changed;
 
 private:
@@ -191,10 +192,6 @@ ColorPicker::ColorPicker(Color color, Window* parent_window, String title)
     resize(458, 326);
 
     build_ui();
-}
-
-ColorPicker::~ColorPicker()
-{
 }
 
 void ColorPicker::set_color_has_alpha_channel(bool has_alpha)
@@ -456,10 +453,6 @@ ColorButton::ColorButton(ColorPicker& picker, Color color)
     : m_picker(picker)
 {
     m_color = color;
-}
-
-ColorButton::~ColorButton()
-{
 }
 
 void ColorButton::set_selected(bool selected)

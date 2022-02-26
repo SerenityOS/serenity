@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,7 @@ namespace GUI {
 class Statusbar : public Widget {
     C_OBJECT(Statusbar)
 public:
-    virtual ~Statusbar() override;
+    virtual ~Statusbar() override = default;
 
     String text(size_t index = 0) const;
     void set_text(String);

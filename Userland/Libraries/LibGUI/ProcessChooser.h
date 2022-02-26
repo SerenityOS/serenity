@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,7 @@ class ProcessChooser final : public GUI::Dialog {
     C_OBJECT(ProcessChooser);
 
 public:
-    virtual ~ProcessChooser() override;
+    virtual ~ProcessChooser() override = default;
 
     pid_t pid() const { return m_pid; }
 

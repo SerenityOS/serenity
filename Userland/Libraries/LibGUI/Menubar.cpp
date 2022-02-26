@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,14 +9,6 @@
 #include <LibGUI/Menubar.h>
 
 namespace GUI {
-
-Menubar::Menubar()
-{
-}
-
-Menubar::~Menubar()
-{
-}
 
 ErrorOr<NonnullRefPtr<Menu>> Menubar::try_add_menu(Badge<Window>, String name)
 {

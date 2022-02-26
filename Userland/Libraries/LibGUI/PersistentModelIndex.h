@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,7 +31,7 @@ class PersistentHandle : public Weakable<PersistentHandle> {
 
 class PersistentModelIndex {
 public:
-    PersistentModelIndex() { }
+    PersistentModelIndex() = default;
     PersistentModelIndex(ModelIndex const&);
     PersistentModelIndex(PersistentModelIndex const&) = default;
     PersistentModelIndex(PersistentModelIndex&&) = default;

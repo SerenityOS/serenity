@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ class OpacitySlider : public AbstractSlider {
     C_OBJECT(OpacitySlider);
 
 public:
-    virtual ~OpacitySlider() override;
+    virtual ~OpacitySlider() override = default;
 
 protected:
     virtual void paint_event(PaintEvent&) override;

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -31,7 +31,7 @@ public:
 
     static ErrorOr<NonnullRefPtr<SettingsWindow>> create(String title, ShowDefaultsButton = ShowDefaultsButton::No);
 
-    virtual ~SettingsWindow() override;
+    virtual ~SettingsWindow() override = default;
 
     template<class T, class... Args>
     ErrorOr<NonnullRefPtr<T>> add_tab(String title, Args&&... args)
@@ -42,7 +42,7 @@ public:
     }
 
 private:
-    SettingsWindow();
+    SettingsWindow() = default;
 
     RefPtr<GUI::TabWidget> m_tab_widget;
     NonnullRefPtrVector<Tab> m_tabs;

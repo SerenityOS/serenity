@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,10 +29,6 @@ HeaderView::HeaderView(AbstractTableView& table_view, Gfx::Orientation orientati
     } else {
         set_fixed_width(40);
     }
-}
-
-HeaderView::~HeaderView()
-{
 }
 
 void HeaderView::set_section_size(int section, int size)

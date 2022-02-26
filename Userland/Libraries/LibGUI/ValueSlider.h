@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Marcus Nilsson <brainbomb@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,7 @@ public:
         Thin,
     };
 
-    virtual ~ValueSlider() override;
+    virtual ~ValueSlider() override = default;
 
     void set_suffix(String suffix) { m_suffix = move(suffix); }
     void set_knob_style(KnobStyle knobstyle) { m_knob_style = knobstyle; }

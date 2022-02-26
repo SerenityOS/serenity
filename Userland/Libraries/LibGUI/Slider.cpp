@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,10 +23,6 @@ Slider::Slider(Orientation orientation)
     REGISTER_ENUM_PROPERTY("knob_size_mode", knob_size_mode, set_knob_size_mode, KnobSizeMode,
         { KnobSizeMode::Fixed, "Fixed" },
         { KnobSizeMode::Proportional, "Proportional" });
-}
-
-Slider::~Slider()
-{
 }
 
 void Slider::paint_event(PaintEvent& event)

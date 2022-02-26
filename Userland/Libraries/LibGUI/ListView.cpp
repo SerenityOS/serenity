@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,9 +23,7 @@ ListView::ListView()
     set_searchable(true);
 }
 
-ListView::~ListView()
-{
-}
+ListView::~ListView() = default;
 
 void ListView::select_all()
 {

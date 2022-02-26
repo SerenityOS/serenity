@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
@@ -74,14 +74,6 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(String title, Show
     };
 
     return window;
-}
-
-SettingsWindow::SettingsWindow()
-{
-}
-
-SettingsWindow::~SettingsWindow()
-{
 }
 
 }
