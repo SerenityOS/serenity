@@ -40,7 +40,7 @@ class Reader {
 
 public:
     static OwnPtr<Reader> create(StringView);
-    ~Reader();
+    ~Reader() = default;
 
     template<typename Func>
     void for_each_memory_region_info(Func func) const;

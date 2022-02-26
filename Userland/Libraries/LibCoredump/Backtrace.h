@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,7 +39,7 @@ public:
     };
 
     Backtrace(const Reader&, const ELF::Core::ThreadInfo&, Function<void(size_t, size_t)> on_progress = {});
-    ~Backtrace();
+    ~Backtrace() = default;
 
     ELF::Core::ThreadInfo const& thread_info() const { return m_thread_info; }
     Vector<Entry> const& entries() const { return m_entries; }
