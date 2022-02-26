@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,7 @@ class Label : public Frame {
     C_OBJECT(Label);
 
 public:
-    virtual ~Label() override;
+    virtual ~Label() override = default;
 
     String text() const { return m_text; }
     void set_text(String);

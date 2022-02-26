@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ namespace GUI {
 class TreeView : public AbstractTableView {
     C_OBJECT(TreeView)
 public:
-    virtual ~TreeView() override;
+    virtual ~TreeView() override = default;
 
     virtual void scroll_into_view(const ModelIndex&, bool scroll_horizontally, bool scroll_vertically) override;
 

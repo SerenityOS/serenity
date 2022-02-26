@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,7 +13,7 @@ namespace GUI {
 
 class TextRange {
 public:
-    TextRange() { }
+    TextRange() = default;
     TextRange(const TextPosition& start, const TextPosition& end)
         : m_start(start)
         , m_end(end)

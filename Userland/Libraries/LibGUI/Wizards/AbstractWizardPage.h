@@ -15,7 +15,7 @@ class AbstractWizardPage : public Widget {
     C_OBJECT_ABSTRACT(AbstractWizardPage);
 
 public:
-    virtual ~AbstractWizardPage() override;
+    virtual ~AbstractWizardPage() override = default;
 
     Function<RefPtr<AbstractWizardPage>()> on_next_page;
     virtual RefPtr<AbstractWizardPage> next_page();
@@ -31,7 +31,7 @@ public:
     void set_is_final_page(bool val) { m_is_final_page = val; }
 
 protected:
-    AbstractWizardPage();
+    AbstractWizardPage() = default;
 
 private:
     bool m_is_final_page { false };

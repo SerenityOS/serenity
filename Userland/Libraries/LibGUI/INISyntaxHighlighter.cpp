@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -74,10 +75,6 @@ Vector<IniSyntaxHighlighter::MatchingTokenPair> IniSyntaxHighlighter::matching_t
 bool IniSyntaxHighlighter::token_types_equal(u64 token1, u64 token2) const
 {
     return static_cast<GUI::IniToken::Type>(token1) == static_cast<GUI::IniToken::Type>(token2);
-}
-
-IniSyntaxHighlighter::~IniSyntaxHighlighter()
-{
 }
 
 }

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nick Vella <nick@nxk.io>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,14 +8,6 @@
 #include <LibGUI/Wizards/AbstractWizardPage.h>
 
 namespace GUI {
-
-AbstractWizardPage::AbstractWizardPage()
-{
-}
-
-AbstractWizardPage::~AbstractWizardPage()
-{
-}
 
 RefPtr<AbstractWizardPage> AbstractWizardPage::next_page()
 {

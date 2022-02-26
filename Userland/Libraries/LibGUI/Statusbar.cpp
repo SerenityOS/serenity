@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,10 +29,6 @@ Statusbar::Statusbar(int count)
 
     REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_INT_PROPERTY("segment_count", segment_count, set_segment_count);
-}
-
-Statusbar::~Statusbar()
-{
 }
 
 NonnullRefPtr<Statusbar::Segment> Statusbar::create_segment()

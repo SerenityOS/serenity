@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +20,7 @@ class AutocompleteProvider {
     AK_MAKE_NONMOVABLE(AutocompleteProvider);
 
 public:
-    virtual ~AutocompleteProvider() { }
+    virtual ~AutocompleteProvider() = default;
 
     enum class Language {
         Unspecified,
@@ -103,7 +103,7 @@ public:
     void detach() { m_editor.clear(); }
 
 protected:
-    AutocompleteProvider() { }
+    AutocompleteProvider() = default;
 
     WeakPtr<TextEditor> m_editor;
 };
@@ -111,7 +111,7 @@ protected:
 class AutocompleteBox final {
 public:
     explicit AutocompleteBox(TextEditor&);
-    ~AutocompleteBox();
+    ~AutocompleteBox() = default;
 
     void update_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions);
     bool is_visible() const;

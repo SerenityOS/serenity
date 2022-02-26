@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -102,10 +103,6 @@ void ProcessChooser::set_pid_from_index_and_close(const ModelIndex& index)
 {
     m_pid = index.data(GUI::ModelRole::Custom).as_i32();
     done(ExecOK);
-}
-
-ProcessChooser::~ProcessChooser()
-{
 }
 
 }

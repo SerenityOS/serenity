@@ -15,6 +15,7 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibCore/Object.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
 #include <LibGfx/Forward.h>

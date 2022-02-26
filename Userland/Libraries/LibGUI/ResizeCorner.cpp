@@ -61,10 +61,6 @@ ResizeCorner::ResizeCorner()
     set_fixed_size(16, 18);
 }
 
-ResizeCorner::~ResizeCorner()
-{
-}
-
 void ResizeCorner::paint_event(PaintEvent& event)
 {
     Painter painter(*this);

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,10 +39,6 @@ TabWidget::TabWidget()
             }
             return false;
         });
-}
-
-TabWidget::~TabWidget()
-{
 }
 
 ErrorOr<void> TabWidget::try_add_widget(String title, Widget& widget)

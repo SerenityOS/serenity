@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Brian Gianforcaro <bgianf@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,8 +13,8 @@ namespace GUI {
 
 class GitCommitSyntaxHighlighter final : public Syntax::Highlighter {
 public:
-    GitCommitSyntaxHighlighter() { }
-    virtual ~GitCommitSyntaxHighlighter() override;
+    GitCommitSyntaxHighlighter() = default;
+    virtual ~GitCommitSyntaxHighlighter() override = default;
 
     virtual Syntax::Language language() const override { return Syntax::Language::GitCommit; }
     virtual void rehighlight(Palette const&) override;

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nick Vella <nick@nxk.io>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -76,10 +77,6 @@ WizardDialog::WizardDialog(Window* parent_window)
     };
 
     update_navigation();
-}
-
-WizardDialog::~WizardDialog()
-{
 }
 
 void WizardDialog::push_page(AbstractWizardPage& page)

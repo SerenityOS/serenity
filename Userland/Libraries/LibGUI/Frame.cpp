@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,10 +31,6 @@ Frame::Frame()
         { Gfx::FrameShape::Container, "Container" },
         { Gfx::FrameShape::Panel, "Panel" },
         { Gfx::FrameShape::Window, "Window" });
-}
-
-Frame::~Frame()
-{
 }
 
 void Frame::set_frame_thickness(int thickness)

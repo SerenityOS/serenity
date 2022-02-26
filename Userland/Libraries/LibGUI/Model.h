@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,7 +34,7 @@ enum class SortOrder {
 
 class ModelClient {
 public:
-    virtual ~ModelClient() { }
+    virtual ~ModelClient() = default;
 
     virtual void model_did_update(unsigned flags) = 0;
 

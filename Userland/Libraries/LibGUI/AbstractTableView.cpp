@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,10 +33,6 @@ AbstractTableView::AbstractTableView()
     m_row_header->move_to_back();
     m_row_header->set_visible(false);
     set_should_hide_unnecessary_scrollbars(true);
-}
-
-AbstractTableView::~AbstractTableView()
-{
 }
 
 void AbstractTableView::select_all()

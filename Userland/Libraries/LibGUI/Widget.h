@@ -12,6 +12,7 @@
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibCore/Object.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/FocusPolicy.h>
 #include <LibGUI/Forward.h>

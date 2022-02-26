@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,10 +20,6 @@ Tray::Tray()
     set_fill_with_background_color(true);
     set_background_role(Gfx::ColorRole::Tray);
     set_focus_policy(GUI::FocusPolicy::TabFocus);
-}
-
-Tray::~Tray()
-{
 }
 
 Gfx::IntRect Tray::Item::rect(Tray const& tray) const

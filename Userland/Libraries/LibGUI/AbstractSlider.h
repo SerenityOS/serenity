@@ -14,7 +14,7 @@ class AbstractSlider : public Widget {
     C_OBJECT_ABSTRACT(AbstractSlider);
 
 public:
-    virtual ~AbstractSlider() override;
+    virtual ~AbstractSlider() override = default;
 
     void set_orientation(Orientation value);
     Orientation orientation() const { return m_orientation; }

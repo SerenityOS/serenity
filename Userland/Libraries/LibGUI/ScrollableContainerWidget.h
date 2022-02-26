@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ class ScrollableContainerWidget : public GUI::AbstractScrollableWidget {
     C_OBJECT(ScrollableContainerWidget);
 
 public:
-    virtual ~ScrollableContainerWidget();
+    virtual ~ScrollableContainerWidget() = default;
 
     void set_widget(GUI::Widget*);
     GUI::Widget* widget() { return m_widget; }

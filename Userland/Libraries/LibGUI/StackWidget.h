@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,7 @@ namespace GUI {
 class StackWidget : public Widget {
     C_OBJECT(StackWidget)
 public:
-    virtual ~StackWidget() override;
+    virtual ~StackWidget() override = default;
 
     Widget* active_widget() { return m_active_widget.ptr(); }
     const Widget* active_widget() const { return m_active_widget.ptr(); }
@@ -22,7 +23,7 @@ public:
     Function<void(Widget*)> on_active_widget_change;
 
 protected:
-    StackWidget();
+    StackWidget() = default;
     virtual void child_event(Core::ChildEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
 

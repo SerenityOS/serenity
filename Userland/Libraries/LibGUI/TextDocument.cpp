@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,10 +34,6 @@ TextDocument::TextDocument(Client* client)
                 client->document_did_update_undo_stack();
         }
     };
-}
-
-TextDocument::~TextDocument()
-{
 }
 
 bool TextDocument::set_text(StringView text, AllowCallback allow_callback)
@@ -287,10 +284,6 @@ void TextDocument::remove_all_lines()
         for (auto* client : m_clients)
             client->document_did_remove_all_lines();
     }
-}
-
-TextDocument::Client::~Client()
-{
 }
 
 void TextDocument::register_client(Client& client)
@@ -750,10 +743,6 @@ void TextDocument::add_to_undo_stack(NonnullOwnPtr<TextDocumentUndoCommand> undo
 
 TextDocumentUndoCommand::TextDocumentUndoCommand(TextDocument& document)
     : m_document(document)
-{
-}
-
-TextDocumentUndoCommand::~TextDocumentUndoCommand()
 {
 }
 

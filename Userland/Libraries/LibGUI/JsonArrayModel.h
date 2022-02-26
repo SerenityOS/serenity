@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,7 +45,7 @@ public:
         return adopt_ref(*new JsonArrayModel(json_path, move(fields)));
     }
 
-    virtual ~JsonArrayModel() override { }
+    virtual ~JsonArrayModel() override = default;
 
     virtual int row_count(const ModelIndex& = ModelIndex()) const override { return m_array.size(); }
     virtual int column_count(const ModelIndex& = ModelIndex()) const override { return m_fields.size(); }

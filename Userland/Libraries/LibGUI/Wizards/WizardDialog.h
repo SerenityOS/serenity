@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Nick Vella <nick@nxk.io>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@ namespace GUI {
 class WizardDialog : public Dialog {
     C_OBJECT(WizardDialog)
 public:
-    virtual ~WizardDialog() override;
+    virtual ~WizardDialog() override = default;
 
     static void show(AbstractWizardPage& first_page, Window* parent_window = nullptr)
     {

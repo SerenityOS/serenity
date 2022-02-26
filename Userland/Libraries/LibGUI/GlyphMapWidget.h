@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +18,7 @@ namespace GUI {
 class GlyphMapWidget final : public AbstractScrollableWidget {
     C_OBJECT(GlyphMapWidget)
 public:
-    virtual ~GlyphMapWidget() override;
+    virtual ~GlyphMapWidget() override = default;
 
     class Selection {
     public:
