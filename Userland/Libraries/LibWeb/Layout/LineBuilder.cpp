@@ -123,15 +123,26 @@ void LineBuilder::update_last_line()
     //       We use the bottommost value of all the font baselines on the line and all the inline-block heights.
     // FIXME: Support all the various CSS baseline properties, etc.
     float max_height = max(m_max_height_on_current_line, m_context.containing_block().line_height());
+    for (auto const& fragment : line_box.fragments()) {
+        if (auto length_percentage = fragment.layout_node().computed_values().vertical_align().get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length()) {
+            max_height = max(max_height, fragment.border_box_height() + length_percentage->length().to_px(fragment.layout_node()));
+        }
+    }
+
     float line_box_baseline = 0;
     for (auto& fragment : line_box.fragments()) {
+        float extra_height_from_vertical_align = 0;
+        if (auto length_percentage = fragment.layout_node().computed_values().vertical_align().get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length()) {
+            extra_height_from_vertical_align = length_percentage->length().to_px(fragment.layout_node());
+        }
         float fragment_baseline;
         if (fragment.layout_node().is_box()) {
             fragment_baseline = m_formatting_state.get(static_cast<Box const&>(fragment.layout_node())).border_box_height();
         } else {
             float font_baseline = fragment.layout_node().font().baseline();
-            fragment_baseline = (max_height / 2.0f) + (font_baseline / 2.0f);
+            fragment_baseline = max_height + (font_baseline / 2.0f);
         }
+        fragment_baseline += extra_height_from_vertical_align;
         line_box_baseline = max(line_box_baseline, fragment_baseline);
     }
 
@@ -143,10 +154,17 @@ void LineBuilder::update_last_line()
     for (size_t i = 0; i < line_box.fragments().size(); ++i) {
         auto& fragment = line_box.fragments()[i];
 
-        // Vertically align everyone's bottom to the baseline.
-        // FIXME: Support other kinds of vertical alignment.
         float new_fragment_x = roundf(x_offset + fragment.offset().x());
-        float new_fragment_y = m_current_y + (line_box_baseline - fragment.height());
+        float new_fragment_y = 0;
+
+        if (auto length_percentage = fragment.layout_node().computed_values().vertical_align().get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length()) {
+            new_fragment_y = m_current_y + (line_box_baseline - (fragment.border_box_bottom() + length_percentage->length().to_px(fragment.layout_node())));
+        } else {
+            // Vertically align everyone's bottom to the baseline.
+            // FIXME: Support other alignment values.
+            new_fragment_y = m_current_y + (line_box_baseline - fragment.border_box_height());
+        }
+
         last_fragment_x_adjustment = new_fragment_x - fragment.offset().x();
         fragment.set_offset({ new_fragment_x, new_fragment_y });
 
