@@ -42,7 +42,7 @@
 #include <LibGfx/TextDirection.h>
 #include <LibUnicode/CharacterTypes.h>
 
-static constexpr int s_pangram_count = 8;
+static constexpr int s_pangram_count = 10;
 static char const* pangrams[s_pangram_count] = {
     "quick fox jumps nightly above wizard",
     "five quacking zephyrs jolt my wax bed",
@@ -51,7 +51,9 @@ static char const* pangrams[s_pangram_count] = {
     "waxy and quivering jocks fumble the pizza",
     "~#:[@_1%]*{$2.3}/4^(5'6\")-&|7+8!=<9,0\\>?;",
     "byxfjärmat föl gick på duvshowen",
-    "         "
+    "         ",
+    "float Fox.quick(h){ is_brown && it_jumps_over(doges.lazy) }",
+    "<fox color=\"brown\" speed=\"quick\" jumps=\"over\">lazy dog</fox>",
 };
 
 static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
