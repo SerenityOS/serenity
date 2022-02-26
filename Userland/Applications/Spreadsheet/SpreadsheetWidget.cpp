@@ -140,6 +140,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
                 return;
 
             save(save_path.value());
+            update_window_title();
         } else {
             save(current_filename());
         }
@@ -152,9 +153,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
             return;
 
         save(save_path.value());
-
-        if (!current_filename().is_empty())
-            set_filename(current_filename());
+        update_window_title();
     });
 
     m_quit_action = GUI::CommonActions::make_quit_action([&](auto&) {
@@ -457,6 +456,7 @@ void SpreadsheetWidget::load_file(Core::File& file)
     }
 
     setup_tabs(m_workbook->sheets());
+    update_window_title();
 }
 
 bool SpreadsheetWidget::request_close()
@@ -473,6 +473,7 @@ bool SpreadsheetWidget::request_close()
                 return false;
 
             save(save_path.value());
+            update_window_title();
         } else {
             save(current_filename());
         }
@@ -506,16 +507,16 @@ void SpreadsheetWidget::add_sheet(NonnullRefPtr<Sheet>&& sheet)
     setup_tabs(new_sheets);
 }
 
-void SpreadsheetWidget::set_filename(const String& filename)
+void SpreadsheetWidget::update_window_title()
 {
-    if (m_workbook->set_filename(filename)) {
-        StringBuilder builder;
-        builder.append("Spreadsheet - ");
+    StringBuilder builder;
+    if (current_filename().is_empty())
+        builder.append("Untitled");
+    else
         builder.append(current_filename());
+    builder.append("[*] - Spreadsheet");
 
-        window()->set_title(builder.string_view());
-        window()->update();
-    }
+    window()->set_title(builder.to_string());
 }
 
 void SpreadsheetWidget::clipboard_action(bool is_cut)
