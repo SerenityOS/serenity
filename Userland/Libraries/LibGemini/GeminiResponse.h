@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +13,7 @@ namespace Gemini {
 
 class GeminiResponse : public Core::NetworkResponse {
 public:
-    virtual ~GeminiResponse() override;
+    virtual ~GeminiResponse() override = default;
     static NonnullRefPtr<GeminiResponse> create(int status, String meta)
     {
         return adopt_ref(*new GeminiResponse(status, meta));
