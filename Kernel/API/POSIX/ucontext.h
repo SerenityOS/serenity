@@ -54,6 +54,7 @@ typedef struct __ucontext {
 #define SI_TIMER 0x40000002
 #define SI_ASYNCIO 0x40000003
 #define SI_MESGQ 0x40000004
+#define SI_NOINFO 0x40000042
 
 #ifdef __cplusplus
 }

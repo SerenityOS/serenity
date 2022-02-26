@@ -1220,6 +1220,7 @@ private:
     VirtualAddress m_thread_specific_data;
     Optional<Memory::VirtualRange> m_thread_specific_range;
     Array<Optional<u32>, NSIG> m_signal_action_masks;
+    Array<ProcessID, NSIG> m_signal_senders;
     Blocker* m_blocker { nullptr };
     Kernel::Mutex* m_blocking_mutex { nullptr };
     u32 m_lock_requested_count { 0 };
