@@ -237,6 +237,9 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     toolbar.add_action(*m_paste_action);
     toolbar.add_action(*m_undo_action);
     toolbar.add_action(*m_redo_action);
+
+    m_cut_action->set_enabled(false);
+    m_copy_action->set_enabled(false);
 }
 
 void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
@@ -278,6 +281,8 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                 m_cell_value_editor->on_focusout = nullptr;
                 m_cell_value_editor->set_text("");
                 m_cell_value_editor->set_enabled(false);
+                m_cut_action->set_enabled(false);
+                m_copy_action->set_enabled(false);
                 return;
             }
 
@@ -299,6 +304,8 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                     update();
                 };
                 m_cell_value_editor->set_enabled(true);
+                m_cut_action->set_enabled(true);
+                m_copy_action->set_enabled(true);
                 static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&cell);
                 return;
             }
