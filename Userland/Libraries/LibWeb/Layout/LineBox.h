@@ -27,7 +27,6 @@ public:
 
     bool is_empty_or_ends_in_whitespace() const;
     bool is_empty() const { return m_fragments.is_empty(); }
-    bool ends_with_forced_line_break() const;
 
 private:
     friend class BlockContainer;

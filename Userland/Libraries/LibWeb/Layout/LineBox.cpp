@@ -69,9 +69,4 @@ bool LineBox::is_empty_or_ends_in_whitespace() const
     return m_fragments.last().ends_in_whitespace();
 }
 
-bool LineBox::ends_with_forced_line_break() const
-{
-    return is<BreakNode>(m_fragments.last().layout_node());
-}
-
 }
