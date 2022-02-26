@@ -68,8 +68,9 @@ CharacterSearchWidget::CharacterSearchWidget()
     m_results_table->horizontal_scrollbar().set_visible(false);
     m_results_table->set_column_headers_visible(false);
     m_results_table->set_model(adopt_ref(*new CharacterSearchModel()));
-    m_results_table->on_activation = [&](GUI::ModelIndex const& index) {
+    m_results_table->on_selection_change = [&] {
         auto& model = static_cast<CharacterSearchModel&>(*m_results_table->model());
+        auto index = m_results_table->selection().first();
         auto code_point = model.data(index, GUI::ModelRole::Custom).as_u32();
         if (on_character_selected)
             on_character_selected(code_point);
