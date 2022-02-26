@@ -1405,4 +1405,49 @@ NonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length const& length)
     return adopt_ref(*new LengthStyleValue(length));
 }
 
+static Optional<CSS::Length> absolutized_length(CSS::Length const& length, Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size)
+{
+    if (length.is_px())
+        return {};
+    if (length.is_absolute() || length.is_relative()) {
+        auto px = length.to_px(viewport_rect, font_metrics, font_size, root_font_size);
+        return CSS::Length::make_px(px);
+    }
+    return {};
+}
+
+NonnullRefPtr<StyleValue> StyleValue::absolutized(Gfx::IntRect const&, Gfx::FontMetrics const&, float, float) const
+{
+    return *this;
+}
+
+NonnullRefPtr<StyleValue> LengthStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
+{
+    if (auto length = absolutized_length(m_length, viewport_rect, font_metrics, font_size, root_font_size); length.has_value())
+        return LengthStyleValue::create(length.release_value());
+    return *this;
+}
+
+NonnullRefPtr<StyleValue> BoxShadowStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
+{
+    auto absolutized_offset_x = absolutized_length(m_offset_x, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_offset_x);
+    auto absolutized_offset_y = absolutized_length(m_offset_y, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_offset_y);
+    auto absolutized_blur_radius = absolutized_length(m_blur_radius, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_blur_radius);
+    auto absolutized_spread_distance = absolutized_length(m_spread_distance, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_spread_distance);
+    return BoxShadowStyleValue::create(m_color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_placement);
+}
+
+NonnullRefPtr<StyleValue> BorderRadiusStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
+{
+    if (m_horizontal_radius.is_percentage() && m_vertical_radius.is_percentage())
+        return *this;
+    auto absolutized_horizontal_radius = m_horizontal_radius;
+    auto absolutized_vertical_radius = m_vertical_radius;
+    if (!m_horizontal_radius.is_percentage())
+        absolutized_horizontal_radius = absolutized_length(m_horizontal_radius.length(), viewport_rect, font_metrics, font_size, root_font_size).value_or(m_horizontal_radius.length());
+    if (!m_vertical_radius.is_percentage())
+        absolutized_vertical_radius = absolutized_length(m_vertical_radius.length(), viewport_rect, font_metrics, font_size, root_font_size).value_or(m_vertical_radius.length());
+    return BorderRadiusStyleValue::create(absolutized_horizontal_radius, absolutized_vertical_radius);
+}
+
 }

@@ -444,6 +444,8 @@ public:
     virtual bool has_number() const { return false; }
     virtual bool has_integer() const { return false; }
 
+    virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const;
+
     virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
     virtual CSS::ValueID to_identifier() const { return ValueID::Invalid; }
     virtual Length to_length() const { VERIFY_NOT_REACHED(); }
@@ -460,8 +462,6 @@ public:
             return false;
         return to_string() == other.to_string();
     }
-
-    virtual void visit_lengths(Function<void(CSS::Length&)>) { }
 
 protected:
     explicit StyleValue(Type);
@@ -669,19 +669,7 @@ private:
         m_is_elliptical = (m_horizontal_radius != m_vertical_radius);
     }
 
-    virtual void visit_lengths(Function<void(CSS::Length&)> visitor) override
-    {
-        if (!m_horizontal_radius.is_percentage()) {
-            Length temp = m_horizontal_radius.length();
-            visitor(temp);
-            m_horizontal_radius = move(temp);
-        }
-        if (!m_vertical_radius.is_percentage()) {
-            Length temp = m_vertical_radius.length();
-            visitor(temp);
-            m_vertical_radius = move(temp);
-        }
-    }
+    virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const override;
 
     bool m_is_elliptical;
     LengthPercentage m_horizontal_radius;
@@ -718,13 +706,7 @@ private:
     {
     }
 
-    virtual void visit_lengths(Function<void(CSS::Length&)> visitor) override
-    {
-        visitor(m_offset_x);
-        visitor(m_offset_y);
-        visitor(m_blur_radius);
-        visitor(m_spread_distance);
-    }
+    virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const override;
 
     Color m_color;
     Length m_offset_x;
@@ -1235,6 +1217,7 @@ public:
     virtual String to_string() const override { return m_length.to_string(); }
     virtual Length to_length() const override { return m_length; }
     virtual ValueID to_identifier() const override { return has_auto() ? ValueID::Auto : ValueID::Invalid; }
+    virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const override;
 
     virtual bool equals(StyleValue const& other) const override
     {
@@ -1248,11 +1231,6 @@ private:
         : StyleValue(Type::Length)
         , m_length(length)
     {
-    }
-
-    virtual void visit_lengths(Function<void(CSS::Length&)> visitor) override
-    {
-        visitor(m_length);
     }
 
     Length m_length;
