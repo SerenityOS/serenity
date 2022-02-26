@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,14 +9,6 @@
 #include <LibGemini/GeminiRequest.h>
 
 namespace Gemini {
-
-GeminiRequest::GeminiRequest()
-{
-}
-
-GeminiRequest::~GeminiRequest()
-{
-}
 
 ByteBuffer GeminiRequest::to_raw_request() const
 {

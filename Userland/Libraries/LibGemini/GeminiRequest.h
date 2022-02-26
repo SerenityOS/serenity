@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,8 +15,8 @@ namespace Gemini {
 
 class GeminiRequest {
 public:
-    GeminiRequest();
-    ~GeminiRequest();
+    GeminiRequest() = default;
+    ~GeminiRequest() = default;
 
     const URL& url() const { return m_url; }
     void set_url(const URL& url) { m_url = url; }
