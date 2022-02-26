@@ -135,7 +135,7 @@ private:
     private:
         IOAddress m_channel_base;
         AC97& m_device;
-        bool m_dma_running = false;
+        bool m_dma_running { false };
         StringView m_name;
     };
 
@@ -160,17 +160,17 @@ private:
     virtual ErrorOr<u32> get_pcm_output_sample_rate(size_t channel_index) override;
 
     OwnPtr<Memory::Region> m_buffer_descriptor_list;
-    u8 m_buffer_descriptor_list_index = 0;
-    bool m_double_rate_pcm_enabled = false;
+    u8 m_buffer_descriptor_list_index { 0 };
+    bool m_double_rate_pcm_enabled { false };
     IOAddress m_io_mixer_base;
     IOAddress m_io_bus_base;
     WaitQueue m_irq_queue;
     OwnPtr<Memory::Region> m_output_buffer;
-    u8 m_output_buffer_page_count = 4;
-    u8 m_output_buffer_page_index = 0;
+    u8 m_output_buffer_page_count { 4 };
+    u8 m_output_buffer_page_index { 0 };
     AC97Channel m_pcm_out_channel;
-    u32 m_sample_rate = 0;
-    bool m_variable_rate_pcm_supported = false;
+    u32 m_sample_rate { 0 };
+    bool m_variable_rate_pcm_supported { false };
     RefPtr<AudioChannel> m_audio_channel;
 };
 

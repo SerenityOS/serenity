@@ -61,11 +61,10 @@ bool AC97::handle_irq(RegisterState const&)
     pcm_out_status_register.out(pcm_out_status);
 
     // Stop the DMA engine if we're through with the buffer and no one is waiting
-    if (is_dma_halted && m_irq_queue.is_empty()) {
+    if (is_dma_halted && m_irq_queue.is_empty())
         reset_pcm_out();
-    } else {
+    else
         m_irq_queue.wake_all();
-    }
     return true;
 }
 
@@ -187,9 +186,9 @@ ErrorOr<size_t> AC97::write(size_t channel_index, UserOrKernelBuffer const& data
     if (channel_index != 0)
         return Error::from_errno(ENODEV);
 
-    if (!m_output_buffer) {
+    if (!m_output_buffer)
         m_output_buffer = TRY(MM.allocate_dma_buffer_pages(m_output_buffer_page_count * PAGE_SIZE, "AC97 Output buffer"sv, Memory::Region::Access::Write));
-    }
+
     if (!m_buffer_descriptor_list) {
         size_t buffer_descriptor_list_size = buffer_descriptor_list_max_entries * sizeof(BufferDescriptorListEntry);
         buffer_descriptor_list_size = TRY(Memory::page_round_up(buffer_descriptor_list_size));
@@ -236,9 +235,8 @@ ErrorOr<void> AC97::write_single_buffer(UserOrKernelBuffer const& data, size_t o
     // Copy data from userspace into one of our buffers
     TRY(data.read(m_output_buffer->vaddr_from_page_index(m_output_buffer_page_index).as_ptr(), offset, length));
 
-    if (!m_pcm_out_channel.dma_running()) {
+    if (!m_pcm_out_channel.dma_running())
         reset_pcm_out();
-    }
 
     // Write the next entry to the buffer descriptor list
     u16 number_of_samples = length / sizeof(u16);
@@ -250,9 +248,8 @@ ErrorOr<void> AC97::write_single_buffer(UserOrKernelBuffer const& data, size_t o
     auto buffer_address = static_cast<u32>(m_buffer_descriptor_list->physical_page(0)->paddr().get());
     m_pcm_out_channel.set_last_valid_index(buffer_address, m_buffer_descriptor_list_index);
 
-    if (!m_pcm_out_channel.dma_running()) {
+    if (!m_pcm_out_channel.dma_running())
         m_pcm_out_channel.start_dma();
-    }
 
     m_output_buffer_page_index = (m_output_buffer_page_index + 1) % m_output_buffer_page_count;
     m_buffer_descriptor_list_index = (m_buffer_descriptor_list_index + 1) % buffer_descriptor_list_max_entries;
