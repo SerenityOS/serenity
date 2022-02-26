@@ -375,7 +375,7 @@ char* strpbrk(const char* s, const char* accept)
 char* strtok_r(char* str, const char* delim, char** saved_str)
 {
     if (!str) {
-        if (!saved_str)
+        if (!saved_str || *saved_str == nullptr)
             return nullptr;
         str = *saved_str;
     }
@@ -407,8 +407,10 @@ char* strtok_r(char* str, const char* delim, char** saved_str)
         }
     }
 
-    if (str[token_start] == '\0')
+    if (str[token_start] == '\0') {
+        *saved_str = nullptr;
         return nullptr;
+    }
 
     if (token_end == 0) {
         *saved_str = nullptr;
