@@ -89,9 +89,11 @@ NonnullRefPtr<Document> DOMImplementation::create_html_document(const String& ti
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocumenttype
-NonnullRefPtr<DocumentType> DOMImplementation::create_document_type(String const& qualified_name, String const& public_id, String const& system_id)
+ExceptionOr<NonnullRefPtr<DocumentType>> DOMImplementation::create_document_type(String const& qualified_name, String const& public_id, String const& system_id)
 {
-    // FIXME: Validate qualified_name.
+    auto result = Document::validate_qualified_name(qualified_name);
+    if (result.is_exception())
+        return result.exception();
     auto document_type = DocumentType::create(document());
     document_type->set_name(qualified_name);
     document_type->set_public_id(public_id);

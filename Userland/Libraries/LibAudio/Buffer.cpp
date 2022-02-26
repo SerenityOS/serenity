@@ -13,31 +13,6 @@
 
 namespace Audio {
 
-u16 pcm_bits_per_sample(PcmSampleFormat format)
-{
-    switch (format) {
-    case Uint8:
-        return 8;
-    case Int16:
-        return 16;
-    case Int24:
-        return 24;
-    case Int32:
-    case Float32:
-        return 32;
-    case Float64:
-        return 64;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
-String sample_format_name(PcmSampleFormat format)
-{
-    bool is_float = format == Float32 || format == Float64;
-    return String::formatted("PCM {}bit {}", pcm_bits_per_sample(format), is_float ? "Float" : "LE");
-}
-
 i32 Buffer::allocate_id()
 {
     static Atomic<i32> next_id;
@@ -160,84 +135,5 @@ ErrorOr<NonnullRefPtr<Buffer>> Buffer::from_pcm_stream(InputMemoryStream& stream
 
     return Buffer::create_with_samples(move(fdata));
 }
-
-template<typename SampleType>
-ResampleHelper<SampleType>::ResampleHelper(u32 source, u32 target)
-    : m_source(source)
-    , m_target(target)
-{
-    VERIFY(source > 0);
-    VERIFY(target > 0);
-}
-template ResampleHelper<i32>::ResampleHelper(u32, u32);
-template ResampleHelper<double>::ResampleHelper(u32, u32);
-
-template<typename SampleType>
-Vector<SampleType> ResampleHelper<SampleType>::resample(Vector<SampleType> to_resample)
-{
-    Vector<SampleType> resampled;
-    resampled.ensure_capacity(to_resample.size() * ceil_div(m_source, m_target));
-    for (auto sample : to_resample) {
-        process_sample(sample, sample);
-
-        while (read_sample(sample, sample))
-            resampled.unchecked_append(sample);
-    }
-
-    return resampled;
-}
-template Vector<i32> ResampleHelper<i32>::resample(Vector<i32>);
-template Vector<double> ResampleHelper<double>::resample(Vector<double>);
-
-ErrorOr<NonnullRefPtr<Buffer>> resample_buffer(ResampleHelper<double>& resampler, Buffer const& to_resample)
-{
-    Vector<Sample> resampled;
-    resampled.ensure_capacity(to_resample.sample_count() * ceil_div(resampler.source(), resampler.target()));
-    for (size_t i = 0; i < static_cast<size_t>(to_resample.sample_count()); ++i) {
-        auto sample = to_resample.samples()[i];
-        resampler.process_sample(sample.left, sample.right);
-
-        while (resampler.read_sample(sample.left, sample.right))
-            resampled.append(sample);
-    }
-
-    return Buffer::create_with_samples(move(resampled));
-}
-
-template<typename SampleType>
-void ResampleHelper<SampleType>::process_sample(SampleType sample_l, SampleType sample_r)
-{
-    m_last_sample_l = sample_l;
-    m_last_sample_r = sample_r;
-    m_current_ratio += m_target;
-}
-template void ResampleHelper<i32>::process_sample(i32, i32);
-template void ResampleHelper<double>::process_sample(double, double);
-
-template<typename SampleType>
-bool ResampleHelper<SampleType>::read_sample(SampleType& next_l, SampleType& next_r)
-{
-    if (m_current_ratio >= m_source) {
-        m_current_ratio -= m_source;
-        next_l = m_last_sample_l;
-        next_r = m_last_sample_r;
-        return true;
-    }
-
-    return false;
-}
-template bool ResampleHelper<i32>::read_sample(i32&, i32&);
-template bool ResampleHelper<double>::read_sample(double&, double&);
-
-template<typename SampleType>
-void ResampleHelper<SampleType>::reset()
-{
-    m_current_ratio = 0;
-    m_last_sample_l = {};
-    m_last_sample_r = {};
-}
-
-template void ResampleHelper<i32>::reset();
-template void ResampleHelper<double>::reset();
 
 }

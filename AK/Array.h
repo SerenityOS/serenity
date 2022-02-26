@@ -13,6 +13,8 @@ namespace AK {
 
 template<typename T, size_t Size>
 struct Array {
+    using ValueType = T;
+
     [[nodiscard]] constexpr T const* data() const { return __data; }
     [[nodiscard]] constexpr T* data() { return __data; }
 
@@ -66,7 +68,7 @@ struct Array {
         return Size;
     }
 
-    [[nodiscard]] constexpr T max() requires(requires(T x, T y) { x < y; })
+    [[nodiscard]] constexpr T max() const requires(requires(T x, T y) { x < y; })
     {
         static_assert(Size > 0, "No values to max() over");
 
@@ -76,7 +78,7 @@ struct Array {
         return value;
     }
 
-    [[nodiscard]] constexpr T min() requires(requires(T x, T y) { x > y; })
+    [[nodiscard]] constexpr T min() const requires(requires(T x, T y) { x > y; })
     {
         static_assert(Size > 0, "No values to min() over");
 

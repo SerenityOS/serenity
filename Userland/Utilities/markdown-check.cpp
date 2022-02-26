@@ -18,14 +18,28 @@
 #include <AK/OwnPtr.h>
 #include <AK/RecursionDecision.h>
 #include <AK/StdLibExtras.h>
+#include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/Visitor.h>
+#include <stdlib.h>
 
 static bool is_missing_file_acceptable(String const& filename)
 {
     const StringView acceptable_missing_files[] = {
+        // FIXME: Please write these manpages!
+        "/usr/share/man/man2/accept.md",
+        "/usr/share/man/man2/exec.md",
+        "/usr/share/man/man2/fcntl.md",
+        "/usr/share/man/man2/fork.md",
+        "/usr/share/man/man2/ioctl.md",
+        "/usr/share/man/man2/listen.md",
+        "/usr/share/man/man2/mmap.md",
+        "/usr/share/man/man2/mprotect.md",
+        "/usr/share/man/man2/open.md",
+        "/usr/share/man/man2/ptrace.md",
+        "/usr/share/man/man5/perfcore.md",
         // These ones are okay:
         "/home/anon/js-tests/test-common.js",
         "/man1/index.html",
@@ -59,16 +73,28 @@ public:
 
     bool has_anchor(String const& anchor) const { return m_anchors.contains(anchor); }
     HashTable<String> const& anchors() const { return m_anchors; }
+    bool has_invalid_link() const { return m_has_invalid_link; }
     Vector<FileLink> const& file_links() const { return m_file_links; }
 
 private:
-    MarkdownLinkage() = default;
+    MarkdownLinkage()
+    {
+        auto const* source_directory = getenv("SERENITY_SOURCE_DIR");
+        if (source_directory != nullptr) {
+            m_serenity_source_directory = source_directory;
+        } else {
+            warnln("The environment variable SERENITY_SOURCE_DIR was not found. Link checking inside Serenity's filesystem will fail.");
+        }
+    }
 
     virtual RecursionDecision visit(Markdown::Heading const&) override;
     virtual RecursionDecision visit(Markdown::Text::LinkNode const&) override;
 
     HashTable<String> m_anchors;
     Vector<FileLink> m_file_links;
+    bool m_has_invalid_link { false };
+
+    String m_serenity_source_directory;
 };
 
 MarkdownLinkage MarkdownLinkage::analyze(Markdown::Document const& document)
@@ -152,25 +178,38 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
         // Nothing to do here.
         return RecursionDecision::Recurse;
     }
-    if (href.starts_with("https://") || href.starts_with("http://")) {
-        outln("Not checking external link {}", href);
-        return RecursionDecision::Recurse;
-    }
-    if (href.starts_with("help://")) {
-        // TODO: Check that the man page actually exists. (That check would also fail because we are currently referring to some nonexistent man pages.)
-        outln("Not checking man page link {}", href);
-        return RecursionDecision::Recurse;
-    }
-    if (href.starts_with("file://")) {
-        // TODO: Resolve relative to $SERENITY_SOURCE_DIR/Base/
-        // Currently, this affects only one link, so it's not worth the effort.
-        outln("Not checking local link {}", href);
-        return RecursionDecision::Recurse;
-    }
-    if (href.starts_with("/res/icons/")) {
-        // TODO: Resolve relative to $SERENITY_SOURCE_DIR/Base/
-        outln("Not checking icon link {}", href);
-        return RecursionDecision::Recurse;
+    auto url = URL::create_with_url_or_path(href);
+    if (url.is_valid()) {
+        if (url.scheme() == "https" || url.scheme() == "http") {
+            outln("Not checking external link {}", href);
+            return RecursionDecision::Recurse;
+        }
+        if (url.scheme() == "help") {
+            if (url.host() != "man") {
+                warnln("help:// URL without 'man': {}", href);
+                m_has_invalid_link = true;
+                return RecursionDecision::Recurse;
+            }
+            if (url.paths().size() < 2) {
+                warnln("help://man URL is missing section or page: {}", href);
+                m_has_invalid_link = true;
+                return RecursionDecision::Recurse;
+            }
+            auto file = String::formatted("../man{}/{}.md", url.paths()[0], url.paths()[1]);
+
+            m_file_links.append({ file, String(), StringCollector::from(*link_node.text) });
+            return RecursionDecision::Recurse;
+        }
+        if (url.scheme() == "file") {
+            // TODO: Check more possible links other than icons.
+            if (url.path().starts_with("/res/icons/")) {
+                auto file = String::formatted("{}/Base{}", m_serenity_source_directory, url.path());
+                m_file_links.append({ file, String(), StringCollector::from(*link_node.text) });
+                return RecursionDecision::Recurse;
+            }
+            outln("Not checking local link {}", href);
+            return RecursionDecision::Recurse;
+        }
     }
 
     String label = StringCollector::from(*link_node.text);
@@ -219,6 +258,12 @@ int main(int argc, char** argv)
     outln("Checking links ...");
     bool any_problems = false;
     for (auto const& file_item : files) {
+        if (file_item.value.has_invalid_link()) {
+            outln("File '{}' has invalid links.", file_item.key);
+            any_problems = true;
+            continue;
+        }
+
         auto file_lexical_path = LexicalPath(file_item.key);
         auto file_dir = file_lexical_path.dirname();
         for (auto const& file_link : file_item.value.file_links()) {

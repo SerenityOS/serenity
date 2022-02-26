@@ -318,6 +318,12 @@ public:
 
     static bool is_valid_name(String const&);
 
+    struct PrefixAndTagName {
+        FlyString prefix;
+        FlyString tag_name;
+    };
+    static ExceptionOr<PrefixAndTagName> validate_qualified_name(String const& qualified_name);
+
 private:
     explicit Document(const AK::URL&);
 

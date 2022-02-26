@@ -1390,4 +1390,54 @@ bool Document::is_valid_name(String const& name)
     return true;
 }
 
+// https://dom.spec.whatwg.org/#validate
+ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String const& qualified_name)
+{
+    if (qualified_name.is_empty())
+        return InvalidCharacterError::create("Empty string is not a valid qualified name.");
+
+    Utf8View utf8view { qualified_name };
+    if (!utf8view.validate())
+        return InvalidCharacterError::create("Invalid qualified name.");
+
+    Optional<size_t> colon_offset;
+
+    bool in_name = false;
+
+    for (auto it = utf8view.begin(); it != utf8view.end(); ++it) {
+        auto code_point = *it;
+        if (code_point == ':') {
+            if (colon_offset.has_value())
+                return InvalidCharacterError::create("More than one colon (:) in qualified name.");
+            colon_offset = utf8view.byte_offset_of(it);
+            continue;
+        }
+        if (in_name) {
+            if (!is_valid_name_start_character(code_point))
+                return InvalidCharacterError::create("Invalid start of qualified name.");
+            in_name = false;
+            continue;
+        }
+        if (!is_valid_name_character(code_point))
+            return InvalidCharacterError::create("Invalid character in qualified name.");
+    }
+
+    if (!colon_offset.has_value())
+        return Document::PrefixAndTagName {
+            .prefix = {},
+            .tag_name = qualified_name,
+        };
+
+    if (*colon_offset == 0)
+        return InvalidCharacterError::create("Qualified name can't start with colon (:).");
+
+    if (*colon_offset >= (qualified_name.length() - 1))
+        return InvalidCharacterError::create("Qualified name can't end with colon (:).");
+
+    return Document::PrefixAndTagName {
+        .prefix = qualified_name.substring_view(0, *colon_offset),
+        .tag_name = qualified_name.substring_view(*colon_offset + 1),
+    };
+}
+
 }
