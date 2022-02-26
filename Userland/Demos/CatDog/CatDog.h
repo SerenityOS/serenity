@@ -8,6 +8,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/File.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MouseTracker.h>
 #include <LibGUI/Widget.h>
@@ -23,9 +24,11 @@ class CatDog final : public GUI::Widget
 public:
     // The general state, does not contain movement direction or whether CatDog is roaming.
     enum class MainState {
-        Idle,     // default state
-        Alerted,  // woken by mouse cursor or speaking after being idle
-        Sleeping, // mouse hasn't moved in some time
+        Idle,      // default state
+        Alerted,   // woken by mouse cursor or speaking after being idle
+        Sleeping,  // mouse hasn't moved in some time
+        Artist,    // PixelPaint or FontEditor are open
+        Inspector, // SystemServer, Profiler or Inspector are open
     };
     static bool is_non_application_state(MainState state)
     {
@@ -69,9 +72,13 @@ private:
     bool m_up, m_down, m_left, m_right;
     bool m_roaming { true };
 
+    RefPtr<Core::File> m_proc_all;
+
     NonnullRefPtr<Gfx::Bitmap> m_alert = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/alert.png").release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_artist = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/artist.png").release_value_but_fixme_should_propagate_errors();
     NonnullRefPtr<Gfx::Bitmap> m_erun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun1.png").release_value_but_fixme_should_propagate_errors();
     NonnullRefPtr<Gfx::Bitmap> m_erun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/erun2.png").release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> m_inspector = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/inspector.png").release_value_but_fixme_should_propagate_errors();
     NonnullRefPtr<Gfx::Bitmap> m_nerun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun1.png").release_value_but_fixme_should_propagate_errors();
     NonnullRefPtr<Gfx::Bitmap> m_nerun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nerun2.png").release_value_but_fixme_should_propagate_errors();
     NonnullRefPtr<Gfx::Bitmap> m_nrun1 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/nrun1.png").release_value_but_fixme_should_propagate_errors();
@@ -108,11 +115,18 @@ private:
             else
                 m_curr_bmp = m_sleep2;
             break;
+        case MainState::Artist:
+            m_curr_bmp = m_artist;
+            break;
+        case MainState::Inspector:
+            m_curr_bmp = m_inspector;
+            break;
         }
     }
 
     CatDog()
         : m_temp_pos { 0, 0 }
+        , m_proc_all(MUST(Core::File::open("/proc/all", Core::OpenMode::ReadOnly)))
     {
         set_image_by_main_state();
     }
