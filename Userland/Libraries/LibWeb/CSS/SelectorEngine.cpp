@@ -142,6 +142,8 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         return true;
     case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild:
     case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType:
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastOfType:
         auto const step_size = pseudo_class.nth_child_pattern.step_size;
         auto const offset = pseudo_class.nth_child_pattern.offset;
         if (step_size == 0 && offset == 0)
@@ -152,12 +154,29 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
             return false;
 
         int index = 1;
-        if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild) {
+        switch (pseudo_class.type) {
+        case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild: {
             for (auto* child = parent->first_child_of_type<DOM::Element>(); child && child != &element; child = child->next_element_sibling())
                 ++index;
-        } else {
+            break;
+        }
+        case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild: {
             for (auto* child = parent->last_child_of_type<DOM::Element>(); child && child != &element; child = child->previous_element_sibling())
                 ++index;
+            break;
+        }
+        case CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType: {
+            for (auto* child = previous_sibling_with_same_tag_name(element); child; child = previous_sibling_with_same_tag_name(*child))
+                ++index;
+            break;
+        }
+        case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastOfType: {
+            for (auto* child = next_sibling_with_same_tag_name(element); child; child = next_sibling_with_same_tag_name(*child))
+                ++index;
+            break;
+        }
+        default:
+            VERIFY_NOT_REACHED();
         }
 
         if (step_size < 0) {
