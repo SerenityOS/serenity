@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,7 +41,7 @@ class ObjectClassRegistration {
 
 public:
     ObjectClassRegistration(StringView class_name, Function<RefPtr<Object>()> factory, ObjectClassRegistration* parent_class = nullptr);
-    ~ObjectClassRegistration();
+    ~ObjectClassRegistration() = default;
 
     String class_name() const { return m_class_name; }
     const ObjectClassRegistration* parent_class() const { return m_parent_class; }

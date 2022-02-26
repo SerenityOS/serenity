@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,7 +25,7 @@ public:
         ProtocolFailed,
         Cancelled,
     };
-    virtual ~NetworkJob() override;
+    virtual ~NetworkJob() override = default;
 
     // Could fire twice, after Headers and after Trailers!
     Function<void(const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)> on_headers_received;

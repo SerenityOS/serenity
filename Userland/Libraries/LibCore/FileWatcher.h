@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,7 +36,7 @@ AK_ENUM_BITWISE_OPERATORS(FileWatcherEvent::Type);
 
 class FileWatcherBase {
 public:
-    virtual ~FileWatcherBase() { }
+    virtual ~FileWatcherBase() = default;
 
     ErrorOr<bool> add_watch(String path, FileWatcherEvent::Type event_mask);
     ErrorOr<bool> remove_watch(String path);

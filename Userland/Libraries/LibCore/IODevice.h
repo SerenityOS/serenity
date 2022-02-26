@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -72,7 +73,7 @@ AK_ENUM_BITWISE_OPERATORS(OpenMode)
 class IODevice : public Object {
     C_OBJECT_ABSTRACT(IODevice)
 public:
-    virtual ~IODevice() override;
+    virtual ~IODevice() override = default;
 
     int fd() const { return m_fd; }
     OpenMode mode() const { return m_mode; }

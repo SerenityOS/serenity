@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,10 +15,6 @@ ChildEvent::ChildEvent(Type type, Object& child, Object* insertion_before_child)
     : Core::Event(type)
     , m_child(child.make_weak_ptr())
     , m_insertion_before_child(AK::make_weak_ptr_if_nonnull(insertion_before_child))
-{
-}
-
-ChildEvent::~ChildEvent()
 {
 }
 

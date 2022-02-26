@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -268,10 +269,6 @@ ObjectClassRegistration::ObjectClassRegistration(StringView class_name, Function
     , m_parent_class(parent_class)
 {
     object_classes().set(class_name, this);
-}
-
-ObjectClassRegistration::~ObjectClassRegistration()
-{
 }
 
 bool ObjectClassRegistration::is_derived_from(const ObjectClassRegistration& base_class) const
