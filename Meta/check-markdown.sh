@@ -18,4 +18,9 @@ if [ -z "${MARKDOWN_CHECK_BINARY:-}" ] ; then
     MARKDOWN_CHECK_BINARY="Build/lagom/markdown-check"
 fi
 
+if [ -z "$SERENITY_SOURCE_DIR" ] ; then
+    SERENITY_SOURCE_DIR=$(pwd -P)
+    export SERENITY_SOURCE_DIR
+fi
+
 find AK Base Documentation Kernel Meta Ports Tests Userland -path 'Ports/*/*' -prune -o -type f -name '*.md' -print0 | xargs -0 "${MARKDOWN_CHECK_BINARY}" README.md

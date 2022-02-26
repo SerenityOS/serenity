@@ -23,6 +23,7 @@
 #include <LibCore/File.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/Visitor.h>
+#include <stdlib.h>
 
 static bool is_missing_file_acceptable(String const& filename)
 {
@@ -76,7 +77,15 @@ public:
     Vector<FileLink> const& file_links() const { return m_file_links; }
 
 private:
-    MarkdownLinkage() = default;
+    MarkdownLinkage()
+    {
+        auto const* source_directory = getenv("SERENITY_SOURCE_DIR");
+        if (source_directory != nullptr) {
+            m_serenity_source_directory = source_directory;
+        } else {
+            warnln("The environment variable SERENITY_SOURCE_DIR was not found. Link checking inside Serenity's filesystem will fail.");
+        }
+    }
 
     virtual RecursionDecision visit(Markdown::Heading const&) override;
     virtual RecursionDecision visit(Markdown::Text::LinkNode const&) override;
@@ -84,6 +93,8 @@ private:
     HashTable<String> m_anchors;
     Vector<FileLink> m_file_links;
     bool m_has_invalid_link { false };
+
+    String m_serenity_source_directory;
 };
 
 MarkdownLinkage MarkdownLinkage::analyze(Markdown::Document const& document)
@@ -190,10 +201,10 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
             return RecursionDecision::Recurse;
         }
         if (url.scheme() == "file") {
-            // TODO: Resolve relative to $SERENITY_SOURCE_DIR/Base/, though we might refer to build-only files like binaries.
-
+            // TODO: Check more possible links other than icons.
             if (url.path().starts_with("/res/icons/")) {
-                outln("Not checking icon link {}", href);
+                auto file = String::formatted("{}/Base{}", m_serenity_source_directory, url.path());
+                m_file_links.append({ file, String(), StringCollector::from(*link_node.text) });
                 return RecursionDecision::Recurse;
             }
             outln("Not checking local link {}", href);
