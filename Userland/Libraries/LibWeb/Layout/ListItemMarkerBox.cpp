@@ -66,8 +66,7 @@ void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
         return;
     }
 
-    // FIXME: It would be nicer to not have to go via the parent here to get our inherited style.
-    auto color = parent()->computed_values().color();
+    auto color = computed_values().color();
 
     int marker_width = (int)enclosing.height() / 2;
     Gfx::IntRect marker_rect { 0, 0, marker_width, marker_width };

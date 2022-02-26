@@ -29,6 +29,9 @@ public:
     void add_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
     void remove_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
 
+    NonnullRefPtr<DOM::HTMLCollection> elements() const;
+    unsigned length() const;
+
 private:
     bool m_firing_submission_events { false };
 

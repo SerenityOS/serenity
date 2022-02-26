@@ -27,6 +27,8 @@ TEST_CASE(test_decode)
     decode_equal("Zm9vYg==", "foob");
     decode_equal("Zm9vYmE=", "fooba");
     decode_equal("Zm9vYmFy", "foobar");
+    decode_equal("Z m\r9\n   v\v  Ym\tFy", "foobar");
+    EXPECT_EQ(decode_base64(" ZD Qg\r\nPS An Zm91cic\r\n 7"sv).value(), decode_base64("ZDQgPSAnZm91cic7"sv).value());
 }
 
 TEST_CASE(test_decode_invalid)

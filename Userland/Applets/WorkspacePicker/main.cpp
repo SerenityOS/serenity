@@ -7,8 +7,8 @@
 #include "DesktopStatusWindow.h"
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/ConnectionToWindowMangerServer.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/WindowManagerServerConnection.h>
 #include <LibMain/Main.h>
 #include <WindowServer/Window.h>
 
@@ -19,7 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
 
     // We need to obtain the WM connection here as well before the pledge shortening.
-    GUI::WindowManagerServerConnection::the();
+    GUI::ConnectionToWindowMangerServer::the();
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 

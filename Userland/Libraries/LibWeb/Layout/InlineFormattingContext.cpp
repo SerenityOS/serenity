@@ -61,7 +61,7 @@ InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::avai
         auto const& floating_box = bfc.right_side_floats().boxes.at(i);
         auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box, parent().root(), m_state);
         if (rect.contains_vertically(y_in_root)) {
-            info.right = rect.left() - 1;
+            info.right = rect.left();
             break;
         }
     }

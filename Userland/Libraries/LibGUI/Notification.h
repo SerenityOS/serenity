@@ -11,12 +11,12 @@
 
 namespace GUI {
 
-class NotificationServerConnection;
+class ConnectionToNotificationServer;
 
 class Notification : public Core::Object {
     C_OBJECT(Notification);
 
-    friend class NotificationServerConnection;
+    friend class ConnectionToNotificationServer;
 
 public:
     virtual ~Notification() override;
@@ -62,7 +62,7 @@ private:
 
     bool m_destroyed { false };
     bool m_shown { false };
-    RefPtr<NotificationServerConnection> m_connection;
+    RefPtr<ConnectionToNotificationServer> m_connection;
 };
 
 }

@@ -81,6 +81,12 @@ ColorStyleValue const& StyleValue::as_color() const
     return static_cast<ColorStyleValue const&>(*this);
 }
 
+ContentStyleValue const& StyleValue::as_content() const
+{
+    VERIFY(is_content());
+    return static_cast<ContentStyleValue const&>(*this);
+}
+
 FlexStyleValue const& StyleValue::as_flex() const
 {
     VERIFY(is_flex());
@@ -1013,6 +1019,13 @@ String ColorStyleValue::to_string() const
 String CombinedBorderRadiusStyleValue::to_string() const
 {
     return String::formatted("{} {} {} {} / {} {} {} {}", m_top_left->horizontal_radius().to_string(), m_top_right->horizontal_radius().to_string(), m_bottom_right->horizontal_radius().to_string(), m_bottom_left->horizontal_radius().to_string(), m_top_left->vertical_radius().to_string(), m_top_right->vertical_radius().to_string(), m_bottom_right->vertical_radius().to_string(), m_bottom_left->vertical_radius().to_string());
+}
+
+String ContentStyleValue::to_string() const
+{
+    if (has_alt_text())
+        return String::formatted("{} / {}", m_content->to_string(), m_alt_text->to_string());
+    return m_content->to_string();
 }
 
 String FlexStyleValue::to_string() const

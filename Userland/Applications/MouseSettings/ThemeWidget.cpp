@@ -11,9 +11,9 @@
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
-#include <LibGUI/WindowServerConnection.h>
 
 String MouseCursorModel::column_name(int column_index) const
 {
@@ -115,7 +115,7 @@ ThemeWidget::ThemeWidget()
     m_cursors_tableview->set_column_width(0, 25);
     m_cursors_tableview->model()->invalidate();
 
-    m_theme_name = GUI::WindowServerConnection::the().get_cursor_theme();
+    m_theme_name = GUI::ConnectionToWindowServer::the().get_cursor_theme();
     mouse_cursor_model->change_theme(m_theme_name);
 
     m_theme_name_box = find_descendant_of_type_named<GUI::ComboBox>("theme_name_box");
@@ -130,7 +130,7 @@ ThemeWidget::ThemeWidget()
 
 void ThemeWidget::apply_settings()
 {
-    GUI::WindowServerConnection::the().async_apply_cursor_theme(m_theme_name_box->text());
+    GUI::ConnectionToWindowServer::the().async_apply_cursor_theme(m_theme_name_box->text());
 }
 
 void ThemeWidget::reset_default_values()

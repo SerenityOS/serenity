@@ -69,7 +69,7 @@ for d in output/*/; do
         2) section_title="System Calls";;
         3) section_title="Library Functions";;
         4) section_title="Special Files";;
-        5) section_title="User Programs";;
+        5) section_title="File Formats";;
         6) section_title="Games";; # TODO: Populate this section
         7) section_title="Miscellanea";;
         8) section_title="Sysadmin Tools";;

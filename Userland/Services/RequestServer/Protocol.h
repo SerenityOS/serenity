@@ -17,7 +17,7 @@ public:
     virtual ~Protocol();
 
     const String& name() const { return m_name; }
-    virtual OwnPtr<Request> start_request(ClientConnection&, const String& method, const URL&, const HashMap<String, String>& headers, ReadonlyBytes body) = 0;
+    virtual OwnPtr<Request> start_request(ConnectionFromClient&, const String& method, const URL&, const HashMap<String, String>& headers, ReadonlyBytes body) = 0;
 
     static Protocol* find_by_name(const String&);
 

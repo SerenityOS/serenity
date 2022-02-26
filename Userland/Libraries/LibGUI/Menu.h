@@ -44,7 +44,7 @@ public:
     void popup(const Gfx::IntPoint& screen_position, const RefPtr<Action>& default_action = nullptr);
     void dismiss();
 
-    void visibility_did_change(Badge<WindowServerConnection>, bool visible);
+    void visibility_did_change(Badge<ConnectionToWindowServer>, bool visible);
 
     void set_children_actions_enabled(bool enabled);
 

@@ -8,13 +8,13 @@
  */
 
 #include <AK/Array.h>
-#include <LibAudio/ClientConnection.h>
+#include <LibAudio/ConnectionFromClient.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
-#include <LibGUI/Label.h>
+#include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Slider.h>
 #include <LibGUI/Widget.h>
@@ -43,14 +43,14 @@ public:
                 { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png")) },
                 { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png")) } }
         };
-        auto audio_client = TRY(Audio::ClientConnection::try_create());
+        auto audio_client = TRY(Audio::ConnectionFromClient::try_create());
         NonnullRefPtr<AudioWidget> audio_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(audio_client), move(volume_level_bitmaps))));
         TRY(audio_widget->try_initialize_graphical_elements());
         return audio_widget;
     }
 
 private:
-    AudioWidget(NonnullRefPtr<Audio::ClientConnection> audio_client, Array<VolumeBitmapPair, 5> volume_level_bitmaps)
+    AudioWidget(NonnullRefPtr<Audio::ConnectionFromClient> audio_client, Array<VolumeBitmapPair, 5> volume_level_bitmaps)
         : m_audio_client(move(audio_client))
         , m_volume_level_bitmaps(move(volume_level_bitmaps))
         , m_show_percent(Config::read_bool("AudioApplet", "Applet", "ShowPercent", false))
@@ -86,17 +86,14 @@ private:
                 close();
         };
 
-        m_root_container = TRY(m_slider_window->try_set_main_widget<GUI::Label>());
+        m_root_container = TRY(m_slider_window->try_set_main_widget<GUI::Frame>());
         m_root_container->set_fill_with_background_color(true);
         m_root_container->set_layout<GUI::VerticalBoxLayout>();
-        m_root_container->layout()->set_margins({ 4, 0 });
+        m_root_container->layout()->set_margins({ 4 });
         m_root_container->layout()->set_spacing(0);
-        m_root_container->set_frame_thickness(2);
-        m_root_container->set_frame_shape(Gfx::FrameShape::Container);
-        m_root_container->set_frame_shadow(Gfx::FrameShadow::Raised);
+        m_root_container->set_frame_shape(Gfx::FrameShape::Window);
 
         m_percent_box = m_root_container->add<GUI::CheckBox>("\xE2\x84\xB9");
-        m_percent_box->set_fixed_size(27, 16);
         m_percent_box->set_tooltip(m_show_percent ? "Hide percent" : "Show percent");
         m_percent_box->set_checked(m_show_percent);
         m_percent_box->on_checked = [&](bool show_percent) {
@@ -122,7 +119,6 @@ private:
         };
 
         m_mute_box = m_root_container->add<GUI::CheckBox>("\xE2\x9D\x8C");
-        m_mute_box->set_fixed_size(27, 16);
         m_mute_box->set_checked(m_audio_muted);
         m_mute_box->set_tooltip(m_audio_muted ? "Unmute" : "Mute");
         m_mute_box->on_checked = [&](bool is_muted) {
@@ -214,11 +210,19 @@ private:
 
     void reposition_slider_window()
     {
+        constexpr auto width { 50 };
+        constexpr auto height { 125 };
+        constexpr auto tray_and_taskbar_padding { 6 };
+        constexpr auto icon_offset { (width - 16) / 2 };
         auto applet_rect = window()->applet_rect_on_screen();
-        m_slider_window->set_rect(applet_rect.x() - 20, applet_rect.y() - 106, 50, 100);
+        m_slider_window->set_rect(
+            applet_rect.x() - icon_offset,
+            applet_rect.y() - height - tray_and_taskbar_padding,
+            width,
+            height);
     }
 
-    NonnullRefPtr<Audio::ClientConnection> m_audio_client;
+    NonnullRefPtr<Audio::ConnectionFromClient> m_audio_client;
     Array<VolumeBitmapPair, 5> m_volume_level_bitmaps;
     bool m_show_percent { false };
     bool m_audio_muted { false };
@@ -228,7 +232,7 @@ private:
     RefPtr<GUI::Window> m_slider_window;
     RefPtr<GUI::CheckBox> m_mute_box;
     RefPtr<GUI::CheckBox> m_percent_box;
-    RefPtr<GUI::Label> m_root_container;
+    RefPtr<GUI::Frame> m_root_container;
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

@@ -219,6 +219,11 @@ void ClassicStylePainter::paint_frame(Painter& painter, IntRect const& rect, Pal
     if (shape == Gfx::FrameShape::NoFrame)
         return;
 
+    if (shape == FrameShape::Window) {
+        StylePainter::paint_window_frame(painter, rect, palette);
+        return;
+    }
+
     Color top_left_color;
     Color bottom_right_color;
     Color dark_shade = palette.threed_shadow1();

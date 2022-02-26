@@ -1,3 +1,4 @@
+#import <DOM/HTMLCollection.idl>
 #import <HTML/HTMLElement.idl>
 
 interface HTMLFormElement : HTMLElement {
@@ -8,5 +9,10 @@ interface HTMLFormElement : HTMLElement {
     [Reflect=novalidate] attribute boolean noValidate;
 
     undefined submit();
+
+    // FIXME: Should be [SameObject] and a HTMLFormControlsCollection
+    readonly attribute HTMLCollection elements;
+
+    readonly attribute unsigned long length;
 
 };

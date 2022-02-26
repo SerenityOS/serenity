@@ -150,6 +150,7 @@ public:
     [[nodiscard]] Vector<String> split_limit(char separator, size_t limit, bool keep_empty = false) const;
     [[nodiscard]] Vector<String> split(char separator, bool keep_empty = false) const;
     [[nodiscard]] Vector<StringView> split_view(char separator, bool keep_empty = false) const;
+    [[nodiscard]] Vector<StringView> split_view(Function<bool(char)> separator, bool keep_empty = false) const;
 
     [[nodiscard]] Optional<size_t> find(char needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
     [[nodiscard]] Optional<size_t> find(StringView needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }

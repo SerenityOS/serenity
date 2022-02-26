@@ -390,6 +390,37 @@ void HTMLElement::focus()
     m_locked_for_focus = false;
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#fire-a-synthetic-pointer-event
+bool HTMLElement::fire_a_synthetic_pointer_event(FlyString const& type, DOM::Element& target, bool not_trusted)
+{
+    // 1. Let event be the result of creating an event using PointerEvent.
+    // 2. Initialize event's type attribute to e.
+    // FIXME: Actually create a PointerEvent!
+    auto event = DOM::Event::create(type);
+
+    // 3. Initialize event's bubbles and cancelable attributes to true.
+    event->set_bubbles(true);
+    event->set_cancelable(true);
+
+    // 4. Set event's composed flag.
+    event->set_composed(true);
+
+    // 5. If the not trusted flag is set, initialize event's isTrusted attribute to false.
+    if (not_trusted) {
+        event->set_is_trusted(false);
+    }
+
+    // FIXME: 6. Initialize event's ctrlKey, shiftKey, altKey, and metaKey attributes according to the current state
+    //           of the key input device, if any (false for any keys that are not available).
+
+    // FIXME: 7. Initialize event's view attribute to target's node document's Window object, if any, and null otherwise.
+
+    // FIXME: 8. event's getModifierState() method is to return values appropriately describing the current state of the key input device.
+
+    // 9. Return the result of dispatching event at target.
+    return target.dispatch_event(move(event));
+}
+
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-click
 void HTMLElement::click()
 {
@@ -403,7 +434,7 @@ void HTMLElement::click()
     m_click_in_progress = true;
 
     // FIXME: 4. Fire a synthetic pointer event named click at this element, with the not trusted flag set.
-    dispatch_event(DOM::Event::create("click"));
+    fire_a_synthetic_pointer_event(HTML::EventNames::click, *this, true);
 
     // 5. Unset this element's click in progress flag.
     m_click_in_progress = false;

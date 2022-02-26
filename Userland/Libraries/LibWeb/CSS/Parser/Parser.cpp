@@ -497,13 +497,15 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 return ParsingResult::IncludesIgnoredVendorPrefix;
 
             if (pseudo_name.equals_ignoring_case("after")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::After;
+                simple_selector.pseudo_element = Selector::PseudoElement::After;
             } else if (pseudo_name.equals_ignoring_case("before")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::Before;
+                simple_selector.pseudo_element = Selector::PseudoElement::Before;
             } else if (pseudo_name.equals_ignoring_case("first-letter")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLetter;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLetter;
             } else if (pseudo_name.equals_ignoring_case("first-line")) {
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLine;
+            } else if (pseudo_name.equals_ignoring_case("marker")) {
+                simple_selector.pseudo_element = Selector::PseudoElement::Marker;
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
@@ -561,19 +563,19 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             } else if (pseudo_name.equals_ignoring_case("after")) {
                 // Single-colon syntax allowed for compatibility. https://www.w3.org/TR/selectors/#pseudo-element-syntax
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::After;
+                simple_selector.pseudo_element = Selector::PseudoElement::After;
             } else if (pseudo_name.equals_ignoring_case("before")) {
                 // See :after
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::Before;
+                simple_selector.pseudo_element = Selector::PseudoElement::Before;
             } else if (pseudo_name.equals_ignoring_case("first-letter")) {
                 // See :after
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLetter;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLetter;
             } else if (pseudo_name.equals_ignoring_case("first-line")) {
                 // See :after
                 simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
+                simple_selector.pseudo_element = Selector::PseudoElement::FirstLine;
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class: ':{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
@@ -3280,6 +3282,66 @@ RefPtr<StyleValue> Parser::parse_single_box_shadow_value(TokenStream<StyleCompon
     return BoxShadowStyleValue::create(color.release_value(), offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), spread_distance.release_value(), placement.release_value());
 }
 
+RefPtr<StyleValue> Parser::parse_content_value(Vector<StyleComponentValueRule> const& component_values)
+{
+    // FIXME: `content` accepts several kinds of function() type, which we don't handle in property_accepts_value() yet.
+
+    auto is_single_value_identifier = [](ValueID identifier) -> bool {
+        switch (identifier) {
+        case ValueID::None:
+        case ValueID::Normal:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    if (component_values.size() == 1) {
+        if (auto identifier = parse_identifier_value(component_values.first())) {
+            if (is_single_value_identifier(identifier->to_identifier()))
+                return identifier;
+        }
+    }
+
+    NonnullRefPtrVector<StyleValue> content_values;
+    NonnullRefPtrVector<StyleValue> alt_text_values;
+    bool in_alt_text = false;
+
+    for (auto const& value : component_values) {
+        if (value.is(Token::Type::Delim) && value.token().delim() == "/"sv) {
+            if (in_alt_text || content_values.is_empty())
+                return {};
+            in_alt_text = true;
+            continue;
+        }
+        auto style_value = parse_css_value(value);
+        if (style_value && property_accepts_value(PropertyID::Content, *style_value)) {
+            if (is_single_value_identifier(style_value->to_identifier()))
+                return {};
+
+            if (in_alt_text) {
+                alt_text_values.append(style_value.release_nonnull());
+            } else {
+                content_values.append(style_value.release_nonnull());
+            }
+            continue;
+        }
+
+        return {};
+    }
+
+    if (content_values.is_empty())
+        return {};
+    if (in_alt_text && alt_text_values.is_empty())
+        return {};
+
+    RefPtr<StyleValueList> alt_text;
+    if (!alt_text_values.is_empty())
+        alt_text = StyleValueList::create(move(alt_text_values), StyleValueList::Separator::Space);
+
+    return ContentStyleValue::create(StyleValueList::create(move(content_values), StyleValueList::Separator::Space), move(alt_text));
+}
+
 RefPtr<StyleValue> Parser::parse_flex_value(Vector<StyleComponentValueRule> const& component_values)
 {
     if (component_values.size() == 1) {
@@ -3862,6 +3924,10 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
         return ParsingResult::SyntaxError;
     case PropertyID::BoxShadow:
         if (auto parsed_value = parse_box_shadow_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParsingResult::SyntaxError;
+    case PropertyID::Content:
+        if (auto parsed_value = parse_content_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::Flex:

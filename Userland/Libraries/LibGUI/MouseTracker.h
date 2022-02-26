@@ -19,7 +19,7 @@ public:
     MouseTracker();
     virtual ~MouseTracker();
 
-    static void track_mouse_move(Badge<WindowServerConnection>, Gfx::IntPoint const&);
+    static void track_mouse_move(Badge<ConnectionToWindowServer>, Gfx::IntPoint const&);
 
 protected:
     virtual void track_mouse_move(Gfx::IntPoint const&) = 0;

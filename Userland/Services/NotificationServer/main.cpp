@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibIPC/MultiServer.h>
@@ -15,7 +15,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd accept rpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto server = TRY(IPC::MultiServer<NotificationServer::ClientConnection>::try_create());
+    auto server = TRY(IPC::MultiServer<NotificationServer::ConnectionFromClient>::try_create());
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

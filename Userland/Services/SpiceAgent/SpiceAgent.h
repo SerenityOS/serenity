@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ClipboardServerConnection.h"
+#include "ConnectionToClipboardServer.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Vector.h>
 #include <LibCore/Notifier.h>
@@ -13,7 +13,7 @@
 
 class SpiceAgent {
 public:
-    SpiceAgent(int fd, ClipboardServerConnection&);
+    SpiceAgent(int fd, ConnectionToClipboardServer&);
 
     static constexpr u32 AGENT_PROTOCOL = 1;
     enum class Port {
@@ -117,7 +117,7 @@ public:
 private:
     int m_fd { -1 };
     RefPtr<Core::Notifier> m_notifier;
-    ClipboardServerConnection& m_clipboard_connection;
+    ConnectionToClipboardServer& m_clipboard_connection;
 
     void on_message_received();
     void send_message(const ByteBuffer& buffer);

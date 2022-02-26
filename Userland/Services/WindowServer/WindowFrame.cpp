@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include <AK/Badge.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>

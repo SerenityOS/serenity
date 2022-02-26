@@ -11,8 +11,8 @@
 
 namespace Web::Layout {
 
-TableRowGroupBox::TableRowGroupBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style)
-    : Layout::BlockContainer(document, &element, move(style))
+TableRowGroupBox::TableRowGroupBox(DOM::Document& document, DOM::Element* element, NonnullRefPtr<CSS::StyleProperties> style)
+    : Layout::BlockContainer(document, element, move(style))
 {
 }
 

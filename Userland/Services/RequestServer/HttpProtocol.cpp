@@ -10,7 +10,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/URL.h>
-#include <RequestServer/ClientConnection.h>
+#include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/HttpCommon.h>
 #include <RequestServer/HttpProtocol.h>
 #include <RequestServer/Request.h>
@@ -22,7 +22,7 @@ HttpProtocol::HttpProtocol()
 {
 }
 
-OwnPtr<Request> HttpProtocol::start_request(ClientConnection& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body)
+OwnPtr<Request> HttpProtocol::start_request(ConnectionFromClient& client, const String& method, const URL& url, const HashMap<String, String>& headers, ReadonlyBytes body)
 {
     return Detail::start_request(Badge<HttpProtocol> {}, client, method, url, headers, body, get_pipe_for_request());
 }

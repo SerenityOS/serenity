@@ -478,6 +478,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     do_border_style(computed_values.border_right(), CSS::PropertyID::BorderRightWidth, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightStyle);
     do_border_style(computed_values.border_bottom(), CSS::PropertyID::BorderBottomWidth, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomStyle);
 
+    computed_values.set_content(specified_style.content());
+
     if (auto fill = specified_style.property(CSS::PropertyID::Fill); fill.has_value())
         computed_values.set_fill(fill.value()->to_color(*this));
     if (auto stroke = specified_style.property(CSS::PropertyID::Stroke); stroke.has_value())

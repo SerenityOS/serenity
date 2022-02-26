@@ -10,6 +10,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -17,7 +18,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Path.h>
 #include <LibMain/Main.h>
@@ -74,7 +74,7 @@ public:
 
         painter.stroke_path(path, Color::Black, 1);
 
-        auto primary_secondary_switched = GUI::WindowServerConnection::the().get_buttons_switched();
+        auto primary_secondary_switched = GUI::ConnectionToWindowServer::the().get_buttons_switched();
         auto primary_pressed = m_buttons & GUI::MouseButton::Primary;
         auto secondary_pressed = m_buttons & GUI::MouseButton::Secondary;
 

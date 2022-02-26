@@ -6,8 +6,8 @@
 
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/DisplayLink.h>
-#include <LibGUI/WindowServerConnection.h>
 
 namespace GUI {
 
@@ -40,7 +40,7 @@ static i32 s_next_callback_id = 1;
 i32 DisplayLink::register_callback(Function<void(i32)> callback)
 {
     if (callbacks().is_empty())
-        WindowServerConnection::the().async_enable_display_link();
+        ConnectionToWindowServer::the().async_enable_display_link();
 
     i32 callback_id = s_next_callback_id++;
     callbacks().set(callback_id, adopt_ref(*new DisplayLinkCallback(callback_id, move(callback))));
@@ -54,12 +54,12 @@ bool DisplayLink::unregister_callback(i32 callback_id)
     callbacks().remove(callback_id);
 
     if (callbacks().is_empty())
-        WindowServerConnection::the().async_disable_display_link();
+        ConnectionToWindowServer::the().async_disable_display_link();
 
     return true;
 }
 
-void DisplayLink::notify(Badge<WindowServerConnection>)
+void DisplayLink::notify(Badge<ConnectionToWindowServer>)
 {
     auto copy_of_callbacks = callbacks();
     for (auto& it : copy_of_callbacks)

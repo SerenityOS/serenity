@@ -12,7 +12,7 @@
 #include "Player.h"
 #include "VisualizationWidget.h"
 #include <AK/NonnullRefPtr.h>
-#include <LibAudio/ClientConnection.h>
+#include <LibAudio/ConnectionFromClient.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
 
@@ -50,7 +50,7 @@ protected:
     void keydown_event(GUI::KeyEvent&) override;
 
 private:
-    SoundPlayerWidgetAdvancedView(GUI::Window&, Audio::ClientConnection&);
+    SoundPlayerWidgetAdvancedView(GUI::Window&, Audio::ConnectionFromClient&);
 
     void sync_previous_next_buttons();
 

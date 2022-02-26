@@ -391,7 +391,7 @@ public:
     }
 
 private:
-    friend class WindowServerConnection;
+    friend class ConnectionToWindowServer;
     KeyCode m_key { KeyCode::Key_Invalid };
     u8 m_modifiers { 0 };
     u32 m_code_point { 0 };

@@ -9,7 +9,7 @@
 
 #include "Music.h"
 #include <LibAudio/Buffer.h>
-#include <LibAudio/ClientConnection.h>
+#include <LibAudio/ConnectionFromClient.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/Object.h>
 
@@ -31,7 +31,7 @@ private:
     TrackManager& m_track_manager;
     Array<Sample, sample_count> m_buffer;
     Optional<Audio::ResampleHelper<double>> m_resampler;
-    RefPtr<Audio::ClientConnection> m_audio_client;
+    RefPtr<Audio::ConnectionFromClient> m_audio_client;
 
     bool m_should_play_audio = true;
 

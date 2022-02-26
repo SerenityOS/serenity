@@ -8,7 +8,7 @@
 
 namespace RequestServer {
 
-class ClientConnection;
+class ConnectionFromClient;
 class Request;
 class GeminiProtocol;
 class HttpRequest;

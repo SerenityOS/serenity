@@ -8,11 +8,11 @@
 
 #include <AK/Error.h>
 #include <LibCore/LocalServer.h>
-#include <LibIPC/ClientConnection.h>
+#include <LibIPC/ConnectionFromClient.h>
 
 namespace IPC {
 
-template<typename ClientConnectionType>
+template<typename ConnectionFromClientType>
 class MultiServer {
 public:
     static ErrorOr<NonnullOwnPtr<MultiServer>> try_create(Optional<String> socket_path = {})
@@ -28,7 +28,7 @@ private:
     {
         m_server->on_accept = [&](auto client_socket) {
             auto client_id = ++m_next_client_id;
-            (void)IPC::new_client_connection<ClientConnectionType>(move(client_socket), client_id);
+            (void)IPC::new_client_connection<ConnectionFromClientType>(move(client_socket), client_id);
         };
     }
 

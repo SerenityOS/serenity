@@ -10,7 +10,7 @@
 #include "Player.h"
 #include "SampleWidget.h"
 #include "SoundPlayerWidgetAdvancedView.h"
-#include <LibAudio/ClientConnection.h>
+#include <LibAudio/ConnectionFromClient.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath thread unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    auto audio_client = TRY(Audio::ClientConnection::try_create());
+    auto audio_client = TRY(Audio::ConnectionFromClient::try_create());
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath thread"));
 

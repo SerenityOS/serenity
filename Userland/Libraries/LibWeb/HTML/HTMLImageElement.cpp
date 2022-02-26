@@ -78,4 +78,50 @@ const Gfx::Bitmap* HTMLImageElement::bitmap() const
     return m_image_loader.bitmap(m_image_loader.current_frame_index());
 }
 
+// https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-width
+unsigned HTMLImageElement::width() const
+{
+    const_cast<DOM::Document&>(document()).update_layout();
+
+    // Return the rendered width of the image, in CSS pixels, if the image is being rendered.
+    if (layout_node() && is<Layout::Box>(*layout_node()))
+        return static_cast<Layout::Box const&>(*layout_node()).content_width();
+
+    // ...or else the density-corrected intrinsic width and height of the image, in CSS pixels,
+    // if the image has intrinsic dimensions and is available but not being rendered.
+    if (m_image_loader.has_image())
+        return m_image_loader.width();
+
+    // ...or else 0, if the image is not available or does not have intrinsic dimensions.
+    return 0;
+}
+
+void HTMLImageElement::set_width(unsigned width)
+{
+    set_attribute(HTML::AttributeNames::width, String::number(width));
+}
+
+// https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-height
+unsigned HTMLImageElement::height() const
+{
+    const_cast<DOM::Document&>(document()).update_layout();
+
+    // Return the rendered height of the image, in CSS pixels, if the image is being rendered.
+    if (layout_node() && is<Layout::Box>(*layout_node()))
+        return static_cast<Layout::Box const&>(*layout_node()).content_height();
+
+    // ...or else the density-corrected intrinsic height and height of the image, in CSS pixels,
+    // if the image has intrinsic dimensions and is available but not being rendered.
+    if (m_image_loader.has_image())
+        return m_image_loader.height();
+
+    // ...or else 0, if the image is not available or does not have intrinsic dimensions.
+    return 0;
+}
+
+void HTMLImageElement::set_height(unsigned height)
+{
+    set_attribute(HTML::AttributeNames::height, String::number(height));
+}
+
 }

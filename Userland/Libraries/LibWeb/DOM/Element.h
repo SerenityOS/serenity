@@ -134,6 +134,8 @@ public:
     virtual void did_receive_focus() { }
     virtual void did_lose_focus() { }
 
+    static RefPtr<Layout::Node> create_layout_node_for_display_type(DOM::Document&, CSS::Display const&, NonnullRefPtr<CSS::StyleProperties>, Element*);
+
 protected:
     virtual void children_changed() override;
 

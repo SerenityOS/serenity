@@ -5,7 +5,7 @@
  */
 
 #include "MenuItem.h"
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include "Menu.h"
 #include "WindowManager.h"
 #include <LibGfx/Bitmap.h>

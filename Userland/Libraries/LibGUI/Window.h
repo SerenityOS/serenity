@@ -190,9 +190,9 @@ public:
 
     void refresh_system_theme();
 
-    static void for_each_window(Badge<WindowServerConnection>, Function<void(Window&)>);
-    static void update_all_windows(Badge<WindowServerConnection>);
-    void notify_state_changed(Badge<WindowServerConnection>, bool minimized, bool occluded);
+    static void for_each_window(Badge<ConnectionToWindowServer>, Function<void(Window&)>);
+    static void update_all_windows(Badge<ConnectionToWindowServer>);
+    void notify_state_changed(Badge<ConnectionToWindowServer>, bool minimized, bool occluded);
 
     virtual bool is_visible_for_timer_purposes() const override { return m_visible_for_timer_purposes; }
 

@@ -7,8 +7,8 @@
 #include "TerminalSettingsWidget.h"
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/SettingsWindow.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibMain/Main.h>
 
 // Including this after to avoid LibIPC errors

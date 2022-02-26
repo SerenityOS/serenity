@@ -28,8 +28,7 @@ enum class FrameShape {
     Box,
     Container,
     Panel,
-    VerticalLine,
-    HorizontalLine
+    Window,
 };
 
 // FIXME: should this be in its own header?

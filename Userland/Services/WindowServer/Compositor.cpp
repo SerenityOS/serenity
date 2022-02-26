@@ -6,7 +6,7 @@
 
 #include "Compositor.h"
 #include "Animation.h"
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include "Event.h"
 #include "EventLoop.h"
 #include "MultiScaleBitmaps.h"
@@ -66,19 +66,19 @@ Compositor::Compositor()
     init_bitmaps();
 }
 
-const Gfx::Bitmap* Compositor::cursor_bitmap_for_screenshot(Badge<ClientConnection>, Screen& screen) const
+const Gfx::Bitmap* Compositor::cursor_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen& screen) const
 {
     if (!m_current_cursor)
         return nullptr;
     return &m_current_cursor->bitmap(screen.scale_factor());
 }
 
-const Gfx::Bitmap& Compositor::front_bitmap_for_screenshot(Badge<ClientConnection>, Screen& screen) const
+const Gfx::Bitmap& Compositor::front_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen& screen) const
 {
     return *screen.compositor_screen_data().m_front_bitmap;
 }
 
-Gfx::Color Compositor::color_at_position(Badge<ClientConnection>, Screen& screen, Gfx::IntPoint const& position) const
+Gfx::Color Compositor::color_at_position(Badge<ConnectionFromClient>, Screen& screen, Gfx::IntPoint const& position) const
 {
     return screen.compositor_screen_data().m_front_bitmap->get_pixel(position);
 }
@@ -977,19 +977,19 @@ void Compositor::update_fonts()
 
 void Compositor::notify_display_links()
 {
-    ClientConnection::for_each_client([](auto& client) {
+    ConnectionFromClient::for_each_client([](auto& client) {
         client.notify_display_link({});
     });
 }
 
-void Compositor::increment_display_link_count(Badge<ClientConnection>)
+void Compositor::increment_display_link_count(Badge<ConnectionFromClient>)
 {
     ++m_display_link_count;
     if (m_display_link_count == 1)
         m_display_link_notify_timer->start();
 }
 
-void Compositor::decrement_display_link_count(Badge<ClientConnection>)
+void Compositor::decrement_display_link_count(Badge<ConnectionFromClient>)
 {
     VERIFY(m_display_link_count);
     --m_display_link_count;
@@ -1007,7 +1007,7 @@ void Compositor::invalidate_current_screen_number_rects()
     });
 }
 
-void Compositor::increment_show_screen_number(Badge<ClientConnection>)
+void Compositor::increment_show_screen_number(Badge<ConnectionFromClient>)
 {
     if (m_show_screen_number_count++ == 0) {
         Screen::for_each([&](auto& screen) {
@@ -1019,7 +1019,7 @@ void Compositor::increment_show_screen_number(Badge<ClientConnection>)
         });
     }
 }
-void Compositor::decrement_show_screen_number(Badge<ClientConnection>)
+void Compositor::decrement_show_screen_number(Badge<ConnectionFromClient>)
 {
     if (--m_show_screen_number_count == 0) {
         invalidate_current_screen_number_rects();

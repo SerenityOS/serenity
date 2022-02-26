@@ -538,6 +538,59 @@ Optional<CSS::Clear> StyleProperties::clear() const
     }
 }
 
+CSS::ContentData StyleProperties::content() const
+{
+    auto maybe_value = property(CSS::PropertyID::Content);
+    if (!maybe_value.has_value())
+        return CSS::ContentData {};
+
+    auto& value = maybe_value.value();
+    if (value->is_content()) {
+        auto& content_style_value = value->as_content();
+
+        CSS::ContentData content_data;
+
+        // FIXME: The content is a list of things: strings, identifiers or functions that return strings, and images.
+        //        So it can't always be represented as a single String, but may have to be multiple boxes.
+        //        For now, we'll just assume strings since that is easiest.
+        StringBuilder builder;
+        for (auto const& item : content_style_value.content().values()) {
+            if (item.is_string()) {
+                builder.append(item.to_string());
+            } else {
+                // TODO: Implement quotes, counters, images, and other things.
+            }
+        }
+        content_data.type = ContentData::Type::String;
+        content_data.data = builder.to_string();
+
+        if (content_style_value.has_alt_text()) {
+            StringBuilder alt_text_builder;
+            for (auto const& item : content_style_value.alt_text()->values()) {
+                if (item.is_string()) {
+                    alt_text_builder.append(item.to_string());
+                } else {
+                    // TODO: Implement counters
+                }
+            }
+            content_data.alt_text = alt_text_builder.to_string();
+        }
+
+        return content_data;
+    }
+
+    switch (value->to_identifier()) {
+    case ValueID::None:
+        return { ContentData::Type::None };
+    case ValueID::Normal:
+        return { ContentData::Type::Normal };
+    default:
+        break;
+    }
+
+    return CSS::ContentData {};
+}
+
 Optional<CSS::Cursor> StyleProperties::cursor() const
 {
     auto value = property(CSS::PropertyID::Cursor);

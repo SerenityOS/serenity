@@ -7,7 +7,7 @@ compile_ipc(WebContentServer.ipc WebContentServerEndpoint.h)
 compile_ipc(WebContentClient.ipc WebContentClientEndpoint.h)
 
 set(SOURCES
-    ClientConnection.cpp
+    ConnectionFromClient.cpp
     ConsoleGlobalObject.cpp
     main.cpp
     PageHost.cpp

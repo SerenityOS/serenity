@@ -28,6 +28,12 @@ public:
 
     const Gfx::Bitmap* bitmap() const;
 
+    unsigned width() const;
+    void set_width(unsigned);
+
+    unsigned height() const;
+    void set_height(unsigned);
+
 private:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 

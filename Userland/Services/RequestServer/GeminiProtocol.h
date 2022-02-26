@@ -15,7 +15,7 @@ public:
     GeminiProtocol();
     virtual ~GeminiProtocol() override;
 
-    virtual OwnPtr<Request> start_request(ClientConnection&, const String& method, const URL&, const HashMap<String, String>&, ReadonlyBytes body) override;
+    virtual OwnPtr<Request> start_request(ConnectionFromClient&, const String& method, const URL&, const HashMap<String, String>&, ReadonlyBytes body) override;
 };
 
 }

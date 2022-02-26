@@ -11,7 +11,7 @@
 #include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>
 #include <LibTLS/Certificate.h>
-#include <RequestServer/ClientConnection.h>
+#include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/GeminiProtocol.h>
 #include <RequestServer/HttpProtocol.h>
 #include <RequestServer/HttpsProtocol.h>
@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     [[maybe_unused]] auto http = make<RequestServer::HttpProtocol>();
     [[maybe_unused]] auto https = make<RequestServer::HttpsProtocol>();
 
-    auto client = TRY(IPC::take_over_accepted_client_from_system_server<RequestServer::ClientConnection>());
+    auto client = TRY(IPC::take_over_accepted_client_from_system_server<RequestServer::ConnectionFromClient>());
 
     auto result = event_loop.exec();
 

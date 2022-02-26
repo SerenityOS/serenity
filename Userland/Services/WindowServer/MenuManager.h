@@ -34,7 +34,7 @@ public:
     void close_everyone_not_in_lineage(Menu&);
     void close_menu_and_descendants(Menu&);
 
-    void close_all_menus_from_client(Badge<ClientConnection>, ClientConnection&);
+    void close_all_menus_from_client(Badge<ConnectionFromClient>, ConnectionFromClient&);
 
     int theme_index() const { return m_theme_index; }
 

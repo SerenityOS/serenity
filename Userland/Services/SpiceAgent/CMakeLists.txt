@@ -6,7 +6,7 @@ serenity_component(
 set(SOURCES
     main.cpp
     SpiceAgent.cpp
-    ClipboardServerConnection.cpp
+    ConnectionToClipboardServer.cpp
 )
 
 serenity_bin(SpiceAgent)

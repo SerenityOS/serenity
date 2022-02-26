@@ -29,8 +29,7 @@ Frame::Frame()
         { Gfx::FrameShape::Box, "Box" },
         { Gfx::FrameShape::Container, "Container" },
         { Gfx::FrameShape::Panel, "Panel" },
-        { Gfx::FrameShape::VerticalLine, "VerticalLine" },
-        { Gfx::FrameShape::HorizontalLine, "HorizontalLine" });
+        { Gfx::FrameShape::Window, "Window" });
 }
 
 Frame::~Frame()

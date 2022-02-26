@@ -7,7 +7,7 @@ compile_ipc(ImageDecoderServer.ipc ImageDecoderServerEndpoint.h)
 compile_ipc(ImageDecoderClient.ipc ImageDecoderClientEndpoint.h)
 
 set(SOURCES
-    ClientConnection.cpp
+    ConnectionFromClient.cpp
     main.cpp
     ImageDecoderServerEndpoint.h
     ImageDecoderClientEndpoint.h

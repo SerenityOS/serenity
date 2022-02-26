@@ -89,11 +89,18 @@
 
 namespace Web::DOM {
 
-NonnullRefPtr<Element> create_element(Document& document, const FlyString& tag_name, const FlyString& namespace_)
+NonnullRefPtr<Element> create_element(Document& document, FlyString tag_name, FlyString namespace_)
 {
     auto lowercase_tag_name = tag_name.to_lowercase();
-    // FIXME: Add prefix when we support it.
-    auto qualified_name = QualifiedName(tag_name, {}, namespace_);
+
+    FlyString prefix;
+    auto parts = tag_name.view().split_view(':');
+    if (parts.size() > 1) {
+        prefix = parts[0];
+        tag_name = tag_name.view().substring_view_starting_from_substring(parts[1]);
+    }
+
+    auto qualified_name = QualifiedName(tag_name, prefix, namespace_);
     if (lowercase_tag_name == HTML::TagNames::a)
         return adopt_ref(*new HTML::HTMLAnchorElement(document, move(qualified_name)));
     if (lowercase_tag_name == HTML::TagNames::area)

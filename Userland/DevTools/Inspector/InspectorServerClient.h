@@ -8,12 +8,12 @@
 
 #include <InspectorServer/InspectorClientEndpoint.h>
 #include <InspectorServer/InspectorServerEndpoint.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 
 namespace Inspector {
 
 class InspectorServerClient final
-    : public IPC::ServerConnection<InspectorClientEndpoint, InspectorServerEndpoint>
+    : public IPC::ConnectionToServer<InspectorClientEndpoint, InspectorServerEndpoint>
     , public InspectorClientEndpoint {
     IPC_CLIENT_CONNECTION(InspectorServerClient, "/tmp/portal/inspector")
 
@@ -22,7 +22,7 @@ public:
 
 private:
     InspectorServerClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
-        : IPC::ServerConnection<InspectorClientEndpoint, InspectorServerEndpoint>(*this, move(socket))
+        : IPC::ConnectionToServer<InspectorClientEndpoint, InspectorServerEndpoint>(*this, move(socket))
     {
     }
 };

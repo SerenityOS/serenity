@@ -6,11 +6,11 @@
 
 #include <AK/Debug.h>
 #include <Kernel/API/MousePacket.h>
-#include <WindowServer/ClientConnection.h>
+#include <WindowServer/ConnectionFromClient.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/EventLoop.h>
 #include <WindowServer/Screen.h>
-#include <WindowServer/WMClientConnection.h>
+#include <WindowServer/WMConnectionFromClient.h>
 #include <WindowServer/WindowManager.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -23,8 +23,8 @@ EventLoop::EventLoop()
     m_keyboard_fd = open("/dev/keyboard0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     m_mouse_fd = open("/dev/mouse0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 
-    m_window_server = MUST(IPC::MultiServer<ClientConnection>::try_create("/tmp/portal/window"));
-    m_wm_server = MUST(IPC::MultiServer<WMClientConnection>::try_create("/tmp/portal/wm"));
+    m_window_server = MUST(IPC::MultiServer<ConnectionFromClient>::try_create("/tmp/portal/window"));
+    m_wm_server = MUST(IPC::MultiServer<WMConnectionFromClient>::try_create("/tmp/portal/wm"));
 
     if (m_keyboard_fd >= 0) {
         m_keyboard_notifier = Core::Notifier::construct(m_keyboard_fd, Core::Notifier::Read);

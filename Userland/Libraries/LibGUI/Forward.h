@@ -88,7 +88,7 @@ class VerticalSlider;
 class WMEvent;
 class Widget;
 class Window;
-class WindowServerConnection;
+class ConnectionToWindowServer;
 
 enum class ModelRole;
 enum class SortOrder;

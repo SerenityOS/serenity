@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <LibIPC/ServerConnection.h>
+#include <LibIPC/ConnectionToServer.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebContentServerEndpoint.h>
@@ -17,7 +17,7 @@ namespace Web {
 class OutOfProcessWebView;
 
 class WebContentClient final
-    : public IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>
+    : public IPC::ConnectionToServer<WebContentClientEndpoint, WebContentServerEndpoint>
     , public WebContentClientEndpoint {
     IPC_CLIENT_CONNECTION(WebContentClient, "/tmp/portal/webcontent");
 

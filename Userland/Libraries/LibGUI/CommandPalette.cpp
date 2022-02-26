@@ -175,7 +175,7 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
     collect_actions(parent_window);
 
     auto& main_widget = set_main_widget<GUI::Frame>();
-    main_widget.set_frame_shadow(Gfx::FrameShadow::Raised);
+    main_widget.set_frame_shape(Gfx::FrameShape::Window);
     main_widget.set_fill_with_background_color(true);
 
     auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();

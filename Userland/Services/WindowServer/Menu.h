@@ -20,7 +20,7 @@
 
 namespace WindowServer {
 
-class ClientConnection;
+class ConnectionFromClient;
 class Menubar;
 class Window;
 
@@ -30,8 +30,8 @@ class Menu final : public Core::Object {
 public:
     virtual ~Menu() override;
 
-    ClientConnection* client() { return m_client; }
-    const ClientConnection* client() const { return m_client; }
+    ConnectionFromClient* client() { return m_client; }
+    const ConnectionFromClient* client() const { return m_client; }
     int menu_id() const { return m_menu_id; }
 
     bool is_open() const;
@@ -129,7 +129,7 @@ public:
     const Vector<size_t>* items_with_alt_shortcut(u32 alt_shortcut) const;
 
 private:
-    Menu(ClientConnection*, int menu_id, String name);
+    Menu(ConnectionFromClient*, int menu_id, String name);
 
     virtual void event(Core::Event&) override;
 
@@ -144,7 +144,7 @@ private:
 
     void start_activation_animation(MenuItem&);
 
-    ClientConnection* m_client { nullptr };
+    ConnectionFromClient* m_client { nullptr };
     int m_menu_id { 0 };
     String m_name;
     u32 m_alt_shortcut_character { 0 };

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ClientConnection.h"
+#include "ConnectionFromClient.h"
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibIPC/MultiServer.h>
@@ -18,6 +18,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     Core::EventLoop event_loop;
 
-    auto server = TRY(IPC::MultiServer<ConfigServer::ClientConnection>::try_create());
+    auto server = TRY(IPC::MultiServer<ConfigServer::ConnectionFromClient>::try_create());
     return event_loop.exec();
 }
