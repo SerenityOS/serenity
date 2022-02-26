@@ -16,6 +16,8 @@ public:
 
     HTMLTableRowElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTableRowElement() override;
+
+    NonnullRefPtr<DOM::HTMLCollection> cells() const;
 };
 
 }
