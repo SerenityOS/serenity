@@ -18,7 +18,7 @@ public:
 
     float width() const { return m_width; }
 
-    void add_fragment(Node const& layout_node, int start, int length, float leading_size, float trailing_size, float content_width, float content_height, LineBoxFragment::Type = LineBoxFragment::Type::Normal);
+    void add_fragment(Node const& layout_node, int start, int length, float leading_size, float trailing_size, float content_width, float content_height, float border_box_top, float border_box_bottom, LineBoxFragment::Type = LineBoxFragment::Type::Normal);
 
     const NonnullOwnPtrVector<LineBoxFragment>& fragments() const { return m_fragments; }
     NonnullOwnPtrVector<LineBoxFragment>& fragments() { return m_fragments; }
@@ -27,7 +27,6 @@ public:
 
     bool is_empty_or_ends_in_whitespace() const;
     bool is_empty() const { return m_fragments.is_empty(); }
-    bool ends_with_forced_line_break() const;
 
 private:
     friend class BlockContainer;

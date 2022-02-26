@@ -167,6 +167,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(placeholder)                \
     __ENUMERATE_HTML_ATTRIBUTE(playsinline)                \
     __ENUMERATE_HTML_ATTRIBUTE(poster)                     \
+    __ENUMERATE_HTML_ATTRIBUTE(preload)                    \
     __ENUMERATE_HTML_ATTRIBUTE(readonly)                   \
     __ENUMERATE_HTML_ATTRIBUTE(rel)                        \
     __ENUMERATE_HTML_ATTRIBUTE(required)                   \

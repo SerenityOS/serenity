@@ -28,7 +28,7 @@ public:
     }
 
     // FIXME: Add optional DocumentType once supported by IDL
-    NonnullRefPtr<Document> create_document(const String&, const String&) const;
+    ExceptionOr<NonnullRefPtr<Document>> create_document(const String&, const String&) const;
     NonnullRefPtr<Document> create_html_document(const String& title) const;
     NonnullRefPtr<DocumentType> create_document_type(String const& qualified_name, String const& public_id, String const& system_id);
 

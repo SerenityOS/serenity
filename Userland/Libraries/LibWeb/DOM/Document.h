@@ -177,8 +177,8 @@ public:
 
     JS::Value run_javascript(StringView source, StringView filename = "(unknown)");
 
-    NonnullRefPtr<Element> create_element(const String& tag_name);
-    NonnullRefPtr<Element> create_element_ns(const String& namespace_, const String& qualified_name);
+    ExceptionOr<NonnullRefPtr<Element>> create_element(const String& tag_name);
+    ExceptionOr<NonnullRefPtr<Element>> create_element_ns(const String& namespace_, const String& qualified_name);
     NonnullRefPtr<DocumentFragment> create_document_fragment();
     NonnullRefPtr<Text> create_text_node(const String& data);
     NonnullRefPtr<Comment> create_comment(const String& data);
@@ -315,6 +315,8 @@ public:
 
     void set_parser(Badge<HTML::HTMLParser>, HTML::HTMLParser&);
     void detach_parser(Badge<HTML::HTMLParser>);
+
+    static bool is_valid_name(String const&);
 
 private:
     explicit Document(const AK::URL&);

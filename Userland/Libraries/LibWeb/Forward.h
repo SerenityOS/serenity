@@ -86,6 +86,7 @@ class UnsetStyleValue;
 }
 
 namespace Web::DOM {
+class AbstractRange;
 class AbortController;
 class AbortSignal;
 class Attribute;
@@ -116,6 +117,7 @@ class ProcessingInstruction;
 class Range;
 class ShadowRoot;
 class StaticNodeList;
+class StaticRange;
 class Text;
 class Timer;
 class Window;
@@ -347,6 +349,7 @@ class URLSearchParamsIterator;
 }
 
 namespace Web::Bindings {
+class AbstractRangeWrapper;
 class AbortControllerWrapper;
 class AbortSignalWrapper;
 class AttributeWrapper;
@@ -479,6 +482,7 @@ class RangeWrapper;
 class ResizeObserverWrapper;
 class ScreenWrapper;
 class SelectionWrapper;
+class StaticRangeWrapper;
 class StorageWrapper;
 class StyleSheetListWrapper;
 class StyleSheetWrapper;

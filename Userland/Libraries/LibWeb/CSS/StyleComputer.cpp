@@ -909,17 +909,11 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
     float root_font_size = 10;
     float font_size = style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(viewport_rect, font_metrics, root_font_size, root_font_size);
 
-    for (auto& value_slot : style.m_property_values) {
+    for (size_t i = 0; i < style.m_property_values.size(); ++i) {
+        auto& value_slot = style.m_property_values[i];
         if (!value_slot)
             continue;
-        value_slot->visit_lengths([&](Length& length) {
-            if (length.is_px())
-                return;
-            if (length.is_absolute() || length.is_relative()) {
-                auto px = length.to_px(viewport_rect, font_metrics, font_size, root_font_size);
-                length = Length::make_px(px);
-            }
-        });
+        value_slot = value_slot->absolutized(viewport_rect, font_metrics, font_size, root_font_size);
     }
 }
 

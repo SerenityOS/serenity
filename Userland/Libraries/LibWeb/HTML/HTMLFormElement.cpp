@@ -182,7 +182,7 @@ NonnullRefPtr<DOM::HTMLCollection> HTMLFormElement::elements() const
 {
     // FIXME: This should return the same HTMLFormControlsCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return DOM::HTMLCollection::create(const_cast<HTMLFormElement&>(*this), [this](Element const& element) {
+    return DOM::HTMLCollection::create(const_cast<HTMLFormElement&>(*this), [](Element const& element) {
         return is_form_control(element);
     });
 }

@@ -1,4 +1,5 @@
 set(SOURCES
+    Bindings/AudioConstructor.cpp
     Bindings/CSSNamespace.cpp
     Bindings/CSSRuleWrapperFactory.cpp
     Bindings/CSSStyleDeclarationWrapperCustom.cpp
@@ -92,6 +93,7 @@ set(SOURCES
     DOM/Range.cpp
     DOM/ShadowRoot.cpp
     DOM/StaticNodeList.cpp
+    DOM/StaticRange.cpp
     DOM/Text.cpp
     DOM/Text.idl
     DOM/Timer.cpp
@@ -410,6 +412,7 @@ libweb_js_wrapper(CSS/MediaQueryListEvent)
 libweb_js_wrapper(CSS/Screen)
 libweb_js_wrapper(CSS/StyleSheet)
 libweb_js_wrapper(CSS/StyleSheetList)
+libweb_js_wrapper(DOM/AbstractRange)
 libweb_js_wrapper(DOM/Attribute)
 libweb_js_wrapper(DOM/AbortController)
 libweb_js_wrapper(DOM/AbortSignal)
@@ -432,6 +435,7 @@ libweb_js_wrapper(DOM/NodeList)
 libweb_js_wrapper(DOM/ProcessingInstruction)
 libweb_js_wrapper(DOM/Range)
 libweb_js_wrapper(DOM/ShadowRoot)
+libweb_js_wrapper(DOM/StaticRange)
 libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(Encoding/TextDecoder)
 libweb_js_wrapper(Encoding/TextEncoder)

@@ -23,12 +23,14 @@ public:
         Trailing,
     };
 
-    LineBoxFragment(Node const& layout_node, int start, int length, const Gfx::FloatPoint& offset, const Gfx::FloatSize& size, Type type)
+    LineBoxFragment(Node const& layout_node, int start, int length, Gfx::FloatPoint const& offset, Gfx::FloatSize const& size, float border_box_top, float border_box_bottom, Type type)
         : m_layout_node(layout_node)
         , m_start(start)
         , m_length(length)
         , m_offset(offset)
         , m_size(size)
+        , m_border_box_top(border_box_top)
+        , m_border_box_bottom(border_box_bottom)
         , m_type(type)
     {
     }
@@ -48,6 +50,10 @@ public:
     float width() const { return m_size.width(); }
     float height() const { return m_size.height(); }
 
+    float border_box_height() const { return m_border_box_top + height() + m_border_box_bottom; }
+    float border_box_top() const { return m_border_box_top; }
+    float border_box_bottom() const { return m_border_box_bottom; }
+
     float absolute_x() const { return absolute_rect().x(); }
 
     void paint(PaintContext&, PaintPhase);
@@ -66,6 +72,8 @@ private:
     int m_length { 0 };
     Gfx::FloatPoint m_offset;
     Gfx::FloatSize m_size;
+    float m_border_box_top { 0 };
+    float m_border_box_bottom { 0 };
     Type m_type { Type::Normal };
 };
 

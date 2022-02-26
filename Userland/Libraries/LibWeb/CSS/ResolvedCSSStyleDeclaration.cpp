@@ -403,6 +403,29 @@ static CSS::ValueID to_css_value_id(CSS::Overflow value)
     VERIFY_NOT_REACHED();
 }
 
+static CSS::ValueID to_css_value_id(CSS::VerticalAlign value)
+{
+    switch (value) {
+    case CSS::VerticalAlign::Baseline:
+        return CSS::ValueID::Baseline;
+    case CSS::VerticalAlign::Bottom:
+        return CSS::ValueID::Bottom;
+    case CSS::VerticalAlign::Middle:
+        return CSS::ValueID::Middle;
+    case CSS::VerticalAlign::Sub:
+        return CSS::ValueID::Sub;
+    case CSS::VerticalAlign::Super:
+        return CSS::ValueID::Super;
+    case CSS::VerticalAlign::TextBottom:
+        return CSS::ValueID::TextBottom;
+    case CSS::VerticalAlign::TextTop:
+        return CSS::ValueID::TextTop;
+    case CSS::VerticalAlign::Top:
+        return CSS::ValueID::Top;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 static CSS::ValueID to_css_value_id(CSS::ListStyleType value)
 {
     switch (value) {
@@ -716,6 +739,15 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
             value_or_default(maybe_background_origin, IdentifierStyleValue::create(CSS::ValueID::PaddingBox)),
             value_or_default(maybe_background_clip, IdentifierStyleValue::create(CSS::ValueID::BorderBox)));
     }
+    case CSS::PropertyID::VerticalAlign:
+        if (auto const* length_percentage = layout_node.computed_values().vertical_align().get_pointer<CSS::LengthPercentage>()) {
+            if (length_percentage->is_length())
+                return LengthStyleValue::create(length_percentage->length());
+            if (length_percentage->is_percentage())
+                return PercentageStyleValue::create(length_percentage->percentage());
+            VERIFY_NOT_REACHED();
+        }
+        return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().vertical_align().get<CSS::VerticalAlign>()));
     case CSS::PropertyID::ListStyleType:
         return IdentifierStyleValue::create(to_css_value_id(layout_node.computed_values().list_style_type()));
     case CSS::PropertyID::BoxSizing:

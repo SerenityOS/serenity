@@ -959,4 +959,35 @@ NonnullRefPtr<Node> Node::get_root_node(GetRootNodeOptions const& options)
     return root();
 }
 
+String Node::debug_description() const
+{
+    StringBuilder builder;
+    builder.append(node_name().to_lowercase());
+    if (is_element()) {
+        auto& element = static_cast<DOM::Element const&>(*this);
+        if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null())
+            builder.appendff("#{}", id);
+        for (auto const& class_name : element.class_names())
+            builder.appendff(".{}", class_name);
+    }
+    return builder.to_string();
+}
+
+// https://dom.spec.whatwg.org/#concept-node-length
+size_t Node::length() const
+{
+    // 1. If node is a DocumentType or Attr node, then return 0.
+    if (is_document_type() || is_attribute())
+        return 0;
+
+    // 2. If node is a CharacterData node, then return node’s data’s length.
+    if (is_character_data()) {
+        auto* character_data_node = verify_cast<CharacterData>(this);
+        return character_data_node->data().length();
+    }
+
+    // 3. Return the number of node’s children.
+    return child_count();
+}
+
 }

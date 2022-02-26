@@ -1,3 +1,4 @@
+#import <DOM/HTMLCollection.idl>
 #import <HTML/HTMLElement.idl>
 
 interface HTMLTableSectionElement : HTMLElement {
@@ -6,5 +7,7 @@ interface HTMLTableSectionElement : HTMLElement {
     [Reflect=char] attribute DOMString ch;
     [Reflect=charoff] attribute DOMString chOff;
     [Reflect=valign] attribute DOMString vAlign;
+
+    [SameObject] readonly attribute HTMLCollection rows;
 
 };

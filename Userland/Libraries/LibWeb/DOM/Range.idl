@@ -1,21 +1,35 @@
 #import <DOM/Node.idl>
+#import <DOM/AbstractRange.idl>
 
-interface Range {
+[Exposed=Window]
+interface Range : AbstractRange {
 
     constructor();
 
-    readonly attribute boolean collapsed;
-
     readonly attribute Node commonAncestorContainer;
-
-    readonly attribute Node startContainer;
-    readonly attribute unsigned long startOffset;
-    readonly attribute Node endContainer;
-    readonly attribute unsigned long endOffset;
 
     undefined setStart(Node node, unsigned long offset);
     undefined setEnd(Node node, unsigned long offset);
+    undefined setStartBefore(Node node);
+    undefined setStartAfter(Node node);
+    undefined setEndBefore(Node node);
+    undefined setEndAfter(Node node);
+    undefined collapse(optional boolean toStart = false);
+    undefined selectNode(Node node);
+    undefined selectNodeContents(Node node);
+
+    const unsigned short START_TO_START = 0;
+    const unsigned short START_TO_END = 1;
+    const unsigned short END_TO_END = 2;
+    const unsigned short END_TO_START = 3;
+    short compareBoundaryPoints(unsigned short how, Range sourceRange);
 
     Range cloneRange();
+    undefined detach();
+
+    boolean isPointInRange(Node node, unsigned long offset);
+    short comparePoint(Node node, unsigned long offset);
+
+    boolean intersectsNode(Node node);
 
 };

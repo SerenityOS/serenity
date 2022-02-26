@@ -88,10 +88,12 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
     auto& painter = context.painter();
 
     if (phase == PaintPhase::Foreground) {
+        auto fragment_absolute_rect = fragment.absolute_rect();
+
         painter.set_font(font());
 
         if (document().inspected_node() == &dom_node())
-            context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
+            context.painter().draw_rect(enclosing_int_rect(fragment_absolute_rect), Color::Magenta);
 
         paint_text_decoration(painter, fragment);
 
@@ -103,14 +105,17 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
         if (text_transform == CSS::TextTransform::Lowercase)
             text = m_text_for_rendering.to_lowercase();
 
-        painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, computed_values().color());
+        // FIXME: This is a hack to prevent text clipping when painting a bitmap font into a too-small box.
+        auto draw_rect = enclosing_int_rect(fragment_absolute_rect);
+        draw_rect.set_height(max(draw_rect.height(), font().glyph_height()));
+        painter.draw_text(draw_rect, text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, computed_values().color());
 
         auto selection_rect = fragment.selection_rect(font());
         if (!selection_rect.is_empty()) {
             painter.fill_rect(enclosing_int_rect(selection_rect), context.palette().selection());
             Gfx::PainterStateSaver saver(painter);
             painter.add_clip_rect(enclosing_int_rect(selection_rect));
-            painter.draw_text(enclosing_int_rect(fragment.absolute_rect()), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, context.palette().selection_text());
+            painter.draw_text(enclosing_int_rect(fragment_absolute_rect), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, context.palette().selection_text());
         }
 
         paint_cursor_if_needed(context, fragment);

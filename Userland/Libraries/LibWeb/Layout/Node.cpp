@@ -198,6 +198,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     m_font = specified_style.computed_font();
     m_line_height = specified_style.line_height(*this);
 
+    computed_values.set_vertical_align(specified_style.vertical_align());
+
     {
         auto attachments = specified_style.property(CSS::PropertyID::BackgroundAttachment);
         auto clips = specified_style.property(CSS::PropertyID::BackgroundClip);

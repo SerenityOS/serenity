@@ -43,19 +43,34 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         margin_rect.set_y(absolute_y() - margin_box.top);
         margin_rect.set_height(content_height() + margin_box.top + margin_box.bottom);
 
-        context.painter().draw_rect(enclosing_int_rect(margin_rect), Color::Yellow);
-        context.painter().draw_rect(enclosing_int_rect(absolute_padding_box_rect()), Color::Cyan);
-        context.painter().draw_rect(enclosing_int_rect(content_rect), Color::Magenta);
+        auto border_rect = absolute_border_box_rect();
+        auto padding_rect = absolute_padding_box_rect();
 
-        auto size_text_rect = absolute_rect();
-        auto size_text = String::formatted("{}x{}", content_rect.width(), content_rect.height());
-        size_text_rect.set_y(content_rect.y() + content_rect.height());
+        auto paint_inspector_rect = [&](Gfx::FloatRect const& rect, Color color) {
+            context.painter().fill_rect(enclosing_int_rect(rect), Color(color).with_alpha(100));
+            context.painter().draw_rect(enclosing_int_rect(rect), Color(color));
+        };
+
+        paint_inspector_rect(margin_rect, Color::Yellow);
+        paint_inspector_rect(padding_rect, Color::Cyan);
+        paint_inspector_rect(border_rect, Color::Green);
+        paint_inspector_rect(content_rect, Color::Magenta);
+
+        StringBuilder builder;
+        if (dom_node())
+            builder.append(dom_node()->debug_description());
+        else
+            builder.append(debug_description());
+        builder.appendff(" {}x{} @ {},{}", border_rect.width(), border_rect.height(), border_rect.x(), border_rect.y());
+        auto size_text = builder.to_string();
+        auto size_text_rect = border_rect;
+        size_text_rect.set_y(border_rect.y() + border_rect.height());
         size_text_rect.set_top(size_text_rect.top());
-        size_text_rect.set_width((float)context.painter().font().width(size_text));
-        size_text_rect.set_height(context.painter().font().glyph_height());
-
-        context.painter().fill_rect(enclosing_int_rect(size_text_rect), Color::Cyan);
-        context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text);
+        size_text_rect.set_width((float)context.painter().font().width(size_text) + 4);
+        size_text_rect.set_height(context.painter().font().glyph_height() + 4);
+        context.painter().fill_rect(enclosing_int_rect(size_text_rect), context.palette().color(Gfx::ColorRole::Tooltip));
+        context.painter().draw_rect(enclosing_int_rect(size_text_rect), context.palette().threed_shadow1());
+        context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text, Gfx::TextAlignment::Center, context.palette().color(Gfx::ColorRole::TooltipText));
     }
 
     if (phase == PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && verify_cast<DOM::Element>(*dom_node()).is_focused()) {

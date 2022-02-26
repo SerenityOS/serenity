@@ -1,3 +1,4 @@
+#import <DOM/HTMLCollection.idl>
 #import <HTML/HTMLElement.idl>
 
 interface HTMLTableRowElement : HTMLElement {
@@ -8,5 +9,7 @@ interface HTMLTableRowElement : HTMLElement {
     [Reflect=valign] attribute DOMString vAlign;
 
     [LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
+
+    [SameObject] readonly attribute HTMLCollection cells;
 
 };
