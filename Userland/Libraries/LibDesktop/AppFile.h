@@ -19,7 +19,7 @@ public:
     static NonnullRefPtr<AppFile> get_for_app(StringView app_name);
     static NonnullRefPtr<AppFile> open(StringView path);
     static void for_each(Function<void(NonnullRefPtr<AppFile>)>, StringView directory = APP_FILES_DIRECTORY);
-    ~AppFile();
+    ~AppFile() = default;
 
     bool is_valid() const { return m_valid; }
     String filename() const { return m_config->filename(); }
