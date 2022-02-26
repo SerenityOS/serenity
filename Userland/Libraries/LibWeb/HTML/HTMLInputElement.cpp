@@ -171,7 +171,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     auto initial_value = attribute(HTML::AttributeNames::value);
     if (initial_value.is_null())
         initial_value = String::empty();
-    auto element = document().create_element(HTML::TagNames::div);
+    auto element = document().create_element(HTML::TagNames::div).release_value();
     element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px");
     m_text_node = adopt_ref(*new DOM::Text(document(), initial_value));
     m_text_node->set_always_editable(true);

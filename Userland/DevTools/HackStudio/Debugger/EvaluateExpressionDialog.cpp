@@ -59,11 +59,11 @@ void EvaluateExpressionDialog::build(Window* parent_window)
 
     auto base_document = Web::DOM::Document::create();
     base_document->append_child(adopt_ref(*new Web::DOM::DocumentType(base_document)));
-    auto html_element = base_document->create_element("html");
+    auto html_element = base_document->create_element("html").release_value();
     base_document->append_child(html_element);
-    auto head_element = base_document->create_element("head");
+    auto head_element = base_document->create_element("head").release_value();
     html_element->append_child(head_element);
-    auto body_element = base_document->create_element("body");
+    auto body_element = base_document->create_element("body").release_value();
     html_element->append_child(body_element);
     m_output_container = body_element;
 
@@ -138,7 +138,7 @@ void EvaluateExpressionDialog::handle_evaluation(const String& expression)
 
 void EvaluateExpressionDialog::set_output(StringView html)
 {
-    auto paragraph = m_output_container->document().create_element("p");
+    auto paragraph = m_output_container->document().create_element("p").release_value();
     paragraph->set_inner_html(html);
 
     m_output_container->append_child(paragraph);

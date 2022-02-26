@@ -444,7 +444,7 @@ void Document::set_title(const String& title)
 
     RefPtr<HTML::HTMLTitleElement> title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
     if (!title_element) {
-        title_element = static_ptr_cast<HTML::HTMLTitleElement>(create_element(HTML::TagNames::title));
+        title_element = static_ptr_cast<HTML::HTMLTitleElement>(create_element(HTML::TagNames::title).release_value());
         head_element->append_child(*title_element);
     }
 
@@ -864,15 +864,18 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
 
 // https://dom.spec.whatwg.org/#dom-document-createelement
 // FIXME: This only implements step 6 of the algorithm and does not take in options.
-NonnullRefPtr<Element> Document::create_element(const String& tag_name)
+DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element(String const& tag_name)
 {
+    if (!is_valid_name(tag_name))
+        return DOM::InvalidCharacterError::create("Invalid character in tag name.");
+
     // FIXME: Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml", and null otherwise.
     return DOM::create_element(*this, tag_name, Namespace::HTML);
 }
 
 // https://dom.spec.whatwg.org/#internal-createelementns-steps
 // FIXME: This only implements step 4 of the algorithm and does not take in options.
-NonnullRefPtr<Element> Document::create_element_ns(const String& namespace_, const String& qualified_name)
+DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element_ns(const String& namespace_, const String& qualified_name)
 {
     return DOM::create_element(*this, qualified_name, namespace_);
 }
@@ -1336,6 +1339,55 @@ void Document::set_parser(Badge<HTML::HTMLParser>, HTML::HTMLParser& parser)
 void Document::detach_parser(Badge<HTML::HTMLParser>)
 {
     m_parser = nullptr;
+}
+
+// https://www.w3.org/TR/xml/#NT-NameStartChar
+static bool is_valid_name_start_character(u32 code_point)
+{
+    return code_point == ':'
+        || (code_point >= 'A' && code_point <= 'Z')
+        || code_point == '_'
+        || (code_point >= 'a' && code_point <= 'z')
+        || (code_point >= 0xc0 && code_point <= 0xd6)
+        || (code_point >= 0xd8 && code_point <= 0xf6)
+        || (code_point >= 0xf8 && code_point <= 0x2ff)
+        || (code_point >= 0x370 && code_point <= 0x37d)
+        || (code_point >= 0x37f && code_point <= 0x1fff)
+        || (code_point >= 0x200c && code_point <= 0x200d)
+        || (code_point >= 0x2070 && code_point <= 0x218f)
+        || (code_point >= 0x2c00 && code_point <= 0x2fef)
+        || (code_point >= 0x3001 && code_point <= 0xD7ff)
+        || (code_point >= 0xf900 && code_point <= 0xfdcf)
+        || (code_point >= 0xfdf0 && code_point <= 0xfffd)
+        || (code_point >= 0x10000 && code_point <= 0xeffff);
+}
+
+// https://www.w3.org/TR/xml/#NT-NameChar
+static inline bool is_valid_name_character(u32 code_point)
+{
+    return is_valid_name_start_character(code_point)
+        || code_point == '-'
+        || code_point == '.'
+        || (code_point >= '0' && code_point <= '9')
+        || code_point == 0xb7
+        || (code_point >= 0x300 && code_point <= 0x36f)
+        || (code_point >= 0x203f && code_point <= 0x2040);
+}
+
+bool Document::is_valid_name(String const& name)
+{
+    if (name.is_empty())
+        return false;
+
+    if (!is_valid_name_start_character(name[0]))
+        return false;
+
+    for (size_t i = 1; i < name.length(); ++i) {
+        if (!is_valid_name_character(name[i]))
+            return false;
+    }
+
+    return true;
 }
 
 }
