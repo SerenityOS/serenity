@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Richard Gráčik <r.gracik@gmail.com>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -85,13 +86,13 @@ void CatDog::timer_event(Core::TimerEvent&)
     }
 
     if (!m_up && !m_down && !m_left && !m_right) {
-        m_curr_bmp = m_still;
-        if (m_timer.elapsed() > 5000) {
-            m_curr_bmp = m_sleep1;
-            if (m_curr_frame == 2)
-                m_curr_bmp = m_sleep2;
-            m_sleeping = true;
-        }
+        // Select the movement-free image based on the main state.
+        if (m_timer.elapsed() > 5000)
+            m_main_state = MainState::Sleeping;
+        set_image_by_main_state();
+    } else if (is_non_application_state(m_main_state)) {
+        // If CatDog currently moves, it should be idle the next time it stops.
+        m_main_state = MainState::Idle;
     }
 
     update();
@@ -113,11 +114,11 @@ void CatDog::track_mouse_move(Gfx::IntPoint const& point)
         return;
     m_temp_pos = relative_point;
     m_timer.start();
-    if (m_sleeping) {
-        m_curr_bmp = m_alert;
+    if (m_main_state == MainState::Sleeping) {
+        m_main_state = MainState::Alerted;
+        set_image_by_main_state();
         update();
     }
-    m_sleeping = false;
 }
 
 void CatDog::mousedown_event(GUI::MouseEvent& event)
