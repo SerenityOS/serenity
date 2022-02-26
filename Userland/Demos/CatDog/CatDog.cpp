@@ -6,11 +6,34 @@
  */
 
 #include "CatDog.h"
+#include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 
 void CatDog::timer_event(Core::TimerEvent&)
 {
+    auto maybe_proc_info = Core::ProcessStatisticsReader::get_all(m_proc_all);
+    if (maybe_proc_info.has_value()) {
+        auto proc_info = maybe_proc_info.release_value();
+
+        auto maybe_paint_program = proc_info.processes.first_matching([](auto& process) {
+            return process.name.equals_ignoring_case("pixelpaint") || process.name.equals_ignoring_case("fonteditor");
+        });
+        if (maybe_paint_program.has_value()) {
+            m_main_state = MainState::Artist;
+        } else {
+            auto maybe_inspector_program = proc_info.processes.first_matching([](auto& process) {
+                return process.name.equals_ignoring_case("inspector") || process.name.equals_ignoring_case("systemmonitor") || process.name.equals_ignoring_case("profiler");
+            });
+
+            if (maybe_inspector_program.has_value())
+                m_main_state = MainState::Inspector;
+            // If we currently have an application state but that app isn't open anymore, go back to idle.
+            else if (!is_non_application_state(m_main_state))
+                m_main_state = MainState::Idle;
+        }
+    }
+
     if (!m_roaming)
         return;
     if (m_temp_pos.x() > 48) {
