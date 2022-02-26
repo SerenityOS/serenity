@@ -61,6 +61,7 @@ private:
     virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(AK::URL const&, u8) override;
     virtual void did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, u8) override;
     virtual void did_update_resource_count(i32 count_waiting) override;
+    virtual void did_request_file(String const& path, i32) override;
 
     OutOfProcessWebView& m_view;
 };

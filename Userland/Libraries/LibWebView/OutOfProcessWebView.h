@@ -112,6 +112,7 @@ public:
     String notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source);
     void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source);
     void notify_server_did_update_resource_count(i32 count_waiting);
+    void notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32);
 
 private:
     OutOfProcessWebView();

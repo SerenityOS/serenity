@@ -505,4 +505,22 @@ Messages::WebContentServer::GetSessionStorageEntriesResponse ConnectionFromClien
     auto session_storage = document->window().session_storage();
     return session_storage->map();
 }
+
+void ConnectionFromClient::handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id)
+{
+    auto result = m_requested_files.get(request_id);
+    VERIFY(result.has_value());
+
+    VERIFY(result.value()->on_file_request_finish);
+    result.value()->on_file_request_finish(error != 0 ? Error::from_errno(error) : ErrorOr<i32> { file->take_fd() });
+    m_requested_files.remove(request_id);
+}
+
+void ConnectionFromClient::request_file(NonnullRefPtr<Web::FileRequest>& file_request)
+{
+    i32 const id = last_id++;
+    m_requested_files.set(id, file_request);
+
+    async_did_request_file(file_request->path(), id);
+}
 }

@@ -17,6 +17,7 @@
 #include <LibCore/IODevice.h>
 #include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
+#include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibGemini/GeminiRequest.h>
 #include <LibGemini/GeminiResponse.h>
@@ -212,6 +213,12 @@ public:
 
     virtual void page_did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override
     {
+    }
+
+    void request_file(NonnullRefPtr<Web::FileRequest>& request) override
+    {
+        auto const file = Core::System::open(request->path(), O_RDONLY);
+        request->on_file_request_finish(file);
     }
 
 private:

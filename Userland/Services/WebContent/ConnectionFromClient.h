@@ -13,6 +13,7 @@
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Loader/FileRequest.h>
 #include <WebContent/Forward.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebContentConsoleClient.h>
@@ -30,6 +31,8 @@ public:
     virtual void die() override;
 
     void initialize_js_console(Badge<PageHost>);
+
+    void request_file(NonnullRefPtr<Web::FileRequest>&);
 
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
@@ -64,6 +67,7 @@ private:
     virtual void set_preferred_color_scheme(Web::CSS::PreferredColorScheme const&) override;
     virtual void set_has_focus(bool) override;
     virtual void set_is_scripting_enabled(bool) override;
+    virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;
 
     virtual void js_console_input(String const&) override;
     virtual void run_javascript(String const&) override;
@@ -91,6 +95,9 @@ private:
     WeakPtr<JS::Interpreter> m_interpreter;
     OwnPtr<WebContentConsoleClient> m_console_client;
     JS::Handle<JS::GlobalObject> m_console_global_object;
+
+    HashMap<int, NonnullRefPtr<Web::FileRequest>> m_requested_files {};
+    int last_id { 0 };
 };
 
 }

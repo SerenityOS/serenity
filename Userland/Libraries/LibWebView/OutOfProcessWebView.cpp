@@ -7,6 +7,7 @@
 #include "OutOfProcessWebView.h"
 #include "WebContentClient.h"
 #include <AK/String.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/InputBox.h>
@@ -398,6 +399,15 @@ void OutOfProcessWebView::notify_server_did_update_resource_count(i32 count_wait
 {
     if (on_resource_status_change)
         on_resource_status_change(count_waiting);
+}
+
+void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, String const& path, i32 request_id)
+{
+    auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), path);
+    if (file.is_error())
+        client().async_handle_file_return(file.error().code(), {}, request_id);
+    else
+        client().async_handle_file_return(0, IPC::File(file.value()->leak_fd()), request_id);
 }
 
 void OutOfProcessWebView::did_scroll()
