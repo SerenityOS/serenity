@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -81,7 +82,7 @@ struct AESCipherKey : public CipherKey {
             expand_decrypt_key(user_key, key_bits);
     }
 
-    virtual ~AESCipherKey() override { }
+    virtual ~AESCipherKey() override = default;
 
     size_t rounds() const { return m_rounds; }
     size_t length() const { return m_bits / 8; }
