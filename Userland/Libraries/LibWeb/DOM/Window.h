@@ -100,6 +100,8 @@ public:
 
     RefPtr<HTML::Storage> local_storage();
 
+    Window* parent();
+
 private:
     explicit Window(Document&);
 

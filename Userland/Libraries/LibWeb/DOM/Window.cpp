@@ -451,4 +451,29 @@ RefPtr<HTML::Storage> Window::local_storage()
     });
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
+Window* Window::parent()
+{
+    // 1. Let current be this Window object's browsing context.
+    auto* current = associated_document().browsing_context();
+
+    // 2. If current is null, then return null.
+    if (!current)
+        return nullptr;
+
+    // 3. If current is a child browsing context of another browsing context parent,
+    //    then return parent's WindowProxy object.
+    if (current->parent()) {
+        VERIFY(current->parent()->active_document());
+        return &current->parent()->active_document()->window();
+    }
+
+    // 4. Assert: current is a top-level browsing context.
+    VERIFY(current->is_top_level());
+
+    // FIXME: 5. Return current's WindowProxy object.
+    VERIFY(current->active_document());
+    return &current->active_document()->window();
+}
+
 }

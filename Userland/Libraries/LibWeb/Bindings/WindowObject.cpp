@@ -396,22 +396,13 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::top_getter)
     return top_window.wrapper();
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::parent_getter)
 {
     auto* impl = TRY(impl_from(vm, global_object));
-
-    auto* this_browsing_context = impl->associated_document().browsing_context();
-    if (!this_browsing_context)
+    auto* parent = impl->parent();
+    if (!parent)
         return JS::js_null();
-
-    if (this_browsing_context->parent()) {
-        VERIFY(this_browsing_context->parent()->active_document());
-        auto& parent_window = this_browsing_context->parent()->active_document()->window();
-        return parent_window.wrapper();
-    }
-    VERIFY(this_browsing_context == &this_browsing_context->top_level_browsing_context());
-    return impl->wrapper();
+    return parent->wrapper();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::document_getter)
