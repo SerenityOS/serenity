@@ -411,6 +411,10 @@ ErrorOr<int> run_in_desktop_mode()
         paste_action->set_enabled(data_type == "text/uri-list" && access(directory_view->path().characters(), W_OK) == 0);
     };
 
+    auto reload_action = GUI::Action::create("&Reload", { Key_F5 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png").release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
+        directory_view->refresh();
+    });
+
     auto desktop_view_context_menu = TRY(GUI::Menu::try_create("Directory View"));
 
     auto file_manager_action = GUI::Action::create("Open in File &Manager", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
@@ -447,6 +451,7 @@ ErrorOr<int> run_in_desktop_mode()
     TRY(desktop_view_context_menu->try_add_action(directory_view->mkdir_action()));
     TRY(desktop_view_context_menu->try_add_action(directory_view->touch_action()));
     TRY(desktop_view_context_menu->try_add_action(paste_action));
+    TRY(desktop_view_context_menu->try_add_action(reload_action));
     TRY(desktop_view_context_menu->try_add_separator());
     TRY(desktop_view_context_menu->try_add_action(file_manager_action));
     TRY(desktop_view_context_menu->try_add_action(open_terminal_action));
