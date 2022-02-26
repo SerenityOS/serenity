@@ -375,6 +375,20 @@ function min(cells) {
     return minIf(() => true, cells);
 }
 
+function sumProductIf(condition, rangeOne, rangeTwo) {
+    const rangeOneNums = numericResolve(rangeOne);
+    const rangeTwoNums = numericResolve(rangeTwo);
+    return rangeOneNums.reduce((accumulator, curr, i) => {
+        const prod = curr * rangeTwoNums[i];
+        if (!condition(curr, rangeTwoNums[i], prod)) return accumulator;
+        return accumulator + prod;
+    }, 0);
+}
+
+function sumProduct(rangeOne, rangeTwo) {
+    return sumProductIf(() => true, rangeOne, rangeTwo);
+}
+
 function median(cells) {
     const values = numericResolve(cells);
 
@@ -768,6 +782,72 @@ minIf.__documentation = JSON.stringify({
     examples: {
         "minIf(x => x > 4, R`A1:C4`)":
             "Finds the smallest number within A1:C4 that is greater than 4",
+    },
+});
+
+sumProduct.__documentation = JSON.stringify({
+    name: "sumProduct",
+    argc: 2,
+    argnames: ["range one", "range two"],
+    doc: "For each cell in the first range, multiply it by the cell at the same index in range two, then add the result to a sum",
+    example_data: {
+        "sumProductIf((a, b, prod) => a > 2, R`A0:A`, R`B0:B`)":
+            "Calculate the product of each cell in a times it's equivalent cell in b, then adds the products, [Click to view](spreadsheet://example/sumProductIf#sum_product)",
+    },
+});
+
+sumProductIf.__documentation = JSON.stringify({
+    name: "sumProductIf",
+    argc: 3,
+    argnames: ["condition", "range one", "range two"],
+    doc: "For each cell in the first range, multiply it by the cell at the same index in range two, then add the result to a sum, if the condition evaluated to true",
+    examples: {
+        "sumProductIf((a, b, prod) => a > 2, R`A0:A`, R`B0:B`)":
+            "Calculate the product of each cell in a times it's equivalent cell in b, then adds the products if a's value was greater than 2, [Click to view](spreadsheet://example/sumProductIf#sum_product)",
+    },
+    example_data: {
+        sum_product: {
+            name: "Sum Product",
+            columns: ["A", "B", "C"],
+            rows: 3,
+            cells: {
+                C0: {
+                    kind: "Formula",
+                    source: "sumProduct(R`A0:A`, R`B0:B`)",
+                    value: "300.0",
+                    type: "Numeric",
+                    type_metadata: {
+                        format: "sumProduct: %f",
+                    },
+                },
+                C1: {
+                    kind: "Formula",
+                    source: "sumProductIf((a, b, prod) => a > 2, R`A0:A`, R`B0:B`)",
+                    value: "250.0",
+                    type: "Numeric",
+                    type_metadata: {
+                        format: "sumProductIf: %f",
+                    },
+                },
+                ...Array.apply(null, { length: 4 })
+                    .map((_, i) => i)
+                    .reduce((acc, i) => {
+                        return {
+                            ...acc,
+                            [`A${i}`]: {
+                                kind: "LiteralString",
+                                value: `${i + 1}`,
+                                type: "Numeric",
+                            },
+                            [`B${i}`]: {
+                                kind: "LiteralString",
+                                value: `${(i + 1) * 10}`,
+                                type: "Numeric",
+                            },
+                        };
+                    }, {}),
+            },
+        },
     },
 });
 
