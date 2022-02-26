@@ -463,12 +463,15 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     auto& wrapping_mode_menu = view_menu.add_submenu("&Wrapping Mode");
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
+        Config::write_string("TextEditor", "View", "WrappingMode", "None");
     });
     m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap &Anywhere", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
+        Config::write_string("TextEditor", "View", "WrappingMode", "Anywhere");
     });
     m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at &Words", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
+        Config::write_string("TextEditor", "View", "WrappingMode", "Words");
     });
 
     m_wrapping_mode_actions.add_action(*m_no_wrapping_action);
@@ -479,7 +482,17 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     wrapping_mode_menu.add_action(*m_wrap_anywhere_action);
     wrapping_mode_menu.add_action(*m_wrap_at_words_action);
 
-    m_no_wrapping_action->set_checked(true);
+    auto word_wrap = Config::read_string("TextEditor", "View", "WrappingMode", "Words");
+    if (word_wrap == "None") {
+        m_no_wrapping_action->set_checked(true);
+        m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
+    } else if (word_wrap == "Anywhere") {
+        m_wrap_anywhere_action->set_checked(true);
+        m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
+    } else {
+        m_wrap_at_words_action->set_checked(true);
+        m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
+    }
 
     m_soft_tab_width_actions.set_exclusive(true);
     auto& soft_tab_width_menu = view_menu.add_submenu("&Tab Width");
