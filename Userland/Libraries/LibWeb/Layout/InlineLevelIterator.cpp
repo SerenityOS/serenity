@@ -86,6 +86,12 @@ Layout::Node const* InlineLevelIterator::next_inline_node_in_pre_order(Layout::N
             return nullptr;
     }
 
+    // If node is the last node on the "box model node stack", pop it off.
+    if (!m_box_model_node_stack.is_empty()
+        && &m_box_model_node_stack.last() == node) {
+        exit_node_with_box_model_metrics();
+    }
+
     return next;
 }
 
