@@ -219,8 +219,12 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
         top = 0;
         if (!line_boxes.is_empty()) {
             for (auto& fragment : line_boxes.last().fragments()) {
-                if (!bottom.has_value() || (fragment.offset().y() + fragment.height()) > bottom.value())
-                    bottom = fragment.offset().y() + fragment.height();
+                float fragment_top = fragment.offset().y() - fragment.border_box_top();
+                if (!top.has_value() || fragment_top < *top)
+                    top = fragment_top;
+                float fragment_bottom = fragment.offset().y() + fragment.height() + fragment.border_box_bottom();
+                if (!bottom.has_value() || fragment_bottom > *bottom)
+                    bottom = fragment_bottom;
             }
         }
     } else {

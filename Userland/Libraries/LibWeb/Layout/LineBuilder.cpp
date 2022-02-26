@@ -52,13 +52,13 @@ LineBox& LineBuilder::ensure_last_line_box()
 void LineBuilder::append_box(Box const& box, float leading_size, float trailing_size)
 {
     auto const& box_state = m_formatting_state.get(box);
-    ensure_last_line_box().add_fragment(box, 0, 0, leading_size, trailing_size, box_state.content_width, box_state.content_height);
+    ensure_last_line_box().add_fragment(box, 0, 0, leading_size, trailing_size, box_state.content_width, box_state.content_height, box_state.border_box_top(), box_state.border_box_bottom());
     m_max_height_on_current_line = max(m_max_height_on_current_line, box_state.content_height);
 }
 
 void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_node, size_t length_in_node, float leading_size, float trailing_size, float content_width, float content_height)
 {
-    ensure_last_line_box().add_fragment(text_node, offset_in_node, length_in_node, leading_size, trailing_size, content_width, content_height);
+    ensure_last_line_box().add_fragment(text_node, offset_in_node, length_in_node, leading_size, trailing_size, content_width, content_height, 0, 0);
     m_max_height_on_current_line = max(m_max_height_on_current_line, content_height);
 }
 
@@ -127,7 +127,7 @@ void LineBuilder::update_last_line()
     for (auto& fragment : line_box.fragments()) {
         float fragment_baseline;
         if (fragment.layout_node().is_box()) {
-            fragment_baseline = m_formatting_state.get(static_cast<Box const&>(fragment.layout_node())).content_height;
+            fragment_baseline = m_formatting_state.get(static_cast<Box const&>(fragment.layout_node())).border_box_height();
         } else {
             float font_baseline = fragment.layout_node().font().baseline();
             fragment_baseline = (max_height / 2.0f) + (font_baseline / 2.0f);

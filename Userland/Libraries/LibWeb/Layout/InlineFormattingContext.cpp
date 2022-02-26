@@ -90,7 +90,7 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
     for (auto& line_box : m_state.get(containing_block()).line_boxes) {
         float max_height = min_line_height;
         for (auto& fragment : line_box.fragments()) {
-            max_height = max(max_height, fragment.height());
+            max_height = max(max_height, fragment.border_box_height());
         }
         max_line_width = max(max_line_width, line_box.width());
         content_height += max_height;
