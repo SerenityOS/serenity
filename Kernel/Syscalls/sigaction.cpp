@@ -85,7 +85,14 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     auto stack_ptr = registers.userspace_sp();
 
     // Stack state (created by the signal trampoline):
-    // saved_ax, ucontext, signal_info.
+    // saved_ax, ucontext, signal_info, fpu_state?.
+
+#if ARCH(I386) || ARCH(X86_64)
+    // The FPU state is at the top here, pop it off and restore it.
+    Thread::current()->fpu_state() = TRY(copy_typed_from_user<FPUState>(stack_ptr));
+    stack_ptr += sizeof(FPUState);
+#endif
+
     stack_ptr += sizeof(siginfo); // We don't need this here.
 
     auto ucontext = TRY(copy_typed_from_user<__ucontext>(stack_ptr));

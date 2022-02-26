@@ -293,12 +293,12 @@ void signal_trampoline_dummy()
     // blocking syscall, that syscall may return some special error code in eax;
     // This error code would likely be overwritten by the signal handler, so it's
     // necessary to preserve it here.
-    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + 5 * sizeof(FlatPtr);
+    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 4 * sizeof(FlatPtr);
     asm(
         ".intel_syntax noprefix\n"
         ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        // stack state: 0, ucontext, signal_info, (alignment = 16), 0, ucontext*, siginfo*, signal, (alignment = 16), handler
+        // stack state: 0, ucontext, signal_info, (alignment = 16), fpu_state (alignment = 16), 0, ucontext*, siginfo*, signal, (alignment = 16), handler
 
         // Pop the handler into ecx
         "pop ecx\n" // save handler
@@ -310,7 +310,7 @@ void signal_trampoline_dummy()
         "call ecx\n"
         // drop the 4 arguments
         "add esp, 16\n"
-        // Current stack state is just saved_eax, ucontext, signal_info.
+        // Current stack state is just saved_eax, ucontext, signal_info, fpu_state?.
         // syscall SC_sigreturn
         "mov eax, %P0\n"
         "int 0x82\n"
@@ -326,12 +326,12 @@ void signal_trampoline_dummy()
     // blocking syscall, that syscall may return some special error code in eax;
     // This error code would likely be overwritten by the signal handler, so it's
     // necessary to preserve it here.
-    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + 4 * sizeof(FlatPtr);
+    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 3 * sizeof(FlatPtr);
     asm(
         ".intel_syntax noprefix\n"
         ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        // stack state: 0, ucontext, signal_info (alignment = 16), ucontext*, siginfo*, signal, handler
+        // stack state: 0, ucontext, signal_info (alignment = 16), fpu_state (alignment = 16), ucontext*, siginfo*, signal, handler
 
         // Pop the handler into rcx
         "pop rcx\n" // save handler
@@ -346,7 +346,7 @@ void signal_trampoline_dummy()
         // Note that the stack is currently aligned to 16 bytes as we popped the extra entries above.
         // call the signal handler
         "call rcx\n"
-        // Current stack state is just saved_rax, ucontext, signal_info.
+        // Current stack state is just saved_rax, ucontext, signal_info, fpu_state.
         // syscall SC_sigreturn
         "mov rax, %P0\n"
         "int 0x82\n"
