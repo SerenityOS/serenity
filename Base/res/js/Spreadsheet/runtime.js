@@ -359,6 +359,22 @@ function averageIf(condition, cells) {
     return sumAndCount[0] / sumAndCount[1];
 }
 
+function maxIf(condition, cells) {
+    return Math.max(...numericResolve(cells).filter(condition));
+}
+
+function max(cells) {
+    return maxIf(() => true, cells);
+}
+
+function minIf(condition, cells) {
+    return Math.min(...numericResolve(cells).filter(condition));
+}
+
+function min(cells) {
+    return minIf(() => true, cells);
+}
+
 function median(cells) {
     const values = numericResolve(cells);
 
@@ -710,6 +726,48 @@ averageIf.__documentation = JSON.stringify({
     examples: {
         "averageIf(x => x > 4, R`A1:C4`)":
             "Calculate the sum of all numbers larger then 4 within A1:C4",
+    },
+});
+
+max.__documentation = JSON.stringify({
+    name: "max",
+    argc: 1,
+    argnames: ["the range"],
+    doc: "Gets the largest cell's value in the range",
+    examples: {
+        "max(R`A1:C4`)": "Finds the largest number within A1:C4",
+    },
+});
+
+maxIf.__documentation = JSON.stringify({
+    name: "max",
+    argc: 1,
+    argnames: ["condition", "the range"],
+    doc: "Gets the largest cell's value in the range which evaluates to true when passed to `condition`",
+    examples: {
+        "maxIf(x => x > 4, R`A1:C4`)":
+            "Finds the largest number within A1:C4 that is greater than 4",
+    },
+});
+
+min.__documentation = JSON.stringify({
+    name: "min",
+    argc: 1,
+    argnames: ["the range"],
+    doc: "Gets the smallest cell's value in the range",
+    examples: {
+        "min(R`A1:C4`)": "Finds the smallest number within A1:C4",
+    },
+});
+
+minIf.__documentation = JSON.stringify({
+    name: "min",
+    argc: 1,
+    argnames: ["condition", "the range"],
+    doc: "Gets the smallest cell's value in the range which evaluates to true when passed to `condition`",
+    examples: {
+        "minIf(x => x > 4, R`A1:C4`)":
+            "Finds the smallest number within A1:C4 that is greater than 4",
     },
 });
 
