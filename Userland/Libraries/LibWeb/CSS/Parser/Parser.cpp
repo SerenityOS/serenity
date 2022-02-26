@@ -585,6 +585,18 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
 
         } else if (pseudo_class_token.is_function()) {
 
+            auto parse_nth_child_pattern = [this](auto& simple_selector, auto& pseudo_function) -> bool {
+                auto function_values = TokenStream<StyleComponentValueRule>(pseudo_function.values());
+                auto nth_child_pattern = parse_a_n_plus_b_pattern(function_values);
+                if (nth_child_pattern.has_value()) {
+                    simple_selector.pseudo_class.nth_child_pattern = nth_child_pattern.value();
+                } else {
+                    dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid format for {}", pseudo_function.name());
+                    return false;
+                }
+                return true;
+            };
+
             auto& pseudo_function = pseudo_class_token.function();
             if (pseudo_function.name().equals_ignoring_case("not")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Not;
@@ -597,24 +609,20 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 simple_selector.pseudo_class.not_selector = not_selector.release_value();
             } else if (pseudo_function.name().equals_ignoring_case("nth-child")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthChild;
-                auto function_values = TokenStream<StyleComponentValueRule>(pseudo_function.values());
-                auto nth_child_pattern = parse_a_n_plus_b_pattern(function_values);
-                if (nth_child_pattern.has_value()) {
-                    simple_selector.pseudo_class.nth_child_pattern = nth_child_pattern.value();
-                } else {
-                    dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid nth-child format");
+                if (!parse_nth_child_pattern(simple_selector, pseudo_function))
                     return ParsingResult::SyntaxError;
-                }
             } else if (pseudo_function.name().equals_ignoring_case("nth-last-child")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthLastChild;
-                auto function_values = TokenStream<StyleComponentValueRule>(pseudo_function.values());
-                auto nth_child_pattern = parse_a_n_plus_b_pattern(function_values);
-                if (nth_child_pattern.has_value()) {
-                    simple_selector.pseudo_class.nth_child_pattern = nth_child_pattern.value();
-                } else {
-                    dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid nth-child format");
+                if (!parse_nth_child_pattern(simple_selector, pseudo_function))
                     return ParsingResult::SyntaxError;
-                }
+            } else if (pseudo_function.name().equals_ignoring_case("nth-of-type")) {
+                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthOfType;
+                if (!parse_nth_child_pattern(simple_selector, pseudo_function))
+                    return ParsingResult::SyntaxError;
+            } else if (pseudo_function.name().equals_ignoring_case("nth-last-of-type")) {
+                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthLastOfType;
+                if (!parse_nth_child_pattern(simple_selector, pseudo_function))
+                    return ParsingResult::SyntaxError;
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
                 return ParsingResult::SyntaxError;

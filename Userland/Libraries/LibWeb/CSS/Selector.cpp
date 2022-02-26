@@ -307,6 +307,10 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "last-of-type"sv;
     case Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:
         return "only-of-type"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::NthOfType:
+        return "nth-of-type"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::NthLastOfType:
+        return "nth-last-of-type"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Disabled:
         return "disabled"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Enabled:
