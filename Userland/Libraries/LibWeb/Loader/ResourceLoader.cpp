@@ -181,17 +181,40 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
     }
 
     if (url.protocol() == "file") {
-        auto file_result = Core::File::open(url.path(), Core::OpenMode::ReadOnly);
-        if (file_result.is_error()) {
-            auto& error = file_result.error();
+        if (request.page().has_value())
+            m_page = request.page().value();
+
+        VERIFY(m_page);
+        auto file_or_error = m_page->client().get_file(url.path());
+
+        if (file_or_error.is_error()) {
+            log_failure(request, file_or_error.error());
+            if (error_callback)
+                error_callback(String::formatted("{}", file_or_error.error()), file_or_error.error().code());
+            return;
+        }
+
+        auto const fd = file_or_error.value();
+
+        auto maybe_file = Core::Stream::File::adopt_fd(fd, Core::Stream::OpenMode::Read);
+        if (maybe_file.is_error()) {
+            auto error = maybe_file.error();
             log_failure(request, error);
             if (error_callback)
                 error_callback(String::formatted("{}", error), error.code());
             return;
         }
 
-        auto file = file_result.release_value();
-        auto data = file->read_all();
+        auto file = maybe_file.release_value();
+        auto maybe_data = file->read_all();
+        if (maybe_data.is_error()) {
+            auto error = maybe_data.error();
+            log_failure(request, error);
+            if (error_callback)
+                error_callback(String::formatted("{}", error), error.code());
+            return;
+        }
+        auto data = maybe_data.release_value();
         log_success(request);
         deferred_invoke([data = move(data), success_callback = move(success_callback)] {
             success_callback(data, {}, {});

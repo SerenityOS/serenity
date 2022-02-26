@@ -10,6 +10,7 @@
 #include <AK/URL.h>
 #include <LibCore/Object.h>
 #include <LibWeb/Loader/Resource.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Protocol {
 class RequestClient;
@@ -62,6 +63,8 @@ private:
     HashTable<NonnullRefPtr<Protocol::Request>> m_active_requests;
     RefPtr<Protocol::RequestClient> m_protocol_client;
     String m_user_agent;
+
+    Page* m_page {};
 };
 
 }

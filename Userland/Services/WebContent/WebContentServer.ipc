@@ -1,4 +1,5 @@
 #include <AK/URL.h>
+#include <LibIPC/File.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
@@ -47,4 +48,6 @@ endpoint WebContentServer
 
     set_has_focus(bool has_focus) =|
 
+    handle_file_return(i32 error, Optional<IPC::File> file, i32 request_id) =|
+    get_file(String path) => (i32 error, Optional<i32> file)
 }

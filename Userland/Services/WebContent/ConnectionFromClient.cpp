@@ -7,6 +7,7 @@
 
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
+#include <LibCore/File.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/SystemTheme.h>
@@ -461,6 +462,26 @@ void ConnectionFromClient::set_preferred_color_scheme(Web::CSS::PreferredColorSc
 void ConnectionFromClient::set_has_focus(bool has_focus)
 {
     m_page_host->set_has_focus(has_focus);
+}
+
+void ConnectionFromClient::handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id)
+{
+    auto result = m_promises.get(request_id);
+    VERIFY(result.has_value());
+    result.value()->resolve({ error, file.has_value() ? Optional<i32> { file.value().take_fd() } : Optional<i32> {} });
+}
+
+Messages::WebContentServer::GetFileResponse ConnectionFromClient::get_file(String const& path)
+{
+    i32 const id = last_id++;
+    VERIFY(!m_promises.contains(id));
+    m_promises.set(id, Core::Promise<Messages::WebContentServer::GetFileResponse>::construct());
+
+    async_did_request_file(path, id);
+
+    auto const result = m_promises.get(id).value()->await();
+    m_promises.remove(id);
+    return result;
 }
 
 }

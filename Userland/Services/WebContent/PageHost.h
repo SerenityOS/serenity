@@ -65,6 +65,7 @@ private:
     virtual String page_did_request_cookie(const URL&, Web::Cookie::Source) override;
     virtual void page_did_set_cookie(const URL&, const Web::Cookie::ParsedCookie&, Web::Cookie::Source) override;
     virtual void page_did_update_resource_count(i32) override;
+    virtual ErrorOr<i32> get_file(String const&) override;
 
     explicit PageHost(ConnectionFromClient&);
 

@@ -262,4 +262,12 @@ void PageHost::page_did_update_resource_count(i32 count_waiting)
     m_client.async_did_update_resource_count(count_waiting);
 }
 
+ErrorOr<i32> PageHost::get_file(String const& filename)
+{
+    auto result = m_client.get_file(filename);
+    if (result.error() != 0)
+        return Error::from_errno(result.take_error());
+    return result.take_file().value();
+}
+
 }

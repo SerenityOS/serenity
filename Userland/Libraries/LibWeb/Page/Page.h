@@ -104,6 +104,7 @@ public:
     virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, const Cookie::ParsedCookie&, Cookie::Source) { }
     virtual void page_did_update_resource_count(i32) { }
+    virtual ErrorOr<i32> get_file(String const&) { VERIFY_NOT_REACHED(); };
 
 protected:
     virtual ~PageClient() = default;

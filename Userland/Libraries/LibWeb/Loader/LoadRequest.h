@@ -37,6 +37,9 @@ public:
     void start_timer() { m_load_timer.start(); };
     Time load_time() const { return m_load_timer.elapsed_time(); }
 
+    auto page() const { return m_page; };
+    void set_page(Page* page) { m_page = page; }
+
     unsigned hash() const
     {
         auto body_hash = string_hash((const char*)m_body.data(), m_body.size());
@@ -70,6 +73,7 @@ private:
     HashMap<String, String> m_headers;
     ByteBuffer m_body;
     Core::ElapsedTimer m_load_timer;
+    Optional<Page*> m_page;
 };
 
 }
