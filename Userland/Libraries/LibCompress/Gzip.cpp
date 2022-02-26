@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -222,10 +222,6 @@ bool GzipDecompressor::handle_any_error()
 
 GzipCompressor::GzipCompressor(OutputStream& stream)
     : m_output_stream(stream)
-{
-}
-
-GzipCompressor::~GzipCompressor()
 {
 }
 
