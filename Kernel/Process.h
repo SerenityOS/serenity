@@ -451,6 +451,7 @@ public:
     ErrorOr<void> send_signal(u8 signal, Process* sender);
 
     u8 termination_signal() const { return m_protected_values.termination_signal; }
+    u8 termination_status() const { return m_protected_values.termination_status; }
 
     u16 thread_count() const
     {

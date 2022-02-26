@@ -738,6 +738,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     }
 
     m_pending_signals |= 1 << (signal - 1);
+    m_signal_senders[signal] = sender ? sender->pid() : pid();
     m_have_any_unmasked_pending_signals.store((pending_signals_for_state() & ~m_signal_mask) != 0, AK::memory_order_release);
     m_signal_blocker_set.unblock_all_blockers_whose_conditions_are_met();
 
@@ -983,6 +984,8 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     }
 
     auto& action = m_process->m_signal_action_data[signal];
+    auto sender_pid = m_signal_senders[signal];
+    auto sender = Process::from_pid(sender_pid);
 
     if (!current_trap() && !action.handler_or_sigaction.is_null()) {
         // We're trying dispatch a handled signal to a user process that was scheduled
@@ -1074,29 +1077,84 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
             .uc_link = nullptr,
             .uc_sigmask = old_signal_mask,
             .uc_stack = {
-                .ss_sp = nullptr,
-                .ss_flags = 0,
-                .ss_size = 0,
+                .ss_sp = bit_cast<void*>(stack),
+                .ss_flags = action.flags & SA_ONSTACK,
+                .ss_size = use_alternative_stack ? m_alternative_signal_stack_size : 0,
             },
             .uc_mcontext = {},
         };
         copy_kernel_registers_into_ptrace_registers(static_cast<PtraceRegisters&>(ucontext.uc_mcontext), state);
 
+        auto fill_signal_info_for_signal = [&](siginfo& signal_info) {
+            if (signal == SIGCHLD) {
+                if (!sender) {
+                    signal_info.si_code = CLD_EXITED;
+                    return;
+                }
+                auto const* thread = sender->thread_list().with([](auto& list) { return list.is_empty() ? nullptr : list.first(); });
+                if (!thread) {
+                    signal_info.si_code = CLD_EXITED;
+                    return;
+                }
+
+                switch (thread->m_state) {
+                case State::Dead:
+                    if (sender->should_generate_coredump() && sender->is_dumpable()) {
+                        signal_info.si_code = CLD_DUMPED;
+                        signal_info.si_status = sender->termination_signal();
+                        return;
+                    }
+                    [[fallthrough]];
+                case State::Dying:
+                    if (sender->termination_signal() == 0) {
+                        signal_info.si_code = CLD_EXITED;
+                        signal_info.si_status = sender->termination_status();
+                        return;
+                    }
+                    signal_info.si_code = CLD_KILLED;
+                    signal_info.si_status = sender->termination_signal();
+                    return;
+                case State::Runnable:
+                case State::Running:
+                case State::Blocked:
+                    signal_info.si_code = CLD_CONTINUED;
+                    return;
+                case State::Stopped:
+                    signal_info.si_code = CLD_STOPPED;
+                    return;
+                case State::Invalid:
+                    // Something is wrong, but we're just an observer.
+                    break;
+                }
+            }
+
+            signal_info.si_code = SI_NOINFO;
+        };
+
         siginfo signal_info {
             .si_signo = signal,
-            .si_code = 0, // FIXME: Signal-specific value, fill this in.
+            // Filled in below by fill_signal_info_for_signal.
+            .si_code = 0,
+            // Set for SI_TIMER, we don't have the data here.
             .si_errno = 0,
-            // FIXME: Plumb sender information here.
-            .si_pid = 0,
-            .si_uid = 0,
-            // FIXME: Fill these in.
+            .si_pid = sender_pid.value(),
+            .si_uid = sender ? sender->uid().value() : 0,
+            // Set for SIGILL, SIGFPE, SIGSEGV and SIGBUS
+            // FIXME: We don't generate these signals in a way that can be handled.
             .si_addr = 0,
+            // Set for SIGCHLD.
             .si_status = 0,
+            // Set for SIGPOLL, we don't have SIGPOLL.
             .si_band = 0,
+            // Set for SI_QUEUE, SI_TIMER, SI_ASYNCIO and SI_MESGQ
+            // We do not generate any of these.
             .si_value = {
                 .sival_int = 0,
             },
         };
+
+        if (action.flags & SA_SIGINFO)
+            fill_signal_info_for_signal(signal_info);
 
 #if ARCH(I386)
         constexpr static FlatPtr thread_red_zone_size = 0;
