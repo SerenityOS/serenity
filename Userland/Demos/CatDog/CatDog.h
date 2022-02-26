@@ -1,13 +1,17 @@
 /*
  * Copyright (c) 2021, Richard Gráčik <r.gracik@gmail.com>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NonnullRefPtr.h>
+#include <AK/RefPtr.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MouseTracker.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/Bitmap.h>
 #include <unistd.h>
 
 #pragma once
@@ -17,6 +21,17 @@ class CatDog final : public GUI::Widget
     C_OBJECT(CatDog);
 
 public:
+    // The general state, does not contain movement direction or whether CatDog is roaming.
+    enum class MainState {
+        Idle,     // default state
+        Alerted,  // woken by mouse cursor or speaking after being idle
+        Sleeping, // mouse hasn't moved in some time
+    };
+    static bool is_non_application_state(MainState state)
+    {
+        return state == MainState::Idle || state == MainState::Alerted || state == MainState::Sleeping;
+    }
+
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void paint_event(GUI::PaintEvent& event) override;
     virtual void track_mouse_move(Gfx::IntPoint const& point) override;
@@ -33,12 +48,16 @@ public:
     {
         m_roaming = roaming;
         if (!roaming) {
-            m_sleeping = false;
+            // If we stop CatDog while it's in a program-specific state, we don't want it to be alerted.
+            if (m_main_state == MainState::Idle || m_main_state == MainState::Sleeping)
+                m_main_state = MainState::Alerted;
             m_curr_frame = 0;
-            m_curr_bmp = m_alert;
+            set_image_by_main_state();
             update();
         }
     }
+
+    MainState main_state() const { return m_main_state; }
 
 private:
     Gfx::IntPoint m_temp_pos;
@@ -46,7 +65,8 @@ private:
 
     int m_curr_frame = 1;
     int m_moveX, m_moveY = 0;
-    bool m_up, m_down, m_left, m_right, m_sleeping = false;
+    MainState m_main_state { MainState::Alerted };
+    bool m_up, m_down, m_left, m_right;
     bool m_roaming { true };
 
     NonnullRefPtr<Gfx::Bitmap> m_alert = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/alert.png").release_value_but_fixme_should_propagate_errors();
@@ -71,8 +91,29 @@ private:
     NonnullRefPtr<Gfx::Bitmap> m_wrun2 = *Gfx::Bitmap::try_load_from_file("/res/icons/catdog/wrun2.png").release_value_but_fixme_should_propagate_errors();
 
     NonnullRefPtr<Gfx::Bitmap> m_curr_bmp = m_alert;
+
+    // Used if CatDog is still; may also account for animation frames.
+    void set_image_by_main_state()
+    {
+        switch (m_main_state) {
+        case MainState::Idle:
+            m_curr_bmp = m_still;
+            break;
+        case MainState::Alerted:
+            m_curr_bmp = m_alert;
+            break;
+        case MainState::Sleeping:
+            if (m_curr_frame == 1)
+                m_curr_bmp = m_sleep1;
+            else
+                m_curr_bmp = m_sleep2;
+            break;
+        }
+    }
+
     CatDog()
         : m_temp_pos { 0, 0 }
     {
+        set_image_by_main_state();
     }
 };
