@@ -24,6 +24,8 @@ struct DisjointIterator {
     DisjointIterator(ReferenceType chunks)
         : m_chunks(chunks)
     {
+        while (m_chunk_index < m_chunks.size() && m_chunks[m_chunk_index].is_empty())
+            ++m_chunk_index;
     }
 
     DisjointIterator(ReferenceType chunks, EndTag)
