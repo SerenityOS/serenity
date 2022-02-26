@@ -959,4 +959,18 @@ NonnullRefPtr<Node> Node::get_root_node(GetRootNodeOptions const& options)
     return root();
 }
 
+String Node::debug_description() const
+{
+    StringBuilder builder;
+    builder.append(node_name().to_lowercase());
+    if (is_element()) {
+        auto& element = static_cast<DOM::Element const&>(*this);
+        if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null())
+            builder.appendff("#{}", id);
+        for (auto const& class_name : element.class_names())
+            builder.appendff(".{}", class_name);
+    }
+    return builder.to_string();
+}
+
 }

@@ -208,6 +208,8 @@ public:
 
     bool is_uninteresting_whitespace_node() const;
 
+    String debug_description() const;
+
 protected:
     Node(Document&, NodeType);
 
