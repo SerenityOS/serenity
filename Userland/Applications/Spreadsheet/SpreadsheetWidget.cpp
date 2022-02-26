@@ -137,16 +137,11 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (current_filename().is_empty()) {
-            String name = "workbook";
-            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), name, "sheets");
-            if (!save_path.has_value())
-                return;
-
-            save(save_path.value());
-            update_window_title();
-        } else {
-            save(current_filename());
+            m_save_as_action->activate();
+            return;
         }
+
+        save(current_filename());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -258,17 +253,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
 
     m_tab_widget->on_double_click = [&](auto& widget) {
         m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
-        VERIFY(m_tab_context_menu_sheet_view);
-
-        auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
-        VERIFY(sheet_ptr); // How did we get here without a sheet?
-        auto& sheet = *sheet_ptr;
-        String new_name;
-        if (GUI::InputBox::show(window(), new_name, String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
-            sheet.set_name(new_name);
-            sheet.update();
-            m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
-        }
+        m_rename_action->activate();
     };
 }
 
@@ -454,18 +439,8 @@ bool SpreadsheetWidget::request_close()
 
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), current_filename());
     if (result == GUI::MessageBox::ExecYes) {
-        if (current_filename().is_empty()) {
-            String name = "workbook";
-            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), name, "sheets");
-            if (!save_path.has_value())
-                return false;
-
-            save(save_path.value());
-            update_window_title();
-        } else {
-            save(current_filename());
-        }
-        return true;
+        m_save_action->activate();
+        return !m_workbook->dirty();
     }
 
     if (result == GUI::MessageBox::ExecNo)
