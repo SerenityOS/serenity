@@ -1190,6 +1190,11 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
         VERIFY(stack % 16 == 0);
 
+#if ARCH(I386) || ARCH(X86_64)
+        // Save the FPU/SSE state
+        TRY(copy_value_on_user_stack(stack, fpu_state()));
+#endif
+
 #if ARCH(I386)
         // Leave one empty slot to align the stack for a handler call.
         TRY(push_value_on_user_stack(stack, 0));
