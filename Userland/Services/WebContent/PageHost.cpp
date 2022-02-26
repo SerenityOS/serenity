@@ -263,4 +263,9 @@ void PageHost::page_did_update_resource_count(i32 count_waiting)
     m_client.async_did_update_resource_count(count_waiting);
 }
 
+void PageHost::request_file(NonnullRefPtr<Web::FileRequest>& file_request)
+{
+    m_client.request_file(file_request);
+}
+
 }

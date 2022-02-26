@@ -1,4 +1,5 @@
 #include <AK/URL.h>
+#include <LibIPC/File.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
@@ -51,4 +52,6 @@ endpoint WebContentServer
 
     get_local_storage_entries() => (OrderedHashMap<String,String> entries)
     get_session_storage_entries() => (OrderedHashMap<String,String> entries)
+
+    handle_file_return(i32 error, Optional<IPC::File> file, i32 request_id) =|
 }

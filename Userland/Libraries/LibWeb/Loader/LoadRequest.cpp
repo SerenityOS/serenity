@@ -19,6 +19,7 @@ LoadRequest LoadRequest::create_for_url_on_page(const AK::URL& url, Page* page)
         String cookie = page->client().page_did_request_cookie(url, Cookie::Source::Http);
         if (!cookie.is_empty())
             request.set_header("Cookie", cookie);
+        request.set_page(*page);
     }
 
     return request;

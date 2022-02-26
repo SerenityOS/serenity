@@ -14,6 +14,7 @@
 #include <LibCore/Object.h>
 #include <LibCore/Proxy.h>
 #include <LibWeb/Loader/Resource.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web {
 
@@ -98,6 +99,7 @@ private:
     HashTable<NonnullRefPtr<ResourceLoaderConnectorRequest>> m_active_requests;
     NonnullRefPtr<ResourceLoaderConnector> m_connector;
     String m_user_agent;
+    Optional<Page&> m_page {};
 };
 
 }

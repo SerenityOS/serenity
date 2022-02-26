@@ -18,6 +18,7 @@
 #include <LibGfx/StandardCursor.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Loader/FileRequest.h>
 
 namespace Web {
 
@@ -110,6 +111,8 @@ public:
     virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_resource_count(i32) { }
+
+    virtual void request_file(NonnullRefPtr<FileRequest>&) = 0;
 
 protected:
     virtual ~PageClient() = default;
