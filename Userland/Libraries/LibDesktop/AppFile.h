@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
