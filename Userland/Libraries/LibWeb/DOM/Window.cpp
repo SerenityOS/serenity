@@ -19,6 +19,7 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Storage.h>
@@ -474,6 +475,20 @@ Window* Window::parent()
     // FIXME: 5. Return current's WindowProxy object.
     VERIFY(current->active_document());
     return &current->active_document()->window();
+}
+
+// https://html.spec.whatwg.org/multipage/web-messaging.html#window-post-message-steps
+DOM::ExceptionOr<void> Window::post_message(JS::Value message, String const&)
+{
+    // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
+    //        have serialization and deserialization of messages.
+    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *wrapper(), [strong_this = NonnullRefPtr(*this), message]() mutable {
+        HTML::MessageEventInit event_init {};
+        event_init.data = message;
+        event_init.origin = "<origin>";
+        strong_this->dispatch_event(HTML::MessageEvent::create(HTML::EventNames::message, event_init));
+    });
+    return {};
 }
 
 }

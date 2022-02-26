@@ -102,6 +102,8 @@ public:
 
     Window* parent();
 
+    DOM::ExceptionOr<void> post_message(JS::Value, String const& target_origin);
+
 private:
     explicit Window(Document&);
 

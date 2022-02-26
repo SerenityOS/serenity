@@ -95,6 +95,8 @@ void WindowObject::initialize_global_object()
     define_native_function("matchMedia", match_media, 1, attr);
     define_native_function("getSelection", get_selection, 0, attr);
 
+    define_native_function("postMessage", post_message, 1, attr);
+
     // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
     define_native_accessor("scrollX", scroll_x_getter, {}, attr);
     define_native_accessor("pageXOffset", scroll_x_getter, {}, attr);
@@ -639,6 +641,14 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_y_getter)
 {
     auto* impl = TRY(impl_from(vm, global_object));
     return JS::Value(impl->screen_y());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::post_message)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    auto target_origin = TRY(vm.argument(1).to_string(global_object));
+    impl->post_message(vm.argument(0), target_origin);
+    return JS::js_undefined();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::local_storage_getter)
