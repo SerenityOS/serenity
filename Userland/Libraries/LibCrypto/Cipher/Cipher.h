@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -82,7 +83,7 @@ struct CipherKey {
     virtual ReadonlyBytes bytes() const = 0;
     static bool is_valid_key_size(size_t) { return false; };
 
-    virtual ~CipherKey() { }
+    virtual ~CipherKey() = default;
 
 protected:
     virtual void expand_encrypt_key(ReadonlyBytes user_key, size_t bits) = 0;

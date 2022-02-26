@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +14,7 @@ namespace Crypto::Checksum {
 
 class Adler32 : public ChecksumFunction<u32> {
 public:
-    Adler32() { }
+    Adler32() = default;
     Adler32(ReadonlyBytes data)
     {
         update(data);

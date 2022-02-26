@@ -14,7 +14,7 @@ namespace Crypto::Checksum {
 
 class CRC32 : public ChecksumFunction<u32> {
 public:
-    CRC32() { }
+    CRC32() = default;
     CRC32(ReadonlyBytes data)
     {
         update(data);
