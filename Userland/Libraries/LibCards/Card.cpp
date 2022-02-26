@@ -139,10 +139,6 @@ Card::Card(Type type, uint8_t value)
     m_front_inverted = invert_bitmap(*m_front);
 }
 
-Card::~Card()
-{
-}
-
 void Card::draw(GUI::Painter& painter) const
 {
     VERIFY(!s_background.is_null());
