@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,10 +28,6 @@ Image::Image(ReadonlyBytes bytes, bool verbose_logging)
 
 Image::Image(const u8* buffer, size_t size, bool verbose_logging)
     : Image(ReadonlyBytes { buffer, size }, verbose_logging)
-{
-}
-
-Image::~Image()
 {
 }
 
