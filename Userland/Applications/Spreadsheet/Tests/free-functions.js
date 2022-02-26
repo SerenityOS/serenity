@@ -125,6 +125,16 @@ describe("Statistics", () => {
         expect(max(R`B0:B9`)).toEqual(81);
     });
 
+    test("sumProductIf", () => {
+        expect(sumProductIf).toBeDefined();
+        expect(sumProductIf((a, b) => b > 25, R`A0:A9`, R`B0:B9`)).toEqual(1800);
+    });
+
+    test("sumProduct", () => {
+        expect(sumProduct).toBeDefined();
+        expect(sumProduct(R`A0:A9`, R`B0:B9`)).toEqual(2025);
+    });
+
     test("median", () => {
         expect(median).toBeDefined();
         expect(median(R`A0:A9`)).toEqual(4.5);
