@@ -133,6 +133,10 @@ class Ranges {
         this.ranges = ranges;
     }
 
+    first() {
+        return this.ranges[0].first();
+    }
+
     static from(...ranges) {
         return new Ranges(ranges);
     }
@@ -176,6 +180,10 @@ class Range {
             throw new Error("A Range with a defined end row must also have a defined start row");
 
         this.normalize();
+    }
+
+    first() {
+        return new Position(this.startingColumnName, this.startingRow);
     }
 
     forEach(callback) {
