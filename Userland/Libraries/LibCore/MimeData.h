@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +18,7 @@ class MimeData : public Object {
     C_OBJECT(MimeData);
 
 public:
-    virtual ~MimeData() { }
+    virtual ~MimeData() = default;
 
     ByteBuffer data(const String& mime_type) const { return m_data.get(mime_type).value_or({}); }
     void set_data(const String& mime_type, ByteBuffer&& data) { m_data.set(mime_type, move(data)); }
@@ -38,7 +39,7 @@ public:
     const HashMap<String, ByteBuffer>& all_data() const { return m_data; }
 
 private:
-    MimeData() { }
+    MimeData() = default;
     explicit MimeData(const HashMap<String, ByteBuffer>& data)
         : m_data(data)
     {
