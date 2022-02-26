@@ -894,4 +894,43 @@ CSS::BoxSizing StyleProperties::box_sizing() const
         return {};
     }
 }
+
+Variant<CSS::VerticalAlign, CSS::LengthPercentage> StyleProperties::vertical_align() const
+{
+    auto value = property(CSS::PropertyID::VerticalAlign);
+    if (!value.has_value())
+        VERIFY_NOT_REACHED();
+
+    if (value.value()->is_identifier()) {
+        switch (value.value()->to_identifier()) {
+        case CSS::ValueID::Baseline:
+            return CSS::VerticalAlign::Baseline;
+        case CSS::ValueID::Bottom:
+            return CSS::VerticalAlign::Bottom;
+        case CSS::ValueID::Middle:
+            return CSS::VerticalAlign::Middle;
+        case CSS::ValueID::Sub:
+            return CSS::VerticalAlign::Sub;
+        case CSS::ValueID::Super:
+            return CSS::VerticalAlign::Super;
+        case CSS::ValueID::TextBottom:
+            return CSS::VerticalAlign::TextBottom;
+        case CSS::ValueID::TextTop:
+            return CSS::VerticalAlign::TextTop;
+        case CSS::ValueID::Top:
+            return CSS::VerticalAlign::Top;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    if (value.value()->is_length())
+        return CSS::LengthPercentage(value.value()->to_length());
+
+    if (value.value()->is_percentage())
+        return CSS::LengthPercentage(value.value()->as_percentage().percentage());
+
+    VERIFY_NOT_REACHED();
+}
+
 }

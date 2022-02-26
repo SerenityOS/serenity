@@ -41,6 +41,7 @@ public:
     static float flex_shrink() { return 1.0f; }
     static float opacity() { return 1.0f; }
     static CSS::Length border_radius() { return Length::make_px(0); }
+    static Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() { return CSS::VerticalAlign::Baseline; }
 };
 
 struct BackgroundLayerData {
@@ -131,6 +132,7 @@ public:
     Optional<CSS::LengthPercentage> const& height() const { return m_noninherited.height; }
     Optional<CSS::LengthPercentage> const& min_height() const { return m_noninherited.min_height; }
     Optional<CSS::LengthPercentage> const& max_height() const { return m_noninherited.max_height; }
+    Variant<CSS::VerticalAlign, CSS::LengthPercentage> const& vertical_align() const { return m_noninherited.vertical_align; }
 
     const CSS::LengthBox& offset() const { return m_noninherited.offset; }
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
@@ -230,6 +232,7 @@ protected:
         Vector<CSS::Transformation> transformations {};
         CSS::BoxSizing box_sizing { InitialValues::box_sizing() };
         CSS::ContentData content;
+        Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align { InitialValues::vertical_align() };
     } m_noninherited;
 };
 
@@ -288,6 +291,7 @@ public:
     void set_box_shadow(Vector<BoxShadowData>&& value) { m_noninherited.box_shadow = move(value); }
     void set_transformations(Vector<CSS::Transformation> value) { m_noninherited.transformations = move(value); }
     void set_box_sizing(CSS::BoxSizing value) { m_noninherited.box_sizing = value; }
+    void set_vertical_align(Variant<CSS::VerticalAlign, CSS::LengthPercentage> value) { m_noninherited.vertical_align = value; }
 
     void set_fill(Color value) { m_inherited.fill = value; }
     void set_stroke(Color value) { m_inherited.stroke = value; }

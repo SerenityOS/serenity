@@ -268,6 +268,17 @@ enum class TransformFunction {
     TranslateY,
 };
 
+enum class VerticalAlign {
+    Baseline,
+    Bottom,
+    Middle,
+    Sub,
+    Super,
+    TextBottom,
+    TextTop,
+    Top,
+};
+
 enum class WhiteSpace {
     Normal,
     Pre,
