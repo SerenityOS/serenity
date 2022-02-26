@@ -207,7 +207,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
                 item.border_start + item.padding_start,
                 item.padding_end + item.border_end,
                 item.width,
-                text_node.font().glyph_height());
+                text_node.computed_values().font_size());
             break;
         }
         }
