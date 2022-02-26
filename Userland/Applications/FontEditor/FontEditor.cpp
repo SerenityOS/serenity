@@ -454,7 +454,8 @@ FontEditorWidget::FontEditorWidget()
     m_filter_model = MUST(GUI::FilteringProxyModel::create(*m_unicode_block_model));
     m_filter_model->set_filter_term("");
 
-    m_unicode_block_listview->on_activation = [this, unicode_blocks](auto& index) {
+    m_unicode_block_listview->on_selection_change = [this, unicode_blocks] {
+        auto index = m_unicode_block_listview->selection().first();
         auto mapped_index = m_filter_model->map(index);
         if (mapped_index.row() > 0)
             m_range = unicode_blocks[mapped_index.row() - 1].code_point_range;
