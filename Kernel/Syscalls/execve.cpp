@@ -608,8 +608,8 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     new_main_thread->reset_fpu_state();
 
     auto& regs = new_main_thread->m_regs;
-#if ARCH(I386)
     regs.cs = GDT_SELECTOR_CODE3 | 3;
+#if ARCH(I386)
     regs.ds = GDT_SELECTOR_DATA3 | 3;
     regs.es = GDT_SELECTOR_DATA3 | 3;
     regs.ss = GDT_SELECTOR_DATA3 | 3;
