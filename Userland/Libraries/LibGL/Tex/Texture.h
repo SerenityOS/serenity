@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,7 @@ namespace GL {
 
 class Texture : public RefCounted<Texture> {
 public:
-    virtual ~Texture() { }
+    virtual ~Texture() = default;
 
     virtual bool is_texture_1d() const { return false; }
     virtual bool is_texture_2d() const { return false; }
