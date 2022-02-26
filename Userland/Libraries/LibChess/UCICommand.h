@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -46,7 +46,7 @@ public:
 
     virtual String to_string() const = 0;
 
-    virtual ~Command() { }
+    virtual ~Command() = default;
 };
 
 class UCICommand : public Command {

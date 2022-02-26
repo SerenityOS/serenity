@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +16,7 @@ namespace Chess::UCI {
 class Endpoint : public Core::Object {
     C_OBJECT(Endpoint)
 public:
-    virtual ~Endpoint() override { }
+    virtual ~Endpoint() override = default;
 
     virtual void handle_uci() { }
     virtual void handle_debug(const DebugCommand&) { }
@@ -46,7 +46,7 @@ public:
     void set_out(RefPtr<Core::IODevice> out) { m_out = out; }
 
 protected:
-    Endpoint() { }
+    Endpoint() = default;
     Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out);
 
 private:
