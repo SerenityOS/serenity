@@ -432,7 +432,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layout_statusbar_action->set_checked(show_statusbar);
     m_statusbar->set_visible(show_statusbar);
 
-    m_layout_ruler_action = GUI::Action::create_checkable("Ruler", [&](auto& action) {
+    m_layout_ruler_action = GUI::Action::create_checkable("&Ruler", [&](auto& action) {
         action.is_checked() ? m_editor->set_ruler_visible(true) : m_editor->set_ruler_visible(false);
         Config::write_bool("TextEditor", "Layout", "ShowRuler", action.is_checked());
     });
@@ -572,7 +572,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_js_highlight);
     syntax_menu.add_action(*m_js_highlight);
 
-    m_css_highlight = GUI::Action::create_checkable("CSS", [&](auto&) {
+    m_css_highlight = GUI::Action::create_checkable("C&SS", [&](auto&) {
         m_editor->set_syntax_highlighter(make<Web::CSS::SyntaxHighlighter>());
         m_editor->update();
     });
@@ -586,7 +586,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_html_highlight);
     syntax_menu.add_action(*m_html_highlight);
 
-    m_git_highlight = GUI::Action::create_checkable("Git Commit", [&](auto&) {
+    m_git_highlight = GUI::Action::create_checkable("Gi&t Commit", [&](auto&) {
         m_editor->set_syntax_highlighter(make<GUI::GitCommitSyntaxHighlighter>());
         m_editor->update();
     });
@@ -607,7 +607,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_ini_highlight);
     syntax_menu.add_action(*m_ini_highlight);
 
-    m_shell_highlight = GUI::Action::create_checkable("&Shell File", [&](auto&) {
+    m_shell_highlight = GUI::Action::create_checkable("Sh&ell File", [&](auto&) {
         m_editor->set_syntax_highlighter(make<Shell::SyntaxHighlighter>());
         m_editor->update();
     });
