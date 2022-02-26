@@ -979,6 +979,13 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     // FIXME: Implement SA_SIGINFO signal handlers.
     VERIFY(!(action.flags & SA_SIGINFO));
 
+    if (!current_trap() && !action.handler_or_sigaction.is_null()) {
+        // We're trying dispatch a handled signal to a user process that was scheduled
+        // after a yielding/blocking kernel thread, we don't have a register capture of
+        // the thread, so just defer processing the signal to later.
+        return DispatchSignalResult::Deferred;
+    }
+
     // Mark this signal as handled.
     m_pending_signals &= ~(1 << (signal - 1));
     m_have_any_unmasked_pending_signals.store((m_pending_signals & ~m_signal_mask) != 0, AK::memory_order_release);
@@ -1033,13 +1040,6 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     if ((sighandler_t)handler_vaddr.as_ptr() == SIG_IGN) {
         dbgln_if(SIGNAL_DEBUG, "Ignored signal {}", signal);
         return DispatchSignalResult::Continue;
-    }
-
-    if (!current_trap()) {
-        // We're trying dispatch a signal to a user process that was scheduled after
-        // a yielding/blocking kernel thread, we don't have a register capture of the
-        // thread, so just defer processing the signal to later.
-        return DispatchSignalResult::Deferred;
     }
 
     ScopedAddressSpaceSwitcher switcher(m_process);
