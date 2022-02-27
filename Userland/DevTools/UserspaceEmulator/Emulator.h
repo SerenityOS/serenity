@@ -10,7 +10,6 @@
 #include "MallocTracer.h"
 #include "RangeAllocator.h"
 #include "Report.h"
-#include "SoftCPU.h"
 #include "SoftMMU.h"
 #include <AK/FileStream.h>
 #include <AK/Types.h>
@@ -26,6 +25,7 @@
 namespace UserspaceEmulator {
 
 class MallocTracer;
+class SoftCPU;
 
 class Emulator {
 public:
@@ -117,7 +117,7 @@ private:
     const Vector<String> m_environment;
 
     SoftMMU m_mmu;
-    SoftCPU m_cpu;
+    NonnullOwnPtr<SoftCPU> m_cpu;
 
     OwnPtr<MallocTracer> m_malloc_tracer;
 
@@ -292,17 +292,5 @@ private:
     bool m_is_in_region_of_interest { false };
     bool m_is_memory_auditing_suppressed { false };
 };
-
-ALWAYS_INLINE bool Emulator::is_in_libsystem() const
-{
-    return m_cpu.base_eip() >= m_libsystem_start && m_cpu.base_eip() < m_libsystem_end;
-}
-
-ALWAYS_INLINE bool Emulator::is_in_loader_code() const
-{
-    if (!m_loader_text_base.has_value() || !m_loader_text_size.has_value())
-        return false;
-    return (m_cpu.base_eip() >= m_loader_text_base.value() && m_cpu.base_eip() < m_loader_text_base.value() + m_loader_text_size.value());
-}
 
 }
