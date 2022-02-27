@@ -482,7 +482,7 @@ static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node, S
         }
         if (name_node.parent() && name_node.parent()->is_declaration()) {
             auto declaration = verify_cast<Declaration>(name_node.parent());
-            if (declaration->is_struct_or_class()) {
+            if (declaration->is_struct_or_class() || declaration->is_enum()) {
                 return TargetDeclaration { TargetDeclaration::Type::Type, name };
             }
             if (declaration->is_function()) {
@@ -517,7 +517,7 @@ RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentDa
     auto symbol_matches = [&](const Symbol& symbol) {
         bool match_function = target_decl.value().type == TargetDeclaration::Function && symbol.declaration->is_function();
         bool match_variable = target_decl.value().type == TargetDeclaration::Variable && symbol.declaration->is_variable_declaration();
-        bool match_type = target_decl.value().type == TargetDeclaration::Type && symbol.declaration->is_struct_or_class();
+        bool match_type = target_decl.value().type == TargetDeclaration::Type && (symbol.declaration->is_struct_or_class() || symbol.declaration->is_enum());
         bool match_property = target_decl.value().type == TargetDeclaration::Property && symbol.declaration->parent()->is_declaration() && verify_cast<Declaration>(symbol.declaration->parent())->is_struct_or_class();
         bool match_parameter = target_decl.value().type == TargetDeclaration::Variable && symbol.declaration->is_parameter();
         bool match_scope = target_decl.value().type == TargetDeclaration::Scope && (symbol.declaration->is_namespace() || symbol.declaration->is_struct_or_class());
@@ -990,7 +990,7 @@ GUI::AutocompleteProvider::TokenInfo::SemanticType CppComprehensionEngine::get_s
             return GUI::AutocompleteProvider::TokenInfo::SemanticType::Member;
         return GUI::AutocompleteProvider::TokenInfo::SemanticType::Variable;
     }
-    if (decl->is_struct_or_class())
+    if (decl->is_struct_or_class() || decl->is_enum())
         return GUI::AutocompleteProvider::TokenInfo::SemanticType::CustomType;
     if (decl->is_namespace())
         return GUI::AutocompleteProvider::TokenInfo::SemanticType::Namespace;

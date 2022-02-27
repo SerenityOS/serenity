@@ -124,6 +124,7 @@ public:
     virtual bool is_class() const { return false; }
     virtual bool is_function() const { return false; }
     virtual bool is_namespace() const { return false; }
+    virtual bool is_enum() const { return false; }
     bool is_member() const { return parent() != nullptr && parent()->is_declaration() && verify_cast<Declaration>(parent())->is_struct_or_class(); }
     const Name* name() const { return m_name; }
     StringView full_name() const;
@@ -655,6 +656,7 @@ public:
     virtual ~EnumDeclaration() override = default;
     virtual const char* class_name() const override { return "EnumDeclaration"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
+    virtual bool is_enum() const override { return true; }
 
     EnumDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : Declaration(parent, start, end, filename)
