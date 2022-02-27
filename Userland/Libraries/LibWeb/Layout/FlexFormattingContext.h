@@ -96,7 +96,7 @@ private:
 
     void resolve_flexible_lengths(float main_available_size);
 
-    float determine_hypothetical_cross_size_of_item(Box const&);
+    void determine_hypothetical_cross_size_of_item(FlexItem&);
 
     void calculate_cross_size_of_each_flex_line(float cross_min_size, float cross_max_size);
 

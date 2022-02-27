@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -117,7 +117,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
     // Cross Size Determination
     // 7. Determine the hypothetical cross size of each item
     for (auto& flex_item : m_flex_items) {
-        flex_item.hypothetical_cross_size = determine_hypothetical_cross_size_of_item(flex_item.box);
+        determine_hypothetical_cross_size_of_item(flex_item);
     }
 
     // 8. Calculate the cross size of each flex line.
@@ -825,36 +825,39 @@ void FlexFormattingContext::resolve_flexible_lengths(float const main_available_
     }
 }
 
-// https://www.w3.org/TR/css-flexbox-1/#algo-cross-item
-float FlexFormattingContext::determine_hypothetical_cross_size_of_item(Box const& box)
+// https://drafts.csswg.org/css-flexbox-1/#algo-cross-item
+void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& item)
 {
-    bool cross_constrained = false;
-    if (is_row_layout()) {
-        if (!is_undefined_or_auto(box.computed_values().height()) || !is_undefined_or_auto(box.computed_values().min_height())) {
-            cross_constrained = true;
-        }
+    // Determine the hypothetical cross size of each item by performing layout
+    // as if it were an in-flow block-level box with the used main size
+    // and the given available space, treating auto as fit-content.
+
+    // If we have a definite cross size, this is easy! No need to perform layout, we can just use it as-is.
+    if (has_definite_cross_size(item.box)) {
+        auto const& cross_value = is_row_layout() ? item.box.computed_values().height() : item.box.computed_values().width();
+        item.hypothetical_cross_size = cross_value->length().to_px(item.box);
+        return;
+    }
+
+    // For indefinite cross sizes, we perform a throwaway layout and then measure it.
+    auto throwaway_state = m_state;
+    auto& tmp_container_state = throwaway_state.get_mutable(flex_container());
+    tmp_container_state.content_width = is_row_layout() ? m_available_space->main : m_available_space->cross;
+
+    VERIFY(item.box.containing_block() == &flex_container());
+    if (auto independent_formatting_context = create_independent_formatting_context_if_needed(throwaway_state, item.box)) {
+        independent_formatting_context->run(item.box, LayoutMode::Default);
     } else {
-        if (!is_undefined_or_auto(box.computed_values().width()) || !is_undefined_or_auto(box.computed_values().min_width())) {
-            cross_constrained = true;
-        }
+        // NOTE: Flex items should always create an independent formatting context!
+        VERIFY_NOT_REACHED();
     }
 
-    if (!cross_constrained && box.children_are_inline()) {
-        auto& block_container = verify_cast<BlockContainer>(box);
-        BlockFormattingContext bfc(m_state, block_container, this);
-        bfc.run(box, LayoutMode::Default);
-        InlineFormattingContext ifc(m_state, block_container, bfc);
-        ifc.run(box, LayoutMode::OnlyRequiredLineBreaks);
-
-        auto const& box_state = m_state.get(box);
-        return is_row_layout() ? box_state.content_height : box_state.content_width;
+    auto const& box_state = throwaway_state.get(item.box);
+    if (is_row_layout()) {
+        item.hypothetical_cross_size = BlockFormattingContext::compute_theoretical_height(throwaway_state, item.box);
+    } else {
+        item.hypothetical_cross_size = box_state.content_width;
     }
-    if (is_row_layout())
-        return BlockFormattingContext::compute_theoretical_height(m_state, box);
-
-    BlockFormattingContext context(m_state, verify_cast<BlockContainer>(box), this);
-    context.compute_width(box);
-    return m_state.get(box).content_width;
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-cross-line
