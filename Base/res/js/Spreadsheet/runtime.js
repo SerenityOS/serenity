@@ -147,6 +147,18 @@ class Ranges {
         }
     }
 
+    at(wantedIx) {
+        let ix = 0;
+        let found = null;
+        this.forEach(cell => {
+            if (ix++ === wantedIx) {
+                found = cell;
+                return Break;
+            }
+        });
+        return found;
+    }
+
     union(other, direction = "right") {
         if (direction === "left") {
             if (other instanceof Ranges) return Ranges.from(...other.ranges, ...this.ranges);
@@ -211,6 +223,18 @@ class Range {
                 if (callback(range.column + row) === Break) break outer;
             }
         }
+    }
+
+    at(wantedIx) {
+        let ix = 0;
+        let found = null;
+        this.forEach(cell => {
+            if (ix++ === wantedIx) {
+                found = cell;
+                return Break;
+            }
+        });
+        return found;
     }
 
     union(other) {
