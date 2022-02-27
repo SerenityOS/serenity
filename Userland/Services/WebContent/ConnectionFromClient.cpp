@@ -258,7 +258,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
     Web::DOM::Node* node = Web::DOM::Node::from_id(node_id);
     if (!node) {
-        return { false, "", "", "" };
+        return { false, "", "", "", "" };
     }
 
     node->document().set_inspected_node(node);
@@ -266,7 +266,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
     if (node->is_element()) {
         auto& element = verify_cast<Web::DOM::Element>(*node);
         if (!element.specified_css_values())
-            return { false, "", "", "" };
+            return { false, "", "", "", "" };
 
         auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> String {
             StringBuilder builder;
@@ -301,14 +301,39 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
             return builder.to_string();
         };
+        auto serialize_node_box_sizing_json = [](Web::DOM::Element const& element) -> String {
+            if (!element.layout_node()) {
+                return "";
+            }
+            auto box_model = static_cast<Web::Layout::Box const&>(*element.layout_node()).box_model();
+            StringBuilder builder;
+            auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
+            MUST(serializer.add("padding_top", box_model.padding.top));
+            MUST(serializer.add("padding_right", box_model.padding.right));
+            MUST(serializer.add("padding_bottom", box_model.padding.bottom));
+            MUST(serializer.add("padding_left", box_model.padding.left));
+            MUST(serializer.add("margin_top", box_model.margin.top));
+            MUST(serializer.add("margin_right", box_model.margin.top));
+            MUST(serializer.add("margin_bottom", box_model.margin.top));
+            MUST(serializer.add("margin_left", box_model.margin.top));
+            MUST(serializer.add("border_top", box_model.border.top));
+            MUST(serializer.add("border_right", box_model.border.right));
+            MUST(serializer.add("border_bottom", box_model.border.bottom));
+            MUST(serializer.add("border_left", box_model.border.left));
+            MUST(serializer.add("content_width", static_cast<Web::Layout::Box const&>(*element.layout_node()).content_width()));
+            MUST(serializer.add("content_height", static_cast<Web::Layout::Box const&>(*element.layout_node()).content_height()));
 
+            MUST(serializer.finish());
+            return builder.to_string();
+        };
         String specified_values_json = serialize_json(*element.specified_css_values());
         String computed_values_json = serialize_json(element.computed_style());
         String custom_properties_json = serialize_custom_properties_json(element);
-        return { true, specified_values_json, computed_values_json, custom_properties_json };
+        String node_box_sizing_json = serialize_node_box_sizing_json(element);
+        return { true, specified_values_json, computed_values_json, custom_properties_json, node_box_sizing_json };
     }
 
-    return { false, "", "", "" };
+    return { false, "", "", "", "" };
 }
 
 Messages::WebContentServer::GetHoveredNodeIdResponse ConnectionFromClient::get_hovered_node_id()

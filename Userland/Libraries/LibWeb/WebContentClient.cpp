@@ -146,9 +146,9 @@ void WebContentClient::did_get_dom_tree(String const& dom_tree)
     m_view.notify_server_did_get_dom_tree(dom_tree);
 }
 
-void WebContentClient::did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties)
+void WebContentClient::did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing)
 {
-    m_view.notify_server_did_get_dom_node_properties(node_id, specified_style, computed_style, custom_properties);
+    m_view.notify_server_did_get_dom_node_properties(node_id, specified_style, computed_style, custom_properties, node_box_sizing);
 }
 
 void WebContentClient::did_output_js_console_message(i32 message_index)

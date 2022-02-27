@@ -51,7 +51,7 @@ private:
     virtual void did_request_image_context_menu(Gfx::IntPoint const&, AK::URL const&, String const&, unsigned, Gfx::ShareableBitmap const&) override;
     virtual void did_get_source(AK::URL const&, String const&) override;
     virtual void did_get_dom_tree(String const&) override;
-    virtual void did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties) override;
+    virtual void did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing) override;
     virtual void did_output_js_console_message(i32 message_index) override;
     virtual void did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages) override;
     virtual void did_change_favicon(Gfx::ShareableBitmap const&) override;
