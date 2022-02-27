@@ -24,7 +24,7 @@ void LineBox::add_fragment(Node const& layout_node, int start, int length, float
         m_fragments.last().m_length = (start - m_fragments.last().m_start) + length;
         m_fragments.last().set_width(m_fragments.last().width() + content_width);
     } else {
-        m_fragments.append(make<LineBoxFragment>(layout_node, start, length, Gfx::FloatPoint(m_width + leading_size, 0.0f), Gfx::FloatSize(content_width, content_height), border_box_top, border_box_bottom, fragment_type));
+        m_fragments.append(LineBoxFragment { layout_node, start, length, Gfx::FloatPoint(m_width + leading_size, 0.0f), Gfx::FloatSize(content_width, content_height), border_box_top, border_box_bottom, fragment_type });
     }
     m_width += content_width + leading_size + trailing_size;
 }
@@ -33,7 +33,7 @@ void LineBox::trim_trailing_whitespace()
 {
     while (!m_fragments.is_empty() && m_fragments.last().is_justifiable_whitespace()) {
         auto fragment = m_fragments.take_last();
-        m_width -= fragment->width();
+        m_width -= fragment.width();
     }
 
     if (m_fragments.is_empty())
