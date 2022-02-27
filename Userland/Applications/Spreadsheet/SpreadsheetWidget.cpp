@@ -274,10 +274,13 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             auto& sheet = *sheet_ptr;
 
             VERIFY(!selection.is_empty());
+            m_cut_action->set_enabled(true);
+            m_copy_action->set_enabled(true);
+            m_current_cell_label->set_enabled(true);
+            m_cell_value_editor->set_enabled(true);
 
             if (selection.size() == 1) {
                 auto& position = selection.first();
-                m_current_cell_label->set_enabled(true);
                 m_current_cell_label->set_text(position.to_cell_identifier(sheet));
 
                 auto& cell = sheet.ensure(position);
@@ -292,9 +295,6 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                     sheet.update();
                     update();
                 };
-                m_cell_value_editor->set_enabled(true);
-                m_cut_action->set_enabled(true);
-                m_copy_action->set_enabled(true);
                 static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&cell);
                 return;
             }
@@ -302,7 +302,6 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             // There are many cells selected, change all of them.
             StringBuilder builder;
             builder.appendff("<{}>", selection.size());
-            m_current_cell_label->set_enabled(true);
             m_current_cell_label->set_text(builder.string_view());
 
             Vector<Cell&> cells;
@@ -331,7 +330,6 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                     update();
                 }
             };
-            m_cell_value_editor->set_enabled(true);
             static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&first_cell);
         };
         m_selected_view->on_selection_dropped = [&]() {
