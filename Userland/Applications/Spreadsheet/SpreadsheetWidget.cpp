@@ -272,18 +272,8 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             // How did this even happen?
             VERIFY(sheet_ptr);
             auto& sheet = *sheet_ptr;
-            if (selection.is_empty()) {
-                m_current_cell_label->set_enabled(false);
-                m_current_cell_label->set_text({});
-                m_cell_value_editor->on_change = nullptr;
-                m_cell_value_editor->on_focusin = nullptr;
-                m_cell_value_editor->on_focusout = nullptr;
-                m_cell_value_editor->set_text("");
-                m_cell_value_editor->set_enabled(false);
-                m_cut_action->set_enabled(false);
-                m_copy_action->set_enabled(false);
-                return;
-            }
+
+            VERIFY(!selection.is_empty());
 
             if (selection.size() == 1) {
                 auto& position = selection.first();
@@ -345,11 +335,18 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&first_cell);
         };
         m_selected_view->on_selection_dropped = [&]() {
-            m_cell_value_editor->set_enabled(false);
-            static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
-            m_cell_value_editor->set_text("");
             m_current_cell_label->set_enabled(false);
-            m_current_cell_label->set_text("");
+            m_current_cell_label->set_text({});
+            m_cell_value_editor->on_change = nullptr;
+            m_cell_value_editor->on_focusin = nullptr;
+            m_cell_value_editor->on_focusout = nullptr;
+            m_cell_value_editor->set_text({});
+            m_cell_value_editor->set_enabled(false);
+
+            m_cut_action->set_enabled(false);
+            m_copy_action->set_enabled(false);
+
+            static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
         };
     };
 
