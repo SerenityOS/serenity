@@ -198,6 +198,9 @@ Vector<StringView> CppComprehensionEngine::scope_of_reference_to_symbol(const AS
 
     Vector<StringView> scope_parts;
     for (auto& scope_part : name->scope()) {
+        // If the target node is part of a scope reference, we want to end the scope chain before it.
+        if (&scope_part == &node)
+            break;
         scope_parts.append(scope_part.name());
     }
     return scope_parts;
@@ -444,7 +447,8 @@ struct TargetDeclaration {
         Variable,
         Type,
         Function,
-        Property
+        Property,
+        Scope
     } type;
     String name;
 };
@@ -470,6 +474,13 @@ static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node)
 
 static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node, String name)
 {
+
+    if (node.parent() && node.parent()->is_name()) {
+        if (&node != verify_cast<Name>(node.parent())->name()) {
+            return TargetDeclaration { TargetDeclaration::Type::Scope, name };
+        }
+    }
+
     if ((node.parent() && node.parent()->is_function_call()) || (node.parent()->is_name() && node.parent()->parent() && node.parent()->parent()->is_function_call())) {
         return TargetDeclaration { TargetDeclaration::Type::Function, name };
     }
@@ -499,6 +510,7 @@ RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentDa
         bool match_type = target_decl.value().type == TargetDeclaration::Type && symbol.declaration->is_struct_or_class();
         bool match_property = target_decl.value().type == TargetDeclaration::Property && symbol.declaration->parent()->is_declaration() && verify_cast<Declaration>(symbol.declaration->parent())->is_struct_or_class();
         bool match_parameter = target_decl.value().type == TargetDeclaration::Variable && symbol.declaration->is_parameter();
+        bool match_scope = target_decl.value().type == TargetDeclaration::Scope && (symbol.declaration->is_namespace() || symbol.declaration->is_struct_or_class());
 
         if (match_property) {
             // FIXME: This is not really correct, we also need to check that the type of the struct/class matches (not just the property name)
@@ -511,7 +523,7 @@ RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentDa
             return false;
         }
 
-        if (match_function || match_type) {
+        if (match_function || match_type || match_scope) {
             if (symbol.name.name == target_decl->name)
                 return true;
         }
@@ -771,19 +783,22 @@ String CppComprehensionEngine::SymbolName::to_string() const
 
 bool CppComprehensionEngine::is_symbol_available(const Symbol& symbol, const Vector<StringView>& current_scope, const Vector<StringView>& reference_scope)
 {
+
     if (!reference_scope.is_empty()) {
         return reference_scope == symbol.name.scope;
     }
 
-    // FIXME: Consider "using namespace ..."
+    // FIXME: Take "using namespace ..." into consideration
 
     // Check if current_scope starts with symbol's scope
     if (symbol.name.scope.size() > current_scope.size())
         return false;
+
     for (size_t i = 0; i < symbol.name.scope.size(); ++i) {
         if (current_scope[i] != symbol.name.scope[i])
             return false;
     }
+
     return true;
 }
 
