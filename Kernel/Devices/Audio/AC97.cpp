@@ -87,8 +87,12 @@ UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize()
     // Reset mixer
     m_io_mixer_base.offset(NativeAudioMixerRegister::Reset).out<u16>(1);
 
+    // Read out AC'97 codec revision
     auto extended_audio_id = m_io_mixer_base.offset(NativeAudioMixerRegister::ExtendedAudioID).in<u16>();
-    VERIFY((extended_audio_id & ExtendedAudioMask::Revision) >> 10 == AC97Revision::Revision23);
+    m_codec_revision = static_cast<AC97Revision>(((extended_audio_id & ExtendedAudioMask::Revision) >> 10) & 0b11);
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: codec revision {:#02b}", pci_address(), to_underlying(m_codec_revision));
+    if (m_codec_revision == AC97Revision::Reserved)
+        return ENOTSUP;
 
     // Enable variable and double rate PCM audio if supported
     auto extended_audio_status_control_register = m_io_mixer_base.offset(NativeAudioMixerRegister::ExtendedAudioStatusControl);
