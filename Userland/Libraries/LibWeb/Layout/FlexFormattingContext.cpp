@@ -989,17 +989,26 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
 // https://www.w3.org/TR/css-flexbox-1/#algo-cross-container
 void FlexFormattingContext::determine_flex_container_used_cross_size(float const cross_min_size, float const cross_max_size)
 {
+    float cross_size = 0;
     if (has_definite_cross_size(flex_container())) {
-        float clamped_cross_size = clamp(specified_cross_size(flex_container()), cross_min_size, cross_max_size);
-        set_cross_size(flex_container(), clamped_cross_size);
+        // Flex container has definite cross size: easy-peasy.
+        cross_size = specified_cross_size(flex_container());
     } else {
-        float sum_of_flex_lines_cross_sizes = 0;
-        for (auto& flex_line : m_flex_lines) {
-            sum_of_flex_lines_cross_sizes += flex_line.cross_size;
+        // Flex container has indefinite cross size.
+        auto cross_size_value = is_row_layout() ? flex_container().computed_values().height() : flex_container().computed_values().width();
+        if (!cross_size_value.has_value() || (cross_size_value->is_length() && cross_size_value->length().is_auto())) {
+            // If a content-based cross size is needed, use the sum of the flex lines' cross sizes.
+            float sum_of_flex_lines_cross_sizes = 0;
+            for (auto& flex_line : m_flex_lines) {
+                sum_of_flex_lines_cross_sizes += flex_line.cross_size;
+            }
+            cross_size = sum_of_flex_lines_cross_sizes;
+        } else {
+            // Otherwise, resolve the indefinite size at this point.
+            cross_size = cross_size_value->resolved(flex_container(), CSS::Length::make_px(specified_cross_size(*flex_container().containing_block()))).to_px(flex_container());
         }
-        float clamped_cross_size = clamp(sum_of_flex_lines_cross_sizes, cross_min_size, cross_max_size);
-        set_cross_size(flex_container(), clamped_cross_size);
     }
+    set_cross_size(flex_container(), clamp(cross_size, cross_min_size, cross_max_size));
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-line-align
