@@ -21,6 +21,7 @@ set(SOURCES
     CookiesTabGML.h
     DownloadWidget.cpp
     EditBookmarkGML.h
+    ElementSizePreviewWidget.cpp
     History.cpp
     IconBag.cpp
     InspectorWidget.cpp

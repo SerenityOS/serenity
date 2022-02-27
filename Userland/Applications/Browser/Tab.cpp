@@ -292,8 +292,8 @@ Tab::Tab(BrowserWindow& window)
             m_dom_inspector_widget->set_dom_json(dom_tree);
     };
 
-    hooks().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties) {
-        m_dom_inspector_widget->set_dom_node_properties_json(node_id, specified, computed, custom_properties);
+    hooks().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties, auto& node_box_sizing) {
+        m_dom_inspector_widget->set_dom_node_properties_json(node_id, specified, computed, custom_properties, node_box_sizing);
     };
 
     hooks().on_js_console_new_message = [this](auto message_index) {

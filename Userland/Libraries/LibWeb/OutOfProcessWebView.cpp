@@ -354,10 +354,10 @@ void OutOfProcessWebView::notify_server_did_get_dom_tree(const String& dom_tree)
         on_get_dom_tree(dom_tree);
 }
 
-void OutOfProcessWebView::notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties)
+void OutOfProcessWebView::notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing)
 {
     if (on_get_dom_node_properties)
-        on_get_dom_node_properties(node_id, specified_style, computed_style, custom_properties);
+        on_get_dom_node_properties(node_id, specified_style, computed_style, custom_properties, node_box_sizing);
 }
 
 void OutOfProcessWebView::notify_server_did_output_js_console_message(i32 message_index)
@@ -441,7 +441,8 @@ Optional<OutOfProcessWebView::DOMNodeProperties> OutOfProcessWebView::inspect_do
     return DOMNodeProperties {
         .specified_values_json = response.specified_style(),
         .computed_values_json = response.computed_style(),
-        .custom_properties_json = response.custom_properties()
+        .custom_properties_json = response.custom_properties(),
+        .node_box_sizing_json = response.node_box_sizing()
     };
 }
 
