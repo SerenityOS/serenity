@@ -97,9 +97,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
     bool main_is_constrained = false;
     bool cross_is_constrained = false;
     bool main_size_is_infinite = false;
-    auto available_space = determine_available_main_and_cross_space(main_size_is_infinite, main_is_constrained, cross_is_constrained, main_min_size, main_max_size, cross_min_size, cross_max_size);
-    auto main_available_size = available_space.main;
-    [[maybe_unused]] auto cross_available_size = available_space.cross;
+    determine_available_main_and_cross_space(main_size_is_infinite, main_is_constrained, cross_is_constrained, main_min_size, main_max_size, cross_min_size, cross_max_size);
 
     // 3. Determine the flex base size and hypothetical main size of each item
     for (auto& flex_item : m_flex_items) {
@@ -107,14 +105,14 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
     }
 
     // 4. Determine the main size of the flex container
-    determine_main_size_of_flex_container(main_is_constrained, main_size_is_infinite, main_available_size, main_min_size, main_max_size);
+    determine_main_size_of_flex_container(main_is_constrained, main_size_is_infinite, m_available_space->main, main_min_size, main_max_size);
 
     // 5. Collect flex items into flex lines:
     // After this step no additional items are to be added to flex_lines or any of its items!
-    collect_flex_items_into_flex_lines(main_available_size);
+    collect_flex_items_into_flex_lines(m_available_space->main);
 
     // 6. Resolve the flexible lengths
-    resolve_flexible_lengths(main_available_size);
+    resolve_flexible_lengths(m_available_space->main);
 
     // Cross Size Determination
     // 7. Determine the hypothetical cross size of each item
@@ -135,7 +133,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
     determine_used_cross_size_of_each_flex_item();
 
     // 12. Distribute any remaining free space.
-    distribute_any_remaining_free_space(main_available_size);
+    distribute_any_remaining_free_space(m_available_space->main);
 
     // 13. Resolve cross-axis auto margins.
     // FIXME: This
@@ -406,7 +404,7 @@ float FlexFormattingContext::sum_of_margin_padding_border_in_main_axis(Box const
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-available
-FlexFormattingContext::AvailableSpace FlexFormattingContext::determine_available_main_and_cross_space(bool& main_size_is_infinite, bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size) const
+void FlexFormattingContext::determine_available_main_and_cross_space(bool& main_size_is_infinite, bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size)
 {
     auto containing_block_effective_main_size = [&](Box const& box) {
         auto& containing_block = *box.containing_block();
@@ -475,7 +473,7 @@ FlexFormattingContext::AvailableSpace FlexFormattingContext::determine_available
             cross_available_space = cross_max_size;
     }
 
-    return AvailableSpace { .main = main_available_space, .cross = cross_available_space };
+    m_available_space = AvailableSpace { .main = main_available_space, .cross = cross_available_space };
 }
 
 float FlexFormattingContext::layout_for_maximum_main_size(Box const& box)

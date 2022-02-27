@@ -85,11 +85,7 @@ private:
 
     void generate_anonymous_flex_items();
 
-    struct AvailableSpace {
-        float main { 0 };
-        float cross { 0 };
-    };
-    AvailableSpace determine_available_main_and_cross_space(bool& main_size_is_infinite, bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size) const;
+    void determine_available_main_and_cross_space(bool& main_size_is_infinite, bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size);
 
     float layout_for_maximum_main_size(Box const&);
     void determine_flex_base_size_and_hypothetical_main_size(FlexItem&);
@@ -124,6 +120,12 @@ private:
     Vector<FlexLine> m_flex_lines;
     Vector<FlexItem> m_flex_items;
     CSS::FlexDirection m_flex_direction {};
+
+    struct AvailableSpace {
+        float main { 0 };
+        float cross { 0 };
+    };
+    Optional<AvailableSpace> m_available_space;
 };
 
 }
