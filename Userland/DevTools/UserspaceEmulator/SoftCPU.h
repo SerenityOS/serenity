@@ -176,21 +176,21 @@ public:
     {
         if (a32)
             return esi();
-        return { si().value(), (u32)si().shadow() & 0xffff };
+        return { si().value(), (u32)si().shadow_as_value() & 0xffff };
     }
 
     ValueWithShadow<u32> destination_index(bool a32) const
     {
         if (a32)
             return edi();
-        return { di().value(), (u32)di().shadow() & 0xffff };
+        return { di().value(), (u32)di().shadow_as_value() & 0xffff };
     }
 
     ValueWithShadow<u32> loop_index(bool a32) const
     {
         if (a32)
             return ecx();
-        return { cx().value(), (u32)cx().shadow() & 0xffff };
+        return { cx().value(), (u32)cx().shadow_as_value() & 0xffff };
     }
 
     bool decrement_loop_index(bool a32)

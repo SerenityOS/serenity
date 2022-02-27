@@ -300,7 +300,7 @@ void SoftFPU::FSTP_RM80(const X86::Instruction& insn)
         f80 = insn.modrm().read128(m_cpu, insn);
         *(long double*)value.bytes().data() = fpu_pop();
         memcpy(f80.value().bytes().data(), &value, 10); // copy
-        memset(f80.shadow().bytes().data(), 0x01, 10);  // mark as initialized
+        f80.set_initialized();
         insn.modrm().write128(m_cpu, insn, f80);
     }
 }
@@ -688,7 +688,7 @@ void SoftFPU::FDIVR_RM64(const X86::Instruction& insn)
 {
     if (insn.modrm().is_register()) {
         // XXX this is FDIVR, Instruction decodes this weirdly
-        //fpu_set(insn.modrm().register_index(), fpu_get(0) / fpu_get(insn.modrm().register_index()));
+        // fpu_set(insn.modrm().register_index(), fpu_get(0) / fpu_get(insn.modrm().register_index()));
         fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) / fpu_get(0));
     } else {
         auto new_f64 = insn.modrm().read64(m_cpu, insn);
@@ -1167,13 +1167,13 @@ void SoftFPU::FNSTENV(const X86::Instruction& insn)
      * |                |       TW      | 8
      * +----------------+---------------+
      * |               FIP              | 12
-     * +----+-----------+---------------+ 
+     * +----+-----------+---------------+
      * |0000|fpuOp[10:0]|    FIP_sel    | 16
-     * +----+-----------+---------------+ 
+     * +----+-----------+---------------+
      * |               FDP              | 20
-     * +----------------+---------------+ 
+     * +----------------+---------------+
      * |                |    FDP_ds     | 24
-     * +----------------|---------------+ 
+     * +----------------|---------------+
      * */
 
     auto address = insn.modrm().resolve(m_cpu, insn);

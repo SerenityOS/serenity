@@ -347,7 +347,7 @@ bool SoftMMU::fast_fill_memory8(X86::LogicalAddress address, size_t size, ValueW
 
     size_t offset_in_region = address.offset() - region->base();
     memset(region->data() + offset_in_region, value.value(), size);
-    memset(region->shadow_data() + offset_in_region, value.shadow(), size);
+    memset(region->shadow_data() + offset_in_region, value.shadow()[0], size);
     return true;
 }
 
@@ -372,7 +372,7 @@ bool SoftMMU::fast_fill_memory32(X86::LogicalAddress address, size_t count, Valu
 
     size_t offset_in_region = address.offset() - region->base();
     fast_u32_fill((u32*)(region->data() + offset_in_region), value.value(), count);
-    fast_u32_fill((u32*)(region->shadow_data() + offset_in_region), value.shadow(), count);
+    fast_u32_fill((u32*)(region->shadow_data() + offset_in_region), value.shadow_as_value(), count);
     return true;
 }
 

@@ -85,7 +85,7 @@ void SimpleRegion::write8(u32 offset, ValueWithShadow<u8> value)
 {
     VERIFY(offset < size());
     m_data[offset] = value.value();
-    m_shadow_data[offset] = value.shadow();
+    m_shadow_data[offset] = value.shadow()[0];
 }
 
 void SimpleRegion::write16(u32 offset, ValueWithShadow<u16> value)
