@@ -81,6 +81,8 @@ private:
     void set_main_axis_first_margin(Box const&, float margin);
     void set_main_axis_second_margin(Box const&, float margin);
 
+    void setup_initial_width_and_height();
+
     void generate_anonymous_flex_items();
 
     struct AvailableSpace {

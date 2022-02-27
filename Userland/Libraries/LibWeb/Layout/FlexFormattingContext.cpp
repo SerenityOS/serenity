@@ -43,6 +43,38 @@ FlexFormattingContext::~FlexFormattingContext()
 {
 }
 
+void FlexFormattingContext::setup_initial_width_and_height()
+{
+    // FIXME: This does not correspond to any part of the spec, and will eventually disappear.
+    auto& containing_block_state = m_state.get(*flex_container().containing_block());
+    if (!flex_container().has_definite_width()) {
+        m_flex_container_state.content_width = containing_block_state.content_width;
+    } else {
+        auto container_width = containing_block_state.content_width;
+
+        auto& maybe_width = flex_container().computed_values().width();
+        if (maybe_width.has_value()) {
+            auto width = maybe_width->resolved(flex_container(), CSS::Length::make_px(container_width)).to_px(flex_container());
+            m_flex_container_state.content_width = width;
+        } else {
+            m_flex_container_state.content_width = 0;
+        }
+    }
+
+    if (!flex_container().has_definite_height()) {
+        m_flex_container_state.content_height = containing_block_state.content_height;
+    } else {
+        auto container_height = containing_block_state.content_height;
+        auto& maybe_height = flex_container().computed_values().height();
+        if (maybe_height.has_value()) {
+            auto height = maybe_height->resolved(flex_container(), CSS::Length::make_px(container_height)).to_px(flex_container());
+            m_flex_container_state.content_height = height;
+        } else {
+            m_flex_container_state.content_height = 0;
+        }
+    }
+}
+
 void FlexFormattingContext::run(Box const& run_box, LayoutMode)
 {
     VERIFY(&run_box == &flex_container());
@@ -50,6 +82,9 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
     // This implements https://www.w3.org/TR/css-flexbox-1/#layout-algorithm
 
     // FIXME: Implement reverse and ordering.
+
+    // AD-HOC: Set up initial width information
+    setup_initial_width_and_height();
 
     // 1. Generate anonymous flex items
     generate_anonymous_flex_items();
@@ -136,40 +171,12 @@ void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::Flex
 // https://www.w3.org/TR/css-flexbox-1/#flex-items
 void FlexFormattingContext::generate_anonymous_flex_items()
 {
-    auto& containing_block_state = m_state.get(*flex_container().containing_block());
     // More like, sift through the already generated items.
     // After this step no items are to be added or removed from flex_items!
     // It holds every item we need to consider and there should be nothing in the following
     // calculations that could change that.
     // This is particularly important since we take references to the items stored in flex_items
     // later, whose addresses won't be stable if we added or removed any items.
-    if (!flex_container().has_definite_width()) {
-        m_flex_container_state.content_width = containing_block_state.content_width;
-    } else {
-        auto container_width = containing_block_state.content_width;
-
-        auto& maybe_width = flex_container().computed_values().width();
-        if (maybe_width.has_value()) {
-            auto width = maybe_width->resolved(flex_container(), CSS::Length::make_px(container_width)).to_px(flex_container());
-            m_flex_container_state.content_width = width;
-        } else {
-            m_flex_container_state.content_width = 0;
-        }
-    }
-
-    if (!flex_container().has_definite_height()) {
-        m_flex_container_state.content_height = containing_block_state.content_height;
-    } else {
-        auto container_height = containing_block_state.content_height;
-        auto& maybe_height = flex_container().computed_values().height();
-        if (maybe_height.has_value()) {
-            auto height = maybe_height->resolved(flex_container(), CSS::Length::make_px(container_height)).to_px(flex_container());
-            m_flex_container_state.content_height = height;
-        } else {
-            m_flex_container_state.content_height = 0;
-        }
-    }
-
     flex_container().for_each_child_of_type<Box>([&](Box& child_box) {
         // Skip anonymous text runs that are only whitespace.
         if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockContainer>()) {
