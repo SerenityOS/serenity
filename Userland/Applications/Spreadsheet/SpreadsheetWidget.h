@@ -9,6 +9,7 @@
 #include "SpreadsheetView.h"
 #include "Workbook.h"
 #include <AK/NonnullRefPtrVector.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/Widget.h>
 
 namespace Spreadsheet {
@@ -26,18 +27,19 @@ public:
     void add_sheet(NonnullRefPtr<Sheet>&&);
 
     const String& current_filename() const { return m_workbook->current_filename(); }
-    Sheet* current_worksheet_if_available() { return m_selected_view ? m_selected_view->sheet_if_available() : nullptr; }
+    SpreadsheetView* current_view() { return static_cast<SpreadsheetView*>(m_tab_widget->active_widget()); }
+    Sheet* current_worksheet_if_available() { return current_view() ? current_view()->sheet_if_available() : nullptr; }
     void update_window_title();
 
     Workbook& workbook() { return *m_workbook; }
     const Workbook& workbook() const { return *m_workbook; }
 
-    const GUI::ModelIndex* current_selection_cursor() const
+    const GUI::ModelIndex* current_selection_cursor()
     {
-        if (!m_selected_view)
+        if (!current_view())
             return nullptr;
 
-        return m_selected_view->cursor();
+        return current_view()->cursor();
     }
 
     void initialize_menubar(GUI::Window&);
@@ -55,7 +57,6 @@ private:
 
     void try_generate_tip_for_input_expression(StringView source, size_t offset);
 
-    SpreadsheetView* m_selected_view { nullptr };
     RefPtr<GUI::Label> m_current_cell_label;
     RefPtr<GUI::TextEditor> m_cell_value_editor;
     RefPtr<GUI::Window> m_inline_documentation_window;

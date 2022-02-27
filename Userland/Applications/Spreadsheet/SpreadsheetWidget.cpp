@@ -48,9 +48,9 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     help_button.set_tooltip("Functions Help");
     help_button.set_fixed_size(20, 20);
     help_button.on_click = [&](auto) {
-        if (!m_selected_view) {
+        if (!current_view()) {
             GUI::MessageBox::show_error(window(), "Can only show function documentation/help when a worksheet exists and is open");
-        } else if (auto* sheet_ptr = m_selected_view->sheet_if_available()) {
+        } else if (auto* sheet_ptr = current_worksheet_if_available()) {
             auto docs = sheet_ptr->gather_documentation();
             auto help_window = HelpWindow::the(window());
             help_window->set_docs(move(docs));
@@ -63,7 +63,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     cell_value_editor.set_scrollbars_enabled(false);
 
     cell_value_editor.on_return_pressed = [this]() {
-        m_selected_view->move_cursor(GUI::AbstractView::CursorMovement::Down);
+        current_view()->move_cursor(GUI::AbstractView::CursorMovement::Down);
     };
 
     cell_value_editor.set_syntax_highlighter(make<CellSyntaxHighlighter>());
@@ -260,7 +260,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             window()->set_modified(true);
         };
         new_view.on_selection_changed = [&](Vector<Position>&& selection) {
-            auto* sheet_ptr = m_selected_view->sheet_if_available();
+            auto* sheet_ptr = current_worksheet_if_available();
             // How did this even happen?
             VERIFY(sheet_ptr);
             auto& sheet = *sheet_ptr;
@@ -308,7 +308,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             m_cell_value_editor->on_focusout = [this] { m_should_change_selected_cells = false; };
             m_cell_value_editor->on_change = [cells = move(cells), this]() mutable {
                 if (m_should_change_selected_cells) {
-                    auto* sheet_ptr = m_selected_view->sheet_if_available();
+                    auto* sheet_ptr = current_worksheet_if_available();
                     if (!sheet_ptr)
                         return;
                     auto& sheet = *sheet_ptr;
@@ -340,10 +340,6 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
         };
     }
 
-    m_tab_widget->on_change = [this](auto& selected_widget) {
-        m_selected_view = &static_cast<SpreadsheetView&>(selected_widget);
-    };
-
     m_tab_widget->on_context_menu_request = [&](auto& widget, auto& event) {
         m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
         m_tab_context_menu->popup(event.screen_position());
@@ -367,14 +363,14 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
 void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source, size_t cursor_offset)
 {
-    auto* sheet_ptr = m_selected_view->sheet_if_available();
+    auto* sheet_ptr = current_view()->sheet_if_available();
     if (!sheet_ptr)
         return;
 
     auto& sheet = *sheet_ptr;
 
     m_inline_documentation_window->set_rect(m_cell_value_editor->screen_relative_rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
-    if (!m_selected_view || !source.starts_with('=')) {
+    if (!current_view() || !source.starts_with('=')) {
         m_inline_documentation_window->hide();
         return;
     }
