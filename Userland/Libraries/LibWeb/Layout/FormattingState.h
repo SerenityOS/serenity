@@ -66,6 +66,15 @@ struct FormattingState {
 
     void commit();
 
+    FormattingState clone() const
+    {
+        FormattingState new_state;
+        for (auto& it : nodes) {
+            new_state.nodes.set(it.key, make<NodeState>(*it.value));
+        }
+        return new_state;
+    }
+
     NodeState& get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
     {
         return *nodes.ensure(&box, [] { return make<NodeState>(); });
