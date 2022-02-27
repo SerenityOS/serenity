@@ -46,24 +46,32 @@ describe("Basic functions", () => {
         expect(reduce).toBeDefined();
         expect(reduce(acc => acc + 1, 0, [1, 2, 3, 4])).toEqual(4);
         expect(reduce(acc => acc + 1, 0, [])).toEqual(0);
+        expect(reduce((acc, x) => acc + "|" + x.toString(), 0, R`A0:A2`)).toEqual("0|0|1|2");
+        expect(reduce((acc, x) => acc + "|" + x.toString(), 0, R`A0:A0`)).toEqual("0|0");
     });
 
     test("numericReduce", () => {
         expect(numericReduce).toBeDefined();
         expect(numericReduce(acc => acc + 1, 0, [1, 2, 3, 4])).toEqual(4);
         expect(numericReduce(acc => acc + 1, 0, [])).toEqual(0);
+        expect(numericReduce((acc, x) => acc + x, 19, R`A0:A2`)).toEqual(22);
+        expect(numericReduce(acc => acc + 1, 3, R`A0:A0`)).toEqual(4);
     });
 
     test("numericResolve", () => {
         expect(numericResolve).toBeDefined();
-        expect(numericResolve(["A0", "A1", "A2"])).toEqual([0, 1, 2]);
+        expect(numericResolve(["0", "1", "2"])).toEqual([0, 1, 2]);
         expect(numericResolve([])).toEqual([]);
+        expect(numericResolve(R`A0:A2`)).toEqual([0, 1, 2]);
+        expect(numericResolve(R`A0:A0`)).toEqual([0]);
     });
 
     test("resolve", () => {
         expect(resolve).toBeDefined();
-        expect(resolve(["A0", "A1", "A2"])).toEqual(["0", "1", "2"]);
+        expect(resolve(["A", "B", "C"])).toEqual(["A", "B", "C"]);
         expect(resolve([])).toEqual([]);
+        expect(resolve(R`A0:A2`)).toEqual(["0", "1", "2"]);
+        expect(resolve(R`A0:A0`)).toEqual(["0"]);
     });
 });
 
