@@ -183,8 +183,9 @@ public:
     /// Ensures that the required space is available.
     ErrorOr<Bytes> get_bytes_for_writing(size_t length)
     {
-        TRY(try_ensure_capacity(size() + length));
-        return Bytes { data() + size(), length };
+        auto const old_size = size();
+        TRY(try_resize(old_size + length));
+        return Bytes { data() + old_size, length };
     }
 
     /// Like get_bytes_for_writing, but crashes if allocation fails.
