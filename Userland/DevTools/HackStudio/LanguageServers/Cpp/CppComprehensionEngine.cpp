@@ -474,10 +474,20 @@ static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node)
 
 static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node, String name)
 {
-
     if (node.parent() && node.parent()->is_name()) {
-        if (&node != verify_cast<Name>(node.parent())->name()) {
+        auto& name_node = *verify_cast<Name>(node.parent());
+        if (&node != name_node.name()) {
+            // Node is part of scope reference chain
             return TargetDeclaration { TargetDeclaration::Type::Scope, name };
+        }
+        if (name_node.parent() && name_node.parent()->is_declaration()) {
+            auto declaration = verify_cast<Declaration>(name_node.parent());
+            if (declaration->is_struct_or_class()) {
+                return TargetDeclaration { TargetDeclaration::Type::Type, name };
+            }
+            if (declaration->is_function()) {
+                return TargetDeclaration { TargetDeclaration::Type::Function, name };
+            }
         }
     }
 
