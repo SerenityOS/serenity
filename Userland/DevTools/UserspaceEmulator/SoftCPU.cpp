@@ -74,8 +74,10 @@ SoftCPU::SoftCPU(Emulator& emulator)
     : m_emulator(emulator)
     , m_fpu(emulator, *this)
 {
-    memset(m_gpr, 0, sizeof(m_gpr));
-    memset(m_gpr_shadow, 1, sizeof(m_gpr_shadow));
+    PartAddressableRegister empty_reg;
+    explicit_bzero(&empty_reg, sizeof(empty_reg));
+    for (auto& gpr : m_gpr)
+        gpr = ValueWithShadow<PartAddressableRegister>::create_initialized(empty_reg);
 
     m_segment[(int)X86::SegmentRegister::CS] = 0x1b;
     m_segment[(int)X86::SegmentRegister::DS] = 0x23;

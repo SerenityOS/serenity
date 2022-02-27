@@ -107,12 +107,6 @@ public:
     {
     }
 
-    ValueAndShadowReference(T& value, T& shadow)
-        : m_value(value)
-        , m_shadow(*bit_cast<ShadowType*>(&shadow))
-    {
-    }
-
     bool is_uninitialized() const
     {
         for (size_t i = 0; i < sizeof(ShadowType); ++i) {
