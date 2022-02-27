@@ -108,4 +108,17 @@ describe("Range", () => {
         expect(R`A0:A25`.first().name).toEqual("A0");
         expect(R`A2:A25`.first().name).toEqual("A2");
     });
+
+    test("Range#at", () => {
+        const workbook = createWorkbook();
+        const sheet = createSheet(workbook, "Sheet 1");
+        sheet.makeCurrent();
+        let i = 0;
+        for (const col of ["A", "B"])
+            for (const row of [0, 1, 2]) sheet.setCell(col, row, Math.pow(i++, 2));
+
+        sheet.focusCell("A", 0);
+        expect(R`A0:A2`.at(2)).toEqual("A2");
+        expect(Ranges.from(R`A0:A2`, R`B0:B2`).at(5)).toEqual("B2");
+    });
 });
