@@ -108,16 +108,16 @@ public:
     bool has_intrinsic_height() const { return intrinsic_height().has_value(); }
     bool has_intrinsic_aspect_ratio() const { return intrinsic_aspect_ratio().has_value(); }
 
-    bool has_overflow() const { return m_overflow_data; }
+    bool has_overflow() const { return m_overflow_data.has_value(); }
 
     Optional<Gfx::FloatRect> scrollable_overflow_rect() const
     {
-        if (!m_overflow_data)
+        if (!m_overflow_data.has_value())
             return {};
         return m_overflow_data->scrollable_overflow_rect;
     }
 
-    void set_overflow_data(OwnPtr<OverflowData> data) { m_overflow_data = move(data); }
+    void set_overflow_data(Optional<OverflowData> data) { m_overflow_data = move(data); }
 
     virtual void before_children_paint(PaintContext&, PaintPhase) override;
     virtual void after_children_paint(PaintContext&, PaintPhase) override;
@@ -146,7 +146,7 @@ private:
 
     OwnPtr<StackingContext> m_stacking_context;
 
-    OwnPtr<OverflowData> m_overflow_data;
+    Optional<OverflowData> m_overflow_data;
 };
 
 template<>
