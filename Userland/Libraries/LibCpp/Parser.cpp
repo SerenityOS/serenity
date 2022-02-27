@@ -1260,6 +1260,7 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
     }
 
     if (peek().type() == Token::Type::LeftParen) {
+        type->set_end(previous_token_end());
         consume();
         auto fn_type = create_ast_node<FunctionType>(parent, type->start(), position());
         fn_type->set_return_type(*type);
