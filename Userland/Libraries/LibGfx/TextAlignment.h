@@ -15,8 +15,10 @@ namespace Gfx {
     M(Center)                            \
     M(CenterLeft)                        \
     M(CenterRight)                       \
+    M(TopCenter)                         \
     M(TopLeft)                           \
     M(TopRight)                          \
+    M(BottomCenter)                      \
     M(BottomLeft)                        \
     M(BottomRight)
 

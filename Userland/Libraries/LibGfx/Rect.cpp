@@ -132,8 +132,14 @@ Rect<T> Rect<T>::aligned_within(Size<T> const& rect_size, Point<T> const& align_
 
     Rect<T> rect;
     switch (alignment) {
+    case TextAlignment::TopCenter:
+        rect = { { align_at.x() - rect_size.width() / 2, align_at.y() }, rect_size };
+        break;
     case TextAlignment::TopLeft:
         rect = { align_at, rect_size };
+        break;
+    case TextAlignment::TopRight:
+        rect = { { align_at.x() - rect_size.width(), align_at.y() }, rect_size };
         break;
     case TextAlignment::CenterLeft:
         rect = { { align_at.x(), align_at.y() - rect_size.height() / 2 }, rect_size };
@@ -144,8 +150,8 @@ Rect<T> Rect<T>::aligned_within(Size<T> const& rect_size, Point<T> const& align_
     case TextAlignment::CenterRight:
         rect = { { align_at.x() - rect_size.width() / 2, align_at.y() }, rect_size };
         break;
-    case TextAlignment::TopRight:
-        rect = { { align_at.x() - rect_size.width(), align_at.y() }, rect_size };
+    case TextAlignment::BottomCenter:
+        rect = { { align_at.x() - rect_size.width() / 2, align_at.y() - rect_size.width() }, rect_size };
         break;
     case TextAlignment::BottomLeft:
         rect = { { align_at.x(), align_at.y() - rect_size.width() }, rect_size };
@@ -270,6 +276,9 @@ void Rect<T>::align_within(Rect<T> const& other, TextAlignment alignment)
     case TextAlignment::Center:
         center_within(other);
         return;
+    case TextAlignment::TopCenter:
+        set_x(other.x() + other.width() / 2);
+        return;
     case TextAlignment::TopLeft:
         set_location(other.location());
         return;
@@ -284,6 +293,10 @@ void Rect<T>::align_within(Rect<T> const& other, TextAlignment alignment)
     case TextAlignment::CenterRight:
         set_x(other.x() + other.width() - width());
         center_vertically_within(other);
+        return;
+    case TextAlignment::BottomCenter:
+        set_x(other.x() + other.width() / 2);
+        set_y(other.y() + other.height() - height());
         return;
     case TextAlignment::BottomLeft:
         set_x(other.x());
