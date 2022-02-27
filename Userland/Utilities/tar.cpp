@@ -14,6 +14,8 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -21,7 +23,7 @@
 
 constexpr size_t buffer_size = 4096;
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool create = false;
     bool extract = false;
@@ -43,7 +45,7 @@ int main(int argc, char** argv)
     args_parser.add_option(directory, "Directory to extract to/create from", "directory", 'C', "DIRECTORY");
     args_parser.add_option(archive_file, "Archive file", "file", 'f', "FILE");
     args_parser.add_positional_argument(paths, "Paths", "PATHS", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (create + extract + list != 1) {
         warnln("exactly one of -c, -x, and -t can be used");
@@ -58,21 +60,11 @@ int main(int argc, char** argv)
     if (list || extract) {
         auto file = Core::File::standard_input();
 
-        if (!archive_file.is_empty()) {
-            auto maybe_file = Core::File::open(archive_file, Core::OpenMode::ReadOnly);
-            if (maybe_file.is_error()) {
-                warnln("Core::File::open: {}", maybe_file.error());
-                return 1;
-            }
-            file = maybe_file.value();
-        }
+        if (!archive_file.is_empty())
+            file = TRY(Core::File::open(archive_file, Core::OpenMode::ReadOnly));
 
-        if (directory) {
-            if (chdir(directory) < 0) {
-                perror("chdir");
-                return 1;
-            }
-        }
+        if (directory)
+            TRY(Core::System::chdir(directory));
 
         Core::InputFileStream file_stream(file);
         Compress::GzipDecompressor gzip_stream(file_stream);
@@ -80,6 +72,7 @@ int main(int argc, char** argv)
         InputStream& file_input_stream = file_stream;
         InputStream& gzip_input_stream = gzip_stream;
         Archive::TarInputStream tar_stream((gzip) ? gzip_input_stream : file_input_stream);
+        // FIXME: implement ErrorOr<TarInputStream>?
         if (!tar_stream.valid()) {
             warnln("the provided file is not a well-formatted ustar file");
             return 1;
@@ -104,39 +97,28 @@ int main(int argc, char** argv)
                 case Archive::TarFileType::AlternateNormalFile: {
                     Core::File::ensure_parent_directories(absolute_path);
 
-                    int fd = open(absolute_path.characters(), O_CREAT | O_WRONLY, header.mode());
-                    if (fd < 0) {
-                        perror("open");
-                        return 1;
-                    }
+                    int fd = TRY(Core::System::open(absolute_path.characters(), O_CREAT | O_WRONLY, header.mode()));
 
                     Array<u8, buffer_size> buffer;
-                    size_t nread;
-                    while ((nread = file_stream.read(buffer)) > 0) {
-                        if (write(fd, buffer.data(), nread) < 0) {
-                            perror("write");
-                            return 1;
-                        }
-                    }
+                    while (file_stream.read(buffer) > 0)
+                        TRY(Core::System::write(fd, buffer.span()));
+
                     close(fd);
                     break;
                 }
                 case Archive::TarFileType::SymLink: {
                     Core::File::ensure_parent_directories(absolute_path);
 
-                    if (symlink(header.link_name().to_string().characters(), absolute_path.characters())) {
-                        perror("symlink");
-                        return 1;
-                    }
-
+                    TRY(Core::System::symlink(header.link_name().to_string().characters(), absolute_path.characters()));
                     break;
                 }
                 case Archive::TarFileType::Directory: {
                     Core::File::ensure_parent_directories(absolute_path);
 
-                    if (mkdir(absolute_path.characters(), header.mode()) && errno != EEXIST) {
-                        perror("mkdir");
-                        return 1;
+                    auto result_or_error = Core::System::mkdir(absolute_path.characters(), header.mode());
+                    if (result_or_error.is_error() && result_or_error.error().code() != EEXIST) {
+                        auto error = result_or_error.error();
+                        warnln("mkdir: {}", error);
                     }
                     break;
                 }
@@ -167,21 +149,11 @@ int main(int argc, char** argv)
 
         auto file = Core::File::standard_output();
 
-        if (!archive_file.is_empty()) {
-            auto maybe_file = Core::File::open(archive_file, Core::OpenMode::WriteOnly);
-            if (maybe_file.is_error()) {
-                warnln("Core::File::open: {}", maybe_file.error());
-                return 1;
-            }
-            file = maybe_file.value();
-        }
+        if (!archive_file.is_empty())
+            file = TRY(Core::File::open(archive_file, Core::OpenMode::WriteOnly));
 
-        if (directory) {
-            if (chdir(directory) < 0) {
-                perror("chdir");
-                return 1;
-            }
-        }
+        if (directory)
+            TRY(Core::System::chdir(directory));
 
         Core::OutputFileStream file_stream(file);
         Compress::GzipCompressor gzip_stream(file_stream);
@@ -197,11 +169,13 @@ int main(int argc, char** argv)
                 return;
             }
 
-            struct stat statbuf;
-            if (lstat(path.characters(), &statbuf) < 0) {
+            auto statbuf_or_error = Core::System::lstat(path.characters());
+            if (statbuf_or_error.is_error()) {
                 warnln("Failed stating {}", path);
                 return;
             }
+
+            auto statbuf = statbuf_or_error.value();
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
             tar_stream.add_file(canonicalized_path, statbuf.st_mode, file->read_all());
             if (verbose)
@@ -209,11 +183,13 @@ int main(int argc, char** argv)
         };
 
         auto add_directory = [&](String path, auto handle_directory) -> void {
-            struct stat statbuf;
-            if (lstat(path.characters(), &statbuf) < 0) {
+            auto statbuf_or_error = Core::System::lstat(path.characters());
+            if (statbuf_or_error.is_error()) {
                 warnln("Failed stating {}", path);
                 return;
             }
+            
+            auto statbuf = statbuf_or_error.value();
             auto canonicalized_path = LexicalPath::canonicalized_path(path);
             tar_stream.add_directory(canonicalized_path, statbuf.st_mode);
             if (verbose)
