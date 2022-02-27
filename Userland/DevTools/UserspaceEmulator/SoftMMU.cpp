@@ -376,4 +376,9 @@ bool SoftMMU::fast_fill_memory32(X86::LogicalAddress address, size_t count, Valu
     return true;
 }
 
+void SoftMMU::dump_backtrace()
+{
+    m_emulator.dump_backtrace();
+}
+
 }
