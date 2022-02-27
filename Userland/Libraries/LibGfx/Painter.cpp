@@ -1336,6 +1336,8 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
     case TextAlignment::BottomRight:
         rect.set_x(rect.right() - font.width(text));
         break;
+    case TextAlignment::TopCenter:
+    case TextAlignment::BottomCenter:
     case TextAlignment::Center: {
         auto shrunken_rect = rect;
         shrunken_rect.set_width(font.width(text));
@@ -1554,6 +1556,10 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
     auto bounding_rect = layout.bounding_rect(wrapping, line_spacing);
 
     switch (alignment) {
+    case TextAlignment::TopCenter:
+        bounding_rect.set_y(rect.y());
+        bounding_rect.center_horizontally_within(rect);
+        break;
     case TextAlignment::TopLeft:
         bounding_rect.set_location(rect.location());
         break;
@@ -1568,6 +1574,10 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
         break;
     case TextAlignment::Center:
         bounding_rect.center_within(rect);
+        break;
+    case TextAlignment::BottomCenter:
+        bounding_rect.set_y((rect.bottom() + 1) - bounding_rect.height());
+        bounding_rect.center_horizontally_within(rect);
         break;
     case TextAlignment::BottomLeft:
         bounding_rect.set_location({ rect.x(), (rect.bottom() + 1) - bounding_rect.height() });

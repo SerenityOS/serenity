@@ -376,8 +376,10 @@ T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<O
         { Gfx::TextAlignment::Center, "Center" },                       \
         { Gfx::TextAlignment::CenterLeft, "CenterLeft" },               \
         { Gfx::TextAlignment::CenterRight, "CenterRight" },             \
+        { Gfx::TextAlignment::TopLeft, "TopCenter" },                   \
         { Gfx::TextAlignment::TopLeft, "TopLeft" },                     \
         { Gfx::TextAlignment::TopRight, "TopRight" },                   \
+        { Gfx::TextAlignment::TopLeft, "BottomCenter" },                \
         { Gfx::TextAlignment::BottomLeft, "BottomLeft" },               \
         { Gfx::TextAlignment::BottomRight, "BottomRight" })
 
