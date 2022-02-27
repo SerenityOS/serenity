@@ -52,8 +52,15 @@ LineBox& LineBuilder::ensure_last_line_box()
 void LineBuilder::append_box(Box const& box, float leading_size, float trailing_size)
 {
     auto const& box_state = m_formatting_state.get(box);
-    ensure_last_line_box().add_fragment(box, 0, 0, leading_size, trailing_size, box_state.content_width, box_state.content_height, box_state.border_box_top(), box_state.border_box_bottom());
+    auto& line_box = ensure_last_line_box();
+    line_box.add_fragment(box, 0, 0, leading_size, trailing_size, box_state.content_width, box_state.content_height, box_state.border_box_top(), box_state.border_box_bottom());
     m_max_height_on_current_line = max(m_max_height_on_current_line, box_state.content_height);
+
+    // FIXME: Move this to FormattingContext!
+    const_cast<Box&>(box).set_containing_line_box_fragment({
+        .line_box_index = m_containing_block_state.line_boxes.size() - 1,
+        .fragment_index = line_box.fragments().size() - 1,
+    });
 }
 
 void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_node, size_t length_in_node, float leading_size, float trailing_size, float content_width, float content_height)

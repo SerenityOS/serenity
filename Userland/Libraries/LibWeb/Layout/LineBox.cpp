@@ -27,11 +27,6 @@ void LineBox::add_fragment(Node const& layout_node, int start, int length, float
         m_fragments.append(make<LineBoxFragment>(layout_node, start, length, Gfx::FloatPoint(m_width + leading_size, 0.0f), Gfx::FloatSize(content_width, content_height), border_box_top, border_box_bottom, fragment_type));
     }
     m_width += content_width + leading_size + trailing_size;
-
-    if (is<Box>(layout_node)) {
-        // FIXME: Move this to FormattingContext!
-        const_cast<Box&>(static_cast<Box const&>(layout_node)).set_containing_line_box_fragment(m_fragments.last());
-    }
 }
 
 void LineBox::trim_trailing_whitespace()

@@ -220,8 +220,10 @@ void Box::set_content_size(Gfx::FloatSize const& size)
 
 Gfx::FloatPoint Box::effective_offset() const
 {
-    if (m_containing_line_box_fragment)
-        return m_containing_line_box_fragment->offset();
+    if (m_containing_line_box_fragment.has_value()) {
+        auto const& fragment = containing_block()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
+        return fragment.offset();
+    }
     return m_offset;
 }
 
@@ -234,9 +236,9 @@ const Gfx::FloatRect Box::absolute_rect() const
     return rect;
 }
 
-void Box::set_containing_line_box_fragment(LineBoxFragment& fragment)
+void Box::set_containing_line_box_fragment(LineBoxFragmentCoordinate fragment_coordinate)
 {
-    m_containing_line_box_fragment = fragment.make_weak_ptr();
+    m_containing_line_box_fragment = fragment_coordinate;
 }
 
 StackingContext* Box::enclosing_stacking_context()

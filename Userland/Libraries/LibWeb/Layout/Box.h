@@ -82,7 +82,11 @@ public:
 
     bool is_body() const;
 
-    void set_containing_line_box_fragment(LineBoxFragment&);
+    struct LineBoxFragmentCoordinate {
+        size_t line_box_index { 0 };
+        size_t fragment_index { 0 };
+    };
+    void set_containing_line_box_fragment(LineBoxFragmentCoordinate);
 
     StackingContext* stacking_context() { return m_stacking_context; }
     const StackingContext* stacking_context() const { return m_stacking_context; }
@@ -138,7 +142,7 @@ private:
     Gfx::FloatSize m_content_size;
 
     // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
-    WeakPtr<LineBoxFragment> m_containing_line_box_fragment;
+    Optional<LineBoxFragmentCoordinate> m_containing_line_box_fragment;
 
     OwnPtr<StackingContext> m_stacking_context;
 
