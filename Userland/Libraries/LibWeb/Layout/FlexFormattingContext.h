@@ -61,7 +61,6 @@ private:
     float specified_cross_size(Box const&) const;
     bool has_main_min_size(Box const&) const;
     bool has_cross_min_size(Box const&) const;
-    bool cross_size_is_absolute_or_resolved_nicely(NodeWithStyle const&) const;
     float specified_main_max_size(Box const&) const;
     float specified_cross_max_size(Box const&) const;
     float calculated_main_size(Box const&) const;

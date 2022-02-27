@@ -245,30 +245,7 @@ bool FlexFormattingContext::has_cross_min_size(Box const& box) const
 
 bool FlexFormattingContext::has_definite_cross_size(Box const& box) const
 {
-    return (is_row_layout() ? box.has_definite_height() : box.has_definite_width()) && cross_size_is_absolute_or_resolved_nicely(box);
-}
-
-bool FlexFormattingContext::cross_size_is_absolute_or_resolved_nicely(NodeWithStyle const& box) const
-{
-    auto length_percentage = is_row_layout() ? box.computed_values().height() : box.computed_values().width();
-
-    if (!length_percentage.has_value())
-        return false;
-
-    // FIXME: Handle calc here.
-    if (length_percentage->is_length()) {
-        auto& length = length_percentage->length();
-        if (length.is_absolute() || length.is_relative())
-            return true;
-        if (length.is_auto())
-            return false;
-    }
-
-    if (!box.parent())
-        return false;
-    if (length_percentage->is_percentage() && cross_size_is_absolute_or_resolved_nicely(*box.parent()))
-        return true;
-    return false;
+    return is_row_layout() ? box.has_definite_height() : box.has_definite_width();
 }
 
 float FlexFormattingContext::specified_main_size_of_child_box(Box const& child_box) const
