@@ -118,7 +118,7 @@ describe("Range", () => {
             for (const row of [0, 1, 2]) sheet.setCell(col, row, Math.pow(i++, 2));
 
         sheet.focusCell("A", 0);
-        expect(R`A0:A2`.at(2)).toEqual("A2");
-        expect(Ranges.from(R`A0:A2`, R`B0:B2`).at(5)).toEqual("B2");
+        expect(R`A0:A2`.at(2).name).toEqual("A2");
+        expect(Ranges.from(R`A0:A2`, R`B0:B2`).at(5).name).toEqual("B2");
     });
 });

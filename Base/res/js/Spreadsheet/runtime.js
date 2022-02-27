@@ -220,7 +220,7 @@ class Range {
 
         outer: for (const range of ranges) {
             for (let row = range.rowStart; row <= range.rowEnd; row += this.rowStep) {
-                if (callback(range.column + row) === Break) break outer;
+                if (callback(new Position(range.column, row)) === Break) break outer;
             }
         }
     }
@@ -328,26 +328,23 @@ function sheet(name) {
 }
 
 function reduce(op, accumulator, cells) {
-    cells.forEach(name => {
-        let cell = thisSheet[name];
-        accumulator = op(accumulator, cell);
-    });
-    return accumulator;
+    return resolve(cells).reduce(op, accumulator);
 }
 
 function numericReduce(op, accumulator, cells) {
-    return reduce((acc, x) => op(acc, Number(x)), accumulator, cells);
+    return numericResolve(cells).reduce(op, accumulator);
 }
 
 function numericResolve(cells) {
-    const values = [];
-    cells.forEach(name => values.push(Number(thisSheet[name])));
-    return values;
+    return resolve(cells).map(str => (str === "" || str == null ? NaN : integer(str)));
 }
 
 function resolve(cells) {
-    const values = [];
-    cells.forEach(name => values.push(thisSheet[name]));
+    let values = [];
+    if (cells instanceof Range || cells instanceof Ranges)
+        cells.forEach(cell => values.push(cell.value()));
+    else values = cells;
+
     return values;
 }
 
@@ -517,39 +514,33 @@ function internal_lookup(
     }
 
     let i = 0;
-    let didMatch = false;
     let value = null;
-    let matchingName = null;
-    lookup_inputs.forEach(name => {
-        value = thisSheet[name];
+    let found_input = null;
+    lookup_inputs.forEach(cell => {
+        value = cell.value();
         if (matches(value)) {
-            didMatch = true;
-            matchingName = name;
+            found_input = cell;
             return Break;
         }
         ++i;
     });
 
-    if (!didMatch) return if_missing;
+    if (found_input == null) return if_missing;
 
     if (lookup_outputs === undefined) {
-        if (reference) return Position.from_name(matchingName);
+        if (reference) return found_input;
 
         return value;
     }
 
-    lookup_outputs.forEach(name => {
-        matchingName = name;
-        if (i === 0) return Break;
-        --i;
-    });
+    const found_output = lookup_outputs.at(i);
 
-    if (i > 0)
+    if (found_output == null)
         throw new Error("Lookup target length must not be smaller than lookup source length");
 
-    if (reference) return Position.from_name(matchingName);
+    if (reference) return found_output;
 
-    return thisSheet[matchingName];
+    return found_output.value();
 }
 
 function lookup(req_lookup_value, lookup_inputs, lookup_outputs, if_missing, mode) {
