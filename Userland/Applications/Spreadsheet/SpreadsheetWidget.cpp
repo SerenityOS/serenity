@@ -242,6 +242,26 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
 
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
+
+    m_tab_widget->on_context_menu_request = [&](auto& widget, auto& event) {
+        m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
+        m_tab_context_menu->popup(event.screen_position());
+    };
+
+    m_tab_widget->on_double_click = [&](auto& widget) {
+        m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
+        VERIFY(m_tab_context_menu_sheet_view);
+
+        auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
+        VERIFY(sheet_ptr); // How did we get here without a sheet?
+        auto& sheet = *sheet_ptr;
+        String new_name;
+        if (GUI::InputBox::show(window(), new_name, String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
+            sheet.set_name(new_name);
+            sheet.update();
+            m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
+        }
+    };
 }
 
 void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
@@ -339,26 +359,6 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
         };
     }
-
-    m_tab_widget->on_context_menu_request = [&](auto& widget, auto& event) {
-        m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
-        m_tab_context_menu->popup(event.screen_position());
-    };
-
-    m_tab_widget->on_double_click = [&](auto& widget) {
-        m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
-        VERIFY(m_tab_context_menu_sheet_view);
-
-        auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
-        VERIFY(sheet_ptr); // How did we get here without a sheet?
-        auto& sheet = *sheet_ptr;
-        String new_name;
-        if (GUI::InputBox::show(window(), new_name, String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
-            sheet.set_name(new_name);
-            sheet.update();
-            m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
-        }
-    };
 }
 
 void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source, size_t cursor_offset)
