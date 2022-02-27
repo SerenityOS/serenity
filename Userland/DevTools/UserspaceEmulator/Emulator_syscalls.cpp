@@ -8,6 +8,7 @@
 #include "Emulator.h"
 #include "MmapRegion.h"
 #include "SimpleRegion.h"
+#include "SoftCPU.h"
 #include <AK/Debug.h>
 #include <AK/FileStream.h>
 #include <AK/Format.h>
@@ -485,7 +486,7 @@ int Emulator::virt$setsockopt(FlatPtr params_addr)
 
 int Emulator::virt$get_stack_bounds(FlatPtr base, FlatPtr size)
 {
-    auto* region = mmu().find_region({ m_cpu.ss(), m_cpu.esp().value() });
+    auto* region = mmu().find_region({ m_cpu->ss(), m_cpu->esp().value() });
     FlatPtr b = region->base();
     size_t s = region->size();
     mmu().copy_to_vm(base, &b, sizeof(b));
@@ -940,7 +941,7 @@ FlatPtr Emulator::virt$mremap(FlatPtr params_addr)
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
     // FIXME: Support regions that have been split in the past (e.g. due to mprotect or munmap).
-    if (auto* region = mmu().find_region({ m_cpu.ds(), (FlatPtr)params.old_address })) {
+    if (auto* region = mmu().find_region({ m_cpu->ds(), (FlatPtr)params.old_address })) {
         if (!is<MmapRegion>(*region))
             return -EINVAL;
         VERIFY(region->size() == params.old_size);
@@ -1398,9 +1399,9 @@ int Emulator::virt$sigprocmask(int how, FlatPtr set, FlatPtr old_set)
 
 int Emulator::virt$sigreturn()
 {
-    u32 stack_ptr = m_cpu.esp().value();
+    u32 stack_ptr = m_cpu->esp().value();
     auto local_pop = [&]() -> ValueWithShadow<u32> {
-        auto value = m_cpu.read_memory32({ m_cpu.ss(), stack_ptr });
+        auto value = m_cpu->read_memory32({ m_cpu->ss(), stack_ptr });
         stack_ptr += sizeof(u32);
         return value;
     };
@@ -1411,17 +1412,17 @@ int Emulator::virt$sigreturn()
 
     m_signal_mask = local_pop().value();
 
-    m_cpu.set_edi(local_pop());
-    m_cpu.set_esi(local_pop());
-    m_cpu.set_ebp(local_pop());
-    m_cpu.set_esp(local_pop());
-    m_cpu.set_ebx(local_pop());
-    m_cpu.set_edx(local_pop());
-    m_cpu.set_ecx(local_pop());
-    m_cpu.set_eax(local_pop());
+    m_cpu->set_edi(local_pop());
+    m_cpu->set_esi(local_pop());
+    m_cpu->set_ebp(local_pop());
+    m_cpu->set_esp(local_pop());
+    m_cpu->set_ebx(local_pop());
+    m_cpu->set_edx(local_pop());
+    m_cpu->set_ecx(local_pop());
+    m_cpu->set_eax(local_pop());
 
-    m_cpu.set_eip(local_pop().value());
-    m_cpu.set_eflags(local_pop());
+    m_cpu->set_eip(local_pop().value());
+    m_cpu->set_eflags(local_pop());
 
     // FIXME: We're losing shadow bits here.
     return smuggled_eax.value();
