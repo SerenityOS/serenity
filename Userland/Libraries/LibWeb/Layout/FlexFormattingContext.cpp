@@ -148,16 +148,17 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
     align_all_flex_lines();
 
     // AD-HOC: Layout the inside of all flex items.
+    copy_dimensions_from_flex_items_to_boxes();
     for (auto& flex_item : m_flex_items) {
         auto independent_formatting_context = layout_inside(flex_item.box, LayoutMode::Default);
         independent_formatting_context->parent_context_did_dimension_child_root_box();
     }
 
-    // FIXME: We run the "align all flex lines" step *again* here, in order to override any sizes
+    // FIXME: We run the "copy dimensions" step *again* here, in order to override any sizes
     //        assigned to the flex item by the "layout inside" step above. This is definitely not
     //        part of the spec, and simply covering up the fact that our inside layout currently
     //        mutates the height of BFC roots.
-    align_all_flex_lines();
+    copy_dimensions_from_flex_items_to_boxes();
 }
 
 void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::FlexDirection flex_direction) const
@@ -1004,15 +1005,24 @@ void FlexFormattingContext::determine_flex_container_used_cross_size(float const
 // https://www.w3.org/TR/css-flexbox-1/#algo-line-align
 void FlexFormattingContext::align_all_flex_lines()
 {
-    // FIXME: Support align-content
     // FIXME: Support reverse
-    for (auto& flex_line : m_flex_lines) {
-        for (auto* flex_item : flex_line.items) {
-            set_main_size(flex_item->box, flex_item->main_size);
-            set_cross_size(flex_item->box, flex_item->cross_size);
-            set_offset(flex_item->box, flex_item->main_offset, flex_item->cross_offset);
-        }
+    if (is_single_line()) {
+        // For single-line flex containers, we only need to center the line along the cross axis.
+        auto& flex_line = m_flex_lines[0];
+        float cross_size_of_flex_container = specified_cross_size(flex_container());
+        for (auto* flex_item : flex_line.items)
+            flex_item->cross_offset += (cross_size_of_flex_container / 2.0f) - (flex_line.cross_size / 2.0f);
+    } else {
+        // FIXME: Support align-content
     }
 }
 
+void FlexFormattingContext::copy_dimensions_from_flex_items_to_boxes()
+{
+    for (auto& flex_item : m_flex_items) {
+        set_main_size(flex_item.box, flex_item.main_size);
+        set_cross_size(flex_item.box, flex_item.cross_size);
+        set_offset(flex_item.box, flex_item.main_offset, flex_item.cross_offset);
+    }
+}
 }
