@@ -50,7 +50,6 @@ bool AC97::handle_irq(RegisterState const&)
     bool current_equals_last_valid = (pcm_out_status & AudioStatusRegisterFlag::CurrentEqualsLastValid) > 0;
     bool is_completion_interrupt = (pcm_out_status & AudioStatusRegisterFlag::BufferCompletionInterruptStatus) > 0;
     bool is_fifo_error = (pcm_out_status & AudioStatusRegisterFlag::FIFOError) > 0;
-
     VERIFY(!is_fifo_error);
 
     // If there is no buffer completion, we're not going to do anything
@@ -171,6 +170,7 @@ RefPtr<AudioChannel> AC97::audio_channel(u32 index) const
         return m_audio_channel;
     return {};
 }
+
 void AC97::detect_hardware_audio_channels(Badge<AudioManagement>)
 {
     m_audio_channel = AudioChannel::must_create(*this, 0);
@@ -179,10 +179,11 @@ void AC97::detect_hardware_audio_channels(Badge<AudioManagement>)
 ErrorOr<void> AC97::set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate)
 {
     if (channel_index != 0)
-        return Error::from_errno(ENODEV);
+        return ENODEV;
     TRY(set_pcm_output_sample_rate(samples_per_second_rate));
     return {};
 }
+
 ErrorOr<u32> AC97::get_pcm_output_sample_rate(size_t channel_index)
 {
     if (channel_index != 0)
