@@ -740,7 +740,7 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
 
         if (element->is_browsing_context_container()) {
             auto const* container = static_cast<HTML::BrowsingContextContainer const*>(element);
-            if (auto const* content_document = container->content_document()) {
+            if (auto const* content_document = container->content_document_without_origin_check()) {
                 auto children = object.add_array("children");
                 JsonObjectSerializer<StringBuilder> content_document_object = children.add_object();
                 content_document->serialize_tree_as_json(content_document_object);
