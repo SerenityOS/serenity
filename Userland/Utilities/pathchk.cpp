@@ -7,21 +7,18 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <bits/posix1_lim.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    TRY(Core::System::pledge("stdio rpath"));
     bool fail = false;
     static bool flag_most_posix = false;
     static bool flag_portability = false;
     static bool flag_empty_name_and_leading_dash = false;
-
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
     Vector<const char*> paths;
 
     Core::ArgsParser args_parser;
@@ -29,7 +26,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_empty_name_and_leading_dash, "Check for empty names and leading dash", nullptr, 'P');
     args_parser.add_option(flag_portability, "Check portability (equivalent to -p and -P)", "portability", '\0');
     args_parser.add_positional_argument(paths, "Path to check", "path", Core::ArgsParser::Required::Yes);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (flag_portability) {
         flag_most_posix = true;
@@ -42,7 +39,7 @@ int main(int argc, char** argv)
         unsigned long name_max = flag_most_posix ? _POSIX_NAME_MAX : pathconf(str_path.characters(), _PC_NAME_MAX);
 
         if (str_path.length() > path_max) {
-            warnln("{}: limit {} exceeded by length {} of filename '{}'", argv[0], path_max, str_path.length(), str_path);
+            warnln("Limit {} exceeded by length {} of filename '{}'", path_max, str_path.length(), str_path);
             fail = true;
             continue;
         }
@@ -52,7 +49,7 @@ int main(int argc, char** argv)
             for (long unsigned i = 0; i < str_path.length(); ++i) {
                 auto c = path[i];
                 if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') && !(c >= '0' && c <= '9') && c != '/' && c != '.' && c != '-' && c != '_') {
-                    warnln("{}: non-portable character '{}' in filename '{}'", argv[0], path[i], str_path);
+                    warnln("Non-portable character '{}' in filename '{}'", path[i], str_path);
                     fail = true;
                     continue;
                 }
@@ -61,7 +58,7 @@ int main(int argc, char** argv)
             struct stat st;
             if (lstat(str_path.characters(), &st) < 0) {
                 if (errno != ENOENT) {
-                    warnln("{}: directory is not searchable '{}'", argv[0], str_path);
+                    warnln("Directory is not searchable '{}'", str_path);
                     fail = true;
                     continue;
                 }
@@ -70,7 +67,7 @@ int main(int argc, char** argv)
 
         if (flag_empty_name_and_leading_dash) {
             if (str_path.is_empty()) {
-                warnln("{}: empty filename", argv[0]);
+                warnln("Empty filename");
                 fail = true;
                 continue;
             }
@@ -79,13 +76,13 @@ int main(int argc, char** argv)
         for (auto& component : str_path.split('/')) {
             if (flag_empty_name_and_leading_dash) {
                 if (component.starts_with('-')) {
-                    warnln("{}: leading '-' in a component of filename '{}'", argv[0], str_path);
+                    warnln("Leading '-' in a component of filename '{}'", str_path);
                     fail = true;
                     break;
                 }
             }
             if (component.length() > name_max) {
-                warnln("{}: limit {} exceeded by length {} of filename component '{}'", argv[0], name_max, component.length(), component.characters());
+                warnln("Limit {} exceeded by length {} of filename component '{}'", name_max, component.length(), component.characters());
                 fail = true;
                 break;
             }
