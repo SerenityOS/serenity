@@ -391,7 +391,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 
         OwnPtr<FormattingContext> independent_formatting_context;
         if (child_box.can_have_children()) {
-            independent_formatting_context = create_independent_formatting_context_if_needed(child_box);
+            independent_formatting_context = create_independent_formatting_context_if_needed(m_state, child_box);
             if (independent_formatting_context)
                 independent_formatting_context->run(child_box, layout_mode);
             else

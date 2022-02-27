@@ -41,7 +41,7 @@ public:
     static float compute_width_for_replaced_element(FormattingState const&, ReplacedBox const&);
     static float compute_height_for_replaced_element(FormattingState const&, ReplacedBox const&);
 
-    OwnPtr<FormattingContext> create_independent_formatting_context_if_needed(Box const& child_box);
+    OwnPtr<FormattingContext> create_independent_formatting_context_if_needed(FormattingState&, Box const& child_box);
 
     virtual void parent_context_did_dimension_child_root_box() { }
 
