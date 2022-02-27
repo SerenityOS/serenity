@@ -148,6 +148,18 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
 
     // 16. Align all flex lines (per align-content)
     align_all_flex_lines();
+
+    // AD-HOC: Layout the inside of all flex items.
+    for (auto& flex_item : m_flex_items) {
+        auto independent_formatting_context = layout_inside(flex_item.box, LayoutMode::Default);
+        independent_formatting_context->parent_context_did_dimension_child_root_box();
+    }
+
+    // FIXME: We run the "align all flex lines" step *again* here, in order to override any sizes
+    //        assigned to the flex item by the "layout inside" step above. This is definitely not
+    //        part of the spec, and simply covering up the fact that our inside layout currently
+    //        mutates the height of BFC roots.
+    align_all_flex_lines();
 }
 
 void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::FlexDirection flex_direction) const
