@@ -165,6 +165,29 @@ ErrorOr<size_t> File::read(Bytes buffer)
     return nread;
 }
 
+ErrorOr<ByteBuffer> File::read_all(size_t block_size)
+{
+    // Note: This is used as a heuristic, it's not valid for devices or /proc files.
+    auto potential_file_size = TRY(System::fstat(m_fd)).st_size;
+
+    ByteBuffer data;
+    data.ensure_capacity(potential_file_size);
+
+    size_t total_read {};
+    while (true) {
+        auto chunk = TRY(data.get_bytes_for_writing(block_size));
+        auto nread = TRY(read(chunk));
+
+        total_read += nread;
+        if (nread < block_size)
+            break;
+    }
+
+    data.resize(total_read);
+
+    return data;
+}
+
 ErrorOr<size_t> File::write(ReadonlyBytes buffer)
 {
     if (!has_flag(m_mode, OpenMode::Write)) {

@@ -195,6 +195,7 @@ public:
 
     virtual bool is_readable() const override;
     virtual ErrorOr<size_t> read(Bytes) override;
+    ErrorOr<ByteBuffer> read_all(size_t block_size = 4096);
     virtual bool is_writable() const override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
     virtual bool is_eof() const override;
