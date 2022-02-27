@@ -218,10 +218,14 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
         auto const& line_boxes = state.get(block_container).line_boxes;
         top = 0;
         if (!line_boxes.is_empty()) {
-            for (auto& fragment : line_boxes.last().fragments()) {
+            // Find the top edge (if negative).
+            for (auto const& fragment : line_boxes.first().fragments()) {
                 float fragment_top = fragment.offset().y() - fragment.border_box_top();
                 if (!top.has_value() || fragment_top < *top)
                     top = fragment_top;
+            }
+            // Find the bottom edge.
+            for (auto const& fragment : line_boxes.last().fragments()) {
                 float fragment_bottom = fragment.offset().y() + fragment.height() + fragment.border_box_bottom();
                 if (!bottom.has_value() || fragment_bottom > *bottom)
                     bottom = fragment_bottom;
