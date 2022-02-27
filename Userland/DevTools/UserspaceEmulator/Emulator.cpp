@@ -616,31 +616,81 @@ void Emulator::dispatch_one_pending_signal()
 
     reportln("\n=={}== Got signal {} ({}), handler at {:p}", getpid(), signum, strsignal(signum), handler.handler);
 
-    auto old_esp = m_cpu->esp();
+    auto old_esp = m_cpu->esp().value();
 
-    u32 stack_alignment = (m_cpu->esp().value() - 52) % 16;
-    m_cpu->set_esp(shadow_wrap_as_initialized(m_cpu->esp().value() - stack_alignment));
+    ucontext_t ucontext {
+        .uc_link = nullptr,
+        .uc_sigmask = m_signal_mask,
+        .uc_stack = {
+            .ss_sp = bit_cast<void*>(old_esp),
+            .ss_flags = 0,
+            .ss_size = 0,
+        },
+        .uc_mcontext = {
+            .eax = m_cpu->eax().value(),
+            .ecx = m_cpu->ecx().value(),
+            .edx = m_cpu->edx().value(),
+            .ebx = m_cpu->ebx().value(),
+            .esp = m_cpu->esp().value(),
+            .ebp = m_cpu->ebp().value(),
+            .esi = m_cpu->esi().value(),
+            .edi = m_cpu->edi().value(),
+            .eip = m_cpu->eip(),
+            .eflags = m_cpu->eflags(),
+            .cs = m_cpu->cs(),
+            .ss = m_cpu->ss(),
+            .ds = m_cpu->ds(),
+            .es = m_cpu->es(),
+            // ???
+            .fs = 0,
+            .gs = 0,
+        },
+    };
 
-    m_cpu->push32(shadow_wrap_as_initialized(m_cpu->eflags()));
-    m_cpu->push32(shadow_wrap_as_initialized(m_cpu->eip()));
-    m_cpu->push32(m_cpu->eax());
-    m_cpu->push32(m_cpu->ecx());
-    m_cpu->push32(m_cpu->edx());
-    m_cpu->push32(m_cpu->ebx());
-    m_cpu->push32(old_esp);
-    m_cpu->push32(m_cpu->ebp());
-    m_cpu->push32(m_cpu->esi());
-    m_cpu->push32(m_cpu->edi());
+    // FIXME: Set these fields.
+    siginfo_t signal_info {
+        .si_signo = signum,
+        .si_code = 0,
+        .si_errno = 0,
+        .si_pid = 0,
+        .si_uid = 0,
+        .si_addr = 0,
+        .si_status = 0,
+        .si_band = 0,
+        .si_value = {
+            .sival_int = 0,
+        },
+    };
 
-    // FIXME: Push old signal mask here.
+    // Align the stack to 16 bytes.
+    // Note that we push some elements on to the stack before the return address,
+    // so we need to account for this here.
+    constexpr static FlatPtr elements_pushed_on_stack_before_handler_address = 1; // one slot for a saved register
+    FlatPtr const extra_bytes_pushed_on_stack_before_handler_address = sizeof(ucontext_t) + sizeof(siginfo_t);
+    FlatPtr stack_alignment = (old_esp - elements_pushed_on_stack_before_handler_address * sizeof(FlatPtr) + extra_bytes_pushed_on_stack_before_handler_address) % 16;
+    // Also note that we have to skip the thread red-zone (if needed), so do that here.
+    old_esp -= stack_alignment;
+
+    m_cpu->set_esp(shadow_wrap_with_taint_from(old_esp, m_cpu->esp()));
+
+    m_cpu->push32(shadow_wrap_as_initialized(0u)); // syscall return value slot
+
+    m_cpu->push_buffer(bit_cast<u8 const*>(&ucontext), sizeof(ucontext_t));
+    auto pointer_to_ucontext = m_cpu->esp().value();
+
+    m_cpu->push_buffer(bit_cast<u8 const*>(&signal_info), sizeof(siginfo_t));
+    auto pointer_to_signal_info = m_cpu->esp().value();
+
+    // FPU state, leave a 512-byte gap. FIXME: Fill this in.
+    m_cpu->set_esp({ m_cpu->esp().value() - 512, m_cpu->esp().shadow() });
+
+    // Leave one empty slot to align the stack for a handler call.
     m_cpu->push32(shadow_wrap_as_initialized(0u));
+    m_cpu->push32(shadow_wrap_as_initialized(pointer_to_ucontext));
+    m_cpu->push32(shadow_wrap_as_initialized(pointer_to_signal_info));
+    m_cpu->push32(shadow_wrap_as_initialized(static_cast<u32>(signum)));
 
-    m_cpu->push32(shadow_wrap_as_initialized((u32)signum));
-    m_cpu->push32(shadow_wrap_as_initialized(handler.handler));
-
-    VERIFY((m_cpu->esp().value() % 16) == 0);
-
-    m_cpu->push32(shadow_wrap_as_initialized(0u));
+    m_cpu->push32(shadow_wrap_as_initialized<u32>(handler.handler));
 
     m_cpu->set_eip(m_signal_trampoline);
 }
@@ -654,21 +704,34 @@ NEVER_INLINE void signal_trampoline_dummy()
     // blocking syscall, that syscall may return some special error code in eax;
     // This error code would likely be overwritten by the signal handler, so it's
     // necessary to preserve it here.
+    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + 512 + 4 * sizeof(FlatPtr);
     asm(
         ".intel_syntax noprefix\n"
+        ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        "push ebp\n"
-        "mov ebp, esp\n"
-        "push eax\n"          // we have to store eax 'cause it might be the return value from a syscall
-        "sub esp, 4\n"        // align the stack to 16 bytes
-        "mov eax, [ebp+12]\n" // push the signal code
-        "push eax\n"
-        "call [ebp+8]\n" // call the signal handler
-        "add esp, 8\n"
+        // stack state: 0, ucontext, signal_info, (alignment = 16), fpu_state (alignment = 16), 0, ucontext*, siginfo*, signal, (alignment = 16), handler
+
+        // Pop the handler into ecx
+        "pop ecx\n" // save handler
+        // we have to save eax 'cause it might be the return value from a syscall
+        "mov [esp+%P2], eax\n"
+        // Note that the stack is currently aligned to 16 bytes as we popped the extra entries above.
+        // and it's already setup to call the handler with the expected values on the stack.
+        // call the signal handler
+        "call ecx\n"
+        // drop the 4 arguments
+        "add esp, 16\n"
+        // Current stack state is just saved_eax, ucontext, signal_info, fpu_state?.
+        // syscall SC_sigreturn
         "mov eax, %P0\n"
-        "int 0x82\n" // sigreturn syscall
+        "int 0x82\n"
+        ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
-        ".att_syntax" ::"i"(Syscall::SC_sigreturn));
+        ".att_syntax"
+        :
+        : "i"(Syscall::SC_sigreturn),
+        "i"(offset_to_first_register_slot),
+        "i"(offset_to_first_register_slot - sizeof(FlatPtr)));
 }
 
 extern "C" void asm_signal_trampoline(void);
