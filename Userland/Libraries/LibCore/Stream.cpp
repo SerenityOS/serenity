@@ -47,20 +47,35 @@ bool Stream::read_or_error(Bytes buffer)
     return true;
 }
 
-ErrorOr<ByteBuffer> Stream::read_all()
+ErrorOr<ByteBuffer> Stream::read_all(size_t block_size)
 {
-    ByteBuffer output;
-    u8 buffer_raw[4096];
-    Bytes buffer { buffer_raw, 4096 };
+    return read_all_impl(block_size);
+}
 
-    while (true) {
-        Bytes read_bytes = TRY(read(buffer));
-        if (read_bytes.is_empty())
-            break;
-        output.append(read_bytes);
+ErrorOr<ByteBuffer> Stream::read_all_impl(size_t block_size, size_t file_size)
+{
+    ByteBuffer data;
+    data.ensure_capacity(file_size);
+
+    size_t total_read {};
+    size_t next_reading_size { block_size };
+    for (Span<u8> chunk; !is_eof();) {
+        if (next_reading_size == block_size)
+            chunk = TRY(data.get_bytes_for_writing(next_reading_size));
+        auto const nread = TRY(read(chunk)).size();
+
+        next_reading_size -= nread;
+
+        if (next_reading_size == 0)
+            next_reading_size = block_size;
+
+        total_read += nread;
+
+        if (nread < block_size)
+            data.resize(total_read);
     }
 
-    return output;
+    return data;
 }
 
 bool Stream::write_or_error(ReadonlyBytes buffer)
@@ -189,6 +204,14 @@ ErrorOr<Bytes> File::read(Bytes buffer)
     ssize_t nread = TRY(System::read(m_fd, buffer));
     m_last_read_was_eof = nread == 0;
     return buffer.trim(nread);
+}
+
+ErrorOr<ByteBuffer> File::read_all(size_t block_size)
+{
+    // Note: This is used as a heuristic, it's not valid for devices or virtual files.
+    auto const potential_file_size = TRY(System::fstat(m_fd)).st_size;
+
+    return read_all_impl(block_size, potential_file_size);
 }
 
 ErrorOr<size_t> File::write(ReadonlyBytes buffer)
