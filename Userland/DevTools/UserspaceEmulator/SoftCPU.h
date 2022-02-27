@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "AK/Debug.h"
+#include "Emulator.h"
 #include "Region.h"
 #include "SoftFPU.h"
 #include "ValueWithShadow.h"
@@ -367,18 +369,12 @@ public:
     template<typename T>
     ValueWithShadow<T> read_memory(X86::LogicalAddress address)
     {
-        if constexpr (sizeof(T) == 1)
-            return read_memory8(address);
-        if constexpr (sizeof(T) == 2)
-            return read_memory16(address);
-        if constexpr (sizeof(T) == 4)
-            return read_memory32(address);
-        if constexpr (sizeof(T) == 8)
-            return read_memory64(address);
-        if constexpr (sizeof(T) == 16)
-            return read_memory128(address);
-        if constexpr (sizeof(T) == 32)
-            return read_memory256(address);
+        auto value = m_emulator.mmu().read<T>(address);
+        if constexpr (AK::HasFormatter<T>)
+            outln_if(MEMORY_DEBUG, "\033[36;1mread_memory: @{:#04x}:{:p} -> {:#064x} ({:hex-dump})\033[0m", address.selector(), address.offset(), value.value(), value.shadow().span());
+        else
+            outln_if(MEMORY_DEBUG, "\033[36;1mread_memory: @{:#04x}:{:p} -> ??? ({:hex-dump})\033[0m", address.selector(), address.offset(), value.shadow().span());
+        return value;
     }
 
     void write_memory8(X86::LogicalAddress, ValueWithShadow<u8>);
