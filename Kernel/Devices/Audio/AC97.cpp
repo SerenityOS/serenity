@@ -44,9 +44,10 @@ bool AC97::handle_irq(RegisterState const&)
 {
     auto pcm_out_status_register = m_pcm_out_channel.reg(AC97Channel::Register::Status);
     auto pcm_out_status = pcm_out_status_register.in<u16>();
-    dbgln_if(AC97_DEBUG, "AC97 @ {}: interrupt received - stat: {:#b}", pci_address(), pcm_out_status);
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: interrupt received - status: {:#05b}", pci_address(), pcm_out_status);
 
     bool is_dma_halted = (pcm_out_status & AudioStatusRegisterFlag::DMAControllerHalted) > 0;
+    bool current_equals_last_valid = (pcm_out_status & AudioStatusRegisterFlag::CurrentEqualsLastValid) > 0;
     bool is_completion_interrupt = (pcm_out_status & AudioStatusRegisterFlag::BufferCompletionInterruptStatus) > 0;
     bool is_fifo_error = (pcm_out_status & AudioStatusRegisterFlag::FIFOError) > 0;
 
@@ -62,11 +63,14 @@ bool AC97::handle_irq(RegisterState const&)
         | AudioStatusRegisterFlag::FIFOError;
     pcm_out_status_register.out(pcm_out_status);
 
-    // Stop the DMA engine if we're through with the buffer and no one is waiting
-    if (is_dma_halted && m_irq_queue.is_empty())
-        reset_pcm_out();
-    else
+    if (is_dma_halted) {
+        VERIFY(current_equals_last_valid);
+        m_pcm_out_channel.handle_dma_stopped();
+    }
+
+    if (!m_irq_queue.is_empty())
         m_irq_queue.wake_all();
+
     return true;
 }
 
@@ -115,15 +119,9 @@ UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize()
     set_master_output_volume(0, 0, Muted::No);
     set_pcm_output_volume(0, 0, Muted::No);
 
-    reset_pcm_out();
+    m_pcm_out_channel.reset();
     enable_irq();
     return {};
-}
-
-void AC97::reset_pcm_out()
-{
-    m_pcm_out_channel.reset();
-    m_buffer_descriptor_list_index = 0;
 }
 
 void AC97::set_master_output_volume(u8 left_channel, u8 right_channel, Muted mute)
@@ -225,29 +223,32 @@ ErrorOr<void> AC97::write_single_buffer(UserOrKernelBuffer const& data, size_t o
     cli();
     do {
         auto pcm_out_status = m_pcm_out_channel.reg(AC97Channel::Register::Status).in<u16>();
-        auto is_dma_controller_halted = (pcm_out_status & AudioStatusRegisterFlag::DMAControllerHalted) > 0;
         auto current_index = m_pcm_out_channel.reg(AC97Channel::Register::CurrentIndexValue).in<u8>();
-        auto last_valid_index = m_pcm_out_channel.reg(AC97Channel::Register::LastValidIndex).in<u8>();
+        int last_valid_index = m_pcm_out_channel.reg(AC97Channel::Register::LastValidIndex).in<u8>();
 
-        auto head_distance = static_cast<int>(last_valid_index) - current_index;
+        auto head_distance = last_valid_index - current_index;
         if (head_distance < 0)
             head_distance += buffer_descriptor_list_max_entries;
-        if (!is_dma_controller_halted)
+        if (m_pcm_out_channel.dma_running())
             ++head_distance;
 
+        // Current index has _passed_ last valid index - move our list index up
+        if (head_distance > m_output_buffer_page_count) {
+            m_buffer_descriptor_list_index = current_index + 1;
+            break;
+        }
+
+        // There is room for our data
         if (head_distance < m_output_buffer_page_count)
             break;
 
-        dbgln_if(AC97_DEBUG, "AC97 @ {}: waiting on interrupt - stat: {:#b} CI: {} LVI: {}", pci_address(), pcm_out_status, current_index, last_valid_index);
+        dbgln_if(AC97_DEBUG, "AC97 @ {}: waiting on interrupt - status: {:#05b} CI: {} LVI: {}", pci_address(), pcm_out_status, current_index, last_valid_index);
         m_irq_queue.wait_forever("AC97"sv);
     } while (m_pcm_out_channel.dma_running());
     sti();
 
     // Copy data from userspace into one of our buffers
     TRY(data.read(m_output_buffer->vaddr_from_page_index(m_output_buffer_page_index).as_ptr(), offset, length));
-
-    if (!m_pcm_out_channel.dma_running())
-        reset_pcm_out();
 
     // Write the next entry to the buffer descriptor list
     u16 number_of_samples = length / sizeof(u16);
@@ -268,9 +269,16 @@ ErrorOr<void> AC97::write_single_buffer(UserOrKernelBuffer const& data, size_t o
     return {};
 }
 
+void AC97::AC97Channel::handle_dma_stopped()
+{
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: channel {}: DMA engine has stopped", m_device.pci_address(), name());
+    VERIFY(m_dma_running);
+    m_dma_running = false;
+}
+
 void AC97::AC97Channel::reset()
 {
-    dbgln("AC97 @ {}: channel {}: resetting", m_device.pci_address(), name());
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: channel {}: resetting", m_device.pci_address(), name());
 
     auto control_register = reg(Register::Control);
     control_register.out(AudioControlRegisterFlag::ResetRegisters);
@@ -283,7 +291,7 @@ void AC97::AC97Channel::reset()
 
 void AC97::AC97Channel::set_last_valid_index(u32 buffer_address, u8 last_valid_index)
 {
-    dbgln_if(AC97_DEBUG, "AC97 @ {}: setting LVI - address: {:#x} LVI: {}", m_device.pci_address(), buffer_address, last_valid_index);
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: channel {}: setting buffer address: {:#x} LVI: {}", m_device.pci_address(), name(), buffer_address, last_valid_index);
 
     reg(Register::BufferDescriptorListBaseAddress).out(buffer_address);
     reg(Register::LastValidIndex).out(last_valid_index);
@@ -291,7 +299,7 @@ void AC97::AC97Channel::set_last_valid_index(u32 buffer_address, u8 last_valid_i
 
 void AC97::AC97Channel::start_dma()
 {
-    dbgln("AC97 @ {}: channel {}: starting DMA engine", m_device.pci_address(), name());
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: channel {}: starting DMA engine", m_device.pci_address(), name());
 
     auto control_register = reg(Register::Control);
     auto control = control_register.in<u8>();

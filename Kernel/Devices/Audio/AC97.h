@@ -128,6 +128,7 @@ private:
         }
 
         bool dma_running() const { return m_dma_running; }
+        void handle_dma_stopped();
         StringView name() const { return m_name; }
         IOAddress reg(Register reg) const { return m_channel_base.offset(reg); }
         void reset();
@@ -148,7 +149,6 @@ private:
 
     AC97Channel channel(StringView name, NativeAudioBusChannel channel) { return AC97Channel(*this, name, m_io_bus_base.offset(channel)); }
     ErrorOr<void> initialize();
-    void reset_pcm_out();
     void set_master_output_volume(u8, u8, Muted);
     ErrorOr<void> set_pcm_output_sample_rate(u32);
     void set_pcm_output_volume(u8, u8, Muted);
