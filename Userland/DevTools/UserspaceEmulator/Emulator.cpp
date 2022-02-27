@@ -272,6 +272,28 @@ int Emulator::exec()
     return m_exit_status;
 }
 
+void Emulator::send_signal(int signal)
+{
+    SignalInfo info {
+        // FIXME: Fill this in somehow
+        .signal_info = {
+            .si_signo = signal,
+            .si_code = SI_USER,
+            .si_errno = 0,
+            .si_pid = getpid(),
+            .si_uid = geteuid(),
+            .si_addr = 0,
+            .si_status = 0,
+            .si_band = 0,
+            .si_value = {
+                .sival_int = 0,
+            },
+        },
+        .context = {},
+    };
+    did_receive_signal(signal, info, true);
+}
+
 void Emulator::handle_repl()
 {
     // Console interface
@@ -346,13 +368,13 @@ void Emulator::handle_repl()
         m_shutdown = true;
     } else if (parts[0].is_one_of("sig"sv, "signal"sv)) {
         if (parts.size() == 1) {
-            did_receive_signal(SIGINT);
+            send_signal(SIGINT);
             return;
         }
         if (parts.size() == 2) {
             auto number = AK::StringUtils::convert_to_int<i32>(parts[1]);
             if (number.has_value()) {
-                did_receive_signal(number.value());
+                send_signal(*number);
                 return;
             }
         }
@@ -512,21 +534,22 @@ String Emulator::create_instruction_line(FlatPtr address, X86::Instruction const
     return String::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
 }
 
-static void emulator_signal_handler(int signum)
+static void emulator_signal_handler(int signum, siginfo_t* signal_info, void* context)
 {
-    Emulator::the().did_receive_signal(signum);
-}
-
-static void emulator_sigint_handler(int signum)
-{
-    Emulator::the().did_receive_sigint(signum);
+    Emulator::the().did_receive_signal(signum, { *signal_info, *reinterpret_cast<ucontext_t*>(context) });
 }
 
 void Emulator::register_signal_handlers()
 {
+    struct sigaction action {
+        .sa_sigaction = emulator_signal_handler,
+        .sa_mask = 0,
+        .sa_flags = SA_SIGINFO,
+    };
+    sigemptyset(&action.sa_mask);
+
     for (int signum = 0; signum < NSIG; ++signum)
-        signal(signum, emulator_signal_handler);
-    signal(SIGINT, emulator_sigint_handler);
+        sigaction(signum, &action, nullptr);
 }
 
 enum class DefaultSignalAction {
@@ -618,48 +641,31 @@ void Emulator::dispatch_one_pending_signal()
 
     auto old_esp = m_cpu->esp().value();
 
-    ucontext_t ucontext {
-        .uc_link = nullptr,
-        .uc_sigmask = m_signal_mask,
-        .uc_stack = {
-            .ss_sp = bit_cast<void*>(old_esp),
-            .ss_flags = 0,
-            .ss_size = 0,
-        },
-        .uc_mcontext = {
-            .eax = m_cpu->eax().value(),
-            .ecx = m_cpu->ecx().value(),
-            .edx = m_cpu->edx().value(),
-            .ebx = m_cpu->ebx().value(),
-            .esp = m_cpu->esp().value(),
-            .ebp = m_cpu->ebp().value(),
-            .esi = m_cpu->esi().value(),
-            .edi = m_cpu->edi().value(),
-            .eip = m_cpu->eip(),
-            .eflags = m_cpu->eflags(),
-            .cs = m_cpu->cs(),
-            .ss = m_cpu->ss(),
-            .ds = m_cpu->ds(),
-            .es = m_cpu->es(),
-            // ???
-            .fs = 0,
-            .gs = 0,
-        },
+    auto signal_info = m_signal_data[signum];
+    signal_info.context.uc_sigmask = m_signal_mask;
+    signal_info.context.uc_stack = {
+        .ss_sp = bit_cast<void*>(old_esp),
+        .ss_flags = 0,
+        .ss_size = 0,
     };
-
-    // FIXME: Set these fields.
-    siginfo_t signal_info {
-        .si_signo = signum,
-        .si_code = 0,
-        .si_errno = 0,
-        .si_pid = 0,
-        .si_uid = 0,
-        .si_addr = 0,
-        .si_status = 0,
-        .si_band = 0,
-        .si_value = {
-            .sival_int = 0,
-        },
+    signal_info.context.uc_mcontext = __mcontext {
+        .eax = m_cpu->eax().value(),
+        .ecx = m_cpu->ecx().value(),
+        .edx = m_cpu->edx().value(),
+        .ebx = m_cpu->ebx().value(),
+        .esp = m_cpu->esp().value(),
+        .ebp = m_cpu->ebp().value(),
+        .esi = m_cpu->esi().value(),
+        .edi = m_cpu->edi().value(),
+        .eip = m_cpu->eip(),
+        .eflags = m_cpu->eflags(),
+        .cs = m_cpu->cs(),
+        .ss = m_cpu->ss(),
+        .ds = m_cpu->ds(),
+        .es = m_cpu->es(),
+        // ???
+        .fs = 0,
+        .gs = 0,
     };
 
     // Align the stack to 16 bytes.
@@ -675,10 +681,10 @@ void Emulator::dispatch_one_pending_signal()
 
     m_cpu->push32(shadow_wrap_as_initialized(0u)); // syscall return value slot
 
-    m_cpu->push_buffer(bit_cast<u8 const*>(&ucontext), sizeof(ucontext_t));
+    m_cpu->push_buffer(bit_cast<u8 const*>(&signal_info.context), sizeof(ucontext_t));
     auto pointer_to_ucontext = m_cpu->esp().value();
 
-    m_cpu->push_buffer(bit_cast<u8 const*>(&signal_info), sizeof(siginfo_t));
+    m_cpu->push_buffer(bit_cast<u8 const*>(&signal_info.signal_info), sizeof(siginfo_t));
     auto pointer_to_signal_info = m_cpu->esp().value();
 
     // FPU state, leave a 512-byte gap. FIXME: Fill this in.
