@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2021, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2021-2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Error.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Device.h>
@@ -145,7 +146,7 @@ private:
     virtual bool handle_irq(const RegisterState&) override;
 
     AC97Channel channel(StringView name, NativeAudioBusChannel channel) { return AC97Channel(*this, name, m_io_bus_base.offset(channel)); }
-    void initialize();
+    ErrorOr<void> initialize();
     void reset_pcm_out();
     void set_master_output_volume(u8, u8, Muted);
     ErrorOr<void> set_pcm_output_sample_rate(u32);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2021-2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +21,10 @@ static constexpr u16 pcm_sample_rate_maximum = 48000;
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AC97>> AC97::try_create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) AC97(pci_device_identifier));
+    auto ac97 = adopt_nonnull_ref_or_enomem(new (nothrow) AC97(pci_device_identifier));
+    if (!ac97.is_error())
+        TRY(ac97.value()->initialize());
+    return ac97;
 }
 
 UNMAP_AFTER_INIT AC97::AC97(PCI::DeviceIdentifier const& pci_device_identifier)
@@ -31,7 +34,6 @@ UNMAP_AFTER_INIT AC97::AC97(PCI::DeviceIdentifier const& pci_device_identifier)
     , m_io_bus_base(PCI::get_BAR1(pci_address()) & ~1)
     , m_pcm_out_channel(channel("PCMOut"sv, NativeAudioBusChannel::PCMOutChannel))
 {
-    initialize();
 }
 
 UNMAP_AFTER_INIT AC97::~AC97()
@@ -68,7 +70,7 @@ bool AC97::handle_irq(RegisterState const&)
     return true;
 }
 
-UNMAP_AFTER_INIT void AC97::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize()
 {
     dbgln_if(AC97_DEBUG, "AC97 @ {}: mixer base: {:#04x}", pci_address(), m_io_mixer_base.get());
     dbgln_if(AC97_DEBUG, "AC97 @ {}: bus base: {:#04x}", pci_address(), m_io_bus_base.get());
@@ -103,7 +105,7 @@ UNMAP_AFTER_INIT void AC97::initialize()
     }
     extended_audio_status_control_register.out(extended_audio_status);
 
-    MUST(set_pcm_output_sample_rate(m_variable_rate_pcm_supported ? pcm_default_sample_rate : pcm_fixed_sample_rate));
+    TRY(set_pcm_output_sample_rate(m_variable_rate_pcm_supported ? pcm_default_sample_rate : pcm_fixed_sample_rate));
 
     // Left and right volume of 0 means attenuation of 0 dB
     set_master_output_volume(0, 0, Muted::No);
@@ -111,6 +113,7 @@ UNMAP_AFTER_INIT void AC97::initialize()
 
     reset_pcm_out();
     enable_irq();
+    return {};
 }
 
 void AC97::reset_pcm_out()
