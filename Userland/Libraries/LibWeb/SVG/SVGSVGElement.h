@@ -25,7 +25,7 @@ public:
     virtual bool requires_svg_container() const override { return false; }
     virtual bool is_svg_container() const override { return true; }
 
-    Optional<ViewBox> const& view_box() { return m_view_box; }
+    Optional<ViewBox> const& view_box() const { return m_view_box; }
 
 private:
     virtual void parse_attribute(FlyString const& name, String const& value) override;
