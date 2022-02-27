@@ -88,21 +88,21 @@ public:
     {
         switch (reg) {
         case X86::RegisterAL:
-            return { m_gpr[X86::RegisterEAX].low_u8, m_gpr_shadow[X86::RegisterEAX].low_u8 };
+            return m_gpr[X86::RegisterEAX].reference_to<&PartAddressableRegister::low_u8>();
         case X86::RegisterAH:
-            return { m_gpr[X86::RegisterEAX].high_u8, m_gpr_shadow[X86::RegisterEAX].high_u8 };
+            return m_gpr[X86::RegisterEAX].reference_to<&PartAddressableRegister::high_u8>();
         case X86::RegisterBL:
-            return { m_gpr[X86::RegisterEBX].low_u8, m_gpr_shadow[X86::RegisterEBX].low_u8 };
+            return m_gpr[X86::RegisterEBX].reference_to<&PartAddressableRegister::low_u8>();
         case X86::RegisterBH:
-            return { m_gpr[X86::RegisterEBX].high_u8, m_gpr_shadow[X86::RegisterEBX].high_u8 };
+            return m_gpr[X86::RegisterEBX].reference_to<&PartAddressableRegister::high_u8>();
         case X86::RegisterCL:
-            return { m_gpr[X86::RegisterECX].low_u8, m_gpr_shadow[X86::RegisterECX].low_u8 };
+            return m_gpr[X86::RegisterECX].reference_to<&PartAddressableRegister::low_u8>();
         case X86::RegisterCH:
-            return { m_gpr[X86::RegisterECX].high_u8, m_gpr_shadow[X86::RegisterECX].high_u8 };
+            return m_gpr[X86::RegisterECX].reference_to<&PartAddressableRegister::high_u8>();
         case X86::RegisterDL:
-            return { m_gpr[X86::RegisterEDX].low_u8, m_gpr_shadow[X86::RegisterEDX].low_u8 };
+            return m_gpr[X86::RegisterEDX].reference_to<&PartAddressableRegister::low_u8>();
         case X86::RegisterDH:
-            return { m_gpr[X86::RegisterEDX].high_u8, m_gpr_shadow[X86::RegisterEDX].high_u8 };
+            return m_gpr[X86::RegisterEDX].reference_to<&PartAddressableRegister::high_u8>();
         }
         VERIFY_NOT_REACHED();
     }
@@ -111,43 +111,43 @@ public:
     {
         switch (reg) {
         case X86::RegisterAL:
-            return { m_gpr[X86::RegisterEAX].low_u8, m_gpr_shadow[X86::RegisterEAX].low_u8 };
+            return m_gpr[X86::RegisterEAX].slice<&PartAddressableRegister::low_u8>();
         case X86::RegisterAH:
-            return { m_gpr[X86::RegisterEAX].high_u8, m_gpr_shadow[X86::RegisterEAX].high_u8 };
+            return m_gpr[X86::RegisterEAX].slice<&PartAddressableRegister::high_u8>();
         case X86::RegisterBL:
-            return { m_gpr[X86::RegisterEBX].low_u8, m_gpr_shadow[X86::RegisterEBX].low_u8 };
+            return m_gpr[X86::RegisterEBX].slice<&PartAddressableRegister::low_u8>();
         case X86::RegisterBH:
-            return { m_gpr[X86::RegisterEBX].high_u8, m_gpr_shadow[X86::RegisterEBX].high_u8 };
+            return m_gpr[X86::RegisterEBX].slice<&PartAddressableRegister::high_u8>();
         case X86::RegisterCL:
-            return { m_gpr[X86::RegisterECX].low_u8, m_gpr_shadow[X86::RegisterECX].low_u8 };
+            return m_gpr[X86::RegisterECX].slice<&PartAddressableRegister::low_u8>();
         case X86::RegisterCH:
-            return { m_gpr[X86::RegisterECX].high_u8, m_gpr_shadow[X86::RegisterECX].high_u8 };
+            return m_gpr[X86::RegisterECX].slice<&PartAddressableRegister::high_u8>();
         case X86::RegisterDL:
-            return { m_gpr[X86::RegisterEDX].low_u8, m_gpr_shadow[X86::RegisterEDX].low_u8 };
+            return m_gpr[X86::RegisterEDX].slice<&PartAddressableRegister::low_u8>();
         case X86::RegisterDH:
-            return { m_gpr[X86::RegisterEDX].high_u8, m_gpr_shadow[X86::RegisterEDX].high_u8 };
+            return m_gpr[X86::RegisterEDX].slice<&PartAddressableRegister::high_u8>();
         }
         VERIFY_NOT_REACHED();
     }
 
     ValueWithShadow<u16> const_gpr16(X86::RegisterIndex16 reg) const
     {
-        return { m_gpr[reg].low_u16, m_gpr_shadow[reg].low_u16 };
+        return m_gpr[reg].slice<&PartAddressableRegister::low_u16>();
     }
 
     ValueAndShadowReference<u16> gpr16(X86::RegisterIndex16 reg)
     {
-        return { m_gpr[reg].low_u16, m_gpr_shadow[reg].low_u16 };
+        return m_gpr[reg].reference_to<&PartAddressableRegister::low_u16>();
     }
 
     ValueWithShadow<u32> const_gpr32(X86::RegisterIndex32 reg) const
     {
-        return { m_gpr[reg].full_u32, m_gpr_shadow[reg].full_u32 };
+        return m_gpr[reg].slice<&PartAddressableRegister::full_u32>();
     }
 
     ValueAndShadowReference<u32> gpr32(X86::RegisterIndex32 reg)
     {
-        return { m_gpr[reg].full_u32, m_gpr_shadow[reg].full_u32 };
+        return m_gpr[reg].reference_to<&PartAddressableRegister::full_u32>();
     }
 
     template<typename T>
@@ -1252,8 +1252,7 @@ private:
     Emulator& m_emulator;
     SoftFPU m_fpu;
 
-    PartAddressableRegister m_gpr[8];
-    PartAddressableRegister m_gpr_shadow[8];
+    ValueWithShadow<PartAddressableRegister> m_gpr[8];
 
     u16 m_segment[8] { 0 };
     u32 m_eflags { 0 };
