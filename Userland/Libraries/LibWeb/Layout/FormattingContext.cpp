@@ -225,11 +225,7 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
                     top = fragment_top;
             }
             // Find the bottom edge.
-            for (auto const& fragment : line_boxes.last().fragments()) {
-                float fragment_bottom = fragment.offset().y() + fragment.height() + fragment.border_box_bottom();
-                if (!bottom.has_value() || fragment_bottom > *bottom)
-                    bottom = fragment_bottom;
-            }
+            bottom = line_boxes.last().bottom();
         }
     } else {
         // If it has block-level children, the height is the distance between

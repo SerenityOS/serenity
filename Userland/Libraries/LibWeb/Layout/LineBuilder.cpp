@@ -96,7 +96,7 @@ void LineBuilder::update_last_line()
 
     auto text_align = m_context.containing_block().computed_values().text_align();
     float x_offset = m_context.available_space_for_line(m_current_y).left;
-
+    float bottom = m_current_y + m_context.containing_block().line_height();
     float excess_horizontal_space = m_containing_block_state.content_width - line_box.width();
 
     switch (text_align) {
@@ -175,6 +175,8 @@ void LineBuilder::update_last_line()
         last_fragment_x_adjustment = new_fragment_x - fragment.offset().x();
         fragment.set_offset({ new_fragment_x, new_fragment_y });
 
+        bottom = max(bottom, new_fragment_y + fragment.height() + fragment.border_box_bottom());
+
         if (text_align == CSS::TextAlign::Justify
             && fragment.is_justifiable_whitespace()
             && fragment.width() != justified_space_width) {
@@ -191,6 +193,8 @@ void LineBuilder::update_last_line()
 
     if (!line_box.fragments().is_empty())
         line_box.m_width += last_fragment_x_adjustment;
+
+    line_box.m_bottom = bottom;
 }
 
 void LineBuilder::remove_last_line_if_empty()

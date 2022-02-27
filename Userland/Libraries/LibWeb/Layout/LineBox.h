@@ -16,6 +16,7 @@ public:
     LineBox() { }
 
     float width() const { return m_width; }
+    float bottom() const { return m_bottom; }
 
     void add_fragment(Node const& layout_node, int start, int length, float leading_size, float trailing_size, float content_width, float content_height, float border_box_top, float border_box_bottom, LineBoxFragment::Type = LineBoxFragment::Type::Normal);
 
@@ -34,6 +35,7 @@ private:
 
     Vector<LineBoxFragment> m_fragments;
     float m_width { 0 };
+    float m_bottom { 0 };
 };
 
 }
