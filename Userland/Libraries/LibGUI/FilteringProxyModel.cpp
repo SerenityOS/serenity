@@ -41,8 +41,8 @@ Variant FilteringProxyModel::data(ModelIndex const& index, ModelRole role) const
     if ((size_t)index.row() > m_matching_indices.size() || index.row() < 0)
         return {};
 
-    // FIXME: Support hierarchical models (with a non-empty index.parent()).
-    auto underlying_index = m_model->index(m_matching_indices[index.row()].row(), index.column(), {});
+    auto matching_index = m_matching_indices[index.row()];
+    auto underlying_index = m_model->index(matching_index.row(), index.column(), matching_index.parent());
     return underlying_index.data(role);
 }
 
