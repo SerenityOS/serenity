@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2021, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2021-2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Error.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Device.h>
@@ -56,6 +57,7 @@ private:
         Revision21OrEarlier = 0b00,
         Revision22 = 0b01,
         Revision23 = 0b10,
+        Reserved = 0b11,
     };
 
     enum NativeAudioBusChannel : u8 {
@@ -126,6 +128,7 @@ private:
         }
 
         bool dma_running() const { return m_dma_running; }
+        void handle_dma_stopped();
         StringView name() const { return m_name; }
         IOAddress reg(Register reg) const { return m_channel_base.offset(reg); }
         void reset();
@@ -145,8 +148,7 @@ private:
     virtual bool handle_irq(const RegisterState&) override;
 
     AC97Channel channel(StringView name, NativeAudioBusChannel channel) { return AC97Channel(*this, name, m_io_bus_base.offset(channel)); }
-    void initialize();
-    void reset_pcm_out();
+    ErrorOr<void> initialize();
     void set_master_output_volume(u8, u8, Muted);
     ErrorOr<void> set_pcm_output_sample_rate(u32);
     void set_pcm_output_volume(u8, u8, Muted);
@@ -161,6 +163,7 @@ private:
 
     OwnPtr<Memory::Region> m_buffer_descriptor_list;
     u8 m_buffer_descriptor_list_index { 0 };
+    AC97Revision m_codec_revision;
     bool m_double_rate_pcm_enabled { false };
     IOAddress m_io_mixer_base;
     IOAddress m_io_bus_base;

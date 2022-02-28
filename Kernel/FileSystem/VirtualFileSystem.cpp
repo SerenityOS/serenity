@@ -725,13 +725,12 @@ ErrorOr<void> VirtualFileSystem::rmdir(StringView path, Custody& base)
     return parent_inode.remove_child(KLexicalPath::basename(path));
 }
 
-void VirtualFileSystem::for_each_mount(Function<IterationDecision(Mount const&)> callback) const
+ErrorOr<void> VirtualFileSystem::for_each_mount(Function<ErrorOr<void>(Mount const&)> callback) const
 {
-    m_mounts.with([&](auto& mounts) {
-        for (auto& mount : mounts) {
-            if (callback(mount) == IterationDecision::Break)
-                break;
-        }
+    return m_mounts.with([&](auto& mounts) -> ErrorOr<void> {
+        for (auto& mount : mounts)
+            TRY(callback(mount));
+        return {};
     });
 }
 

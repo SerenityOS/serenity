@@ -30,6 +30,7 @@ public:
     ErrorOr<NonnullRefPtr<OpenFileDescription>> recvfd(const OpenFileDescription& socket_description);
 
     static void for_each(Function<void(const LocalSocket&)>);
+    static ErrorOr<void> try_for_each(Function<ErrorOr<void>(const LocalSocket&)>);
 
     StringView socket_path() const;
     ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription& description) const override;

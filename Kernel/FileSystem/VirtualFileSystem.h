@@ -68,7 +68,7 @@ public:
     ErrorOr<void> mknod(StringView path, mode_t, dev_t, Custody& base);
     ErrorOr<NonnullRefPtr<Custody>> open_directory(StringView path, Custody& base);
 
-    void for_each_mount(Function<IterationDecision(const Mount&)>) const;
+    ErrorOr<void> for_each_mount(Function<ErrorOr<void>(const Mount&)>) const;
 
     InodeIdentifier root_inode_id() const;
 

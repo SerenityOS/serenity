@@ -237,6 +237,7 @@ public:
     IterationDecision for_each_thread(Callback);
     template<IteratorFunction<Thread&> Callback>
     IterationDecision for_each_thread(Callback callback) const;
+    ErrorOr<void> try_for_each_thread(Function<ErrorOr<void>(Thread const&)>) const;
 
     // Non-breakable iteration functions
     template<VoidFunction<Process&> Callback>
@@ -487,12 +488,13 @@ public:
     Thread::WaitBlockerSet& wait_blocker_set() { return m_wait_blocker_set; }
 
     template<typename Callback>
-    void for_each_coredump_property(Callback callback) const
+    ErrorOr<void> for_each_coredump_property(Callback callback) const
     {
         for (auto const& property : m_coredump_properties) {
             if (property.key && property.value)
-                callback(*property.key, *property.value);
+                TRY(callback(*property.key, *property.value));
         }
+        return {};
     }
 
     ErrorOr<void> set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value);
@@ -659,6 +661,7 @@ public:
         OpenFileDescriptionAndFlags* get_if_valid(size_t i);
 
         void enumerate(Function<void(const OpenFileDescriptionAndFlags&)>) const;
+        ErrorOr<void> try_enumerate(Function<ErrorOr<void>(const OpenFileDescriptionAndFlags&)>) const;
         void change_each(Function<void(OpenFileDescriptionAndFlags&)>);
 
         ErrorOr<ScopedDescriptionAllocation> allocate(int first_candidate_fd = 0);
@@ -937,6 +940,15 @@ inline IterationDecision Process::for_each_thread(Callback callback) const
             callback(thread);
     });
     return IterationDecision::Continue;
+}
+
+inline ErrorOr<void> Process::try_for_each_thread(Function<ErrorOr<void>(Thread const&)> callback) const
+{
+    return thread_list().with([&](auto& thread_list) -> ErrorOr<void> {
+        for (auto& thread : thread_list)
+            TRY(callback(thread));
+        return {};
+    });
 }
 
 template<VoidFunction<Thread&> Callback>

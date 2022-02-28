@@ -432,7 +432,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layout_statusbar_action->set_checked(show_statusbar);
     m_statusbar->set_visible(show_statusbar);
 
-    m_layout_ruler_action = GUI::Action::create_checkable("Ruler", [&](auto& action) {
+    m_layout_ruler_action = GUI::Action::create_checkable("&Ruler", [&](auto& action) {
         action.is_checked() ? m_editor->set_ruler_visible(true) : m_editor->set_ruler_visible(false);
         Config::write_bool("TextEditor", "Layout", "ShowRuler", action.is_checked());
     });
@@ -463,12 +463,15 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     auto& wrapping_mode_menu = view_menu.add_submenu("&Wrapping Mode");
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
+        Config::write_string("TextEditor", "View", "WrappingMode", "None");
     });
     m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap &Anywhere", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
+        Config::write_string("TextEditor", "View", "WrappingMode", "Anywhere");
     });
     m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at &Words", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
+        Config::write_string("TextEditor", "View", "WrappingMode", "Words");
     });
 
     m_wrapping_mode_actions.add_action(*m_no_wrapping_action);
@@ -479,7 +482,17 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     wrapping_mode_menu.add_action(*m_wrap_anywhere_action);
     wrapping_mode_menu.add_action(*m_wrap_at_words_action);
 
-    m_no_wrapping_action->set_checked(true);
+    auto word_wrap = Config::read_string("TextEditor", "View", "WrappingMode", "Words");
+    if (word_wrap == "None") {
+        m_no_wrapping_action->set_checked(true);
+        m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
+    } else if (word_wrap == "Anywhere") {
+        m_wrap_anywhere_action->set_checked(true);
+        m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
+    } else {
+        m_wrap_at_words_action->set_checked(true);
+        m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
+    }
 
     m_soft_tab_width_actions.set_exclusive(true);
     auto& soft_tab_width_menu = view_menu.add_submenu("&Tab Width");
@@ -572,7 +585,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_js_highlight);
     syntax_menu.add_action(*m_js_highlight);
 
-    m_css_highlight = GUI::Action::create_checkable("CSS", [&](auto&) {
+    m_css_highlight = GUI::Action::create_checkable("C&SS", [&](auto&) {
         m_editor->set_syntax_highlighter(make<Web::CSS::SyntaxHighlighter>());
         m_editor->update();
     });
@@ -586,7 +599,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_html_highlight);
     syntax_menu.add_action(*m_html_highlight);
 
-    m_git_highlight = GUI::Action::create_checkable("Git Commit", [&](auto&) {
+    m_git_highlight = GUI::Action::create_checkable("Gi&t Commit", [&](auto&) {
         m_editor->set_syntax_highlighter(make<GUI::GitCommitSyntaxHighlighter>());
         m_editor->update();
     });
@@ -607,7 +620,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_ini_highlight);
     syntax_menu.add_action(*m_ini_highlight);
 
-    m_shell_highlight = GUI::Action::create_checkable("&Shell File", [&](auto&) {
+    m_shell_highlight = GUI::Action::create_checkable("Sh&ell File", [&](auto&) {
         m_editor->set_syntax_highlighter(make<Shell::SyntaxHighlighter>());
         m_editor->update();
     });

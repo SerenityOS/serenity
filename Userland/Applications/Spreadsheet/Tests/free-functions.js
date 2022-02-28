@@ -73,6 +73,7 @@ describe("Statistics", () => {
     sheet.makeCurrent();
 
     for (let i = 0; i < 10; ++i) sheet.setCell("A", i, `${i}`);
+    for (let i = 0; i < 10; ++i) sheet.setCell("B", i, `${i * i}`);
 
     test("sum", () => {
         expect(sum).toBeDefined();
@@ -102,6 +103,36 @@ describe("Statistics", () => {
     test("averageIf", () => {
         expect(averageIf).toBeDefined();
         expect(averageIf(x => !Number.isNaN(x), R`A0:A10`)).toEqual(4.5);
+    });
+
+    test("minIf", () => {
+        expect(minIf).toBeDefined();
+        expect(minIf(x => x > 25, R`B0:B9`)).toEqual(36);
+    });
+
+    test("min", () => {
+        expect(min).toBeDefined();
+        expect(min(R`B0:B9`)).toEqual(0);
+    });
+
+    test("maxIf", () => {
+        expect(maxIf).toBeDefined();
+        expect(maxIf(x => x > 25, R`B0:B9`)).toEqual(81);
+    });
+
+    test("max", () => {
+        expect(max).toBeDefined();
+        expect(max(R`B0:B9`)).toEqual(81);
+    });
+
+    test("sumProductIf", () => {
+        expect(sumProductIf).toBeDefined();
+        expect(sumProductIf((a, b) => b > 25, R`A0:A9`, R`B0:B9`)).toEqual(1800);
+    });
+
+    test("sumProduct", () => {
+        expect(sumProduct).toBeDefined();
+        expect(sumProduct(R`A0:A9`, R`B0:B9`)).toEqual(2025);
     });
 
     test("median", () => {

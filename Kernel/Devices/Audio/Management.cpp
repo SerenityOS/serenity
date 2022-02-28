@@ -45,8 +45,13 @@ UNMAP_AFTER_INIT void AudioManagement::enumerate_hardware_controllers()
             return;
 
         dbgln("AC97: found audio controller at {}", device_identifier.address());
-        // FIXME: Propagate errors properly
-        m_controllers_list.append(AC97::try_create(device_identifier).release_value());
+        auto ac97_device = AC97::try_create(device_identifier);
+        if (ac97_device.is_error()) {
+            // FIXME: Propagate errors properly
+            dbgln("AudioManagement: failed to initialize AC97 device: {}", ac97_device.error());
+            return;
+        }
+        m_controllers_list.append(ac97_device.release_value());
     });
 }
 

@@ -94,4 +94,18 @@ describe("Range", () => {
         });
         expect(cellsVisited).toEqual(11);
     });
+
+    test("Range#first", () => {
+        const workbook = createWorkbook();
+        const sheet = createSheet(workbook, "Sheet 1");
+        sheet.makeCurrent();
+
+        sheet.setCell("A", 0, "0");
+        sheet.setCell("A", 1, "0");
+        sheet.setCell("A", 2, "0");
+        sheet.focusCell("A", 0);
+        expect(R`A0:A`.first().name).toEqual("A0");
+        expect(R`A0:A25`.first().name).toEqual("A0");
+        expect(R`A2:A25`.first().name).toEqual("A2");
+    });
 });

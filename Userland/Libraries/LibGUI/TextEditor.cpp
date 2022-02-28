@@ -57,8 +57,10 @@ TextEditor::TextEditor(Type type)
     if (is_single_line())
         set_visualize_trailing_whitespace(false);
     set_scrollbars_enabled(is_multi_line());
-    if (is_multi_line())
+    if (is_multi_line()) {
         set_font(Gfx::FontDatabase::default_fixed_width_font());
+        set_wrapping_mode(WrappingMode::WrapAtWords);
+    }
     vertical_scrollbar().set_step(line_height());
     m_cursor = { 0, 0 };
     m_automatic_selection_scroll_timer = add<Core::Timer>(100, [this] {

@@ -40,33 +40,35 @@ private:
     ProcFSAdapters();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
-        NetworkingManagement::the().for_each([&array](auto& adapter) {
-            auto obj = array.add_object();
-            obj.add("name", adapter.name());
-            obj.add("class_name", adapter.class_name());
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        TRY(NetworkingManagement::the().try_for_each([&array](auto& adapter) -> ErrorOr<void> {
+            auto obj = TRY(array.add_object());
+            TRY(obj.add("name", adapter.name()));
+            TRY(obj.add("class_name", adapter.class_name()));
             auto mac_address = adapter.mac_address().to_string().release_value_but_fixme_should_propagate_errors();
-            obj.add("mac_address", mac_address->view());
+            TRY(obj.add("mac_address", mac_address->view()));
             if (!adapter.ipv4_address().is_zero()) {
                 auto ipv4_address = adapter.ipv4_address().to_string().release_value_but_fixme_should_propagate_errors();
-                obj.add("ipv4_address", ipv4_address->view());
+                TRY(obj.add("ipv4_address", ipv4_address->view()));
                 auto ipv4_netmask = adapter.ipv4_netmask().to_string().release_value_but_fixme_should_propagate_errors();
-                obj.add("ipv4_netmask", ipv4_netmask->view());
+                TRY(obj.add("ipv4_netmask", ipv4_netmask->view()));
             }
             if (!adapter.ipv4_gateway().is_zero()) {
                 auto ipv4_gateway = adapter.ipv4_gateway().to_string().release_value_but_fixme_should_propagate_errors();
-                obj.add("ipv4_gateway", ipv4_gateway->view());
+                TRY(obj.add("ipv4_gateway", ipv4_gateway->view()));
             }
-            obj.add("packets_in", adapter.packets_in());
-            obj.add("bytes_in", adapter.bytes_in());
-            obj.add("packets_out", adapter.packets_out());
-            obj.add("bytes_out", adapter.bytes_out());
-            obj.add("link_up", adapter.link_up());
-            obj.add("link_speed", adapter.link_speed());
-            obj.add("link_full_duplex", adapter.link_full_duplex());
-            obj.add("mtu", adapter.mtu());
-        });
-        array.finish();
+            TRY(obj.add("packets_in", adapter.packets_in()));
+            TRY(obj.add("bytes_in", adapter.bytes_in()));
+            TRY(obj.add("packets_out", adapter.packets_out()));
+            TRY(obj.add("bytes_out", adapter.bytes_out()));
+            TRY(obj.add("link_up", adapter.link_up()));
+            TRY(obj.add("link_speed", adapter.link_speed()));
+            TRY(obj.add("link_full_duplex", adapter.link_full_duplex()));
+            TRY(obj.add("mtu", adapter.mtu()));
+            TRY(obj.finish());
+            return {};
+        }));
+        TRY(array.finish());
         return {};
     }
 };
@@ -79,15 +81,19 @@ private:
     ProcFSARP();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
-        arp_table().for_each([&](const auto& it) {
-            auto obj = array.add_object();
-            auto mac_address = it.value.to_string().release_value_but_fixme_should_propagate_errors();
-            obj.add("mac_address", mac_address->view());
-            auto ip_address = it.key.to_string().release_value_but_fixme_should_propagate_errors();
-            obj.add("ip_address", ip_address->view());
-        });
-        array.finish();
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        TRY(arp_table().with([&](const auto& table) -> ErrorOr<void> {
+            for (auto& it : table) {
+                auto obj = TRY(array.add_object());
+                auto mac_address = it.value.to_string().release_value_but_fixme_should_propagate_errors();
+                TRY(obj.add("mac_address", mac_address->view()));
+                auto ip_address = it.key.to_string().release_value_but_fixme_should_propagate_errors();
+                TRY(obj.add("ip_address", ip_address->view()));
+                TRY(obj.finish());
+            }
+            return {};
+        }));
+        TRY(array.finish());
         return {};
     }
 };
@@ -100,29 +106,31 @@ private:
     ProcFSTCP();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
-        TCPSocket::for_each([&array](auto& socket) {
-            auto obj = array.add_object();
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        TRY(TCPSocket::try_for_each([&array](auto& socket) -> ErrorOr<void> {
+            auto obj = TRY(array.add_object());
             auto local_address = socket.local_address().to_string().release_value_but_fixme_should_propagate_errors();
-            obj.add("local_address", local_address->view());
-            obj.add("local_port", socket.local_port());
+            TRY(obj.add("local_address", local_address->view()));
+            TRY(obj.add("local_port", socket.local_port()));
             auto peer_address = socket.peer_address().to_string().release_value_but_fixme_should_propagate_errors();
-            obj.add("peer_address", peer_address->view());
-            obj.add("peer_port", socket.peer_port());
-            obj.add("state", TCPSocket::to_string(socket.state()));
-            obj.add("ack_number", socket.ack_number());
-            obj.add("sequence_number", socket.sequence_number());
-            obj.add("packets_in", socket.packets_in());
-            obj.add("bytes_in", socket.bytes_in());
-            obj.add("packets_out", socket.packets_out());
-            obj.add("bytes_out", socket.bytes_out());
+            TRY(obj.add("peer_address", peer_address->view()));
+            TRY(obj.add("peer_port", socket.peer_port()));
+            TRY(obj.add("state", TCPSocket::to_string(socket.state())));
+            TRY(obj.add("ack_number", socket.ack_number()));
+            TRY(obj.add("sequence_number", socket.sequence_number()));
+            TRY(obj.add("packets_in", socket.packets_in()));
+            TRY(obj.add("bytes_in", socket.bytes_in()));
+            TRY(obj.add("packets_out", socket.packets_out()));
+            TRY(obj.add("bytes_out", socket.bytes_out()));
             if (Process::current().is_superuser() || Process::current().uid() == socket.origin_uid()) {
-                obj.add("origin_pid", socket.origin_pid().value());
-                obj.add("origin_uid", socket.origin_uid().value());
-                obj.add("origin_gid", socket.origin_gid().value());
+                TRY(obj.add("origin_pid", socket.origin_pid().value()));
+                TRY(obj.add("origin_uid", socket.origin_uid().value()));
+                TRY(obj.add("origin_gid", socket.origin_gid().value()));
             }
-        });
-        array.finish();
+            TRY(obj.finish());
+            return {};
+        }));
+        TRY(array.finish());
         return {};
     }
 };
@@ -135,18 +143,20 @@ private:
     ProcFSLocalNet();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
-        LocalSocket::for_each([&array](auto& socket) {
-            auto obj = array.add_object();
-            obj.add("path", socket.socket_path());
-            obj.add("origin_pid", socket.origin_pid().value());
-            obj.add("origin_uid", socket.origin_uid().value());
-            obj.add("origin_gid", socket.origin_gid().value());
-            obj.add("acceptor_pid", socket.acceptor_pid().value());
-            obj.add("acceptor_uid", socket.acceptor_uid().value());
-            obj.add("acceptor_gid", socket.acceptor_gid().value());
-        });
-        array.finish();
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        TRY(LocalSocket::try_for_each([&array](auto& socket) -> ErrorOr<void> {
+            auto obj = TRY(array.add_object());
+            TRY(obj.add("path", socket.socket_path()));
+            TRY(obj.add("origin_pid", socket.origin_pid().value()));
+            TRY(obj.add("origin_uid", socket.origin_uid().value()));
+            TRY(obj.add("origin_gid", socket.origin_gid().value()));
+            TRY(obj.add("acceptor_pid", socket.acceptor_pid().value()));
+            TRY(obj.add("acceptor_uid", socket.acceptor_uid().value()));
+            TRY(obj.add("acceptor_gid", socket.acceptor_gid().value()));
+            TRY(obj.finish());
+            return {};
+        }));
+        TRY(array.finish());
         return {};
     }
 };
@@ -159,22 +169,24 @@ private:
     ProcFSUDP();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
-        UDPSocket::for_each([&array](auto& socket) {
-            auto obj = array.add_object();
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        TRY(UDPSocket::try_for_each([&array](auto& socket) -> ErrorOr<void> {
+            auto obj = TRY(array.add_object());
             auto local_address = socket.local_address().to_string().release_value_but_fixme_should_propagate_errors();
-            obj.add("local_address", local_address->view());
-            obj.add("local_port", socket.local_port());
+            TRY(obj.add("local_address", local_address->view()));
+            TRY(obj.add("local_port", socket.local_port()));
             auto peer_address = socket.peer_address().to_string().release_value_but_fixme_should_propagate_errors();
-            obj.add("peer_address", peer_address->view());
-            obj.add("peer_port", socket.peer_port());
+            TRY(obj.add("peer_address", peer_address->view()));
+            TRY(obj.add("peer_port", socket.peer_port()));
             if (Process::current().is_superuser() || Process::current().uid() == socket.origin_uid()) {
-                obj.add("origin_pid", socket.origin_pid().value());
-                obj.add("origin_uid", socket.origin_uid().value());
-                obj.add("origin_gid", socket.origin_gid().value());
+                TRY(obj.add("origin_pid", socket.origin_pid().value()));
+                TRY(obj.add("origin_uid", socket.origin_uid().value()));
+                TRY(obj.add("origin_gid", socket.origin_gid().value()));
             }
-        });
-        array.finish();
+            TRY(obj.finish());
+            return {};
+        }));
+        TRY(array.finish());
         return {};
     }
 };
@@ -349,43 +361,33 @@ private:
     ProcFSDiskUsage();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
-        ErrorOr<void> result;
-        VirtualFileSystem::the().for_each_mount([&array, &result](auto& mount) {
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        TRY(VirtualFileSystem::the().for_each_mount([&array](auto& mount) -> ErrorOr<void> {
             auto& fs = mount.guest_fs();
-            auto fs_object = array.add_object();
-            fs_object.add("class_name", fs.class_name());
-            fs_object.add("total_block_count", fs.total_block_count());
-            fs_object.add("free_block_count", fs.free_block_count());
-            fs_object.add("total_inode_count", fs.total_inode_count());
-            fs_object.add("free_inode_count", fs.free_inode_count());
-            auto mount_point_or_error = mount.absolute_path();
-            if (mount_point_or_error.is_error()) {
-                result = mount_point_or_error.release_error();
-                return IterationDecision::Break;
-            }
-            fs_object.add("mount_point", mount_point_or_error.value()->view());
-            fs_object.add("block_size", static_cast<u64>(fs.block_size()));
-            fs_object.add("readonly", fs.is_readonly());
-            fs_object.add("mount_flags", mount.flags());
+            auto fs_object = TRY(array.add_object());
+            TRY(fs_object.add("class_name", fs.class_name()));
+            TRY(fs_object.add("total_block_count", fs.total_block_count()));
+            TRY(fs_object.add("free_block_count", fs.free_block_count()));
+            TRY(fs_object.add("total_inode_count", fs.total_inode_count()));
+            TRY(fs_object.add("free_inode_count", fs.free_inode_count()));
+            auto mount_point = TRY(mount.absolute_path());
+            TRY(fs_object.add("mount_point", mount_point->view()));
+            TRY(fs_object.add("block_size", static_cast<u64>(fs.block_size())));
+            TRY(fs_object.add("readonly", fs.is_readonly()));
+            TRY(fs_object.add("mount_flags", mount.flags()));
 
             if (fs.is_file_backed()) {
-                auto pseudo_path_or_error = static_cast<const FileBackedFileSystem&>(fs).file_description().pseudo_path();
-                if (pseudo_path_or_error.is_error()) {
-                    // We're probably out of memory and should not attempt to continue.
-                    result = pseudo_path_or_error.release_error();
-                    return IterationDecision::Break;
-                }
-                fs_object.add("source", pseudo_path_or_error.value()->view());
+                auto pseudo_path = TRY(static_cast<const FileBackedFileSystem&>(fs).file_description().pseudo_path());
+                TRY(fs_object.add("source", pseudo_path->view()));
             } else {
-                fs_object.add("source", "none");
+                TRY(fs_object.add("source", "none"));
             }
 
-            return IterationDecision::Continue;
-        });
-        if (!result.is_error())
-            array.finish();
-        return result;
+            TRY(fs_object.finish());
+            return {};
+        }));
+        TRY(array.finish());
+        return {};
     }
 };
 
@@ -404,18 +406,18 @@ private:
 
         auto system_memory = MM.get_system_memory_info();
 
-        JsonObjectSerializer<KBufferBuilder> json { builder };
-        json.add("kmalloc_allocated", stats.bytes_allocated);
-        json.add("kmalloc_available", stats.bytes_free);
-        json.add("user_physical_allocated", system_memory.user_physical_pages_used);
-        json.add("user_physical_available", system_memory.user_physical_pages - system_memory.user_physical_pages_used);
-        json.add("user_physical_committed", system_memory.user_physical_pages_committed);
-        json.add("user_physical_uncommitted", system_memory.user_physical_pages_uncommitted);
-        json.add("super_physical_allocated", system_memory.super_physical_pages_used);
-        json.add("super_physical_available", system_memory.super_physical_pages - system_memory.super_physical_pages_used);
-        json.add("kmalloc_call_count", stats.kmalloc_call_count);
-        json.add("kfree_call_count", stats.kfree_call_count);
-        json.finish();
+        auto json = TRY(JsonObjectSerializer<>::try_create(builder));
+        TRY(json.add("kmalloc_allocated", stats.bytes_allocated));
+        TRY(json.add("kmalloc_available", stats.bytes_free));
+        TRY(json.add("user_physical_allocated", system_memory.user_physical_pages_used));
+        TRY(json.add("user_physical_available", system_memory.user_physical_pages - system_memory.user_physical_pages_used));
+        TRY(json.add("user_physical_committed", system_memory.user_physical_pages_committed));
+        TRY(json.add("user_physical_uncommitted", system_memory.user_physical_pages_uncommitted));
+        TRY(json.add("super_physical_allocated", system_memory.super_physical_pages_used));
+        TRY(json.add("super_physical_available", system_memory.super_physical_pages - system_memory.super_physical_pages_used));
+        TRY(json.add("kmalloc_call_count", stats.kmalloc_call_count));
+        TRY(json.add("kfree_call_count", stats.kfree_call_count));
+        TRY(json.finish());
         return {};
     }
 };
@@ -428,17 +430,17 @@ private:
     ProcFSSystemStatistics();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonObjectSerializer<KBufferBuilder> json { builder };
+        auto json = TRY(JsonObjectSerializer<>::try_create(builder));
         auto total_time_scheduled = Scheduler::get_total_time_scheduled();
-        json.add("total_time", total_time_scheduled.total);
-        json.add("kernel_time", total_time_scheduled.total_kernel);
-        json.add("user_time", total_time_scheduled.total - total_time_scheduled.total_kernel);
+        TRY(json.add("total_time", total_time_scheduled.total));
+        TRY(json.add("kernel_time", total_time_scheduled.total_kernel));
+        TRY(json.add("user_time", total_time_scheduled.total - total_time_scheduled.total_kernel));
         u64 idle_time = 0;
         Processor::for_each([&](Processor& processor) {
             idle_time += processor.time_spent_idle();
         });
-        json.add("idle_time", idle_time);
-        json.finish();
+        TRY(json.add("idle_time", idle_time));
+        TRY(json.finish());
         return {};
     }
 };
@@ -451,11 +453,11 @@ private:
     ProcFSOverallProcesses();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonObjectSerializer<KBufferBuilder> json { builder };
+        auto json = TRY(JsonObjectSerializer<>::try_create(builder));
 
         // Keep this in sync with CProcessStatistics.
         auto build_process = [&](JsonArraySerializer<KBufferBuilder>& array, const Process& process) -> ErrorOr<void> {
-            auto process_object = array.add_object();
+            auto process_object = TRY(array.add_object());
 
             if (process.is_user_process()) {
                 StringBuilder pledge_builder;
@@ -466,90 +468,96 @@ private:
                 ENUMERATE_PLEDGE_PROMISES
 #undef __ENUMERATE_PLEDGE_PROMISE
 
-                process_object.add("pledge", pledge_builder.string_view());
+                TRY(process_object.add("pledge", pledge_builder.string_view()));
 
                 switch (process.veil_state()) {
                 case VeilState::None:
-                    process_object.add("veil", "None");
+                    TRY(process_object.add("veil", "None"));
                     break;
                 case VeilState::Dropped:
-                    process_object.add("veil", "Dropped");
+                    TRY(process_object.add("veil", "Dropped"));
                     break;
                 case VeilState::Locked:
-                    process_object.add("veil", "Locked");
+                    TRY(process_object.add("veil", "Locked"));
                     break;
                 }
             } else {
-                process_object.add("pledge", ""sv);
-                process_object.add("veil", ""sv);
+                TRY(process_object.add("pledge", ""sv));
+                TRY(process_object.add("veil", ""sv));
             }
 
-            process_object.add("pid", process.pid().value());
-            process_object.add("pgid", process.tty() ? process.tty()->pgid().value() : 0);
-            process_object.add("pgp", process.pgid().value());
-            process_object.add("sid", process.sid().value());
-            process_object.add("uid", process.uid().value());
-            process_object.add("gid", process.gid().value());
-            process_object.add("ppid", process.ppid().value());
-            process_object.add("nfds", process.fds().with_shared([](auto& fds) { return fds.open_count(); }));
-            process_object.add("name", process.name());
-            process_object.add("executable", process.executable() ? TRY(process.executable()->try_serialize_absolute_path())->view() : ""sv);
-            process_object.add("tty", process.tty() ? process.tty()->tty_name().view() : "notty"sv);
-            process_object.add("amount_virtual", process.address_space().amount_virtual());
-            process_object.add("amount_resident", process.address_space().amount_resident());
-            process_object.add("amount_dirty_private", process.address_space().amount_dirty_private());
-            process_object.add("amount_clean_inode", TRY(process.address_space().amount_clean_inode()));
-            process_object.add("amount_shared", process.address_space().amount_shared());
-            process_object.add("amount_purgeable_volatile", process.address_space().amount_purgeable_volatile());
-            process_object.add("amount_purgeable_nonvolatile", process.address_space().amount_purgeable_nonvolatile());
-            process_object.add("dumpable", process.is_dumpable());
-            process_object.add("kernel", process.is_kernel_process());
-            auto thread_array = process_object.add_array("threads");
-            process.for_each_thread([&](const Thread& thread) {
+            TRY(process_object.add("pid", process.pid().value()));
+            TRY(process_object.add("pgid", process.tty() ? process.tty()->pgid().value() : 0));
+            TRY(process_object.add("pgp", process.pgid().value()));
+            TRY(process_object.add("sid", process.sid().value()));
+            TRY(process_object.add("uid", process.uid().value()));
+            TRY(process_object.add("gid", process.gid().value()));
+            TRY(process_object.add("ppid", process.ppid().value()));
+            TRY(process_object.add("nfds", process.fds().with_shared([](auto& fds) { return fds.open_count(); })));
+            TRY(process_object.add("name", process.name()));
+            TRY(process_object.add("executable", process.executable() ? TRY(process.executable()->try_serialize_absolute_path())->view() : ""sv));
+            TRY(process_object.add("tty", process.tty() ? process.tty()->tty_name().view() : "notty"sv));
+            TRY(process_object.add("amount_virtual", process.address_space().amount_virtual()));
+            TRY(process_object.add("amount_resident", process.address_space().amount_resident()));
+            TRY(process_object.add("amount_dirty_private", process.address_space().amount_dirty_private()));
+            TRY(process_object.add("amount_clean_inode", TRY(process.address_space().amount_clean_inode())));
+            TRY(process_object.add("amount_shared", process.address_space().amount_shared()));
+            TRY(process_object.add("amount_purgeable_volatile", process.address_space().amount_purgeable_volatile()));
+            TRY(process_object.add("amount_purgeable_nonvolatile", process.address_space().amount_purgeable_nonvolatile()));
+            TRY(process_object.add("dumpable", process.is_dumpable()));
+            TRY(process_object.add("kernel", process.is_kernel_process()));
+            auto thread_array = TRY(process_object.add_array("threads"));
+            TRY(process.try_for_each_thread([&](const Thread& thread) -> ErrorOr<void> {
                 SpinlockLocker locker(thread.get_lock());
-                auto thread_object = thread_array.add_object();
+                auto thread_object = TRY(thread_array.add_object());
 #if LOCK_DEBUG
-                thread_object.add("lock_count", thread.lock_count());
+                TRY(thread_object.add("lock_count", thread.lock_count()));
 #endif
-                thread_object.add("tid", thread.tid().value());
-                thread_object.add("name", thread.name());
-                thread_object.add("times_scheduled", thread.times_scheduled());
-                thread_object.add("time_user", thread.time_in_user());
-                thread_object.add("time_kernel", thread.time_in_kernel());
-                thread_object.add("state", thread.state_string());
-                thread_object.add("cpu", thread.cpu());
-                thread_object.add("priority", thread.priority());
-                thread_object.add("syscall_count", thread.syscall_count());
-                thread_object.add("inode_faults", thread.inode_faults());
-                thread_object.add("zero_faults", thread.zero_faults());
-                thread_object.add("cow_faults", thread.cow_faults());
-                thread_object.add("file_read_bytes", thread.file_read_bytes());
-                thread_object.add("file_write_bytes", thread.file_write_bytes());
-                thread_object.add("unix_socket_read_bytes", thread.unix_socket_read_bytes());
-                thread_object.add("unix_socket_write_bytes", thread.unix_socket_write_bytes());
-                thread_object.add("ipv4_socket_read_bytes", thread.ipv4_socket_read_bytes());
-                thread_object.add("ipv4_socket_write_bytes", thread.ipv4_socket_write_bytes());
-            });
+                TRY(thread_object.add("tid", thread.tid().value()));
+                TRY(thread_object.add("name", thread.name()));
+                TRY(thread_object.add("times_scheduled", thread.times_scheduled()));
+                TRY(thread_object.add("time_user", thread.time_in_user()));
+                TRY(thread_object.add("time_kernel", thread.time_in_kernel()));
+                TRY(thread_object.add("state", thread.state_string()));
+                TRY(thread_object.add("cpu", thread.cpu()));
+                TRY(thread_object.add("priority", thread.priority()));
+                TRY(thread_object.add("syscall_count", thread.syscall_count()));
+                TRY(thread_object.add("inode_faults", thread.inode_faults()));
+                TRY(thread_object.add("zero_faults", thread.zero_faults()));
+                TRY(thread_object.add("cow_faults", thread.cow_faults()));
+                TRY(thread_object.add("file_read_bytes", thread.file_read_bytes()));
+                TRY(thread_object.add("file_write_bytes", thread.file_write_bytes()));
+                TRY(thread_object.add("unix_socket_read_bytes", thread.unix_socket_read_bytes()));
+                TRY(thread_object.add("unix_socket_write_bytes", thread.unix_socket_write_bytes()));
+                TRY(thread_object.add("ipv4_socket_read_bytes", thread.ipv4_socket_read_bytes()));
+                TRY(thread_object.add("ipv4_socket_write_bytes", thread.ipv4_socket_write_bytes()));
 
+                TRY(thread_object.finish());
+                return {};
+            }));
+            TRY(thread_array.finish());
+            TRY(process_object.finish());
             return {};
         };
 
         SpinlockLocker lock(g_scheduler_lock);
         {
             {
-                auto array = json.add_array("processes");
+                auto array = TRY(json.add_array("processes"));
                 TRY(build_process(array, *Scheduler::colonel()));
                 TRY(Process::all_instances().with([&](auto& processes) -> ErrorOr<void> {
                     for (auto& process : processes)
                         TRY(build_process(array, process));
                     return {};
                 }));
+                TRY(array.finish());
             }
 
             auto total_time_scheduled = Scheduler::get_total_time_scheduled();
-            json.add("total_time", total_time_scheduled.total);
-            json.add("total_time_kernel", total_time_scheduled.total_kernel);
+            TRY(json.add("total_time", total_time_scheduled.total));
+            TRY(json.add("total_time_kernel", total_time_scheduled.total_kernel));
         }
+        TRY(json.finish());
         return {};
     }
 };
@@ -561,28 +569,37 @@ private:
     ProcFSCPUInformation();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
-        Processor::for_each(
-            [&](Processor& proc) {
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        TRY(Processor::try_for_each(
+            [&](Processor& proc) -> ErrorOr<void> {
                 auto& info = proc.info();
-                auto obj = array.add_object();
-                obj.add("processor", proc.id());
-                obj.add("cpuid", info.cpuid());
-                obj.add("family", info.display_family());
+                auto obj = TRY(array.add_object());
+                TRY(obj.add("processor", proc.id()));
+                TRY(obj.add("cpuid", info.cpuid()));
+                TRY(obj.add("family", info.display_family()));
 
-                auto features_array = obj.add_array("features");
+                auto features_array = TRY(obj.add_array("features"));
                 auto keep_empty = false;
-                info.features().for_each_split_view(' ', keep_empty, [&](StringView feature) {
-                    features_array.add(feature);
-                });
-                features_array.finish();
 
-                obj.add("model", info.display_model());
-                obj.add("stepping", info.stepping());
-                obj.add("type", info.type());
-                obj.add("brand", info.brand());
-            });
-        array.finish();
+                ErrorOr<void> result; // FIXME: Make this nicer
+                info.features().for_each_split_view(' ', keep_empty, [&](StringView feature) {
+                    if (result.is_error())
+                        return;
+                    result = features_array.add(feature);
+                });
+                TRY(result);
+
+                TRY(features_array.finish());
+
+                TRY(obj.add("model", info.display_model()));
+                TRY(obj.add("stepping", info.stepping()));
+                TRY(obj.add("type", info.type()));
+                TRY(obj.add("brand", info.brand()));
+
+                TRY(obj.finish());
+                return {};
+            }));
+        TRY(array.finish());
         return {};
     }
 };
@@ -612,17 +629,25 @@ private:
     ProcFSInterrupts();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
-        InterruptManagement::the().enumerate_interrupt_handlers([&array](GenericInterruptHandler& handler) {
-            auto obj = array.add_object();
-            obj.add("purpose", handler.purpose());
-            obj.add("interrupt_line", handler.interrupt_number());
-            obj.add("controller", handler.controller());
-            obj.add("cpu_handler", 0); // FIXME: Determine the responsible CPU for each interrupt handler.
-            obj.add("device_sharing", (unsigned)handler.sharing_devices_count());
-            obj.add("call_count", (unsigned)handler.get_invoking_count());
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        ErrorOr<void> result; // FIXME: Make this nicer
+        InterruptManagement::the().enumerate_interrupt_handlers([&array, &result](GenericInterruptHandler& handler) {
+            if (result.is_error())
+                return;
+            result = ([&]() -> ErrorOr<void> {
+                auto obj = TRY(array.add_object());
+                TRY(obj.add("purpose", handler.purpose()));
+                TRY(obj.add("interrupt_line", handler.interrupt_number()));
+                TRY(obj.add("controller", handler.controller()));
+                TRY(obj.add("cpu_handler", 0)); // FIXME: Determine the responsible CPU for each interrupt handler.
+                TRY(obj.add("device_sharing", (unsigned)handler.sharing_devices_count()));
+                TRY(obj.add("call_count", (unsigned)handler.get_invoking_count()));
+                TRY(obj.finish());
+                return {};
+            })();
         });
-        array.finish();
+        TRY(result);
+        TRY(array.finish());
         return {};
     }
 };
@@ -634,9 +659,9 @@ private:
     ProcFSKeymap();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonObjectSerializer<KBufferBuilder> json { builder };
-        json.add("keymap", HIDManagement::the().keymap_name());
-        json.finish();
+        auto json = TRY(JsonObjectSerializer<>::try_create(builder));
+        TRY(json.add("keymap", HIDManagement::the().keymap_name()));
+        TRY(json.finish());
         return {};
     }
 };
@@ -650,22 +675,30 @@ private:
     ProcFSPCI();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
-        PCI::enumerate([&array](PCI::DeviceIdentifier const& device_identifier) {
-            auto obj = array.add_object();
-            obj.add("domain", device_identifier.address().domain());
-            obj.add("bus", device_identifier.address().bus());
-            obj.add("device", device_identifier.address().device());
-            obj.add("function", device_identifier.address().function());
-            obj.add("vendor_id", device_identifier.hardware_id().vendor_id);
-            obj.add("device_id", device_identifier.hardware_id().device_id);
-            obj.add("revision_id", device_identifier.revision_id().value());
-            obj.add("subclass", device_identifier.subclass_code().value());
-            obj.add("class", device_identifier.class_code().value());
-            obj.add("subsystem_id", device_identifier.subsystem_id().value());
-            obj.add("subsystem_vendor_id", device_identifier.subsystem_vendor_id().value());
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        ErrorOr<void> result; // FIXME: Make this nicer
+        PCI::enumerate([&array, &result](PCI::DeviceIdentifier const& device_identifier) {
+            if (result.is_error())
+                return;
+            result = ([&]() -> ErrorOr<void> {
+                auto obj = TRY(array.add_object());
+                TRY(obj.add("domain", device_identifier.address().domain()));
+                TRY(obj.add("bus", device_identifier.address().bus()));
+                TRY(obj.add("device", device_identifier.address().device()));
+                TRY(obj.add("function", device_identifier.address().function()));
+                TRY(obj.add("vendor_id", device_identifier.hardware_id().vendor_id));
+                TRY(obj.add("device_id", device_identifier.hardware_id().device_id));
+                TRY(obj.add("revision_id", device_identifier.revision_id().value()));
+                TRY(obj.add("subclass", device_identifier.subclass_code().value()));
+                TRY(obj.add("class", device_identifier.class_code().value()));
+                TRY(obj.add("subsystem_id", device_identifier.subsystem_id().value()));
+                TRY(obj.add("subsystem_vendor_id", device_identifier.subsystem_vendor_id().value()));
+                TRY(obj.finish());
+                return {};
+            })();
         });
-        array.finish();
+        TRY(result);
+        TRY(array.finish());
         return {};
     }
 };
@@ -678,21 +711,23 @@ private:
     ProcFSDevices();
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
-        DeviceManagement::the().for_each([&array](auto& device) {
-            auto obj = array.add_object();
-            obj.add("major", device.major().value());
-            obj.add("minor", device.minor().value());
-            obj.add("class_name", device.class_name());
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        TRY(DeviceManagement::the().try_for_each([&array](auto& device) -> ErrorOr<void> {
+            auto obj = TRY(array.add_object());
+            TRY(obj.add("major", device.major().value()));
+            TRY(obj.add("minor", device.minor().value()));
+            TRY(obj.add("class_name", device.class_name()));
 
             if (device.is_block_device())
-                obj.add("type", "block");
+                TRY(obj.add("type", "block"));
             else if (device.is_character_device())
-                obj.add("type", "character");
+                TRY(obj.add("type", "character"));
             else
                 VERIFY_NOT_REACHED();
-        });
-        array.finish();
+            TRY(obj.finish());
+            return {};
+        }));
+        TRY(array.finish());
         return {};
     }
 };
