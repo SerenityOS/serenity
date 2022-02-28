@@ -62,30 +62,31 @@ struct FormattingState {
                 overflow_data = Layout::Box::OverflowData {};
             return *overflow_data;
         }
+
+        // NOTE: NodeState is ref-counted and accessed via copy-on-write helpers below.
+        size_t ref_count { 1 };
+        void ref()
+        {
+            VERIFY(ref_count);
+            ++ref_count;
+        }
+        void unref()
+        {
+            VERIFY(ref_count);
+            if (!--ref_count)
+                delete this;
+        }
     };
 
     void commit();
 
-    FormattingState clone() const
-    {
-        FormattingState new_state;
-        for (auto& it : nodes) {
-            new_state.nodes.set(it.key, make<NodeState>(*it.value));
-        }
-        return new_state;
-    }
+    // NOTE: get_mutable() will CoW the NodeState if it's shared with another FormattingContext.
+    NodeState& get_mutable(NodeWithStyleAndBoxModelMetrics const&);
 
-    NodeState& get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
-    {
-        return *nodes.ensure(&box, [] { return make<NodeState>(); });
-    }
+    // NOTE: get() will not CoW the NodeState.
+    NodeState const& get(NodeWithStyleAndBoxModelMetrics const&) const;
 
-    NodeState const& get(NodeWithStyleAndBoxModelMetrics const& box) const
-    {
-        return const_cast<FormattingState&>(*this).get_mutable(box);
-    }
-
-    HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullOwnPtr<NodeState>> nodes;
+    HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullRefPtr<NodeState>> nodes;
 };
 
 Gfx::FloatRect absolute_content_rect(Box const&, FormattingState const&);
