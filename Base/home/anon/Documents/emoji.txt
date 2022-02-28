@@ -146,6 +146,7 @@ Emoji Tag Sequence Flags
 ------------------------
 
 🏴󠁣󠁡󠁱󠁣󠁿 - U+1F3F4 U+E0063 U+E0061 U+E0071 U+E0063 U+E007F CA-QC Quebec
+🏴󠁤󠁥󠁨󠁥󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0068 U+E0065 U+E007F DE-HE Hesse
 🏴󠁥󠁳󠁣󠁴󠁿 - U+1F3F4 U+E0065 U+E0073 U+E0063 U+E0074 U+E007F ES-CT Catalonia
 🏴󠁥󠁳󠁰󠁶󠁿 - U+1F3F4 U+E0065 U+E0073 U+E0070 U+E0076 U+E007F ES-PV Basque Country
 🏴󠁳󠁥󠁭󠁿 - U+1F3F4 U+E0073 U+E0065 U+E006D U+E007F         SE-M  Skåne
