@@ -17,10 +17,13 @@ class NoVisualizationWidget final : public VisualizationWidget {
 public:
     ~NoVisualizationWidget() override = default;
     void set_buffer(RefPtr<Audio::Buffer>) override;
+    void start_new_file(StringView) override;
 
 private:
     void paint_event(GUI::PaintEvent&) override;
     NoVisualizationWidget() = default;
+    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_album_cover(StringView const filename);
 
     RefPtr<Gfx::Bitmap> m_serenity_bg;
+    RefPtr<Gfx::Bitmap> m_album_cover;
 };
