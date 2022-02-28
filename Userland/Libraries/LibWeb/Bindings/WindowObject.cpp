@@ -115,6 +115,7 @@ void WindowObject::initialize_global_object()
     define_direct_property("CSS", heap().allocate<CSSNamespace>(*this, *this), 0);
 
     define_native_accessor("localStorage", local_storage_getter, {}, attr);
+    define_native_accessor("origin", origin_getter, {}, attr);
 
     // Legacy
     define_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
@@ -649,6 +650,13 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::post_message)
     auto target_origin = TRY(vm.argument(1).to_string(global_object));
     impl->post_message(vm.argument(0), target_origin);
     return JS::js_undefined();
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#dom-origin
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::origin_getter)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    return JS::js_string(vm, impl->associated_document().origin().serialize());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::local_storage_getter)
