@@ -66,6 +66,32 @@ public:
         return false;
     }
 
+    // https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin
+    String serialize()
+    {
+        // 1. If origin is an opaque origin, then return "null"
+        if (is_opaque())
+            return "null";
+
+        // 2. Otherwise, let result be origin's scheme.
+        StringBuilder result;
+        result.append(protocol());
+
+        // 3. Append "://" to result.
+        result.append("://");
+
+        // 4. Append origin's host, serialized, to result.
+        result.append(host());
+
+        // 5. If origin's port is non-null, append a U+003A COLON character (:), and origin's port, serialized, to result.
+        if (port() != 0) {
+            result.append(":");
+            result.append(String::number(port()));
+        }
+        // 6. Return result
+        return result.to_string();
+    }
+
     bool operator==(Origin const& other) const { return is_same_origin(other); }
     bool operator!=(Origin const& other) const { return !is_same_origin(other); }
 

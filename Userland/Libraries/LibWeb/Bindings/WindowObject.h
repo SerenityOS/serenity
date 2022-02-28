@@ -97,6 +97,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(post_message);
 
     JS_DECLARE_NATIVE_FUNCTION(local_storage_getter);
+    JS_DECLARE_NATIVE_FUNCTION(origin_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(alert);
     JS_DECLARE_NATIVE_FUNCTION(confirm);
