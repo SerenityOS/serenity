@@ -972,10 +972,12 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
     case BoxTypeTransformation::None:
         break;
     case BoxTypeTransformation::Blockify:
-        style.set_property(CSS::PropertyID::Display, IdentifierStyleValue::create(CSS::ValueID::Block));
+        if (!display.is_block_outside())
+            style.set_property(CSS::PropertyID::Display, IdentifierStyleValue::create(CSS::ValueID::Block));
         break;
     case BoxTypeTransformation::Inlinify:
-        style.set_property(CSS::PropertyID::Display, IdentifierStyleValue::create(CSS::ValueID::Inline));
+        if (!display.is_inline_outside())
+            style.set_property(CSS::PropertyID::Display, IdentifierStyleValue::create(CSS::ValueID::Inline));
         break;
     }
 }
