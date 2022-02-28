@@ -218,12 +218,16 @@ build_target() {
         # invoked superbuild for serenity target that doesn't set -DBUILD_LAGOM=ON
         cmake -S "$SERENITY_SOURCE_DIR/Meta/Lagom" -B "$BUILD_DIR" -DBUILD_LAGOM=ON
     fi
+
+    # Get either the environement MAKEJOBS or all processors via CMake
+    [ -z "$MAKEJOBS" ] && MAKEJOBS=$(cmake -P "$SERENITY_SOURCE_DIR/Meta/CMake/processor-count.cmake")
+
     # With zero args, we are doing a standard "build"
     # With multiple args, we are doing an install/image/run
     if [ $# -eq 0 ]; then
-        cmake --build "$SUPER_BUILD_DIR"
+        CMAKE_BUILD_PARALLEL_LEVEL="$MAKEJOBS" cmake --build "$SUPER_BUILD_DIR"
     else
-        ninja -C "$BUILD_DIR" -- "$@"
+        ninja -j "$MAKEJOBS" -C "$BUILD_DIR" -- "$@"
     fi
 }
 
