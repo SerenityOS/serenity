@@ -98,7 +98,7 @@ ThrowCompletionOr<Value> await(GlobalObject& global_object, Value value)
     //        running all queued promise jobs.
     // Note: This is not used by LibJS itself, and is performed for the embedder (i.e. LibWeb).
     if (Core::EventLoop::has_been_instantiated())
-        Core::EventLoop::current().spin_until([&] { return promise->state() != Promise::State::Pending; });
+        Core::EventLoop::current().spin_until([&] { return success.has_value(); });
 
     // 8. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
     // NOTE: Since we don't push any EC, this step is not performed.
