@@ -11,17 +11,17 @@
 #include <LibAudio/Buffer.h>
 #include <LibGUI/Frame.h>
 
-class NoVisualizationWidget final : public VisualizationWidget {
-    C_OBJECT(NoVisualizationWidget)
+class AlbumCoverVisualizationWidget final : public VisualizationWidget {
+    C_OBJECT(AlbumCoverVisualizationWidget)
 
 public:
-    ~NoVisualizationWidget() override = default;
+    ~AlbumCoverVisualizationWidget() override = default;
     void set_buffer(RefPtr<Audio::Buffer>) override;
     void start_new_file(StringView) override;
 
 private:
     void paint_event(GUI::PaintEvent&) override;
-    NoVisualizationWidget() = default;
+    AlbumCoverVisualizationWidget() = default;
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_album_cover(StringView const filename);
 
     RefPtr<Gfx::Bitmap> m_serenity_bg;
