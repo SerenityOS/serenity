@@ -925,8 +925,6 @@ enum class BoxTypeTransformation {
 
 static BoxTypeTransformation required_box_type_transformation(StyleProperties const& style, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> const&)
 {
-    auto display = style.display();
-
     // Absolute positioning or floating an element blockifies the box’s display type. [CSS2]
     if (style.position() == CSS::Position::Absolute || style.position() == CSS::Position::Fixed || style.float_() != CSS::Float::None)
         return BoxTypeTransformation::Blockify;
