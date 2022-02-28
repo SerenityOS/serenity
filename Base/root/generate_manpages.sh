@@ -9,8 +9,6 @@ rm -rf generated_manpages || exit 1
 
 for i in ( \
             (UserspaceEmulator 1) \
-            (TelnetServer 1) \
-            (WebServer 1) \
             (config 1) \
             (fortune 1) \
             (grep 1) \
