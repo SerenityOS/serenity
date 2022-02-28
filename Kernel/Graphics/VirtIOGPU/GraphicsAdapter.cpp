@@ -155,7 +155,7 @@ void GraphicsAdapter::query_display_information()
     VERIFY(m_operation_lock.is_locked());
     auto writer = create_scratchspace_writer();
     auto& request = writer.append_structure<Protocol::ControlHeader>();
-    populate_virtio_gpu_request_header(request, Protocol::CommandType::VIRTIO_GPU_CMD_GET_DISPLAY_INFO, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request, Protocol::CommandType::VIRTIO_GPU_CMD_GET_DISPLAY_INFO, 0);
     auto& response = writer.append_structure<Protocol::DisplayInfoResponse>();
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
@@ -231,7 +231,7 @@ auto GraphicsAdapter::query_edid(u32 scanout_id) -> ErrorOr<Optional<EDID::Parse
     auto& request = writer.append_structure<Protocol::GetEDID>();
     auto& response = writer.append_structure<Protocol::GetEDIDResponse>();
 
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_GET_EDID, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_GET_EDID, 0);
 
     request.scanout_id = scanout_id;
     request.padding = 0;
@@ -256,7 +256,7 @@ ResourceID GraphicsAdapter::create_2d_resource(Protocol::Rect rect)
     auto& request = writer.append_structure<Protocol::ResourceCreate2D>();
     auto& response = writer.append_structure<Protocol::ControlHeader>();
 
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_CREATE_2D, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_CREATE_2D, 0);
 
     auto resource_id = allocate_resource_id();
     request.resource_id = resource_id.value();
@@ -278,7 +278,7 @@ ResourceID GraphicsAdapter::create_3d_resource(Protocol::Resource3DSpecification
     auto& request = writer.append_structure<Protocol::ResourceCreate3D>();
     auto& response = writer.append_structure<Protocol::ControlHeader>();
 
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_CREATE_3D, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_CREATE_3D, 0);
 
     auto resource_id = allocate_resource_id();
     request.resource_id = resource_id.value();
@@ -306,7 +306,7 @@ void GraphicsAdapter::ensure_backing_storage(ResourceID resource_id, Memory::Reg
     auto& request = writer.append_structure<Protocol::ResourceAttachBacking>();
     const size_t header_block_size = sizeof(request) + num_mem_regions * sizeof(Protocol::MemoryEntry);
 
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING, 0);
     request.resource_id = resource_id.value();
     request.num_entries = num_mem_regions;
     for (size_t i = 0; i < num_mem_regions; ++i) {
@@ -330,7 +330,7 @@ void GraphicsAdapter::detach_backing_storage(ResourceID resource_id)
     auto& request = writer.append_structure<Protocol::ResourceDetachBacking>();
     auto& response = writer.append_structure<Protocol::ControlHeader>();
 
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_DETACH_BACKING, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_DETACH_BACKING, 0);
     request.resource_id = resource_id.value();
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
@@ -348,7 +348,7 @@ void GraphicsAdapter::set_scanout_resource(ScanoutID scanout, ResourceID resourc
         auto& request = writer.append_structure<Protocol::SetScanOut>();
         auto& response = writer.append_structure<Protocol::ControlHeader>();
 
-        populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_SET_SCANOUT, VIRTIO_GPU_FLAG_FENCE);
+        populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_SET_SCANOUT, 0);
         request.resource_id = resource_id.value();
         request.scanout_id = scanout.value();
         request.rect = rect;
@@ -370,7 +370,7 @@ void GraphicsAdapter::transfer_framebuffer_data_to_host(ScanoutID scanout, Resou
     auto& request = writer.append_structure<Protocol::TransferToHost2D>();
     auto& response = writer.append_structure<Protocol::ControlHeader>();
 
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D, 0);
     request.offset = (dirty_rect.x + (dirty_rect.y * m_scanouts[scanout.value()].display_info.rect.width)) * sizeof(u32);
     request.resource_id = resource_id.value();
     request.rect = dirty_rect;
@@ -387,7 +387,7 @@ void GraphicsAdapter::flush_displayed_image(ResourceID resource_id, Protocol::Re
     auto& request = writer.append_structure<Protocol::ResourceFlush>();
     auto& response = writer.append_structure<Protocol::ControlHeader>();
 
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_FLUSH, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_FLUSH, 0);
     request.resource_id = resource_id.value();
     request.rect = dirty_rect;
 
@@ -450,7 +450,7 @@ void GraphicsAdapter::delete_resource(ResourceID resource_id)
     auto& request = writer.append_structure<Protocol::ResourceUnref>();
     auto& response = writer.append_structure<Protocol::ControlHeader>();
 
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_UNREF, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_UNREF, 0);
     request.resource_id = resource_id.value();
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
@@ -475,7 +475,7 @@ ContextID GraphicsAdapter::create_context()
     auto& response = writer.append_structure<Protocol::ControlHeader>();
 
     constexpr char const* region_name = "Serenity VirGL3D Context";
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_CTX_CREATE, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_CTX_CREATE, 0);
     request.header.context_id = ctx_id.value();
     request.name_length = strlen(region_name);
     memset(request.debug_name.data(), 0, 64);
@@ -494,7 +494,7 @@ void GraphicsAdapter::submit_command_buffer(ContextID context_id, Function<size_
     auto writer = create_scratchspace_writer();
     auto& request = writer.append_structure<Protocol::CommandSubmit>();
 
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_SUBMIT_3D, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_SUBMIT_3D, 0);
     request.header.context_id = context_id.value();
 
     auto max_command_buffer_length = m_scratch_space->size() - sizeof(request) - sizeof(Protocol::ControlHeader);
@@ -524,7 +524,7 @@ void GraphicsAdapter::attach_resource_to_context(ResourceID resource_id, Context
     auto writer = create_scratchspace_writer();
     auto& request = writer.append_structure<Protocol::ContextAttachResource>();
     auto& response = writer.append_structure<Protocol::ControlHeader>();
-    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_CTX_ATTACH_RESOURCE, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_CTX_ATTACH_RESOURCE, 0);
     request.header.context_id = context_id.value();
     request.resource_id = resource_id.value();
 
