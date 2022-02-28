@@ -19,6 +19,7 @@ namespace JS {
 class [[nodiscard]] Completion {
 public:
     enum class Type {
+        Empty,
         Normal,
         Break,
         Continue,
@@ -31,6 +32,7 @@ public:
         , m_value(move(value))
         , m_target(move(target))
     {
+        VERIFY(type != Type::Empty);
         if (m_value.has_value())
             VERIFY(!m_value->is_empty());
     }
@@ -59,7 +61,11 @@ public:
     Completion(Completion&&) = default;
     Completion& operator=(Completion&&) = default;
 
-    [[nodiscard]] Type type() const { return m_type; }
+    [[nodiscard]] Type type() const
+    {
+        VERIFY(m_type != Type::Empty);
+        return m_type;
+    }
     [[nodiscard]] Optional<Value>& value() { return m_value; }
     [[nodiscard]] Optional<Value> const& value() const { return m_value; }
     [[nodiscard]] Optional<FlyString>& target() { return m_target; }
@@ -94,10 +100,139 @@ public:
     }
 
 private:
+    class EmptyTag {
+    };
+    friend AK::Optional<Completion>;
+
+    Completion(EmptyTag)
+        : m_type(Type::Empty)
+    {
+    }
+
+    bool is_empty() const
+    {
+        return m_type == Type::Empty;
+    }
+
     Type m_type { Type::Normal }; // [[Type]]
     Optional<Value> m_value;      // [[Value]]
     Optional<FlyString> m_target; // [[Target]]
 };
+
+}
+
+namespace AK {
+
+template<>
+class Optional<JS::Completion> {
+    template<typename U>
+    friend class Optional;
+
+public:
+    using ValueType = JS::Completion;
+
+    Optional()
+        : m_value(JS::Completion(JS::Completion::EmptyTag {}))
+    {
+    }
+
+    Optional(Optional<JS::Completion> const& other)
+    {
+        if (other.has_value())
+            m_value = other.m_value;
+    }
+
+    Optional(Optional&& other)
+        : m_value(other.m_value)
+    {
+    }
+
+    template<typename U = JS::Completion>
+    explicit(!IsConvertible<U&&, JS::Completion>) Optional(U&& value) requires(!IsSame<RemoveCVReference<U>, Optional<JS::Completion>> && IsConstructible<JS::Completion, U&&>)
+        : m_value(forward<U>(value))
+    {
+    }
+
+    Optional& operator=(Optional const& other)
+    {
+        if (this != &other) {
+            clear();
+            m_value = other.m_value;
+        }
+        return *this;
+    }
+
+    Optional& operator=(Optional&& other)
+    {
+        if (this != &other) {
+            clear();
+            m_value = other.m_value;
+        }
+        return *this;
+    }
+
+    void clear()
+    {
+        m_value = JS::Completion(JS::Completion::EmptyTag {});
+    }
+
+    [[nodiscard]] bool has_value() const
+    {
+        return !m_value.is_empty();
+    }
+
+    [[nodiscard]] JS::Completion& value() &
+    {
+        VERIFY(has_value());
+        return m_value;
+    }
+
+    [[nodiscard]] JS::Completion const& value() const&
+    {
+        VERIFY(has_value());
+        return m_value;
+    }
+
+    [[nodiscard]] JS::Completion value() &&
+    {
+        return release_value();
+    }
+
+    [[nodiscard]] JS::Completion release_value()
+    {
+        VERIFY(has_value());
+        JS::Completion released_value = m_value;
+        clear();
+        return released_value;
+    }
+
+    JS::Completion value_or(JS::Completion const& fallback) const&
+    {
+        if (has_value())
+            return value();
+        return fallback;
+    }
+
+    [[nodiscard]] JS::Completion value_or(JS::Completion&& fallback) &&
+    {
+        if (has_value())
+            return value();
+        return fallback;
+    }
+
+    JS::Completion const& operator*() const { return value(); }
+    JS::Completion& operator*() { return value(); }
+
+    JS::Completion const* operator->() const { return &value(); }
+    JS::Completion* operator->() { return &value(); }
+
+private:
+    JS::Completion m_value;
+};
+
+}
+
+namespace JS {
 
 template<typename ValueType>
 class [[nodiscard]] ThrowCompletionOr {
