@@ -206,6 +206,7 @@ void SoundPlayerWidgetAdvancedView::time_elapsed(int seconds)
 
 void SoundPlayerWidgetAdvancedView::file_name_changed(StringView name)
 {
+    m_visualization->start_new_file(name);
     m_window.set_title(String::formatted("{} - Sound Player", name));
 }
 
