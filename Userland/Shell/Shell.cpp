@@ -1416,8 +1416,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base,
     //      since we are not suggesting anything starting with
     //      `/foo/', but rather just `bar...'
     auto token_length = escape_token(token).length();
+    size_t static_offset = last_slash + 1;
+    auto invariant_offset = token_length;
     if (m_editor)
-        m_editor->suggest(token_length, last_slash + 1);
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
     // only suggest dot-files if path starts with a dot
     Core::DirIterator files(path,
@@ -1440,6 +1442,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base,
                     suggestions.append({ escape_token(file), " " });
                 }
                 suggestions.last().input_offset = token_length;
+                suggestions.last().invariant_offset = invariant_offset;
+                suggestions.last().static_offset = static_offset;
             }
         }
     }
@@ -1465,8 +1469,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
 
     String completion = *match;
     auto token_length = escape_token(name).length();
+    auto invariant_offset = token_length;
+    size_t static_offset = 0;
     if (m_editor)
-        m_editor->suggest(token_length, 0);
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
     // Now that we have a program name starting with our token, we look at
     // other program names starting with our token and cut off any mismatching
@@ -1475,16 +1481,17 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
     Vector<Line::CompletionSuggestion> suggestions;
 
     int index = match - cached_path.data();
-    for (int i = index - 1; i >= 0 && cached_path[i].starts_with(name); --i) {
+    for (int i = index - 1; i >= 0 && cached_path[i].starts_with(name); --i)
         suggestions.append({ cached_path[i], " " });
-        suggestions.last().input_offset = token_length;
-    }
-    for (size_t i = index + 1; i < cached_path.size() && cached_path[i].starts_with(name); ++i) {
+    for (size_t i = index + 1; i < cached_path.size() && cached_path[i].starts_with(name); ++i)
         suggestions.append({ cached_path[i], " " });
-        suggestions.last().input_offset = token_length;
-    }
     suggestions.append({ cached_path[index], " " });
-    suggestions.last().input_offset = token_length;
+
+    for (auto& entry : suggestions) {
+        entry.input_offset = token_length;
+        entry.invariant_offset = invariant_offset;
+        entry.static_offset = static_offset;
+    }
 
     return suggestions;
 }
@@ -1494,8 +1501,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, siz
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
 
+    auto invariant_offset = offset;
+    size_t static_offset = 0;
     if (m_editor)
-        m_editor->suggest(offset);
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
     // Look at local variables.
     for (auto& frame : m_local_frames) {
@@ -1516,8 +1525,13 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, siz
             if (suggestions.contains_slow(name))
                 continue;
             suggestions.append(move(name));
-            suggestions.last().input_offset = offset;
         }
+    }
+
+    for (auto& entry : suggestions) {
+        entry.input_offset = offset;
+        entry.invariant_offset = invariant_offset;
+        entry.static_offset = static_offset;
     }
 
     return suggestions;
@@ -1528,8 +1542,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(StringView name, size_t 
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
 
+    auto invariant_offset = offset;
+    size_t static_offset = 0;
     if (m_editor)
-        m_editor->suggest(offset);
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
     Core::DirIterator di("/home", Core::DirIterator::SkipParentAndBaseDir);
 
@@ -1540,7 +1556,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(StringView name, size_t 
         String name = di.next_path();
         if (name.starts_with(pattern)) {
             suggestions.append(name);
-            suggestions.last().input_offset = offset;
+            auto& suggestion = suggestions.last();
+            suggestion.input_offset = offset;
+            suggestion.invariant_offset = invariant_offset;
+            suggestion.static_offset = static_offset;
         }
     }
 
@@ -1553,8 +1572,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(StringView program_nam
     while (start < option.length() && option[start] == '-' && start < 2)
         ++start;
     auto option_pattern = offset > start ? option.substring_view(start, offset - start) : "";
+    auto invariant_offset = offset;
+    size_t static_offset = 0;
     if (m_editor)
-        m_editor->suggest(offset);
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
     Vector<Line::CompletionSuggestion> suggestions;
 
@@ -1579,13 +1600,18 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(StringView program_nam
                 return builder.to_string();
             };
 #define __ENUMERATE_SHELL_OPTION(name, d_, descr_) \
-    if (#name##sv.starts_with(option_pattern)) {   \
-        suggestions.append(maybe_negate(#name));   \
-        suggestions.last().input_offset = offset;  \
-    }
+    if (#name##sv.starts_with(option_pattern))     \
+        suggestions.append(maybe_negate(#name));
 
             ENUMERATE_SHELL_OPTIONS();
 #undef __ENUMERATE_SHELL_OPTION
+
+            for (auto& entry : suggestions) {
+                entry.input_offset = offset;
+                entry.invariant_offset = invariant_offset;
+                entry.static_offset = static_offset;
+            }
+
             return suggestions;
         }
     }
@@ -1596,18 +1622,24 @@ Vector<Line::CompletionSuggestion> Shell::complete_immediate_function_name(Strin
 {
     Vector<Line::CompletionSuggestion> suggestions;
 
-#define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(fn_name)                 \
-    if (auto name_view = #fn_name##sv; name_view.starts_with(name)) { \
-        suggestions.append({ name_view, " " });                       \
-        suggestions.last().input_offset = offset;                     \
-    }
+    auto invariant_offset = offset;
+    size_t static_offset = 0;
+    if (m_editor)
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
+
+#define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(fn_name)               \
+    if (auto name_view = #fn_name##sv; name_view.starts_with(name)) \
+        suggestions.append({ name_view, " " });
 
     ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS();
 
 #undef __ENUMERATE_SHELL_IMMEDIATE_FUNCTION
 
-    if (m_editor)
-        m_editor->suggest(offset);
+    for (auto& entry : suggestions) {
+        entry.input_offset = offset;
+        entry.invariant_offset = invariant_offset;
+        entry.static_offset = static_offset;
+    }
 
     return suggestions;
 }

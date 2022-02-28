@@ -489,7 +489,7 @@ void Editor::stylize(Span const& span, Style const& style)
     ending_map.set(start, style);
 }
 
-void Editor::suggest(size_t invariant_offset, size_t static_offset, Span::Mode offset_mode) const
+void Editor::transform_suggestion_offsets(size_t& invariant_offset, size_t& static_offset, Span::Mode offset_mode) const
 {
     auto internal_static_offset = static_offset;
     auto internal_invariant_offset = invariant_offset;
@@ -501,7 +501,8 @@ void Editor::suggest(size_t invariant_offset, size_t static_offset, Span::Mode o
         internal_static_offset = offsets.start;
         internal_invariant_offset = offsets.end - offsets.start;
     }
-    m_suggestion_manager.set_suggestion_variants(internal_static_offset, internal_invariant_offset, 0);
+    invariant_offset = internal_invariant_offset;
+    static_offset = internal_static_offset;
 }
 
 void Editor::initialize()
@@ -1141,7 +1142,6 @@ void Editor::handle_read_event()
                 // We have none, or just one suggestion,
                 // we should just commit that and continue
                 // after it, as if it were auto-completed.
-                suggest(0, 0, Span::CodepointOriented);
                 m_times_tab_pressed = 0;
                 m_suggestion_manager.reset();
                 m_suggestion_display->finish();
@@ -1180,7 +1180,6 @@ void Editor::cleanup_suggestions()
             m_refresh_needed = true;
         }
         m_suggestion_manager.reset();
-        suggest(0, 0, Span::CodepointOriented);
         m_suggestion_display->finish();
     }
     m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB

@@ -221,7 +221,7 @@ public:
     //       +-|- static offset: the suggestions start here
     //         +- invariant offset: the suggestions do not change up to here
     //
-    void suggest(size_t invariant_offset = 0, size_t static_offset = 0, Span::Mode offset_mode = Span::ByteOriented) const;
+    void transform_suggestion_offsets(size_t& invariant_offset, size_t& static_offset, Span::Mode offset_mode = Span::ByteOriented) const;
 
     const struct termios& termios() const { return m_termios; }
     const struct termios& default_termios() const { return m_default_termios; }

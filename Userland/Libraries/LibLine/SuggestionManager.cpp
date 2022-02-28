@@ -84,10 +84,12 @@ CompletionSuggestion const& SuggestionManager::suggest()
 
 void SuggestionManager::set_current_suggestion_initiation_index(size_t index)
 {
+    auto& suggestion = m_suggestions[m_next_suggestion_index];
+
     if (m_last_shown_suggestion_display_length)
-        m_last_shown_suggestion.start_index = index - m_next_suggestion_static_offset - m_last_shown_suggestion_display_length;
+        m_last_shown_suggestion.start_index = index - suggestion.static_offset - m_last_shown_suggestion_display_length;
     else
-        m_last_shown_suggestion.start_index = index - m_next_suggestion_static_offset - m_next_suggestion_invariant_offset;
+        m_last_shown_suggestion.start_index = index - suggestion.static_offset - suggestion.invariant_offset;
 
     m_last_shown_suggestion_display_length = m_last_shown_suggestion.text_view.length();
     m_last_shown_suggestion_was_complete = true;
@@ -98,7 +100,9 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
     CompletionAttemptResult result { mode };
 
     if (m_next_suggestion_index < m_suggestions.size()) {
-        auto can_complete = m_next_suggestion_invariant_offset <= m_largest_common_suggestion_prefix_length;
+        auto& next_suggestion = m_suggestions[m_next_suggestion_index];
+
+        auto can_complete = next_suggestion.invariant_offset <= m_largest_common_suggestion_prefix_length;
         ssize_t actual_offset;
         size_t shown_length = m_last_shown_suggestion_display_length;
         switch (mode) {
@@ -106,7 +110,7 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
             actual_offset = 0;
             break;
         case ShowSuggestions:
-            actual_offset = 0 - m_largest_common_suggestion_prefix_length + m_next_suggestion_invariant_offset;
+            actual_offset = 0 - m_largest_common_suggestion_prefix_length + next_suggestion.invariant_offset;
             if (can_complete)
                 shown_length = m_largest_common_suggestion_prefix_length + m_last_shown_suggestion.trivia_view.length();
             break;
@@ -114,11 +118,11 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
             if (m_last_shown_suggestion_display_length == 0)
                 actual_offset = 0;
             else
-                actual_offset = 0 - m_last_shown_suggestion_display_length + m_next_suggestion_invariant_offset;
+                actual_offset = 0 - m_last_shown_suggestion_display_length + next_suggestion.invariant_offset;
             break;
         }
 
-        result.offset_region_to_remove = { m_next_suggestion_invariant_offset, shown_length };
+        result.offset_region_to_remove = { next_suggestion.invariant_offset, shown_length };
         result.new_cursor_offset = actual_offset;
 
         auto& suggestion = suggest();
@@ -127,7 +131,7 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
         if (mode == CompletePrefix) {
             // Only auto-complete *if possible*.
             if (can_complete) {
-                result.insert.append(suggestion.text_view.substring_view(m_next_suggestion_invariant_offset, m_largest_common_suggestion_prefix_length - m_next_suggestion_invariant_offset));
+                result.insert.append(suggestion.text_view.substring_view(suggestion.invariant_offset, m_largest_common_suggestion_prefix_length - suggestion.invariant_offset));
                 m_last_shown_suggestion_display_length = m_largest_common_suggestion_prefix_length;
                 // Do not increment the suggestion index, as the first tab should only be a *peek*.
                 if (m_suggestions.size() == 1) {
@@ -147,7 +151,7 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
             m_last_shown_suggestion_was_complete = false;
             m_last_shown_suggestion = String::empty();
         } else {
-            result.insert.append(suggestion.text_view.substring_view(m_next_suggestion_invariant_offset, suggestion.text_view.length() - m_next_suggestion_invariant_offset));
+            result.insert.append(suggestion.text_view.substring_view(suggestion.invariant_offset, suggestion.text_view.length() - suggestion.invariant_offset));
             // Add in the trivia of the last selected suggestion.
             result.insert.append(suggestion.trivia_view);
             m_last_shown_suggestion_display_length += suggestion.trivia_view.length();
