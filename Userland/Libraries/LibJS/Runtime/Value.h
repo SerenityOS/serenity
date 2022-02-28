@@ -434,6 +434,110 @@ inline bool Value::operator==(Value const& value) const { return same_value(*thi
 namespace AK {
 
 template<>
+class Optional<JS::Value> {
+    template<typename U>
+    friend class Optional;
+
+public:
+    using ValueType = JS::Value;
+
+    Optional() = default;
+
+    Optional(Optional<JS::Value> const& other)
+    {
+        if (other.has_value())
+            m_value = other.m_value;
+    }
+
+    Optional(Optional&& other)
+        : m_value(other.m_value)
+    {
+    }
+
+    template<typename U = JS::Value>
+    explicit(!IsConvertible<U&&, JS::Value>) Optional(U&& value) requires(!IsSame<RemoveCVReference<U>, Optional<JS::Value>> && IsConstructible<JS::Value, U&&>)
+        : m_value(forward<U>(value))
+    {
+    }
+
+    Optional& operator=(Optional const& other)
+    {
+        if (this != &other) {
+            clear();
+            m_value = other.m_value;
+        }
+        return *this;
+    }
+
+    Optional& operator=(Optional&& other)
+    {
+        if (this != &other) {
+            clear();
+            m_value = other.m_value;
+        }
+        return *this;
+    }
+
+    void clear()
+    {
+        m_value = {};
+    }
+
+    [[nodiscard]] bool has_value() const
+    {
+        return !m_value.is_empty();
+    }
+
+    [[nodiscard]] JS::Value& value() &
+    {
+        VERIFY(has_value());
+        return m_value;
+    }
+
+    [[nodiscard]] JS::Value const& value() const&
+    {
+        VERIFY(has_value());
+        return m_value;
+    }
+
+    [[nodiscard]] JS::Value value() &&
+    {
+        return release_value();
+    }
+
+    [[nodiscard]] JS::Value release_value()
+    {
+        VERIFY(has_value());
+        JS::Value released_value = m_value;
+        clear();
+        return released_value;
+    }
+
+    JS::Value value_or(JS::Value const& fallback) const&
+    {
+        if (has_value())
+            return value();
+        return fallback;
+    }
+
+    [[nodiscard]] JS::Value value_or(JS::Value&& fallback) &&
+    {
+        if (has_value())
+            return value();
+        return fallback;
+    }
+
+    JS::Value const& operator*() const { return value(); }
+    JS::Value& operator*() { return value(); }
+
+    JS::Value const* operator->() const { return &value(); }
+    JS::Value* operator->() { return &value(); }
+
+private:
+    JS::Value m_value;
+};
+
+template<>
 struct Formatter<JS::Value> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JS::Value value)
     {
