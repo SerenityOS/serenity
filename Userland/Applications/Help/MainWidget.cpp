@@ -18,7 +18,6 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -44,11 +43,13 @@ MainWidget::MainWidget()
 
     m_search_box = find_descendant_of_type_named<GUI::TextBox>("search_box");
     m_search_box->on_change = [this] {
-        if (auto* model = m_search_view->model()) {
-            auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
-            search_model.set_filter_term(m_search_box->text());
-            search_model.invalidate();
-        }
+        m_filter_model->set_filter_term(m_search_box->text());
+    };
+    m_search_box->on_down_pressed = [this] {
+        m_search_view->move_cursor(GUI::AbstractView::CursorMovement::Down, GUI::AbstractView::SelectionUpdate::Set);
+    };
+    m_search_box->on_up_pressed = [this] {
+        m_search_view->move_cursor(GUI::AbstractView::CursorMovement::Up, GUI::AbstractView::SelectionUpdate::Set);
     };
 
     m_search_view = find_descendant_of_type_named<GUI::ListView>("search_view");
@@ -212,11 +213,10 @@ void MainWidget::set_start_page(String const& start_page, int section)
             // No match, so treat the input as a search query
             if (!set_start_page) {
                 m_tab_widget->set_active_widget(m_search_container);
+                m_search_box->set_focus(true);
                 m_search_box->set_text(start_page);
-                if (auto* model = m_search_view->model(); model) {
-                    auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
-                    search_model.set_filter_term(m_search_box->text());
-                }
+                m_search_box->select_all();
+                m_filter_model->set_filter_term(m_search_box->text());
             }
         }
     }
@@ -260,8 +260,9 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
 
     m_manual_model = TRY(ManualModel::create());
     m_browse_view->set_model(*m_manual_model);
-    m_search_view->set_model(TRY(GUI::FilteringProxyModel::create(*m_manual_model)));
-    m_search_view->model()->invalidate();
+    m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_manual_model));
+    m_search_view->set_model(*m_filter_model);
+    m_filter_model->set_filter_term("");
 
     return {};
 }

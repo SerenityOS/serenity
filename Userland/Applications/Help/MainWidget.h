@@ -8,6 +8,7 @@
 
 #include "History.h"
 #include "ManualModel.h"
+#include <LibGUI/FilteringProxyModel.h>
 #include <LibWeb/OutOfProcessWebView.h>
 
 namespace Help {
@@ -31,6 +32,7 @@ private:
     History m_history;
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<ManualModel> m_manual_model;
+    RefPtr<GUI::FilteringProxyModel> m_filter_model;
 
     RefPtr<GUI::Action> m_go_back_action;
     RefPtr<GUI::Action> m_go_forward_action;
