@@ -14,6 +14,11 @@
 
 namespace Web::Layout {
 
+struct LineBoxFragmentCoordinate {
+    size_t line_box_index { 0 };
+    size_t fragment_index { 0 };
+};
+
 class Box : public NodeWithStyleAndBoxModelMetrics {
 public:
     struct OverflowData {
@@ -82,11 +87,7 @@ public:
 
     bool is_body() const;
 
-    struct LineBoxFragmentCoordinate {
-        size_t line_box_index { 0 };
-        size_t fragment_index { 0 };
-    };
-    void set_containing_line_box_fragment(LineBoxFragmentCoordinate);
+    void set_containing_line_box_fragment(Optional<LineBoxFragmentCoordinate>);
 
     StackingContext* stacking_context() { return m_stacking_context; }
     const StackingContext* stacking_context() const { return m_stacking_context; }

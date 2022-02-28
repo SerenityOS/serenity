@@ -44,6 +44,7 @@ void FormattingState::commit()
             box.set_offset(node_state.offset);
             box.set_content_size(node_state.content_width, node_state.content_height);
             box.set_overflow_data(move(node_state.overflow_data));
+            box.set_containing_line_box_fragment(node_state.containing_line_box_fragment);
         }
 
         // For block containers, transfer line boxes.

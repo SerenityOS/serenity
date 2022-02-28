@@ -236,7 +236,7 @@ const Gfx::FloatRect Box::absolute_rect() const
     return rect;
 }
 
-void Box::set_containing_line_box_fragment(LineBoxFragmentCoordinate fragment_coordinate)
+void Box::set_containing_line_box_fragment(Optional<LineBoxFragmentCoordinate> fragment_coordinate)
 {
     m_containing_line_box_fragment = fragment_coordinate;
 }

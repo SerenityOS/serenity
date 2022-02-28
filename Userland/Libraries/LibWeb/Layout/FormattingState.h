@@ -63,6 +63,8 @@ struct FormattingState {
             return *overflow_data;
         }
 
+        Optional<LineBoxFragmentCoordinate> containing_line_box_fragment;
+
         // NOTE: NodeState is ref-counted and accessed via copy-on-write helpers below.
         size_t ref_count { 1 };
         void ref()
