@@ -820,6 +820,11 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_terminal_action()
         Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/add-terminal.png").release_value_but_fixme_should_propagate_errors(),
         [this](auto&) {
             auto& terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Terminal");
+            terminal_wrapper.on_command_exit = [&]() {
+                deferred_invoke([this]() {
+                    m_action_tab_widget->remove_tab(*m_action_tab_widget->active_widget());
+                });
+            };
             reveal_action_tab(terminal_wrapper);
             update_actions();
             terminal_wrapper.terminal().set_focus(true);
