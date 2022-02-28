@@ -4,9 +4,13 @@ serenity_component(
     TARGETS Help
 )
 
+compile_gml(HelpWindow.gml HelpWindowGML.h help_window_gml)
+
 set(SOURCES
+    HelpWindowGML.h
     History.cpp
     main.cpp
+    MainWidget.cpp
     ManualModel.cpp
     ManualPageNode.cpp
     ManualSectionNode.cpp

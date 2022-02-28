@@ -14,9 +14,9 @@
 
 class ManualModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<ManualModel> create()
+    static ErrorOr<NonnullRefPtr<ManualModel>> create()
     {
-        return adopt_ref(*new ManualModel);
+        return adopt_nonnull_ref_or_enomem(new (nothrow) ManualModel);
     }
 
     virtual ~ManualModel() override {};
