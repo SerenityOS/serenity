@@ -923,7 +923,7 @@ enum class BoxTypeTransformation {
     Inlinify,
 };
 
-static BoxTypeTransformation required_box_type_transformation(StyleProperties const& style, DOM::Element const&, Optional<CSS::Selector::PseudoElement> const&)
+static BoxTypeTransformation required_box_type_transformation(StyleProperties const& style, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> const&)
 {
     auto display = style.display();
 
@@ -933,7 +933,12 @@ static BoxTypeTransformation required_box_type_transformation(StyleProperties co
 
     // FIXME: Containment in a ruby container inlinifies the box’s display type, as described in [CSS-RUBY-1].
 
-    // FIXME: A parent with a grid or flex display value blockifies the box’s display type. [CSS-GRID-1] [CSS-FLEXBOX-1]
+    // A parent with a grid or flex display value blockifies the box’s display type. [CSS-GRID-1] [CSS-FLEXBOX-1]
+    if (element.parent() && element.parent()->layout_node()) {
+        auto const& parent_display = element.parent()->layout_node()->computed_values().display();
+        if (parent_display.is_grid_inside() || parent_display.is_flex_inside())
+            return BoxTypeTransformation::Blockify;
+    }
 
     return BoxTypeTransformation::None;
 }
