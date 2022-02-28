@@ -17,6 +17,9 @@ PaintContext::PaintContext(Gfx::Painter& painter, Palette const& palette, Gfx::I
 
 SVGContext& PaintContext::svg_context()
 {
+    // FIXME: This is a total hack to avoid crashing on content that has SVG elements embedded directly in HTML without an <svg> element.
+    if (!m_svg_context.has_value())
+        m_svg_context = SVGContext { {} };
     return m_svg_context.value();
 }
 
