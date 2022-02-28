@@ -13,7 +13,7 @@ set(SOURCES
     SampleWidget.cpp
     SoundPlayerWidgetAdvancedView.cpp
     BarsVisualizationWidget.cpp
-    NoVisualizationWidget.cpp
+    AlbumCoverVisualizationWidget.cpp
     M3UParser.cpp
     PlaylistWidget.cpp
 )

@@ -6,12 +6,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "NoVisualizationWidget.h"
+#include "AlbumCoverVisualizationWidget.h"
 #include <AK/LexicalPath.h>
 #include <LibCore/File.h>
 #include <LibGUI/Painter.h>
 
-void NoVisualizationWidget::paint_event(GUI::PaintEvent& event)
+void AlbumCoverVisualizationWidget::paint_event(GUI::PaintEvent& event)
 {
     Frame::paint_event(event);
     GUI::Painter painter(*this);
@@ -25,7 +25,7 @@ void NoVisualizationWidget::paint_event(GUI::PaintEvent& event)
     }
 }
 
-ErrorOr<NonnullRefPtr<Gfx::Bitmap>> NoVisualizationWidget::get_album_cover(StringView const filename)
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> AlbumCoverVisualizationWidget::get_album_cover(StringView const filename)
 {
     auto directory = LexicalPath::dirname(filename);
 
@@ -39,7 +39,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> NoVisualizationWidget::get_album_cover(Strin
     return Error::from_string_literal("No cover file found");
 }
 
-void NoVisualizationWidget::start_new_file(StringView filename)
+void AlbumCoverVisualizationWidget::start_new_file(StringView filename)
 {
     auto album_cover_or_error = get_album_cover(filename);
     if (album_cover_or_error.is_error())
@@ -48,6 +48,6 @@ void NoVisualizationWidget::start_new_file(StringView filename)
         m_album_cover = album_cover_or_error.value();
 }
 
-void NoVisualizationWidget::set_buffer(RefPtr<Audio::Buffer>)
+void AlbumCoverVisualizationWidget::set_buffer(RefPtr<Audio::Buffer>)
 {
 }
