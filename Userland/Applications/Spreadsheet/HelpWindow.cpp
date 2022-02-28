@@ -183,8 +183,8 @@ String HelpWindow::render(StringView key)
         VERIFY(examples.is_object());
         markdown_builder.append("# EXAMPLES\n");
         examples.as_object().for_each_member([&](auto& text, auto& description_value) {
-            dbgln("- {}\n\n```js\n{}\n```\n", description_value.to_string(), text);
-            markdown_builder.appendff("- {}\n\n```js\n{}\n```\n", description_value.to_string(), text);
+            dbgln("```js\n{}\n```\n\n- {}\n", text, description_value.to_string());
+            markdown_builder.appendff("```js\n{}\n```\n\n- {}\n", text, description_value.to_string());
         });
     }
 
