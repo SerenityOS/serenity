@@ -10,6 +10,8 @@
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <ctype.h>
+#include <inttypes.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
@@ -262,4 +264,12 @@ TEST_CASE(hexadecimal_values)
     EXPECT(test_single<int>({ LITERAL("xxxxx\0"), "|%#.1x|", 0x1, 5, LITERAL("|0x1|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxx\0"), "|%x|", 0, 3, LITERAL("|0|\0") }));
     EXPECT(test_single<int>({ LITERAL("xxx\0"), "|%#x|", 0, 3, LITERAL("|0|\0") }));
+}
+
+TEST_CASE(inttypes_macros)
+{
+    EXPECT(test_single<uint8_t>({ LITERAL("xxxxx"), "|%" PRIx8 "|", 0xAB, 4, LITERAL("|ab|\0") }));
+    EXPECT(test_single<uint8_t>({ LITERAL("xxxxx"), "|%" PRIX8 "|", 0xAB, 4, LITERAL("|AB|\0") }));
+    EXPECT(test_single<uint16_t>({ LITERAL("xxxxxxx"), "|%" PRIx16 "|", 0xC0DE, 6, LITERAL("|c0de|\0") }));
+    EXPECT(test_single<uint16_t>({ LITERAL("xxxxxxx"), "|%" PRIX16 "|", 0xC0DE, 6, LITERAL("|C0DE|\0") }));
 }
