@@ -1206,6 +1206,7 @@ void HackStudioWidget::create_file_menu(GUI::Window& window)
     file_menu.add_action(*m_new_project_action);
     file_menu.add_action(*m_open_action);
     m_recent_projects_submenu = &file_menu.add_submenu("Open Recent");
+    m_recent_projects_submenu->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-recent.png").release_value_but_fixme_should_propagate_errors());
     update_recent_projects_submenu();
     file_menu.add_action(*m_save_action);
     file_menu.add_action(*m_save_as_action);
