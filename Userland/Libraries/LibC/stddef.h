@@ -6,6 +6,8 @@
 
 #pragma once
 
+#define offsetof(type, member) __builtin_offsetof(type, member)
+
 #ifndef KERNEL
 
 #    include <sys/cdefs.h>
