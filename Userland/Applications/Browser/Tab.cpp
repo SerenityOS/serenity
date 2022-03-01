@@ -14,6 +14,7 @@
 #include "ConsoleWidget.h"
 #include "DownloadWidget.h"
 #include "InspectorWidget.h"
+#include "StorageWidget.h"
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/Browser/TabGML.h>
@@ -529,6 +530,28 @@ void Tab::show_console_window()
     }
 
     auto* window = m_console_widget->window();
+    window->show();
+    window->move_to_front();
+}
+
+void Tab::show_storage_inspector()
+{
+    if (!m_storage_widget) {
+        auto storage_window = GUI::Window::construct(&window());
+        storage_window->resize(500, 300);
+        storage_window->set_title("Storage inspector");
+        storage_window->set_icon(g_icon_bag.cookie);
+        m_storage_widget = storage_window->set_main_widget<StorageWidget>();
+    }
+
+    if (on_want_cookies) {
+        auto cookies = on_want_cookies();
+        m_storage_widget->clear_cookies();
+        for (auto cookie : cookies)
+            m_storage_widget->add_cookie(cookie);
+    }
+
+    auto* window = m_storage_widget->window();
     window->show();
     window->move_to_front();
 }
