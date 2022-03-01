@@ -10,12 +10,27 @@
 
 namespace Web::HTML {
 
+#define ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTES              \
+    __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(submit, Submit) \
+    __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(reset, Reset)   \
+    __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(button, Button)
+
 class HTMLButtonElement final : public FormAssociatedElement {
 public:
     using WrapperType = Bindings::HTMLButtonElementWrapper;
 
     HTMLButtonElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLButtonElement() override;
+
+    enum class TypeAttributeState {
+#define __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(_, state) state,
+        ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTES
+#undef __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE
+    };
+
+    String type() const;
+    TypeAttributeState type_state() const;
+    void set_type(String const&);
 
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed

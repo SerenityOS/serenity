@@ -6,5 +6,6 @@ interface HTMLButtonElement : HTMLElement {
     [Reflect=formtarget] attribute DOMString formTarget;
     [Reflect] attribute DOMString name;
     [Reflect] attribute DOMString value;
+    [CEReactions] attribute DOMString type;
 
 };
