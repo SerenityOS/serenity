@@ -46,7 +46,7 @@ struct BigAllocationBlock : public CommonHeader {
         m_magic = MAGIC_BIGALLOC_HEADER;
         m_size = size;
     }
-    unsigned char* m_slot[0];
+    alignas(16) unsigned char* m_slot[0];
 };
 
 struct FreelistEntry {
