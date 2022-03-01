@@ -36,11 +36,6 @@ public:
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
-
-private:
-    // ^DOM::Node
-    virtual void inserted() override;
-    virtual void removed_from(DOM::Node*) override;
 };
 
 }

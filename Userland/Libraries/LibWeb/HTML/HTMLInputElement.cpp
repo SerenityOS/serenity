@@ -191,18 +191,6 @@ bool HTMLInputElement::is_focusable() const
     return m_text_node;
 }
 
-void HTMLInputElement::inserted()
-{
-    HTMLElement::inserted();
-    set_form(first_ancestor_of_type<HTMLFormElement>());
-}
-
-void HTMLInputElement::removed_from(DOM::Node* old_parent)
-{
-    HTMLElement::removed_from(old_parent);
-    set_form(nullptr);
-}
-
 void HTMLInputElement::parse_attribute(FlyString const& name, String const& value)
 {
     FormAssociatedElement::parse_attribute(name, value);

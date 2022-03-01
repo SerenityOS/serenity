@@ -101,10 +101,6 @@ public:
     virtual bool is_labelable() const override { return type_state() != TypeAttributeState::Hidden; }
 
 private:
-    // ^DOM::Node
-    virtual void inserted() override;
-    virtual void removed_from(Node*) override;
-
     // ^DOM::EventTarget
     virtual void did_receive_focus() override;
     virtual void run_activation_behavior() override;
