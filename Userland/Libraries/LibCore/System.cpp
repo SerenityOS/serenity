@@ -507,6 +507,14 @@ ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const& ios)
     return {};
 }
 
+ErrorOr<int> tcsetpgrp(int fd, pid_t pgrp)
+{
+    int rc = ::tcsetpgrp(fd, pgrp);
+    if (rc < 0)
+        return Error::from_syscall("tcsetpgrp"sv, -errno);
+    return { rc };
+}
+
 ErrorOr<void> chmod(StringView pathname, mode_t mode)
 {
     if (!pathname.characters_without_null_termination())
