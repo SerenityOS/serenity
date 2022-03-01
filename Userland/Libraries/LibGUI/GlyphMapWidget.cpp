@@ -104,7 +104,7 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     painter.set_font(font());
-    painter.fill_rect(widget_inner_rect(), palette().inactive_window_title());
+    painter.fill_rect(widget_inner_rect(), palette().window().darkened(0.8f));
 
     int scroll_steps = vertical_scrollbar().value() / vertical_scrollbar().step();
     int first_visible_glyph = scroll_steps * columns();
@@ -130,7 +130,8 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
         } else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph)) {
             painter.fill_rect(outer_rect, Gfx::Color { 255, 150, 150 });
             painter.draw_emoji(inner_rect.location(), *emoji, font());
-        }
+        } else
+            painter.fill_rect(outer_rect, palette().window());
     }
     painter.draw_focus_rect(get_outer_rect(m_active_glyph), Gfx::Color::Black);
 }
