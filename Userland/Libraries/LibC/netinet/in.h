@@ -41,6 +41,8 @@ static inline uint32_t ntohl(uint32_t value)
     return htonl(value);
 }
 
+#define IN_MULTICAST(x) (((x)&0xf0000000) == 0xe0000000)
+
 // NOTE: The IPv6 Addressing Scheme that we detect are documented in RFC# 2373.
 //       See: https://datatracker.ietf.org/doc/html/rfc2373
 
