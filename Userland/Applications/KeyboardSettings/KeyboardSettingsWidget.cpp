@@ -23,6 +23,7 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibKeyboard/CharacterMap.h>
 #include <spawn.h>
 
@@ -107,9 +108,13 @@ public:
     int row_count(GUI::ModelIndex const&) const override { return m_data.size(); }
     int column_count(GUI::ModelIndex const&) const override { return 1; }
 
-    GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole) const override
+    GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
     {
-        return m_data.at(index.row());
+        String const& data = m_data.at(index.row());
+        if (role == GUI::ModelRole::Font && data == m_active_keymap)
+            return Gfx::FontDatabase::default_font().bold_variant();
+
+        return data;
     }
 
     void remove_at(size_t index)
@@ -124,10 +129,17 @@ public:
         invalidate();
     }
 
+    void set_active_keymap(String const& keymap)
+    {
+        m_active_keymap = keymap;
+        invalidate();
+    }
+
     Vector<String> const& keymaps() const { return m_data; }
 
 private:
     Vector<String> m_data;
+    String m_active_keymap;
 };
 
 KeyboardSettingsWidget::KeyboardSettingsWidget()
@@ -158,6 +170,8 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
         m_initial_keymap_list.append(keymap);
         keymaps_list_model.add_keymap(keymap);
     }
+
+    keymaps_list_model.set_active_keymap(m_current_applied_keymap);
 
     m_add_keymap_button = find_descendant_of_type_named<GUI::Button>("add_keymap_button");
 
