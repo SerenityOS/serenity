@@ -149,6 +149,18 @@ Optional<int> GlyphMapWidget::glyph_at_position(Gfx::IntPoint position) const
     return {};
 }
 
+int GlyphMapWidget::glyph_at_position_clamped(Gfx::IntPoint position) const
+{
+    Gfx::IntPoint map_offset { frame_thickness() - horizontal_scrollbar().value(), frame_thickness() - vertical_scrollbar().value() };
+    auto map_position = position - map_offset;
+    auto col = clamp((map_position.x() - 1) / ((font().max_glyph_width() + m_horizontal_spacing)), 0, columns() - 1);
+    auto row = clamp((map_position.y() - 1) / ((font().glyph_height() + m_vertical_spacing)), 0, rows() - 1);
+    auto glyph = row * columns() + col + m_active_range.first;
+    if (row == rows() - 1)
+        glyph = min(glyph, m_glyph_count + m_active_range.first - 1);
+    return glyph;
+}
+
 void GlyphMapWidget::mousedown_event(MouseEvent& event)
 {
     Frame::mousedown_event(event);
@@ -172,13 +184,13 @@ void GlyphMapWidget::mouseup_event(GUI::MouseEvent& event)
 
     if (!m_in_drag_select)
         return;
-
-    if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value()) {
+    auto constrained = event.position().constrained(rect().shrunken(0, frame_thickness() * 2));
+    if (auto maybe_glyph = glyph_at_position(constrained); maybe_glyph.has_value()) {
         auto glyph = maybe_glyph.value();
         m_selection.extend_to(glyph);
-        m_in_drag_select = false;
         set_active_glyph(glyph, ShouldResetSelection::No);
     }
+    m_in_drag_select = false;
 }
 
 void GlyphMapWidget::mousemove_event(GUI::MouseEvent& event)
@@ -188,13 +200,11 @@ void GlyphMapWidget::mousemove_event(GUI::MouseEvent& event)
     if (!m_in_drag_select)
         return;
 
-    if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value()) {
-        auto glyph = maybe_glyph.value();
-        m_selection.extend_to(glyph);
-        set_active_glyph(glyph, ShouldResetSelection::No);
-        scroll_to_glyph(glyph);
-        update();
-    }
+    auto glyph = glyph_at_position_clamped(event.position());
+    m_selection.extend_to(glyph);
+    set_active_glyph(glyph, ShouldResetSelection::No);
+    scroll_to_glyph(glyph);
+    update();
 }
 
 void GlyphMapWidget::doubleclick_event(MouseEvent& event)

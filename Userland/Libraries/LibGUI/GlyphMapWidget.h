@@ -80,6 +80,7 @@ private:
 
     Gfx::IntRect get_outer_rect(int glyph) const;
     Optional<int> glyph_at_position(Gfx::IntPoint) const;
+    int glyph_at_position_clamped(Gfx::IntPoint) const;
 
     void recalculate_content_size();
 
