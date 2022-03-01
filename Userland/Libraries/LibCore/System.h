@@ -145,4 +145,6 @@ ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2]);
 ErrorOr<Vector<gid_t>> getgroups();
 ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev);
 ErrorOr<void> mkfifo(StringView pathname, mode_t mode);
+ErrorOr<void> setenv(StringView, StringView, bool);
+
 }
