@@ -273,3 +273,19 @@ TEST_CASE(inttypes_macros)
     EXPECT(test_single<uint16_t>({ LITERAL("xxxxxxx"), "|%" PRIx16 "|", 0xC0DE, 6, LITERAL("|c0de|\0") }));
     EXPECT(test_single<uint16_t>({ LITERAL("xxxxxxx"), "|%" PRIX16 "|", 0xC0DE, 6, LITERAL("|C0DE|\0") }));
 }
+
+TEST_CASE(float_values)
+{
+    union {
+        float f;
+        int i;
+    } v;
+
+    v.i = 0x7fc00000;
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", v.f, 6, LITERAL("| nan|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", -v.f, 6, LITERAL("|-nan|\0") }));
+
+    v.i = 0x7f800000;
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", v.f, 6, LITERAL("| inf|\0") }));
+    EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", -v.f, 6, LITERAL("|-inf|\0") }));
+}
