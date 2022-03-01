@@ -138,11 +138,6 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
     });
 }
 
-bool HTMLInputElement::enabled() const
-{
-    return !has_attribute(HTML::AttributeNames::disabled);
-}
-
 String HTMLInputElement::value() const
 {
     if (m_text_node)

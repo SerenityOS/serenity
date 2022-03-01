@@ -19,6 +19,8 @@ public:
 
     void set_form(HTMLFormElement*);
 
+    bool enabled() const;
+
 protected:
     FormAssociatedElement(DOM::Document& document, DOM::QualifiedName qualified_name)
         : HTMLElement(document, move(qualified_name))
