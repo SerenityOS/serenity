@@ -113,7 +113,7 @@ private:
 
     void generate_implied_end_tags(const FlyString& exception = {});
     void generate_all_implied_end_tags_thoroughly();
-    NonnullRefPtr<DOM::Element> create_element_for(const HTMLToken&, const FlyString& namespace_);
+    NonnullRefPtr<DOM::Element> create_element_for(HTMLToken const&, FlyString const& namespace_, DOM::Node const& intended_parent);
 
     struct AdjustedInsertionLocation {
         RefPtr<DOM::Node> parent;
