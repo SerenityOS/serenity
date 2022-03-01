@@ -131,7 +131,7 @@ UNMAP_AFTER_INIT void StorageManagement::dump_storage_devices_and_partitions() c
     }
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PartitionTable>> StorageManagement::try_to_initialize_partition_table(StorageDevice const& device) const
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> StorageManagement::try_to_initialize_partition_table(StorageDevice const& device) const
 {
     auto mbr_table_or_error = MBRPartitionTable::try_to_initialize(device);
     if (!mbr_table_or_error.is_error())

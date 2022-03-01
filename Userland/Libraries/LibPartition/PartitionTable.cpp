@@ -4,15 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Storage/Partition/PartitionTable.h>
+#include <LibPartition/PartitionTable.h>
 
-namespace Kernel {
-PartitionTable::PartitionTable(StorageDevice const& device)
+namespace Partition {
+
+PartitionTable::PartitionTable(Kernel::StorageDevice const& device)
     : m_device(device)
 {
 }
 
-Optional<Partition::DiskPartitionMetadata> PartitionTable::partition(unsigned index)
+Optional<DiskPartitionMetadata> PartitionTable::partition(unsigned index)
 {
     if (index > partitions_count())
         return {};
