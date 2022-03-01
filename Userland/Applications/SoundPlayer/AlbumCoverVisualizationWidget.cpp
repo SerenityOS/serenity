@@ -10,6 +10,7 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/File.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/Rect.h>
 
 void AlbumCoverVisualizationWidget::paint_event(GUI::PaintEvent& event)
 {
@@ -17,7 +18,16 @@ void AlbumCoverVisualizationWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
 
     if (m_album_cover) {
-        painter.draw_scaled_bitmap(frame_inner_rect(), *m_album_cover, m_album_cover->rect(), 1.0f);
+        auto album_cover_rect = m_album_cover->rect();
+
+        auto height_ratio = frame_inner_rect().height() / (float)album_cover_rect.height();
+        auto width_ratio = frame_inner_rect().width() / (float)album_cover_rect.width();
+        auto scale = min(height_ratio, width_ratio);
+
+        Gfx::IntRect fitted_rect = { 0, 0, (int)(album_cover_rect.width() * scale), (int)(album_cover_rect.height() * scale) };
+        fitted_rect.center_within(frame_inner_rect());
+
+        painter.draw_scaled_bitmap(fitted_rect, *m_album_cover, m_album_cover->rect(), 1.0f);
     } else {
         if (!m_serenity_bg)
             m_serenity_bg = Gfx::Bitmap::try_load_from_file("/res/wallpapers/sunset-retro.png").release_value_but_fixme_should_propagate_errors();
