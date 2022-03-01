@@ -73,8 +73,6 @@ public:
     };
     void set_checked(bool, ChangeSource = ChangeSource::Programmatic, ShouldRunActivationBehavior = ShouldRunActivationBehavior::Yes);
 
-    bool enabled() const;
-
     void did_click_button(Badge<Layout::ButtonBox>);
     void did_click_checkbox(Badge<Layout::CheckBox>);
 
