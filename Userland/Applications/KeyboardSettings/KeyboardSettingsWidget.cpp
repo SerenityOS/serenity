@@ -163,7 +163,8 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
 
     m_add_keymap_button->on_click = [&](auto) {
         auto keymap = KeymapSelectionDialog::select_keymap(window(), keymaps_list_model.keymaps());
-        keymaps_list_model.add_keymap(keymap);
+        if (!keymap.is_empty())
+            keymaps_list_model.add_keymap(keymap);
     };
 
     m_remove_keymap_button = find_descendant_of_type_named<GUI::Button>("remove_keymap_button");
