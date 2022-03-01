@@ -208,21 +208,68 @@ static Gfx::FloatSize solve_replaced_size_constraint(FormattingState const& stat
 
 float FormattingContext::compute_auto_height_for_block_level_element(FormattingState const& state, Box const& box)
 {
+    if (creates_block_formatting_context(box))
+        return compute_auto_height_for_block_formatting_context_root(state, verify_cast<BlockContainer>(box));
+
+    auto const& box_state = state.get(box);
+
+    // https://www.w3.org/TR/CSS22/visudet.html#normal-block
+    // 10.6.3 Block-level non-replaced elements in normal flow when 'overflow' computes to 'visible'
+
+    // The element's height is the distance from its top content edge to the first applicable of the following:
+
+    // 1. the bottom edge of the last line box, if the box establishes a inline formatting context with one or more lines
+    if (box.children_are_inline() && !box_state.line_boxes.is_empty()) {
+        // Find the top content edge (if negative).
+        float top_content_edge = 0;
+        for (auto const& fragment : box_state.line_boxes.first().fragments()) {
+            float fragment_top_content_edge = fragment.offset().y();
+            if (fragment_top_content_edge < top_content_edge)
+                top_content_edge = fragment_top_content_edge;
+        }
+        return box_state.line_boxes.last().bottom() - top_content_edge;
+    }
+
+    // 2. the bottom edge of the bottom (possibly collapsed) margin of its last in-flow child, if the child's bottom margin does not collapse with the element's bottom margin
+    if (!box.children_are_inline()) {
+        // FIXME: Don't walk all children from first to last here!
+        Box const* last_in_flow_child = nullptr;
+        box.for_each_child_of_type<Box>([&](Box const& child_box) {
+            bool is_in_flow = !child_box.is_floating() && !child_box.is_absolutely_positioned();
+            if (is_in_flow)
+                last_in_flow_child = &child_box;
+        });
+        if (last_in_flow_child) {
+            auto const& child_state = state.get(*last_in_flow_child);
+            // FIXME: Handle margin collapsing.
+            return child_state.offset.y() + child_state.content_height + child_state.margin_box_bottom();
+        }
+    }
+
+    // FIXME: 3. the bottom border edge of the last in-flow child whose top margin doesn't collapse with the element's bottom margin
+
+    // 4. zero, otherwise
+    return 0;
+}
+
+// https://www.w3.org/TR/CSS22/visudet.html#root-height
+float FormattingContext::compute_auto_height_for_block_formatting_context_root(FormattingState const& state, BlockContainer const& root)
+{
+    // 10.6.7 'Auto' heights for block formatting context roots
     Optional<float> top;
     Optional<float> bottom;
 
-    if (box.children_are_inline()) {
+    if (root.children_are_inline()) {
         // If it only has inline-level children, the height is the distance between
         // the top content edge and the bottom of the bottommost line box.
-        auto const& block_container = verify_cast<BlockContainer>(box);
-        auto const& line_boxes = state.get(block_container).line_boxes;
+        auto const& line_boxes = state.get(root).line_boxes;
         top = 0;
         if (!line_boxes.is_empty()) {
             // Find the top edge (if negative).
             for (auto const& fragment : line_boxes.first().fragments()) {
-                float fragment_top = fragment.offset().y() - fragment.border_box_top();
-                if (!top.has_value() || fragment_top < *top)
-                    top = fragment_top;
+                float fragment_top_content_edge = fragment.offset().y();
+                if (!top.has_value() || fragment_top_content_edge < *top)
+                    top = fragment_top_content_edge;
             }
             // Find the bottom edge.
             bottom = line_boxes.last().bottom();
@@ -231,10 +278,15 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
         // If it has block-level children, the height is the distance between
         // the top margin-edge of the topmost block-level child box
         // and the bottom margin-edge of the bottommost block-level child box.
-        box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
+        root.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
+            // Absolutely positioned children are ignored,
+            // and relatively positioned boxes are considered without their offset.
+            // Note that the child box may be an anonymous block box.
             if (child_box.is_absolutely_positioned())
                 return IterationDecision::Continue;
-            if ((box.computed_values().overflow_y() == CSS::Overflow::Visible) && child_box.is_floating())
+
+            // FIXME: This doesn't look right.
+            if ((root.computed_values().overflow_y() == CSS::Overflow::Visible) && child_box.is_floating())
                 return IterationDecision::Continue;
 
             auto const& child_box_state = state.get(child_box);
@@ -253,12 +305,11 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
         // In addition, if the element has any floating descendants
         // whose bottom margin edge is below the element's bottom content edge,
         // then the height is increased to include those edges.
-        box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
+        root.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
             if (!child_box.is_floating())
                 return IterationDecision::Continue;
 
             auto const& child_box_state = state.get(child_box);
-
             float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom();
 
             if (!bottom.has_value() || child_box_bottom > bottom.value())
