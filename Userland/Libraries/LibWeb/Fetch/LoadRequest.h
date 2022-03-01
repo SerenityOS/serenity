@@ -272,7 +272,7 @@ public:
 
     bool prevent_no_cache_cache_control_header_modification() const { return m_prevent_no_cache_cache_control_header_modification; }
 
-    bool has_authenication_entry() const
+    bool has_authentication_entry() const
     {
         return !m_authentication_entry.get<0>().is_null() && !m_authentication_entry.get<1>().is_null() && !!m_authentication_entry.get<2>().is_null();
     }
