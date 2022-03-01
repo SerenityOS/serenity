@@ -1,0 +1,13 @@
+diff --git a/libavutil/error.h b/libavutil/error.h
+index 0d3269a..a54d80d 100644
+--- a/libavutil/error.h
++++ b/libavutil/error.h
+@@ -37,7 +37,7 @@
+ 
+ 
+ /* error handling */
+-#if EDOM > 0
++#if 1
+ #define AVERROR(e) (-(e))   ///< Returns a negative error code from a POSIX error code, to return from library functions.
+ #define AVUNERROR(e) (-(e)) ///< Returns a POSIX error code from a library function error return value.
+ #else
