@@ -10,8 +10,8 @@
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
 #include <AK/Time.h>
-#include <AK/URL.h>
 #include <AK/Tuple.h>
+#include <AK/URL.h>
 #include <AK/Variant.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/ElapsedTimer.h>
@@ -19,8 +19,8 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/PolicyContainer.h>
 #include <LibWeb/Origin.h>
-#include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 
 namespace Web::Fetch {
 
@@ -145,7 +145,7 @@ public:
 
     using AuthenticationEntry = Tuple<String, String, String>; // Tuple of username, password and realm.
 
-    static NonnullRefPtr<LoadRequest> create_a_potential_cors_request(const URL& url, Page* page, Destination destination /* FIXME: and corsAttributeState and an optional same-origin fallback flag */);
+    static NonnullRefPtr<LoadRequest> create_a_potential_cors_request(const AK::URL& url, Page* page, Destination destination /* FIXME: and corsAttributeState and an optional same-origin fallback flag */);
 
     static NonnullRefPtr<LoadRequest> create_for_url_on_page(const AK::URL& url, Page* page);
 
@@ -166,9 +166,9 @@ public:
     unsigned hash() const
     {
         auto body_hash = string_hash((const char*)m_body.data(), m_body.size());
-        auto body_and_headers_hash = pair_int_hash(body_hash, m_headers.hash());
-        auto url_and_method_hash = pair_int_hash(m_url.to_string().hash(), m_method.hash());
-        return pair_int_hash(body_and_headers_hash, url_and_method_hash);
+        // auto body_and_headers_hash = pair_int_hash(body_hash, m_headers.hash());
+        // auto url_and_method_hash = pair_int_hash(m_url_list.first().to_string().hash(), m_method.hash());
+        return pair_int_hash(body_hash, m_method.hash());
     }
 
     bool operator==(const LoadRequest& other) const
@@ -192,7 +192,7 @@ public:
     const HTTP::HeaderList& headers() const { return m_headers; }
 
     // https://fetch.spec.whatwg.org/#concept-request-current-url
-    const URL& current_url() const { return m_url_list.last(); }
+    const AK::URL& current_url() const { return m_url_list.last(); }
 
     Destination destination() const { return m_destination; }
 
@@ -265,7 +265,7 @@ public:
     bool timing_allow_failed() const { return m_timing_allow_failed; }
     void set_timing_allow_failed(Badge<ResourceLoader>, bool timing_allow_failed) { m_timing_allow_failed = timing_allow_failed; }
 
-    Variant<Referrer, URL> referrer() const { return m_referrer; }
+    Variant<Referrer, AK::URL> referrer() const { return m_referrer; }
 
     CacheMode cache_mode() const { return m_cache_mode; }
     void set_cache_mode(CacheMode cache_mode) { m_cache_mode = cache_mode; }
@@ -277,7 +277,7 @@ public:
         return !m_authentication_entry.get<0>().is_null() && !m_authentication_entry.get<1>().is_null() && !!m_authentication_entry.get<2>().is_null();
     }
 
-    const Vector<URL>& url_list() const { return m_url_list; }
+    const Vector<AK::URL>& url_list() const { return m_url_list; }
 
     Window window() const { return m_window; }
     void set_window(Window window) { m_window = window; }
@@ -285,7 +285,7 @@ public:
     u8 redirect_count() const { return m_redirect_count; }
     void increment_redirect_count(Badge<ResourceLoader>) { ++m_redirect_count; }
 
-    void append_url_to_url_list(Badge<ResourceLoader>, const URL& url) { m_url_list.append(url); }
+    // void append_url_to_url_list(Badge<ResourceLoader>, const AK::URL& url) { m_url_list.append(url); }
 
     bool done() const { return m_done; }
     void set_done(Badge<ResourceLoader>, bool done) { m_done = done; }
@@ -293,14 +293,14 @@ public:
     WeakPtr<Page> client() const { return m_client; }
 
 private:
-    LoadRequest(const URL& url, Page* page);
+    LoadRequest(const AK::URL& url, Page* page);
 
     Core::ElapsedTimer m_load_timer;
     String m_method { "GET" }; // FIXME: This should be a byte sequence.
     bool m_local_urls_only { false };
     HTTP::HeaderList m_headers;
     bool m_unsafe_request { false };
-    ByteBuffer m_body; // FIXME: Or a body object
+    ByteBuffer m_body;      // FIXME: Or a body object
     WeakPtr<Page> m_client; // FIXME: this should be an environment settings object
     // FIXME: A request has an associated reserved client (null, an environment, or an environment settings object). Unless stated otherwise it is null.
     String m_replaces_client_id;
@@ -312,7 +312,7 @@ private:
     // FIXME: A request has an associated priority (null or a user-agent-defined object). Unless otherwise stated it is null.
     Variant<OriginEnum, Origin> m_origin { OriginEnum::Client };
     HTML::PolicyContainer m_policy_container;
-    Variant<Referrer, URL> m_referrer { Referrer::Client };
+    Variant<Referrer, AK::URL> m_referrer { Referrer::Client };
     ReferrerPolicy::ReferrerPolicy m_referrer_policy { ReferrerPolicy::ReferrerPolicy::None };
     Mode m_mode { Mode::NoCors };
     bool m_use_cors_preflight { false };
@@ -327,7 +327,7 @@ private:
     bool m_history_navigation { false };
     bool m_user_activation { false };
     bool m_tainted_origin { false };
-    Vector<URL> m_url_list;    // FIXME: Put in m_url as the first entry
+    Vector<AK::URL> m_url_list; // FIXME: Put in m_url as the first entry
     u8 m_redirect_count { 0 };
     ResponseTainting m_response_tainting { ResponseTainting::Basic };
     bool m_prevent_no_cache_cache_control_header_modification { false };

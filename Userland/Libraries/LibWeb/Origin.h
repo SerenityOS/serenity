@@ -27,12 +27,17 @@ public:
     bool is_opaque() const { return m_protocol.is_null() && m_host.is_null() && m_port == 0; }
 
     // https://url.spec.whatwg.org/#concept-url-origin
-    static Origin create_from_url(const URL& url)
+    static Origin create_from_url(const AK::URL& url)
     {
         // FIXME: Handle blob and file
 
-        if (url.protocol().is_one_of("ftp", "http", "https", "ws", "wss"))
-            return { url.protocol(), url.host(), url.port() };
+        if (url.protocol().is_one_of("ftp", "http", "https", "ws", "wss")) {
+            auto p1 = url.protocol();
+            auto p2 = url.host();
+            auto p3 = url.port();
+            auto obj = Origin(p1, p2, p3.value());
+            return obj;
+        }
 
         return {};
     }

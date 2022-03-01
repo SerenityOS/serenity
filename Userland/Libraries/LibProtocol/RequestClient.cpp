@@ -52,7 +52,9 @@ RefPtr<Request> RequestClient::start_request(const String& method, const String&
         header_dictionary.add(it.name, it.value);
     }
 
-    auto response = IPCProxy::start_request(method, url, header_dictionary, ByteBuffer::copy(request_body));
+    auto var = ByteBuffer::copy(request_body);
+
+    auto response = IPCProxy::start_request(method, url, header_dictionary, var.get<ByteBuffer>());
     auto request_id = response.request_id();
     if (request_id < 0 || !response.response_fd().has_value())
         return nullptr;

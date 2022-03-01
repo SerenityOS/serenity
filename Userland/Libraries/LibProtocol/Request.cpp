@@ -44,25 +44,11 @@ void Request::stream_into_impl(T& stream)
     m_internal_stream_data->on_finish = [this, user_on_finish = move(user_on_finish)] {
         if (!m_internal_stream_data->user_finish_called && m_internal_stream_data->read_stream->is_eof()) {
             m_internal_stream_data->user_finish_called = true;
-//        if (on_finish_with_data) {
-//            auto output_buffer = m_internal_buffered_data->payload_stream.copy_into_contiguous_buffer();
-//
-//            on_finish_with_data(m_internal_stream_data->success, m_internal_stream_data->total_size, )
-//        }
-    };
+            // if (on_finish_with_data) {
+            //     auto output_buffer = m_internal_buffered_data->payload_stream.copy_into_contiguous_buffer();
 
-    notifier->on_ready_to_read = [this, &stream, user_on_finish = move(user_on_finish)] {
-        constexpr size_t buffer_size = 4096;
-        static char buf[buffer_size];
-        auto nread = m_internal_stream_data->read_stream.read({ buf, buffer_size });
-        if (auto error = stream.write_or_error({ buf, nread }); !error) {
-            // FIXME: What do we do here?
-            TODO();
-        }
-
-        if (m_internal_stream_data->read_stream.eof() && m_internal_stream_data->request_done) {
-            m_internal_stream_data->read_notifier->close();
-            user_on_finish(m_internal_stream_data->success, m_internal_stream_data->total_size);
+            //    on_finish_with_data(m_internal_stream_data->success, m_internal_stream_data->total_size, )
+            //}
         }
     };
     m_internal_stream_data->read_notifier->on_ready_to_read = [this, &stream] {

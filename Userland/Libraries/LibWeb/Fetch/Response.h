@@ -63,24 +63,25 @@ public:
 
     bool has_encoded_data() const { return m_body.size() > 0; }
 
-    Optional<URL> url() const
+    /*Optional<URL>*/ void url() const
     {
-        if (m_url_list.is_empty())
-            return {}; // FIXME: Returns local temp object!!
-        return m_url_list.last();
+        // if (m_url_list.is_empty())
+        //     return {}; // FIXME: Returns local temp object!!
+        dbgln("{}", m_url_list);
+        return; // m_url_list.last();
     }
 
     const ByteBuffer& body() const { return m_body; }
-    void set_body(ReadonlyBytes body) { m_body = ByteBuffer::copy(body); }
+    ErrorOr<void> set_body(ReadonlyBytes body) { m_body = TRY(ByteBuffer::copy(body)); }
 
-//    const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers() const { return m_response_headers; }
+    //    const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers() const { return m_response_headers; }
 
-    [[nodiscard]] Optional<u32> status_code() const { return m_status_code; }
+    // [[nodiscard]] Optional<u32> status_code() const { return m_status_code; }
 
     void register_client(Badge<ResourceClient>, ResourceClient&);
     void unregister_client(Badge<ResourceClient>, ResourceClient&);
 
-//    const String& encoding() const { return m_encoding; }
+    //    const String& encoding() const { return m_encoding; }
     Optional<Core::MimeType> mime_type() const { return m_header_list.extract_mime_type(); }
 
     void for_each_client(Function<void(ResourceClient&)>);
@@ -142,12 +143,12 @@ public:
     void set_range_requested(Badge<ResourceLoader>, bool range_requested) { m_range_requested = range_requested; }
 
     // NOTE: This is an intentional copy, as the spec always makes a copy.
-    void set_url_list(Badge<ResourceLoader>, const Vector<URL>& url_list) { m_url_list = url_list; }
-    void set_url_list(const Vector<URL>& url_list) { m_url_list = url_list; } // FIXME: REMOVE
+    // void set_url_list(Badge<ResourceLoader>, const Vector<URL>& url_list) { m_url_list = url_list; }
+    // void set_url_list(const Vector<URL>& url_list) { m_url_list = url_list; } // FIXME: REMOVE
 
     u32 status() const { return m_status; }
 
-    Optional<URL> location_url(String const& request_fragment) const;
+    Optional<AK::URL> location_url(String const& request_fragment) const;
 
     NonnullRefPtr<Response> clone() const;
 
@@ -161,10 +162,10 @@ protected:
     Response();
 
 private:
-    Type m_type { Type::Generic }; // FIXME: Remove
+    Type m_type { Type::Generic };           // FIXME: Remove
     NewType m_new_type { NewType::Default }; // FIXME: Rename to m_type
     bool m_aborted { false };
-    Vector<URL> m_url_list;
+    Vector<AK::URL> m_url_list;
     u32 m_status { 200 };
     String m_status_message; // FIXME: Should be a byte sequence
     HTTP::HeaderList m_header_list;
