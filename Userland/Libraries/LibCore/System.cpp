@@ -422,6 +422,13 @@ ErrorOr<void> kill(pid_t pid, int signal)
     return {};
 }
 
+ErrorOr<void> killpg(int pgrp, int signal)
+{
+    if (::killpg(pgrp, signal) < 0)
+        return Error::from_syscall("killpg"sv, -errno);
+    return {};
+}
+
 ErrorOr<int> dup(int source_fd)
 {
     int fd = ::dup(source_fd);
