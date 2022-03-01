@@ -22,6 +22,13 @@ public:
         static String fieldset = "fieldset";
         return fieldset;
     }
+
+    // ^FormAssociatedElement
+    // https://html.spec.whatwg.org/multipage/forms.html#category-listed
+    virtual bool is_listed() const override { return true; }
+
+    // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
+    virtual bool is_auto_capitalize_inheriting() const override { return true; }
 };
 
 }
