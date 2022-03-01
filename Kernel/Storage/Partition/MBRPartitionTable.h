@@ -11,11 +11,11 @@
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
 #include <AK/Vector.h>
-#include <Kernel/Storage/Partition/PartitionTable.h>
+#include <LibPartition/PartitionTable.h>
 
 namespace Kernel {
 
-class MBRPartitionTable : public PartitionTable {
+class MBRPartitionTable : public Partition::PartitionTable {
 public:
     struct [[gnu::packed]] Entry {
         u8 status;

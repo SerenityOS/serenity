@@ -14,10 +14,10 @@
 #include <Kernel/Storage/Partition/DiskPartition.h>
 #include <Kernel/Storage/StorageController.h>
 #include <Kernel/Storage/StorageDevice.h>
+#include <LibPartition/PartitionTable.h>
 
 namespace Kernel {
 
-class PartitionTable;
 class StorageManagement {
 
 public:
@@ -47,7 +47,7 @@ private:
 
     void dump_storage_devices_and_partitions() const;
 
-    ErrorOr<NonnullOwnPtr<PartitionTable>> try_to_initialize_partition_table(StorageDevice const&) const;
+    ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> try_to_initialize_partition_table(StorageDevice const&) const;
 
     RefPtr<BlockDevice> boot_block_device() const;
 
