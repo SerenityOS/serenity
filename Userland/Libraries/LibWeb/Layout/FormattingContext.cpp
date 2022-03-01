@@ -260,7 +260,7 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
 
                 auto const& child_box_state = state.get(child_box);
 
-                float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height;
+                float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom();
 
                 if (!bottom.has_value() || child_box_bottom > bottom.value())
                     bottom = child_box_bottom;
