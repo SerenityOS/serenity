@@ -1084,4 +1084,28 @@ ErrorOr<void> setenv(StringView name, StringView value, bool overwrite)
     return {};
 }
 
+ErrorOr<int> posix_openpt(int flags)
+{
+    int const rc = ::posix_openpt(flags);
+    if (rc < 0)
+        return Error::from_syscall("posix_openpt", -errno);
+    return rc;
+}
+
+ErrorOr<void> grantpt(int fildes)
+{
+    auto const rc = ::grantpt(fildes);
+    if (rc < 0)
+        return Error::from_syscall("grantpt", -errno);
+    return {};
+}
+
+ErrorOr<void> unlockpt(int fildes)
+{
+    auto const rc = ::unlockpt(fildes);
+    if (rc < 0)
+        return Error::from_syscall("unlockpt", -errno);
+    return {};
+}
+
 }
