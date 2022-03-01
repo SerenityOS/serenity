@@ -401,7 +401,7 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
 void ConnectionFromClient::set_content_filters(Vector<String> const& filters)
 {
     for (auto& filter : filters)
-        Web::ContentFilter::the().add_pattern(filter);
+        Web::Fetch::ContentFilter::the().add_pattern(filter);
 }
 
 void ConnectionFromClient::set_preferred_color_scheme(Web::CSS::PreferredColorScheme const& color_scheme)
