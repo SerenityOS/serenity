@@ -28,6 +28,7 @@ public:
         FirstLetter,
         Marker,
     };
+    static auto constexpr PseudoElementCount = to_underlying(PseudoElement::Marker) + 1;
 
     struct SimpleSelector {
         enum class Type {
@@ -145,8 +146,75 @@ private:
     mutable Optional<u32> m_specificity;
 };
 
-constexpr StringView pseudo_element_name(Selector::PseudoElement);
-constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Type);
+constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
+{
+    switch (pseudo_element) {
+    case Selector::PseudoElement::Before:
+        return "before"sv;
+    case Selector::PseudoElement::After:
+        return "after"sv;
+    case Selector::PseudoElement::FirstLine:
+        return "first-line"sv;
+    case Selector::PseudoElement::FirstLetter:
+        return "first-letter"sv;
+    case Selector::PseudoElement::Marker:
+        return "marker"sv;
+    case Selector::PseudoElement::None:
+        break;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Type pseudo_class)
+{
+    switch (pseudo_class) {
+    case Selector::SimpleSelector::PseudoClass::Type::Link:
+        return "link"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Visited:
+        return "visited"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Hover:
+        return "hover"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Focus:
+        return "focus"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::FirstChild:
+        return "first-child"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::LastChild:
+        return "last-child"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::OnlyChild:
+        return "only-child"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Empty:
+        return "empty"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Root:
+        return "root"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
+        return "first-of-type"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::LastOfType:
+        return "last-of-type"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:
+        return "only-of-type"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::NthOfType:
+        return "nth-of-type"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::NthLastOfType:
+        return "nth-last-of-type"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Disabled:
+        return "disabled"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Enabled:
+        return "enabled"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Checked:
+        return "checked"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Active:
+        return "active"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::NthChild:
+        return "nth-child"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
+        return "nth-last-child"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Not:
+        return "not"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::None:
+        break;
+    }
+    VERIFY_NOT_REACHED();
+}
 
 String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors);
 
