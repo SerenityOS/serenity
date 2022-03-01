@@ -310,7 +310,7 @@ float BlockFormattingContext::compute_theoretical_height(FormattingState const& 
         if (!box.computed_values().height().has_value()
             || (box.computed_values().height()->is_length() && box.computed_values().height()->length().is_auto())
             || (computed_values.height().has_value() && computed_values.height()->is_percentage() && !is_absolute(containing_block.computed_values().height()))) {
-            height = compute_auto_height_for_block_level_element(state, box, ConsiderFloats::No);
+            height = compute_auto_height_for_block_level_element(state, box);
         } else {
             height = computed_values.height().has_value() ? computed_values.height()->resolved(box, containing_block_height).to_px(box) : 0;
         }

@@ -58,11 +58,7 @@ protected:
 
     static float tentative_width_for_replaced_element(FormattingState const&, ReplacedBox const&, CSS::Length const& width);
     static float tentative_height_for_replaced_element(FormattingState const&, ReplacedBox const&, CSS::Length const& height);
-    enum ConsiderFloats {
-        Yes,
-        No,
-    };
-    static float compute_auto_height_for_block_level_element(FormattingState const&, Box const&, ConsiderFloats consider_floats = ConsiderFloats::Yes);
+    static float compute_auto_height_for_block_level_element(FormattingState const&, Box const&);
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 
