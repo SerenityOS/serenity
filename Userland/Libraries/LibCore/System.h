@@ -146,5 +146,8 @@ ErrorOr<Vector<gid_t>> getgroups();
 ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev);
 ErrorOr<void> mkfifo(StringView pathname, mode_t mode);
 ErrorOr<void> setenv(StringView, StringView, bool);
+ErrorOr<int> posix_openpt(int flags);
+ErrorOr<void> grantpt(int fildes);
+ErrorOr<void> unlockpt(int fildes);
 
 }
