@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        let tempObj = [1, 2, 3];
+        console.log('This is a console.log from within <head> before anything else! What follows is a temporary array:', tempObj);
+        tempObj = null;
+    </script>
     <meta charset="UTF-8" />
     <title>Welcome!</title>
     <!-- this is a comment -->
@@ -194,6 +199,7 @@
         </ul>
     </nav>
     <script>
+        console.log('This is a console.log at the end of the <body> but not within queueMicrotask');
         queueMicrotask(function() {
             document.getElementById("loadtime").innerHTML = performance.now();
         });

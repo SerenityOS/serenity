@@ -54,8 +54,9 @@ public:
     };
 
     explicit Console(GlobalObject&);
+    ~Console();
 
-    void set_client(ConsoleClient& client) { m_client = &client; }
+    void set_client(ConsoleClient& client);
 
     GlobalObject& global_object() { return m_global_object; }
     const GlobalObject& global_object() const { return m_global_object; }

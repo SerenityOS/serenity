@@ -6,20 +6,135 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
 #include <LibJS/Console.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 
 namespace JS {
 
+class QueueingConsoleClient : public ConsoleClient {
+public:
+    QueueingConsoleClient(Console& console)
+        : ConsoleClient(console)
+    {
+    }
+
+    virtual ~QueueingConsoleClient() override = default;
+
+    virtual ThrowCompletionOr<Value> printer(Console::LogLevel log_level, PrinterArguments arguments) override
+    {
+        if (log_level == Console::LogLevel::Trace) {
+            auto& trace = arguments.get<Console::Trace>();
+            m_queued_commands.empend(ConsoleCommandType::Trace, log_level, trace.label, trace.stack);
+            return js_undefined();
+        }
+
+        if (log_level == Console::LogLevel::Group || log_level == Console::LogLevel::GroupCollapsed) {
+            auto& group = arguments.get<Console::Group>();
+            m_queued_commands.empend(ConsoleCommandType::Group, log_level, group.label);
+            return js_undefined();
+        }
+
+        auto& logging_arguments = arguments.get<Vector<Value>>();
+        MarkedVector<Value> marked_arguments { vm().heap() };
+        marked_arguments.extend(logging_arguments);
+
+        m_queued_commands.empend(ConsoleCommandType::Printer, log_level, String {}, move(marked_arguments));
+        return js_undefined();
+    }
+
+    virtual void clear() override
+    {
+        m_queued_commands.empend(ConsoleCommandType::Clear);
+    }
+    virtual void end_group() override
+    {
+        m_queued_commands.empend(ConsoleCommandType::EndGroup);
+    }
+
+    void run_commands(ConsoleClient& client)
+    {
+
+        if (!m_queued_commands.is_empty())
+            dbgln("\033[32;1m(Outputting queued commands from js log)\033[0m");
+
+        // We just ignore the results here as we have already return undefined.
+        for (auto& command : m_queued_commands) {
+            switch (command.type) {
+            case ConsoleCommandType::Trace:
+                VERIFY(command.arguments.has<Vector<String>>());
+                MUST(client.printer(command.log_level, Console::Trace { move(command.string_data), move(command.arguments.get<Vector<String>>()) }));
+                break;
+            case ConsoleCommandType::Group:
+                MUST(client.printer(command.log_level, Console::Group { move(command.string_data) }));
+                break;
+            case ConsoleCommandType::Printer: {
+                VERIFY(command.arguments.has<MarkedVector<Value>>());
+                auto& value_arguments = command.arguments.get<MarkedVector<Value>>();
+                Vector<Value> raw_values;
+                raw_values.extend(value_arguments);
+                MUST(client.printer(command.log_level, raw_values));
+                break;
+            }
+            case ConsoleCommandType::Clear:
+                client.clear();
+                break;
+            case ConsoleCommandType::EndGroup:
+                client.end_group();
+                break;
+            }
+        }
+        m_queued_commands.clear();
+    }
+
+private:
+    enum class ConsoleCommandType {
+        Trace,
+        Group,
+        Printer,
+        Clear,
+        EndGroup
+    };
+
+    struct ConsoleCommand {
+        ConsoleCommandType type;
+        Console::LogLevel log_level = Console::LogLevel::Assert;
+        String string_data {};
+        Variant<Empty, Vector<String>, MarkedVector<Value>> arguments {};
+    };
+
+    Vector<ConsoleCommand> m_queued_commands;
+};
+
 Console::Console(GlobalObject& global_object)
     : m_global_object(global_object)
+    , m_client(new QueueingConsoleClient(*this))
 {
+}
+
+Console::~Console()
+{
+    if (is<QueueingConsoleClient>(m_client)) {
+        auto* queueing_client = static_cast<QueueingConsoleClient*>(m_client);
+        delete queueing_client;
+    }
 }
 
 VM& Console::vm()
 {
     return m_global_object.vm();
+}
+
+void Console::set_client(ConsoleClient& client)
+{
+    if (is<QueueingConsoleClient>(m_client)) {
+        auto* queueing_client = static_cast<QueueingConsoleClient*>(m_client);
+        queueing_client->run_commands(client);
+        delete queueing_client;
+        m_client = nullptr;
+    }
+    m_client = &client;
 }
 
 // 1.1.3. debug(...data), https://console.spec.whatwg.org/#debug
