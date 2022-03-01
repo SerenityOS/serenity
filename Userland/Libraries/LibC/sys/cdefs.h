@@ -22,5 +22,3 @@
 
 #undef __P
 #define __P(a) a
-
-#define offsetof(type, member) __builtin_offsetof(type, member)
