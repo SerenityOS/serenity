@@ -191,6 +191,7 @@ void GlyphMapWidget::mousemove_event(GUI::MouseEvent& event)
     if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value()) {
         auto glyph = maybe_glyph.value();
         m_selection.extend_to(glyph);
+        set_active_glyph(glyph, ShouldResetSelection::No);
         scroll_to_glyph(glyph);
         update();
     }
