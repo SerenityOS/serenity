@@ -14,6 +14,7 @@
 #include <LibSystem/syscall.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/ptrace.h>
@@ -1067,6 +1068,20 @@ ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev)
 ErrorOr<void> mkfifo(StringView pathname, mode_t mode)
 {
     return mknod(pathname, mode | S_IFIFO, 0);
+}
+
+ErrorOr<void> setenv(StringView name, StringView value, bool overwrite)
+{
+#ifdef __serenity__
+    auto const rc = ::serenity_setenv(name.characters_without_null_termination(), name.length(), value.characters_without_null_termination(), value.length(), overwrite);
+#else
+    String name_string = name;
+    String value_string = value;
+    auto const rc = ::setenv(name_string.characters(), value_string.characters(), overwrite);
+#endif
+    if (rc < 0)
+        return Error::from_syscall("setenv", -errno);
+    return {};
 }
 
 }
