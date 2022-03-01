@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Sarah Taube <metalflakecobaltpaint@gmail.com>
  * Copyright (c) 2021, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -391,7 +392,7 @@ void ClassicStylePainter::paint_radio_button(Painter& painter, IntRect const& re
     painter.blit(rect.location(), bitmap, bitmap.rect());
 }
 
-static char const* s_checked_bitmap_data = {
+static constexpr Gfx::CharacterBitmap s_checked_bitmap {
     "         "
     "       # "
     "      ## "
@@ -400,12 +401,9 @@ static char const* s_checked_bitmap_data = {
     " #####   "
     "  ###    "
     "   #     "
-    "         "
+    "         ",
+    9, 9
 };
-
-static Gfx::CharacterBitmap* s_checked_bitmap;
-static int const s_checked_bitmap_width = 9;
-static int const s_checked_bitmap_height = 9;
 
 void ClassicStylePainter::paint_check_box(Painter& painter, IntRect const& rect, Palette const& palette, bool is_enabled, bool is_checked, bool is_being_pressed)
 {
@@ -418,9 +416,7 @@ void ClassicStylePainter::paint_check_box(Painter& painter, IntRect const& rect,
     }
 
     if (is_checked) {
-        if (!s_checked_bitmap)
-            s_checked_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
-        painter.draw_bitmap(rect.shrunken(4, 4).location(), *s_checked_bitmap, is_enabled ? palette.base_text() : palette.threed_shadow1());
+        painter.draw_bitmap(rect.shrunken(4, 4).location(), s_checked_bitmap, is_enabled ? palette.base_text() : palette.threed_shadow1());
     }
 }
 
