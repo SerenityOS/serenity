@@ -114,11 +114,34 @@ describe("Range", () => {
         const sheet = createSheet(workbook, "Sheet 1");
         sheet.makeCurrent();
         let i = 0;
-        for (const col of ["A", "B"])
-            for (const row of [0, 1, 2]) sheet.setCell(col, row, Math.pow(i++, 2));
+        for (const col of ["A", "B"]) {
+            for (const row of [0, 1, 2]) {
+                sheet.setCell(col, row, Math.pow(i++, 2));
+            }
+        }
 
         sheet.focusCell("A", 0);
         expect(R`A0:A2`.at(2).name).toEqual("A2");
         expect(Ranges.from(R`A0:A2`, R`B0:B2`).at(5).name).toEqual("B2");
+    });
+
+    test("Range(s)#toArray", () => {
+        const workbook = createWorkbook();
+        const sheet = createSheet(workbook, "Sheet 1");
+        sheet.makeCurrent();
+        let i = 0;
+        for (const col of ["A", "B"]) {
+            for (const row of [0, 1, 2]) {
+                sheet.setCell(col, row, Math.pow(i++, 2));
+            }
+        }
+
+        sheet.focusCell("A", 0);
+        expect(R`A0:A2`.toArray().toString()).toEqual("<Cell at A0>,<Cell at A1>,<Cell at A2>");
+        expect(
+            Ranges.from(R`A0:A2`, R`B0:B2`)
+                .toArray()
+                .toString()
+        ).toEqual("<Cell at A0>,<Cell at A1>,<Cell at A2>,<Cell at B0>,<Cell at B1>,<Cell at B2>");
     });
 });
