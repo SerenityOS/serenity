@@ -171,6 +171,12 @@ class Ranges {
         }
     }
 
+    toArray() {
+        const cells = [];
+        this.forEach(val => cells.push(val));
+        return cells;
+    }
+
     toString() {
         return `Ranges.from(${this.ranges.map(r => r.toString()).join(", ")})`;
     }
@@ -263,6 +269,12 @@ class Range {
         }
     }
 
+    toArray() {
+        const cells = [];
+        this.forEach(val => cells.push(val));
+        return cells;
+    }
+
     toString() {
         const endingRow = this.endingRow ?? "";
         return `R\`${this.startingColumnName}${this.startingRow}:${this.endingColumnName}${endingRow}:${this.columnStep}:${this.rowStep}\``;
@@ -340,12 +352,8 @@ function numericResolve(cells) {
 }
 
 function resolve(cells) {
-    let values = [];
-    if (cells instanceof Range || cells instanceof Ranges)
-        cells.forEach(cell => values.push(cell.value()));
-    else values = cells;
-
-    return values;
+    const isRange = cells instanceof Range || cells instanceof Ranges;
+    return isRange ? cells.toArray().map(cell => cell.value()) : cells;
 }
 
 // Statistics
