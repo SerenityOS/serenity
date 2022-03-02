@@ -423,6 +423,10 @@ static void print_array_buffer(JS::Object const& object, HashTable<JS::Object*>&
     print_type("ArrayBuffer");
     js_out("\n  byteLength: ");
     print_value(JS::Value((double)byte_length), seen_objects);
+    if (array_buffer.is_resizable_array_buffer()) {
+        js_out("\n  maxByteLength: ");
+        print_value(JS::Value((double)array_buffer.max_byte_length()), seen_objects);
+    }
     if (!byte_length)
         return;
     js_outln();
