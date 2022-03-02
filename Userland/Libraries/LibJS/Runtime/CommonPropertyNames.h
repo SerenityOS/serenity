@@ -314,6 +314,7 @@ namespace JS {
     P(log10)                                 \
     P(map)                                   \
     P(max)                                   \
+    P(maxByteLength)                         \
     P(maximize)                              \
     P(mergeFields)                           \
     P(message)                               \
