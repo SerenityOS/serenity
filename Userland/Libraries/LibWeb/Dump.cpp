@@ -165,7 +165,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         if (interactive)
             builder.appendff("@{:p} ", &layout_node);
 
-        builder.appendff("at ({},{}) size {}x{}",
+        builder.appendff("at ({},{}) content-size {}x{}",
             box.absolute_x(),
             box.absolute_y(),
             box.content_width(),
