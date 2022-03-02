@@ -6,23 +6,17 @@
 
 #pragma once
 
-#include <AK/Error.h>
-#include <AK/RefPtr.h>
-#include <AK/Result.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
 #include <LibPartition/MBRPartitionTable.h>
 
-namespace Kernel {
+namespace Partition {
 
 struct GUIDPartitionHeader;
-class GUIDPartitionTable final : public Partition::MBRPartitionTable {
+class GUIDPartitionTable final : public MBRPartitionTable {
 public:
     virtual ~GUIDPartitionTable() = default;
-    ;
 
-    static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(StorageDevice const&);
-    explicit GUIDPartitionTable(StorageDevice const&);
+    static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(Kernel::StorageDevice const&);
+    explicit GUIDPartitionTable(Kernel::StorageDevice const&);
 
     virtual bool is_valid() const override { return m_valid; };
 

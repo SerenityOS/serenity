@@ -107,10 +107,6 @@
 #cmakedefine01 FUTEXQUEUE_DEBUG
 #endif
 
-#ifndef GPT_DEBUG
-#cmakedefine01 GPT_DEBUG
-#endif
-
 #ifndef HPET_COMPARATOR_DEBUG
 #cmakedefine01 HPET_COMPARATOR_DEBUG
 #endif
