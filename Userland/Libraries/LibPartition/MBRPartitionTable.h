@@ -6,16 +6,12 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/Error.h>
-#include <AK/RefPtr.h>
-#include <AK/Result.h>
-#include <AK/Vector.h>
 #include <LibPartition/PartitionTable.h>
 
-namespace Kernel {
+namespace Partition {
 
-class MBRPartitionTable : public Partition::PartitionTable {
+class MBRPartitionTable : public PartitionTable {
 public:
     struct [[gnu::packed]] Entry {
         u8 status;
@@ -42,10 +38,10 @@ public:
 public:
     ~MBRPartitionTable();
 
-    static ErrorOr<NonnullOwnPtr<MBRPartitionTable>> try_to_initialize(StorageDevice const&);
-    static OwnPtr<MBRPartitionTable> try_to_initialize(StorageDevice const&, u32 start_lba);
-    explicit MBRPartitionTable(StorageDevice const&);
-    MBRPartitionTable(StorageDevice const&, u32 start_lba);
+    static ErrorOr<NonnullOwnPtr<MBRPartitionTable>> try_to_initialize(Kernel::StorageDevice const&);
+    static OwnPtr<MBRPartitionTable> try_to_initialize(Kernel::StorageDevice const&, u32 start_lba);
+    explicit MBRPartitionTable(Kernel::StorageDevice const&);
+    MBRPartitionTable(Kernel::StorageDevice const&, u32 start_lba);
 
     bool is_protective_mbr() const;
     bool contains_ebr() const;
@@ -63,4 +59,5 @@ private:
     const u32 m_start_lba;
     ByteBuffer m_cached_header;
 };
+
 }

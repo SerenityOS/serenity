@@ -11,12 +11,12 @@
 #include <AK/Result.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <Kernel/Storage/Partition/MBRPartitionTable.h>
+#include <LibPartition/MBRPartitionTable.h>
 
 namespace Kernel {
 
 struct GUIDPartitionHeader;
-class GUIDPartitionTable final : public MBRPartitionTable {
+class GUIDPartitionTable final : public Partition::MBRPartitionTable {
 public:
     virtual ~GUIDPartitionTable() = default;
     ;

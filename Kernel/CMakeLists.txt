@@ -106,7 +106,6 @@ set(KERNEL_SOURCES
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/EBRPartitionTable.cpp
     Storage/Partition/GUIDPartitionTable.cpp
-    Storage/Partition/MBRPartitionTable.cpp
     Storage/NVMe/NVMeController.cpp
     Storage/NVMe/NVMeNameSpace.cpp
     Storage/NVMe/NVMeInterruptQueue.cpp
@@ -405,6 +404,7 @@ set(CRYPTO_SOURCES
 
 set(PARTITION_SOURCES
     ../Userland/Libraries/LibPartition/DiskPartitionMetadata.cpp
+    ../Userland/Libraries/LibPartition/MBRPartitionTable.cpp
     ../Userland/Libraries/LibPartition/PartitionTable.cpp
 )
 

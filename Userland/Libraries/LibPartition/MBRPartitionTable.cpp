@@ -4,18 +4,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <Kernel/Debug.h>
-#include <Kernel/Storage/Partition/MBRPartitionTable.h>
+#include <AK/Debug.h>
+#include <LibPartition/MBRPartitionTable.h>
 
-namespace Kernel {
+namespace Partition {
 
 #define MBR_SIGNATURE 0xaa55
 #define MBR_PROTECTIVE 0xEE
 #define EBR_CHS_CONTAINER 0x05
 #define EBR_LBA_CONTAINER 0x0F
 
-ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(StorageDevice const& device)
+ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice const& device)
 {
     auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(device)));
     if (table->contains_ebr())
@@ -27,7 +26,7 @@ ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(S
     return table;
 }
 
-OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(StorageDevice const& device, u32 start_lba)
+OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice const& device, u32 start_lba)
 {
     auto table = adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(device, start_lba)).release_value_but_fixme_should_propagate_errors();
     if (!table->is_valid())
@@ -44,7 +43,7 @@ bool MBRPartitionTable::read_boot_record()
     return m_header_valid;
 }
 
-MBRPartitionTable::MBRPartitionTable(StorageDevice const& device, u32 start_lba)
+MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice const& device, u32 start_lba)
     : PartitionTable(device)
     , m_start_lba(start_lba)
     , m_cached_header(ByteBuffer::create_zeroed(m_device->block_size()).release_value_but_fixme_should_propagate_errors()) // FIXME: Do something sensible if this fails because of OOM.
@@ -65,7 +64,7 @@ MBRPartitionTable::MBRPartitionTable(StorageDevice const& device, u32 start_lba)
     m_valid = true;
 }
 
-MBRPartitionTable::MBRPartitionTable(StorageDevice const& device)
+MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice const& device)
     : PartitionTable(device)
     , m_start_lba(0)
     , m_cached_header(ByteBuffer::create_zeroed(m_device->block_size()).release_value_but_fixme_should_propagate_errors()) // FIXME: Do something sensible if this fails because of OOM.
