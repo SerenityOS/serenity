@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, Jamie Mansfield <jmansfield@cadixdev.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,6 +27,8 @@ void ArrayBufferPrototype::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.slice, slice, 2, attr);
     define_native_accessor(vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.maxByteLength, max_byte_length_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.resizable, resizable_getter, {}, Attribute::Configurable);
 
     // 25.1.5.4 ArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-arraybuffer.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.ArrayBuffer.as_string()), Attribute::Configurable);
@@ -143,6 +146,46 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
 
     // 6. Return 𝔽(length).
     return Value(length);
+}
+
+// 1.3.2 get ArrayBuffer.prototype.maxByteLength, https://tc39.es/proposal-resizablearraybuffer/#sec-get-arraybuffer.prototype.maxbytelength
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::max_byte_length_getter)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
+    auto* array_buffer_object = TRY(typed_this_value(global_object));
+
+    // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
+    // FIXME: Check for shared buffer
+
+    // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
+    if (array_buffer_object->is_detached())
+        return Value(0);
+
+    // 5. If IsResizableArrayBuffer(O) is true, then
+    if (array_buffer_object->is_resizable_array_buffer()) {
+        // a. Let length be O.[[ArrayBufferMaxByteLength]].
+        return array_buffer_object->max_byte_length();
+    }
+
+    // 6. Else
+    //     a. Let length be O.[[ArrayBufferByteLength]].
+    // 7. Return 𝔽(length).
+    return array_buffer_object->byte_length();
+}
+
+// 1.3.3 get ArrayBuffer.prototype.resizable, https://tc39.es/proposal-resizablearraybuffer/#sec-get-arraybuffer.prototype.resizable
+JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::resizable_getter)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
+    auto* array_buffer_object = TRY(typed_this_value(global_object));
+
+    // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
+    // FIXME: Check for shared buffer
+
+    // 4. Return IsResizableArrayBuffer(O).
+    return array_buffer_object->is_resizable_array_buffer();
 }
 
 }
