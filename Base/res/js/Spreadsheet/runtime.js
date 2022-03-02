@@ -277,10 +277,13 @@ class Range {
 
     toString() {
         const endingRow = this.endingRow ?? "";
-        return `R\`${this.startingColumnName}${this.startingRow}:${this.endingColumnName}${endingRow}:${this.columnStep}:${this.rowStep}\``;
+        const showSteps = this.rowStep !== 1 || this.columnStep !== 1;
+        const steps = showSteps ? `:${this.columnStep}:${this.rowStep}` : "";
+        return `R\`${this.startingColumnName}${this.startingRow}:${this.endingColumnName}${endingRow}${steps}\``;
     }
 }
 
+const R_FORMAT = /^([a-zA-Z_]+)(?:(\d+):([a-zA-Z_]+)(\d+)?(?::(\d+):(\d+))?)?$/;
 function R(fmt, ...args) {
     if (args.length !== 0) throw new TypeError("R`` format must be a literal");
     // done because:
@@ -288,23 +291,20 @@ function R(fmt, ...args) {
     // myFunc("ABC") => ""ABC""
     // myFunc`ABC` => "["ABC"]"
     if (Array.isArray(fmt)) fmt = fmt[0];
-    const parts = fmt.split(":");
-    if (parts.length !== 2 && parts.length !== 4)
-        throw new Error("Invalid Format. Expected Format: R`A0:A1` or R`A0:A2:1:2`");
-    // ColRow:Col(Row)?(:ColStep:RowStep)?
-    const start = thisSheet.parse_cell_name(parts[0]);
-    let end = parts[1];
-    if (/^[a-zA-Z_]+$/.test(end)) end = { column: end, row: undefined };
-    else end = thisSheet.parse_cell_name(parts[1]);
-    parts[2] ??= 1;
-    parts[3] ??= 1;
+    if (!R_FORMAT.test(fmt))
+        throw new Error("Invalid Format. Expected Format: R`A` or R`A0:A1` or R`A0:A2:1:2`");
+    // Format: Col(Row:Col(Row)?(:ColStep:RowStep)?)?
+    // Ignore the first element of the match array as that will be the whole match.
+    const [, ...matches] = fmt.match(R_FORMAT);
+    const [startCol, startRow, endCol, endRow, colStep, rowStep] = matches;
     return new Range(
-        start.column,
-        end.column,
-        start.row,
-        end.row,
-        integer(parts[2]),
-        integer(parts[3])
+        startCol,
+        endCol ?? startCol,
+        integer(startRow ?? 0),
+        // Don't make undefined an integer, because then it becomes 0.
+        !!endRow ? integer(endRow) : endRow,
+        integer(colStep ?? 1),
+        integer(rowStep ?? 1)
     );
 }
 
