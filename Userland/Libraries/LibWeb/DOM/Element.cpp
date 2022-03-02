@@ -140,7 +140,7 @@ static ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, Fly
         return NamespaceError::create("Namespace is the XMLNS namespace and neither qualifiedName nor prefix is 'xmlns'.");
 
     // 10. Return namespace, prefix, and localName.
-    return QualifiedName { namespace_, prefix, local_name };
+    return QualifiedName { local_name, prefix, namespace_ };
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributens
