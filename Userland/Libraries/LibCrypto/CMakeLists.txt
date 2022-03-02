@@ -17,6 +17,7 @@ set(SOURCES
     Checksum/Adler32.cpp
     Checksum/CRC32.cpp
     Cipher/AES.cpp
+    Curves/SECP256r1.cpp
     Curves/X25519.cpp
     Curves/X448.cpp
     Hash/MD5.cpp
