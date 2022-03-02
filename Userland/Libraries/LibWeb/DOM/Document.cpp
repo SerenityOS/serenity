@@ -877,11 +877,22 @@ DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element(String const& 
     return DOM::create_element(*this, tag_name, Namespace::HTML);
 }
 
+// https://dom.spec.whatwg.org/#dom-document-createelementns
 // https://dom.spec.whatwg.org/#internal-createelementns-steps
 // FIXME: This only implements step 4 of the algorithm and does not take in options.
-DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element_ns(const String& namespace_, const String& qualified_name)
+DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element_ns(String const& namespace_, String const& qualified_name)
 {
-    return DOM::create_element(*this, qualified_name, namespace_);
+    // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
+    auto result = validate_and_extract(namespace_, qualified_name);
+    if (result.is_exception())
+        return result.exception();
+    auto qname = result.release_value();
+
+    // FIXME: 2. Let is be null.
+    // FIXME: 3. If options is a dictionary and options["is"] exists, then set is to it.
+
+    // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
+    return DOM::create_element(*this, qname.local_name(), qname.namespace_(), qname.prefix());
 }
 
 NonnullRefPtr<DocumentFragment> Document::create_document_fragment()

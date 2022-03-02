@@ -101,13 +101,15 @@ ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& va
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract
-static ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString qualified_name)
+ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString qualified_name)
 {
     // 1. If namespace is the empty string, then set it to null.
     if (namespace_.is_empty())
         namespace_ = {};
 
-    // FIXME: 2. Validate qualifiedName.
+    // 2. Validate qualifiedName.
+    if (auto result = Document::validate_qualified_name(qualified_name); result.is_exception())
+        return result.exception();
 
     // 3. Let prefix be null.
     FlyString prefix = {};
