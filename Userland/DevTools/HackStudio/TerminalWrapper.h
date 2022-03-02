@@ -21,8 +21,8 @@ public:
         No,
         Yes
     };
-    void run_command(const String&, Optional<String> working_directory = {}, WaitForExit = WaitForExit::No);
-    void kill_running_command();
+    ErrorOr<void> run_command(const String&, Optional<String> working_directory = {}, WaitForExit = WaitForExit::No, Optional<StringView> failure_message = {});
+    ErrorOr<void> kill_running_command();
     void clear_including_history();
 
     bool user_spawned() const { return m_user_spawned; }
