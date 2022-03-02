@@ -26,9 +26,11 @@ private:
     void add_operation_button(GUI::Button&, Calculator::Operation);
     void add_digit_button(GUI::Button&, int digit);
 
+    void mimic_pressed_button(RefPtr<GUI::Button>);
     void update_display();
 
     virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void timer_event(Core::TimerEvent&) override;
 
     Calculator m_calculator;
     Keypad m_keypad;
@@ -54,4 +56,6 @@ private:
     RefPtr<GUI::Button> m_inverse_button;
     RefPtr<GUI::Button> m_percent_button;
     RefPtr<GUI::Button> m_equals_button;
+
+    RefPtr<GUI::Button> m_mimic_pressed_button {};
 };
