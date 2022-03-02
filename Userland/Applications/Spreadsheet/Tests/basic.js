@@ -145,3 +145,62 @@ describe("Range", () => {
         ).toEqual("<Cell at A0>,<Cell at A1>,<Cell at A2>,<Cell at B0>,<Cell at B1>,<Cell at B2>");
     });
 });
+
+describe("R function", () => {
+    const workbook = createWorkbook();
+    const sheet = createSheet(workbook, "Sheet 1");
+    sheet.makeCurrent();
+    /*
+      A B
+      +++
+    0+1 1
+    1+2 4
+    2+3 9
+    */
+    for (const row of ["A", "B"]) {
+        for (let col of [0, 1, 2]) {
+            sheet.setCell(row, col++, row === "A" ? col : Math.pow(col, 2));
+        }
+    }
+    sheet.focusCell("A", 0);
+
+    test("Check for correctness: R`A0:A`", () => {
+        const range = R`A0:A`;
+        expect(range.toString()).toEqual("R`A0:A`");
+        expect(count(range)).toEqual(3);
+        expect(sum(range)).toEqual(6);
+    });
+    test("Check for correctness: R`A`", () => {
+        const range = R`A`;
+        expect(range.toString()).toEqual("R`A0:A`");
+        expect(count(range)).toEqual(3);
+        expect(sum(range)).toEqual(6);
+    });
+    test("Check for correctness: R`A0:B`", () => {
+        const range = R`A0:B`;
+        expect(range.toString()).toEqual("R`A0:B`");
+        expect(count(range)).toEqual(6);
+        expect(sum(range)).toEqual(20);
+    });
+    test("Check for correctness: R`A0:B0`", () => {
+        const range = R`A0:B0`;
+        expect(range.toString()).toEqual("R`A0:B0`");
+        expect(count(range)).toEqual(2);
+        expect(sum(range)).toEqual(2);
+    });
+    test("Check for correctness: R`A0:B:2:1`", () => {
+        const range = R`A0:B2:1:2`;
+        expect(range.toString()).toEqual("R`A0:B2:1:2`");
+        expect(range.toArray().toString()).toEqual(
+            "<Cell at A0>,<Cell at A2>,<Cell at B0>,<Cell at B2>"
+        );
+        expect(count(range)).toEqual(4);
+        expect(sum(range)).toEqual(14);
+    });
+    test("R`B`", () => {
+        const range = R`B`;
+        expect(range.toString()).toEqual("R`B0:B`");
+        expect(count(range)).toEqual(3);
+        expect(sum(range)).toEqual(14);
+    });
+});
