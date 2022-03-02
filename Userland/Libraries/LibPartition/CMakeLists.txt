@@ -1,5 +1,6 @@
 set(SOURCES
     DiskPartitionMetadata.cpp
+    EBRPartitionTable.cpp
     MBRPartitionTable.cpp
     PartitionTable.cpp
 )

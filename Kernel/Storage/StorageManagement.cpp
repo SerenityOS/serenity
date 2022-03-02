@@ -21,10 +21,10 @@
 #include <Kernel/Storage/ATA/GenericIDE/ISAController.h>
 #include <Kernel/Storage/ATA/GenericIDE/PCIController.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
-#include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 #include <Kernel/Storage/Ramdisk/Controller.h>
 #include <Kernel/Storage/StorageManagement.h>
+#include <LibPartition/EBRPartitionTable.h>
 #include <LibPartition/MBRPartitionTable.h>
 
 namespace Kernel {
@@ -136,7 +136,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> StorageManage
     auto mbr_table_or_error = Partition::MBRPartitionTable::try_to_initialize(device);
     if (!mbr_table_or_error.is_error())
         return mbr_table_or_error.release_value();
-    auto ebr_table_or_error = EBRPartitionTable::try_to_initialize(device);
+    auto ebr_table_or_error = Partition::EBRPartitionTable::try_to_initialize(device);
     if (!ebr_table_or_error.is_error()) {
         return ebr_table_or_error.release_value();
     }
