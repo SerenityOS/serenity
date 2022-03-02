@@ -286,6 +286,10 @@
 #cmakedefine01 MATROSKA_TRACE_DEBUG
 #endif
 
+#ifndef MBR_DEBUG
+#cmakedefine01 MBR_DEBUG
+#endif
+
 #ifndef MEMORY_DEBUG
 #cmakedefine01 MEMORY_DEBUG
 #endif
