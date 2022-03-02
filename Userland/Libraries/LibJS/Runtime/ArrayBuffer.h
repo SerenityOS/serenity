@@ -34,6 +34,7 @@ public:
     virtual ~ArrayBuffer() override;
 
     size_t byte_length() const { return buffer_impl().size(); }
+    size_t max_byte_length() const { return m_max_byte_length.value(); } // Will VERIFY() that it has value
     ByteBuffer& buffer() { return buffer_impl(); }
     const ByteBuffer& buffer() const { return buffer_impl(); }
 
@@ -46,6 +47,8 @@ public:
 
     void detach_buffer() { m_buffer = Empty {}; }
     bool is_detached() const { return m_buffer.has<Empty>(); }
+
+    bool is_resizable_array_buffer() const;
 
     enum Order {
         SeqCst,

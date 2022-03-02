@@ -380,6 +380,7 @@ namespace JS {
     P(reject)                                \
     P(relativeTo)                            \
     P(repeat)                                \
+    P(resizable)                             \
     P(resolve)                               \
     P(resolvedOptions)                       \
     P(reverse)                               \

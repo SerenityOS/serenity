@@ -48,6 +48,16 @@ ArrayBuffer::~ArrayBuffer()
 {
 }
 
+// 1.1.5 IsResizableArrayBuffer ( arrayBuffer ), https://tc39.es/proposal-resizablearraybuffer/#sec-isresizablearraybuffer
+bool ArrayBuffer::is_resizable_array_buffer() const
+{
+    // 1. Assert: Type(arrayBuffer) is Object and arrayBuffer has an [[ArrayBufferData]] internal slot.
+
+    // 2. If buffer has an [[ArrayBufferMaxByteLength]] internal slot, return true.
+    // 3. Return false.
+    return m_max_byte_length.has_value();
+}
+
 void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
