@@ -844,7 +844,7 @@ _StartOfFunction:
             {
                 ON('"')
                 {
-                    m_current_token.ensure_doctype_data().public_identifier = consume_current_builder();
+                    m_current_token.ensure_doctype_data().system_identifier = consume_current_builder();
                     SWITCH_TO(AfterDOCTYPESystemIdentifier);
                 }
                 ON(0)
@@ -856,7 +856,7 @@ _StartOfFunction:
                 ON('>')
                 {
                     log_parse_error();
-                    m_current_token.ensure_doctype_data().public_identifier = consume_current_builder();
+                    m_current_token.ensure_doctype_data().system_identifier = consume_current_builder();
                     m_current_token.ensure_doctype_data().force_quirks = true;
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
