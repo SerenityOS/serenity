@@ -85,7 +85,7 @@ apk add build-base
 apk add qemu qemu-system-i386 qemu-img qemu-ui-gtk
 
 # build tools (samurai is a drop-in replacement for ninja)
-apk add cmake e2fsprogs grub-bios samurai mpc1-dev mpfr-dev gmp-dev ccache rsync
+apk add cmake e2fsprogs grub-bios samurai mpc1-dev mpfr-dev gmp-dev ccache rsync texinfo
 ```
 
 ## OpenBSD prerequisites
