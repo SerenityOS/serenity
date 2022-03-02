@@ -10,7 +10,7 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/Storage/Partition/DiskPartition.h>
+#include <Kernel/Storage/DiskPartition.h>
 #include <Kernel/Storage/StorageController.h>
 
 namespace Kernel {

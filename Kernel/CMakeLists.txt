@@ -103,7 +103,6 @@ set(KERNEL_SOURCES
     Storage/ATA/ATADiskDevice.cpp
     Storage/ATA/ATAPIDiscDevice.cpp
     Storage/ATA/ATAPort.cpp
-    Storage/Partition/DiskPartition.cpp
     Storage/NVMe/NVMeController.cpp
     Storage/NVMe/NVMeNameSpace.cpp
     Storage/NVMe/NVMeInterruptQueue.cpp
@@ -111,6 +110,7 @@ set(KERNEL_SOURCES
     Storage/NVMe/NVMeQueue.cpp
     Storage/Ramdisk/Controller.cpp
     Storage/Ramdisk/Device.cpp
+    Storage/DiskPartition.cpp
     Storage/StorageController.cpp
     Storage/StorageDevice.cpp
     Storage/StorageManagement.cpp
