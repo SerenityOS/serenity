@@ -11,7 +11,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
-#include <Kernel/Storage/Partition/DiskPartition.h>
+#include <Kernel/Storage/DiskPartition.h>
 #include <Kernel/Storage/StorageController.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <LibPartition/PartitionTable.h>
