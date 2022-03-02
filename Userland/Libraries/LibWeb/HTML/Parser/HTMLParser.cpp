@@ -490,7 +490,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
     }
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::html) {
-        auto element = create_element_for(token, Namespace::HTML);
+        auto element = create_element_for(token, Namespace::HTML, document());
         document().append_child(element);
         m_stack_of_open_elements.push(move(element));
         m_insertion_mode = InsertionMode::BeforeHead;
@@ -586,13 +586,64 @@ HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_ins
     return adjusted_insertion_location;
 }
 
-NonnullRefPtr<DOM::Element> HTMLParser::create_element_for(const HTMLToken& token, const FlyString& namespace_)
+NonnullRefPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, FlyString const& namespace_, DOM::Node const& intended_parent)
 {
-    auto element = create_element(document(), token.tag_name(), namespace_);
+    // FIXME: 1. If the active speculative HTML parser is not null, then return the result of creating a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
+    // FIXME: 2. Otherwise, optionally create a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
+
+    // 3. Let document be intended parent's node document.
+    NonnullRefPtr<DOM::Document> document = intended_parent.document();
+
+    // 4. Let local name be the tag name of the token.
+    auto local_name = token.tag_name();
+
+    // FIXME: 5. Let is be the value of the "is" attribute in the given token, if such an attribute exists, or null otherwise.
+    // FIXME: 6. Let definition be the result of looking up a custom element definition given document, given namespace, local name, and is.
+    // FIXME: 7. If definition is non-null and the parser was not created as part of the HTML fragment parsing algorithm, then let will execute script be true. Otherwise, let it be false.
+    // FIXME: 8. If will execute script is true, then:
+    // FIXME:    1. Increment document's throw-on-dynamic-markup-insertion counter.
+    // FIXME:    2. If the JavaScript execution context stack is empty, then perform a microtask checkpoint.
+    // FIXME:    3. Push a new element queue onto document's relevant agent's custom element reactions stack.
+
+    // 9. Let element be the result of creating an element given document, localName, given namespace, null, and is.
+    // FIXME: If will execute script is true, set the synchronous custom elements flag; otherwise, leave it unset.
+    // FIXME: Pass in `null` and `is`.
+    auto element = create_element(document, local_name, namespace_);
+
+    // 10. Append each attribute in the given token to element.
+    // FIXME: This isn't the exact `append` the spec is talking about.
     token.for_each_attribute([&](auto& attribute) {
         element->set_attribute(attribute.local_name, attribute.value);
         return IterationDecision::Continue;
     });
+
+    // FIXME: 11. If will execute script is true, then:
+    // FIXME:     1. Let queue be the result of popping from document's relevant agent's custom element reactions stack. (This will be the same element queue as was pushed above.)
+    // FIXME:     2. Invoke custom element reactions in queue.
+    // FIXME:     3. Decrement document's throw-on-dynamic-markup-insertion counter.
+
+    // FIXME: 12. If element has an xmlns attribute in the XMLNS namespace whose value is not exactly the same as the element's namespace, that is a parse error.
+    //            Similarly, if element has an xmlns:xlink attribute in the XMLNS namespace whose value is not the XLink Namespace, that is a parse error.
+
+    // FIXME: 13. If element is a resettable element, invoke its reset algorithm. (This initializes the element's value and checkedness based on the element's attributes.)
+
+    // 14. If element is a form-associated element and not a form-associated custom element, the form element pointer is not null, there is no template element on the stack of open elements,
+    //     element is either not listed or doesn't have a form attribute, and the intended parent is in the same tree as the element pointed to by the form element pointer,
+    //     then associate element with the form element pointed to by the form element pointer and set element's parser inserted flag.
+    // FIXME: Check if the element is not a form-associated custom element.
+    if (is<FormAssociatedElement>(*element)) {
+        auto& form_associated_element = static_cast<FormAssociatedElement&>(*element);
+
+        if (m_form_element
+            && !m_stack_of_open_elements.contains(HTML::TagNames::template_)
+            && (!form_associated_element.is_listed() || !form_associated_element.has_attribute(HTML::AttributeNames::form))
+            && &intended_parent.root() == &m_form_element->root()) {
+            form_associated_element.set_form(m_form_element);
+            form_associated_element.set_parser_inserted({});
+        }
+    }
+
+    // 15. Return element.
     return element;
 }
 
@@ -601,8 +652,8 @@ NonnullRefPtr<DOM::Element> HTMLParser::insert_foreign_element(const HTMLToken& 
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
 
-    // FIXME: Pass in adjusted_insertion_location.parent as the intended parent.
-    auto element = create_element_for(token, namespace_);
+    // NOTE: adjusted_insertion_location.parent will be non-null, however, it uses RP to be able to default-initialize HTMLParser::AdjustedInsertionLocation.
+    auto element = create_element_for(token, namespace_, *adjusted_insertion_location.parent);
 
     auto pre_insertion_validity = adjusted_insertion_location.parent->ensure_pre_insertion_validity(element, adjusted_insertion_location.insert_before_sibling);
 
@@ -735,7 +786,7 @@ void HTMLParser::handle_in_head(HTMLToken& token)
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::script) {
         auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-        auto element = create_element_for(token, Namespace::HTML);
+        auto element = create_element_for(token, Namespace::HTML, *adjusted_insertion_location.parent);
         auto& script_element = verify_cast<HTMLScriptElement>(*element);
         script_element.set_parser_document({}, document());
         script_element.set_non_blocking({}, false);

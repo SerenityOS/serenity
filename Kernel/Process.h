@@ -16,6 +16,7 @@
 #include <AK/Variant.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
+#include <Kernel/API/POSIX/sys/resource.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/AtomicEdgeAction.h>
@@ -286,6 +287,7 @@ public:
     ErrorOr<FlatPtr> sys$getppid();
     ErrorOr<FlatPtr> sys$getresuid(Userspace<UserID*>, Userspace<UserID*>, Userspace<UserID*>);
     ErrorOr<FlatPtr> sys$getresgid(Userspace<GroupID*>, Userspace<GroupID*>, Userspace<GroupID*>);
+    ErrorOr<FlatPtr> sys$getrusage(int, Userspace<rusage*>);
     ErrorOr<FlatPtr> sys$umask(mode_t);
     ErrorOr<FlatPtr> sys$open(Userspace<const Syscall::SC_open_params*>);
     ErrorOr<FlatPtr> sys$close(int fd);

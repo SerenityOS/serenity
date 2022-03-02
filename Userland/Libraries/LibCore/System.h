@@ -111,6 +111,7 @@ ErrorOr<bool> isatty(int fd);
 ErrorOr<void> symlink(StringView target, StringView link_path);
 ErrorOr<void> mkdir(StringView path, mode_t);
 ErrorOr<void> chdir(StringView path);
+ErrorOr<void> rmdir(StringView path);
 ErrorOr<pid_t> fork();
 ErrorOr<int> mkstemp(Span<char> pattern);
 ErrorOr<void> fchmod(int fd, mode_t mode);
@@ -142,5 +143,4 @@ ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2]);
 ErrorOr<Vector<gid_t>> getgroups();
 ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev);
 ErrorOr<void> mkfifo(StringView pathname, mode_t mode);
-
 }

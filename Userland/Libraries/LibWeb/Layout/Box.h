@@ -14,6 +14,11 @@
 
 namespace Web::Layout {
 
+struct LineBoxFragmentCoordinate {
+    size_t line_box_index { 0 };
+    size_t fragment_index { 0 };
+};
+
 class Box : public NodeWithStyleAndBoxModelMetrics {
 public:
     struct OverflowData {
@@ -82,7 +87,7 @@ public:
 
     bool is_body() const;
 
-    void set_containing_line_box_fragment(LineBoxFragment&);
+    void set_containing_line_box_fragment(Optional<LineBoxFragmentCoordinate>);
 
     StackingContext* stacking_context() { return m_stacking_context; }
     const StackingContext* stacking_context() const { return m_stacking_context; }
@@ -104,16 +109,16 @@ public:
     bool has_intrinsic_height() const { return intrinsic_height().has_value(); }
     bool has_intrinsic_aspect_ratio() const { return intrinsic_aspect_ratio().has_value(); }
 
-    bool has_overflow() const { return m_overflow_data; }
+    bool has_overflow() const { return m_overflow_data.has_value(); }
 
     Optional<Gfx::FloatRect> scrollable_overflow_rect() const
     {
-        if (!m_overflow_data)
+        if (!m_overflow_data.has_value())
             return {};
         return m_overflow_data->scrollable_overflow_rect;
     }
 
-    void set_overflow_data(OwnPtr<OverflowData> data) { m_overflow_data = move(data); }
+    void set_overflow_data(Optional<OverflowData> data) { m_overflow_data = move(data); }
 
     virtual void before_children_paint(PaintContext&, PaintPhase) override;
     virtual void after_children_paint(PaintContext&, PaintPhase) override;
@@ -138,11 +143,11 @@ private:
     Gfx::FloatSize m_content_size;
 
     // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
-    WeakPtr<LineBoxFragment> m_containing_line_box_fragment;
+    Optional<LineBoxFragmentCoordinate> m_containing_line_box_fragment;
 
     OwnPtr<StackingContext> m_stacking_context;
 
-    OwnPtr<OverflowData> m_overflow_data;
+    Optional<OverflowData> m_overflow_data;
 };
 
 template<>

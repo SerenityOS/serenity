@@ -249,6 +249,7 @@ set(KERNEL_SOURCES
     Syscalls/readlink.cpp
     Syscalls/realpath.cpp
     Syscalls/rename.cpp
+    Syscalls/resource.cpp
     Syscalls/rmdir.cpp
     Syscalls/sched.cpp
     Syscalls/sendfd.cpp
@@ -383,7 +384,7 @@ else()
     set(SOURCES
         ${SOURCES}
         ${AK_SOURCES}
-        
+
         Arch/aarch64/dummy.cpp
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/ScopedCritical.cpp
@@ -426,7 +427,7 @@ else() # Assume Clang
 
     # We need this in order to pick up the #define __serenity__, otherwise we end up including unistd.h into the linker script
     set(TARGET_STRING "--target=${CMAKE_CXX_COMPILER_TARGET}")
-    
+
     add_link_options(LINKER:--build-id=none LINKER:--pack-dyn-relocs=relr)
 endif()
 

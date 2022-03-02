@@ -571,9 +571,13 @@ void Document::update_layout()
     Layout::BlockFormattingContext root_formatting_context(formatting_state, *m_layout_root, nullptr);
     m_layout_root->build_stacking_context_tree();
 
-    auto& icb_state = formatting_state.get_mutable(*m_layout_root);
+    auto& icb = static_cast<Layout::InitialContainingBlock&>(*m_layout_root);
+    auto& icb_state = formatting_state.get_mutable(icb);
     icb_state.content_width = viewport_rect.width();
     icb_state.content_height = viewport_rect.height();
+
+    icb.set_has_definite_width(true);
+    icb.set_has_definite_height(true);
 
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
     formatting_state.commit();

@@ -8,7 +8,9 @@
 
 #include <AK/Concepts.h>
 #include <AK/Format.h>
+#include <AK/IntegralMath.h>
 #include <AK/Math.h>
+#include <AK/NumericLimits.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -116,6 +118,39 @@ public:
                     : 0);
     }
 
+    // http://www.claysturner.com/dsp/BinaryLogarithm.pdf
+    constexpr This log2() const
+    {
+        // 0.5
+        This b = create_raw(1 << (precision - 1));
+        This y = 0;
+        This x = *this;
+
+        // FIXME: There's no negative infinity.
+        if (x.raw() <= 0)
+            return create_raw(NumericLimits<Underlying>::min());
+
+        if (x != 1) {
+            i32 shift_amount = AK::log2<Underlying>(x.raw()) - precision;
+            if (shift_amount > 0)
+                x >>= shift_amount;
+            else
+                x <<= -shift_amount;
+            y += shift_amount;
+        }
+
+        for (size_t i = 0; i < precision; ++i) {
+            x *= x;
+            if (x >= 2) {
+                x >>= 1;
+                y += b;
+            }
+            b >>= 1;
+        }
+
+        return y;
+    }
+
     constexpr bool signbit() const requires(IsSigned<Underlying>)
     {
         return m_value >> (sizeof(Underlying) * 8 - 1);
@@ -179,6 +214,16 @@ public:
     {
         return create_raw(m_value / other);
     }
+    template<Integral I>
+    constexpr This operator>>(I other) const
+    {
+        return create_raw(m_value >> other);
+    }
+    template<Integral I>
+    constexpr This operator<<(I other) const
+    {
+        return create_raw(m_value << other);
+    }
 
     This& operator+=(This const& other)
     {
@@ -239,6 +284,18 @@ public:
         m_value /= other;
         return *this;
     }
+    template<Integral I>
+    This& operator>>=(I other)
+    {
+        m_value >>= other;
+        return *this;
+    }
+    template<Integral I>
+    This& operator<<=(I other)
+    {
+        m_value <<= other;
+        return *this;
+    }
 
     bool operator==(This const& other) const { return raw() == other.raw(); }
     bool operator!=(This const& other) const { return raw() != other.raw(); }
@@ -261,42 +318,22 @@ public:
     template<Integral I>
     bool operator>(I other) const
     {
-        if (m_value > 0)
-            return (m_value >> precision) > other || (m_value >> precision == other && (m_value & radix_mask));
-        if (other > 0)
-            return false;
-
-        return (m_value >> precision) > other || !(m_value >> precision == other && (m_value & radix_mask));
+        return !(*this <= other);
     }
     template<Integral I>
     bool operator>=(I other) const
     {
-        if (m_value > 0)
-            return (m_value >> precision) >= other || (m_value >> precision == other && (m_value & radix_mask));
-        if (other > 0)
-            return false;
-
-        return (m_value >> precision) >= other || !(m_value >> precision == other && (m_value & radix_mask));
+        return !(*this < other);
     }
     template<Integral I>
     bool operator<(I other) const
     {
-        if (m_value > 0)
-            return (m_value >> precision) < other || !(m_value >> precision == other && (m_value & radix_mask));
-        if (other > 0)
-            return true;
-
-        return (m_value >> precision) < other || (m_value >> precision == other && (m_value & radix_mask));
+        return (m_value >> precision) < other || m_value < (other << precision);
     }
     template<Integral I>
     bool operator<=(I other) const
     {
-        if (m_value > 0)
-            return (m_value >> precision) <= other || !(m_value >> precision == other && (m_value & radix_mask));
-        if (other > 0)
-            return true;
-
-        return (m_value >> precision) <= other || (m_value >> precision == other && (m_value & radix_mask));
+        return *this < other || *this == other;
     }
 
     // Casting from a float should be faster than casting to a float

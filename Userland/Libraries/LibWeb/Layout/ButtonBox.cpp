@@ -26,8 +26,8 @@ ButtonBox::~ButtonBox()
 
 void ButtonBox::prepare_for_replaced_layout()
 {
-    set_intrinsic_width(font().width(dom_node().value()) + 20);
-    set_intrinsic_height(20);
+    set_intrinsic_width(font().width(dom_node().value()));
+    set_intrinsic_height(font().glyph_height());
 }
 
 void ButtonBox::paint(PaintContext& context, PaintPhase phase)
@@ -38,16 +38,10 @@ void ButtonBox::paint(PaintContext& context, PaintPhase phase)
     LabelableNode::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        bool hovered = document().hovered_node() == &dom_node();
-        if (!hovered)
-            hovered = Label::is_associated_label_hovered(*this);
-
-        Gfx::StylePainter::paint_button(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::ButtonStyle::Normal, m_being_pressed, hovered, dom_node().checked(), dom_node().enabled());
-
         auto text_rect = enclosing_int_rect(absolute_rect());
         if (m_being_pressed)
             text_rect.translate_by(1, 1);
-        context.painter().draw_text(text_rect, dom_node().value(), font(), Gfx::TextAlignment::Center, context.palette().button_text());
+        context.painter().draw_text(text_rect, dom_node().value(), font(), Gfx::TextAlignment::Center, computed_values().color());
     }
 }
 

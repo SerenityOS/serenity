@@ -226,10 +226,10 @@ void GenericFramebufferConsoleImpl::clear(size_t x, size_t y, size_t length)
 {
     if (x == 0 && length == max_column()) {
         // if we need to clear the entire row, just clean it with quick memset :)
-        auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * sizeof(u32) * width()];
+        auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * framebuffer_pitch()];
         for (size_t current_x = 0; current_x < 8; current_x++) {
-            memset(offset_in_framebuffer, 0, width() * sizeof(u32));
-            offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + width() * 4);
+            memset(offset_in_framebuffer, 0, framebuffer_pitch());
+            offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + framebuffer_pitch());
         }
         flush(0, 8 * y, 8 * length, 1);
         return;
@@ -241,10 +241,10 @@ void GenericFramebufferConsoleImpl::clear(size_t x, size_t y, size_t length)
             if (y >= max_row())
                 y = 0;
         }
-        auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * sizeof(u32) * width()];
+        auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * framebuffer_pitch()];
         for (size_t current_x = 0; current_x < 8; current_x++) {
             memset(offset_in_framebuffer, 0, 8 * sizeof(u32));
-            offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + width() * sizeof(u32));
+            offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + framebuffer_pitch());
         }
         flush(8 * x, 8 * y, 8, 8);
     }
@@ -252,17 +252,17 @@ void GenericFramebufferConsoleImpl::clear(size_t x, size_t y, size_t length)
 
 void GenericFramebufferConsoleImpl::clear_glyph(size_t x, size_t y)
 {
-    auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * sizeof(u32) * width()];
+    auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * framebuffer_pitch()];
     for (size_t current_x = 0; current_x < 8; current_x++) {
         memset(offset_in_framebuffer, 0, 8 * sizeof(u32));
-        offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + width() * sizeof(u32));
+        offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + framebuffer_pitch());
     }
     flush(8 * x, 8 * y, 8, 8);
 }
 
 void GenericFramebufferConsoleImpl::enable()
 {
-    memset(framebuffer_data(), 0, height() * width() * sizeof(u32));
+    memset(framebuffer_data(), 0, height() * framebuffer_pitch());
     m_enabled.store(true);
 }
 
@@ -291,7 +291,7 @@ void GenericFramebufferConsoleImpl::write(size_t x, size_t y, char ch, Color bac
         return;
     }
     clear_glyph(x, y);
-    auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * sizeof(u32) * width()];
+    auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * framebuffer_pitch()];
     int current_bitpixels = 0;
     int current_bitpixel = 0;
     auto bitmap = font8x8_basic[(int)ch];
@@ -307,7 +307,7 @@ void GenericFramebufferConsoleImpl::write(size_t x, size_t y, char ch, Color bac
                 offset_in_framebuffer[current_bitpixel] = background_color;
             }
         }
-        offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + width() * 4);
+        offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + framebuffer_pitch());
     }
     flush(8 * x, 8 * y, 8, 8);
     m_x = x + 1;

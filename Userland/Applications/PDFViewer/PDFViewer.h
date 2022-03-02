@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,28 +11,6 @@
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGfx/Bitmap.h>
 #include <LibPDF/Document.h>
-
-static constexpr u16 zoom_levels[] = {
-    17,
-    21,
-    26,
-    33,
-    41,
-    51,
-    64,
-    80,
-    100,
-    120,
-    144,
-    173,
-    207,
-    249,
-    299,
-    358,
-    430
-};
-
-static constexpr size_t number_of_zoom_levels = sizeof(zoom_levels) / sizeof(zoom_levels[0]);
 
 static constexpr size_t initial_zoom_level = 8;
 

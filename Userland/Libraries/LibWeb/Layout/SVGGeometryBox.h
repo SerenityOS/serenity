@@ -21,6 +21,9 @@ public:
 
     virtual void paint(PaintContext& context, PaintPhase phase) override;
 
+    float viewbox_scaling() const;
+    Gfx::FloatPoint viewbox_origin() const;
+
 private:
     virtual bool is_svg_geometry_box() const final { return true; }
 };

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Lucas Chollet <lucas.chollet@free.fr>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,21 +8,23 @@
 #include <AK/Format.h>
 #include <assert.h>
 #include <sys/resource.h>
+#include <syscall.h>
 #include <ulimit.h>
 
 extern "C" {
 
 long ulimit([[maybe_unused]] int cmd, [[maybe_unused]] long newlimit)
 {
-    dbgln("FIXME: Implement getrusage()");
+    dbgln("FIXME: Implement ulimit()");
     TODO();
     return -1;
 }
 
-int getrusage([[maybe_unused]] int who, [[maybe_unused]] struct rusage* usage)
+// https://pubs.opengroup.org/onlinepubs/009696699/functions/getrusage.html
+int getrusage(int who, struct rusage* usage)
 {
-    dbgln("FIXME: Implement getrusage()");
-    return -1;
+    int rc = syscall(SC_getrusage, who, usage);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int getrlimit([[maybe_unused]] int resource, rlimit* rl)

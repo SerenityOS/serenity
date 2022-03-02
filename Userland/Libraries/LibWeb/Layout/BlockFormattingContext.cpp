@@ -310,7 +310,7 @@ float BlockFormattingContext::compute_theoretical_height(FormattingState const& 
         if (!box.computed_values().height().has_value()
             || (box.computed_values().height()->is_length() && box.computed_values().height()->length().is_auto())
             || (computed_values.height().has_value() && computed_values.height()->is_percentage() && !is_absolute(containing_block.computed_values().height()))) {
-            height = compute_auto_height_for_block_level_element(state, box, ConsiderFloats::No);
+            height = compute_auto_height_for_block_level_element(state, box);
         } else {
             height = computed_values.height().has_value() ? computed_values.height()->resolved(box, containing_block_height).to_px(box) : 0;
         }
@@ -391,7 +391,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 
         OwnPtr<FormattingContext> independent_formatting_context;
         if (child_box.can_have_children()) {
-            independent_formatting_context = create_independent_formatting_context_if_needed(child_box);
+            independent_formatting_context = create_independent_formatting_context_if_needed(m_state, child_box);
             if (independent_formatting_context)
                 independent_formatting_context->run(child_box, layout_mode);
             else

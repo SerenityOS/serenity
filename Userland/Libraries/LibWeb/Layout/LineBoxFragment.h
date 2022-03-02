@@ -6,14 +6,13 @@
 
 #pragma once
 
-#include <AK/Weakable.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Layout {
 
-class LineBoxFragment : public Weakable<LineBoxFragment> {
+class LineBoxFragment {
     friend class LineBox;
 
 public:

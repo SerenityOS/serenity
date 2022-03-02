@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -322,7 +323,7 @@ bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView c
 
 ErrorOr<int> run_in_desktop_mode()
 {
-    static constexpr char const* process_name = "FileManager (Desktop)";
+    constexpr char const* process_name = "FileManager (Desktop)";
     set_process_name(process_name, strlen(process_name));
     pthread_setname_np(pthread_self(), process_name);
 
