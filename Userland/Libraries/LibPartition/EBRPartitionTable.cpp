@@ -4,12 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <Kernel/Storage/Partition/EBRPartitionTable.h>
+#include <LibPartition/EBRPartitionTable.h>
 
-namespace Kernel {
+namespace Partition {
 
-ErrorOr<NonnullOwnPtr<EBRPartitionTable>> EBRPartitionTable::try_to_initialize(StorageDevice const& device)
+ErrorOr<NonnullOwnPtr<EBRPartitionTable>> EBRPartitionTable::try_to_initialize(Kernel::StorageDevice const& device)
 {
     auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) EBRPartitionTable(device)));
     if (table->is_protective_mbr())
@@ -19,7 +18,7 @@ ErrorOr<NonnullOwnPtr<EBRPartitionTable>> EBRPartitionTable::try_to_initialize(S
     return table;
 }
 
-void EBRPartitionTable::search_extended_partition(StorageDevice const& device, MBRPartitionTable& checked_ebr, u64 current_block_offset, size_t limit)
+void EBRPartitionTable::search_extended_partition(Kernel::StorageDevice const& device, MBRPartitionTable& checked_ebr, u64 current_block_offset, size_t limit)
 {
     if (limit == 0)
         return;
@@ -39,7 +38,7 @@ void EBRPartitionTable::search_extended_partition(StorageDevice const& device, M
     search_extended_partition(device, *next_ebr, current_block_offset, (limit - 1));
 }
 
-EBRPartitionTable::EBRPartitionTable(StorageDevice const& device)
+EBRPartitionTable::EBRPartitionTable(Kernel::StorageDevice const& device)
     : MBRPartitionTable(device)
 {
     if (!is_header_valid())
