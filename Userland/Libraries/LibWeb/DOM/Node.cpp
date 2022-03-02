@@ -81,8 +81,11 @@ Node::~Node()
 const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
 {
     for (auto* node = this; node; node = node->parent()) {
-        if (is<HTML::HTMLAnchorElement>(*node) && verify_cast<HTML::HTMLAnchorElement>(*node).has_attribute(HTML::AttributeNames::href))
-            return verify_cast<HTML::HTMLAnchorElement>(node);
+        if (!is<HTML::HTMLAnchorElement>(*node))
+            continue;
+        auto const& anchor_element = static_cast<HTML::HTMLAnchorElement const&>(*node);
+        if (anchor_element.has_attribute(HTML::AttributeNames::href))
+            return &anchor_element;
     }
     return nullptr;
 }
