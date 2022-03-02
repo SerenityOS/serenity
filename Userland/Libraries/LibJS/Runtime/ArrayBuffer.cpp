@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -54,8 +55,10 @@ void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
 }
 
 // 25.1.2.1 AllocateArrayBuffer ( constructor, byteLength ), https://tc39.es/ecma262/#sec-allocatearraybuffer
-ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_object, FunctionObject& constructor, size_t byte_length)
+// 1.1.2 AllocateArrayBuffer ( constructor, byteLength [, maxByteLength ] ), https://tc39.es/proposal-resizablearraybuffer/#sec-allocatearraybuffer
+ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_object, FunctionObject& constructor, size_t byte_length, Optional<size_t> max_byte_length)
 {
+    (void)max_byte_length;
     // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
     auto* obj = TRY(ordinary_create_from_constructor<ArrayBuffer>(global_object, constructor, &GlobalObject::array_buffer_prototype, nullptr));
 

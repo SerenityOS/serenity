@@ -15,6 +15,7 @@
     M(BigIntFromNonIntegral, "Cannot convert non-integral number to BigInt")                                                            \
     M(BigIntInvalidValue, "Invalid value for BigInt: {}")                                                                               \
     M(BindingNotInitialized, "Binding {} is not initialized")                                                                           \
+    M(ByteLengthBeyondRequestedMax, "Byte length exceeds maxByteLength option")                                                         \
     M(CallStackSizeExceeded, "Call stack size limit exceeded")                                                                          \
     M(CannotDeclareGlobalFunction, "Cannot declare global function of name '{}'")                                                       \
     M(CannotDeclareGlobalVariable, "Cannot declare global variable of name '{}'")                                                       \
