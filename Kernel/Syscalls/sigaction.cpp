@@ -89,7 +89,10 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
 
 #if ARCH(I386) || ARCH(X86_64)
     // The FPU state is at the top here, pop it off and restore it.
-    Thread::current()->fpu_state() = TRY(copy_typed_from_user<FPUState>(stack_ptr));
+    // FIXME: The stack alignment is off by 8 bytes here, figure this out and remove this excessively aligned object.
+    alignas(alignof(FPUState) * 2) FPUState data {};
+    TRY(copy_from_user(&data, bit_cast<FPUState const*>(stack_ptr)));
+    Thread::current()->fpu_state() = data;
     stack_ptr += sizeof(FPUState);
 #endif
 
