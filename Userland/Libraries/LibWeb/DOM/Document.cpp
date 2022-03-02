@@ -1406,7 +1406,7 @@ ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String
 
     Optional<size_t> colon_offset;
 
-    bool in_name = false;
+    bool at_start_of_name = true;
 
     for (auto it = utf8view.begin(); it != utf8view.end(); ++it) {
         auto code_point = *it;
@@ -1414,12 +1414,13 @@ ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String
             if (colon_offset.has_value())
                 return InvalidCharacterError::create("More than one colon (:) in qualified name.");
             colon_offset = utf8view.byte_offset_of(it);
+            at_start_of_name = true;
             continue;
         }
-        if (in_name) {
+        if (at_start_of_name) {
             if (!is_valid_name_start_character(code_point))
                 return InvalidCharacterError::create("Invalid start of qualified name.");
-            in_name = false;
+            at_start_of_name = false;
             continue;
         }
         if (!is_valid_name_character(code_point))
