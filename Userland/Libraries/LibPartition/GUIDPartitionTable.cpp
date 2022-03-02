@@ -4,16 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/AllOf.h>
-#include <AK/Array.h>
-#include <Kernel/Debug.h>
-#include <Kernel/Storage/Partition/GUIDPartitionTable.h>
+#include <AK/Debug.h>
+#include <LibPartition/GUIDPartitionTable.h>
 
-namespace Kernel {
+namespace Partition {
 
 #define GPT_SIGNATURE2 0x54524150
 #define GPT_SIGNATURE 0x20494645
-#define BytesPerSector 512
 
 struct [[gnu::packed]] GPTPartitionEntry {
     u8 partition_guid[16];
@@ -47,7 +44,7 @@ struct [[gnu::packed]] GUIDPartitionHeader {
     u32 crc32_entries_array;
 };
 
-ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> GUIDPartitionTable::try_to_initialize(StorageDevice const& device)
+ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> GUIDPartitionTable::try_to_initialize(Kernel::StorageDevice const& device)
 {
     auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) GUIDPartitionTable(device)));
     if (!table->is_valid())
@@ -55,7 +52,7 @@ ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> GUIDPartitionTable::try_to_initialize
     return table;
 }
 
-GUIDPartitionTable::GUIDPartitionTable(StorageDevice const& device)
+GUIDPartitionTable::GUIDPartitionTable(Kernel::StorageDevice const& device)
     : MBRPartitionTable(device)
 {
     // FIXME: Handle OOM failure here.

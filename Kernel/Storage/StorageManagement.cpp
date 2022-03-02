@@ -21,10 +21,10 @@
 #include <Kernel/Storage/ATA/GenericIDE/ISAController.h>
 #include <Kernel/Storage/ATA/GenericIDE/PCIController.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
-#include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 #include <Kernel/Storage/Ramdisk/Controller.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <LibPartition/EBRPartitionTable.h>
+#include <LibPartition/GUIDPartitionTable.h>
 #include <LibPartition/MBRPartitionTable.h>
 
 namespace Kernel {
@@ -140,7 +140,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> StorageManage
     if (!ebr_table_or_error.is_error()) {
         return ebr_table_or_error.release_value();
     }
-    return TRY(GUIDPartitionTable::try_to_initialize(device));
+    return TRY(Partition::GUIDPartitionTable::try_to_initialize(device));
 }
 
 UNMAP_AFTER_INIT void StorageManagement::enumerate_disk_partitions()

@@ -104,7 +104,6 @@ set(KERNEL_SOURCES
     Storage/ATA/ATAPIDiscDevice.cpp
     Storage/ATA/ATAPort.cpp
     Storage/Partition/DiskPartition.cpp
-    Storage/Partition/GUIDPartitionTable.cpp
     Storage/NVMe/NVMeController.cpp
     Storage/NVMe/NVMeNameSpace.cpp
     Storage/NVMe/NVMeInterruptQueue.cpp
@@ -404,6 +403,7 @@ set(CRYPTO_SOURCES
 set(PARTITION_SOURCES
     ../Userland/Libraries/LibPartition/DiskPartitionMetadata.cpp
     ../Userland/Libraries/LibPartition/EBRPartitionTable.cpp
+    ../Userland/Libraries/LibPartition/GUIDPartitionTable.cpp
     ../Userland/Libraries/LibPartition/MBRPartitionTable.cpp
     ../Userland/Libraries/LibPartition/PartitionTable.cpp
 )
