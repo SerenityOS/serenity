@@ -46,11 +46,11 @@ void BarsVisualizationWidget::render(GUI::PaintEvent& event, FixedArray<double> 
         groups[i / values_per_bar] /= values_per_bar;
     }
 
-    double const max_peak_value = AK::sqrt(static_cast<double>(fft_size));
+    double const max_peak_value = AK::sqrt(static_cast<double>(fft_size * 2));
     for (size_t i = 0; i < bar_count; i++) {
         groups[i] = AK::log(groups[i] + 1) / AK::log(max_peak_value);
         if (m_adjust_frequencies)
-            groups[i] *= 1 + 3.0 * i / bar_count;
+            groups[i] *= 1 + 2.0 * (static_cast<double>(i) - static_cast<double>(bar_count / 3)) / static_cast<double>(bar_count);
     }
 
     int const horizontal_margin = 30;
