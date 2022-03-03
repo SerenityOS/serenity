@@ -187,6 +187,10 @@ class Range {
         // using == to account for '0' since js will parse `+'0'` to 0
         if (columnStep == 0 || rowStep == 0)
             throw new Error("rowStep or columnStep is 0, this will cause an infinite loop");
+        if (typeof startingRow === "string" || typeof endingRow === "string")
+            throw new Error(
+                "startingRow or endingRow is a string, this will cause an infinite loop"
+            );
         this.startingColumnName = startingColumnName;
         this.endingColumnName = endingColumnName;
         this.startingRow = startingRow;
