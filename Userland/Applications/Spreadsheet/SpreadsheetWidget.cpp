@@ -451,10 +451,8 @@ void SpreadsheetWidget::redo()
 
 void SpreadsheetWidget::change_cell_static_color_format(bool background)
 {
-    VERIFY(m_selected_view);
-    auto* sheet_ptr = m_selected_view->sheet_if_available();
-    VERIFY(sheet_ptr);
-    auto& sheet = *sheet_ptr;
+    VERIFY(m_selected_view->sheet_if_available());
+    auto& sheet = *m_selected_view->sheet_if_available();
 
     auto dialog = GUI::ColorPicker::construct(Color::White, window(), "Select Color");
     if (dialog->exec() == GUI::Dialog::ExecOK) {
