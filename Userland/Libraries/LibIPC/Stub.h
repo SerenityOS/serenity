@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,14 +21,14 @@ struct MessageBuffer;
 
 class Stub {
 public:
-    virtual ~Stub();
+    virtual ~Stub() = default;
 
     virtual u32 magic() const = 0;
     virtual String name() const = 0;
     virtual OwnPtr<MessageBuffer> handle(const Message&) = 0;
 
 protected:
-    Stub();
+    Stub() = default;
 
 private:
     String m_name;

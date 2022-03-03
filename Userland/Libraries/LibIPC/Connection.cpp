@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,10 +18,6 @@ ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullOwnPtr<Core::Stream
     , m_local_endpoint_magic(local_endpoint_magic)
 {
     m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
-}
-
-ConnectionBase::~ConnectionBase()
-{
 }
 
 ErrorOr<void> ConnectionBase::post_message(Message const& message)
