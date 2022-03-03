@@ -439,7 +439,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<String, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index, HashMap<String, StyleProperty const*> const& custom_properties) const
+bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index, HashMap<FlyString, StyleProperty const*> const& custom_properties) const
 {
     // FIXME: Do this better!
     // We build a copy of the tree of StyleComponentValueRules, with all var()s replaced with their contents.
@@ -532,14 +532,14 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
     return true;
 }
 
-RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, PropertyID property_id, UnresolvedStyleValue const& unresolved, HashMap<String, StyleProperty const*> const& custom_properties) const
+RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, PropertyID property_id, UnresolvedStyleValue const& unresolved, HashMap<FlyString, StyleProperty const*> const& custom_properties) const
 {
     // Unresolved always contains a var(), unless it is a custom property's value, in which case we shouldn't be trying
     // to produce a different StyleValue from it.
     VERIFY(unresolved.contains_var());
 
     Vector<StyleComponentValueRule> expanded_values;
-    HashMap<String, NonnullRefPtr<PropertyDependencyNode>> dependencies;
+    HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
     if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values, 0, custom_properties))
         return {};
 
@@ -549,7 +549,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     return {};
 }
 
-void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, Important important, HashMap<String, StyleProperty const*> const& custom_properties) const
+void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, Important important, HashMap<FlyString, StyleProperty const*> const& custom_properties) const
 {
     for (auto const& match : matching_rules) {
         for (auto const& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
@@ -575,9 +575,9 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
     }
 }
 
-static HashMap<String, StyleProperty const*> cascade_custom_properties(DOM::Element& element, Vector<MatchingRule> const& matching_rules)
+static HashMap<FlyString, StyleProperty const*> cascade_custom_properties(DOM::Element& element, Vector<MatchingRule> const& matching_rules)
 {
-    HashMap<String, StyleProperty const*> custom_properties;
+    HashMap<FlyString, StyleProperty const*> custom_properties;
 
     if (auto* parent_element = element.parent_element()) {
         for (auto const& it : parent_element->custom_properties())
