@@ -229,6 +229,14 @@ void HexEditor::set_content_length(size_t length)
     set_content_size({ static_cast<int>(newWidth), static_cast<int>(newHeight) });
 }
 
+Optional<u8> HexEditor::get_byte(size_t position)
+{
+    if (position < m_document->size())
+        return m_document->get(position).value;
+
+    return {};
+}
+
 void HexEditor::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Primary) {
