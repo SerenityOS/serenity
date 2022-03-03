@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ namespace HTTP {
 
 class HttpResponse : public Core::NetworkResponse {
 public:
-    virtual ~HttpResponse() override;
+    virtual ~HttpResponse() override = default;
     static NonnullRefPtr<HttpResponse> create(int code, HashMap<String, String, CaseInsensitiveStringTraits>&& headers, size_t downloaded_size)
     {
         return adopt_ref(*new HttpResponse(code, move(headers), downloaded_size));
