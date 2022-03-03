@@ -2994,7 +2994,12 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
         generator.append(R"~~~(
 static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
+    auto this_value = vm.this_value(global_object);
+    JS::Object* this_object = nullptr;
+    if (this_value.is_nullish()) 
+        this_object = &vm.current_realm()->global_object();
+    else 
+        this_object = TRY(this_value.to_object(global_object));
 )~~~");
 
         if (interface.name == "EventTarget") {
