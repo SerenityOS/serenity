@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/TagNames.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/TreeBuilder.h>
 
 namespace Web::DOM {
 
@@ -131,6 +132,11 @@ public:
 
     static RefPtr<Layout::Node> create_layout_node_for_display_type(DOM::Document&, CSS::Display const&, NonnullRefPtr<CSS::StyleProperties>, Element*);
 
+    void set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement, RefPtr<Layout::Node>);
+    RefPtr<Layout::Node> get_pseudo_element_node(CSS::Selector::PseudoElement) const;
+    void clear_pseudo_element_nodes(Badge<Layout::TreeBuilder>);
+    void serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilder>& children_array) const;
+
 protected:
     virtual void children_changed() override;
 
@@ -150,6 +156,8 @@ private:
     Vector<FlyString> m_classes;
 
     RefPtr<ShadowRoot> m_shadow_root;
+
+    Array<RefPtr<Layout::Node>, CSS::Selector::PseudoElementCount> m_pseudo_element_nodes;
 };
 
 template<>

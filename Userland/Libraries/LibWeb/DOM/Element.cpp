@@ -501,4 +501,34 @@ void Element::children_changed()
     set_needs_style_update(true);
 }
 
+void Element::set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement pseudo_element, RefPtr<Layout::Node> pseudo_element_node)
+{
+    m_pseudo_element_nodes[to_underlying(pseudo_element)] = move(pseudo_element_node);
+}
+
+RefPtr<Layout::Node> Element::get_pseudo_element_node(CSS::Selector::PseudoElement pseudo_element) const
+{
+    return m_pseudo_element_nodes[to_underlying(pseudo_element)];
+}
+
+void Element::clear_pseudo_element_nodes(Badge<Layout::TreeBuilder>)
+{
+    m_pseudo_element_nodes.fill(nullptr);
+}
+
+void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilder>& children_array) const
+{
+    for (size_t i = 0; i < m_pseudo_element_nodes.size(); ++i) {
+        auto& pseudo_element_node = m_pseudo_element_nodes[i];
+        if (!pseudo_element_node)
+            continue;
+        auto object = MUST(children_array.add_object());
+        MUST(object.add("name", String::formatted("::{}", CSS::pseudo_element_name(static_cast<CSS::Selector::PseudoElement>(i)))));
+        MUST(object.add("type", "pseudo-element"));
+        MUST(object.add("parent-id", id()));
+        MUST(object.add("pseudo-element", i));
+        MUST(object.finish());
+    }
+}
+
 }
