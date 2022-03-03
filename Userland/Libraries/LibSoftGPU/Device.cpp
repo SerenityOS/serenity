@@ -803,42 +803,33 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                     if (!light.is_enabled)
                         continue;
 
-                    // We need to save the length here because the attenuation factor requires a non
-                    // normalized vector!
-                    auto sgi_arrow_operator = [](FloatVector4 const& p1, FloatVector4 const& p2, float& saved_length) {
-                        if ((p1.w() != 0.0f) && (p2.w() == 0.0f)) {
-                            saved_length = p2.length();
-                            return (p2 / saved_length).xyz();
-                        } else if ((p1.w() == 0.0f) && (p2.w() != 0.0f)) {
-                            saved_length = p2.length();
-                            return -(p1 / saved_length).xyz();
-                        } else {
-                            // FIXME: The OpenGL 1.5 spec says nothing about the case where P1 and P2 BOTH have a w value of 1, which would
-                            // then mean the light position has an implicit value of (0, 0, 0, 0). This doesn't make any logical sense, and it most likely
-                            // a typographical error. Most other GL implementations seem to just fix it to the distance from the vertex to the light, which
-                            // seems to work just fine.
-                            // If somebody with more insight about this could clarify this eventually, that'd be great.
-                            auto distance = (p2 - p1);
-                            saved_length = distance.length();
-                            return (distance / saved_length).xyz();
-                        }
+                    // We need to save the length here because the attenuation factor requires a non-normalized vector!
+                    auto sgi_arrow_operator = [](FloatVector4 const& p1, FloatVector4 const& p2, float& output_length) {
+                        FloatVector3 light_vector;
+                        if ((p1.w() != 0.f) && (p2.w() == 0.f))
+                            light_vector = p2.xyz();
+                        else if ((p1.w() == 0.f) && (p2.w() != 0.f))
+                            light_vector = -p1.xyz();
+                        else
+                            light_vector = p2.xyz() - p1.xyz();
+
+                        output_length = light_vector.length();
+                        if (output_length == 0.f)
+                            return light_vector;
+                        return light_vector / output_length;
                     };
 
                     auto sgi_dot_operator = [](FloatVector3 const& d1, FloatVector3 const& d2) {
                         return AK::max(d1.dot(d2), 0.0f);
                     };
 
-                    float vector_length = 0.0f;
-                    FloatVector3 vertex_to_light = sgi_arrow_operator(vertex.eye_coordinates, light.position, vector_length);
+                    float vertex_to_light_length = 0.f;
+                    FloatVector3 vertex_to_light = sgi_arrow_operator(vertex.eye_coordinates, light.position, vertex_to_light_length);
 
                     // Light attenuation value.
                     float light_attenuation_factor = 1.0f;
-                    if (light.position.w() != 0.0f) {
-                        auto const vertex_to_light_length = vertex_to_light.length();
-                        auto const vertex_to_light_length_squared = vertex_to_light_length * vertex_to_light_length;
-
-                        light_attenuation_factor = 1.0f / (light.constant_attenuation + (light.linear_attenuation * vertex_to_light_length) + (light.quadratic_attenuation * vertex_to_light_length_squared));
-                    }
+                    if (light.position.w() != 0.0f)
+                        light_attenuation_factor = 1.0f / (light.constant_attenuation + (light.linear_attenuation * vertex_to_light_length) + (light.quadratic_attenuation * vertex_to_light_length * vertex_to_light_length));
 
                     // Spotlight factor
                     float spotlight_factor = 1.0f;
@@ -872,7 +863,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                         if (!m_lighting_model.viewer_at_infinity) {
                             half_vector_normalized = (vertex_to_light + FloatVector3(0.0f, 0.0f, 1.0f)).normalized();
                         } else {
-                            auto const vertex_to_eye_point = sgi_arrow_operator(vertex.eye_coordinates.normalized(), FloatVector4(0.0f, 0.0f, 0.0f, 1.0f), vector_length);
+                            auto const vertex_to_eye_point = sgi_arrow_operator(vertex.eye_coordinates.normalized(), { 0.f, 0.f, 0.f, 1.f }, vertex_to_light_length);
                             half_vector_normalized = vertex_to_light + vertex_to_eye_point;
                         }
 
@@ -881,9 +872,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                         specular_component = (specular * light.specular_intensity) * specular_coefficient;
                     }
 
-                    FloatVector4 color = ambient_component;
-                    color += diffuse_component;
-                    color += specular_component;
+                    auto color = ambient_component + diffuse_component + specular_component;
                     color = color * light_attenuation_factor * spotlight_factor;
                     result_color += color;
                 }
