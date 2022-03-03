@@ -165,6 +165,8 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
     VERIFY_NOT_REACHED();
 }
 
+Optional<Selector::PseudoElement> pseudo_element_from_string(StringView);
+
 constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Type pseudo_class)
 {
     switch (pseudo_class) {

@@ -261,4 +261,20 @@ String serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selec
     return builder.to_string();
 }
 
+Optional<Selector::PseudoElement> pseudo_element_from_string(StringView name)
+{
+    if (name.equals_ignoring_case("after")) {
+        return Selector::PseudoElement::After;
+    } else if (name.equals_ignoring_case("before")) {
+        return Selector::PseudoElement::Before;
+    } else if (name.equals_ignoring_case("first-letter")) {
+        return Selector::PseudoElement::FirstLetter;
+    } else if (name.equals_ignoring_case("first-line")) {
+        return Selector::PseudoElement::FirstLine;
+    } else if (name.equals_ignoring_case("marker")) {
+        return Selector::PseudoElement::Marker;
+    }
+    return {};
+}
+
 }

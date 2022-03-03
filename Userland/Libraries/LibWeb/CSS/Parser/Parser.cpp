@@ -496,20 +496,12 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             if (has_ignored_vendor_prefix(pseudo_name))
                 return ParsingResult::IncludesIgnoredVendorPrefix;
 
-            if (pseudo_name.equals_ignoring_case("after")) {
-                simple_selector.pseudo_element = Selector::PseudoElement::After;
-            } else if (pseudo_name.equals_ignoring_case("before")) {
-                simple_selector.pseudo_element = Selector::PseudoElement::Before;
-            } else if (pseudo_name.equals_ignoring_case("first-letter")) {
-                simple_selector.pseudo_element = Selector::PseudoElement::FirstLetter;
-            } else if (pseudo_name.equals_ignoring_case("first-line")) {
-                simple_selector.pseudo_element = Selector::PseudoElement::FirstLine;
-            } else if (pseudo_name.equals_ignoring_case("marker")) {
-                simple_selector.pseudo_element = Selector::PseudoElement::Marker;
-            } else {
+            auto pseudo_element = pseudo_element_from_string(pseudo_name);
+            if (!pseudo_element.has_value()) {
                 dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
                 return ParsingResult::SyntaxError;
             }
+            simple_selector.pseudo_element = pseudo_element.value();
 
             return simple_selector;
         }
