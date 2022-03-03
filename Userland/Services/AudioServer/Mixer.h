@@ -28,7 +28,7 @@ namespace AudioServer {
 
 // Headroom, i.e. fixed attenuation for all audio streams.
 // This is to prevent clipping when two streams with low headroom (e.g. normalized & compressed) are playing.
-constexpr double SAMPLE_HEADROOM = 0.7;
+constexpr double SAMPLE_HEADROOM = 0.95;
 
 class ConnectionFromClient;
 
