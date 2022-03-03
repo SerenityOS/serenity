@@ -11,6 +11,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ColorPicker.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
@@ -213,6 +214,18 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         redo();
     });
 
+    m_change_background_color_action = GUI::Action::create(
+        "&Change Background Color", { Mod_Ctrl, Key_P }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+            change_cell_static_color_format(true);
+        },
+        window());
+
+    m_change_text_color_action = GUI::Action::create(
+        "&Change Text Color", { Mod_Ctrl | Mod_Shift, Key_P }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/text-color.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+            change_cell_static_color_format(false);
+        },
+        window());
+
     m_functions_help_action = GUI::Action::create(
         "&Functions Help", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             if (auto* worksheet_ptr = current_worksheet_if_available()) {
@@ -237,9 +250,14 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     toolbar.add_action(*m_paste_action);
     toolbar.add_action(*m_undo_action);
     toolbar.add_action(*m_redo_action);
+    toolbar.add_separator();
+    toolbar.add_action(*m_change_background_color_action);
+    toolbar.add_action(*m_change_text_color_action);
 
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
+    m_change_background_color_action->set_enabled(false);
+    m_change_text_color_action->set_enabled(false);
 }
 
 void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
@@ -306,6 +324,8 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                 m_cell_value_editor->set_enabled(true);
                 m_cut_action->set_enabled(true);
                 m_copy_action->set_enabled(true);
+                m_change_background_color_action->set_enabled(true);
+                m_change_text_color_action->set_enabled(true);
                 static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&cell);
                 return;
             }
@@ -427,6 +447,24 @@ void SpreadsheetWidget::redo()
 
     m_undo_stack.redo();
     update();
+}
+
+void SpreadsheetWidget::change_cell_static_color_format(bool background)
+{
+    VERIFY(m_selected_view);
+    auto* sheet_ptr = m_selected_view->sheet_if_available();
+    VERIFY(sheet_ptr);
+    auto& sheet = *sheet_ptr;
+
+    auto dialog = GUI::ColorPicker::construct(Color::White, window(), "Select Color");
+    if (dialog->exec() == GUI::Dialog::ExecOK) {
+        for (const auto& position : sheet.selected_cells()) {
+            if (background)
+                sheet.at(position)->type_metadata().static_format.background_color = dialog->color();
+            else
+                sheet.at(position)->type_metadata().static_format.foreground_color = dialog->color();
+        }
+    }
 }
 
 void SpreadsheetWidget::save(StringView filename)
@@ -582,6 +620,9 @@ void SpreadsheetWidget::initialize_menubar(GUI::Window& window)
     edit_menu.add_action(*m_cut_action);
     edit_menu.add_action(*m_copy_action);
     edit_menu.add_action(*m_paste_action);
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_change_background_color_action);
+    edit_menu.add_action(*m_change_text_color_action);
 
     auto& help_menu = window.add_menu("&Help");
     help_menu.add_action(*m_functions_help_action);

@@ -44,6 +44,7 @@ public:
 
     void undo();
     void redo();
+    void change_cell_static_color_format(bool);
     auto& undo_stack() { return m_undo_stack; }
 
 private:
@@ -80,6 +81,8 @@ private:
     RefPtr<GUI::Action> m_paste_action;
     RefPtr<GUI::Action> m_undo_action;
     RefPtr<GUI::Action> m_redo_action;
+    RefPtr<GUI::Action> m_change_background_color_action;
+    RefPtr<GUI::Action> m_change_text_color_action;
 
     RefPtr<GUI::Action> m_functions_help_action;
     RefPtr<GUI::Action> m_about_action;
