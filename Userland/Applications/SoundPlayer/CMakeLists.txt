@@ -6,16 +6,16 @@ serenity_component(
 )
 
 set(SOURCES
-    main.cpp
+    AlbumCoverVisualizationWidget.cpp
+    BarsVisualizationWidget.cpp
+    M3UParser.cpp
+    PlaybackManager.cpp
     Player.cpp
     Playlist.cpp
-    PlaybackManager.cpp
+    PlaylistWidget.cpp
     SampleWidget.cpp
     SoundPlayerWidgetAdvancedView.cpp
-    BarsVisualizationWidget.cpp
-    AlbumCoverVisualizationWidget.cpp
-    M3UParser.cpp
-    PlaylistWidget.cpp
+    main.cpp
 )
 
 serenity_app(SoundPlayer ICON app-sound-player)
