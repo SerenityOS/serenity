@@ -36,14 +36,31 @@ void BarsVisualizationWidget::render(GUI::PaintEvent& event, FixedArray<double> 
 
     Array<double, bar_count> groups {};
 
-    for (size_t i = 0; i < fft_size / 2; i += values_per_bar) {
-        double const magnitude = m_fft_samples[i].magnitude();
-        groups[i / values_per_bar] = magnitude;
-        for (size_t j = 0; j < values_per_bar; j++) {
-            double const magnitude = m_fft_samples[i + j].magnitude();
-            groups[i / values_per_bar] += magnitude;
+    if (m_logarithmic_spectrum) {
+        auto const log_bar_size = static_cast<double>(bar_count) / AK::log2(fft_size);
+
+        for (size_t i = 0; i < bar_count; ++i) {
+            auto const bar_start = i == 0 ? 0 : static_cast<size_t>(floor(AK::pow(2., static_cast<double>(i) / log_bar_size)));
+            auto const bar_end = clamp(static_cast<size_t>(floor(AK::pow(2., static_cast<double>(i + 1) / log_bar_size))), bar_start + 1, cutoff);
+            auto const values_in_bar = bar_end - bar_start;
+
+            for (size_t sample_index = bar_start; sample_index < bar_start + values_in_bar; sample_index++) {
+                double const magnitude = m_fft_samples[sample_index].magnitude();
+                groups[i] += magnitude;
+            }
+            groups[i] /= static_cast<double>(values_in_bar);
         }
-        groups[i / values_per_bar] /= values_per_bar;
+    } else {
+        static constexpr size_t values_per_bar = (fft_size / 2) / bar_count;
+        for (size_t i = 0; i < fft_size / 2; i += values_per_bar) {
+            double const magnitude = m_fft_samples[i].magnitude();
+            groups[i / values_per_bar] = magnitude;
+            for (size_t j = 0; j < values_per_bar; j++) {
+                double const magnitude = m_fft_samples[i + j].magnitude();
+                groups[i / values_per_bar] += magnitude;
+            }
+            groups[i / values_per_bar] /= values_per_bar;
+        }
     }
 
     double const max_peak_value = AK::sqrt(static_cast<double>(fft_size * 2));
@@ -71,6 +88,7 @@ void BarsVisualizationWidget::render(GUI::PaintEvent& event, FixedArray<double> 
 BarsVisualizationWidget::BarsVisualizationWidget()
     : m_is_using_last(false)
     , m_adjust_frequencies(true)
+    , m_logarithmic_spectrum(true)
 {
     m_context_menu = GUI::Menu::construct();
     auto frequency_energy_action = GUI::Action::create_checkable("Adjust frequency energy (for aesthetics)", [&](GUI::Action& action) {
@@ -78,6 +96,11 @@ BarsVisualizationWidget::BarsVisualizationWidget()
     });
     frequency_energy_action->set_checked(true);
     m_context_menu->add_action(frequency_energy_action);
+    auto logarithmic_spectrum_action = GUI::Action::create_checkable("Scale spectrum logarithmically", [&](GUI::Action& action) {
+        m_logarithmic_spectrum = action.is_checked();
+    });
+    logarithmic_spectrum_action->set_checked(true);
+    m_context_menu->add_action(logarithmic_spectrum_action);
 
     m_fft_window = LibDSP::Window<double>::hann<fft_size>();
 
