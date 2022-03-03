@@ -458,7 +458,7 @@ void SpreadsheetWidget::change_cell_static_color_format(bool background)
 
     auto dialog = GUI::ColorPicker::construct(Color::White, window(), "Select Color");
     if (dialog->exec() == GUI::Dialog::ExecOK) {
-        for (const auto& position : sheet.selected_cells()) {
+        for (auto& position : sheet.selected_cells()) {
             if (background)
                 sheet.at(position)->type_metadata().static_format.background_color = dialog->color();
             else
