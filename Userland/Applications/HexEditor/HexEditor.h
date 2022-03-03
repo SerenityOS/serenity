@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -53,6 +54,7 @@ public:
     void set_bytes_per_row(size_t);
 
     void set_position(size_t position);
+    void set_selection(size_t position, size_t length);
     void highlight(size_t start, size_t end);
     Optional<size_t> find(ByteBuffer& needle, size_t start = 0);
     Optional<size_t> find_and_highlight(ByteBuffer& needle, size_t start = 0);
