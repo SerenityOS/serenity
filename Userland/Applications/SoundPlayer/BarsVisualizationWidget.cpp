@@ -67,14 +67,15 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
 }
 
 BarsVisualizationWidget::BarsVisualizationWidget()
-    : m_last_id(-1)
-    , m_is_using_last(false)
-    , m_adjust_frequencies(false)
+    : m_is_using_last(false)
+    , m_adjust_frequencies(true)
 {
     m_context_menu = GUI::Menu::construct();
-    m_context_menu->add_action(GUI::Action::create_checkable("Adjust frequency energy (for aesthetics)", [&](GUI::Action& action) {
+    auto frequency_energy_action = GUI::Action::create_checkable("Adjust frequency energy (for aesthetics)", [&](GUI::Action& action) {
         m_adjust_frequencies = action.is_checked();
-    }));
+    });
+    frequency_energy_action->set_checked(true);
+    m_context_menu->add_action(frequency_energy_action);
 }
 
 // black magic from Hacker's delight
