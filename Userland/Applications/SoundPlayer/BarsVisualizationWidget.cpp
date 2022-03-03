@@ -26,7 +26,7 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
     if (m_sample_buffer.is_empty())
         return;
 
-    LibDSP::fft(m_sample_buffer, false);
+    LibDSP::fft(m_sample_buffer.span(), false);
     double max = AK::sqrt(m_sample_count * 2.);
 
     double freq_bin = m_samplerate / (double)m_sample_count;
