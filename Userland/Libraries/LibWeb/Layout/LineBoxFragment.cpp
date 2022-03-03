@@ -6,6 +6,7 @@
 
 #include <AK/Utf8View.h>
 #include <LibGfx/Painter.h>
+#include <LibWeb/Layout/FormattingState.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
 #include <LibWeb/Layout/TextNode.h>

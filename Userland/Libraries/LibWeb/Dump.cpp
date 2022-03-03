@@ -229,12 +229,13 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             auto& line_box = block.line_boxes()[line_box_index];
             for (size_t i = 0; i < indent; ++i)
                 builder.append("  ");
-            builder.appendff("  {}line {}{} width: {}, bottom: {}\n",
+            builder.appendff("  {}line {}{} width: {}, bottom: {}, baseline: {}\n",
                 line_box_color_on,
                 line_box_index,
                 color_off,
                 line_box.width(),
-                line_box.bottom());
+                line_box.bottom(),
+                line_box.baseline());
             for (size_t fragment_index = 0; fragment_index < line_box.fragments().size(); ++fragment_index) {
                 auto& fragment = line_box.fragments()[fragment_index];
                 for (size_t i = 0; i < indent; ++i)

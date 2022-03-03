@@ -54,7 +54,7 @@ void LineBuilder::append_box(Box const& box, float leading_size, float trailing_
     auto& box_state = m_formatting_state.get_mutable(box);
     auto& line_box = ensure_last_line_box();
     line_box.add_fragment(box, 0, 0, leading_size, trailing_size, box_state.content_width, box_state.content_height, box_state.border_box_top(), box_state.border_box_bottom());
-    m_max_height_on_current_line = max(m_max_height_on_current_line, box_state.content_height);
+    m_max_height_on_current_line = max(m_max_height_on_current_line, box_state.border_box_height());
 
     box_state.containing_line_box_fragment = LineBoxFragmentCoordinate {
         .line_box_index = m_containing_block_state.line_boxes.size() - 1,
@@ -81,6 +81,19 @@ bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width, bo
         return false;
     auto current_line_width = line_boxes.last().width();
     return (current_line_width + next_item_width) > m_available_width_for_current_line;
+}
+
+static float box_baseline(FormattingState const& state, Box const& box)
+{
+    auto const& box_state = state.get(box);
+    if (!box_state.line_boxes.is_empty())
+        return box_state.offset.y() + box_state.line_boxes.last().baseline();
+    if (box.has_children() && !box.children_are_inline()) {
+        auto const* child_box = box.last_child_of_type<Box>();
+        VERIFY(child_box);
+        return box_baseline(state, *child_box);
+    }
+    return box_state.border_box_height();
 }
 
 void LineBuilder::update_last_line()
@@ -125,32 +138,25 @@ void LineBuilder::update_last_line()
 
     float justified_space_width = whitespace_count > 0 ? (excess_horizontal_space_including_whitespace / static_cast<float>(whitespace_count)) : 0;
 
-    // HACK: This is where we determine the baseline of this line box.
-    //       We use the bottommost value of all the font baselines on the line and all the inline-block heights.
-    // FIXME: Support all the various CSS baseline properties, etc.
-    float max_height = max(m_max_height_on_current_line, m_context.containing_block().line_height());
-    for (auto const& fragment : line_box.fragments()) {
-        if (auto length_percentage = fragment.layout_node().computed_values().vertical_align().get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length()) {
-            max_height = max(max_height, fragment.border_box_height() + length_percentage->length().to_px(fragment.layout_node()));
-        }
-    }
+    auto fragment_baseline = [&](auto const& fragment) -> float {
+        if (fragment.layout_node().is_text_node())
+            return fragment.layout_node().font().baseline();
+        auto const& box = verify_cast<Layout::Box>(fragment.layout_node());
+        return box_baseline(m_formatting_state, box);
+    };
 
-    float line_box_baseline = 0;
-    for (auto& fragment : line_box.fragments()) {
-        float extra_height_from_vertical_align = 0;
-        if (auto length_percentage = fragment.layout_node().computed_values().vertical_align().get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length()) {
-            extra_height_from_vertical_align = length_percentage->length().to_px(fragment.layout_node());
+    auto line_box_baseline = [&] {
+        float line_box_baseline = 0;
+        for (auto const& fragment : line_box.fragments()) {
+            auto baseline = fragment_baseline(fragment);
+            // NOTE: For fragments with a <length> vertical-align, shift the fragment baseline down by the length.
+            //       This ensures that we make enough vertical space on the line for any manually-aligned fragments.
+            if (auto length_percentage = fragment.layout_node().computed_values().vertical_align().get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length())
+                baseline += length_percentage->length().to_px(fragment.layout_node());
+            line_box_baseline = max(line_box_baseline, baseline);
         }
-        float fragment_baseline;
-        if (fragment.layout_node().is_box()) {
-            fragment_baseline = m_formatting_state.get(static_cast<Box const&>(fragment.layout_node())).border_box_height();
-        } else {
-            float font_baseline = fragment.layout_node().font().baseline();
-            fragment_baseline = max_height + (font_baseline / 2.0f);
-        }
-        fragment_baseline += extra_height_from_vertical_align;
-        line_box_baseline = max(line_box_baseline, fragment_baseline);
-    }
+        return line_box_baseline;
+    }();
 
     // Now we're going to align our fragments on the inline axis.
     // We need to remember how much the last fragment on the line was moved by this process,
@@ -163,12 +169,30 @@ void LineBuilder::update_last_line()
         float new_fragment_x = roundf(x_offset + fragment.offset().x());
         float new_fragment_y = 0;
 
-        if (auto length_percentage = fragment.layout_node().computed_values().vertical_align().get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length()) {
-            new_fragment_y = m_current_y + (line_box_baseline - (fragment.border_box_bottom() + length_percentage->length().to_px(fragment.layout_node())));
+        auto y_value_for_alignment = [&](CSS::VerticalAlign vertical_align) {
+            switch (vertical_align) {
+            case CSS::VerticalAlign::Baseline:
+            case CSS::VerticalAlign::Bottom:
+            case CSS::VerticalAlign::Middle:
+            case CSS::VerticalAlign::Sub:
+            case CSS::VerticalAlign::Super:
+            case CSS::VerticalAlign::TextBottom:
+            case CSS::VerticalAlign::TextTop:
+            case CSS::VerticalAlign::Top:
+                // FIXME: These are all 'baseline'
+                return m_current_y + line_box_baseline - fragment_baseline(fragment) + fragment.border_box_top();
+            }
+            VERIFY_NOT_REACHED();
+        };
+
+        auto const& vertical_align = fragment.layout_node().computed_values().vertical_align();
+        if (vertical_align.has<CSS::VerticalAlign>()) {
+            new_fragment_y = y_value_for_alignment(vertical_align.get<CSS::VerticalAlign>());
         } else {
-            // Vertically align everyone's bottom to the baseline.
-            // FIXME: Support other alignment values.
-            new_fragment_y = m_current_y + (line_box_baseline - fragment.border_box_height());
+            if (auto length_percentage = vertical_align.get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length()) {
+                auto vertical_align_amount = length_percentage->length().to_px(fragment.layout_node());
+                new_fragment_y = y_value_for_alignment(CSS::VerticalAlign::Baseline) - vertical_align_amount;
+            }
         }
 
         last_fragment_x_adjustment = new_fragment_x - fragment.offset().x();
@@ -194,6 +218,7 @@ void LineBuilder::update_last_line()
         line_box.m_width += last_fragment_x_adjustment;
 
     line_box.m_bottom = bottom;
+    line_box.m_baseline = line_box_baseline;
 }
 
 void LineBuilder::remove_last_line_if_empty()
