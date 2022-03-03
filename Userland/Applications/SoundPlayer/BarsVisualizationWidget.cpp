@@ -7,6 +7,7 @@
 
 #include "BarsVisualizationWidget.h"
 #include <AK/Math.h>
+#include <AK/TypedTransfer.h>
 #include <LibDSP/FFT.h>
 #include <LibDSP/Window.h>
 #include <LibGUI/Event.h>
@@ -22,8 +23,14 @@ void BarsVisualizationWidget::render(GUI::PaintEvent& event, FixedArray<double> 
     painter.add_clip_rect(event.rect());
     painter.fill_rect(frame_inner_rect(), Color::Black);
 
-    for (size_t i = 0; i < fft_size; i++)
-        m_fft_samples[i] = samples[i] * m_fft_window[i];
+    // First half of data is from previous iteration, second half is from now.
+    // This gives us fully overlapping windows, which result in more accurate and visually appealing STFT.
+    for (size_t i = 0; i < fft_size / 2; i++)
+        m_fft_samples[i] = m_previous_samples[i] * m_fft_window[i];
+    for (size_t i = 0; i < fft_size / 2; i++)
+        m_fft_samples[i + fft_size / 2] = samples[i] * m_fft_window[i + fft_size / 2];
+
+    AK::TypedTransfer<double>::copy(m_previous_samples.data(), samples.data(), samples.size());
 
     LibDSP::fft(m_fft_samples.span(), false);
 
@@ -74,7 +81,8 @@ BarsVisualizationWidget::BarsVisualizationWidget()
 
     m_fft_window = LibDSP::Window<double>::hann<fft_size>();
 
-    MUST(set_render_sample_count(fft_size));
+    // As we use full-overlapping windows, the passed-in data is only half the size of one FFT operation.
+    MUST(set_render_sample_count(fft_size / 2));
 }
 
 void BarsVisualizationWidget::context_menu_event(GUI::ContextMenuEvent& event)
