@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -111,7 +112,19 @@ void HexEditor::set_position(size_t position)
     scroll_position_into_view(position);
     update_status();
 }
+void HexEditor::set_selection(size_t position, size_t length)
+{
+    if (position > m_document->size() || position + length > m_document->size())
+        return;
 
+    m_position = position;
+    m_cursor_at_low_nibble = false;
+    m_selection_start = position;
+    m_selection_end = position + length;
+    reset_cursor_blink_state();
+    scroll_position_into_view(position);
+    update_status();
+}
 bool HexEditor::save_as(NonnullRefPtr<Core::File> new_file)
 {
     if (m_document->type() == HexDocument::Type::File) {
