@@ -776,6 +776,13 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
             child.serialize_tree_as_json(child_object);
             MUST(child_object.finish());
         });
+
+        // Pseudo-elements don't have DOM nodes,so we have to add them separately.
+        if (is_element()) {
+            auto const* element = static_cast<DOM::Element const*>(this);
+            element->serialize_pseudo_elements_as_json(children);
+        }
+
         MUST(children.finish());
     }
 }

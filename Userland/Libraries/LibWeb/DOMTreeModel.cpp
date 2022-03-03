@@ -126,6 +126,8 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         //        Then we won't need to have a GUI::TreeView& member anymore.
         if (type == "comment"sv)
             return m_tree_view.palette().syntax_comment();
+        if (type == "pseudo-element"sv)
+            return m_tree_view.palette().syntax_type();
         return {};
     }
 
