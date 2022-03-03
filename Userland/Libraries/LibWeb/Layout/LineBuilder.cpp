@@ -158,11 +158,6 @@ void LineBuilder::update_last_line()
         return line_box_baseline;
     }();
 
-    // Now we're going to align our fragments on the inline axis.
-    // We need to remember how much the last fragment on the line was moved by this process,
-    // since that is used to compute the final width of the entire line box.
-    float last_fragment_x_adjustment = 0;
-
     for (size_t i = 0; i < line_box.fragments().size(); ++i) {
         auto& fragment = line_box.fragments()[i];
 
@@ -195,7 +190,6 @@ void LineBuilder::update_last_line()
             }
         }
 
-        last_fragment_x_adjustment = new_fragment_x - fragment.offset().x();
         fragment.set_offset({ new_fragment_x, new_fragment_y });
 
         bottom = max(bottom, new_fragment_y + fragment.height() + fragment.border_box_bottom());
@@ -213,9 +207,6 @@ void LineBuilder::update_last_line()
             }
         }
     }
-
-    if (!line_box.fragments().is_empty())
-        line_box.m_width += last_fragment_x_adjustment;
 
     line_box.m_bottom = bottom;
     line_box.m_baseline = line_box_baseline;
