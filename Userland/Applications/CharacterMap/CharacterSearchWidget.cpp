@@ -59,6 +59,9 @@ CharacterSearchWidget::CharacterSearchWidget()
     m_search_button = find_descendant_of_type_named<GUI::Button>("search_button");
     m_results_table = find_descendant_of_type_named<GUI::TableView>("results_table");
 
+    m_search_input->on_up_pressed = [this] { m_results_table->move_cursor(GUI::AbstractView::CursorMovement::Up, GUI::AbstractView::SelectionUpdate::Set); };
+    m_search_input->on_down_pressed = [this] { m_results_table->move_cursor(GUI::AbstractView::CursorMovement::Down, GUI::AbstractView::SelectionUpdate::Set); };
+
     m_search_input->on_return_pressed = [this] { search(); };
     m_search_button->on_click = [this](auto) { search(); };
 
