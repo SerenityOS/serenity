@@ -3288,6 +3288,7 @@ void SoftwareGLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_device_info.num_lights), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(!(pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION || pname != GL_SPOT_EXPONENT || pname != GL_SPOT_CUTOFF), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(param < 0.f, GL_INVALID_VALUE);
 
     auto& light_state = m_light_states.at(light - GL_LIGHT0);
 
@@ -3302,9 +3303,11 @@ void SoftwareGLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)
         light_state.quadratic_attenuation = param;
         break;
     case GL_SPOT_EXPONENT:
+        RETURN_WITH_ERROR_IF(param > 128.f, GL_INVALID_VALUE);
         light_state.spotlight_exponent = param;
         break;
     case GL_SPOT_CUTOFF:
+        RETURN_WITH_ERROR_IF(param > 90.f && param != 180.f, GL_INVALID_VALUE);
         light_state.spotlight_cutoff_angle = param;
         break;
     default:
@@ -3338,24 +3341,33 @@ void SoftwareGLContext::gl_lightfv(GLenum light, GLenum pname, GLfloat const* pa
         light_state.position = m_model_view_matrix * light_state.position;
         break;
     case GL_CONSTANT_ATTENUATION:
-        light_state.constant_attenuation = *params;
+        RETURN_WITH_ERROR_IF(params[0] < 0.f, GL_INVALID_VALUE);
+        light_state.constant_attenuation = params[0];
         break;
     case GL_LINEAR_ATTENUATION:
-        light_state.linear_attenuation = *params;
+        RETURN_WITH_ERROR_IF(params[0] < 0.f, GL_INVALID_VALUE);
+        light_state.linear_attenuation = params[0];
         break;
     case GL_QUADRATIC_ATTENUATION:
-        light_state.quadratic_attenuation = *params;
+        RETURN_WITH_ERROR_IF(params[0] < 0.f, GL_INVALID_VALUE);
+        light_state.quadratic_attenuation = params[0];
         break;
-    case GL_SPOT_EXPONENT:
-        light_state.spotlight_exponent = *params;
+    case GL_SPOT_EXPONENT: {
+        auto exponent = params[0];
+        RETURN_WITH_ERROR_IF(exponent < 0.f || exponent > 128.f, GL_INVALID_VALUE);
+        light_state.spotlight_exponent = exponent;
         break;
-    case GL_SPOT_CUTOFF:
-        light_state.spotlight_cutoff_angle = *params;
+    }
+    case GL_SPOT_CUTOFF: {
+        auto cutoff = params[0];
+        RETURN_WITH_ERROR_IF((cutoff < 0.f || cutoff > 90.f) && cutoff != 180.f, GL_INVALID_VALUE);
+        light_state.spotlight_cutoff_angle = cutoff;
         break;
+    }
     case GL_SPOT_DIRECTION: {
-        FloatVector4 direction_vector = { params[0], params[1], params[2], 0.0f };
+        FloatVector4 direction_vector = { params[0], params[1], params[2], 0.f };
         direction_vector = m_model_view_matrix * direction_vector;
-        light_state.spotlight_direction = { direction_vector.x(), direction_vector.y(), direction_vector.z() };
+        light_state.spotlight_direction = direction_vector.xyz();
         break;
     }
     default:
@@ -3393,22 +3405,31 @@ void SoftwareGLContext::gl_lightiv(GLenum light, GLenum pname, GLint const* para
         light_state.position = m_model_view_matrix * light_state.position;
         break;
     case GL_CONSTANT_ATTENUATION:
+        RETURN_WITH_ERROR_IF(params[0] < 0, GL_INVALID_VALUE);
         light_state.constant_attenuation = static_cast<float>(params[0]);
         break;
     case GL_LINEAR_ATTENUATION:
+        RETURN_WITH_ERROR_IF(params[0] < 0, GL_INVALID_VALUE);
         light_state.linear_attenuation = static_cast<float>(params[0]);
         break;
     case GL_QUADRATIC_ATTENUATION:
+        RETURN_WITH_ERROR_IF(params[0] < 0, GL_INVALID_VALUE);
         light_state.quadratic_attenuation = static_cast<float>(params[0]);
         break;
-    case GL_SPOT_EXPONENT:
-        light_state.spotlight_exponent = static_cast<float>(params[0]);
+    case GL_SPOT_EXPONENT: {
+        auto exponent = static_cast<float>(params[0]);
+        RETURN_WITH_ERROR_IF(exponent < 0.f || exponent > 128.f, GL_INVALID_VALUE);
+        light_state.spotlight_exponent = exponent;
         break;
-    case GL_SPOT_CUTOFF:
-        light_state.spotlight_cutoff_angle = static_cast<float>(params[0]);
+    }
+    case GL_SPOT_CUTOFF: {
+        auto cutoff = static_cast<float>(params[0]);
+        RETURN_WITH_ERROR_IF((cutoff < 0.f || cutoff > 90.f) && cutoff != 180.f, GL_INVALID_VALUE);
+        light_state.spotlight_cutoff_angle = cutoff;
         break;
+    }
     case GL_SPOT_DIRECTION: {
-        FloatVector4 direction_vector = to_float_vector(params[0], params[1], params[2], 0.0f);
+        auto direction_vector = to_float_vector(params[0], params[1], params[2], 0.0f);
         direction_vector = m_model_view_matrix * direction_vector;
         light_state.spotlight_direction = direction_vector.xyz();
         break;
