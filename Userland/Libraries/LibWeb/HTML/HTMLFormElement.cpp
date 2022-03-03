@@ -116,8 +116,7 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
         url.set_query(url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
     }
 
-    LoadRequest request;
-    request.set_url(url);
+    LoadRequest request = LoadRequest::create_for_url_on_page(url, document().page());
 
     if (effective_method == "post") {
         auto body = url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded).to_byte_buffer();
