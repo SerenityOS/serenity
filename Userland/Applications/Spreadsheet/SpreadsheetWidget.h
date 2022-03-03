@@ -44,7 +44,7 @@ public:
 
     void undo();
     void redo();
-    void change_cell_static_color_format(bool);
+    void change_cell_static_color_format(Spreadsheet::FormatType);
     auto& undo_stack() { return m_undo_stack; }
 
 private:

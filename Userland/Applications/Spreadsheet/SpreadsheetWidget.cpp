@@ -215,14 +215,14 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     });
 
     m_change_background_color_action = GUI::Action::create(
-        "&Change Background Color", { Mod_Ctrl, Key_P }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-            change_cell_static_color_format(true);
+        "&Change Background Color", { Mod_Ctrl, Key_B }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+            change_cell_static_color_format(Spreadsheet::Background);
         },
         window());
 
     m_change_text_color_action = GUI::Action::create(
-        "&Change Text Color", { Mod_Ctrl | Mod_Shift, Key_P }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/text-color.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-            change_cell_static_color_format(false);
+        "&Change Text Color", { Mod_Ctrl, Key_T }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/text-color.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+            change_cell_static_color_format(Spreadsheet::Foreground);
         },
         window());
 
@@ -449,7 +449,7 @@ void SpreadsheetWidget::redo()
     update();
 }
 
-void SpreadsheetWidget::change_cell_static_color_format(bool background)
+void SpreadsheetWidget::change_cell_static_color_format(Spreadsheet::FormatType format_type)
 {
     VERIFY(m_selected_view->sheet_if_available());
     auto& sheet = *m_selected_view->sheet_if_available();
@@ -457,7 +457,7 @@ void SpreadsheetWidget::change_cell_static_color_format(bool background)
     auto dialog = GUI::ColorPicker::construct(Color::White, window(), "Select Color");
     if (dialog->exec() == GUI::Dialog::ExecOK) {
         for (auto& position : sheet.selected_cells()) {
-            if (background)
+            if (format_type == Spreadsheet::Background)
                 sheet.at(position)->type_metadata().static_format.background_color = dialog->color();
             else
                 sheet.at(position)->type_metadata().static_format.foreground_color = dialog->color();
