@@ -28,7 +28,8 @@ private:
 
     static constexpr size_t fft_size = 512;
     static constexpr size_t bar_count = 64;
-    static constexpr size_t values_per_bar = (fft_size / 2) / bar_count;
+    // Things become weird near the Nyquist limit. Just don't use that FFT data.
+    static constexpr size_t cutoff = fft_size - 32;
 
     Array<Complex<double>, fft_size> m_fft_samples {};
     Array<double, fft_size> m_fft_window {};
@@ -36,5 +37,6 @@ private:
     Array<int, bar_count> m_gfx_falling_bars {};
     bool m_is_using_last;
     bool m_adjust_frequencies;
+    bool m_logarithmic_spectrum;
     RefPtr<GUI::Menu> m_context_menu;
 };
