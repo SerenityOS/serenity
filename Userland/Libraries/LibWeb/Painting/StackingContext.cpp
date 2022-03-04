@@ -230,7 +230,12 @@ void StackingContext::dump(int indent) const
     StringBuilder builder;
     for (int i = 0; i < indent; ++i)
         builder.append(' ');
-    builder.appendff("SC for {}({}) {} [children: {}]", m_box.class_name(), m_box.dom_node() ? m_box.dom_node()->node_name().characters() : "(anonymous)", m_box.absolute_rect().to_string().characters(), m_children.size());
+    builder.appendff("SC for {} {} [children: {}] (z-index: ", m_box.debug_description(), m_box.absolute_rect(), m_children.size());
+    if (m_box.computed_values().z_index().has_value())
+        builder.appendff("{}", m_box.computed_values().z_index().value());
+    else
+        builder.append("auto");
+    builder.append(')');
     dbgln("{}", builder.string_view());
     for (auto& child : m_children)
         child->dump(indent + 1);
