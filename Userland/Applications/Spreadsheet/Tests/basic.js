@@ -144,25 +144,53 @@ describe("Range", () => {
                 .toString()
         ).toEqual("<Cell at A0>,<Cell at A1>,<Cell at A2>,<Cell at B0>,<Cell at B1>,<Cell at B2>");
     });
+
+    test("CommonRange#findIndex", () => {
+        makeSheet();
+        const range = R`B`;
+        let idxs = [];
+        let values = [];
+        const idx = range.findIndex((val, idx) => {
+            idxs.push(idx);
+            values.push(val.value());
+            return integer(val.value()) === 4;
+        });
+        expect(idx).toEqual(1);
+        expect(values).toEqual(["1", "4"]);
+        expect(idxs).toEqual([0, 1]);
+    });
+
+    test("CommonRange#find", () => {
+        makeSheet();
+        const range = R`B`;
+        let idxs = [];
+        let values = [];
+        const val = range.find((val, idx) => {
+            idxs.push(idx);
+            values.push(val.value());
+            return integer(val.value()) === 4;
+        });
+        expect(val.name).toEqual("B1");
+        expect(values).toEqual(["1", "4"]);
+        expect(idxs).toEqual([0, 1]);
+    });
+
+    test("CommonRange#indexOf", () => {
+        makeSheet();
+        const range = R`B`;
+        expect(range.indexOf("B1")).toEqual(1);
+    });
+
+    test("CommonRange#has", () => {
+        makeSheet();
+        const range = R`B`;
+        expect(range.has("B1")).toEqual(true);
+        expect(range.has("B4")).toEqual(false);
+    });
 });
 
 describe("R function", () => {
-    const workbook = createWorkbook();
-    const sheet = createSheet(workbook, "Sheet 1");
-    sheet.makeCurrent();
-    /*
-      A B
-      +++
-    0+1 1
-    1+2 4
-    2+3 9
-    */
-    for (const row of ["A", "B"]) {
-        for (let col of [0, 1, 2]) {
-            sheet.setCell(row, col++, row === "A" ? col : Math.pow(col, 2));
-        }
-    }
-    sheet.focusCell("A", 0);
+    makeSheet();
 
     test("Check for correctness: R`A0:A`", () => {
         const range = R`A0:A`;
@@ -204,3 +232,23 @@ describe("R function", () => {
         expect(sum(range)).toEqual(14);
     });
 });
+
+/*
+ A B
+ +++
+0+1 1
+1+2 4
+2+3 9
+*/
+
+function makeSheet() {
+    const workbook = createWorkbook();
+    const sheet = createSheet(workbook, "Sheet 1");
+    sheet.makeCurrent();
+    for (const row of ["A", "B"]) {
+        for (let col of [0, 1, 2]) {
+            sheet.setCell(row, col++, row === "A" ? col : Math.pow(col, 2));
+        }
+    }
+    sheet.focusCell("A", 0);
+}
