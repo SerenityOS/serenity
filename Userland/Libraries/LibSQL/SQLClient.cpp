@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,10 +8,6 @@
 #include <LibSQL/SQLClient.h>
 
 namespace SQL {
-
-SQLClient::~SQLClient()
-{
-}
 
 void SQLClient::connected(int connection_id, String const& connected_to_database)
 {
