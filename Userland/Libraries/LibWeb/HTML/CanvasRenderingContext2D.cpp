@@ -31,6 +31,7 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
 
 void CanvasRenderingContext2D::set_fill_style(String style)
 {
+    // FIXME: 2. If the given value is a CanvasPattern object that is marked as not origin-clean, then set this's origin-clean flag to false.
     m_drawing_state.fill_style = Gfx::Color::from_string(style).value_or(Color::Black);
 }
 
@@ -63,6 +64,7 @@ void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float h
 
 void CanvasRenderingContext2D::set_stroke_style(String style)
 {
+    // FIXME: 2. If the given value is a CanvasPattern object that is marked as not origin-clean, then set this's origin-clean flag to false.
     m_drawing_state.stroke_style = Gfx::Color::from_string(style).value_or(Color::Black);
 }
 
