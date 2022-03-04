@@ -77,13 +77,57 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             warnln("the provided file is not a well-formatted ustar file");
             return 1;
         }
+
+        HashMap<String, String> global_overrides;
+        HashMap<String, String> local_overrides;
+
+        auto get_override = [&](StringView key) -> Optional<String> {
+            Optional<String> maybe_local = local_overrides.get(key);
+
+            if (maybe_local.has_value())
+                return maybe_local;
+
+            Optional<String> maybe_global = global_overrides.get(key);
+
+            if (maybe_global.has_value())
+                return maybe_global;
+
+            return {};
+        };
+
         for (; !tar_stream.finished(); tar_stream.advance()) {
             const Archive::TarFileHeader& header = tar_stream.header();
+
+            // Handle meta-entries earlier to avoid consuming the file content stream.
+            if (header.content_is_like_extended_header()) {
+                switch (header.type_flag()) {
+                case Archive::TarFileType::GlobalExtendedHeader: {
+                    TRY(tar_stream.for_each_extended_header([&](StringView key, StringView value) {
+                        if (value.length() == 0)
+                            global_overrides.remove(key);
+                        else
+                            global_overrides.set(key, value);
+                    }));
+                    break;
+                }
+                case Archive::TarFileType::ExtendedHeader: {
+                    TRY(tar_stream.for_each_extended_header([&](StringView key, StringView value) {
+                        local_overrides.set(key, value);
+                    }));
+                    break;
+                }
+                default:
+                    warnln("Unknown extended header type '{}' of {}", (char)header.type_flag(), header.filename());
+                    VERIFY_NOT_REACHED();
+                }
+
+                continue;
+            }
 
             LexicalPath path = LexicalPath(header.filename());
             if (!header.prefix().is_empty())
                 path = path.prepend(header.prefix());
-            String filename = path.string();
+            String filename = get_override("path"sv).value_or(path.string());
 
             if (list || verbose)
                 outln("{}", filename);
@@ -122,20 +166,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         return result_or_error.error();
                     break;
                 }
-                case Archive::TarFileType::GlobalExtendedHeader: {
-                    dbgln("ignoring global extended header: {}", header.filename());
-                    break;
-                }
-                case Archive::TarFileType::ExtendedHeader: {
-                    dbgln("ignoring extended header: {}", header.filename());
-                    break;
-                }
                 default:
                     // FIXME: Implement other file types
                     warnln("file type '{}' of {} is not yet supported", (char)header.type_flag(), header.filename());
                     VERIFY_NOT_REACHED();
                 }
             }
+
+            // Non-global headers should be cleared after every file.
+            local_overrides.clear();
         }
         file_stream.close();
 
