@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Dex♪ <dexes.ttp@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,10 +23,6 @@ NonnullRefPtr<WebSocket> WebSocket::create(ConnectionInfo connection)
 
 WebSocket::WebSocket(ConnectionInfo connection)
     : m_connection(move(connection))
-{
-}
-
-WebSocket::~WebSocket()
 {
 }
 

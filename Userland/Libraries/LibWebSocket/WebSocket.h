@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Dex♪ <dexes.ttp@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,7 +26,7 @@ class WebSocket final : public Core::Object {
     C_OBJECT(WebSocket)
 public:
     static NonnullRefPtr<WebSocket> create(ConnectionInfo);
-    virtual ~WebSocket() override;
+    virtual ~WebSocket() override = default;
 
     URL const& url() const { return m_connection.url(); }
 
