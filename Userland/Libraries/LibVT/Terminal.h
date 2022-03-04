@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,7 +46,7 @@ enum CursorKeysMode {
 
 class TerminalClient {
 public:
-    virtual ~TerminalClient() { }
+    virtual ~TerminalClient() = default;
 
     virtual void beep() = 0;
     virtual void set_window_title(StringView) = 0;

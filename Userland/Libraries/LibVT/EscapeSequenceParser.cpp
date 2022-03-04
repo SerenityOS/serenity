@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,10 +13,6 @@ namespace VT {
 EscapeSequenceParser::EscapeSequenceParser(EscapeSequenceExecutor& executor)
     : m_executor(executor)
     , m_state_machine([this](auto action, auto byte) { perform_action(action, byte); })
-{
-}
-
-EscapeSequenceParser::~EscapeSequenceParser()
 {
 }
 
