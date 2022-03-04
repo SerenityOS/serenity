@@ -37,6 +37,7 @@ interface CanvasRenderingContext2D {
     attribute double lineWidth;
 
     ImageData createImageData(long sw, long sh);
+    ImageData getImageData(long sx, long sy, long sw, long sh);
     undefined putImageData(ImageData imagedata, double dx, double dy);
 
     undefined save();
