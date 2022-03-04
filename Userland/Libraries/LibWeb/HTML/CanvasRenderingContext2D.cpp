@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/ExtraMathConstants.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Painter.h>
@@ -109,19 +110,19 @@ void CanvasRenderingContext2D::draw_image(const HTMLImageElement& image_element,
 
 void CanvasRenderingContext2D::scale(float sx, float sy)
 {
-    dbgln("CanvasRenderingContext2D::scale({}, {})", sx, sy);
+    dbgln_if(CANVAS_RENDERING_CONTEXT_2D_DEBUG, "CanvasRenderingContext2D::scale({}, {})", sx, sy);
     m_drawing_state.transform.scale(sx, sy);
 }
 
 void CanvasRenderingContext2D::translate(float tx, float ty)
 {
-    dbgln("CanvasRenderingContext2D::translate({}, {})", tx, ty);
+    dbgln_if(CANVAS_RENDERING_CONTEXT_2D_DEBUG, "CanvasRenderingContext2D::translate({}, {})", tx, ty);
     m_drawing_state.transform.translate(tx, ty);
 }
 
 void CanvasRenderingContext2D::rotate(float radians)
 {
-    dbgln("CanvasRenderingContext2D::rotate({})", radians);
+    dbgln_if(CANVAS_RENDERING_CONTEXT_2D_DEBUG, "CanvasRenderingContext2D::rotate({})", radians);
     m_drawing_state.transform.rotate_radians(radians);
 }
 
