@@ -14,8 +14,10 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/Screen.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
 
 namespace Web::DOM {
@@ -41,8 +43,13 @@ public:
     Page* page();
     Page const* page() const;
 
+    // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
     Document const& associated_document() const { return *m_associated_document; }
     Document& associated_document() { return *m_associated_document; }
+
+    // https://html.spec.whatwg.org/multipage/window-object.html#window-bc
+    HTML::BrowsingContext const* browsing_context() const { return m_associated_document->browsing_context(); }
+    HTML::BrowsingContext* browsing_context() { return m_associated_document->browsing_context(); }
 
     void alert(String const&);
     bool confirm(String const&);
