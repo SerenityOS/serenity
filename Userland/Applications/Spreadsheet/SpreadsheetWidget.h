@@ -27,7 +27,7 @@ public:
 
     const String& current_filename() const { return m_workbook->current_filename(); }
     Sheet* current_worksheet_if_available() { return m_selected_view ? m_selected_view->sheet_if_available() : nullptr; }
-    void set_filename(const String& filename);
+    void update_window_title();
 
     Workbook& workbook() { return *m_workbook; }
     const Workbook& workbook() const { return *m_workbook; }

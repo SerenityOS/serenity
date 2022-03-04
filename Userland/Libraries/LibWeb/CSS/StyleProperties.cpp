@@ -156,7 +156,7 @@ Optional<int> StyleProperties::z_index() const
     auto& value = maybe_value.value();
 
     if (value->has_auto())
-        return 0;
+        return {};
     if (value->has_integer())
         return value->to_integer();
     return {};

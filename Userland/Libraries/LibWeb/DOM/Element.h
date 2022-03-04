@@ -113,13 +113,8 @@ public:
     const ShadowRoot* shadow_root() const { return m_shadow_root; }
     void set_shadow_root(RefPtr<ShadowRoot>);
 
-    void add_custom_property(String custom_property_name, CSS::StyleProperty style_property)
-    {
-        m_custom_properties.set(move(custom_property_name), move(style_property));
-    }
-
-    HashMap<String, CSS::StyleProperty> const& custom_properties() const { return m_custom_properties; }
-    HashMap<String, CSS::StyleProperty>& custom_properties() { return m_custom_properties; }
+    void set_custom_properties(HashMap<FlyString, CSS::StyleProperty> custom_properties) { m_custom_properties = move(custom_properties); }
+    HashMap<FlyString, CSS::StyleProperty> const& custom_properties() const { return m_custom_properties; }
 
     void queue_an_element_task(HTML::Task::Source, Function<void()>);
 
@@ -149,7 +144,7 @@ private:
     RefPtr<CSS::CSSStyleDeclaration> m_inline_style;
 
     RefPtr<CSS::StyleProperties> m_specified_css_values;
-    HashMap<String, CSS::StyleProperty> m_custom_properties;
+    HashMap<FlyString, CSS::StyleProperty> m_custom_properties;
 
     RefPtr<DOMTokenList> m_class_list;
     Vector<FlyString> m_classes;

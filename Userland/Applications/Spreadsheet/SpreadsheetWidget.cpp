@@ -123,6 +123,9 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     });
 
     m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
+        if (!request_close())
+            return;
+
         Optional<String> load_path = GUI::FilePicker::get_open_filepath(window());
         if (!load_path.has_value())
             return;
@@ -141,6 +144,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
                 return;
 
             save(save_path.value());
+            update_window_title();
         } else {
             save(current_filename());
         }
@@ -153,9 +157,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
             return;
 
         save(save_path.value());
-
-        if (!current_filename().is_empty())
-            set_filename(current_filename());
+        update_window_title();
     });
 
     m_quit_action = GUI::CommonActions::make_quit_action([&](auto&) {
@@ -291,22 +293,15 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             // How did this even happen?
             VERIFY(sheet_ptr);
             auto& sheet = *sheet_ptr;
-            if (selection.is_empty()) {
-                m_current_cell_label->set_enabled(false);
-                m_current_cell_label->set_text({});
-                m_cell_value_editor->on_change = nullptr;
-                m_cell_value_editor->on_focusin = nullptr;
-                m_cell_value_editor->on_focusout = nullptr;
-                m_cell_value_editor->set_text("");
-                m_cell_value_editor->set_enabled(false);
-                m_cut_action->set_enabled(false);
-                m_copy_action->set_enabled(false);
-                return;
-            }
+
+            VERIFY(!selection.is_empty());
+            m_cut_action->set_enabled(true);
+            m_copy_action->set_enabled(true);
+            m_current_cell_label->set_enabled(true);
+            m_cell_value_editor->set_enabled(true);
 
             if (selection.size() == 1) {
                 auto& position = selection.first();
-                m_current_cell_label->set_enabled(true);
                 m_current_cell_label->set_text(position.to_cell_identifier(sheet));
 
                 auto& cell = sheet.ensure(position);
@@ -326,6 +321,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                 m_copy_action->set_enabled(true);
                 m_change_background_color_action->set_enabled(true);
                 m_change_text_color_action->set_enabled(true);
+
                 static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&cell);
                 return;
             }
@@ -333,7 +329,6 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             // There are many cells selected, change all of them.
             StringBuilder builder;
             builder.appendff("<{}>", selection.size());
-            m_current_cell_label->set_enabled(true);
             m_current_cell_label->set_text(builder.string_view());
 
             Vector<Cell&> cells;
@@ -362,15 +357,21 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                     update();
                 }
             };
-            m_cell_value_editor->set_enabled(true);
             static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&first_cell);
         };
         m_selected_view->on_selection_dropped = [&]() {
-            m_cell_value_editor->set_enabled(false);
-            static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
-            m_cell_value_editor->set_text("");
             m_current_cell_label->set_enabled(false);
-            m_current_cell_label->set_text("");
+            m_current_cell_label->set_text({});
+            m_cell_value_editor->on_change = nullptr;
+            m_cell_value_editor->on_focusin = nullptr;
+            m_cell_value_editor->on_focusout = nullptr;
+            m_cell_value_editor->set_text({});
+            m_cell_value_editor->set_enabled(false);
+
+            m_cut_action->set_enabled(false);
+            m_copy_action->set_enabled(false);
+
+            static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
         };
     };
 
@@ -493,6 +494,7 @@ void SpreadsheetWidget::load_file(Core::File& file)
     }
 
     setup_tabs(m_workbook->sheets());
+    update_window_title();
 }
 
 bool SpreadsheetWidget::request_close()
@@ -509,6 +511,7 @@ bool SpreadsheetWidget::request_close()
                 return false;
 
             save(save_path.value());
+            update_window_title();
         } else {
             save(current_filename());
         }
@@ -542,16 +545,16 @@ void SpreadsheetWidget::add_sheet(NonnullRefPtr<Sheet>&& sheet)
     setup_tabs(new_sheets);
 }
 
-void SpreadsheetWidget::set_filename(const String& filename)
+void SpreadsheetWidget::update_window_title()
 {
-    if (m_workbook->set_filename(filename)) {
-        StringBuilder builder;
-        builder.append("Spreadsheet - ");
+    StringBuilder builder;
+    if (current_filename().is_empty())
+        builder.append("Untitled");
+    else
         builder.append(current_filename());
+    builder.append("[*] - Spreadsheet");
 
-        window()->set_title(builder.string_view());
-        window()->update();
-    }
+    window()->set_title(builder.to_string());
 }
 
 void SpreadsheetWidget::clipboard_action(bool is_cut)

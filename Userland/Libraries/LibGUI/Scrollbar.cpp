@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@ REGISTER_WIDGET(GUI, Scrollbar)
 
 namespace GUI {
 
-static const char* s_up_arrow_bitmap_data = {
+static constexpr Gfx::CharacterBitmap s_up_arrow_bitmap {
     "         "
     "         "
     "         "
@@ -24,10 +25,11 @@ static const char* s_up_arrow_bitmap_data = {
     "  #####  "
     " ####### "
     "         "
-    "         "
+    "         ",
+    9, 9
 };
 
-static const char* s_down_arrow_bitmap_data = {
+static constexpr Gfx::CharacterBitmap s_down_arrow_bitmap {
     "         "
     "         "
     "         "
@@ -36,10 +38,11 @@ static const char* s_down_arrow_bitmap_data = {
     "   ###   "
     "    #    "
     "         "
-    "         "
+    "         ",
+    9, 9
 };
 
-static const char* s_left_arrow_bitmap_data = {
+static constexpr Gfx::CharacterBitmap s_left_arrow_bitmap {
     "         "
     "     #   "
     "    ##   "
@@ -48,10 +51,11 @@ static const char* s_left_arrow_bitmap_data = {
     "   ###   "
     "    ##   "
     "     #   "
-    "         "
+    "         ",
+    9, 9
 };
 
-static const char* s_right_arrow_bitmap_data = {
+static constexpr Gfx::CharacterBitmap s_right_arrow_bitmap {
     "         "
     "   #     "
     "   ##    "
@@ -60,26 +64,14 @@ static const char* s_right_arrow_bitmap_data = {
     "   ###   "
     "   ##    "
     "   #     "
-    "         "
+    "         ",
+    9, 9
 };
-
-static Gfx::CharacterBitmap* s_up_arrow_bitmap;
-static Gfx::CharacterBitmap* s_down_arrow_bitmap;
-static Gfx::CharacterBitmap* s_left_arrow_bitmap;
-static Gfx::CharacterBitmap* s_right_arrow_bitmap;
 
 Scrollbar::Scrollbar(Orientation orientation)
     : AbstractSlider(orientation)
 {
     m_automatic_scrolling_timer = add<Core::Timer>();
-    if (!s_up_arrow_bitmap)
-        s_up_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 9, 9).leak_ref();
-    if (!s_down_arrow_bitmap)
-        s_down_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_down_arrow_bitmap_data, 9, 9).leak_ref();
-    if (!s_left_arrow_bitmap)
-        s_left_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_left_arrow_bitmap_data, 9, 9).leak_ref();
-    if (!s_right_arrow_bitmap)
-        s_right_arrow_bitmap = &Gfx::CharacterBitmap::create_from_ascii(s_right_arrow_bitmap_data, 9, 9).leak_ref();
 
     if (orientation == Orientation::Vertical) {
         set_fixed_width(16);
@@ -210,15 +202,15 @@ void Scrollbar::paint_event(PaintEvent& event)
         if (decrement_pressed)
             decrement_location.translate_by(1, 1);
         if (!has_scrubber() || !is_enabled())
-            painter.draw_bitmap(decrement_location.translated(1, 1), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, palette().threed_highlight());
-        painter.draw_bitmap(decrement_location, orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
+            painter.draw_bitmap(decrement_location.translated(1, 1), orientation() == Orientation::Vertical ? s_up_arrow_bitmap : s_left_arrow_bitmap, palette().threed_highlight());
+        painter.draw_bitmap(decrement_location, orientation() == Orientation::Vertical ? s_up_arrow_bitmap : s_left_arrow_bitmap, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
 
         auto increment_location = increment_button_rect().location().translated(3, 3);
         if (increment_pressed)
             increment_location.translate_by(1, 1);
         if (!has_scrubber() || !is_enabled())
-            painter.draw_bitmap(increment_location.translated(1, 1), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, palette().threed_highlight());
-        painter.draw_bitmap(increment_location, orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
+            painter.draw_bitmap(increment_location.translated(1, 1), orientation() == Orientation::Vertical ? s_down_arrow_bitmap : s_right_arrow_bitmap, palette().threed_highlight());
+        painter.draw_bitmap(increment_location, orientation() == Orientation::Vertical ? s_down_arrow_bitmap : s_right_arrow_bitmap, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
     }
 
     if (has_scrubber() && !scrubber_rect().is_null())

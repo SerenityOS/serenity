@@ -223,7 +223,7 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
         // Find the top content edge (if negative).
         float top_content_edge = 0;
         for (auto const& fragment : box_state.line_boxes.first().fragments()) {
-            float fragment_top_content_edge = fragment.offset().y();
+            float fragment_top_content_edge = fragment.offset().y() - fragment.border_box_top();
             if (fragment_top_content_edge < top_content_edge)
                 top_content_edge = fragment_top_content_edge;
         }
@@ -231,22 +231,26 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
     }
 
     // 2. the bottom edge of the bottom (possibly collapsed) margin of its last in-flow child, if the child's bottom margin does not collapse with the element's bottom margin
-    if (!box.children_are_inline()) {
-        // FIXME: Don't walk all children from first to last here!
-        Box const* last_in_flow_child = nullptr;
-        box.for_each_child_of_type<Box>([&](Box const& child_box) {
-            bool is_in_flow = !child_box.is_floating() && !child_box.is_absolutely_positioned();
-            if (is_in_flow)
-                last_in_flow_child = &child_box;
-        });
-        if (last_in_flow_child) {
-            auto const& child_state = state.get(*last_in_flow_child);
-            // FIXME: Handle margin collapsing.
-            return child_state.offset.y() + child_state.content_height + child_state.margin_box_bottom();
-        }
-    }
-
     // FIXME: 3. the bottom border edge of the last in-flow child whose top margin doesn't collapse with the element's bottom margin
+    if (!box.children_are_inline()) {
+        Optional<float> top;
+        Optional<float> bottom;
+        box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
+            if (child_box.is_absolutely_positioned() || child_box.is_floating())
+                return;
+
+            // FIXME: Handle margin collapsing.
+            auto const& child_box_state = state.get(child_box);
+            float child_box_top = child_box_state.offset.y() - child_box_state.border_box_top();
+            float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom();
+
+            if (!top.has_value() || child_box_top < top.value())
+                top = child_box_top;
+            if (!bottom.has_value() || child_box_bottom > bottom.value())
+                bottom = child_box_bottom;
+        });
+        return bottom.value_or(0) - top.value_or(0);
+    }
 
     // 4. zero, otherwise
     return 0;

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,7 @@
 
 namespace GUI {
 
-static const char* s_arrow_bitmap_data = {
+static constexpr Gfx::CharacterBitmap s_arrow_bitmap {
     "         "
     "   #     "
     "   ##    "
@@ -22,10 +23,9 @@ static const char* s_arrow_bitmap_data = {
     "   ###   "
     "   ##    "
     "   #     "
-    "         "
+    "         ",
+    9, 9
 };
-static const int s_arrow_bitmap_width = 9;
-static const int s_arrow_bitmap_height = 9;
 
 ColumnsView::ColumnsView()
 {
@@ -128,7 +128,7 @@ void ColumnsView::paint_event(PaintEvent& event)
 
             Gfx::IntRect text_rect = {
                 icon_rect.right() + 1 + icon_spacing(), row * item_height(),
-                column.width - icon_spacing() - icon_size() - icon_spacing() - icon_spacing() - s_arrow_bitmap_width - icon_spacing(), item_height()
+                column.width - icon_spacing() - icon_size() - icon_spacing() - icon_spacing() - static_cast<int>(s_arrow_bitmap.width()) - icon_spacing(), item_height()
             };
             draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::CenterLeft, Gfx::TextElision::None);
 
@@ -145,11 +145,10 @@ void ColumnsView::paint_event(PaintEvent& event)
             if (expandable) {
                 Gfx::IntRect arrow_rect = {
                     text_rect.right() + 1 + icon_spacing(), 0,
-                    s_arrow_bitmap_width, s_arrow_bitmap_height
+                    s_arrow_bitmap.width(), s_arrow_bitmap.height()
                 };
                 arrow_rect.center_vertically_within(row_rect);
-                static auto& arrow_bitmap = Gfx::CharacterBitmap::create_from_ascii(s_arrow_bitmap_data, s_arrow_bitmap_width, s_arrow_bitmap_height).leak_ref();
-                painter.draw_bitmap(arrow_rect.location(), arrow_bitmap, text_color);
+                painter.draw_bitmap(arrow_rect.location(), s_arrow_bitmap, text_color);
             }
         }
 
@@ -201,7 +200,7 @@ void ColumnsView::update_column_sizes()
             ModelIndex index = model()->index(row, m_model_column, column.parent_index);
             VERIFY(index.is_valid());
             auto text = index.data().to_string();
-            int row_width = icon_spacing() + icon_size() + icon_spacing() + font().width(text) + icon_spacing() + s_arrow_bitmap_width + icon_spacing();
+            int row_width = icon_spacing() + icon_size() + icon_spacing() + font().width(text) + icon_spacing() + s_arrow_bitmap.width() + icon_spacing();
             if (row_width > column.width)
                 column.width = row_width;
         }

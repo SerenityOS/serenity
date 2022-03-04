@@ -40,6 +40,8 @@ private:
         ExtendedAudioID = 0x28,
         ExtendedAudioStatusControl = 0x2a,
         PCMFrontDACRate = 0x2c,
+        VendorID1 = 0x7c,
+        VendorID2 = 0x7e,
     };
 
     enum ExtendedAudioMask : u16 {

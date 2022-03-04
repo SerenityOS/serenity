@@ -199,8 +199,17 @@ ErrorOr<void> PerformanceEventBuffer::to_json_impl(Serializer& object) const
 {
     {
         auto strings = TRY(object.add_array("strings"));
-        for (auto const& it : m_strings)
-            TRY(strings.add(it->view()));
+        Vector<KString*> strings_sorted_by_index;
+        TRY(strings_sorted_by_index.try_resize(m_strings.size()));
+
+        for (auto& entry : m_strings) {
+            strings_sorted_by_index[entry.value] = const_cast<Kernel::KString*>(entry.key.ptr());
+        }
+
+        for (size_t i = 0; i < m_strings.size(); i++) {
+            TRY(strings.add(strings_sorted_by_index[i]->view()));
+        }
+
         TRY(strings.finish());
     }
 
@@ -361,9 +370,14 @@ ErrorOr<void> PerformanceEventBuffer::add_process(const Process& process, Proces
 
 ErrorOr<FlatPtr> PerformanceEventBuffer::register_string(NonnullOwnPtr<KString> string)
 {
-    FlatPtr string_id = m_strings.size();
-    TRY(m_strings.try_set(move(string)));
-    return string_id;
+    auto it = m_strings.find(string);
+    if (it != m_strings.end()) {
+        return it->value;
+    }
+
+    auto new_index = m_strings.size();
+    TRY(m_strings.try_set(move(string), move(new_index)));
+    return new_index;
 }
 
 }
