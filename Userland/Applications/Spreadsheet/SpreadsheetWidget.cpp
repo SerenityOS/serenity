@@ -43,21 +43,6 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     auto& current_cell_label = top_bar.add<GUI::Label>("");
     current_cell_label.set_fixed_width(50);
 
-    auto& help_button = top_bar.add<GUI::Button>("");
-    help_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png").release_value_but_fixme_should_propagate_errors());
-    help_button.set_tooltip("Functions Help");
-    help_button.set_fixed_size(20, 20);
-    help_button.on_click = [&](auto) {
-        if (!m_selected_view) {
-            GUI::MessageBox::show_error(window(), "Can only show function documentation/help when a worksheet exists and is open");
-        } else if (auto* sheet_ptr = m_selected_view->sheet_if_available()) {
-            auto docs = sheet_ptr->gather_documentation();
-            auto help_window = HelpWindow::the(window());
-            help_window->set_docs(move(docs));
-            help_window->show();
-        }
-    };
-
     auto& cell_value_editor = top_bar.add<GUI::TextEditor>(GUI::TextEditor::Type::SingleLine);
     cell_value_editor.set_font(Gfx::FontDatabase::default_fixed_width_font());
     cell_value_editor.set_scrollbars_enabled(false);
@@ -239,6 +224,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     toolbar.add_action(*m_paste_action);
     toolbar.add_action(*m_undo_action);
     toolbar.add_action(*m_redo_action);
+    toolbar.add_action(*m_functions_help_action);
 
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
