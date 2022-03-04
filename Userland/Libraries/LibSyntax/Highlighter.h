@@ -37,7 +37,7 @@ class Highlighter {
     AK_MAKE_NONMOVABLE(Highlighter);
 
 public:
-    virtual ~Highlighter();
+    virtual ~Highlighter() = default;
 
     virtual Language language() const = 0;
     StringView language_string(Language) const;
@@ -64,7 +64,7 @@ public:
     virtual bool is_cpp_semantic_highlighter() const { return false; }
 
 protected:
-    Highlighter() { }
+    Highlighter() = default;
 
     // FIXME: This should be WeakPtr somehow
     HighlighterClient* m_client { nullptr };
