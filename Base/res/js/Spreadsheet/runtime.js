@@ -365,6 +365,9 @@ function randRange(min, max) {
 }
 
 function integer(value) {
+    const typeVal = typeof value;
+    if ((typeVal !== "number" && typeVal !== "string") || Number.isNaN(Number(value)))
+        throw new Error(`integer() called with unexpected type "${typeVal}"`);
     return value | 0;
 }
 
@@ -381,7 +384,7 @@ function numericReduce(op, accumulator, cells) {
 }
 
 function numericResolve(cells) {
-    return resolve(cells).map(str => (str === "" || str == null ? NaN : integer(str)));
+    return resolve(cells).map(val => parseInt(val));
 }
 
 function resolve(cells) {
