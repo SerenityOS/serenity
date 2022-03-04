@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/URL.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Forward.h>
@@ -31,6 +32,7 @@ public:
 
 private:
     DOM::Document const* relevant_document() const;
+    AK::URL url() const;
 
     JS_DECLARE_NATIVE_FUNCTION(reload);
     JS_DECLARE_NATIVE_FUNCTION(replace);
