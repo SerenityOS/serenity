@@ -1706,7 +1706,7 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
     char* out_ptr = reinterpret_cast<char*>(pixels);
     for (int i = 0; i < (int)height; ++i) {
         for (int j = 0; j < (int)width; ++j) {
-            Gfx::RGBA32 color {};
+            Gfx::ARGB32 color {};
             if (m_current_read_buffer == GL_FRONT || m_current_read_buffer == GL_LEFT || m_current_read_buffer == GL_FRONT_LEFT) {
                 if (y + i >= m_frontbuffer->width() || x + j >= m_frontbuffer->height())
                     color = 0;

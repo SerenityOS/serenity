@@ -333,7 +333,7 @@ private:
         u32 as_u32;
         u64 as_u64;
         float as_float;
-        Gfx::RGBA32 as_color;
+        Gfx::ARGB32 as_color;
         Gfx::TextAlignment as_text_alignment;
         Gfx::ColorRole as_color_role;
         Gfx::AlignmentRole as_alignment_role;

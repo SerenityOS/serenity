@@ -84,8 +84,8 @@ void Painter::fill_rect_with_draw_op(IntRect const& a_rect, Color color)
     if (rect.is_empty())
         return;
 
-    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(rect.top()) + rect.left();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     for (int i = rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < rect.width(); ++j)
@@ -103,8 +103,8 @@ void Painter::clear_rect(IntRect const& a_rect, Color color)
     VERIFY(m_target->rect().contains(rect));
     rect *= scale();
 
-    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(rect.top()) + rect.left();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     for (int i = rect.height() - 1; i >= 0; --i) {
         fast_u32_fill(dst, color.value(), rect.width());
@@ -115,8 +115,8 @@ void Painter::clear_rect(IntRect const& a_rect, Color color)
 void Painter::fill_physical_rect(IntRect const& physical_rect, Color color)
 {
     // Callers must do clipping.
-    RGBA32* dst = m_target->scanline(physical_rect.top()) + physical_rect.left();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(physical_rect.top()) + physical_rect.left();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     for (int i = physical_rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < physical_rect.width(); ++j)
@@ -156,8 +156,8 @@ void Painter::fill_rect_with_dither_pattern(IntRect const& a_rect, Color color_a
     if (rect.is_empty())
         return;
 
-    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(rect.top()) + rect.left();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     for (int i = 0; i < rect.height(); ++i) {
         for (int j = 0; j < rect.width(); ++j) {
@@ -180,8 +180,8 @@ void Painter::fill_rect_with_checkerboard(IntRect const& a_rect, IntSize const& 
     if (rect.is_empty())
         return;
 
-    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(rect.top()) + rect.left();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     int first_cell_column = rect.x() / cell_size.width();
     int prologue_length = min(rect.width(), cell_size.width() - (rect.x() % cell_size.width()));
@@ -240,8 +240,8 @@ void Painter::fill_rect_with_gradient(Orientation orientation, IntRect const& a_
 
     int offset = clipped_rect.primary_offset_for_orientation(orientation) - rect.primary_offset_for_orientation(orientation);
 
-    RGBA32* dst = m_target->scanline(clipped_rect.top()) + clipped_rect.left();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(clipped_rect.top()) + clipped_rect.left();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     float increment = (1.0 / ((rect.primary_size_for_orientation(orientation))));
     float alpha_increment = increment * ((float)gradient_end.alpha() - (float)gradient_start.alpha());
@@ -389,8 +389,8 @@ void Painter::fill_rounded_corner(IntRect const& a_rect, int radius, Color color
     rect *= scale();
     clip_offset *= scale();
 
-    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(rect.top()) + rect.left();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     IntPoint circle_center;
     switch (orientation) {
@@ -456,8 +456,8 @@ void Painter::draw_circle_arc_intersecting(IntRect const& a_rect, IntPoint const
         return distance2 <= (radius2 + radius + 0.25) && distance2 >= (radius2 - radius + 0.25);
     };
 
-    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(rect.top()) + rect.left();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     for (int i = rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < rect.width(); ++j)
@@ -621,8 +621,8 @@ void Painter::draw_bitmap(IntPoint const& p, CharacterBitmap const& bitmap, Colo
     int const last_row = clipped_rect.bottom() - rect.top();
     int const first_column = clipped_rect.left() - rect.left();
     int const last_column = clipped_rect.right() - rect.left();
-    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
     char const* bitmap_row = &bitmap.bits()[first_row * bitmap.width() + first_column];
     size_t const bitmap_skip = bitmap.width();
 
@@ -649,8 +649,8 @@ void Painter::draw_bitmap(IntPoint const& p, GlyphBitmap const& bitmap, Color co
     int const last_column = clipped_rect.right() - dst_rect.left();
 
     int scale = this->scale();
-    RGBA32* dst = m_target->scanline(clipped_rect.y() * scale) + clipped_rect.x() * scale;
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(clipped_rect.y() * scale) + clipped_rect.x() * scale;
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     if (scale == 1) {
         for (int row = first_row; row <= last_row; ++row) {
@@ -762,8 +762,8 @@ struct BlitState {
         BothAlpha = SrcAlpha | DstAlpha
     };
 
-    RGBA32 const* src;
-    RGBA32* dst;
+    ARGB32 const* src;
+    ARGB32* dst;
     size_t src_pitch;
     size_t dst_pitch;
     int row_count;
@@ -822,8 +822,8 @@ void Painter::blit_with_opacity(IntPoint const& position, Gfx::Bitmap const& sou
     BlitState blit_state {
         .src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column,
         .dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x(),
-        .src_pitch = source.pitch() / sizeof(RGBA32),
-        .dst_pitch = m_target->pitch() / sizeof(RGBA32),
+        .src_pitch = source.pitch() / sizeof(ARGB32),
+        .dst_pitch = m_target->pitch() / sizeof(ARGB32),
         .row_count = last_row - first_row + 1,
         .column_count = last_column - first_column + 1,
         .opacity = opacity
@@ -861,13 +861,13 @@ void Painter::blit_filtered(IntPoint const& position, Gfx::Bitmap const& source,
     int const last_row = clipped_rect.bottom() - dst_rect.top();
     int const first_column = clipped_rect.left() - dst_rect.left();
     int const last_column = clipped_rect.right() - dst_rect.left();
-    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     int s = scale / source.scale();
     if (s == 1) {
-        RGBA32 const* src = source.scanline(safe_src_rect.top() + first_row) + safe_src_rect.left() + first_column;
-        size_t const src_skip = source.pitch() / sizeof(RGBA32);
+        ARGB32 const* src = source.scanline(safe_src_rect.top() + first_row) + safe_src_rect.left() + first_column;
+        size_t const src_skip = source.pitch() / sizeof(ARGB32);
 
         for (int row = first_row; row <= last_row; ++row) {
             for (int x = 0; x <= (last_column - first_column); ++x) {
@@ -888,7 +888,7 @@ void Painter::blit_filtered(IntPoint const& position, Gfx::Bitmap const& source,
         }
     } else {
         for (int row = first_row; row <= last_row; ++row) {
-            RGBA32 const* src = source.scanline(safe_src_rect.top() + row / s) + safe_src_rect.left() + first_column / s;
+            ARGB32 const* src = source.scanline(safe_src_rect.top() + row / s) + safe_src_rect.left() + first_column / s;
             for (int x = 0; x <= (last_column - first_column); ++x) {
                 u8 alpha = Color::from_rgba(src[x / s]).alpha();
                 if (alpha == 0xff) {
@@ -937,15 +937,15 @@ void Painter::draw_tiled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& so
     int const first_row = (clipped_rect.top() - dst_rect.top());
     int const last_row = (clipped_rect.bottom() - dst_rect.top());
     int const first_column = (clipped_rect.left() - dst_rect.left());
-    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     if (source.format() == BitmapFormat::BGRx8888 || source.format() == BitmapFormat::BGRA8888) {
         int s = scale / source.scale();
         if (s == 1) {
             int x_start = first_column + a_dst_rect.left() * scale;
             for (int row = first_row; row <= last_row; ++row) {
-                RGBA32 const* sl = source.scanline((row + a_dst_rect.top() * scale) % source.physical_height());
+                ARGB32 const* sl = source.scanline((row + a_dst_rect.top() * scale) % source.physical_height());
                 for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
                     dst[x - x_start] = sl[x % source.physical_width()];
                 }
@@ -954,7 +954,7 @@ void Painter::draw_tiled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& so
         } else {
             int x_start = first_column + a_dst_rect.left() * scale;
             for (int row = first_row; row <= last_row; ++row) {
-                RGBA32 const* sl = source.scanline(((row + a_dst_rect.top() * scale) / s) % source.physical_height());
+                ARGB32 const* sl = source.scanline(((row + a_dst_rect.top() * scale) / s) % source.physical_height());
                 for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
                     dst[x - x_start] = sl[(x / s) % source.physical_width()];
                 }
@@ -1009,12 +1009,12 @@ void Painter::blit(IntPoint const& position, Gfx::Bitmap const& source, IntRect 
     int const first_row = clipped_rect.top() - dst_rect.top();
     int const last_row = clipped_rect.bottom() - dst_rect.top();
     int const first_column = clipped_rect.left() - dst_rect.left();
-    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
-    size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
+    ARGB32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
     if (source.format() == BitmapFormat::BGRx8888 || source.format() == BitmapFormat::BGRA8888) {
-        RGBA32 const* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
-        size_t const src_skip = source.pitch() / sizeof(RGBA32);
+        ARGB32 const* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
+        size_t const src_skip = source.pitch() / sizeof(ARGB32);
         for (int row = first_row; row <= last_row; ++row) {
             fast_u32_copy(dst, src, clipped_rect.width());
             dst += dst_skip;

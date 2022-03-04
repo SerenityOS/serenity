@@ -78,12 +78,12 @@ Optional<Color> Color::from_string(StringView string)
         return {};
 
     struct ColorAndWebName {
-        constexpr ColorAndWebName(RGBA32 c, char const* n)
+        constexpr ColorAndWebName(ARGB32 c, char const* n)
             : color(c)
             , name(n)
         {
         }
-        RGBA32 color;
+        ARGB32 color;
         StringView name;
     };
 

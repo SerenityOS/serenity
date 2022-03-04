@@ -58,7 +58,7 @@ ErrorOr<void> decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
     if (!Gfx::is_valid_bitmap_format(raw_bitmap_format))
         return Error::from_string_literal("IPC: Invalid Gfx::ShareableBitmap format"sv);
     auto bitmap_format = (Gfx::BitmapFormat)raw_bitmap_format;
-    Vector<Gfx::RGBA32> palette;
+    Vector<Gfx::ARGB32> palette;
     if (Gfx::Bitmap::is_indexed(bitmap_format)) {
         TRY(decoder.decode(palette));
     }
