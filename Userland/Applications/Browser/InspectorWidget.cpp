@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -21,33 +21,35 @@
 
 namespace Browser {
 
-void InspectorWidget::set_inspected_node(i32 node_id)
+void InspectorWidget::set_selection(Selection selection)
 {
     if (!m_dom_json.has_value()) {
         // DOM Tree hasn't been loaded yet, so make a note to inspect it later.
-        m_pending_inspect_node_id = node_id;
+        m_pending_selection = move(selection);
         return;
     }
 
     auto* model = verify_cast<Web::DOMTreeModel>(m_dom_tree_view->model());
-    auto index = model->index_for_node(node_id);
+    auto index = model->index_for_node(selection.dom_node_id, selection.pseudo_element);
     if (!index.is_valid()) {
-        dbgln("InspectorWidget told to inspect non-existent node, id={}", node_id);
+        dbgln("InspectorWidget told to inspect non-existent node: {}", selection.to_string());
         return;
     }
 
     m_dom_tree_view->expand_all_parents_of(index);
     m_dom_tree_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
-    set_inspected_node(index);
+    set_selection(index);
 }
 
-void InspectorWidget::set_inspected_node(GUI::ModelIndex const index)
+void InspectorWidget::set_selection(GUI::ModelIndex const index)
 {
     auto* json = static_cast<JsonObject const*>(index.internal_data());
-    i32 inspected_node = json ? json->get("id").to_i32() : 0;
-    if (inspected_node == m_inspected_node_id)
+    VERIFY(json);
+
+    Selection selection { json->get("id").to_i32() };
+    if (selection == m_selection)
         return;
-    m_inspected_node_id = inspected_node;
+    m_selection = move(selection);
 
     auto maybe_inspected_node_properties = m_web_view->inspect_dom_node(m_inspected_node_id);
     if (maybe_inspected_node_properties.has_value()) {
@@ -75,7 +77,7 @@ InspectorWidget::InspectorWidget()
     m_dom_tree_view = dom_tree_container.add<GUI::TreeView>();
     m_dom_tree_view->on_selection_change = [this] {
         const auto& index = m_dom_tree_view->selection().first();
-        set_inspected_node(index);
+        set_selection(index);
     };
 
     auto& bottom_tab_widget = splitter.add<GUI::TabWidget>();
@@ -121,10 +123,8 @@ void InspectorWidget::set_dom_json(String json)
     m_dom_json = json;
     m_dom_tree_view->set_model(Web::DOMTreeModel::create(m_dom_json->view(), *m_dom_tree_view));
 
-    if (m_pending_inspect_node_id.has_value()) {
-        i32 node_id = m_pending_inspect_node_id.value();
-        m_pending_inspect_node_id.clear();
-        set_inspected_node(node_id);
+    if (m_pending_selection.has_value()) {
+        set_selection(m_pending_selection.release_value());
     } else {
         select_default_node();
     }
@@ -137,10 +137,10 @@ void InspectorWidget::clear_dom_json()
     clear_style_json();
 }
 
-void InspectorWidget::set_dom_node_properties_json(i32 node_id, String specified_values_json, String computed_values_json, String custom_properties_json, String node_box_sizing_json)
+void InspectorWidget::set_dom_node_properties_json(Selection selection, String specified_values_json, String computed_values_json, String custom_properties_json, String node_box_sizing_json)
 {
-    if (node_id != m_inspected_node_id) {
-        dbgln("Got data for the wrong node id! Wanted {}, got {}", m_inspected_node_id, node_id);
+    if (selection != m_selection) {
+        dbgln("Got data for the wrong node id! Wanted ({}), got ({})", m_selection.to_string(), selection.to_string());
         return;
     }
 
@@ -150,14 +150,14 @@ void InspectorWidget::set_dom_node_properties_json(i32 node_id, String specified
 
 void InspectorWidget::load_style_json(String specified_values_json, String computed_values_json, String custom_properties_json)
 {
-    m_inspected_node_specified_values_json = specified_values_json;
-    m_style_table_view->set_model(Web::StylePropertiesModel::create(m_inspected_node_specified_values_json.value().view()));
+    m_selection_specified_values_json = specified_values_json;
+    m_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_specified_values_json.value().view()));
 
-    m_inspected_node_computed_values_json = computed_values_json;
-    m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(m_inspected_node_computed_values_json.value().view()));
+    m_selection_computed_values_json = computed_values_json;
+    m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_computed_values_json.value().view()));
 
-    m_inspected_node_custom_properties_json = custom_properties_json;
-    m_custom_properties_table_view->set_model(Web::StylePropertiesModel::create(m_inspected_node_custom_properties_json.value().view()));
+    m_selection_custom_properties_json = custom_properties_json;
+    m_custom_properties_table_view->set_model(Web::StylePropertiesModel::create(m_selection_custom_properties_json.value().view()));
 }
 
 void InspectorWidget::update_node_box_model(Optional<String> node_box_sizing_json)
@@ -192,13 +192,13 @@ void InspectorWidget::update_node_box_model(Optional<String> node_box_sizing_jso
 
 void InspectorWidget::clear_style_json()
 {
-    m_inspected_node_specified_values_json.clear();
+    m_selection_specified_values_json.clear();
     m_style_table_view->set_model(nullptr);
 
-    m_inspected_node_computed_values_json.clear();
+    m_selection_computed_values_json.clear();
     m_computed_style_table_view->set_model(nullptr);
 
-    m_inspected_node_custom_properties_json.clear();
+    m_selection_custom_properties_json.clear();
     m_custom_properties_table_view->set_model(nullptr);
 
     m_element_size_view->set_box_model({});
