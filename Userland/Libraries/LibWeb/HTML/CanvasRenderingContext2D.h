@@ -121,6 +121,9 @@ private:
     DrawingState m_drawing_state;
     Vector<DrawingState> m_drawing_state_stack;
 
+    // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-origin-clean
+    bool m_origin_clean { true };
+
     // https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-context-lost
     bool m_context_lost { false };
 
