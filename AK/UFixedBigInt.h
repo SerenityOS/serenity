@@ -37,6 +37,12 @@ struct NumericLimits<UFixedBigInt<T>> {
     static constexpr bool is_signed() { return false; }
 };
 
+template<Unsigned T>
+struct UFixedBigIntMultiplicationResult {
+    T low;
+    T high;
+};
+
 template<typename T>
 requires(sizeof(T) >= sizeof(u64) && IsUnsigned<T>) class UFixedBigInt {
 public:
@@ -532,6 +538,72 @@ public:
             that <<= 1u;
         }
         return res;
+    }
+
+    template<Unsigned U>
+    requires(IsSame<R, U>&& IsSame<T, u64>) constexpr UFixedBigIntMultiplicationResult<R> wide_multiply(U const& other) const
+    {
+        auto mult_64_to_128 = [](u64 a, u64 b) -> UFixedBigIntMultiplicationResult<u64> {
+#ifdef __SIZEOF_INT128__
+            unsigned __int128 result = (unsigned __int128)a * b;
+            u64 low = result;
+            u64 high = result >> 64;
+            return { low, high };
+#else
+            u32 a_low = a;
+            u32 a_high = (a >> 32);
+            u32 b_low = b;
+            u32 b_high = (b >> 32);
+
+            u64 ll_result = (u64)a_low * b_low;
+            u64 lh_result = (u64)a_low * b_high;
+            u64 hl_result = (u64)a_high * b_low;
+            u64 hh_result = (u64)a_high * b_high;
+
+            UFixedBigInt<u64> ll { ll_result, 0u };
+            UFixedBigInt<u64> lh { lh_result << 32, lh_result >> 32 };
+            UFixedBigInt<u64> hl { hl_result << 32, hl_result >> 32 };
+            UFixedBigInt<u64> hh { 0u, hh_result };
+
+            UFixedBigInt<u64> result = ll + lh + hl + hh;
+            return { result.low(), result.high() };
+#endif
+        };
+
+        auto ll_result = mult_64_to_128(m_low, other.low());
+        auto lh_result = mult_64_to_128(m_low, other.high());
+        auto hl_result = mult_64_to_128(m_high, other.low());
+        auto hh_result = mult_64_to_128(m_high, other.high());
+
+        UFixedBigInt<R> ll { R { ll_result.low, ll_result.high }, R { 0u, 0u } };
+        UFixedBigInt<R> lh { R { 0u, lh_result.low }, R { lh_result.high, 0u } };
+        UFixedBigInt<R> hl { R { 0u, hl_result.low }, R { hl_result.high, 0u } };
+        UFixedBigInt<R> hh { R { 0u, 0u }, R { hh_result.low, hh_result.high } };
+
+        UFixedBigInt<R> result = ll + lh + hl + hh;
+        return { result.low(), result.high() };
+    }
+
+    template<Unsigned U>
+    requires(IsSame<R, U> && sizeof(T) > sizeof(u64)) constexpr UFixedBigIntMultiplicationResult<R> wide_multiply(U const& other) const
+    {
+        T left_low = m_low;
+        T left_high = m_high;
+        T right_low = other.low();
+        T right_high = other.high();
+
+        auto ll_result = left_low.wide_multiply(right_low);
+        auto lh_result = left_low.wide_multiply(right_high);
+        auto hl_result = left_high.wide_multiply(right_low);
+        auto hh_result = left_high.wide_multiply(right_high);
+
+        UFixedBigInt<R> ll { R { ll_result.low, ll_result.high }, R { 0u, 0u } };
+        UFixedBigInt<R> lh { R { 0u, lh_result.low }, R { lh_result.high, 0u } };
+        UFixedBigInt<R> hl { R { 0u, hl_result.low }, R { hl_result.high, 0u } };
+        UFixedBigInt<R> hh { R { 0u, 0u }, R { hh_result.low, hh_result.high } };
+
+        UFixedBigInt<R> result = ll + lh + hl + hh;
+        return { result.low(), result.high() };
     }
 
     template<Unsigned U>
