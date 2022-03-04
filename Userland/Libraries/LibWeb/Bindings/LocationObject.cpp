@@ -56,6 +56,15 @@ DOM::Document const* LocationObject::relevant_document() const
     return browsing_context ? browsing_context->active_document() : nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/history.html#concept-location-url
+AK::URL LocationObject::url() const
+{
+    // A Location object has an associated url, which is this Location object's relevant Document's URL,
+    // if this Location object's relevant Document is non-null, and about:blank otherwise.
+    auto const* relevant_document = this->relevant_document();
+    return relevant_document ? relevant_document->url() : "about:blank"sv;
+}
+
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-href
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_getter)
 {
