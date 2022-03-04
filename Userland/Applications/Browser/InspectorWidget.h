@@ -10,6 +10,7 @@
 
 #include "ElementSizePreviewWidget.h"
 #include <LibGUI/Widget.h>
+#include <LibWeb/CSS/Selector.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BoxModelMetrics.h>
 
@@ -20,14 +21,17 @@ class InspectorWidget final : public GUI::Widget {
 public:
     struct Selection {
         i32 dom_node_id { 0 };
+        Optional<Web::CSS::Selector::PseudoElement> pseudo_element {};
 
         bool operator==(Selection const& other) const
         {
-            return dom_node_id == other.dom_node_id;
+            return dom_node_id == other.dom_node_id && pseudo_element == other.pseudo_element;
         }
 
         String to_string() const
         {
+            if (pseudo_element.has_value())
+                return String::formatted("id: {}, pseudo: {}", dom_node_id, Web::CSS::pseudo_element_name(pseudo_element.value()));
             return String::formatted("id: {}", dom_node_id);
         }
     };

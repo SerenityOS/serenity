@@ -55,7 +55,7 @@ private:
     virtual void debug_request(String const&, String const&) override;
     virtual void get_source() override;
     virtual void inspect_dom_tree() override;
-    virtual Messages::WebContentServer::InspectDomNodeResponse inspect_dom_node(i32) override;
+    virtual Messages::WebContentServer::InspectDomNodeResponse inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element) override;
     virtual Messages::WebContentServer::GetHoveredNodeIdResponse get_hovered_node_id() override;
     virtual Messages::WebContentServer::DumpLayoutTreeResponse dump_layout_tree() override;
     virtual void set_content_filters(Vector<String> const&) override;

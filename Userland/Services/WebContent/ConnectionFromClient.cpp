@@ -245,7 +245,7 @@ void ConnectionFromClient::inspect_dom_tree()
     }
 }
 
-Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect_dom_node(i32 node_id)
+Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element)
 {
     auto& top_context = page().top_level_browsing_context();
 
@@ -261,6 +261,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
         return { false, "", "", "", "" };
     }
 
+    // FIXME: Pass the pseudo-element here.
     node->document().set_inspected_node(node);
 
     if (node->is_element()) {
@@ -326,6 +327,23 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             MUST(serializer.finish());
             return builder.to_string();
         };
+
+        if (pseudo_element.has_value()) {
+            auto pseudo_element_node = element.get_pseudo_element_node(pseudo_element.value());
+            if (pseudo_element_node.is_null())
+                return { false, "", "", "", "" };
+
+            // FIXME: Pseudo-elements only exist as Layout::Nodes, which don't have style information
+            //        in a format we can use. So, we run the StyleComputer again to get the specified
+            //        values, and have to ignore the computed values and custom properties.
+            auto pseudo_element_style = page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element);
+            String specified_values_json = serialize_json(pseudo_element_style);
+            String computed_values_json = "{}";
+            String custom_properties_json = "{}";
+            String node_box_sizing_json = "{}";
+            return { true, specified_values_json, computed_values_json, custom_properties_json, node_box_sizing_json };
+        }
+
         String specified_values_json = serialize_json(*element.specified_css_values());
         String computed_values_json = serialize_json(element.computed_style());
         String custom_properties_json = serialize_custom_properties_json(element);
