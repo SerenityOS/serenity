@@ -64,7 +64,7 @@ public:
     }
 
     static constexpr Color from_rgb(unsigned rgb) { return Color(rgb | 0xff000000); }
-    static constexpr Color from_rgba(unsigned rgba) { return Color(rgba); }
+    static constexpr Color from_argb(unsigned argb) { return Color(argb); }
 
     static constexpr Color from_cmyk(float c, float m, float y, float k)
     {

@@ -54,7 +54,7 @@ ALWAYS_INLINE Color get_pixel(Gfx::Bitmap const& bitmap, int x, int y)
     if constexpr (format == BitmapFormat::BGRx8888)
         return Color::from_rgb(bitmap.scanline(y)[x]);
     if constexpr (format == BitmapFormat::BGRA8888)
-        return Color::from_rgba(bitmap.scanline(y)[x]);
+        return Color::from_argb(bitmap.scanline(y)[x]);
     return bitmap.get_pixel(x, y);
 }
 
@@ -120,7 +120,7 @@ void Painter::fill_physical_rect(IntRect const& physical_rect, Color color)
 
     for (int i = physical_rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < physical_rect.width(); ++j)
-            dst[j] = Color::from_rgba(dst[j]).blend(color).value();
+            dst[j] = Color::from_argb(dst[j]).blend(color).value();
         dst += dst_skip;
     }
 }
@@ -421,7 +421,7 @@ void Painter::fill_rounded_corner(IntRect const& a_rect, int radius, Color color
     for (int i = rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < rect.width(); ++j)
             if (is_in_circle(j, rect.height() - i + clip_offset))
-                dst[j] = Color::from_rgba(dst[j]).blend(color).value();
+                dst[j] = Color::from_argb(dst[j]).blend(color).value();
         dst += dst_skip;
     }
 }
@@ -462,7 +462,7 @@ void Painter::draw_circle_arc_intersecting(IntRect const& a_rect, IntPoint const
     for (int i = rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < rect.width(); ++j)
             if (is_on_arc(j, rect.height() - i + clip_offset))
-                dst[j] = Color::from_rgba(dst[j]).blend(color).value();
+                dst[j] = Color::from_argb(dst[j]).blend(color).value();
         dst += dst_skip;
     }
 
@@ -656,7 +656,7 @@ void Painter::draw_bitmap(IntPoint const& p, GlyphBitmap const& bitmap, Color co
         for (int row = first_row; row <= last_row; ++row) {
             for (int j = 0; j <= (last_column - first_column); ++j) {
                 if (bitmap.bit_at(j + first_column, row))
-                    dst[j] = Color::from_rgba(dst[j]).blend(color).value();
+                    dst[j] = Color::from_argb(dst[j]).blend(color).value();
             }
             dst += dst_skip;
         }
@@ -667,7 +667,7 @@ void Painter::draw_bitmap(IntPoint const& p, GlyphBitmap const& bitmap, Color co
                     for (int iy = 0; iy < scale; ++iy)
                         for (int ix = 0; ix < scale; ++ix) {
                             auto pixel_index = j * scale + ix + iy * dst_skip;
-                            dst[pixel_index] = Color::from_rgba(dst[pixel_index]).blend(color).value();
+                            dst[pixel_index] = Color::from_argb(dst[pixel_index]).blend(color).value();
                         }
                 }
             }
@@ -776,9 +776,9 @@ static void do_blit_with_opacity(BlitState& state)
 {
     for (int row = 0; row < state.row_count; ++row) {
         for (int x = 0; x < state.column_count; ++x) {
-            Color dest_color = (has_alpha & BlitState::DstAlpha) ? Color::from_rgba(state.dst[x]) : Color::from_rgb(state.dst[x]);
+            Color dest_color = (has_alpha & BlitState::DstAlpha) ? Color::from_argb(state.dst[x]) : Color::from_rgb(state.dst[x]);
             if constexpr (has_alpha & BlitState::SrcAlpha) {
-                Color src_color_with_alpha = Color::from_rgba(state.src[x]);
+                Color src_color_with_alpha = Color::from_argb(state.src[x]);
                 float pixel_opacity = src_color_with_alpha.alpha() / 255.0;
                 src_color_with_alpha.set_alpha(255 * (state.opacity * pixel_opacity));
                 state.dst[x] = dest_color.blend(src_color_with_alpha).value();
@@ -871,17 +871,17 @@ void Painter::blit_filtered(IntPoint const& position, Gfx::Bitmap const& source,
 
         for (int row = first_row; row <= last_row; ++row) {
             for (int x = 0; x <= (last_column - first_column); ++x) {
-                u8 alpha = Color::from_rgba(src[x]).alpha();
+                u8 alpha = Color::from_argb(src[x]).alpha();
                 if (alpha == 0xff) {
-                    auto color = filter(Color::from_rgba(src[x]));
+                    auto color = filter(Color::from_argb(src[x]));
                     if (color.alpha() == 0xff)
                         dst[x] = color.value();
                     else
-                        dst[x] = Color::from_rgba(dst[x]).blend(color).value();
+                        dst[x] = Color::from_argb(dst[x]).blend(color).value();
                 } else if (!alpha)
                     continue;
                 else
-                    dst[x] = Color::from_rgba(dst[x]).blend(filter(Color::from_rgba(src[x]))).value();
+                    dst[x] = Color::from_argb(dst[x]).blend(filter(Color::from_argb(src[x]))).value();
             }
             dst += dst_skip;
             src += src_skip;
@@ -890,17 +890,17 @@ void Painter::blit_filtered(IntPoint const& position, Gfx::Bitmap const& source,
         for (int row = first_row; row <= last_row; ++row) {
             ARGB32 const* src = source.scanline(safe_src_rect.top() + row / s) + safe_src_rect.left() + first_column / s;
             for (int x = 0; x <= (last_column - first_column); ++x) {
-                u8 alpha = Color::from_rgba(src[x / s]).alpha();
+                u8 alpha = Color::from_argb(src[x / s]).alpha();
                 if (alpha == 0xff) {
-                    auto color = filter(Color::from_rgba(src[x / s]));
+                    auto color = filter(Color::from_argb(src[x / s]));
                     if (color.alpha() == 0xff)
                         dst[x] = color.value();
                     else
-                        dst[x] = Color::from_rgba(dst[x]).blend(color).value();
+                        dst[x] = Color::from_argb(dst[x]).blend(color).value();
                 } else if (!alpha)
                     continue;
                 else
-                    dst[x] = Color::from_rgba(dst[x]).blend(filter(Color::from_rgba(src[x / s]))).value();
+                    dst[x] = Color::from_argb(dst[x]).blend(filter(Color::from_argb(src[x / s]))).value();
             }
             dst += dst_skip;
         }
@@ -1680,10 +1680,10 @@ ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color co
         pixel = color.value();
         break;
     case DrawOp::Xor:
-        pixel = color.xored(Color::from_rgba(pixel)).value();
+        pixel = color.xored(Color::from_argb(pixel)).value();
         break;
     case DrawOp::Invert:
-        pixel = Color::from_rgba(pixel).inverted().value();
+        pixel = Color::from_argb(pixel).inverted().value();
         break;
     }
 }
@@ -1701,7 +1701,7 @@ ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, in
         auto* pixel = m_target->scanline(y) + x;
         auto* end = pixel + width;
         while (pixel < end) {
-            *pixel = Color::from_rgba(*pixel).xored(color).value();
+            *pixel = Color::from_argb(*pixel).xored(color).value();
             pixel++;
         }
         break;
@@ -1710,7 +1710,7 @@ ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, in
         auto* pixel = m_target->scanline(y) + x;
         auto* end = pixel + width;
         while (pixel < end) {
-            *pixel = Color::from_rgba(*pixel).inverted().value();
+            *pixel = Color::from_argb(*pixel).inverted().value();
             pixel++;
         }
         break;
@@ -1730,7 +1730,7 @@ void Painter::draw_physical_pixel(IntPoint const& physical_position, Color color
 
     if (thickness == 1) { // Implies scale() == 1.
         auto& pixel = m_target->scanline(physical_position.y())[physical_position.x()];
-        return set_physical_pixel_with_draw_op(pixel, Color::from_rgba(pixel).blend(color));
+        return set_physical_pixel_with_draw_op(pixel, Color::from_argb(pixel).blend(color));
     }
 
     IntRect rect { physical_position, { thickness, thickness } };

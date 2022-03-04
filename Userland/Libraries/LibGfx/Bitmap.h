@@ -207,7 +207,7 @@ public:
     [[nodiscard]] static constexpr size_t size_in_bytes(size_t pitch, int physical_height) { return pitch * physical_height; }
     [[nodiscard]] size_t size_in_bytes() const { return size_in_bytes(m_pitch, physical_height()); }
 
-    [[nodiscard]] Color palette_color(u8 index) const { return Color::from_rgba(m_palette[index]); }
+    [[nodiscard]] Color palette_color(u8 index) const { return Color::from_argb(m_palette[index]); }
     void set_palette_color(u8 index, Color color) { m_palette[index] = color.value(); }
 
     template<StorageFormat>
@@ -289,7 +289,7 @@ template<>
 inline Color Bitmap::get_pixel<StorageFormat::BGRA8888>(int x, int y) const
 {
     VERIFY(x >= 0 && x < physical_width());
-    return Color::from_rgba(scanline(y)[x]);
+    return Color::from_argb(scanline(y)[x]);
 }
 
 template<>

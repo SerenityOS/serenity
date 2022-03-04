@@ -235,7 +235,7 @@ public:
     Color as_color() const
     {
         VERIFY(type() == Type::Color);
-        return Color::from_rgba(m_value.as_color);
+        return Color::from_argb(m_value.as_color);
     }
 
     const Gfx::Font& as_font() const

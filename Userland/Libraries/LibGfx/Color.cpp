@@ -245,7 +245,7 @@ Optional<Color> Color::from_string(StringView string)
     };
 
     if (string.equals_ignoring_case("transparent"))
-        return Color::from_rgba(0x00000000);
+        return Color::from_argb(0x00000000);
 
     for (size_t i = 0; !web_colors[i].name.is_null(); ++i) {
         if (string.equals_ignoring_case(web_colors[i].name))
@@ -346,7 +346,7 @@ ErrorOr<void> IPC::decode(IPC::Decoder& decoder, Color& color)
 {
     u32 rgba;
     TRY(decoder.decode(rgba));
-    color = Color::from_rgba(rgba);
+    color = Color::from_argb(rgba);
     return {};
 }
 

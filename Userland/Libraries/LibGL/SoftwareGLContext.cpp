@@ -2305,7 +2305,7 @@ void SoftwareGLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum for
         auto pixel_data = static_cast<u32 const*>(data);
         for (int y = 0; y < height; ++y)
             for (int x = 0; x < width; ++x)
-                bitmap->set_pixel(x, y, Color::from_rgba(*(pixel_data++)));
+                bitmap->set_pixel(x, y, Color::from_argb(*(pixel_data++)));
 
         m_rasterizer.blit_to_color_buffer_at_raster_position(bitmap);
     } else if (format == GL_DEPTH_COMPONENT) {
