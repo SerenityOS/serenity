@@ -525,6 +525,7 @@ class XMLHttpRequestConstructor;
 class XMLHttpRequestEventTargetWrapper;
 class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
+enum class CanPlayTypeResult;
 enum class DOMParserSupportedType;
 enum class XMLHttpRequestResponseType;
 }

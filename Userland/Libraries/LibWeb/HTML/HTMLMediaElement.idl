@@ -1,5 +1,11 @@
 #import <HTML/HTMLElement.idl>
 
+enum CanPlayTypeResult {
+    "",
+    "maybe",
+    "probably"
+};
+
 interface HTMLMediaElement : HTMLElement {
 
     [Reflect] attribute DOMString src;
@@ -9,4 +15,5 @@ interface HTMLMediaElement : HTMLElement {
 
     [Reflect] attribute boolean controls;
 
+    CanPlayTypeResult canPlayType(DOMString type);
 };
