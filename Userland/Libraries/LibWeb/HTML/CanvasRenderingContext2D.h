@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
+#include <AK/Variant.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
@@ -19,6 +21,10 @@
 #include <LibWeb/Layout/LineBox.h>
 
 namespace Web::HTML {
+
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasimagesource
+// NOTE: This is the Variant created by the IDL wrapper generator, and needs to be updated accordingly.
+using CanvasImageSource = Variant<NonnullRefPtr<HTMLImageElement>, NonnullRefPtr<HTMLCanvasElement>>;
 
 class CanvasRenderingContext2D
     : public RefCounted<CanvasRenderingContext2D>
@@ -43,7 +49,7 @@ public:
     void stroke_rect(float x, float y, float width, float height);
     void clear_rect(float x, float y, float width, float height);
 
-    void draw_image(const HTMLImageElement&, float x, float y);
+    DOM::ExceptionOr<void> draw_image(CanvasImageSource const&, float x, float y);
 
     void scale(float sx, float sy);
     void translate(float x, float y);
@@ -129,5 +135,13 @@ private:
 
     Gfx::Path m_path;
 };
+
+enum class CanvasImageSourceUsability {
+    Bad,
+    Good,
+};
+
+DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImageSource const&);
+bool image_is_not_origin_clean(CanvasImageSource const&);
 
 }

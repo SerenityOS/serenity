@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,8 +9,10 @@
 #include <AK/ExtraMathConstants.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Painter.h>
+#include <LibGfx/Rect.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
@@ -94,20 +97,53 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
     did_draw(rect);
 }
 
-void CanvasRenderingContext2D::draw_image(const HTMLImageElement& image_element, float x, float y)
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-drawimage
+DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource const& image, float x, float y)
 {
-    if (!image_element.bitmap())
-        return;
+    // 1. If any of the arguments are infinite or NaN, then return.
+    if (isinf(x) || isnan(x) || isinf(y) || isnan(y))
+        return {};
 
+    // 2. Let usability be the result of checking the usability of image.
+    auto usability = check_usability_of_image(image);
+    if (usability.is_exception())
+        return usability.exception();
+
+    // 3. If usability is bad, then return (without drawing anything).
+    if (usability.value() == CanvasImageSourceUsability::Bad)
+        return {};
+
+    auto const* bitmap = image.visit([](auto const& source) { return source->bitmap(); });
+    if (!bitmap)
+        return {};
+
+    // 4. Establish the source and destination rectangles as follows:
+    //    If not specified, the dw and dh arguments must default to the values of sw and sh, interpreted such that one CSS pixel in the image is treated as one unit in the output bitmap's coordinate space.
+    //    If the sx, sy, sw, and sh arguments are omitted, then they must default to 0, 0, the image's intrinsic width in image pixels, and the image's intrinsic height in image pixels, respectively.
+    //    If the image has no intrinsic dimensions, then the concrete object size must be used instead, as determined using the CSS "Concrete Object Size Resolution" algorithm, with the specified size having
+    //    neither a definite width nor height, nor any additional constraints, the object's intrinsic properties being those of the image argument, and the default object size being the size of the output bitmap.
+    //    The source rectangle is the rectangle whose corners are the four points (sx, sy), (sx+sw, sy), (sx+sw, sy+sh), (sx, sy+sh).
+    //    The destination rectangle is the rectangle whose corners are the four points (dx, dy), (dx+dw, dy), (dx+dw, dy+dh), (dx, dy+dh).
+    // FIXME: Support all of sx, sy, sw, sh, dx, dy, dw, dh.
+    auto source_rect = bitmap->rect();
+    auto destination_rect = Gfx::FloatRect { x, y, (float)bitmap->width(), (float)bitmap->height() };
+
+    // 5. If one of the sw or sh arguments is zero, then return. Nothing is painted.
+    if (x == 0 || y == 0)
+        return {};
+
+    // 6. Paint the region of the image argument specified by the source rectangle on the region of the rendering context's output bitmap specified by the destination rectangle, after applying the current transformation matrix to the destination rectangle.
     auto painter = this->painter();
     if (!painter)
-        return;
+        return {};
+    auto transformed_destination_rect = m_drawing_state.transform.map(destination_rect);
+    painter->draw_scaled_bitmap(rounded_int_rect(transformed_destination_rect), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
 
-    auto src_rect = image_element.bitmap()->rect();
-    Gfx::FloatRect dst_rect = { x, y, (float)image_element.bitmap()->width(), (float)image_element.bitmap()->height() };
-    auto rect = m_drawing_state.transform.map(dst_rect);
+    // 7. If image is not origin-clean, then set the CanvasRenderingContext2D's origin-clean flag to false.
+    if (image_is_not_origin_clean(image))
+        m_origin_clean = false;
 
-    painter->draw_scaled_bitmap(rounded_int_rect(rect), *image_element.bitmap(), src_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+    return {};
 }
 
 void CanvasRenderingContext2D::scale(float sx, float sy)
@@ -518,6 +554,64 @@ NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_linear_gradient(d
 NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_conic_gradient(double start_angle, double x, double y)
 {
     return CanvasGradient::create_conic(start_angle, x, y);
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument
+DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImageSource const& image)
+{
+    // 1. Switch on image:
+    auto usability = image.visit(
+        // HTMLOrSVGImageElement
+        [](HTMLImageElement const& image_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
+            // FIXME: If image's current request's state is broken, then throw an "InvalidStateError" DOMException.
+            // FIXME: If image is not fully decodable, then return bad.
+
+            // If image has an intrinsic width or intrinsic height (or both) equal to zero, then return bad.
+            if (image_element.width() == 0 || image_element.height() == 0)
+                return { CanvasImageSourceUsability::Bad };
+            return Optional<CanvasImageSourceUsability> {};
+        },
+
+        // FIXME: HTMLVideoElement
+        // If image's readyState attribute is either HAVE_NOTHING or HAVE_METADATA, then return bad.
+
+        // HTMLCanvasElement
+        // FIXME: OffscreenCanvas
+        [](HTMLCanvasElement const& canvas_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
+            // If image has either a horizontal dimension or a vertical dimension equal to zero, then throw an "InvalidStateError" DOMException.
+            if (canvas_element.width() == 0 || canvas_element.height() == 0)
+                return DOM::InvalidStateError::create("Canvas width or height is zero");
+            return Optional<CanvasImageSourceUsability> {};
+        });
+    if (usability.is_exception())
+        return usability.exception();
+    if (usability.value().has_value())
+        return *usability.value();
+
+    // 2. Return good.
+    return { CanvasImageSourceUsability::Good };
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#the-image-argument-is-not-origin-clean
+bool image_is_not_origin_clean(CanvasImageSource const& image)
+{
+    // An object image is not origin-clean if, switching on image's type:
+    return image.visit(
+        // HTMLOrSVGImageElement
+        [](HTMLImageElement const&) {
+            // FIXME: image's current request's image data is CORS-cross-origin.
+            return false;
+        },
+
+        // FIXME: HTMLVideoElement
+        // image's media data is CORS-cross-origin.
+
+        // HTMLCanvasElement
+        // FIXME: ImageBitmap
+        [](HTMLCanvasElement const&) {
+            // FIXME: image's bitmap's origin-clean flag is false.
+            return false;
+        });
 }
 
 }
