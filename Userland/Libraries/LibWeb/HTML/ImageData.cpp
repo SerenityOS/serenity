@@ -18,8 +18,6 @@ RefPtr<ImageData> ImageData::create_with_size(JS::GlobalObject& global_object, i
     if (width > 16384 || height > 16384)
         return nullptr;
 
-    dbgln("Creating ImageData with {}x{}", width, height);
-
     auto data_or_error = JS::Uint8ClampedArray::create(global_object, width * height * 4);
     if (data_or_error.is_error())
         return nullptr;
