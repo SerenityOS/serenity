@@ -410,7 +410,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
         }
 
         content_height = max(content_height, box_state.offset.y() + box_state.content_height + box_state.margin_box_bottom());
-        content_width = max(content_width, box_state.content_width);
+        content_width = max(content_width, box_state.border_box_width());
 
         if (independent_formatting_context)
             independent_formatting_context->parent_context_did_dimension_child_root_box();
