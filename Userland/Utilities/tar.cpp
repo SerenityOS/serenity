@@ -78,19 +78,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
         for (; !tar_stream.finished(); tar_stream.advance()) {
+            const Archive::TarFileHeader& header = tar_stream.header();
+
+            LexicalPath path = LexicalPath(header.filename());
+            if (!header.prefix().is_empty())
+                path = path.prepend(header.prefix());
+            String filename = path.string();
+
             if (list || verbose)
-                outln("{}", tar_stream.header().filename());
+                outln("{}", filename);
 
             if (extract) {
                 Archive::TarFileStream file_stream = tar_stream.file_contents();
 
-                const Archive::TarFileHeader& header = tar_stream.header();
-
-                LexicalPath path = LexicalPath(header.filename());
-                if (!header.prefix().is_empty())
-                    path = path.prepend(header.prefix());
-
-                String absolute_path = Core::File::absolute_path(path.string());
+                String absolute_path = Core::File::absolute_path(filename);
 
                 switch (header.type_flag()) {
                 case Archive::TarFileType::NormalFile:
