@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +30,8 @@ public:
     //        but we don't have the infrastructure in place to implement them yet.
 
 private:
+    DOM::Document const* relevant_document() const;
+
     JS_DECLARE_NATIVE_FUNCTION(reload);
     JS_DECLARE_NATIVE_FUNCTION(replace);
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,6 +44,16 @@ void LocationObject::initialize(JS::GlobalObject& global_object)
 
 LocationObject::~LocationObject()
 {
+}
+
+// https://html.spec.whatwg.org/multipage/history.html#relevant-document
+DOM::Document const* LocationObject::relevant_document() const
+{
+    // A Location object has an associated relevant Document, which is this Location object's
+    // relevant global object's browsing context's active document, if this Location object's
+    // relevant global object's browsing context is non-null, and null otherwise.
+    auto* browsing_context = static_cast<WindowObject&>(global_object()).impl().browsing_context();
+    return browsing_context ? browsing_context->active_document() : nullptr;
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-href
