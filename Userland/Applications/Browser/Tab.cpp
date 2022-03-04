@@ -330,7 +330,7 @@ Tab::Tab(BrowserWindow& window)
     };
 
     hooks().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties, auto& node_box_sizing) {
-        m_dom_inspector_widget->set_dom_node_properties_json(node_id, specified, computed, custom_properties, node_box_sizing);
+        m_dom_inspector_widget->set_dom_node_properties_json({ node_id }, specified, computed, custom_properties, node_box_sizing);
     };
 
     hooks().on_js_console_new_message = [this](auto message_index) {
@@ -537,9 +537,9 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
     }
 
     if (inspector_target == InspectorTarget::HoveredElement) {
-        Optional<i32> hovered_node = m_web_content_view->get_hovered_node_id();
-        VERIFY(hovered_node.has_value());
-        m_dom_inspector_widget->set_inspected_node(hovered_node.value());
+        // FIXME: Handle pseudo-elements
+        auto hovered_node = m_web_content_view->get_hovered_node_id();
+        m_dom_inspector_widget->set_selection({ hovered_node });
     } else {
         VERIFY(inspector_target == InspectorTarget::Document);
         m_dom_inspector_widget->select_default_node();
