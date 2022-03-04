@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,7 +26,7 @@ public:
         virtual size_t terminal_length() const = 0;
         virtual RecursionDecision walk(Visitor&) const = 0;
 
-        virtual ~Node() { }
+        virtual ~Node() = default;
     };
 
     class EmphasisNode : public Node {
