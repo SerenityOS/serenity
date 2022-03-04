@@ -26,6 +26,10 @@
 #cmakedefine01 CALLBACK_MACHINE_DEBUG
 #endif
 
+#ifndef CANVAS_RENDERING_CONTEXT_2D_DEBUG
+#cmakedefine01 CANVAS_RENDERING_CONTEXT_2D_DEBUG
+#endif
+
 #ifndef COMPOSE_DEBUG
 #cmakedefine01 COMPOSE_DEBUG
 #endif
