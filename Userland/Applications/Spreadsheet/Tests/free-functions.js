@@ -203,3 +203,36 @@ describe("Lookup", () => {
         expect(reflookup("80", R`A0:A9`, R`B0:B9`, undefined, "nextlargest").name).toEqual("B9");
     });
 });
+
+describe("integer() function", () => {
+    test("undefined", () => {
+        expect(() => integer(undefined)).toThrow(Error);
+    });
+    test("null", () => {
+        expect(() => integer(null)).toThrow(Error);
+    });
+    test("NaN", () => {
+        expect(() => integer(NaN)).toThrow(Error);
+    });
+    test("object", () => {
+        expect(() => integer({})).toThrow(Error);
+    });
+    test("function", () => {
+        expect(() => integer(() => {})).toThrow(Error);
+    });
+    test("try 1 as string", () => {
+        expect(integer("1")).toBe(1);
+    });
+    test("try 1 as number", () => {
+        expect(integer(1)).toBe(1);
+    });
+    test("try 1000000 as string", () => {
+        expect(integer("1000000")).toBe(1000000);
+    });
+    test("try 1000000 as number", () => {
+        expect(integer(1000000)).toBe(1000000);
+    });
+    test("don't just allow any strings", () => {
+        expect(() => integer("is this NaN yet?")).toThrow();
+    });
+});
