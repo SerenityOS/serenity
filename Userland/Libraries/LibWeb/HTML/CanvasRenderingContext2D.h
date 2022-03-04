@@ -78,6 +78,7 @@ public:
     void fill(const String& fill_rule);
 
     RefPtr<ImageData> create_image_data(int width, int height) const;
+    DOM::ExceptionOr<RefPtr<ImageData>> get_image_data(int x, int y, int width, int height) const;
     void put_image_data(const ImageData&, float x, float y);
 
     void save();

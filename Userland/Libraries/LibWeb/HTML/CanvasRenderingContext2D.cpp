@@ -356,6 +356,46 @@ RefPtr<ImageData> CanvasRenderingContext2D::create_image_data(int width, int hei
     return ImageData::create_with_size(wrapper()->global_object(), width, height);
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-getimagedata
+DOM::ExceptionOr<RefPtr<ImageData>> CanvasRenderingContext2D::get_image_data(int x, int y, int width, int height) const
+{
+    // 1. If either the sw or sh arguments are zero, then throw an "IndexSizeError" DOMException.
+    if (width == 0 || height == 0)
+        return DOM::IndexSizeError::create("Width and height must not be zero");
+
+    // 2. If the CanvasRenderingContext2D's origin-clean flag is set to false, then throw a "SecurityError" DOMException.
+    if (!m_origin_clean)
+        return DOM::SecurityError::create("CanvasRenderingContext2D is not origin-clean");
+
+    // 3. Let imageData be a new ImageData object.
+    // 4. Initialize imageData given sw, sh, settings set to settings, and defaultColorSpace set to this's color space.
+    auto image_data = ImageData::create_with_size(wrapper()->global_object(), width, height);
+
+    // NOTE: We don't attempt to create the underlying bitmap here; if it doesn't exist, it's like copying only transparent black pixels (which is a no-op).
+    if (!m_element || !m_element->bitmap())
+        return image_data;
+    auto const& bitmap = *m_element->bitmap();
+
+    // 5. Let the source rectangle be the rectangle whose corners are the four points (sx, sy), (sx+sw, sy), (sx+sw, sy+sh), (sx, sy+sh).
+    auto source_rect = Gfx::Rect { x, y, width, height };
+    auto source_rect_intersected = source_rect.intersected(bitmap.rect());
+
+    // 6. Set the pixel values of imageData to be the pixels of this's output bitmap in the area specified by the source rectangle in the bitmap's coordinate space units, converted from this's color space to imageData's colorSpace using 'relative-colorimetric' rendering intent.
+    // FIXME: Can't use a Gfx::Painter + blit() here as it doesn't support ImageData bitmap's RGBA8888 format.
+    for (int target_y = 0; target_y < source_rect_intersected.height(); ++target_y) {
+        for (int target_x = 0; target_x < source_rect_intersected.width(); ++target_x) {
+            auto pixel = bitmap.get_pixel(target_x + x, target_y + y);
+            image_data->bitmap().set_pixel(target_x, target_y, pixel);
+        }
+    }
+
+    // 7. Set the pixels values of imageData for areas of the source rectangle that are outside of the output bitmap to transparent black.
+    // NOTE: No-op, already done during creation.
+
+    // 8. Return imageData.
+    return image_data;
+}
+
 void CanvasRenderingContext2D::put_image_data(const ImageData& image_data, float x, float y)
 {
     auto painter = this->painter();
