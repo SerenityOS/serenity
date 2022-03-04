@@ -141,6 +141,49 @@ class CommonRange {
         return found;
     }
 
+    findIndex(matcher) {
+        let i = 0;
+        let found = false;
+        this.forEach(cell => {
+            if (matcher(cell, i)) {
+                found = true;
+                return Break;
+            }
+            ++i;
+        });
+        return found ? i : -1;
+    }
+
+    find(matcher) {
+        let value = null;
+        let i = 0;
+        this.forEach(cell => {
+            if (matcher(cell, i)) {
+                value = cell;
+                return Break;
+            }
+            ++i;
+        });
+        return value;
+    }
+
+    indexOf(name) {
+        let i = 0;
+        let found = false;
+        this.forEach(cell => {
+            if (cell.name === name) {
+                found = true;
+                return Break;
+            }
+            ++i;
+        });
+        return found ? i : -1;
+    }
+
+    has(name) {
+        return this.indexOf(name) !== -1;
+    }
+
     toArray() {
         const cells = [];
         this.forEach(val => cells.push(val));
