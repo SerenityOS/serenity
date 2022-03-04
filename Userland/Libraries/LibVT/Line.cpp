@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,10 +12,6 @@ namespace VT {
 Line::Line(size_t length)
 {
     set_length(length);
-}
-
-Line::~Line()
-{
 }
 
 void Line::rewrap(size_t new_length, Line* next_line, CursorPosition* cursor, bool cursor_is_on_next_line)
