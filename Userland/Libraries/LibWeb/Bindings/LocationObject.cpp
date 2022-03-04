@@ -65,15 +65,24 @@ AK::URL LocationObject::url() const
     return relevant_document ? relevant_document->url() : "about:blank"sv;
 }
 
+static JS::ThrowCompletionOr<LocationObject*> typed_this_value(JS::GlobalObject& global_object)
+{
+    auto& vm = global_object.vm();
+    auto this_value = vm.this_value(global_object);
+    if (!this_value.is_object() || !is<LocationObject>(this_value.as_object()))
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "Location");
+    return static_cast<LocationObject*>(&this_value.as_object());
+}
+
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-href
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_getter)
 {
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto* location_object = TRY(typed_this_value(global_object));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Return this's url, serialized.
-    return JS::js_string(vm, window.impl().associated_document().url().to_string());
+    return JS::js_string(vm, location_object->url().to_string());
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface:dom-location-href-2
@@ -98,106 +107,105 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-pathname
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::pathname_getter)
 {
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto* location_object = TRY(typed_this_value(global_object));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Return the result of URL path serializing this Location object's url.
-    return JS::js_string(vm, window.impl().associated_document().url().path());
+    return JS::js_string(vm, location_object->url().path());
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-hostname
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::hostname_getter)
 {
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto* location_object = TRY(typed_this_value(global_object));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. If this's url's host is null, return the empty string.
+    if (location_object->url().host().is_null())
+        return JS::js_string(vm, String::empty());
+
     // 3. Return this's url's host, serialized.
-    return JS::js_string(vm, window.impl().associated_document().url().host());
+    return JS::js_string(vm, location_object->url().host());
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-host
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::host_getter)
 {
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto* location_object = TRY(typed_this_value(global_object));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Let url be this's url.
-    auto url = window.impl().associated_document().url();
+    auto url = location_object->url();
 
-    // FIXME: 3. If url's host is null, return the empty string.
-    // FIXME: 4. If url's port is null, return url's host, serialized.
+    // 3. If url's host is null, return the empty string.
+    if (url.host().is_null())
+        return JS::js_string(vm, String::empty());
+
+    // 4. If url's port is null, return url's host, serialized.
+    if (!url.port().has_value())
+        return JS::js_string(vm, url.host());
 
     // 5. Return url's host, serialized, followed by ":" and url's port, serialized.
-    return JS::js_string(vm, String::formatted("{}:{}", url.host(), url.port_or_default()));
+    return JS::js_string(vm, String::formatted("{}:{}", url.host(), *url.port()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-hash
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::hash_getter)
 {
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto* location_object = TRY(typed_this_value(global_object));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. If this's url's fragment is either null or the empty string, return the empty string.
-    auto fragment = window.impl().associated_document().url().fragment();
-    if (!fragment.length())
-        return JS::js_string(vm, "");
+    if (location_object->url().fragment().is_empty())
+        return JS::js_string(vm, String::empty());
 
     // 3. Return "#", followed by this's url's fragment.
-    StringBuilder builder;
-    builder.append('#');
-    builder.append(fragment);
-    return JS::js_string(vm, builder.to_string());
+    return JS::js_string(vm, String::formatted("#{}", location_object->url().fragment()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-search
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::search_getter)
 {
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto* location_object = TRY(typed_this_value(global_object));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. If this's url's query is either null or the empty string, return the empty string.
-    auto query = window.impl().associated_document().url().query();
-    if (!query.length())
-        return JS::js_string(vm, "");
+    if (location_object->url().query().is_empty())
+        return JS::js_string(vm, String::empty());
 
     // 3. Return "?", followed by this's url's query.
-    StringBuilder builder;
-    builder.append('?');
-    builder.append(query);
-    return JS::js_string(vm, builder.to_string());
+    return JS::js_string(vm, String::formatted("?{}", location_object->url().query()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-protocol
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::protocol_getter)
 {
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto* location_object = TRY(typed_this_value(global_object));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Return this's url's scheme, followed by ":".
-    StringBuilder builder;
-    builder.append(window.impl().associated_document().url().protocol());
-    builder.append(':');
-    return JS::js_string(vm, builder.to_string());
+    return JS::js_string(vm, String::formatted("{}:", location_object->url().protocol()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-port
 JS_DEFINE_NATIVE_FUNCTION(LocationObject::port_getter)
 {
-    auto& window = static_cast<WindowObject&>(global_object);
+    auto* location_object = TRY(typed_this_value(global_object));
 
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
-    // FIXME: 2. If this's url's port is null, return the empty string.
+    // 2. If this's url's port is null, return the empty string.
+    if (!location_object->url().port().has_value())
+        return JS::js_string(vm, String::empty());
 
     // 3. Return this's url's port, serialized.
-    return JS::Value(window.impl().associated_document().url().port_or_default());
+    return JS::js_string(vm, String::number(*location_object->url().port()));
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-reload
