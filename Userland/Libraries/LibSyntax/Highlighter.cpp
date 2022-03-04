@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,10 +9,6 @@
 #include <LibSyntax/Highlighter.h>
 
 namespace Syntax {
-
-Highlighter::~Highlighter()
-{
-}
 
 void Highlighter::highlight_matching_token_pair()
 {
