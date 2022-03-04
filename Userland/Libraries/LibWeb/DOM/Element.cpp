@@ -304,9 +304,19 @@ void Element::recompute_style()
     auto new_specified_css_values = document().style_computer().compute_style(*this);
     m_specified_css_values = new_specified_css_values;
     if (!layout_node()) {
+        // This element doesn't have a corresponding layout node.
+
+        // If the new style is display:none, bail.
         if (new_specified_css_values->display().is_none())
             return;
-        // We need a new layout tree here!
+
+        // If we're inside a display:none ancestor or an ancestor that can't have children, bail.
+        for (auto* ancestor = parent_element(); ancestor; ancestor = ancestor->parent_element()) {
+            if (!ancestor->layout_node() || !ancestor->layout_node()->can_have_children())
+                return;
+        }
+
+        // Okay, we need a new layout subtree here.
         Layout::TreeBuilder tree_builder;
         (void)tree_builder.build(*this);
         return;
