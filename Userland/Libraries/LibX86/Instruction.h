@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -489,7 +490,7 @@ class Instruction {
 public:
     template<typename InstructionStreamType>
     static Instruction from_stream(InstructionStreamType&, bool o32, bool a32);
-    ~Instruction() { }
+    ~Instruction() = default;
 
     ALWAYS_INLINE MemoryOrRegisterReference& modrm() const { return m_modrm; }
 
