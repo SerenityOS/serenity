@@ -276,6 +276,9 @@ public:
     bool operator==(T* other) { return as_ptr() == other; }
     bool operator!=(T* other) { return as_ptr() != other; }
 
+    bool operator==(NonnullRefPtr<T> other) { return as_ptr() == other; }
+    bool operator!=(NonnullRefPtr<T> other) { return as_ptr() != other; }
+
     ALWAYS_INLINE bool is_null() const { return !m_ptr; }
 
 private:
