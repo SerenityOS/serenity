@@ -5,36 +5,34 @@
  */
 
 #include <LibCore/Timer.h>
-#include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/DOM/Timer.h>
 #include <LibWeb/DOM/Window.h>
 
 namespace Web::DOM {
 
-NonnullRefPtr<Timer> Timer::create_interval(Window& window, int milliseconds, NonnullOwnPtr<Bindings::CallbackType> callback)
+NonnullRefPtr<Timer> Timer::create(Window& window, i32 milliseconds, Function<void()> callback, i32 id)
 {
-    return adopt_ref(*new Timer(window, Type::Interval, milliseconds, move(callback)));
+    return adopt_ref(*new Timer(window, milliseconds, move(callback), id));
 }
 
-NonnullRefPtr<Timer> Timer::create_timeout(Window& window, int milliseconds, NonnullOwnPtr<Bindings::CallbackType> callback)
-{
-    return adopt_ref(*new Timer(window, Type::Timeout, milliseconds, move(callback)));
-}
-
-Timer::Timer(Window& window, Type type, int milliseconds, NonnullOwnPtr<Bindings::CallbackType> callback)
+Timer::Timer(Window& window, i32 milliseconds, Function<void()> callback, i32 id)
     : m_window(window)
-    , m_type(type)
-    , m_callback(move(callback))
+    , m_id(id)
 {
-    m_id = window.allocate_timer_id({});
-    m_timer = Core::Timer::construct(milliseconds, [this] { m_window.timer_did_fire({}, *this); });
-    if (m_type == Type::Timeout)
-        m_timer->set_single_shot(true);
+    m_timer = Core::Timer::create_single_shot(milliseconds, [this, callback = move(callback)] {
+        NonnullRefPtr strong_timer { *this };
+        callback();
+    });
 }
 
 Timer::~Timer()
 {
     m_window.deallocate_timer_id({}, m_id);
+}
+
+void Timer::start()
+{
+    m_timer->start();
 }
 
 }

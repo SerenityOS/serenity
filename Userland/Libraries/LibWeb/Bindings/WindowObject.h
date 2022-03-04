@@ -8,14 +8,19 @@
 #pragma once
 
 #include <AK/TypeCasts.h>
+#include <AK/Variant.h>
 #include <AK/Weakable.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibWeb/Bindings/CallbackType.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
 
 namespace Web {
 namespace Bindings {
+
+// https://html.spec.whatwg.org/#timerhandler
+using TimerHandler = Variant<CallbackType, String>;
 
 class WindowObject
     : public JS::GlobalObject

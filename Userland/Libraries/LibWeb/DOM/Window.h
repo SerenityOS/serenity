@@ -50,8 +50,8 @@ public:
     i32 request_animation_frame(NonnullOwnPtr<Bindings::CallbackType> js_callback);
     void cancel_animation_frame(i32);
 
-    i32 set_timeout(NonnullOwnPtr<Bindings::CallbackType> callback, i32);
-    i32 set_interval(NonnullOwnPtr<Bindings::CallbackType> callback, i32);
+    i32 set_timeout(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
+    i32 set_interval(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
     void clear_timeout(i32);
     void clear_interval(i32);
 
@@ -69,9 +69,7 @@ public:
 
     void set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject&);
 
-    i32 allocate_timer_id(Badge<Timer>);
     void deallocate_timer_id(Badge<Timer>, i32);
-    void timer_did_fire(Badge<Timer>, Timer&);
 
     HighResolutionTime::Performance& performance() { return *m_performance; }
 
@@ -109,6 +107,12 @@ private:
 
     // ^HTML::GlobalEventHandlers
     virtual DOM::EventTarget& global_event_handlers_to_event_target() override { return *this; }
+
+    enum class Repeat {
+        Yes,
+        No,
+    };
+    i32 run_timer_initialization_steps(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments, Repeat repeat, Optional<i32> previous_id = {});
 
     // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
     WeakPtr<Document> m_associated_document;
