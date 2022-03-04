@@ -128,8 +128,29 @@ class Position {
     }
 }
 
-class Ranges {
+class CommonRange {
+    at(wantedIx) {
+        let ix = 0;
+        let found = null;
+        this.forEach(cell => {
+            if (ix++ === wantedIx) {
+                found = cell;
+                return Break;
+            }
+        });
+        return found;
+    }
+
+    toArray() {
+        const cells = [];
+        this.forEach(val => cells.push(val));
+        return cells;
+    }
+}
+
+class Ranges extends CommonRange {
     constructor(ranges) {
+        super();
         this.ranges = ranges;
     }
 
@@ -147,18 +168,6 @@ class Ranges {
         }
     }
 
-    at(wantedIx) {
-        let ix = 0;
-        let found = null;
-        this.forEach(cell => {
-            if (ix++ === wantedIx) {
-                found = cell;
-                return Break;
-            }
-        });
-        return found;
-    }
-
     union(other, direction = "right") {
         if (direction === "left") {
             if (other instanceof Ranges) return Ranges.from(...other.ranges, ...this.ranges);
@@ -171,19 +180,14 @@ class Ranges {
         }
     }
 
-    toArray() {
-        const cells = [];
-        this.forEach(val => cells.push(val));
-        return cells;
-    }
-
     toString() {
         return `Ranges.from(${this.ranges.map(r => r.toString()).join(", ")})`;
     }
 }
 
-class Range {
+class Range extends CommonRange {
     constructor(startingColumnName, endingColumnName, startingRow, endingRow, columnStep, rowStep) {
+        super();
         // using == to account for '0' since js will parse `+'0'` to 0
         if (columnStep == 0 || rowStep == 0)
             throw new Error("rowStep or columnStep is 0, this will cause an infinite loop");
@@ -235,18 +239,6 @@ class Range {
         }
     }
 
-    at(wantedIx) {
-        let ix = 0;
-        let found = null;
-        this.forEach(cell => {
-            if (ix++ === wantedIx) {
-                found = cell;
-                return Break;
-            }
-        });
-        return found;
-    }
-
     union(other) {
         if (other instanceof Ranges) return other.union(this, "left");
 
@@ -271,12 +263,6 @@ class Range {
                 this.endingRow = temp;
             }
         }
-    }
-
-    toArray() {
-        const cells = [];
-        this.forEach(val => cells.push(val));
-        return cells;
     }
 
     toString() {

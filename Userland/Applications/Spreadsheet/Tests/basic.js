@@ -109,7 +109,7 @@ describe("Range", () => {
         expect(R`A2:A25`.first().name).toEqual("A2");
     });
 
-    test("Range#at", () => {
+    test("CommonRange#at", () => {
         const workbook = createWorkbook();
         const sheet = createSheet(workbook, "Sheet 1");
         sheet.makeCurrent();
@@ -125,7 +125,7 @@ describe("Range", () => {
         expect(Ranges.from(R`A0:A2`, R`B0:B2`).at(5).name).toEqual("B2");
     });
 
-    test("Range(s)#toArray", () => {
+    test("CommonRange#toArray", () => {
         const workbook = createWorkbook();
         const sheet = createSheet(workbook, "Sheet 1");
         sheet.makeCurrent();
