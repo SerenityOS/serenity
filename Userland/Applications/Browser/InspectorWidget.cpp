@@ -46,12 +46,19 @@ void InspectorWidget::set_selection(GUI::ModelIndex const index)
     auto* json = static_cast<JsonObject const*>(index.internal_data());
     VERIFY(json);
 
-    Selection selection { json->get("id").to_i32() };
+    Selection selection {};
+    if (json->has_u32("pseudo-element")) {
+        selection.dom_node_id = json->get("parent-id").to_i32();
+        selection.pseudo_element = static_cast<Web::CSS::Selector::PseudoElement>(json->get("pseudo-element").to_u32());
+    } else {
+        selection.dom_node_id = json->get("id").to_i32();
+    }
+
     if (selection == m_selection)
         return;
     m_selection = move(selection);
 
-    auto maybe_inspected_node_properties = m_web_view->inspect_dom_node(m_inspected_node_id);
+    auto maybe_inspected_node_properties = m_web_view->inspect_dom_node(m_selection.dom_node_id, m_selection.pseudo_element);
     if (maybe_inspected_node_properties.has_value()) {
         auto inspected_node_properties = maybe_inspected_node_properties.value();
         load_style_json(inspected_node_properties.specified_values_json, inspected_node_properties.computed_values_json, inspected_node_properties.custom_properties_json);

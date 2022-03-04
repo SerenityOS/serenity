@@ -9,6 +9,7 @@
 #include <AK/URL.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Widget.h>
+#include <LibWeb/CSS/Selector.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/WebViewHooks.h>
 
@@ -40,7 +41,7 @@ public:
         String custom_properties_json;
         String node_box_sizing_json;
     };
-    Optional<DOMNodeProperties> inspect_dom_node(i32 node_id);
+    Optional<DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<CSS::Selector::PseudoElement>);
     void clear_inspected_dom_node();
     i32 get_hovered_node_id();
 

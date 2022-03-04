@@ -182,22 +182,39 @@ void DOMTreeModel::map_dom_nodes_to_parent(JsonObject const* parent, JsonObject 
     });
 }
 
-GUI::ModelIndex DOMTreeModel::index_for_node(i32 node_id) const
+GUI::ModelIndex DOMTreeModel::index_for_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element) const
 {
     auto node = m_node_id_to_dom_node_map.get(node_id).value_or(nullptr);
     if (node) {
-        auto* parent = get_parent(*node);
-        if (!parent)
-            return {};
-        auto parent_children = get_children(*parent);
-        for (size_t i = 0; i < parent_children->size(); i++) {
-            if (&parent_children->at(i).as_object() == node) {
-                return create_index(i, 0, node);
+        if (pseudo_element.has_value()) {
+            // Find pseudo-element child of the node.
+            auto node_children = get_children(*node);
+            for (size_t i = 0; i < node_children->size(); i++) {
+                auto& child = node_children->at(i).as_object();
+                if (!child.has("pseudo-element"))
+                    continue;
+
+                auto child_pseudo_element = child.get("pseudo-element");
+                if (!child_pseudo_element.is_i32())
+                    continue;
+
+                if (child_pseudo_element.as_i32() == to_underlying(pseudo_element.value()))
+                    return create_index(i, 0, &child);
+            }
+        } else {
+            auto* parent = get_parent(*node);
+            if (!parent)
+                return {};
+            auto parent_children = get_children(*parent);
+            for (size_t i = 0; i < parent_children->size(); i++) {
+                if (&parent_children->at(i).as_object() == node) {
+                    return create_index(i, 0, node);
+                }
             }
         }
     }
 
-    dbgln("Didn't find index for node {}!", node_id);
+    dbgln("Didn't find index for node {}, pseudo-element {}!", node_id, pseudo_element.has_value() ? CSS::pseudo_element_name(pseudo_element.value()) : "NONE");
     return {};
 }
 

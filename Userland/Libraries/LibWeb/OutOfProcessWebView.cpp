@@ -439,9 +439,9 @@ void OutOfProcessWebView::inspect_dom_tree()
     client().async_inspect_dom_tree();
 }
 
-Optional<OutOfProcessWebView::DOMNodeProperties> OutOfProcessWebView::inspect_dom_node(i32 node_id)
+Optional<OutOfProcessWebView::DOMNodeProperties> OutOfProcessWebView::inspect_dom_node(i32 node_id, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
-    auto response = client().inspect_dom_node(node_id);
+    auto response = client().inspect_dom_node(node_id, pseudo_element);
     if (!response.has_style())
         return {};
     return DOMNodeProperties {
@@ -454,7 +454,7 @@ Optional<OutOfProcessWebView::DOMNodeProperties> OutOfProcessWebView::inspect_do
 
 void OutOfProcessWebView::clear_inspected_dom_node()
 {
-    client().inspect_dom_node(0);
+    client().inspect_dom_node(0, {});
 }
 
 i32 OutOfProcessWebView::get_hovered_node_id()
