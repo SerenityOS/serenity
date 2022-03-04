@@ -325,6 +325,15 @@ inline void Bitmap::set_pixel<StorageFormat::BGRA8888>(int x, int y, Color color
     VERIFY(x >= 0 && x < physical_width());
     scanline(y)[x] = color.value(); // drop alpha
 }
+template<>
+inline void Bitmap::set_pixel<StorageFormat::RGBA8888>(int x, int y, Color color)
+{
+    VERIFY(x >= 0 && x < physical_width());
+    // FIXME: There's a lot of inaccurately named functions in the Color class right now (RGBA vs BGRA),
+    //        clear those up and then make this more convenient.
+    auto rgba = (color.alpha() << 24) | (color.blue() << 16) | (color.green() << 8) | color.red();
+    scanline(y)[x] = rgba;
+}
 inline void Bitmap::set_pixel(int x, int y, Color color)
 {
     switch (determine_storage_format(m_format)) {
@@ -333,6 +342,9 @@ inline void Bitmap::set_pixel(int x, int y, Color color)
         break;
     case StorageFormat::BGRA8888:
         set_pixel<StorageFormat::BGRA8888>(x, y, color);
+        break;
+    case StorageFormat::RGBA8888:
+        set_pixel<StorageFormat::RGBA8888>(x, y, color);
         break;
     case StorageFormat::Indexed8:
         VERIFY_NOT_REACHED();
