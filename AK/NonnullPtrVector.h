@@ -41,6 +41,11 @@ public:
     ALWAYS_INLINE constexpr Iterator end() { return Iterator::end(*this); }
     ALWAYS_INLINE constexpr ReverseIterator rend() { return ReverseIterator::rend(*this); }
 
+    ALWAYS_INLINE constexpr auto in_reverse()
+    {
+        return ReverseWrapper::in_reverse(*this);
+    }
+
     ALWAYS_INLINE PtrType& ptr_at(size_t index) { return Base::at(index); }
     ALWAYS_INLINE const PtrType& ptr_at(size_t index) const { return Base::at(index); }
 

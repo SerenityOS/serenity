@@ -704,6 +704,11 @@ public:
     Iterator end() { return Iterator::end(*this); }
     ReverseIterator rend() { return ReverseIterator::rend(*this); }
 
+    ALWAYS_INLINE constexpr auto in_reverse()
+    {
+        return ReverseWrapper::in_reverse(*this);
+    }
+
     template<typename TUnaryPredicate>
     ConstIterator find_if(TUnaryPredicate&& finder) const
     {
