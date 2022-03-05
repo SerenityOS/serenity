@@ -2994,6 +2994,17 @@ Completion ObjectExpression::execute(Interpreter& interpreter, GlobalObject& glo
 
         auto value = TRY(property.value().execute(interpreter, global_object)).release_value();
 
+        // 8. If isProtoSetter is true, then
+        if (property.type() == ObjectProperty::Type::ProtoSetter) {
+            // a. If Type(propValue) is either Object or Null, then
+            if (value.is_object() || value.is_null()) {
+                // i. Perform ! object.[[SetPrototypeOf]](propValue).
+                MUST(object->internal_set_prototype_of(value.is_object() ? &value.as_object() : nullptr));
+            }
+            // b. Return unused.
+            continue;
+        }
+
         if (value.is_function() && property.is_method())
             static_cast<ECMAScriptFunctionObject&>(value.as_function()).set_home_object(object);
 
