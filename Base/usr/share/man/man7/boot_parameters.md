@@ -28,6 +28,8 @@ List of options:
    during the boot sequence. Leaving only the AHCI and Ram Disk controllers.
 
 * **`disable_physical_storage`** - If present on the command line, neither AHCI, or IDE controllers will be initialized on boot.
+
+* **`disable_ps2_mouse`** - If present on the command line, no PS2 mouse will be attached.
     
 * **`disable_uhci_controller`** - If present on the command line, the UHCI controller will not be initialized on boot.
 
