@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -51,8 +51,8 @@ enum class TextRenderingMode : u8 {
 };
 
 struct TextState {
-    float character_spacing { 3.0f };
-    float word_spacing { 5.0f };
+    float character_spacing { 0.0f };
+    float word_spacing { 0.0f };
     float horizontal_scaling { 1.0f };
     float leading { 0.0f };
     FlyString font_family { "Liberation Serif" };
