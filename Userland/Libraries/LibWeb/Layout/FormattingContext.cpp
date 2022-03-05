@@ -634,8 +634,12 @@ void FormattingContext::compute_width_for_absolutely_positioned_replaced_element
     m_state.get_mutable(box).content_width = compute_width_for_replaced_element(m_state, box);
 }
 
+// https://www.w3.org/TR/CSS22/visudet.html#abs-non-replaced-height
 void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_element(Box const& box)
 {
+    // 10.6.4 Absolutely positioned, non-replaced elements
+
+    // FIXME: The section below is partly on-spec, partly ad-hoc.
     auto& computed_values = box.computed_values();
     auto const& containing_block = *box.containing_block();
     auto const& containing_block_state = m_state.get(containing_block);
@@ -664,7 +668,11 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     box_state.padding_top = computed_values.padding().top.resolved(box, width_of_containing_block).to_px(box);
     box_state.padding_bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block).to_px(box);
 
-    if (specified_height.is_auto() && !specified_top.is_auto() && specified_bottom.is_auto()) {
+    if (specified_height.is_auto() && specified_top.is_auto() && specified_bottom.is_auto()) {
+        specified_height = CSS::Length(compute_auto_height_for_block_level_element(m_state, box), CSS::Length::Type::Px);
+    }
+
+    else if (specified_height.is_auto() && !specified_top.is_auto() && specified_bottom.is_auto()) {
         specified_height = CSS::Length(compute_auto_height_for_block_level_element(m_state, box), CSS::Length::Type::Px);
         box_state.offset_bottom = containing_block_state.content_height - specified_height.to_px(box) - specified_top.to_px(box) - box_state.margin_top - box_state.padding_top - box_state.border_top - box_state.margin_bottom - box_state.padding_bottom - box_state.border_bottom;
     }
