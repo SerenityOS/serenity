@@ -76,6 +76,7 @@ ErrorOr<struct stat> lstat(StringView path);
 ErrorOr<ssize_t> read(int fd, Bytes buffer);
 ErrorOr<ssize_t> write(int fd, ReadonlyBytes buffer);
 ErrorOr<void> kill(pid_t, int signal);
+ErrorOr<void> killpg(int pgrp, int signal);
 ErrorOr<int> dup(int source_fd);
 ErrorOr<int> dup2(int source_fd, int destination_fd);
 ErrorOr<String> ptsname(int fd);
@@ -85,6 +86,7 @@ ErrorOr<String> getcwd();
 ErrorOr<void> ioctl(int fd, unsigned request, ...);
 ErrorOr<struct termios> tcgetattr(int fd);
 ErrorOr<void> tcsetattr(int fd, int optional_actions, struct termios const&);
+ErrorOr<int> tcsetpgrp(int fd, pid_t pgrp);
 ErrorOr<void> chmod(StringView pathname, mode_t mode);
 ErrorOr<void> lchown(StringView pathname, uid_t uid, gid_t gid);
 ErrorOr<void> chown(StringView pathname, uid_t uid, gid_t gid);
@@ -143,4 +145,9 @@ ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2]);
 ErrorOr<Vector<gid_t>> getgroups();
 ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev);
 ErrorOr<void> mkfifo(StringView pathname, mode_t mode);
+ErrorOr<void> setenv(StringView, StringView, bool);
+ErrorOr<int> posix_openpt(int flags);
+ErrorOr<void> grantpt(int fildes);
+ErrorOr<void> unlockpt(int fildes);
+
 }

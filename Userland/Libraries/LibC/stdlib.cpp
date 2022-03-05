@@ -306,11 +306,16 @@ int clearenv()
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/setenv.html
 int setenv(const char* name, const char* value, int overwrite)
 {
+    return serenity_setenv(name, strlen(name), value, strlen(value), overwrite);
+}
+
+int serenity_setenv(const char* name, ssize_t name_length, const char* value, ssize_t value_length, int overwrite)
+{
     if (!overwrite && getenv(name))
         return 0;
-    auto length = strlen(name) + strlen(value) + 2;
-    auto* var = (char*)malloc(length);
-    snprintf(var, length, "%s=%s", name, value);
+    auto const total_length = name_length + value_length + 2;
+    auto* var = (char*)malloc(total_length);
+    snprintf(var, total_length, "%s=%s", name, value);
     s_malloced_environment_variables.set((FlatPtr)var);
     return putenv(var);
 }

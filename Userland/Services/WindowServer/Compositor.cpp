@@ -672,8 +672,8 @@ void Compositor::flush(Screen& screen)
         // a scale applied. But this routine accesses the backbuffer pixels directly, so it
         // must work in physical coordinates.
         auto scaled_rect = rect * screen.scale_factor();
-        Gfx::RGBA32* front_ptr = screen_data.m_front_bitmap->scanline(scaled_rect.y()) + scaled_rect.x();
-        Gfx::RGBA32* back_ptr = screen_data.m_back_bitmap->scanline(scaled_rect.y()) + scaled_rect.x();
+        Gfx::ARGB32* front_ptr = screen_data.m_front_bitmap->scanline(scaled_rect.y()) + scaled_rect.x();
+        Gfx::ARGB32* back_ptr = screen_data.m_back_bitmap->scanline(scaled_rect.y()) + scaled_rect.x();
         size_t pitch = screen_data.m_back_bitmap->pitch();
 
         // NOTE: The meaning of a flush depends on whether we can flip buffers or not.
@@ -685,8 +685,8 @@ void Compositor::flush(Screen& screen)
         //       If flipping is not supported, flushing means that we copy the changed
         //       rects from the backing bitmap to the display framebuffer.
 
-        Gfx::RGBA32* to_ptr;
-        const Gfx::RGBA32* from_ptr;
+        Gfx::ARGB32* to_ptr;
+        const Gfx::ARGB32* from_ptr;
 
         if (screen_data.m_screen_can_set_buffer) {
             to_ptr = back_ptr;
@@ -698,8 +698,8 @@ void Compositor::flush(Screen& screen)
 
         for (int y = 0; y < scaled_rect.height(); ++y) {
             fast_u32_copy(to_ptr, from_ptr, scaled_rect.width());
-            from_ptr = (const Gfx::RGBA32*)((const u8*)from_ptr + pitch);
-            to_ptr = (Gfx::RGBA32*)((u8*)to_ptr + pitch);
+            from_ptr = (const Gfx::ARGB32*)((const u8*)from_ptr + pitch);
+            to_ptr = (Gfx::ARGB32*)((u8*)to_ptr + pitch);
         }
         if (device_can_flush_buffers) {
             // Whether or not we need to flush buffers, we need to at least track what we modified

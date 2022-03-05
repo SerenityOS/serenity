@@ -15,7 +15,7 @@ namespace Web {
 void dump_tree(StringBuilder&, DOM::Node const&);
 void dump_tree(DOM::Node const&);
 void dump_tree(StringBuilder&, Layout::Node const&, bool show_box_model = false, bool show_specified_style = false, bool colorize = false);
-void dump_tree(Layout::Node const&, bool show_box_model = false, bool show_specified_style = false);
+void dump_tree(Layout::Node const&, bool show_box_model = true, bool show_specified_style = false);
 void dump_sheet(StringBuilder&, CSS::StyleSheet const&);
 void dump_sheet(CSS::StyleSheet const&);
 void dump_rule(StringBuilder&, CSS::CSSRule const&, int indent_levels = 0);

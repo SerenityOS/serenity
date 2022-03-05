@@ -738,6 +738,7 @@ void Thread::send_signal(u8 signal, [[maybe_unused]] Process* sender)
     }
 
     m_pending_signals |= 1 << (signal - 1);
+    m_signal_senders[signal] = sender ? sender->pid() : pid();
     m_have_any_unmasked_pending_signals.store((pending_signals_for_state() & ~m_signal_mask) != 0, AK::memory_order_release);
     m_signal_blocker_set.unblock_all_blockers_whose_conditions_are_met();
 
@@ -790,7 +791,7 @@ void Thread::reset_signals_for_exec()
     // The signal mask is preserved across execve(2).
     // The pending signal set is preserved across an execve(2).
     m_have_any_unmasked_pending_signals.store(false, AK::memory_order_release);
-    m_signal_action_data.fill({});
+    m_signal_action_masks.fill({});
     // A successful call to execve(2) removes any existing alternate signal stack
     m_alternative_signal_stack = 0;
     m_alternative_signal_stack_size = 0;
@@ -902,7 +903,7 @@ static DefaultSignalAction default_signal_action(u8 signal)
 bool Thread::should_ignore_signal(u8 signal) const
 {
     VERIFY(signal < 32);
-    auto const& action = m_signal_action_data[signal];
+    auto const& action = m_process->m_signal_action_data[signal];
     if (action.handler_or_sigaction.is_null())
         return default_signal_action(signal) == DefaultSignalAction::Ignore;
     return ((sighandler_t)action.handler_or_sigaction.get() == SIG_IGN);
@@ -911,7 +912,7 @@ bool Thread::should_ignore_signal(u8 signal) const
 bool Thread::has_signal_handler(u8 signal) const
 {
     VERIFY(signal < 32);
-    auto const& action = m_signal_action_data[signal];
+    auto const& action = m_process->m_signal_action_data[signal];
     return !action.handler_or_sigaction.is_null();
 }
 
@@ -936,6 +937,13 @@ static ErrorOr<void> push_value_on_user_stack(FlatPtr& stack, FlatPtr data)
 {
     stack -= sizeof(FlatPtr);
     return copy_to_user((FlatPtr*)stack, &data);
+}
+
+template<typename T>
+static ErrorOr<void> copy_value_on_user_stack(FlatPtr& stack, T const& data)
+{
+    stack -= sizeof(data);
+    return copy_to_user((RemoveCVReference<T>*)stack, &data);
 }
 
 void Thread::resume_from_stopped()
@@ -975,9 +983,9 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         return DispatchSignalResult::Deferred;
     }
 
-    auto& action = m_signal_action_data[signal];
-    // FIXME: Implement SA_SIGINFO signal handlers.
-    VERIFY(!(action.flags & SA_SIGINFO));
+    auto& action = m_process->m_signal_action_data[signal];
+    auto sender_pid = m_signal_senders[signal];
+    auto sender = Process::from_pid(sender_pid);
 
     if (!current_trap() && !action.handler_or_sigaction.is_null()) {
         // We're trying dispatch a handled signal to a user process that was scheduled
@@ -1045,7 +1053,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     ScopedAddressSpaceSwitcher switcher(m_process);
 
     u32 old_signal_mask = m_signal_mask;
-    u32 new_signal_mask = action.mask;
+    u32 new_signal_mask = m_signal_action_masks[signal].value_or(action.mask);
     if ((action.flags & SA_NODEFER) == SA_NODEFER)
         new_signal_mask &= ~(1 << (signal - 1));
     else
@@ -1057,78 +1065,149 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     bool use_alternative_stack = ((action.flags & SA_ONSTACK) != 0) && has_alternative_signal_stack() && !is_in_alternative_signal_stack();
 
     auto setup_stack = [&](RegisterState& state) -> ErrorOr<void> {
-        FlatPtr old_sp = state.userspace_sp();
         FlatPtr stack;
         if (use_alternative_stack)
             stack = m_alternative_signal_stack + m_alternative_signal_stack_size;
         else
-            stack = old_sp;
+            stack = state.userspace_sp();
 
-        FlatPtr ret_ip = state.ip();
-        FlatPtr ret_flags = state.flags();
+        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to IP {:p}, SP {:p}", state.ip(), state.userspace_sp());
 
-        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to IP {:p}, SP {:p}", ret_ip, old_sp);
+        __ucontext ucontext {
+            .uc_link = nullptr,
+            .uc_sigmask = old_signal_mask,
+            .uc_stack = {
+                .ss_sp = bit_cast<void*>(stack),
+                .ss_flags = action.flags & SA_ONSTACK,
+                .ss_size = use_alternative_stack ? m_alternative_signal_stack_size : 0,
+            },
+            .uc_mcontext = {},
+        };
+        copy_kernel_registers_into_ptrace_registers(static_cast<PtraceRegisters&>(ucontext.uc_mcontext), state);
+
+        auto fill_signal_info_for_signal = [&](siginfo& signal_info) {
+            if (signal == SIGCHLD) {
+                if (!sender) {
+                    signal_info.si_code = CLD_EXITED;
+                    return;
+                }
+                auto const* thread = sender->thread_list().with([](auto& list) { return list.is_empty() ? nullptr : list.first(); });
+                if (!thread) {
+                    signal_info.si_code = CLD_EXITED;
+                    return;
+                }
+
+                switch (thread->m_state) {
+                case State::Dead:
+                    if (sender->should_generate_coredump() && sender->is_dumpable()) {
+                        signal_info.si_code = CLD_DUMPED;
+                        signal_info.si_status = sender->termination_signal();
+                        return;
+                    }
+                    [[fallthrough]];
+                case State::Dying:
+                    if (sender->termination_signal() == 0) {
+                        signal_info.si_code = CLD_EXITED;
+                        signal_info.si_status = sender->termination_status();
+                        return;
+                    }
+                    signal_info.si_code = CLD_KILLED;
+                    signal_info.si_status = sender->termination_signal();
+                    return;
+                case State::Runnable:
+                case State::Running:
+                case State::Blocked:
+                    signal_info.si_code = CLD_CONTINUED;
+                    return;
+                case State::Stopped:
+                    signal_info.si_code = CLD_STOPPED;
+                    return;
+                case State::Invalid:
+                    // Something is wrong, but we're just an observer.
+                    break;
+                }
+            }
+
+            signal_info.si_code = SI_NOINFO;
+        };
+
+        siginfo signal_info {
+            .si_signo = signal,
+            // Filled in below by fill_signal_info_for_signal.
+            .si_code = 0,
+            // Set for SI_TIMER, we don't have the data here.
+            .si_errno = 0,
+            .si_pid = sender_pid.value(),
+            .si_uid = sender ? sender->uid().value() : 0,
+            // Set for SIGILL, SIGFPE, SIGSEGV and SIGBUS
+            // FIXME: We don't generate these signals in a way that can be handled.
+            .si_addr = 0,
+            // Set for SIGCHLD.
+            .si_status = 0,
+            // Set for SIGPOLL, we don't have SIGPOLL.
+            .si_band = 0,
+            // Set for SI_QUEUE, SI_TIMER, SI_ASYNCIO and SI_MESGQ
+            // We do not generate any of these.
+            .si_value = {
+                .sival_int = 0,
+            },
+        };
+
+        if (action.flags & SA_SIGINFO)
+            fill_signal_info_for_signal(signal_info);
 
 #if ARCH(I386)
-        // Align the stack to 16 bytes.
-        // Note that we push 52 bytes (4 * 13) on to the stack
-        // before the return address, so we need to account for this here.
-        // 56 % 16 = 4, so we only need to take 4 bytes into consideration for
-        // the stack alignment.
-        FlatPtr stack_alignment = (stack - 4) % 16;
-        stack -= stack_alignment;
-
-        TRY(push_value_on_user_stack(stack, ret_flags));
-
-        TRY(push_value_on_user_stack(stack, ret_ip));
-        TRY(push_value_on_user_stack(stack, state.eax));
-        TRY(push_value_on_user_stack(stack, state.ecx));
-        TRY(push_value_on_user_stack(stack, state.edx));
-        TRY(push_value_on_user_stack(stack, state.ebx));
-        TRY(push_value_on_user_stack(stack, old_sp));
-        TRY(push_value_on_user_stack(stack, state.ebp));
-        TRY(push_value_on_user_stack(stack, state.esi));
-        TRY(push_value_on_user_stack(stack, state.edi));
+        constexpr static FlatPtr thread_red_zone_size = 0;
+#elif ARCH(X86_64)
+        constexpr static FlatPtr thread_red_zone_size = 128;
 #else
-        // Align the stack to 16 bytes.
-        // Note that we push 168 bytes (8 * 21) on to the stack
-        // before the return address, so we need to account for this here.
-        // 168 % 16 = 8, so we only need to take 8 bytes into consideration for
-        // the stack alignment.
-        // We also are not allowed to touch the thread's red-zone of 128 bytes
-        FlatPtr stack_alignment = (stack - 8) % 16;
-        stack -= 128 + stack_alignment;
-
-        TRY(push_value_on_user_stack(stack, ret_flags));
-
-        TRY(push_value_on_user_stack(stack, ret_ip));
-        TRY(push_value_on_user_stack(stack, state.r15));
-        TRY(push_value_on_user_stack(stack, state.r14));
-        TRY(push_value_on_user_stack(stack, state.r13));
-        TRY(push_value_on_user_stack(stack, state.r12));
-        TRY(push_value_on_user_stack(stack, state.r11));
-        TRY(push_value_on_user_stack(stack, state.r10));
-        TRY(push_value_on_user_stack(stack, state.r9));
-        TRY(push_value_on_user_stack(stack, state.r8));
-        TRY(push_value_on_user_stack(stack, state.rax));
-        TRY(push_value_on_user_stack(stack, state.rcx));
-        TRY(push_value_on_user_stack(stack, state.rdx));
-        TRY(push_value_on_user_stack(stack, state.rbx));
-        TRY(push_value_on_user_stack(stack, old_sp));
-        TRY(push_value_on_user_stack(stack, state.rbp));
-        TRY(push_value_on_user_stack(stack, state.rsi));
-        TRY(push_value_on_user_stack(stack, state.rdi));
+#    error Unknown architecture in dispatch_signal
 #endif
 
-        // PUSH old_signal_mask
-        TRY(push_value_on_user_stack(stack, old_signal_mask));
+        // Align the stack to 16 bytes.
+        // Note that we push some elements on to the stack before the return address,
+        // so we need to account for this here.
+        constexpr static FlatPtr elements_pushed_on_stack_before_handler_address = 1; // one slot for a saved register
+        FlatPtr const extra_bytes_pushed_on_stack_before_handler_address = sizeof(ucontext) + sizeof(signal_info);
+        FlatPtr stack_alignment = (stack - elements_pushed_on_stack_before_handler_address * sizeof(FlatPtr) + extra_bytes_pushed_on_stack_before_handler_address) % 16;
+        // Also note that we have to skip the thread red-zone (if needed), so do that here.
+        stack -= thread_red_zone_size + stack_alignment;
+        auto start_of_stack = stack;
 
+        TRY(push_value_on_user_stack(stack, 0)); // syscall return value slot
+
+        TRY(copy_value_on_user_stack(stack, ucontext));
+        auto pointer_to_ucontext = stack;
+
+        TRY(copy_value_on_user_stack(stack, signal_info));
+        auto pointer_to_signal_info = stack;
+
+        // Make sure we actually pushed as many elements as we claimed to have pushed.
+        if (start_of_stack - stack != elements_pushed_on_stack_before_handler_address * sizeof(FlatPtr) + extra_bytes_pushed_on_stack_before_handler_address) {
+            PANIC("Stack in invalid state after signal trampoline, expected {:x} but got {:x}",
+                start_of_stack - elements_pushed_on_stack_before_handler_address * sizeof(FlatPtr) - extra_bytes_pushed_on_stack_before_handler_address, stack);
+        }
+
+        VERIFY(stack % 16 == 0);
+
+#if ARCH(I386) || ARCH(X86_64)
+        // Save the FPU/SSE state
+        TRY(copy_value_on_user_stack(stack, fpu_state()));
+#endif
+
+#if ARCH(I386)
+        // Leave one empty slot to align the stack for a handler call.
+        TRY(push_value_on_user_stack(stack, 0));
+#endif
+        TRY(push_value_on_user_stack(stack, pointer_to_ucontext));
+        TRY(push_value_on_user_stack(stack, pointer_to_signal_info));
         TRY(push_value_on_user_stack(stack, signal));
+
+#if ARCH(I386)
+        VERIFY(stack % 16 == 0);
+#endif
+
         TRY(push_value_on_user_stack(stack, handler_vaddr.get()));
-
-        VERIFY((stack % 16) == 0);
-
-        TRY(push_value_on_user_stack(stack, 0)); // push fake return address
 
         // We write back the adjusted stack value into the register state.
         // We have to do this because we can't just pass around a reference to a packed field, as it's UB.
@@ -1182,8 +1261,7 @@ RegisterState& Thread::get_register_dump_from_stack()
 ErrorOr<NonnullRefPtr<Thread>> Thread::try_clone(Process& process)
 {
     auto clone = TRY(Thread::try_create(process));
-    auto signal_action_data_span = m_signal_action_data.span();
-    signal_action_data_span.copy_to(clone->m_signal_action_data.span());
+    m_signal_action_masks.span().copy_to(clone->m_signal_action_masks);
     clone->m_signal_mask = m_signal_mask;
     clone->m_fpu_state = m_fpu_state;
     clone->m_thread_specific_data = m_thread_specific_data;

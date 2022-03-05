@@ -125,7 +125,8 @@ CharacterMapWidget::CharacterMapWidget()
     };
 
     auto unicode_blocks = Unicode::block_display_names();
-    m_unicode_block_listview->on_activation = [this, unicode_blocks](auto& index) {
+    m_unicode_block_listview->on_selection_change = [this, unicode_blocks] {
+        auto index = m_unicode_block_listview->selection().first();
         if (index.row() > 0)
             m_range = unicode_blocks[index.row() - 1].code_point_range;
         else

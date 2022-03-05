@@ -169,7 +169,7 @@ private:
     {
         GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
-        painter.clear_rect(event.rect(), Color::from_rgba(0));
+        painter.clear_rect(event.rect(), Color::from_argb(0));
 
         auto& audio_bitmap = choose_bitmap_from_volume();
         painter.blit({}, audio_bitmap, audio_bitmap.rect());

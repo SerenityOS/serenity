@@ -17,7 +17,8 @@
         .plus-n > div:nth-last-child(+n), /** "+n" is special case inside parser. */
         .minus-n > div:nth-last-child(-n), /** "-n" is special case inside parser. */
         ._0n-plus-1 > div:nth-last-child(-0n+1),
-        .n-plus-2__minus-n-plus-3 > div:nth-last-child(+n + 2 ):nth-last-child( -n+3) {
+        .n-plus-2__minus-n-plus-3 > div:nth-last-child(+n + 2 ):nth-last-child( -n+3),
+        .acid3 > div:nth-last-child(-5n+3) {
             background-color: lightblue;
         }
     </style>
@@ -135,6 +136,25 @@
     <div>3 +</div>
     <div>4 +</div>
     <div>5</div>
+</div>
+
+<h4>:nth-last-child(-5n+3) - Acid3</h4>
+<div class="acid3">
+    <div>1</div>
+    <div>2</div>
+    <div>3</div>
+    <div>4</div>
+    <div>5</div>
+    <div>6</div>
+    <div>7</div>
+    <div>8</div>
+    <div>9</div>
+    <div>10</div>
+    <div>11</div>
+    <div>12</div>
+    <div>13+</div>
+    <div>14</div>
+    <div>15</div>
 </div>
 </body>
 </html>

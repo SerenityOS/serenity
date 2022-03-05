@@ -154,7 +154,7 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
         return item;
     }
 
-    if (m_current_node->is_positioned()) {
+    if (m_current_node->is_absolutely_positioned()) {
         skip_to_next();
         return next(available_width);
     }

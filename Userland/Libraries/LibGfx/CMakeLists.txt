@@ -6,7 +6,6 @@ set(SOURCES
     BitmapFont.cpp
     BMPLoader.cpp
     BMPWriter.cpp
-    CharacterBitmap.cpp
     ClassicStylePainter.cpp
     ClassicWindowTheme.cpp
     Color.cpp

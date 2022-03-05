@@ -237,14 +237,17 @@ Gfx::Path& SVGPathElement::get_path()
                 m_previous_control_point = last_point;
             }
 
-            auto reflected_previous_control_x = last_point.dx_relative_to(m_previous_control_point);
-            auto reflected_previous_control_y = last_point.dy_relative_to(m_previous_control_point);
+            // 9.5.2. Reflected control points https://svgwg.org/svg2-draft/paths.html#ReflectedControlPoints
+            // If the current point is (curx, cury) and the final control point of the previous path segment is (oldx2, oldy2),
+            // then the reflected point (i.e., (newx1, newy1), the first control point of the current path segment) is:
+            // (newx1, newy1) = (curx - (oldx2 - curx), cury - (oldy2 - cury))
+            auto reflected_previous_control_x = last_point.x() - m_previous_control_point.dx_relative_to(last_point);
+            auto reflected_previous_control_y = last_point.y() - m_previous_control_point.dy_relative_to(last_point);
             Gfx::FloatPoint c1 = Gfx::FloatPoint { reflected_previous_control_x, reflected_previous_control_y };
             Gfx::FloatPoint c2 = { data[0], data[1] };
             Gfx::FloatPoint p2 = { data[2], data[3] };
             if (!absolute) {
                 p2 += last_point;
-                c1 += last_point;
                 c2 += last_point;
             }
             path.cubic_bezier_curve_to(c1, c2, p2);

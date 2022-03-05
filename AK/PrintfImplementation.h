@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
+#include <math.h>
 #include <stdarg.h>
 
 #ifdef __serenity__
@@ -165,7 +166,30 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
 
     u32 whole_width = (field_width >= precision + 1) ? field_width - precision - 1 : 0;
 
-    bool sign = number < 0;
+    bool sign = signbit(number);
+    bool nan = isnan(number);
+    bool inf = isinf(number);
+
+    if (nan || inf) {
+        for (unsigned i = 0; i < field_width - 3 - sign; i++) {
+            putch(bufptr, ' ');
+            length++;
+        }
+        if (sign) {
+            putch(bufptr, '-');
+            length++;
+        }
+        if (nan) {
+            putch(bufptr, 'n');
+            putch(bufptr, 'a');
+            putch(bufptr, 'n');
+        } else {
+            putch(bufptr, 'i');
+            putch(bufptr, 'n');
+            putch(bufptr, 'f');
+        }
+        return length + 3;
+    }
 
     if (sign)
         number = -number;

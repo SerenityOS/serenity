@@ -11,11 +11,13 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/HostBridge.h>
 #include <Kernel/Bus/PCI/Controller/MemoryBackedHostBridge.h>
+#include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/TypedMapping.h>
+#include <Kernel/ProcessExposed.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::PCI {
@@ -35,6 +37,11 @@ Access& Access::the()
 bool Access::is_initialized()
 {
     return (s_access != nullptr);
+}
+
+bool Access::is_disabled()
+{
+    return g_pci_access_is_disabled_from_commandline || g_pci_access_io_probe_failed;
 }
 
 UNMAP_AFTER_INIT bool Access::find_and_register_pci_host_bridges_from_acpi_mcfg_table(PhysicalAddress mcfg_table)
@@ -89,6 +96,7 @@ UNMAP_AFTER_INIT bool Access::find_and_register_pci_host_bridges_from_acpi_mcfg_
 UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddress mcfg_table)
 {
     VERIFY(!Access::is_initialized());
+    ProcFSComponentRegistry::the().root_directory().add_pci_node({});
     auto* access = new Access();
     if (!access->find_and_register_pci_host_bridges_from_acpi_mcfg_table(mcfg_table))
         return false;
@@ -100,6 +108,7 @@ UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddres
 UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
 {
     VERIFY(!Access::is_initialized());
+    ProcFSComponentRegistry::the().root_directory().add_pci_node({});
     auto* access = new Access();
     auto host_bridge = HostBridge::must_create_with_io_access();
     access->add_host_controller(move(host_bridge));

@@ -108,4 +108,147 @@ describe("Range", () => {
         expect(R`A0:A25`.first().name).toEqual("A0");
         expect(R`A2:A25`.first().name).toEqual("A2");
     });
+
+    test("CommonRange#at", () => {
+        const workbook = createWorkbook();
+        const sheet = createSheet(workbook, "Sheet 1");
+        sheet.makeCurrent();
+        let i = 0;
+        for (const col of ["A", "B"]) {
+            for (const row of [0, 1, 2]) {
+                sheet.setCell(col, row, Math.pow(i++, 2));
+            }
+        }
+
+        sheet.focusCell("A", 0);
+        expect(R`A0:A2`.at(2).name).toEqual("A2");
+        expect(Ranges.from(R`A0:A2`, R`B0:B2`).at(5).name).toEqual("B2");
+    });
+
+    test("CommonRange#toArray", () => {
+        const workbook = createWorkbook();
+        const sheet = createSheet(workbook, "Sheet 1");
+        sheet.makeCurrent();
+        let i = 0;
+        for (const col of ["A", "B"]) {
+            for (const row of [0, 1, 2]) {
+                sheet.setCell(col, row, Math.pow(i++, 2));
+            }
+        }
+
+        sheet.focusCell("A", 0);
+        expect(R`A0:A2`.toArray().toString()).toEqual("<Cell at A0>,<Cell at A1>,<Cell at A2>");
+        expect(
+            Ranges.from(R`A0:A2`, R`B0:B2`)
+                .toArray()
+                .toString()
+        ).toEqual("<Cell at A0>,<Cell at A1>,<Cell at A2>,<Cell at B0>,<Cell at B1>,<Cell at B2>");
+    });
+
+    test("CommonRange#findIndex", () => {
+        makeSheet();
+        const range = R`B`;
+        let idxs = [];
+        let values = [];
+        const idx = range.findIndex((val, idx) => {
+            idxs.push(idx);
+            values.push(val.value());
+            return integer(val.value()) === 4;
+        });
+        expect(idx).toEqual(1);
+        expect(values).toEqual(["1", "4"]);
+        expect(idxs).toEqual([0, 1]);
+    });
+
+    test("CommonRange#find", () => {
+        makeSheet();
+        const range = R`B`;
+        let idxs = [];
+        let values = [];
+        const val = range.find((val, idx) => {
+            idxs.push(idx);
+            values.push(val.value());
+            return integer(val.value()) === 4;
+        });
+        expect(val.name).toEqual("B1");
+        expect(values).toEqual(["1", "4"]);
+        expect(idxs).toEqual([0, 1]);
+    });
+
+    test("CommonRange#indexOf", () => {
+        makeSheet();
+        const range = R`B`;
+        expect(range.indexOf("B1")).toEqual(1);
+    });
+
+    test("CommonRange#has", () => {
+        makeSheet();
+        const range = R`B`;
+        expect(range.has("B1")).toEqual(true);
+        expect(range.has("B4")).toEqual(false);
+    });
 });
+
+describe("R function", () => {
+    makeSheet();
+
+    test("Check for correctness: R`A0:A`", () => {
+        const range = R`A0:A`;
+        expect(range.toString()).toEqual("R`A0:A`");
+        expect(count(range)).toEqual(3);
+        expect(sum(range)).toEqual(6);
+    });
+    test("Check for correctness: R`A`", () => {
+        const range = R`A`;
+        expect(range.toString()).toEqual("R`A0:A`");
+        expect(count(range)).toEqual(3);
+        expect(sum(range)).toEqual(6);
+    });
+    test("Check for correctness: R`A0:B`", () => {
+        const range = R`A0:B`;
+        expect(range.toString()).toEqual("R`A0:B`");
+        expect(count(range)).toEqual(6);
+        expect(sum(range)).toEqual(20);
+    });
+    test("Check for correctness: R`A0:B0`", () => {
+        const range = R`A0:B0`;
+        expect(range.toString()).toEqual("R`A0:B0`");
+        expect(count(range)).toEqual(2);
+        expect(sum(range)).toEqual(2);
+    });
+    test("Check for correctness: R`A0:B:2:1`", () => {
+        const range = R`A0:B2:1:2`;
+        expect(range.toString()).toEqual("R`A0:B2:1:2`");
+        expect(range.toArray().toString()).toEqual(
+            "<Cell at A0>,<Cell at A2>,<Cell at B0>,<Cell at B2>"
+        );
+        expect(count(range)).toEqual(4);
+        expect(sum(range)).toEqual(14);
+    });
+    test("R`B`", () => {
+        const range = R`B`;
+        expect(range.toString()).toEqual("R`B0:B`");
+        expect(count(range)).toEqual(3);
+        expect(sum(range)).toEqual(14);
+    });
+});
+
+/*
+ A B
+ +++
+0+1 1
+1+2 4
+2+3 9
+*/
+
+function makeSheet() {
+    const workbook = createWorkbook();
+    const sheet = createSheet(workbook, "Sheet 1");
+    sheet.makeCurrent();
+    for (const row of ["A", "B"]) {
+        for (let col of [0, 1, 2]) {
+            sheet.setCell(row, col++, row === "A" ? col : Math.pow(col, 2));
+        }
+    }
+    sheet.focusCell("A", 0);
+}

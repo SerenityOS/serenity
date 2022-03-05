@@ -139,7 +139,7 @@ void BoardWidget::paint_event(GUI::PaintEvent& event)
 
             bool on = m_board->cell(row, column);
             if (on) {
-                fill_color = Color::from_rgb(Gfx::make_rgb(220, 220, 80));
+                fill_color = Color::from_rgb(0xdcdc50);
             } else {
                 fill_color = Color::MidGray;
             }

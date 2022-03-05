@@ -293,45 +293,69 @@ void signal_trampoline_dummy()
     // blocking syscall, that syscall may return some special error code in eax;
     // This error code would likely be overwritten by the signal handler, so it's
     // necessary to preserve it here.
+    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 4 * sizeof(FlatPtr);
     asm(
         ".intel_syntax noprefix\n"
         ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        "push ebp\n"
-        "mov ebp, esp\n"
-        "push eax\n"          // we have to store eax 'cause it might be the return value from a syscall
-        "sub esp, 4\n"        // align the stack to 16 bytes
-        "mov eax, [ebp+12]\n" // push the signal code
-        "push eax\n"
-        "call [ebp+8]\n" // call the signal handler
-        "add esp, 8\n"
+        // stack state: 0, ucontext, signal_info, (alignment = 16), fpu_state (alignment = 16), 0, ucontext*, siginfo*, signal, (alignment = 16), handler
+
+        // Pop the handler into ecx
+        "pop ecx\n" // save handler
+        // we have to save eax 'cause it might be the return value from a syscall
+        "mov [esp+%P1], eax\n"
+        // Note that the stack is currently aligned to 16 bytes as we popped the extra entries above.
+        // and it's already setup to call the handler with the expected values on the stack.
+        // call the signal handler
+        "call ecx\n"
+        // drop the 4 arguments
+        "add esp, 16\n"
+        // Current stack state is just saved_eax, ucontext, signal_info, fpu_state?.
+        // syscall SC_sigreturn
         "mov eax, %P0\n"
-        "int 0x82\n" // sigreturn syscall
+        "int 0x82\n"
         ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
-        ".att_syntax" ::"i"(Syscall::SC_sigreturn));
+        ".att_syntax"
+        :
+        : "i"(Syscall::SC_sigreturn),
+        "i"(offset_to_first_register_slot));
 #elif ARCH(X86_64)
     // The trampoline preserves the current rax, pushes the signal code and
     // then calls the signal handler. We do this because, when interrupting a
     // blocking syscall, that syscall may return some special error code in eax;
     // This error code would likely be overwritten by the signal handler, so it's
     // necessary to preserve it here.
+    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 3 * sizeof(FlatPtr);
     asm(
         ".intel_syntax noprefix\n"
         ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        "push rbp\n"
-        "mov rbp, rsp\n"
-        "push rax\n"          // we have to store rax 'cause it might be the return value from a syscall
-        "sub rsp, 8\n"        // align the stack to 16 bytes
-        "mov rdi, [rbp+24]\n" // push the signal code
-        "call [rbp+16]\n"     // call the signal handler
-        "add rsp, 8\n"
+        // stack state: 0, ucontext, signal_info (alignment = 16), fpu_state (alignment = 16), ucontext*, siginfo*, signal, handler
+
+        // Pop the handler into rcx
+        "pop rcx\n" // save handler
+        // we have to save rax 'cause it might be the return value from a syscall
+        "mov [rsp+%P1], rax\n"
+        // pop signal number into rdi (first param)
+        "pop rdi\n"
+        // pop siginfo* into rsi (second param)
+        "pop rsi\n"
+        // pop ucontext* into rdx (third param)
+        "pop rdx\n"
+        // Note that the stack is currently aligned to 16 bytes as we popped the extra entries above.
+        // call the signal handler
+        "call rcx\n"
+        // Current stack state is just saved_rax, ucontext, signal_info, fpu_state.
+        // syscall SC_sigreturn
         "mov rax, %P0\n"
-        "int 0x82\n" // sigreturn syscall
+        "int 0x82\n"
         ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
-        ".att_syntax" ::"i"(Syscall::SC_sigreturn));
+        ".att_syntax"
+        :
+        : "i"(Syscall::SC_sigreturn),
+        "i"(offset_to_first_register_slot));
 #endif
 }
 
@@ -612,10 +636,9 @@ void Process::finalize()
     m_state.store(State::Dead, AK::MemoryOrder::memory_order_release);
 
     {
-        // FIXME: PID/TID BUG
-        if (auto parent_thread = Thread::from_tid(ppid().value())) {
-            if (parent_thread->process().is_user_process() && (parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
-                parent_thread->send_signal(SIGCHLD, this);
+        if (auto parent_process = Process::from_pid(ppid())) {
+            if (parent_process->is_user_process() && (parent_process->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
+                (void)parent_process->send_signal(SIGCHLD, this);
         }
     }
 

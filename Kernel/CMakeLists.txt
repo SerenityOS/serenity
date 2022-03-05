@@ -82,10 +82,11 @@ set(KERNEL_SOURCES
     Graphics/FramebufferDevice.cpp
     Graphics/GraphicsManagement.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
+    Graphics/VGA/ISAAdapter.cpp
+    Graphics/VGA/PCIAdapter.cpp
     Graphics/VirtIOGPU/FramebufferDevice.cpp
     Graphics/VirtIOGPU/Console.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
-    Graphics/VGACompatibleAdapter.cpp
     Graphics/GenericFramebufferDevice.cpp
     SanCov.cpp
     Storage/ATA/AHCIController.cpp
@@ -95,6 +96,8 @@ set(KERNEL_SOURCES
     Storage/ATA/ATADiskDevice.cpp
     Storage/ATA/ATAPIDiscDevice.cpp
     Storage/ATA/BMIDEChannel.cpp
+    Storage/ATA/ISAIDEController.cpp
+    Storage/ATA/PCIIDEController.cpp
     Storage/ATA/IDEController.cpp
     Storage/ATA/IDEChannel.cpp
     Storage/Partition/DiskPartition.cpp

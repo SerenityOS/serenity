@@ -58,15 +58,17 @@ ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> 
         return EINVAL;
 
     InterruptDisabler disabler; // FIXME: This should use a narrower lock. Maybe a way to ignore signals temporarily?
-    auto& action = Thread::current()->m_signal_action_data[signum];
+    auto& action = m_signal_action_data[signum];
     if (user_old_act) {
         sigaction old_act {};
         old_act.sa_flags = action.flags;
         old_act.sa_sigaction = reinterpret_cast<decltype(old_act.sa_sigaction)>(action.handler_or_sigaction.as_ptr());
+        old_act.sa_mask = action.mask;
         TRY(copy_to_user(user_old_act, &old_act));
     }
     if (user_act) {
         auto act = TRY(copy_typed_from_user(user_act));
+        action.mask = act.sa_mask;
         action.flags = act.sa_flags;
         action.handler_or_sigaction = VirtualAddress { reinterpret_cast<void*>(act.sa_sigaction) };
     }
@@ -79,53 +81,46 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     TRY(require_promise(Pledge::stdio));
     SmapDisabler disabler;
 
-#if ARCH(I386)
     // Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
-    u32* stack_ptr = (u32*)registers.userspace_esp;
-    u32 smuggled_eax = *stack_ptr;
+    auto stack_ptr = registers.userspace_sp();
 
-    // pop the stored eax, ebp, return address, handler and signal code
-    stack_ptr += 5;
+    // Stack state (created by the signal trampoline):
+    // saved_ax, ucontext, signal_info, fpu_state?.
 
-    Thread::current()->m_signal_mask = *stack_ptr;
-    stack_ptr++;
-
-    // pop edi, esi, ebp, esp, ebx, edx, ecx and eax
-    memcpy(&registers.edi, stack_ptr, 8 * sizeof(FlatPtr));
-    stack_ptr += 8;
-
-    registers.eip = *stack_ptr;
-    stack_ptr++;
-
-    registers.eflags = (registers.eflags & ~safe_eflags_mask) | (*stack_ptr & safe_eflags_mask);
-    stack_ptr++;
-
-    registers.userspace_esp = registers.esp;
-    return smuggled_eax;
-#else
-    // Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
-    FlatPtr* stack_ptr = (FlatPtr*)registers.userspace_rsp;
-    FlatPtr smuggled_rax = *stack_ptr;
-
-    // pop the stored rax, rbp, return address, handler and signal code
-    stack_ptr += 5;
-
-    Thread::current()->m_signal_mask = *stack_ptr;
-    stack_ptr++;
-
-    // pop rdi, rsi, rbp, rsp, rbx, rdx, rcx, rax, r8, r9, r10, r11, r12, r13, r14 and r15
-    memcpy(&registers.rdi, stack_ptr, 16 * sizeof(FlatPtr));
-    stack_ptr += 16;
-
-    registers.rip = *stack_ptr;
-    stack_ptr++;
-
-    registers.rflags = (registers.rflags & ~safe_eflags_mask) | (*stack_ptr & safe_eflags_mask);
-    stack_ptr++;
-
-    registers.userspace_rsp = registers.rsp;
-    return smuggled_rax;
+#if ARCH(I386) || ARCH(X86_64)
+    // The FPU state is at the top here, pop it off and restore it.
+    // FIXME: The stack alignment is off by 8 bytes here, figure this out and remove this excessively aligned object.
+    alignas(alignof(FPUState) * 2) FPUState data {};
+    TRY(copy_from_user(&data, bit_cast<FPUState const*>(stack_ptr)));
+    Thread::current()->fpu_state() = data;
+    stack_ptr += sizeof(FPUState);
 #endif
+
+    stack_ptr += sizeof(siginfo); // We don't need this here.
+
+    auto ucontext = TRY(copy_typed_from_user<__ucontext>(stack_ptr));
+    stack_ptr += sizeof(__ucontext);
+
+    auto saved_ax = TRY(copy_typed_from_user<FlatPtr>(stack_ptr));
+
+    Thread::current()->m_signal_mask = ucontext.uc_sigmask;
+#if ARCH(X86_64)
+    auto sp = registers.rsp;
+#elif ARCH(I386)
+    auto sp = registers.esp;
+#endif
+
+    copy_ptrace_registers_into_kernel_registers(registers, static_cast<PtraceRegisters const&>(ucontext.uc_mcontext));
+
+#if ARCH(X86_64)
+    registers.set_userspace_sp(registers.rsp);
+    registers.rsp = sp;
+#elif ARCH(I386)
+    registers.set_userspace_sp(registers.esp);
+    registers.esp = sp;
+#endif
+
+    return saved_ax;
 }
 
 ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)

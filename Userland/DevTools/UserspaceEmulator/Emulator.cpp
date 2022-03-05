@@ -49,7 +49,7 @@ Emulator::Emulator(String const& executable_path, Vector<StringView> const& argu
     , m_arguments(arguments)
     , m_environment(environment)
     , m_mmu(*this)
-    , m_cpu(*this)
+    , m_cpu(make<SoftCPU>(*this))
     , m_editor(Line::Editor::construct())
 {
     m_malloc_tracer = make<MallocTracer>(*this);
@@ -101,53 +101,53 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
     auto stack_region = make<SimpleRegion>(stack_location, stack_size);
     stack_region->set_stack(true);
     m_mmu.add_region(move(stack_region));
-    m_cpu.set_esp(shadow_wrap_as_initialized<u32>(stack_location + stack_size));
+    m_cpu->set_esp(shadow_wrap_as_initialized<u32>(stack_location + stack_size));
 
     Vector<u32> argv_entries;
 
     for (auto const& argument : m_arguments) {
-        m_cpu.push_string(argument);
-        argv_entries.append(m_cpu.esp().value());
+        m_cpu->push_string(argument);
+        argv_entries.append(m_cpu->esp().value());
     }
 
     Vector<u32> env_entries;
 
     for (auto const& variable : m_environment) {
-        m_cpu.push_string(variable.characters());
-        env_entries.append(m_cpu.esp().value());
+        m_cpu->push_string(variable.characters());
+        env_entries.append(m_cpu->esp().value());
     }
 
     for (auto& auxv : aux_vector) {
         if (!auxv.optional_string.is_empty()) {
-            m_cpu.push_string(auxv.optional_string);
-            auxv.auxv.a_un.a_ptr = (void*)m_cpu.esp().value();
+            m_cpu->push_string(auxv.optional_string);
+            auxv.auxv.a_un.a_ptr = (void*)m_cpu->esp().value();
         }
     }
 
     for (ssize_t i = aux_vector.size() - 1; i >= 0; --i) {
         auto& value = aux_vector[i].auxv;
-        m_cpu.push_buffer((u8 const*)&value, sizeof(value));
+        m_cpu->push_buffer((u8 const*)&value, sizeof(value));
     }
 
-    m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // char** envp = { envv_entries..., nullptr }
+    m_cpu->push32(shadow_wrap_as_initialized<u32>(0)); // char** envp = { envv_entries..., nullptr }
     for (ssize_t i = env_entries.size() - 1; i >= 0; --i)
-        m_cpu.push32(shadow_wrap_as_initialized(env_entries[i]));
-    u32 envp = m_cpu.esp().value();
+        m_cpu->push32(shadow_wrap_as_initialized(env_entries[i]));
+    u32 envp = m_cpu->esp().value();
 
-    m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // char** argv = { argv_entries..., nullptr }
+    m_cpu->push32(shadow_wrap_as_initialized<u32>(0)); // char** argv = { argv_entries..., nullptr }
     for (ssize_t i = argv_entries.size() - 1; i >= 0; --i)
-        m_cpu.push32(shadow_wrap_as_initialized(argv_entries[i]));
-    u32 argv = m_cpu.esp().value();
+        m_cpu->push32(shadow_wrap_as_initialized(argv_entries[i]));
+    u32 argv = m_cpu->esp().value();
 
-    while ((m_cpu.esp().value() + 4) % 16 != 0)
-        m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // (alignment)
+    while ((m_cpu->esp().value() + 4) % 16 != 0)
+        m_cpu->push32(shadow_wrap_as_initialized<u32>(0)); // (alignment)
 
     u32 argc = argv_entries.size();
-    m_cpu.push32(shadow_wrap_as_initialized(envp));
-    m_cpu.push32(shadow_wrap_as_initialized(argv));
-    m_cpu.push32(shadow_wrap_as_initialized(argc));
+    m_cpu->push32(shadow_wrap_as_initialized(envp));
+    m_cpu->push32(shadow_wrap_as_initialized(argv));
+    m_cpu->push32(shadow_wrap_as_initialized(argc));
 
-    VERIFY(m_cpu.esp().value() % 16 == 0);
+    VERIFY(m_cpu->esp().value() % 16 == 0);
 }
 
 bool Emulator::load_elf()
@@ -207,7 +207,7 @@ bool Emulator::load_elf()
     });
 
     auto entry_point = interpreter_image.entry().offset(interpreter_load_offset).get();
-    m_cpu.set_eip(entry_point);
+    m_cpu->set_eip(entry_point);
 
     // executable_fd will be used by the loader
     int executable_fd = open(m_executable_path.characters(), O_RDONLY);
@@ -233,14 +233,14 @@ int Emulator::exec()
 
     while (!m_shutdown) {
         if (m_steps_til_pause) [[likely]] {
-            m_cpu.save_base_eip();
-            auto insn = X86::Instruction::from_stream(m_cpu, true, true);
+            m_cpu->save_base_eip();
+            auto insn = X86::Instruction::from_stream(*m_cpu, true, true);
             // Exec cycle
             if constexpr (trace) {
-                outln("{:p}  \033[33;1m{}\033[0m", m_cpu.base_eip(), insn.to_string(m_cpu.base_eip(), symbol_provider));
+                outln("{:p}  \033[33;1m{}\033[0m", m_cpu->base_eip(), insn.to_string(m_cpu->base_eip(), symbol_provider));
             }
 
-            (m_cpu.*insn.handler())(insn);
+            (m_cpu->*insn.handler())(insn);
 
             if (is_profiling()) {
                 if (instructions_until_next_profile_dump == 0) {
@@ -252,7 +252,7 @@ int Emulator::exec()
             }
 
             if constexpr (trace) {
-                m_cpu.dump();
+                m_cpu->dump();
             }
 
             if (m_pending_signals) [[unlikely]] {
@@ -272,31 +272,53 @@ int Emulator::exec()
     return m_exit_status;
 }
 
+void Emulator::send_signal(int signal)
+{
+    SignalInfo info {
+        // FIXME: Fill this in somehow
+        .signal_info = {
+            .si_signo = signal,
+            .si_code = SI_USER,
+            .si_errno = 0,
+            .si_pid = getpid(),
+            .si_uid = geteuid(),
+            .si_addr = 0,
+            .si_status = 0,
+            .si_band = 0,
+            .si_value = {
+                .sival_int = 0,
+            },
+        },
+        .context = {},
+    };
+    did_receive_signal(signal, info, true);
+}
+
 void Emulator::handle_repl()
 {
     // Console interface
     // FIXME: Previous Instruction**s**
     // FIXME: Function names (base, call, jump)
-    auto saved_eip = m_cpu.eip();
-    m_cpu.save_base_eip();
-    auto insn = X86::Instruction::from_stream(m_cpu, true, true);
+    auto saved_eip = m_cpu->eip();
+    m_cpu->save_base_eip();
+    auto insn = X86::Instruction::from_stream(*m_cpu, true, true);
     // FIXME: This does not respect inlining
     //        another way of getting the current function is at need
-    if (auto symbol = symbol_at(m_cpu.base_eip()); symbol.has_value()) {
+    if (auto symbol = symbol_at(m_cpu->base_eip()); symbol.has_value()) {
         outln("[{}]: {}", symbol->lib_name, symbol->symbol);
     }
 
-    outln("==> {}", create_instruction_line(m_cpu.base_eip(), insn));
+    outln("==> {}", create_instruction_line(m_cpu->base_eip(), insn));
     for (int i = 0; i < 7; ++i) {
-        m_cpu.save_base_eip();
-        insn = X86::Instruction::from_stream(m_cpu, true, true);
-        outln("    {}", create_instruction_line(m_cpu.base_eip(), insn));
+        m_cpu->save_base_eip();
+        insn = X86::Instruction::from_stream(*m_cpu, true, true);
+        outln("    {}", create_instruction_line(m_cpu->base_eip(), insn));
     }
     // We don't want to increase EIP here, we just want the instructions
-    m_cpu.set_eip(saved_eip);
+    m_cpu->set_eip(saved_eip);
 
     outln();
-    m_cpu.dump();
+    m_cpu->dump();
     outln();
 
     auto line_or_error = m_editor->get_line(">> ");
@@ -340,19 +362,19 @@ void Emulator::handle_repl()
     } else if (parts[0].is_one_of("r"sv, "ret"sv)) {
         m_run_til_return = true;
         // FIXME: This may be uninitialized
-        m_watched_addr = m_mmu.read32({ 0x23, m_cpu.ebp().value() + 4 }).value();
+        m_watched_addr = m_mmu.read32({ 0x23, m_cpu->ebp().value() + 4 }).value();
         m_steps_til_pause = -1;
     } else if (parts[0].is_one_of("q"sv, "quit"sv)) {
         m_shutdown = true;
     } else if (parts[0].is_one_of("sig"sv, "signal"sv)) {
         if (parts.size() == 1) {
-            did_receive_signal(SIGINT);
+            send_signal(SIGINT);
             return;
         }
         if (parts.size() == 2) {
             auto number = AK::StringUtils::convert_to_int<i32>(parts[1]);
             if (number.has_value()) {
-                did_receive_signal(number.value());
+                send_signal(*number);
                 return;
             }
         }
@@ -365,11 +387,11 @@ void Emulator::handle_repl()
 Vector<FlatPtr> Emulator::raw_backtrace()
 {
     Vector<FlatPtr, 128> backtrace;
-    backtrace.append(m_cpu.base_eip());
+    backtrace.append(m_cpu->base_eip());
 
     // FIXME: Maybe do something if the backtrace has uninitialized data in the frame chain.
 
-    u32 frame_ptr = m_cpu.ebp().value();
+    u32 frame_ptr = m_cpu->ebp().value();
     while (frame_ptr) {
         u32 ret_ptr = m_mmu.read32({ 0x23, frame_ptr + 4 }).value();
         if (!ret_ptr)
@@ -512,21 +534,22 @@ String Emulator::create_instruction_line(FlatPtr address, X86::Instruction const
     return String::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
 }
 
-static void emulator_signal_handler(int signum)
+static void emulator_signal_handler(int signum, siginfo_t* signal_info, void* context)
 {
-    Emulator::the().did_receive_signal(signum);
-}
-
-static void emulator_sigint_handler(int signum)
-{
-    Emulator::the().did_receive_sigint(signum);
+    Emulator::the().did_receive_signal(signum, { *signal_info, *reinterpret_cast<ucontext_t*>(context) });
 }
 
 void Emulator::register_signal_handlers()
 {
+    struct sigaction action {
+        .sa_sigaction = emulator_signal_handler,
+        .sa_mask = 0,
+        .sa_flags = SA_SIGINFO,
+    };
+    sigemptyset(&action.sa_mask);
+
     for (int signum = 0; signum < NSIG; ++signum)
-        signal(signum, emulator_signal_handler);
-    signal(SIGINT, emulator_sigint_handler);
+        sigaction(signum, &action, nullptr);
 }
 
 enum class DefaultSignalAction {
@@ -616,33 +639,66 @@ void Emulator::dispatch_one_pending_signal()
 
     reportln("\n=={}== Got signal {} ({}), handler at {:p}", getpid(), signum, strsignal(signum), handler.handler);
 
-    auto old_esp = m_cpu.esp();
+    auto old_esp = m_cpu->esp().value();
 
-    u32 stack_alignment = (m_cpu.esp().value() - 52) % 16;
-    m_cpu.set_esp(shadow_wrap_as_initialized(m_cpu.esp().value() - stack_alignment));
+    auto signal_info = m_signal_data[signum];
+    signal_info.context.uc_sigmask = m_signal_mask;
+    signal_info.context.uc_stack = {
+        .ss_sp = bit_cast<void*>(old_esp),
+        .ss_flags = 0,
+        .ss_size = 0,
+    };
+    signal_info.context.uc_mcontext = __mcontext {
+        .eax = m_cpu->eax().value(),
+        .ecx = m_cpu->ecx().value(),
+        .edx = m_cpu->edx().value(),
+        .ebx = m_cpu->ebx().value(),
+        .esp = m_cpu->esp().value(),
+        .ebp = m_cpu->ebp().value(),
+        .esi = m_cpu->esi().value(),
+        .edi = m_cpu->edi().value(),
+        .eip = m_cpu->eip(),
+        .eflags = m_cpu->eflags(),
+        .cs = m_cpu->cs(),
+        .ss = m_cpu->ss(),
+        .ds = m_cpu->ds(),
+        .es = m_cpu->es(),
+        // ???
+        .fs = 0,
+        .gs = 0,
+    };
 
-    m_cpu.push32(shadow_wrap_as_initialized(m_cpu.eflags()));
-    m_cpu.push32(shadow_wrap_as_initialized(m_cpu.eip()));
-    m_cpu.push32(m_cpu.eax());
-    m_cpu.push32(m_cpu.ecx());
-    m_cpu.push32(m_cpu.edx());
-    m_cpu.push32(m_cpu.ebx());
-    m_cpu.push32(old_esp);
-    m_cpu.push32(m_cpu.ebp());
-    m_cpu.push32(m_cpu.esi());
-    m_cpu.push32(m_cpu.edi());
+    // Align the stack to 16 bytes.
+    // Note that we push some elements on to the stack before the return address,
+    // so we need to account for this here.
+    constexpr static FlatPtr elements_pushed_on_stack_before_handler_address = 1; // one slot for a saved register
+    FlatPtr const extra_bytes_pushed_on_stack_before_handler_address = sizeof(ucontext_t) + sizeof(siginfo_t);
+    FlatPtr stack_alignment = (old_esp - elements_pushed_on_stack_before_handler_address * sizeof(FlatPtr) + extra_bytes_pushed_on_stack_before_handler_address) % 16;
+    // Also note that we have to skip the thread red-zone (if needed), so do that here.
+    old_esp -= stack_alignment;
 
-    // FIXME: Push old signal mask here.
-    m_cpu.push32(shadow_wrap_as_initialized(0u));
+    m_cpu->set_esp(shadow_wrap_with_taint_from(old_esp, m_cpu->esp()));
 
-    m_cpu.push32(shadow_wrap_as_initialized((u32)signum));
-    m_cpu.push32(shadow_wrap_as_initialized(handler.handler));
+    m_cpu->push32(shadow_wrap_as_initialized(0u)); // syscall return value slot
 
-    VERIFY((m_cpu.esp().value() % 16) == 0);
+    m_cpu->push_buffer(bit_cast<u8 const*>(&signal_info.context), sizeof(ucontext_t));
+    auto pointer_to_ucontext = m_cpu->esp().value();
 
-    m_cpu.push32(shadow_wrap_as_initialized(0u));
+    m_cpu->push_buffer(bit_cast<u8 const*>(&signal_info.signal_info), sizeof(siginfo_t));
+    auto pointer_to_signal_info = m_cpu->esp().value();
 
-    m_cpu.set_eip(m_signal_trampoline);
+    // FPU state, leave a 512-byte gap. FIXME: Fill this in.
+    m_cpu->set_esp({ m_cpu->esp().value() - 512, m_cpu->esp().shadow() });
+
+    // Leave one empty slot to align the stack for a handler call.
+    m_cpu->push32(shadow_wrap_as_initialized(0u));
+    m_cpu->push32(shadow_wrap_as_initialized(pointer_to_ucontext));
+    m_cpu->push32(shadow_wrap_as_initialized(pointer_to_signal_info));
+    m_cpu->push32(shadow_wrap_as_initialized(static_cast<u32>(signum)));
+
+    m_cpu->push32(shadow_wrap_as_initialized<u32>(handler.handler));
+
+    m_cpu->set_eip(m_signal_trampoline);
 }
 
 // Make sure the compiler doesn't "optimize away" this function:
@@ -654,21 +710,34 @@ NEVER_INLINE void signal_trampoline_dummy()
     // blocking syscall, that syscall may return some special error code in eax;
     // This error code would likely be overwritten by the signal handler, so it's
     // necessary to preserve it here.
+    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + 512 + 4 * sizeof(FlatPtr);
     asm(
         ".intel_syntax noprefix\n"
+        ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        "push ebp\n"
-        "mov ebp, esp\n"
-        "push eax\n"          // we have to store eax 'cause it might be the return value from a syscall
-        "sub esp, 4\n"        // align the stack to 16 bytes
-        "mov eax, [ebp+12]\n" // push the signal code
-        "push eax\n"
-        "call [ebp+8]\n" // call the signal handler
-        "add esp, 8\n"
+        // stack state: 0, ucontext, signal_info, (alignment = 16), fpu_state (alignment = 16), 0, ucontext*, siginfo*, signal, (alignment = 16), handler
+
+        // Pop the handler into ecx
+        "pop ecx\n" // save handler
+        // we have to save eax 'cause it might be the return value from a syscall
+        "mov [esp+%P2], eax\n"
+        // Note that the stack is currently aligned to 16 bytes as we popped the extra entries above.
+        // and it's already setup to call the handler with the expected values on the stack.
+        // call the signal handler
+        "call ecx\n"
+        // drop the 4 arguments
+        "add esp, 16\n"
+        // Current stack state is just saved_eax, ucontext, signal_info, fpu_state?.
+        // syscall SC_sigreturn
         "mov eax, %P0\n"
-        "int 0x82\n" // sigreturn syscall
+        "int 0x82\n"
+        ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
-        ".att_syntax" ::"i"(Syscall::SC_sigreturn));
+        ".att_syntax"
+        :
+        : "i"(Syscall::SC_sigreturn),
+        "i"(offset_to_first_register_slot),
+        "i"(offset_to_first_register_slot - sizeof(FlatPtr)));
 }
 
 extern "C" void asm_signal_trampoline(void);
@@ -705,6 +774,18 @@ void Emulator::dump_regions() const
             region.is_text() ? "(text) " : "");
         return IterationDecision::Continue;
     });
+}
+
+bool Emulator::is_in_libsystem() const
+{
+    return m_cpu->base_eip() >= m_libsystem_start && m_cpu->base_eip() < m_libsystem_end;
+}
+
+bool Emulator::is_in_loader_code() const
+{
+    if (!m_loader_text_base.has_value() || !m_loader_text_size.has_value())
+        return false;
+    return (m_cpu->base_eip() >= m_loader_text_base.value() && m_cpu->base_eip() < m_loader_text_base.value() + m_loader_text_size.value());
 }
 
 }

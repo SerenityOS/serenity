@@ -84,6 +84,7 @@ public:
     virtual bool is_editable() const;
 
     virtual bool is_html_html_element() const { return false; }
+    virtual bool is_html_anchor_element() const { return false; }
     virtual bool is_html_template_element() const { return false; }
     virtual bool is_browsing_context_container() const { return false; }
 

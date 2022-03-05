@@ -877,11 +877,22 @@ DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element(String const& 
     return DOM::create_element(*this, tag_name, Namespace::HTML);
 }
 
+// https://dom.spec.whatwg.org/#dom-document-createelementns
 // https://dom.spec.whatwg.org/#internal-createelementns-steps
 // FIXME: This only implements step 4 of the algorithm and does not take in options.
-DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element_ns(const String& namespace_, const String& qualified_name)
+DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element_ns(String const& namespace_, String const& qualified_name)
 {
-    return DOM::create_element(*this, qualified_name, namespace_);
+    // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
+    auto result = validate_and_extract(namespace_, qualified_name);
+    if (result.is_exception())
+        return result.exception();
+    auto qname = result.release_value();
+
+    // FIXME: 2. Let is be null.
+    // FIXME: 3. If options is a dictionary and options["is"] exists, then set is to it.
+
+    // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
+    return DOM::create_element(*this, qname.local_name(), qname.namespace_(), qname.prefix());
 }
 
 NonnullRefPtr<DocumentFragment> Document::create_document_fragment()
@@ -1070,13 +1081,17 @@ void Document::set_focused_element(Element* element)
     if (m_focused_element == element)
         return;
 
-    if (m_focused_element)
+    if (m_focused_element) {
         m_focused_element->did_lose_focus();
+        m_focused_element->set_needs_style_update(true);
+    }
 
     m_focused_element = element;
 
-    if (m_focused_element)
+    if (m_focused_element) {
         m_focused_element->did_receive_focus();
+        m_focused_element->set_needs_style_update(true);
+    }
 
     if (m_layout_root)
         m_layout_root->set_needs_display();
@@ -1406,7 +1421,7 @@ ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String
 
     Optional<size_t> colon_offset;
 
-    bool in_name = false;
+    bool at_start_of_name = true;
 
     for (auto it = utf8view.begin(); it != utf8view.end(); ++it) {
         auto code_point = *it;
@@ -1414,12 +1429,13 @@ ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String
             if (colon_offset.has_value())
                 return InvalidCharacterError::create("More than one colon (:) in qualified name.");
             colon_offset = utf8view.byte_offset_of(it);
+            at_start_of_name = true;
             continue;
         }
-        if (in_name) {
+        if (at_start_of_name) {
             if (!is_valid_name_start_character(code_point))
                 return InvalidCharacterError::create("Invalid start of qualified name.");
-            in_name = false;
+            at_start_of_name = false;
             continue;
         }
         if (!is_valid_name_character(code_point))

@@ -27,8 +27,7 @@ public:
         return adopt_own(*new DOMImplementation(document));
     }
 
-    // FIXME: Add optional DocumentType once supported by IDL
-    ExceptionOr<NonnullRefPtr<Document>> create_document(const String&, const String&) const;
+    ExceptionOr<NonnullRefPtr<Document>> create_document(String const&, String const&, RefPtr<DocumentType>) const;
     NonnullRefPtr<Document> create_html_document(const String& title) const;
     ExceptionOr<NonnullRefPtr<DocumentType>> create_document_type(String const& qualified_name, String const& public_id, String const& system_id);
 

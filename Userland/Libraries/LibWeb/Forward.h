@@ -299,6 +299,7 @@ class ButtonBox;
 class CheckBox;
 class FlexFormattingContext;
 class FormattingContext;
+struct FormattingState;
 class InitialContainingBlock;
 class InlineFormattingContext;
 class Label;
@@ -524,6 +525,7 @@ class XMLHttpRequestConstructor;
 class XMLHttpRequestEventTargetWrapper;
 class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
+enum class CanPlayTypeResult;
 enum class DOMParserSupportedType;
 enum class XMLHttpRequestResponseType;
 }

@@ -24,6 +24,8 @@ public:
 
     virtual bool is_focusable() const override { return has_attribute(HTML::AttributeNames::href); }
 
+    virtual bool is_html_anchor_element() const override { return true; }
+
 private:
     // ^DOM::Element
     virtual void parse_attribute(FlyString const& name, String const& value) override;
@@ -34,4 +36,9 @@ private:
     virtual void set_hyperlink_element_utils_href(String) override;
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLAnchorElement>() const { return is_html_anchor_element(); }
 }

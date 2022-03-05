@@ -15,6 +15,7 @@ class VisualizationWidget : public GUI::Frame {
 public:
     virtual void set_buffer(RefPtr<Audio::Buffer> buffer) = 0;
     virtual void set_samplerate(int) { }
+    virtual void start_new_file(StringView) { }
 
 protected:
     VisualizationWidget() = default;

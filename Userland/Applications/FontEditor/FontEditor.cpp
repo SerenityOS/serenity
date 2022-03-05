@@ -43,6 +43,17 @@
 #include <LibGfx/TextDirection.h>
 #include <LibUnicode/CharacterTypes.h>
 
+static constexpr Array pangrams = {
+    "quick fox jumps nightly above wizard",
+    "five quacking zephyrs jolt my wax bed",
+    "pack my box with five dozen liquor jugs",
+    "quick brown fox jumps over the lazy dog",
+    "waxy and quivering jocks fumble the pizza",
+    "~#:[@_1%]*{$2.3}/4^(5'6\")-&|7+8!=<9,0\\>?;",
+    "byxfjärmat föl gick på duvshowen",
+    "         "
+};
+
 static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
 {
     auto window = GUI::Window::construct(&editor);
@@ -72,17 +83,6 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     auto& textbox_button_container = main_widget.add<GUI::Widget>();
     textbox_button_container.set_layout<GUI::HorizontalBoxLayout>();
     textbox_button_container.set_fixed_height(22);
-
-    constexpr Array pangrams = {
-        "quick fox jumps nightly above wizard",
-        "five quacking zephyrs jolt my wax bed",
-        "pack my box with five dozen liquor jugs",
-        "quick brown fox jumps over the lazy dog",
-        "waxy and quivering jocks fumble the pizza",
-        "~#:[@_1%]*{$2.3}/4^(5'6\")-&|7+8!=<9,0\\>?;",
-        "byxfjärmat föl gick på duvshowen",
-        "         "
-    };
 
     auto& preview_textbox = textbox_button_container.add<GUI::TextBox>();
     preview_textbox.set_text(pangrams[0]);
@@ -454,7 +454,8 @@ FontEditorWidget::FontEditorWidget()
     m_filter_model = MUST(GUI::FilteringProxyModel::create(*m_unicode_block_model));
     m_filter_model->set_filter_term("");
 
-    m_unicode_block_listview->on_activation = [this, unicode_blocks](auto& index) {
+    m_unicode_block_listview->on_selection_change = [this, unicode_blocks] {
+        auto index = m_unicode_block_listview->selection().first();
         auto mapped_index = m_filter_model->map(index);
         if (mapped_index.row() > 0)
             m_range = unicode_blocks[mapped_index.row() - 1].code_point_range;

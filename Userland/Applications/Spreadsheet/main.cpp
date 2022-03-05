@@ -54,13 +54,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-spreadsheet");
     auto window = GUI::Window::construct();
-    window->set_title("Spreadsheet");
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename == nullptr);
 
     spreadsheet_widget.initialize_menubar(*window);
+    spreadsheet_widget.update_window_title();
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (spreadsheet_widget.request_close())

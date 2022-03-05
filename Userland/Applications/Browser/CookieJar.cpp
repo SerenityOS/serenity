@@ -75,6 +75,17 @@ void CookieJar::dump_cookies() const
     dbgln("{}", builder.build());
 }
 
+Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies() const
+{
+    Vector<Web::Cookie::Cookie> cookies;
+    cookies.ensure_capacity(m_cookies.size());
+
+    for (auto const& cookie : m_cookies)
+        cookies.unchecked_append(cookie.value);
+
+    return cookies;
+}
+
 Optional<String> CookieJar::canonicalize_domain(const URL& url)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.2

@@ -1,7 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=vttest
-version=20210210
+version=20220215
 useconfigure=true
-use_fresh_config_sub=true
-files="https://invisible-island.net/datafiles/release/vttest.tar.gz vttest.tar.gz 0f98a2e305982915f1520984c3e8698e3acd508ee210711528c89f5a7ea7f046"
+files="https://invisible-mirror.net/archives/vttest/vttest-$version.tgz vttest-$version.tar.gz 4a65998c5e12cf08ced2cfce119adb44fa842ac1495d0f150f21c8a6785915a1"
 auth_type=sha256

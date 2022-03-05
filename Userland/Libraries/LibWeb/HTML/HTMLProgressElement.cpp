@@ -26,7 +26,11 @@ RefPtr<Layout::Node> HTMLProgressElement::create_layout_node(NonnullRefPtr<CSS::
 
 double HTMLProgressElement::value() const
 {
-    auto parsed_value = strtod(attribute(HTML::AttributeNames::value).characters(), nullptr);
+    auto value_characters = attribute(HTML::AttributeNames::value).characters();
+    if (value_characters == nullptr)
+        return 0;
+
+    auto parsed_value = strtod(value_characters, nullptr);
     if (!isfinite(parsed_value) || parsed_value < 0)
         return 0;
 
@@ -46,7 +50,11 @@ void HTMLProgressElement::set_value(double value)
 
 double HTMLProgressElement::max() const
 {
-    auto parsed_value = strtod(attribute(HTML::AttributeNames::max).characters(), nullptr);
+    auto max_characters = attribute(HTML::AttributeNames::max).characters();
+    if (max_characters == nullptr)
+        return 1;
+
+    auto parsed_value = strtod(max_characters, nullptr);
     if (!isfinite(parsed_value) || parsed_value <= 0)
         return 1;
 

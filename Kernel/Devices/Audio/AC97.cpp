@@ -78,10 +78,20 @@ UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize()
     dbgln_if(AC97_DEBUG, "AC97 @ {}: mixer base: {:#04x}", pci_address(), m_io_mixer_base.get());
     dbgln_if(AC97_DEBUG, "AC97 @ {}: bus base: {:#04x}", pci_address(), m_io_bus_base.get());
 
-    enable_pin_based_interrupts();
-    PCI::enable_bus_mastering(pci_address());
+    // Read out AC'97 codec revision and vendor
+    auto extended_audio_id = m_io_mixer_base.offset(NativeAudioMixerRegister::ExtendedAudioID).in<u16>();
+    m_codec_revision = static_cast<AC97Revision>(((extended_audio_id & ExtendedAudioMask::Revision) >> 10) & 0b11);
+    dbgln_if(AC97_DEBUG, "AC97 @ {}: codec revision {:#02b}", pci_address(), to_underlying(m_codec_revision));
+    if (m_codec_revision == AC97Revision::Reserved)
+        return ENOTSUP;
+
+    // Report vendor / device ID
+    u32 vendor_id = m_io_mixer_base.offset(NativeAudioMixerRegister::VendorID1).in<u16>() << 16 | m_io_mixer_base.offset(NativeAudioMixerRegister::VendorID2).in<u16>();
+    dbgln("AC97 @ {}: Vendor ID: {:#8x}", pci_address(), vendor_id);
 
     // Bus cold reset, enable interrupts
+    enable_pin_based_interrupts();
+    PCI::enable_bus_mastering(pci_address());
     auto control = m_io_bus_base.offset(NativeAudioBusRegister::GlobalControl).in<u32>();
     control |= GlobalControlFlag::GPIInterruptEnable;
     control |= GlobalControlFlag::AC97ColdReset;
@@ -89,13 +99,6 @@ UNMAP_AFTER_INIT ErrorOr<void> AC97::initialize()
 
     // Reset mixer
     m_io_mixer_base.offset(NativeAudioMixerRegister::Reset).out<u16>(1);
-
-    // Read out AC'97 codec revision
-    auto extended_audio_id = m_io_mixer_base.offset(NativeAudioMixerRegister::ExtendedAudioID).in<u16>();
-    m_codec_revision = static_cast<AC97Revision>(((extended_audio_id & ExtendedAudioMask::Revision) >> 10) & 0b11);
-    dbgln_if(AC97_DEBUG, "AC97 @ {}: codec revision {:#02b}", pci_address(), to_underlying(m_codec_revision));
-    if (m_codec_revision == AC97Revision::Reserved)
-        return ENOTSUP;
 
     // Enable variable and double rate PCM audio if supported
     auto extended_audio_status_control_register = m_io_mixer_base.offset(NativeAudioMixerRegister::ExtendedAudioStatusControl);

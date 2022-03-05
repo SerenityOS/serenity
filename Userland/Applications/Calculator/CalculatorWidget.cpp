@@ -10,6 +10,7 @@
 #include "CalculatorWidget.h"
 #include "KeypadValue.h"
 #include <Applications/Calculator/CalculatorGML.h>
+#include <LibCore/Event.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
@@ -105,13 +106,18 @@ CalculatorWidget::CalculatorWidget()
     };
 }
 
+void CalculatorWidget::perform_operation(Calculator::Operation operation)
+{
+    KeypadValue argument = m_keypad.value();
+    KeypadValue res = m_calculator.begin_operation(operation, argument);
+    m_keypad.set_value(res);
+    update_display();
+}
+
 void CalculatorWidget::add_operation_button(GUI::Button& button, Calculator::Operation operation)
 {
     button.on_click = [this, operation](auto) {
-        KeypadValue argument = m_keypad.value();
-        KeypadValue res = m_calculator.begin_operation(operation, argument);
-        m_keypad.set_value(res);
-        update_display();
+        perform_operation(operation);
     };
 }
 
@@ -134,6 +140,20 @@ void CalculatorWidget::set_entry(KeypadValue value)
     update_display();
 }
 
+void CalculatorWidget::mimic_pressed_button(RefPtr<GUI::Button> button)
+{
+    constexpr int TIMER_MS = 80;
+
+    if (!m_mimic_pressed_button.is_null())
+        m_mimic_pressed_button->set_mimic_pressed(false);
+
+    button->set_mimic_pressed(true);
+    m_mimic_pressed_button = button;
+
+    stop_timer();
+    start_timer(TIMER_MS, Core::TimerShouldFireWhenNotVisible::Yes);
+}
+
 void CalculatorWidget::update_display()
 {
     m_entry->set_text(m_keypad.to_string());
@@ -145,39 +165,58 @@ void CalculatorWidget::update_display()
 
 void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
 {
-    //Clear button selection when we are typing
-    m_equals_button->set_focus(true);
-    m_equals_button->set_focus(false);
-
     if (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Equal) {
         m_keypad.set_value(m_calculator.finish_operation(m_keypad.value()));
+        mimic_pressed_button(m_equals_button);
     } else if (event.code_point() >= '0' && event.code_point() <= '9') {
-        m_keypad.type_digit(event.code_point() - '0');
+        u32 digit = event.code_point() - '0';
+        m_keypad.type_digit(digit);
+        mimic_pressed_button(m_digit_button[digit]);
     } else if (event.code_point() == '.') {
         m_keypad.type_decimal_point();
-    } else if (event.key() == KeyCode::Key_Escape) {
+        mimic_pressed_button(m_decimal_point_button);
+    } else if (event.key() == KeyCode::Key_Escape || event.key() == KeyCode::Key_Delete) {
         m_keypad.set_value(0.0);
         m_calculator.clear_operation();
+        mimic_pressed_button(m_clear_button);
     } else if (event.key() == KeyCode::Key_Backspace) {
         m_keypad.type_backspace();
+        mimic_pressed_button(m_backspace_button);
+    } else if (event.key() == KeyCode::Key_Backslash) {
+        perform_operation(Calculator::Operation::ToggleSign);
+        mimic_pressed_button(m_sign_button);
+    } else if (event.key() == KeyCode::Key_S) {
+        perform_operation(Calculator::Operation::Sqrt);
+        mimic_pressed_button(m_sqrt_button);
+    } else if (event.key() == KeyCode::Key_Percent) {
+        perform_operation(Calculator::Operation::Percent);
+        mimic_pressed_button(m_percent_button);
+    } else if (event.key() == KeyCode::Key_I) {
+        perform_operation(Calculator::Operation::Inverse);
+        mimic_pressed_button(m_inverse_button);
     } else {
         Calculator::Operation operation;
 
         switch (event.code_point()) {
         case '+':
             operation = Calculator::Operation::Add;
+            mimic_pressed_button(m_add_button);
             break;
         case '-':
             operation = Calculator::Operation::Subtract;
+            mimic_pressed_button(m_subtract_button);
             break;
         case '*':
             operation = Calculator::Operation::Multiply;
+            mimic_pressed_button(m_multiply_button);
             break;
         case '/':
             operation = Calculator::Operation::Divide;
+            mimic_pressed_button(m_divide_button);
             break;
         case '%':
             operation = Calculator::Operation::Percent;
+            mimic_pressed_button(m_percent_button);
             break;
         default:
             return;
@@ -187,4 +226,10 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
     }
 
     update_display();
+}
+
+void CalculatorWidget::timer_event(Core::TimerEvent&)
+{
+    if (!m_mimic_pressed_button.is_null())
+        m_mimic_pressed_button->set_mimic_pressed(false);
 }

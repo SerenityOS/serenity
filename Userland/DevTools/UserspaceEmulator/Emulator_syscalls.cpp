@@ -8,6 +8,7 @@
 #include "Emulator.h"
 #include "MmapRegion.h"
 #include "SimpleRegion.h"
+#include "SoftCPU.h"
 #include <AK/Debug.h>
 #include <AK/FileStream.h>
 #include <AK/Format.h>
@@ -485,7 +486,7 @@ int Emulator::virt$setsockopt(FlatPtr params_addr)
 
 int Emulator::virt$get_stack_bounds(FlatPtr base, FlatPtr size)
 {
-    auto* region = mmu().find_region({ m_cpu.ss(), m_cpu.esp().value() });
+    auto* region = mmu().find_region({ m_cpu->ss(), m_cpu->esp().value() });
     FlatPtr b = region->base();
     size_t s = region->size();
     mmu().copy_to_vm(base, &b, sizeof(b));
@@ -940,7 +941,7 @@ FlatPtr Emulator::virt$mremap(FlatPtr params_addr)
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
     // FIXME: Support regions that have been split in the past (e.g. due to mprotect or munmap).
-    if (auto* region = mmu().find_region({ m_cpu.ds(), (FlatPtr)params.old_address })) {
+    if (auto* region = mmu().find_region({ m_cpu->ds(), (FlatPtr)params.old_address })) {
         if (!is<MmapRegion>(*region))
             return -EINVAL;
         VERIFY(region->size() == params.old_size);
@@ -1398,33 +1399,44 @@ int Emulator::virt$sigprocmask(int how, FlatPtr set, FlatPtr old_set)
 
 int Emulator::virt$sigreturn()
 {
-    u32 stack_ptr = m_cpu.esp().value();
-    auto local_pop = [&]() -> ValueWithShadow<u32> {
-        auto value = m_cpu.read_memory32({ m_cpu.ss(), stack_ptr });
-        stack_ptr += sizeof(u32);
+    u32 stack_ptr = m_cpu->esp().value();
+    auto local_pop = [&]<typename T>() {
+        auto value = m_cpu->read_memory<T>({ m_cpu->ss(), stack_ptr });
+        stack_ptr += sizeof(T);
         return value;
     };
 
-    auto smuggled_eax = local_pop();
+    // State from signal trampoline (note that we're assuming i386 here):
+    // saved_ax, ucontext, signal_info, fpu_state.
 
-    stack_ptr += 4 * sizeof(u32);
+    // Drop the FPU state
+    // FIXME: Read and restore from this.
+    stack_ptr += 512;
 
-    m_signal_mask = local_pop().value();
+    // Drop the signal info
+    stack_ptr += sizeof(siginfo_t);
 
-    m_cpu.set_edi(local_pop());
-    m_cpu.set_esi(local_pop());
-    m_cpu.set_ebp(local_pop());
-    m_cpu.set_esp(local_pop());
-    m_cpu.set_ebx(local_pop());
-    m_cpu.set_edx(local_pop());
-    m_cpu.set_ecx(local_pop());
-    m_cpu.set_eax(local_pop());
+    auto ucontext = local_pop.operator()<ucontext_t>();
 
-    m_cpu.set_eip(local_pop().value());
-    m_cpu.set_eflags(local_pop());
+    auto eax = local_pop.operator()<u32>();
 
-    // FIXME: We're losing shadow bits here.
-    return smuggled_eax.value();
+    m_signal_mask = ucontext.value().uc_sigmask;
+
+    auto mcontext_slice = ucontext.slice<&ucontext_t::uc_mcontext>();
+
+    m_cpu->set_edi(mcontext_slice.slice<&__mcontext::edi>());
+    m_cpu->set_esi(mcontext_slice.slice<&__mcontext::esi>());
+    m_cpu->set_ebp(mcontext_slice.slice<&__mcontext::ebp>());
+    m_cpu->set_esp(mcontext_slice.slice<&__mcontext::esp>());
+    m_cpu->set_ebx(mcontext_slice.slice<&__mcontext::ebx>());
+    m_cpu->set_edx(mcontext_slice.slice<&__mcontext::edx>());
+    m_cpu->set_ecx(mcontext_slice.slice<&__mcontext::ecx>());
+    m_cpu->set_eax(mcontext_slice.slice<&__mcontext::eax>());
+    m_cpu->set_eip(mcontext_slice.value().eip);
+    m_cpu->set_eflags(mcontext_slice.slice<&__mcontext::eflags>());
+
+    // FIXME: We're dropping the shadow bits here.
+    return eax.value();
 }
 
 int Emulator::virt$getpgrp()

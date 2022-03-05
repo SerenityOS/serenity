@@ -95,7 +95,7 @@ public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_wrapper(BitmapFormat, IntSize const&, int intrinsic_scale, size_t pitch, void*);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_load_from_file(String const& path, int scale_factor = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_load_from_fd_and_close(int fd, String const& path);
-    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize const&, int intrinsic_scale, Vector<RGBA32> const& palette);
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize const&, int intrinsic_scale, Vector<ARGB32> const& palette);
     static ErrorOr<NonnullRefPtr<Bitmap>> try_create_from_serialized_byte_buffer(ByteBuffer&&);
 
     static bool is_path_a_supported_image_format(StringView path)
@@ -125,8 +125,8 @@ public:
 
     [[nodiscard]] u8* scanline_u8(int physical_y);
     [[nodiscard]] u8 const* scanline_u8(int physical_y) const;
-    [[nodiscard]] RGBA32* scanline(int physical_y);
-    [[nodiscard]] RGBA32 const* scanline(int physical_y) const;
+    [[nodiscard]] ARGB32* scanline(int physical_y);
+    [[nodiscard]] ARGB32 const* scanline(int physical_y) const;
 
     [[nodiscard]] IntRect rect() const { return { {}, m_size }; }
     [[nodiscard]] IntSize size() const { return m_size; }
@@ -167,7 +167,7 @@ public:
         }
     }
 
-    [[nodiscard]] Vector<RGBA32> palette_to_vector() const;
+    [[nodiscard]] Vector<ARGB32> palette_to_vector() const;
 
     [[nodiscard]] static unsigned bpp_for_format(BitmapFormat format)
     {
@@ -207,7 +207,7 @@ public:
     [[nodiscard]] static constexpr size_t size_in_bytes(size_t pitch, int physical_height) { return pitch * physical_height; }
     [[nodiscard]] size_t size_in_bytes() const { return size_in_bytes(m_pitch, physical_height()); }
 
-    [[nodiscard]] Color palette_color(u8 index) const { return Color::from_rgba(m_palette[index]); }
+    [[nodiscard]] Color palette_color(u8 index) const { return Color::from_argb(m_palette[index]); }
     void set_palette_color(u8 index, Color color) { m_palette[index] = color.value(); }
 
     template<StorageFormat>
@@ -239,16 +239,16 @@ public:
 private:
     Bitmap(BitmapFormat, IntSize const&, int, BackingStore const&);
     Bitmap(BitmapFormat, IntSize const&, int, size_t pitch, void*);
-    Bitmap(BitmapFormat, Core::AnonymousBuffer, IntSize const&, int, Vector<RGBA32> const& palette);
+    Bitmap(BitmapFormat, Core::AnonymousBuffer, IntSize const&, int, Vector<ARGB32> const& palette);
 
     static ErrorOr<BackingStore> allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor);
 
-    void allocate_palette_from_format(BitmapFormat, Vector<RGBA32> const& source_palette);
+    void allocate_palette_from_format(BitmapFormat, Vector<ARGB32> const& source_palette);
 
     IntSize m_size;
     int m_scale;
     void* m_data { nullptr };
-    RGBA32* m_palette { nullptr };
+    ARGB32* m_palette { nullptr };
     size_t m_pitch { 0 };
     BitmapFormat m_format { BitmapFormat::Invalid };
     bool m_needs_munmap { false };
@@ -268,14 +268,14 @@ inline u8 const* Bitmap::scanline_u8(int y) const
     return reinterpret_cast<u8 const*>(m_data) + (y * m_pitch);
 }
 
-inline RGBA32* Bitmap::scanline(int y)
+inline ARGB32* Bitmap::scanline(int y)
 {
-    return reinterpret_cast<RGBA32*>(scanline_u8(y));
+    return reinterpret_cast<ARGB32*>(scanline_u8(y));
 }
 
-inline RGBA32 const* Bitmap::scanline(int y) const
+inline ARGB32 const* Bitmap::scanline(int y) const
 {
-    return reinterpret_cast<RGBA32 const*>(scanline_u8(y));
+    return reinterpret_cast<ARGB32 const*>(scanline_u8(y));
 }
 
 template<>
@@ -289,7 +289,7 @@ template<>
 inline Color Bitmap::get_pixel<StorageFormat::BGRA8888>(int x, int y) const
 {
     VERIFY(x >= 0 && x < physical_width());
-    return Color::from_rgba(scanline(y)[x]);
+    return Color::from_argb(scanline(y)[x]);
 }
 
 template<>
@@ -325,6 +325,15 @@ inline void Bitmap::set_pixel<StorageFormat::BGRA8888>(int x, int y, Color color
     VERIFY(x >= 0 && x < physical_width());
     scanline(y)[x] = color.value(); // drop alpha
 }
+template<>
+inline void Bitmap::set_pixel<StorageFormat::RGBA8888>(int x, int y, Color color)
+{
+    VERIFY(x >= 0 && x < physical_width());
+    // FIXME: There's a lot of inaccurately named functions in the Color class right now (RGBA vs BGRA),
+    //        clear those up and then make this more convenient.
+    auto rgba = (color.alpha() << 24) | (color.blue() << 16) | (color.green() << 8) | color.red();
+    scanline(y)[x] = rgba;
+}
 inline void Bitmap::set_pixel(int x, int y, Color color)
 {
     switch (determine_storage_format(m_format)) {
@@ -333,6 +342,9 @@ inline void Bitmap::set_pixel(int x, int y, Color color)
         break;
     case StorageFormat::BGRA8888:
         set_pixel<StorageFormat::BGRA8888>(x, y, color);
+        break;
+    case StorageFormat::RGBA8888:
+        set_pixel<StorageFormat::RGBA8888>(x, y, color);
         break;
     case StorageFormat::Indexed8:
         VERIFY_NOT_REACHED();

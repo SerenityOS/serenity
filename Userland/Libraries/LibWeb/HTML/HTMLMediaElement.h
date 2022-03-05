@@ -16,6 +16,8 @@ public:
 
     HTMLMediaElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLMediaElement() override;
+
+    Bindings::CanPlayTypeResult can_play_type(String const& type) const;
 };
 
 }

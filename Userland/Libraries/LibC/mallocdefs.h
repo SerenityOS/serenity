@@ -46,7 +46,7 @@ struct BigAllocationBlock : public CommonHeader {
         m_magic = MAGIC_BIGALLOC_HEADER;
         m_size = size;
     }
-    unsigned char* m_slot[0];
+    alignas(16) unsigned char* m_slot[0];
 };
 
 struct FreelistEntry {
@@ -69,7 +69,7 @@ struct ChunkedBlock : public CommonHeader {
     size_t m_next_lazy_freelist_index { 0 };
     FreelistEntry* m_freelist { nullptr };
     size_t m_free_chunks { 0 };
-    [[gnu::aligned(16)]] unsigned char m_slot[0];
+    alignas(16) unsigned char m_slot[0];
 
     void* chunk(size_t index)
     {

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Gunnar Beutner <gunnar@beutner.name>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,10 +12,20 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 
-static Array<StringView, 3> messages = {
+static Array<StringView, 3> default_messages = {
     "It looks like you're trying to debug\na program. Would you like some help?"sv,
     "It looks like you're trying to shave\na yak. Would you like some help?"sv,
     "Well Hello Friend!"sv,
+};
+static Array<StringView, 3> pixel_paint_messages = {
+    "It looks like you're creating art.\nWould you like some help?"sv,
+    "It looks like you're making a meme\nfor Discord. \U0010CD65"sv,
+    "It looks like you're using the filter\ngallery. Would you like a suggestion?"sv,
+};
+static Array<StringView, 3> inspector_messages = {
+    "It looks like you're trying to kill\na program. Would you like some help?"sv,
+    "It looks like you're profiling a\nprogram. Would you like some help?"sv,
+    "It looks like you're interested in\nCPU usage. Would you like some help?"sv,
 };
 
 void SpeechBubble::paint_event(GUI::PaintEvent&)
@@ -37,7 +48,8 @@ void SpeechBubble::paint_event(GUI::PaintEvent&)
     painter.draw_line(connector_top_left, Gfx::IntPoint { connector_bottom.x() - 1, connector_bottom.y() }, palette().active_window_border1());
     painter.draw_line(connector_top_right, connector_bottom, palette().active_window_border1());
 
-    auto message = messages[get_random<u8>() % messages.size()];
+    auto& message_list = m_cat_dog->main_state() == CatDog::MainState::Artist ? pixel_paint_messages : (m_cat_dog->main_state() == CatDog::MainState::Inspector ? inspector_messages : default_messages);
+    auto message = message_list[get_random<u8>() % message_list.size()];
     painter.draw_text(text_area, message, Gfx::TextAlignment::Center);
 }
 

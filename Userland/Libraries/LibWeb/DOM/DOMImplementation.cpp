@@ -20,7 +20,7 @@ DOMImplementation::DOMImplementation(Document& document)
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocument
-ExceptionOr<NonnullRefPtr<Document>> DOMImplementation::create_document(const String& namespace_, const String& qualified_name) const
+ExceptionOr<NonnullRefPtr<Document>> DOMImplementation::create_document(const String& namespace_, const String& qualified_name, RefPtr<DocumentType> doctype) const
 {
     // FIXME: This should specifically be an XML document.
     auto xml_document = Document::create();
@@ -36,7 +36,8 @@ ExceptionOr<NonnullRefPtr<Document>> DOMImplementation::create_document(const St
         element = new_element.release_value();
     }
 
-    // FIXME: If doctype is non-null, append doctype to document.
+    if (doctype)
+        xml_document->append_child(doctype.release_nonnull());
 
     if (element)
         xml_document->append_child(element.release_nonnull());

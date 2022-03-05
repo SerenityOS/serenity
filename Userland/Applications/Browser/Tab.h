@@ -25,6 +25,7 @@ namespace Browser {
 class BrowserWindow;
 class InspectorWidget;
 class ConsoleWidget;
+class StorageWidget;
 
 class Tab final : public GUI::Widget {
     C_OBJECT(Tab);
@@ -62,6 +63,7 @@ public:
     Function<String(const URL&, Web::Cookie::Source source)> on_get_cookie;
     Function<void(const URL&, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void()> on_dump_cookies;
+    Function<Vector<Web::Cookie::Cookie>()> on_want_cookies;
 
     enum class InspectorTarget {
         Document,
@@ -70,6 +72,7 @@ public:
     void show_inspector_window(InspectorTarget);
 
     void show_console_window();
+    void show_storage_inspector();
 
     const String& title() const { return m_title; }
     const Gfx::Bitmap* icon() const { return m_icon; }
@@ -97,6 +100,7 @@ private:
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<InspectorWidget> m_dom_inspector_widget;
     RefPtr<ConsoleWidget> m_console_widget;
+    RefPtr<StorageWidget> m_storage_widget;
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
 

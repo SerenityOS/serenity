@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "AK/Debug.h"
+#include "Emulator.h"
 #include "Region.h"
 #include "SoftFPU.h"
 #include "ValueWithShadow.h"
@@ -88,21 +90,21 @@ public:
     {
         switch (reg) {
         case X86::RegisterAL:
-            return { m_gpr[X86::RegisterEAX].low_u8, m_gpr_shadow[X86::RegisterEAX].low_u8 };
+            return m_gpr[X86::RegisterEAX].reference_to<&PartAddressableRegister::low_u8>();
         case X86::RegisterAH:
-            return { m_gpr[X86::RegisterEAX].high_u8, m_gpr_shadow[X86::RegisterEAX].high_u8 };
+            return m_gpr[X86::RegisterEAX].reference_to<&PartAddressableRegister::high_u8>();
         case X86::RegisterBL:
-            return { m_gpr[X86::RegisterEBX].low_u8, m_gpr_shadow[X86::RegisterEBX].low_u8 };
+            return m_gpr[X86::RegisterEBX].reference_to<&PartAddressableRegister::low_u8>();
         case X86::RegisterBH:
-            return { m_gpr[X86::RegisterEBX].high_u8, m_gpr_shadow[X86::RegisterEBX].high_u8 };
+            return m_gpr[X86::RegisterEBX].reference_to<&PartAddressableRegister::high_u8>();
         case X86::RegisterCL:
-            return { m_gpr[X86::RegisterECX].low_u8, m_gpr_shadow[X86::RegisterECX].low_u8 };
+            return m_gpr[X86::RegisterECX].reference_to<&PartAddressableRegister::low_u8>();
         case X86::RegisterCH:
-            return { m_gpr[X86::RegisterECX].high_u8, m_gpr_shadow[X86::RegisterECX].high_u8 };
+            return m_gpr[X86::RegisterECX].reference_to<&PartAddressableRegister::high_u8>();
         case X86::RegisterDL:
-            return { m_gpr[X86::RegisterEDX].low_u8, m_gpr_shadow[X86::RegisterEDX].low_u8 };
+            return m_gpr[X86::RegisterEDX].reference_to<&PartAddressableRegister::low_u8>();
         case X86::RegisterDH:
-            return { m_gpr[X86::RegisterEDX].high_u8, m_gpr_shadow[X86::RegisterEDX].high_u8 };
+            return m_gpr[X86::RegisterEDX].reference_to<&PartAddressableRegister::high_u8>();
         }
         VERIFY_NOT_REACHED();
     }
@@ -111,43 +113,43 @@ public:
     {
         switch (reg) {
         case X86::RegisterAL:
-            return { m_gpr[X86::RegisterEAX].low_u8, m_gpr_shadow[X86::RegisterEAX].low_u8 };
+            return m_gpr[X86::RegisterEAX].slice<&PartAddressableRegister::low_u8>();
         case X86::RegisterAH:
-            return { m_gpr[X86::RegisterEAX].high_u8, m_gpr_shadow[X86::RegisterEAX].high_u8 };
+            return m_gpr[X86::RegisterEAX].slice<&PartAddressableRegister::high_u8>();
         case X86::RegisterBL:
-            return { m_gpr[X86::RegisterEBX].low_u8, m_gpr_shadow[X86::RegisterEBX].low_u8 };
+            return m_gpr[X86::RegisterEBX].slice<&PartAddressableRegister::low_u8>();
         case X86::RegisterBH:
-            return { m_gpr[X86::RegisterEBX].high_u8, m_gpr_shadow[X86::RegisterEBX].high_u8 };
+            return m_gpr[X86::RegisterEBX].slice<&PartAddressableRegister::high_u8>();
         case X86::RegisterCL:
-            return { m_gpr[X86::RegisterECX].low_u8, m_gpr_shadow[X86::RegisterECX].low_u8 };
+            return m_gpr[X86::RegisterECX].slice<&PartAddressableRegister::low_u8>();
         case X86::RegisterCH:
-            return { m_gpr[X86::RegisterECX].high_u8, m_gpr_shadow[X86::RegisterECX].high_u8 };
+            return m_gpr[X86::RegisterECX].slice<&PartAddressableRegister::high_u8>();
         case X86::RegisterDL:
-            return { m_gpr[X86::RegisterEDX].low_u8, m_gpr_shadow[X86::RegisterEDX].low_u8 };
+            return m_gpr[X86::RegisterEDX].slice<&PartAddressableRegister::low_u8>();
         case X86::RegisterDH:
-            return { m_gpr[X86::RegisterEDX].high_u8, m_gpr_shadow[X86::RegisterEDX].high_u8 };
+            return m_gpr[X86::RegisterEDX].slice<&PartAddressableRegister::high_u8>();
         }
         VERIFY_NOT_REACHED();
     }
 
     ValueWithShadow<u16> const_gpr16(X86::RegisterIndex16 reg) const
     {
-        return { m_gpr[reg].low_u16, m_gpr_shadow[reg].low_u16 };
+        return m_gpr[reg].slice<&PartAddressableRegister::low_u16>();
     }
 
     ValueAndShadowReference<u16> gpr16(X86::RegisterIndex16 reg)
     {
-        return { m_gpr[reg].low_u16, m_gpr_shadow[reg].low_u16 };
+        return m_gpr[reg].reference_to<&PartAddressableRegister::low_u16>();
     }
 
     ValueWithShadow<u32> const_gpr32(X86::RegisterIndex32 reg) const
     {
-        return { m_gpr[reg].full_u32, m_gpr_shadow[reg].full_u32 };
+        return m_gpr[reg].slice<&PartAddressableRegister::full_u32>();
     }
 
     ValueAndShadowReference<u32> gpr32(X86::RegisterIndex32 reg)
     {
-        return { m_gpr[reg].full_u32, m_gpr_shadow[reg].full_u32 };
+        return m_gpr[reg].reference_to<&PartAddressableRegister::full_u32>();
     }
 
     template<typename T>
@@ -176,21 +178,21 @@ public:
     {
         if (a32)
             return esi();
-        return { si().value(), (u32)si().shadow() & 0xffff };
+        return { si().value(), (u32)si().shadow_as_value() & 0xffff };
     }
 
     ValueWithShadow<u32> destination_index(bool a32) const
     {
         if (a32)
             return edi();
-        return { di().value(), (u32)di().shadow() & 0xffff };
+        return { di().value(), (u32)di().shadow_as_value() & 0xffff };
     }
 
     ValueWithShadow<u32> loop_index(bool a32) const
     {
         if (a32)
             return ecx();
-        return { cx().value(), (u32)cx().shadow() & 0xffff };
+        return { cx().value(), (u32)cx().shadow_as_value() & 0xffff };
     }
 
     bool decrement_loop_index(bool a32)
@@ -367,18 +369,12 @@ public:
     template<typename T>
     ValueWithShadow<T> read_memory(X86::LogicalAddress address)
     {
-        if constexpr (sizeof(T) == 1)
-            return read_memory8(address);
-        if constexpr (sizeof(T) == 2)
-            return read_memory16(address);
-        if constexpr (sizeof(T) == 4)
-            return read_memory32(address);
-        if constexpr (sizeof(T) == 8)
-            return read_memory64(address);
-        if constexpr (sizeof(T) == 16)
-            return read_memory128(address);
-        if constexpr (sizeof(T) == 32)
-            return read_memory256(address);
+        auto value = m_emulator.mmu().read<T>(address);
+        if constexpr (AK::HasFormatter<T>)
+            outln_if(MEMORY_DEBUG, "\033[36;1mread_memory: @{:#04x}:{:p} -> {:#064x} ({:hex-dump})\033[0m", address.selector(), address.offset(), value.value(), value.shadow().span());
+        else
+            outln_if(MEMORY_DEBUG, "\033[36;1mread_memory: @{:#04x}:{:p} -> ??? ({:hex-dump})\033[0m", address.selector(), address.offset(), value.shadow().span());
+        return value;
     }
 
     void write_memory8(X86::LogicalAddress, ValueWithShadow<u8>);
@@ -1252,8 +1248,7 @@ private:
     Emulator& m_emulator;
     SoftFPU m_fpu;
 
-    PartAddressableRegister m_gpr[8];
-    PartAddressableRegister m_gpr_shadow[8];
+    ValueWithShadow<PartAddressableRegister> m_gpr[8];
 
     u16 m_segment[8] { 0 };
     u32 m_eflags { 0 };

@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/URL.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Forward.h>
@@ -29,6 +31,9 @@ public:
     //        but we don't have the infrastructure in place to implement them yet.
 
 private:
+    DOM::Document const* relevant_document() const;
+    AK::URL url() const;
+
     JS_DECLARE_NATIVE_FUNCTION(reload);
     JS_DECLARE_NATIVE_FUNCTION(replace);
 

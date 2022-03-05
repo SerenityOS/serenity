@@ -21,6 +21,7 @@
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/PageTransitionEvent.h>
+#include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
@@ -149,41 +150,28 @@ String Window::prompt(String const& message, String const& default_)
     return {};
 }
 
-i32 Window::set_interval(NonnullOwnPtr<Bindings::CallbackType> callback, i32 interval)
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout
+i32 Window::set_timeout(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments)
 {
-    auto timer = Timer::create_interval(*this, interval, move(callback));
-    m_timers.set(timer->id(), timer);
-    return timer->id();
+    return run_timer_initialization_steps(move(handler), timeout, move(arguments), Repeat::No);
 }
 
-i32 Window::set_timeout(NonnullOwnPtr<Bindings::CallbackType> callback, i32 interval)
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-setinterval
+i32 Window::set_interval(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments)
 {
-    auto timer = Timer::create_timeout(*this, interval, move(callback));
-    m_timers.set(timer->id(), timer);
-    return timer->id();
+    return run_timer_initialization_steps(move(handler), timeout, move(arguments), Repeat::Yes);
 }
 
-void Window::timer_did_fire(Badge<Timer>, Timer& timer)
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-cleartimeout
+void Window::clear_timeout(i32 id)
 {
-    NonnullRefPtr<Timer> strong_timer { timer };
-
-    if (timer.type() == Timer::Type::Timeout) {
-        m_timers.remove(timer.id());
-    }
-
-    // We should not be here if there's no JS wrapper for the Window object.
-    VERIFY(wrapper());
-
-    HTML::queue_global_task(HTML::Task::Source::TimerTask, *wrapper(), [this, strong_this = NonnullRefPtr(*this), strong_timer = NonnullRefPtr(timer)]() mutable {
-        auto result = Bindings::IDL::invoke_callback(strong_timer->callback(), wrapper());
-        if (result.is_error())
-            HTML::report_exception(result);
-    });
+    m_timers.remove(id);
 }
 
-i32 Window::allocate_timer_id(Badge<Timer>)
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-clearinterval
+void Window::clear_interval(i32 id)
 {
-    return m_timer_id_allocator.allocate();
+    m_timers.remove(id);
 }
 
 void Window::deallocate_timer_id(Badge<Timer>, i32 id)
@@ -191,14 +179,95 @@ void Window::deallocate_timer_id(Badge<Timer>, i32 id)
     m_timer_id_allocator.deallocate(id);
 }
 
-void Window::clear_timeout(i32 timer_id)
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timer-initialisation-steps
+i32 Window::run_timer_initialization_steps(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments, Repeat repeat, Optional<i32> previous_id)
 {
-    m_timers.remove(timer_id);
-}
+    // 1. Let thisArg be global if that is a WorkerGlobalScope object; otherwise let thisArg be the WindowProxy that corresponds to global.
 
-void Window::clear_interval(i32 timer_id)
-{
-    m_timers.remove(timer_id);
+    // 2. If previousId was given, let id be previousId; otherwise, let id be an implementation-defined integer that is greater than zero and does not already exist in global's map of active timers.
+    auto id = previous_id.has_value() ? previous_id.value() : m_timer_id_allocator.allocate();
+
+    // 3. FIXME: If the surrounding agent's event loop's currently running task is a task that was created by this algorithm, then let nesting level be the task's timer nesting level. Otherwise, let nesting level be zero.
+
+    // 4. If timeout is less than 0, then set timeout to 0.
+    if (timeout < 0)
+        timeout = 0;
+
+    // 5. FIXME: If nesting level is greater than 5, and timeout is less than 4, then set timeout to 4.
+
+    // 6. Let callerRealm be the current Realm Record, and calleeRealm be global's relevant Realm.
+    // FIXME: Implement this when step 9.2 is implemented.
+
+    // 7. Let initiating script be the active script.
+    // 8. Assert: initiating script is not null, since this algorithm is always called from some script.
+
+    // 9. Let task be a task that runs the following substeps:
+    auto task = [window = NonnullRefPtr(*this), handler = move(handler), timeout, arguments = move(arguments), repeat, id]() mutable {
+        // 1. If id does not exist in global's map of active timers, then abort these steps.
+        if (!window->m_timers.contains(id))
+            return;
+
+        handler.visit(
+            // 2. If handler is a Function, then invoke handler given arguments with the callback this value set to thisArg. If this throws an exception, catch it, and report the exception.
+            [&](Bindings::CallbackType& callback) {
+                if (auto result = Bindings::IDL::invoke_callback(callback, window->wrapper(), arguments); result.is_error())
+                    HTML::report_exception(result);
+            },
+            // 3. Otherwise:
+            [&](String const& source) {
+                // 1. Assert: handler is a string.
+                // 2. FIXME: Perform HostEnsureCanCompileStrings(callerRealm, calleeRealm). If this throws an exception, catch it, report the exception, and abort these steps.
+
+                // 3. Let settings object be global's relevant settings object.
+                auto& settings_object = window->associated_document().relevant_settings_object();
+
+                // 4. Let base URL be initiating script's base URL.
+                auto url = window->associated_document().url();
+
+                // 5. Assert: base URL is not null, as initiating script is a classic script or a JavaScript module script.
+
+                // 6. Let fetch options be a script fetch options whose cryptographic nonce is initiating script's fetch options's cryptographic nonce, integrity metadata is the empty string, parser metadata is "not-parser-inserted", credentials mode is initiating script's fetch options's credentials mode, and referrer policy is initiating script's fetch options's referrer policy.
+                // 7. Let script be the result of creating a classic script given handler, settings object, base URL, and fetch options.
+                auto script = HTML::ClassicScript::create(url.basename(), source, settings_object, url);
+
+                // 8. Run the classic script script.
+                (void)script->run();
+            });
+
+        // 4. If id does not exist in global's map of active timers, then abort these steps.
+        if (!window->m_timers.contains(id))
+            return;
+
+        switch (repeat) {
+        // 5. If repeat is true, then perform the timer initialization steps again, given global, handler, timeout, arguments, true, and id.
+        case Repeat::Yes:
+            window->run_timer_initialization_steps(handler, timeout, move(arguments), repeat, id);
+            break;
+
+        // 6. Otherwise, remove global's map of active timers[id].
+        case Repeat::No:
+            window->m_timers.remove(id);
+            break;
+        }
+    };
+
+    // 10. FIXME: Increment nesting level by one.
+    // 11. FIXME: Set task's timer nesting level to nesting level.
+
+    // 12. Let completionStep be an algorithm step which queues a global task on the timer task source given global to run task.
+    auto completion_step = [window = NonnullRefPtr(*this), task = move(task)]() mutable {
+        HTML::queue_global_task(HTML::Task::Source::TimerTask, *window->wrapper(), [task = move(task)]() mutable {
+            task();
+        });
+    };
+
+    // 13. Run steps after a timeout given global, "setTimeout/setInterval", timeout, completionStep, and id.
+    auto timer = Timer::create(*this, timeout, move(completion_step), id);
+    m_timers.set(id, timer);
+    timer->start();
+
+    // 14. Return id.
+    return id;
 }
 
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#run-the-animation-frame-callbacks

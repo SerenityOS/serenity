@@ -35,7 +35,7 @@ class WebSocketClientManager : public Core::Object {
 public:
     static WebSocketClientManager& the();
 
-    RefPtr<Protocol::WebSocket> connect(const AK::URL&);
+    RefPtr<Protocol::WebSocket> connect(const AK::URL&, String const& origin);
 
 private:
     static ErrorOr<NonnullRefPtr<WebSocketClientManager>> try_create();

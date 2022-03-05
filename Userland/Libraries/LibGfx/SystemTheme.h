@@ -30,6 +30,8 @@ namespace Gfx {
     C(BaseText)                    \
     C(Button)                      \
     C(ButtonText)                  \
+    C(DisabledTextFront)           \
+    C(DisabledTextBack)            \
     C(DesktopBackground)           \
     C(FocusOutline)                \
     C(Gutter)                      \
@@ -258,7 +260,7 @@ inline const char* to_string(PathRole role)
 }
 
 struct SystemTheme {
-    RGBA32 color[(int)ColorRole::__Count];
+    ARGB32 color[(int)ColorRole::__Count];
     Gfx::TextAlignment alignment[(int)AlignmentRole::__Count];
     bool flag[(int)FlagRole::__Count];
     int metric[(int)MetricRole::__Count];

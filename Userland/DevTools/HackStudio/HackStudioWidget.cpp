@@ -1341,7 +1341,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_stop_action()
 {
     auto action = GUI::Action::create("&Stop", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/program-stop.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         if (!Debugger::the().session()) {
-            m_terminal_wrapper->kill_running_command();
+            if (auto result = m_terminal_wrapper->kill_running_command(); result.is_error())
+                warnln("{}", result.error());
             return;
         }
 

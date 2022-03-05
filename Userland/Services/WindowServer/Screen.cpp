@@ -342,7 +342,7 @@ bool Screen::set_resolution(bool initial)
             VERIFY(rc == 0);
             m_size_in_bytes = properties.buffer_length;
 
-            m_framebuffer = (Gfx::RGBA32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
+            m_framebuffer = (Gfx::ARGB32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
             VERIFY(m_framebuffer && m_framebuffer != (void*)-1);
 
             if (m_can_set_buffer) {

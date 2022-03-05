@@ -128,8 +128,72 @@ class Position {
     }
 }
 
-class Ranges {
+class CommonRange {
+    at(wantedIx) {
+        let ix = 0;
+        let found = null;
+        this.forEach(cell => {
+            if (ix++ === wantedIx) {
+                found = cell;
+                return Break;
+            }
+        });
+        return found;
+    }
+
+    findIndex(matcher) {
+        let i = 0;
+        let found = false;
+        this.forEach(cell => {
+            if (matcher(cell, i)) {
+                found = true;
+                return Break;
+            }
+            ++i;
+        });
+        return found ? i : -1;
+    }
+
+    find(matcher) {
+        let value = null;
+        let i = 0;
+        this.forEach(cell => {
+            if (matcher(cell, i)) {
+                value = cell;
+                return Break;
+            }
+            ++i;
+        });
+        return value;
+    }
+
+    indexOf(name) {
+        let i = 0;
+        let found = false;
+        this.forEach(cell => {
+            if (cell.name === name) {
+                found = true;
+                return Break;
+            }
+            ++i;
+        });
+        return found ? i : -1;
+    }
+
+    has(name) {
+        return this.indexOf(name) !== -1;
+    }
+
+    toArray() {
+        const cells = [];
+        this.forEach(val => cells.push(val));
+        return cells;
+    }
+}
+
+class Ranges extends CommonRange {
     constructor(ranges) {
+        super();
         this.ranges = ranges;
     }
 
@@ -164,11 +228,16 @@ class Ranges {
     }
 }
 
-class Range {
+class Range extends CommonRange {
     constructor(startingColumnName, endingColumnName, startingRow, endingRow, columnStep, rowStep) {
+        super();
         // using == to account for '0' since js will parse `+'0'` to 0
         if (columnStep == 0 || rowStep == 0)
             throw new Error("rowStep or columnStep is 0, this will cause an infinite loop");
+        if (typeof startingRow === "string" || typeof endingRow === "string")
+            throw new Error(
+                "startingRow or endingRow is a string, this will cause an infinite loop"
+            );
         this.startingColumnName = startingColumnName;
         this.endingColumnName = endingColumnName;
         this.startingRow = startingRow;
@@ -208,7 +277,7 @@ class Range {
 
         outer: for (const range of ranges) {
             for (let row = range.rowStart; row <= range.rowEnd; row += this.rowStep) {
-                if (callback(range.column + row) === Break) break outer;
+                if (callback(new Position(range.column, row)) === Break) break outer;
             }
         }
     }
@@ -241,10 +310,13 @@ class Range {
 
     toString() {
         const endingRow = this.endingRow ?? "";
-        return `R\`${this.startingColumnName}${this.startingRow}:${this.endingColumnName}${endingRow}:${this.columnStep}:${this.rowStep}\``;
+        const showSteps = this.rowStep !== 1 || this.columnStep !== 1;
+        const steps = showSteps ? `:${this.columnStep}:${this.rowStep}` : "";
+        return `R\`${this.startingColumnName}${this.startingRow}:${this.endingColumnName}${endingRow}${steps}\``;
     }
 }
 
+const R_FORMAT = /^([a-zA-Z_]+)(?:(\d+):([a-zA-Z_]+)(\d+)?(?::(\d+):(\d+))?)?$/;
 function R(fmt, ...args) {
     if (args.length !== 0) throw new TypeError("R`` format must be a literal");
     // done because:
@@ -252,23 +324,20 @@ function R(fmt, ...args) {
     // myFunc("ABC") => ""ABC""
     // myFunc`ABC` => "["ABC"]"
     if (Array.isArray(fmt)) fmt = fmt[0];
-    const parts = fmt.split(":");
-    if (parts.length !== 2 && parts.length !== 4)
-        throw new Error("Invalid Format. Expected Format: R`A0:A1` or R`A0:A2:1:2`");
-    // ColRow:Col(Row)?(:ColStep:RowStep)?
-    const start = thisSheet.parse_cell_name(parts[0]);
-    let end = parts[1];
-    if (/^[a-zA-Z_]+$/.test(end)) end = { column: end, row: undefined };
-    else end = thisSheet.parse_cell_name(parts[1]);
-    parts[2] ??= 1;
-    parts[3] ??= 1;
+    if (!R_FORMAT.test(fmt))
+        throw new Error("Invalid Format. Expected Format: R`A` or R`A0:A1` or R`A0:A2:1:2`");
+    // Format: Col(Row:Col(Row)?(:ColStep:RowStep)?)?
+    // Ignore the first element of the match array as that will be the whole match.
+    const [, ...matches] = fmt.match(R_FORMAT);
+    const [startCol, startRow, endCol, endRow, colStep, rowStep] = matches;
     return new Range(
-        start.column,
-        end.column,
-        start.row,
-        end.row,
-        integer(parts[2]),
-        integer(parts[3])
+        startCol,
+        endCol ?? startCol,
+        integer(startRow ?? 0),
+        // Don't make undefined an integer, because then it becomes 0.
+        !!endRow ? integer(endRow) : endRow,
+        integer(colStep ?? 1),
+        integer(rowStep ?? 1)
     );
 }
 
@@ -296,6 +365,9 @@ function randRange(min, max) {
 }
 
 function integer(value) {
+    const typeVal = typeof value;
+    if ((typeVal !== "number" && typeVal !== "string") || Number.isNaN(Number(value)))
+        throw new Error(`integer() called with unexpected type "${typeVal}"`);
     return value | 0;
 }
 
@@ -304,27 +376,20 @@ function sheet(name) {
 }
 
 function reduce(op, accumulator, cells) {
-    cells.forEach(name => {
-        let cell = thisSheet[name];
-        accumulator = op(accumulator, cell);
-    });
-    return accumulator;
+    return resolve(cells).reduce(op, accumulator);
 }
 
 function numericReduce(op, accumulator, cells) {
-    return reduce((acc, x) => op(acc, Number(x)), accumulator, cells);
+    return numericResolve(cells).reduce(op, accumulator);
 }
 
 function numericResolve(cells) {
-    const values = [];
-    cells.forEach(name => values.push(Number(thisSheet[name])));
-    return values;
+    return resolve(cells).map(val => parseInt(val));
 }
 
 function resolve(cells) {
-    const values = [];
-    cells.forEach(name => values.push(thisSheet[name]));
-    return values;
+    const isRange = cells instanceof Range || cells instanceof Ranges;
+    return isRange ? cells.toArray().map(cell => cell.value()) : cells;
 }
 
 // Statistics
@@ -493,39 +558,33 @@ function internal_lookup(
     }
 
     let i = 0;
-    let didMatch = false;
     let value = null;
-    let matchingName = null;
-    lookup_inputs.forEach(name => {
-        value = thisSheet[name];
+    let found_input = null;
+    lookup_inputs.forEach(cell => {
+        value = cell.value();
         if (matches(value)) {
-            didMatch = true;
-            matchingName = name;
+            found_input = cell;
             return Break;
         }
         ++i;
     });
 
-    if (!didMatch) return if_missing;
+    if (found_input == null) return if_missing;
 
     if (lookup_outputs === undefined) {
-        if (reference) return Position.from_name(matchingName);
+        if (reference) return found_input;
 
         return value;
     }
 
-    lookup_outputs.forEach(name => {
-        matchingName = name;
-        if (i === 0) return Break;
-        --i;
-    });
+    const found_output = lookup_outputs.at(i);
 
-    if (i > 0)
+    if (found_output == null)
         throw new Error("Lookup target length must not be smaller than lookup source length");
 
-    if (reference) return Position.from_name(matchingName);
+    if (reference) return found_output;
 
-    return thisSheet[matchingName];
+    return found_output.value();
 }
 
 function lookup(req_lookup_value, lookup_inputs, lookup_outputs, if_missing, mode) {

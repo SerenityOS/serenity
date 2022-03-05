@@ -41,10 +41,10 @@ __BEGIN_DECLS
 #    define PRIu64 "lu"
 #    define PRIuPTR "lx"
 #endif
-#define PRIx8 "b"
-#define PRIX8 "hhX"
-#define PRIx16 "w"
-#define PRIX16 "hX"
+#define PRIx8 "x"
+#define PRIX8 "X"
+#define PRIx16 "x"
+#define PRIX16 "X"
 #define PRIx32 "x"
 #define PRIX32 "X"
 #ifndef __x86_64__

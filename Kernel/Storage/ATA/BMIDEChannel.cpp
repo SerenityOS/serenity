@@ -39,7 +39,6 @@ UNMAP_AFTER_INIT void BMIDEChannel::initialize()
 {
     VERIFY(m_io_group.bus_master_base().has_value());
     // Let's try to set up DMA transfers.
-    PCI::enable_bus_mastering(m_parent_controller->pci_address());
     {
         auto region_or_error = MM.allocate_dma_buffer_page("IDE PRDT", Memory::Region::Access::ReadWrite, m_prdt_page);
         if (region_or_error.is_error())

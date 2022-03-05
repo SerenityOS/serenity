@@ -179,13 +179,21 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
             VERIFY_NOT_REACHED();
         }
 
-        if (step_size < 0) {
-            // When "step_size" is negative, selector represents first "offset" elements in document tree.
+        // When "step_size == -1", selector represents first "offset" elements in document tree.
+        if (step_size == -1)
             return !(offset <= 0 || index > offset);
-        } else if (step_size == 1) {
-            // When "step_size == 1", selector represents last "offset" elements in document tree.
+
+        // When "step_size == 1", selector represents last "offset" elements in document tree.
+        if (step_size == 1)
             return !(offset < 0 || index < offset);
-        }
+
+        // When "step_size == 0", selector picks only the "offset" element.
+        if (step_size == 0)
+            return index == offset;
+
+        // If both are negative, nothing can match.
+        if (step_size < 0 && offset < 0)
+            return false;
 
         // Like "a % b", but handles negative integers correctly.
         auto const canonical_modulo = [](int a, int b) -> int {
@@ -196,15 +204,12 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
             return c;
         };
 
-        if (step_size == 0) {
-            // Avoid divide by zero.
-            if (index != offset) {
-                return false;
-            }
-        } else if (canonical_modulo(index - offset, step_size) != 0) {
-            return false;
-        }
-        return true;
+        // When "step_size < 0", we start at "offset" and count backwards.
+        if (step_size < 0)
+            return index <= offset && canonical_modulo(index - offset, -step_size) == 0;
+
+        // Otherwise, we start at "offset" and count forwards.
+        return index >= offset && canonical_modulo(index - offset, step_size) == 0;
     }
 
     return false;

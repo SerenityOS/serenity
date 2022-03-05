@@ -177,7 +177,7 @@ ALWAYS_INLINE static u8 paeth_predictor(int a, int b, int c)
 }
 
 union [[gnu::packed]] Pixel {
-    RGBA32 rgba { 0 };
+    ARGB32 rgba { 0 };
     u8 v[4];
     struct {
         u8 r;
@@ -460,7 +460,7 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
         break;
     }
 
-    u8 dummy_scanline[context.width * sizeof(RGBA32)];
+    u8 dummy_scanline[context.width * sizeof(ARGB32)];
     memset(dummy_scanline, 0, sizeof(dummy_scanline));
 
     for (int y = 0; y < context.height; ++y) {

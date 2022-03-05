@@ -17,12 +17,7 @@
 namespace Gfx {
 
 enum class ColorRole;
-typedef u32 RGBA32;
-
-constexpr u32 make_rgb(u8 r, u8 g, u8 b)
-{
-    return ((r << 16) | (g << 8) | b);
-}
+typedef u32 ARGB32;
 
 struct HSV {
     double hue { 0 };
@@ -69,7 +64,7 @@ public:
     }
 
     static constexpr Color from_rgb(unsigned rgb) { return Color(rgb | 0xff000000); }
-    static constexpr Color from_rgba(unsigned rgba) { return Color(rgba); }
+    static constexpr Color from_argb(unsigned argb) { return Color(argb); }
 
     static constexpr Color from_cmyk(float c, float m, float y, float k)
     {
@@ -282,7 +277,7 @@ public:
         return Color(((other.m_value ^ m_value) & 0x00ffffff) | (m_value & 0xff000000));
     }
 
-    constexpr RGBA32 value() const { return m_value; }
+    constexpr ARGB32 value() const { return m_value; }
 
     constexpr bool operator==(Color const& other) const
     {
@@ -404,12 +399,12 @@ public:
     }
 
 private:
-    constexpr explicit Color(RGBA32 rgba)
+    constexpr explicit Color(ARGB32 rgba)
         : m_value(rgba)
     {
     }
 
-    RGBA32 m_value { 0 };
+    ARGB32 m_value { 0 };
 };
 
 constexpr Color::Color(NamedColor named)

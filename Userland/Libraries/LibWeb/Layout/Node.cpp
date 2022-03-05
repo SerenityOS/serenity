@@ -80,15 +80,9 @@ bool Node::establishes_stacking_context() const
     return computed_values().opacity() < 1.0f;
 }
 
-HitTestResult Node::hit_test(const Gfx::IntPoint& position, HitTestType type) const
+HitTestResult Node::hit_test(Gfx::IntPoint const&, HitTestType) const
 {
-    HitTestResult result;
-    for_each_child_in_paint_order([&](auto& child) {
-        auto child_result = child.hit_test(position, type);
-        if (child_result.layout_node)
-            result = child_result;
-    });
-    return result;
+    VERIFY_NOT_REACHED();
 }
 
 HTML::BrowsingContext const& Node::browsing_context() const
