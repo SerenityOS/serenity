@@ -1220,6 +1220,8 @@ public:
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
 
+    virtual bool is_private_identifier() const override { return true; }
+
 private:
     FlyString m_string;
 };
