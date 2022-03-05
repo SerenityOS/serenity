@@ -6,6 +6,7 @@
 
 #include <AK/ByteReader.h>
 #include <AK/Endian.h>
+#include <AK/Random.h>
 #include <LibCrypto/Curves/X25519.h>
 
 namespace Crypto::Curves {
@@ -259,6 +260,19 @@ void X25519::modular_multiply_inverse(u32* state, u32* value)
     modular_multiply(state, u, value);
 }
 
+ErrorOr<ByteBuffer> X25519::generate_private_key()
+{
+    auto buffer = TRY(ByteBuffer::create_uninitialized(BYTES));
+    fill_with_random(buffer.data(), buffer.size());
+    return buffer;
+}
+
+ErrorOr<ByteBuffer> X25519::generate_public_key(ReadonlyBytes a)
+{
+    u8 generator[BYTES] { 9 };
+    return compute_coordinate(a, { generator, BYTES });
+}
+
 // https://datatracker.ietf.org/doc/html/rfc7748#section-5
 ErrorOr<ByteBuffer> X25519::compute_coordinate(ReadonlyBytes input_k, ReadonlyBytes input_u)
 {
@@ -334,4 +348,12 @@ ErrorOr<ByteBuffer> X25519::compute_coordinate(ReadonlyBytes input_k, ReadonlyBy
     // Encode state for export
     return export_state(u);
 }
+
+ErrorOr<ByteBuffer> X25519::derive_premaster_key(ReadonlyBytes shared_point)
+{
+    VERIFY(shared_point.size() == BYTES);
+    ByteBuffer premaster_key = TRY(ByteBuffer::copy(shared_point));
+    return premaster_key;
+}
+
 }
