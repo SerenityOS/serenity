@@ -115,6 +115,20 @@ void HIDManagement::set_maps(NonnullOwnPtr<KString> character_map_name, Keyboard
     });
 }
 
+void HIDManagement::detach_standalone_hid_device(HIDDevice& device)
+{
+    m_standalone_hid_devices.with([&](auto& list) {
+        list.remove(device);
+    });
+}
+
+void HIDManagement::attach_standalone_hid_device(HIDDevice& device)
+{
+    m_standalone_hid_devices.with([&](auto& list) {
+        list.append(device);
+    });
+}
+
 UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
 {
     // FIXME: When we have USB HID support, we should ensure that we disable
