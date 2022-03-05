@@ -1,12 +1,15 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Ben Abraham <ben.d.abraham@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
 #include <AK/TypeCasts.h>
+#include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
@@ -280,11 +283,12 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
 
     // 11. Else,
     // a. Let n be an integer for which n / (10^f) - x is as close to zero as possible. If there are two such n, pick the larger n.
-    // FIXME: This breaks down with values of `fraction_digits` > 23
-    auto n = round(pow(10.0f, fraction_digits) * number);
+    // NOTE: Doing it this way to make sure we don't lose any bits of precision between double and bigint representation
+    auto multiplier = Crypto::NumberTheory::Power(Crypto::UnsignedBigInteger(10), Crypto::UnsignedBigInteger(fraction_digits));
+    auto n = Crypto::SignedBigInteger::create_from_double_with_multiplier(number, multiplier);
 
     // b. If n = 0, let m be the String "0". Otherwise, let m be the String value consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
-    auto m = (n == 0 ? "0" : String::formatted("{}", n));
+    auto m = (n == Crypto::SignedBigInteger(0) ? "0" : n.to_base(10));
 
     // c. If f ≠ 0, then
     if (fraction_digits != 0) {
