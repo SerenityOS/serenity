@@ -311,7 +311,7 @@ Function Parser::parse_function(HashMap<String, String>& extended_attributes, In
     consume_whitespace();
     assert_specific(';');
 
-    Function function { move(return_type), name, move(parameters), move(extended_attributes) };
+    Function function { move(return_type), name, move(parameters), move(extended_attributes), {}, false };
 
     // "Defining a special operation with an identifier is equivalent to separating the special operation out into its own declaration without an identifier."
     if (is_special_operation == IsSpecialOperation::No || (is_special_operation == IsSpecialOperation::Yes && !name.is_empty())) {
@@ -802,6 +802,31 @@ NonnullOwnPtr<Interface> Parser::parse()
             }
         }
     }
+
+    // Create overload sets
+    for (auto& function : interface->functions) {
+        auto& overload_set = interface->overload_sets.ensure(function.name);
+        function.overload_index = overload_set.size();
+        overload_set.append(function);
+    }
+    for (auto& overload_set : interface->overload_sets) {
+        if (overload_set.value.size() == 1)
+            continue;
+        for (auto& overloaded_function : overload_set.value)
+            overloaded_function.is_overloaded = true;
+    }
+    for (auto& function : interface->static_functions) {
+        auto& overload_set = interface->static_overload_sets.ensure(function.name);
+        function.overload_index = overload_set.size();
+        overload_set.append(function);
+    }
+    for (auto& overload_set : interface->static_overload_sets) {
+        if (overload_set.value.size() == 1)
+            continue;
+        for (auto& overloaded_function : overload_set.value)
+            overloaded_function.is_overloaded = true;
+    }
+    // FIXME: Add support for overloading constructors
 
     interface->imported_modules = move(imports);
 
