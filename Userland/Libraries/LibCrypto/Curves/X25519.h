@@ -7,10 +7,11 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <LibCrypto/Curves/EllipticCurve.h>
 
 namespace Crypto::Curves {
 
-class X25519 {
+class X25519 : public EllipticCurve {
 
     static constexpr u8 BITS = 255;
     static constexpr u8 BYTES = 32;
@@ -18,7 +19,11 @@ class X25519 {
     static constexpr u32 A24 = 121666;
 
 public:
-    static ErrorOr<ByteBuffer> compute_coordinate(ReadonlyBytes a, ReadonlyBytes b);
+    size_t key_size() override { return BYTES; }
+    ErrorOr<ByteBuffer> generate_private_key() override;
+    ErrorOr<ByteBuffer> generate_public_key(ReadonlyBytes a) override;
+    ErrorOr<ByteBuffer> compute_coordinate(ReadonlyBytes a, ReadonlyBytes b) override;
+    ErrorOr<ByteBuffer> derive_premaster_key(ReadonlyBytes shared_point) override;
 
 private:
     static void import_state(u32* state, ReadonlyBytes data);

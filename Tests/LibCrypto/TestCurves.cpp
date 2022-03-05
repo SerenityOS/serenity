@@ -48,30 +48,24 @@ TEST_CASE(test_x25519)
         0x76, 0xf0, 0x9b, 0x3c, 0x1e, 0x16, 0x17, 0x42
     };
 
-    u8 coordinate_data[32] {
-        0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    };
-
-    ReadonlyBytes coordinate { coordinate_data, 32 };
     ReadonlyBytes alice_public_key { alice_public_key_data, 32 };
     ReadonlyBytes alice_private_key { alice_private_key_data, 32 };
     ReadonlyBytes bob_public_key { bob_public_key_data, 32 };
     ReadonlyBytes bob_private_key { bob_private_key_data, 32 };
     ReadonlyBytes shared_secret { shared_secret_data, 32 };
 
-    auto generated_alice_public = MUST(Crypto::Curves::X25519::compute_coordinate(alice_private_key, coordinate));
+    Crypto::Curves::X25519 curve;
+
+    auto generated_alice_public = MUST(curve.generate_public_key(alice_private_key));
     EXPECT_EQ(alice_public_key, generated_alice_public);
 
-    auto generated_bob_public = MUST(Crypto::Curves::X25519::compute_coordinate(bob_private_key, coordinate));
+    auto generated_bob_public = MUST(curve.generate_public_key(bob_private_key));
     EXPECT_EQ(bob_public_key, generated_bob_public);
 
-    auto shared_alice = MUST(Crypto::Curves::X25519::compute_coordinate(alice_private_key, bob_public_key));
+    auto shared_alice = MUST(curve.compute_coordinate(alice_private_key, bob_public_key));
     EXPECT_EQ(shared_alice, shared_secret);
 
-    auto shared_bob = MUST(Crypto::Curves::X25519::compute_coordinate(bob_private_key, alice_public_key));
+    auto shared_bob = MUST(curve.compute_coordinate(bob_private_key, alice_public_key));
     EXPECT_EQ(shared_bob, shared_secret);
 
     EXPECT_EQ(shared_alice, shared_bob);
@@ -130,33 +124,24 @@ TEST_CASE(test_x448)
         0x44, 0x9a, 0x50, 0x37, 0x51, 0x4a, 0x87, 0x9d
     };
 
-    u8 coordinate_data[56] {
-        0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    };
-
-    ReadonlyBytes coordinate { coordinate_data, 56 };
     ReadonlyBytes alice_public_key { alice_public_key_data, 56 };
     ReadonlyBytes alice_private_key { alice_private_key_data, 56 };
     ReadonlyBytes bob_public_key { bob_public_key_data, 56 };
     ReadonlyBytes bob_private_key { bob_private_key_data, 56 };
     ReadonlyBytes shared_secret { shared_secret_data, 56 };
 
-    auto generated_alice_public = MUST(Crypto::Curves::X448::compute_coordinate(alice_private_key, coordinate));
+    Crypto::Curves::X448 curve;
+
+    auto generated_alice_public = MUST(curve.generate_public_key(alice_private_key));
     EXPECT_EQ(alice_public_key, generated_alice_public);
 
-    auto generated_bob_public = MUST(Crypto::Curves::X448::compute_coordinate(bob_private_key, coordinate));
+    auto generated_bob_public = MUST(curve.generate_public_key(bob_private_key));
     EXPECT_EQ(bob_public_key, generated_bob_public);
 
-    auto shared_alice = MUST(Crypto::Curves::X448::compute_coordinate(alice_private_key, bob_public_key));
+    auto shared_alice = MUST(curve.compute_coordinate(alice_private_key, bob_public_key));
     EXPECT_EQ(shared_alice, shared_secret);
 
-    auto shared_bob = MUST(Crypto::Curves::X448::compute_coordinate(bob_private_key, alice_public_key));
+    auto shared_bob = MUST(curve.compute_coordinate(bob_private_key, alice_public_key));
     EXPECT_EQ(shared_bob, shared_secret);
 
     EXPECT_EQ(shared_alice, shared_bob);
