@@ -378,6 +378,10 @@ void IntelNativeGraphicsAdapter::gmbus_read_edid()
         SpinlockLocker control_lock(m_control_lock);
         gmbus_write(DDC2_I2C_ADDRESS, 0);
         gmbus_read(DDC2_I2C_ADDRESS, (u8*)&m_crt_edid_bytes, sizeof(m_crt_edid_bytes));
+        // FIXME: It seems like the returned EDID is almost correct,
+        // but the first byte is set to 0xD0 instead of 0x00.
+        // For now, this "hack" works well enough.
+        m_crt_edid_bytes[0] = 0x0;
     }
     if (auto parsed_edid = EDID::Parser::from_bytes({ m_crt_edid_bytes, sizeof(m_crt_edid_bytes) }); !parsed_edid.is_error()) {
         m_crt_edid = parsed_edid.release_value();
