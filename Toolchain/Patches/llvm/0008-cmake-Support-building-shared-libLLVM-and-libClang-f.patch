@@ -1,7 +1,7 @@
 From eb1dbc59eaebdefd9735b738ca30478ce1788dca Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Mon, 18 Apr 2022 22:32:29 +0200
-Subject: [PATCH 8/8] [cmake] Support building shared libLLVM and libClang for
+Subject: [PATCH 8/9] [cmake] Support building shared libLLVM and libClang for
  SerenityOS
 
 This patch tells CMake that the --whole-archive linker option should be

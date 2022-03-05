@@ -232,7 +232,7 @@ pushd "$DIR/Tarballs"
                 git init > /dev/null
                 git add . > /dev/null
                 git commit -am "BASE" > /dev/null
-                git am "$DIR"/Patches/llvm/*.patch > /dev/null
+                git am --keep-non-patch "$DIR"/Patches/llvm/*.patch > /dev/null
             else
                 for patch in "$DIR"/Patches/llvm/*.patch; do
                     patch -p1 < "$patch" > /dev/null

@@ -1,7 +1,7 @@
 From 9ff3d5362c71dfa9b6aba1dd65a33bb6d8971164 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 09:54:22 +0200
-Subject: [PATCH 1/8] [Support] Add support for building LLVM on SerenityOS
+Subject: [PATCH 1/9] [Support] Add support for building LLVM on SerenityOS
 
 Adds SerenityOS `#ifdef`s for platform-specific code.
 

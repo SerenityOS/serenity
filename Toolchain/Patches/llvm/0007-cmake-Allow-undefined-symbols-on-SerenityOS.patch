@@ -1,7 +1,7 @@
 From ac91fd973bdf23b24645336a470d5dfb31811aa6 Mon Sep 17 00:00:00 2001
 From: Daniel Bertalan <dani@danielbertalan.dev>
 Date: Thu, 14 Apr 2022 10:21:19 +0200
-Subject: [PATCH 7/8] [cmake] Allow undefined symbols on SerenityOS
+Subject: [PATCH 7/9] [cmake] Allow undefined symbols on SerenityOS
 
 Allow undefined symbols in LLVM libraries, which is needed because only
 stubs are available for SerenityOS libraries when libc++ and libunwind
