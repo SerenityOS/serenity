@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -117,5 +118,7 @@ private:
 EnvironmentSettingsObject& incumbent_settings_object();
 JS::Realm& incumbent_realm();
 JS::GlobalObject& incumbent_global_object();
+EnvironmentSettingsObject& current_settings_object();
+JS::GlobalObject& current_global_object();
 
 }

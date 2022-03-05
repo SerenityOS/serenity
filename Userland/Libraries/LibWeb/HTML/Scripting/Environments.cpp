@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -268,6 +269,26 @@ JS::GlobalObject& incumbent_global_object()
 {
     // Similarly, the incumbent global object is the global object of the incumbent settings object.
     return incumbent_settings_object().global_object();
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#current-settings-object
+EnvironmentSettingsObject& current_settings_object()
+{
+    auto& event_loop = HTML::main_thread_event_loop();
+    auto& vm = event_loop.vm();
+
+    // Then, the current settings object is the environment settings object of the current Realm Record.
+    return verify_cast<EnvironmentSettingsObject>(*vm.current_realm()->host_defined());
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#current-global-object
+JS::GlobalObject& current_global_object()
+{
+    auto& event_loop = HTML::main_thread_event_loop();
+    auto& vm = event_loop.vm();
+
+    // Similarly, the current global object is the global object of the current Realm Record.
+    return vm.current_realm()->global_object();
 }
 
 }
