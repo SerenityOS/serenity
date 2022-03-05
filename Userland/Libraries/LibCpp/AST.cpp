@@ -124,7 +124,8 @@ String FunctionType::to_string() const
             first = false;
         else
             builder.append(", ");
-        builder.append(parameter.type()->to_string());
+        if (parameter.type())
+            builder.append(parameter.type()->to_string());
         if (parameter.name() && !parameter.full_name().is_empty()) {
             builder.append(" ");
             builder.append(parameter.full_name());
