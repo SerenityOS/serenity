@@ -51,7 +51,9 @@ static constexpr Array pangrams = {
     "waxy and quivering jocks fumble the pizza",
     "~#:[@_1%]*{$2.3}/4^(5'6\")-&|7+8!=<9,0\\>?;",
     "byxfjärmat föl gick på duvshowen",
-    "         "
+    "         ",
+    "float Fox.quick(h){ is_brown && it_jumps_over(doges.lazy) }",
+    "<fox color=\"brown\" speed=\"quick\" jumps=\"over\">lazy dog</fox>"
 };
 
 static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
