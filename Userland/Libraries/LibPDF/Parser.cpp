@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,7 +7,6 @@
 #include <AK/BitStream.h>
 #include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
-#include <AK/TypeCasts.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Filter.h>
@@ -556,27 +555,6 @@ bool Parser::navigate_to_after_startxref()
 
         m_reader.move_to(offset);
         return true;
-    }
-
-    return false;
-}
-
-bool Parser::sloppy_is_linearized()
-{
-    ScopeGuard guard([&] {
-        m_reader.move_to(0);
-        m_reader.set_reading_forwards();
-    });
-
-    auto limit = min(1024ul, m_reader.bytes().size() - 1);
-    m_reader.move_to(limit);
-    m_reader.set_reading_backwards();
-
-    while (!m_reader.done()) {
-        m_reader.move_until('/');
-        if (m_reader.matches("/Linearized"))
-            return true;
-        m_reader.move_by(1);
     }
 
     return false;
