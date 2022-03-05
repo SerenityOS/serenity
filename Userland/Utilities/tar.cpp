@@ -100,8 +100,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     int fd = TRY(Core::System::open(absolute_path, O_CREAT | O_WRONLY, header.mode()));
 
                     Array<u8, buffer_size> buffer;
-                    while (file_stream.read(buffer) > 0)
-                        TRY(Core::System::write(fd, buffer.span()));
+                    size_t bytes_read;
+                    while ((bytes_read = file_stream.read(buffer)) > 0)
+                        TRY(Core::System::write(fd, buffer.span().slice(0, bytes_read)));
 
                     TRY(Core::System::close(fd));
                     break;
