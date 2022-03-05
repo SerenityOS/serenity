@@ -382,7 +382,15 @@ void IntelNativeGraphicsAdapter::gmbus_read_edid()
     if (auto parsed_edid = EDID::Parser::from_bytes({ m_crt_edid_bytes, sizeof(m_crt_edid_bytes) }); !parsed_edid.is_error()) {
         m_crt_edid = parsed_edid.release_value();
     } else {
-        dbgln("IntelNativeGraphicsAdapter: Parsing EDID failed: {}", parsed_edid.error());
+        for (size_t x = 0; x < 128; x = x + 16) {
+            dmesgln("IntelNativeGraphicsAdapter: Print offending EDID");
+            dmesgln("{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
+                m_crt_edid_bytes[x], m_crt_edid_bytes[x + 1], m_crt_edid_bytes[x + 2], m_crt_edid_bytes[x + 3],
+                m_crt_edid_bytes[x + 4], m_crt_edid_bytes[x + 5], m_crt_edid_bytes[x + 6], m_crt_edid_bytes[x + 7],
+                m_crt_edid_bytes[x + 8], m_crt_edid_bytes[x + 9], m_crt_edid_bytes[x + 10], m_crt_edid_bytes[x + 11],
+                m_crt_edid_bytes[x + 12], m_crt_edid_bytes[x + 13], m_crt_edid_bytes[x + 14], m_crt_edid_bytes[x + 15]);
+        }
+        dmesgln("IntelNativeGraphicsAdapter: Parsing EDID failed: {}", parsed_edid.error());
         m_crt_edid = {};
     }
 }
