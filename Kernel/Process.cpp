@@ -26,6 +26,7 @@
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
+#include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
@@ -41,6 +42,8 @@
 namespace Kernel {
 
 static void create_signal_trampoline();
+
+extern ProcessID g_init_pid;
 
 RecursiveSpinlock g_profiling_lock;
 static Atomic<pid_t> next_pid;
@@ -608,6 +611,9 @@ void Process::finalize()
 
     if (veil_state() == VeilState::Dropped)
         dbgln("\x1b[01;31mProcess '{}' exited with the veil left open\x1b[0m", name());
+
+    if (g_init_pid != 0 && pid() == g_init_pid)
+        PANIC("Init process quit unexpectedly. Exit code: {}", m_protected_values.termination_status);
 
     if (is_dumpable()) {
         if (m_should_generate_coredump) {
