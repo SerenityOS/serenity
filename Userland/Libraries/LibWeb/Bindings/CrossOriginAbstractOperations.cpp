@@ -6,10 +6,17 @@
 
 #include <AK/Variant.h>
 #include <AK/Vector.h>
+#include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/PropertyDescriptor.h>
+#include <LibJS/Runtime/PropertyKey.h>
 #include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
+#include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/DOM/DOMException.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 
 namespace Web::Bindings {
 
@@ -44,6 +51,24 @@ Vector<CrossOriginProperty> cross_origin_properties(Variant<LocationObject const
                 { .property = "postMessage"sv },
             };
         });
+}
+
+// 7.2.3.2 CrossOriginPropertyFallback ( P ), https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertyfallback-(-p-)
+JS::ThrowCompletionOr<JS::PropertyDescriptor> cross_origin_property_fallback(JS::GlobalObject& global_object, JS::PropertyKey const& property_key)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If P is "then", @@toStringTag, @@hasInstance, or @@isConcatSpreadable, then return PropertyDescriptor{ [[Value]]: undefined, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }.
+    auto property_key_is_then = property_key.is_string() && property_key.as_string() == vm.names.then.as_string();
+    auto property_key_is_allowed_symbol = property_key.is_symbol()
+        && (property_key.as_symbol() == vm.well_known_symbol_to_string_tag()
+            || property_key.as_symbol() == vm.well_known_symbol_has_instance()
+            || property_key.as_symbol() == vm.well_known_symbol_is_concat_spreadable());
+    if (property_key_is_then || property_key_is_allowed_symbol)
+        return JS::PropertyDescriptor { .value = JS::js_undefined(), .writable = false, .enumerable = false, .configurable = true };
+
+    // 2. Throw a "SecurityError" DOMException.
+    return vm.throw_completion<DOMExceptionWrapper>(global_object, DOM::SecurityError::create(String::formatted("Can't access property '{}' on cross-origin object", property_key)));
 }
 
 }
