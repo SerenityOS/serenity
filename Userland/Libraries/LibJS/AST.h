@@ -66,6 +66,7 @@ public:
     virtual bool is_class_expression() const { return false; }
     virtual bool is_expression_statement() const { return false; }
     virtual bool is_identifier() const { return false; }
+    virtual bool is_private_identifier() const { return false; }
     virtual bool is_scope_node() const { return false; }
     virtual bool is_program() const { return false; }
     virtual bool is_class_declaration() const { return false; }
@@ -2088,6 +2089,9 @@ inline bool ASTNode::fast_is<ClassExpression>() const { return is_class_expressi
 
 template<>
 inline bool ASTNode::fast_is<Identifier>() const { return is_identifier(); }
+
+template<>
+inline bool ASTNode::fast_is<PrivateIdentifier>() const { return is_private_identifier(); }
 
 template<>
 inline bool ASTNode::fast_is<ExpressionStatement>() const { return is_expression_statement(); }
