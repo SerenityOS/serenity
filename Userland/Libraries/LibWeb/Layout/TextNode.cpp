@@ -68,17 +68,19 @@ void TextNode::paint_text_decoration(Gfx::Painter& painter, LineBoxFragment cons
         return;
     }
 
+    auto line_color = computed_values().text_decoration_color();
+
     switch (computed_values().text_decoration_style()) {
         // FIXME: Implement the other styles
     case CSS::TextDecorationStyle::Solid:
     case CSS::TextDecorationStyle::Double:
     case CSS::TextDecorationStyle::Dashed:
     case CSS::TextDecorationStyle::Dotted:
-        painter.draw_line(line_start_point, line_end_point, computed_values().color());
+        painter.draw_line(line_start_point, line_end_point, line_color);
         break;
     case CSS::TextDecorationStyle::Wavy:
         // FIXME: There is a thing called text-decoration-thickness which also affects the amplitude here.
-        painter.draw_triangle_wave(line_start_point, line_end_point, computed_values().color(), 2);
+        painter.draw_triangle_wave(line_start_point, line_end_point, line_color, 2);
         break;
     }
 }
