@@ -189,6 +189,17 @@ describe("Range", () => {
     });
 });
 
+describe("SplitRange", () => {
+    makeSheet();
+    test("Range#filter => SplitRange", () => {
+        const range = R`A0:B`.filter(c => c.value() % 2 === 1);
+        expect(range.toString()).toEqual('SplitRange.fromNames("A0", "A2", "B0", "B2")');
+        expect(resolve(range)).toEqual(["1", "3", "1", "9"]);
+        expect(numericResolve(range)).toEqual([1, 3, 1, 9]);
+        expect(count(range)).toEqual(4);
+    });
+});
+
 describe("R function", () => {
     makeSheet();
 
