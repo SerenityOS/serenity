@@ -861,9 +861,10 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             return find_font("Csilla");
         case ValueID::Serif:
             return find_font("Roman");
+        case ValueID::Fantasy:
+            return find_font("Comic Book");
         case ValueID::SansSerif:
         case ValueID::Cursive:
-        case ValueID::Fantasy:
         case ValueID::UiSerif:
         case ValueID::UiSansSerif:
         case ValueID::UiRounded:
