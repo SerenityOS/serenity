@@ -1706,7 +1706,7 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
     char* out_ptr = reinterpret_cast<char*>(pixels);
     for (int i = 0; i < (int)height; ++i) {
         for (int j = 0; j < (int)width; ++j) {
-            Gfx::RGBA32 color {};
+            Gfx::ARGB32 color {};
             if (m_current_read_buffer == GL_FRONT || m_current_read_buffer == GL_LEFT || m_current_read_buffer == GL_FRONT_LEFT) {
                 if (y + i >= m_frontbuffer->width() || x + j >= m_frontbuffer->height())
                     color = 0;
@@ -2305,7 +2305,7 @@ void SoftwareGLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum for
         auto pixel_data = static_cast<u32 const*>(data);
         for (int y = 0; y < height; ++y)
             for (int x = 0; x < width; ++x)
-                bitmap->set_pixel(x, y, Color::from_rgba(*(pixel_data++)));
+                bitmap->set_pixel(x, y, Color::from_argb(*(pixel_data++)));
 
         m_rasterizer.blit_to_color_buffer_at_raster_position(bitmap);
     } else if (format == GL_DEPTH_COMPONENT) {
@@ -2996,12 +2996,12 @@ void SoftwareGLContext::sync_device_sampler_config()
             config.mipmap_filter = SoftGPU::MipMapFilter::Nearest;
             break;
         case GL_LINEAR_MIPMAP_NEAREST:
-            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
-            config.mipmap_filter = SoftGPU::MipMapFilter::Linear;
-            break;
-        case GL_NEAREST_MIPMAP_LINEAR:
             config.texture_min_filter = SoftGPU::TextureFilter::Linear;
             config.mipmap_filter = SoftGPU::MipMapFilter::Nearest;
+            break;
+        case GL_NEAREST_MIPMAP_LINEAR:
+            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
+            config.mipmap_filter = SoftGPU::MipMapFilter::Linear;
             break;
         case GL_LINEAR_MIPMAP_LINEAR:
             config.texture_min_filter = SoftGPU::TextureFilter::Linear;

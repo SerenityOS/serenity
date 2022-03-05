@@ -80,15 +80,9 @@ bool Node::establishes_stacking_context() const
     return computed_values().opacity() < 1.0f;
 }
 
-HitTestResult Node::hit_test(const Gfx::IntPoint& position, HitTestType type) const
+HitTestResult Node::hit_test(Gfx::IntPoint const&, HitTestType) const
 {
-    HitTestResult result;
-    for_each_child_in_paint_order([&](auto& child) {
-        auto child_result = child.hit_test(position, type);
-        if (child_result.layout_node)
-            result = child_result;
-    });
-    return result;
+    VERIFY_NOT_REACHED();
 }
 
 HTML::BrowsingContext const& Node::browsing_context() const
@@ -437,8 +431,27 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (computed_values.opacity() == 0)
         m_visible = false;
 
-    if (auto width = specified_style.property(CSS::PropertyID::Width); width.has_value() && !width.value()->has_auto())
-        m_has_definite_width = true;
+    auto is_definite_size = [&](CSS::PropertyID property_id, bool width) {
+        auto maybe_value = specified_style.property(property_id);
+        if (!maybe_value.has_value() || maybe_value.value()->has_auto())
+            return false;
+        auto maybe_length_percentage = specified_style.length_percentage(property_id);
+        if (!maybe_length_percentage.has_value())
+            return false;
+        auto length_percentage = maybe_length_percentage.release_value();
+        if (length_percentage.is_length())
+            return true;
+        if (length_percentage.is_percentage()) {
+            auto* containing_block = this->containing_block();
+            return containing_block && (width ? containing_block->m_has_definite_width : containing_block->m_has_definite_height);
+        }
+        // FIXME: Determine if calc() value is definite.
+        return false;
+    };
+
+    m_has_definite_width = is_definite_size(CSS::PropertyID::Width, true);
+    m_has_definite_height = is_definite_size(CSS::PropertyID::Height, false);
+
     if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::Width); maybe_length_percentage.has_value())
         computed_values.set_width(maybe_length_percentage.release_value());
     if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MinWidth); maybe_length_percentage.has_value())
@@ -446,8 +459,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MaxWidth); maybe_length_percentage.has_value())
         computed_values.set_max_width(maybe_length_percentage.release_value());
 
-    if (auto height = specified_style.property(CSS::PropertyID::Height); height.has_value() && !height.value()->has_auto())
-        m_has_definite_height = true;
     if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::Height); maybe_length_percentage.has_value())
         computed_values.set_height(maybe_length_percentage.release_value());
     if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MinHeight); maybe_length_percentage.has_value())

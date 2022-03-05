@@ -41,7 +41,6 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventHandler.h>
-#include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/Origin.h>
@@ -95,6 +94,8 @@ void WindowObject::initialize_global_object()
     define_native_function("matchMedia", match_media, 1, attr);
     define_native_function("getSelection", get_selection, 0, attr);
 
+    define_native_function("postMessage", post_message, 1, attr);
+
     // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
     define_native_accessor("scrollX", scroll_x_getter, {}, attr);
     define_native_accessor("pageXOffset", scroll_x_getter, {}, attr);
@@ -113,6 +114,7 @@ void WindowObject::initialize_global_object()
     define_direct_property("CSS", heap().allocate<CSSNamespace>(*this, *this), 0);
 
     define_native_accessor("localStorage", local_storage_getter, {}, attr);
+    define_native_accessor("origin", origin_getter, {}, attr);
 
     // Legacy
     define_native_accessor("event", event_getter, event_setter, JS::Attribute::Enumerable);
@@ -219,96 +221,80 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::prompt)
     return JS::js_string(vm, response);
 }
 
-// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-setinterval
-JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
+static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::GlobalObject& global_object, JS::Value handler)
 {
-    // FIXME: Ideally this would share more code with setTimeout() using the "timer initialization steps"
-    // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timer-initialisation-steps
-    auto* impl = TRY(impl_from(vm, global_object));
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "setInterval");
-    JS::Object* callback_object;
-    if (vm.argument(0).is_function()) {
-        callback_object = &vm.argument(0).as_function();
-    } else {
-        auto script_source = TRY(vm.argument(0).to_string(global_object));
-        // FIXME: This needs more work once we have a environment settings object.
-        // The spec wants us to use a task for the "run function or script string" part,
-        // using a NativeFunction for the latter is a workaround so that we can reuse the
-        // DOM::Timer API unaltered (always expects a JS::FunctionObject).
-        callback_object = JS::NativeFunction::create(global_object, "", [impl, script_source = move(script_source)](auto&, auto&) mutable {
-            auto& settings_object = verify_cast<HTML::EnvironmentSettingsObject>(*impl->associated_document().realm().host_defined());
-            auto script = HTML::ClassicScript::create(impl->associated_document().url().to_string(), script_source, settings_object, AK::URL());
-            return script->run();
-        });
-    }
-    i32 interval = 0;
-    if (vm.argument_count() >= 2) {
-        interval = TRY(vm.argument(1).to_i32(global_object));
-        if (interval < 0)
-            interval = 0;
-    }
-
-    NonnullOwnPtr<Bindings::CallbackType> callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
-    // FIXME: Pass ...arguments to the callback function when it's invoked
-    auto timer_id = impl->set_interval(move(callback), interval);
-    return JS::Value(timer_id);
+    if (handler.is_function())
+        return Bindings::CallbackType(JS::make_handle<JS::Object>(handler.as_function()), HTML::incumbent_settings_object());
+    return TRY(handler.to_string(global_object));
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
 {
-    // FIXME: Ideally this would share more code with setInterval() using the "timer initialization steps"
-    // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#timer-initialisation-steps
     auto* impl = TRY(impl_from(vm, global_object));
+
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "setTimeout");
-    JS::Object* callback_object;
-    if (vm.argument(0).is_function()) {
-        callback_object = &vm.argument(0).as_function();
-    } else {
-        auto script_source = TRY(vm.argument(0).to_string(global_object));
-        // FIXME: This needs more work once we have a environment settings object.
-        // The spec wants us to use a task for the "run function or script string" part,
-        // using a NativeFunction for the latter is a workaround so that we can reuse the
-        // DOM::Timer API unaltered (always expects a JS::FunctionObject).
-        callback_object = JS::NativeFunction::create(global_object, "", [impl, script_source = move(script_source)](auto&, auto&) mutable {
-            auto& settings_object = verify_cast<HTML::EnvironmentSettingsObject>(*impl->associated_document().realm().host_defined());
-            auto script = HTML::ClassicScript::create(impl->associated_document().url().to_string(), script_source, settings_object, AK::URL());
-            return script->run();
-        });
-    }
-    i32 interval = 0;
-    if (vm.argument_count() >= 2) {
-        interval = TRY(vm.argument(1).to_i32(global_object));
-        if (interval < 0)
-            interval = 0;
-    }
 
-    NonnullOwnPtr<Bindings::CallbackType> callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
+    auto handler = TRY(make_timer_handler(global_object, vm.argument(0)));
 
-    // FIXME: Pass ...arguments to the callback function when it's invoked
-    auto timer_id = impl->set_timeout(move(callback), interval);
-    return JS::Value(timer_id);
+    i32 timeout = 0;
+    if (vm.argument_count() >= 2)
+        timeout = TRY(vm.argument(1).to_i32(global_object));
+
+    JS::MarkedVector<JS::Value> arguments { vm.heap() };
+    for (size_t i = 2; i < vm.argument_count(); ++i)
+        arguments.append(vm.argument(i));
+
+    auto id = impl->set_timeout(move(handler), timeout, move(arguments));
+    return JS::Value(id);
 }
 
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-setinterval
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+
+    if (!vm.argument_count())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "setInterval");
+
+    auto handler = TRY(make_timer_handler(global_object, vm.argument(0)));
+
+    i32 timeout = 0;
+    if (vm.argument_count() >= 2)
+        timeout = TRY(vm.argument(1).to_i32(global_object));
+
+    JS::MarkedVector<JS::Value> arguments { vm.heap() };
+    for (size_t i = 2; i < vm.argument_count(); ++i)
+        arguments.append(vm.argument(i));
+
+    auto id = impl->set_interval(move(handler), timeout, move(arguments));
+    return JS::Value(id);
+}
+
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-cleartimeout
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_timeout)
 {
     auto* impl = TRY(impl_from(vm, global_object));
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "clearTimeout");
-    i32 timer_id = TRY(vm.argument(0).to_i32(global_object));
-    impl->clear_timeout(timer_id);
+
+    i32 id = 0;
+    if (vm.argument_count())
+        id = TRY(vm.argument(0).to_i32(global_object));
+
+    impl->clear_timeout(id);
     return JS::js_undefined();
 }
 
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-clearinterval
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::clear_interval)
 {
     auto* impl = TRY(impl_from(vm, global_object));
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "clearInterval");
-    i32 timer_id = TRY(vm.argument(0).to_i32(global_object));
-    impl->clear_interval(timer_id);
+
+    i32 id = 0;
+    if (vm.argument_count())
+        id = TRY(vm.argument(0).to_i32(global_object));
+
+    impl->clear_interval(id);
     return JS::js_undefined();
 }
 
@@ -396,22 +382,13 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::top_getter)
     return top_window.wrapper();
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::parent_getter)
 {
     auto* impl = TRY(impl_from(vm, global_object));
-
-    auto* this_browsing_context = impl->associated_document().browsing_context();
-    if (!this_browsing_context)
+    auto* parent = impl->parent();
+    if (!parent)
         return JS::js_null();
-
-    if (this_browsing_context->parent()) {
-        VERIFY(this_browsing_context->parent()->active_document());
-        auto& parent_window = this_browsing_context->parent()->active_document()->window();
-        return parent_window.wrapper();
-    }
-    VERIFY(this_browsing_context == &this_browsing_context->top_level_browsing_context());
-    return impl->wrapper();
+    return parent->wrapper();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::document_getter)
@@ -648,6 +625,21 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_y_getter)
 {
     auto* impl = TRY(impl_from(vm, global_object));
     return JS::Value(impl->screen_y());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::post_message)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    auto target_origin = TRY(vm.argument(1).to_string(global_object));
+    impl->post_message(vm.argument(0), target_origin);
+    return JS::js_undefined();
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#dom-origin
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::origin_getter)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    return JS::js_string(vm, impl->associated_document().origin().serialize());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::local_storage_getter)

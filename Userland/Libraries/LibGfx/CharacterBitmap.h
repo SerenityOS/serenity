@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,26 +10,31 @@
 #include "Size.h"
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/StringView.h>
 
 namespace Gfx {
 
-class CharacterBitmap : public RefCounted<CharacterBitmap> {
+class CharacterBitmap {
 public:
-    static NonnullRefPtr<CharacterBitmap> create_from_ascii(const char* asciiData, unsigned width, unsigned height);
-    ~CharacterBitmap();
+    CharacterBitmap() = delete;
+    constexpr CharacterBitmap(StringView ascii_data, unsigned width, unsigned height)
+        : m_bits(ascii_data)
+        , m_size(width, height)
+    {
+    }
 
-    bool bit_at(unsigned x, unsigned y) const { return m_bits[y * width() + x] == '#'; }
-    const char* bits() const { return m_bits; }
+    constexpr ~CharacterBitmap() = default;
 
-    IntSize size() const { return m_size; }
-    unsigned width() const { return m_size.width(); }
-    unsigned height() const { return m_size.height(); }
+    constexpr bool bit_at(unsigned x, unsigned y) const { return m_bits[y * width() + x] == '#'; }
+    constexpr StringView bits() const { return m_bits; }
+
+    constexpr IntSize size() const { return m_size; }
+    constexpr unsigned width() const { return m_size.width(); }
+    constexpr unsigned height() const { return m_size.height(); }
 
 private:
-    CharacterBitmap(const char* b, unsigned w, unsigned h);
-
-    const char* m_bits { nullptr };
-    IntSize m_size;
+    StringView m_bits {};
+    IntSize m_size {};
 };
 
 }

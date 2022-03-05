@@ -528,7 +528,7 @@ size_t malloc_size(void const* ptr)
     auto* header = (const CommonHeader*)page_base;
     auto size = header->m_size;
     if (header->m_magic == MAGIC_BIGALLOC_HEADER)
-        size -= sizeof(CommonHeader);
+        size -= sizeof(BigAllocationBlock);
     else
         VERIFY(header->m_magic == MAGIC_PAGE_HEADER);
     return size;

@@ -13,6 +13,8 @@
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
+#include <Kernel/Graphics/VGA/ISAAdapter.h>
+#include <Kernel/Graphics/VGA/PCIAdapter.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -76,6 +78,16 @@ static inline bool is_display_controller_pci_device(PCI::DeviceIdentifier const&
     return device_identifier.class_code().value() == 0x3;
 }
 
+UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_isa_graphics_device()
+{
+    dmesgln("Graphics: Using a ISA VGA compatible generic adapter");
+    auto adapter = ISAVGAAdapter::initialize();
+    m_graphics_devices.append(*adapter);
+    adapter->enable_consoles();
+    m_vga_adapter = adapter;
+    return true;
+}
+
 UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
@@ -99,7 +111,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
             dmesgln("Graphics: The framebuffer set up by the bootloader is not RGB, ignoring fbdev argument");
         } else {
             dmesgln("Graphics: Using a preset resolution from the bootloader");
-            adapter = VGACompatibleAdapter::initialize_with_preset_resolution(device_identifier,
+            adapter = PCIVGACompatibleAdapter::initialize_with_preset_resolution(device_identifier,
                 multiboot_framebuffer_addr,
                 multiboot_framebuffer_width,
                 multiboot_framebuffer_height,
@@ -145,8 +157,8 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
             if (!m_vga_adapter && PCI::is_io_space_enabled(device_identifier.address())) {
                 create_bootloader_framebuffer_device();
             } else {
-                dmesgln("Graphics: Using a VGA compatible generic adapter");
-                adapter = VGACompatibleAdapter::initialize(device_identifier);
+                dmesgln("Graphics: Using a PCI VGA compatible generic adapter");
+                adapter = PCIVGACompatibleAdapter::initialize(device_identifier);
             }
             break;
         }
@@ -168,7 +180,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
 UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
 {
 
-    /* Explanation on the flow when not requesting to force not creating any 
+    /* Explanation on the flow when not requesting to force not creating any
      * framebuffer devices:
      * If the user wants to use a Console instead of the graphical environment,
      * they doesn't need to request text mode.
@@ -179,30 +191,40 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
      * 1. The bootloader didn't specify settings of a pre-set framebuffer. The
      * kernel has a native driver for a detected display adapter, therefore
      * the kernel can still set a framebuffer.
-     * 2. The bootloader specified settings of a pre-set framebuffer, and the 
+     * 2. The bootloader specified settings of a pre-set framebuffer, and the
      * kernel has a native driver for a detected display adapter, therefore
      * the kernel can still set a framebuffer and change the settings of it.
-     * In that situation, the kernel will simply ignore the Multiboot pre-set 
+     * In that situation, the kernel will simply ignore the Multiboot pre-set
      * framebuffer.
-     * 2. The bootloader specified settings of a pre-set framebuffer, and the 
-     * kernel does not have a native driver for a detected display adapter, 
+     * 2. The bootloader specified settings of a pre-set framebuffer, and the
+     * kernel does not have a native driver for a detected display adapter,
      * therefore the kernel will use the pre-set framebuffer. Modesetting is not
      * available in this situation.
-     * 3. The bootloader didn't specify settings of a pre-set framebuffer, and 
-     * the kernel does not have a native driver for a detected display adapter, 
+     * 3. The bootloader didn't specify settings of a pre-set framebuffer, and
+     * the kernel does not have a native driver for a detected display adapter,
      * therefore the kernel will try to initialize a VGA text mode console.
      * In that situation, the kernel will assume that VGA text mode was already
-     * initialized, but will still try to modeset it. No switching to graphical 
+     * initialized, but will still try to modeset it. No switching to graphical
      * environment is allowed in this case.
-     * 
+     *
      * By default, the kernel assumes that no framebuffer was created until it
-     * was proven that there's an existing framebuffer or we can modeset the 
+     * was proven that there's an existing framebuffer or we can modeset the
      * screen resolution to create a framebuffer.
-     * 
+     *
+     * Special cases:
+     * 1. If the user disabled PCI access, the kernel behaves like it's running
+     * on a pure ISA PC machine and therefore the kernel will try to initialize
+     * a variant that is suitable for ISA VGA handling, and not PCI adapters.
+     *
      * If the user requests to force no initialization of framebuffer devices
      * the same flow above will happen, except that no framebuffer device will
      * be created, so SystemServer will not try to initialize WindowServer.
      */
+
+    if (PCI::Access::is_disabled()) {
+        determine_and_initialize_isa_graphics_device();
+        return true;
+    }
 
     if (framebuffer_devices_console_only())
         dbgln("Forcing non-initialization of framebuffer devices (console only)");

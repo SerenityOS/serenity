@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Region.h"
+#include "Report.h"
 #include "ValueWithShadow.h"
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
@@ -28,6 +29,39 @@ public:
     ValueWithShadow<u64> read64(X86::LogicalAddress);
     ValueWithShadow<u128> read128(X86::LogicalAddress);
     ValueWithShadow<u256> read256(X86::LogicalAddress);
+
+    void dump_backtrace();
+
+    template<typename T>
+    ValueWithShadow<T> read(X86::LogicalAddress address) requires(IsTriviallyConstructible<T>)
+    {
+        auto* region = find_region(address);
+        if (!region) {
+            reportln("SoftMMU::read256: No region for @ {:p}", address.offset());
+            dump_backtrace();
+            TODO();
+        }
+
+        if (!region->is_readable()) {
+            reportln("SoftMMU::read256: Non-readable region @ {:p}", address.offset());
+            dump_backtrace();
+            TODO();
+        }
+
+        alignas(alignof(T)) u8 data[sizeof(T)];
+        Array<u8, sizeof(T)> shadow;
+
+        for (auto i = 0u; i < sizeof(T); ++i) {
+            auto result = region->read8(address.offset() - region->base() + i);
+            data[i] = result.value();
+            shadow[i] = result.shadow()[0];
+        }
+
+        return {
+            *bit_cast<T*>(&data[0]),
+            shadow,
+        };
+    }
 
     void write8(X86::LogicalAddress, ValueWithShadow<u8>);
     void write16(X86::LogicalAddress, ValueWithShadow<u16>);

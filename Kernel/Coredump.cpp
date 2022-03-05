@@ -220,22 +220,26 @@ ErrorOr<void> Coredump::create_notes_process_data(auto& builder) const
     TRY(builder.append_bytes(ReadonlyBytes { (void*)&info, sizeof(info) }));
 
     {
-        JsonObjectSerializer process_obj { builder };
-        process_obj.add("pid"sv, m_process->pid().value());
-        process_obj.add("termination_signal"sv, m_process->termination_signal());
-        process_obj.add("executable_path"sv, m_process->executable() ? TRY(m_process->executable()->try_serialize_absolute_path())->view() : ""sv);
+        auto process_obj = TRY(JsonObjectSerializer<>::try_create(builder));
+        TRY(process_obj.add("pid"sv, m_process->pid().value()));
+        TRY(process_obj.add("termination_signal"sv, m_process->termination_signal()));
+        TRY(process_obj.add("executable_path"sv, m_process->executable() ? TRY(m_process->executable()->try_serialize_absolute_path())->view() : ""sv));
 
         {
-            auto arguments_array = process_obj.add_array("arguments"sv);
+            auto arguments_array = TRY(process_obj.add_array("arguments"sv));
             for (auto const& argument : m_process->arguments())
-                arguments_array.add(argument.view());
+                TRY(arguments_array.add(argument.view()));
+            TRY(arguments_array.finish());
         }
 
         {
-            auto environment_array = process_obj.add_array("environment"sv);
+            auto environment_array = TRY(process_obj.add_array("environment"sv));
             for (auto const& variable : m_process->environment())
-                environment_array.add(variable.view());
+                TRY(environment_array.add(variable.view()));
+            TRY(environment_array.finish());
         }
+
+        TRY(process_obj.finish());
     }
 
     TRY(builder.append('\0'));
@@ -296,10 +300,12 @@ ErrorOr<void> Coredump::create_notes_metadata_data(auto& builder) const
     TRY(builder.append_bytes(ReadonlyBytes { (void*)&metadata, sizeof(metadata) }));
 
     {
-        JsonObjectSerializer metadata_obj { builder };
-        m_process->for_each_coredump_property([&](auto& key, auto& value) {
-            metadata_obj.add(key.view(), value.view());
-        });
+        auto metadata_obj = TRY(JsonObjectSerializer<>::try_create(builder));
+        TRY(m_process->for_each_coredump_property([&](auto& key, auto& value) -> ErrorOr<void> {
+            TRY(metadata_obj.add(key.view(), value.view()));
+            return {};
+        }));
+        TRY(metadata_obj.finish());
     }
     TRY(builder.append('\0'));
     return {};

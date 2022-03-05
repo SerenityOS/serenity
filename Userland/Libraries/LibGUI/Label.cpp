@@ -104,8 +104,8 @@ void Label::paint_event(PaintEvent& event)
     if (is_enabled()) {
         painter.draw_text(text_rect, text(), text_alignment(), palette().color(foreground_role()), Gfx::TextElision::Right, text_wrapping());
     } else {
-        painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), Color::White, Gfx::TextElision::Right, text_wrapping());
-        painter.draw_text(text_rect, text(), font(), text_alignment(), Color::from_rgb(0x808080), Gfx::TextElision::Right, text_wrapping());
+        painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), palette().disabled_text_back(), Gfx::TextElision::Right, text_wrapping());
+        painter.draw_text(text_rect, text(), font(), text_alignment(), palette().disabled_text_front(), Gfx::TextElision::Right, text_wrapping());
     }
 }
 

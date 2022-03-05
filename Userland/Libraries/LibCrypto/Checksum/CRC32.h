@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,35 +11,6 @@
 #include <LibCrypto/Checksum/ChecksumFunction.h>
 
 namespace Crypto::Checksum {
-
-struct Table {
-    u32 data[256];
-
-    constexpr Table()
-        : data()
-    {
-        for (auto i = 0; i < 256; i++) {
-            u32 value = i;
-
-            for (auto j = 0; j < 8; j++) {
-                if (value & 1) {
-                    value = 0xEDB88320 ^ (value >> 1);
-                } else {
-                    value = value >> 1;
-                }
-            }
-
-            data[i] = value;
-        }
-    }
-
-    constexpr u32 operator[](int index) const
-    {
-        return data[index];
-    }
-};
-
-constexpr static auto table = Table();
 
 class CRC32 : public ChecksumFunction<u32> {
 public:

@@ -8,6 +8,7 @@
 #include <AK/Array.h>
 #include <AK/Hex.h>
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <Applications/HexEditor/FindDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -17,13 +18,13 @@
 #include <LibGUI/Widget.h>
 
 struct Option {
-    String title;
+    StringView title;
     OptionId opt;
     bool enabled;
     bool default_action;
 };
 
-static const Array<Option, 2> options = {
+static constexpr Array<Option, 2> options = {
     {
         { "ASCII String", OPTION_ASCII_STRING, true, true },
         { "Hex value", OPTION_HEX_VALUE, true, false },

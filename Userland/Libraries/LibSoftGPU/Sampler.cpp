@@ -111,9 +111,46 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
 
     auto const& image = *m_config.bound_image;
 
+    // FIXME: Make base level configurable with glTexParameteri(GL_TEXTURE_BASE_LEVEL, base_level)
+    constexpr unsigned base_level = 0;
+
+    // Determine the texture scale factor. See OpenGL 1.5 spec chapter 3.8.8.
+    // FIXME: Static casting from u32 to float could silently truncate here.
+    // u16 should be plenty enough for texture dimensions and would allow textures of up to 65536x65536x65536 pixels.
+    auto texel_coordinates = uv;
+    texel_coordinates.set_x(texel_coordinates.x() * static_cast<float>(image.level_width(base_level)));
+    texel_coordinates.set_y(texel_coordinates.y() * static_cast<float>(image.level_height(base_level)));
+    auto dtdx = ddx(texel_coordinates);
+    auto dtdy = ddy(texel_coordinates);
+    auto scale_factor = max(dtdx.dot(dtdx), dtdy.dot(dtdy));
+
+    // FIXME: Here we simply determine the filter based on the single scale factor of the upper left pixel.
+    // Actually, we could end up with different scale factors for each pixel. This however would break our
+    // parallelisation as we could also end up with different filter modes per pixel.
+    auto filter = scale_factor[0] > 1 ? m_config.texture_mag_filter : m_config.texture_min_filter;
+
+    if (m_config.mipmap_filter == MipMapFilter::None)
+        return sample_2d_lod(uv, expand4(base_level), filter);
+
+    // FIXME: Instead of clamping to num_levels - 1, actually make the max mipmap level configurable with glTexParameteri(GL_TEXTURE_MAX_LEVEL, max_level)
+    auto min_level = expand4(static_cast<float>(base_level));
+    auto max_level = expand4(image.num_levels() - 1.0f);
+    auto level = min(max(log2_approximate(scale_factor) * 0.5f, min_level), max_level);
+
+    auto lower_level_texel = sample_2d_lod(uv, to_u32x4(level), filter);
+
+    if (m_config.mipmap_filter == MipMapFilter::Nearest)
+        return lower_level_texel;
+
+    auto higher_level_texel = sample_2d_lod(uv, to_u32x4(min(level + 1.f, max_level)), filter);
+
+    return mix(lower_level_texel, higher_level_texel, frac_int_range(level));
+}
+
+Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& uv, AK::SIMD::u32x4 level, TextureFilter filter) const
+{
+    auto const& image = *m_config.bound_image;
     u32x4 const layer = expand4(0u);
-    // FIXME: calculate actual mipmap level  to use
-    u32x4 const level = expand4(0u);
 
     u32x4 const width = {
         image.level_width(level[0]),
@@ -137,7 +174,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     f32x4 u = s * to_f32x4(width);
     f32x4 v = t * to_f32x4(height);
 
-    if (m_config.texture_mag_filter == TextureFilter::Nearest) {
+    if (filter == TextureFilter::Nearest) {
         u32x4 i = to_u32x4(u);
         u32x4 j = to_u32x4(v);
         u32x4 k = expand4(0u);

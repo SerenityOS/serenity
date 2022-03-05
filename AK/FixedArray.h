@@ -11,6 +11,7 @@
 #include <AK/Iterator.h>
 #include <AK/Span.h>
 #include <AK/kmalloc.h>
+#include <initializer_list>
 
 namespace AK {
 
@@ -20,6 +21,17 @@ template<typename T>
 class FixedArray {
 public:
     FixedArray() = default;
+
+    static ErrorOr<FixedArray<T>> try_create(std::initializer_list<T> initializer)
+    {
+        auto array = TRY(try_create(initializer.size()));
+        auto it = initializer.begin();
+        for (size_t i = 0; i < array.size(); ++i) {
+            array[i] = move(*it);
+            ++it;
+        }
+        return array;
+    }
 
     static ErrorOr<FixedArray<T>> try_create(size_t size)
     {
@@ -112,19 +124,30 @@ public:
     }
 
     size_t size() const { return m_size; }
+    bool is_empty() const { return m_size == 0; }
     T* data() { return m_elements; }
     T const* data() const { return m_elements; }
 
-    T& operator[](size_t index)
+    T& at(size_t index)
     {
         VERIFY(index < m_size);
         return m_elements[index];
     }
 
-    T const& operator[](size_t index) const
+    T const& at(size_t index) const
     {
         VERIFY(index < m_size);
         return m_elements[index];
+    }
+
+    T& operator[](size_t index)
+    {
+        return at(index);
+    }
+
+    T const& operator[](size_t index) const
+    {
+        return at(index);
     }
 
     bool contains_slow(T const& value) const

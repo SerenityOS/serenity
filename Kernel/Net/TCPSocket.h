@@ -19,6 +19,7 @@ namespace Kernel {
 class TCPSocket final : public IPv4Socket {
 public:
     static void for_each(Function<void(const TCPSocket&)>);
+    static ErrorOr<void> try_for_each(Function<ErrorOr<void>(const TCPSocket&)>);
     static ErrorOr<NonnullRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~TCPSocket() override;
 

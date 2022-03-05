@@ -22,6 +22,11 @@ int profiling_free_buffer(pid_t);
 
 int futex(uint32_t* userspace_address, int futex_op, uint32_t value, const struct timespec* timeout, uint32_t* userspace_address2, uint32_t value3);
 
+#ifndef ALWAYS_INLINE
+#    define ALWAYS_INLINE inline __attribute__((always_inline))
+#    define ALWAYS_INLINE_SERENITY_H
+#endif
+
 static ALWAYS_INLINE int futex_wait(uint32_t* userspace_address, uint32_t value, const struct timespec* abstime, int clockid)
 {
     int op;
@@ -41,6 +46,10 @@ static ALWAYS_INLINE int futex_wake(uint32_t* userspace_address, uint32_t count)
 {
     return futex(userspace_address, FUTEX_WAKE, count, NULL, NULL, 0);
 }
+
+#ifdef ALWAYS_INLINE_SERENITY_H
+#    undef ALWAYS_INLINE
+#endif
 
 int purge(int mode);
 

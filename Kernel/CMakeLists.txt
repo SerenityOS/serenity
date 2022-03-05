@@ -82,10 +82,11 @@ set(KERNEL_SOURCES
     Graphics/FramebufferDevice.cpp
     Graphics/GraphicsManagement.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
+    Graphics/VGA/ISAAdapter.cpp
+    Graphics/VGA/PCIAdapter.cpp
     Graphics/VirtIOGPU/FramebufferDevice.cpp
     Graphics/VirtIOGPU/Console.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
-    Graphics/VGACompatibleAdapter.cpp
     Graphics/GenericFramebufferDevice.cpp
     SanCov.cpp
     Storage/ATA/AHCIController.cpp
@@ -95,6 +96,8 @@ set(KERNEL_SOURCES
     Storage/ATA/ATADiskDevice.cpp
     Storage/ATA/ATAPIDiscDevice.cpp
     Storage/ATA/BMIDEChannel.cpp
+    Storage/ATA/ISAIDEController.cpp
+    Storage/ATA/PCIIDEController.cpp
     Storage/ATA/IDEController.cpp
     Storage/ATA/IDEChannel.cpp
     Storage/Partition/DiskPartition.cpp
@@ -249,6 +252,7 @@ set(KERNEL_SOURCES
     Syscalls/readlink.cpp
     Syscalls/realpath.cpp
     Syscalls/rename.cpp
+    Syscalls/resource.cpp
     Syscalls/rmdir.cpp
     Syscalls/sched.cpp
     Syscalls/sendfd.cpp
@@ -383,7 +387,7 @@ else()
     set(SOURCES
         ${SOURCES}
         ${AK_SOURCES}
-        
+
         Arch/aarch64/dummy.cpp
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/ScopedCritical.cpp
@@ -426,7 +430,7 @@ else() # Assume Clang
 
     # We need this in order to pick up the #define __serenity__, otherwise we end up including unistd.h into the linker script
     set(TARGET_STRING "--target=${CMAKE_CXX_COMPILER_TARGET}")
-    
+
     add_link_options(LINKER:--build-id=none LINKER:--pack-dyn-relocs=relr)
 endif()
 

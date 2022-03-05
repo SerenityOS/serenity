@@ -57,6 +57,13 @@ void BrowsingContext::reset_cursor_blink_cycle()
     m_cursor_position.node()->layout_node()->set_needs_display();
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#top-level-browsing-context
+bool BrowsingContext::is_top_level() const
+{
+    // A browsing context that has no parent browsing context is the top-level browsing context for itself and all of the browsing contexts for which it is an ancestor browsing context.
+    return !parent();
+}
+
 bool BrowsingContext::is_focused_context() const
 {
     return m_page && &m_page->focused_context() == this;

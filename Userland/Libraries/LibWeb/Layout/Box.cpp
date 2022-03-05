@@ -178,7 +178,7 @@ HitTestResult Box::hit_test(const Gfx::IntPoint& position, HitTestType type) con
     // FIXME: It would be nice if we could confidently skip over hit testing
     //        parts of the layout tree, but currently we can't just check
     //        m_rect.contains() since inline text rects can't be trusted..
-    HitTestResult result { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
+    HitTestResult result { absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
     for_each_child_in_paint_order([&](auto& child) {
         auto child_result = child.hit_test(position, type);
         if (child_result.layout_node)
@@ -220,8 +220,10 @@ void Box::set_content_size(Gfx::FloatSize const& size)
 
 Gfx::FloatPoint Box::effective_offset() const
 {
-    if (m_containing_line_box_fragment)
-        return m_containing_line_box_fragment->offset();
+    if (m_containing_line_box_fragment.has_value()) {
+        auto const& fragment = containing_block()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
+        return fragment.offset();
+    }
     return m_offset;
 }
 
@@ -234,9 +236,9 @@ const Gfx::FloatRect Box::absolute_rect() const
     return rect;
 }
 
-void Box::set_containing_line_box_fragment(LineBoxFragment& fragment)
+void Box::set_containing_line_box_fragment(Optional<LineBoxFragmentCoordinate> fragment_coordinate)
 {
-    m_containing_line_box_fragment = fragment.make_weak_ptr();
+    m_containing_line_box_fragment = fragment_coordinate;
 }
 
 StackingContext* Box::enclosing_stacking_context()

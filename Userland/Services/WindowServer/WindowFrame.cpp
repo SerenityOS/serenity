@@ -190,6 +190,9 @@ MultiScaleBitmaps const* WindowFrame::shadow_bitmap() const
     case WindowType::WindowSwitcher:
         return nullptr;
     default:
+        // FIXME: Support shadow for themes with border radius
+        if (WindowManager::the().palette().window_border_radius() > 0)
+            return nullptr;
         if (auto* highlight_window = WindowManager::the().highlight_window())
             return highlight_window == &m_window ? s_active_window_shadow : s_inactive_window_shadow;
         return m_window.is_active() ? s_active_window_shadow : s_inactive_window_shadow;
@@ -568,7 +571,8 @@ Gfx::IntRect WindowFrame::unconstrained_render_rect() const
 
 Gfx::DisjointRectSet WindowFrame::opaque_render_rects() const
 {
-    if (has_alpha_channel()) {
+    auto border_radius = WindowManager::the().palette().window_border_radius();
+    if (has_alpha_channel() || border_radius > 0) {
         if (m_window.is_opaque())
             return constrained_render_rect_to_screen(m_window.rect());
         return {};
@@ -582,7 +586,8 @@ Gfx::DisjointRectSet WindowFrame::opaque_render_rects() const
 
 Gfx::DisjointRectSet WindowFrame::transparent_render_rects() const
 {
-    if (has_alpha_channel()) {
+    auto border_radius = WindowManager::the().palette().window_border_radius();
+    if (has_alpha_channel() || border_radius > 0) {
         if (m_window.is_opaque()) {
             Gfx::DisjointRectSet transparent_rects;
             transparent_rects.add_many(render_rect().shatter(m_window.rect()));

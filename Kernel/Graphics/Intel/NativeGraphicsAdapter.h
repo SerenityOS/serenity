@@ -10,7 +10,7 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
-#include <Kernel/Graphics/VGACompatibleAdapter.h>
+#include <Kernel/Graphics/VGA/PCIAdapter.h>
 #include <Kernel/PhysicalAddress.h>
 #include <LibEDID/EDID.h>
 
@@ -47,7 +47,7 @@ enum RegisterIndex {
 }
 
 class IntelNativeGraphicsAdapter final
-    : public VGACompatibleAdapter {
+    : public PCIVGACompatibleAdapter {
 public:
     struct PLLSettings {
         bool is_valid() const { return (n != 0 && m1 != 0 && m2 != 0 && p1 != 0 && p2 != 0); }

@@ -228,6 +228,14 @@ void BrowserWindow::build_menus()
     js_console_action->set_status_tip("Open JavaScript console for this page");
     inspect_menu.add_action(js_console_action);
 
+    auto storage_window_action = GUI::Action::create(
+        "Open S&torage Inspector", g_icon_bag.cookie, [this](auto&) {
+            active_tab().show_storage_inspector();
+        },
+        this);
+    storage_window_action->set_status_tip("Show Storage inspector for this page");
+    inspect_menu.add_action(storage_window_action);
+
     auto& settings_menu = add_menu("&Settings");
 
     m_change_homepage_action = GUI::Action::create(
@@ -524,6 +532,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
 
     new_tab.on_dump_cookies = [this]() {
         m_cookie_jar.dump_cookies();
+    };
+
+    new_tab.on_want_cookies = [this]() {
+        return m_cookie_jar.get_all_cookies();
     };
 
     new_tab.load(url);

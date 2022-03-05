@@ -136,7 +136,7 @@ class Sheet {
             if (column !== name) continue;
             bound = Math.max(bound, row);
         }
-        return row;
+        return bound;
     }
 
     evaluate(currentColumn, currentRow, expression) {

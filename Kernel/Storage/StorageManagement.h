@@ -36,7 +36,7 @@ public:
 private:
     bool boot_argument_contains_partition_uuid();
 
-    void enumerate_controllers(bool force_pio, bool nvme_poll);
+    void enumerate_pci_controllers(bool force_pio, bool nvme_poll);
     void enumerate_storage_devices();
     void enumerate_disk_partitions();
 

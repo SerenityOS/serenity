@@ -109,6 +109,15 @@ void DeviceManagement::for_each(Function<void(Device&)> callback)
     });
 }
 
+ErrorOr<void> DeviceManagement::try_for_each(Function<ErrorOr<void>(Device&)> callback)
+{
+    return m_devices.with([&](auto& map) -> ErrorOr<void> {
+        for (auto& entry : map)
+            TRY(callback(*entry.value));
+        return {};
+    });
+}
+
 NullDevice& DeviceManagement::null_device()
 {
     return *m_null_device;

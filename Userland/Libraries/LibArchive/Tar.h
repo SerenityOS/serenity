@@ -116,6 +116,8 @@ public:
     unsigned expected_checksum() const;
     void calculate_checksum();
 
+    bool content_is_like_extended_header() const;
+
 private:
     char m_filename[100] { 0 };
     char m_mode[8] { 0 };

@@ -179,19 +179,19 @@ Vector<String> DiffViewer::split_to_lines(const String& text)
 
 Gfx::Color DiffViewer::red_background()
 {
-    static Gfx::Color color = Gfx::Color::from_rgba(0x88ff0000);
+    static Gfx::Color color = Gfx::Color::from_argb(0x88ff0000);
     return color;
 }
 
 Gfx::Color DiffViewer::green_background()
 {
-    static Gfx::Color color = Gfx::Color::from_rgba(0x8800ff00);
+    static Gfx::Color color = Gfx::Color::from_argb(0x8800ff00);
     return color;
 }
 
 Gfx::Color DiffViewer::gray_background()
 {
-    static Gfx::Color color = Gfx::Color::from_rgba(0x88888888);
+    static Gfx::Color color = Gfx::Color::from_argb(0x88888888);
     return color;
 }
 

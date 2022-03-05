@@ -75,7 +75,7 @@ bool FormattingContext::creates_block_formatting_context(const Box& box)
     return false;
 }
 
-OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_context_if_needed(Box const& child_box)
+OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_context_if_needed(FormattingState& state, Box const& child_box)
 {
     if (!child_box.can_have_children())
         return {};
@@ -83,20 +83,20 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
     auto child_display = child_box.computed_values().display();
 
     if (is<SVGSVGBox>(child_box))
-        return make<SVGFormattingContext>(m_state, child_box, this);
+        return make<SVGFormattingContext>(state, child_box, this);
 
     if (child_display.is_flex_inside())
-        return make<FlexFormattingContext>(m_state, child_box, this);
+        return make<FlexFormattingContext>(state, child_box, this);
 
     if (creates_block_formatting_context(child_box))
-        return make<BlockFormattingContext>(m_state, verify_cast<BlockContainer>(child_box), this);
+        return make<BlockFormattingContext>(state, verify_cast<BlockContainer>(child_box), this);
 
     if (child_display.is_table_inside())
-        return make<TableFormattingContext>(m_state, verify_cast<TableBox>(child_box), this);
+        return make<TableFormattingContext>(state, verify_cast<TableBox>(child_box), this);
 
     VERIFY(is_block_formatting_context());
     if (child_box.children_are_inline())
-        return make<InlineFormattingContext>(m_state, verify_cast<BlockContainer>(child_box), static_cast<BlockFormattingContext&>(*this));
+        return make<InlineFormattingContext>(state, verify_cast<BlockContainer>(child_box), static_cast<BlockFormattingContext&>(*this));
 
     // The child box is a block container that doesn't create its own BFC.
     // It will be formatted by this BFC.
@@ -112,7 +112,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
             }
             virtual void run(Box const&, LayoutMode) override { }
         };
-        return make<DummyFormattingContext>(m_state, child_box);
+        return make<DummyFormattingContext>(state, child_box);
     }
     VERIFY(child_box.is_block_container());
     VERIFY(child_display.is_flow_inside());
@@ -124,7 +124,7 @@ OwnPtr<FormattingContext> FormattingContext::layout_inside(Box const& child_box,
     if (!child_box.can_have_children())
         return {};
 
-    auto independent_formatting_context = create_independent_formatting_context_if_needed(child_box);
+    auto independent_formatting_context = create_independent_formatting_context_if_needed(m_state, child_box);
     if (independent_formatting_context)
         independent_formatting_context->run(child_box, layout_mode);
     else
@@ -206,35 +206,91 @@ static Gfx::FloatSize solve_replaced_size_constraint(FormattingState const& stat
     return { w, h };
 }
 
-float FormattingContext::compute_auto_height_for_block_level_element(FormattingState const& state, Box const& box, ConsiderFloats consider_floats)
+float FormattingContext::compute_auto_height_for_block_level_element(FormattingState const& state, Box const& box)
 {
+    if (creates_block_formatting_context(box))
+        return compute_auto_height_for_block_formatting_context_root(state, verify_cast<BlockContainer>(box));
+
+    auto const& box_state = state.get(box);
+
+    // https://www.w3.org/TR/CSS22/visudet.html#normal-block
+    // 10.6.3 Block-level non-replaced elements in normal flow when 'overflow' computes to 'visible'
+
+    // The element's height is the distance from its top content edge to the first applicable of the following:
+
+    // 1. the bottom edge of the last line box, if the box establishes a inline formatting context with one or more lines
+    if (box.children_are_inline() && !box_state.line_boxes.is_empty()) {
+        // Find the top content edge (if negative).
+        float top_content_edge = 0;
+        for (auto const& fragment : box_state.line_boxes.first().fragments()) {
+            float fragment_top_content_edge = fragment.offset().y() - fragment.border_box_top();
+            if (fragment_top_content_edge < top_content_edge)
+                top_content_edge = fragment_top_content_edge;
+        }
+        return box_state.line_boxes.last().bottom() - top_content_edge;
+    }
+
+    // 2. the bottom edge of the bottom (possibly collapsed) margin of its last in-flow child, if the child's bottom margin does not collapse with the element's bottom margin
+    // FIXME: 3. the bottom border edge of the last in-flow child whose top margin doesn't collapse with the element's bottom margin
+    if (!box.children_are_inline()) {
+        Optional<float> top;
+        Optional<float> bottom;
+        box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
+            if (child_box.is_absolutely_positioned() || child_box.is_floating())
+                return;
+
+            // FIXME: Handle margin collapsing.
+            auto const& child_box_state = state.get(child_box);
+            float child_box_top = child_box_state.offset.y() - child_box_state.border_box_top();
+            float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom();
+
+            if (!top.has_value() || child_box_top < top.value())
+                top = child_box_top;
+            if (!bottom.has_value() || child_box_bottom > bottom.value())
+                bottom = child_box_bottom;
+        });
+        return bottom.value_or(0) - top.value_or(0);
+    }
+
+    // 4. zero, otherwise
+    return 0;
+}
+
+// https://www.w3.org/TR/CSS22/visudet.html#root-height
+float FormattingContext::compute_auto_height_for_block_formatting_context_root(FormattingState const& state, BlockContainer const& root)
+{
+    // 10.6.7 'Auto' heights for block formatting context roots
     Optional<float> top;
     Optional<float> bottom;
 
-    if (box.children_are_inline()) {
+    if (root.children_are_inline()) {
         // If it only has inline-level children, the height is the distance between
         // the top content edge and the bottom of the bottommost line box.
-        auto const& block_container = verify_cast<BlockContainer>(box);
-        auto const& line_boxes = state.get(block_container).line_boxes;
+        auto const& line_boxes = state.get(root).line_boxes;
         top = 0;
         if (!line_boxes.is_empty()) {
-            for (auto& fragment : line_boxes.last().fragments()) {
-                float fragment_top = fragment.offset().y() - fragment.border_box_top();
-                if (!top.has_value() || fragment_top < *top)
-                    top = fragment_top;
-                float fragment_bottom = fragment.offset().y() + fragment.height() + fragment.border_box_bottom();
-                if (!bottom.has_value() || fragment_bottom > *bottom)
-                    bottom = fragment_bottom;
+            // Find the top edge (if negative).
+            for (auto const& fragment : line_boxes.first().fragments()) {
+                float fragment_top_content_edge = fragment.offset().y();
+                if (!top.has_value() || fragment_top_content_edge < *top)
+                    top = fragment_top_content_edge;
             }
+            // Find the bottom edge.
+            bottom = line_boxes.last().bottom();
         }
     } else {
         // If it has block-level children, the height is the distance between
         // the top margin-edge of the topmost block-level child box
         // and the bottom margin-edge of the bottommost block-level child box.
-        box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
+        root.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
+            // Absolutely positioned children are ignored,
+            // and relatively positioned boxes are considered without their offset.
+            // Note that the child box may be an anonymous block box.
             if (child_box.is_absolutely_positioned())
                 return IterationDecision::Continue;
-            if ((box.computed_values().overflow_y() == CSS::Overflow::Visible) && child_box.is_floating())
+
+            // FIXME: This doesn't look right.
+            if ((root.computed_values().overflow_y() == CSS::Overflow::Visible) && child_box.is_floating())
                 return IterationDecision::Continue;
 
             auto const& child_box_state = state.get(child_box);
@@ -250,24 +306,21 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
 
             return IterationDecision::Continue;
         });
-        if (consider_floats == ConsiderFloats::Yes) {
-            // In addition, if the element has any floating descendants
-            // whose bottom margin edge is below the element's bottom content edge,
-            // then the height is increased to include those edges.
-            box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
-                if (!child_box.is_floating())
-                    return IterationDecision::Continue;
-
-                auto const& child_box_state = state.get(child_box);
-
-                float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height;
-
-                if (!bottom.has_value() || child_box_bottom > bottom.value())
-                    bottom = child_box_bottom;
-
+        // In addition, if the element has any floating descendants
+        // whose bottom margin edge is below the element's bottom content edge,
+        // then the height is increased to include those edges.
+        root.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
+            if (!child_box.is_floating())
                 return IterationDecision::Continue;
-            });
-        }
+
+            auto const& child_box_state = state.get(child_box);
+            float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom();
+
+            if (!bottom.has_value() || child_box_bottom > bottom.value())
+                bottom = child_box_bottom;
+
+            return IterationDecision::Continue;
+        });
     }
     return bottom.value_or(0) - top.value_or(0);
 }

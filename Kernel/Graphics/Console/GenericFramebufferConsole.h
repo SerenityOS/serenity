@@ -45,6 +45,7 @@ protected:
     {
     }
     virtual u8* framebuffer_data() = 0;
+    size_t framebuffer_pitch() const { return m_pitch; }
     virtual void clear_glyph(size_t x, size_t y);
     size_t m_pitch;
 };

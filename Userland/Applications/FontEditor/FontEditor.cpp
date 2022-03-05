@@ -8,6 +8,7 @@
 #include "FontEditor.h"
 #include "GlyphEditorWidget.h"
 #include "NewFontDialog.h"
+#include <AK/Array.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
@@ -42,8 +43,7 @@
 #include <LibGfx/TextDirection.h>
 #include <LibUnicode/CharacterTypes.h>
 
-static constexpr int s_pangram_count = 10;
-static char const* pangrams[s_pangram_count] = {
+static constexpr Array pangrams = {
     "quick fox jumps nightly above wizard",
     "five quacking zephyrs jolt my wax bed",
     "pack my box with five dozen liquor jugs",
@@ -101,8 +101,8 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     reload_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png").release_value_but_fixme_should_propagate_errors());
     reload_button.set_fixed_width(22);
     reload_button.on_click = [&](auto) {
-        static int i = 1;
-        if (i >= s_pangram_count)
+        static size_t i = 1;
+        if (i >= pangrams.size())
             i = 0;
         preview_textbox.set_text(pangrams[i]);
         i++;
@@ -456,7 +456,8 @@ FontEditorWidget::FontEditorWidget()
     m_filter_model = MUST(GUI::FilteringProxyModel::create(*m_unicode_block_model));
     m_filter_model->set_filter_term("");
 
-    m_unicode_block_listview->on_activation = [this, unicode_blocks](auto& index) {
+    m_unicode_block_listview->on_selection_change = [this, unicode_blocks] {
+        auto index = m_unicode_block_listview->selection().first();
         auto mapped_index = m_filter_model->map(index);
         if (mapped_index.row() > 0)
             m_range = unicode_blocks[mapped_index.row() - 1].code_point_range;

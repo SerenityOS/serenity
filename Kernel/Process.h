@@ -16,6 +16,7 @@
 #include <AK/Variant.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
+#include <Kernel/API/POSIX/sys/resource.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/AtomicEdgeAction.h>
@@ -237,6 +238,7 @@ public:
     IterationDecision for_each_thread(Callback);
     template<IteratorFunction<Thread&> Callback>
     IterationDecision for_each_thread(Callback callback) const;
+    ErrorOr<void> try_for_each_thread(Function<ErrorOr<void>(Thread const&)>) const;
 
     // Non-breakable iteration functions
     template<VoidFunction<Process&> Callback>
@@ -285,6 +287,7 @@ public:
     ErrorOr<FlatPtr> sys$getppid();
     ErrorOr<FlatPtr> sys$getresuid(Userspace<UserID*>, Userspace<UserID*>, Userspace<UserID*>);
     ErrorOr<FlatPtr> sys$getresgid(Userspace<GroupID*>, Userspace<GroupID*>, Userspace<GroupID*>);
+    ErrorOr<FlatPtr> sys$getrusage(int, Userspace<rusage*>);
     ErrorOr<FlatPtr> sys$umask(mode_t);
     ErrorOr<FlatPtr> sys$open(Userspace<const Syscall::SC_open_params*>);
     ErrorOr<FlatPtr> sys$close(int fd);
@@ -448,6 +451,7 @@ public:
     ErrorOr<void> send_signal(u8 signal, Process* sender);
 
     u8 termination_signal() const { return m_protected_values.termination_signal; }
+    u8 termination_status() const { return m_protected_values.termination_status; }
 
     u16 thread_count() const
     {
@@ -487,12 +491,13 @@ public:
     Thread::WaitBlockerSet& wait_blocker_set() { return m_wait_blocker_set; }
 
     template<typename Callback>
-    void for_each_coredump_property(Callback callback) const
+    ErrorOr<void> for_each_coredump_property(Callback callback) const
     {
         for (auto const& property : m_coredump_properties) {
             if (property.key && property.value)
-                callback(*property.key, *property.value);
+                TRY(callback(*property.key, *property.value));
         }
+        return {};
     }
 
     ErrorOr<void> set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value);
@@ -659,6 +664,7 @@ public:
         OpenFileDescriptionAndFlags* get_if_valid(size_t i);
 
         void enumerate(Function<void(const OpenFileDescriptionAndFlags&)>) const;
+        ErrorOr<void> try_enumerate(Function<ErrorOr<void>(const OpenFileDescriptionAndFlags&)>) const;
         void change_each(Function<void(OpenFileDescriptionAndFlags&)>);
 
         ErrorOr<ScopedDescriptionAllocation> allocate(int first_candidate_fd = 0);
@@ -822,6 +828,12 @@ private:
     NonnullRefPtrVector<Thread> m_threads_for_coredump;
 
     mutable RefPtr<ProcessProcFSTraits> m_procfs_traits;
+    struct SignalActionData {
+        VirtualAddress handler_or_sigaction;
+        int flags { 0 };
+        u32 mask { 0 };
+    };
+    Array<SignalActionData, NSIG> m_signal_action_data;
 
     static_assert(sizeof(ProtectedValues) < (PAGE_SIZE));
     alignas(4096) ProtectedValues m_protected_values;
@@ -937,6 +949,15 @@ inline IterationDecision Process::for_each_thread(Callback callback) const
             callback(thread);
     });
     return IterationDecision::Continue;
+}
+
+inline ErrorOr<void> Process::try_for_each_thread(Function<ErrorOr<void>(Thread const&)> callback) const
+{
+    return thread_list().with([&](auto& thread_list) -> ErrorOr<void> {
+        for (auto& thread : thread_list)
+            TRY(callback(thread));
+        return {};
+    });
 }
 
 template<VoidFunction<Thread&> Callback>

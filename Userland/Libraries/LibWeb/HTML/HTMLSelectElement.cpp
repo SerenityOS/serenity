@@ -19,16 +19,4 @@ HTMLSelectElement::~HTMLSelectElement()
 {
 }
 
-void HTMLSelectElement::inserted()
-{
-    HTMLElement::inserted();
-    set_form(first_ancestor_of_type<HTMLFormElement>());
-}
-
-void HTMLSelectElement::removed_from(DOM::Node* old_parent)
-{
-    HTMLElement::removed_from(old_parent);
-    set_form(nullptr);
-}
-
 }

@@ -46,24 +46,32 @@ describe("Basic functions", () => {
         expect(reduce).toBeDefined();
         expect(reduce(acc => acc + 1, 0, [1, 2, 3, 4])).toEqual(4);
         expect(reduce(acc => acc + 1, 0, [])).toEqual(0);
+        expect(reduce((acc, x) => acc + "|" + x.toString(), 0, R`A0:A2`)).toEqual("0|0|1|2");
+        expect(reduce((acc, x) => acc + "|" + x.toString(), 0, R`A0:A0`)).toEqual("0|0");
     });
 
     test("numericReduce", () => {
         expect(numericReduce).toBeDefined();
         expect(numericReduce(acc => acc + 1, 0, [1, 2, 3, 4])).toEqual(4);
         expect(numericReduce(acc => acc + 1, 0, [])).toEqual(0);
+        expect(numericReduce((acc, x) => acc + x, 19, R`A0:A2`)).toEqual(22);
+        expect(numericReduce(acc => acc + 1, 3, R`A0:A0`)).toEqual(4);
     });
 
     test("numericResolve", () => {
         expect(numericResolve).toBeDefined();
-        expect(numericResolve(["A0", "A1", "A2"])).toEqual([0, 1, 2]);
+        expect(numericResolve(["0", "1", "2"])).toEqual([0, 1, 2]);
         expect(numericResolve([])).toEqual([]);
+        expect(numericResolve(R`A0:A2`)).toEqual([0, 1, 2]);
+        expect(numericResolve(R`A0:A0`)).toEqual([0]);
     });
 
     test("resolve", () => {
         expect(resolve).toBeDefined();
-        expect(resolve(["A0", "A1", "A2"])).toEqual(["0", "1", "2"]);
+        expect(resolve(["A", "B", "C"])).toEqual(["A", "B", "C"]);
         expect(resolve([])).toEqual([]);
+        expect(resolve(R`A0:A2`)).toEqual(["0", "1", "2"]);
+        expect(resolve(R`A0:A0`)).toEqual(["0"]);
     });
 });
 
@@ -73,6 +81,7 @@ describe("Statistics", () => {
     sheet.makeCurrent();
 
     for (let i = 0; i < 10; ++i) sheet.setCell("A", i, `${i}`);
+    for (let i = 0; i < 10; ++i) sheet.setCell("B", i, `${i * i}`);
 
     test("sum", () => {
         expect(sum).toBeDefined();
@@ -102,6 +111,36 @@ describe("Statistics", () => {
     test("averageIf", () => {
         expect(averageIf).toBeDefined();
         expect(averageIf(x => !Number.isNaN(x), R`A0:A10`)).toEqual(4.5);
+    });
+
+    test("minIf", () => {
+        expect(minIf).toBeDefined();
+        expect(minIf(x => x > 25, R`B0:B9`)).toEqual(36);
+    });
+
+    test("min", () => {
+        expect(min).toBeDefined();
+        expect(min(R`B0:B9`)).toEqual(0);
+    });
+
+    test("maxIf", () => {
+        expect(maxIf).toBeDefined();
+        expect(maxIf(x => x > 25, R`B0:B9`)).toEqual(81);
+    });
+
+    test("max", () => {
+        expect(max).toBeDefined();
+        expect(max(R`B0:B9`)).toEqual(81);
+    });
+
+    test("sumProductIf", () => {
+        expect(sumProductIf).toBeDefined();
+        expect(sumProductIf((a, b) => b > 25, R`A0:A9`, R`B0:B9`)).toEqual(1800);
+    });
+
+    test("sumProduct", () => {
+        expect(sumProduct).toBeDefined();
+        expect(sumProduct(R`A0:A9`, R`B0:B9`)).toEqual(2025);
     });
 
     test("median", () => {
@@ -162,5 +201,38 @@ describe("Lookup", () => {
         expect(reflookup("2", R`A0:A9`, R`B0:B9`).name).toEqual("B2");
         expect(reflookup("20", R`A0:A9`, R`B0:B9`)).toEqual(here());
         expect(reflookup("80", R`A0:A9`, R`B0:B9`, undefined, "nextlargest").name).toEqual("B9");
+    });
+});
+
+describe("integer() function", () => {
+    test("undefined", () => {
+        expect(() => integer(undefined)).toThrow(Error);
+    });
+    test("null", () => {
+        expect(() => integer(null)).toThrow(Error);
+    });
+    test("NaN", () => {
+        expect(() => integer(NaN)).toThrow(Error);
+    });
+    test("object", () => {
+        expect(() => integer({})).toThrow(Error);
+    });
+    test("function", () => {
+        expect(() => integer(() => {})).toThrow(Error);
+    });
+    test("try 1 as string", () => {
+        expect(integer("1")).toBe(1);
+    });
+    test("try 1 as number", () => {
+        expect(integer(1)).toBe(1);
+    });
+    test("try 1000000 as string", () => {
+        expect(integer("1000000")).toBe(1000000);
+    });
+    test("try 1000000 as number", () => {
+        expect(integer(1000000)).toBe(1000000);
+    });
+    test("don't just allow any strings", () => {
+        expect(() => integer("is this NaN yet?")).toThrow();
     });
 });

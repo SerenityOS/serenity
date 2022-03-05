@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "AK/TypedTransfer.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
 #include <AK/FixedArray.h>
@@ -17,57 +18,14 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <AK/kmalloc.h>
+#include <LibAudio/Resampler.h>
 #include <LibAudio/Sample.h>
+#include <LibAudio/SampleFormats.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <string.h>
 
 namespace Audio {
 using namespace AK::Exponentials;
-
-// Supported PCM sample formats.
-enum PcmSampleFormat : u8 {
-    Uint8,
-    Int16,
-    Int24,
-    Int32,
-    Float32,
-    Float64,
-};
-
-// Most of the read code only cares about how many bits to read or write
-u16 pcm_bits_per_sample(PcmSampleFormat format);
-String sample_format_name(PcmSampleFormat format);
-
-// Small helper to resample from one playback rate to another
-// This isn't really "smart", in that we just insert (or drop) samples.
-// Should do better...
-template<typename SampleType>
-class ResampleHelper {
-public:
-    ResampleHelper(u32 source, u32 target);
-
-    // To be used as follows:
-    // while the resampler doesn't need a new sample, read_sample(current) and store the resulting samples.
-    // as long as the resampler needs a new sample, process_sample(current)
-
-    // Stores a new sample
-    void process_sample(SampleType sample_l, SampleType sample_r);
-    // Assigns the given sample to its correct value and returns false if there is a new sample required
-    bool read_sample(SampleType& next_l, SampleType& next_r);
-    Vector<SampleType> resample(Vector<SampleType> to_resample);
-
-    void reset();
-
-    u32 source() const { return m_source; }
-    u32 target() const { return m_target; }
-
-private:
-    const u32 m_source;
-    const u32 m_target;
-    u32 m_current_ratio { 0 };
-    SampleType m_last_sample_l;
-    SampleType m_last_sample_r;
-};
 
 // A buffer of audio samples.
 class Buffer : public RefCounted<Buffer> {
@@ -90,6 +48,14 @@ public:
     }
 
     Sample const* samples() const { return (const Sample*)data(); }
+
+    ErrorOr<FixedArray<Sample>> to_sample_array() const
+    {
+        FixedArray<Sample> samples = TRY(FixedArray<Sample>::try_create(m_sample_count));
+        AK::TypedTransfer<Sample>::copy(samples.data(), this->samples(), m_sample_count);
+        return samples;
+    }
+
     int sample_count() const { return m_sample_count; }
     void const* data() const { return m_buffer.data<void>(); }
     int size_in_bytes() const { return m_sample_count * (int)sizeof(Sample); }

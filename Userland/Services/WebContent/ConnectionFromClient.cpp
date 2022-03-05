@@ -271,18 +271,18 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
         auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> String {
             StringBuilder builder;
 
-            JsonObjectSerializer serializer(builder);
+            auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
             properties.for_each_property([&](auto property_id, auto& value) {
-                serializer.add(Web::CSS::string_from_property_id(property_id), value.to_string());
+                MUST(serializer.add(Web::CSS::string_from_property_id(property_id), value.to_string()));
             });
-            serializer.finish();
+            MUST(serializer.finish());
 
             return builder.to_string();
         };
 
         auto serialize_custom_properties_json = [](Web::DOM::Element const& element) -> String {
             StringBuilder builder;
-            JsonObjectSerializer serializer(builder);
+            auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
             HashTable<String> seen_properties;
 
             auto const* element_to_check = &element;
@@ -290,14 +290,14 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
                 for (auto const& property : element_to_check->custom_properties()) {
                     if (!seen_properties.contains(property.key)) {
                         seen_properties.set(property.key);
-                        serializer.add(property.key, property.value.value->to_string());
+                        MUST(serializer.add(property.key, property.value.value->to_string()));
                     }
                 }
 
                 element_to_check = element_to_check->parent_element();
             }
 
-            serializer.finish();
+            MUST(serializer.finish());
 
             return builder.to_string();
         };

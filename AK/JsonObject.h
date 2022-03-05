@@ -162,10 +162,11 @@ private:
 template<typename Builder>
 inline void JsonObject::serialize(Builder& builder) const
 {
-    JsonObjectSerializer serializer { builder };
+    auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
     for_each_member([&](auto& key, auto& value) {
-        serializer.add(key, value);
+        MUST(serializer.add(key, value));
     });
+    MUST(serializer.finish());
 }
 
 template<typename Builder>

@@ -1,6 +1,6 @@
 ## Name
 
-usermod
+usermod - modify a user account
 
 ## Synopsis
 
@@ -10,7 +10,8 @@ $ usermod [--uid uid] [--gid gid] [--lock] [--unlock] [--home new-home] [--move]
 
 ## Description
 
-Modify a user account
+This program modifies an existing user account.
+This program must be run as root.
 
 ## Options:
 

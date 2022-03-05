@@ -36,7 +36,7 @@ public:
     void register_viewport_client(ViewportClient&);
     void unregister_viewport_client(ViewportClient&);
 
-    bool is_top_level() const { return !container(); }
+    bool is_top_level() const;
     bool is_focused_context() const;
 
     DOM::Document const* active_document() const { return m_active_document; }

@@ -9,6 +9,23 @@
 
 namespace Web::Layout {
 
+FormattingState::NodeState& FormattingState::get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
+{
+    auto state = nodes.ensure(&box, [] { return adopt_ref(*new NodeState); });
+    // CoW if ref_count > 2 (1 for the entry in `this->nodes`, 1 for the `state` local in this function)
+    if (state->ref_count > 2) {
+        state = adopt_ref(*new NodeState { *state });
+        state->ref_count = 1;
+        nodes.set(&box, state);
+    }
+    return state;
+}
+
+FormattingState::NodeState const& FormattingState::get(NodeWithStyleAndBoxModelMetrics const& box) const
+{
+    return *const_cast<FormattingState&>(*this).nodes.ensure(&box, [] { return adopt_ref(*new NodeState); });
+}
+
 void FormattingState::commit()
 {
     for (auto& it : nodes) {
@@ -27,6 +44,7 @@ void FormattingState::commit()
             box.set_offset(node_state.offset);
             box.set_content_size(node_state.content_width, node_state.content_height);
             box.set_overflow_data(move(node_state.overflow_data));
+            box.set_containing_line_box_fragment(node_state.containing_line_box_fragment);
         }
 
         // For block containers, transfer line boxes.

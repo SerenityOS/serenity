@@ -14,8 +14,10 @@
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/CSS/MediaQueryList.h>
 #include <LibWeb/CSS/Screen.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
 
 namespace Web::DOM {
@@ -41,8 +43,13 @@ public:
     Page* page();
     Page const* page() const;
 
+    // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
     Document const& associated_document() const { return *m_associated_document; }
     Document& associated_document() { return *m_associated_document; }
+
+    // https://html.spec.whatwg.org/multipage/window-object.html#window-bc
+    HTML::BrowsingContext const* browsing_context() const { return m_associated_document->browsing_context(); }
+    HTML::BrowsingContext* browsing_context() { return m_associated_document->browsing_context(); }
 
     void alert(String const&);
     bool confirm(String const&);
@@ -50,8 +57,8 @@ public:
     i32 request_animation_frame(NonnullOwnPtr<Bindings::CallbackType> js_callback);
     void cancel_animation_frame(i32);
 
-    i32 set_timeout(NonnullOwnPtr<Bindings::CallbackType> callback, i32);
-    i32 set_interval(NonnullOwnPtr<Bindings::CallbackType> callback, i32);
+    i32 set_timeout(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
+    i32 set_interval(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
     void clear_timeout(i32);
     void clear_interval(i32);
 
@@ -69,9 +76,7 @@ public:
 
     void set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject&);
 
-    i32 allocate_timer_id(Badge<Timer>);
     void deallocate_timer_id(Badge<Timer>, i32);
-    void timer_did_fire(Badge<Timer>, Timer&);
 
     HighResolutionTime::Performance& performance() { return *m_performance; }
 
@@ -100,11 +105,21 @@ public:
 
     RefPtr<HTML::Storage> local_storage();
 
+    Window* parent();
+
+    DOM::ExceptionOr<void> post_message(JS::Value, String const& target_origin);
+
 private:
     explicit Window(Document&);
 
     // ^HTML::GlobalEventHandlers
     virtual DOM::EventTarget& global_event_handlers_to_event_target() override { return *this; }
+
+    enum class Repeat {
+        Yes,
+        No,
+    };
+    i32 run_timer_initialization_steps(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments, Repeat repeat, Optional<i32> previous_id = {});
 
     // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
     WeakPtr<Document> m_associated_document;

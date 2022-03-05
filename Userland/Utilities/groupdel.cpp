@@ -2,38 +2,30 @@
  * Copyright (c) 2020, Fei Wu <f.eiwu@yahoo.com>
  * Copyright (c) 2021, Brandon Pruitt <brapru@pm.me>
  * Copyright (c) 2021, Maxime Friess <M4x1me@pm.me>
+ * Copyright (c) 2022, Umut İnan Erdoğan <umutinanerdogan62@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <grp.h>
 #include <pwd.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio wpath rpath cpath fattr proc exec", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/etc/", "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/bin/rm", "x") < 0) {
-        perror("unveil");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio wpath rpath cpath fattr proc exec"));
+    TRY(Core::System::unveil("/etc/", "rwc"));
+    TRY(Core::System::unveil("/bin/rm", "x"));
 
     char const* groupname = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(groupname, "Group name", "group");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     setgrent();
     auto* g = getgrnam(groupname);
@@ -68,7 +60,7 @@ int main(int argc, char** argv)
     char temp_group[] = "/etc/group.XXXXXX";
 
     auto unlink_temp_files = [&] {
-        if (unlink(temp_group) < 0)
+        if (Core::System::unlink(temp_group).is_error())
             perror("unlink");
     };
 
@@ -76,11 +68,7 @@ int main(int argc, char** argv)
         unlink_temp_files();
     };
 
-    auto temp_group_fd = mkstemp(temp_group);
-    if (temp_group_fd == -1) {
-        perror("failed to create temporary group file");
-        return 1;
-    }
+    int temp_group_fd = TRY(Core::System::mkstemp(temp_group));
 
     FILE* temp_group_file = fdopen(temp_group_fd, "w");
     if (!temp_group_file) {
@@ -104,15 +92,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (chmod(temp_group, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) {
-        perror("chmod");
-        return 1;
-    }
-
-    if (rename(temp_group, "/etc/group") < 0) {
-        perror("failed to rename the temporary group file");
-        return 1;
-    }
+    TRY(Core::System::chmod(temp_group, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH));
+    TRY(Core::System::rename(temp_group, "/etc/group"));
 
     unlink_temp_files_guard.disarm();
 

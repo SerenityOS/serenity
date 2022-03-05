@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/FixedPoint.h>
+#include <AK/NumericLimits.h>
 
 using Type = FixedPoint<4>;
 
@@ -71,6 +72,43 @@ TEST_CASE(rounding)
     EXPECT_EQ(Type(-1.5).lfloor(), -2);
     EXPECT_EQ(Type(-1.5).lceil(), -1);
     EXPECT_EQ(Type(-1.5).ltrunk(), -1);
+}
+
+TEST_CASE(logarithm)
+{
+    EXPECT_EQ(Type(0).log2().raw(), NumericLimits<int>::min());
+    EXPECT_EQ(Type(1).log2(), Type(0));
+    EXPECT_EQ(Type(2).log2(), Type(1));
+    EXPECT_EQ(Type(8).log2(), Type(3));
+    EXPECT_EQ(Type(0.5).log2(), Type(-1));
+
+    EXPECT_EQ(Type(22.627416997969520780827019587355).log2(), Type(4.4375));
+    EXPECT_EQ(Type(3088).log2(), Type(11.592457037268080419637304576833));
+}
+
+TEST_CASE(comparison)
+{
+    EXPECT(Type(0) < 1);
+    EXPECT(Type(0) <= 1);
+    EXPECT(Type(0) <= 0);
+    EXPECT(Type(-10) <= -10);
+
+    EXPECT(Type(4.25) > 4);
+    EXPECT(Type(4.25) >= 4);
+    EXPECT(Type(4.25) <= 5);
+    EXPECT(Type(4.25) < 5);
+    EXPECT(Type(1.5) > 1);
+
+    EXPECT(!(FixedPoint<4, u8>(2) > 128));
+    EXPECT(!(FixedPoint<4, u8>(2) >= 128));
+
+    EXPECT(Type(-6.25) < -6);
+    EXPECT(Type(-6.25) <= -6);
+    EXPECT(Type(-6.75) > -7);
+    EXPECT(Type(-6.75) >= -7);
+
+    EXPECT(Type(17) == 17);
+    EXPECT(Type(-8) != -9);
 }
 
 TEST_CASE(cast)

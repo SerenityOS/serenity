@@ -439,7 +439,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<String, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index, HashMap<String, StyleProperty const*> const& custom_properties) const
+bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index, HashMap<FlyString, StyleProperty> const& custom_properties) const
 {
     // FIXME: Do this better!
     // We build a copy of the tree of StyleComponentValueRules, with all var()s replaced with their contents.
@@ -456,7 +456,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
     auto get_custom_property = [&custom_properties](auto& name) -> RefPtr<StyleValue> {
         auto it = custom_properties.find(name);
         if (it != custom_properties.end())
-            return it->value->value;
+            return it->value.value;
         return nullptr;
     };
 
@@ -532,14 +532,14 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
     return true;
 }
 
-RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, PropertyID property_id, UnresolvedStyleValue const& unresolved, HashMap<String, StyleProperty const*> const& custom_properties) const
+RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, PropertyID property_id, UnresolvedStyleValue const& unresolved, HashMap<FlyString, StyleProperty> const& custom_properties) const
 {
     // Unresolved always contains a var(), unless it is a custom property's value, in which case we shouldn't be trying
     // to produce a different StyleValue from it.
     VERIFY(unresolved.contains_var());
 
     Vector<StyleComponentValueRule> expanded_values;
-    HashMap<String, NonnullRefPtr<PropertyDependencyNode>> dependencies;
+    HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
     if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values, 0, custom_properties))
         return {};
 
@@ -549,7 +549,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     return {};
 }
 
-void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, Important important, HashMap<String, StyleProperty const*> const& custom_properties) const
+void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, Important important, HashMap<FlyString, StyleProperty> const& custom_properties) const
 {
     for (auto const& match : matching_rules) {
         for (auto const& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
@@ -575,26 +575,29 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
     }
 }
 
-static HashMap<String, StyleProperty const*> cascade_custom_properties(DOM::Element& element, Vector<MatchingRule> const& matching_rules)
+static HashMap<FlyString, StyleProperty> const& cascade_custom_properties(DOM::Element& element, Vector<MatchingRule> const& matching_rules)
 {
-    HashMap<String, StyleProperty const*> custom_properties;
+    size_t needed_capacity = 0;
+    if (auto* parent_element = element.parent_element())
+        needed_capacity += parent_element->custom_properties().size();
+    for (auto const& matching_rule : matching_rules)
+        needed_capacity += verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties().size();
+
+    HashMap<FlyString, StyleProperty> custom_properties;
+    custom_properties.ensure_capacity(needed_capacity);
 
     if (auto* parent_element = element.parent_element()) {
         for (auto const& it : parent_element->custom_properties())
-            custom_properties.set(it.key, &it.value);
+            custom_properties.set(it.key, it.value);
     }
 
     for (auto const& matching_rule : matching_rules) {
-        for (auto const& it : verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties()) {
-            custom_properties.set(it.key, &it.value);
-        }
+        for (auto const& it : verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties())
+            custom_properties.set(it.key, it.value);
     }
 
-    element.custom_properties().clear();
-    for (auto& it : custom_properties)
-        element.add_custom_property(it.key, *it.value);
-
-    return custom_properties;
+    element.set_custom_properties(move(custom_properties));
+    return element.custom_properties();
 }
 
 // https://www.w3.org/TR/css-cascade/#cascading
@@ -608,7 +611,7 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     sort_matching_rules(matching_rule_set.author_rules);
 
     // Then we resolve all the CSS custom properties ("variables") for this element:
-    auto custom_properties = cascade_custom_properties(element, matching_rule_set.author_rules);
+    auto const& custom_properties = cascade_custom_properties(element, matching_rule_set.author_rules);
 
     // Then we apply the declarations from the matched rules in cascade order:
 
@@ -917,16 +920,38 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
     }
 }
 
+enum class BoxTypeTransformation {
+    None,
+    Blockify,
+    Inlinify,
+};
+
+static BoxTypeTransformation required_box_type_transformation(StyleProperties const& style, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> const&)
+{
+    // Absolute positioning or floating an element blockifies the box’s display type. [CSS2]
+    if (style.position() == CSS::Position::Absolute || style.position() == CSS::Position::Fixed || style.float_() != CSS::Float::None)
+        return BoxTypeTransformation::Blockify;
+
+    // FIXME: Containment in a ruby container inlinifies the box’s display type, as described in [CSS-RUBY-1].
+
+    // A parent with a grid or flex display value blockifies the box’s display type. [CSS-GRID-1] [CSS-FLEXBOX-1]
+    if (element.parent() && element.parent()->layout_node()) {
+        auto const& parent_display = element.parent()->layout_node()->computed_values().display();
+        if (parent_display.is_grid_inside() || parent_display.is_flex_inside())
+            return BoxTypeTransformation::Blockify;
+    }
+
+    return BoxTypeTransformation::None;
+}
+
 // https://drafts.csswg.org/css-display/#transformations
-void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::Element const&, Optional<CSS::Selector::PseudoElement>) const
+void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     // 2.7. Automatic Box Type Transformations
 
     // Some layout effects require blockification or inlinification of the box type,
     // which sets the box’s computed outer display type to block or inline (respectively).
     // (This has no effect on display types that generate no box at all, such as none or contents.)
-
-    // Additionally:
 
     // FIXME: If a block box (block flow) is inlinified, its inner display type is set to flow-root so that it remains a block container.
     //
@@ -940,16 +965,22 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
     //        Inlinification has no effect on layout-internal boxes. (However, placement in such an inline context will typically cause them
     //        to be wrapped in an appropriately-typed anonymous inline-level box.)
 
-    // Absolute positioning or floating an element blockifies the box’s display type. [CSS2]
     auto display = style.display();
-    if (!display.is_none() && !display.is_contents() && !display.is_block_outside()) {
-        if (style.position() == CSS::Position::Absolute || style.position() == CSS::Position::Fixed || style.float_() != CSS::Float::None)
+    if (display.is_none() || display.is_contents())
+        return;
+
+    switch (required_box_type_transformation(style, element, pseudo_element)) {
+    case BoxTypeTransformation::None:
+        break;
+    case BoxTypeTransformation::Blockify:
+        if (!display.is_block_outside())
             style.set_property(CSS::PropertyID::Display, IdentifierStyleValue::create(CSS::ValueID::Block));
+        break;
+    case BoxTypeTransformation::Inlinify:
+        if (!display.is_inline_outside())
+            style.set_property(CSS::PropertyID::Display, IdentifierStyleValue::create(CSS::ValueID::Inline));
+        break;
     }
-
-    // FIXME: Containment in a ruby container inlinifies the box’s display type, as described in [CSS-RUBY-1].
-
-    // FIXME: A parent with a grid or flex display value blockifies the box’s display type. [CSS-GRID-1] [CSS-FLEXBOX-1]
 }
 
 NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const

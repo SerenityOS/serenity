@@ -31,4 +31,5 @@
 #include <Kernel/API/POSIX/sys/wait.h>
 #include <Kernel/API/POSIX/termios.h>
 #include <Kernel/API/POSIX/time.h>
+#include <Kernel/API/POSIX/ucontext.h>
 #include <Kernel/API/POSIX/unistd.h>

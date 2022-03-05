@@ -51,7 +51,6 @@ UNMAP_AFTER_INIT void IDEChannel::initialize()
         dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base: {}", channel_type_string(), m_io_group.bus_master_base().value());
     else
         dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base disabled", channel_type_string());
-    m_parent_controller->enable_pin_based_interrupts();
 
     // reset the channel
     u8 device_control = m_io_group.control_base().in<u8>();

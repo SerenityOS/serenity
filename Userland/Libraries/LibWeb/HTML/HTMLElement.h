@@ -46,6 +46,9 @@ public:
 
     bool fire_a_synthetic_pointer_event(FlyString const& type, DOM::Element& target, bool not_trusted);
 
+    // https://html.spec.whatwg.org/multipage/forms.html#category-label
+    virtual bool is_labelable() const { return false; }
+
 protected:
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 

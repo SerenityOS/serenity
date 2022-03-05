@@ -45,23 +45,23 @@ void Handler::from_executable(Type handler_type, const String& executable)
 String Handler::to_details_str() const
 {
     StringBuilder builder;
-    JsonObjectSerializer obj { builder };
-    obj.add("executable", executable);
-    obj.add("name", name);
+    auto obj = MUST(JsonObjectSerializer<>::try_create(builder));
+    MUST(obj.add("executable", executable));
+    MUST(obj.add("name", name));
     switch (handler_type) {
     case Type::Application:
-        obj.add("type", "app");
+        MUST(obj.add("type", "app"));
         break;
     case Type::UserDefault:
-        obj.add("type", "userdefault");
+        MUST(obj.add("type", "userdefault"));
         break;
     case Type::UserPreferred:
-        obj.add("type", "userpreferred");
+        MUST(obj.add("type", "userpreferred"));
         break;
     default:
         break;
     }
-    obj.finish();
+    MUST(obj.finish());
     return builder.build();
 }
 

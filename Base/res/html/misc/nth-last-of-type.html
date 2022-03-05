@@ -21,7 +21,8 @@
         .plus-n > p:nth-last-of-type(+n), /** "+n" is special case inside parser. */
         .minus-n > p:nth-last-of-type(-n), /** "-n" is special case inside parser. */
         ._0n-plus-1 > p:nth-last-of-type(-0n+1),
-        .n-plus-2__minus-n-plus-3 > p:nth-last-of-type(+n + 2 ):nth-last-of-type( -n+3) {
+        .n-plus-2__minus-n-plus-3 > p:nth-last-of-type(+n + 2 ):nth-last-of-type( -n+3),
+        .acid3 > p:nth-last-of-type(-5n+3) {
             background-color: lightblue;
         }
     </style>
@@ -170,6 +171,35 @@
     <div>(div)</div>
     <div>(div)</div>
     <p>5</p>
+</div>
+
+<h4>:nth-last-of-type(-5n+3) - Acid3</h4>
+<div class="acid3">
+    <p>1</p>
+    <div>(div)</div>
+    <div>(div)</div>
+    <p>2</p>
+    <div>(div)</div>
+    <p>3</p>
+    <div>(div)</div>
+    <div>(div)</div>
+    <div>(div)</div>
+    <p>4</p>
+    <p>5</p>
+    <p>6</p>
+    <div>(div)</div>
+    <p>7</p>
+    <div>(div)</div>
+    <div>(div)</div>
+    <p>8</p>
+    <div>(div)</div>
+    <p>9</p>
+    <p>10</p>
+    <p>11</p>
+    <p>12</p>
+    <p>13 +</p>
+    <p>14</p>
+    <p>15</p>
 </div>
 </body>
 </html>

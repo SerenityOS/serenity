@@ -73,8 +73,6 @@ public:
     };
     void set_checked(bool, ChangeSource = ChangeSource::Programmatic, ShouldRunActivationBehavior = ShouldRunActivationBehavior::Yes);
 
-    bool enabled() const;
-
     void did_click_button(Badge<Layout::ButtonBox>);
     void did_click_checkbox(Badge<Layout::CheckBox>);
 
@@ -85,11 +83,24 @@ public:
     virtual void parse_attribute(FlyString const&, String const&) override;
     virtual void did_remove_attribute(FlyString const&) override;
 
-private:
-    // ^DOM::Node
-    virtual void inserted() override;
-    virtual void removed_from(Node*) override;
+    // ^FormAssociatedElement
+    // https://html.spec.whatwg.org/multipage/forms.html#category-listed
+    virtual bool is_listed() const override { return true; }
 
+    // https://html.spec.whatwg.org/multipage/forms.html#category-submit
+    virtual bool is_submittable() const override { return true; }
+
+    // https://html.spec.whatwg.org/multipage/forms.html#category-reset
+    virtual bool is_resettable() const override { return true; }
+
+    // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
+    virtual bool is_auto_capitalize_inheriting() const override { return true; }
+
+    // ^HTMLElement
+    // https://html.spec.whatwg.org/multipage/forms.html#category-label
+    virtual bool is_labelable() const override { return type_state() != TypeAttributeState::Hidden; }
+
+private:
     // ^DOM::EventTarget
     virtual void did_receive_focus() override;
     virtual void run_activation_behavior() override;

@@ -29,7 +29,7 @@ public:
     Color color(ColorRole role) const
     {
         VERIFY((int)role < (int)ColorRole::__Count);
-        return Color::from_rgba(theme().color[(int)role]);
+        return Color::from_argb(theme().color[(int)role]);
     }
 
     Gfx::TextAlignment alignment(AlignmentRole role) const
@@ -99,6 +99,8 @@ public:
     Color menu_selection_text() const { return color(ColorRole::MenuSelectionText); }
     Color base() const { return color(ColorRole::Base); }
     Color base_text() const { return color(ColorRole::BaseText); }
+    Color disabled_text_front() const { return color(ColorRole::DisabledTextFront); }
+    Color disabled_text_back() const { return color(ColorRole::DisabledTextBack); }
     Color button() const { return color(ColorRole::Button); }
     Color button_text() const { return color(ColorRole::ButtonText); }
     Color threed_highlight() const { return color(ColorRole::ThreedHighlight); }

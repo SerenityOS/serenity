@@ -170,6 +170,7 @@ void Editor::kill_line()
     for (size_t i = 0; i < m_cursor; ++i)
         remove_at_index(0);
     m_cursor = 0;
+    m_inline_search_cursor = m_cursor;
     m_refresh_needed = true;
 }
 

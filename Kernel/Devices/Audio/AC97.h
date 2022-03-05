@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2021, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2021-2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Error.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Device.h>
@@ -39,6 +40,8 @@ private:
         ExtendedAudioID = 0x28,
         ExtendedAudioStatusControl = 0x2a,
         PCMFrontDACRate = 0x2c,
+        VendorID1 = 0x7c,
+        VendorID2 = 0x7e,
     };
 
     enum ExtendedAudioMask : u16 {
@@ -56,6 +59,7 @@ private:
         Revision21OrEarlier = 0b00,
         Revision22 = 0b01,
         Revision23 = 0b10,
+        Reserved = 0b11,
     };
 
     enum NativeAudioBusChannel : u8 {
@@ -126,6 +130,7 @@ private:
         }
 
         bool dma_running() const { return m_dma_running; }
+        void handle_dma_stopped();
         StringView name() const { return m_name; }
         IOAddress reg(Register reg) const { return m_channel_base.offset(reg); }
         void reset();
@@ -135,7 +140,7 @@ private:
     private:
         IOAddress m_channel_base;
         AC97& m_device;
-        bool m_dma_running = false;
+        bool m_dma_running { false };
         StringView m_name;
     };
 
@@ -145,8 +150,7 @@ private:
     virtual bool handle_irq(const RegisterState&) override;
 
     AC97Channel channel(StringView name, NativeAudioBusChannel channel) { return AC97Channel(*this, name, m_io_bus_base.offset(channel)); }
-    void initialize();
-    void reset_pcm_out();
+    ErrorOr<void> initialize();
     void set_master_output_volume(u8, u8, Muted);
     ErrorOr<void> set_pcm_output_sample_rate(u32);
     void set_pcm_output_volume(u8, u8, Muted);
@@ -160,17 +164,18 @@ private:
     virtual ErrorOr<u32> get_pcm_output_sample_rate(size_t channel_index) override;
 
     OwnPtr<Memory::Region> m_buffer_descriptor_list;
-    u8 m_buffer_descriptor_list_index = 0;
-    bool m_double_rate_pcm_enabled = false;
+    u8 m_buffer_descriptor_list_index { 0 };
+    AC97Revision m_codec_revision;
+    bool m_double_rate_pcm_enabled { false };
     IOAddress m_io_mixer_base;
     IOAddress m_io_bus_base;
     WaitQueue m_irq_queue;
     OwnPtr<Memory::Region> m_output_buffer;
-    u8 m_output_buffer_page_count = 4;
-    u8 m_output_buffer_page_index = 0;
+    u8 m_output_buffer_page_count { 4 };
+    u8 m_output_buffer_page_index { 0 };
     AC97Channel m_pcm_out_channel;
-    u32 m_sample_rate = 0;
-    bool m_variable_rate_pcm_supported = false;
+    u32 m_sample_rate { 0 };
+    bool m_variable_rate_pcm_supported { false };
     RefPtr<AudioChannel> m_audio_channel;
 };
 

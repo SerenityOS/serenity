@@ -15,6 +15,7 @@ set(TEST_SOURCES
     path-resolution-race.cpp
     pthread-cond-timedwait-example.cpp
     setpgid-across-sessions-without-leader.cpp
+    siginfo-example.cpp
     stress-truncate.cpp
     stress-writeread.cpp
     uaf-close-while-blocked-in-read.cpp

@@ -50,6 +50,15 @@ void NetworkingManagement::for_each(Function<void(NetworkAdapter&)> callback)
     });
 }
 
+ErrorOr<void> NetworkingManagement::try_for_each(Function<ErrorOr<void>(NetworkAdapter&)> callback)
+{
+    return m_adapters.with([&](auto& adapters) -> ErrorOr<void> {
+        for (auto& adapter : adapters)
+            TRY(callback(adapter));
+        return {};
+    });
+}
+
 RefPtr<NetworkAdapter> NetworkingManagement::from_ipv4_address(IPv4Address const& address) const
 {
     if (address[0] == 0 && address[1] == 0 && address[2] == 0 && address[3] == 0)
@@ -102,7 +111,7 @@ UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_
 
 bool NetworkingManagement::initialize()
 {
-    if (!kernel_command_line().is_physical_networking_disabled()) {
+    if (!kernel_command_line().is_physical_networking_disabled() && !PCI::Access::is_disabled()) {
         PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
             // Note: PCI class 2 is the class of Network devices
             if (device_identifier.class_code().value() != 0x02)

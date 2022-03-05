@@ -128,9 +128,77 @@ class Position {
     }
 }
 
-class Ranges {
+class CommonRange {
+    at(wantedIx) {
+        let ix = 0;
+        let found = null;
+        this.forEach(cell => {
+            if (ix++ === wantedIx) {
+                found = cell;
+                return Break;
+            }
+        });
+        return found;
+    }
+
+    findIndex(matcher) {
+        let i = 0;
+        let found = false;
+        this.forEach(cell => {
+            if (matcher(cell, i)) {
+                found = true;
+                return Break;
+            }
+            ++i;
+        });
+        return found ? i : -1;
+    }
+
+    find(matcher) {
+        let value = null;
+        let i = 0;
+        this.forEach(cell => {
+            if (matcher(cell, i)) {
+                value = cell;
+                return Break;
+            }
+            ++i;
+        });
+        return value;
+    }
+
+    indexOf(name) {
+        let i = 0;
+        let found = false;
+        this.forEach(cell => {
+            if (cell.name === name) {
+                found = true;
+                return Break;
+            }
+            ++i;
+        });
+        return found ? i : -1;
+    }
+
+    has(name) {
+        return this.indexOf(name) !== -1;
+    }
+
+    toArray() {
+        const cells = [];
+        this.forEach(val => cells.push(val));
+        return cells;
+    }
+}
+
+class Ranges extends CommonRange {
     constructor(ranges) {
+        super();
         this.ranges = ranges;
+    }
+
+    first() {
+        return this.ranges[0].first();
     }
 
     static from(...ranges) {
@@ -160,11 +228,16 @@ class Ranges {
     }
 }
 
-class Range {
+class Range extends CommonRange {
     constructor(startingColumnName, endingColumnName, startingRow, endingRow, columnStep, rowStep) {
+        super();
         // using == to account for '0' since js will parse `+'0'` to 0
         if (columnStep == 0 || rowStep == 0)
             throw new Error("rowStep or columnStep is 0, this will cause an infinite loop");
+        if (typeof startingRow === "string" || typeof endingRow === "string")
+            throw new Error(
+                "startingRow or endingRow is a string, this will cause an infinite loop"
+            );
         this.startingColumnName = startingColumnName;
         this.endingColumnName = endingColumnName;
         this.startingRow = startingRow;
@@ -176,6 +249,10 @@ class Range {
             throw new Error("A Range with a defined end row must also have a defined start row");
 
         this.normalize();
+    }
+
+    first() {
+        return new Position(this.startingColumnName, this.startingRow);
     }
 
     forEach(callback) {
@@ -200,7 +277,7 @@ class Range {
 
         outer: for (const range of ranges) {
             for (let row = range.rowStart; row <= range.rowEnd; row += this.rowStep) {
-                if (callback(range.column + row) === Break) break outer;
+                if (callback(new Position(range.column, row)) === Break) break outer;
             }
         }
     }
@@ -233,10 +310,13 @@ class Range {
 
     toString() {
         const endingRow = this.endingRow ?? "";
-        return `R\`${this.startingColumnName}${this.startingRow}:${this.endingColumnName}${endingRow}:${this.columnStep}:${this.rowStep}\``;
+        const showSteps = this.rowStep !== 1 || this.columnStep !== 1;
+        const steps = showSteps ? `:${this.columnStep}:${this.rowStep}` : "";
+        return `R\`${this.startingColumnName}${this.startingRow}:${this.endingColumnName}${endingRow}${steps}\``;
     }
 }
 
+const R_FORMAT = /^([a-zA-Z_]+)(?:(\d+):([a-zA-Z_]+)(\d+)?(?::(\d+):(\d+))?)?$/;
 function R(fmt, ...args) {
     if (args.length !== 0) throw new TypeError("R`` format must be a literal");
     // done because:
@@ -244,23 +324,20 @@ function R(fmt, ...args) {
     // myFunc("ABC") => ""ABC""
     // myFunc`ABC` => "["ABC"]"
     if (Array.isArray(fmt)) fmt = fmt[0];
-    const parts = fmt.split(":");
-    if (parts.length !== 2 && parts.length !== 4)
-        throw new Error("Invalid Format. Expected Format: R`A0:A1` or R`A0:A2:1:2`");
-    // ColRow:Col(Row)?(:ColStep:RowStep)?
-    const start = thisSheet.parse_cell_name(parts[0]);
-    let end = parts[1];
-    if (/^[a-zA-Z_]+$/.test(end)) end = { column: end, row: undefined };
-    else end = thisSheet.parse_cell_name(parts[1]);
-    parts[2] ??= 1;
-    parts[3] ??= 1;
+    if (!R_FORMAT.test(fmt))
+        throw new Error("Invalid Format. Expected Format: R`A` or R`A0:A1` or R`A0:A2:1:2`");
+    // Format: Col(Row:Col(Row)?(:ColStep:RowStep)?)?
+    // Ignore the first element of the match array as that will be the whole match.
+    const [, ...matches] = fmt.match(R_FORMAT);
+    const [startCol, startRow, endCol, endRow, colStep, rowStep] = matches;
     return new Range(
-        start.column,
-        end.column,
-        start.row,
-        end.row,
-        integer(parts[2]),
-        integer(parts[3])
+        startCol,
+        endCol ?? startCol,
+        integer(startRow ?? 0),
+        // Don't make undefined an integer, because then it becomes 0.
+        !!endRow ? integer(endRow) : endRow,
+        integer(colStep ?? 1),
+        integer(rowStep ?? 1)
     );
 }
 
@@ -288,6 +365,9 @@ function randRange(min, max) {
 }
 
 function integer(value) {
+    const typeVal = typeof value;
+    if ((typeVal !== "number" && typeVal !== "string") || Number.isNaN(Number(value)))
+        throw new Error(`integer() called with unexpected type "${typeVal}"`);
     return value | 0;
 }
 
@@ -296,27 +376,20 @@ function sheet(name) {
 }
 
 function reduce(op, accumulator, cells) {
-    cells.forEach(name => {
-        let cell = thisSheet[name];
-        accumulator = op(accumulator, cell);
-    });
-    return accumulator;
+    return resolve(cells).reduce(op, accumulator);
 }
 
 function numericReduce(op, accumulator, cells) {
-    return reduce((acc, x) => op(acc, Number(x)), accumulator, cells);
+    return numericResolve(cells).reduce(op, accumulator);
 }
 
 function numericResolve(cells) {
-    const values = [];
-    cells.forEach(name => values.push(Number(thisSheet[name])));
-    return values;
+    return resolve(cells).map(val => parseInt(val));
 }
 
 function resolve(cells) {
-    const values = [];
-    cells.forEach(name => values.push(thisSheet[name]));
-    return values;
+    const isRange = cells instanceof Range || cells instanceof Ranges;
+    return isRange ? cells.toArray().map(cell => cell.value()) : cells;
 }
 
 // Statistics
@@ -349,6 +422,36 @@ function averageIf(condition, cells) {
         cells
     );
     return sumAndCount[0] / sumAndCount[1];
+}
+
+function maxIf(condition, cells) {
+    return Math.max(...numericResolve(cells).filter(condition));
+}
+
+function max(cells) {
+    return maxIf(() => true, cells);
+}
+
+function minIf(condition, cells) {
+    return Math.min(...numericResolve(cells).filter(condition));
+}
+
+function min(cells) {
+    return minIf(() => true, cells);
+}
+
+function sumProductIf(condition, rangeOne, rangeTwo) {
+    const rangeOneNums = numericResolve(rangeOne);
+    const rangeTwoNums = numericResolve(rangeTwo);
+    return rangeOneNums.reduce((accumulator, curr, i) => {
+        const prod = curr * rangeTwoNums[i];
+        if (!condition(curr, rangeTwoNums[i], prod)) return accumulator;
+        return accumulator + prod;
+    }, 0);
+}
+
+function sumProduct(rangeOne, rangeTwo) {
+    return sumProductIf(() => true, rangeOne, rangeTwo);
 }
 
 function median(cells) {
@@ -455,39 +558,33 @@ function internal_lookup(
     }
 
     let i = 0;
-    let didMatch = false;
     let value = null;
-    let matchingName = null;
-    lookup_inputs.forEach(name => {
-        value = thisSheet[name];
+    let found_input = null;
+    lookup_inputs.forEach(cell => {
+        value = cell.value();
         if (matches(value)) {
-            didMatch = true;
-            matchingName = name;
+            found_input = cell;
             return Break;
         }
         ++i;
     });
 
-    if (!didMatch) return if_missing;
+    if (found_input == null) return if_missing;
 
     if (lookup_outputs === undefined) {
-        if (reference) return Position.from_name(matchingName);
+        if (reference) return found_input;
 
         return value;
     }
 
-    lookup_outputs.forEach(name => {
-        matchingName = name;
-        if (i === 0) return Break;
-        --i;
-    });
+    const found_output = lookup_outputs.at(i);
 
-    if (i > 0)
+    if (found_output == null)
         throw new Error("Lookup target length must not be smaller than lookup source length");
 
-    if (reference) return Position.from_name(matchingName);
+    if (reference) return found_output;
 
-    return thisSheet[matchingName];
+    return found_output.value();
 }
 
 function lookup(req_lookup_value, lookup_inputs, lookup_outputs, if_missing, mode) {
@@ -702,6 +799,114 @@ averageIf.__documentation = JSON.stringify({
     examples: {
         "averageIf(x => x > 4, R`A1:C4`)":
             "Calculate the sum of all numbers larger then 4 within A1:C4",
+    },
+});
+
+max.__documentation = JSON.stringify({
+    name: "max",
+    argc: 1,
+    argnames: ["the range"],
+    doc: "Gets the largest cell's value in the range",
+    examples: {
+        "max(R`A1:C4`)": "Finds the largest number within A1:C4",
+    },
+});
+
+maxIf.__documentation = JSON.stringify({
+    name: "max",
+    argc: 1,
+    argnames: ["condition", "the range"],
+    doc: "Gets the largest cell's value in the range which evaluates to true when passed to `condition`",
+    examples: {
+        "maxIf(x => x > 4, R`A1:C4`)":
+            "Finds the largest number within A1:C4 that is greater than 4",
+    },
+});
+
+min.__documentation = JSON.stringify({
+    name: "min",
+    argc: 1,
+    argnames: ["the range"],
+    doc: "Gets the smallest cell's value in the range",
+    examples: {
+        "min(R`A1:C4`)": "Finds the smallest number within A1:C4",
+    },
+});
+
+minIf.__documentation = JSON.stringify({
+    name: "min",
+    argc: 1,
+    argnames: ["condition", "the range"],
+    doc: "Gets the smallest cell's value in the range which evaluates to true when passed to `condition`",
+    examples: {
+        "minIf(x => x > 4, R`A1:C4`)":
+            "Finds the smallest number within A1:C4 that is greater than 4",
+    },
+});
+
+sumProduct.__documentation = JSON.stringify({
+    name: "sumProduct",
+    argc: 2,
+    argnames: ["range one", "range two"],
+    doc: "For each cell in the first range, multiply it by the cell at the same index in range two, then add the result to a sum",
+    example_data: {
+        "sumProductIf((a, b, prod) => a > 2, R`A0:A`, R`B0:B`)":
+            "Calculate the product of each cell in a times it's equivalent cell in b, then adds the products, [Click to view](spreadsheet://example/sumProductIf#sum_product)",
+    },
+});
+
+sumProductIf.__documentation = JSON.stringify({
+    name: "sumProductIf",
+    argc: 3,
+    argnames: ["condition", "range one", "range two"],
+    doc: "For each cell in the first range, multiply it by the cell at the same index in range two, then add the result to a sum, if the condition evaluated to true",
+    examples: {
+        "sumProductIf((a, b, prod) => a > 2, R`A0:A`, R`B0:B`)":
+            "Calculate the product of each cell in a times it's equivalent cell in b, then adds the products if a's value was greater than 2, [Click to view](spreadsheet://example/sumProductIf#sum_product)",
+    },
+    example_data: {
+        sum_product: {
+            name: "Sum Product",
+            columns: ["A", "B", "C"],
+            rows: 3,
+            cells: {
+                C0: {
+                    kind: "Formula",
+                    source: "sumProduct(R`A0:A`, R`B0:B`)",
+                    value: "300.0",
+                    type: "Numeric",
+                    type_metadata: {
+                        format: "sumProduct: %f",
+                    },
+                },
+                C1: {
+                    kind: "Formula",
+                    source: "sumProductIf((a, b, prod) => a > 2, R`A0:A`, R`B0:B`)",
+                    value: "250.0",
+                    type: "Numeric",
+                    type_metadata: {
+                        format: "sumProductIf: %f",
+                    },
+                },
+                ...Array.apply(null, { length: 4 })
+                    .map((_, i) => i)
+                    .reduce((acc, i) => {
+                        return {
+                            ...acc,
+                            [`A${i}`]: {
+                                kind: "LiteralString",
+                                value: `${i + 1}`,
+                                type: "Numeric",
+                            },
+                            [`B${i}`]: {
+                                kind: "LiteralString",
+                                value: `${(i + 1) * 10}`,
+                                type: "Numeric",
+                            },
+                        };
+                    }, {}),
+            },
+        },
     },
 });
 

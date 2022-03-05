@@ -28,11 +28,12 @@ ErrorOr<void> ProjectBuilder::build(StringView active_file)
         return Error::from_string_literal("no active file"sv);
 
     if (active_file.ends_with(".js")) {
-        m_terminal->run_command(String::formatted("js -A {}", active_file));
+        TRY(m_terminal->run_command(String::formatted("js -A {}", active_file)));
         return {};
     }
+
     if (m_is_serenity == IsSerenityRepo::No) {
-        m_terminal->run_command("make");
+        TRY(m_terminal->run_command("make"));
         return {};
     }
 
@@ -47,12 +48,12 @@ ErrorOr<void> ProjectBuilder::run(StringView active_file)
         return Error::from_string_literal("no active file"sv);
 
     if (active_file.ends_with(".js")) {
-        m_terminal->run_command(String::formatted("js {}", active_file));
+        TRY(m_terminal->run_command(String::formatted("js {}", active_file)));
         return {};
     }
 
     if (m_is_serenity == IsSerenityRepo::No) {
-        m_terminal->run_command("make run");
+        TRY(m_terminal->run_command("make run"));
         return {};
     }
 
@@ -64,7 +65,7 @@ ErrorOr<void> ProjectBuilder::run(StringView active_file)
 ErrorOr<void> ProjectBuilder::run_serenity_component()
 {
     auto relative_path_to_dir = LexicalPath::relative_path(LexicalPath::dirname(m_serenity_component_cmake_file), m_project_root);
-    m_terminal->run_command(LexicalPath::join(relative_path_to_dir, m_serenity_component_name).string(), build_directory());
+    TRY(m_terminal->run_command(LexicalPath::join(relative_path_to_dir, m_serenity_component_name).string(), build_directory()));
     return {};
 }
 
@@ -89,10 +90,8 @@ ErrorOr<void> ProjectBuilder::update_active_file(StringView active_file)
 
 ErrorOr<void> ProjectBuilder::build_serenity_component()
 {
-    m_terminal->run_command(String::formatted("make {}", m_serenity_component_name), build_directory(), TerminalWrapper::WaitForExit::Yes);
-    if (m_terminal->child_exit_status() == 0)
-        return {};
-    return Error::from_string_literal("Make failed"sv);
+    TRY(m_terminal->run_command(String::formatted("make {}", m_serenity_component_name), build_directory(), TerminalWrapper::WaitForExit::Yes, "Make failed"sv));
+    return {};
 }
 
 ErrorOr<String> ProjectBuilder::component_name(StringView cmake_file_path)
@@ -122,14 +121,12 @@ ErrorOr<void> ProjectBuilder::initialize_build_directory()
     auto cmake_file = TRY(Core::File::open(cmake_file_path, Core::OpenMode::WriteOnly));
     cmake_file->write(generate_cmake_file_content());
 
-    m_terminal->run_command(String::formatted("cmake -S {} -DHACKSTUDIO_BUILD=ON -DHACKSTUDIO_BUILD_CMAKE_FILE={}"
-                                              " -DENABLE_UNICODE_DATABASE_DOWNLOAD=OFF",
-                                m_project_root, cmake_file_path),
-        build_directory(), TerminalWrapper::WaitForExit::Yes);
+    TRY(m_terminal->run_command(String::formatted("cmake -S {} -DHACKSTUDIO_BUILD=ON -DHACKSTUDIO_BUILD_CMAKE_FILE={}"
+                                                  " -DENABLE_UNICODE_DATABASE_DOWNLOAD=OFF",
+                                    m_project_root, cmake_file_path),
+        build_directory(), TerminalWrapper::WaitForExit::Yes, "CMake error"sv));
 
-    if (m_terminal->child_exit_status() == 0)
-        return {};
-    return Error::from_string_literal("CMake error"sv);
+    return {};
 }
 
 Optional<String> ProjectBuilder::find_cmake_file_for(StringView file_path) const

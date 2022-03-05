@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,6 +42,7 @@ public:
 
 private:
     bool determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
+    bool determine_and_initialize_isa_graphics_device();
     NonnullRefPtrVector<GenericGraphicsAdapter> m_graphics_devices;
     RefPtr<Graphics::Console> m_console;
 

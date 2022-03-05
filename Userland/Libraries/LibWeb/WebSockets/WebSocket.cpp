@@ -47,9 +47,9 @@ WebSocketClientManager::WebSocketClientManager(NonnullRefPtr<Protocol::WebSocket
 {
 }
 
-RefPtr<Protocol::WebSocket> WebSocketClientManager::connect(const AK::URL& url)
+RefPtr<Protocol::WebSocket> WebSocketClientManager::connect(const AK::URL& url, String const& origin)
 {
-    return m_websocket_client->connect(url);
+    return m_websocket_client->connect(url, origin);
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-websocket
@@ -72,7 +72,8 @@ WebSocket::WebSocket(DOM::Window& window, AK::URL& url)
     , m_window(window)
 {
     // FIXME: Integrate properly with FETCH as per https://fetch.spec.whatwg.org/#websocket-opening-handshake
-    m_websocket = WebSocketClientManager::the().connect(url);
+    auto origin_string = m_window->associated_document().origin().serialize();
+    m_websocket = WebSocketClientManager::the().connect(url, origin_string);
     m_websocket->on_open = [weak_this = make_weak_ptr()] {
         if (!weak_this)
             return;

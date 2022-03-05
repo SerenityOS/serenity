@@ -26,6 +26,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/proc/all", "r"));
+    // FIXME: For some reason, this is needed in the /proc/all shenanigans.
+    TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(GUI::Window::try_create());
@@ -58,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     advice_window->set_has_alpha_channel(true);
     advice_window->set_alpha_hit_threshold(1.0f);
 
-    auto advice_widget = TRY(advice_window->try_set_main_widget<SpeechBubble>());
+    auto advice_widget = TRY(advice_window->try_set_main_widget<SpeechBubble>(catdog_widget));
     (void)TRY(advice_widget->try_set_layout<GUI::VerticalBoxLayout>());
     advice_widget->layout()->set_spacing(0);
 

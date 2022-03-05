@@ -269,16 +269,50 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
     // 8. Let s be the empty String.
     // 9. If x < 0, then
     //    a. Set s to "-".
+    auto s = (number < 0 ? "-" : "");
     //    b. Set x to -x.
+    if (number < 0)
+        number = -number;
 
     // 10. If x ≥ 10^21, then
     if (fabs(number) >= 1e+21)
         return js_string(vm, MUST(number_value.to_string(global_object)));
 
     // 11. Else,
-    //    a-c. NOTE: The number to string formatting algorithm is handled by String::formatted().
+    // a. Let n be an integer for which n / (10^f) - x is as close to zero as possible. If there are two such n, pick the larger n.
+    // FIXME: This breaks down with values of `fraction_digits` > 23
+    auto n = round(pow(10.0f, fraction_digits) * number);
+
+    // b. If n = 0, let m be the String "0". Otherwise, let m be the String value consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
+    auto m = (n == 0 ? "0" : String::formatted("{}", n));
+
+    // c. If f ≠ 0, then
+    if (fraction_digits != 0) {
+        // i. Let k be the length of m.
+        auto k = static_cast<size_t>(m.length());
+
+        // ii. If k ≤ f, then
+        if (k <= fraction_digits) {
+            // 1. Let z be the String value consisting of f + 1 - k occurrences of the code unit 0x0030 (DIGIT ZERO).
+            auto z = String::repeated('0', fraction_digits + 1 - k);
+
+            // 2. Set m to the string-concatenation of z and m.
+            m = String::formatted("{}{}", z, m);
+
+            // 3. Set k to f + 1.
+            k = fraction_digits + 1;
+        }
+
+        // iii. Let a be the first k - f code units of m.
+        // iv. Let b be the other f code units of m.
+        // v. Set m to the string-concatenation of a, ".", and b.
+        m = String::formatted("{}.{}",
+            m.substring_view(0, k - fraction_digits),
+            m.substring_view(k - fraction_digits, fraction_digits));
+    }
+
     // 12. Return the string-concatenation of s and m.
-    return js_string(vm, String::formatted("{:0.{1}}", number, static_cast<size_t>(fraction_digits)));
+    return js_string(vm, String::formatted("{}{}", s, m));
 }
 
 // 19.2.1 Number.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-number.prototype.tolocalestring

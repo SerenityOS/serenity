@@ -101,7 +101,7 @@ HitTestResult BlockContainer::hit_test(const Gfx::IntPoint& position, HitTestTyp
 
     if (type == HitTestType::TextCursor && last_good_candidate.layout_node)
         return last_good_candidate;
-    return { absolute_rect().contains(position.x(), position.y()) ? this : nullptr };
+    return { absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
 }
 
 bool BlockContainer::is_scrollable() const

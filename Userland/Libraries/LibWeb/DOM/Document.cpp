@@ -571,9 +571,13 @@ void Document::update_layout()
     Layout::BlockFormattingContext root_formatting_context(formatting_state, *m_layout_root, nullptr);
     m_layout_root->build_stacking_context_tree();
 
-    auto& icb_state = formatting_state.get_mutable(*m_layout_root);
+    auto& icb = static_cast<Layout::InitialContainingBlock&>(*m_layout_root);
+    auto& icb_state = formatting_state.get_mutable(icb);
     icb_state.content_width = viewport_rect.width();
     icb_state.content_height = viewport_rect.height();
+
+    icb.set_has_definite_width(true);
+    icb.set_has_definite_height(true);
 
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
     formatting_state.commit();
@@ -873,11 +877,22 @@ DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element(String const& 
     return DOM::create_element(*this, tag_name, Namespace::HTML);
 }
 
+// https://dom.spec.whatwg.org/#dom-document-createelementns
 // https://dom.spec.whatwg.org/#internal-createelementns-steps
 // FIXME: This only implements step 4 of the algorithm and does not take in options.
-DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element_ns(const String& namespace_, const String& qualified_name)
+DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element_ns(String const& namespace_, String const& qualified_name)
 {
-    return DOM::create_element(*this, qualified_name, namespace_);
+    // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
+    auto result = validate_and_extract(namespace_, qualified_name);
+    if (result.is_exception())
+        return result.exception();
+    auto qname = result.release_value();
+
+    // FIXME: 2. Let is be null.
+    // FIXME: 3. If options is a dictionary and options["is"] exists, then set is to it.
+
+    // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
+    return DOM::create_element(*this, qname.local_name(), qname.namespace_(), qname.prefix());
 }
 
 NonnullRefPtr<DocumentFragment> Document::create_document_fragment()
@@ -1066,13 +1081,17 @@ void Document::set_focused_element(Element* element)
     if (m_focused_element == element)
         return;
 
-    if (m_focused_element)
+    if (m_focused_element) {
         m_focused_element->did_lose_focus();
+        m_focused_element->set_needs_style_update(true);
+    }
 
     m_focused_element = element;
 
-    if (m_focused_element)
+    if (m_focused_element) {
         m_focused_element->did_receive_focus();
+        m_focused_element->set_needs_style_update(true);
+    }
 
     if (m_layout_root)
         m_layout_root->set_needs_display();
@@ -1185,10 +1204,10 @@ void Document::set_cookie(String const& cookie_string, Cookie::Source source)
 String Document::dump_dom_tree_as_json() const
 {
     StringBuilder builder;
-    JsonObjectSerializer json(builder);
+    auto json = MUST(JsonObjectSerializer<>::try_create(builder));
     serialize_tree_as_json(json);
 
-    json.finish();
+    MUST(json.finish());
     return builder.to_string();
 }
 
@@ -1388,6 +1407,57 @@ bool Document::is_valid_name(String const& name)
     }
 
     return true;
+}
+
+// https://dom.spec.whatwg.org/#validate
+ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String const& qualified_name)
+{
+    if (qualified_name.is_empty())
+        return InvalidCharacterError::create("Empty string is not a valid qualified name.");
+
+    Utf8View utf8view { qualified_name };
+    if (!utf8view.validate())
+        return InvalidCharacterError::create("Invalid qualified name.");
+
+    Optional<size_t> colon_offset;
+
+    bool at_start_of_name = true;
+
+    for (auto it = utf8view.begin(); it != utf8view.end(); ++it) {
+        auto code_point = *it;
+        if (code_point == ':') {
+            if (colon_offset.has_value())
+                return InvalidCharacterError::create("More than one colon (:) in qualified name.");
+            colon_offset = utf8view.byte_offset_of(it);
+            at_start_of_name = true;
+            continue;
+        }
+        if (at_start_of_name) {
+            if (!is_valid_name_start_character(code_point))
+                return InvalidCharacterError::create("Invalid start of qualified name.");
+            at_start_of_name = false;
+            continue;
+        }
+        if (!is_valid_name_character(code_point))
+            return InvalidCharacterError::create("Invalid character in qualified name.");
+    }
+
+    if (!colon_offset.has_value())
+        return Document::PrefixAndTagName {
+            .prefix = {},
+            .tag_name = qualified_name,
+        };
+
+    if (*colon_offset == 0)
+        return InvalidCharacterError::create("Qualified name can't start with colon (:).");
+
+    if (*colon_offset >= (qualified_name.length() - 1))
+        return InvalidCharacterError::create("Qualified name can't end with colon (:).");
+
+    return Document::PrefixAndTagName {
+        .prefix = qualified_name.substring_view(0, *colon_offset),
+        .tag_name = qualified_name.substring_view(*colon_offset + 1),
+    };
 }
 
 }

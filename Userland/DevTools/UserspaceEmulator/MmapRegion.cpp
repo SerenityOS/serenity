@@ -6,6 +6,7 @@
 
 #include "MmapRegion.h"
 #include "Emulator.h"
+#include <AK/ByteReader.h>
 #include <string.h>
 #include <sys/mman.h>
 
@@ -196,7 +197,7 @@ void MmapRegion::write8(u32 offset, ValueWithShadow<u8> value)
 
     VERIFY(offset < size());
     m_data[offset] = value.value();
-    m_shadow_data[offset] = value.shadow();
+    m_shadow_data[offset] = value.shadow()[0];
 }
 
 void MmapRegion::write16(u32 offset, ValueWithShadow<u16> value)

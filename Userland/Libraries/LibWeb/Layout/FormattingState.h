@@ -54,29 +54,41 @@ struct FormattingState {
         float border_box_width() const { return border_box_left() + content_width + border_box_right(); }
         float border_box_height() const { return border_box_top() + content_height + border_box_bottom(); }
 
-        OwnPtr<Layout::Box::OverflowData> overflow_data;
+        Optional<Layout::Box::OverflowData> overflow_data;
 
         Layout::Box::OverflowData& ensure_overflow_data()
         {
-            if (!overflow_data)
-                overflow_data = make<Layout::Box::OverflowData>();
+            if (!overflow_data.has_value())
+                overflow_data = Layout::Box::OverflowData {};
             return *overflow_data;
+        }
+
+        Optional<LineBoxFragmentCoordinate> containing_line_box_fragment;
+
+        // NOTE: NodeState is ref-counted and accessed via copy-on-write helpers below.
+        size_t ref_count { 1 };
+        void ref()
+        {
+            VERIFY(ref_count);
+            ++ref_count;
+        }
+        void unref()
+        {
+            VERIFY(ref_count);
+            if (!--ref_count)
+                delete this;
         }
     };
 
     void commit();
 
-    NodeState& get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
-    {
-        return *nodes.ensure(&box, [] { return make<NodeState>(); });
-    }
+    // NOTE: get_mutable() will CoW the NodeState if it's shared with another FormattingContext.
+    NodeState& get_mutable(NodeWithStyleAndBoxModelMetrics const&);
 
-    NodeState const& get(NodeWithStyleAndBoxModelMetrics const& box) const
-    {
-        return const_cast<FormattingState&>(*this).get_mutable(box);
-    }
+    // NOTE: get() will not CoW the NodeState.
+    NodeState const& get(NodeWithStyleAndBoxModelMetrics const&) const;
 
-    HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullOwnPtr<NodeState>> nodes;
+    HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullRefPtr<NodeState>> nodes;
 };
 
 Gfx::FloatRect absolute_content_rect(Box const&, FormattingState const&);

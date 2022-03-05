@@ -39,6 +39,11 @@ public:
     static NonnullRefPtr<VM> create(OwnPtr<CustomData> = {});
     ~VM();
 
+    enum class HostResizeArrayBufferResult {
+        Unhandled,
+        Handled,
+    };
+
     Heap& heap() { return m_heap; }
     const Heap& heap() const { return m_heap; }
 
@@ -223,6 +228,7 @@ public:
     Function<void(FinalizationRegistry&)> host_enqueue_finalization_registry_cleanup_job;
     Function<void(Function<ThrowCompletionOr<Value>()>, Realm*)> host_enqueue_promise_job;
     Function<JobCallback(FunctionObject&)> host_make_job_callback;
+    Function<ThrowCompletionOr<HostResizeArrayBufferResult>(GlobalObject&, size_t)> host_resize_array_buffer;
 
 private:
     explicit VM(OwnPtr<CustomData>);
