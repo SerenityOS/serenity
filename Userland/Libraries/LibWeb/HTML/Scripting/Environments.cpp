@@ -291,4 +291,25 @@ JS::GlobalObject& current_global_object()
     return vm.current_realm()->global_object();
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#concept-relevant-realm
+JS::Realm& relevant_realm(JS::Object const& object)
+{
+    // The relevant Realm for a platform object is the value of its [[Realm]] field.
+    return *object.global_object().associated_realm();
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#relevant-settings-object
+EnvironmentSettingsObject& relevant_settings_object(JS::Object const& object)
+{
+    // Then, the relevant settings object for a platform object o is the environment settings object of the relevant Realm for o.
+    return verify_cast<EnvironmentSettingsObject>(*relevant_realm(object).host_defined());
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#concept-relevant-global
+JS::GlobalObject& relevant_global_object(JS::Object const& object)
+{
+    // Similarly, the relevant global object for a platform object o is the global object of the relevant Realm for o.
+    return relevant_realm(object).global_object();
+}
+
 }
