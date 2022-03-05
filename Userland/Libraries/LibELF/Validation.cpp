@@ -46,9 +46,10 @@ bool validate_elf_header(ElfW(Ehdr) const& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    if (ELFOSABI_SYSV != elf_header.e_ident[EI_OSABI]) {
+    // NOTE: With Clang, -fprofile-instr-generate -fcoverage-mapping sets our ELF ABI Version to 3 b/c of SHF_GNU_RETAIN
+    if (ELFOSABI_SYSV != elf_header.e_ident[EI_OSABI] && ELFOSABI_LINUX != elf_header.e_ident[EI_OSABI]) {
         if (verbose)
-            dbgln("File has unknown OS ABI ({}), expected SYSV(0)!", elf_header.e_ident[EI_OSABI]);
+            dbgln("File has unknown OS ABI ({}), expected SYSV(0) or GNU/Linux(3)!", elf_header.e_ident[EI_OSABI]);
         return false;
     }
 
