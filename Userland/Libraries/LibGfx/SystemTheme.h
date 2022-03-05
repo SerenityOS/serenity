@@ -30,6 +30,8 @@ namespace Gfx {
     C(BaseText)                    \
     C(Button)                      \
     C(ButtonText)                  \
+    C(DisabledTextFront)           \
+    C(DisabledTextBack)            \
     C(DesktopBackground)           \
     C(FocusOutline)                \
     C(Gutter)                      \
