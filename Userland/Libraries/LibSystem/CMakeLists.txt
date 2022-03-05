@@ -8,3 +8,4 @@ target_include_directories(LibSystem PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(LibSystemStatic STATIC ${SOURCES})
 target_include_directories(LibSystemStatic PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(LibSystemStatic PRIVATE NoCoverage)
