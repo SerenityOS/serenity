@@ -228,6 +228,16 @@ UNMAP_AFTER_INIT bool CommandLine::is_physical_networking_disabled() const
     return contains("disable_physical_networking"sv);
 }
 
+UNMAP_AFTER_INIT bool CommandLine::disable_ps2_controller() const
+{
+    return contains("disable_ps2_controller"sv);
+}
+
+UNMAP_AFTER_INIT bool CommandLine::disable_ps2_mouse() const
+{
+    return contains("disable_ps2_mouse"sv);
+}
+
 UNMAP_AFTER_INIT bool CommandLine::disable_physical_storage() const
 {
     return contains("disable_physical_storage"sv);
