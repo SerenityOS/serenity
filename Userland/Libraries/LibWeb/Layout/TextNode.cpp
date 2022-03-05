@@ -97,8 +97,6 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
         if (document().inspected_node() == &dom_node())
             context.painter().draw_rect(enclosing_int_rect(fragment_absolute_rect), Color::Magenta);
 
-        paint_text_decoration(painter, fragment);
-
         // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.
         auto text = m_text_for_rendering;
         auto text_transform = computed_values().text_transform();
@@ -119,6 +117,8 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
             painter.add_clip_rect(enclosing_int_rect(selection_rect));
             painter.draw_text(enclosing_int_rect(fragment_absolute_rect), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, context.palette().selection_text());
         }
+
+        paint_text_decoration(painter, fragment);
 
         paint_cursor_if_needed(context, fragment);
     }
