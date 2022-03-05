@@ -6,8 +6,10 @@
 
 #include <AK/Variant.h>
 #include <AK/Vector.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/PropertyKey.h>
@@ -76,6 +78,92 @@ bool is_platform_object_same_origin(JS::Object const& object)
 {
     // 1. Return true if the current settings object's origin is same origin-domain with O's relevant settings object's origin, and false otherwise.
     return HTML::current_settings_object().origin().is_same_origin_domain(HTML::relevant_settings_object(object).origin());
+}
+
+// 7.2.3.4 CrossOriginGetOwnPropertyHelper ( O, P ), https://html.spec.whatwg.org/multipage/browsers.html#crossorigingetownpropertyhelper-(-o,-p-)
+Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<LocationObject*, WindowObject*> const& object, JS::PropertyKey const& property_key)
+{
+    auto const* object_ptr = object.visit([](auto* o) { return static_cast<JS::Object const*>(o); });
+    auto const object_const_variant = object.visit([](auto* o) { return Variant<LocationObject const*, WindowObject const*> { o }; });
+
+    // 1. Let crossOriginKey be a tuple consisting of the current settings object, O's relevant settings object, and P.
+    auto cross_origin_key = CrossOriginKey {
+        .current_settings_object = (FlatPtr)&HTML::current_settings_object(),
+        .relevant_settings_object = (FlatPtr)&HTML::relevant_settings_object(*object_ptr),
+        .property_key = property_key,
+    };
+
+    // 2. For each e of CrossOriginProperties(O):
+    for (auto const& entry : cross_origin_properties(object_const_variant)) {
+        auto& cross_origin_property_descriptor_map = object.visit([](auto* o) -> CrossOriginPropertyDescriptorMap& { return o->cross_origin_property_descriptor_map(); });
+
+        // 1. If the value of the [[CrossOriginPropertyDescriptorMap]] internal slot of O contains an entry whose key is crossOriginKey, then return that entry's value.
+        auto it = cross_origin_property_descriptor_map.find(cross_origin_key);
+        if (it != cross_origin_property_descriptor_map.end())
+            return it->value;
+
+        // 2. Let originalDesc be OrdinaryGetOwnProperty(O, P).
+        auto original_descriptor = MUST((object_ptr->JS::Object::internal_get_own_property)(property_key));
+
+        // 3. Let crossOriginDesc be undefined.
+        auto cross_origin_descriptor = JS::PropertyDescriptor {};
+
+        // 4. If e.[[NeedsGet]] and e.[[NeedsSet]] are absent, then:
+        if (!entry.needs_get.has_value() && !entry.needs_set.has_value()) {
+            // 1. Let value be originalDesc.[[Value]].
+            auto value = original_descriptor->value;
+
+            // 2. If IsCallable(value) is true, then set value to an anonymous built-in function, created in the current Realm Record, that performs the same steps as the IDL operation P on object O.
+            if (value->is_function()) {
+                value = JS::NativeFunction::create(
+                    HTML::current_global_object(), [function = JS::make_handle(*value)](auto&, auto& global_object) {
+                        return JS::call(global_object, function.value(), JS::js_undefined());
+                    },
+                    0, "");
+            }
+
+            // 3. Set crossOriginDesc to PropertyDescriptor{ [[Value]]: value, [[Enumerable]]: false, [[Writable]]: false, [[Configurable]]: true }.
+            cross_origin_descriptor = JS::PropertyDescriptor { .value = value, .writable = false, .enumerable = false, .configurable = true };
+        }
+        // 5. Otherwise:
+        else {
+            // 1. Let crossOriginGet be undefined.
+            Optional<JS::FunctionObject*> cross_origin_get;
+
+            // 2. If e.[[NeedsGet]] is true, then set crossOriginGet to an anonymous built-in function, created in the current Realm Record, that performs the same steps as the getter of the IDL attribute P on object O.
+            if (*entry.needs_get) {
+                cross_origin_get = JS::NativeFunction::create(
+                    HTML::current_global_object(), [object_ptr, getter = JS::make_handle(*original_descriptor->get)](auto&, auto& global_object) {
+                        return JS::call(global_object, getter.cell(), object_ptr);
+                    },
+                    0, "");
+            }
+
+            // 3. Let crossOriginSet be undefined.
+            Optional<JS::FunctionObject*> cross_origin_set;
+
+            // If e.[[NeedsSet]] is true, then set crossOriginSet to an anonymous built-in function, created in the current Realm Record, that performs the same steps as the setter of the IDL attribute P on object O.
+            if (*entry.needs_set) {
+                cross_origin_set = JS::NativeFunction::create(
+                    HTML::current_global_object(), [object_ptr, setter = JS::make_handle(*original_descriptor->set)](auto&, auto& global_object) {
+                        return JS::call(global_object, setter.cell(), object_ptr);
+                    },
+                    0, "");
+            }
+
+            // 5. Set crossOriginDesc to PropertyDescriptor{ [[Get]]: crossOriginGet, [[Set]]: crossOriginSet, [[Enumerable]]: false, [[Configurable]]: true }.
+            cross_origin_descriptor = JS::PropertyDescriptor { .get = cross_origin_get, .set = cross_origin_set, .enumerable = false, .configurable = true };
+        }
+
+        // 6. Create an entry in the value of the [[CrossOriginPropertyDescriptorMap]] internal slot of O with key crossOriginKey and value crossOriginDesc.
+        cross_origin_property_descriptor_map.set(cross_origin_key, cross_origin_descriptor);
+
+        // 7. Return crossOriginDesc.
+        return cross_origin_descriptor;
+    }
+
+    // 3. Return undefined.
+    return {};
 }
 
 }
