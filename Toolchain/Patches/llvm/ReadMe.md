@@ -76,3 +76,12 @@ shared libraries.
 Symbol versioning is disabled, as the SerenityOS loader doesn't support
 it, and the ELF sections that store version data would just waste space.
 
+## `0009-compiler-rt-llvm-Enable-profile-instrumentation-for-.patch`
+
+Enable profile instrumentation for SerenityOS
+
+Treat SerenityOS the same as other *NIX platforms that behave close
+enough to linux to use the pre-canned InstrProfiling implementation.
+
+Curiously, enabling profiling for the SerenityOS target changes the ELF
+OS ABI for userspace binaries to 3, or GNU/Linux.
