@@ -1016,10 +1016,10 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
             quad.out_color = texel;
             break;
         case TextureEnvMode::Decal: {
-            auto src_alpha = quad.out_color.w();
-            quad.out_color.set_x(mix(quad.out_color.x(), texel.x(), src_alpha));
-            quad.out_color.set_y(mix(quad.out_color.y(), texel.y(), src_alpha));
-            quad.out_color.set_z(mix(quad.out_color.z(), texel.z(), src_alpha));
+            auto dst_alpha = texel.w();
+            quad.out_color.set_x(mix(quad.out_color.x(), texel.x(), dst_alpha));
+            quad.out_color.set_y(mix(quad.out_color.y(), texel.y(), dst_alpha));
+            quad.out_color.set_z(mix(quad.out_color.z(), texel.z(), dst_alpha));
             break;
         }
         default:
