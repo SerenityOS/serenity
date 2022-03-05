@@ -33,6 +33,7 @@ bool is_platform_object_same_origin(JS::Object const&);
 Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<LocationObject*, WindowObject*> const&, JS::PropertyKey const&);
 JS::ThrowCompletionOr<JS::Value> cross_origin_get(JS::GlobalObject&, JS::Object const&, JS::PropertyKey const&, JS::Value receiver);
 JS::ThrowCompletionOr<bool> cross_origin_set(JS::GlobalObject&, JS::Object&, JS::PropertyKey const&, JS::Value, JS::Value receiver);
+JS::MarkedVector<JS::Value> cross_origin_own_property_keys(Variant<LocationObject const*, WindowObject const*> const&);
 
 }
 
