@@ -604,10 +604,13 @@ DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImag
         // HTMLOrSVGImageElement
         [](HTMLImageElement const& image_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
             // FIXME: If image's current request's state is broken, then throw an "InvalidStateError" DOMException.
-            // FIXME: If image is not fully decodable, then return bad.
+
+            // If image is not fully decodable, then return bad.
+            if (!image_element.bitmap())
+                return { CanvasImageSourceUsability::Bad };
 
             // If image has an intrinsic width or intrinsic height (or both) equal to zero, then return bad.
-            if (image_element.width() == 0 || image_element.height() == 0)
+            if (image_element.bitmap()->width() == 0 || image_element.bitmap()->height() == 0)
                 return { CanvasImageSourceUsability::Bad };
             return Optional<CanvasImageSourceUsability> {};
         },
