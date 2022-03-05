@@ -31,6 +31,8 @@ Vector<CrossOriginProperty> cross_origin_properties(Variant<LocationObject const
 JS::ThrowCompletionOr<JS::PropertyDescriptor> cross_origin_property_fallback(JS::GlobalObject&, JS::PropertyKey const&);
 bool is_platform_object_same_origin(JS::Object const&);
 Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<LocationObject*, WindowObject*> const&, JS::PropertyKey const&);
+JS::ThrowCompletionOr<JS::Value> cross_origin_get(JS::GlobalObject&, JS::Object const&, JS::PropertyKey const&, JS::Value receiver);
+JS::ThrowCompletionOr<bool> cross_origin_set(JS::GlobalObject&, JS::Object&, JS::PropertyKey const&, JS::Value, JS::Value receiver);
 
 }
 

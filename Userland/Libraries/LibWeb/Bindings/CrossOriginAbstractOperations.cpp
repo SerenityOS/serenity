@@ -166,4 +166,33 @@ Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<Lo
     return {};
 }
 
+// 7.2.3.5 CrossOriginGet ( O, P, Receiver ), https://html.spec.whatwg.org/multipage/browsers.html#crossoriginget-(-o,-p,-receiver-)
+JS::ThrowCompletionOr<JS::Value> cross_origin_get(JS::GlobalObject& global_object, JS::Object const& object, JS::PropertyKey const& property_key, JS::Value receiver)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let desc be ? O.[[GetOwnProperty]](P).
+    auto descriptor = TRY(object.internal_get_own_property(property_key));
+
+    // 2. Assert: desc is not undefined.
+    VERIFY(descriptor.has_value());
+
+    // 3. If IsDataDescriptor(desc) is true, then return desc.[[Value]].
+    if (descriptor->is_data_descriptor())
+        return descriptor->value;
+
+    // 4. Assert: IsAccessorDescriptor(desc) is true.
+    VERIFY(descriptor->is_accessor_descriptor());
+
+    // 5. Let getter be desc.[[Get]].
+    auto& getter = descriptor->get;
+
+    // 6. If getter is undefined, then throw a "SecurityError" DOMException.
+    if (!getter.has_value())
+        return vm.throw_completion<DOMExceptionWrapper>(global_object, DOM::SecurityError::create(String::formatted("Can't get property '{}' on cross-origin object", property_key)));
+
+    // 7. Return ? Call(getter, Receiver).
+    return JS::call(global_object, *getter, receiver);
+}
+
 }
