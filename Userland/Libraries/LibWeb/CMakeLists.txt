@@ -1,5 +1,6 @@
 set(SOURCES
     Bindings/AudioConstructor.cpp
+    Bindings/CrossOriginAbstractOperations.cpp
     Bindings/CSSNamespace.cpp
     Bindings/CSSRuleWrapperFactory.cpp
     Bindings/CSSStyleDeclarationWrapperCustom.cpp
