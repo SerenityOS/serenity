@@ -11,7 +11,9 @@
 
 namespace Kernel {
 
+class HIDManagement;
 class HIDDevice : public CharacterDevice {
+    friend class HIDManagement;
 
 protected:
     HIDDevice(MajorNumber major, MinorNumber minor)
@@ -20,6 +22,8 @@ protected:
     }
 
     EntropySource m_entropy_source;
+
+    IntrusiveListNode<HIDDevice, NonnullRefPtr<HIDDevice>> m_list_node;
 };
 
 }
