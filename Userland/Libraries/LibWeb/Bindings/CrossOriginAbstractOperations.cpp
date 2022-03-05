@@ -71,4 +71,11 @@ JS::ThrowCompletionOr<JS::PropertyDescriptor> cross_origin_property_fallback(JS:
     return vm.throw_completion<DOMExceptionWrapper>(global_object, DOM::SecurityError::create(String::formatted("Can't access property '{}' on cross-origin object", property_key)));
 }
 
+// 7.2.3.3 IsPlatformObjectSameOrigin ( O ), https://html.spec.whatwg.org/multipage/browsers.html#isplatformobjectsameorigin-(-o-)
+bool is_platform_object_same_origin(JS::Object const& object)
+{
+    // 1. Return true if the current settings object's origin is same origin-domain with O's relevant settings object's origin, and false otherwise.
+    return HTML::current_settings_object().origin().is_same_origin_domain(HTML::relevant_settings_object(object).origin());
+}
+
 }
