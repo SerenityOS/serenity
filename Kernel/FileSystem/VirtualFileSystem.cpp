@@ -771,6 +771,13 @@ ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(StringView p
     VERIFY(!path.contains("/../"sv) && !path.ends_with("/.."sv));
     VERIFY(!path.contains("/./"sv) && !path.ends_with("/."sv));
 
+#ifdef SKIP_PATH_VALIDATION_FOR_COVERAGE_INSTRUMENTATION
+    // Skip veil validation against profile data when coverage is enabled for userspace
+    // so that all processes can write out coverage data even with veils in place
+    if (KLexicalPath::basename(path).ends_with(".profraw"sv))
+        return {};
+#endif
+
     auto& unveiled_path = find_matching_unveiled_path(path);
     if (unveiled_path.permissions() == UnveilAccess::None) {
         dbgln("Rejecting path '{}' since it hasn't been unveiled.", path);
