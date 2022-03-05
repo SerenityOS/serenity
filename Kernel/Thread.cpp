@@ -1237,6 +1237,8 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     regs.set_ip(signal_trampoline_addr);
 
     dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:#04x}:{:p} to deliver {}", state_string(), m_regs.cs, m_regs.ip(), signal);
+    if (state() != State::Running)
+        set_state(State::Runnable);
 
     return DispatchSignalResult::Continue;
 }
