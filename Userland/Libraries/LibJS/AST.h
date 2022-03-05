@@ -1648,6 +1648,7 @@ public:
         Getter,
         Setter,
         Spread,
+        ProtoSetter,
     };
 
     ObjectProperty(SourceRange source_range, NonnullRefPtr<Expression> key, RefPtr<Expression> value, Type property_type, bool is_method)
