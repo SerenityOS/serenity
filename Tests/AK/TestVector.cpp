@@ -567,4 +567,8 @@ TEST_CASE(reverse_range_for_loop)
     int index = 9;
     for (auto item : AK::ReverseWrapper::in_reverse(v))
         EXPECT_EQ(item, index--);
+
+    index = 9;
+    for (auto item : v.in_reverse())
+        EXPECT_EQ(item, index--);
 }
