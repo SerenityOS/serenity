@@ -383,7 +383,7 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(FlyString const& na
         return CSS::MediaFeatureValue("fine");
     // FIXME: aspect-ratio
     if (name.equals_ignoring_case("color"sv))
-        return CSS::MediaFeatureValue(32);
+        return CSS::MediaFeatureValue(8);
     if (name.equals_ignoring_case("color-gamut"sv))
         return CSS::MediaFeatureValue("srgb");
     if (name.equals_ignoring_case("color-index"sv))
