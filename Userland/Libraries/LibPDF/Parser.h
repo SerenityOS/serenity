@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -101,14 +101,6 @@ private:
 
     bool navigate_to_before_eof_marker();
     bool navigate_to_after_startxref();
-
-    // If the PDF is linearized, the first object will be the linearization
-    // parameter dictionary, and it will always occur within the first 1024 bytes.
-    // We do a very sloppy and context-free search for this object. A return value
-    // of true does not necessarily mean this PDF is linearized, but a return value
-    // of false does mean this PDF is not linearized.
-    // FIXME: false doesn't guarantee non-linearization, but we VERIFY the result!
-    bool sloppy_is_linearized();
 
     String parse_comment();
 
