@@ -769,8 +769,21 @@ struct BlitState {
     int row_count;
     int column_count;
     float opacity;
+    BitmapFormat src_format;
 };
 
+// FIXME: This is a hack to support blit_with_opacity() with RGBA8888 source.
+//        Ideally we'd have a more generic solution that allows any source format.
+static void swap_red_and_blue_channels(Color& color)
+{
+    u32 rgba = color.value();
+    u32 bgra = (rgba & 0xff00ff00)
+        | ((rgba & 0x000000ff) << 16)
+        | ((rgba & 0x00ff0000) >> 16);
+    color = Color::from_argb(bgra);
+}
+
+// FIXME: This function is very unoptimized.
 template<BlitState::AlphaState has_alpha>
 static void do_blit_with_opacity(BlitState& state)
 {
@@ -779,11 +792,15 @@ static void do_blit_with_opacity(BlitState& state)
             Color dest_color = (has_alpha & BlitState::DstAlpha) ? Color::from_argb(state.dst[x]) : Color::from_rgb(state.dst[x]);
             if constexpr (has_alpha & BlitState::SrcAlpha) {
                 Color src_color_with_alpha = Color::from_argb(state.src[x]);
+                if (state.src_format == BitmapFormat::RGBA8888)
+                    swap_red_and_blue_channels(src_color_with_alpha);
                 float pixel_opacity = src_color_with_alpha.alpha() / 255.0;
                 src_color_with_alpha.set_alpha(255 * (state.opacity * pixel_opacity));
                 state.dst[x] = dest_color.blend(src_color_with_alpha).value();
             } else {
                 Color src_color_with_alpha = Color::from_rgb(state.src[x]);
+                if (state.src_format == BitmapFormat::RGBA8888)
+                    swap_red_and_blue_channels(src_color_with_alpha);
                 src_color_with_alpha.set_alpha(state.opacity * 255);
                 state.dst[x] = dest_color.blend(src_color_with_alpha).value();
             }
@@ -826,7 +843,8 @@ void Painter::blit_with_opacity(IntPoint const& position, Gfx::Bitmap const& sou
         .dst_pitch = m_target->pitch() / sizeof(ARGB32),
         .row_count = last_row - first_row + 1,
         .column_count = last_column - first_column + 1,
-        .opacity = opacity
+        .opacity = opacity,
+        .src_format = source.format(),
     };
 
     if (source.has_alpha_channel() && apply_alpha) {
