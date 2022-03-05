@@ -29,6 +29,7 @@ using CrossOriginPropertyDescriptorMap = HashMap<CrossOriginKey, JS::PropertyDes
 
 Vector<CrossOriginProperty> cross_origin_properties(Variant<LocationObject const*, WindowObject const*> const&);
 JS::ThrowCompletionOr<JS::PropertyDescriptor> cross_origin_property_fallback(JS::GlobalObject&, JS::PropertyKey const&);
+bool is_platform_object_same_origin(JS::Object const&);
 
 }
 
