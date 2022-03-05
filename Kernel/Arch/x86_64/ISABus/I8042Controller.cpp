@@ -9,6 +9,7 @@
 #include <Kernel/Arch/x86_64/ISABus/HID/VMWareMouseDevice.h>
 #include <Kernel/Arch/x86_64/ISABus/I8042Controller.h>
 #include <Kernel/Bus/SerialIO/PS2/Device.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Devices/HID/MouseDevice.h>
 #include <Kernel/Devices/HID/PS2/KeyboardDevice.h>
@@ -223,7 +224,7 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices(EnableFirstPortTr
             m_first_ps2_port.device = error_or_device.release_value();
         }
     }
-    if (m_second_port_available) {
+    if (m_second_port_available && !kernel_command_line().disable_ps2_mouse()) {
         // FIXME: Actually figure out the connected PS2 device type
         m_second_ps2_port.device_type = PS2DeviceType::StandardMouse;
         auto mouse_device = TRY(MouseDevice::try_to_initialize());
