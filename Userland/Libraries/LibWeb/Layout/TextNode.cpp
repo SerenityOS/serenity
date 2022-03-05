@@ -277,12 +277,6 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
                 return result.release_value();
         }
 
-        if (m_layout_mode == LayoutMode::AllPossibleLineBreaks) {
-            if (auto result = try_commit_chunk(start_of_chunk, m_iterator, false); result.has_value()) {
-                return result.release_value();
-            }
-        }
-
         // NOTE: The checks after this need to look at the current iterator
         //       position, which depends on not being at the end.
         if (m_iterator == m_utf8_view.end())
@@ -300,7 +294,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
             }
         }
 
-        if (m_wrap_lines) {
+        if (m_wrap_lines || m_layout_mode == LayoutMode::AllPossibleLineBreaks) {
             bool is_space = is_ascii_space(*m_iterator);
             if (is_space != m_last_was_space) {
                 m_last_was_space = is_space;
