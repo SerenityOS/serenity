@@ -97,11 +97,47 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
     did_draw(rect);
 }
 
+static void default_source_size(CanvasImageSource const& image, float& source_width, float& source_height)
+{
+    image.visit([&source_width, &source_height](auto const& source) {
+        if (source->bitmap()) {
+            source_width = source->bitmap()->width();
+            source_height = source->bitmap()->height();
+        }
+        source_width = source->width();
+        source_height = source->height();
+    });
+}
+
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-drawimage
-DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource const& image, float x, float y)
+DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource const& image, float destination_x, float destination_y)
+{
+    // If not specified, the dw and dh arguments must default to the values of sw and sh, interpreted such that one CSS pixel in the image is treated as one unit in the output bitmap's coordinate space.
+    // If the sx, sy, sw, and sh arguments are omitted, then they must default to 0, 0, the image's intrinsic width in image pixels, and the image's intrinsic height in image pixels, respectively.
+    // If the image has no intrinsic dimensions, then the concrete object size must be used instead, as determined using the CSS "Concrete Object Size Resolution" algorithm, with the specified size having
+    // neither a definite width nor height, nor any additional constraints, the object's intrinsic properties being those of the image argument, and the default object size being the size of the output bitmap.
+    float source_width;
+    float source_height;
+    default_source_size(image, source_width, source_height);
+    return draw_image(image, 0, 0, source_width, source_height, destination_x, destination_y, source_width, source_height);
+}
+
+DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource const& image, float destination_x, float destination_y, float destination_width, float destination_height)
+{
+    // If the sx, sy, sw, and sh arguments are omitted, then they must default to 0, 0, the image's intrinsic width in image pixels, and the image's intrinsic height in image pixels, respectively.
+    // If the image has no intrinsic dimensions, then the concrete object size must be used instead, as determined using the CSS "Concrete Object Size Resolution" algorithm, with the specified size having
+    // neither a definite width nor height, nor any additional constraints, the object's intrinsic properties being those of the image argument, and the default object size being the size of the output bitmap.
+    float source_width;
+    float source_height;
+    default_source_size(image, source_width, source_height);
+    return draw_image(image, 0, 0, source_width, source_height, destination_x, destination_y, destination_width, destination_height);
+}
+
+// 4.12.5.1.14 Drawing images, https://html.spec.whatwg.org/multipage/canvas.html#drawing-images
+DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource const& image, float source_x, float source_y, float source_width, float source_height, float destination_x, float destination_y, float destination_width, float destination_height)
 {
     // 1. If any of the arguments are infinite or NaN, then return.
-    if (isinf(x) || isnan(x) || isinf(y) || isnan(y))
+    if (!isfinite(source_x) || !isfinite(source_y) || !isfinite(source_width) || !isfinite(source_height) || !isfinite(destination_x) || !isfinite(destination_y) || !isfinite(destination_width) || !isfinite(destination_height))
         return {};
 
     // 2. Let usability be the result of checking the usability of image.
@@ -124,12 +160,23 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
     //    neither a definite width nor height, nor any additional constraints, the object's intrinsic properties being those of the image argument, and the default object size being the size of the output bitmap.
     //    The source rectangle is the rectangle whose corners are the four points (sx, sy), (sx+sw, sy), (sx+sw, sy+sh), (sx, sy+sh).
     //    The destination rectangle is the rectangle whose corners are the four points (dx, dy), (dx+dw, dy), (dx+dw, dy+dh), (dx, dy+dh).
-    // FIXME: Support all of sx, sy, sw, sh, dx, dy, dw, dh.
-    auto source_rect = bitmap->rect();
-    auto destination_rect = Gfx::FloatRect { x, y, (float)bitmap->width(), (float)bitmap->height() };
+    // NOTE: Implemented in drawImage() overloads
+
+    //    The source rectangle is the rectangle whose corners are the four points (sx, sy), (sx+sw, sy), (sx+sw, sy+sh), (sx, sy+sh).
+    auto source_rect = Gfx::FloatRect { source_x, source_y, source_width, source_height };
+    //    The destination rectangle is the rectangle whose corners are the four points (dx, dy), (dx+dw, dy), (dx+dw, dy+dh), (dx, dy+dh).
+    auto destination_rect = Gfx::FloatRect { destination_x, destination_y, destination_width, destination_height };
+    //    When the source rectangle is outside the source image, the source rectangle must be clipped
+    //    to the source image and the destination rectangle must be clipped in the same proportion.
+    auto clipped_source = source_rect.intersected(bitmap->rect().to_type<float>());
+    auto clipped_destination = destination_rect;
+    if (clipped_source != source_rect) {
+        clipped_destination.set_width(clipped_destination.width() * (clipped_source.width() / source_rect.width()));
+        clipped_destination.set_height(clipped_destination.height() * (clipped_source.height() / source_rect.height()));
+    }
 
     // 5. If one of the sw or sh arguments is zero, then return. Nothing is painted.
-    if (x == 0 || y == 0)
+    if (source_width == 0 || source_height == 0)
         return {};
 
     // 6. Paint the region of the image argument specified by the source rectangle on the region of the rendering context's output bitmap specified by the destination rectangle, after applying the current transformation matrix to the destination rectangle.
