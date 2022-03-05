@@ -426,6 +426,11 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     computed_values.set_color(specified_style.color_or_fallback(CSS::PropertyID::Color, *this, CSS::InitialValues::color()));
 
+    // FIXME: The default text decoration color value is `currentcolor`, but since we can't resolve that easily,
+    //        we just manually grab the value from `color`. This makes it dependent on `color` being
+    //        specified first, so it's far from ideal.
+    computed_values.set_text_decoration_color(specified_style.color_or_fallback(CSS::PropertyID::TextDecorationColor, *this, computed_values.color()));
+
     computed_values.set_z_index(specified_style.z_index());
     computed_values.set_opacity(specified_style.opacity());
     if (computed_values.opacity() == 0)
