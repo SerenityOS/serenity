@@ -49,7 +49,9 @@ public:
     void stroke_rect(float x, float y, float width, float height);
     void clear_rect(float x, float y, float width, float height);
 
-    DOM::ExceptionOr<void> draw_image(CanvasImageSource const&, float x, float y);
+    DOM::ExceptionOr<void> draw_image(CanvasImageSource const&, float destination_x, float destination_y);
+    DOM::ExceptionOr<void> draw_image(CanvasImageSource const&, float destination_x, float destination_y, float destination_width, float destination_height);
+    DOM::ExceptionOr<void> draw_image(CanvasImageSource const&, float source_x, float source_y, float source_width, float source_height, float destination_x, float destination_y, float destination_width, float destination_height);
 
     void scale(float sx, float sy);
     void translate(float x, float y);

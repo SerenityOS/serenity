@@ -31,6 +31,8 @@ interface CanvasRenderingContext2D {
     undefined strokeText(DOMString text, double x, double y, optional double maxWidth);
 
     undefined drawImage((HTMLImageElement or HTMLCanvasElement) image, double dx, double dy);
+    undefined drawImage((HTMLImageElement or HTMLCanvasElement) image, double dx, double dy, double dw, double dh);
+    undefined drawImage((HTMLImageElement or HTMLCanvasElement) image, double sx, double sy, double sw, double sh, double dx, double dy, double dw, double dh);
 
     attribute DOMString fillStyle;
     attribute DOMString strokeStyle;
