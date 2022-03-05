@@ -9,8 +9,15 @@
 #include <AK/Forward.h>
 #include <AK/Traits.h>
 #include <LibJS/Forward.h>
+#include <LibWeb/Forward.h>
 
 namespace Web::Bindings {
+
+struct CrossOriginProperty {
+    String property;
+    Optional<bool> needs_get {};
+    Optional<bool> needs_set {};
+};
 
 struct CrossOriginKey {
     FlatPtr current_settings_object;
@@ -19,6 +26,8 @@ struct CrossOriginKey {
 };
 
 using CrossOriginPropertyDescriptorMap = HashMap<CrossOriginKey, JS::PropertyDescriptor>;
+
+Vector<CrossOriginProperty> cross_origin_properties(Variant<LocationObject const*, WindowObject const*> const&);
 
 }
 
