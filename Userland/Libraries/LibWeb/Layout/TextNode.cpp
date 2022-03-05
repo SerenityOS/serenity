@@ -79,12 +79,33 @@ void TextNode::paint_text_decoration(Gfx::Painter& painter, LineBoxFragment cons
     }();
 
     switch (computed_values().text_decoration_style()) {
-        // FIXME: Implement the other styles
     case CSS::TextDecorationStyle::Solid:
+        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Solid);
+        break;
     case CSS::TextDecorationStyle::Double:
-    case CSS::TextDecorationStyle::Dashed:
-    case CSS::TextDecorationStyle::Dotted:
+        switch (computed_values().text_decoration_line()) {
+        case CSS::TextDecorationLine::Underline:
+            break;
+        case CSS::TextDecorationLine::Overline:
+            line_start_point.translate_by(0, -line_thickness - 1);
+            line_end_point.translate_by(0, -line_thickness - 1);
+            break;
+        case CSS::TextDecorationLine::LineThrough:
+            line_start_point.translate_by(0, -line_thickness / 2);
+            line_end_point.translate_by(0, -line_thickness / 2);
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
         painter.draw_line(line_start_point, line_end_point, line_color, line_thickness);
+        painter.draw_line(line_start_point.translated(0, line_thickness + 1), line_end_point.translated(0, line_thickness + 1), line_color, line_thickness);
+        break;
+    case CSS::TextDecorationStyle::Dashed:
+        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Dashed);
+        break;
+    case CSS::TextDecorationStyle::Dotted:
+        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Dotted);
         break;
     case CSS::TextDecorationStyle::Wavy:
         painter.draw_triangle_wave(line_start_point, line_end_point, line_color, line_thickness + 1, line_thickness);
