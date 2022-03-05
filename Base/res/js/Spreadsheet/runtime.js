@@ -189,6 +189,40 @@ class CommonRange {
         this.forEach(val => cells.push(val));
         return cells;
     }
+
+    filter(matches) {
+        const cells = [];
+        this.forEach(cell => {
+            if (matches(cell)) cells.push(cell);
+        });
+        return new SplitRange(cells);
+    }
+}
+
+class SplitRange extends CommonRange {
+    constructor(cells) {
+        super();
+        this.cells = cells;
+    }
+
+    static fromNames(...cellNames) {
+        return new SplitRange(cellNames.map(Position.from_name));
+    }
+
+    first() {
+        return this.cellNames[0];
+    }
+
+    forEach(callback) {
+        for (const cell of this.cells) {
+            if (callback(cell) === Break) return;
+        }
+    }
+
+    toString() {
+        const namesFormatted = this.cells.map(cell => '"' + cell.name + '"').join(", ");
+        return `SplitRange.fromNames(${namesFormatted})`;
+    }
 }
 
 class Ranges extends CommonRange {
@@ -388,7 +422,7 @@ function numericResolve(cells) {
 }
 
 function resolve(cells) {
-    const isRange = cells instanceof Range || cells instanceof Ranges;
+    const isRange = cells instanceof CommonRange;
     return isRange ? cells.toArray().map(cell => cell.value()) : cells;
 }
 
