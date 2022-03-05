@@ -195,4 +195,29 @@ JS::ThrowCompletionOr<JS::Value> cross_origin_get(JS::GlobalObject& global_objec
     return JS::call(global_object, *getter, receiver);
 }
 
+// 7.2.3.6 CrossOriginSet ( O, P, V, Receiver ), https://html.spec.whatwg.org/multipage/browsers.html#crossoriginset-(-o,-p,-v,-receiver-)
+JS::ThrowCompletionOr<bool> cross_origin_set(JS::GlobalObject& global_object, JS::Object& object, JS::PropertyKey const& property_key, JS::Value value, JS::Value receiver)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let desc be ? O.[[GetOwnProperty]](P).
+    auto descriptor = TRY(object.internal_get_own_property(property_key));
+
+    // 2. Assert: desc is not undefined.
+    VERIFY(descriptor.has_value());
+
+    // 3. If desc.[[Set]] is present and its value is not undefined, then:
+    if (descriptor->set.has_value() && *descriptor->set) {
+        // FIXME: Spec issue, `setter` isn't being defined.
+        // 1. Perform ? Call(setter, Receiver, «V»).
+        TRY(JS::call(global_object, *descriptor->set, receiver, value));
+
+        // 2. Return true.
+        return true;
+    }
+
+    // 4. Throw a "SecurityError" DOMException.
+    return vm.throw_completion<DOMExceptionWrapper>(global_object, DOM::SecurityError::create(String::formatted("Can't set property '{}' on cross-origin object", property_key)));
+}
+
 }
