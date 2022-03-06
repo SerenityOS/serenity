@@ -83,7 +83,7 @@ HeaderView::VisibleSectionRange HeaderView::visible_section_range() const
 {
     auto section_count = this->section_count();
     auto is_horizontal = m_orientation == Orientation::Horizontal;
-    auto rect = m_table_view.visible_content_rect();
+    auto rect = m_table_view.frame_inner_rect();
     auto start = is_horizontal ? rect.top_left().x() : rect.top_left().y();
     auto end = is_horizontal ? rect.top_right().x() : rect.bottom_left().y();
     auto offset = 0;
