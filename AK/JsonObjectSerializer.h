@@ -170,6 +170,16 @@ public:
     }
 
 #ifndef KERNEL
+    ErrorOr<void> add(StringView key, float value)
+    {
+        TRY(begin_item(key));
+        if constexpr (IsLegacyBuilder<Builder>)
+            TRY(m_builder.try_appendff("{}", value));
+        else
+            TRY(m_builder.appendff("{}", value));
+        return {};
+    }
+
     ErrorOr<void> add(StringView key, double value)
     {
         TRY(begin_item(key));
