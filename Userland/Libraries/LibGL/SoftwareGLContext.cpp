@@ -2008,18 +2008,18 @@ void SoftwareGLContext::gl_enable_client_state(GLenum cap)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     switch (cap) {
-    case GL_VERTEX_ARRAY:
-        m_client_side_vertex_array_enabled = true;
-        break;
-
     case GL_COLOR_ARRAY:
         m_client_side_color_array_enabled = true;
         break;
-
+    case GL_NORMAL_ARRAY:
+        m_client_side_normal_array_enabled = true;
+        break;
     case GL_TEXTURE_COORD_ARRAY:
         m_client_side_texture_coord_array_enabled[m_client_active_texture] = true;
         break;
-
+    case GL_VERTEX_ARRAY:
+        m_client_side_vertex_array_enabled = true;
+        break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
@@ -2030,18 +2030,18 @@ void SoftwareGLContext::gl_disable_client_state(GLenum cap)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     switch (cap) {
-    case GL_VERTEX_ARRAY:
-        m_client_side_vertex_array_enabled = false;
-        break;
-
     case GL_COLOR_ARRAY:
         m_client_side_color_array_enabled = false;
         break;
-
+    case GL_NORMAL_ARRAY:
+        m_client_side_normal_array_enabled = false;
+        break;
     case GL_TEXTURE_COORD_ARRAY:
         m_client_side_texture_coord_array_enabled[m_client_active_texture] = false;
         break;
-
+    case GL_VERTEX_ARRAY:
+        m_client_side_vertex_array_enabled = false;
+        break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
@@ -2057,57 +2057,54 @@ void SoftwareGLContext::gl_client_active_texture(GLenum target)
 void SoftwareGLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-
     RETURN_WITH_ERROR_IF(!(size == 2 || size == 3 || size == 4), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(!(type == GL_SHORT || type == GL_INT || type == GL_FLOAT || type == GL_DOUBLE), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
-    m_client_vertex_pointer.size = size;
-    m_client_vertex_pointer.type = type;
-    m_client_vertex_pointer.stride = stride;
-    m_client_vertex_pointer.pointer = pointer;
+    m_client_vertex_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
 }
 
 void SoftwareGLContext::gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-
     RETURN_WITH_ERROR_IF(!(size == 3 || size == 4), GL_INVALID_VALUE);
-
-    RETURN_WITH_ERROR_IF(!(type == GL_BYTE
-                             || type == GL_UNSIGNED_BYTE
-                             || type == GL_SHORT
-                             || type == GL_UNSIGNED_SHORT
-                             || type == GL_INT
-                             || type == GL_UNSIGNED_INT
-                             || type == GL_FLOAT
-                             || type == GL_DOUBLE),
+    RETURN_WITH_ERROR_IF(type != GL_BYTE
+            && type != GL_UNSIGNED_BYTE
+            && type != GL_SHORT
+            && type != GL_UNSIGNED_SHORT
+            && type != GL_INT
+            && type != GL_UNSIGNED_INT
+            && type != GL_FLOAT
+            && type != GL_DOUBLE,
         GL_INVALID_ENUM);
-
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
-    m_client_color_pointer.size = size;
-    m_client_color_pointer.type = type;
-    m_client_color_pointer.stride = stride;
-    m_client_color_pointer.pointer = pointer;
+    m_client_color_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
 }
 
 void SoftwareGLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-
     RETURN_WITH_ERROR_IF(!(size == 1 || size == 2 || size == 3 || size == 4), GL_INVALID_VALUE);
-
     RETURN_WITH_ERROR_IF(!(type == GL_SHORT || type == GL_INT || type == GL_FLOAT || type == GL_DOUBLE), GL_INVALID_ENUM);
-
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
     auto& tex_coord_pointer = m_client_tex_coord_pointer[m_client_active_texture];
+    tex_coord_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
+}
 
-    tex_coord_pointer.size = size;
-    tex_coord_pointer.type = type;
-    tex_coord_pointer.stride = stride;
-    tex_coord_pointer.pointer = pointer;
+void SoftwareGLContext::gl_normal_pointer(GLenum type, GLsizei stride, void const* pointer)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(type != GL_BYTE
+            && type != GL_SHORT
+            && type != GL_INT
+            && type != GL_FLOAT
+            && type != GL_DOUBLE,
+        GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
+
+    m_client_normal_pointer = { .size = 3, .type = type, .stride = stride, .pointer = pointer };
 }
 
 void SoftwareGLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
@@ -2160,6 +2157,12 @@ void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
     auto last = first + count;
     gl_begin(mode);
     for (int i = first; i < last; i++) {
+        if (m_client_side_color_array_enabled) {
+            float color[4] { 0, 0, 0, 1 };
+            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
+            gl_color(color[0], color[1], color[2], color[3]);
+        }
+
         for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
             if (m_client_side_texture_coord_array_enabled[t]) {
                 float tex_coords[4] { 0, 0, 0, 0 };
@@ -2168,10 +2171,10 @@ void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
             }
         }
 
-        if (m_client_side_color_array_enabled) {
-            float color[4] { 0, 0, 0, 1 };
-            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
-            gl_color(color[0], color[1], color[2], color[3]);
+        if (m_client_side_normal_array_enabled) {
+            float normal[3];
+            read_from_vertex_attribute_pointer(m_client_normal_pointer, i, normal, false);
+            gl_normal(normal[0], normal[1], normal[2]);
         }
 
         float vertex[4] { 0, 0, 0, 1 };
@@ -2221,6 +2224,12 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
             break;
         }
 
+        if (m_client_side_color_array_enabled) {
+            float color[4] { 0, 0, 0, 1 };
+            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
+            gl_color(color[0], color[1], color[2], color[3]);
+        }
+
         for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
             if (m_client_side_texture_coord_array_enabled[t]) {
                 float tex_coords[4] { 0, 0, 0, 0 };
@@ -2229,10 +2238,10 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
             }
         }
 
-        if (m_client_side_color_array_enabled) {
-            float color[4] { 0, 0, 0, 1 };
-            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
-            gl_color(color[0], color[1], color[2], color[3]);
+        if (m_client_side_normal_array_enabled) {
+            float normal[3];
+            read_from_vertex_attribute_pointer(m_client_normal_pointer, i, normal, false);
+            gl_normal(normal[0], normal[1], normal[2]);
         }
 
         float vertex[4] { 0, 0, 0, 1 };
@@ -2732,20 +2741,6 @@ void SoftwareGLContext::gl_normal(GLfloat nx, GLfloat ny, GLfloat nz)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_normal, nx, ny, nz);
 
     m_current_vertex_normal = { nx, ny, nz };
-}
-
-void SoftwareGLContext::gl_normal_pointer(GLenum type, GLsizei stride, void const* pointer)
-{
-    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(type != GL_BYTE
-            && type != GL_SHORT
-            && type != GL_INT
-            && type != GL_FLOAT
-            && type != GL_DOUBLE,
-        GL_INVALID_ENUM);
-    RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
-
-    dbgln_if(GL_DEBUG, "gl_normal_pointer({:#x}, {}, {:p}): unimplemented", type, stride, pointer);
 }
 
 void SoftwareGLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
