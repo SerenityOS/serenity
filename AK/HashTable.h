@@ -402,6 +402,8 @@ public:
         delete_bucket(bucket);
         --m_size;
         ++m_deleted_count;
+
+        shrink_if_needed();
     }
 
     template<typename TUnaryPredicate>
@@ -418,9 +420,9 @@ public:
         if (removed_count) {
             m_deleted_count += removed_count;
             m_size -= removed_count;
-            return true;
         }
-        return false;
+        shrink_if_needed();
+        return removed_count;
     }
 
 private:
@@ -542,6 +544,19 @@ private:
 
     [[nodiscard]] size_t used_bucket_count() const { return m_size + m_deleted_count; }
     [[nodiscard]] bool should_grow() const { return ((used_bucket_count() + 1) * 100) >= (m_capacity * load_factor_in_percent); }
+
+    void shrink_if_needed()
+    {
+        // Shrink if less than 20% of buckets are used, but never going below 16.
+        // These limits are totally arbitrary and can probably be improved.
+        bool should_shrink = m_size * 5 < m_capacity && m_capacity > 16;
+        if (!should_shrink)
+            return;
+
+        // NOTE: We ignore memory allocation failure here, since we can continue
+        //       just fine with an oversized table.
+        (void)try_rehash(m_size * 2);
+    }
 
     void delete_bucket(auto& bucket)
     {
