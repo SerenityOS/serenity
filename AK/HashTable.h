@@ -402,23 +402,9 @@ public:
         auto next_iterator = iterator;
         ++next_iterator;
 
-        bucket.slot()->~T();
-        bucket.used = false;
-        bucket.deleted = true;
+        delete_bucket(bucket);
         --m_size;
         ++m_deleted_count;
-
-        if constexpr (IsOrdered) {
-            if (bucket.previous)
-                bucket.previous->next = bucket.next;
-            else
-                m_collection_data.head = bucket.next;
-
-            if (bucket.next)
-                bucket.next->previous = bucket.previous;
-            else
-                m_collection_data.tail = bucket.previous;
-        }
 
         return next_iterator;
     }
@@ -426,16 +412,20 @@ public:
     template<typename TUnaryPredicate>
     bool remove_all_matching(TUnaryPredicate predicate)
     {
-        bool something_was_removed = false;
-        for (auto it = begin(); it != end();) {
-            if (predicate(*it)) {
-                it = remove(it);
-                something_was_removed = true;
-            } else {
-                ++it;
+        size_t removed_count = 0;
+        for (size_t i = 0; i < m_capacity; ++i) {
+            auto& bucket = m_buckets[i];
+            if (bucket.used && predicate(*bucket.slot())) {
+                delete_bucket(bucket);
+                ++removed_count;
             }
         }
-        return something_was_removed;
+        if (removed_count) {
+            m_deleted_count += removed_count;
+            m_size -= removed_count;
+            return true;
+        }
+        return false;
     }
 
 private:
@@ -557,6 +547,25 @@ private:
 
     [[nodiscard]] size_t used_bucket_count() const { return m_size + m_deleted_count; }
     [[nodiscard]] bool should_grow() const { return ((used_bucket_count() + 1) * 100) >= (m_capacity * load_factor_in_percent); }
+
+    void delete_bucket(auto& bucket)
+    {
+        bucket.slot()->~T();
+        bucket.used = false;
+        bucket.deleted = true;
+
+        if constexpr (IsOrdered) {
+            if (bucket.previous)
+                bucket.previous->next = bucket.next;
+            else
+                m_collection_data.head = bucket.next;
+
+            if (bucket.next)
+                bucket.next->previous = bucket.previous;
+            else
+                m_collection_data.tail = bucket.previous;
+        }
+    }
 
     BucketType* m_buckets { nullptr };
 

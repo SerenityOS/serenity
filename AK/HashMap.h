@@ -79,16 +79,9 @@ public:
     template<typename TUnaryPredicate>
     bool remove_all_matching(TUnaryPredicate predicate)
     {
-        bool something_was_removed = false;
-        for (auto it = begin(); it != end();) {
-            if (predicate(it->key, it->value)) {
-                it = remove(it);
-                something_was_removed = true;
-            } else {
-                ++it;
-            }
-        }
-        return something_was_removed;
+        return m_table.template remove_all_matching([&](auto& entry) {
+            return predicate(entry.key, entry.value);
+        });
     }
 
     using HashTableType = HashTable<Entry, EntryTraits, IsOrdered>;
