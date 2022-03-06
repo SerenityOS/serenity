@@ -189,9 +189,9 @@ public:
         return find(value) != end();
     }
 
-    IteratorType remove(IteratorType it)
+    void remove(IteratorType it)
     {
-        return m_table.remove(it);
+        m_table.remove(it);
     }
 
     V& ensure(const K& key)

@@ -389,7 +389,7 @@ public:
         return false;
     }
 
-    Iterator remove(Iterator iterator)
+    void remove(Iterator iterator)
     {
         VERIFY(iterator.m_bucket);
         auto& bucket = *iterator.m_bucket;
@@ -399,14 +399,9 @@ public:
         if constexpr (!IsOrdered)
             VERIFY(!bucket.end);
 
-        auto next_iterator = iterator;
-        ++next_iterator;
-
         delete_bucket(bucket);
         --m_size;
         ++m_deleted_count;
-
-        return next_iterator;
     }
 
     template<typename TUnaryPredicate>
