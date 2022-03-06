@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -8,6 +8,7 @@
 #include "PDFViewer.h"
 #include <AK/Array.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibPDF/Renderer.h>
 
@@ -56,15 +57,15 @@ void PDFViewer::set_document(RefPtr<PDF::Document> document)
     update();
 }
 
-RefPtr<Gfx::Bitmap> PDFViewer::get_rendered_page(u32 index)
+PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> PDFViewer::get_rendered_page(u32 index)
 {
     auto& rendered_page_map = m_rendered_page_list[index];
     auto existing_rendered_page = rendered_page_map.get(m_zoom_level);
     if (existing_rendered_page.has_value() && existing_rendered_page.value().rotation == m_rotations)
         return existing_rendered_page.value().bitmap;
 
-    // FIXME: Propogate errors in the Renderer
-    auto rendered_page = render_page(MUST(m_document->get_page(index)));
+    auto page = TRY(m_document->get_page(index));
+    auto rendered_page = TRY(render_page(page));
     rendered_page_map.set(m_zoom_level, { rendered_page, m_rotations });
     return rendered_page;
 }
@@ -81,7 +82,14 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
     if (!m_document)
         return;
 
-    auto page = get_rendered_page(m_current_page_index);
+    auto maybe_page = get_rendered_page(m_current_page_index);
+    if (maybe_page.is_error()) {
+        auto error = maybe_page.release_error();
+        GUI::MessageBox::show_error(nullptr, String::formatted("Error rendering page:\n{}", error.message()));
+        return;
+    }
+
+    auto page = maybe_page.release_value();
     set_content_size(page->size());
 
     painter.translate(frame_thickness(), frame_thickness());
@@ -196,7 +204,7 @@ void PDFViewer::rotate(int degrees)
     update();
 }
 
-RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
+PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> PDFViewer::render_page(const PDF::Page& page)
 {
     auto zoom_scale_factor = static_cast<float>(zoom_levels[m_zoom_level]) / 100.0f;
 
@@ -208,7 +216,7 @@ RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
     auto width = height / page_scale_factor;
     auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors();
 
-    PDF::Renderer::render(*m_document, page, bitmap);
+    TRY(PDF::Renderer::render(*m_document, page, bitmap));
 
     if (page.rotate + m_rotations != 0) {
         int rotation_count = ((page.rotate + m_rotations) / 90) % 4;

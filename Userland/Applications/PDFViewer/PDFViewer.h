@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -45,12 +45,12 @@ protected:
 
 private:
     struct RenderedPage {
-        RefPtr<Gfx::Bitmap> bitmap;
+        NonnullRefPtr<Gfx::Bitmap> bitmap;
         int rotation;
     };
 
-    RefPtr<Gfx::Bitmap> get_rendered_page(u32 index);
-    RefPtr<Gfx::Bitmap> render_page(const PDF::Page&);
+    PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_rendered_page(u32 index);
+    PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page(const PDF::Page&);
 
     RefPtr<PDF::Document> m_document;
     u32 m_current_page_index { 0 };

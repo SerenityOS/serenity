@@ -79,22 +79,22 @@ struct GraphicsState {
 
 class Renderer {
 public:
-    static void render(Document&, Page const&, RefPtr<Gfx::Bitmap>);
+    static PDFErrorOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>);
 
 private:
     Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>);
 
-    void render();
+    PDFErrorOr<void> render();
 
-    void handle_command(Command const&);
+    PDFErrorOr<void> handle_command(Command const&);
 #define V(name, snake_name, symbol) \
-    void handle_##snake_name(Vector<Value> const& args);
+    PDFErrorOr<void> handle_##snake_name(Vector<Value> const& args);
     ENUMERATE_COMMANDS(V)
 #undef V
-    void handle_text_next_line_show_string(Vector<Value> const& args);
-    void handle_text_next_line_show_string_set_spacing(Vector<Value> const& args);
+    PDFErrorOr<void> handle_text_next_line_show_string(Vector<Value> const& args);
+    PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(Vector<Value> const& args);
 
-    void set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
+    PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     // shift is the manual advance given in the TJ command array
     void show_text(String const&, float shift = 0.0f);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space(Value const&);
