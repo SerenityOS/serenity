@@ -2231,6 +2231,39 @@ Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_v
     return {};
 }
 
+Optional<Ratio> Parser::parse_ratio(TokenStream<StyleComponentValueRule>& tokens)
+{
+    auto position = tokens.position();
+    tokens.skip_whitespace();
+
+    auto error = [&]() -> Optional<Ratio> {
+        tokens.rewind_to_position(position);
+        return {};
+    };
+
+    // `<ratio> = <number [0,∞]> [ / <number [0,∞]> ]?`
+    // FIXME: I think either part is allowed to be calc(), which makes everything complicated.
+    auto first_number = tokens.next_token();
+    if (!first_number.is(Token::Type::Number) || first_number.token().number_value() < 0)
+        return error();
+
+    auto position_after_first_number = tokens.position();
+
+    tokens.skip_whitespace();
+    auto solidus = tokens.next_token();
+    tokens.skip_whitespace();
+    auto second_number = tokens.next_token();
+    if (solidus.is(Token::Type::Delim) && solidus.token().delim() == "/"
+        && second_number.is(Token::Type::Number) && second_number.token().number_value() > 0) {
+        // Two-value ratio
+        return Ratio { static_cast<float>(first_number.token().number_value()), static_cast<float>(second_number.token().number_value()) };
+    }
+
+    // Single-value ratio
+    tokens.rewind_to_position(position_after_first_number);
+    return Ratio { static_cast<float>(first_number.token().number_value()) };
+}
+
 RefPtr<StyleValue> Parser::parse_dimension_value(StyleComponentValueRule const& component_value)
 {
     // Numbers with no units can be lengths, in two situations:

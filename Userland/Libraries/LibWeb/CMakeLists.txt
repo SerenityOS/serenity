@@ -44,6 +44,7 @@ set(SOURCES
     CSS/PropertyID.cpp
     CSS/PropertyID.h
     CSS/QuirksModeStyleSheetSource.cpp
+    CSS/Ratio.cpp
     CSS/Resolution.cpp
     CSS/ResolvedCSSStyleDeclaration.cpp
     CSS/Screen.cpp

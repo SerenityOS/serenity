@@ -22,6 +22,7 @@
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
+#include <LibWeb/CSS/Ratio.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/Supports.h>
@@ -243,6 +244,7 @@ private:
     Optional<Dimension> parse_dimension(StyleComponentValueRule const&);
     Optional<Color> parse_color(StyleComponentValueRule const&);
     Optional<Length> parse_length(StyleComponentValueRule const&);
+    Optional<Ratio> parse_ratio(TokenStream<StyleComponentValueRule>&);
 
     enum class AllowedDataUrlType {
         None,
