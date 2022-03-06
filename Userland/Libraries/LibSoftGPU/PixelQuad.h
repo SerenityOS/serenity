@@ -15,7 +15,7 @@
 namespace SoftGPU {
 
 struct PixelQuad final {
-    Vector2<AK::SIMD::i32x4> screen_coordinates;
+    Vector2<AK::SIMD::f32x4> screen_coordinates;
     Vector3<AK::SIMD::f32x4> barycentrics;
     AK::SIMD::f32x4 depth;
     Vector4<AK::SIMD::f32x4> vertex_color;
