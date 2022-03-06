@@ -730,7 +730,7 @@ NonnullRefPtr<StringObject> Parser::parse_string()
 
     if (string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
         // The string is encoded in UTF16-BE
-        string = TextCodec::decoder_for("utf-16be")->to_utf8(string.substring(2));
+        string = TextCodec::decoder_for("utf-16be")->to_utf8(string);
     } else if (string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 })) {
         // The string is encoded in UTF-8. This is the default anyways, but if these bytes
         // are explicitly included, we have to trim them
