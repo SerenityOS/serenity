@@ -292,7 +292,6 @@ void MainWidget::open_url(URL const& url)
             auto browse_view_index = m_manual_model->index_from_path(path);
             if (browse_view_index.has_value()) {
                 m_browse_view->expand_tree(browse_view_index.value().parent());
-                m_browse_view->selection().set(browse_view_index.value());
 
                 String page_and_section = m_manual_model->page_and_section(browse_view_index.value());
                 window()->set_title(String::formatted("{} - Help", page_and_section));
