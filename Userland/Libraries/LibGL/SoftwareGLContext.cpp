@@ -2467,18 +2467,16 @@ void SoftwareGLContext::read_from_vertex_attribute_pointer(VertexAttribPointer c
         if (stride == 0)
             stride = sizeof(GLfloat) * attrib.size;
 
-        for (int i = 0; i < attrib.size; i++) {
+        for (int i = 0; i < attrib.size; i++)
             elements[i] = *(reinterpret_cast<const GLfloat*>(byte_ptr + stride * index) + i);
-        }
         break;
     }
     case GL_DOUBLE: {
         if (stride == 0)
             stride = sizeof(GLdouble) * attrib.size;
 
-        for (int i = 0; i < attrib.size; i++) {
+        for (int i = 0; i < attrib.size; i++)
             elements[i] = static_cast<float>(*(reinterpret_cast<const GLdouble*>(byte_ptr + stride * index) + i));
-        }
         break;
     }
     }
