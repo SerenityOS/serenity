@@ -36,10 +36,8 @@ void CanvasBox::paint(PaintContext& context, PaintPhase phase)
         if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
             return;
 
-        if (dom_node().bitmap()) {
-            auto scaling_mode = computed_values().image_rendering() == CSS::ImageRendering::Pixelated ? Gfx::Painter::ScalingMode::NearestNeighbor : Gfx::Painter::ScalingMode::BilinearBlend;
-            context.painter().draw_scaled_bitmap(rounded_int_rect(absolute_rect()), *dom_node().bitmap(), dom_node().bitmap()->rect(), 1.0f, scaling_mode);
-        }
+        if (dom_node().bitmap())
+            context.painter().draw_scaled_bitmap(rounded_int_rect(absolute_rect()), *dom_node().bitmap(), dom_node().bitmap()->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
     }
 }
 

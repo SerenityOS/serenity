@@ -277,8 +277,14 @@ Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
     switch (value.value()->to_identifier()) {
     case CSS::ValueID::Auto:
         return CSS::ImageRendering::Auto;
+    case CSS::ValueID::CrispEdges:
+        return CSS::ImageRendering::CrispEdges;
+    case CSS::ValueID::HighQuality:
+        return CSS::ImageRendering::HighQuality;
     case CSS::ValueID::Pixelated:
         return CSS::ImageRendering::Pixelated;
+    case CSS::ValueID::Smooth:
+        return CSS::ImageRendering::Smooth;
     default:
         return {};
     }

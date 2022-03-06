@@ -363,8 +363,14 @@ static CSS::ValueID to_css_value_id(CSS::ImageRendering value)
     switch (value) {
     case ImageRendering::Auto:
         return CSS::ValueID::Auto;
+    case ImageRendering::CrispEdges:
+        return CSS::ValueID::CrispEdges;
+    case ImageRendering::HighQuality:
+        return CSS::ValueID::HighQuality;
     case ImageRendering::Pixelated:
         return CSS::ValueID::Pixelated;
+    case ImageRendering::Smooth:
+        return CSS::ValueID::Smooth;
     }
     VERIFY_NOT_REACHED();
 }

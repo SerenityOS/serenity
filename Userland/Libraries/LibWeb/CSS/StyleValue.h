@@ -22,6 +22,7 @@
 #include <AK/WeakPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/Painter.h>
 #include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Frequency.h>
@@ -146,8 +147,26 @@ enum class Float {
 
 enum class ImageRendering {
     Auto,
-    Pixelated
+    CrispEdges,
+    HighQuality,
+    Pixelated,
+    Smooth,
 };
+
+// FIXME: Find a better place for this helper.
+inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_value)
+{
+    switch (css_value) {
+    case CSS::ImageRendering::Auto:
+    case CSS::ImageRendering::HighQuality:
+    case CSS::ImageRendering::Smooth:
+        return Gfx::Painter::ScalingMode::BilinearBlend;
+    case CSS::ImageRendering::CrispEdges:
+    case CSS::ImageRendering::Pixelated:
+        return Gfx::Painter::ScalingMode::NearestNeighbor;
+    }
+    VERIFY_NOT_REACHED();
+}
 
 enum class JustifyContent {
     FlexStart,
