@@ -22,7 +22,8 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(to_string);
-    JS_DECLARE_NATIVE_FUNCTION(stack);
+    JS_DECLARE_NATIVE_FUNCTION(stack_getter);
+    JS_DECLARE_NATIVE_FUNCTION(stack_setter);
 };
 
 #define DECLARE_NATIVE_ERROR_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName) \
