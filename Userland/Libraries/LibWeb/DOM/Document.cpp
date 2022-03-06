@@ -1286,7 +1286,7 @@ void Document::run_the_resize_steps()
         return;
     m_last_viewport_size = viewport_size;
 
-    dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
+    window().dispatch_event(DOM::Event::create(UIEvents::EventNames::resize));
 
     update_layout();
 }
