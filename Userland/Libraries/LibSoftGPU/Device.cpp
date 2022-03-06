@@ -192,9 +192,9 @@ void Device::rasterize_triangle(const Triangle& triangle)
     Vertex const vertex2 = triangle.vertices[2];
 
     // Calculate area of the triangle for later tests
-    FloatVector2 const v0 { vertex0.window_coordinates.x(), vertex0.window_coordinates.y() };
-    FloatVector2 const v1 { vertex1.window_coordinates.x(), vertex1.window_coordinates.y() };
-    FloatVector2 const v2 { vertex2.window_coordinates.x(), vertex2.window_coordinates.y() };
+    FloatVector2 const v0 = vertex0.window_coordinates.xy();
+    FloatVector2 const v1 = vertex1.window_coordinates.xy();
+    FloatVector2 const v2 = vertex2.window_coordinates.xy();
 
     auto const area = edge_function(v0, v1, v2);
     auto const one_over_area = 1.0f / area;
@@ -608,7 +608,7 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
         }
         case TexCoordGenerationMode::SphereMap: {
             auto const eye_unit = vertex.eye_coordinates.normalized();
-            FloatVector3 const eye_unit_xyz = { eye_unit.x(), eye_unit.y(), eye_unit.z() };
+            FloatVector3 const eye_unit_xyz = eye_unit.xyz();
             auto const normal = vertex.normal;
             auto reflection = eye_unit_xyz - normal * 2 * normal.dot(eye_unit_xyz);
             reflection.set_z(reflection.z() + 1);
@@ -617,7 +617,7 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
         }
         case TexCoordGenerationMode::ReflectionMap: {
             auto const eye_unit = vertex.eye_coordinates.normalized();
-            FloatVector3 const eye_unit_xyz = { eye_unit.x(), eye_unit.y(), eye_unit.z() };
+            FloatVector3 const eye_unit_xyz = eye_unit.xyz();
             auto const normal = vertex.normal;
             auto reflection = eye_unit_xyz - normal * 2 * normal.dot(eye_unit_xyz);
             switch (config_index) {
@@ -995,7 +995,7 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
         // FIXME: implement GL_TEXTURE_1D, GL_TEXTURE_3D and GL_TEXTURE_CUBE_MAP
         auto const& sampler = m_samplers[i];
 
-        auto texel = sampler.sample_2d({ quad.texture_coordinates[i].x(), quad.texture_coordinates[i].y() });
+        auto texel = sampler.sample_2d(quad.texture_coordinates[i].xy());
         INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
 
         // FIXME: Implement more blend modes
