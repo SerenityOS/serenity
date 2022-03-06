@@ -201,7 +201,12 @@ public:
             return AK::sqrt(m_data[0] * m_data[0] + m_data[1] * m_data[1] + m_data[2] * m_data[2] + m_data[3] * m_data[3]);
     }
 
-    [[nodiscard]] constexpr VectorN<3, T> xyz() const requires(N == 4)
+    [[nodiscard]] constexpr VectorN<2, T> xy() const requires(N >= 3)
+    {
+        return VectorN<2, T>(x(), y());
+    }
+
+    [[nodiscard]] constexpr VectorN<3, T> xyz() const requires(N >= 4)
     {
         return VectorN<3, T>(x(), y(), z());
     }
