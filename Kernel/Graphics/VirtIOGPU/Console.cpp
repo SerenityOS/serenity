@@ -65,10 +65,11 @@ void Console::enqueue_refresh_timer()
                 .width = (u32)rect.width(),
                 .height = (u32)rect.height(),
             };
-            g_io_work->queue([this, dirty_rect]() {
+            // FIXME: Do something sanely here if we can't allocate a work queue?
+            MUST(g_io_work->try_queue([this, dirty_rect]() {
                 m_framebuffer_device->flush_dirty_window(dirty_rect, m_framebuffer_device->current_buffer());
                 m_dirty_rect.clear();
-            });
+            }));
         }
         enqueue_refresh_timer();
     });

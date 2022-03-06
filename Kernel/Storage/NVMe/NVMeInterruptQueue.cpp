@@ -33,7 +33,7 @@ void NVMeInterruptQueue::complete_current_request(u16 status)
 {
     VERIFY(m_request_lock.is_locked());
 
-    g_io_work->queue([this, status]() {
+    auto work_item_creation_result = g_io_work->try_queue([this, status]() {
         SpinlockLocker lock(m_request_lock);
         auto current_request = m_current_request;
         m_current_request.clear();
@@ -53,5 +53,10 @@ void NVMeInterruptQueue::complete_current_request(u16 status)
         current_request->complete(AsyncDeviceRequest::Success);
         return;
     });
+    if (work_item_creation_result.is_error()) {
+        auto current_request = m_current_request;
+        m_current_request.clear();
+        current_request->complete(AsyncDeviceRequest::OutOfMemory);
+    }
 }
 }
