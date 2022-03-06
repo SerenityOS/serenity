@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,7 +34,7 @@ public:
 
 class DeviceGrayColorSpace final : public ColorSpace {
 public:
-    static RefPtr<DeviceGrayColorSpace> the();
+    static NonnullRefPtr<DeviceGrayColorSpace> the();
 
     virtual ~DeviceGrayColorSpace() override = default;
 
@@ -46,7 +46,7 @@ private:
 
 class DeviceRGBColorSpace final : public ColorSpace {
 public:
-    static RefPtr<DeviceRGBColorSpace> the();
+    static NonnullRefPtr<DeviceRGBColorSpace> the();
 
     virtual ~DeviceRGBColorSpace() override = default;
 
@@ -58,7 +58,7 @@ private:
 
 class DeviceCMYKColorSpace final : public ColorSpace {
 public:
-    static RefPtr<DeviceCMYKColorSpace> the();
+    static NonnullRefPtr<DeviceCMYKColorSpace> the();
 
     virtual ~DeviceCMYKColorSpace() override = default;
 
@@ -70,7 +70,7 @@ private:
 
 class CalRGBColorSpace final : public ColorSpace {
 public:
-    static RefPtr<CalRGBColorSpace> create(RefPtr<Document>, Vector<Value>&& parameters);
+    static PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> create(RefPtr<Document>, Vector<Value>&& parameters);
     virtual ~CalRGBColorSpace() override = default;
 
     virtual Color color(Vector<Value> const& arguments) const override;

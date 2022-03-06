@@ -413,13 +413,13 @@ RENDERER_TODO(type3_font_set_glyph_width_and_bbox);
 
 RENDERER_HANDLER(set_stroking_space)
 {
-    state().stroke_color_space = get_color_space(args[0]);
+    state().stroke_color_space = MUST(get_color_space(args[0]));
     VERIFY(state().stroke_color_space);
 }
 
 RENDERER_HANDLER(set_painting_space)
 {
-    state().paint_color_space = get_color_space(args[0]);
+    state().paint_color_space = MUST(get_color_space(args[0]));
     VERIFY(state().paint_color_space);
 }
 
@@ -564,7 +564,7 @@ void Renderer::show_text(String const& string, float shift)
     m_text_matrix = Gfx::AffineTransform(1, 0, 0, 1, delta_x, 0).multiply(m_text_matrix);
 }
 
-RefPtr<ColorSpace> Renderer::get_color_space(Value const& value)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space(Value const& value)
 {
     auto name = value.get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
 
@@ -580,12 +580,12 @@ RefPtr<ColorSpace> Renderer::get_color_space(Value const& value)
 
     // The color space is a complex color space with parameters that resides in
     // the resource dictionary
-    auto color_space_resource_dict = MUST(m_page.resources->get_dict(m_document, CommonNames::ColorSpace));
+    auto color_space_resource_dict = TRY(m_page.resources->get_dict(m_document, CommonNames::ColorSpace));
     if (!color_space_resource_dict->contains(name))
         TODO();
 
-    auto color_space_array = MUST(color_space_resource_dict->get_array(m_document, name));
-    name = MUST(color_space_array->get_name_at(m_document, 0))->name();
+    auto color_space_array = TRY(color_space_resource_dict->get_array(m_document, name));
+    name = TRY(color_space_array->get_name_at(m_document, 0))->name();
 
     Vector<Value> parameters;
     parameters.ensure_capacity(color_space_array->size() - 1);
@@ -593,7 +593,7 @@ RefPtr<ColorSpace> Renderer::get_color_space(Value const& value)
         parameters.unchecked_append(color_space_array->at(i));
 
     if (name == CommonNames::CalRGB)
-        return CalRGBColorSpace::create(m_document, move(parameters));
+        return TRY(CalRGBColorSpace::create(m_document, move(parameters)));
 
     TODO();
 }

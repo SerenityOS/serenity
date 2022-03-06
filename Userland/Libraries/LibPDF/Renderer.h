@@ -97,7 +97,7 @@ private:
     void set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     // shift is the manual advance given in the TJ command array
     void show_text(String const&, float shift = 0.0f);
-    RefPtr<ColorSpace> get_color_space(Value const&);
+    PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space(Value const&);
 
     ALWAYS_INLINE GraphicsState const& state() const { return m_graphics_state_stack.last(); }
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
