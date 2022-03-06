@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/IntrusiveList.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/SpinlockProtected.h>
@@ -23,23 +24,29 @@ class WorkQueue {
 public:
     static void initialize();
 
-    void queue(void (*function)(void*), void* data = nullptr, void (*free_data)(void*) = nullptr)
+    ErrorOr<void> try_queue(void (*function)(void*), void* data = nullptr, void (*free_data)(void*) = nullptr)
     {
-        auto* item = new WorkItem; // TODO: use a pool
+        auto item = new (nothrow) WorkItem; // TODO: use a pool
+        if (!item)
+            return Error::from_errno(ENOMEM);
         item->function = [function, data, free_data] {
             function(data);
             if (free_data)
                 free_data(data);
         };
         do_queue(item);
+        return {};
     }
 
     template<typename Function>
-    void queue(Function function)
+    ErrorOr<void> try_queue(Function function)
     {
-        auto* item = new WorkItem; // TODO: use a pool
+        auto item = new (nothrow) WorkItem; // TODO: use a pool
+        if (!item)
+            return Error::from_errno(ENOMEM);
         item->function = Function(function);
         do_queue(item);
+        return {};
     }
 
 private:

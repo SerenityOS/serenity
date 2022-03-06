@@ -121,7 +121,7 @@ void BMIDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult re
     // This is important so that we can safely write the buffer back,
     // which could cause page faults. Note that this may be called immediately
     // before Processor::deferred_call_queue returns!
-    g_io_work->queue([this, result]() {
+    auto work_item_creation_result = g_io_work->try_queue([this, result]() {
         dbgln_if(PATA_DEBUG, "BMIDEChannel::complete_current_request result: {}", (int)result);
         SpinlockLocker lock(m_request_lock);
         VERIFY(m_current_request);
@@ -145,6 +145,11 @@ void BMIDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult re
         lock.unlock();
         current_request->complete(result);
     });
+    if (work_item_creation_result.is_error()) {
+        auto current_request = m_current_request;
+        m_current_request.clear();
+        current_request->complete(AsyncDeviceRequest::OutOfMemory);
+    }
 }
 
 void BMIDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
