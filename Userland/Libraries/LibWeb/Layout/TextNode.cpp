@@ -344,7 +344,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
     return {};
 }
 
-Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::Iterator const& start, Utf8View::Iterator const& end, bool has_breaking_newline, bool must_commit)
+Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::Iterator const& start, Utf8View::Iterator const& end, bool has_breaking_newline, bool must_commit) const
 {
     if (m_layout_mode == LayoutMode::OnlyRequiredLineBreaks && !must_commit)
         return {};
