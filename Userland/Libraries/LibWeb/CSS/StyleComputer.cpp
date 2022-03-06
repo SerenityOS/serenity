@@ -180,12 +180,14 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         if (value.is_text_decoration()) {
             auto const& text_decoration = value.as_text_decoration();
             style.set_property(CSS::PropertyID::TextDecorationLine, text_decoration.line());
+            style.set_property(CSS::PropertyID::TextDecorationThickness, text_decoration.thickness());
             style.set_property(CSS::PropertyID::TextDecorationStyle, text_decoration.style());
             style.set_property(CSS::PropertyID::TextDecorationColor, text_decoration.color());
             return;
         }
 
         style.set_property(CSS::PropertyID::TextDecorationLine, value);
+        style.set_property(CSS::PropertyID::TextDecorationThickness, value);
         style.set_property(CSS::PropertyID::TextDecorationStyle, value);
         style.set_property(CSS::PropertyID::TextDecorationColor, value);
         return;

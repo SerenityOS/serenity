@@ -3733,13 +3733,13 @@ RefPtr<StyleValue> Parser::parse_overflow_value(Vector<StyleComponentValueRule> 
 
 RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<StyleComponentValueRule> const& component_values)
 {
-    if (component_values.size() > 3)
+    if (component_values.size() > 4)
         return nullptr;
 
     RefPtr<StyleValue> decoration_line;
+    RefPtr<StyleValue> decoration_thickness;
     RefPtr<StyleValue> decoration_style;
     RefPtr<StyleValue> decoration_color;
-    // FIXME: Implement 'text-decoration-thickness' parameter. https://www.w3.org/TR/css-text-decor-4/#text-decoration-width-property
 
     for (auto& part : component_values) {
         auto value = parse_css_value(part);
@@ -3758,6 +3758,12 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<StyleComponentValu
             decoration_line = value.release_nonnull();
             continue;
         }
+        if (property_accepts_value(PropertyID::TextDecorationThickness, *value)) {
+            if (decoration_thickness)
+                return nullptr;
+            decoration_thickness = value.release_nonnull();
+            continue;
+        }
         if (property_accepts_value(PropertyID::TextDecorationStyle, *value)) {
             if (decoration_style)
                 return nullptr;
@@ -3770,12 +3776,14 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<StyleComponentValu
 
     if (!decoration_line)
         decoration_line = property_initial_value(PropertyID::TextDecorationLine);
+    if (!decoration_thickness)
+        decoration_thickness = property_initial_value(PropertyID::TextDecorationThickness);
     if (!decoration_style)
         decoration_style = property_initial_value(PropertyID::TextDecorationStyle);
     if (!decoration_color)
         decoration_color = property_initial_value(PropertyID::TextDecorationColor);
 
-    return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull());
+    return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_thickness.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull());
 }
 
 static Optional<CSS::TransformFunction> parse_transform_function_name(StringView name)
