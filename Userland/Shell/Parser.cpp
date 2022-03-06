@@ -333,7 +333,7 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
     if (!expression) {
         if (is_whitespace(peek())) {
             auto string_start = push_start();
-            expression = create<AST::StringLiteral>("");
+            expression = create<AST::StringLiteral>("", AST::StringLiteral::EnclosureType::None);
         } else {
             restore_to(pos_before_name.offset, pos_before_name.line);
             return nullptr;
@@ -1276,7 +1276,7 @@ RefPtr<AST::Node> Parser::parse_string()
         bool is_error = false;
         if (!expect('\''))
             is_error = true;
-        auto result = create<AST::StringLiteral>(move(text)); // String Literal
+        auto result = create<AST::StringLiteral>(move(text), AST::StringLiteral::EnclosureType::SingleQuotes); // String Literal
         if (is_error)
             result->set_is_syntax_error(*create<AST::SyntaxError>("Expected a terminating single quote", true));
         return result;
@@ -1358,7 +1358,7 @@ RefPtr<AST::Node> Parser::parse_string_inner(StringEndCondition condition)
             continue;
         }
         if (peek() == '$') {
-            auto string_literal = create<AST::StringLiteral>(builder.to_string()); // String Literal
+            auto string_literal = create<AST::StringLiteral>(builder.to_string(), AST::StringLiteral::EnclosureType::DoubleQuotes); // String Literal
             auto read_concat = [&](auto&& node) {
                 auto inner = create<AST::StringPartCompose>(
                     move(string_literal),
@@ -1384,7 +1384,7 @@ RefPtr<AST::Node> Parser::parse_string_inner(StringEndCondition condition)
         builder.append(consume());
     }
 
-    return create<AST::StringLiteral>(builder.to_string()); // String Literal
+    return create<AST::StringLiteral>(builder.to_string(), AST::StringLiteral::EnclosureType::DoubleQuotes); // String Literal
 }
 
 RefPtr<AST::Node> Parser::parse_variable()
@@ -1923,7 +1923,7 @@ RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
 
     if (next_is(",")) {
         // Note that we don't consume the ',' here.
-        subexpressions.append(create<AST::StringLiteral>(""));
+        subexpressions.append(create<AST::StringLiteral>("", AST::StringLiteral::EnclosureType::None));
     } else {
         auto start_expr = parse_expression();
         if (start_expr) {
@@ -1948,7 +1948,7 @@ RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
         if (expr) {
             subexpressions.append(expr.release_nonnull());
         } else {
-            subexpressions.append(create<AST::StringLiteral>(""));
+            subexpressions.append(create<AST::StringLiteral>("", AST::StringLiteral::EnclosureType::None));
         }
     }
 
@@ -2061,7 +2061,7 @@ bool Parser::parse_heredoc_entries()
             if (!last_line_offset.has_value())
                 last_line_offset = current_position();
             // Now just wrap it in a StringLiteral and set it as the node's contents
-            auto node = create<AST::StringLiteral>(m_input.substring_view(rule_start->offset, last_line_offset->offset - rule_start->offset));
+            auto node = create<AST::StringLiteral>(m_input.substring_view(rule_start->offset, last_line_offset->offset - rule_start->offset), AST::StringLiteral::EnclosureType::None);
             if (!found_key)
                 node->set_is_syntax_error(*create<AST::SyntaxError>(String::formatted("Expected to find the heredoc key '{}', but found Eof", record.end), true));
             record.node->set_contents(move(node));
@@ -2110,7 +2110,7 @@ bool Parser::parse_heredoc_entries()
             }
 
             if (!expr && found_key) {
-                expr = create<AST::StringLiteral>("");
+                expr = create<AST::StringLiteral>("", AST::StringLiteral::EnclosureType::None);
             } else if (!expr) {
                 expr = create<AST::SyntaxError>(String::formatted("Expected to find a valid string inside a heredoc (with end key '{}')", record.end), true);
             } else if (!found_key) {

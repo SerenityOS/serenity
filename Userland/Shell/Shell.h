@@ -156,9 +156,14 @@ public:
     [[nodiscard]] Frame push_frame(String name);
     void pop_frame();
 
+    enum class EscapeMode {
+        Bareword,
+        SingleQuotedString,
+        DoubleQuotedString,
+    };
     static String escape_token_for_double_quotes(StringView token);
     static String escape_token_for_single_quotes(StringView token);
-    static String escape_token(StringView token);
+    static String escape_token(StringView token, EscapeMode = EscapeMode::Bareword);
     static String unescape_token(StringView token);
     enum class SpecialCharacterEscapeMode {
         Untouched,
@@ -166,7 +171,7 @@ public:
         QuotedAsEscape,
         QuotedAsHex,
     };
-    static SpecialCharacterEscapeMode special_character_escape_mode(u32 c);
+    static SpecialCharacterEscapeMode special_character_escape_mode(u32 c, EscapeMode);
 
     static bool is_glob(StringView);
     static Vector<StringView> split_path(StringView);
@@ -178,8 +183,8 @@ public:
 
     void highlight(Line::Editor&) const;
     Vector<Line::CompletionSuggestion> complete();
-    Vector<Line::CompletionSuggestion> complete_path(StringView base, StringView, size_t offset, ExecutableOnly executable_only);
-    Vector<Line::CompletionSuggestion> complete_program_name(StringView, size_t offset);
+    Vector<Line::CompletionSuggestion> complete_path(StringView base, StringView, size_t offset, ExecutableOnly executable_only, EscapeMode = EscapeMode::Bareword);
+    Vector<Line::CompletionSuggestion> complete_program_name(StringView, size_t offset, EscapeMode = EscapeMode::Bareword);
     Vector<Line::CompletionSuggestion> complete_variable(StringView, size_t offset);
     Vector<Line::CompletionSuggestion> complete_user(StringView, size_t offset);
     Vector<Line::CompletionSuggestion> complete_option(StringView, StringView, size_t offset);
@@ -378,7 +383,7 @@ private:
     return c == '_' || (c <= 'Z' && c >= 'A') || (c <= 'z' && c >= 'a') || (c <= '9' && c >= '0');
 }
 
-inline size_t find_offset_into_node(StringView unescaped_text, size_t escaped_offset)
+inline size_t find_offset_into_node(StringView unescaped_text, size_t escaped_offset, Shell::EscapeMode escape_mode)
 {
     size_t unescaped_offset = 0;
     size_t offset = 0;
@@ -387,20 +392,41 @@ inline size_t find_offset_into_node(StringView unescaped_text, size_t escaped_of
             if (offset == escaped_offset)
                 return unescaped_offset;
 
-            switch (Shell::special_character_escape_mode(c)) {
+            switch (Shell::special_character_escape_mode(c, escape_mode)) {
             case Shell::SpecialCharacterEscapeMode::Untouched:
                 break;
             case Shell::SpecialCharacterEscapeMode::Escaped:
                 ++offset; // X -> \X
                 break;
             case Shell::SpecialCharacterEscapeMode::QuotedAsEscape:
-                offset += 3; // X -> "\Y"
+                switch (escape_mode) {
+                case Shell::EscapeMode::Bareword:
+                    offset += 3; // X -> "\Y"
+                    break;
+                case Shell::EscapeMode::SingleQuotedString:
+                    offset += 5; // X -> '"\Y"'
+                    break;
+                case Shell::EscapeMode::DoubleQuotedString:
+                    offset += 1; // X -> \Y
+                    break;
+                }
                 break;
             case Shell::SpecialCharacterEscapeMode::QuotedAsHex:
+                switch (escape_mode) {
+                case Shell::EscapeMode::Bareword:
+                    offset += 2; // X -> "\..."
+                    break;
+                case Shell::EscapeMode::SingleQuotedString:
+                    offset += 4; // X -> '"\..."'
+                    break;
+                case Shell::EscapeMode::DoubleQuotedString:
+                    // X -> \...
+                    break;
+                }
                 if (c > NumericLimits<u8>::max())
-                    offset += 11; // X -> "\uhhhhhhhh"
+                    offset += 8; // X -> "\uhhhhhhhh"
                 else
-                    offset += 5; // X -> "\xhh"
+                    offset += 3; // X -> "\xhh"
                 break;
             }
             ++offset;

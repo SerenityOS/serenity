@@ -228,7 +228,7 @@ RefPtr<AST::Node> Shell::immediate_regex_replace(AST::ImmediateExpression& invok
     Regex<PosixExtendedParser> re { pattern->resolve_as_list(this).first() };
     auto result = re.replace(value->resolve_as_list(this)[0], replacement->resolve_as_list(this)[0], PosixFlags::Global | PosixFlags::Multiline | PosixFlags::Unicode);
 
-    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), move(result));
+    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), move(result), AST::StringLiteral::EnclosureType::None);
 }
 
 RefPtr<AST::Node> Shell::immediate_remove_suffix(AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>& arguments)
@@ -256,7 +256,7 @@ RefPtr<AST::Node> Shell::immediate_remove_suffix(AST::ImmediateExpression& invok
 
         if (value_str.ends_with(suffix_str))
             removed = removed.substring_view(0, value_str.length() - suffix_str.length());
-        nodes.append(AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), removed));
+        nodes.append(AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), removed, AST::StringLiteral::EnclosureType::None));
     }
 
     return AST::make_ref_counted<AST::ListConcatenate>(invoking_node.position(), move(nodes));
@@ -287,7 +287,7 @@ RefPtr<AST::Node> Shell::immediate_remove_prefix(AST::ImmediateExpression& invok
 
         if (value_str.starts_with(prefix_str))
             removed = removed.substring_view(prefix_str.length());
-        nodes.append(AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), removed));
+        nodes.append(AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), removed, AST::StringLiteral::EnclosureType::None));
     }
 
     return AST::make_ref_counted<AST::ListConcatenate>(invoking_node.position(), move(nodes));
@@ -375,7 +375,7 @@ RefPtr<AST::Node> Shell::immediate_concat_lists(AST::ImmediateExpression& invoki
             } else {
                 auto values = list_of_values->resolve_as_list(this);
                 for (auto& entry : values)
-                    result.append(AST::make_ref_counted<AST::StringLiteral>(argument.position(), entry));
+                    result.append(AST::make_ref_counted<AST::StringLiteral>(argument.position(), entry, AST::StringLiteral::EnclosureType::None));
             }
         }
     }

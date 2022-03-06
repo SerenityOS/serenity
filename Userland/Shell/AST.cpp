@@ -335,17 +335,40 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
 {
     auto matching_node = hit_test_result.matching_node;
     if (matching_node) {
-        if (matching_node->is_bareword()) {
-            auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
-            auto corrected_offset = find_offset_into_node(node->text(), offset - matching_node->position().start_offset);
+        auto kind = matching_node->kind();
+        StringLiteral::EnclosureType enclosure_type = StringLiteral::EnclosureType::None;
+        if (kind == Kind::StringLiteral)
+            enclosure_type = static_cast<StringLiteral*>(matching_node.ptr())->enclosure_type();
 
-            if (corrected_offset > node->text().length())
+        auto set_results_trivia = [enclosure_type](Vector<Line::CompletionSuggestion>&& suggestions) {
+            if (enclosure_type != StringLiteral::EnclosureType::None) {
+                for (auto& entry : suggestions)
+                    entry.trailing_trivia = { static_cast<u32>(enclosure_type == StringLiteral::EnclosureType::SingleQuotes ? '\'' : '"') };
+            }
+            return suggestions;
+        };
+        if (kind == Kind::BarewordLiteral || kind == Kind::StringLiteral) {
+            Shell::EscapeMode escape_mode;
+            StringView text;
+            size_t corrected_offset;
+            if (kind == Kind::BarewordLiteral) {
+                auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
+                text = node->text();
+                escape_mode = Shell::EscapeMode::Bareword;
+                corrected_offset = find_offset_into_node(text, offset - matching_node->position().start_offset, escape_mode);
+            } else {
+                auto* node = static_cast<StringLiteral*>(matching_node.ptr());
+                text = node->text();
+                escape_mode = enclosure_type == StringLiteral::EnclosureType::SingleQuotes ? Shell::EscapeMode::SingleQuotedString : Shell::EscapeMode::DoubleQuotedString;
+                corrected_offset = find_offset_into_node(text, offset - matching_node->position().start_offset + 1, escape_mode);
+            }
+
+            if (corrected_offset > text.length())
                 return {};
-            auto& text = node->text();
 
             // If the literal isn't an option, treat it as a path.
             if (!(text.starts_with("-") || text == "--" || text == "-"))
-                return shell.complete_path("", text, corrected_offset, Shell::ExecutableOnly::No);
+                return set_results_trivia(shell.complete_path("", text, corrected_offset, Shell::ExecutableOnly::No, escape_mode));
 
             // If the literal is an option, we have to know the program name
             // should we have no way to get that, bail early.
@@ -363,7 +386,7 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
             else
                 program_name = static_cast<StringLiteral*>(program_name_node.ptr())->text();
 
-            return shell.complete_option(program_name, text, corrected_offset);
+            return set_results_trivia(shell.complete_option(program_name, text, corrected_offset));
         }
         return {};
     }
@@ -3096,9 +3119,10 @@ void StringLiteral::highlight_in_editor(Line::Editor& editor, Shell&, HighlightM
     editor.stylize({ m_position.start_offset, m_position.end_offset }, move(style));
 }
 
-StringLiteral::StringLiteral(Position position, String text)
+StringLiteral::StringLiteral(Position position, String text, EnclosureType enclosure_type)
     : Node(move(position))
     , m_text(move(text))
+    , m_enclosure_type(enclosure_type)
 {
 }
 
