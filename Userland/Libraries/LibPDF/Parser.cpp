@@ -847,8 +847,10 @@ String Parser::parse_hex_string()
                 hex_value *= 16;
                 if (ch <= '9') {
                     hex_value += ch - '0';
-                } else {
+                } else if (ch >= 'A' && ch <= 'F') {
                     hex_value += ch - 'A' + 10;
+                } else {
+                    hex_value += ch - 'a' + 10;
                 }
             }
 
