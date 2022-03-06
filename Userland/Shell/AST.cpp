@@ -2736,6 +2736,15 @@ HitTestResult Sequence::hit_test_position(size_t offset) const
     return {};
 }
 
+RefPtr<Node> Sequence::leftmost_trivial_literal() const
+{
+    for (auto& entry : m_entries) {
+        if (auto node = entry.leftmost_trivial_literal())
+            return node;
+    }
+    return nullptr;
+}
+
 Sequence::Sequence(Position position, NonnullRefPtrVector<Node> entries, Vector<Position> separator_positions)
     : Node(move(position))
     , m_entries(move(entries))

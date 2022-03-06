@@ -1183,6 +1183,7 @@ private:
     virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_list() const override { return true; }
     virtual bool should_override_execution_in_current_process() const override { return true; }
+    virtual RefPtr<Node> leftmost_trivial_literal() const override;
 
     NonnullRefPtrVector<Node> m_entries;
     Vector<Position> m_separator_positions;
