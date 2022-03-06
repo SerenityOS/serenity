@@ -164,6 +164,7 @@ public:
     static String escape_token_for_double_quotes(StringView token);
     static String escape_token_for_single_quotes(StringView token);
     static String escape_token(StringView token, EscapeMode = EscapeMode::Bareword);
+    static String escape_token(Utf32View token, EscapeMode = EscapeMode::Bareword);
     static String unescape_token(StringView token);
     enum class SpecialCharacterEscapeMode {
         Untouched,
