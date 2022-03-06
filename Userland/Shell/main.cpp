@@ -82,6 +82,79 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         editor->on_tab_complete = [&](const Line::Editor&) {
             return shell->complete();
         };
+        editor->on_paste = [&](Utf32View data, Line::Editor& editor) {
+            auto line = editor.line(editor.cursor());
+            Shell::Parser parser(line, false);
+            auto ast = parser.parse();
+            if (!ast) {
+                editor.insert(data);
+                return;
+            }
+
+            auto hit_test_result = ast->hit_test_position(editor.cursor());
+            // If the argument isn't meant to be an entire command, escape it.
+            // This allows copy-pasting entire commands where commands are expected, and otherwise escapes everything.
+            auto should_escape = false;
+            if (!hit_test_result.matching_node && hit_test_result.closest_command_node) {
+                // There's *some* command, but our cursor is immediate after it
+                should_escape = editor.cursor() >= hit_test_result.closest_command_node->position().end_offset;
+                hit_test_result.matching_node = hit_test_result.closest_command_node;
+            } else if (hit_test_result.matching_node && hit_test_result.closest_command_node) {
+                // There's a command, and we're at the end of or in the middle of some node.
+                auto leftmost_literal = hit_test_result.closest_command_node->leftmost_trivial_literal();
+                if (leftmost_literal)
+                    should_escape = !hit_test_result.matching_node->position().contains(leftmost_literal->position().start_offset);
+            }
+
+            if (should_escape) {
+                String escaped_string;
+                Optional<char> trivia {};
+                bool starting_trivia_already_provided = false;
+                auto escape_mode = Shell::Shell::EscapeMode::Bareword;
+                if (hit_test_result.matching_node->kind() == Shell::AST::Node::Kind::StringLiteral) {
+                    // If we're pasting in a string literal, make sure to only consider that specific escape mode
+                    auto* node = static_cast<Shell::AST::StringLiteral const*>(hit_test_result.matching_node.ptr());
+                    switch (node->enclosure_type()) {
+                    case Shell::AST::StringLiteral::EnclosureType::None:
+                        break;
+                    case Shell::AST::StringLiteral::EnclosureType::SingleQuotes:
+                        escape_mode = Shell::Shell::EscapeMode::SingleQuotedString;
+                        trivia = '\'';
+                        starting_trivia_already_provided = true;
+                        break;
+                    case Shell::AST::StringLiteral::EnclosureType::DoubleQuotes:
+                        escape_mode = Shell::Shell::EscapeMode::DoubleQuotedString;
+                        trivia = '"';
+                        starting_trivia_already_provided = true;
+                        break;
+                    }
+                }
+
+                if (starting_trivia_already_provided) {
+                    escaped_string = shell->escape_token(data, escape_mode);
+                } else {
+                    escaped_string = shell->escape_token(data, Shell::Shell::EscapeMode::Bareword);
+                    if (auto string = shell->escape_token(data, Shell::Shell::EscapeMode::SingleQuotedString); string.length() + 2 < escaped_string.length()) {
+                        escaped_string = move(string);
+                        trivia = '\'';
+                    }
+                    if (auto string = shell->escape_token(data, Shell::Shell::EscapeMode::DoubleQuotedString); string.length() + 2 < escaped_string.length()) {
+                        escaped_string = move(string);
+                        trivia = '"';
+                    }
+                }
+
+                if (trivia.has_value() && !starting_trivia_already_provided)
+                    editor.insert(*trivia);
+
+                editor.insert(escaped_string);
+
+                if (trivia.has_value())
+                    editor.insert(*trivia);
+            } else {
+                editor.insert(data);
+            }
+        };
     };
 
     const char* command_to_run = nullptr;

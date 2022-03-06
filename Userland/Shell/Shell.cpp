@@ -1168,6 +1168,8 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
     case '}':
     case '&':
     case ';':
+    case '?':
+    case '*':
     case ' ':
         if (mode == EscapeMode::SingleQuotedString || mode == EscapeMode::DoubleQuotedString)
             return SpecialCharacterEscapeMode::Untouched;
@@ -1184,76 +1186,82 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
     }
 }
 
+static String do_escape(Shell::EscapeMode escape_mode, auto& token)
+{
+    StringBuilder builder;
+    for (auto c : token) {
+        static_assert(sizeof(c) == sizeof(u32) || sizeof(c) == sizeof(u8));
+        switch (Shell::special_character_escape_mode(c, escape_mode)) {
+        case Shell::SpecialCharacterEscapeMode::Untouched:
+            if constexpr (sizeof(c) == sizeof(u8))
+                builder.append(c);
+            else
+                builder.append(Utf32View { &c, 1 });
+            break;
+        case Shell::SpecialCharacterEscapeMode::Escaped:
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            builder.append('\\');
+            builder.append(c);
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            break;
+        case Shell::SpecialCharacterEscapeMode::QuotedAsEscape:
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
+                builder.append("\"");
+            switch (c) {
+            case '\n':
+                builder.append(R"(\n)");
+                break;
+            case '\t':
+                builder.append(R"(\t)");
+                break;
+            case '\r':
+                builder.append(R"(\r)");
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+            if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
+                builder.append("\"");
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            break;
+        case Shell::SpecialCharacterEscapeMode::QuotedAsHex:
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
+                builder.append("\"");
+
+            if (c <= NumericLimits<u8>::max())
+                builder.appendff(R"(\x{:0>2x})", static_cast<u8>(c));
+            else
+                builder.appendff(R"(\u{:0>8x})", static_cast<u32>(c));
+
+            if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
+                builder.append("\"");
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            break;
+        }
+    }
+
+    return builder.build();
+}
+
+String Shell::escape_token(Utf32View token, EscapeMode escape_mode)
+{
+    return do_escape(escape_mode, token);
+}
+
 String Shell::escape_token(StringView token, EscapeMode escape_mode)
 {
-    auto do_escape = [escape_mode](auto& token) {
-        StringBuilder builder;
-        for (auto c : token) {
-            static_assert(sizeof(c) == sizeof(u32) || sizeof(c) == sizeof(u8));
-            switch (special_character_escape_mode(c, escape_mode)) {
-            case SpecialCharacterEscapeMode::Untouched:
-                if constexpr (sizeof(c) == sizeof(u8))
-                    builder.append(c);
-                else
-                    builder.append(Utf32View { &c, 1 });
-                break;
-            case SpecialCharacterEscapeMode::Escaped:
-                if (escape_mode == EscapeMode::SingleQuotedString)
-                    builder.append("'");
-                builder.append('\\');
-                builder.append(c);
-                if (escape_mode == EscapeMode::SingleQuotedString)
-                    builder.append("'");
-                break;
-            case SpecialCharacterEscapeMode::QuotedAsEscape:
-                if (escape_mode == EscapeMode::SingleQuotedString)
-                    builder.append("'");
-                if (escape_mode != EscapeMode::DoubleQuotedString)
-                    builder.append("\"");
-                switch (c) {
-                case '\n':
-                    builder.append(R"(\n)");
-                    break;
-                case '\t':
-                    builder.append(R"(\t)");
-                    break;
-                case '\r':
-                    builder.append(R"(\r)");
-                    break;
-                default:
-                    VERIFY_NOT_REACHED();
-                }
-                if (escape_mode != EscapeMode::DoubleQuotedString)
-                    builder.append("\"");
-                if (escape_mode == EscapeMode::SingleQuotedString)
-                    builder.append("'");
-                break;
-            case SpecialCharacterEscapeMode::QuotedAsHex:
-                if (escape_mode == EscapeMode::SingleQuotedString)
-                    builder.append("'");
-                if (escape_mode != EscapeMode::DoubleQuotedString)
-                    builder.append("\"");
-
-                if (c <= NumericLimits<u8>::max())
-                    builder.appendff(R"(\x{:0>2x})", static_cast<u8>(c));
-                else
-                    builder.appendff(R"(\u{:0>8x})", static_cast<u32>(c));
-
-                if (escape_mode != EscapeMode::DoubleQuotedString)
-                    builder.append("\"");
-                if (escape_mode == EscapeMode::SingleQuotedString)
-                    builder.append("'");
-                break;
-            }
-        }
-
-        return builder.build();
-    };
-
     Utf8View view { token };
     if (view.validate())
-        return do_escape(view);
-    return do_escape(token);
+        return do_escape(escape_mode, view);
+    return do_escape(escape_mode, token);
 }
 
 String Shell::unescape_token(StringView token)
