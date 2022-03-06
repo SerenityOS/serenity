@@ -246,9 +246,12 @@ void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
 
 void InfinitelyScrollableTableView::drop_event(GUI::DropEvent& event)
 {
-    TableView::drop_event(event);
     m_is_dragging_for_cut = false;
     set_override_cursor(Gfx::StandardCursor::Arrow);
+    if (!index_at_event_position(event.position()).is_valid())
+        return;
+
+    TableView::drop_event(event);
     auto drop_index = index_at_event_position(event.position());
     if (selection().size() > 0) {
         // Get top left index position of previous selection
