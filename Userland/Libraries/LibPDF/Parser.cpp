@@ -303,7 +303,7 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> Parser::parse_xref_table()
 
     auto table = adopt_ref(*new XRefTable());
 
-    while (true) {
+    do {
         if (m_reader.matches("trailer"))
             return table;
 
@@ -349,11 +349,16 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> Parser::parse_xref_table()
         }
 
         table->add_section({ starting_index, object_count, entries });
-    }
+    } while (matches_number());
+
+    return table;
 }
 
 PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_file_trailer()
 {
+    while (matches_eol())
+        consume_eol();
+
     if (!m_reader.matches("trailer"))
         return error("Expected \"trailer\" keyword");
     m_reader.move_by(7);
