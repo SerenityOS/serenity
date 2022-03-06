@@ -974,6 +974,12 @@ void Editor::handle_read_event()
                     }
                     if (is_in_paste && param1 == 201) {
                         m_state = InputState::Free;
+                        if (on_paste) {
+                            on_paste(Utf32View { m_paste_buffer.data(), m_paste_buffer.size() }, *this);
+                            m_paste_buffer.clear_with_capacity();
+                        }
+                        if (!m_paste_buffer.is_empty())
+                            insert(Utf32View { m_paste_buffer.data(), m_paste_buffer.size() });
                         continue;
                     }
                 }
@@ -998,7 +1004,10 @@ void Editor::handle_read_event()
                 m_state = InputState::GotEscape;
                 continue;
             }
-            insert(code_point);
+            if (on_paste)
+                m_paste_buffer.append(code_point);
+            else
+                insert(code_point);
             continue;
         case InputState::Free:
             m_previous_free_state = InputState::Free;
