@@ -1146,12 +1146,19 @@ String Shell::escape_token_for_double_quotes(StringView token)
     return builder.build();
 }
 
-Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_point)
+Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_point, EscapeMode mode)
 {
     switch (code_point) {
     case '\'':
+        if (mode == EscapeMode::DoubleQuotedString)
+            return SpecialCharacterEscapeMode::Untouched;
+        return SpecialCharacterEscapeMode::Escaped;
     case '"':
     case '$':
+    case '\\':
+        if (mode == EscapeMode::SingleQuotedString)
+            return SpecialCharacterEscapeMode::Untouched;
+        return SpecialCharacterEscapeMode::Escaped;
     case '|':
     case '>':
     case '<':
@@ -1161,8 +1168,9 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
     case '}':
     case '&':
     case ';':
-    case '\\':
     case ' ':
+        if (mode == EscapeMode::SingleQuotedString || mode == EscapeMode::DoubleQuotedString)
+            return SpecialCharacterEscapeMode::Untouched;
         return SpecialCharacterEscapeMode::Escaped;
     case '\n':
     case '\t':
@@ -1176,13 +1184,13 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
     }
 }
 
-String Shell::escape_token(StringView token)
+String Shell::escape_token(StringView token, EscapeMode escape_mode)
 {
-    auto do_escape = [](auto& token) {
+    auto do_escape = [escape_mode](auto& token) {
         StringBuilder builder;
         for (auto c : token) {
             static_assert(sizeof(c) == sizeof(u32) || sizeof(c) == sizeof(u8));
-            switch (special_character_escape_mode(c)) {
+            switch (special_character_escape_mode(c, escape_mode)) {
             case SpecialCharacterEscapeMode::Untouched:
                 if constexpr (sizeof(c) == sizeof(u8))
                     builder.append(c);
@@ -1190,29 +1198,51 @@ String Shell::escape_token(StringView token)
                     builder.append(Utf32View { &c, 1 });
                 break;
             case SpecialCharacterEscapeMode::Escaped:
+                if (escape_mode == EscapeMode::SingleQuotedString)
+                    builder.append("'");
                 builder.append('\\');
                 builder.append(c);
+                if (escape_mode == EscapeMode::SingleQuotedString)
+                    builder.append("'");
                 break;
             case SpecialCharacterEscapeMode::QuotedAsEscape:
+                if (escape_mode == EscapeMode::SingleQuotedString)
+                    builder.append("'");
+                if (escape_mode != EscapeMode::DoubleQuotedString)
+                    builder.append("\"");
                 switch (c) {
                 case '\n':
-                    builder.append(R"("\n")");
+                    builder.append(R"(\n)");
                     break;
                 case '\t':
-                    builder.append(R"("\t")");
+                    builder.append(R"(\t)");
                     break;
                 case '\r':
-                    builder.append(R"("\r")");
+                    builder.append(R"(\r)");
                     break;
                 default:
                     VERIFY_NOT_REACHED();
                 }
+                if (escape_mode != EscapeMode::DoubleQuotedString)
+                    builder.append("\"");
+                if (escape_mode == EscapeMode::SingleQuotedString)
+                    builder.append("'");
                 break;
             case SpecialCharacterEscapeMode::QuotedAsHex:
+                if (escape_mode == EscapeMode::SingleQuotedString)
+                    builder.append("'");
+                if (escape_mode != EscapeMode::DoubleQuotedString)
+                    builder.append("\"");
+
                 if (c <= NumericLimits<u8>::max())
-                    builder.appendff(R"("\x{:0>2x}")", static_cast<u8>(c));
+                    builder.appendff(R"(\x{:0>2x})", static_cast<u8>(c));
                 else
-                    builder.appendff(R"("\u{:0>8x}")", static_cast<u32>(c));
+                    builder.appendff(R"(\u{:0>8x})", static_cast<u32>(c));
+
+                if (escape_mode != EscapeMode::DoubleQuotedString)
+                    builder.append("\"");
+                if (escape_mode == EscapeMode::SingleQuotedString)
+                    builder.append("'");
                 break;
             }
         }
@@ -1372,8 +1402,7 @@ Vector<Line::CompletionSuggestion> Shell::complete()
     return ast->complete_for_editor(*this, line.length());
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base,
-    StringView part, size_t offset, ExecutableOnly executable_only)
+Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringView part, size_t offset, ExecutableOnly executable_only, EscapeMode escape_mode)
 {
     auto token = offset ? part.substring_view(0, offset) : "";
     String path;
@@ -1415,7 +1444,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base,
     // e. in `cd /foo/bar', 'bar' is the invariant
     //      since we are not suggesting anything starting with
     //      `/foo/', but rather just `bar...'
-    auto token_length = escape_token(token).length();
+    auto token_length = escape_token(token, escape_mode).length();
     size_t static_offset = last_slash + 1;
     auto invariant_offset = token_length;
     if (m_editor)
@@ -1435,11 +1464,11 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base,
             int stat_error = stat(file_path.characters(), &program_status);
             if (!stat_error && (executable_only == ExecutableOnly::No || access(file_path.characters(), X_OK) == 0)) {
                 if (S_ISDIR(program_status.st_mode)) {
-                    suggestions.append({ escape_token(file), "/" });
+                    suggestions.append({ escape_token(file, escape_mode), "/" });
                 } else {
                     if (!allow_direct_children && !file.contains("/"))
                         continue;
-                    suggestions.append({ escape_token(file), " " });
+                    suggestions.append({ escape_token(file, escape_mode), " " });
                 }
                 suggestions.last().input_offset = token_length;
                 suggestions.last().invariant_offset = invariant_offset;
@@ -1451,7 +1480,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base,
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name, size_t offset, EscapeMode escape_mode)
 {
     auto match = binary_search(
         cached_path.span(),
@@ -1465,10 +1494,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
         });
 
     if (!match)
-        return complete_path("", name, offset, ExecutableOnly::Yes);
+        return complete_path("", name, offset, ExecutableOnly::Yes, escape_mode);
 
     String completion = *match;
-    auto token_length = escape_token(name).length();
+    auto token_length = escape_token(name, escape_mode).length();
     auto invariant_offset = token_length;
     size_t static_offset = 0;
     if (m_editor)
