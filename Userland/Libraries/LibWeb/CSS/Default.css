@@ -286,3 +286,8 @@ input[type=hidden i] { display: none !important; }
 @media (scripting) {
   noscript { display: none !important; }
 }
+
+/* 15.4.1 Embedded content
+ * https://html.spec.whatwg.org/multipage/rendering.html#embedded-content-rendering-rules
+ */
+iframe { border: 2px inset; }
