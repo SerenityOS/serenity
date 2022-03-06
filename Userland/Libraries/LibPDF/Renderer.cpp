@@ -694,8 +694,8 @@ Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix()
             1.0f,
             0.0f,
             text_state().rise);
-        m_text_rendering_matrix.multiply(m_text_matrix);
         m_text_rendering_matrix.multiply(state().ctm);
+        m_text_rendering_matrix.multiply(m_text_matrix);
         m_text_rendering_matrix_is_dirty = false;
     }
     return m_text_rendering_matrix;
