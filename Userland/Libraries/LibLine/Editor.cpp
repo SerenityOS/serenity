@@ -1061,6 +1061,7 @@ void Editor::handle_read_event()
             // further tabs simply show the cached completions.
             if (m_times_tab_pressed == 1) {
                 m_suggestion_manager.set_suggestions(on_tab_complete(*this));
+                m_suggestion_manager.set_start_index(0);
                 m_prompt_lines_at_suggestion_initiation = num_lines();
                 if (m_suggestion_manager.count() == 0) {
                     // There are no suggestions, beep.
