@@ -209,6 +209,39 @@ PDFErrorOr<void> Document::build_outline()
     return {};
 }
 
+PDFErrorOr<Destination> Document::create_destination_from_parameters(NonnullRefPtr<ArrayObject> array)
+{
+    auto page_ref = array->at(0);
+    auto type_name = TRY(array->get_name_at(this, 1))->name();
+
+    Vector<float> parameters;
+    for (size_t i = 2; i < array->size(); i++)
+        parameters.append(array->at(i).to_float());
+
+    Destination::Type type;
+    if (type_name == CommonNames::XYZ) {
+        type = Destination::Type::XYZ;
+    } else if (type_name == CommonNames::Fit) {
+        type = Destination::Type::Fit;
+    } else if (type_name == CommonNames::FitH) {
+        type = Destination::Type::FitH;
+    } else if (type_name == CommonNames::FitV) {
+        type = Destination::Type::FitV;
+    } else if (type_name == CommonNames::FitR) {
+        type = Destination::Type::FitR;
+    } else if (type_name == CommonNames::FitB) {
+        type = Destination::Type::FitB;
+    } else if (type_name == CommonNames::FitBH) {
+        type = Destination::Type::FitBH;
+    } else if (type_name == CommonNames::FitBV) {
+        type = Destination::Type::FitBV;
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
+    return Destination { type, page_ref, parameters };
+}
+
 PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict)
 {
     auto outline_item = adopt_ref(*new OutlineItem {});
@@ -228,37 +261,28 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
         outline_item->count = outline_item_dict->get_value(CommonNames::Count).get<int>();
 
     if (outline_item_dict->contains(CommonNames::Dest)) {
-        auto dest_arr = TRY(outline_item_dict->get_array(this, CommonNames::Dest));
-        dbgln("IS ARRAY = {}", dest_arr->is_array());
-        auto page_ref = dest_arr->at(0);
-        auto type_name = TRY(dest_arr->get_name_at(this, 1))->name();
+        auto dest_obj = TRY(outline_item_dict->get_object(this, CommonNames::Dest));
 
-        Vector<float> parameters;
-        for (size_t i = 2; i < dest_arr->size(); i++)
-            parameters.append(dest_arr->at(i).to_float());
-
-        Destination::Type type;
-        if (type_name == CommonNames::XYZ) {
-            type = Destination::Type::XYZ;
-        } else if (type_name == CommonNames::Fit) {
-            type = Destination::Type::Fit;
-        } else if (type_name == CommonNames::FitH) {
-            type = Destination::Type::FitH;
-        } else if (type_name == CommonNames::FitV) {
-            type = Destination::Type::FitV;
-        } else if (type_name == CommonNames::FitR) {
-            type = Destination::Type::FitR;
-        } else if (type_name == CommonNames::FitB) {
-            type = Destination::Type::FitB;
-        } else if (type_name == CommonNames::FitBH) {
-            type = Destination::Type::FitBH;
-        } else if (type_name == CommonNames::FitBV) {
-            type = Destination::Type::FitBV;
-        } else {
-            VERIFY_NOT_REACHED();
+        if (dest_obj->is<ArrayObject>()) {
+            auto dest_arr = dest_obj->cast<ArrayObject>();
+            outline_item->dest = TRY(create_destination_from_parameters(dest_arr));
+        } else if (dest_obj->is<NameObject>()) {
+            auto dest_name = dest_obj->cast<NameObject>()->name();
+            if (auto dests_value = m_catalog->get(CommonNames::Dests); dests_value.has_value()) {
+                auto dests = dests_value.value().get<NonnullRefPtr<Object>>()->cast<DictObject>();
+                auto entry = MUST(dests->get_object(this, dest_name));
+                if (entry->is<ArrayObject>()) {
+                    auto entry_array = entry->cast<ArrayObject>();
+                    outline_item->dest = TRY(create_destination_from_parameters(entry_array));
+                } else {
+                    auto entry_dictionary = entry->cast<DictObject>();
+                    auto d_array = MUST(entry_dictionary->get_array(this, CommonNames::D));
+                    outline_item->dest = TRY(create_destination_from_parameters(d_array));
+                }
+            } else {
+                return Error { Error::Type::MalformedPDF, "Malformed outline destination" };
+            }
         }
-
-        outline_item->dest = Destination { type, page_ref, parameters };
     }
 
     if (outline_item_dict->contains(CommonNames::C)) {

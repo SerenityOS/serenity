@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +29,7 @@
     V(D)                          \
     V(DCTDecode)                  \
     V(Dest)                       \
+    V(Dests)                      \
     V(DeviceCMYK)                 \
     V(DeviceGray)                 \
     V(DeviceRGB)                  \
