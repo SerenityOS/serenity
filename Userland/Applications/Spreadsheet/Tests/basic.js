@@ -198,6 +198,21 @@ describe("SplitRange", () => {
         expect(numericResolve(range)).toEqual([1, 3, 1, 9]);
         expect(count(range)).toEqual(4);
     });
+
+    test("Range#unique => SplitRange", () => {
+        makeSheet();
+
+        const origRange = R`A0:B`;
+        const uniqueRange = origRange.unique();
+        expect(uniqueRange.toString()).toEqual(
+            'SplitRange.fromNames("A0", "A1", "A2", "B1", "B2")'
+        );
+
+        const uniqueCount = count(uniqueRange);
+        // We expect that making a set (unique array) of the original range should equal the length of our unique range
+        expect(new Set(resolve(origRange)).size).toEqual(uniqueCount);
+        expect(uniqueCount).toEqual(5);
+    });
 });
 
 describe("R function", () => {

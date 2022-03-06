@@ -197,6 +197,19 @@ class CommonRange {
         });
         return new SplitRange(cells);
     }
+
+    unique() {
+        const cells = [];
+        const values = new Set();
+        this.forEach(cell => {
+            const value = cell.value();
+            if (!values.has(value)) {
+                values.add(value);
+                cells.push(cell);
+            }
+        });
+        return new SplitRange(cells);
+    }
 }
 
 class SplitRange extends CommonRange {
