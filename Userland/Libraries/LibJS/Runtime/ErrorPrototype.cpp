@@ -31,7 +31,7 @@ void ErrorPrototype::initialize(GlobalObject& global_object)
     // Non standard property "stack"
     // Every other engine seems to have this in some way or another, and the spec
     // proposal for this is only Stage 1
-    define_native_accessor(vm.names.stack, stack, nullptr, attr);
+    define_native_accessor(vm.names.stack, stack_getter, stack_setter, attr);
 }
 
 // 20.5.3.4 Error.prototype.toString ( ), https://tc39.es/ecma262/#sec-error.prototype.tostring
@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
     return js_string(vm, String::formatted("{}: {}", name, message));
 }
 
-JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack)
+JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
 {
     auto* error = TRY(typed_this_value(global_object));
 
@@ -89,6 +89,27 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack)
 
     return js_string(vm,
         String::formatted("{}\n{}", header, error->stack_string()));
+}
+
+// B.1.2 set Error.prototype.stack ( value ), https://tc39.es/proposal-error-stacks/#sec-set-error.prototype-stack
+JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_setter)
+{
+    // 1. Let E be the this value.
+    auto this_value = vm.this_value(global_object);
+
+    // 2. If ! Type(E) is not Object, throw a TypeError exception.
+    if (!this_value.is_object())
+        return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, this_value.to_string_without_side_effects());
+
+    auto& this_object = this_value.as_object();
+
+    // 3. Let numberOfArgs be the number of arguments passed to this function call.
+    // 4. If numberOfArgs is 0, throw a TypeError exception.
+    if (vm.argument_count() == 0)
+        return vm.throw_completion<TypeError>(global_object, ErrorType::BadArgCountOne, "set stack");
+
+    // 5. Return ? CreateDataPropertyOrThrow(E, "stack", value);
+    return TRY(this_object.create_data_property_or_throw(vm.names.stack, vm.argument(0)));
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
