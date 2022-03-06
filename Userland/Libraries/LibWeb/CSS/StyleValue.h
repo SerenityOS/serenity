@@ -1451,14 +1451,16 @@ class TextDecorationStyleValue final : public StyleValue {
 public:
     static NonnullRefPtr<TextDecorationStyleValue> create(
         NonnullRefPtr<StyleValue> line,
+        NonnullRefPtr<StyleValue> thickness,
         NonnullRefPtr<StyleValue> style,
         NonnullRefPtr<StyleValue> color)
     {
-        return adopt_ref(*new TextDecorationStyleValue(line, style, color));
+        return adopt_ref(*new TextDecorationStyleValue(line, thickness, style, color));
     }
     virtual ~TextDecorationStyleValue() override { }
 
     NonnullRefPtr<StyleValue> line() const { return m_line; }
+    NonnullRefPtr<StyleValue> thickness() const { return m_thickness; }
     NonnullRefPtr<StyleValue> style() const { return m_style; }
     NonnullRefPtr<StyleValue> color() const { return m_color; }
 
@@ -1467,16 +1469,19 @@ public:
 private:
     TextDecorationStyleValue(
         NonnullRefPtr<StyleValue> line,
+        NonnullRefPtr<StyleValue> thickness,
         NonnullRefPtr<StyleValue> style,
         NonnullRefPtr<StyleValue> color)
         : StyleValue(Type::TextDecoration)
         , m_line(line)
+        , m_thickness(thickness)
         , m_style(style)
         , m_color(color)
     {
     }
 
     NonnullRefPtr<StyleValue> m_line;
+    NonnullRefPtr<StyleValue> m_thickness;
     NonnullRefPtr<StyleValue> m_style;
     NonnullRefPtr<StyleValue> m_color;
 };
