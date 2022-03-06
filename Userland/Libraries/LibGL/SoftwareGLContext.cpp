@@ -2128,6 +2128,7 @@ void SoftwareGLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
     case GL_REPLACE:
     case GL_DECAL:
         m_active_texture_unit->set_env_mode(param_enum);
+        m_sampler_config_is_dirty = true;
         break;
     default:
         // FIXME: We currently only support a subset of possible param values. Implement the rest!
