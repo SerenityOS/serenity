@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "TaskbarButton.h"
 #include "WindowList.h"
 #include <LibConfig/Listener.h>
 #include <LibDesktop/AppFile.h>
@@ -33,6 +34,18 @@ private:
     void remove_window_button(::Window&, bool);
     void update_window_button(::Window&, bool);
     ::Window* find_window_owner(::Window&) const;
+
+    template<typename Callback>
+    void for_each_visible_taskbar_button(Callback callback)
+    {
+        m_task_button_container->for_each_child_widget([&](auto& widget) {
+            // The button might be invisible depending on the current workspace
+            if (!widget.is_visible())
+                return IterationDecision::Continue;
+
+            return callback(static_cast<TaskbarButton&>(widget));
+        });
+    }
 
     virtual void event(Core::Event&) override;
     virtual void wm_event(GUI::WMEvent&) override;

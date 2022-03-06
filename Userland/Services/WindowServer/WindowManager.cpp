@@ -1614,12 +1614,12 @@ void WindowManager::process_key_event(KeyEvent& event)
             tell_wms_super_space_key_pressed();
             return;
         }
+    }
 
-        if (event.type() == Event::KeyDown && event.key() >= Key_0 && event.key() <= Key_9) {
-            auto digit = event.key() - Key_0;
-            tell_wms_super_digit_key_pressed(digit);
-            return;
-        }
+    if (event.type() == Event::KeyDown && event.key() >= Key_0 && event.key() <= Key_9) {
+        auto digit = event.key() - Key_0;
+        tell_wms_super_digit_key_pressed(digit);
+        return;
     }
 
     if (MenuManager::the().current_menu() && event.key() != Key_Super) {

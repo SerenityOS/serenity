@@ -10,6 +10,7 @@
 #include "QuickLaunchWidget.h"
 #include "TaskbarButton.h"
 #include <AK/Debug.h>
+#include <AK/IterationDecision.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -335,21 +336,20 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         break;
     }
     case GUI::Event::WM_SuperDigitKeyPressed: {
+        m_start_menu->dismiss();
+
         auto& digit_event = static_cast<GUI::WMSuperDigitKeyPressedEvent&>(event);
         auto index = digit_event.digit() != 0 ? digit_event.digit() - 1 : 9;
 
-        for (auto& widget : m_task_button_container->child_widgets()) {
-            // NOTE: The button might be invisible depending on the current workspace
-            if (!widget.is_visible())
-                continue;
-
+        for_each_visible_taskbar_button([&](auto& button) {
             if (index == 0) {
-                static_cast<TaskbarButton&>(widget).click();
-                break;
+                static_cast<TaskbarButton&>(button).click();
+                return IterationDecision::Break;
             }
 
             --index;
-        }
+            return IterationDecision::Continue;
+        });
         break;
     }
     case GUI::Event::WM_WorkspaceChanged: {
