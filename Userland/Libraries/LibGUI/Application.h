@@ -14,6 +14,7 @@
 #include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
+#include <LibGUI/TooltipWindow.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Point.h>
 #include <LibMain/Main.h>
@@ -105,7 +106,6 @@ private:
     RefPtr<Gfx::PaletteImpl> m_palette;
     RefPtr<Gfx::PaletteImpl> m_system_palette;
     HashMap<Shortcut, Action*> m_global_shortcut_actions;
-    class TooltipWindow;
     RefPtr<Core::Timer> m_tooltip_show_timer;
     RefPtr<Core::Timer> m_tooltip_hide_timer;
     RefPtr<TooltipWindow> m_tooltip_window;

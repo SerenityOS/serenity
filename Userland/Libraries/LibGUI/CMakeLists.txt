@@ -104,6 +104,7 @@ set(SOURCES
     TextEditor.cpp
     Toolbar.cpp
     ToolbarContainer.cpp
+    TooltipWindow.cpp
     Tray.cpp
     TreeView.cpp
     UndoStack.cpp
