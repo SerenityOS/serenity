@@ -341,6 +341,8 @@ void TreeMapWidget::set_tree(RefPtr<TreeMap> tree)
 
 void TreeMapWidget::set_viewpoint(size_t viewpoint)
 {
+    if (m_viewpoint == viewpoint)
+        return;
     if (viewpoint > m_path.size())
         viewpoint = m_path.size();
     m_viewpoint = viewpoint;
