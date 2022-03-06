@@ -125,7 +125,13 @@ These belong in the `.vscode/settings.json` of Serenity.
     "C_Cpp.clang_format_style": "file",
     // Tab settings
     "editor.tabSize": 4,
-    "editor.useTabStops": false
+    "editor.useTabStops": false,
+    // format trailing new lines
+    "files.trimFinalNewlines": true,
+    "files.insertFinalNewline": true,
+    // git commit message length
+    "git.inputValidationLength": 72,
+    "git.inputValidationSubjectLength": 72
 }
 ```
 
