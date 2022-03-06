@@ -1316,8 +1316,8 @@ Gfx::IntRect Device::get_rasterization_rect_of_size(Gfx::IntSize size)
     // "Any fragments whose centers lie inside of this rectangle (or on its bottom or left
     // boundaries) are produced in correspondence with this particular group of elements."
     return {
-        static_cast<int>(roundf(m_raster_position.window_coordinates.x())),
-        static_cast<int>(roundf(m_raster_position.window_coordinates.y())),
+        static_cast<int>(lroundf(m_raster_position.window_coordinates.x())),
+        static_cast<int>(lroundf(m_raster_position.window_coordinates.y())),
         size.width(),
         size.height(),
     };
