@@ -430,6 +430,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     //        we just manually grab the value from `color`. This makes it dependent on `color` being
     //        specified first, so it's far from ideal.
     computed_values.set_text_decoration_color(specified_style.color_or_fallback(CSS::PropertyID::TextDecorationColor, *this, computed_values.color()));
+    if (auto maybe_text_decoration_thickness = specified_style.length_percentage(CSS::PropertyID::TextDecorationThickness); maybe_text_decoration_thickness.has_value())
+        computed_values.set_text_decoration_thickness(maybe_text_decoration_thickness.release_value());
 
     computed_values.set_z_index(specified_style.z_index());
     computed_values.set_opacity(specified_style.opacity());
