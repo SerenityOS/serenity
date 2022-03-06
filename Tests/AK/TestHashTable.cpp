@@ -224,3 +224,13 @@ TEST_CASE(basic_contains)
     EXPECT_EQ(table.remove(1), true);
     EXPECT_EQ(table.contains(1), false);
 }
+
+TEST_CASE(capacity_leak)
+{
+    HashTable<int> table;
+    for (size_t i = 0; i < 10000; ++i) {
+        table.set(i);
+        table.remove(i);
+    }
+    EXPECT(table.capacity() < 100u);
+}
