@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/SourceLocation.h>
 #include <AK/WeakPtr.h>
 #include <LibPDF/Command.h>
 #include <LibPDF/Object.h>
@@ -20,12 +21,11 @@ class Document;
 class Parser final : public RefCounted<Parser> {
 public:
     enum class LinearizationResult {
-        Error,
         NotLinearized,
         Linearized,
     };
 
-    static Vector<Command> parse_graphics_commands(ReadonlyBytes);
+    static PDFErrorOr<Vector<Command>> parse_graphics_commands(ReadonlyBytes);
 
     Parser(Badge<Document>, ReadonlyBytes);
 
@@ -33,15 +33,13 @@ public:
     void set_document(WeakPtr<Document> const&);
 
     // Parses the header and initializes the xref table and trailer
-    bool initialize();
+    PDFErrorOr<void> initialize();
 
-    Value parse_object_with_index(u32 index);
+    PDFErrorOr<Value> parse_object_with_index(u32 index);
 
     // Specialized version of parse_dict which aborts early if the dict being parsed
-    // is not a page object. A null RefPtr return indicates that the dict at this index
-    // is not a page tree node, whereas ok == false indicates a malformed PDF file and
-    // should cause an abort of the current operation.
-    RefPtr<DictObject> conditionally_parse_page_tree_node(u32 object_index, bool& ok);
+    // is not a page object
+    PDFErrorOr<RefPtr<DictObject>> conditionally_parse_page_tree_node(u32 object_index);
 
 private:
     struct LinearizationDictionary {
@@ -89,35 +87,35 @@ private:
 
     explicit Parser(ReadonlyBytes);
 
-    bool parse_header();
-    LinearizationResult initialize_linearization_dict();
-    bool initialize_linearized_xref_table();
-    bool initialize_non_linearized_xref_table();
-    bool initialize_hint_tables();
-    Optional<PageOffsetHintTable> parse_page_offset_hint_table(ReadonlyBytes hint_stream_bytes);
-    Optional<Vector<PageOffsetHintTableEntry>> parse_all_page_offset_hint_table_entries(PageOffsetHintTable const&, ReadonlyBytes hint_stream_bytes);
-    RefPtr<XRefTable> parse_xref_table();
-    RefPtr<DictObject> parse_file_trailer();
+    PDFErrorOr<void> parse_header();
+    PDFErrorOr<LinearizationResult> initialize_linearization_dict();
+    PDFErrorOr<void> initialize_linearized_xref_table();
+    PDFErrorOr<void> initialize_non_linearized_xref_table();
+    PDFErrorOr<void> initialize_hint_tables();
+    PDFErrorOr<PageOffsetHintTable> parse_page_offset_hint_table(ReadonlyBytes hint_stream_bytes);
+    Vector<PageOffsetHintTableEntry> parse_all_page_offset_hint_table_entries(PageOffsetHintTable const&, ReadonlyBytes hint_stream_bytes);
+    PDFErrorOr<NonnullRefPtr<XRefTable>> parse_xref_table();
+    PDFErrorOr<NonnullRefPtr<DictObject>> parse_file_trailer();
 
     bool navigate_to_before_eof_marker();
     bool navigate_to_after_startxref();
 
     String parse_comment();
 
-    Value parse_value();
-    Value parse_possible_indirect_value_or_ref();
-    RefPtr<IndirectValue> parse_indirect_value(int index, int generation);
-    RefPtr<IndirectValue> parse_indirect_value();
-    Value parse_number();
-    RefPtr<NameObject> parse_name();
-    RefPtr<StringObject> parse_string();
+    PDFErrorOr<Value> parse_value();
+    PDFErrorOr<Value> parse_possible_indirect_value_or_ref();
+    PDFErrorOr<NonnullRefPtr<IndirectValue>> parse_indirect_value(int index, int generation);
+    PDFErrorOr<NonnullRefPtr<IndirectValue>> parse_indirect_value();
+    PDFErrorOr<Value> parse_number();
+    PDFErrorOr<NonnullRefPtr<NameObject>> parse_name();
+    NonnullRefPtr<StringObject> parse_string();
     String parse_literal_string();
     String parse_hex_string();
-    RefPtr<ArrayObject> parse_array();
-    RefPtr<DictObject> parse_dict();
-    RefPtr<StreamObject> parse_stream(NonnullRefPtr<DictObject> dict);
+    PDFErrorOr<NonnullRefPtr<ArrayObject>> parse_array();
+    PDFErrorOr<NonnullRefPtr<DictObject>> parse_dict();
+    PDFErrorOr<NonnullRefPtr<StreamObject>> parse_stream(NonnullRefPtr<DictObject> dict);
 
-    Vector<Command> parse_graphics_commands();
+    PDFErrorOr<Vector<Command>> parse_graphics_commands();
 
     bool matches_eol() const;
     bool matches_whitespace() const;
@@ -130,6 +128,14 @@ private:
     char consume();
     void consume(int amount);
     bool consume(char);
+
+    Error error(
+        String const& message
+#ifdef PDF_DEBUG
+        ,
+        SourceLocation loc = SourceLocation::current()
+#endif
+    ) const;
 
     Reader m_reader;
     WeakPtr<Document> m_document;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -65,19 +65,18 @@ void Renderer::render()
     // as one stream or multiple?
     ByteBuffer byte_buffer;
 
-    if (m_page.contents->is_array()) {
-        auto contents = object_cast<ArrayObject>(m_page.contents);
+    if (m_page.contents->is<ArrayObject>()) {
+        auto contents = m_page.contents->cast<ArrayObject>();
         for (auto& ref : *contents) {
-            auto bytes = m_document->resolve_to<StreamObject>(ref)->bytes();
+            auto bytes = MUST(m_document->resolve_to<StreamObject>(ref))->bytes();
             byte_buffer.append(bytes.data(), bytes.size());
         }
     } else {
-        VERIFY(m_page.contents->is_stream());
-        auto bytes = object_cast<StreamObject>(m_page.contents)->bytes();
+        auto bytes = m_page.contents->cast<StreamObject>()->bytes();
         byte_buffer.append(bytes.data(), bytes.size());
     }
 
-    auto commands = Parser::parse_graphics_commands(byte_buffer);
+    auto commands = MUST(Parser::parse_graphics_commands(byte_buffer));
 
     for (auto& command : commands)
         handle_command(command);
@@ -147,7 +146,7 @@ RENDERER_HANDLER(set_miter_limit)
 
 RENDERER_HANDLER(set_dash_pattern)
 {
-    auto dash_array = m_document->resolve_to<ArrayObject>(args[0]);
+    auto dash_array = MUST(m_document->resolve_to<ArrayObject>(args[0]));
     Vector<int> pattern;
     for (auto& element : *dash_array)
         pattern.append(element.get<int>());
@@ -160,9 +159,9 @@ RENDERER_TODO(set_flatness_tolerance);
 RENDERER_HANDLER(set_graphics_state_from_dict)
 {
     VERIFY(m_page.resources->contains(CommonNames::ExtGState));
-    auto dict_name = m_document->resolve_to<NameObject>(args[0])->name();
-    auto ext_gstate_dict = m_page.resources->get_dict(m_document, CommonNames::ExtGState);
-    auto target_dict = ext_gstate_dict->get_dict(m_document, dict_name);
+    auto dict_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
+    auto ext_gstate_dict = MUST(m_page.resources->get_dict(m_document, CommonNames::ExtGState));
+    auto target_dict = MUST(ext_gstate_dict->get_dict(m_document, dict_name));
     set_graphics_state_from_dict(target_dict);
 }
 
@@ -303,14 +302,14 @@ RENDERER_HANDLER(text_set_leading)
 
 RENDERER_HANDLER(text_set_font)
 {
-    auto target_font_name = m_document->resolve_to<NameObject>(args[0])->name();
-    auto fonts_dictionary = m_page.resources->get_dict(m_document, CommonNames::Font);
-    auto font_dictionary = fonts_dictionary->get_dict(m_document, target_font_name);
+    auto target_font_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
+    auto fonts_dictionary = MUST(m_page.resources->get_dict(m_document, CommonNames::Font));
+    auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, target_font_name));
 
     // FIXME: We do not yet have the standard 14 fonts, as some of them are not open fonts,
     // so we just use LiberationSerif for everything
 
-    auto font_name = font_dictionary->get_name(m_document, CommonNames::BaseFont)->name().to_lowercase();
+    auto font_name = MUST(font_dictionary->get_name(m_document, CommonNames::BaseFont))->name().to_lowercase();
     auto font_view = font_name.view();
     bool is_bold = font_view.contains("bold");
     bool is_italic = font_view.contains("italic");
@@ -380,7 +379,7 @@ RENDERER_HANDLER(text_next_line)
 
 RENDERER_HANDLER(text_show_string)
 {
-    auto text = m_document->resolve_to<StringObject>(args[0])->string();
+    auto text = MUST(m_document->resolve_to<StringObject>(args[0]))->string();
     show_text(text);
 }
 
@@ -394,7 +393,7 @@ RENDERER_TODO(text_next_line_show_string_set_spacing);
 
 RENDERER_HANDLER(text_show_string_array)
 {
-    auto elements = m_document->resolve_to<ArrayObject>(args[0])->elements();
+    auto elements = MUST(m_document->resolve_to<ArrayObject>(args[0]))->elements();
     float next_shift = 0.0f;
 
     for (auto& element : elements) {
@@ -403,9 +402,7 @@ RENDERER_HANDLER(text_show_string_array)
         } else if (element.has<float>()) {
             next_shift = element.get<float>();
         } else {
-            auto& obj = element.get<NonnullRefPtr<Object>>();
-            VERIFY(obj->is_string());
-            auto str = object_cast<StringObject>(obj)->string();
+            auto str = element.get<NonnullRefPtr<Object>>()->cast<StringObject>()->string();
             show_text(str, next_shift);
         }
     }
@@ -523,7 +520,7 @@ void Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
         handle_set_miter_limit({ dict->get_value(CommonNames::ML) });
 
     if (dict->contains(CommonNames::D))
-        handle_set_dash_pattern(dict->get_array(m_document, CommonNames::D)->elements());
+        handle_set_dash_pattern(MUST(dict->get_array(m_document, CommonNames::D))->elements());
 
     if (dict->contains(CommonNames::FL))
         handle_set_flatness_tolerance({ dict->get_value(CommonNames::FL) });
@@ -569,7 +566,7 @@ void Renderer::show_text(String const& string, float shift)
 
 RefPtr<ColorSpace> Renderer::get_color_space(Value const& value)
 {
-    auto name = object_cast<NameObject>(value.get<NonnullRefPtr<Object>>())->name();
+    auto name = value.get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
 
     // Simple color spaces with no parameters, which can be specified directly
     if (name == CommonNames::DeviceGray)
@@ -583,12 +580,12 @@ RefPtr<ColorSpace> Renderer::get_color_space(Value const& value)
 
     // The color space is a complex color space with parameters that resides in
     // the resource dictionary
-    auto color_space_resource_dict = m_page.resources->get_dict(m_document, CommonNames::ColorSpace);
+    auto color_space_resource_dict = MUST(m_page.resources->get_dict(m_document, CommonNames::ColorSpace));
     if (!color_space_resource_dict->contains(name))
         TODO();
 
-    auto color_space_array = color_space_resource_dict->get_array(m_document, name);
-    name = color_space_array->get_name_at(m_document, 0)->name();
+    auto color_space_array = MUST(color_space_resource_dict->get_array(m_document, name));
+    name = MUST(color_space_array->get_name_at(m_document, 0))->name();
 
     Vector<Value> parameters;
     parameters.ensure_capacity(color_space_array->size() - 1);

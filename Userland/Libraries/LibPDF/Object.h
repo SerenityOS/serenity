@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,8 +11,28 @@
 #include <AK/Format.h>
 #include <AK/RefCounted.h>
 #include <AK/SourceLocation.h>
+#include <LibPDF/Error.h>
 #include <LibPDF/Forward.h>
 #include <LibPDF/Value.h>
+
+#ifdef PDF_DEBUG
+namespace {
+
+template<PDF::IsObject T>
+const char* object_name()
+{
+#    define ENUMERATE_TYPE(class_name, snake_name)  \
+        if constexpr (IsSame<PDF::class_name, T>) { \
+            return #class_name;                     \
+        }
+    ENUMERATE_OBJECT_TYPES(ENUMERATE_TYPE)
+#    undef ENUMERATE_TYPE
+
+    VERIFY_NOT_REACHED();
+}
+
+}
+#endif
 
 namespace PDF {
 
@@ -23,39 +43,48 @@ public:
     [[nodiscard]] ALWAYS_INLINE u32 generation_index() const { return m_generation_index; }
     ALWAYS_INLINE void set_generation_index(u32 generation_index) { m_generation_index = generation_index; }
 
-#define DEFINE_ID(_, name) \
-    virtual bool is_##name() const { return false; }
-    ENUMERATE_OBJECT_TYPES(DEFINE_ID)
-#undef DEFINE_ID
+    template<IsObject T>
+    bool is() const requires(!IsSame<T, Object>)
+    {
+#define ENUMERATE_TYPE(class_name, snake_name) \
+    if constexpr (IsSame<class_name, T>) {     \
+        return is_##snake_name();              \
+    }
+        ENUMERATE_OBJECT_TYPES(ENUMERATE_TYPE)
+#undef ENUMERATE_TYPE
+
+        VERIFY_NOT_REACHED();
+    }
+
+    template<IsObject T>
+    [[nodiscard]] ALWAYS_INLINE NonnullRefPtr<T> cast(
+#ifdef PDF_DEBUG
+        SourceLocation loc = SourceLocation::current()
+#endif
+    ) const requires(!IsSame<T, Object>)
+    {
+#ifdef PDF_DEBUG
+        if (!is<T>()) {
+            dbgln("{} invalid cast from {} to {}", loc, type_name(), object_name<T>());
+            VERIFY_NOT_REACHED();
+        }
+#endif
+
+        return NonnullRefPtr<T>(static_cast<T const&>(*this));
+    }
 
     virtual const char* type_name() const = 0;
     virtual String to_string(int indent) const = 0;
 
+protected:
+#define ENUMERATE_TYPE(_, name) \
+    virtual bool is_##name() const { return false; }
+    ENUMERATE_OBJECT_TYPES(ENUMERATE_TYPE)
+#undef ENUMERATE_TYPE
+
 private:
     u32 m_generation_index { 0 };
 };
-
-template<IsObject To, IsObject From>
-[[nodiscard]] ALWAYS_INLINE static NonnullRefPtr<To> object_cast(NonnullRefPtr<From> obj
-#ifdef PDF_DEBUG
-    ,
-    SourceLocation loc = SourceLocation::current()
-#endif
-)
-{
-#ifdef PDF_DEBUG
-#    define ENUMERATE_TYPES(class_name, snake_name)                                                \
-        if constexpr (IsSame<To, class_name>) {                                                    \
-            if (!obj->is_##snake_name()) {                                                         \
-                dbgln("{} invalid cast from type {} to type " #snake_name, loc, obj->type_name()); \
-            }                                                                                      \
-        }
-    ENUMERATE_OBJECT_TYPES(ENUMERATE_TYPES)
-#    undef ENUMERATE_TYPES
-#endif
-
-    return static_ptr_cast<To>(obj);
-}
 
 }
 

@@ -63,7 +63,8 @@ RefPtr<Gfx::Bitmap> PDFViewer::get_rendered_page(u32 index)
     if (existing_rendered_page.has_value() && existing_rendered_page.value().rotation == m_rotations)
         return existing_rendered_page.value().bitmap;
 
-    auto rendered_page = render_page(m_document->get_page(index));
+    // FIXME: Propogate errors in the Renderer
+    auto rendered_page = render_page(MUST(m_document->get_page(index)));
     rendered_page_map.set(m_zoom_level, { rendered_page, m_rotations });
     return rendered_page;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +11,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Color.h>
+#include <LibPDF/Error.h>
 #include <LibPDF/ObjectDerivatives.h>
 #include <LibPDF/Parser.h>
 
@@ -75,17 +76,17 @@ class Document final
     : public RefCounted<Document>
     , public Weakable<Document> {
 public:
-    static RefPtr<Document> create(ReadonlyBytes bytes);
+    static PDFErrorOr<NonnullRefPtr<Document>> create(ReadonlyBytes bytes);
 
     ALWAYS_INLINE RefPtr<OutlineDict> const& outline() const { return m_outline; }
 
-    [[nodiscard]] Value get_or_load_value(u32 index);
+    [[nodiscard]] PDFErrorOr<Value> get_or_load_value(u32 index);
 
     [[nodiscard]] u32 get_first_page_index() const;
 
     [[nodiscard]] u32 get_page_count() const;
 
-    [[nodiscard]] Page get_page(u32 index);
+    [[nodiscard]] PDFErrorOr<Page> get_page(u32 index);
 
     ALWAYS_INLINE Value get_value(u32 index) const
     {
@@ -95,23 +96,25 @@ public:
     // Strips away the layer of indirection by turning indirect value
     // refs into the value they reference, and indirect values into
     // the value being wrapped.
-    Value resolve(Value const& value);
+    PDFErrorOr<Value> resolve(Value const& value);
 
     // Like resolve, but unwraps the Value into the given type. Accepts
     // any object type, and the three primitive Value types.
     template<IsValueType T>
-    UnwrappedValueType<T> resolve_to(Value const& value)
+    PDFErrorOr<UnwrappedValueType<T>> resolve_to(Value const& value)
     {
-        auto resolved = resolve(value);
+        auto resolved = TRY(resolve(value));
 
         if constexpr (IsSame<T, bool>)
             return resolved.get<bool>();
-        if constexpr (IsSame<T, int>)
+        else if constexpr (IsSame<T, int>)
             return resolved.get<int>();
-        if constexpr (IsSame<T, float>)
+        else if constexpr (IsSame<T, float>)
             return resolved.get<float>();
-        if constexpr (IsObject<T>)
-            return object_cast<T>(resolved.get<NonnullRefPtr<Object>>());
+        else if constexpr (IsSame<T, Object>)
+            return resolved.get<NonnullRefPtr<Object>>();
+        else if constexpr (IsObject<T>)
+            return resolved.get<NonnullRefPtr<Object>>()->cast<T>();
 
         VERIFY_NOT_REACHED();
     }
@@ -125,12 +128,12 @@ private:
     // parsing, as good PDF writers will layout the page tree in a balanced tree to
     // improve lookup time. This would reduce the initial overhead by not loading
     // every page tree node of, say, a 1000+ page PDF file.
-    bool build_page_tree();
-    bool add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& page_tree);
+    PDFErrorOr<void> build_page_tree();
+    PDFErrorOr<void> add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& page_tree);
 
-    void build_outline();
-    NonnullRefPtr<OutlineItem> build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict);
-    NonnullRefPtrVector<OutlineItem> build_outline_item_chain(Value const& first_ref, Value const& last_ref);
+    PDFErrorOr<void> build_outline();
+    PDFErrorOr<NonnullRefPtr<OutlineItem>> build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict);
+    PDFErrorOr<NonnullRefPtrVector<OutlineItem>> build_outline_item_chain(Value const& first_ref, Value const& last_ref);
 
     NonnullRefPtr<Parser> m_parser;
     RefPtr<DictObject> m_catalog;
