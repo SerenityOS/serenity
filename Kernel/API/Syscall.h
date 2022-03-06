@@ -10,10 +10,6 @@
 #include <AK/Types.h>
 #include <AK/Userspace.h>
 
-#ifdef __serenity__
-#    include <LibC/fd_set.h>
-#endif
-
 constexpr int syscall_vector = 0x82;
 
 extern "C" {
