@@ -52,10 +52,22 @@ void ConnectionToWindowMangerServer::window_removed(i32 wm_id, i32 client_id, i3
         Core::EventLoop::current().post_event(*window, make<WMWindowRemovedEvent>(client_id, window_id));
 }
 
+void ConnectionToWindowMangerServer::super_key_down(i32 wm_id)
+{
+    if (auto* window = Window::from_window_id(wm_id))
+        Core::EventLoop::current().post_event(*window, make<WMSuperKeyDownEvent>(wm_id));
+}
+
 void ConnectionToWindowMangerServer::super_key_pressed(i32 wm_id)
 {
     if (auto* window = Window::from_window_id(wm_id))
         Core::EventLoop::current().post_event(*window, make<WMSuperKeyPressedEvent>(wm_id));
+}
+
+void ConnectionToWindowMangerServer::super_key_up(i32 wm_id)
+{
+    if (auto* window = Window::from_window_id(wm_id))
+        Core::EventLoop::current().post_event(*window, make<WMSuperKeyUpEvent>(wm_id));
 }
 
 void ConnectionToWindowMangerServer::super_space_key_pressed(i32 wm_id)

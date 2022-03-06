@@ -64,7 +64,9 @@ public:
         WM_WindowRectChanged,
         WM_WindowIconBitmapChanged,
         WM_AppletAreaSizeChanged,
+        WM_SuperKeyDown,
         WM_SuperKeyPressed,
+        WM_SuperKeyUp,
         WM_SuperSpaceKeyPressed,
         WM_SuperDigitKeyPressed,
         WM_WorkspaceChanged,
@@ -100,10 +102,26 @@ private:
     int m_window_id { -1 };
 };
 
+class WMSuperKeyDownEvent : public WMEvent {
+public:
+    explicit WMSuperKeyDownEvent(int client_id)
+        : WMEvent(Event::Type::WM_SuperKeyDown, client_id, 0)
+    {
+    }
+};
+
 class WMSuperKeyPressedEvent : public WMEvent {
 public:
     explicit WMSuperKeyPressedEvent(int client_id)
         : WMEvent(Event::Type::WM_SuperKeyPressed, client_id, 0)
+    {
+    }
+};
+
+class WMSuperKeyUpEvent : public WMEvent {
+public:
+    explicit WMSuperKeyUpEvent(int client_id)
+        : WMEvent(Event::Type::WM_SuperKeyUp, client_id, 0)
     {
     }
 };

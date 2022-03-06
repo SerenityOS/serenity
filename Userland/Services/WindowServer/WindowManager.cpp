@@ -524,6 +524,17 @@ void WindowManager::tell_wms_applet_area_size_changed(Gfx::IntSize const& size)
     });
 }
 
+void WindowManager::tell_wms_super_key_down()
+{
+    for_each_window_manager([](WMConnectionFromClient& conn) {
+        if (conn.window_id() < 0)
+            return IterationDecision::Continue;
+
+        conn.async_super_key_down(conn.window_id());
+        return IterationDecision::Continue;
+    });
+}
+
 void WindowManager::tell_wms_super_key_pressed()
 {
     for_each_window_manager([](WMConnectionFromClient& conn) {
@@ -531,6 +542,17 @@ void WindowManager::tell_wms_super_key_pressed()
             return IterationDecision::Continue;
 
         conn.async_super_key_pressed(conn.window_id());
+        return IterationDecision::Continue;
+    });
+}
+
+void WindowManager::tell_wms_super_key_up()
+{
+    for_each_window_manager([](WMConnectionFromClient& conn) {
+        if (conn.window_id() < 0)
+            return IterationDecision::Continue;
+
+        conn.async_super_key_up(conn.window_id());
         return IterationDecision::Continue;
     });
 }
@@ -1601,8 +1623,12 @@ void WindowManager::process_key_event(KeyEvent& event)
         return;
     }
 
+    if (event.type() == Event::KeyUp && event.key() == Key_Super)
+        tell_wms_super_key_up();
+
     if (event.type() == Event::KeyDown && event.key() == Key_Super) {
         m_previous_event_was_super_keydown = true;
+        tell_wms_super_key_down();
     } else if (m_previous_event_was_super_keydown) {
         m_previous_event_was_super_keydown = false;
         if (!m_dnd_client && !current_window_stack().active_input_tracking_window() && event.type() == Event::KeyUp && event.key() == Key_Super) {
