@@ -335,6 +335,14 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
             warnln("failed to spawn 'Assistant' when requested via Super+Space");
         break;
     }
+    case GUI::Event::WM_SuperKeyDown: {
+        show_task_button_tooltips();
+        break;
+    }
+    case GUI::Event::WM_SuperKeyUp: {
+        hide_task_button_tooltips();
+        break;
+    }
     case GUI::Event::WM_SuperDigitKeyPressed: {
         m_start_menu->dismiss();
 
@@ -387,4 +395,37 @@ void TaskbarWindow::set_start_button_font(Gfx::Font const& font)
 {
     m_start_button->set_font(font);
     m_start_button->set_fixed_size(font.width(m_start_button->text()) + 30, 21);
+}
+
+void TaskbarWindow::show_task_button_tooltips()
+{
+    size_t index = 0;
+
+    for_each_visible_taskbar_button([&](auto& button) {
+        if (index >= 10)
+            return IterationDecision::Break;
+
+        if (index >= m_task_button_tooltips.size())
+            m_task_button_tooltips.append(GUI::TooltipWindow::construct());
+
+        VERIFY(index < m_task_button_tooltips.size());
+        auto& window = m_task_button_tooltips[index++];
+
+        auto key = index != 10 ? index : 0;
+        window.set_tooltip(String::number(key));
+
+        auto rect = button.screen_relative_rect();
+        Gfx::IntPoint position(rect.center().x() - window.width() / 2, rect.y() - window.height());
+        window.move_to(position);
+
+        window.show();
+
+        return IterationDecision::Continue;
+    });
+}
+
+void TaskbarWindow::hide_task_button_tooltips()
+{
+    for (auto& window : m_task_button_tooltips)
+        window.hide();
 }

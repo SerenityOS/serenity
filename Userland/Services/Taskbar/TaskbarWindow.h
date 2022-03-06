@@ -8,8 +8,10 @@
 
 #include "TaskbarButton.h"
 #include "WindowList.h"
+#include <AK/NonnullRefPtrVector.h>
 #include <LibConfig/Listener.h>
 #include <LibDesktop/AppFile.h>
+#include <LibGUI/TooltipWindow.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/ShareableBitmap.h>
@@ -47,6 +49,9 @@ private:
         });
     }
 
+    void show_task_button_tooltips();
+    void hide_task_button_tooltips();
+
     virtual void event(Core::Event&) override;
     virtual void wm_event(GUI::WMEvent&) override;
     virtual void screen_rects_change_event(GUI::ScreenRectsChangeEvent&) override;
@@ -60,6 +65,7 @@ private:
 
     NonnullRefPtr<GUI::Menu> m_start_menu;
     RefPtr<GUI::Widget> m_task_button_container;
+    NonnullRefPtrVector<GUI::TooltipWindow> m_task_button_tooltips;
     RefPtr<Gfx::Bitmap> m_default_icon;
 
     Gfx::IntSize m_applet_area_size;
