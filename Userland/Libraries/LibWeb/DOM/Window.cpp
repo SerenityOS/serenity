@@ -381,7 +381,8 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(FlyString const& na
         return CSS::MediaFeatureValue("hover");
     if (name.equals_ignoring_case("any-pointer"sv))
         return CSS::MediaFeatureValue("fine");
-    // FIXME: aspect-ratio
+    if (name.equals_ignoring_case("aspect-ratio"sv))
+        return CSS::MediaFeatureValue(CSS::Ratio(inner_width(), inner_height()));
     if (name.equals_ignoring_case("color"sv))
         return CSS::MediaFeatureValue(8);
     if (name.equals_ignoring_case("color-gamut"sv))

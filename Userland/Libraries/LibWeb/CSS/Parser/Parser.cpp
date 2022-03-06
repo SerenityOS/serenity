@@ -1153,13 +1153,14 @@ Optional<MediaFeatureValue> Parser::parse_media_feature_value(TokenStream<StyleC
     auto position = tokens.position();
     tokens.skip_whitespace();
     auto& first = tokens.next_token();
+    tokens.skip_whitespace();
 
     // `<number>`
-    if (first.is(Token::Type::Number))
+    if (first.is(Token::Type::Number) && !tokens.has_next_token())
         return MediaFeatureValue(first.token().number_value());
 
     // `<dimension>`
-    if (auto dimension = parse_dimension(first); dimension.has_value()) {
+    if (auto dimension = parse_dimension(first); dimension.has_value() && !tokens.has_next_token()) {
         if (dimension->is_length())
             return MediaFeatureValue(dimension->length());
         if (dimension->is_resolution())
@@ -1167,10 +1168,15 @@ Optional<MediaFeatureValue> Parser::parse_media_feature_value(TokenStream<StyleC
     }
 
     // `<ident>`
-    if (first.is(Token::Type::Ident))
+    if (first.is(Token::Type::Ident) && !tokens.has_next_token())
         return MediaFeatureValue(first.token().ident());
 
-    // FIXME: `<ratio>`, once we have ratios.
+    // `<ratio>`
+    // Note that a single <number> is a valid <ratio>, but it gets parsed above as a <number>.
+    // This will get solved with directed parsing of values based on the media-feature.
+    tokens.rewind_to_position(position);
+    if (auto ratio = parse_ratio(tokens); ratio.has_value() && !tokens.has_next_token())
+        return MediaFeatureValue(ratio.release_value());
 
     tokens.rewind_to_position(position);
     return {};

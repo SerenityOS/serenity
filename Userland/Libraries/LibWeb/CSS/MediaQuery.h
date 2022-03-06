@@ -13,6 +13,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <LibWeb/CSS/GeneralEnclosed.h>
+#include <LibWeb/CSS/Ratio.h>
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
@@ -27,6 +28,11 @@ public:
 
     explicit MediaFeatureValue(Length length)
         : m_value(move(length))
+    {
+    }
+
+    explicit MediaFeatureValue(Ratio ratio)
+        : m_value(move(ratio))
     {
     }
 
@@ -45,6 +51,7 @@ public:
     bool is_ident() const { return m_value.has<String>(); }
     bool is_length() const { return m_value.has<Length>(); }
     bool is_number() const { return m_value.has<double>(); }
+    bool is_ratio() const { return m_value.has<Ratio>(); }
     bool is_resolution() const { return m_value.has<Resolution>(); }
     bool is_same_type(MediaFeatureValue const& other) const;
 
@@ -60,6 +67,12 @@ public:
         return m_value.get<Length>();
     }
 
+    Ratio const& ratio() const
+    {
+        VERIFY(is_ratio());
+        return m_value.get<Ratio>();
+    }
+
     Resolution const& resolution() const
     {
         VERIFY(is_resolution());
@@ -73,8 +86,7 @@ public:
     }
 
 private:
-    // TODO: Support <ratio> once we have that.
-    Variant<String, Length, Resolution, double> m_value;
+    Variant<String, Length, Ratio, Resolution, double> m_value;
 };
 
 // https://www.w3.org/TR/mediaqueries-4/#mq-features
