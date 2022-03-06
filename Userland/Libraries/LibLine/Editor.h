@@ -163,6 +163,7 @@ public:
     static StringMetrics actual_rendered_string_metrics(Utf32View const&);
 
     Function<Vector<CompletionSuggestion>(Editor const&)> on_tab_complete;
+    Function<void(Utf32View, Editor&)> on_paste;
     Function<void()> on_interrupt_handled;
     Function<void(Editor&)> on_display_refresh;
 
@@ -316,6 +317,7 @@ private:
         m_chars_touched_in_the_middle = 0;
         m_drawn_end_of_line_offset = 0;
         m_drawn_spans = {};
+        m_paste_buffer.clear_with_capacity();
     }
 
     void refresh_display();
@@ -490,6 +492,8 @@ private:
     } m_drawn_spans, m_current_spans;
 
     RefPtr<Core::Notifier> m_notifier;
+
+    Vector<u32> m_paste_buffer;
 
     bool m_initialized { false };
     bool m_refresh_needed { false };
