@@ -2787,8 +2787,9 @@ void SoftwareGLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLflo
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_light_model, pname, x, y, z, w);
 
-    RETURN_WITH_ERROR_IF(!(pname == GL_LIGHT_MODEL_AMBIENT
-                             || pname == GL_LIGHT_MODEL_TWO_SIDE),
+    RETURN_WITH_ERROR_IF(pname != GL_LIGHT_MODEL_LOCAL_VIEWER
+            && pname != GL_LIGHT_MODEL_TWO_SIDE
+            && pname != GL_LIGHT_MODEL_AMBIENT,
         GL_INVALID_ENUM);
 
     auto lighting_params = m_rasterizer.light_model();
