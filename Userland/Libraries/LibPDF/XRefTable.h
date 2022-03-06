@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,7 +29,7 @@ struct XRefSection {
 
 class XRefTable final : public RefCounted<XRefTable> {
 public:
-    bool merge(XRefTable&& other)
+    PDFErrorOr<void> merge(XRefTable&& other)
     {
         auto this_size = m_entries.size();
         auto other_size = other.m_entries.size();
@@ -48,11 +48,11 @@ public:
                 m_entries[i] = other_entry;
             } else if (other_entry.byte_offset != invalid_byte_offset) {
                 // Both xref tables have an entry for the same object index
-                return false;
+                return Error { Error::Type::Parse, "Conflicting xref entry during merge" };
             }
         }
 
-        return true;
+        return {};
     }
 
     void add_section(XRefSection const& section)

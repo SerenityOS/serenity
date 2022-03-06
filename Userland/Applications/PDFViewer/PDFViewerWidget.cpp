@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -151,11 +151,14 @@ void PDFViewerWidget::open_file(Core::File& file)
     window()->set_title(String::formatted("{} - PDF Viewer", file.filename()));
 
     m_buffer = file.read_all();
-    auto document = PDF::Document::create(m_buffer);
-    if (!document) {
-        GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't load PDF: {}", file.filename()));
+    auto maybe_document = PDF::Document::create(m_buffer);
+    if (maybe_document.is_error()) {
+        auto error = maybe_document.release_error();
+        GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't load PDF {}:\n{}", file.filename(), error.message()));
         return;
     }
+
+    auto document = maybe_document.release_value();
 
     m_viewer->set_document(document);
     m_total_page_label->set_text(String::formatted("of {}", document->get_page_count()));

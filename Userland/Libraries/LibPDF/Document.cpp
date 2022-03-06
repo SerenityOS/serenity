@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,17 +34,16 @@ String OutlineItem::to_string(int indent) const
     return builder.to_string();
 }
 
-RefPtr<Document> Document::create(ReadonlyBytes bytes)
+PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
 {
     auto parser = adopt_ref(*new Parser({}, bytes));
     auto document = adopt_ref(*new Document(parser));
 
-    if (!parser->initialize())
-        return {};
+    TRY(parser->initialize());
 
-    document->m_catalog = parser->trailer()->get_dict(document, CommonNames::Root);
-    document->build_page_tree();
-    document->build_outline();
+    document->m_catalog = TRY(parser->trailer()->get_dict(document, CommonNames::Root));
+    TRY(document->build_page_tree());
+    TRY(document->build_outline());
 
     return document;
 }
@@ -55,13 +54,13 @@ Document::Document(NonnullRefPtr<Parser> const& parser)
     m_parser->set_document(this);
 }
 
-Value Document::get_or_load_value(u32 index)
+PDFErrorOr<Value> Document::get_or_load_value(u32 index)
 {
     auto value = get_value(index);
     if (!value.has<Empty>()) // FIXME: Use Optional instead?
         return value;
 
-    auto object = m_parser->parse_object_with_index(index);
+    auto object = TRY(m_parser->parse_object_with_index(index));
     m_values.set(index, object);
     return object;
 }
@@ -78,7 +77,7 @@ u32 Document::get_page_count() const
     return m_page_object_indices.size();
 }
 
-Page Document::get_page(u32 index)
+PDFErrorOr<Page> Document::get_page(u32 index)
 {
     VERIFY(index < m_page_object_indices.size());
 
@@ -87,17 +86,18 @@ Page Document::get_page(u32 index)
         return cached_page.value();
 
     auto page_object_index = m_page_object_indices[index];
-    auto raw_page_object = resolve_to<DictObject>(get_or_load_value(page_object_index));
+    auto page_object = TRY(get_or_load_value(page_object_index));
+    auto raw_page_object = TRY(resolve_to<DictObject>(page_object));
 
     if (!raw_page_object->contains(CommonNames::Resources)) {
         // This page inherits its resource dictionary
         TODO();
     }
 
-    auto resources = raw_page_object->get_dict(this, CommonNames::Resources);
-    auto contents = raw_page_object->get_object(this, CommonNames::Contents);
+    auto resources = TRY(raw_page_object->get_dict(this, CommonNames::Resources));
+    auto contents = TRY(raw_page_object->get_object(this, CommonNames::Contents));
 
-    auto media_box_array = raw_page_object->get_array(this, CommonNames::MediaBox);
+    auto media_box_array = TRY(raw_page_object->get_array(this, CommonNames::MediaBox));
     auto media_box = Rectangle {
         media_box_array->at(0).to_float(),
         media_box_array->at(1).to_float(),
@@ -107,7 +107,7 @@ Page Document::get_page(u32 index)
 
     auto crop_box = media_box;
     if (raw_page_object->contains(CommonNames::CropBox)) {
-        auto crop_box_array = raw_page_object->get_array(this, CommonNames::CropBox);
+        auto crop_box_array = TRY(raw_page_object->get_array(this, CommonNames::CropBox));
         crop_box = Rectangle {
             crop_box_array->at(0).to_float(),
             crop_box_array->at(1).to_float(),
@@ -131,7 +131,7 @@ Page Document::get_page(u32 index)
     return page;
 }
 
-Value Document::resolve(Value const& value)
+PDFErrorOr<Value> Document::resolve(Value const& value)
 {
     if (value.has<Reference>()) {
         // FIXME: Surely indirect PDF objects can't contain another indirect PDF object,
@@ -145,26 +145,21 @@ Value Document::resolve(Value const& value)
 
     auto& obj = value.get<NonnullRefPtr<Object>>();
 
-    if (obj->is_indirect_value())
+    if (obj->is<IndirectValue>())
         return static_ptr_cast<IndirectValue>(obj)->value();
 
     return value;
 }
 
-bool Document::build_page_tree()
+PDFErrorOr<void> Document::build_page_tree()
 {
-    if (!m_catalog->contains(CommonNames::Pages))
-        return false;
-    auto page_tree = m_catalog->get_dict(this, CommonNames::Pages);
+    auto page_tree = TRY(m_catalog->get_dict(this, CommonNames::Pages));
     return add_page_tree_node_to_page_tree(page_tree);
 }
 
-bool Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& page_tree)
+PDFErrorOr<void> Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& page_tree)
 {
-    if (!page_tree->contains(CommonNames::Kids) || !page_tree->contains(CommonNames::Count))
-        return false;
-
-    auto kids_array = page_tree->get_array(this, CommonNames::Kids);
+    auto kids_array = TRY(page_tree->get_array(this, CommonNames::Kids));
     auto page_count = page_tree->get(CommonNames::Count).value().get<int>();
 
     if (static_cast<size_t>(page_count) != kids_array->elements().size()) {
@@ -173,13 +168,9 @@ bool Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& 
 
         for (auto& value : *kids_array) {
             auto reference_index = value.as_ref_index();
-            bool ok;
-            auto maybe_page_tree_node = m_parser->conditionally_parse_page_tree_node(reference_index, ok);
-            if (!ok)
-                return false;
+            auto maybe_page_tree_node = TRY(m_parser->conditionally_parse_page_tree_node(reference_index));
             if (maybe_page_tree_node) {
-                if (!add_page_tree_node_to_page_tree(maybe_page_tree_node.release_nonnull()))
-                    return false;
+                TRY(add_page_tree_node_to_page_tree(maybe_page_tree_node.release_nonnull()));
             } else {
                 m_page_object_indices.append(reference_index);
             }
@@ -190,33 +181,35 @@ bool Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& 
             m_page_object_indices.append(value.as_ref_index());
     }
 
-    return true;
+    return {};
 }
 
-void Document::build_outline()
+PDFErrorOr<void> Document::build_outline()
 {
     if (!m_catalog->contains(CommonNames::Outlines))
-        return;
+        return {};
 
-    auto outline_dict = m_catalog->get_dict(this, CommonNames::Outlines);
+    auto outline_dict = TRY(m_catalog->get_dict(this, CommonNames::Outlines));
     if (!outline_dict->contains(CommonNames::First))
-        return;
+        return {};
     if (!outline_dict->contains(CommonNames::Last))
-        return;
+        return {};
 
     auto first_ref = outline_dict->get_value(CommonNames::First);
     auto last_ref = outline_dict->get_value(CommonNames::Last);
 
-    auto children = build_outline_item_chain(first_ref, last_ref);
+    auto children = TRY(build_outline_item_chain(first_ref, last_ref));
 
     m_outline = adopt_ref(*new OutlineDict());
     m_outline->children = move(children);
 
     if (outline_dict->contains(CommonNames::Count))
         m_outline->count = outline_dict->get_value(CommonNames::Count).get<int>();
+
+    return {};
 }
 
-NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict)
+PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict)
 {
     auto outline_item = adopt_ref(*new OutlineItem {});
 
@@ -225,19 +218,20 @@ NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject
         auto first_ref = outline_item_dict->get_value(CommonNames::First);
         auto last_ref = outline_item_dict->get_value(CommonNames::Last);
 
-        auto children = build_outline_item_chain(first_ref, last_ref);
+        auto children = TRY(build_outline_item_chain(first_ref, last_ref));
         outline_item->children = move(children);
     }
 
-    outline_item->title = outline_item_dict->get_string(this, CommonNames::Title)->string();
+    outline_item->title = TRY(outline_item_dict->get_string(this, CommonNames::Title))->string();
 
     if (outline_item_dict->contains(CommonNames::Count))
         outline_item->count = outline_item_dict->get_value(CommonNames::Count).get<int>();
 
     if (outline_item_dict->contains(CommonNames::Dest)) {
-        auto dest_arr = outline_item_dict->get_array(this, CommonNames::Dest);
+        auto dest_arr = TRY(outline_item_dict->get_array(this, CommonNames::Dest));
+        dbgln("IS ARRAY = {}", dest_arr->is_array());
         auto page_ref = dest_arr->at(0);
-        auto type_name = dest_arr->get_name_at(this, 1)->name();
+        auto type_name = TRY(dest_arr->get_name_at(this, 1))->name();
 
         Vector<float> parameters;
         for (size_t i = 2; i < dest_arr->size(); i++)
@@ -268,7 +262,7 @@ NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject
     }
 
     if (outline_item_dict->contains(CommonNames::C)) {
-        auto color_array = outline_item_dict->get_array(this, CommonNames::C);
+        auto color_array = TRY(outline_item_dict->get_array(this, CommonNames::C));
         auto r = static_cast<int>(255.0f * color_array->at(0).get<float>());
         auto g = static_cast<int>(255.0f * color_array->at(1).get<float>());
         auto b = static_cast<int>(255.0f * color_array->at(2).get<float>());
@@ -284,16 +278,16 @@ NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject
     return outline_item;
 }
 
-NonnullRefPtrVector<OutlineItem> Document::build_outline_item_chain(Value const& first_ref, Value const& last_ref)
+PDFErrorOr<NonnullRefPtrVector<OutlineItem>> Document::build_outline_item_chain(Value const& first_ref, Value const& last_ref)
 {
     VERIFY(first_ref.has<Reference>());
     VERIFY(last_ref.has<Reference>());
 
     NonnullRefPtrVector<OutlineItem> children;
 
-    auto first_dict = object_cast<DictObject>(
-        get_or_load_value(first_ref.as_ref_index()).get<NonnullRefPtr<Object>>());
-    auto first = build_outline_item(first_dict);
+    auto first_value = TRY(get_or_load_value(first_ref.as_ref_index())).get<NonnullRefPtr<Object>>();
+    auto first_dict = first_value->cast<DictObject>();
+    auto first = TRY(build_outline_item(first_dict));
     children.append(first);
 
     auto current_child_dict = first_dict;
@@ -302,8 +296,9 @@ NonnullRefPtrVector<OutlineItem> Document::build_outline_item_chain(Value const&
     while (current_child_dict->contains(CommonNames::Next)) {
         auto next_child_dict_ref = current_child_dict->get_value(CommonNames::Next);
         current_child_index = next_child_dict_ref.as_ref_index();
-        auto next_child_dict = object_cast<DictObject>(get_or_load_value(current_child_index).get<NonnullRefPtr<Object>>());
-        auto next_child = build_outline_item(next_child_dict);
+        auto next_child_value = TRY(get_or_load_value(current_child_index)).get<NonnullRefPtr<Object>>();
+        auto next_child_dict = next_child_value->cast<DictObject>();
+        auto next_child = TRY(build_outline_item(next_child_dict));
         children.append(next_child);
 
         current_child_dict = move(next_child_dict);
