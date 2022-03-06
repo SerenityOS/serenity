@@ -47,14 +47,14 @@ using AK::SIMD::to_f32x4;
 using AK::SIMD::to_u32x4;
 using AK::SIMD::u32x4;
 
-constexpr static int edge_function(const IntVector2& a, const IntVector2& b, const IntVector2& c)
+constexpr static float edge_function(const FloatVector2& a, const FloatVector2& b, const FloatVector2& c)
 {
-    return ((c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x()));
+    return (c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x());
 }
 
-constexpr static i32x4 edge_function4(const IntVector2& a, const IntVector2& b, const Vector2<i32x4>& c)
+constexpr static f32x4 edge_function4(const FloatVector2& a, const FloatVector2& b, const Vector2<f32x4>& c)
 {
-    return ((c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x()));
+    return (c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x());
 }
 
 template<typename T, typename U>
@@ -191,38 +191,20 @@ void Device::rasterize_triangle(const Triangle& triangle)
     Vertex const vertex1 = triangle.vertices[1];
     Vertex const vertex2 = triangle.vertices[2];
 
-    constexpr int subpixel_factor = 1 << SUBPIXEL_BITS;
-
     // Calculate area of the triangle for later tests
-    IntVector2 const v0 { static_cast<int>(vertex0.window_coordinates.x() * subpixel_factor), static_cast<int>(vertex0.window_coordinates.y() * subpixel_factor) };
-    IntVector2 const v1 { static_cast<int>(vertex1.window_coordinates.x() * subpixel_factor), static_cast<int>(vertex1.window_coordinates.y() * subpixel_factor) };
-    IntVector2 const v2 { static_cast<int>(vertex2.window_coordinates.x() * subpixel_factor), static_cast<int>(vertex2.window_coordinates.y() * subpixel_factor) };
+    FloatVector2 const v0 { vertex0.window_coordinates.x(), vertex0.window_coordinates.y() };
+    FloatVector2 const v1 { vertex1.window_coordinates.x(), vertex1.window_coordinates.y() };
+    FloatVector2 const v2 { vertex2.window_coordinates.x(), vertex2.window_coordinates.y() };
 
-    int area = edge_function(v0, v1, v2);
-    if (area == 0)
-        return;
-
+    auto const area = edge_function(v0, v1, v2);
     auto const one_over_area = 1.0f / area;
 
     auto render_bounds = m_frame_buffer->rect();
     if (m_options.scissor_enabled)
         render_bounds.intersect(m_options.scissor_box);
 
-    // Obey top-left rule:
-    // This sets up "zero" for later pixel coverage tests.
-    // Depending on where on the triangle the edge is located
-    // it is either tested against 0 or 1, effectively
-    // turning "< 0" into "<= 0"
-    IntVector3 zero { 1, 1, 1 };
-    if (v1.y() > v0.y() || (v1.y() == v0.y() && v1.x() < v0.x()))
-        zero.set_z(0);
-    if (v2.y() > v1.y() || (v2.y() == v1.y() && v2.x() < v1.x()))
-        zero.set_x(0);
-    if (v0.y() > v2.y() || (v0.y() == v2.y() && v0.x() < v2.x()))
-        zero.set_y(0);
-
     // This function calculates the 3 edge values for the pixel relative to the triangle.
-    auto calculate_edge_values4 = [v0, v1, v2](Vector2<i32x4> const& p) -> Vector3<i32x4> {
+    auto calculate_edge_values4 = [v0, v1, v2](Vector2<f32x4> const& p) -> Vector3<f32x4> {
         return {
             edge_function4(v1, v2, p),
             edge_function4(v2, v0, p),
@@ -230,8 +212,22 @@ void Device::rasterize_triangle(const Triangle& triangle)
         };
     };
 
+    // Zero is used in testing against edge values below, applying the "top-left rule". If a pixel
+    // lies exactly on an edge shared by two triangles, we only render that pixel if the edge in
+    // question is a "top" or "left" edge. We can detect those easily by testing for Y2 <= Y1,
+    // since we know our vertices are in CCW order. By changing a float epsilon to 0, we
+    // effectively change the comparisons against the edge values below from "> 0" into ">= 0".
+    constexpr auto epsilon = NumericLimits<float>::epsilon();
+    FloatVector3 zero { epsilon, epsilon, epsilon };
+    if (v2.y() <= v1.y())
+        zero.set_x(0.f);
+    if (v0.y() <= v2.y())
+        zero.set_y(0.f);
+    if (v1.y() <= v0.y())
+        zero.set_z(0.f);
+
     // This function tests whether a point as identified by its 3 edge values lies within the triangle
-    auto test_point4 = [zero](Vector3<i32x4> const& edges) -> i32x4 {
+    auto test_point4 = [zero](Vector3<f32x4> const& edges) -> i32x4 {
         return edges.x() >= zero.x()
             && edges.y() >= zero.y()
             && edges.z() >= zero.z();
@@ -239,26 +235,30 @@ void Device::rasterize_triangle(const Triangle& triangle)
 
     // Calculate block-based bounds
     // clang-format off
-    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x()) / subpixel_factor) & ~1;
-    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x()) / subpixel_factor) & ~1) + 2;
-    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y()) / subpixel_factor) & ~1;
-    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y()) / subpixel_factor) & ~1) + 2;
+    int const bx0 =  max(render_bounds.left(),   min(min(v0.x(), v1.x()), v2.x())) & ~1;
+    int const bx1 = (min(render_bounds.right(),  max(max(v0.x(), v1.x()), v2.x())) & ~1) + 2;
+    int const by0 =  max(render_bounds.top(),    min(min(v0.y(), v1.y()), v2.y())) & ~1;
+    int const by1 = (min(render_bounds.bottom(), max(max(v0.y(), v1.y()), v2.y())) & ~1) + 2;
     // clang-format on
 
-    // Fog depths
-    float const vertex0_eye_absz = fabsf(vertex0.eye_coordinates.z());
-    float const vertex1_eye_absz = fabsf(vertex1.eye_coordinates.z());
-    float const vertex2_eye_absz = fabsf(vertex2.eye_coordinates.z());
+    // Calculate depth of fragment for fog;
+    // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
+    // eye-coordinate distance from the eye to each fragment center by |Ze|."
+    f32x4 vertex0_fog_depth;
+    f32x4 vertex1_fog_depth;
+    f32x4 vertex2_fog_depth;
+    if (m_options.fog_enabled) {
+        vertex0_fog_depth = expand4(fabsf(vertex0.eye_coordinates.z()));
+        vertex1_fog_depth = expand4(fabsf(vertex1.eye_coordinates.z()));
+        vertex2_fog_depth = expand4(fabsf(vertex2.eye_coordinates.z()));
+    }
 
-    int const render_bounds_left = render_bounds.x();
-    int const render_bounds_right = render_bounds.x() + render_bounds.width();
-    int const render_bounds_top = render_bounds.y();
-    int const render_bounds_bottom = render_bounds.y() + render_bounds.height();
+    float const render_bounds_left = render_bounds.left();
+    float const render_bounds_right = render_bounds.right();
+    float const render_bounds_top = render_bounds.top();
+    float const render_bounds_bottom = render_bounds.bottom();
 
-    auto const half_pixel_offset = Vector2<i32x4> {
-        expand4(subpixel_factor / 2),
-        expand4(subpixel_factor / 2),
-    };
+    auto const half_pixel_offset = Vector2<f32x4> { expand4(.5f), expand4(.5f) };
 
     auto color_buffer = m_frame_buffer->color_buffer();
     auto depth_buffer = m_frame_buffer->depth_buffer();
@@ -304,37 +304,32 @@ void Device::rasterize_triangle(const Triangle& triangle)
 
     // Iterate over all blocks within the bounds of the triangle
     for (int by = by0; by < by1; by += 2) {
+        auto const f_by = static_cast<float>(by);
         for (int bx = bx0; bx < bx1; bx += 2) {
             PixelQuad quad;
 
+            auto const f_bx = static_cast<float>(bx);
             quad.screen_coordinates = {
-                i32x4 { bx, bx + 1, bx, bx + 1 },
-                i32x4 { by, by, by + 1, by + 1 },
+                f32x4 { f_bx, f_bx + 1, f_bx, f_bx + 1 },
+                f32x4 { f_by, f_by, f_by + 1, f_by + 1 },
             };
 
-            auto edge_values = calculate_edge_values4(quad.screen_coordinates * subpixel_factor + half_pixel_offset);
+            auto edge_values = calculate_edge_values4(quad.screen_coordinates + half_pixel_offset);
 
             // Generate triangle coverage mask
             quad.mask = test_point4(edge_values);
 
             // Test quad against intersection of render target size and scissor rect
             quad.mask &= quad.screen_coordinates.x() >= render_bounds_left
-                && quad.screen_coordinates.x() < render_bounds_right
+                && quad.screen_coordinates.x() <= render_bounds_right
                 && quad.screen_coordinates.y() >= render_bounds_top
-                && quad.screen_coordinates.y() < render_bounds_bottom;
+                && quad.screen_coordinates.y() <= render_bounds_bottom;
 
             if (none(quad.mask))
                 continue;
 
             INCREASE_STATISTICS_COUNTER(g_num_quads, 1);
             INCREASE_STATISTICS_COUNTER(g_num_pixels, maskcount(quad.mask));
-
-            // Calculate barycentric coordinates from previously calculated edge values
-            quad.barycentrics = Vector3<f32x4> {
-                to_f32x4(edge_values.x()),
-                to_f32x4(edge_values.y()),
-                to_f32x4(edge_values.z()),
-            } * one_over_area;
 
             int coverage_bits = maskbits(quad.mask);
 
@@ -394,6 +389,9 @@ void Device::rasterize_triangle(const Triangle& triangle)
                 if (none(quad.mask))
                     continue;
             }
+
+            // Calculate barycentric coordinates from previously calculated edge values
+            quad.barycentrics = edge_values * one_over_area;
 
             // Depth testing
             DepthType* depth_ptrs[4] = {
@@ -507,8 +505,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
             };
 
             auto const interpolated_reciprocal_w = interpolate(w_coordinates.x(), w_coordinates.y(), w_coordinates.z(), quad.barycentrics);
-            auto const interpolated_w = 1.0f / interpolated_reciprocal_w;
-            quad.barycentrics = quad.barycentrics * w_coordinates * interpolated_w;
+            quad.barycentrics = quad.barycentrics * w_coordinates / interpolated_reciprocal_w;
 
             // FIXME: make this more generic. We want to interpolate more than just color and uv
             if (m_options.shade_smooth)
@@ -519,14 +516,8 @@ void Device::rasterize_triangle(const Triangle& triangle)
             for (size_t i = 0; i < NUM_SAMPLERS; ++i)
                 quad.texture_coordinates[i] = interpolate(expand4(vertex0.tex_coords[i]), expand4(vertex1.tex_coords[i]), expand4(vertex2.tex_coords[i]), quad.barycentrics);
 
-            if (m_options.fog_enabled) {
-                // Calculate depth of fragment for fog
-                //
-                // OpenGL 1.5 spec chapter 3.10: "An implementation may choose to approximate the
-                // eye-coordinate distance from the eye to each fragment center by |Ze|."
-
-                quad.fog_depth = interpolate(expand4(vertex0_eye_absz), expand4(vertex1_eye_absz), expand4(vertex2_eye_absz), quad.barycentrics);
-            }
+            if (m_options.fog_enabled)
+                quad.fog_depth = interpolate(vertex0_fog_depth, vertex1_fog_depth, vertex2_fog_depth, quad.barycentrics);
 
             shade_fragments(quad);
 
