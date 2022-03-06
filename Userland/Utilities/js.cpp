@@ -1451,7 +1451,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             bool indenters_starting_line = true;
             for (JS::Token token = lexer.next(); token.type() != JS::TokenType::Eof; token = lexer.next()) {
                 auto length = Utf8View { token.value() }.length();
-                auto start = token.line_column() - 1;
+                auto start = token.offset();
                 auto end = start + length;
                 if (indenters_starting_line) {
                     if (token.type() != JS::TokenType::ParenClose && token.type() != JS::TokenType::BracketClose && token.type() != JS::TokenType::CurlyClose) {
