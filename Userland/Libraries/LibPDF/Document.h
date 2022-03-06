@@ -135,6 +135,8 @@ private:
     PDFErrorOr<NonnullRefPtr<OutlineItem>> build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict);
     PDFErrorOr<NonnullRefPtrVector<OutlineItem>> build_outline_item_chain(Value const& first_ref, Value const& last_ref);
 
+    PDFErrorOr<Destination> create_destination_from_parameters(NonnullRefPtr<ArrayObject>);
+
     NonnullRefPtr<Parser> m_parser;
     RefPtr<DictObject> m_catalog;
     Vector<u32> m_page_object_indices;
