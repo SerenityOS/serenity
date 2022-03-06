@@ -534,11 +534,37 @@ RENDERER_TODO(inline_image_begin)
 RENDERER_TODO(inline_image_begin_data)
 RENDERER_TODO(inline_image_end)
 RENDERER_TODO(paint_xobject)
-RENDERER_TODO(marked_content_point)
-RENDERER_TODO(marked_content_designate)
-RENDERER_TODO(marked_content_begin)
-RENDERER_TODO(marked_content_begin_with_property_list)
-RENDERER_TODO(marked_content_end)
+
+RENDERER_HANDLER(marked_content_point)
+{
+    // nop
+    return {};
+}
+
+RENDERER_HANDLER(marked_content_designate)
+{
+    // nop
+    return {};
+}
+
+RENDERER_HANDLER(marked_content_begin)
+{
+    // nop
+    return {};
+}
+
+RENDERER_HANDLER(marked_content_begin_with_property_list)
+{
+    // nop
+    return {};
+}
+
+RENDERER_HANDLER(marked_content_end)
+{
+    // nop
+    return {};
+}
+
 RENDERER_TODO(compatibility_begin)
 RENDERER_TODO(compatibility_end)
 
