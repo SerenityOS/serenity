@@ -294,6 +294,12 @@ Position Sheet::offset_relative_to(const Position& base, const Position& offset,
 
 void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to, CopyOperation copy_operation)
 {
+    // Disallow misaligned copies.
+    if (to.size() > 1 && from.size() != to.size()) {
+        dbgln("Cannot copy {} cells to {} cells", from.size(), to.size());
+        return;
+    }
+
     Vector<Position> target_cells;
     for (auto& position : from)
         target_cells.append(resolve_relative_to.has_value() ? offset_relative_to(to.first(), position, resolve_relative_to.value()) : to.first());
@@ -313,39 +319,46 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
                 source_cell->set_data("");
     };
 
-    if (from.size() == to.size()) {
-        auto from_it = from.begin();
-        // FIXME: Ordering.
-        for (auto& position : to)
-            copy_to(*from_it++, position);
+    // Resolve each index as relative to the first index offset from the selection.
+    auto& target = to.first();
 
-        return;
+    auto top_left_most_position_from = from.first();
+    auto bottom_right_most_position_from = from.first();
+    for (auto& position : from) {
+        if (position.row > bottom_right_most_position_from.row)
+            bottom_right_most_position_from = position;
+        else if (position.column > bottom_right_most_position_from.column)
+            bottom_right_most_position_from = position;
+
+        if (position.row < top_left_most_position_from.row)
+            top_left_most_position_from = position;
+        else if (position.column < top_left_most_position_from.column)
+            top_left_most_position_from = position;
     }
 
-    if (to.size() == 1) {
-        // Resolve each index as relative to the first index offset from the selection.
-        auto& target = to.first();
+    Vector<Position> ordered_from;
+    auto current_column = top_left_most_position_from.column;
+    auto current_row = top_left_most_position_from.row;
+    for ([[maybe_unused]] auto& position : from) {
+        for (auto& position : from)
+            if (position.row == current_row && position.column == current_column)
+                ordered_from.append(position);
 
-        for (auto& position : from) {
-            dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", position.to_url(*this), target.to_url(*this));
-            copy_to(position, resolve_relative_to.has_value() ? offset_relative_to(target, position, resolve_relative_to.value()) : target);
+        if (current_column >= bottom_right_most_position_from.column) {
+            current_column = top_left_most_position_from.column;
+            current_row += 1;
+        } else {
+            current_column += 1;
         }
-
-        return;
     }
 
-    if (from.size() == 1) {
-        // Fill the target selection with the single cell.
-        auto& source = from.first();
-        for (auto& position : to) {
-            dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", source.to_url(*this), position.to_url(*this));
-            copy_to(source, resolve_relative_to.has_value() ? offset_relative_to(position, source, resolve_relative_to.value()) : position);
-        }
-        return;
-    }
+    if (target.row > top_left_most_position_from.row || (target.row >= top_left_most_position_from.row && target.column > top_left_most_position_from.column))
+        ordered_from.reverse();
 
-    // Just disallow misaligned copies.
-    dbgln("Cannot copy {} cells to {} cells", from.size(), to.size());
+    for (auto& position : ordered_from) {
+        dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", position.to_url(*this), target.to_url(*this));
+        copy_to(position, resolve_relative_to.has_value() ? offset_relative_to(target, position, resolve_relative_to.value()) : target);
+    }
 }
 
 RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
