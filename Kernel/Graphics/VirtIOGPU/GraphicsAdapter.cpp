@@ -232,7 +232,7 @@ auto GraphicsAdapter::query_edid(u32 scanout_id) -> ErrorOr<Optional<EDID::Parse
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    if (response.header.type != static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_EDID))
+    if (response.header.type != to_underlying(Protocol::CommandType::VIRTIO_GPU_RESP_OK_EDID))
         return Error::from_string_literal("VirtIO::GraphicsAdapter: Failed to get EDID");
 
     if (response.size == 0)
@@ -256,11 +256,11 @@ ResourceID GraphicsAdapter::create_2d_resource(Protocol::Rect rect)
     request.resource_id = resource_id.value();
     request.width = rect.width;
     request.height = rect.height;
-    request.format = static_cast<u32>(Protocol::TextureFormat::VIRTIO_GPU_FORMAT_B8G8R8X8_UNORM);
+    request.format = to_underlying(Protocol::TextureFormat::VIRTIO_GPU_FORMAT_B8G8R8X8_UNORM);
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+    VERIFY(response.type == to_underlying(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
     dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Allocated 2d resource with id {}", resource_id.value());
     return resource_id;
 }
@@ -291,7 +291,7 @@ void GraphicsAdapter::ensure_backing_storage(ResourceID resource_id, Memory::Reg
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), header_block_size, sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+    VERIFY(response.type == to_underlying(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
     dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Allocated backing storage");
 }
 
@@ -307,7 +307,7 @@ void GraphicsAdapter::detach_backing_storage(ResourceID resource_id)
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+    VERIFY(response.type == to_underlying(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
     dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Detached backing storage");
 }
 
@@ -327,7 +327,7 @@ void GraphicsAdapter::set_scanout_resource(ScanoutID scanout, ResourceID resourc
 
         synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-        VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+        VERIFY(response.type == to_underlying(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
         dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: Set backing scanout");
     }
 
@@ -349,7 +349,7 @@ void GraphicsAdapter::transfer_framebuffer_data_to_host(ScanoutID scanout, Resou
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+    VERIFY(response.type == to_underlying(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
 }
 
 void GraphicsAdapter::flush_displayed_image(ResourceID resource_id, Protocol::Rect const& dirty_rect)
@@ -365,7 +365,7 @@ void GraphicsAdapter::flush_displayed_image(ResourceID resource_id, Protocol::Re
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+    VERIFY(response.type == to_underlying(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
 }
 
 void GraphicsAdapter::synchronous_virtio_gpu_command(PhysicalAddress buffer_start, size_t request_size, size_t response_size)
@@ -386,7 +386,7 @@ void GraphicsAdapter::synchronous_virtio_gpu_command(PhysicalAddress buffer_star
 
 void GraphicsAdapter::populate_virtio_gpu_request_header(Protocol::ControlHeader& header, Protocol::CommandType ctrl_type, u32 flags)
 {
-    header.type = static_cast<u32>(ctrl_type);
+    header.type = to_underlying(ctrl_type);
     header.flags = flags;
     header.fence_id = 0;
     header.context_id = 0;
@@ -419,7 +419,7 @@ void GraphicsAdapter::delete_resource(ResourceID resource_id)
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+    VERIFY(response.type == to_underlying(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
 }
 
 }
