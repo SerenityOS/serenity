@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -128,7 +129,7 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         }
 
         painter.draw_rect(adjusted_rect, palette().color(ColorRole::BaseText));
-        painter.draw_scaled_bitmap(inner_thumbnail_rect, layer.bitmap(), layer.bitmap().rect());
+        painter.draw_scaled_bitmap(inner_thumbnail_rect, layer.display_bitmap(), layer.display_bitmap().rect());
 
         if (layer.is_visible()) {
             painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, layer.is_selected() ? palette().selection_text() : palette().button_text());

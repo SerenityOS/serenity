@@ -114,7 +114,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 auto image = PixelPaint::Image::try_create_with_size(dialog->image_size()).release_value_but_fixme_should_propagate_errors();
                 auto bg_layer = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
                 image->add_layer(*bg_layer);
-                bg_layer->bitmap().fill(Color::White);
+                bg_layer->content_bitmap().fill(Color::White);
 
                 auto& editor = create_new_editor(*image);
                 auto image_title = dialog->image_name().trim_whitespace();
@@ -630,7 +630,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         if (auto* layer = editor->active_layer()) {
             Gfx::GenericConvolutionFilter<5> filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::GenericConvolutionFilter<5>>::get(&window)) {
-                filter.apply(layer->bitmap(), layer->rect(), layer->bitmap(), layer->rect(), *parameters);
+                filter.apply(layer->content_bitmap(), layer->rect(), layer->content_bitmap(), layer->rect(), *parameters);
                 layer->did_modify_bitmap(layer->rect());
                 editor->did_complete_action();
             }
@@ -735,7 +735,7 @@ void MainWidget::create_default_image()
 
     auto bg_layer = Layer::try_create_with_size(*image, image->size(), "Background").release_value_but_fixme_should_propagate_errors();
     image->add_layer(*bg_layer);
-    bg_layer->bitmap().fill(Color::White);
+    bg_layer->content_bitmap().fill(Color::White);
 
     m_layer_list_widget->set_image(image);
 
