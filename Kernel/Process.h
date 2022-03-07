@@ -466,12 +466,20 @@ public:
 
     VeilState veil_state() const
     {
-        return m_veil_state;
+        return m_unveil_data.with([&](auto const& unveil_data) { return unveil_data.state; });
     }
-    const UnveilNode& unveiled_paths() const
-    {
-        return m_unveiled_paths;
-    }
+
+    struct UnveilData {
+        explicit UnveilData(UnveilNode&& p)
+            : paths(move(p))
+        {
+        }
+        VeilState state { VeilState::None };
+        UnveilNode paths;
+    };
+
+    auto& unveil_data() { return m_unveil_data; }
+    auto const& unveil_data() const { return m_unveil_data; }
 
     bool wait_for_tracer_at_next_execve() const
     {
@@ -805,8 +813,7 @@ private:
 
     RefPtr<Timer> m_alarm_timer;
 
-    VeilState m_veil_state { VeilState::None };
-    UnveilNode m_unveiled_paths;
+    SpinlockProtected<UnveilData> m_unveil_data;
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 

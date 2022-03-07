@@ -145,25 +145,28 @@ ErrorOr<void> Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
 ErrorOr<void> Process::procfs_get_unveil_stats(KBufferBuilder& builder) const
 {
     auto array = TRY(JsonArraySerializer<>::try_create(builder));
-    TRY(unveiled_paths().for_each_node_in_tree_order([&](auto const& unveiled_path) -> ErrorOr<IterationDecision> {
-        if (!unveiled_path.was_explicitly_unveiled())
+    TRY(m_unveil_data.with([&](auto& unveil_data) -> ErrorOr<void> {
+        TRY(unveil_data.paths.for_each_node_in_tree_order([&](auto const& unveiled_path) -> ErrorOr<IterationDecision> {
+            if (!unveiled_path.was_explicitly_unveiled())
+                return IterationDecision::Continue;
+            auto obj = TRY(array.add_object());
+            TRY(obj.add("path", unveiled_path.path()));
+            StringBuilder permissions_builder;
+            if (unveiled_path.permissions() & UnveilAccess::Read)
+                permissions_builder.append('r');
+            if (unveiled_path.permissions() & UnveilAccess::Write)
+                permissions_builder.append('w');
+            if (unveiled_path.permissions() & UnveilAccess::Execute)
+                permissions_builder.append('x');
+            if (unveiled_path.permissions() & UnveilAccess::CreateOrRemove)
+                permissions_builder.append('c');
+            if (unveiled_path.permissions() & UnveilAccess::Browse)
+                permissions_builder.append('b');
+            TRY(obj.add("permissions", permissions_builder.string_view()));
+            TRY(obj.finish());
             return IterationDecision::Continue;
-        auto obj = TRY(array.add_object());
-        TRY(obj.add("path", unveiled_path.path()));
-        StringBuilder permissions_builder;
-        if (unveiled_path.permissions() & UnveilAccess::Read)
-            permissions_builder.append('r');
-        if (unveiled_path.permissions() & UnveilAccess::Write)
-            permissions_builder.append('w');
-        if (unveiled_path.permissions() & UnveilAccess::Execute)
-            permissions_builder.append('x');
-        if (unveiled_path.permissions() & UnveilAccess::CreateOrRemove)
-            permissions_builder.append('c');
-        if (unveiled_path.permissions() & UnveilAccess::Browse)
-            permissions_builder.append('b');
-        TRY(obj.add("permissions", permissions_builder.string_view()));
-        TRY(obj.finish());
-        return IterationDecision::Continue;
+        }));
+        return {};
     }));
     TRY(array.finish());
     return {};

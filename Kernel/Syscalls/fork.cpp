@@ -20,8 +20,13 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     RefPtr<Thread> child_first_thread;
     auto child_name = TRY(m_name->try_clone());
     auto child = TRY(Process::try_create(child_first_thread, move(child_name), uid(), gid(), pid(), m_is_kernel_process, current_directory(), m_executable, m_tty, this));
-    child->m_veil_state = m_veil_state;
-    child->m_unveiled_paths = TRY(m_unveiled_paths.deep_copy());
+    TRY(m_unveil_data.with([&](auto& parent_unveil_data) -> ErrorOr<void> {
+        return child->m_unveil_data.with([&](auto& child_unveil_data) -> ErrorOr<void> {
+            child_unveil_data.state = parent_unveil_data.state;
+            child_unveil_data.paths = TRY(parent_unveil_data.paths.deep_copy());
+            return {};
+        });
+    }));
 
     TRY(child->m_fds.with_exclusive([&](auto& child_fds) {
         return m_fds.with_exclusive([&](auto& parent_fds) {
