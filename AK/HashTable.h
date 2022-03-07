@@ -28,6 +28,15 @@ enum class HashSetExistingEntryBehavior {
     Replace
 };
 
+// FIXME: Choose specific values so that we can do bit-based checks for various classes of state.
+enum class BucketState : u8 {
+    Free = 0,
+    Used,
+    Deleted,
+    Rehashed,
+    End,
+};
+
 template<typename HashTableType, typename T, typename BucketType>
 class HashTableIterator {
     friend HashTableType;
@@ -46,10 +55,10 @@ private:
             return;
         do {
             ++m_bucket;
-            if (m_bucket->used)
+            if (m_bucket->state == BucketState::Used)
                 return;
-        } while (!m_bucket->end);
-        if (m_bucket->end)
+        } while (m_bucket->state != BucketState::End);
+        if (m_bucket->state == BucketState::End)
             m_bucket = nullptr;
     }
 
@@ -87,9 +96,7 @@ class HashTable {
     static constexpr size_t load_factor_in_percent = 60;
 
     struct Bucket {
-        bool used;
-        bool deleted;
-        bool end;
+        BucketState state;
         alignas(T) u8 storage[sizeof(T)];
 
         T* slot() { return reinterpret_cast<T*>(storage); }
@@ -99,8 +106,7 @@ class HashTable {
     struct OrderedBucket {
         OrderedBucket* previous;
         OrderedBucket* next;
-        bool used;
-        bool deleted;
+        BucketState state;
         alignas(T) u8 storage[sizeof(T)];
         T* slot() { return reinterpret_cast<T*>(storage); }
         const T* slot() const { return reinterpret_cast<const T*>(storage); }
@@ -128,7 +134,7 @@ public:
             return;
 
         for (size_t i = 0; i < m_capacity; ++i) {
-            if (m_buckets[i].used)
+            if (m_buckets[i].state == BucketState::Used)
                 m_buckets[i].slot()->~T();
         }
 
@@ -232,7 +238,7 @@ public:
             return Iterator(m_collection_data.head);
 
         for (size_t i = 0; i < m_capacity; ++i) {
-            if (m_buckets[i].used)
+            if (m_buckets[i].state == BucketState::Used)
                 return Iterator(&m_buckets[i]);
         }
         return end();
@@ -253,7 +259,7 @@ public:
             return ConstIterator(m_collection_data.head);
 
         for (size_t i = 0; i < m_capacity; ++i) {
-            if (m_buckets[i].used)
+            if (m_buckets[i].state == BucketState::Used)
                 return ConstIterator(&m_buckets[i]);
         }
         return end();
@@ -281,14 +287,14 @@ public:
         if constexpr (IsOrdered)
             m_collection_data = { nullptr, nullptr };
         else
-            m_buckets[m_capacity].end = true;
+            m_buckets[m_capacity].state = BucketState::End;
     }
 
     template<typename U = T>
     ErrorOr<HashSetResult> try_set(U&& value, HashSetExistingEntryBehavior existing_entry_behavior = HashSetExistingEntryBehavior::Replace)
     {
         auto* bucket = TRY(try_lookup_for_writing(value));
-        if (bucket->used) {
+        if (bucket->state == BucketState::Used) {
             if (existing_entry_behavior == HashSetExistingEntryBehavior::Keep)
                 return HashSetResult::KeptExistingEntry;
             (*bucket->slot()) = forward<U>(value);
@@ -296,11 +302,9 @@ public:
         }
 
         new (bucket->slot()) T(forward<U>(value));
-        bucket->used = true;
-        if (bucket->deleted) {
-            bucket->deleted = false;
+        if (bucket->state == BucketState::Deleted)
             --m_deleted_count;
-        }
+        bucket->state = BucketState::Used;
 
         if constexpr (IsOrdered) {
             if (!m_collection_data.head) [[unlikely]] {
@@ -393,11 +397,7 @@ public:
     {
         VERIFY(iterator.m_bucket);
         auto& bucket = *iterator.m_bucket;
-        VERIFY(bucket.used);
-        VERIFY(!bucket.deleted);
-
-        if constexpr (!IsOrdered)
-            VERIFY(!bucket.end);
+        VERIFY(bucket.state == BucketState::Used);
 
         delete_bucket(bucket);
         --m_size;
@@ -412,7 +412,7 @@ public:
         size_t removed_count = 0;
         for (size_t i = 0; i < m_capacity; ++i) {
             auto& bucket = m_buckets[i];
-            if (bucket.used && predicate(*bucket.slot())) {
+            if (bucket.state == BucketState::Used && predicate(*bucket.slot())) {
                 delete_bucket(bucket);
                 ++removed_count;
             }
@@ -430,7 +430,7 @@ private:
     {
         auto& bucket = lookup_for_writing(value);
         new (bucket.slot()) T(move(value));
-        bucket.used = true;
+        bucket.state = BucketState::Used;
 
         if constexpr (IsOrdered) {
             if (!m_collection_data.head) [[unlikely]] {
@@ -473,7 +473,7 @@ private:
         if constexpr (IsOrdered)
             m_collection_data = { nullptr, nullptr };
         else
-            m_buckets[m_capacity].end = true;
+            m_buckets[m_capacity].state = BucketState::End;
 
         if (!old_buckets)
             return {};
@@ -500,10 +500,10 @@ private:
         for (;;) {
             auto& bucket = m_buckets[hash % m_capacity];
 
-            if (bucket.used && predicate(*bucket.slot()))
+            if (bucket.state == BucketState::Used && predicate(*bucket.slot()))
                 return &bucket;
 
-            if (!bucket.used && !bucket.deleted)
+            if (bucket.state != BucketState::Used && bucket.state != BucketState::Deleted)
                 return nullptr;
 
             hash = double_hash(hash);
@@ -522,14 +522,14 @@ private:
         for (;;) {
             auto& bucket = m_buckets[hash % m_capacity];
 
-            if (bucket.used && TraitsForT::equals(*bucket.slot(), value))
+            if (bucket.state == BucketState::Used && TraitsForT::equals(*bucket.slot(), value))
                 return &bucket;
 
-            if (!bucket.used) {
+            if (bucket.state != BucketState::Used) {
                 if (!first_empty_bucket)
                     first_empty_bucket = &bucket;
 
-                if (!bucket.deleted)
+                if (bucket.state != BucketState::Deleted)
                     return const_cast<BucketType*>(first_empty_bucket);
             }
 
@@ -560,8 +560,7 @@ private:
     void delete_bucket(auto& bucket)
     {
         bucket.slot()->~T();
-        bucket.used = false;
-        bucket.deleted = true;
+        bucket.state = BucketState::Deleted;
 
         if constexpr (IsOrdered) {
             if (bucket.previous)
