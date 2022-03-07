@@ -1612,7 +1612,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto const& variable = interpreter->global_object();
                 list_all_properties(variable.shape(), variable_name);
 
-                for (String& name : global_environment.declarative_record().bindings()) {
+                for (auto const& name : global_environment.declarative_record().bindings()) {
                     if (name.starts_with(variable_name)) {
                         results.empend(name);
                         results.last().invariant_offset = variable_name.length();
