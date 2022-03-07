@@ -40,6 +40,11 @@ public:
     Gfx::Bitmap const& content_bitmap() const { return m_content_bitmap; }
     Gfx::Bitmap& content_bitmap() { return m_content_bitmap; }
 
+    Gfx::Bitmap const* mask_bitmap() const { return m_mask_bitmap; }
+    Gfx::Bitmap* mask_bitmap() { return m_mask_bitmap; }
+
+    void create_mask();
+
     Gfx::IntSize size() const { return content_bitmap().size(); }
 
     Gfx::IntRect relative_rect() const { return { location(), size() }; }
@@ -67,6 +72,8 @@ public:
 
     void erase_selection(Selection const&);
 
+    bool is_masked() { return !m_mask_bitmap.is_null(); }
+
 private:
     Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
 
@@ -75,6 +82,7 @@ private:
     String m_name;
     Gfx::IntPoint m_location;
     NonnullRefPtr<Gfx::Bitmap> m_content_bitmap;
+    RefPtr<Gfx::Bitmap> m_mask_bitmap { nullptr };
     NonnullRefPtr<Gfx::Bitmap> m_cached_display_bitmap;
 
     bool m_selected { false };
