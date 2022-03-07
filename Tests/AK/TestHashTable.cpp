@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/HashTable.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/String.h>
 
 TEST_CASE(construct)
@@ -233,6 +234,26 @@ TEST_CASE(capacity_leak)
         table.remove(i);
     }
     EXPECT(table.capacity() < 100u);
+}
+
+TEST_CASE(non_trivial_type_table)
+{
+    HashTable<NonnullOwnPtr<int>> table;
+
+    table.set(make<int>(3));
+    table.set(make<int>(11));
+
+    for (int i = 0; i < 1'000; ++i) {
+        table.set(make<int>(-i));
+    }
+    for (int i = 0; i < 10'000; ++i) {
+        table.set(make<int>(i));
+        table.remove(make<int>(i));
+    }
+
+    EXPECT_EQ(table.remove_all_matching([&](auto&) { return true; }), true);
+    EXPECT(table.is_empty());
+    EXPECT_EQ(table.remove_all_matching([&](auto&) { return true; }), false);
 }
 
 // Inserting and removing a bunch of elements will "thrash" the table, leading to a lot of "deleted" markers.
