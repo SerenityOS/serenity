@@ -78,7 +78,7 @@ enum class NeedsBigProcessLock {
     S(fork, NeedsBigProcessLock::Yes)                       \
     S(fstat, NeedsBigProcessLock::No)                       \
     S(fstatvfs, NeedsBigProcessLock::Yes)                   \
-    S(fsync, NeedsBigProcessLock::Yes)                      \
+    S(fsync, NeedsBigProcessLock::No)                       \
     S(ftruncate, NeedsBigProcessLock::Yes)                  \
     S(futex, NeedsBigProcessLock::Yes)                      \
     S(get_dir_entries, NeedsBigProcessLock::Yes)            \
