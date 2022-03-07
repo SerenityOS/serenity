@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, Ben Abraham <ben.d.abraham@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "SignedBigInteger.h"
+#include <AK/FloatExtractor.h>
 #include <AK/StringBuilder.h>
+#include <LibCrypto/NumberTheory/ModularFunctions.h>
 
 namespace Crypto {
 
@@ -14,6 +17,38 @@ SignedBigInteger SignedBigInteger::import_data(const u8* ptr, size_t length)
     bool sign = *ptr;
     auto unsigned_data = UnsignedBigInteger::import_data(ptr + 1, length - 1);
     return { move(unsigned_data), sign };
+}
+
+SignedBigInteger SignedBigInteger::create_from_double_with_multiplier(double value, UnsignedBigInteger multiplier)
+{
+    // FIXME: Make this properly generic to accept float/long double
+    using Extractor = FloatExtractor<double>;
+    Extractor extractor;
+    extractor.d = value;
+
+    int sign = extractor.sign;
+    auto unbiased_exponent = extractor.exponent - Extractor::exponent_bias;
+    unsigned long long significand = extractor.mantissa;
+
+    significand |= 1ull << Extractor::mantissa_bits;
+
+    UnsignedBigInteger number_value;
+    if (unbiased_exponent > Extractor::mantissa_bits) {
+        auto scalar = Crypto::NumberTheory::Power(UnsignedBigInteger(2), UnsignedBigInteger(unbiased_exponent - Extractor::mantissa_bits));
+        number_value = UnsignedBigInteger::create_from(significand).multiplied_by(multiplier).multiplied_by(scalar);
+    } else if (unbiased_exponent < Extractor::mantissa_bits) {
+        auto scalar = Crypto::NumberTheory::Power(UnsignedBigInteger(2), UnsignedBigInteger(Extractor::mantissa_bits - unbiased_exponent));
+        auto result = UnsignedBigInteger::create_from(significand).multiplied_by(multiplier).divided_by(scalar);
+        number_value = result.quotient;
+        // FIXME: Add configurable rounding mode
+        auto decimal_remainder = result.remainder.to_double() / scalar.to_double();
+        if (decimal_remainder >= 0.5)
+            number_value = number_value.plus(UnsignedBigInteger(1));
+    } else {
+        number_value = UnsignedBigInteger(significand).multiplied_by(multiplier);
+    }
+
+    return SignedBigInteger(move(number_value), sign);
 }
 
 size_t SignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) const

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2022, Ben Abraham <ben.d.abraham@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -60,6 +61,11 @@ public:
         }
         return SignedBigInteger { UnsignedBigInteger::create_from(unsigned_value), sign };
     }
+    static SignedBigInteger create_from_double(double value)
+    {
+        return create_from_double_with_multiplier(value, 1);
+    }
+    static SignedBigInteger create_from_double_with_multiplier(double value, UnsignedBigInteger multiplier);
 
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 

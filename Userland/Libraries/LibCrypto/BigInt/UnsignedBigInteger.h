@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2022, Ben Abraham <ben.d.abraham@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -98,6 +99,7 @@ public:
     u32 hash() const;
 
     void set_bit_inplace(size_t bit_index);
+    void clear_bit_inplace(size_t bit_index);
 
     bool operator==(const UnsignedBigInteger& other) const;
     bool operator!=(const UnsignedBigInteger& other) const;

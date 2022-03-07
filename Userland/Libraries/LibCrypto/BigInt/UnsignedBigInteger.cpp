@@ -8,9 +8,11 @@
 #include "UnsignedBigInteger.h"
 #include <AK/BuiltinWrappers.h>
 #include <AK/CharacterTypes.h>
+#include <AK/FloatExtractor.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringHash.h>
 #include <LibCrypto/BigInt/Algorithms/UnsignedBigIntegerAlgorithms.h>
+#include <LibCrypto/NumberTheory/ModularFunctions.h>
 
 namespace Crypto {
 
@@ -116,8 +118,31 @@ u64 UnsignedBigInteger::to_u64() const
 
 double UnsignedBigInteger::to_double() const
 {
-    // FIXME: I am naive
-    return static_cast<double>(to_u64());
+    // FIXME: Make this properly generic to produce float/long double
+    using Extractor = FloatExtractor<double>;
+    Extractor extractor;
+
+    int max_exponent_bit = Extractor::exponent_max - Extractor::exponent_bias - Extractor::mantissa_bits;
+    // Unset the implied 53'rd bit that is included in decimal representations
+    auto actual_bits = UnsignedBigInteger(*this);
+    actual_bits.clear_bit_inplace(actual_bits.one_based_index_of_highest_set_bit());
+    auto highest_bit = min(max_exponent_bit, actual_bits.one_based_index_of_highest_set_bit() - 1);
+
+    u64 normalized_value;
+    if (highest_bit > Extractor::mantissa_bits) {
+        auto scalar = Crypto::NumberTheory::Power(UnsignedBigInteger(2), UnsignedBigInteger(highest_bit - Extractor::mantissa_bits));
+        normalized_value = divided_by(scalar).quotient.to_u64();
+    } else if (highest_bit < Extractor::mantissa_bits) {
+        normalized_value = shift_left(Extractor::mantissa_bits - highest_bit).to_u64();
+    } else {
+        normalized_value = to_u64();
+    }
+
+    extractor.exponent = Extractor::exponent_bias + highest_bit;
+    extractor.mantissa = (normalized_value & Extractor::mantissa_max);
+    extractor.sign = 0;
+
+    return extractor.d;
 }
 
 void UnsignedBigInteger::set_to_0()
@@ -308,15 +333,31 @@ u32 UnsignedBigInteger::hash() const
 
 void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
 {
-    const size_t word_index = bit_index / UnsignedBigInteger::BITS_IN_WORD;
-    const size_t inner_word_index = bit_index % UnsignedBigInteger::BITS_IN_WORD;
+    size_t const word_index = bit_index / UnsignedBigInteger::BITS_IN_WORD;
+    size_t const inner_word_index = bit_index % UnsignedBigInteger::BITS_IN_WORD;
 
     m_words.ensure_capacity(word_index + 1);
 
-    for (size_t i = length(); i <= word_index; ++i) {
+    for (size_t i = length(); i <= word_index; ++i)
         m_words.unchecked_append(0);
-    }
+
     m_words[word_index] |= (1 << inner_word_index);
+
+    m_cached_trimmed_length = {};
+    m_cached_hash = 0;
+}
+
+void UnsignedBigInteger::clear_bit_inplace(size_t bit_index)
+{
+    size_t const word_index = bit_index / UnsignedBigInteger::BITS_IN_WORD;
+    size_t const inner_word_index = bit_index % UnsignedBigInteger::BITS_IN_WORD;
+
+    m_words.ensure_capacity(word_index + 1);
+
+    for (size_t i = length(); i <= word_index; ++i)
+        m_words.unchecked_append(0);
+
+    m_words[word_index] &= ~(1 << inner_word_index);
 
     m_cached_trimmed_length = {};
     m_cached_hash = 0;
