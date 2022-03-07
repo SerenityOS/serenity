@@ -23,7 +23,7 @@ ErrorOr<FlatPtr> Process::sys$chdir(Userspace<const char*> user_path, size_t pat
 
 ErrorOr<FlatPtr> Process::sys$fchdir(int fd)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
     auto description = TRY(open_file_description(fd));
     if (!description->is_directory())
