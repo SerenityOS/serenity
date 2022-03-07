@@ -127,22 +127,25 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     // FIXME: Here we simply determine the filter based on the single scale factor of the upper left pixel.
     // Actually, we could end up with different scale factors for each pixel. This however would break our
     // parallelisation as we could also end up with different filter modes per pixel.
-    auto filter = scale_factor[0] > 1 ? m_config.texture_mag_filter : m_config.texture_min_filter;
+
+    // Note: scale_factor approximates texels per pixel. This means a scale factor less than 1 indicates texture magnification.
+    if (scale_factor[0] < 1)
+        return sample_2d_lod(uv, expand4(base_level), m_config.texture_mag_filter);
 
     if (m_config.mipmap_filter == MipMapFilter::None)
-        return sample_2d_lod(uv, expand4(base_level), filter);
+        return sample_2d_lod(uv, expand4(base_level), m_config.texture_min_filter);
 
     // FIXME: Instead of clamping to num_levels - 1, actually make the max mipmap level configurable with glTexParameteri(GL_TEXTURE_MAX_LEVEL, max_level)
     auto min_level = expand4(static_cast<float>(base_level));
     auto max_level = expand4(image.num_levels() - 1.0f);
     auto level = min(max(log2_approximate(scale_factor) * 0.5f, min_level), max_level);
 
-    auto lower_level_texel = sample_2d_lod(uv, to_u32x4(level), filter);
+    auto lower_level_texel = sample_2d_lod(uv, to_u32x4(level), m_config.texture_min_filter);
 
     if (m_config.mipmap_filter == MipMapFilter::Nearest)
         return lower_level_texel;
 
-    auto higher_level_texel = sample_2d_lod(uv, to_u32x4(min(level + 1.f, max_level)), filter);
+    auto higher_level_texel = sample_2d_lod(uv, to_u32x4(min(level + 1.f, max_level)), m_config.texture_min_filter);
 
     return mix(lower_level_texel, higher_level_texel, frac_int_range(level));
 }
