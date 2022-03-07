@@ -13,7 +13,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
     auto description = TRY(open_file_description(fd));
     auto buffer = TRY(description->stat());
