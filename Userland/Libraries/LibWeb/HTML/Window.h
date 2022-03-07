@@ -76,7 +76,7 @@ public:
 
     void set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject&);
 
-    void deallocate_timer_id(Badge<DOM::Timer>, i32);
+    void deallocate_timer_id(Badge<Timer>, i32);
 
     HighResolutionTime::Performance& performance() { return *m_performance; }
 
@@ -127,7 +127,7 @@ private:
     WeakPtr<Bindings::WindowObject> m_wrapper;
 
     IDAllocator m_timer_id_allocator;
-    HashMap<int, NonnullRefPtr<DOM::Timer>> m_timers;
+    HashMap<int, NonnullRefPtr<Timer>> m_timers;
 
     NonnullOwnPtr<HighResolutionTime::Performance> m_performance;
     NonnullRefPtr<Crypto::Crypto> m_crypto;
