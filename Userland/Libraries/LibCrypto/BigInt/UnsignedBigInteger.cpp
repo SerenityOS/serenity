@@ -352,12 +352,12 @@ void UnsignedBigInteger::clear_bit_inplace(size_t bit_index)
     size_t const word_index = bit_index / UnsignedBigInteger::BITS_IN_WORD;
     size_t const inner_word_index = bit_index % UnsignedBigInteger::BITS_IN_WORD;
 
-    m_words.ensure_capacity(word_index + 1);
-
-    for (size_t i = length(); i <= word_index; ++i)
-        m_words.unchecked_append(0);
+    if (word_index >= length())
+        return;
 
     m_words[word_index] &= ~(1 << inner_word_index);
+
+    clamp_to_trimmed_length();
 
     m_cached_trimmed_length = {};
     m_cached_hash = 0;
