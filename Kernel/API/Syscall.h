@@ -49,7 +49,7 @@ enum class NeedsBigProcessLock {
     S(adjtime, NeedsBigProcessLock::Yes)                    \
     S(alarm, NeedsBigProcessLock::Yes)                      \
     S(allocate_tls, NeedsBigProcessLock::Yes)               \
-    S(anon_create, NeedsBigProcessLock::Yes)                \
+    S(anon_create, NeedsBigProcessLock::No)                 \
     S(beep, NeedsBigProcessLock::No)                        \
     S(bind, NeedsBigProcessLock::Yes)                       \
     S(chdir, NeedsBigProcessLock::Yes)                      \
