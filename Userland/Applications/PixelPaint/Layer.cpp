@@ -156,6 +156,20 @@ void Layer::update_cached_bitmap()
         m_cached_display_bitmap = m_content_bitmap;
         return;
     }
+
+    if (m_content_bitmap.ptr() == m_cached_display_bitmap.ptr())
+        m_cached_display_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size()));
+
+    // FIXME: This can probably be done nicer
+    m_cached_display_bitmap->fill(Color::Transparent);
+    for (int y = 0; y < size().height(); ++y) {
+        for (int x = 0; x < size().width(); ++x) {
+            auto opacity_multiplier = (float)m_mask_bitmap->get_pixel(x, y).to_grayscale().red() / 255;
+            auto content_color = m_content_bitmap->get_pixel(x, y);
+            content_color.set_alpha(content_color.alpha() * opacity_multiplier);
+            m_cached_display_bitmap->set_pixel(x, y, content_color);
+        }
+    }
 }
 
 void Layer::create_mask()
