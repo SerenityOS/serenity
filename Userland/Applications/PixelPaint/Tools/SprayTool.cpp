@@ -40,7 +40,7 @@ void SprayTool::paint_it()
     if (!layer)
         return;
 
-    auto& bitmap = layer->content_bitmap();
+    auto& bitmap = layer->currently_edited_bitmap();
     GUI::Painter painter(bitmap);
     VERIFY(bitmap.bpp() == 32);
     const double minimal_radius = 2;
