@@ -78,6 +78,8 @@ String guess_mime_type_based_on_filename(StringView path)
         return "application/javascript";
     if (path.ends_with(".json", CaseSensitivity::CaseInsensitive))
         return "application/json";
+    if (path.ends_with(".zip", CaseSensitivity::CaseInsensitive))
+        return "application/zip";
     if (path.ends_with(".md", CaseSensitivity::CaseInsensitive))
         return "text/markdown";
     if (path.ends_with("/", CaseSensitivity::CaseInsensitive))
@@ -120,6 +122,7 @@ String guess_mime_type_based_on_filename(StringView path)
     __ENUMERATE_MIME_TYPE_HEADER(shell, "text/x-shellscript", 0, 10, '#', '!', '/', 'b', 'i', 'n', '/', 's', 'h', '\n')                          \
     __ENUMERATE_MIME_TYPE_HEADER(sqlite, "extra/sqlite", 0, 16, 'S', 'Q', 'L', 'i', 't', 'e', ' ', 'f', 'o', 'r', 'm', 'a', 't', ' ', '3', 0x00) \
     __ENUMERATE_MIME_TYPE_HEADER(tar, "application/tar", 0x101, 5, 0x75, 0x73, 0x74, 0x61, 0x72)                                                 \
+    __ENUMERATE_MIME_TYPE_HEADER(zip, "application/zip", 0, 2, 0x50, 0x4B)                                                                       \
     __ENUMERATE_MIME_TYPE_HEADER(tiff, "image/tiff", 0, 4, 'I', 'I', '*', 0x00)                                                                  \
     __ENUMERATE_MIME_TYPE_HEADER(tiff_bigendian, "image/tiff", 0, 4, 'M', 'M', 0x00, '*')                                                        \
     __ENUMERATE_MIME_TYPE_HEADER(wasm, "application/wasm", 0, 4, 0x00, 'a', 's', 'm')                                                            \
