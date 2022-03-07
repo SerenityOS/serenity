@@ -493,6 +493,20 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_layer_menu->add_separator();
     m_layer_menu->add_action(GUI::Action::create(
+        "Add M&ask", { Mod_Ctrl | Mod_Shift, Key_M }, nullptr, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+            active_layer->create_mask();
+            editor->update();
+            m_layer_list_widget->repaint();
+        }));
+
+    m_layer_menu->add_separator();
+
+    m_layer_menu->add_action(GUI::Action::create(
         "Select &Previous Layer", { 0, Key_PageUp }, g_icon_bag.previous_layer, [&](auto&) {
             m_layer_list_widget->cycle_through_selection(1);
         }));
