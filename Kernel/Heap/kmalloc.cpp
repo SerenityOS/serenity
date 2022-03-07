@@ -22,6 +22,7 @@ static constexpr size_t CHUNK_SIZE = 32;
 #else
 static constexpr size_t CHUNK_SIZE = 64;
 #endif
+static_assert(is_power_of_two(CHUNK_SIZE));
 
 static constexpr size_t INITIAL_KMALLOC_MEMORY_SIZE = 2 * MiB;
 
@@ -435,7 +436,13 @@ void kfree_sized(void* ptr, size_t size)
 
 size_t kmalloc_good_size(size_t size)
 {
-    return size;
+    VERIFY(size > 0);
+    // NOTE: There's no need to take the kmalloc lock, as the kmalloc slab-heaps (and their sizes) are constant
+    for (auto const& slabheap : g_kmalloc_global->slabheaps) {
+        if (size <= slabheap.slab_size())
+            return slabheap.slab_size();
+    }
+    return round_up_to_power_of_two(size + Heap<CHUNK_SIZE>::AllocationHeaderSize, CHUNK_SIZE) - Heap<CHUNK_SIZE>::AllocationHeaderSize;
 }
 
 void* kmalloc_aligned(size_t size, size_t alignment)
