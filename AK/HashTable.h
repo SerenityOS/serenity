@@ -403,7 +403,7 @@ public:
         --m_size;
         ++m_deleted_count;
 
-        shrink_if_needed();
+        rehash_in_place_if_needed();
     }
 
     template<typename TUnaryPredicate>
@@ -421,7 +421,7 @@ public:
             m_deleted_count += removed_count;
             m_size -= removed_count;
         }
-        shrink_if_needed();
+        rehash_in_place_if_needed();
         return removed_count;
     }
 
@@ -454,6 +454,11 @@ private:
 
     ErrorOr<void> try_rehash(size_t new_capacity)
     {
+        if (new_capacity == m_capacity && new_capacity >= 4) {
+            rehash_in_place();
+            return {};
+        }
+
         new_capacity = max(new_capacity, static_cast<size_t>(4));
         new_capacity = kmalloc_good_size(new_capacity * sizeof(BucketType)) / sizeof(BucketType);
 
@@ -489,6 +494,136 @@ private:
     void rehash(size_t new_capacity)
     {
         MUST(try_rehash(new_capacity));
+    }
+
+    void rehash_in_place()
+    {
+        // FIXME: This implementation takes two loops over the entire bucket array, but avoids re-allocation.
+        //        Please benchmark your new implementation before you replace this.
+        //        The reason is that because of collisions, we use the special "rehashed" bucket state to mark already-rehashed used buckets.
+        //        Because we of course want to write into old used buckets, but already rehashed data shall not be touched.
+
+        // FIXME: Find a way to reduce the cognitive complexity of this function.
+
+        for (size_t i = 0; i < m_capacity; ++i) {
+            auto& bucket = m_buckets[i];
+
+            // FIXME: Bail out when we have handled every filled bucket.
+
+            if (bucket.state == BucketState::Rehashed || bucket.state == BucketState::End || bucket.state == BucketState::Free)
+                continue;
+            if (bucket.state == BucketState::Deleted) {
+                bucket.state = BucketState::Free;
+                continue;
+            }
+
+            auto const new_hash = TraitsForT::hash(*bucket.slot());
+            if (new_hash % m_capacity == i) {
+                bucket.state = BucketState::Rehashed;
+                continue;
+            }
+
+            auto target_hash = new_hash;
+            auto const to_move_hash = i;
+            BucketType* target_bucket = &m_buckets[target_hash % m_capacity];
+            BucketType* bucket_to_move = &m_buckets[i];
+
+            // Try to move the bucket to move into its correct spot.
+            // During the procedure, we might re-hash or actually change the bucket to move.
+            while (!(bucket_to_move->state == BucketState::Free || bucket_to_move->state == BucketState::Deleted)) {
+
+                // If we're targeting ourselves, there's nothing to do.
+                if (to_move_hash == target_hash % m_capacity) {
+                    bucket_to_move->state = BucketState::Rehashed;
+                    break;
+                }
+
+                if (target_bucket->state == BucketState::Free || target_bucket->state == BucketState::Deleted) {
+                    // We can just overwrite the target bucket and bail out.
+                    new (target_bucket->slot()) T(move(*bucket_to_move->slot()));
+                    target_bucket->state = BucketState::Rehashed;
+                    bucket_to_move->state = BucketState::Free;
+
+                    if constexpr (IsOrdered) {
+                        swap(bucket_to_move->previous, target_bucket->previous);
+                        swap(bucket_to_move->next, target_bucket->next);
+
+                        if (target_bucket->previous)
+                            target_bucket->previous->next = target_bucket;
+                        else
+                            m_collection_data.head = target_bucket;
+                        if (target_bucket->next)
+                            target_bucket->next->previous = target_bucket;
+                        else
+                            m_collection_data.tail = target_bucket;
+                    }
+                } else if (target_bucket->state == BucketState::Rehashed) {
+                    // If the target bucket is already re-hashed, we do normal probing.
+                    target_hash = double_hash(target_hash);
+                    target_bucket = &m_buckets[target_hash % m_capacity];
+                } else {
+                    VERIFY(target_bucket->state != BucketState::End);
+                    // The target bucket is a used bucket that hasn't been re-hashed.
+                    // Swap the data into the target; now the target's data resides in the bucket to move again.
+                    // (That's of course what we want, how neat!)
+                    swap(*bucket_to_move->slot(), *target_bucket->slot());
+                    bucket_to_move->state = target_bucket->state;
+                    target_bucket->state = BucketState::Rehashed;
+
+                    if constexpr (IsOrdered) {
+                        // Update state for the target bucket, we'll do the bucket to move later.
+                        swap(bucket_to_move->previous, target_bucket->previous);
+                        swap(bucket_to_move->next, target_bucket->next);
+
+                        if (target_bucket->previous)
+                            target_bucket->previous->next = target_bucket;
+                        else
+                            m_collection_data.head = target_bucket;
+                        if (target_bucket->next)
+                            target_bucket->next->previous = target_bucket;
+                        else
+                            m_collection_data.tail = target_bucket;
+                    }
+
+                    target_hash = TraitsForT::hash(*bucket_to_move->slot());
+                    target_bucket = &m_buckets[target_hash % m_capacity];
+
+                    // The data is already in the correct location: Adjust the pointers
+                    if (target_hash % m_capacity == to_move_hash) {
+                        bucket_to_move->state = BucketState::Rehashed;
+                        if constexpr (IsOrdered) {
+                            // Update state for the bucket to move as it's not actually moved anymore.
+                            if (bucket_to_move->previous)
+                                bucket_to_move->previous->next = bucket_to_move;
+                            else
+                                m_collection_data.head = bucket_to_move;
+                            if (bucket_to_move->next)
+                                bucket_to_move->next->previous = bucket_to_move;
+                            else
+                                m_collection_data.tail = bucket_to_move;
+                        }
+                        break;
+                    }
+                }
+            }
+            // After this, the bucket_to_move either contains data that rehashes to itself, or it contains nothing as we were able to move the last thing.
+            if (bucket_to_move->state == BucketState::Deleted)
+                bucket_to_move->state = BucketState::Free;
+        }
+
+        for (size_t i = 0; i < m_capacity; ++i) {
+            if (m_buckets[i].state == BucketState::Rehashed)
+                m_buckets[i].state = BucketState::Used;
+        }
+
+        m_deleted_count = 0;
+    }
+
+    void rehash_in_place_if_needed()
+    {
+        // This signals a "thrashed" hash table with many deleted slots.
+        if (m_deleted_count >= m_size && should_grow())
+            rehash_in_place();
     }
 
     template<typename TUnaryPredicate>
@@ -543,19 +678,6 @@ private:
 
     [[nodiscard]] size_t used_bucket_count() const { return m_size + m_deleted_count; }
     [[nodiscard]] bool should_grow() const { return ((used_bucket_count() + 1) * 100) >= (m_capacity * load_factor_in_percent); }
-
-    void shrink_if_needed()
-    {
-        // Shrink if less than 20% of buckets are used, but never going below 16.
-        // These limits are totally arbitrary and can probably be improved.
-        bool should_shrink = m_size * 5 < m_capacity && m_capacity > 16;
-        if (!should_shrink)
-            return;
-
-        // NOTE: We ignore memory allocation failure here, since we can continue
-        //       just fine with an oversized table.
-        (void)try_rehash(m_size * 2);
-    }
 
     void delete_bucket(auto& bucket)
     {
