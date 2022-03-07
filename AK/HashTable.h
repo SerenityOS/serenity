@@ -417,10 +417,10 @@ public:
                 ++removed_count;
             }
         }
-        if (removed_count) {
-            m_deleted_count += removed_count;
-            m_size -= removed_count;
-        }
+
+        m_deleted_count += removed_count;
+        m_size -= removed_count;
+
         shrink_if_needed();
         return removed_count;
     }
