@@ -16,6 +16,7 @@
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/UnixTypes.h>
 #include <LibKeyboard/CharacterMapData.h>
 
@@ -39,8 +40,14 @@ public:
 
     ErrorOr<void> enumerate();
 
-    StringView keymap_name() const { return m_character_map_name->view(); }
-    Keyboard::CharacterMapData const& character_map() const { return m_character_map; }
+    struct KeymapData {
+        KeymapData();
+        NonnullOwnPtr<KString> character_map_name;
+        Keyboard::CharacterMapData character_map;
+    };
+
+    SpinlockProtected<KeymapData>& keymap_data() { return m_keymap_data; }
+
     u32 get_char_from_character_map(KeyEvent) const;
 
     void set_client(KeyboardClient* client) { m_client = client; }
@@ -50,10 +57,9 @@ private:
     size_t generate_minor_device_number_for_mouse();
     size_t generate_minor_device_number_for_keyboard();
 
+    SpinlockProtected<KeymapData> m_keymap_data;
     size_t m_mouse_minor_number { 0 };
     size_t m_keyboard_minor_number { 0 };
-    NonnullOwnPtr<KString> m_character_map_name;
-    Keyboard::CharacterMapData m_character_map;
     KeyboardClient* m_client { nullptr };
     RefPtr<I8042Controller> m_i8042_controller;
     NonnullRefPtrVector<HIDDevice> m_hid_devices;
