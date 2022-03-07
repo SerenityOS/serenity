@@ -218,22 +218,17 @@ void Editor::ensure_free_lines_from_origin(size_t count)
 void Editor::get_terminal_size()
 {
     struct winsize ws;
-
-    if (ioctl(STDERR_FILENO, TIOCGWINSZ, &ws) < 0) {
-        m_num_columns = 80;
-        m_num_lines = 25;
-    } else {
-        if (ws.ws_col == 0 || ws.ws_row == 0) {
-            // LLDB uses ttys which "work" and then gives us a zero sized
-            // terminal which is far from useful
-            if (int fd = open("/dev/tty", O_RDONLY); fd != -1) {
-                ioctl(fd, TIOCGWINSZ, &ws);
-                close(fd);
-            }
+    ioctl(STDERR_FILENO, TIOCGWINSZ, &ws);
+    if (ws.ws_col == 0 || ws.ws_row == 0) {
+        // LLDB uses ttys which "work" and then gives us a zero sized
+        // terminal which is far from useful
+        if (int fd = open("/dev/tty", O_RDONLY); fd != -1) {
+            ioctl(fd, TIOCGWINSZ, &ws);
+            close(fd);
         }
-        m_num_columns = ws.ws_col;
-        m_num_lines = ws.ws_row;
     }
+    m_num_columns = ws.ws_col;
+    m_num_lines = ws.ws_row;
 }
 
 void Editor::add_to_history(String const& line)
@@ -494,7 +489,7 @@ void Editor::stylize(Span const& span, Style const& style)
     ending_map.set(start, style);
 }
 
-void Editor::suggest(size_t invariant_offset, size_t static_offset, Span::Mode offset_mode) const
+void Editor::transform_suggestion_offsets(size_t& invariant_offset, size_t& static_offset, Span::Mode offset_mode) const
 {
     auto internal_static_offset = static_offset;
     auto internal_invariant_offset = invariant_offset;
@@ -506,7 +501,8 @@ void Editor::suggest(size_t invariant_offset, size_t static_offset, Span::Mode o
         internal_static_offset = offsets.start;
         internal_invariant_offset = offsets.end - offsets.start;
     }
-    m_suggestion_manager.set_suggestion_variants(internal_static_offset, internal_invariant_offset, 0);
+    invariant_offset = internal_invariant_offset;
+    static_offset = internal_static_offset;
 }
 
 void Editor::initialize()
@@ -978,6 +974,12 @@ void Editor::handle_read_event()
                     }
                     if (is_in_paste && param1 == 201) {
                         m_state = InputState::Free;
+                        if (on_paste) {
+                            on_paste(Utf32View { m_paste_buffer.data(), m_paste_buffer.size() }, *this);
+                            m_paste_buffer.clear_with_capacity();
+                        }
+                        if (!m_paste_buffer.is_empty())
+                            insert(Utf32View { m_paste_buffer.data(), m_paste_buffer.size() });
                         continue;
                     }
                 }
@@ -1002,7 +1004,10 @@ void Editor::handle_read_event()
                 m_state = InputState::GotEscape;
                 continue;
             }
-            insert(code_point);
+            if (on_paste)
+                m_paste_buffer.append(code_point);
+            else
+                insert(code_point);
             continue;
         case InputState::Free:
             m_previous_free_state = InputState::Free;
@@ -1056,6 +1061,7 @@ void Editor::handle_read_event()
             // further tabs simply show the cached completions.
             if (m_times_tab_pressed == 1) {
                 m_suggestion_manager.set_suggestions(on_tab_complete(*this));
+                m_suggestion_manager.set_start_index(0);
                 m_prompt_lines_at_suggestion_initiation = num_lines();
                 if (m_suggestion_manager.count() == 0) {
                     // There are no suggestions, beep.
@@ -1146,7 +1152,6 @@ void Editor::handle_read_event()
                 // We have none, or just one suggestion,
                 // we should just commit that and continue
                 // after it, as if it were auto-completed.
-                suggest(0, 0, Span::CodepointOriented);
                 m_times_tab_pressed = 0;
                 m_suggestion_manager.reset();
                 m_suggestion_display->finish();
@@ -1185,7 +1190,6 @@ void Editor::cleanup_suggestions()
             m_refresh_needed = true;
         }
         m_suggestion_manager.reset();
-        suggest(0, 0, Span::CodepointOriented);
         m_suggestion_display->finish();
     }
     m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB

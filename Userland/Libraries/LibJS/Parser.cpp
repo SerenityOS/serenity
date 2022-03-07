@@ -1700,6 +1700,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             property_key = parse_property_key();
         }
 
+        // 4. Else if propKey is the String value "__proto__" and if IsComputedPropertyKey of PropertyName is false, then
+        // a. Let isProtoSetter be true.
         bool is_proto = (type == TokenType::StringLiteral || type == TokenType::Identifier) && is<StringLiteral>(*property_key) && static_cast<StringLiteral const&>(*property_key).value() == "__proto__";
 
         if (property_type == ObjectProperty::Type::Getter || property_type == ObjectProperty::Type::Setter) {
@@ -1741,6 +1743,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                     syntax_error("Property name '__proto__' must not appear more than once in object literal");
                 has_direct_proto_property = true;
             }
+            if (is_proto && property_type == ObjectProperty::Type::KeyValue)
+                property_type = ObjectProperty::Type::ProtoSetter;
             properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_key, parse_expression(2), property_type, false));
         } else if (property_key && property_value) {
             if (m_state.strict_mode && is<StringLiteral>(*property_key)) {

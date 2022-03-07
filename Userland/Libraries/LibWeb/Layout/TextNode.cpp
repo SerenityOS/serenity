@@ -68,17 +68,47 @@ void TextNode::paint_text_decoration(Gfx::Painter& painter, LineBoxFragment cons
         return;
     }
 
+    auto line_color = computed_values().text_decoration_color();
+
+    int line_thickness = [this] {
+        CSS::Length computed_thickness = computed_values().text_decoration_thickness().resolved(*this, CSS::Length(1, CSS::Length::Type::Em));
+        if (computed_thickness.is_auto())
+            return CSS::InitialValues::text_decoration_thickness().to_px(*this);
+
+        return computed_thickness.to_px(*this);
+    }();
+
     switch (computed_values().text_decoration_style()) {
-        // FIXME: Implement the other styles
     case CSS::TextDecorationStyle::Solid:
+        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Solid);
+        break;
     case CSS::TextDecorationStyle::Double:
+        switch (computed_values().text_decoration_line()) {
+        case CSS::TextDecorationLine::Underline:
+            break;
+        case CSS::TextDecorationLine::Overline:
+            line_start_point.translate_by(0, -line_thickness - 1);
+            line_end_point.translate_by(0, -line_thickness - 1);
+            break;
+        case CSS::TextDecorationLine::LineThrough:
+            line_start_point.translate_by(0, -line_thickness / 2);
+            line_end_point.translate_by(0, -line_thickness / 2);
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness);
+        painter.draw_line(line_start_point.translated(0, line_thickness + 1), line_end_point.translated(0, line_thickness + 1), line_color, line_thickness);
+        break;
     case CSS::TextDecorationStyle::Dashed:
+        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Dashed);
+        break;
     case CSS::TextDecorationStyle::Dotted:
-        painter.draw_line(line_start_point, line_end_point, computed_values().color());
+        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Dotted);
         break;
     case CSS::TextDecorationStyle::Wavy:
-        // FIXME: There is a thing called text-decoration-thickness which also affects the amplitude here.
-        painter.draw_triangle_wave(line_start_point, line_end_point, computed_values().color(), 2);
+        painter.draw_triangle_wave(line_start_point, line_end_point, line_color, line_thickness + 1, line_thickness);
         break;
     }
 }
@@ -94,8 +124,6 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
 
         if (document().inspected_node() == &dom_node())
             context.painter().draw_rect(enclosing_int_rect(fragment_absolute_rect), Color::Magenta);
-
-        paint_text_decoration(painter, fragment);
 
         // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.
         auto text = m_text_for_rendering;
@@ -117,6 +145,8 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
             painter.add_clip_rect(enclosing_int_rect(selection_rect));
             painter.draw_text(enclosing_int_rect(fragment_absolute_rect), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, context.palette().selection_text());
         }
+
+        paint_text_decoration(painter, fragment);
 
         paint_cursor_if_needed(context, fragment);
     }
@@ -277,12 +307,6 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
                 return result.release_value();
         }
 
-        if (m_layout_mode == LayoutMode::AllPossibleLineBreaks) {
-            if (auto result = try_commit_chunk(start_of_chunk, m_iterator, false); result.has_value()) {
-                return result.release_value();
-            }
-        }
-
         // NOTE: The checks after this need to look at the current iterator
         //       position, which depends on not being at the end.
         if (m_iterator == m_utf8_view.end())
@@ -300,7 +324,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
             }
         }
 
-        if (m_wrap_lines) {
+        if (m_wrap_lines || m_layout_mode == LayoutMode::AllPossibleLineBreaks) {
             bool is_space = is_ascii_space(*m_iterator);
             if (is_space != m_last_was_space) {
                 m_last_was_space = is_space;

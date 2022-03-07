@@ -211,9 +211,9 @@ private:
     float m_clear_depth { 1.f };
     u8 m_clear_stencil { 0 };
 
-    FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    FloatVector4 m_current_vertex_color { 1.0f, 1.0f, 1.0f, 1.0f };
     Vector<FloatVector4> m_current_vertex_tex_coord;
-    FloatVector3 m_current_vertex_normal = { 0.0f, 0.0f, 1.0f };
+    FloatVector3 m_current_vertex_normal { 0.0f, 0.0f, 1.0f };
 
     Vector<SoftGPU::Vertex> m_vertex_list;
 
@@ -261,10 +261,11 @@ private:
     GLenum m_current_draw_buffer = GL_BACK;
 
     // Client side arrays
-    bool m_client_side_vertex_array_enabled = false;
-    bool m_client_side_color_array_enabled = false;
+    bool m_client_side_vertex_array_enabled { false };
+    bool m_client_side_color_array_enabled { false };
     Vector<bool> m_client_side_texture_coord_array_enabled;
     size_t m_client_active_texture = 0;
+    bool m_client_side_normal_array_enabled { false };
 
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 
@@ -413,6 +414,7 @@ private:
     VertexAttribPointer m_client_vertex_pointer;
     VertexAttribPointer m_client_color_pointer;
     Vector<VertexAttribPointer> m_client_tex_coord_pointer;
+    VertexAttribPointer m_client_normal_pointer;
 
     u8 m_pack_alignment { 4 };
     GLsizei m_unpack_row_length { 0 };

@@ -9,6 +9,7 @@ set(SOURCES
         main.cpp
         IndividualSampleModel.cpp
         FlameGraphView.cpp
+        FilesystemEventModel.cpp
         Gradient.cpp
         Process.cpp
         Profile.cpp

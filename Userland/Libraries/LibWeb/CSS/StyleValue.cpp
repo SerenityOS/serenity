@@ -1319,7 +1319,7 @@ String PositionStyleValue::to_string() const
 
 String TextDecorationStyleValue::to_string() const
 {
-    return String::formatted("{} {} {}", m_line->to_string(), m_style->to_string(), m_color->to_string());
+    return String::formatted("{} {} {} {}", m_line->to_string(), m_thickness->to_string(), m_style->to_string(), m_color->to_string());
 }
 
 String TransformationStyleValue::to_string() const

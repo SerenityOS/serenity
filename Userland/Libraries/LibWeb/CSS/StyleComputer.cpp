@@ -180,12 +180,14 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         if (value.is_text_decoration()) {
             auto const& text_decoration = value.as_text_decoration();
             style.set_property(CSS::PropertyID::TextDecorationLine, text_decoration.line());
+            style.set_property(CSS::PropertyID::TextDecorationThickness, text_decoration.thickness());
             style.set_property(CSS::PropertyID::TextDecorationStyle, text_decoration.style());
             style.set_property(CSS::PropertyID::TextDecorationColor, text_decoration.color());
             return;
         }
 
         style.set_property(CSS::PropertyID::TextDecorationLine, value);
+        style.set_property(CSS::PropertyID::TextDecorationThickness, value);
         style.set_property(CSS::PropertyID::TextDecorationStyle, value);
         style.set_property(CSS::PropertyID::TextDecorationColor, value);
         return;
@@ -860,9 +862,11 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             monospace = true;
             return find_font("Csilla");
         case ValueID::Serif:
+            return find_font("Roman");
+        case ValueID::Fantasy:
+            return find_font("Comic Book");
         case ValueID::SansSerif:
         case ValueID::Cursive:
-        case ValueID::Fantasy:
         case ValueID::UiSerif:
         case ValueID::UiSansSerif:
         case ValueID::UiRounded:

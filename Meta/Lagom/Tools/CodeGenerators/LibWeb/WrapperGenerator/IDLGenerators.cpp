@@ -10,6 +10,7 @@
 #include "IDLTypes.h"
 #include <AK/LexicalPath.h>
 #include <AK/Queue.h>
+#include <AK/QuickSort.h>
 
 Vector<StringView> s_header_search_paths;
 
@@ -1079,21 +1080,21 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     }
 }
 
-template<typename FunctionType>
-static void generate_argument_count_check(SourceGenerator& generator, FunctionType& function)
+static void generate_argument_count_check(SourceGenerator& generator, String const& function_name, size_t argument_count)
 {
-    auto argument_count_check_generator = generator.fork();
-    argument_count_check_generator.set("function.name", function.name);
-    argument_count_check_generator.set("function.nargs", String::number(function.length()));
-
-    if (function.length() == 0)
+    if (argument_count == 0)
         return;
-    if (function.length() == 1) {
+
+    auto argument_count_check_generator = generator.fork();
+    argument_count_check_generator.set("function.name", function_name);
+    argument_count_check_generator.set("function.nargs", String::number(argument_count));
+
+    if (argument_count == 1) {
         argument_count_check_generator.set(".bad_arg_count", "JS::ErrorType::BadArgCountOne");
         argument_count_check_generator.set(".arg_count_suffix", "");
     } else {
         argument_count_check_generator.set(".bad_arg_count", "JS::ErrorType::BadArgCountMany");
-        argument_count_check_generator.set(".arg_count_suffix", String::formatted(", \"{}\"", function.length()));
+        argument_count_check_generator.set(".arg_count_suffix", String::formatted(", \"{}\"", argument_count));
     }
 
     argument_count_check_generator.append(R"~~~(
@@ -1316,6 +1317,7 @@ static void generate_function(SourceGenerator& generator, IDL::Function const& f
     function_generator.set("interface_fully_qualified_name", interface_fully_qualified_name);
     function_generator.set("function.name", function.name);
     function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
+    function_generator.set("overload_suffix", function.is_overloaded ? String::number(function.overload_index) : String::empty());
 
     if (function.extended_attributes.contains("ImplementedAs")) {
         auto implemented_as = function.extended_attributes.get("ImplementedAs").value();
@@ -1325,7 +1327,7 @@ static void generate_function(SourceGenerator& generator, IDL::Function const& f
     }
 
     function_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffix@)
 {
 )~~~");
 
@@ -1335,7 +1337,9 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 )~~~");
     }
 
-    generate_argument_count_check(generator, function);
+    // Optimization: overloaded functions' arguments count is checked by the overload arbiter
+    if (!function.is_overloaded)
+        generate_argument_count_check(generator, function.name, function.length());
 
     StringBuilder arguments_builder;
     generate_arguments(generator, function.parameters, arguments_builder, interface);
@@ -1354,6 +1358,108 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     generate_return_statement(generator, *function.return_type, interface);
 
     function_generator.append(R"~~~(
+}
+)~~~");
+}
+
+// FIXME: This is extremely ad-hoc, implement the WebIDL overload resolution algorithm instead
+static Optional<String> generate_arguments_match_check_for_count(Vector<IDL::Parameter> const& parameters, size_t argument_count)
+{
+    Vector<String> conditions;
+    for (auto i = 0u; i < argument_count; ++i) {
+        auto const& parameter = parameters[i];
+        if (parameter.type->is_string() || parameter.type->is_numeric())
+            continue;
+        auto argument = String::formatted("arg{}", i);
+        StringBuilder condition;
+        condition.append('(');
+        if (parameter.type->nullable)
+            condition.appendff("{}.is_nullish() || ", argument);
+        else if (parameter.optional)
+            condition.appendff("{}.is_undefined() || ", argument);
+        condition.appendff("{}.is_object()", argument);
+        condition.append(')');
+        conditions.append(condition.build());
+    }
+    if (conditions.is_empty())
+        return {};
+    return String::formatted("({})", String::join(" && ", conditions));
+}
+
+static String generate_arguments_match_check(Function const& function)
+{
+    Vector<String> options;
+    for (size_t i = 0; i < function.parameters.size(); ++i) {
+        if (!function.parameters[i].optional && !function.parameters[i].variadic)
+            continue;
+        auto match_check = generate_arguments_match_check_for_count(function.parameters, i);
+        if (match_check.has_value())
+            options.append(match_check.release_value());
+    }
+    if (!function.parameters.is_empty() && !function.parameters.last().variadic) {
+        auto match_check = generate_arguments_match_check_for_count(function.parameters, function.parameters.size());
+        if (match_check.has_value())
+            options.append(match_check.release_value());
+    }
+    return String::join(" || ", options);
+}
+
+static void generate_overload_arbiter(SourceGenerator& generator, auto const& overload_set, String const& class_name)
+{
+    auto function_generator = generator.fork();
+    function_generator.set("class_name", class_name);
+    function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
+
+    function_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
+{
+)~~~");
+
+    auto minimum_argument_count = get_shortest_function_length(overload_set.value);
+    generate_argument_count_check(function_generator, overload_set.key, minimum_argument_count);
+
+    auto overloaded_functions = overload_set.value;
+    quick_sort(overloaded_functions, [](auto const& a, auto const& b) { return a.length() < b.length(); });
+    auto fetched_arguments = 0u;
+    for (auto i = 0u; i < overloaded_functions.size(); ++i) {
+        auto const& overloaded_function = overloaded_functions[i];
+        auto argument_count = overloaded_function.length();
+
+        function_generator.set("argument_count", String::number(argument_count));
+        function_generator.set("arguments_match_check", generate_arguments_match_check(overloaded_function));
+        function_generator.set("overload_suffix", String::number(i));
+
+        if (argument_count > fetched_arguments) {
+            for (auto j = fetched_arguments; j < argument_count; ++j) {
+                function_generator.set("argument.index", String::number(j));
+                function_generator.append(R"~~~(
+    [[maybe_unused]] auto arg@argument.index@ = vm.argument(@argument.index@);
+)~~~");
+            }
+            fetched_arguments = argument_count;
+        }
+
+        auto is_last = i == overloaded_functions.size() - 1;
+        if (!is_last) {
+            function_generator.append(R"~~~(
+    if (vm.argument_count() == @argument_count@) {
+)~~~");
+        }
+
+        function_generator.append(R"~~~(
+    if (@arguments_match_check@)
+        return @function.name:snakecase@@overload_suffix@(vm, global_object);
+)~~~");
+
+        if (!is_last) {
+            function_generator.append(R"~~~(
+    }
+)~~~");
+        }
+    }
+
+    function_generator.append(R"~~~(
+    return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::OverloadResolutionFailed);
 }
 )~~~");
 }
@@ -2355,12 +2461,20 @@ private:
     virtual bool has_constructor() const override { return true; }
 )~~~");
 
-    for (auto& function : interface.static_functions) {
+    for (auto const& overload_set : interface.static_overload_sets) {
         auto function_generator = generator.fork();
-        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
         function_generator.append(R"~~~(
     JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
 )~~~");
+        if (overload_set.value.size() > 1) {
+            for (auto i = 0u; i < overload_set.value.size(); ++i) {
+                function_generator.set("overload_suffix", String::number(i));
+                function_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@@overload_suffix@);
+)~~~");
+            }
+        }
     }
 
     generator.append(R"~~~(
@@ -2486,7 +2600,7 @@ JS::ThrowCompletionOr<JS::Object*> @constructor_class@::construct(FunctionObject
 )~~~");
 
         if (!constructor.parameters.is_empty()) {
-            generate_argument_count_check(generator, constructor);
+            generate_argument_count_check(generator, constructor.name, constructor.length());
 
             StringBuilder arguments_builder;
             generate_arguments(generator, constructor.parameters, arguments_builder, interface);
@@ -2534,11 +2648,11 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
     }
 
     // https://webidl.spec.whatwg.org/#es-operations
-    for (auto& function : interface.static_functions) {
+    for (auto const& overload_set : interface.static_overload_sets) {
         auto function_generator = generator.fork();
-        function_generator.set("function.name", function.name);
-        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
-        function_generator.set("function.length", String::number(function.length()));
+        function_generator.set("function.name", overload_set.key);
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
+        function_generator.set("function.length", String::number(get_shortest_function_length(overload_set.value)));
 
         function_generator.append(R"~~~(
     define_native_function("@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
@@ -2550,8 +2664,12 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
 )~~~");
 
     // Implementation: Static Functions
-    for (auto& function : interface.static_functions) {
+    for (auto& function : interface.static_functions)
         generate_function(generator, function, StaticFunction::Yes, interface.constructor_class, interface.fully_qualified_name, interface);
+    for (auto const& overload_set : interface.static_overload_sets) {
+        if (overload_set.value.size() == 1)
+            continue;
+        generate_overload_arbiter(generator, overload_set, interface.constructor_class);
     }
 
     generator.append(R"~~~(
@@ -2587,12 +2705,20 @@ public:
 private:
 )~~~");
 
-    for (auto& function : interface.functions) {
+    for (auto const& overload_set : interface.overload_sets) {
         auto function_generator = generator.fork();
-        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
         function_generator.append(R"~~~(
     JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
         )~~~");
+        if (overload_set.value.size() > 1) {
+            for (auto i = 0u; i < overload_set.value.size(); ++i) {
+                function_generator.set("overload_suffix", String::number(i));
+                function_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@@overload_suffix@);
+)~~~");
+            }
+        }
     }
 
     if (interface.has_stringifier) {
@@ -2788,13 +2914,14 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
     }
 
     // https://webidl.spec.whatwg.org/#es-operations
-    for (auto& function : interface.functions) {
+    for (auto const& overload_set : interface.overload_sets) {
         auto function_generator = generator.fork();
-        function_generator.set("function.name", function.name);
-        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
-        function_generator.set("function.length", String::number(function.length()));
+        function_generator.set("function.name", overload_set.key);
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
+        function_generator.set("function.length", String::number(get_shortest_function_length(overload_set.value)));
 
-        if (function.extended_attributes.contains("Unscopable")) {
+        // FIXME: What if only some of the overloads are Unscopable?
+        if (any_of(overload_set.value, [](auto const& function) { return function.extended_attributes.contains("Unscopable"); })) {
             function_generator.append(R"~~~(
     MUST(unscopable_object->create_data_property("@function.name@", JS::Value(true)));
 )~~~");
@@ -2971,8 +3098,12 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
     }
 
     // Implementation: Functions
-    for (auto& function : interface.functions) {
+    for (auto& function : interface.functions)
         generate_function(generator, function, StaticFunction::No, interface.prototype_class, interface.fully_qualified_name, interface);
+    for (auto const& overload_set : interface.overload_sets) {
+        if (overload_set.value.size() == 1)
+            continue;
+        generate_overload_arbiter(generator, overload_set, interface.prototype_class);
     }
 
     if (interface.has_stringifier) {

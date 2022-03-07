@@ -48,7 +48,9 @@ String CookiesModel::column_name(int column) const
 
 GUI::ModelIndex CookiesModel::index(int row, int column, GUI::ModelIndex const&) const
 {
-    return create_index(row, column, &m_cookies.at(row));
+    if (static_cast<size_t>(row) < m_cookies.size())
+        return create_index(row, column, &m_cookies.at(row));
+    return {};
 }
 
 GUI::Variant CookiesModel::data(GUI::ModelIndex const& index, GUI::ModelRole role) const

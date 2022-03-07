@@ -389,7 +389,7 @@ public:
         return false;
     }
 
-    Iterator remove(Iterator iterator)
+    void remove(Iterator iterator)
     {
         VERIFY(iterator.m_bucket);
         auto& bucket = *iterator.m_bucket;
@@ -399,43 +399,30 @@ public:
         if constexpr (!IsOrdered)
             VERIFY(!bucket.end);
 
-        auto next_iterator = iterator;
-        ++next_iterator;
-
-        bucket.slot()->~T();
-        bucket.used = false;
-        bucket.deleted = true;
+        delete_bucket(bucket);
         --m_size;
         ++m_deleted_count;
 
-        if constexpr (IsOrdered) {
-            if (bucket.previous)
-                bucket.previous->next = bucket.next;
-            else
-                m_collection_data.head = bucket.next;
-
-            if (bucket.next)
-                bucket.next->previous = bucket.previous;
-            else
-                m_collection_data.tail = bucket.previous;
-        }
-
-        return next_iterator;
+        shrink_if_needed();
     }
 
     template<typename TUnaryPredicate>
     bool remove_all_matching(TUnaryPredicate predicate)
     {
-        bool something_was_removed = false;
-        for (auto it = begin(); it != end();) {
-            if (predicate(*it)) {
-                it = remove(it);
-                something_was_removed = true;
-            } else {
-                ++it;
+        size_t removed_count = 0;
+        for (size_t i = 0; i < m_capacity; ++i) {
+            auto& bucket = m_buckets[i];
+            if (bucket.used && predicate(*bucket.slot())) {
+                delete_bucket(bucket);
+                ++removed_count;
             }
         }
-        return something_was_removed;
+        if (removed_count) {
+            m_deleted_count += removed_count;
+            m_size -= removed_count;
+        }
+        shrink_if_needed();
+        return removed_count;
     }
 
 private:
@@ -557,6 +544,38 @@ private:
 
     [[nodiscard]] size_t used_bucket_count() const { return m_size + m_deleted_count; }
     [[nodiscard]] bool should_grow() const { return ((used_bucket_count() + 1) * 100) >= (m_capacity * load_factor_in_percent); }
+
+    void shrink_if_needed()
+    {
+        // Shrink if less than 20% of buckets are used, but never going below 16.
+        // These limits are totally arbitrary and can probably be improved.
+        bool should_shrink = m_size * 5 < m_capacity && m_capacity > 16;
+        if (!should_shrink)
+            return;
+
+        // NOTE: We ignore memory allocation failure here, since we can continue
+        //       just fine with an oversized table.
+        (void)try_rehash(m_size * 2);
+    }
+
+    void delete_bucket(auto& bucket)
+    {
+        bucket.slot()->~T();
+        bucket.used = false;
+        bucket.deleted = true;
+
+        if constexpr (IsOrdered) {
+            if (bucket.previous)
+                bucket.previous->next = bucket.next;
+            else
+                m_collection_data.head = bucket.next;
+
+            if (bucket.next)
+                bucket.next->previous = bucket.previous;
+            else
+                m_collection_data.tail = bucket.previous;
+        }
+    }
 
     BucketType* m_buckets { nullptr };
 

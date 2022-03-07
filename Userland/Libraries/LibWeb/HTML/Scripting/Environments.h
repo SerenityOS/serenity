@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 #include <AK/URL.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
@@ -117,5 +119,10 @@ private:
 EnvironmentSettingsObject& incumbent_settings_object();
 JS::Realm& incumbent_realm();
 JS::GlobalObject& incumbent_global_object();
+EnvironmentSettingsObject& current_settings_object();
+JS::GlobalObject& current_global_object();
+JS::Realm& relevant_realm(JS::Object const&);
+EnvironmentSettingsObject& relevant_settings_object(JS::Object const&);
+JS::GlobalObject& relevant_global_object(JS::Object const&);
 
 }

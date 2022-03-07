@@ -2008,18 +2008,18 @@ void SoftwareGLContext::gl_enable_client_state(GLenum cap)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     switch (cap) {
-    case GL_VERTEX_ARRAY:
-        m_client_side_vertex_array_enabled = true;
-        break;
-
     case GL_COLOR_ARRAY:
         m_client_side_color_array_enabled = true;
         break;
-
+    case GL_NORMAL_ARRAY:
+        m_client_side_normal_array_enabled = true;
+        break;
     case GL_TEXTURE_COORD_ARRAY:
         m_client_side_texture_coord_array_enabled[m_client_active_texture] = true;
         break;
-
+    case GL_VERTEX_ARRAY:
+        m_client_side_vertex_array_enabled = true;
+        break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
@@ -2030,18 +2030,18 @@ void SoftwareGLContext::gl_disable_client_state(GLenum cap)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     switch (cap) {
-    case GL_VERTEX_ARRAY:
-        m_client_side_vertex_array_enabled = false;
-        break;
-
     case GL_COLOR_ARRAY:
         m_client_side_color_array_enabled = false;
         break;
-
+    case GL_NORMAL_ARRAY:
+        m_client_side_normal_array_enabled = false;
+        break;
     case GL_TEXTURE_COORD_ARRAY:
         m_client_side_texture_coord_array_enabled[m_client_active_texture] = false;
         break;
-
+    case GL_VERTEX_ARRAY:
+        m_client_side_vertex_array_enabled = false;
+        break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
@@ -2057,57 +2057,54 @@ void SoftwareGLContext::gl_client_active_texture(GLenum target)
 void SoftwareGLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-
     RETURN_WITH_ERROR_IF(!(size == 2 || size == 3 || size == 4), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(!(type == GL_SHORT || type == GL_INT || type == GL_FLOAT || type == GL_DOUBLE), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
-    m_client_vertex_pointer.size = size;
-    m_client_vertex_pointer.type = type;
-    m_client_vertex_pointer.stride = stride;
-    m_client_vertex_pointer.pointer = pointer;
+    m_client_vertex_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
 }
 
 void SoftwareGLContext::gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-
     RETURN_WITH_ERROR_IF(!(size == 3 || size == 4), GL_INVALID_VALUE);
-
-    RETURN_WITH_ERROR_IF(!(type == GL_BYTE
-                             || type == GL_UNSIGNED_BYTE
-                             || type == GL_SHORT
-                             || type == GL_UNSIGNED_SHORT
-                             || type == GL_INT
-                             || type == GL_UNSIGNED_INT
-                             || type == GL_FLOAT
-                             || type == GL_DOUBLE),
+    RETURN_WITH_ERROR_IF(type != GL_BYTE
+            && type != GL_UNSIGNED_BYTE
+            && type != GL_SHORT
+            && type != GL_UNSIGNED_SHORT
+            && type != GL_INT
+            && type != GL_UNSIGNED_INT
+            && type != GL_FLOAT
+            && type != GL_DOUBLE,
         GL_INVALID_ENUM);
-
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
-    m_client_color_pointer.size = size;
-    m_client_color_pointer.type = type;
-    m_client_color_pointer.stride = stride;
-    m_client_color_pointer.pointer = pointer;
+    m_client_color_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
 }
 
 void SoftwareGLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-
     RETURN_WITH_ERROR_IF(!(size == 1 || size == 2 || size == 3 || size == 4), GL_INVALID_VALUE);
-
     RETURN_WITH_ERROR_IF(!(type == GL_SHORT || type == GL_INT || type == GL_FLOAT || type == GL_DOUBLE), GL_INVALID_ENUM);
-
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
     auto& tex_coord_pointer = m_client_tex_coord_pointer[m_client_active_texture];
+    tex_coord_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
+}
 
-    tex_coord_pointer.size = size;
-    tex_coord_pointer.type = type;
-    tex_coord_pointer.stride = stride;
-    tex_coord_pointer.pointer = pointer;
+void SoftwareGLContext::gl_normal_pointer(GLenum type, GLsizei stride, void const* pointer)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(type != GL_BYTE
+            && type != GL_SHORT
+            && type != GL_INT
+            && type != GL_FLOAT
+            && type != GL_DOUBLE,
+        GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
+
+    m_client_normal_pointer = { .size = 3, .type = type, .stride = stride, .pointer = pointer };
 }
 
 void SoftwareGLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
@@ -2128,6 +2125,7 @@ void SoftwareGLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
     case GL_REPLACE:
     case GL_DECAL:
         m_active_texture_unit->set_env_mode(param_enum);
+        m_sampler_config_is_dirty = true;
         break;
     default:
         // FIXME: We currently only support a subset of possible param values. Implement the rest!
@@ -2159,6 +2157,12 @@ void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
     auto last = first + count;
     gl_begin(mode);
     for (int i = first; i < last; i++) {
+        if (m_client_side_color_array_enabled) {
+            float color[4] { 0, 0, 0, 1 };
+            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
+            gl_color(color[0], color[1], color[2], color[3]);
+        }
+
         for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
             if (m_client_side_texture_coord_array_enabled[t]) {
                 float tex_coords[4] { 0, 0, 0, 0 };
@@ -2167,10 +2171,10 @@ void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
             }
         }
 
-        if (m_client_side_color_array_enabled) {
-            float color[4] { 0, 0, 0, 1 };
-            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
-            gl_color(color[0], color[1], color[2], color[3]);
+        if (m_client_side_normal_array_enabled) {
+            float normal[3];
+            read_from_vertex_attribute_pointer(m_client_normal_pointer, i, normal, false);
+            gl_normal(normal[0], normal[1], normal[2]);
         }
 
         float vertex[4] { 0, 0, 0, 1 };
@@ -2220,6 +2224,12 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
             break;
         }
 
+        if (m_client_side_color_array_enabled) {
+            float color[4] { 0, 0, 0, 1 };
+            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
+            gl_color(color[0], color[1], color[2], color[3]);
+        }
+
         for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
             if (m_client_side_texture_coord_array_enabled[t]) {
                 float tex_coords[4] { 0, 0, 0, 0 };
@@ -2228,10 +2238,10 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
             }
         }
 
-        if (m_client_side_color_array_enabled) {
-            float color[4] { 0, 0, 0, 1 };
-            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
-            gl_color(color[0], color[1], color[2], color[3]);
+        if (m_client_side_normal_array_enabled) {
+            float normal[3];
+            read_from_vertex_attribute_pointer(m_client_normal_pointer, i, normal, false);
+            gl_normal(normal[0], normal[1], normal[2]);
         }
 
         float vertex[4] { 0, 0, 0, 1 };
@@ -2466,18 +2476,16 @@ void SoftwareGLContext::read_from_vertex_attribute_pointer(VertexAttribPointer c
         if (stride == 0)
             stride = sizeof(GLfloat) * attrib.size;
 
-        for (int i = 0; i < attrib.size; i++) {
+        for (int i = 0; i < attrib.size; i++)
             elements[i] = *(reinterpret_cast<const GLfloat*>(byte_ptr + stride * index) + i);
-        }
         break;
     }
     case GL_DOUBLE: {
         if (stride == 0)
             stride = sizeof(GLdouble) * attrib.size;
 
-        for (int i = 0; i < attrib.size; i++) {
+        for (int i = 0; i < attrib.size; i++)
             elements[i] = static_cast<float>(*(reinterpret_cast<const GLdouble*>(byte_ptr + stride * index) + i));
-        }
         break;
     }
     }
@@ -2735,20 +2743,6 @@ void SoftwareGLContext::gl_normal(GLfloat nx, GLfloat ny, GLfloat nz)
     m_current_vertex_normal = { nx, ny, nz };
 }
 
-void SoftwareGLContext::gl_normal_pointer(GLenum type, GLsizei stride, void const* pointer)
-{
-    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
-    RETURN_WITH_ERROR_IF(type != GL_BYTE
-            && type != GL_SHORT
-            && type != GL_INT
-            && type != GL_FLOAT
-            && type != GL_DOUBLE,
-        GL_INVALID_ENUM);
-    RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
-
-    dbgln_if(GL_DEBUG, "gl_normal_pointer({:#x}, {}, {:p}): unimplemented", type, stride, pointer);
-}
-
 void SoftwareGLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_raster_pos, x, y, z, w);
@@ -2788,8 +2782,9 @@ void SoftwareGLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLflo
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_light_model, pname, x, y, z, w);
 
-    RETURN_WITH_ERROR_IF(!(pname == GL_LIGHT_MODEL_AMBIENT
-                             || pname == GL_LIGHT_MODEL_TWO_SIDE),
+    RETURN_WITH_ERROR_IF(pname != GL_LIGHT_MODEL_LOCAL_VIEWER
+            && pname != GL_LIGHT_MODEL_TWO_SIDE
+            && pname != GL_LIGHT_MODEL_AMBIENT,
         GL_INVALID_ENUM);
 
     auto lighting_params = m_rasterizer.light_model();
@@ -3288,6 +3283,7 @@ void SoftwareGLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(light < GL_LIGHT0 || light >= (GL_LIGHT0 + m_device_info.num_lights), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(!(pname == GL_CONSTANT_ATTENUATION || pname == GL_LINEAR_ATTENUATION || pname == GL_QUADRATIC_ATTENUATION || pname != GL_SPOT_EXPONENT || pname != GL_SPOT_CUTOFF), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(param < 0.f, GL_INVALID_VALUE);
 
     auto& light_state = m_light_states.at(light - GL_LIGHT0);
 
@@ -3302,9 +3298,11 @@ void SoftwareGLContext::gl_lightf(GLenum light, GLenum pname, GLfloat param)
         light_state.quadratic_attenuation = param;
         break;
     case GL_SPOT_EXPONENT:
+        RETURN_WITH_ERROR_IF(param > 128.f, GL_INVALID_VALUE);
         light_state.spotlight_exponent = param;
         break;
     case GL_SPOT_CUTOFF:
+        RETURN_WITH_ERROR_IF(param > 90.f && param != 180.f, GL_INVALID_VALUE);
         light_state.spotlight_cutoff_angle = param;
         break;
     default:
@@ -3338,24 +3336,33 @@ void SoftwareGLContext::gl_lightfv(GLenum light, GLenum pname, GLfloat const* pa
         light_state.position = m_model_view_matrix * light_state.position;
         break;
     case GL_CONSTANT_ATTENUATION:
-        light_state.constant_attenuation = *params;
+        RETURN_WITH_ERROR_IF(params[0] < 0.f, GL_INVALID_VALUE);
+        light_state.constant_attenuation = params[0];
         break;
     case GL_LINEAR_ATTENUATION:
-        light_state.linear_attenuation = *params;
+        RETURN_WITH_ERROR_IF(params[0] < 0.f, GL_INVALID_VALUE);
+        light_state.linear_attenuation = params[0];
         break;
     case GL_QUADRATIC_ATTENUATION:
-        light_state.quadratic_attenuation = *params;
+        RETURN_WITH_ERROR_IF(params[0] < 0.f, GL_INVALID_VALUE);
+        light_state.quadratic_attenuation = params[0];
         break;
-    case GL_SPOT_EXPONENT:
-        light_state.spotlight_exponent = *params;
+    case GL_SPOT_EXPONENT: {
+        auto exponent = params[0];
+        RETURN_WITH_ERROR_IF(exponent < 0.f || exponent > 128.f, GL_INVALID_VALUE);
+        light_state.spotlight_exponent = exponent;
         break;
-    case GL_SPOT_CUTOFF:
-        light_state.spotlight_cutoff_angle = *params;
+    }
+    case GL_SPOT_CUTOFF: {
+        auto cutoff = params[0];
+        RETURN_WITH_ERROR_IF((cutoff < 0.f || cutoff > 90.f) && cutoff != 180.f, GL_INVALID_VALUE);
+        light_state.spotlight_cutoff_angle = cutoff;
         break;
+    }
     case GL_SPOT_DIRECTION: {
-        FloatVector4 direction_vector = { params[0], params[1], params[2], 0.0f };
+        FloatVector4 direction_vector = { params[0], params[1], params[2], 0.f };
         direction_vector = m_model_view_matrix * direction_vector;
-        light_state.spotlight_direction = { direction_vector.x(), direction_vector.y(), direction_vector.z() };
+        light_state.spotlight_direction = direction_vector.xyz();
         break;
     }
     default:
@@ -3393,22 +3400,31 @@ void SoftwareGLContext::gl_lightiv(GLenum light, GLenum pname, GLint const* para
         light_state.position = m_model_view_matrix * light_state.position;
         break;
     case GL_CONSTANT_ATTENUATION:
+        RETURN_WITH_ERROR_IF(params[0] < 0, GL_INVALID_VALUE);
         light_state.constant_attenuation = static_cast<float>(params[0]);
         break;
     case GL_LINEAR_ATTENUATION:
+        RETURN_WITH_ERROR_IF(params[0] < 0, GL_INVALID_VALUE);
         light_state.linear_attenuation = static_cast<float>(params[0]);
         break;
     case GL_QUADRATIC_ATTENUATION:
+        RETURN_WITH_ERROR_IF(params[0] < 0, GL_INVALID_VALUE);
         light_state.quadratic_attenuation = static_cast<float>(params[0]);
         break;
-    case GL_SPOT_EXPONENT:
-        light_state.spotlight_exponent = static_cast<float>(params[0]);
+    case GL_SPOT_EXPONENT: {
+        auto exponent = static_cast<float>(params[0]);
+        RETURN_WITH_ERROR_IF(exponent < 0.f || exponent > 128.f, GL_INVALID_VALUE);
+        light_state.spotlight_exponent = exponent;
         break;
-    case GL_SPOT_CUTOFF:
-        light_state.spotlight_cutoff_angle = static_cast<float>(params[0]);
+    }
+    case GL_SPOT_CUTOFF: {
+        auto cutoff = static_cast<float>(params[0]);
+        RETURN_WITH_ERROR_IF((cutoff < 0.f || cutoff > 90.f) && cutoff != 180.f, GL_INVALID_VALUE);
+        light_state.spotlight_cutoff_angle = cutoff;
         break;
+    }
     case GL_SPOT_DIRECTION: {
-        FloatVector4 direction_vector = to_float_vector(params[0], params[1], params[2], 0.0f);
+        auto direction_vector = to_float_vector(params[0], params[1], params[2], 0.0f);
         direction_vector = m_model_view_matrix * direction_vector;
         light_state.spotlight_direction = direction_vector.xyz();
         break;

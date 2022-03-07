@@ -1183,6 +1183,7 @@ private:
     virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_list() const override { return true; }
     virtual bool should_override_execution_in_current_process() const override { return true; }
+    virtual RefPtr<Node> leftmost_trivial_literal() const override;
 
     NonnullRefPtrVector<Node> m_entries;
     Vector<Position> m_separator_positions;
@@ -1344,11 +1345,18 @@ private:
 
 class StringLiteral final : public Node {
 public:
-    StringLiteral(Position, String);
+    enum class EnclosureType {
+        None,
+        SingleQuotes,
+        DoubleQuotes,
+    };
+
+    StringLiteral(Position, String, EnclosureType);
     virtual ~StringLiteral();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     const String& text() const { return m_text; }
+    EnclosureType enclosure_type() const { return m_enclosure_type; }
 
 private:
     NODE(StringLiteral);
@@ -1358,6 +1366,7 @@ private:
     virtual RefPtr<Node> leftmost_trivial_literal() const override { return this; };
 
     String m_text;
+    EnclosureType m_enclosure_type;
 };
 
 class StringPartCompose final : public Node {

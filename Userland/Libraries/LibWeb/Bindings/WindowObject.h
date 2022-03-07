@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +14,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/CallbackType.h>
+#include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
 
@@ -67,6 +69,9 @@ public:
     }
 
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
+
+    CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
+    CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
 private:
     virtual void visit_edges(Visitor&) override;
@@ -136,6 +141,9 @@ private:
 
     HashMap<String, JS::Object*> m_prototypes;
     HashMap<String, JS::NativeFunction*> m_constructors;
+
+    // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
+    CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
 };
 
 }

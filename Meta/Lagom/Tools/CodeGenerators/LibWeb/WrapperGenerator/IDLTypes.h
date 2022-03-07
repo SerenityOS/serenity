@@ -78,6 +78,8 @@ struct Function {
     String name;
     Vector<Parameter> parameters;
     HashMap<String, String> extended_attributes;
+    size_t overload_index { 0 };
+    bool is_overloaded { false };
 
     size_t length() const { return get_function_length(*this); }
 };
@@ -144,6 +146,14 @@ struct ParameterizedType : public Type {
     void generate_sequence_from_iterable(SourceGenerator& generator, String const& cpp_name, String const& iterable_cpp_name, String const& iterator_method_cpp_name, IDL::Interface const&, size_t recursion_depth) const;
 };
 
+static inline size_t get_shortest_function_length(Vector<Function&> const& overload_set)
+{
+    size_t longest_length = SIZE_MAX;
+    for (auto const& function : overload_set)
+        longest_length = min(function.length(), longest_length);
+    return longest_length;
+}
+
 struct Interface {
     String name;
     String parent_name;
@@ -188,6 +198,9 @@ struct Interface {
     String module_own_path;
     HashTable<String> imported_paths;
     NonnullOwnPtrVector<Interface> imported_modules;
+
+    HashMap<String, Vector<Function&>> overload_sets;
+    HashMap<String, Vector<Function&>> static_overload_sets;
 
     // https://webidl.spec.whatwg.org/#dfn-support-indexed-properties
     bool supports_indexed_properties() const { return indexed_property_getter.has_value(); }

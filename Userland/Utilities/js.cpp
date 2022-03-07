@@ -1451,7 +1451,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             bool indenters_starting_line = true;
             for (JS::Token token = lexer.next(); token.type() != JS::TokenType::Eof; token = lexer.next()) {
                 auto length = Utf8View { token.value() }.length();
-                auto start = token.line_column() - 1;
+                auto start = token.offset();
                 auto end = start + length;
                 if (indenters_starting_line) {
                     if (token.type() != JS::TokenType::ParenClose && token.type() != JS::TokenType::BracketClose && token.type() != JS::TokenType::CurlyClose) {
@@ -1580,6 +1580,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         Line::CompletionSuggestion completion { key, Line::CompletionSuggestion::ForSearch };
                         if (!results.contains_slow(completion)) { // hide duplicates
                             results.append(String(key));
+                            results.last().invariant_offset = property_pattern.length();
                         }
                     }
                 }
@@ -1605,8 +1606,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto const* object = MUST(variable.to_object(interpreter->global_object()));
                 auto const& shape = object->shape();
                 list_all_properties(shape, property_name);
-                if (results.size())
-                    editor.suggest(property_name.length());
                 break;
             }
             case CompleteVariable: {
@@ -1614,12 +1613,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 list_all_properties(variable.shape(), variable_name);
 
                 for (String& name : global_environment.declarative_record().bindings()) {
-                    if (name.starts_with(variable_name))
+                    if (name.starts_with(variable_name)) {
                         results.empend(name);
+                        results.last().invariant_offset = variable_name.length();
+                    }
                 }
 
-                if (results.size())
-                    editor.suggest(variable_name.length());
                 break;
             }
             default:

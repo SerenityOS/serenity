@@ -22,6 +22,7 @@
 #include <AK/WeakPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/Painter.h>
 #include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Frequency.h>
@@ -146,8 +147,26 @@ enum class Float {
 
 enum class ImageRendering {
     Auto,
-    Pixelated
+    CrispEdges,
+    HighQuality,
+    Pixelated,
+    Smooth,
 };
+
+// FIXME: Find a better place for this helper.
+inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_value)
+{
+    switch (css_value) {
+    case CSS::ImageRendering::Auto:
+    case CSS::ImageRendering::HighQuality:
+    case CSS::ImageRendering::Smooth:
+        return Gfx::Painter::ScalingMode::BilinearBlend;
+    case CSS::ImageRendering::CrispEdges:
+    case CSS::ImageRendering::Pixelated:
+        return Gfx::Painter::ScalingMode::NearestNeighbor;
+    }
+    VERIFY_NOT_REACHED();
+}
 
 enum class JustifyContent {
     FlexStart,
@@ -1451,14 +1470,16 @@ class TextDecorationStyleValue final : public StyleValue {
 public:
     static NonnullRefPtr<TextDecorationStyleValue> create(
         NonnullRefPtr<StyleValue> line,
+        NonnullRefPtr<StyleValue> thickness,
         NonnullRefPtr<StyleValue> style,
         NonnullRefPtr<StyleValue> color)
     {
-        return adopt_ref(*new TextDecorationStyleValue(line, style, color));
+        return adopt_ref(*new TextDecorationStyleValue(line, thickness, style, color));
     }
     virtual ~TextDecorationStyleValue() override { }
 
     NonnullRefPtr<StyleValue> line() const { return m_line; }
+    NonnullRefPtr<StyleValue> thickness() const { return m_thickness; }
     NonnullRefPtr<StyleValue> style() const { return m_style; }
     NonnullRefPtr<StyleValue> color() const { return m_color; }
 
@@ -1467,16 +1488,19 @@ public:
 private:
     TextDecorationStyleValue(
         NonnullRefPtr<StyleValue> line,
+        NonnullRefPtr<StyleValue> thickness,
         NonnullRefPtr<StyleValue> style,
         NonnullRefPtr<StyleValue> color)
         : StyleValue(Type::TextDecoration)
         , m_line(line)
+        , m_thickness(thickness)
         , m_style(style)
         , m_color(color)
     {
     }
 
     NonnullRefPtr<StyleValue> m_line;
+    NonnullRefPtr<StyleValue> m_thickness;
     NonnullRefPtr<StyleValue> m_style;
     NonnullRefPtr<StyleValue> m_color;
 };

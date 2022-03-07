@@ -1146,12 +1146,19 @@ String Shell::escape_token_for_double_quotes(StringView token)
     return builder.build();
 }
 
-Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_point)
+Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_point, EscapeMode mode)
 {
     switch (code_point) {
     case '\'':
+        if (mode == EscapeMode::DoubleQuotedString)
+            return SpecialCharacterEscapeMode::Untouched;
+        return SpecialCharacterEscapeMode::Escaped;
     case '"':
     case '$':
+    case '\\':
+        if (mode == EscapeMode::SingleQuotedString)
+            return SpecialCharacterEscapeMode::Untouched;
+        return SpecialCharacterEscapeMode::Escaped;
     case '|':
     case '>':
     case '<':
@@ -1161,8 +1168,11 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
     case '}':
     case '&':
     case ';':
-    case '\\':
+    case '?':
+    case '*':
     case ' ':
+        if (mode == EscapeMode::SingleQuotedString || mode == EscapeMode::DoubleQuotedString)
+            return SpecialCharacterEscapeMode::Untouched;
         return SpecialCharacterEscapeMode::Escaped;
     case '\n':
     case '\t':
@@ -1176,54 +1186,82 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
     }
 }
 
-String Shell::escape_token(StringView token)
+static String do_escape(Shell::EscapeMode escape_mode, auto& token)
 {
-    auto do_escape = [](auto& token) {
-        StringBuilder builder;
-        for (auto c : token) {
-            static_assert(sizeof(c) == sizeof(u32) || sizeof(c) == sizeof(u8));
-            switch (special_character_escape_mode(c)) {
-            case SpecialCharacterEscapeMode::Untouched:
-                if constexpr (sizeof(c) == sizeof(u8))
-                    builder.append(c);
-                else
-                    builder.append(Utf32View { &c, 1 });
-                break;
-            case SpecialCharacterEscapeMode::Escaped:
-                builder.append('\\');
+    StringBuilder builder;
+    for (auto c : token) {
+        static_assert(sizeof(c) == sizeof(u32) || sizeof(c) == sizeof(u8));
+        switch (Shell::special_character_escape_mode(c, escape_mode)) {
+        case Shell::SpecialCharacterEscapeMode::Untouched:
+            if constexpr (sizeof(c) == sizeof(u8))
                 builder.append(c);
+            else
+                builder.append(Utf32View { &c, 1 });
+            break;
+        case Shell::SpecialCharacterEscapeMode::Escaped:
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            builder.append('\\');
+            builder.append(c);
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            break;
+        case Shell::SpecialCharacterEscapeMode::QuotedAsEscape:
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
+                builder.append("\"");
+            switch (c) {
+            case '\n':
+                builder.append(R"(\n)");
                 break;
-            case SpecialCharacterEscapeMode::QuotedAsEscape:
-                switch (c) {
-                case '\n':
-                    builder.append(R"("\n")");
-                    break;
-                case '\t':
-                    builder.append(R"("\t")");
-                    break;
-                case '\r':
-                    builder.append(R"("\r")");
-                    break;
-                default:
-                    VERIFY_NOT_REACHED();
-                }
+            case '\t':
+                builder.append(R"(\t)");
                 break;
-            case SpecialCharacterEscapeMode::QuotedAsHex:
-                if (c <= NumericLimits<u8>::max())
-                    builder.appendff(R"("\x{:0>2x}")", static_cast<u8>(c));
-                else
-                    builder.appendff(R"("\u{:0>8x}")", static_cast<u32>(c));
+            case '\r':
+                builder.append(R"(\r)");
                 break;
+            default:
+                VERIFY_NOT_REACHED();
             }
+            if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
+                builder.append("\"");
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            break;
+        case Shell::SpecialCharacterEscapeMode::QuotedAsHex:
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
+                builder.append("\"");
+
+            if (c <= NumericLimits<u8>::max())
+                builder.appendff(R"(\x{:0>2x})", static_cast<u8>(c));
+            else
+                builder.appendff(R"(\u{:0>8x})", static_cast<u32>(c));
+
+            if (escape_mode != Shell::EscapeMode::DoubleQuotedString)
+                builder.append("\"");
+            if (escape_mode == Shell::EscapeMode::SingleQuotedString)
+                builder.append("'");
+            break;
         }
+    }
 
-        return builder.build();
-    };
+    return builder.build();
+}
 
+String Shell::escape_token(Utf32View token, EscapeMode escape_mode)
+{
+    return do_escape(escape_mode, token);
+}
+
+String Shell::escape_token(StringView token, EscapeMode escape_mode)
+{
     Utf8View view { token };
     if (view.validate())
-        return do_escape(view);
-    return do_escape(token);
+        return do_escape(escape_mode, view);
+    return do_escape(escape_mode, token);
 }
 
 String Shell::unescape_token(StringView token)
@@ -1372,8 +1410,7 @@ Vector<Line::CompletionSuggestion> Shell::complete()
     return ast->complete_for_editor(*this, line.length());
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base,
-    StringView part, size_t offset, ExecutableOnly executable_only)
+Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringView part, size_t offset, ExecutableOnly executable_only, EscapeMode escape_mode)
 {
     auto token = offset ? part.substring_view(0, offset) : "";
     String path;
@@ -1415,9 +1452,11 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base,
     // e. in `cd /foo/bar', 'bar' is the invariant
     //      since we are not suggesting anything starting with
     //      `/foo/', but rather just `bar...'
-    auto token_length = escape_token(token).length();
+    auto token_length = escape_token(token, escape_mode).length();
+    size_t static_offset = last_slash + 1;
+    auto invariant_offset = token_length;
     if (m_editor)
-        m_editor->suggest(token_length, last_slash + 1);
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
     // only suggest dot-files if path starts with a dot
     Core::DirIterator files(path,
@@ -1433,13 +1472,15 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base,
             int stat_error = stat(file_path.characters(), &program_status);
             if (!stat_error && (executable_only == ExecutableOnly::No || access(file_path.characters(), X_OK) == 0)) {
                 if (S_ISDIR(program_status.st_mode)) {
-                    suggestions.append({ escape_token(file), "/" });
+                    suggestions.append({ escape_token(file, escape_mode), "/" });
                 } else {
                     if (!allow_direct_children && !file.contains("/"))
                         continue;
-                    suggestions.append({ escape_token(file), " " });
+                    suggestions.append({ escape_token(file, escape_mode), " " });
                 }
                 suggestions.last().input_offset = token_length;
+                suggestions.last().invariant_offset = invariant_offset;
+                suggestions.last().static_offset = static_offset;
             }
         }
     }
@@ -1447,7 +1488,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base,
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name, size_t offset, EscapeMode escape_mode)
 {
     auto match = binary_search(
         cached_path.span(),
@@ -1461,12 +1502,14 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
         });
 
     if (!match)
-        return complete_path("", name, offset, ExecutableOnly::Yes);
+        return complete_path("", name, offset, ExecutableOnly::Yes, escape_mode);
 
     String completion = *match;
-    auto token_length = escape_token(name).length();
+    auto token_length = escape_token(name, escape_mode).length();
+    auto invariant_offset = token_length;
+    size_t static_offset = 0;
     if (m_editor)
-        m_editor->suggest(token_length, 0);
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
     // Now that we have a program name starting with our token, we look at
     // other program names starting with our token and cut off any mismatching
@@ -1475,16 +1518,17 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
     Vector<Line::CompletionSuggestion> suggestions;
 
     int index = match - cached_path.data();
-    for (int i = index - 1; i >= 0 && cached_path[i].starts_with(name); --i) {
+    for (int i = index - 1; i >= 0 && cached_path[i].starts_with(name); --i)
         suggestions.append({ cached_path[i], " " });
-        suggestions.last().input_offset = token_length;
-    }
-    for (size_t i = index + 1; i < cached_path.size() && cached_path[i].starts_with(name); ++i) {
+    for (size_t i = index + 1; i < cached_path.size() && cached_path[i].starts_with(name); ++i)
         suggestions.append({ cached_path[i], " " });
-        suggestions.last().input_offset = token_length;
-    }
     suggestions.append({ cached_path[index], " " });
-    suggestions.last().input_offset = token_length;
+
+    for (auto& entry : suggestions) {
+        entry.input_offset = token_length;
+        entry.invariant_offset = invariant_offset;
+        entry.static_offset = static_offset;
+    }
 
     return suggestions;
 }
@@ -1494,8 +1538,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, siz
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
 
+    auto invariant_offset = offset;
+    size_t static_offset = 0;
     if (m_editor)
-        m_editor->suggest(offset);
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
     // Look at local variables.
     for (auto& frame : m_local_frames) {
@@ -1516,8 +1562,13 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, siz
             if (suggestions.contains_slow(name))
                 continue;
             suggestions.append(move(name));
-            suggestions.last().input_offset = offset;
         }
+    }
+
+    for (auto& entry : suggestions) {
+        entry.input_offset = offset;
+        entry.invariant_offset = invariant_offset;
+        entry.static_offset = static_offset;
     }
 
     return suggestions;
@@ -1528,8 +1579,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(StringView name, size_t 
     Vector<Line::CompletionSuggestion> suggestions;
     auto pattern = offset ? name.substring_view(0, offset) : "";
 
+    auto invariant_offset = offset;
+    size_t static_offset = 0;
     if (m_editor)
-        m_editor->suggest(offset);
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
     Core::DirIterator di("/home", Core::DirIterator::SkipParentAndBaseDir);
 
@@ -1540,7 +1593,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(StringView name, size_t 
         String name = di.next_path();
         if (name.starts_with(pattern)) {
             suggestions.append(name);
-            suggestions.last().input_offset = offset;
+            auto& suggestion = suggestions.last();
+            suggestion.input_offset = offset;
+            suggestion.invariant_offset = invariant_offset;
+            suggestion.static_offset = static_offset;
         }
     }
 
@@ -1553,8 +1609,10 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(StringView program_nam
     while (start < option.length() && option[start] == '-' && start < 2)
         ++start;
     auto option_pattern = offset > start ? option.substring_view(start, offset - start) : "";
+    auto invariant_offset = offset;
+    size_t static_offset = 0;
     if (m_editor)
-        m_editor->suggest(offset);
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
     Vector<Line::CompletionSuggestion> suggestions;
 
@@ -1579,13 +1637,18 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(StringView program_nam
                 return builder.to_string();
             };
 #define __ENUMERATE_SHELL_OPTION(name, d_, descr_) \
-    if (#name##sv.starts_with(option_pattern)) {   \
-        suggestions.append(maybe_negate(#name));   \
-        suggestions.last().input_offset = offset;  \
-    }
+    if (#name##sv.starts_with(option_pattern))     \
+        suggestions.append(maybe_negate(#name));
 
             ENUMERATE_SHELL_OPTIONS();
 #undef __ENUMERATE_SHELL_OPTION
+
+            for (auto& entry : suggestions) {
+                entry.input_offset = offset;
+                entry.invariant_offset = invariant_offset;
+                entry.static_offset = static_offset;
+            }
+
             return suggestions;
         }
     }
@@ -1596,18 +1659,24 @@ Vector<Line::CompletionSuggestion> Shell::complete_immediate_function_name(Strin
 {
     Vector<Line::CompletionSuggestion> suggestions;
 
-#define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(fn_name)                 \
-    if (auto name_view = #fn_name##sv; name_view.starts_with(name)) { \
-        suggestions.append({ name_view, " " });                       \
-        suggestions.last().input_offset = offset;                     \
-    }
+    auto invariant_offset = offset;
+    size_t static_offset = 0;
+    if (m_editor)
+        m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
+
+#define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(fn_name)               \
+    if (auto name_view = #fn_name##sv; name_view.starts_with(name)) \
+        suggestions.append({ name_view, " " });
 
     ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS();
 
 #undef __ENUMERATE_SHELL_IMMEDIATE_FUNCTION
 
-    if (m_editor)
-        m_editor->suggest(offset);
+    for (auto& entry : suggestions) {
+        entry.input_offset = offset;
+        entry.invariant_offset = invariant_offset;
+        entry.static_offset = static_offset;
+    }
 
     return suggestions;
 }
