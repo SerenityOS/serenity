@@ -85,7 +85,7 @@ enum class NeedsBigProcessLock {
     S(get_process_name, NeedsBigProcessLock::Yes)           \
     S(get_stack_bounds, NeedsBigProcessLock::No)            \
     S(get_thread_name, NeedsBigProcessLock::Yes)            \
-    S(getcwd, NeedsBigProcessLock::Yes)                     \
+    S(getcwd, NeedsBigProcessLock::No)                      \
     S(getegid, NeedsBigProcessLock::Yes)                    \
     S(geteuid, NeedsBigProcessLock::Yes)                    \
     S(getgid, NeedsBigProcessLock::Yes)                     \

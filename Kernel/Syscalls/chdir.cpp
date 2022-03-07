@@ -38,7 +38,7 @@ ErrorOr<FlatPtr> Process::sys$fchdir(int fd)
 
 ErrorOr<FlatPtr> Process::sys$getcwd(Userspace<char*> buffer, size_t size)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::rpath));
 
     if (size > NumericLimits<ssize_t>::max())
