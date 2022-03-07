@@ -25,6 +25,11 @@
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {}
 
+            @GUI::Label {
+                name: "fail_message"
+                text_alignment: "CenterLeft"
+            }
+
             @GUI::Widget {}
 
             @GUI::Button {
