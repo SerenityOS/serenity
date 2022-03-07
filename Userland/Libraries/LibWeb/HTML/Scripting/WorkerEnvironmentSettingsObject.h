@@ -13,7 +13,7 @@
 namespace Web::HTML {
 
 // FIXME: This is a bit ugly, this implementation is basically a 1:1 copy of what is in ESO
-//        just modified to use DOM::Document instead of DOM::Window since workers have no window
+//        just modified to use DOM::Document instead of HTML::Window since workers have no window
 class WorkerEnvironmentSettingsObject final
     : public EnvironmentSettingsObject
     , public Weakable<WorkerEnvironmentSettingsObject> {

@@ -6,16 +6,16 @@
 
 #include <LibCore/Timer.h>
 #include <LibWeb/DOM/Timer.h>
-#include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
-NonnullRefPtr<Timer> Timer::create(Window& window, i32 milliseconds, Function<void()> callback, i32 id)
+NonnullRefPtr<Timer> Timer::create(HTML::Window& window, i32 milliseconds, Function<void()> callback, i32 id)
 {
     return adopt_ref(*new Timer(window, milliseconds, move(callback), id));
 }
 
-Timer::Timer(Window& window, i32 milliseconds, Function<void()> callback, i32 id)
+Timer::Timer(HTML::Window& window, i32 milliseconds, Function<void()> callback, i32 id)
     : m_window(window)
     , m_id(id)
 {

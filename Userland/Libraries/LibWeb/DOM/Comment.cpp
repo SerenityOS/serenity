@@ -5,7 +5,7 @@
  */
 
 #include <LibWeb/DOM/Comment.h>
-#include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/TextNode.h>
 
 namespace Web::DOM {

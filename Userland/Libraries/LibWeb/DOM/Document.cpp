@@ -34,7 +34,6 @@
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -56,6 +55,7 @@
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
@@ -75,7 +75,7 @@ Document::Document(const AK::URL& url)
     , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_style_sheets(CSS::StyleSheetList::create(*this))
     , m_url(url)
-    , m_window(Window::create_with_document(*this))
+    , m_window(HTML::Window::create_with_document(*this))
     , m_implementation(DOMImplementation::create({}, *this))
     , m_history(HTML::History::create(*this))
 {

@@ -7,8 +7,8 @@
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 

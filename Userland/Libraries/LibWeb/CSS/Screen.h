@@ -9,20 +9,20 @@
 #include <AK/RefCountForwarder.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/Bindings/Wrappable.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
 class Screen final
-    : public RefCountForwarder<DOM::Window>
+    : public RefCountForwarder<HTML::Window>
     , public Bindings::Wrappable {
 
 public:
     using WrapperType = Bindings::ScreenWrapper;
     using AllowOwnPtr = TrueType;
 
-    static NonnullOwnPtr<Screen> create(Badge<DOM::Window>, DOM::Window& window)
+    static NonnullOwnPtr<Screen> create(Badge<HTML::Window>, HTML::Window& window)
     {
         return adopt_own(*new Screen(window));
     }
@@ -35,9 +35,9 @@ public:
     u32 pixel_depth() const { return 24; }
 
 private:
-    explicit Screen(DOM::Window&);
+    explicit Screen(HTML::Window&);
 
-    DOM::Window const& window() const { return ref_count_target(); }
+    HTML::Window const& window() const { return ref_count_target(); }
 
     Gfx::IntRect screen_rect() const;
 };

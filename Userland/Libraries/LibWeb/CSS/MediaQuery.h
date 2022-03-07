@@ -140,7 +140,7 @@ public:
         return feature;
     }
 
-    bool evaluate(DOM::Window const&) const;
+    bool evaluate(HTML::Window const&) const;
     String to_string() const;
 
 private:
@@ -159,7 +159,7 @@ private:
     {
     }
 
-    static bool compare(DOM::Window const& window, MediaFeatureValue left, Comparison comparison, MediaFeatureValue right);
+    static bool compare(HTML::Window const& window, MediaFeatureValue left, Comparison comparison, MediaFeatureValue right);
 
     struct Range {
         MediaFeatureValue left_value;
@@ -196,7 +196,7 @@ struct MediaCondition {
     static NonnullOwnPtr<MediaCondition> from_and_list(NonnullOwnPtrVector<MediaCondition>&&);
     static NonnullOwnPtr<MediaCondition> from_or_list(NonnullOwnPtrVector<MediaCondition>&&);
 
-    MatchResult evaluate(DOM::Window const&) const;
+    MatchResult evaluate(HTML::Window const&) const;
     String to_string() const;
 
 private:
@@ -234,7 +234,7 @@ public:
     static NonnullRefPtr<MediaQuery> create() { return adopt_ref(*new MediaQuery); }
 
     bool matches() const { return m_matches; }
-    bool evaluate(DOM::Window const&);
+    bool evaluate(HTML::Window const&);
     String to_string() const;
 
 private:

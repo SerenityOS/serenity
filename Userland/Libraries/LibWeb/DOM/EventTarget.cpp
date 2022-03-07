@@ -25,7 +25,6 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOM/IDLEventListener.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/ErrorEvent.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -33,6 +32,7 @@
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
 #include <LibWeb/HTML/HTMLFrameSetElement.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/EventNames.h>
 
 namespace Web::DOM {
@@ -315,8 +315,8 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
             element = element_event_target;
             document = element_event_target->document();
         } else {
-            VERIFY(is<Window>(this));
-            auto* window_event_target = verify_cast<Window>(this);
+            VERIFY(is<HTML::Window>(this));
+            auto* window_event_target = verify_cast<HTML::Window>(this);
             document = window_event_target->associated_document();
         }
 
@@ -346,7 +346,7 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
         StringBuilder builder;
 
         // sourceText
-        if (name == HTML::EventNames::error && is<Window>(this)) {
+        if (name == HTML::EventNames::error && is<HTML::Window>(this)) {
             //  -> If name is onerror and eventTarget is a Window object
             //      The string formed by concatenating "function ", name, "(event, source, lineno, colno, error) {", U+000A LF, body, U+000A LF, and "}".
             builder.appendff("function {}(event, source, lineno, colno, error) {{\n{}\n}}", name, body);
@@ -511,14 +511,14 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
 
     // FIXME: This is guess work on what global object the NativeFunction should be allocated on.
     //        For <body> or <frameset> elements who just had an element attribute set, it will be this's wrapper, as `this` is the result of determine_target_of_event_handler
-    //        returning the element's document's global object, which is the DOM::Window object.
+    //        returning the element's document's global object, which is the HTML::Window object.
     //        For any other HTMLElement who just had an element attribute set, `this` will be that HTMLElement, so the global object is this's document's realm's global object.
     //        For anything else, it came from JavaScript, so use the global object of the provided callback function.
     //        Sadly, this doesn't work if an element attribute is set on a <body> element before any script is run, as Window::wrapper() will be null.
     JS::GlobalObject* global_object = nullptr;
     if (is_attribute == IsAttribute::Yes) {
-        if (is<Window>(this)) {
-            auto* window_global_object = verify_cast<Window>(this)->wrapper();
+        if (is<HTML::Window>(this)) {
+            auto* window_global_object = verify_cast<HTML::Window>(this)->wrapper();
             global_object = static_cast<JS::GlobalObject*>(window_global_object);
         } else {
             auto* html_element = verify_cast<HTML::HTMLElement>(this);
@@ -606,7 +606,7 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
     // 3. Let special error event handling be true if event is an ErrorEvent object, event's type is error, and event's currentTarget implements the WindowOrWorkerGlobalScope mixin.
     //    Otherwise, let special error event handling be false.
     // FIXME: This doesn't check for WorkerGlobalScape as we don't currently have it.
-    bool special_error_event_handling = is<HTML::ErrorEvent>(event) && event.type() == HTML::EventNames::error && is<Window>(event.current_target().ptr());
+    bool special_error_event_handling = is<HTML::ErrorEvent>(event) && event.type() == HTML::EventNames::error && is<HTML::Window>(event.current_target().ptr());
 
     // 4. Process the Event object event as follows:
     JS::Completion return_value_or_error;

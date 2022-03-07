@@ -62,7 +62,7 @@ void CSSStyleSheet::for_each_effective_style_rule(Function<void(CSSStyleRule con
     m_rules->for_each_effective_style_rule(callback);
 }
 
-bool CSSStyleSheet::evaluate_media_queries(DOM::Window const& window)
+bool CSSStyleSheet::evaluate_media_queries(HTML::Window const& window)
 {
     return m_rules->evaluate_media_queries(window);
 }

@@ -37,7 +37,7 @@ public:
 
 protected:
     CloseEvent(FlyString const& event_name, CloseEventInit const& event_init)
-        : Event(event_name, event_init)
+        : DOM::Event(event_name, event_init)
         , m_was_clean(event_init.was_clean)
         , m_code(event_init.code)
         , m_reason(event_init.reason)

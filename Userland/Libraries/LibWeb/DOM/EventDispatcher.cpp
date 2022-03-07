@@ -22,9 +22,9 @@
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ShadowRoot.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web::DOM {
@@ -190,7 +190,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
         target_override = target;
     } else {
         // NOTE: This can be done because legacy_target_override is only set for events targeted at Window.
-        target_override = verify_cast<Window>(*target).associated_document();
+        target_override = verify_cast<HTML::Window>(*target).associated_document();
     }
 
     RefPtr<EventTarget> activation_target;
@@ -229,7 +229,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
                 touch_targets.append(retarget(touch_target, parent));
             }
 
-            if (is<Window>(parent)
+            if (is<HTML::Window>(parent)
                 || (is<Node>(parent) && verify_cast<Node>(*target).root().is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*parent)))) {
                 if (is_activation_event && event->bubbles() && !activation_target && parent->activation_behavior)
                     activation_target = parent;

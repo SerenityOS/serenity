@@ -99,7 +99,6 @@ set(SOURCES
     DOM/Text.cpp
     DOM/Text.idl
     DOM/Timer.cpp
-    DOM/Window.cpp
     DOMParsing/InnerHTML.cpp
     DOMTreeModel.cpp
     Dump.cpp
@@ -214,6 +213,7 @@ set(SOURCES
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/TextMetrics.cpp
+    HTML/Window.cpp
     HTML/Worker.cpp
     HTML/WorkerDebugConsoleClient.cpp
     HTML/WorkerGlobalScope.cpp

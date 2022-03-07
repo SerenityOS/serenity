@@ -242,7 +242,7 @@ public:
 
     void removed_last_ref();
 
-    Window& window() { return *m_window; }
+    HTML::Window& window() { return *m_window; }
 
     ExceptionOr<void> write(Vector<String> const& strings);
     ExceptionOr<void> writeln(Vector<String> const& strings);
@@ -250,7 +250,7 @@ public:
     ExceptionOr<Document*> open(String const& = "", String const& = "");
     ExceptionOr<void> close();
 
-    Window* default_view() { return m_window; }
+    HTML::Window* default_view() { return m_window; }
 
     const String& content_type() const { return m_content_type; }
     void set_content_type(const String& content_type) { m_content_type = content_type; }
@@ -360,7 +360,7 @@ private:
     WeakPtr<HTML::BrowsingContext> m_browsing_context;
     AK::URL m_url;
 
-    RefPtr<Window> m_window;
+    RefPtr<HTML::Window> m_window;
 
     RefPtr<Layout::InitialContainingBlock> m_layout_root;
 

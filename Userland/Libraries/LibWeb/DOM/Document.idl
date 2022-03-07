@@ -33,7 +33,7 @@ interface Document : Node {
     readonly attribute Window? defaultView;
 
     [CEReactions] Document open(optional DOMString unused1, optional DOMString unused2);
-    // FIXME: implement ExceptionOr<Window> Document::open(...)
+    // FIXME: implement ExceptionOr<HTML::Window> Document::open(...)
     // WindowProxy? open(USVString url, DOMString name, DOMString features);
     [CEReactions] undefined close();
     [CEReactions] undefined write(DOMString... text);

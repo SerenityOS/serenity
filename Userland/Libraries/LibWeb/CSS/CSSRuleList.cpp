@@ -103,7 +103,7 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
     }
 }
 
-bool CSSRuleList::evaluate_media_queries(DOM::Window const& window)
+bool CSSRuleList::evaluate_media_queries(HTML::Window const& window)
 {
     bool any_media_queries_changed_match_state = false;
 

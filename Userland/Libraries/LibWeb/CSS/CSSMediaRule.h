@@ -34,7 +34,7 @@ public:
 
     NonnullRefPtr<MediaList> const& media() const { return m_media; }
 
-    bool evaluate(DOM::Window const& window) { return m_media->evaluate(window); }
+    bool evaluate(HTML::Window const& window) { return m_media->evaluate(window); }
 
 private:
     explicit CSSMediaRule(NonnullRefPtr<MediaList>&&, NonnullRefPtrVector<CSSRule>&&);

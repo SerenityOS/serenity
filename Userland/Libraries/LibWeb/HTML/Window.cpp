@@ -16,7 +16,6 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/Timer.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/MessageEvent.h>
@@ -24,12 +23,13 @@
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Storage.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Selection/Selection.h>
 
-namespace Web::DOM {
+namespace Web::HTML {
 
 class RequestAnimationFrameCallback : public RefCounted<RequestAnimationFrameCallback> {
 public:
@@ -107,13 +107,13 @@ void run_animation_frame_callbacks(DOM::Document&, double)
     request_animation_frame_driver().run();
 }
 
-NonnullRefPtr<Window> Window::create_with_document(Document& document)
+NonnullRefPtr<Window> Window::create_with_document(DOM::Document& document)
 {
     return adopt_ref(*new Window(document));
 }
 
-Window::Window(Document& document)
-    : EventTarget()
+Window::Window(DOM::Document& document)
+    : DOM::EventTarget()
     , m_associated_document(document)
     , m_performance(make<HighResolutionTime::Performance>(*this))
     , m_crypto(Crypto::Crypto::create())
@@ -174,7 +174,7 @@ void Window::clear_interval(i32 id)
     m_timers.remove(id);
 }
 
-void Window::deallocate_timer_id(Badge<Timer>, i32 id)
+void Window::deallocate_timer_id(Badge<DOM::Timer>, i32 id)
 {
     m_timer_id_allocator.deallocate(id);
 }
@@ -262,7 +262,7 @@ i32 Window::run_timer_initialization_steps(Bindings::TimerHandler handler, i32 t
     };
 
     // 13. Run steps after a timeout given global, "setTimeout/setInterval", timeout, completionStep, and id.
-    auto timer = Timer::create(*this, timeout, move(completion_step), id);
+    auto timer = DOM::Timer::create(*this, timeout, move(completion_step), id);
     m_timers.set(id, timer);
     timer->start();
 
@@ -320,9 +320,9 @@ void Window::did_call_location_replace(Badge<Bindings::LocationObject>, String u
     browsing_context->loader().load(move(new_url), FrameLoader::Type::Navigation);
 }
 
-bool Window::dispatch_event(NonnullRefPtr<Event> event)
+bool Window::dispatch_event(NonnullRefPtr<DOM::Event> event)
 {
-    return EventDispatcher::dispatch(*this, event, true);
+    return DOM::EventDispatcher::dispatch(*this, event, true);
 }
 
 JS::Object* Window::create_wrapper(JS::GlobalObject& global_object)
