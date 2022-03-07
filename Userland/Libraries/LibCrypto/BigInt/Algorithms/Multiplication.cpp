@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2020-2021, Dex♪ <dexes.ttp@gmail.com>
+ * Copyright (c) 2022, Ben Abraham <ben.d.abraham@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,7 +26,19 @@ FLATTEN void UnsignedBigIntegerAlgorithms::multiply_without_allocation(
     UnsignedBigInteger& temp_shift,
     UnsignedBigInteger& output)
 {
+    if (left == 1) {
+        output.set_to(right);
+        return;
+    }
+    if (right == 1) {
+        output.set_to(left);
+        return;
+    }
+
     output.set_to_0();
+
+    if (left == 0 || right == 0)
+        return;
 
     // iterate all bits
     for (size_t word_index = 0; word_index < left.length(); ++word_index) {

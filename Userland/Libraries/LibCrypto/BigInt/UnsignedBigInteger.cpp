@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2022, Ben Abraham <ben.d.abraham@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -274,6 +275,9 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::multiplied_by(const UnsignedBigIn
 
 FLATTEN UnsignedDivisionResult UnsignedBigInteger::divided_by(const UnsignedBigInteger& divisor) const
 {
+    if (divisor == 1)
+        return UnsignedDivisionResult { *this, 0 };
+
     UnsignedBigInteger quotient;
     UnsignedBigInteger remainder;
 
