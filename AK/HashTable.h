@@ -547,9 +547,10 @@ private:
 
     void shrink_if_needed()
     {
-        // Shrink if less than 20% of buckets are used, but never going below 16.
+        // Shrink if more than 12.5% of buckets are deleted and less than 20% of buckets are
+        // used, but never going below 16.
         // These limits are totally arbitrary and can probably be improved.
-        bool should_shrink = m_size * 5 < m_capacity && m_capacity > 16;
+        bool should_shrink = m_deleted_count * 8 > m_capacity && m_size * 5 < m_capacity && m_capacity > 16;
         if (!should_shrink)
             return;
 
