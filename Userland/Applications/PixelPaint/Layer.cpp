@@ -179,4 +179,25 @@ void Layer::create_mask()
     update_cached_bitmap();
 }
 
+Gfx::Bitmap& Layer::currently_edited_bitmap()
+{
+    switch (edit_mode()) {
+    case EditMode::Mask:
+        if (is_masked())
+            return *mask_bitmap();
+        [[fallthrough]];
+    case EditMode::Content:
+        return content_bitmap();
+    }
+    VERIFY_NOT_REACHED();
+}
+
+void Layer::set_edit_mode(Layer::EditMode mode)
+{
+    if (m_edit_mode == mode)
+        return;
+
+    m_edit_mode = mode;
+}
+
 }
