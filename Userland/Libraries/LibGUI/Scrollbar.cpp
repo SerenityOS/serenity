@@ -12,6 +12,9 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
+static constexpr int ANIMATION_INTERVAL = 16;  // Milliseconds
+static constexpr double ANIMATION_TIME = 0.18; // Seconds
+
 REGISTER_WIDGET(GUI, Scrollbar)
 
 namespace GUI {
@@ -113,6 +116,39 @@ int Scrollbar::scrubbable_range_in_pixels() const
 bool Scrollbar::has_scrubber() const
 {
     return max() != min();
+}
+
+void Scrollbar::set_value(int value, AllowCallback allow_callback)
+{
+    m_target_value = value;
+    if (!(m_animated_scrolling_timer.is_null()))
+        m_animated_scrolling_timer->stop();
+
+    AbstractSlider::set_value(value, allow_callback);
+}
+
+void Scrollbar::set_target_value(int new_target_value)
+{
+    new_target_value = clamp(new_target_value, min(), max());
+
+    // If we are already at or scrolling to the new target then don't touch anything
+    if (m_target_value == new_target_value)
+        return;
+
+    m_animation_time_elapsed = 0;
+    m_start_value = value();
+    m_target_value = new_target_value;
+
+    if (m_animated_scrolling_timer.is_null()) {
+        m_animated_scrolling_timer = add<Core::Timer>();
+        m_animated_scrolling_timer->set_interval(ANIMATION_INTERVAL);
+        m_animated_scrolling_timer->on_timeout = [this]() {
+            m_animation_time_elapsed += (double)ANIMATION_INTERVAL / 1'000; // ms -> sec
+            update_animated_scroll();
+        };
+    }
+
+    m_animated_scrolling_timer->start();
 }
 
 float Scrollbar::unclamped_scrubber_size() const
@@ -335,7 +371,7 @@ void Scrollbar::scroll_to_position(const Gfx::IntPoint& click_position)
 
     float x_or_y = ::max(0, click_position.primary_offset_for_orientation(orientation()) - button_width() - button_width() / 2);
     float rel_x_or_y = x_or_y / available;
-    set_value(min() + rel_x_or_y * range_size);
+    set_target_value(min() + rel_x_or_y * range_size);
 }
 
 Scrollbar::Component Scrollbar::component_at_position(const Gfx::IntPoint& position)
@@ -389,6 +425,21 @@ void Scrollbar::change_event(Event& event)
             set_automatic_scrolling_active(false, Component::None);
     }
     return Widget::change_event(event);
+}
+
+void Scrollbar::update_animated_scroll()
+{
+    if (value() == m_target_value) {
+        m_animated_scrolling_timer->stop();
+        return;
+    }
+
+    double time_percent = m_animation_time_elapsed / ANIMATION_TIME;
+    double ease_percent = 1.0 - pow(1.0 - time_percent, 5.0); // Ease out quint
+    double initial_distance = m_target_value - m_start_value;
+    double new_distance = initial_distance * ease_percent;
+    int new_value = m_start_value + (int)round(new_distance);
+    AbstractSlider::set_value(new_value);
 }
 
 }
