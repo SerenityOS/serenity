@@ -19,7 +19,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     TRY(require_promise(Pledge::proc));
     RefPtr<Thread> child_first_thread;
     auto child_name = TRY(m_name->try_clone());
-    auto child = TRY(Process::try_create(child_first_thread, move(child_name), uid(), gid(), pid(), m_is_kernel_process, m_cwd, m_executable, m_tty, this));
+    auto child = TRY(Process::try_create(child_first_thread, move(child_name), uid(), gid(), pid(), m_is_kernel_process, current_directory(), m_executable, m_tty, this));
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = TRY(m_unveiled_paths.deep_copy());
 

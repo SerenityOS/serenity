@@ -274,7 +274,7 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
 
 ErrorOr<void> Process::procfs_get_current_work_directory_link(KBufferBuilder& builder) const
 {
-    return builder.append(TRY(const_cast<Process&>(*this).current_directory().try_serialize_absolute_path())->view());
+    return builder.append(TRY(const_cast<Process&>(*this).current_directory()->try_serialize_absolute_path())->view());
 }
 
 mode_t Process::binary_link_required_mode() const

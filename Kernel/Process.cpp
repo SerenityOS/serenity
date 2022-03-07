@@ -215,20 +215,20 @@ void Process::unprotect_data()
     });
 }
 
-ErrorOr<NonnullRefPtr<Process>> Process::try_create(RefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+ErrorOr<NonnullRefPtr<Process>> Process::try_create(RefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
     auto space = TRY(Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr));
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
-    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty, move(unveil_tree))));
+    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), uid, gid, ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree))));
     TRY(process->attach_resources(move(space), first_thread, fork_parent));
     return process;
 }
 
-Process::Process(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree)
+Process::Process(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree)
     : m_name(move(name))
     , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
-    , m_cwd(move(cwd))
+    , m_current_directory(move(current_directory))
     , m_tty(tty)
     , m_unveiled_paths(move(unveil_tree))
     , m_wait_blocker_set(*this)
@@ -528,11 +528,13 @@ siginfo_t Process::wait_info() const
     return siginfo;
 }
 
-Custody& Process::current_directory()
+NonnullRefPtr<Custody> Process::current_directory()
 {
-    if (!m_cwd)
-        m_cwd = VirtualFileSystem::the().root_custody();
-    return *m_cwd;
+    return m_current_directory.with([&](auto& current_directory) -> NonnullRefPtr<Custody> {
+        if (!current_directory)
+            current_directory = VirtualFileSystem::the().root_custody();
+        return *current_directory;
+    });
 }
 
 ErrorOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Userspace<char const*> user_path, size_t path_length)
@@ -629,7 +631,6 @@ void Process::finalize()
     m_fds.with_exclusive([](auto& fds) { fds.clear(); });
     m_tty = nullptr;
     m_executable = nullptr;
-    m_cwd = nullptr;
     m_arguments.clear();
     m_environment.clear();
 
