@@ -31,7 +31,7 @@ void Filter::apply() const
     if (!m_editor)
         return;
     if (auto* layer = m_editor->active_layer()) {
-        apply(layer->bitmap(), layer->bitmap());
+        apply(layer->content_bitmap(), layer->content_bitmap());
         layer->did_modify_bitmap(layer->rect());
         m_editor->did_complete_action();
     }

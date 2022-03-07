@@ -65,7 +65,7 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
         m_config_widget->add_child(*m_selected_filter_config_widget);
     };
 
-    m_preview_widget->set_bitmap(editor->active_layer()->bitmap().clone().release_value());
+    m_preview_widget->set_bitmap(editor->active_layer()->content_bitmap().clone().release_value());
 
     apply_button->on_click = [this](auto) {
         if (!m_selected_filter) {

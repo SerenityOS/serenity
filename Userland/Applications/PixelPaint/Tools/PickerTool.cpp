@@ -24,7 +24,7 @@ void PickerTool::on_mousedown(Layer* layer, MouseEvent& event)
     } else {
         if (!layer || !layer->rect().contains(position))
             return;
-        color = layer->bitmap().get_pixel(position);
+        color = layer->content_bitmap().get_pixel(position);
     }
 
     // We picked a transparent pixel, do nothing.

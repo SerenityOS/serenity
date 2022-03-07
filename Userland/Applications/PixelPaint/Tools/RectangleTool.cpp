@@ -70,7 +70,7 @@ void RectangleTool::on_mouseup(Layer* layer, MouseEvent& event)
         return;
 
     if (event.layer_event().button() == m_drawing_button) {
-        GUI::Painter painter(layer->bitmap());
+        GUI::Painter painter(layer->content_bitmap());
         draw_using(painter, m_rectangle_start_position, m_rectangle_end_position, m_thickness);
         m_drawing_button = GUI::MouseButton::None;
         layer->did_modify_bitmap();

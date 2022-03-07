@@ -49,7 +49,7 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect) con
             continue;
         auto target = dest_rect.translated(layer.location().x() * scale, layer.location().y() * scale);
         target.set_size(layer.size().width() * scale, layer.size().height() * scale);
-        painter.draw_scaled_bitmap(target, layer.bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
+        painter.draw_scaled_bitmap(target, layer.display_bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
     }
 }
 
@@ -126,7 +126,8 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
             MUST(json_layer.add("opacity_percent", layer.opacity_percent()));
             MUST(json_layer.add("visible", layer.is_visible()));
             MUST(json_layer.add("selected", layer.is_selected()));
-            MUST(json_layer.add("bitmap", encode_base64(bmp_dumber.dump(layer.bitmap()))));
+            // FIXME: Respect mask
+            MUST(json_layer.add("bitmap", encode_base64(bmp_dumber.dump(layer.display_bitmap()))));
         }
     }
 }
@@ -330,7 +331,7 @@ void Image::flatten_all_layers()
 
     auto& bottom_layer = m_layers.at(0);
 
-    GUI::Painter painter(bottom_layer.bitmap());
+    GUI::Painter painter(bottom_layer.content_bitmap());
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
 
     for (size_t index = m_layers.size() - 1; index > 0; index--) {
@@ -351,7 +352,7 @@ void Image::merge_visible_layers()
     while (index < m_layers.size()) {
         if (m_layers.at(index).is_visible()) {
             auto& bottom_layer = m_layers.at(index);
-            GUI::Painter painter(bottom_layer.bitmap());
+            GUI::Painter painter(bottom_layer.content_bitmap());
             paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
             select_layer(&bottom_layer);
             index++;
@@ -380,8 +381,8 @@ void Image::merge_active_layer_up(Layer& layer)
     }
 
     auto& layer_above = m_layers.at(layer_index + 1);
-    GUI::Painter painter(layer_above.bitmap());
-    painter.draw_scaled_bitmap(rect(), layer.bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
+    GUI::Painter painter(layer_above.content_bitmap());
+    painter.draw_scaled_bitmap(rect(), layer.display_bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
     remove_layer(layer);
     select_layer(&layer_above);
 }
@@ -397,8 +398,8 @@ void Image::merge_active_layer_down(Layer& layer)
     }
 
     auto& layer_below = m_layers.at(layer_index - 1);
-    GUI::Painter painter(layer_below.bitmap());
-    painter.draw_scaled_bitmap(rect(), layer.bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
+    GUI::Painter painter(layer_below.content_bitmap());
+    painter.draw_scaled_bitmap(rect(), layer.display_bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
     remove_layer(layer);
     select_layer(&layer_below);
 }
@@ -473,9 +474,10 @@ void ImageUndoCommand::redo()
 void Image::flip(Gfx::Orientation orientation)
 {
     for (auto& layer : m_layers) {
-        auto flipped = layer.bitmap().flipped(orientation).release_value_but_fixme_should_propagate_errors();
-        layer.set_bitmap(*flipped);
+        auto flipped = layer.content_bitmap().flipped(orientation).release_value_but_fixme_should_propagate_errors();
+        layer.set_content_bitmap(*flipped);
         layer.did_modify_bitmap(rect());
+        // FIXME: Respect mask
     }
 
     did_change();
@@ -484,9 +486,10 @@ void Image::flip(Gfx::Orientation orientation)
 void Image::rotate(Gfx::RotationDirection direction)
 {
     for (auto& layer : m_layers) {
-        auto rotated = layer.bitmap().rotated(direction).release_value_but_fixme_should_propagate_errors();
-        layer.set_bitmap(*rotated);
+        auto rotated = layer.content_bitmap().rotated(direction).release_value_but_fixme_should_propagate_errors();
+        layer.set_content_bitmap(*rotated);
         layer.did_modify_bitmap(rect());
+        // FIXME: Respect mask
     }
 
     m_size = { m_size.height(), m_size.width() };
@@ -496,9 +499,10 @@ void Image::rotate(Gfx::RotationDirection direction)
 void Image::crop(Gfx::IntRect const& cropped_rect)
 {
     for (auto& layer : m_layers) {
-        auto cropped = layer.bitmap().cropped(cropped_rect).release_value_but_fixme_should_propagate_errors();
-        layer.set_bitmap(*cropped);
+        auto cropped = layer.content_bitmap().cropped(cropped_rect).release_value_but_fixme_should_propagate_errors();
+        layer.set_content_bitmap(*cropped);
         layer.did_modify_bitmap(rect());
+        // FIXME: Respect mask
     }
 
     m_size = { cropped_rect.width(), cropped_rect.height() };
@@ -512,7 +516,7 @@ Color Image::color_at(Gfx::IntPoint const& point) const
         if (!layer.is_visible() || !layer.rect().contains(point))
             continue;
 
-        auto layer_color = layer.bitmap().get_pixel(point);
+        auto layer_color = layer.display_bitmap().get_pixel(point);
         float layer_opacity = layer.opacity_percent() / 100.0f;
         layer_color.set_alpha((u8)(layer_color.alpha() * layer_opacity));
         color = color.blend(layer_color);
