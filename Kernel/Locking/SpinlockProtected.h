@@ -46,7 +46,11 @@ private:
     auto lock_mutable() { return Locked<T>(m_value, m_spinlock); }
 
 public:
-    SpinlockProtected() = default;
+    template<typename... Args>
+    SpinlockProtected(Args&&... args)
+        : m_value(forward<Args>(args)...)
+    {
+    }
 
     template<typename Callback>
     decltype(auto) with(Callback callback) const
