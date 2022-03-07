@@ -153,10 +153,16 @@ void Layer::update_cached_bitmap()
     if (!is_masked()) {
         if (m_content_bitmap.ptr() == m_cached_display_bitmap.ptr())
             return;
-
         m_cached_display_bitmap = m_content_bitmap;
         return;
     }
+}
+
+void Layer::create_mask()
+{
+    m_mask_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size()));
+    m_mask_bitmap->fill(Gfx::Color::White);
+    update_cached_bitmap();
 }
 
 }
