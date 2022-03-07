@@ -94,8 +94,8 @@ void InfinitelyScrollableTableView::mousemove_event(GUI::MouseEvent& event)
                     top_left_most_index = index;
             });
 
-            auto top_left_rect = content_rect(top_left_most_index);
-            auto bottom_right_rect = content_rect(bottom_right_most_index);
+            auto top_left_rect = content_rect_minus_scrollbars(top_left_most_index);
+            auto bottom_right_rect = content_rect_minus_scrollbars(bottom_right_most_index);
             auto distance_tl = top_left_rect.center() - event.position();
             auto distance_br = bottom_right_rect.center() - event.position();
             auto is_over_top_line = false;
@@ -201,7 +201,7 @@ void InfinitelyScrollableTableView::mousedown_event(GUI::MouseEvent& event)
             m_is_dragging_for_cut = true;
         else if (m_is_hovering_extend_zone)
             m_is_dragging_for_extend = true;
-        auto rect = content_rect(m_target_cell);
+        auto rect = content_rect_minus_scrollbars(m_target_cell);
         GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y() };
         AbstractTableView::mousedown_event(adjusted_event);
     } else {
@@ -236,7 +236,7 @@ void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
     m_has_committed_to_cutting = false;
     m_has_committed_to_extending = false;
     if (m_is_hovering_cut_zone || m_is_hovering_extend_zone) {
-        auto rect = content_rect(m_target_cell);
+        auto rect = content_rect_minus_scrollbars(m_target_cell);
         GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y() };
         TableView::mouseup_event(adjusted_event);
     } else {
