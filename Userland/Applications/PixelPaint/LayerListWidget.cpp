@@ -147,16 +147,31 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         if (is_masked)
             painter.draw_scaled_bitmap(inner_mask_thumbnail_rect, *layer.mask_bitmap(), layer.mask_bitmap()->rect());
 
+        Color border_color = layer.is_visible() ? palette().color(ColorRole::BaseText) : palette().color(ColorRole::DisabledText);
+
+        // FIXME: This needs cleaning up
         if (layer.is_visible()) {
             painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, layer.is_selected() ? palette().selection_text() : palette().button_text());
-            painter.draw_rect(inner_thumbnail_rect, palette().color(ColorRole::BaseText));
-            if (is_masked)
-                painter.draw_rect(inner_mask_thumbnail_rect, palette().color(ColorRole::BaseText));
+            switch (layer.edit_mode()) {
+            case Layer::EditMode::Content:
+                if (is_masked) {
+                    painter.draw_rect_with_thickness(inner_thumbnail_rect.inflated(4, 4), Color::Yellow, 2);
+                    painter.draw_rect(inner_mask_thumbnail_rect, border_color);
+                } else {
+                    painter.draw_rect(inner_thumbnail_rect, border_color);
+                }
+                break;
+            case Layer::EditMode::Mask:
+                painter.draw_rect(inner_thumbnail_rect, border_color);
+                if (is_masked)
+                    painter.draw_rect_with_thickness(inner_mask_thumbnail_rect.inflated(4, 4), Color::Yellow, 2);
+                break;
+            }
         } else {
             painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, palette().color(ColorRole::DisabledText));
-            painter.draw_rect(inner_thumbnail_rect, palette().color(ColorRole::DisabledText));
+            painter.draw_rect(inner_thumbnail_rect, border_color);
             if (is_masked)
-                painter.draw_rect(inner_mask_thumbnail_rect, palette().color(ColorRole::DisabledText));
+                painter.draw_rect(inner_mask_thumbnail_rect, border_color);
         }
     };
 
