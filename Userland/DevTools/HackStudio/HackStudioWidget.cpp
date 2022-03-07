@@ -435,9 +435,19 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     m_new_file_actions.append(create_new_file_action("&C++ Source File", "/res/icons/16x16/filetype-cplusplus.png", "cpp"));
     m_new_file_actions.append(create_new_file_action("C++ &Header File", "/res/icons/16x16/filetype-header.png", "h"));
     m_new_file_actions.append(create_new_file_action("&GML File", "/res/icons/16x16/filetype-gml.png", "gml"));
-    m_new_file_actions.append(create_new_file_action("Java&Script Source File", "/res/icons/16x16/filetype-javascript.png", "js"));
+    m_new_file_actions.append(create_new_file_action("P&ython Source File", "/res/icons/16x16/filetype-python.png", "py"));
+    m_new_file_actions.append(create_new_file_action("Ja&va Source File", "/res/icons/16x16/filetype-java.png", "java"));
+    m_new_file_actions.append(create_new_file_action("C Source File", "/res/icons/16x16/filetype-c.png", "c"));
+
+    m_new_file_actions.append(create_new_file_action("&JavaScript Source File", "/res/icons/16x16/filetype-javascript.png", "js"));
     m_new_file_actions.append(create_new_file_action("HT&ML File", "/res/icons/16x16/filetype-html.png", "html"));
     m_new_file_actions.append(create_new_file_action("C&SS File", "/res/icons/16x16/filetype-css.png", "css"));
+    m_new_file_actions.append(create_new_file_action("&PHP File", "/res/icons/16x16/filetype-php.png", "php"));
+    m_new_file_actions.append(create_new_file_action("&Wasm File", "/res/icons/16x16/filetype-wasm.png", "wasm"));
+
+    m_new_file_actions.append(create_new_file_action("&INI File", "/res/icons/16x16/filetype-ini.png", "ini"));
+    m_new_file_actions.append(create_new_file_action("JS&ON File", "/res/icons/16x16/filetype-json.png", "json"));
+    m_new_file_actions.append(create_new_file_action("Mark&down File", "/res/icons/16x16/filetype-markdown.png", "md"));
 
     m_new_plain_file_action = create_new_file_action("Plain &File", "/res/icons/16x16/new.png", "");
 
