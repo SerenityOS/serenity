@@ -55,6 +55,7 @@
 #include <LibJS/Runtime/ShadowRealm.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
@@ -1273,8 +1274,9 @@ static void repl(JS::Interpreter& interpreter)
 {
     while (!s_fail_repl) {
         String piece = read_next_piece();
-        if (piece.is_empty())
+        if (Utf8View { piece }.trim(JS::whitespace_characters).is_empty())
             continue;
+
         repl_statements.append(piece);
         parse_and_run(interpreter, piece, "REPL");
     }
