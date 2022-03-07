@@ -69,7 +69,7 @@ void LayerListWidget::resize_event(GUI::ResizeEvent& event)
     relayout_gadgets();
 }
 
-void LayerListWidget::get_gadget_rects(Gadget const& gadget, Gfx::IntRect& outer_rect, Gfx::IntRect& outer_thumbnail_rect, Gfx::IntRect& inner_thumbnail_rect, Gfx::IntRect& text_rect)
+void LayerListWidget::get_gadget_rects(Gadget const& gadget, bool is_masked, Gfx::IntRect& outer_rect, Gfx::IntRect& outer_thumbnail_rect, Gfx::IntRect& inner_thumbnail_rect, Gfx::IntRect& outer_mask_thumbnail_rect, Gfx::IntRect& inner_mask_thumbnail_rect, Gfx::IntRect& text_rect)
 {
     outer_rect = gadget.rect;
     outer_rect.translate_by(0, -vertical_scrollbar().value());
@@ -97,7 +97,16 @@ void LayerListWidget::get_gadget_rects(Gadget const& gadget, Gfx::IntRect& outer
     inner_thumbnail_rect = { 0, 0, thumbnail_size.width(), thumbnail_size.height() };
     inner_thumbnail_rect.center_within(outer_thumbnail_rect);
 
-    text_rect = { outer_thumbnail_rect.right() + 10, outer_rect.y(), outer_rect.width(), outer_rect.height() };
+    if (is_masked) {
+        outer_mask_thumbnail_rect = { outer_thumbnail_rect.top_right().x() + 5, outer_thumbnail_rect.y(), outer_thumbnail_rect.width(), outer_thumbnail_rect.height() };
+        inner_mask_thumbnail_rect = { 0, 0, thumbnail_size.width(), thumbnail_size.height() };
+        inner_mask_thumbnail_rect.center_within(outer_mask_thumbnail_rect);
+    } else {
+        outer_mask_thumbnail_rect = outer_thumbnail_rect;
+        inner_mask_thumbnail_rect = inner_thumbnail_rect;
+    }
+
+    text_rect = { outer_mask_thumbnail_rect.right() + 10, outer_rect.y(), outer_rect.width(), outer_rect.height() };
     text_rect.intersect(outer_rect);
 }
 
@@ -116,11 +125,15 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
     auto paint_gadget = [&](auto& gadget) {
         auto& layer = m_image->layer(gadget.layer_index);
 
+        auto is_masked = layer.is_masked();
+
         Gfx::IntRect adjusted_rect;
         Gfx::IntRect outer_thumbnail_rect;
         Gfx::IntRect inner_thumbnail_rect;
+        Gfx::IntRect outer_mask_thumbnail_rect;
+        Gfx::IntRect inner_mask_thumbnail_rect;
         Gfx::IntRect text_rect;
-        get_gadget_rects(gadget, adjusted_rect, outer_thumbnail_rect, inner_thumbnail_rect, text_rect);
+        get_gadget_rects(gadget, is_masked, adjusted_rect, outer_thumbnail_rect, inner_thumbnail_rect, outer_mask_thumbnail_rect, inner_mask_thumbnail_rect, text_rect);
 
         if (gadget.is_moving) {
             painter.fill_rect(adjusted_rect, palette().selection().lightened(1.5f));
@@ -131,12 +144,19 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_rect(adjusted_rect, palette().color(ColorRole::BaseText));
         painter.draw_scaled_bitmap(inner_thumbnail_rect, layer.display_bitmap(), layer.display_bitmap().rect());
 
+        if (is_masked)
+            painter.draw_scaled_bitmap(inner_mask_thumbnail_rect, *layer.mask_bitmap(), layer.mask_bitmap()->rect());
+
         if (layer.is_visible()) {
             painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, layer.is_selected() ? palette().selection_text() : palette().button_text());
             painter.draw_rect(inner_thumbnail_rect, palette().color(ColorRole::BaseText));
+            if (is_masked)
+                painter.draw_rect(inner_mask_thumbnail_rect, palette().color(ColorRole::BaseText));
         } else {
             painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, palette().color(ColorRole::DisabledText));
             painter.draw_rect(inner_thumbnail_rect, palette().color(ColorRole::DisabledText));
+            if (is_masked)
+                painter.draw_rect(inner_mask_thumbnail_rect, palette().color(ColorRole::DisabledText));
         }
     };
 
@@ -315,9 +335,16 @@ void LayerListWidget::image_did_modify_layer_bitmap(size_t layer_index)
     Gfx::IntRect adjusted_rect;
     Gfx::IntRect outer_thumbnail_rect;
     Gfx::IntRect inner_thumbnail_rect;
+    Gfx::IntRect outer_mask_thumbnail_rect;
+    Gfx::IntRect inner_mask_thumbnail_rect;
     Gfx::IntRect text_rect;
-    get_gadget_rects(m_gadgets[to_gadget_index(layer_index)], adjusted_rect, outer_thumbnail_rect, inner_thumbnail_rect, text_rect);
+
+    auto is_masked = m_image->layer(layer_index).is_masked();
+
+    get_gadget_rects(m_gadgets[to_gadget_index(layer_index)], is_masked, adjusted_rect, outer_thumbnail_rect, inner_thumbnail_rect, outer_mask_thumbnail_rect, inner_mask_thumbnail_rect, text_rect);
     update(outer_thumbnail_rect);
+    if (is_masked)
+        update(outer_mask_thumbnail_rect);
 }
 
 void LayerListWidget::image_did_modify_layer_stack()
