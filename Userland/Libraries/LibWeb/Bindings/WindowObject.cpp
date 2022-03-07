@@ -114,6 +114,7 @@ void WindowObject::initialize_global_object()
     define_direct_property("CSS", heap().allocate<CSSNamespace>(*this, *this), 0);
 
     define_native_accessor("localStorage", local_storage_getter, {}, attr);
+    define_native_accessor("sessionStorage", session_storage_getter, {}, attr);
     define_native_accessor("origin", origin_getter, {}, attr);
 
     // Legacy
@@ -647,6 +648,13 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::local_storage_getter)
     auto* impl = TRY(impl_from(vm, global_object));
     // FIXME: localStorage may throw. We have to deal with that here.
     return wrap(global_object, *impl->local_storage());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::session_storage_getter)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    // FIXME: sessionStorage may throw. We have to deal with that here.
+    return wrap(global_object, *impl->session_storage());
 }
 
 #define __ENUMERATE(attribute, event_name)                                                                                 \

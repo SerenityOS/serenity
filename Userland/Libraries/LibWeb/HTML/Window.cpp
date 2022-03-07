@@ -528,6 +528,17 @@ RefPtr<HTML::Storage> Window::local_storage()
     });
 }
 
+// https://html.spec.whatwg.org/multipage/webstorage.html#dom-sessionstorage
+RefPtr<HTML::Storage> Window::session_storage()
+{
+    // FIXME: Implement according to spec.
+
+    static HashMap<Origin, NonnullRefPtr<HTML::Storage>> session_storage_per_origin;
+    return session_storage_per_origin.ensure(associated_document().origin(), [] {
+        return HTML::Storage::create();
+    });
+}
+
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
 Window* Window::parent()
 {

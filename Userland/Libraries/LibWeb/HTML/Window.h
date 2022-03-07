@@ -104,6 +104,7 @@ public:
     Selection::Selection* get_selection();
 
     RefPtr<HTML::Storage> local_storage();
+    RefPtr<HTML::Storage> session_storage();
 
     Window* parent();
 
