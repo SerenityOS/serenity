@@ -7,7 +7,7 @@
 #include <LibWeb/CSS/MediaQuery.h>
 #include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
@@ -77,7 +77,7 @@ String MediaFeature::to_string() const
     VERIFY_NOT_REACHED();
 }
 
-bool MediaFeature::evaluate(DOM::Window const& window) const
+bool MediaFeature::evaluate(HTML::Window const& window) const
 {
     auto maybe_queried_value = window.query_media_feature(m_name);
     if (!maybe_queried_value.has_value())
@@ -122,7 +122,7 @@ bool MediaFeature::evaluate(DOM::Window const& window) const
     VERIFY_NOT_REACHED();
 }
 
-bool MediaFeature::compare(DOM::Window const& window, MediaFeatureValue left, Comparison comparison, MediaFeatureValue right)
+bool MediaFeature::compare(HTML::Window const& window, MediaFeatureValue left, Comparison comparison, MediaFeatureValue right)
 {
     if (!left.is_same_type(right))
         return false;
@@ -298,7 +298,7 @@ String MediaCondition::to_string() const
     return builder.to_string();
 }
 
-MatchResult MediaCondition::evaluate(DOM::Window const& window) const
+MatchResult MediaCondition::evaluate(HTML::Window const& window) const
 {
     switch (type) {
     case Type::Single:
@@ -369,7 +369,7 @@ String MediaQuery::to_string() const
     return builder.to_string();
 }
 
-bool MediaQuery::evaluate(DOM::Window const& window)
+bool MediaQuery::evaluate(HTML::Window const& window)
 {
     auto matches_media = [](MediaType media) -> MatchResult {
         switch (media) {

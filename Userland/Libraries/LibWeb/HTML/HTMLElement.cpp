@@ -11,13 +11,13 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>

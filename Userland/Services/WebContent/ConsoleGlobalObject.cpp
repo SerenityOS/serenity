@@ -10,7 +10,7 @@
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace WebContent {
 

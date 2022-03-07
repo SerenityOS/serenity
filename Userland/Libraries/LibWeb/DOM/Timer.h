@@ -15,16 +15,16 @@ namespace Web::DOM {
 
 class Timer final : public RefCounted<Timer> {
 public:
-    static NonnullRefPtr<Timer> create(Window& window, i32 milliseconds, Function<void()> callback, i32 id);
+    static NonnullRefPtr<Timer> create(HTML::Window& window, i32 milliseconds, Function<void()> callback, i32 id);
     ~Timer();
 
     void start();
 
 private:
-    Timer(Window& window, i32 milliseconds, Function<void()> callback, i32 id);
+    Timer(HTML::Window& window, i32 milliseconds, Function<void()> callback, i32 id);
 
     RefPtr<Core::Timer> m_timer;
-    Window& m_window;
+    HTML::Window& m_window;
     i32 m_id { 0 };
 };
 

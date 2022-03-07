@@ -9,11 +9,11 @@
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Range.h>
-#include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 
-NonnullRefPtr<Range> Range::create(Window& window)
+NonnullRefPtr<Range> Range::create(HTML::Window& window)
 {
     return Range::create(window.associated_document());
 }

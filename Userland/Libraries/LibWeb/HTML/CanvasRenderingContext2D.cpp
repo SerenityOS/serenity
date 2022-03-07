@@ -13,12 +13,12 @@
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/ExceptionOr.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/ImageData.h>
 #include <LibWeb/HTML/TextMetrics.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/TextNode.h>
 
 namespace Web::HTML {

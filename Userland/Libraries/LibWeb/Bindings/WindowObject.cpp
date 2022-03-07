@@ -38,18 +38,18 @@
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Storage.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 namespace Web::Bindings {
 
-WindowObject::WindowObject(DOM::Window& impl)
+WindowObject::WindowObject(HTML::Window& impl)
     : m_impl(impl)
 {
     impl.set_wrapper({}, *this);
@@ -164,7 +164,7 @@ JS::ThrowCompletionOr<bool> WindowObject::internal_set_prototype_of(JS::Object* 
     return set_immutable_prototype(prototype);
 }
 
-static JS::ThrowCompletionOr<DOM::Window*> impl_from(JS::VM& vm, JS::GlobalObject& global_object)
+static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
     // Since this is a non built-in function we must treat it as non-strict mode
     // this means that a nullish this_value should be converted to the

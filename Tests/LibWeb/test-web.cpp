@@ -45,7 +45,7 @@ struct TestWebGlobalObject : public Web::Bindings::WindowObject {
     JS_OBJECT(TestWebGlobalObject, Web::Bindings::WindowObject);
 
 public:
-    TestWebGlobalObject(Web::DOM::Window& window)
+    TestWebGlobalObject(Web::HTML::Window& window)
         : Web::Bindings::WindowObject(window)
     {
     }

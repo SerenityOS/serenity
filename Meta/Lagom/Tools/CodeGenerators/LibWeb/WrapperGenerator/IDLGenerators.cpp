@@ -2804,8 +2804,8 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/Range.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Origin.h>
 
 #if __has_include(<LibWeb/Bindings/@prototype_base_class@.h>)

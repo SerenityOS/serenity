@@ -10,7 +10,7 @@
 
 namespace Web::HTML {
 
-WindowEnvironmentSettingsObject::WindowEnvironmentSettingsObject(DOM::Window& window, JS::ExecutionContext& execution_context)
+WindowEnvironmentSettingsObject::WindowEnvironmentSettingsObject(Window& window, JS::ExecutionContext& execution_context)
     : EnvironmentSettingsObject(execution_context)
     , m_window(window)
 {

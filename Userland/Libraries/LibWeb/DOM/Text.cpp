@@ -5,8 +5,8 @@
  */
 
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/TextNode.h>
 
 namespace Web::DOM {

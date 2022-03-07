@@ -30,12 +30,12 @@ class WindowObject
     JS_OBJECT(WindowObject, JS::GlobalObject);
 
 public:
-    explicit WindowObject(DOM::Window&);
+    explicit WindowObject(HTML::Window&);
     virtual void initialize_global_object() override;
     virtual ~WindowObject() override;
 
-    DOM::Window& impl() { return *m_impl; }
-    const DOM::Window& impl() const { return *m_impl; }
+    HTML::Window& impl() { return *m_impl; }
+    const HTML::Window& impl() const { return *m_impl; }
 
     Origin origin() const;
 
@@ -135,7 +135,7 @@ private:
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
 #undef __ENUMERATE
 
-    NonnullRefPtr<DOM::Window> m_impl;
+    NonnullRefPtr<HTML::Window> m_impl;
 
     LocationObject* m_location_object { nullptr };
 

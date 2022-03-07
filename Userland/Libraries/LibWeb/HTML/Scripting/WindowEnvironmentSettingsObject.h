@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::HTML {
 
@@ -24,9 +24,9 @@ public:
     virtual CanUseCrossOriginIsolatedAPIs cross_origin_isolated_capability() override;
 
 private:
-    WindowEnvironmentSettingsObject(DOM::Window&, JS::ExecutionContext& execution_context);
+    WindowEnvironmentSettingsObject(Window&, JS::ExecutionContext& execution_context);
 
-    NonnullRefPtr<DOM::Window> m_window;
+    NonnullRefPtr<Window> m_window;
 };
 
 }

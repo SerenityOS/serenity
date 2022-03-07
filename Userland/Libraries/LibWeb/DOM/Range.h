@@ -18,7 +18,7 @@ public:
     virtual ~Range() override;
 
     static NonnullRefPtr<Range> create(Document&);
-    static NonnullRefPtr<Range> create(Window&);
+    static NonnullRefPtr<Range> create(HTML::Window&);
     static NonnullRefPtr<Range> create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
     static NonnullRefPtr<Range> create_with_global_object(Bindings::WindowObject&);
 

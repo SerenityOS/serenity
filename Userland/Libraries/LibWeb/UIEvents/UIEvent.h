@@ -8,12 +8,12 @@
 
 #include <AK/RefPtr.h>
 #include <LibWeb/DOM/Event.h>
-#include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::UIEvents {
 
 struct UIEventInit : public DOM::EventInit {
-    RefPtr<DOM::Window> view { nullptr };
+    RefPtr<HTML::Window> view { nullptr };
     int detail { 0 };
 };
 
@@ -33,10 +33,10 @@ public:
 
     virtual ~UIEvent() override { }
 
-    DOM::Window const* view() const { return m_view; }
+    HTML::Window const* view() const { return m_view; }
     int detail() const { return m_detail; }
 
-    void init_ui_event(String const& type, bool bubbles, bool cancelable, DOM::Window* view, int detail)
+    void init_ui_event(String const& type, bool bubbles, bool cancelable, HTML::Window* view, int detail)
     {
         init_event(type, bubbles, cancelable);
         m_view = view;
@@ -55,7 +55,7 @@ protected:
     {
     }
 
-    RefPtr<DOM::Window> m_view;
+    RefPtr<HTML::Window> m_view;
     int m_detail { 0 };
 };
 

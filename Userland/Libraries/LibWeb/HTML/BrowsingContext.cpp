@@ -6,12 +6,12 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/HTMLCollection.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TextNode.h>

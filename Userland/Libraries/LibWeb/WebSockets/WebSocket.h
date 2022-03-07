@@ -59,7 +59,7 @@ public:
 
     using WrapperType = Bindings::WebSocketWrapper;
 
-    static NonnullRefPtr<WebSocket> create(DOM::Window& window, AK::URL& url)
+    static NonnullRefPtr<WebSocket> create(HTML::Window& window, AK::URL& url)
     {
         return adopt_ref(*new WebSocket(window, url));
     }
@@ -100,9 +100,9 @@ private:
     void on_error();
     void on_close(u16 code, String reason, bool was_clean);
 
-    explicit WebSocket(DOM::Window&, AK::URL&);
+    explicit WebSocket(HTML::Window&, AK::URL&);
 
-    NonnullRefPtr<DOM::Window> m_window;
+    NonnullRefPtr<HTML::Window> m_window;
 
     AK::URL m_url;
     String m_binary_type { "blob" };

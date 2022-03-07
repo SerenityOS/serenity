@@ -22,10 +22,10 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/Fetch/AbstractOperations.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/Page.h>
@@ -35,7 +35,7 @@
 
 namespace Web::XHR {
 
-XMLHttpRequest::XMLHttpRequest(DOM::Window& window)
+XMLHttpRequest::XMLHttpRequest(HTML::Window& window)
     : XMLHttpRequestEventTarget()
     , m_window(window)
     , m_response_type(Bindings::XMLHttpRequestResponseType::Empty)

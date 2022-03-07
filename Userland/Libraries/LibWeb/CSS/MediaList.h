@@ -29,7 +29,7 @@ public:
     void append_medium(String);
     void delete_medium(String);
 
-    bool evaluate(DOM::Window const&);
+    bool evaluate(HTML::Window const&);
     bool matches() const;
 
 private:

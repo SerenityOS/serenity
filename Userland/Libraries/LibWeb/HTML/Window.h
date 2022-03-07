@@ -20,16 +20,16 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
 
-namespace Web::DOM {
+namespace Web::HTML {
 
 class RequestAnimationFrameCallback;
 
 class Window final
     : public RefCounted<Window>
-    , public EventTarget
+    , public DOM::EventTarget
     , public HTML::GlobalEventHandlers {
 public:
-    static NonnullRefPtr<Window> create_with_document(Document&);
+    static NonnullRefPtr<Window> create_with_document(DOM::Document&);
     ~Window();
 
     using RefCounted::ref;
@@ -37,15 +37,15 @@ public:
 
     virtual void ref_event_target() override { RefCounted::ref(); }
     virtual void unref_event_target() override { RefCounted::unref(); }
-    virtual bool dispatch_event(NonnullRefPtr<Event>) override;
+    virtual bool dispatch_event(NonnullRefPtr<DOM::Event>) override;
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
     Page* page();
     Page const* page() const;
 
     // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
-    Document const& associated_document() const { return *m_associated_document; }
-    Document& associated_document() { return *m_associated_document; }
+    DOM::Document const& associated_document() const { return *m_associated_document; }
+    DOM::Document& associated_document() { return *m_associated_document; }
 
     // https://html.spec.whatwg.org/multipage/window-object.html#window-bc
     HTML::BrowsingContext const* browsing_context() const { return m_associated_document->browsing_context(); }
@@ -76,7 +76,7 @@ public:
 
     void set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject&);
 
-    void deallocate_timer_id(Badge<Timer>, i32);
+    void deallocate_timer_id(Badge<DOM::Timer>, i32);
 
     HighResolutionTime::Performance& performance() { return *m_performance; }
 
@@ -84,8 +84,8 @@ public:
 
     CSS::Screen& screen() { return *m_screen; }
 
-    Event const* current_event() const { return m_current_event; }
-    void set_current_event(Event* event) { m_current_event = event; }
+    DOM::Event const* current_event() const { return m_current_event; }
+    void set_current_event(DOM::Event* event) { m_current_event = event; }
 
     NonnullRefPtr<CSS::CSSStyleDeclaration> get_computed_style(DOM::Element&) const;
     NonnullRefPtr<CSS::MediaQueryList> match_media(String);
@@ -110,7 +110,7 @@ public:
     DOM::ExceptionOr<void> post_message(JS::Value, String const& target_origin);
 
 private:
-    explicit Window(Document&);
+    explicit Window(DOM::Document&);
 
     // ^HTML::GlobalEventHandlers
     virtual DOM::EventTarget& global_event_handlers_to_event_target() override { return *this; }
@@ -122,17 +122,17 @@ private:
     i32 run_timer_initialization_steps(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments, Repeat repeat, Optional<i32> previous_id = {});
 
     // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
-    WeakPtr<Document> m_associated_document;
+    WeakPtr<DOM::Document> m_associated_document;
 
     WeakPtr<Bindings::WindowObject> m_wrapper;
 
     IDAllocator m_timer_id_allocator;
-    HashMap<int, NonnullRefPtr<Timer>> m_timers;
+    HashMap<int, NonnullRefPtr<DOM::Timer>> m_timers;
 
     NonnullOwnPtr<HighResolutionTime::Performance> m_performance;
     NonnullRefPtr<Crypto::Crypto> m_crypto;
     NonnullOwnPtr<CSS::Screen> m_screen;
-    RefPtr<Event> m_current_event;
+    RefPtr<DOM::Event> m_current_event;
 
     HashMap<i32, NonnullRefPtr<RequestAnimationFrameCallback>> m_request_animation_frame_callbacks;
 };
