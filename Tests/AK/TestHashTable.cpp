@@ -234,3 +234,21 @@ TEST_CASE(capacity_leak)
     }
     EXPECT(table.capacity() < 100u);
 }
+
+// Inserting and removing a bunch of elements will "thrash" the table, leading to a lot of "deleted" markers.
+BENCHMARK_CASE(benchmark_thrashing)
+{
+    HashTable<int> table;
+    // Ensure that there needs to be some copying when rehashing.
+    table.set(3);
+    table.set(7);
+    table.set(11);
+    table.set(13);
+    for (int i = 0; i < 10'000; ++i) {
+        table.set(-i);
+    }
+    for (int i = 0; i < 10'000'000; ++i) {
+        table.set(i);
+        table.remove(i);
+    }
+}
