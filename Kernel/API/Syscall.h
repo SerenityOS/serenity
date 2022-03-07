@@ -144,7 +144,7 @@ enum class NeedsBigProcessLock {
     S(pread, NeedsBigProcessLock::Yes)                      \
     S(readlink, NeedsBigProcessLock::Yes)                   \
     S(readv, NeedsBigProcessLock::Yes)                      \
-    S(realpath, NeedsBigProcessLock::Yes)                   \
+    S(realpath, NeedsBigProcessLock::No)                    \
     S(recvfd, NeedsBigProcessLock::Yes)                     \
     S(recvmsg, NeedsBigProcessLock::Yes)                    \
     S(rename, NeedsBigProcessLock::Yes)                     \
