@@ -74,6 +74,16 @@ public:
 
     bool is_masked() { return !m_mask_bitmap.is_null(); }
 
+    enum class EditMode {
+        Content,
+        Mask,
+    };
+
+    EditMode edit_mode() { return m_edit_mode; }
+    void set_edit_mode(EditMode mode);
+
+    Gfx::Bitmap& currently_edited_bitmap();
+
 private:
     Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
 
@@ -89,6 +99,8 @@ private:
     bool m_visible { true };
 
     int m_opacity_percent { 100 };
+
+    EditMode m_edit_mode { EditMode::Content };
 
     void update_cached_bitmap();
 };
