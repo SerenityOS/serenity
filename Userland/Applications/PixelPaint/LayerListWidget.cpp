@@ -180,6 +180,48 @@ Optional<size_t> LayerListWidget::gadget_at(Gfx::IntPoint const& position)
     return {};
 }
 
+void LayerListWidget::doubleclick_event(GUI::MouseEvent& event)
+{
+    if (!m_image)
+        return;
+    if (event.button() != GUI::MouseButton::Primary)
+        return;
+
+    Gfx::IntPoint translated_event_point = { 0, vertical_scrollbar().value() + event.y() };
+
+    auto maybe_gadget_index = gadget_at(translated_event_point);
+    if (!maybe_gadget_index.has_value())
+        return;
+    auto gadget_index = maybe_gadget_index.value();
+
+    // FIXME: Allow for a double click to change the selected gadget
+    if (m_selected_gadget_index != gadget_index)
+        return;
+
+    auto& gadget = m_gadgets[gadget_index];
+    auto& layer = m_image->layer(to_layer_index(gadget_index));
+
+    auto is_masked = layer.is_masked();
+
+    if (!is_masked)
+        return;
+
+    Gfx::IntRect adjusted_rect;
+    Gfx::IntRect outer_thumbnail_rect;
+    Gfx::IntRect inner_thumbnail_rect;
+    Gfx::IntRect outer_mask_thumbnail_rect;
+    Gfx::IntRect inner_mask_thumbnail_rect;
+    Gfx::IntRect text_rect;
+    get_gadget_rects(gadget, is_masked, adjusted_rect, outer_thumbnail_rect, inner_thumbnail_rect, outer_mask_thumbnail_rect, inner_mask_thumbnail_rect, text_rect);
+
+    if (outer_thumbnail_rect.contains(event.position()))
+        layer.set_edit_mode(Layer::EditMode::Content);
+    else if (outer_mask_thumbnail_rect.contains(event.position()))
+        layer.set_edit_mode(Layer::EditMode::Mask);
+
+    update();
+}
+
 void LayerListWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (!m_image)
