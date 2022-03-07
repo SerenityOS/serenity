@@ -155,8 +155,12 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
     }
 
     if (m_current_node->is_absolutely_positioned()) {
+        auto& node = *m_current_node;
         skip_to_next();
-        return next(available_width);
+        return Item {
+            .type = Item::Type::AbsolutelyPositionedElement,
+            .node = &node,
+        };
     }
 
     if (is<Layout::BreakNode>(*m_current_node)) {

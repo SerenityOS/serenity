@@ -75,14 +75,6 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
 
     generate_line_boxes(layout_mode);
 
-    containing_block().for_each_child([&](auto& child) {
-        VERIFY(child.is_inline());
-        if (is<Box>(child) && child.is_absolutely_positioned()) {
-            parent().add_absolutely_positioned_box(static_cast<Box&>(child));
-            return;
-        }
-    });
-
     float min_line_height = containing_block().line_height();
     float max_line_width = 0;
     float content_height = 0;
@@ -201,6 +193,11 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
             line_builder.append_box(box, item.border_start + item.padding_start, item.padding_end + item.border_end);
             break;
         }
+        case InlineLevelIterator::Item::Type::AbsolutelyPositionedElement:
+            if (is<Box>(*item.node))
+                parent().add_absolutely_positioned_box(static_cast<Layout::Box const&>(*item.node));
+            break;
+
         case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
             line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break);
