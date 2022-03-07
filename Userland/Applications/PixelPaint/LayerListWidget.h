@@ -39,6 +39,7 @@ private:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
+    virtual void doubleclick_event(GUI::MouseEvent&) override;
 
     virtual void image_did_add_layer(size_t) override;
     virtual void image_did_remove_layer(size_t) override;
