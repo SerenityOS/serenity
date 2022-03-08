@@ -12,6 +12,7 @@
 #include "EditGuideDialog.h"
 #include "FilterGallery.h"
 #include "FilterParams.h"
+#include "ResizeImageDialog.h"
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/File.h>
@@ -406,7 +407,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_view_menu->add_action(*show_pixel_grid_action);
 
     m_show_rulers_action = GUI::Action::create_checkable(
-        "Show R&ulers", { Mod_Ctrl, Key_R }, [&](auto& action) {
+        "Show R&ulers", [&](auto& action) {
             Config::write_bool("PixelPaint", "Rulers", "Show", action.is_checked());
             auto* editor = current_image_editor();
             VERIFY(editor);
@@ -461,6 +462,15 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             editor->image().rotate(Gfx::RotationDirection::Clockwise);
         }));
     m_image_menu->add_separator();
+    m_image_menu->add_action(GUI::Action::create(
+        "&Resize Image...", { Mod_Ctrl, Key_R }, g_icon_bag.resize_image, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto dialog = PixelPaint::ResizeImageDialog::construct(editor->image().size(), &window);
+            if (dialog->exec() == GUI::Dialog::ExecOK) {
+                // TODO
+            }
+        }));
     m_image_menu->add_action(GUI::Action::create(
         "&Crop To Selection", g_icon_bag.crop, [&](auto&) {
             auto* editor = current_image_editor();

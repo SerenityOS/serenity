@@ -1,0 +1,29 @@
+/*
+ * Copyright (c) 2022, Andrew Smith <andrew@alsmith.net>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <LibGUI/Dialog.h>
+#include <LibGfx/Painter.h>
+
+namespace PixelPaint {
+
+class ResizeImageDialog final : public GUI::Dialog {
+    C_OBJECT(ResizeImageDialog);
+
+public:
+    Gfx::IntSize const& desired_size() const { return m_desired_size; }
+    Gfx::Painter::ScalingMode scaling_mode() const { return m_scaling_mode; }
+
+private:
+    ResizeImageDialog(Gfx::IntSize const& starting_size, GUI::Window* parent_window);
+
+    Gfx::IntSize m_desired_size;
+    Gfx::Painter::ScalingMode m_scaling_mode;
+    float m_starting_aspect_ratio;
+};
+
+}
