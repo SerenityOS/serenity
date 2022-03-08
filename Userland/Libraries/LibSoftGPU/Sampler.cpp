@@ -191,28 +191,28 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
     u -= 0.5f;
     v -= 0.5f;
 
-    i32x4 i0 = to_i32x4(floor_int_range(u));
-    i32x4 i1 = i0 + 1;
-    i32x4 j0 = to_i32x4(floor_int_range(v));
-    i32x4 j1 = j0 + 1;
+    u32x4 i0 = to_u32x4(floor_int_range(u));
+    u32x4 i1 = i0 + 1;
+    u32x4 j0 = to_u32x4(floor_int_range(v));
+    u32x4 j1 = j0 + 1;
 
     if (m_config.texture_wrap_u == TextureWrapMode::Repeat) {
         if (image.width_is_power_of_two()) {
-            i0 = (i32x4)(i0 & width_mask);
-            i1 = (i32x4)(i1 & width_mask);
+            i0 = i0 & width_mask;
+            i1 = i1 & width_mask;
         } else {
-            i0 = (i32x4)(i0 % width);
-            i1 = (i32x4)(i1 % width);
+            i0 = i0 % width;
+            i1 = i1 % width;
         }
     }
 
     if (m_config.texture_wrap_v == TextureWrapMode::Repeat) {
         if (image.height_is_power_of_two()) {
-            j0 = (i32x4)(j0 & height_mask);
-            j1 = (i32x4)(j1 & height_mask);
+            j0 = j0 & height_mask;
+            j1 = j1 & height_mask;
         } else {
-            j0 = (i32x4)(j0 % height);
-            j1 = (i32x4)(j1 % height);
+            j0 = j0 % height;
+            j1 = j1 % height;
         }
     }
 
@@ -221,15 +221,15 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
     Vector4<f32x4> t0, t1, t2, t3;
 
     if (m_config.texture_wrap_u == TextureWrapMode::Repeat && m_config.texture_wrap_v == TextureWrapMode::Repeat) {
-        t0 = texel4(image, layer, level, to_u32x4(i0), to_u32x4(j0), k);
-        t1 = texel4(image, layer, level, to_u32x4(i1), to_u32x4(j0), k);
-        t2 = texel4(image, layer, level, to_u32x4(i0), to_u32x4(j1), k);
-        t3 = texel4(image, layer, level, to_u32x4(i1), to_u32x4(j1), k);
+        t0 = texel4(image, layer, level, i0, j0, k);
+        t1 = texel4(image, layer, level, i1, j0, k);
+        t2 = texel4(image, layer, level, i0, j1, k);
+        t3 = texel4(image, layer, level, i1, j1, k);
     } else {
-        t0 = texel4border(image, layer, level, to_u32x4(i0), to_u32x4(j0), k, m_config.border_color, width, height);
-        t1 = texel4border(image, layer, level, to_u32x4(i1), to_u32x4(j0), k, m_config.border_color, width, height);
-        t2 = texel4border(image, layer, level, to_u32x4(i0), to_u32x4(j1), k, m_config.border_color, width, height);
-        t3 = texel4border(image, layer, level, to_u32x4(i1), to_u32x4(j1), k, m_config.border_color, width, height);
+        t1 = texel4border(image, layer, level, i1, j0, k, m_config.border_color, width, height);
+        t0 = texel4border(image, layer, level, i0, j0, k, m_config.border_color, width, height);
+        t2 = texel4border(image, layer, level, i0, j1, k, m_config.border_color, width, height);
+        t3 = texel4border(image, layer, level, i1, j1, k, m_config.border_color, width, height);
     }
 
     f32x4 const alpha = frac_int_range(u);
