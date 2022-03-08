@@ -379,15 +379,15 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
     // MEDIAQUERIES-4 properties - https://www.w3.org/TR/mediaqueries-4/#media-descriptor-table
     switch (media_feature) {
     case CSS::MediaFeatureID::AnyHover:
-        return CSS::MediaFeatureValue("hover");
+        return CSS::MediaFeatureValue(CSS::ValueID::Hover);
     case CSS::MediaFeatureID::AnyPointer:
-        return CSS::MediaFeatureValue("fine");
+        return CSS::MediaFeatureValue(CSS::ValueID::Fine);
     case CSS::MediaFeatureID::AspectRatio:
         return CSS::MediaFeatureValue(CSS::Ratio(inner_width(), inner_height()));
     case CSS::MediaFeatureID::Color:
         return CSS::MediaFeatureValue(8);
     case CSS::MediaFeatureID::ColorGamut:
-        return CSS::MediaFeatureValue("srgb");
+        return CSS::MediaFeatureValue(CSS::ValueID::Srgb);
     case CSS::MediaFeatureID::ColorIndex:
         return CSS::MediaFeatureValue(0);
     // FIXME: device-aspect-ratio
@@ -398,22 +398,22 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
     case CSS::MediaFeatureID::Height:
         return CSS::MediaFeatureValue(CSS::Length::make_px(inner_height()));
     case CSS::MediaFeatureID::Hover:
-        return CSS::MediaFeatureValue("hover");
+        return CSS::MediaFeatureValue(CSS::ValueID::Hover);
     case CSS::MediaFeatureID::Monochrome:
         return CSS::MediaFeatureValue(0);
     case CSS::MediaFeatureID::Orientation:
-        return CSS::MediaFeatureValue(inner_height() >= inner_width() ? "portrait" : "landscape");
+        return CSS::MediaFeatureValue(inner_height() >= inner_width() ? CSS::ValueID::Portrait : CSS::ValueID::Landscape);
     case CSS::MediaFeatureID::OverflowBlock:
-        return CSS::MediaFeatureValue("scroll");
+        return CSS::MediaFeatureValue(CSS::ValueID::Scroll);
     case CSS::MediaFeatureID::OverflowInline:
-        return CSS::MediaFeatureValue("scroll");
+        return CSS::MediaFeatureValue(CSS::ValueID::Scroll);
     case CSS::MediaFeatureID::Pointer:
-        return CSS::MediaFeatureValue("fine");
+        return CSS::MediaFeatureValue(CSS::ValueID::Fine);
     // FIXME: resolution
     case CSS::MediaFeatureID::Scan:
-        return CSS::MediaFeatureValue("progressive");
+        return CSS::MediaFeatureValue(CSS::ValueID::Progressive);
     case CSS::MediaFeatureID::Update:
-        return CSS::MediaFeatureValue("fast");
+        return CSS::MediaFeatureValue(CSS::ValueID::Fast);
     case CSS::MediaFeatureID::Width:
         return CSS::MediaFeatureValue(CSS::Length::make_px(inner_width()));
 
@@ -422,12 +422,12 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
         if (auto* page = this->page()) {
             switch (page->preferred_color_scheme()) {
             case CSS::PreferredColorScheme::Light:
-                return CSS::MediaFeatureValue("light");
+                return CSS::MediaFeatureValue(CSS::ValueID::Light);
             case CSS::PreferredColorScheme::Dark:
-                return CSS::MediaFeatureValue("dark");
+                return CSS::MediaFeatureValue(CSS::ValueID::Dark);
             case CSS::PreferredColorScheme::Auto:
             default:
-                return CSS::MediaFeatureValue(page->palette().is_dark() ? "dark" : "light");
+                return CSS::MediaFeatureValue(page->palette().is_dark() ? CSS::ValueID::Dark : CSS::ValueID::Light);
             }
         }
         return CSS::MediaFeatureValue(CSS::ValueID::Light);

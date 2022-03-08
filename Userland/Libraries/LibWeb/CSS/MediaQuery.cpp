@@ -23,7 +23,7 @@ NonnullRefPtr<MediaQuery> MediaQuery::create_not_all()
 String MediaFeatureValue::to_string() const
 {
     return m_value.visit(
-        [](String const& ident) { return serialize_an_identifier(ident); },
+        [](ValueID const& ident) { return String { string_from_value_id(ident) }; },
         [](Length const& length) { return length.to_string(); },
         [](Ratio const& ratio) { return ratio.to_string(); },
         [](Resolution const& resolution) { return resolution.to_string(); },
@@ -33,7 +33,7 @@ String MediaFeatureValue::to_string() const
 bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const
 {
     return m_value.visit(
-        [&](String const&) { return other.is_ident(); },
+        [&](ValueID const&) { return other.is_ident(); },
         [&](Length const&) { return other.is_length(); },
         [&](Ratio const&) { return other.is_ratio(); },
         [&](Resolution const&) { return other.is_resolution(); },
@@ -96,7 +96,7 @@ bool MediaFeature::evaluate(HTML::Window const& window) const
         if (queried_value.is_resolution())
             return queried_value.resolution().to_dots_per_pixel() != 0;
         if (queried_value.is_ident())
-            return queried_value.ident() != "none";
+            return queried_value.ident() != ValueID::None;
         return false;
 
     case Type::ExactValue:
@@ -129,7 +129,7 @@ bool MediaFeature::compare(HTML::Window const& window, MediaFeatureValue left, C
 
     if (left.is_ident()) {
         if (comparison == Comparison::Equal)
-            return left.ident().equals_ignoring_case(right.ident());
+            return left.ident() == right.ident();
         return false;
     }
 

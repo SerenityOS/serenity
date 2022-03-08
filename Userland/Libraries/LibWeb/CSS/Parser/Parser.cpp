@@ -1187,8 +1187,10 @@ Optional<MediaFeatureValue> Parser::parse_media_feature_value(TokenStream<StyleC
     }
 
     // `<ident>`
-    if (first.is(Token::Type::Ident) && !tokens.has_next_token())
-        return MediaFeatureValue(first.token().ident());
+    if (first.is(Token::Type::Ident)) {
+        if (auto ident = value_id_from_string(first.token().ident()); ident != ValueID::Invalid)
+            return MediaFeatureValue(ident);
+    }
 
     // `<ratio>`
     // Note that a single <number> is a valid <ratio>, but it gets parsed above as a <number>.
