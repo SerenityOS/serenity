@@ -339,6 +339,8 @@ extern "C" {
 #define GL_TEXTURE_3D 0x806F
 #define GL_PROXY_TEXTURE_3D 0x8070
 #define GL_TEXTURE_CUBE_MAP 0x8513
+#define GL_TEXTURE_1D_ARRAY 0x8C18
+#define GL_TEXTURE_2D_ARRAY 0x8C1A
 
 // Texture parameters
 #define GL_TEXTURE_WIDTH 0x1000

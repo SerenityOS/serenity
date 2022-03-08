@@ -68,6 +68,13 @@ SoftwareGLContext::SoftwareGLContext(Gfx::Bitmap& frontbuffer)
     m_texture_units.resize(m_device_info.num_texture_units);
     m_active_texture_unit = &m_texture_units[0];
 
+    // All texture units are initialized with default textures for all targets; these
+    // can be referenced later on with texture name 0 in operations like glBindTexture().
+    auto default_texture_2d = adopt_ref(*new Texture2D());
+    m_default_textures.set(GL_TEXTURE_2D, default_texture_2d);
+    for (auto& texture_unit : m_texture_units)
+        texture_unit.set_texture_2d_target_texture(default_texture_2d);
+
     // Query the number lights from the device and set set up their state
     // locally in the GL
     m_light_states.resize(m_device_info.num_lights);
@@ -914,9 +921,8 @@ void SoftwareGLContext::gl_gen_textures(GLsizei n, GLuint* textures)
     m_name_allocator.allocate(n, textures);
 
     // Initialize all texture names with a nullptr
-    for (auto i = 0; i < n; i++) {
+    for (auto i = 0; i < n; ++i) {
         GLuint name = textures[i];
-
         m_allocated_textures.set(name, nullptr);
     }
 }
@@ -936,11 +942,14 @@ void SoftwareGLContext::gl_delete_textures(GLsizei n, const GLuint* textures)
         auto texture_object = m_allocated_textures.find(name);
         if (texture_object == m_allocated_textures.end() || texture_object->value.is_null())
             continue;
+        auto texture = texture_object->value;
 
         // Check all texture units
         for (auto& texture_unit : m_texture_units) {
-            if (texture_object->value == texture_unit.bound_texture())
-                texture_unit.bind_texture_to_target(GL_TEXTURE_2D, nullptr);
+            if (texture->is_texture_2d() && texture_unit.texture_2d_target_texture() == texture) {
+                // If a texture that is currently bound is deleted, the binding reverts to 0 (the default texture)
+                texture_unit.set_texture_2d_target_texture(get_default_texture<Texture2D>(GL_TEXTURE_2D));
+            }
         }
 
         m_allocated_textures.remove(name);
@@ -953,9 +962,6 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
 
     // We only support GL_TEXTURE_2D for now
     RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
-
-    // Check if there is actually a texture bound
-    RETURN_WITH_ERROR_IF(target == GL_TEXTURE_2D && m_active_texture_unit->currently_bound_target() != GL_TEXTURE_2D, GL_INVALID_OPERATION);
 
     // Internal format can also be a number between 1 and 4. Symbolic formats were only added with EXT_texture, promoted to core in OpenGL 1.1
     if (internal_format == 1)
@@ -979,6 +985,9 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     }
     RETURN_WITH_ERROR_IF(border != 0, GL_INVALID_VALUE);
 
+    auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    VERIFY(!texture_2d.is_null());
+
     if (level == 0) {
         // FIXME: OpenGL has the concept of texture and mipmap completeness. A texture has to fulfill certain criteria to be considered complete.
         // Trying to render while an incomplete texture is bound will result in an error.
@@ -986,11 +995,11 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
         // that constructing GL textures in any but the default mipmap order, going from level 0 upwards will cause mip levels to stay uninitialized.
         // To be spec compliant we should create the device image once the texture has become complete and is used for rendering the first time.
         // All images that were attached before the device image was created need to be stored somewhere to be used to initialize the device image once complete.
-        m_active_texture_unit->bound_texture_2d()->set_device_image(m_rasterizer.create_image(SoftGPU::ImageFormat::BGRA8888, width, height, 1, 999, 1));
+        texture_2d->set_device_image(m_rasterizer.create_image(SoftGPU::ImageFormat::BGRA8888, width, height, 1, 999, 1));
         m_sampler_config_is_dirty = true;
     }
 
-    m_active_texture_unit->bound_texture_2d()->upload_texture_data(level, internal_format, width, height, format, type, data, m_unpack_row_length, m_unpack_alignment);
+    texture_2d->upload_texture_data(level, internal_format, width, height, format, type, data, m_unpack_row_length, m_unpack_alignment);
 }
 
 void SoftwareGLContext::gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* data)
@@ -1000,20 +1009,19 @@ void SoftwareGLContext::gl_tex_sub_image_2d(GLenum target, GLint level, GLint xo
     // We only support GL_TEXTURE_2D for now
     RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
 
-    // Check if there is actually a texture bound
-    RETURN_WITH_ERROR_IF(target == GL_TEXTURE_2D && m_active_texture_unit->currently_bound_target() != GL_TEXTURE_2D, GL_INVALID_OPERATION);
-
     // We only support symbolic constants for now
     RETURN_WITH_ERROR_IF(!(format == GL_RGBA || format == GL_RGB), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(!(type == GL_UNSIGNED_BYTE || type == GL_UNSIGNED_SHORT_5_6_5), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
 
-    auto texture = m_active_texture_unit->bound_texture_2d();
+    // A 2D texture array must have been defined by a previous glTexImage2D operation
+    auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    RETURN_WITH_ERROR_IF(texture_2d.is_null(), GL_INVALID_OPERATION);
 
-    RETURN_WITH_ERROR_IF(xoffset < 0 || yoffset < 0 || xoffset + width > texture->width_at_lod(level) || yoffset + height > texture->height_at_lod(level), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(xoffset < 0 || yoffset < 0 || xoffset + width > texture_2d->width_at_lod(level) || yoffset + height > texture_2d->height_at_lod(level), GL_INVALID_VALUE);
 
-    texture->replace_sub_texture_data(level, xoffset, yoffset, width, height, format, type, data, m_unpack_row_length, m_unpack_alignment);
+    texture_2d->replace_sub_texture_data(level, xoffset, yoffset, width, height, format, type, data, m_unpack_row_length, m_unpack_alignment);
 }
 
 void SoftwareGLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
@@ -1032,57 +1040,56 @@ void SoftwareGLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat pa
                              || pname == GL_TEXTURE_WRAP_T),
         GL_INVALID_ENUM);
 
-    if (target == GL_TEXTURE_2D) {
-        auto texture2d = m_active_texture_unit->bound_texture_2d();
-        if (texture2d.is_null())
-            return;
+    // We assume GL_TEXTURE_2D (see above)
+    auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    if (texture_2d.is_null())
+        return;
 
-        switch (pname) {
-        case GL_TEXTURE_MIN_FILTER:
-            RETURN_WITH_ERROR_IF(!(param == GL_NEAREST
-                                     || param == GL_LINEAR
-                                     || param == GL_NEAREST_MIPMAP_NEAREST
-                                     || param == GL_LINEAR_MIPMAP_NEAREST
-                                     || param == GL_NEAREST_MIPMAP_LINEAR
-                                     || param == GL_LINEAR_MIPMAP_LINEAR),
-                GL_INVALID_ENUM);
+    switch (pname) {
+    case GL_TEXTURE_MIN_FILTER:
+        RETURN_WITH_ERROR_IF(!(param == GL_NEAREST
+                                 || param == GL_LINEAR
+                                 || param == GL_NEAREST_MIPMAP_NEAREST
+                                 || param == GL_LINEAR_MIPMAP_NEAREST
+                                 || param == GL_NEAREST_MIPMAP_LINEAR
+                                 || param == GL_LINEAR_MIPMAP_LINEAR),
+            GL_INVALID_ENUM);
 
-            texture2d->sampler().set_min_filter(param);
-            break;
+        texture_2d->sampler().set_min_filter(param);
+        break;
 
-        case GL_TEXTURE_MAG_FILTER:
-            RETURN_WITH_ERROR_IF(!(param == GL_NEAREST
-                                     || param == GL_LINEAR),
-                GL_INVALID_ENUM);
+    case GL_TEXTURE_MAG_FILTER:
+        RETURN_WITH_ERROR_IF(!(param == GL_NEAREST
+                                 || param == GL_LINEAR),
+            GL_INVALID_ENUM);
 
-            texture2d->sampler().set_mag_filter(param);
-            break;
+        texture_2d->sampler().set_mag_filter(param);
+        break;
 
-        case GL_TEXTURE_WRAP_S:
-            RETURN_WITH_ERROR_IF(!(param == GL_CLAMP
-                                     || param == GL_CLAMP_TO_BORDER
-                                     || param == GL_CLAMP_TO_EDGE
-                                     || param == GL_MIRRORED_REPEAT
-                                     || param == GL_REPEAT),
-                GL_INVALID_ENUM);
+    case GL_TEXTURE_WRAP_S:
+        RETURN_WITH_ERROR_IF(!(param == GL_CLAMP
+                                 || param == GL_CLAMP_TO_BORDER
+                                 || param == GL_CLAMP_TO_EDGE
+                                 || param == GL_MIRRORED_REPEAT
+                                 || param == GL_REPEAT),
+            GL_INVALID_ENUM);
 
-            texture2d->sampler().set_wrap_s_mode(param);
-            break;
+        texture_2d->sampler().set_wrap_s_mode(param);
+        break;
 
-        case GL_TEXTURE_WRAP_T:
-            RETURN_WITH_ERROR_IF(!(param == GL_CLAMP
-                                     || param == GL_CLAMP_TO_BORDER
-                                     || param == GL_CLAMP_TO_EDGE
-                                     || param == GL_MIRRORED_REPEAT
-                                     || param == GL_REPEAT),
-                GL_INVALID_ENUM);
+    case GL_TEXTURE_WRAP_T:
+        RETURN_WITH_ERROR_IF(!(param == GL_CLAMP
+                                 || param == GL_CLAMP_TO_BORDER
+                                 || param == GL_CLAMP_TO_EDGE
+                                 || param == GL_MIRRORED_REPEAT
+                                 || param == GL_REPEAT),
+            GL_INVALID_ENUM);
 
-            texture2d->sampler().set_wrap_t_mode(param);
-            break;
+        texture_2d->sampler().set_wrap_t_mode(param);
+        break;
 
-        default:
-            VERIFY_NOT_REACHED();
-        }
+    default:
+        VERIFY_NOT_REACHED();
     }
 
     m_sampler_config_is_dirty = true;
@@ -1810,55 +1817,49 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
 void SoftwareGLContext::gl_bind_texture(GLenum target, GLuint texture)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_1D
+            && target != GL_TEXTURE_2D
+            && target != GL_TEXTURE_3D
+            && target != GL_TEXTURE_1D_ARRAY
+            && target != GL_TEXTURE_2D_ARRAY
+            && target != GL_TEXTURE_CUBE_MAP,
+        GL_INVALID_ENUM);
+
     // FIXME: We only support GL_TEXTURE_2D for now
-    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
+    if (target != GL_TEXTURE_2D) {
+        dbgln("gl_bind_texture(target = {:#x}): currently only GL_TEXTURE_2D is supported", target);
+        return;
+    }
+
+    RefPtr<Texture2D> texture_2d;
 
     if (texture == 0) {
-        switch (target) {
-        case GL_TEXTURE_2D:
-            m_active_texture_unit->bind_texture_to_target(target, nullptr);
-            m_sampler_config_is_dirty = true;
-            return;
-        default:
-            VERIFY_NOT_REACHED();
-            return;
+        // Texture name 0 refers to the default texture
+        texture_2d = get_default_texture<Texture2D>(target);
+    } else {
+        // Find this texture name in our previously allocated textures
+        auto it = m_allocated_textures.find(texture);
+        if (it != m_allocated_textures.end()) {
+            auto texture_object = it->value;
+            if (!texture_object.is_null()) {
+                // Texture must have been created with the same target
+                RETURN_WITH_ERROR_IF(!texture_object->is_texture_2d(), GL_INVALID_OPERATION);
+                texture_2d = static_cast<Texture2D*>(texture_object.ptr());
+            }
+        }
+
+        // OpenGL 1.x supports binding texture names that were not previously generated by glGenTextures.
+        // If there is not an allocated texture, meaning it was not previously generated by glGenTextures,
+        // we can keep texture_object null to both allocate and bind the texture with the passed in texture name.
+        // FIXME: Later OpenGL versions such as 4.x enforce that texture names being bound were previously generated
+        //        by glGenTextures.
+        if (!texture_2d) {
+            texture_2d = adopt_ref(*new Texture2D());
+            m_allocated_textures.set(texture, texture_2d);
         }
     }
 
-    auto it = m_allocated_textures.find(texture);
-    RefPtr<Texture> texture_object;
-
-    // OpenGL 1.x supports binding texture names that were not previously generated by glGenTextures.
-    // If there is not an allocated texture, meaning it was not previously generated by glGenTextures,
-    // we can keep texture_object null to both allocate and bind the texture with the passed in texture name.
-    // FIXME: Later OpenGL versions such as 4.x enforce that texture names being bound were previously generated
-    //        by glGenTextures.
-    if (it != m_allocated_textures.end())
-        texture_object = it->value;
-
-    // Binding a texture to a different target than it was first bound is an invalid operation
-    // FIXME: We only support GL_TEXTURE_2D for now
-    RETURN_WITH_ERROR_IF(target == GL_TEXTURE_2D && !texture_object.is_null() && !texture_object->is_texture_2d(), GL_INVALID_OPERATION);
-
-    if (!texture_object) {
-        // This is the first time the texture is bound. Allocate an actual texture object
-        switch (target) {
-        case GL_TEXTURE_2D:
-            texture_object = adopt_ref(*new Texture2D());
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-
-        m_allocated_textures.set(texture, texture_object);
-    }
-
-    switch (target) {
-    case GL_TEXTURE_2D:
-        m_active_texture_unit->bind_texture_to_target(target, texture_object);
-        break;
-    }
-
+    m_active_texture_unit->set_texture_2d_target_texture(texture_2d);
     m_sampler_config_is_dirty = true;
 }
 
@@ -2850,12 +2851,15 @@ void SoftwareGLContext::gl_get_tex_parameter_integerv(GLenum target, GLint level
     // FIXME: GL_INVALID_VALUE is generated if target is GL_TEXTURE_BUFFER and level is not zero
     // FIXME: GL_INVALID_OPERATION is generated if GL_TEXTURE_COMPRESSED_IMAGE_SIZE is queried on texture images with an uncompressed internal format or on proxy targets
 
+    VERIFY(!m_active_texture_unit->texture_2d_target_texture().is_null());
+    auto const texture_2d = m_active_texture_unit->texture_2d_target_texture();
+
     switch (pname) {
     case GL_TEXTURE_HEIGHT:
-        *params = m_active_texture_unit->bound_texture_2d()->height_at_lod(level);
+        *params = texture_2d->height_at_lod(level);
         break;
     case GL_TEXTURE_WIDTH:
-        *params = m_active_texture_unit->bound_texture_2d()->width_at_lod(level);
+        *params = texture_2d->width_at_lod(level);
         break;
     }
 }
@@ -2966,16 +2970,23 @@ void SoftwareGLContext::sync_device_sampler_config()
     m_sampler_config_is_dirty = false;
 
     for (unsigned i = 0; i < m_texture_units.size(); ++i) {
-        SoftGPU::SamplerConfig config;
+        auto const& texture_unit = m_texture_units[i];
 
-        if (!m_texture_units[i].texture_2d_enabled())
+        if (!texture_unit.texture_2d_enabled())
             continue;
 
-        auto texture = m_texture_units[i].bound_texture_2d();
+        SoftGPU::SamplerConfig config;
 
-        config.bound_image = texture.is_null() ? nullptr : texture->device_image();
+        auto texture_2d = texture_unit.texture_2d_target_texture();
+        if (texture_2d.is_null()) {
+            config.bound_image = nullptr;
+            m_rasterizer.set_sampler_config(i, config);
+            continue;
+        }
 
-        auto const& sampler = texture->sampler();
+        config.bound_image = texture_2d->device_image();
+
+        auto const& sampler = texture_2d->sampler();
 
         switch (sampler.min_filter()) {
         case GL_NEAREST:
@@ -3057,7 +3068,7 @@ void SoftwareGLContext::sync_device_sampler_config()
             VERIFY_NOT_REACHED();
         }
 
-        switch (m_texture_units[i].env_mode()) {
+        switch (texture_unit.env_mode()) {
         case GL_MODULATE:
             config.fixed_function_texture_env_mode = SoftGPU::TextureEnvMode::Modulate;
             break;

@@ -16,7 +16,6 @@ set(SOURCES
     SoftwareGLContext.cpp
     Tex/NameAllocator.cpp
     Tex/Texture2D.cpp
-    Tex/TextureUnit.cpp
 )
 
 serenity_lib(LibGL gl)
