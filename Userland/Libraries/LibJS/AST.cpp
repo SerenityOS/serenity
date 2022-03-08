@@ -736,13 +736,16 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, GlobalObject&
     }
 
     // 14.7.4.4 CreatePerIterationEnvironment ( perIterationBindings ), https://tc39.es/ecma262/#sec-createperiterationenvironment
+    // NOTE: Our implementation of this AO is heavily dependent on DeclarativeEnvironment using a Vector with constant indices.
+    //       For performance, we can take advantage of the fact that the declarations of the initialization statement are created
+    //       in the same order each time CreatePerIterationEnvironment is invoked.
     auto create_per_iteration_environment = [&]() -> ThrowCompletionOr<void> {
         // 1. If perIterationBindings has any elements, then
         if (let_declarations.is_empty())
             return {};
 
         // a. Let lastIterationEnv be the running execution context's LexicalEnvironment.
-        auto* last_iteration_env = interpreter.lexical_environment();
+        auto* last_iteration_env = verify_cast<DeclarativeEnvironment>(interpreter.lexical_environment());
 
         // b. Let outer be lastIterationEnv.[[OuterEnv]].
         auto* outer = last_iteration_env->outer_environment();
@@ -752,18 +755,21 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, GlobalObject&
 
         // d. Let thisIterationEnv be NewDeclarativeEnvironment(outer).
         auto* this_iteration_env = new_declarative_environment(*outer);
+        this_iteration_env->ensure_capacity(let_declarations.size());
 
         // e. For each element bn of perIterationBindings, do
-        for (auto& name : let_declarations) {
+        for (size_t declaration_index = 0; declaration_index < let_declarations.size(); ++declaration_index) {
+            auto const& name = let_declarations[declaration_index];
+
             // i. Perform ! thisIterationEnv.CreateMutableBinding(bn, false).
             MUST(this_iteration_env->create_mutable_binding(global_object, name, false));
 
             // ii. Let lastValue be ? lastIterationEnv.GetBindingValue(bn, true).
-            auto last_value = TRY(last_iteration_env->get_binding_value(global_object, name, true));
+            auto last_value = TRY(last_iteration_env->get_binding_value_direct(global_object, declaration_index, true));
             VERIFY(!last_value.is_empty());
 
             // iii. Perform thisIterationEnv.InitializeBinding(bn, lastValue).
-            MUST(this_iteration_env->initialize_binding(global_object, name, last_value));
+            MUST(this_iteration_env->initialize_binding_direct(global_object, declaration_index, last_value));
         }
 
         // f. Set the running execution context's LexicalEnvironment to thisIterationEnv.
