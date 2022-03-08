@@ -527,6 +527,17 @@ void Image::crop(Gfx::IntRect const& cropped_rect)
     did_change_rect(cropped_rect);
 }
 
+void Image::resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode)
+{
+    for (auto& layer : m_layers) {
+        layer.resize(new_size, scaling_mode);
+    }
+
+    m_size = { new_size.width(), new_size.height() };
+    did_change_rect();
+
+}
+
 Color Image::color_at(Gfx::IntPoint const& point) const
 {
     Color color;

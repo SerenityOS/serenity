@@ -13,6 +13,7 @@
 #include <AK/String.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Painter.h>
 
 namespace PixelPaint {
 
@@ -56,6 +57,7 @@ public:
     void flip(Gfx::Orientation orientation);
     void rotate(Gfx::RotationDirection direction);
     void crop(Gfx::IntRect const& rect);
+    void resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode);
 
     ErrorOr<void> try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask);
 
