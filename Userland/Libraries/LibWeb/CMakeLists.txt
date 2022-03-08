@@ -33,6 +33,8 @@ set(SOURCES
     CSS/Display.cpp
     CSS/Frequency.cpp
     CSS/Length.cpp
+    CSS/MediaFeatureID.cpp
+    CSS/MediaFeatureID.h
     CSS/MediaList.cpp
     CSS/MediaQuery.cpp
     CSS/MediaQueryList.cpp
@@ -569,6 +571,32 @@ libweb_js_wrapper(WebSockets/WebSocket)
 libweb_js_wrapper(XHR/ProgressEvent)
 libweb_js_wrapper(XHR/XMLHttpRequest)
 libweb_js_wrapper(XHR/XMLHttpRequestEventTarget)
+
+add_custom_command(
+    OUTPUT CSS/MediaFeatureID.h
+    COMMAND ${CMAKE_COMMAND} -E make_directory CSS
+    COMMAND "$<TARGET_FILE:Lagom::Generate_CSS_MediaFeatureID_h>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/MediaFeatures.json" > CSS/MediaFeatureID.h.tmp
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/MediaFeatureID.h.tmp CSS/MediaFeatureID.h
+    COMMAND "${CMAKE_COMMAND}" -E remove CSS/MediaFeatureID.h.tmp
+    VERBATIM
+    DEPENDS Lagom::Generate_CSS_MediaFeatureID_h
+    MAIN_DEPENDENCY CSS/MediaFeatures.json
+)
+add_custom_target(generate_MediaFeatureID.h DEPENDS CSS/MediaFeatureID.h)
+add_dependencies(all_generated generate_MediaFeatureID.h)
+
+add_custom_command(
+    OUTPUT CSS/MediaFeatureID.cpp
+    COMMAND ${CMAKE_COMMAND} -E make_directory CSS
+    COMMAND "$<TARGET_FILE:Lagom::Generate_CSS_MediaFeatureID_cpp>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/MediaFeatures.json" > CSS/MediaFeatureID.cpp.tmp
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/MediaFeatureID.cpp.tmp CSS/MediaFeatureID.cpp
+    COMMAND "${CMAKE_COMMAND}" -E remove CSS/MediaFeatureID.cpp.tmp
+    VERBATIM
+    DEPENDS Lagom::Generate_CSS_MediaFeatureID_cpp
+    MAIN_DEPENDENCY CSS/MediaFeatures.json
+)
+add_custom_target(generate_MediaFeatureID.cpp DEPENDS CSS/MediaFeatureID.cpp)
+add_dependencies(all_generated generate_MediaFeatureID.cpp)
 
 add_custom_command(
     OUTPUT CSS/PropertyID.h
