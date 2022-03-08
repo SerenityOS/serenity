@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Prekernel/Arch/aarch64/Framebuffer.h>
-#include <Kernel/Prekernel/Arch/aarch64/FramebufferMailboxMessages.h>
-#include <Kernel/Prekernel/Arch/aarch64/Utils.h>
+#include <Kernel/Arch/aarch64/Framebuffer.h>
+#include <Kernel/Arch/aarch64/FramebufferMailboxMessages.h>
+#include <Kernel/Arch/aarch64/Utils.h>
 
 namespace Prekernel {
 

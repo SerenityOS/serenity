@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Prekernel/Arch/aarch64/UART.h>
-#include <Kernel/Prekernel/Arch/aarch64/Utils.h>
+#include <Kernel/Arch/aarch64/UART.h>
+#include <Kernel/Arch/aarch64/Utils.h>
 
 void Prekernel::dbgln(const char* text)
 {

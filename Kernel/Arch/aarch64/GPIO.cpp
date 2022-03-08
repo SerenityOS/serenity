@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Prekernel/Arch/aarch64/GPIO.h>
-#include <Kernel/Prekernel/Arch/aarch64/MMIO.h>
+#include <Kernel/Arch/aarch64/GPIO.h>
+#include <Kernel/Arch/aarch64/MMIO.h>
 
 extern "C" void wait_cycles(int n);
 

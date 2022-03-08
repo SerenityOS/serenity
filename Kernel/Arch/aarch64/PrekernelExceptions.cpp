@@ -5,9 +5,9 @@
  */
 
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
+#include <Kernel/Arch/aarch64/Aarch64_asm_utils.h>
+#include <Kernel/Arch/aarch64/Prekernel.h>
 #include <Kernel/Arch/aarch64/Registers.h>
-#include <Kernel/Prekernel/Arch/aarch64/Aarch64_asm_utils.h>
-#include <Kernel/Prekernel/Arch/aarch64/Prekernel.h>
 
 extern "C" void enter_el2_from_el3();
 extern "C" void enter_el1_from_el2();

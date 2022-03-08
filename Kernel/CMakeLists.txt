@@ -386,15 +386,31 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     )
 else()
     set(SOURCES
-        ${SOURCES}
-        ${AK_SOURCES}
+        Arch/aarch64/BootPPMParser.cpp
+        Arch/aarch64/GPIO.cpp
+        Arch/aarch64/Framebuffer.cpp
+        Arch/aarch64/Mailbox.cpp
+        Arch/aarch64/MainIdRegister.cpp
+        Arch/aarch64/MMIO.cpp
+        Arch/aarch64/Timer.cpp
+        Arch/aarch64/UART.cpp
+        Arch/aarch64/Utils.cpp
 
-        Arch/aarch64/dummy.cpp
+        # Preload specific
+        Arch/aarch64/init.cpp
+        Arch/aarch64/PrekernelMMU.cpp
+        Arch/aarch64/PrekernelExceptions.cpp
+        Arch/aarch64/PrekernelCommon.cpp
+
+        # Assembly
+        Arch/aarch64/boot.S
+        Arch/aarch64/Aarch64_asm_utils.S
+        Arch/aarch64/vector_table.S
+
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/ScopedCritical.cpp
-        StdLib.cpp
         MiniStdLib.cpp
-        UBSanitizer.cpp
+        Prekernel/UBSanitizer.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
@@ -492,6 +508,10 @@ if (ENABLE_KERNEL_ADDRESS_SANITIZER)
     add_link_options(-fsanitize=kernel-address)
 endif()
 
+if ("${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_compile_options(-fno-threadsafe-statics)
+endif()
+
 add_compile_definitions(KERNEL)
 add_link_options(LINKER:-z,notext)
 
@@ -501,17 +521,22 @@ endif()
 add_executable(Kernel ${SOURCES})
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
 
-add_custom_command(
-    OUTPUT linker.ld
-    COMMAND "${CMAKE_CXX_COMPILER}" ${TARGET_STRING} -E -P -x c -I${CMAKE_CURRENT_SOURCE_DIR}/.. "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld" -o "${CMAKE_CURRENT_BINARY_DIR}/linker.ld"
-    MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld"
-    COMMENT "Preprocessing linker.ld"
-    VERBATIM
-)
+if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/linker.ld
+        COMMAND "${CMAKE_CXX_COMPILER}" ${TARGET_STRING} -E -P -x c -I${CMAKE_CURRENT_SOURCE_DIR}/.. "${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/linker.ld" -o "${CMAKE_CURRENT_BINARY_DIR}/linker.ld"
+        MAIN_DEPENDENCY "Arch/x86/linker.ld"
+        COMMENT "Preprocessing linker.ld"
+        VERBATIM
+    )
 
-add_custom_target(generate_kernel_linker_script DEPENDS linker.ld)
-target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib -nodefaultlibs)
-set_target_properties(Kernel PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/linker.ld")
+    add_custom_target(generate_kernel_linker_script DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/linker.ld)
+    target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib -nodefaultlibs)
+    set_target_properties(Kernel PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/linker.ld")
+else()
+    target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld -nostdlib LINKER:--no-pie)
+    set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/aarch64/linker.ld)
+endif()
 
 if (ENABLE_KERNEL_LTO)
     include(CheckIPOSupported)
@@ -532,20 +557,32 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
 endif()
 
 add_custom_command(
-    TARGET Kernel POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E env NM=${CMAKE_NM} sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
-    COMMAND ${CMAKE_COMMAND} -E env OBJCOPY=${CMAKE_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
-    COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
-    COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
-    COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
+        TARGET Kernel POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E env NM=${CMAKE_NM} sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
+        COMMAND ${CMAKE_COMMAND} -E env OBJCOPY=${CMAKE_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
+        COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
+        COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
+        COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
+        BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
 )
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel" DESTINATION boot)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel.debug" DESTINATION boot)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kernel.map" DESTINATION res)
 
+if ("${SERENITY_ARCH}" STREQUAL "aarch64")
+    embed_resource(Kernel serenity_boot_logo "Arch/aarch64/SerenityLogoRGB.ppm")
+    add_custom_command(
+            TARGET Kernel POST_BUILD
+            COMMAND ${CMAKE_OBJCOPY} -O binary Kernel kernel8.img
+            BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel8.img
+    )
+endif()
+
 serenity_install_headers(Kernel)
 serenity_install_sources(Kernel)
 
-add_subdirectory(Prekernel)
+# aarch64 does not need a Prekernel
+if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_subdirectory(Prekernel)
+endif()
