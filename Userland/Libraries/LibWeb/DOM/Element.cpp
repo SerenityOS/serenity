@@ -120,7 +120,6 @@ ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString 
     // 5. If qualifiedName contains a U+003A (:), then strictly split the string on it and set prefix to the part before and localName to the part after.
     if (qualified_name.view().contains(':')) {
         auto parts = qualified_name.view().split_view(':');
-        // FIXME: Handle parts > 2
         prefix = parts[0];
         local_name = parts[1];
     }
