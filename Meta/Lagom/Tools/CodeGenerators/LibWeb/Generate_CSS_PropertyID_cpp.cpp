@@ -5,48 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "GeneratorUtil.h"
 #include <AK/ByteBuffer.h>
 #include <AK/JsonObject.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
-#include <ctype.h>
-
-static String title_casify(const String& dashy_name)
-{
-    auto parts = dashy_name.split('-');
-    StringBuilder builder;
-    for (auto& part : parts) {
-        if (part.is_empty())
-            continue;
-        builder.append(toupper(part[0]));
-        if (part.length() == 1)
-            continue;
-        builder.append(part.substring_view(1, part.length() - 1));
-    }
-    return builder.to_string();
-}
-
-static String camel_casify(StringView dashy_name)
-{
-    auto parts = dashy_name.split_view('-');
-    StringBuilder builder;
-    bool first = true;
-    for (auto& part : parts) {
-        if (part.is_empty())
-            continue;
-        char ch = part[0];
-        if (!first)
-            ch = toupper(ch);
-        else
-            first = false;
-        builder.append(ch);
-        if (part.length() == 1)
-            continue;
-        builder.append(part.substring_view(1, part.length() - 1));
-    }
-    return builder.to_string();
-}
 
 int main(int argc, char** argv)
 {
