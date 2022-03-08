@@ -111,11 +111,13 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
 
     m_editors_splitter = m_right_hand_stack->add<GUI::VerticalSplitter>();
     m_editors_splitter->layout()->set_margins({ 3, 0, 0 });
-    add_new_editor(*m_editors_splitter);
+    add_new_editor_tab_widget(*m_editors_splitter);
 
+    m_switch_to_next_editor_tab_widget = create_switch_to_next_editor_tab_widget_action();
     m_switch_to_next_editor = create_switch_to_next_editor_action();
     m_switch_to_previous_editor = create_switch_to_previous_editor_action();
 
+    m_remove_current_editor_tab_widget_action = create_remove_current_editor_tab_widget_action();
     m_remove_current_editor_action = create_remove_current_editor_action();
     m_open_action = create_open_action();
     m_save_action = create_save_action();
@@ -124,6 +126,7 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
 
     create_action_tab(*m_right_hand_splitter);
 
+    m_add_editor_tab_widget_action = create_add_editor_tab_widget_action();
     m_add_editor_action = create_add_editor_action();
     m_add_terminal_action = create_add_terminal_action();
     m_remove_current_terminal_action = create_remove_current_terminal_action();
@@ -358,7 +361,7 @@ bool HackStudioWidget::open_file(const String& full_filename, size_t line, size_
     m_project_tree_view->update();
 
     current_editor_wrapper().set_filename(filename);
-
+    update_current_editor_title();
     current_editor().set_focus(true);
 
     current_editor().on_cursor_change = [this] { on_cursor_change(); };
@@ -394,6 +397,18 @@ void HackStudioWidget::close_file_in_all_editors(String const& filename)
     }
 
     m_open_files_view->model()->invalidate();
+}
+
+GUI::TabWidget& HackStudioWidget::current_editor_tab_widget()
+{
+    VERIFY(m_current_editor_tab_widget);
+    return *m_current_editor_tab_widget;
+}
+
+GUI::TabWidget const& HackStudioWidget::current_editor_tab_widget() const
+{
+    VERIFY(m_current_editor_tab_widget);
+    return *m_current_editor_tab_widget;
 }
 
 EditorWrapper& HackStudioWidget::current_editor_wrapper()
@@ -643,70 +658,137 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_project_action()
     });
 }
 
-void HackStudioWidget::add_new_editor(GUI::Widget& parent)
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_editor_tab_widget_action()
 {
-    auto wrapper = EditorWrapper::construct();
+    return GUI::Action::create("Switch to Next Editor Group", { Mod_Alt | Mod_Shift, Key_Backslash }, [this](auto&) {
+        if (m_all_editor_tab_widgets.size() <= 1)
+            return;
+        auto tab_widget = m_current_editor_tab_widget;
+        while (tab_widget->children().size() > 1) {
+            auto active_wrapper = tab_widget->active_widget();
+            tab_widget->remove_tab(*active_wrapper);
+            m_all_editor_wrappers.remove_first_matching([&active_wrapper](auto& entry) { return entry == active_wrapper; });
+        }
+        tab_widget->on_tab_close_click(*tab_widget->active_widget());
+    });
+}
+
+void HackStudioWidget::add_new_editor_tab_widget(GUI::Widget& parent)
+{
+    auto tab_widget = GUI::TabWidget::construct();
     if (m_action_tab_widget) {
-        parent.insert_child_before(wrapper, *m_action_tab_widget);
+        parent.insert_child_before(tab_widget, *m_action_tab_widget);
     } else {
-        parent.add_child(wrapper);
+        parent.add_child(tab_widget);
     }
+
+    m_current_editor_tab_widget = tab_widget;
+    m_all_editor_tab_widgets.append(tab_widget);
+
+    tab_widget->set_reorder_allowed(true);
+
+    if (m_all_editor_tab_widgets.size() > 1) {
+        for (auto& widget : m_all_editor_tab_widgets)
+            widget.set_close_button_enabled(true);
+    }
+
+    tab_widget->on_change = [&](auto& widget) {
+        auto& wrapper = static_cast<EditorWrapper&>(widget);
+        set_current_editor_wrapper(wrapper);
+        current_editor().set_focus(true);
+    };
+
+    tab_widget->on_middle_click = [](auto& widget) {
+        auto& wrapper = static_cast<EditorWrapper&>(widget);
+        wrapper.on_tab_close_request(wrapper);
+    };
+
+    tab_widget->on_tab_close_click = [](auto& widget) {
+        auto& wrapper = static_cast<EditorWrapper&>(widget);
+        wrapper.on_tab_close_request(wrapper);
+    };
+
+    add_new_editor(*m_current_editor_tab_widget);
+}
+
+void HackStudioWidget::add_new_editor(GUI::TabWidget& parent)
+{
+    auto& wrapper = parent.add_tab<EditorWrapper>("(Untitled)");
+    parent.set_active_widget(&wrapper);
+    if (parent.children().size() > 1 || m_all_editor_tab_widgets.size() > 1)
+        parent.set_close_button_enabled(true);
+
     auto previous_editor_wrapper = m_current_editor_wrapper;
     m_current_editor_wrapper = wrapper;
     m_all_editor_wrappers.append(wrapper);
-    wrapper->editor().set_focus(true);
-    wrapper->editor().set_font(*m_editor_font);
-    wrapper->set_project_root(m_project->root_path());
-    wrapper->editor().on_cursor_change = [this] { on_cursor_change(); };
-    wrapper->on_change = [this] { update_gml_preview(); };
+    wrapper.editor().set_focus(true);
+    wrapper.editor().set_font(*m_editor_font);
+    wrapper.set_project_root(m_project->root_path());
+    wrapper.editor().on_cursor_change = [this] { on_cursor_change(); };
+    wrapper.on_change = [this] { update_gml_preview(); };
     set_edit_mode(EditMode::Text);
     if (previous_editor_wrapper && previous_editor_wrapper->editor().editing_engine()->is_regular())
-        wrapper->editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+        wrapper.editor().set_editing_engine(make<GUI::RegularEditingEngine>());
     else if (previous_editor_wrapper && previous_editor_wrapper->editor().editing_engine()->is_vim())
-        wrapper->editor().set_editing_engine(make<GUI::VimEditingEngine>());
+        wrapper.editor().set_editing_engine(make<GUI::VimEditingEngine>());
     else
-        wrapper->editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+        wrapper.editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+
+    wrapper.on_tab_close_request = [this, &parent](auto& tab) {
+        parent.deferred_invoke([this, &parent, &tab] {
+            set_current_editor_wrapper(tab);
+            parent.remove_tab(tab);
+            m_all_editor_wrappers.remove_first_matching([&tab](auto& entry) { return entry == &tab; });
+            if (parent.children().is_empty()) {
+                m_switch_to_next_editor_tab_widget->activate();
+                m_editors_splitter->remove_child(parent);
+                m_all_editor_tab_widgets.remove_first_matching([&parent](auto& entry) { return entry == &parent; });
+                if (m_current_editor_tab_widget->children().size() == 1)
+                    m_current_editor_tab_widget->set_close_button_enabled(false);
+            }
+            if (parent.children().size() == 1 && m_all_editor_tab_widgets.size() <= 1)
+                parent.set_close_button_enabled(false);
+            update_actions();
+        });
+    };
+}
+
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_tab_widget_action()
+{
+    return GUI::Action::create("Switch to Next Editor Group", { Mod_Ctrl | Mod_Shift, Key_T }, [this](auto&) {
+        if (m_all_editor_tab_widgets.size() <= 1)
+            return;
+        Vector<GUI::TabWidget&> tab_widgets;
+        m_editors_splitter->for_each_child_of_type<GUI::TabWidget>([&tab_widgets](auto& child) {
+            tab_widgets.append(child);
+            return IterationDecision::Continue;
+        });
+        for (size_t i = 0; i < tab_widgets.size(); ++i) {
+            if (m_current_editor_tab_widget.ptr() == &tab_widgets[i]) {
+                if (i == tab_widgets.size() - 1)
+                    m_current_editor_tab_widget = tab_widgets[0];
+                else
+                    m_current_editor_tab_widget = tab_widgets[i + 1];
+                auto wrapper = static_cast<EditorWrapper*>(m_current_editor_tab_widget->active_widget());
+                set_current_editor_wrapper(wrapper);
+                current_editor().set_focus(true);
+                break;
+            }
+        }
+    });
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_action()
 {
     return GUI::Action::create("Switch to &Next Editor", { Mod_Ctrl, Key_E }, [this](auto&) {
-        if (m_all_editor_wrappers.size() <= 1)
-            return;
-        Vector<EditorWrapper&> wrappers;
-        m_editors_splitter->for_each_child_of_type<EditorWrapper>([&wrappers](auto& child) {
-            wrappers.append(child);
-            return IterationDecision::Continue;
-        });
-        for (size_t i = 0; i < wrappers.size(); ++i) {
-            if (m_current_editor_wrapper.ptr() == &wrappers[i]) {
-                if (i == wrappers.size() - 1)
-                    wrappers[0].editor().set_focus(true);
-                else
-                    wrappers[i + 1].editor().set_focus(true);
-            }
-        }
+        m_current_editor_tab_widget->activate_next_tab();
     });
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_previous_editor_action()
 {
     return GUI::Action::create("Switch to &Previous Editor", { Mod_Ctrl | Mod_Shift, Key_E }, [this](auto&) {
-        if (m_all_editor_wrappers.size() <= 1)
-            return;
-        Vector<EditorWrapper&> wrappers;
-        m_editors_splitter->for_each_child_of_type<EditorWrapper>([&wrappers](auto& child) {
-            wrappers.append(child);
-            return IterationDecision::Continue;
-        });
-        for (int i = wrappers.size() - 1; i >= 0; --i) {
-            if (m_current_editor_wrapper.ptr() == &wrappers[i]) {
-                if (i == 0)
-                    wrappers.last().editor().set_focus(true);
-                else
-                    wrappers[i - 1].editor().set_focus(true);
-            }
-        }
+        m_current_editor_tab_widget->activate_previous_tab();
     });
 }
 
@@ -715,10 +797,10 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_editor_action
     return GUI::Action::create("&Remove Current Editor", { Mod_Alt | Mod_Shift, Key_E }, Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/remove-editor.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         if (m_all_editor_wrappers.size() <= 1)
             return;
-        auto wrapper = m_current_editor_wrapper;
-        m_switch_to_next_editor->activate();
-        m_editors_splitter->remove_child(*wrapper);
-        m_all_editor_wrappers.remove_first_matching([&wrapper](auto& entry) { return entry == wrapper.ptr(); });
+        auto tab_widget = m_current_editor_tab_widget;
+        auto* active_wrapper = tab_widget->active_widget();
+        VERIFY(active_wrapper);
+        tab_widget->on_tab_close_click(*active_wrapper);
         update_actions();
     });
 }
@@ -782,6 +864,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
         m_open_files_vector.remove_all_matching([&old_filename](auto const& element) { return element == old_filename; });
 
         update_window_title();
+        update_current_editor_title();
 
         m_project->model().invalidate();
         update_tree_view();
@@ -804,12 +887,21 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_terminal_acti
     });
 }
 
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_editor_tab_widget_action()
+{
+    return GUI::Action::create("Add New Editor Group", { Mod_Ctrl | Mod_Alt, Key_Backslash },
+        [this](auto&) {
+            add_new_editor_tab_widget(*m_editors_splitter);
+            update_actions();
+        });
+}
+
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_editor_action()
 {
     return GUI::Action::create("Add New &Editor", { Mod_Ctrl | Mod_Alt, Key_E },
         Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/add-editor.png").release_value_but_fixme_should_propagate_errors(),
         [this](auto&) {
-            add_new_editor(*m_editors_splitter);
+            add_new_editor(*m_current_editor_tab_widget);
             update_actions();
         });
 }
@@ -1003,11 +1095,19 @@ Project& HackStudioWidget::project()
     return *m_project;
 }
 
+void HackStudioWidget::set_current_editor_tab_widget(RefPtr<GUI::TabWidget> tab_widget)
+{
+    m_current_editor_tab_widget = tab_widget;
+}
+
 void HackStudioWidget::set_current_editor_wrapper(RefPtr<EditorWrapper> editor_wrapper)
 {
     m_current_editor_wrapper = editor_wrapper;
     update_window_title();
+    update_current_editor_title();
     update_tree_view();
+    set_current_editor_tab_widget(static_cast<GUI::TabWidget*>(m_current_editor_wrapper->parent()));
+    update_statusbar();
 }
 
 void HackStudioWidget::file_renamed(String const& old_name, String const& new_name)
@@ -1034,6 +1134,9 @@ void HackStudioWidget::file_renamed(String const& old_name, String const& new_na
         VERIFY(!m_file_watcher->remove_watch(old_name).is_error());
         VERIFY(!m_file_watcher->add_watch(new_name, Core::FileWatcherEvent::Type::Deleted).is_error());
     }
+
+    update_window_title();
+    update_current_editor_title();
 }
 
 void HackStudioWidget::configure_project_tree_view()
@@ -1331,6 +1434,7 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
     view_menu.add_action(*m_editor_font_action);
 
     view_menu.add_separator();
+    view_menu.add_action(*m_add_editor_tab_widget_action);
     view_menu.add_action(*m_add_editor_action);
     view_menu.add_action(*m_remove_current_editor_action);
     view_menu.add_action(*m_add_terminal_action);
@@ -1412,7 +1516,7 @@ void HackStudioWidget::close_current_project()
     m_all_editor_wrappers.clear();
     m_open_files.clear();
     m_open_files_vector.clear();
-    add_new_editor(*m_editors_splitter);
+    add_new_editor(*m_current_editor_tab_widget);
     m_find_in_files_widget->reset();
     m_todo_entries_widget->clear();
     m_terminal_wrapper->clear_including_history();
@@ -1470,7 +1574,12 @@ void HackStudioWidget::update_tree_view()
 
 void HackStudioWidget::update_window_title()
 {
-    window()->set_title(String::formatted("{} - {} - Hack Studio", m_current_editor_wrapper->filename_label().text(), m_project->name()));
+    window()->set_title(String::formatted("{} - {} - Hack Studio", m_current_editor_wrapper->filename_title(), m_project->name()));
+}
+
+void HackStudioWidget::update_current_editor_title()
+{
+    current_editor_tab_widget().set_tab_title(current_editor_wrapper(), current_editor_wrapper().filename_title());
 }
 
 void HackStudioWidget::on_cursor_change()
@@ -1614,5 +1723,4 @@ bool HackStudioWidget::semantic_syntax_highlighting_is_enabled() const
 {
     return m_toggle_semantic_highlighting_action->is_checked();
 }
-
 }

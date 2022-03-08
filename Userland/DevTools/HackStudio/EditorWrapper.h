@@ -32,10 +32,6 @@ public:
 
     void save();
 
-    GUI::Label& filename_label() { return *m_filename_label; }
-    const GUI::Label& filename_label() const { return *m_filename_label; }
-
-    void set_editor_has_focus(Badge<Editor>, bool);
     LanguageClient& language_client();
 
     void set_mode_displayable();
@@ -43,6 +39,7 @@ public:
     void set_debug_mode(bool);
     void set_filename(const String&);
     const String& filename() const { return m_filename; }
+    String const& filename_title() const { return m_filename_title; }
 
     Optional<String> const& project_root() const { return m_project_root; }
     void set_project_root(String const& project_root);
@@ -53,6 +50,7 @@ public:
     Vector<Diff::Hunk> const& hunks() const { return m_hunks; }
 
     Function<void()> on_change;
+    Function<void(EditorWrapper&)> on_tab_close_request;
 
 private:
     static constexpr auto untitled_label = "(Untitled)";
@@ -62,7 +60,7 @@ private:
     void update_title();
 
     String m_filename;
-    RefPtr<GUI::Label> m_filename_label;
+    String m_filename_title;
     RefPtr<Editor> m_editor;
 
     Optional<String> m_project_root;
