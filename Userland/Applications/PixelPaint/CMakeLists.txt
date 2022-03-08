@@ -8,6 +8,7 @@ serenity_component(
 compile_gml(PixelPaintWindow.gml PixelPaintWindowGML.h pixel_paint_window_gml)
 compile_gml(EditGuideDialog.gml EditGuideDialogGML.h edit_guide_dialog_gml)
 compile_gml(FilterGallery.gml FilterGalleryGML.h filter_gallery_gml)
+compile_gml(ResizeImageDialog.gml ResizeImageDialogGML.h resize_image_dialog_gml)
 
 set(SOURCES
     CreateNewImageDialog.cpp
@@ -43,6 +44,8 @@ set(SOURCES
     PaletteWidget.cpp
     PixelPaintWindowGML.h
     ProjectLoader.cpp
+    ResizeImageDialog.cpp
+    ResizeImageDialogGML.h
     Selection.cpp
     ToolPropertiesWidget.cpp
     ToolboxWidget.cpp
