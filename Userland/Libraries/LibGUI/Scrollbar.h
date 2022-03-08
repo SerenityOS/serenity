@@ -21,6 +21,13 @@ public:
 
     bool has_scrubber() const;
 
+    enum class Animation {
+        SmoothScroll,
+        CoarseScroll
+    };
+
+    void set_scroll_animation(Animation scroll_animation);
+
     virtual void set_value(int, AllowCallback = AllowCallback::Yes) override;
     void set_target_value(int);
 
@@ -76,6 +83,8 @@ private:
     Component component_at_position(const Gfx::IntPoint&);
 
     void update_animated_scroll();
+
+    Animation m_scroll_animation { Animation::SmoothScroll };
 
     int m_target_value { 0 };
     int m_start_value { 0 };
