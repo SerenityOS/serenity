@@ -49,6 +49,11 @@ public:
     ThrowCompletionOr<Value> get_binding_value_direct(GlobalObject&, size_t index, bool strict);
     ThrowCompletionOr<void> set_mutable_binding_direct(GlobalObject&, size_t index, Value, bool strict);
 
+    void ensure_capacity(size_t capacity)
+    {
+        m_bindings.ensure_capacity(capacity);
+    }
+
 protected:
     virtual void visit_edges(Visitor&) override;
 
