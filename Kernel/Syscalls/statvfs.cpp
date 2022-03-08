@@ -54,7 +54,7 @@ ErrorOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_params
 
 ErrorOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
     auto description = TRY(open_file_description(fd));
