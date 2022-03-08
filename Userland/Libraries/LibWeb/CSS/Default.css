@@ -200,15 +200,6 @@ blockquote {
     margin-right: 25px;
 }
 
-mark {
-    background: yellow;
-}
-
-abbr[title],
-acronym[title] {
-    text-decoration: dotted underline;
-}
-
 ul,
 ol {
     padding-left: 20px;
@@ -296,6 +287,19 @@ input[type=hidden i] { display: none !important; }
 
 @media (scripting) {
   noscript { display: none !important; }
+}
+
+/* 15.3.4 Phrasing content
+ * https://html.spec.whatwg.org/multipage/rendering.html#phrasing-content-3
+ */
+abbr[title],
+acronym[title] {
+    text-decoration: dotted underline;
+}
+
+mark {
+    background: yellow;
+    color: black;
 }
 
 /* 15.4.1 Embedded content
