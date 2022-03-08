@@ -36,11 +36,13 @@
     V(DeviceRGB)                  \
     V(Differences)                \
     V(E)                          \
+    V(Encoding)                   \
     V(ExtGState)                  \
     V(F)                          \
     V(FL)                         \
     V(Filter)                     \
     V(First)                      \
+    V(FirstChar)                  \
     V(Fit)                        \
     V(FitB)                       \
     V(FitBH)                      \
@@ -50,6 +52,11 @@
     V(FitV)                       \
     V(FlateDecode)                \
     V(Font)                       \
+    V(FontDescriptor)             \
+    V(FontFamily)                 \
+    V(FontFile1)                  \
+    V(FontFile2)                  \
+    V(FontFile3)                  \
     V(Gamma)                      \
     V(H)                          \
     V(HT)                         \
@@ -63,6 +70,7 @@
     V(LW)                         \
     V(LZWDecode)                  \
     V(Last)                       \
+    V(LastChar)                   \
     V(Length)                     \
     V(Linearized)                 \
     V(ML)                         \
@@ -87,16 +95,19 @@
     V(SA)                         \
     V(SM)                         \
     V(SMask)                      \
+    V(Subtype)                    \
     V(T)                          \
     V(TK)                         \
     V(TR)                         \
     V(TR2)                        \
     V(Title)                      \
+    V(ToUnicode)                  \
     V(Type)                       \
     V(UCR)                        \
     V(UseBlackPTComp)             \
     V(UserUnit)                   \
     V(WhitePoint)                 \
+    V(Widths)                     \
     V(XYZ)                        \
     V(ca)                         \
     V(op)

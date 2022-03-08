@@ -4,6 +4,7 @@ set(SOURCES
     Document.cpp
     Encoding.cpp
     Filter.cpp
+    Fonts.cpp
     ObjectDerivatives.cpp
     Parser.cpp
     Renderer.cpp
