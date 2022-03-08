@@ -111,6 +111,7 @@ set(SOURCES
     HTML/BrowsingContextContainer.cpp
     HTML/CanvasGradient.cpp
     HTML/CanvasRenderingContext2D.cpp
+    HTML/CrossOrigin/Reporting.cpp
     HTML/DOMParser.cpp
     HTML/DOMStringMap.cpp
     HTML/EventLoop/EventLoop.cpp
