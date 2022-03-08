@@ -932,7 +932,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
             tokens.skip_whitespace();
             if (tokens.next_token().is(Token::Type::Colon)) {
                 tokens.skip_whitespace();
-                if (auto maybe_value = parse_media_feature_value(tokens); maybe_value.has_value()) {
+                if (auto maybe_value = parse_media_feature_value(maybe_name->id, tokens); maybe_value.has_value()) {
                     tokens.skip_whitespace();
                     if (!tokens.has_next_token()) {
                         switch (maybe_name->type) {
@@ -1032,7 +1032,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
             tokens.skip_whitespace();
             if (auto maybe_comparison = parse_comparison(tokens); maybe_comparison.has_value()) {
                 tokens.skip_whitespace();
-                if (auto maybe_value = parse_media_feature_value(tokens); maybe_value.has_value()) {
+                if (auto maybe_value = parse_media_feature_value(maybe_name->id, tokens); maybe_value.has_value()) {
                     tokens.skip_whitespace();
                     if (!tokens.has_next_token() && !maybe_value->is_ident())
                         return MediaFeature::half_range(maybe_value.release_value(), flip(maybe_comparison.release_value()), maybe_name->id);
@@ -1043,11 +1043,31 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
         //  `<mf-value> <mf-comparison> <mf-name>
         // | <mf-value> <mf-lt> <mf-name> <mf-lt> <mf-value>
         // | <mf-value> <mf-gt> <mf-name> <mf-gt> <mf-value>`
-        if (auto maybe_left_value = parse_media_feature_value(tokens); maybe_left_value.has_value()) {
-            tokens.skip_whitespace();
-            if (auto maybe_left_comparison = parse_comparison(tokens); maybe_left_comparison.has_value()) {
+        // NOTE: To parse the first value, we need to first find and parse the <mf-name> so we know what value types to parse.
+        //       To allow for <mf-value> to be any number of tokens long, we scan forward until we find a comparison, and then
+        //       treat the next non-whitespace token as the <mf-name>, which should be correct as long as they don't add a value
+        //       type that can include a comparison in it. :^)
+        Optional<MediaFeatureName> maybe_name;
+        while (tokens.has_next_token() && !maybe_name.has_value()) {
+            if (auto maybe_comparison = parse_comparison(tokens); maybe_comparison.has_value()) {
+                // We found a comparison, so the next non-whitespace token should be the <mf-name>
                 tokens.skip_whitespace();
-                if (auto maybe_name = parse_mf_name(tokens, false); maybe_name.has_value() && media_feature_type_is_range(maybe_name->id)) {
+                maybe_name = parse_mf_name(tokens, false);
+                break;
+            }
+            tokens.next_token();
+            tokens.skip_whitespace();
+        }
+        tokens.rewind_to_position(position);
+        tokens.skip_whitespace();
+
+        // Now, we can parse the range properly.
+        if (maybe_name.has_value() && media_feature_type_is_range(maybe_name->id)) {
+            if (auto maybe_left_value = parse_media_feature_value(maybe_name->id, tokens); maybe_left_value.has_value()) {
+                tokens.skip_whitespace();
+                if (auto maybe_left_comparison = parse_comparison(tokens); maybe_left_comparison.has_value()) {
+                    tokens.skip_whitespace();
+                    tokens.next_token(); // The <mf-name> which we already parsed above.
                     tokens.skip_whitespace();
 
                     if (!tokens.has_next_token())
@@ -1055,7 +1075,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
 
                     if (auto maybe_right_comparison = parse_comparison(tokens); maybe_right_comparison.has_value()) {
                         tokens.skip_whitespace();
-                        if (auto maybe_right_value = parse_media_feature_value(tokens); maybe_right_value.has_value()) {
+                        if (auto maybe_right_value = parse_media_feature_value(maybe_name->id, tokens); maybe_right_value.has_value()) {
                             tokens.skip_whitespace();
                             // For this to be valid, the following must be true:
                             // - Comparisons must either both be >/>= or both be </<=.
@@ -1166,38 +1186,54 @@ OwnPtr<MediaCondition> Parser::parse_media_in_parens(TokenStream<StyleComponentV
 }
 
 // `<mf-value>`, https://www.w3.org/TR/mediaqueries-4/#typedef-mf-value
-Optional<MediaFeatureValue> Parser::parse_media_feature_value(TokenStream<StyleComponentValueRule>& tokens)
+Optional<MediaFeatureValue> Parser::parse_media_feature_value(MediaFeatureID media_feature, TokenStream<StyleComponentValueRule>& tokens)
 {
-    // `<number> | <dimension> | <ident> | <ratio>`
     auto position = tokens.position();
     tokens.skip_whitespace();
     auto& first = tokens.next_token();
     tokens.skip_whitespace();
 
-    // `<number>`
-    if (first.is(Token::Type::Number) && !tokens.has_next_token())
-        return MediaFeatureValue(first.token().number_value());
-
-    // `<dimension>`
-    if (auto dimension = parse_dimension(first); dimension.has_value() && !tokens.has_next_token()) {
-        if (dimension->is_length())
-            return MediaFeatureValue(dimension->length());
-        if (dimension->is_resolution())
-            return MediaFeatureValue(dimension->resolution());
-    }
-
-    // `<ident>`
+    // Identifiers
     if (first.is(Token::Type::Ident)) {
-        if (auto ident = value_id_from_string(first.token().ident()); ident != ValueID::Invalid)
+        auto ident = value_id_from_string(first.token().ident());
+        if (ident != ValueID::Invalid && media_feature_accepts_identifier(media_feature, ident))
             return MediaFeatureValue(ident);
     }
 
-    // `<ratio>`
-    // Note that a single <number> is a valid <ratio>, but it gets parsed above as a <number>.
-    // This will get solved with directed parsing of values based on the media-feature.
+    // One branch for each member of the MediaFeatureValueType enum:
+
+    // Boolean (<mq-boolean> in the spec: a 1 or 0)
+    if (media_feature_accepts_type(media_feature, MediaFeatureValueType::Boolean)) {
+        if (first.is(Token::Type::Number) && first.token().number_type() == Token::NumberType::Integer
+            && (first.token().number_value() == 0 || first.token().number_value() == 1))
+            return MediaFeatureValue(first.token().number_value());
+    }
+
+    // Integer
+    if (media_feature_accepts_type(media_feature, MediaFeatureValueType::Integer)) {
+        if (first.is(Token::Type::Number) && first.token().number_type() == Token::NumberType::Integer)
+            return MediaFeatureValue(first.token().number_value());
+    }
+
+    // Length
+    if (media_feature_accepts_type(media_feature, MediaFeatureValueType::Length)) {
+        if (auto length = parse_length(first); length.has_value())
+            return MediaFeatureValue(length.release_value());
+    }
+
+    // Resolution
+    if (media_feature_accepts_type(media_feature, MediaFeatureValueType::Resolution)) {
+        if (auto resolution = parse_dimension(first); resolution.has_value() && resolution->is_resolution())
+            return MediaFeatureValue(resolution->resolution());
+    }
+
+    // Ratio
+    // Done last because it uses multiple tokens.
     tokens.rewind_to_position(position);
-    if (auto ratio = parse_ratio(tokens); ratio.has_value() && !tokens.has_next_token())
-        return MediaFeatureValue(ratio.release_value());
+    if (media_feature_accepts_type(media_feature, MediaFeatureValueType::Ratio)) {
+        if (auto ratio = parse_ratio(tokens); ratio.has_value())
+            return MediaFeatureValue(ratio.release_value());
+    }
 
     tokens.rewind_to_position(position);
     return {};
