@@ -18,7 +18,10 @@ SpinBox::SpinBox()
     set_fixed_height(22);
     m_editor = add<TextBox>();
     m_editor->set_text("0");
-    m_editor->on_change = [this] {
+    m_editor->on_change = [this, weak_this = make_weak_ptr()] {
+        if (!weak_this)
+            return;
+
         auto value = m_editor->text().to_uint();
         if (value.has_value())
             set_value(value.value());
