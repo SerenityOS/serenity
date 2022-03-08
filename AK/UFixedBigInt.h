@@ -764,6 +764,32 @@ public:
         return log2() / base.log2();
     }
 
+    constexpr u64 fold_or() const requires(IsSame<T, u64>)
+    {
+        return m_low | m_high;
+    }
+    constexpr u64 fold_or() const requires(!IsSame<T, u64>)
+    {
+        return m_low.fold_or() | m_high.fold_or();
+    }
+    constexpr bool is_zero_constant_time() const
+    {
+        return fold_or() == 0;
+    }
+
+    constexpr u64 fold_xor_pair(R& other) const requires(IsSame<T, u64>)
+    {
+        return (m_low ^ other.low()) | (m_high ^ other.high());
+    }
+    constexpr u64 fold_xor_pair(R& other) const requires(!IsSame<T, u64>)
+    {
+        return (m_low.fold_xor_pair(other.low())) | (m_high.fold_xor_pair(other.high()));
+    }
+    constexpr bool is_equal_to_constant_time(R& other)
+    {
+        return fold_xor_pair(other) == 0;
+    }
+
 private:
     T m_low;
     T m_high;
