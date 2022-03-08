@@ -45,6 +45,7 @@ public:
         return names;
     }
 
+    ThrowCompletionOr<void> initialize_binding_direct(GlobalObject&, size_t index, Value);
     ThrowCompletionOr<Value> get_binding_value_direct(GlobalObject&, size_t index, bool strict);
     ThrowCompletionOr<void> set_mutable_binding_direct(GlobalObject&, size_t index, Value, bool strict);
 
