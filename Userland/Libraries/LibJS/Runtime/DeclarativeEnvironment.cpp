@@ -86,11 +86,17 @@ ThrowCompletionOr<void> DeclarativeEnvironment::create_immutable_binding(GlobalO
 }
 
 // 9.1.1.1.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v
-ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding(GlobalObject&, FlyString const& name, Value value)
+ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
 {
     auto index = find_binding_index(name);
     VERIFY(index.has_value());
-    auto& binding = m_bindings[*index];
+
+    return initialize_binding_direct(global_object, *index, value);
+}
+
+ThrowCompletionOr<void> DeclarativeEnvironment::initialize_binding_direct(GlobalObject&, size_t index, Value value)
+{
+    auto& binding = m_bindings[index];
 
     // 1. Assert: envRec must have an uninitialized binding for N.
     VERIFY(binding.initialized == false);
