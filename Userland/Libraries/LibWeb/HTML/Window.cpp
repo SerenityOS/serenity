@@ -372,52 +372,53 @@ NonnullRefPtr<CSS::MediaQueryList> Window::match_media(String media)
     return media_query_list;
 }
 
-Optional<CSS::MediaFeatureValue> Window::query_media_feature(FlyString const& name) const
+Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID media_feature) const
 {
     // FIXME: Many of these should be dependent on the hardware
 
     // MEDIAQUERIES-4 properties - https://www.w3.org/TR/mediaqueries-4/#media-descriptor-table
-    if (name.equals_ignoring_case("any-hover"sv))
+    switch (media_feature) {
+    case CSS::MediaFeatureID::AnyHover:
         return CSS::MediaFeatureValue("hover");
-    if (name.equals_ignoring_case("any-pointer"sv))
+    case CSS::MediaFeatureID::AnyPointer:
         return CSS::MediaFeatureValue("fine");
-    if (name.equals_ignoring_case("aspect-ratio"sv))
+    case CSS::MediaFeatureID::AspectRatio:
         return CSS::MediaFeatureValue(CSS::Ratio(inner_width(), inner_height()));
-    if (name.equals_ignoring_case("color"sv))
+    case CSS::MediaFeatureID::Color:
         return CSS::MediaFeatureValue(8);
-    if (name.equals_ignoring_case("color-gamut"sv))
+    case CSS::MediaFeatureID::ColorGamut:
         return CSS::MediaFeatureValue("srgb");
-    if (name.equals_ignoring_case("color-index"sv))
+    case CSS::MediaFeatureID::ColorIndex:
         return CSS::MediaFeatureValue(0);
     // FIXME: device-aspect-ratio
     // FIXME: device-height
     // FIXME: device-width
-    if (name.equals_ignoring_case("grid"sv))
+    case CSS::MediaFeatureID::Grid:
         return CSS::MediaFeatureValue(0);
-    if (name.equals_ignoring_case("height"sv))
+    case CSS::MediaFeatureID::Height:
         return CSS::MediaFeatureValue(CSS::Length::make_px(inner_height()));
-    if (name.equals_ignoring_case("hover"sv))
+    case CSS::MediaFeatureID::Hover:
         return CSS::MediaFeatureValue("hover");
-    if (name.equals_ignoring_case("monochrome"sv))
+    case CSS::MediaFeatureID::Monochrome:
         return CSS::MediaFeatureValue(0);
-    if (name.equals_ignoring_case("orientation"sv))
+    case CSS::MediaFeatureID::Orientation:
         return CSS::MediaFeatureValue(inner_height() >= inner_width() ? "portrait" : "landscape");
-    if (name.equals_ignoring_case("overflow-block"sv))
+    case CSS::MediaFeatureID::OverflowBlock:
         return CSS::MediaFeatureValue("scroll");
-    if (name.equals_ignoring_case("overflow-inline"sv))
+    case CSS::MediaFeatureID::OverflowInline:
         return CSS::MediaFeatureValue("scroll");
-    if (name.equals_ignoring_case("pointer"sv))
+    case CSS::MediaFeatureID::Pointer:
         return CSS::MediaFeatureValue("fine");
     // FIXME: resolution
-    if (name.equals_ignoring_case("scan"sv))
+    case CSS::MediaFeatureID::Scan:
         return CSS::MediaFeatureValue("progressive");
-    if (name.equals_ignoring_case("update"sv))
+    case CSS::MediaFeatureID::Update:
         return CSS::MediaFeatureValue("fast");
-    if (name.equals_ignoring_case("width"sv))
+    case CSS::MediaFeatureID::Width:
         return CSS::MediaFeatureValue(CSS::Length::make_px(inner_width()));
 
     // MEDIAQUERIES-5 properties - https://www.w3.org/TR/mediaqueries-5/#media-descriptor-table
-    if (name.equals_ignoring_case("prefers-color-scheme")) {
+    case CSS::MediaFeatureID::PrefersColorScheme: {
         if (auto* page = this->page()) {
             switch (page->preferred_color_scheme()) {
             case CSS::PreferredColorScheme::Light:
@@ -429,6 +430,11 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(FlyString const& na
                 return CSS::MediaFeatureValue(page->palette().is_dark() ? "dark" : "light");
             }
         }
+        return CSS::MediaFeatureValue(CSS::ValueID::Light);
+    }
+
+    default:
+        break;
     }
 
     return {};
