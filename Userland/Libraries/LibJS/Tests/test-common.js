@@ -536,6 +536,7 @@ class ExpectationError extends Error {
             __TestResults__[suiteMessage][defaultSuiteMessage] = {
                 result: "fail",
                 details: String(e),
+                duration: 0,
             };
         }
         suiteMessage = defaultSuiteMessage;
@@ -549,19 +550,25 @@ class ExpectationError extends Error {
             suite[message] = {
                 result: "fail",
                 details: "Another test with the same message did already run",
+                duration: 0,
             };
             return;
         }
 
+        const now = () => Temporal.Now.instant().epochNanoseconds;
+        const start = now();
+        const time_us = () => Number(BigInt.asIntN(53, (now() - start) / 1000n));
         try {
             callback();
             suite[message] = {
                 result: "pass",
+                duration: time_us(),
             };
         } catch (e) {
             suite[message] = {
                 result: "fail",
                 details: String(e),
+                duration: time_us(),
             };
         }
     };
@@ -577,12 +584,14 @@ class ExpectationError extends Error {
             suite[message] = {
                 result: "fail",
                 details: "Another test with the same message did already run",
+                duration: 0,
             };
             return;
         }
 
         suite[message] = {
             result: "skip",
+            duration: 0,
         };
     };
 })();

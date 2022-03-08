@@ -168,8 +168,8 @@ extern IntermediateRunFileResult (*g_run_file)(const String&, JS::Interpreter&, 
 
 class TestRunner : public ::Test::TestRunner {
 public:
-    TestRunner(String test_root, String common_path, bool print_times, bool print_progress, bool print_json)
-        : ::Test::TestRunner(move(test_root), print_times, print_progress, print_json)
+    TestRunner(String test_root, String common_path, bool print_times, bool print_progress, bool print_json, bool detailed_json)
+        : ::Test::TestRunner(move(test_root), print_times, print_progress, print_json, detailed_json)
         , m_common_path(move(common_path))
     {
         g_test_root = m_test_root;
@@ -266,6 +266,9 @@ inline void TestRunner::do_run_single_test(const String& test_path, size_t, size
     auto file_result = run_file_test(test_path);
     if (!m_print_json)
         print_file_result(file_result);
+
+    if (needs_detailed_suites())
+        ensure_suites().extend(file_result.suites);
 }
 
 inline Vector<String> TestRunner::get_test_paths() const
@@ -402,12 +405,12 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
     }
 
     test_json.value().as_object().for_each_member([&](const String& suite_name, const JsonValue& suite_value) {
-        Test::Suite suite { suite_name };
+        Test::Suite suite { test_path, suite_name };
 
         VERIFY(suite_value.is_object());
 
         suite_value.as_object().for_each_member([&](const String& test_name, const JsonValue& test_value) {
-            Test::Case test { test_name, Test::Result::Fail, "" };
+            Test::Case test { test_name, Test::Result::Fail, "", 0 };
 
             VERIFY(test_value.is_object());
             VERIFY(test_value.as_object().has("result"));
@@ -432,6 +435,8 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
                     suite.most_severe_test_result = Test::Result::Skip;
                 m_counts.tests_skipped++;
             }
+
+            test.duration_us = test_value.as_object().get("duration").to_u64(0);
 
             suite.tests.append(test);
         });

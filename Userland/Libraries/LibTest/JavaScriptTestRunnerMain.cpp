@@ -87,6 +87,7 @@ int main(int argc, char** argv)
         false;
 #endif
     bool print_json = false;
+    bool per_file = false;
     const char* specified_test_root = nullptr;
     String common_path;
     String test_glob;
@@ -109,6 +110,7 @@ int main(int argc, char** argv)
         },
     });
     args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
+    args_parser.add_option(per_file, "Show detailed per-file results as JSON (implies -j)", "per-file", 0);
     args_parser.add_option(g_collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
     args_parser.add_option(g_run_bytecode, "Use the bytecode interpreter", "run-bytecode", 'b');
     args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
@@ -118,6 +120,9 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(common_path, "Path to tests-common.js", "common-path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
+
+    if (per_file)
+        print_json = true;
 
     test_glob = String::formatted("*{}*", test_glob);
 
@@ -182,7 +187,7 @@ int main(int argc, char** argv)
         g_vm->enable_default_host_import_module_dynamically_hook();
     }
 
-    Test::JS::TestRunner test_runner(test_root, common_path, print_times, print_progress, print_json);
+    Test::JS::TestRunner test_runner(test_root, common_path, print_times, print_progress, print_json, per_file);
     test_runner.run(test_glob);
 
     g_vm = nullptr;
