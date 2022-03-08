@@ -15,6 +15,7 @@
     V(BG)                         \
     V(BG2)                        \
     V(BM)                         \
+    V(BaseEncoding)               \
     V(BaseFont)                   \
     V(BlackPoint)                 \
     V(C)                          \
@@ -33,6 +34,7 @@
     V(DeviceCMYK)                 \
     V(DeviceGray)                 \
     V(DeviceRGB)                  \
+    V(Differences)                \
     V(E)                          \
     V(ExtGState)                  \
     V(F)                          \

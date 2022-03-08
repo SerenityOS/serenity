@@ -2,6 +2,7 @@ set(SOURCES
     ColorSpace.cpp
     CommonNames.cpp
     Document.cpp
+    Encoding.cpp
     Filter.cpp
     ObjectDerivatives.cpp
     Parser.cpp
