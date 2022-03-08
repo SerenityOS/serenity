@@ -221,11 +221,15 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
-            if (!success) {
-                auto http_load_failure_msg = "HTTP load failed"sv;
-                log_failure(request, http_load_failure_msg);
+            if (!success || (status_code.has_value() && *status_code >= 400 && *status_code <= 599)) {
+                StringBuilder error_builder;
+                if (status_code.has_value())
+                    error_builder.appendff("Load failed: {}", *status_code);
+                else
+                    error_builder.append("Load failed");
+                log_failure(request, error_builder.string_view());
                 if (error_callback)
-                    error_callback(http_load_failure_msg, {});
+                    error_callback(error_builder.to_string(), {});
                 return;
             }
             log_success(request);
