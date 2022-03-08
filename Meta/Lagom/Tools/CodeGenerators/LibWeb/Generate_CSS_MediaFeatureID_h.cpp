@@ -43,6 +43,8 @@ enum class MediaFeatureID {)~~~");
 Optional<MediaFeatureID> media_feature_id_from_string(StringView);
 char const* string_from_media_feature_id(MediaFeatureID);
 
+bool media_feature_type_is_range(MediaFeatureID);
+
 }
 )~~~");
 
