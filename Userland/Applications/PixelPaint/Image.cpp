@@ -128,7 +128,10 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
             MUST(json_layer.add("selected", layer.is_selected()));
             // FIXME: Respect mask
             MUST(json_layer.add("bitmap", encode_base64(bmp_dumber.dump(layer.display_bitmap()))));
+            MUST(json_layer.finish());
         }
+
+        MUST(json_layers.finish());
     }
 }
 
