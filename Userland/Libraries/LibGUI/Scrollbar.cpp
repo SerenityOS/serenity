@@ -114,6 +114,11 @@ bool Scrollbar::has_scrubber() const
     return max() != min();
 }
 
+void Scrollbar::set_scroll_animation(Animation scroll_animation)
+{
+    m_scroll_animation = scroll_animation;
+}
+
 void Scrollbar::set_value(int value, AllowCallback allow_callback)
 {
     m_target_value = value;
@@ -125,6 +130,9 @@ void Scrollbar::set_value(int value, AllowCallback allow_callback)
 
 void Scrollbar::set_target_value(int new_target_value)
 {
+    if (m_scroll_animation == Animation::CoarseScroll)
+        return set_value(new_target_value);
+
     new_target_value = clamp(new_target_value, min(), max());
 
     // If we are already at or scrolling to the new target then don't touch anything
