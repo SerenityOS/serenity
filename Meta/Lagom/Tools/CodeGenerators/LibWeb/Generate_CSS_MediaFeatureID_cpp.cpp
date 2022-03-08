@@ -60,6 +60,30 @@ char const* string_from_media_feature_id(MediaFeatureID media_feature_id)
     VERIFY_NOT_REACHED();
 }
 
+bool media_feature_type_is_range(MediaFeatureID media_feature_id)
+{
+    switch (media_feature_id) {)~~~");
+
+    json.as_object().for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+        auto& feature = value.as_object();
+
+        auto member_generator = generator.fork();
+        member_generator.set("name:titlecase", title_casify(name));
+        VERIFY(feature.has("type"));
+        auto feature_type = feature.get("type");
+        VERIFY(feature_type.is_string());
+        member_generator.set("is_range", feature_type.as_string() == "range" ? "true" : "false");
+        member_generator.append(R"~~~(
+    case MediaFeatureID::@name:titlecase@:
+        return @is_range@;)~~~");
+    });
+
+    generator.append(R"~~~(
+    }
+    VERIFY_NOT_REACHED();
+}
+
 }
 )~~~");
 

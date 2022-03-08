@@ -896,7 +896,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
 
             if (allow_min_max_prefix && (name.starts_with("min-", CaseSensitivity::CaseInsensitive) || name.starts_with("max-", CaseSensitivity::CaseInsensitive))) {
                 auto adjusted_name = name.substring_view(4);
-                if (auto id = media_feature_id_from_string(adjusted_name); id.has_value()) {
+                if (auto id = media_feature_id_from_string(adjusted_name); id.has_value() && media_feature_type_is_range(id.value())) {
                     tokens.next_token();
                     return MediaFeatureName {
                         name.starts_with("min-", CaseSensitivity::CaseInsensitive) ? MediaFeatureName::Type::Min : MediaFeatureName::Type::Max,
@@ -1028,7 +1028,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
 
         // `<mf-name> <mf-comparison> <mf-value>`
         // NOTE: We have to check for <mf-name> first, since all <mf-name>s will also parse as <mf-value>.
-        if (auto maybe_name = parse_mf_name(tokens, false); maybe_name.has_value()) {
+        if (auto maybe_name = parse_mf_name(tokens, false); maybe_name.has_value() && media_feature_type_is_range(maybe_name->id)) {
             tokens.skip_whitespace();
             if (auto maybe_comparison = parse_comparison(tokens); maybe_comparison.has_value()) {
                 tokens.skip_whitespace();
@@ -1047,7 +1047,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
             tokens.skip_whitespace();
             if (auto maybe_left_comparison = parse_comparison(tokens); maybe_left_comparison.has_value()) {
                 tokens.skip_whitespace();
-                if (auto maybe_name = parse_mf_name(tokens, false); maybe_name.has_value()) {
+                if (auto maybe_name = parse_mf_name(tokens, false); maybe_name.has_value() && media_feature_type_is_range(maybe_name->id)) {
                     tokens.skip_whitespace();
 
                     if (!tokens.has_next_token())
