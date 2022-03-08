@@ -49,7 +49,7 @@ enum class NeedsBigProcessLock {
     S(beep, NeedsBigProcessLock::No)                        \
     S(bind, NeedsBigProcessLock::Yes)                       \
     S(chdir, NeedsBigProcessLock::No)                       \
-    S(chmod, NeedsBigProcessLock::Yes)                      \
+    S(chmod, NeedsBigProcessLock::No)                       \
     S(chown, NeedsBigProcessLock::Yes)                      \
     S(clock_gettime, NeedsBigProcessLock::No)               \
     S(clock_nanosleep, NeedsBigProcessLock::No)             \
