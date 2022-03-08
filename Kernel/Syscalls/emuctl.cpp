@@ -10,7 +10,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$emuctl()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     return ENOSYS;
 }
 
