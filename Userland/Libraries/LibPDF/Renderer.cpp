@@ -6,6 +6,7 @@
 
 #include <AK/Utf8View.h>
 #include <LibPDF/CommonNames.h>
+#include <LibPDF/Fonts.h>
 #include <LibPDF/Renderer.h>
 
 #define RENDERER_HANDLER(name) \
@@ -340,9 +341,11 @@ RENDERER_HANDLER(text_set_font)
     auto target_font_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
     auto fonts_dictionary = MUST(m_page.resources->get_dict(m_document, CommonNames::Font));
     auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, target_font_name));
+    auto font = TRY(PDFFont::create(m_document, font_dictionary));
+    text_state().font = font;
 
     // FIXME: We do not yet have the standard 14 fonts, as some of them are not open fonts,
-    // so we just use LiberationSerif for everything
+    //        so we just use LiberationSerif for everything
 
     auto font_name = MUST(font_dictionary->get_name(m_document, CommonNames::BaseFont))->name().to_lowercase();
     auto font_view = font_name.view();
@@ -614,8 +617,6 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
 
 void Renderer::show_text(String const& string, float shift)
 {
-    auto utf = Utf8View(string);
-
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
 
     auto font_size = static_cast<int>(text_rendering_matrix.x_scale() * text_state().font_size);
@@ -628,7 +629,9 @@ void Renderer::show_text(String const& string, float shift)
 
     auto original_position = glyph_position;
 
-    for (auto code_point : utf) {
+    for (auto char_code : string.bytes()) {
+        auto code_point = text_state().font->char_code_to_code_point(char_code);
+
         if (code_point != 0x20)
             m_painter.draw_glyph(glyph_position.to_type<int>(), code_point, *font, state().paint_color);
 

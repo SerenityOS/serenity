@@ -18,6 +18,7 @@
 #include <LibGfx/Size.h>
 #include <LibPDF/ColorSpace.h>
 #include <LibPDF/Document.h>
+#include <LibPDF/Fonts.h>
 #include <LibPDF/Object.h>
 
 namespace PDF {
@@ -58,6 +59,7 @@ struct TextState {
     FlyString font_family { "Liberation Serif" };
     String font_variant { "Regular" };
     float font_size { 12.0f };
+    RefPtr<PDFFont> font;
     TextRenderingMode rendering_mode { TextRenderingMode::Fill };
     float rise { 0.0f };
     bool knockout { true };
