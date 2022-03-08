@@ -92,6 +92,13 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject
         auto bitmap = TRY(try_decode_bitmap(bitmap_data));
         auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
 
+        if (auto mask_object = layer_object.get("mask"); !mask_object.is_null()) {
+            auto mask_base64_encoded = mask_object.as_string();
+            auto mask_data = TRY(decode_base64(mask_base64_encoded));
+            auto mask = TRY(try_decode_bitmap(mask_data));
+            layer->set_mask_bitmap(move(mask));
+        }
+
         auto width = layer_object.get("width").to_i32();
         auto height = layer_object.get("height").to_i32();
 
@@ -126,8 +133,9 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
             MUST(json_layer.add("opacity_percent", layer.opacity_percent()));
             MUST(json_layer.add("visible", layer.is_visible()));
             MUST(json_layer.add("selected", layer.is_selected()));
-            // FIXME: Respect mask
             MUST(json_layer.add("bitmap", encode_base64(bmp_writer.dump(layer.content_bitmap()))));
+            if (layer.is_masked())
+                MUST(json_layer.add("mask", encode_base64(bmp_writer.dump(*layer.mask_bitmap()))));
             MUST(json_layer.finish());
         }
 

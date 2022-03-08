@@ -148,6 +148,12 @@ void Layer::set_content_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
     update_cached_bitmap();
 }
 
+void Layer::set_mask_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
+{
+    m_mask_bitmap = move(bitmap);
+    update_cached_bitmap();
+}
+
 void Layer::update_cached_bitmap()
 {
     if (!is_masked()) {
