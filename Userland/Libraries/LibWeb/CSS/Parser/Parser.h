@@ -309,7 +309,7 @@ private:
     Optional<MediaFeature> parse_media_feature(TokenStream<StyleComponentValueRule>&);
     Optional<MediaQuery::MediaType> parse_media_type(TokenStream<StyleComponentValueRule>&);
     OwnPtr<MediaCondition> parse_media_in_parens(TokenStream<StyleComponentValueRule>&);
-    Optional<MediaFeatureValue> parse_media_feature_value(TokenStream<StyleComponentValueRule>&);
+    Optional<MediaFeatureValue> parse_media_feature_value(MediaFeatureID, TokenStream<StyleComponentValueRule>&);
 
     OwnPtr<Supports::Condition> parse_supports_condition(TokenStream<StyleComponentValueRule>&);
     Optional<Supports::InParens> parse_supports_in_parens(TokenStream<StyleComponentValueRule>&);
