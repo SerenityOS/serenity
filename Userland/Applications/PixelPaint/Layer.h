@@ -54,6 +54,7 @@ public:
     void set_name(String);
 
     void set_content_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap);
+    void set_mask_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap);
 
     void did_modify_bitmap(Gfx::IntRect const& = {});
 
@@ -72,7 +73,7 @@ public:
 
     void erase_selection(Selection const&);
 
-    bool is_masked() { return !m_mask_bitmap.is_null(); }
+    bool is_masked() const { return !m_mask_bitmap.is_null(); }
 
     enum class EditMode {
         Content,
