@@ -28,14 +28,29 @@ enum class HashSetExistingEntryBehavior {
     Replace
 };
 
-// FIXME: Choose specific values so that we can do bit-based checks for various classes of state.
+// Upper nibble determines state class:
+// - 0: unused bucket
+// - 1: used bucket
+// - F: end bucket
+// Lower nibble determines state within a class.
 enum class BucketState : u8 {
-    Free = 0,
-    Used,
-    Deleted,
-    Rehashed,
-    End,
+    Free = 0x00,
+    Used = 0x10,
+    Deleted = 0x01,
+    Rehashed = 0x12,
+    End = 0xFF,
 };
+
+// Note that because there's the end state, used and free are not 100% opposites!
+constexpr bool is_used_bucket(BucketState state)
+{
+    return (static_cast<u8>(state) & 0xf0) == 0x10;
+}
+
+constexpr bool is_free_bucket(BucketState state)
+{
+    return (static_cast<u8>(state) & 0xf0) == 0x00;
+}
 
 template<typename HashTableType, typename T, typename BucketType>
 class HashTableIterator {
@@ -134,7 +149,7 @@ public:
             return;
 
         for (size_t i = 0; i < m_capacity; ++i) {
-            if (m_buckets[i].state == BucketState::Used)
+            if (is_used_bucket(m_buckets[i].state))
                 m_buckets[i].slot()->~T();
         }
 
@@ -238,7 +253,7 @@ public:
             return Iterator(m_collection_data.head);
 
         for (size_t i = 0; i < m_capacity; ++i) {
-            if (m_buckets[i].state == BucketState::Used)
+            if (is_used_bucket(m_buckets[i].state))
                 return Iterator(&m_buckets[i]);
         }
         return end();
@@ -259,7 +274,7 @@ public:
             return ConstIterator(m_collection_data.head);
 
         for (size_t i = 0; i < m_capacity; ++i) {
-            if (m_buckets[i].state == BucketState::Used)
+            if (is_used_bucket(m_buckets[i].state))
                 return ConstIterator(&m_buckets[i]);
         }
         return end();
@@ -294,7 +309,7 @@ public:
     ErrorOr<HashSetResult> try_set(U&& value, HashSetExistingEntryBehavior existing_entry_behavior = HashSetExistingEntryBehavior::Replace)
     {
         auto* bucket = TRY(try_lookup_for_writing(value));
-        if (bucket->state == BucketState::Used) {
+        if (is_used_bucket(bucket->state)) {
             if (existing_entry_behavior == HashSetExistingEntryBehavior::Keep)
                 return HashSetResult::KeptExistingEntry;
             (*bucket->slot()) = forward<U>(value);
@@ -397,7 +412,7 @@ public:
     {
         VERIFY(iterator.m_bucket);
         auto& bucket = *iterator.m_bucket;
-        VERIFY(bucket.state == BucketState::Used);
+        VERIFY(is_used_bucket(bucket.state));
 
         delete_bucket(bucket);
         --m_size;
@@ -412,7 +427,7 @@ public:
         size_t removed_count = 0;
         for (size_t i = 0; i < m_capacity; ++i) {
             auto& bucket = m_buckets[i];
-            if (bucket.state == BucketState::Used && predicate(*bucket.slot())) {
+            if (is_used_bucket(bucket.state) && predicate(*bucket.slot())) {
                 delete_bucket(bucket);
                 ++removed_count;
             }
@@ -530,7 +545,7 @@ private:
 
             // Try to move the bucket to move into its correct spot.
             // During the procedure, we might re-hash or actually change the bucket to move.
-            while (!(bucket_to_move->state == BucketState::Free || bucket_to_move->state == BucketState::Deleted)) {
+            while (!is_free_bucket(bucket_to_move->state)) {
 
                 // If we're targeting ourselves, there's nothing to do.
                 if (to_move_hash == target_hash % m_capacity) {
@@ -538,7 +553,7 @@ private:
                     break;
                 }
 
-                if (target_bucket->state == BucketState::Free || target_bucket->state == BucketState::Deleted) {
+                if (is_free_bucket(target_bucket->state)) {
                     // We can just overwrite the target bucket and bail out.
                     new (target_bucket->slot()) T(move(*bucket_to_move->slot()));
                     target_bucket->state = BucketState::Rehashed;
@@ -635,7 +650,7 @@ private:
         for (;;) {
             auto& bucket = m_buckets[hash % m_capacity];
 
-            if (bucket.state == BucketState::Used && predicate(*bucket.slot()))
+            if (is_used_bucket(bucket.state) && predicate(*bucket.slot()))
                 return &bucket;
 
             if (bucket.state != BucketState::Used && bucket.state != BucketState::Deleted)
@@ -657,10 +672,10 @@ private:
         for (;;) {
             auto& bucket = m_buckets[hash % m_capacity];
 
-            if (bucket.state == BucketState::Used && TraitsForT::equals(*bucket.slot(), value))
+            if (is_used_bucket(bucket.state) && TraitsForT::equals(*bucket.slot(), value))
                 return &bucket;
 
-            if (bucket.state != BucketState::Used) {
+            if (!is_used_bucket(bucket.state)) {
                 if (!first_empty_bucket)
                     first_empty_bucket = &bucket;
 
