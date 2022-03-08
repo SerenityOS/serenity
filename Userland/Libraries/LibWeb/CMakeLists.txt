@@ -14,6 +14,7 @@ set(SOURCES
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapperFactory.cpp
     Bindings/WindowObject.cpp
+    Bindings/WindowProxy.cpp
     Bindings/Wrappable.cpp
     Crypto/Crypto.cpp
     Crypto/SubtleCrypto.cpp

@@ -515,6 +515,7 @@ class URLSearchParamsWrapper;
 class URLWrapper;
 class WebSocketWrapper;
 class WindowObject;
+class WindowProxy;
 class WorkerWrapper;
 class WorkerGlobalScopeWrapper;
 class WorkerLocationWrapper;
