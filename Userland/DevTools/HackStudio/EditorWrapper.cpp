@@ -21,15 +21,7 @@ EditorWrapper::EditorWrapper()
 {
     set_layout<GUI::VerticalBoxLayout>();
 
-    auto& label_wrapper = add<GUI::Widget>();
-    label_wrapper.set_fixed_height(14);
-    label_wrapper.set_fill_with_background_color(true);
-    label_wrapper.set_layout<GUI::HorizontalBoxLayout>();
-    label_wrapper.layout()->set_margins({ 0, 2 });
-
-    m_filename_label = label_wrapper.add<GUI::Label>(untitled_label);
-    m_filename_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    m_filename_label->set_fixed_height(14);
+    m_filename_title = untitled_label;
 
     // FIXME: Propagate errors instead of giving up
     m_editor = MUST(try_add<Editor>());
@@ -47,12 +39,6 @@ EditorWrapper::EditorWrapper()
     m_editor->on_modified_change = [this](bool) {
         update_title();
     };
-}
-
-void EditorWrapper::set_editor_has_focus(Badge<Editor>, bool focus)
-{
-    auto& font = Gfx::FontDatabase::default_font();
-    m_filename_label->set_font(focus ? font.bold_variant() : font);
 }
 
 LanguageClient& EditorWrapper::language_client() { return m_editor->language_client(); }
@@ -121,7 +107,7 @@ void EditorWrapper::update_title()
 
     if (editor().document().is_modified())
         title.append(" (*)");
-    m_filename_label->set_text(title.to_string());
+    m_filename_title = title.to_string();
 }
 
 void EditorWrapper::set_debug_mode(bool enabled)
