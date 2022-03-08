@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Prekernel/Arch/aarch64/Prekernel.h>
+#include <Kernel/Arch/aarch64/Prekernel.h>
 
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Prekernel/Arch/aarch64/UART.h>
+#include <Kernel/Arch/aarch64/UART.h>
 
 namespace Prekernel {
 

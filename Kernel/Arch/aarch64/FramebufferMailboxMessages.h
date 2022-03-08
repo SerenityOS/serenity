@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
+#include <Kernel/Arch/aarch64/Mailbox.h>
 
 namespace Prekernel {
 

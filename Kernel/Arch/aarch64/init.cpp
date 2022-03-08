@@ -10,14 +10,14 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Prekernel/Arch/aarch64/Aarch64_asm_utils.h>
-#include <Kernel/Prekernel/Arch/aarch64/BootPPMParser.h>
-#include <Kernel/Prekernel/Arch/aarch64/Framebuffer.h>
-#include <Kernel/Prekernel/Arch/aarch64/Mailbox.h>
-#include <Kernel/Prekernel/Arch/aarch64/Prekernel.h>
-#include <Kernel/Prekernel/Arch/aarch64/Timer.h>
-#include <Kernel/Prekernel/Arch/aarch64/UART.h>
-#include <Kernel/Prekernel/Arch/aarch64/Utils.h>
+#include <Kernel/Arch/aarch64/Aarch64_asm_utils.h>
+#include <Kernel/Arch/aarch64/BootPPMParser.h>
+#include <Kernel/Arch/aarch64/Framebuffer.h>
+#include <Kernel/Arch/aarch64/Mailbox.h>
+#include <Kernel/Arch/aarch64/Prekernel.h>
+#include <Kernel/Arch/aarch64/Timer.h>
+#include <Kernel/Arch/aarch64/UART.h>
+#include <Kernel/Arch/aarch64/Utils.h>
 
 static void draw_logo();
 static u32 query_firmware_version();
