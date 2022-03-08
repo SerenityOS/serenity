@@ -26,46 +26,11 @@ apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel ninja-
 
 ## NixOS
 
-You can use a `nix-shell` script like the following to set up the correct environment:
+You can use the `nix-shell` script [`Toolchain/serenity.nix`](../Toolchain/serenity.nix) to set up the environment:
 
-myshell.nix:
-
+```console
+nix-shell Toolchain/serenity.nix
 ```
-with import <nixpkgs> {};
-
-stdenv.mkDerivation {
-  name = "cpp-env";
-  nativeBuildInputs = [
-    gcc11
-    curl
-    cmake
-    mpfr
-    ninja
-    gmp
-    libmpc
-    e2fsprogs
-    patch
-    ccache
-    rsync
-    unzip
-
-    # Example Build-time Additional Dependencies
-    pkgconfig
-  ];
-  buildInputs = [
-    # Example Run-time Additional Dependencies
-    openssl
-    x11
-    qemu
-    # glibc
-  ];
-  hardeningDisable = [ "format" "fortify" ];
-}
-```
-
-Then use this script: `nix-shell myshell.nix`.
-
-Once you're in nix-shell, you should be able to follow the build directions.
 
 ## Alpine Linux
 
