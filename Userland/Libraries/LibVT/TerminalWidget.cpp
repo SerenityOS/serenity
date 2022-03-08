@@ -90,6 +90,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     m_auto_scroll_timer = add<Core::Timer>();
 
     m_scrollbar = add<GUI::Scrollbar>(Orientation::Vertical);
+    m_scrollbar->set_scroll_animation(GUI::Scrollbar::Animation::CoarseScroll);
     m_scrollbar->set_relative_rect(0, 0, 16, 0);
     m_scrollbar->on_change = [this](int) {
         update();
