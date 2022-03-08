@@ -89,7 +89,7 @@ public:
 
     NonnullRefPtr<CSS::CSSStyleDeclaration> get_computed_style(DOM::Element&) const;
     NonnullRefPtr<CSS::MediaQueryList> match_media(String);
-    Optional<CSS::MediaFeatureValue> query_media_feature(FlyString const&) const;
+    Optional<CSS::MediaFeatureValue> query_media_feature(CSS::MediaFeatureID) const;
 
     float scroll_x() const;
     float scroll_y() const;

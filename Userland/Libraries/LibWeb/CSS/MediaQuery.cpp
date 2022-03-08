@@ -60,18 +60,18 @@ String MediaFeature::to_string() const
 
     switch (m_type) {
     case Type::IsTrue:
-        return serialize_an_identifier(m_name);
+        return string_from_media_feature_id(m_id);
     case Type::ExactValue:
-        return String::formatted("{}:{}", serialize_an_identifier(m_name), m_value->to_string());
+        return String::formatted("{}:{}", string_from_media_feature_id(m_id), m_value->to_string());
     case Type::MinValue:
-        return String::formatted("min-{}:{}", serialize_an_identifier(m_name), m_value->to_string());
+        return String::formatted("min-{}:{}", string_from_media_feature_id(m_id), m_value->to_string());
     case Type::MaxValue:
-        return String::formatted("max-{}:{}", serialize_an_identifier(m_name), m_value->to_string());
+        return String::formatted("max-{}:{}", string_from_media_feature_id(m_id), m_value->to_string());
     case Type::Range:
         if (!m_range->right_comparison.has_value())
-            return String::formatted("{} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), serialize_an_identifier(m_name));
+            return String::formatted("{} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id));
 
-        return String::formatted("{} {} {} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), serialize_an_identifier(m_name), comparison_string(*m_range->right_comparison), m_range->right_value->to_string());
+        return String::formatted("{} {} {} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id), comparison_string(*m_range->right_comparison), m_range->right_value->to_string());
     }
 
     VERIFY_NOT_REACHED();
@@ -79,7 +79,7 @@ String MediaFeature::to_string() const
 
 bool MediaFeature::evaluate(HTML::Window const& window) const
 {
-    auto maybe_queried_value = window.query_media_feature(m_name);
+    auto maybe_queried_value = window.query_media_feature(m_id);
     if (!maybe_queried_value.has_value())
         return false;
     auto queried_value = maybe_queried_value.release_value();

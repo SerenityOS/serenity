@@ -877,20 +877,31 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
     tokens.skip_whitespace();
 
     // `<mf-name> = <ident>`
-    auto parse_mf_name = [](auto& tokens, bool allow_min_max_prefix) -> Optional<String> {
+    struct MediaFeatureName {
+        enum Type {
+            Normal,
+            Min,
+            Max
+        } type;
+        MediaFeatureID id;
+    };
+    auto parse_mf_name = [](auto& tokens, bool allow_min_max_prefix) -> Optional<MediaFeatureName> {
         auto& token = tokens.peek_token();
         if (token.is(Token::Type::Ident)) {
             auto name = token.token().ident();
-            if (is_media_feature_name(name)) {
+            if (auto id = media_feature_id_from_string(name); id.has_value()) {
                 tokens.next_token();
-                return name;
+                return MediaFeatureName { MediaFeatureName::Type::Normal, id.value() };
             }
 
             if (allow_min_max_prefix && (name.starts_with("min-", CaseSensitivity::CaseInsensitive) || name.starts_with("max-", CaseSensitivity::CaseInsensitive))) {
                 auto adjusted_name = name.substring_view(4);
-                if (is_media_feature_name(adjusted_name)) {
+                if (auto id = media_feature_id_from_string(adjusted_name); id.has_value()) {
                     tokens.next_token();
-                    return name;
+                    return MediaFeatureName {
+                        name.starts_with("min-", CaseSensitivity::CaseInsensitive) ? MediaFeatureName::Type::Min : MediaFeatureName::Type::Max,
+                        id.value()
+                    };
                 }
             }
         }
@@ -902,11 +913,10 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
         auto position = tokens.position();
         tokens.skip_whitespace();
 
-        auto maybe_name = parse_mf_name(tokens, false);
-        if (maybe_name.has_value()) {
+        if (auto maybe_name = parse_mf_name(tokens, false); maybe_name.has_value()) {
             tokens.skip_whitespace();
             if (!tokens.has_next_token())
-                return MediaFeature::boolean(maybe_name.release_value());
+                return MediaFeature::boolean(maybe_name->id);
         }
 
         tokens.rewind_to_position(position);
@@ -924,8 +934,17 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
                 tokens.skip_whitespace();
                 if (auto maybe_value = parse_media_feature_value(tokens); maybe_value.has_value()) {
                     tokens.skip_whitespace();
-                    if (!tokens.has_next_token())
-                        return MediaFeature::plain(maybe_name.release_value(), maybe_value.release_value());
+                    if (!tokens.has_next_token()) {
+                        switch (maybe_name->type) {
+                        case MediaFeatureName::Type::Normal:
+                            return MediaFeature::plain(maybe_name->id, maybe_value.release_value());
+                        case MediaFeatureName::Type::Min:
+                            return MediaFeature::min(maybe_name->id, maybe_value.release_value());
+                        case MediaFeatureName::Type::Max:
+                            return MediaFeature::max(maybe_name->id, maybe_value.release_value());
+                        }
+                        VERIFY_NOT_REACHED();
+                    }
                 }
             }
         }
@@ -1016,7 +1035,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
                 if (auto maybe_value = parse_media_feature_value(tokens); maybe_value.has_value()) {
                     tokens.skip_whitespace();
                     if (!tokens.has_next_token() && !maybe_value->is_ident())
-                        return MediaFeature::half_range(maybe_value.release_value(), flip(maybe_comparison.release_value()), maybe_name.release_value());
+                        return MediaFeature::half_range(maybe_value.release_value(), flip(maybe_comparison.release_value()), maybe_name->id);
                 }
             }
         }
@@ -1032,7 +1051,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
                     tokens.skip_whitespace();
 
                     if (!tokens.has_next_token())
-                        return MediaFeature::half_range(maybe_left_value.release_value(), maybe_left_comparison.release_value(), maybe_name.release_value());
+                        return MediaFeature::half_range(maybe_left_value.release_value(), maybe_left_comparison.release_value(), maybe_name->id);
 
                     if (auto maybe_right_comparison = parse_comparison(tokens); maybe_right_comparison.has_value()) {
                         tokens.skip_whitespace();
@@ -1049,7 +1068,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
                                 && comparisons_match(left_comparison, right_comparison)
                                 && left_comparison != MediaFeature::Comparison::Equal
                                 && !maybe_left_value->is_ident() && !maybe_right_value->is_ident()) {
-                                return MediaFeature::range(maybe_left_value.release_value(), left_comparison, maybe_name.release_value(), right_comparison, maybe_right_value.release_value());
+                                return MediaFeature::range(maybe_left_value.release_value(), left_comparison, maybe_name->id, right_comparison, maybe_right_value.release_value());
                             }
                         }
                     }

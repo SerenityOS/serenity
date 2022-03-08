@@ -13,6 +13,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <LibWeb/CSS/GeneralEnclosed.h>
+#include <LibWeb/CSS/MediaFeatureID.h>
 #include <LibWeb/CSS/Ratio.h>
 #include <LibWeb/CSS/StyleValue.h>
 
@@ -101,25 +102,29 @@ public:
     };
 
     // Corresponds to `<mf-boolean>` grammar
-    static MediaFeature boolean(String const& name)
+    static MediaFeature boolean(MediaFeatureID id)
     {
-        return MediaFeature(Type::IsTrue, name);
+        return MediaFeature(Type::IsTrue, id);
     }
 
     // Corresponds to `<mf-plain>` grammar
-    static MediaFeature plain(String const& name, MediaFeatureValue value)
+    static MediaFeature plain(MediaFeatureID id, MediaFeatureValue value)
     {
-        if (name.starts_with("min-", CaseSensitivity::CaseInsensitive))
-            return MediaFeature(Type::MinValue, name.substring_view(4), move(value));
-        if (name.starts_with("max-", CaseSensitivity::CaseInsensitive))
-            return MediaFeature(Type::MaxValue, name.substring_view(4), move(value));
-        return MediaFeature(Type::ExactValue, move(name), move(value));
+        return MediaFeature(Type::ExactValue, move(id), move(value));
+    }
+    static MediaFeature min(MediaFeatureID id, MediaFeatureValue value)
+    {
+        return MediaFeature(Type::MinValue, id, move(value));
+    }
+    static MediaFeature max(MediaFeatureID id, MediaFeatureValue value)
+    {
+        return MediaFeature(Type::MaxValue, id, move(value));
     }
 
     // Corresponds to `<mf-range>` grammar, with a single comparison
-    static MediaFeature half_range(MediaFeatureValue value, Comparison comparison, String const& name)
+    static MediaFeature half_range(MediaFeatureValue value, Comparison comparison, MediaFeatureID id)
     {
-        MediaFeature feature { Type::Range, name };
+        MediaFeature feature { Type::Range, id };
         feature.m_range = Range {
             .left_value = value,
             .left_comparison = comparison,
@@ -128,9 +133,9 @@ public:
     }
 
     // Corresponds to `<mf-range>` grammar, with two comparisons
-    static MediaFeature range(MediaFeatureValue left_value, Comparison left_comparison, String const& name, Comparison right_comparison, MediaFeatureValue right_value)
+    static MediaFeature range(MediaFeatureValue left_value, Comparison left_comparison, MediaFeatureID id, Comparison right_comparison, MediaFeatureValue right_value)
     {
-        MediaFeature feature { Type::Range, name };
+        MediaFeature feature { Type::Range, id };
         feature.m_range = Range {
             .left_value = left_value,
             .left_comparison = left_comparison,
@@ -152,9 +157,9 @@ private:
         Range,
     };
 
-    MediaFeature(Type type, FlyString name, Optional<MediaFeatureValue> value = {})
+    MediaFeature(Type type, MediaFeatureID id, Optional<MediaFeatureValue> value = {})
         : m_type(type)
-        , m_name(move(name))
+        , m_id(move(id))
         , m_value(move(value))
     {
     }
@@ -169,7 +174,7 @@ private:
     };
 
     Type m_type;
-    FlyString m_name;
+    MediaFeatureID m_id;
     Optional<MediaFeatureValue> m_value {};
     Optional<Range> m_range {};
 };
