@@ -34,7 +34,8 @@ pre {
 
 code,
 kbd,
-samp {
+samp,
+tt {
     font-family: monospace;
 }
 
@@ -44,6 +45,7 @@ ins {
 }
 
 s,
+strike,
 del {
     text-decoration: line-through;
 }
@@ -196,6 +198,15 @@ colgroup {
 blockquote {
     margin-left: 25px;
     margin-right: 25px;
+}
+
+mark {
+    background: yellow;
+}
+
+abbr[title],
+acronym[title] {
+    text-decoration: dotted underline;
 }
 
 ul,
