@@ -57,8 +57,7 @@ private:
         NotPressed,
         BeforeScrubber,
         AfterScrubber,
-    } gutter_click_state
-        = GutterClickState::NotPressed;
+    } m_gutter_click_state { GutterClickState::NotPressed };
 
     int default_button_size() const { return 16; }
     int button_size() const { return length(orientation()) <= (default_button_size() * 2) ? length(orientation()) / 2 : default_button_size(); }

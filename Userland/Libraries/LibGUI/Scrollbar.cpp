@@ -198,24 +198,24 @@ void Scrollbar::paint_event(PaintEvent& event)
         hovered_component_for_painting = Component::None;
 
     painter.fill_rect_with_dither_pattern(rect(), palette().button().lightened(1.3f), palette().button());
-    if (gutter_click_state != GutterClickState::NotPressed && has_scrubber() && hovered_component_for_painting == Component::Gutter) {
+    if (m_gutter_click_state != GutterClickState::NotPressed && has_scrubber() && hovered_component_for_painting == Component::Gutter) {
         VERIFY(!scrubber_rect().is_null());
         Gfx::IntRect rect_to_fill = rect();
         if (orientation() == Orientation::Vertical) {
-            if (gutter_click_state == GutterClickState::BeforeScrubber) {
+            if (m_gutter_click_state == GutterClickState::BeforeScrubber) {
                 rect_to_fill.set_top(decrement_button_rect().bottom());
                 rect_to_fill.set_bottom(scrubber_rect().top());
             } else {
-                VERIFY(gutter_click_state == GutterClickState::AfterScrubber);
+                VERIFY(m_gutter_click_state == GutterClickState::AfterScrubber);
                 rect_to_fill.set_top(scrubber_rect().bottom());
                 rect_to_fill.set_bottom(increment_button_rect().top());
             }
         } else {
-            if (gutter_click_state == GutterClickState::BeforeScrubber) {
+            if (m_gutter_click_state == GutterClickState::BeforeScrubber) {
                 rect_to_fill.set_left(decrement_button_rect().right());
                 rect_to_fill.set_right(scrubber_rect().left());
             } else {
-                VERIFY(gutter_click_state == GutterClickState::AfterScrubber);
+                VERIFY(m_gutter_click_state == GutterClickState::AfterScrubber);
                 rect_to_fill.set_left(scrubber_rect().right());
                 rect_to_fill.set_right(increment_button_rect().left());
             }
@@ -264,12 +264,12 @@ void Scrollbar::on_automatic_scrolling_timer_fired()
         if (m_hovered_component != component_at_position(m_last_mouse_position)) {
             m_hovered_component = component_at_position(m_last_mouse_position);
             if (m_hovered_component != Component::Gutter)
-                gutter_click_state = GutterClickState::NotPressed;
+                m_gutter_click_state = GutterClickState::NotPressed;
             update();
         }
         return;
     }
-    gutter_click_state = GutterClickState::NotPressed;
+    m_gutter_click_state = GutterClickState::NotPressed;
 }
 
 void Scrollbar::mousedown_event(MouseEvent& event)
@@ -340,7 +340,7 @@ void Scrollbar::set_automatic_scrolling_active(bool active, Component pressed_co
         m_automatic_scrolling_timer->start();
     } else {
         m_automatic_scrolling_timer->stop();
-        gutter_click_state = GutterClickState::NotPressed;
+        m_gutter_click_state = GutterClickState::NotPressed;
     }
 }
 
@@ -352,10 +352,10 @@ void Scrollbar::scroll_by_page(const Gfx::IntPoint& click_position)
     float page_increment = range_size * rel_scrubber_size;
 
     if (click_position.primary_offset_for_orientation(orientation()) < scrubber_rect().primary_offset_for_orientation(orientation())) {
-        gutter_click_state = GutterClickState::BeforeScrubber;
+        m_gutter_click_state = GutterClickState::BeforeScrubber;
         decrease_slider_by(page_increment);
     } else {
-        gutter_click_state = GutterClickState::AfterScrubber;
+        m_gutter_click_state = GutterClickState::AfterScrubber;
         increase_slider_by(page_increment);
     }
 }
