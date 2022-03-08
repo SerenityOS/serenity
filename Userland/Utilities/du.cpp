@@ -30,28 +30,28 @@ struct DuOption {
     bool all = false;
     bool apparent_size = false;
     int threshold = 0;
+    int max_depth = INT_MAX;
     TimeType time_type = TimeType::NotUsed;
     Vector<String> excluded_patterns;
 };
 
-static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option, int& max_depth);
-static ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int max_depth, bool inside_dir = false);
+static ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option);
+static ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int depth_level = 0, bool inside_dir = false);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Vector<String> files;
     DuOption du_option;
-    int max_depth = INT_MAX;
 
-    TRY(parse_args(arguments, files, du_option, max_depth));
+    TRY(parse_args(arguments, files, du_option));
 
     for (const auto& file : files)
-        TRY(print_space_usage(file, du_option, max_depth));
+        TRY(print_space_usage(file, du_option));
 
     return 0;
 }
 
-ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option, int& max_depth)
+ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOption& du_option)
 {
     bool summarize = false;
     const char* pattern = nullptr;
@@ -84,7 +84,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     args_parser.add_option(du_option.all, "Write counts for all files, not just directories", "all", 'a');
     args_parser.add_option(du_option.apparent_size, "Print apparent sizes, rather than disk usage", "apparent-size", 0);
     args_parser.add_option(du_option.human_readable, "Print human-readable sizes", "human-readable", 'h');
-    args_parser.add_option(max_depth, "Print the total for a directory or file only if it is N or fewer levels below the command line argument", "max-depth", 'd', "N");
+    args_parser.add_option(du_option.max_depth, "Print the total for a directory or file only if it is N or fewer levels below the command line argument", "max-depth", 'd', "N");
     args_parser.add_option(summarize, "Display only a total for each argument", "summarize", 's');
     args_parser.add_option(du_option.threshold, "Exclude entries smaller than size if positive, or entries greater than size if negative", "threshold", 't', "size");
     args_parser.add_option(move(time_option));
@@ -94,7 +94,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     args_parser.parse(arguments);
 
     if (summarize)
-        max_depth = 0;
+        du_option.max_depth = 0;
 
     if (pattern)
         du_option.excluded_patterns.append(pattern);
@@ -118,12 +118,12 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<String>& files, DuOpt
     return {};
 }
 
-ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int max_depth, bool inside_dir)
+ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, int depth_level, bool inside_dir)
 {
     struct stat path_stat = TRY(Core::System::lstat(path.characters()));
     off_t directory_size = 0;
     const bool is_directory = S_ISDIR(path_stat.st_mode);
-    if (--max_depth >= 0 && is_directory) {
+    if (is_directory) {
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
         if (di.has_error()) {
             outln("du: cannot read directory '{}': {}", path, di.error_string());
@@ -132,7 +132,7 @@ ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, 
 
         while (di.has_next()) {
             const auto child_path = di.next_full_path();
-            directory_size += TRY(print_space_usage(child_path, du_option, max_depth, true));
+            directory_size += TRY(print_space_usage(child_path, du_option, depth_level + 1, true));
         }
     }
 
@@ -157,31 +157,33 @@ ErrorOr<off_t> print_space_usage(const String& path, const DuOption& du_option, 
     if ((du_option.threshold > 0 && size < du_option.threshold) || (du_option.threshold < 0 && size > -du_option.threshold))
         return { 0 };
 
-    if (du_option.human_readable) {
-        out("{}", human_readable_size(size));
-    } else {
-        constexpr long long block_size = 1024;
-        size = size / block_size + (size % block_size != 0);
-        out("{}", size);
-    }
-
-    if (du_option.time_type == DuOption::TimeType::NotUsed) {
-        outln("\t{}", path);
-    } else {
-        auto time = path_stat.st_mtime;
-        switch (du_option.time_type) {
-        case DuOption::TimeType::Access:
-            time = path_stat.st_atime;
-            break;
-        case DuOption::TimeType::Status:
-            time = path_stat.st_ctime;
-            break;
-        default:
-            break;
+    if (depth_level <= du_option.max_depth) {
+        if (du_option.human_readable) {
+            out("{}", human_readable_size(size));
+        } else {
+            constexpr long long block_size = 1024;
+            size = size / block_size + (size % block_size != 0);
+            out("{}", size);
         }
 
-        const auto formatted_time = Core::DateTime::from_timestamp(time).to_string();
-        outln("\t{}\t{}", formatted_time, path);
+        if (du_option.time_type == DuOption::TimeType::NotUsed) {
+            outln("\t{}", path);
+        } else {
+            auto time = path_stat.st_mtime;
+            switch (du_option.time_type) {
+            case DuOption::TimeType::Access:
+                time = path_stat.st_atime;
+                break;
+            case DuOption::TimeType::Status:
+                time = path_stat.st_ctime;
+                break;
+            default:
+                break;
+            }
+
+            const auto formatted_time = Core::DateTime::from_timestamp(time).to_string();
+            outln("\t{}\t{}", formatted_time, path);
+        }
     }
 
     return { size };
