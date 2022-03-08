@@ -116,7 +116,7 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
     {
         auto json_layers = MUST(json.add_array("layers"));
         for (const auto& layer : m_layers) {
-            Gfx::BMPWriter bmp_dumber;
+            Gfx::BMPWriter bmp_writer;
             auto json_layer = MUST(json_layers.add_object());
             MUST(json_layer.add("width", layer.size().width()));
             MUST(json_layer.add("height", layer.size().height()));
@@ -127,7 +127,7 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
             MUST(json_layer.add("visible", layer.is_visible()));
             MUST(json_layer.add("selected", layer.is_selected()));
             // FIXME: Respect mask
-            MUST(json_layer.add("bitmap", encode_base64(bmp_dumber.dump(layer.display_bitmap()))));
+            MUST(json_layer.add("bitmap", encode_base64(bmp_writer.dump(layer.content_bitmap()))));
             MUST(json_layer.finish());
         }
 
