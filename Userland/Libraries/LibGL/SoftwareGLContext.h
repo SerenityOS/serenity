@@ -270,8 +270,17 @@ private:
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 
     // Texture objects
+    template<typename T>
+    RefPtr<T> get_default_texture(GLenum target)
+    {
+        auto default_texture = m_default_textures.get(target);
+        VERIFY(default_texture.has_value());
+        return static_cast<T*>(default_texture.value());
+    }
+
     TextureNameAllocator m_name_allocator;
     HashMap<GLuint, RefPtr<Texture>> m_allocated_textures;
+    HashMap<GLenum, RefPtr<Texture>> m_default_textures;
     Vector<TextureUnit> m_texture_units;
     TextureUnit* m_active_texture_unit;
     size_t m_active_texture_unit_index { 0 };

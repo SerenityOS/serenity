@@ -20,11 +20,11 @@ void Texture2D::upload_texture_data(GLuint lod, GLint internal_format, GLsizei w
     mip.set_width(width);
     mip.set_height(height);
 
-    // No pixel data was supplied leave the texture memory uninitialized.
+    m_internal_format = internal_format;
+
+    // No pixel data was supplied; leave the texture memory uninitialized.
     if (pixels == nullptr)
         return;
-
-    m_internal_format = internal_format;
 
     replace_sub_texture_data(lod, 0, 0, width, height, format, type, pixels, pixels_per_row, byte_alignment);
 }
