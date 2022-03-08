@@ -24,9 +24,11 @@ struct Case {
     String name;
     Result result;
     String details;
+    u64 duration_us;
 };
 
 struct Suite {
+    String path;
     String name;
     // A failed test takes precedence over a skipped test, which both have
     // precedence over a passed test
