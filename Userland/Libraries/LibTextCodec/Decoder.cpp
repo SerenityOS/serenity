@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +15,7 @@ namespace {
 Latin1Decoder s_latin1_decoder;
 UTF8Decoder s_utf8_decoder;
 UTF16BEDecoder s_utf16be_decoder;
+UTF16LEDecoder s_utf16le_decoder;
 Latin2Decoder s_latin2_decoder;
 HebrewDecoder s_hebrew_decoder;
 CyrillicDecoder s_cyrillic_decoder;
@@ -33,6 +35,8 @@ Decoder* decoder_for(const String& a_encoding)
             return &s_utf8_decoder;
         if (encoding.value().equals_ignoring_case("utf-16be"))
             return &s_utf16be_decoder;
+        if (encoding.value().equals_ignoring_case("utf-16le"))
+            return &s_utf16le_decoder;
         if (encoding.value().equals_ignoring_case("iso-8859-2"))
             return &s_latin2_decoder;
         if (encoding.value().equals_ignoring_case("windows-1255"))
@@ -172,8 +176,7 @@ Decoder* bom_sniff_to_decoder(StringView input)
     case 0xFE: // UTF-16BE
         return bytes[1] == 0xFF ? &s_utf16be_decoder : nullptr;
     case 0xFF: // UTF-16LE
-        // FIXME: There is currently no UTF-16LE decoder.
-        TODO();
+        return bytes[1] == 0xFE ? &s_utf16le_decoder : nullptr;
     }
 
     return nullptr;
@@ -241,9 +244,29 @@ String UTF16BEDecoder::to_utf8(StringView input)
 {
     // Discard the BOM
     auto bomless_input = input;
-    if (auto bytes = input.bytes(); bytes.size() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF) {
+    if (auto bytes = input.bytes(); bytes.size() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF)
         bomless_input = input.substring_view(2);
+
+    StringBuilder builder(bomless_input.length() / 2);
+    process(bomless_input, [&builder](u32 c) { builder.append_code_point(c); });
+    return builder.to_string();
+}
+
+void UTF16LEDecoder::process(StringView input, Function<void(u32)> on_code_point)
+{
+    size_t utf16_length = input.length() - (input.length() % 2);
+    for (size_t i = 0; i < utf16_length; i += 2) {
+        u16 code_point = input[i] | (input[i + 1] << 8);
+        on_code_point(code_point);
     }
+}
+
+String UTF16LEDecoder::to_utf8(StringView input)
+{
+    // Discard the BOM
+    auto bomless_input = input;
+    if (auto bytes = input.bytes(); bytes.size() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE)
+        bomless_input = input.substring_view(2);
 
     StringBuilder builder(bomless_input.length() / 2);
     process(bomless_input, [&builder](u32 c) { builder.append_code_point(c); });

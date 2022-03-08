@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,6 +28,12 @@ public:
 };
 
 class UTF16BEDecoder final : public Decoder {
+public:
+    virtual void process(StringView, Function<void(u32)> on_code_point) override;
+    virtual String to_utf8(StringView) override;
+};
+
+class UTF16LEDecoder final : public Decoder {
 public:
     virtual void process(StringView, Function<void(u32)> on_code_point) override;
     virtual String to_utf8(StringView) override;
