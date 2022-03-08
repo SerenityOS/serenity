@@ -34,7 +34,7 @@ ErrorOr<FlatPtr> Process::sys$chmod(Userspace<Syscall::SC_chmod_params const*> u
 
 ErrorOr<FlatPtr> Process::sys$fchmod(int fd, mode_t mode)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::fattr));
     auto description = TRY(open_file_description(fd));
     TRY(description->chmod(mode));

@@ -68,7 +68,7 @@ enum class NeedsBigProcessLock {
     S(exit, NeedsBigProcessLock::Yes)                       \
     S(exit_thread, NeedsBigProcessLock::Yes)                \
     S(fchdir, NeedsBigProcessLock::No)                      \
-    S(fchmod, NeedsBigProcessLock::Yes)                     \
+    S(fchmod, NeedsBigProcessLock::No)                      \
     S(fchown, NeedsBigProcessLock::Yes)                     \
     S(fcntl, NeedsBigProcessLock::Yes)                      \
     S(fork, NeedsBigProcessLock::Yes)                       \
