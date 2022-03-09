@@ -13,7 +13,6 @@ set(SOURCES
     GLUtils.cpp
     GLVert.cpp
     GLVertexArrays.cpp
-    SoftwareGLContext.cpp
     Tex/NameAllocator.cpp
     Tex/Texture2D.cpp
 )
