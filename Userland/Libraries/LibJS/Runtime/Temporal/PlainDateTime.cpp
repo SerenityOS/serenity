@@ -315,21 +315,19 @@ i8 compare_iso_date_time(i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8
 // 5.5.9 AddDateTime ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, calendar, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddatetime
 ThrowCompletionOr<TemporalPlainDateTime> add_date_time(GlobalObject& global_object, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options)
 {
-    // 1. Assert: year, month, day, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
-
-    // 2. Let timeResult be ! AddTime(hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
+    // 1. Let timeResult be ! AddTime(hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
     auto time_result = add_time(hour, minute, second, millisecond, microsecond, nanosecond, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
 
-    // 3. Let datePart be ? CreateTemporalDate(year, month, day, calendar).
+    // 2. Let datePart be ? CreateTemporalDate(year, month, day, calendar).
     auto* date_part = TRY(create_temporal_date(global_object, year, month, day, calendar));
 
-    // 4. Let dateDuration be ? CreateTemporalDuration(years, months, weeks, days + timeResult.[[Days]], 0, 0, 0, 0, 0, 0).
+    // 3. Let dateDuration be ? CreateTemporalDuration(years, months, weeks, days + timeResult.[[Days]], 0, 0, 0, 0, 0, 0).
     auto* date_duration = TRY(create_temporal_duration(global_object, years, months, weeks, days + time_result.days, 0, 0, 0, 0, 0, 0));
 
-    // 5. Let addedDate be ? CalendarDateAdd(calendar, datePart, dateDuration, options).
+    // 4. Let addedDate be ? CalendarDateAdd(calendar, datePart, dateDuration, options).
     auto* added_date = TRY(calendar_date_add(global_object, calendar, date_part, *date_duration, options));
 
-    // 6. Return the Record { [[Year]]: addedDate.[[ISOYear]], [[Month]]: addedDate.[[ISOMonth]], [[Day]]: addedDate.[[ISODay]], [[Hour]]: timeResult.[[Hour]], [[Minute]]: timeResult.[[Minute]], [[Second]]: timeResult.[[Second]], [[Millisecond]]: timeResult.[[Millisecond]], [[Microsecond]]: timeResult.[[Microsecond]], [[Nanosecond]]: timeResult.[[Nanosecond]] }.
+    // 5. Return the Record { [[Year]]: addedDate.[[ISOYear]], [[Month]]: addedDate.[[ISOMonth]], [[Day]]: addedDate.[[ISODay]], [[Hour]]: timeResult.[[Hour]], [[Minute]]: timeResult.[[Minute]], [[Second]]: timeResult.[[Second]], [[Millisecond]]: timeResult.[[Millisecond]], [[Microsecond]]: timeResult.[[Microsecond]], [[Nanosecond]]: timeResult.[[Nanosecond]] }.
     return TemporalPlainDateTime { .year = added_date->iso_year(), .month = added_date->iso_month(), .day = added_date->iso_day(), .hour = time_result.hour, .minute = time_result.minute, .second = time_result.second, .millisecond = time_result.millisecond, .microsecond = time_result.microsecond, .nanosecond = time_result.nanosecond };
 }
 
@@ -357,25 +355,23 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, and ns2 are integers.
-
-    // 2. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
     if (!options)
         options = Object::create(global_object, nullptr);
 
-    // 3. Let timeDifference be ! DifferenceTime(h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2).
+    // 2. Let timeDifference be ! DifferenceTime(h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2).
     auto time_difference = difference_time(hour1, minute1, second1, millisecond1, microsecond1, nanosecond1, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2);
 
-    // 4. Let timeSign be ! DurationSign(0, 0, 0, timeDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
+    // 3. Let timeSign be ! DurationSign(0, 0, 0, timeDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
     auto time_sign = duration_sign(0, 0, 0, time_difference.days, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, time_difference.nanoseconds);
 
-    // 5. Let dateSign be ! CompareISODate(y2, mon2, d2, y1, mon1, d1).
+    // 4. Let dateSign be ! CompareISODate(y2, mon2, d2, y1, mon1, d1).
     auto date_sign = compare_iso_date(year2, month2, day2, year1, month1, day1);
 
-    // 6. Let balanceResult be ! BalanceISODate(y1, mon1, d1 + timeDifference.[[Days]]).
+    // 5. Let balanceResult be ! BalanceISODate(y1, mon1, d1 + timeDifference.[[Days]]).
     auto balance_result = balance_iso_date(year1, month1, day1 + time_difference.days);
 
-    // 7. If timeSign is -dateSign, then
+    // 6. If timeSign is -dateSign, then
     if (time_sign == -date_sign) {
         // a. Set balanceResult to ! BalanceISODate(balanceResult.[[Year]], balanceResult.[[Month]], balanceResult.[[Day]] - timeSign).
         balance_result = balance_iso_date(balance_result.year, balance_result.month, balance_result.day - time_sign);
@@ -384,25 +380,25 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
         time_difference = TRY(balance_duration(global_object, -time_sign, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, *js_bigint(vm, { (i32)time_difference.nanoseconds }), largest_unit));
     }
 
-    // 8. Let date1 be ? CreateTemporalDate(balanceResult.[[Year]], balanceResult.[[Month]], balanceResult.[[Day]], calendar).
+    // 7. Let date1 be ? CreateTemporalDate(balanceResult.[[Year]], balanceResult.[[Month]], balanceResult.[[Day]], calendar).
     auto* date1 = TRY(create_temporal_date(global_object, balance_result.year, balance_result.month, balance_result.day, calendar));
 
-    // 9. Let date2 be ? CreateTemporalDate(y2, mon2, d2, calendar).
+    // 8. Let date2 be ? CreateTemporalDate(y2, mon2, d2, calendar).
     auto* date2 = TRY(create_temporal_date(global_object, year2, month2, day2, calendar));
 
-    // 10. Let dateLargestUnit be ! LargerOfTwoTemporalUnits("day", largestUnit).
+    // 9. Let dateLargestUnit be ! LargerOfTwoTemporalUnits("day", largestUnit).
     auto date_largest_unit = larger_of_two_temporal_units("day"sv, largest_unit);
 
-    // 11. Let untilOptions be ? MergeLargestUnitOption(options, dateLargestUnit).
+    // 10. Let untilOptions be ? MergeLargestUnitOption(options, dateLargestUnit).
     auto* until_options = TRY(merge_largest_unit_option(global_object, *options, date_largest_unit));
 
-    // 12. Let dateDifference be ? CalendarDateUntil(calendar, date1, date2, untilOptions).
+    // 11. Let dateDifference be ? CalendarDateUntil(calendar, date1, date2, untilOptions).
     auto* date_difference = TRY(calendar_date_until(global_object, calendar, date1, date2, *until_options));
 
-    // 13. Let balanceResult be ? BalanceDuration(dateDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
+    // 12. Let balanceResult be ? BalanceDuration(dateDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
     auto balance_result_ = TRY(balance_duration(global_object, date_difference->days(), time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, *js_bigint(vm, { (i32)time_difference.nanoseconds }), largest_unit));
 
-    // 14. Return the Record { [[Years]]: dateDifference.[[Years]], [[Months]]: dateDifference.[[Months]], [[Weeks]]: dateDifference.[[Weeks]], [[Days]]: balanceResult.[[Days]], [[Hours]]: balanceResult.[[Hours]], [[Minutes]]: balanceResult.[[Minutes]], [[Seconds]]: balanceResult.[[Seconds]], [[Milliseconds]]: balanceResult.[[Milliseconds]], [[Microseconds]]: balanceResult.[[Microseconds]], [[Nanoseconds]]: balanceResult.[[Nanoseconds]] }.
+    // 13. Return the Record { [[Years]]: dateDifference.[[Years]], [[Months]]: dateDifference.[[Months]], [[Weeks]]: dateDifference.[[Weeks]], [[Days]]: balanceResult.[[Days]], [[Hours]]: balanceResult.[[Hours]], [[Minutes]]: balanceResult.[[Minutes]], [[Seconds]]: balanceResult.[[Seconds]], [[Milliseconds]]: balanceResult.[[Milliseconds]], [[Microseconds]]: balanceResult.[[Microseconds]], [[Nanoseconds]]: balanceResult.[[Nanoseconds]] }.
     return DurationRecord { .years = date_difference->years(), .months = date_difference->months(), .weeks = date_difference->weeks(), .days = balance_result_.days, .hours = balance_result_.hours, .minutes = balance_result_.minutes, .seconds = balance_result_.seconds, .milliseconds = balance_result_.milliseconds, .microseconds = balance_result_.microseconds, .nanoseconds = balance_result_.nanoseconds };
 }
 
