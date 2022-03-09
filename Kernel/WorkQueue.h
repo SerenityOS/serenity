@@ -34,7 +34,7 @@ public:
             if (free_data)
                 free_data(data);
         };
-        do_queue(item);
+        do_queue(*item);
         return {};
     }
 
@@ -45,7 +45,7 @@ public:
         if (!item)
             return Error::from_errno(ENOMEM);
         item->function = Function(function);
-        do_queue(item);
+        do_queue(*item);
         return {};
     }
 
@@ -58,7 +58,7 @@ private:
         Function<void()> function;
     };
 
-    void do_queue(WorkItem*);
+    void do_queue(WorkItem&);
 
     RefPtr<Thread> m_thread;
     WaitQueue m_wait_queue;

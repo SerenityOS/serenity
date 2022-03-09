@@ -47,10 +47,10 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
     m_thread = thread.release_nonnull();
 }
 
-void WorkQueue::do_queue(WorkItem* item)
+void WorkQueue::do_queue(WorkItem& item)
 {
     m_items.with([&](auto& items) {
-        items.append(*item);
+        items.append(item);
     });
     m_wait_queue.wake_one();
 }
