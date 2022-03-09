@@ -26,6 +26,7 @@ public:
     void set_range(int min, int max, AllowCallback = AllowCallback::Yes);
 
     Function<void(int value)> on_change;
+    Function<void()> on_return_pressed;
 
 protected:
     SpinBox();
