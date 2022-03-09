@@ -9,7 +9,7 @@ auth_type=sha256
 
 configure() {
     run mkdir -p build
-    run sh -c "cd build && cmake ${configopts[@]} .."
+    run sh -c "cd build && cmake .. ${configopts[@]}"
 }
 
 build() {
