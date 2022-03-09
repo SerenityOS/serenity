@@ -91,6 +91,13 @@ public:
         m_size = other.size();
     }
 
+    explicit Vector(Span<T const> other) requires(!IsLvalueReference<T>)
+    {
+        ensure_capacity(other.size());
+        TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
+        m_size = other.size();
+    }
+
     template<size_t other_inline_capacity>
     Vector(Vector<T, other_inline_capacity> const& other)
     {
