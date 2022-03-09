@@ -12,6 +12,7 @@ namespace Web::CSS {
 void StyleSheetList::add_sheet(NonnullRefPtr<CSSStyleSheet> sheet)
 {
     VERIFY(!m_sheets.contains_slow(sheet));
+    sheet->set_style_sheet_list({}, this);
     m_sheets.append(move(sheet));
 
     ++m_generation;
@@ -20,6 +21,7 @@ void StyleSheetList::add_sheet(NonnullRefPtr<CSSStyleSheet> sheet)
 
 void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
 {
+    sheet.set_style_sheet_list({}, nullptr);
     m_sheets.remove_first_matching([&](auto& entry) { return &*entry == &sheet; });
 
     ++m_generation;

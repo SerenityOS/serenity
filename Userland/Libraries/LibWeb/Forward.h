@@ -73,6 +73,7 @@ class StringStyleValue;
 class StyleComputer;
 class StyleProperties;
 class StyleSheet;
+class StyleSheetList;
 class StyleValue;
 class StyleValueList;
 class Supports;

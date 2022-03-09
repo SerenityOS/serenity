@@ -6,6 +6,8 @@
 
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/CSS/StyleSheetList.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 
 namespace Web::CSS {
@@ -36,7 +38,16 @@ DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned 
     // FIXME: 5. If parsed rule is an @import rule, and the constructed flag is set, throw a SyntaxError DOMException.
 
     // 6. Return the result of invoking insert a CSS rule rule in the CSS rules at index.
-    return m_rules->insert_a_css_rule(parsed_rule.release_nonnull(), index);
+    auto result = m_rules->insert_a_css_rule(parsed_rule.release_nonnull(), index);
+
+    if (!result.is_exception()) {
+        if (m_style_sheet_list) {
+            m_style_sheet_list->bump_generation();
+            m_style_sheet_list->document().invalidate_style();
+        }
+    }
+
+    return result;
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-deleterule
@@ -47,7 +58,14 @@ DOM::ExceptionOr<void> CSSStyleSheet::delete_rule(unsigned index)
     // FIXME: 2. If the disallow modification flag is set, throw a NotAllowedError DOMException.
 
     // 3. Remove a CSS rule in the CSS rules at index.
-    return m_rules->remove_a_css_rule(index);
+    auto result = m_rules->remove_a_css_rule(index);
+    if (!result.is_exception()) {
+        if (m_style_sheet_list) {
+            m_style_sheet_list->bump_generation();
+            m_style_sheet_list->document().invalidate_style();
+        }
+    }
+    return result;
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-removerule
@@ -65,6 +83,11 @@ void CSSStyleSheet::for_each_effective_style_rule(Function<void(CSSStyleRule con
 bool CSSStyleSheet::evaluate_media_queries(HTML::Window const& window)
 {
     return m_rules->evaluate_media_queries(window);
+}
+
+void CSSStyleSheet::set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList* list)
+{
+    m_style_sheet_list = list;
 }
 
 }
