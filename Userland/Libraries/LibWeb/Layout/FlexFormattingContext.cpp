@@ -393,10 +393,7 @@ FlexFormattingContext::AvailableSpace FlexFormattingContext::determine_available
     auto containing_block_effective_main_size = [&](Box const& box) {
         auto& containing_block = *box.containing_block();
         if (is_row_layout()) {
-            if (containing_block.has_definite_width())
-                return m_state.get(containing_block).content_width;
-            main_size_is_infinite = true;
-            return NumericLimits<float>::max();
+            return m_state.get(containing_block).content_width;
         } else {
             if (containing_block.has_definite_height())
                 return m_state.get(containing_block).content_height;
