@@ -48,7 +48,7 @@ StringView LineBoxFragment::text() const
 const Gfx::FloatRect LineBoxFragment::absolute_rect() const
 {
     Gfx::FloatRect rect { {}, size() };
-    rect.set_location(m_layout_node.containing_block()->absolute_position());
+    rect.set_location(m_layout_node.containing_block()->m_paint_box->absolute_position());
     rect.translate_by(offset());
     return rect;
 }

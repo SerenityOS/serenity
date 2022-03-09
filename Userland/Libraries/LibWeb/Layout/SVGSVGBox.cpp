@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Layout/SVGSVGBox.h>
+#include <LibWeb/Painting/Box.h>
 
 namespace Web::Layout {
 
@@ -19,7 +20,7 @@ void SVGSVGBox::before_children_paint(PaintContext& context, PaintPhase phase)
         return;
 
     if (!context.has_svg_context())
-        context.set_svg_context(SVGContext(absolute_rect()));
+        context.set_svg_context(SVGContext(m_paint_box->absolute_rect()));
 
     SVGGraphicsBox::before_children_paint(context, phase);
 }

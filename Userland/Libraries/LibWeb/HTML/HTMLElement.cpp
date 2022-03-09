@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,6 +22,7 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Painting/Box.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
 
@@ -150,17 +151,17 @@ int HTMLElement::offset_left() const
 // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetwidth
 int HTMLElement::offset_width() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    return static_cast<Layout::Box const&>(*layout_node()).border_box_width();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->border_box_width();
+    return 0;
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetheight
 int HTMLElement::offset_height() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    return static_cast<Layout::Box const&>(*layout_node()).border_box_height();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->border_box_height();
+    return 0;
 }
 
 bool HTMLElement::cannot_navigate() const

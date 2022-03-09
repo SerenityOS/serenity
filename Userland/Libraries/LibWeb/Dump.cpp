@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -26,6 +26,7 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/SVGBox.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Painting/Box.h>
 #include <stdio.h>
 
 namespace Web {
@@ -166,10 +167,10 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             builder.appendff("@{:p} ", &layout_node);
 
         builder.appendff("at ({},{}) content-size {}x{}",
-            box.absolute_x(),
-            box.absolute_y(),
-            box.content_width(),
-            box.content_height());
+            box.m_paint_box->absolute_x(),
+            box.m_paint_box->absolute_y(),
+            box.m_paint_box->content_width(),
+            box.m_paint_box->content_height());
 
         if (box.is_positioned())
             builder.appendff(" {}positioned{}", positioned_color_on, color_off);
@@ -204,7 +205,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().margin.left,
                 box.box_model().border.left,
                 box.box_model().padding.left,
-                box.content_width(),
+                box.m_paint_box->content_width(),
                 box.box_model().padding.right,
                 box.box_model().border.right,
                 box.box_model().margin.right);
@@ -214,7 +215,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().margin.top,
                 box.box_model().border.top,
                 box.box_model().padding.top,
-                box.content_height(),
+                box.m_paint_box->content_height(),
                 box.box_model().padding.bottom,
                 box.box_model().border.bottom,
                 box.box_model().margin.bottom);
@@ -225,8 +226,8 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 
     if (is<Layout::BlockContainer>(layout_node) && static_cast<Layout::BlockContainer const&>(layout_node).children_are_inline()) {
         auto& block = static_cast<Layout::BlockContainer const&>(layout_node);
-        for (size_t line_box_index = 0; line_box_index < block.line_boxes().size(); ++line_box_index) {
-            auto& line_box = block.line_boxes()[line_box_index];
+        for (size_t line_box_index = 0; line_box_index < block.m_paint_box->line_boxes().size(); ++line_box_index) {
+            auto& line_box = block.m_paint_box->line_boxes()[line_box_index];
             for (size_t i = 0; i < indent; ++i)
                 builder.append("  ");
             builder.appendff("  {}line {}{} width: {}, bottom: {}, baseline: {}\n",

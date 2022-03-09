@@ -12,6 +12,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/Label.h>
+#include <LibWeb/Painting/Box.h>
 
 namespace Web::Layout {
 
@@ -38,7 +39,7 @@ void ButtonBox::paint(PaintContext& context, PaintPhase phase)
     LabelableNode::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        auto text_rect = enclosing_int_rect(absolute_rect());
+        auto text_rect = enclosing_int_rect(m_paint_box->absolute_rect());
         if (m_being_pressed)
             text_rect.translate_by(1, 1);
         context.painter().draw_text(text_rect, dom_node().value(), font(), Gfx::TextAlignment::Center, computed_values().color());
@@ -66,7 +67,7 @@ void ButtonBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& positio
     NonnullRefPtr protected_this = *this;
     NonnullRefPtr protected_browsing_context = browsing_context();
 
-    bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
+    bool is_inside_node_or_label = enclosing_int_rect(m_paint_box->absolute_rect()).contains(position);
     if (!is_inside_node_or_label)
         is_inside_node_or_label = Label::is_inside_associated_label(*this, position);
 
@@ -84,7 +85,7 @@ void ButtonBox::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& posit
     if (!m_tracking_mouse || !dom_node().enabled())
         return;
 
-    bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
+    bool is_inside_node_or_label = enclosing_int_rect(m_paint_box->absolute_rect()).contains(position);
     if (!is_inside_node_or_label)
         is_inside_node_or_label = Label::is_inside_associated_label(*this, position);
 

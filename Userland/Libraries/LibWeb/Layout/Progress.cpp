@@ -7,6 +7,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/Progress.h>
+#include <LibWeb/Painting/Box.h>
 
 namespace Web::Layout {
 
@@ -27,7 +28,7 @@ void Progress::paint(PaintContext& context, PaintPhase phase)
 
     if (phase == PaintPhase::Foreground) {
         // FIXME: This does not support floating point value() and max()
-        Gfx::StylePainter::paint_progressbar(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), 0, dom_node().max(), dom_node().value(), "");
+        Gfx::StylePainter::paint_progressbar(context.painter(), enclosing_int_rect(m_paint_box->absolute_rect()), context.palette(), 0, dom_node().max(), dom_node().value(), "");
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +11,7 @@
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Painting/Box.h>
 
 namespace Web::Layout {
 
@@ -46,11 +47,11 @@ void BlockContainer::paint(PaintContext& context, PaintPhase phase)
     if (should_clip_overflow()) {
         context.painter().save();
         // FIXME: Handle overflow-x and overflow-y being different values.
-        context.painter().add_clip_rect(enclosing_int_rect(absolute_padding_box_rect()));
+        context.painter().add_clip_rect(enclosing_int_rect(m_paint_box->absolute_padding_box_rect()));
         context.painter().translate(-m_scroll_offset.to_type<int>());
     }
 
-    for (auto& line_box : m_line_boxes) {
+    for (auto& line_box : m_paint_box->m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
             if (context.should_show_line_box_borders())
                 context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
@@ -64,7 +65,7 @@ void BlockContainer::paint(PaintContext& context, PaintPhase phase)
 
     // FIXME: Merge this loop with the above somehow..
     if (phase == PaintPhase::FocusOutline) {
-        for (auto& line_box : m_line_boxes) {
+        for (auto& line_box : m_paint_box->m_line_boxes) {
             for (auto& fragment : line_box.fragments()) {
                 auto* node = fragment.layout_node().dom_node();
                 if (!node)
@@ -85,7 +86,7 @@ HitTestResult BlockContainer::hit_test(const Gfx::IntPoint& position, HitTestTyp
         return Box::hit_test(position, type);
 
     HitTestResult last_good_candidate;
-    for (auto& line_box : m_line_boxes) {
+    for (auto& line_box : m_paint_box->m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
             if (is<Box>(fragment.layout_node()) && verify_cast<Box>(fragment.layout_node()).stacking_context())
                 continue;
@@ -101,7 +102,7 @@ HitTestResult BlockContainer::hit_test(const Gfx::IntPoint& position, HitTestTyp
 
     if (type == HitTestType::TextCursor && last_good_candidate.layout_node)
         return last_good_candidate;
-    return { absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
+    return { m_paint_box->absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
 }
 
 bool BlockContainer::is_scrollable() const

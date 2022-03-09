@@ -1010,4 +1010,13 @@ size_t Node::length() const
     return child_count();
 }
 
+Painting::Box const* Node::paint_box() const
+{
+    if (!layout_node())
+        return nullptr;
+    if (!layout_node()->is_box())
+        return nullptr;
+    return static_cast<Layout::Box const&>(*layout_node()).m_paint_box;
+}
+
 }

@@ -12,6 +12,7 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Painting/Box.h>
 #include <WebContent/WebContentClientEndpoint.h>
 
 namespace WebContent {
@@ -121,10 +122,10 @@ void PageHost::page_did_layout()
     auto* layout_root = this->layout_root();
     VERIFY(layout_root);
     Gfx::IntSize content_size;
-    if (layout_root->has_overflow())
-        content_size = enclosing_int_rect(layout_root->scrollable_overflow_rect().value()).size();
+    if (layout_root->m_paint_box->has_overflow())
+        content_size = enclosing_int_rect(layout_root->m_paint_box->scrollable_overflow_rect().value()).size();
     else
-        content_size = enclosing_int_rect(layout_root->absolute_rect()).size();
+        content_size = enclosing_int_rect(layout_root->m_paint_box->absolute_rect()).size();
     m_client.async_did_layout(content_size);
 }
 

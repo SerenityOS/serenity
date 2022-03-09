@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -25,6 +25,7 @@
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Painting/Box.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebContentClientEndpoint.h>
@@ -322,8 +323,13 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             MUST(serializer.add("border_right", box_model.border.right));
             MUST(serializer.add("border_bottom", box_model.border.bottom));
             MUST(serializer.add("border_left", box_model.border.left));
-            MUST(serializer.add("content_width", box->content_width()));
-            MUST(serializer.add("content_height", box->content_height()));
+            if (auto* paint_box = box->paint_box()) {
+                MUST(serializer.add("content_width", paint_box->content_width()));
+                MUST(serializer.add("content_height", paint_box->content_height()));
+            } else {
+                MUST(serializer.add("content_width", 0));
+                MUST(serializer.add("content_height", 0));
+            }
 
             MUST(serializer.finish());
             return builder.to_string();

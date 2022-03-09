@@ -35,6 +35,7 @@
 #include <LibWeb/Layout/TableRowGroupBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Namespace.h>
+#include <LibWeb/Painting/Box.h>
 
 namespace Web::DOM {
 
@@ -436,7 +437,7 @@ NonnullRefPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
     auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
 
     auto& box = static_cast<Layout::Box const&>(*layout_node());
-    return Geometry::DOMRect::create(box.absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
+    return Geometry::DOMRect::create(box.m_paint_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
@@ -465,34 +466,30 @@ NonnullRefPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
 int Element::client_top() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    auto& box = static_cast<Layout::Box const&>(*layout_node());
-    return box.absolute_rect().top();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->absolute_rect().top();
+    return 0;
 }
 
 int Element::client_left() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    auto& box = static_cast<Layout::Box const&>(*layout_node());
-    return box.absolute_rect().left();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->absolute_rect().left();
+    return 0;
 }
 
 int Element::client_width() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    auto& box = static_cast<Layout::Box const&>(*layout_node());
-    return box.absolute_rect().width();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->absolute_rect().width();
+    return 0;
 }
 
 int Element::client_height() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    auto& box = static_cast<Layout::Box const&>(*layout_node());
-    return box.absolute_rect().height();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->absolute_rect().height();
+    return 0;
 }
 
 void Element::children_changed()

@@ -284,6 +284,7 @@ set(SOURCES
     Page/Page.cpp
     Painting/BackgroundPainting.cpp
     Painting/BorderPainting.cpp
+    Painting/Box.cpp
     Painting/PaintContext.cpp
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp

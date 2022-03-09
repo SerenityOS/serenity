@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +8,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Painting/Box.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {
@@ -41,7 +42,7 @@ void InitialContainingBlock::build_stacking_context_tree()
 
 void InitialContainingBlock::paint_all_phases(PaintContext& context)
 {
-    context.painter().fill_rect(enclosing_int_rect(absolute_rect()), context.palette().base());
+    context.painter().fill_rect(enclosing_int_rect(m_paint_box->absolute_rect()), context.palette().base());
     context.painter().translate(-context.viewport_rect().location());
     stacking_context()->paint(context);
 }

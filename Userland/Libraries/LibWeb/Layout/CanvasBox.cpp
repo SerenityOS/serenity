@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/CanvasBox.h>
+#include <LibWeb/Painting/Box.h>
 
 namespace Web::Layout {
 
@@ -33,11 +34,11 @@ void CanvasBox::paint(PaintContext& context, PaintPhase phase)
 
     if (phase == PaintPhase::Foreground) {
         // FIXME: This should be done at a different level. Also rect() does not include padding etc!
-        if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
+        if (!context.viewport_rect().intersects(enclosing_int_rect(m_paint_box->absolute_rect())))
             return;
 
         if (dom_node().bitmap())
-            context.painter().draw_scaled_bitmap(rounded_int_rect(absolute_rect()), *dom_node().bitmap(), dom_node().bitmap()->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
+            context.painter().draw_scaled_bitmap(rounded_int_rect(m_paint_box->absolute_rect()), *dom_node().bitmap(), dom_node().bitmap()->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
     }
 }
 

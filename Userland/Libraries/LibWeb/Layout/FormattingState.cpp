@@ -38,19 +38,15 @@ void FormattingState::commit()
         node.box_model().border = { node_state.border_top, node_state.border_right, node_state.border_bottom, node_state.border_left };
         node.box_model().margin = { node_state.margin_top, node_state.margin_right, node_state.margin_bottom, node_state.margin_left };
 
-        // For boxes, transfer relative offset, size, and overflow data.
+        // For boxes, transfer all the state needed for painting.
         if (is<Layout::Box>(node)) {
             auto& box = static_cast<Layout::Box&>(node);
-            box.set_offset(node_state.offset);
-            box.set_content_size(node_state.content_width, node_state.content_height);
-            box.set_overflow_data(move(node_state.overflow_data));
-            box.set_containing_line_box_fragment(node_state.containing_line_box_fragment);
-        }
-
-        // For block containers, transfer line boxes.
-        if (is<Layout::BlockContainer>(node)) {
-            auto& block_container = static_cast<Layout::BlockContainer&>(node);
-            block_container.set_line_boxes(move(node_state.line_boxes));
+            box.m_paint_box = Painting::Box::create(box);
+            box.m_paint_box->set_offset(node_state.offset);
+            box.m_paint_box->set_content_size(node_state.content_width, node_state.content_height);
+            box.m_paint_box->set_overflow_data(move(node_state.overflow_data));
+            box.m_paint_box->set_containing_line_box_fragment(node_state.containing_line_box_fragment);
+            box.m_paint_box->set_line_boxes(move(node_state.line_boxes));
         }
     }
 }

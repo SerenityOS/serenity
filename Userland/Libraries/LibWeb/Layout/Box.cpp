@@ -15,9 +15,24 @@
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/BorderPainting.h>
+#include <LibWeb/Painting/Box.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Layout {
+
+Box::Box(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
+    : NodeWithStyleAndBoxModelMetrics(document, node, move(style))
+{
+}
+
+Box::Box(DOM::Document& document, DOM::Node* node, CSS::ComputedValues computed_values)
+    : NodeWithStyleAndBoxModelMetrics(document, node, move(computed_values))
+{
+}
+
+Box::~Box()
+{
+}
 
 void Box::paint(PaintContext& context, PaintPhase phase)
 {
@@ -34,17 +49,17 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     }
 
     if (phase == PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
-        auto content_rect = absolute_rect();
+        auto content_rect = m_paint_box->absolute_rect();
 
         auto margin_box = box_model().margin_box();
         Gfx::FloatRect margin_rect;
-        margin_rect.set_x(absolute_x() - margin_box.left);
-        margin_rect.set_width(content_width() + margin_box.left + margin_box.right);
-        margin_rect.set_y(absolute_y() - margin_box.top);
-        margin_rect.set_height(content_height() + margin_box.top + margin_box.bottom);
+        margin_rect.set_x(m_paint_box->absolute_x() - margin_box.left);
+        margin_rect.set_width(m_paint_box->content_width() + margin_box.left + margin_box.right);
+        margin_rect.set_y(m_paint_box->absolute_y() - margin_box.top);
+        margin_rect.set_height(m_paint_box->content_height() + margin_box.top + margin_box.bottom);
 
-        auto border_rect = absolute_border_box_rect();
-        auto padding_rect = absolute_padding_box_rect();
+        auto border_rect = m_paint_box->absolute_border_box_rect();
+        auto padding_rect = m_paint_box->absolute_padding_box_rect();
 
         auto paint_inspector_rect = [&](Gfx::FloatRect const& rect, Color color) {
             context.painter().fill_rect(enclosing_int_rect(rect), Color(color).with_alpha(100));
@@ -74,7 +89,7 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     }
 
     if (phase == PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && verify_cast<DOM::Element>(*dom_node()).is_focused()) {
-        context.painter().draw_rect(enclosing_int_rect(absolute_rect()), context.palette().focus_outline());
+        context.painter().draw_rect(enclosing_int_rect(m_paint_box->absolute_rect()), context.palette().focus_outline());
     }
 }
 
@@ -86,7 +101,7 @@ void Box::paint_border(PaintContext& context)
         .bottom = computed_values().border_bottom(),
         .left = computed_values().border_left(),
     };
-    Painting::paint_all_borders(context, absolute_border_box_rect(), normalized_border_radius_data(), borders_data);
+    Painting::paint_all_borders(context, m_paint_box->absolute_border_box_rect(), normalized_border_radius_data(), borders_data);
 }
 
 void Box::paint_background(PaintContext& context)
@@ -110,13 +125,13 @@ void Box::paint_background(PaintContext& context)
             background_color = document().background_color(context.palette());
         }
     } else {
-        background_rect = enclosing_int_rect(absolute_padding_box_rect());
+        background_rect = enclosing_int_rect(m_paint_box->absolute_padding_box_rect());
     }
 
     // HACK: If the Box has a border, use the bordered_rect to paint the background.
     //       This way if we have a border-radius there will be no gap between the filling and actual border.
     if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
-        background_rect = enclosing_int_rect(absolute_border_box_rect());
+        background_rect = enclosing_int_rect(m_paint_box->absolute_border_box_rect());
 
     Painting::paint_background(context, *this, background_rect, background_color, background_layers, normalized_border_radius_data());
 }
@@ -138,12 +153,12 @@ void Box::paint_box_shadow(PaintContext& context)
             static_cast<int>(layer.spread_distance.to_px(*this)),
             layer.placement == CSS::BoxShadowPlacement::Outer ? Painting::BoxShadowPlacement::Outer : Painting::BoxShadowPlacement::Inner);
     }
-    Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), resolved_box_shadow_data);
+    Painting::paint_box_shadow(context, enclosing_int_rect(m_paint_box->absolute_border_box_rect()), resolved_box_shadow_data);
 }
 
 Painting::BorderRadiusData Box::normalized_border_radius_data()
 {
-    return Painting::normalized_border_radius_data(*this, absolute_border_box_rect(),
+    return Painting::normalized_border_radius_data(*this, m_paint_box->absolute_border_box_rect(),
         computed_values().border_top_left_radius(),
         computed_values().border_top_right_radius(),
         computed_values().border_bottom_right_radius(),
@@ -178,7 +193,7 @@ HitTestResult Box::hit_test(const Gfx::IntPoint& position, HitTestType type) con
     // FIXME: It would be nice if we could confidently skip over hit testing
     //        parts of the layout tree, but currently we can't just check
     //        m_rect.contains() since inline text rects can't be trusted..
-    HitTestResult result { absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
+    HitTestResult result { m_paint_box->absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
     for_each_child_in_paint_order([&](auto& child) {
         auto child_result = child.hit_test(position, type);
         if (child_result.layout_node)
@@ -190,7 +205,7 @@ HitTestResult Box::hit_test(const Gfx::IntPoint& position, HitTestType type) con
 void Box::set_needs_display()
 {
     if (!is_inline()) {
-        browsing_context().set_needs_display(enclosing_int_rect(absolute_rect()));
+        browsing_context().set_needs_display(enclosing_int_rect(m_paint_box->absolute_rect()));
         return;
     }
 
@@ -200,45 +215,6 @@ void Box::set_needs_display()
 bool Box::is_body() const
 {
     return dom_node() && dom_node() == document().body();
-}
-
-void Box::set_offset(const Gfx::FloatPoint& offset)
-{
-    if (m_offset == offset)
-        return;
-    m_offset = offset;
-    did_set_rect();
-}
-
-void Box::set_content_size(Gfx::FloatSize const& size)
-{
-    if (m_content_size == size)
-        return;
-    m_content_size = size;
-    did_set_rect();
-}
-
-Gfx::FloatPoint Box::effective_offset() const
-{
-    if (m_containing_line_box_fragment.has_value()) {
-        auto const& fragment = containing_block()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
-        return fragment.offset();
-    }
-    return m_offset;
-}
-
-const Gfx::FloatRect Box::absolute_rect() const
-{
-    Gfx::FloatRect rect { effective_offset(), content_size() };
-    for (auto* block = containing_block(); block; block = block->containing_block()) {
-        rect.translate_by(block->effective_offset());
-    }
-    return rect;
-}
-
-void Box::set_containing_line_box_fragment(Optional<LineBoxFragmentCoordinate> fragment_coordinate)
-{
-    m_containing_line_box_fragment = fragment_coordinate;
 }
 
 StackingContext* Box::enclosing_stacking_context()
@@ -262,7 +238,7 @@ void Box::before_children_paint(PaintContext& context, PaintPhase phase)
     // FIXME: Support more overflow variations.
     if (computed_values().overflow_x() == CSS::Overflow::Hidden && computed_values().overflow_y() == CSS::Overflow::Hidden) {
         context.painter().save();
-        context.painter().add_clip_rect(enclosing_int_rect(absolute_border_box_rect()));
+        context.painter().add_clip_rect(enclosing_int_rect(m_paint_box->absolute_border_box_rect()));
     }
 }
 

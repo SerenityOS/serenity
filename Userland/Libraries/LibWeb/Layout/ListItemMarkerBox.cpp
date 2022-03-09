@@ -8,6 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
+#include <LibWeb/Painting/Box.h>
 
 namespace Web::Layout {
 
@@ -59,7 +60,7 @@ void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
     if (phase != PaintPhase::Foreground)
         return;
 
-    auto enclosing = enclosing_int_rect(absolute_rect());
+    auto enclosing = enclosing_int_rect(m_paint_box->absolute_rect());
 
     if (auto const* list_style_image = list_style_image_bitmap()) {
         context.painter().blit(enclosing.location(), *list_style_image, list_style_image->rect());

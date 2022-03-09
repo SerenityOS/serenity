@@ -263,6 +263,10 @@ namespace Web::NavigationTiming {
 class PerformanceTiming;
 }
 
+namespace Web::Painting {
+class Box;
+}
+
 namespace Web::RequestIdleCallback {
 class IdleDeadline;
 }

@@ -158,6 +158,8 @@ public:
     const Layout::Node* layout_node() const { return m_layout_node; }
     Layout::Node* layout_node() { return m_layout_node; }
 
+    Painting::Box const* paint_box() const;
+
     void set_layout_node(Badge<Layout::Node>, Layout::Node*) const;
 
     virtual bool is_child_allowed(const Node&) const { return true; }

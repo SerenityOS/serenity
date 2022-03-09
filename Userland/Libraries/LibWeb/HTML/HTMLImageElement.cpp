@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Painting/Box.h>
 
 namespace Web::HTML {
 
@@ -84,8 +85,8 @@ unsigned HTMLImageElement::width() const
     const_cast<DOM::Document&>(document()).update_layout();
 
     // Return the rendered width of the image, in CSS pixels, if the image is being rendered.
-    if (layout_node() && is<Layout::Box>(*layout_node()))
-        return static_cast<Layout::Box const&>(*layout_node()).content_width();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->content_width();
 
     // ...or else the density-corrected intrinsic width and height of the image, in CSS pixels,
     // if the image has intrinsic dimensions and is available but not being rendered.
@@ -107,8 +108,8 @@ unsigned HTMLImageElement::height() const
     const_cast<DOM::Document&>(document()).update_layout();
 
     // Return the rendered height of the image, in CSS pixels, if the image is being rendered.
-    if (layout_node() && is<Layout::Box>(*layout_node()))
-        return static_cast<Layout::Box const&>(*layout_node()).content_height();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->content_height();
 
     // ...or else the density-corrected intrinsic height and height of the image, in CSS pixels,
     // if the image has intrinsic dimensions and is available but not being rendered.

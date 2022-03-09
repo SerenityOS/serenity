@@ -8,6 +8,7 @@
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
+#include <LibWeb/Painting/Box.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
@@ -39,7 +40,7 @@ void SVGGeometryBox::paint(PaintContext& context, PaintPhase phase)
     SVG::SVGSVGElement* svg_element = geometry_element.first_ancestor_of_type<SVG::SVGSVGElement>();
     auto maybe_view_box = svg_element->view_box();
 
-    context.painter().add_clip_rect((Gfx::Rect<int>)absolute_rect());
+    context.painter().add_clip_rect(enclosing_int_rect(m_paint_box->absolute_rect()));
 
     Gfx::Path path = geometry_element.get_path();
 
@@ -121,10 +122,10 @@ float SVGGeometryBox::viewbox_scaling() const
     auto view_box = svg_box->view_box().value();
 
     bool has_specified_width = svg_box->has_attribute(HTML::AttributeNames::width);
-    auto specified_width = content_width();
+    auto specified_width = m_paint_box->content_width();
 
     bool has_specified_height = svg_box->has_attribute(HTML::AttributeNames::height);
-    auto specified_height = content_height();
+    auto specified_height = m_paint_box->content_height();
 
     auto scale_width = has_specified_width ? specified_width / view_box.width : 1;
     auto scale_height = has_specified_height ? specified_height / view_box.height : 1;

@@ -10,6 +10,7 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/ReplacedBox.h>
+#include <LibWeb/Painting/Box.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {
@@ -140,7 +141,7 @@ void StackingContext::paint(PaintContext& context)
         Gfx::Painter painter(bitmap);
         PaintContext paint_context(painter, context.palette(), context.scroll_offset());
         paint_internal(paint_context);
-        context.painter().blit(Gfx::IntPoint(m_box.absolute_position()), bitmap, Gfx::IntRect(m_box.absolute_rect()), opacity);
+        context.painter().blit(Gfx::IntPoint(m_box.m_paint_box->absolute_position()), bitmap, Gfx::IntRect(m_box.m_paint_box->absolute_rect()), opacity);
     } else {
         paint_internal(context);
     }
@@ -216,7 +217,7 @@ HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, HitTestTy
     }
 
     // 1. the background and borders of the element forming the stacking context.
-    if (m_box.absolute_border_box_rect().contains(position.to_type<float>())) {
+    if (m_box.m_paint_box->absolute_border_box_rect().contains(position.to_type<float>())) {
         return HitTestResult {
             .layout_node = m_box,
         };
@@ -230,7 +231,7 @@ void StackingContext::dump(int indent) const
     StringBuilder builder;
     for (int i = 0; i < indent; ++i)
         builder.append(' ');
-    builder.appendff("SC for {} {} [children: {}] (z-index: ", m_box.debug_description(), m_box.absolute_rect(), m_children.size());
+    builder.appendff("SC for {} {} [children: {}] (z-index: ", m_box.debug_description(), m_box.m_paint_box->absolute_rect(), m_children.size());
     if (m_box.computed_values().z_index().has_value())
         builder.appendff("{}", m_box.computed_values().z_index().value());
     else

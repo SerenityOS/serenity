@@ -12,6 +12,7 @@
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/Label.h>
+#include <LibWeb/Painting/Box.h>
 
 namespace Web::Layout {
 
@@ -34,7 +35,7 @@ void CheckBox::paint(PaintContext& context, PaintPhase phase)
     LabelableNode::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
-        Gfx::StylePainter::paint_check_box(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), dom_node().enabled(), dom_node().checked(), m_being_pressed);
+        Gfx::StylePainter::paint_check_box(context.painter(), enclosing_int_rect(m_paint_box->absolute_rect()), context.palette(), dom_node().enabled(), dom_node().checked(), m_being_pressed);
     }
 }
 
@@ -58,7 +59,7 @@ void CheckBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position
     // NOTE: Changing the checked state of the DOM node may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protect = *this;
 
-    bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
+    bool is_inside_node_or_label = enclosing_int_rect(m_paint_box->absolute_rect()).contains(position);
     if (!is_inside_node_or_label)
         is_inside_node_or_label = Label::is_inside_associated_label(*this, position);
 
@@ -77,7 +78,7 @@ void CheckBox::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& positi
     if (!m_tracking_mouse || !dom_node().enabled())
         return;
 
-    bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
+    bool is_inside_node_or_label = enclosing_int_rect(m_paint_box->absolute_rect()).contains(position);
     if (!is_inside_node_or_label)
         is_inside_node_or_label = Label::is_inside_associated_label(*this, position);
 

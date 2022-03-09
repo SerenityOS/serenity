@@ -10,6 +10,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Painting/Box.h>
 
 namespace Web::Layout {
 
@@ -46,8 +47,8 @@ void FrameBox::paint(PaintContext& context, PaintPhase phase)
         context.painter().save();
         auto old_viewport_rect = context.viewport_rect();
 
-        context.painter().add_clip_rect(enclosing_int_rect(absolute_rect()));
-        context.painter().translate(absolute_x(), absolute_y());
+        context.painter().add_clip_rect(enclosing_int_rect(m_paint_box->absolute_rect()));
+        context.painter().translate(m_paint_box->absolute_x(), m_paint_box->absolute_y());
 
         context.set_viewport_rect({ {}, dom_node().nested_browsing_context()->size() });
         const_cast<Layout::InitialContainingBlock*>(hosted_layout_tree)->paint_all_phases(context);
@@ -57,7 +58,7 @@ void FrameBox::paint(PaintContext& context, PaintPhase phase)
 
         if constexpr (HIGHLIGHT_FOCUSED_FRAME_DEBUG) {
             if (dom_node().nested_browsing_context()->is_focused_context()) {
-                context.painter().draw_rect(absolute_rect().to_type<int>(), Color::Cyan);
+                context.painter().draw_rect(m_paint_box->absolute_rect().to_type<int>(), Color::Cyan);
             }
         }
     }
@@ -68,7 +69,7 @@ void FrameBox::did_set_rect()
     ReplacedBox::did_set_rect();
 
     VERIFY(dom_node().nested_browsing_context());
-    dom_node().nested_browsing_context()->set_size(content_size().to_type<int>());
+    dom_node().nested_browsing_context()->set_size(m_paint_box->content_size().to_type<int>());
 }
 
 }
