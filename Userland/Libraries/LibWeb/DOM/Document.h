@@ -141,12 +141,13 @@ public:
     void set_visited_link_color(Color);
 
     void force_layout();
-    void ensure_layout();
 
     void update_style();
     void update_layout();
 
     void set_needs_layout();
+
+    void invalidate_layout();
 
     virtual bool is_child_allowed(const Node&) const override;
 

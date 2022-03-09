@@ -546,10 +546,9 @@ void Document::force_layout()
     update_layout();
 }
 
-void Document::ensure_layout()
+void Document::invalidate_layout()
 {
-    if (m_needs_layout || !m_layout_root)
-        update_layout();
+    tear_down_layout_tree();
 }
 
 void Document::update_layout()

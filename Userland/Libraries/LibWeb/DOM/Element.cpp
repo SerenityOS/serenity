@@ -266,74 +266,19 @@ void Element::parse_attribute(const FlyString& name, const String& value)
     }
 }
 
-enum class StyleDifference {
-    None,
-    NeedsRepaint,
-    NeedsRelayout,
-};
-
-static StyleDifference compute_style_difference(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style, Layout::NodeWithStyle const& node)
-{
-    if (old_style == new_style)
-        return StyleDifference::None;
-
-    bool needs_repaint = false;
-    bool needs_relayout = false;
-
-    if (new_style.display() != old_style.display())
-        needs_relayout = true;
-
-    if (new_style.color_or_fallback(CSS::PropertyID::Color, node, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::Color, node, Color::Black))
-        needs_repaint = true;
-    else if (new_style.color_or_fallback(CSS::PropertyID::BackgroundColor, node, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::BackgroundColor, node, Color::Black))
-        needs_repaint = true;
-
-    if (needs_relayout)
-        return StyleDifference::NeedsRelayout;
-    if (needs_repaint)
-        return StyleDifference::NeedsRepaint;
-    return StyleDifference::None;
-}
-
 void Element::recompute_style()
 {
     set_needs_style_update(false);
     VERIFY(parent());
     auto old_specified_css_values = m_specified_css_values;
     auto new_specified_css_values = document().style_computer().compute_style(*this);
+
+    if (old_specified_css_values == new_specified_css_values)
+        return;
+
     m_specified_css_values = new_specified_css_values;
-    if (!layout_node()) {
-        // This element doesn't have a corresponding layout node.
 
-        // If the new style is display:none, bail.
-        if (new_specified_css_values->display().is_none())
-            return;
-
-        // If we're inside a display:none ancestor or an ancestor that can't have children, bail.
-        for (auto* ancestor = parent_element(); ancestor; ancestor = ancestor->parent_element()) {
-            if (!ancestor->layout_node() || !ancestor->layout_node()->can_have_children())
-                return;
-        }
-
-        // Okay, we need a new layout subtree here.
-        Layout::TreeBuilder tree_builder;
-        (void)tree_builder.build(*this);
-        return;
-    }
-
-    auto diff = StyleDifference::NeedsRelayout;
-    if (old_specified_css_values && layout_node())
-        diff = compute_style_difference(*old_specified_css_values, *new_specified_css_values, *layout_node());
-    if (diff == StyleDifference::None)
-        return;
-    layout_node()->apply_style(*new_specified_css_values);
-    if (diff == StyleDifference::NeedsRelayout) {
-        document().set_needs_layout();
-        return;
-    }
-    if (diff == StyleDifference::NeedsRepaint) {
-        layout_node()->set_needs_display();
-    }
+    document().invalidate_layout();
 }
 
 NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
