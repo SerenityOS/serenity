@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -353,7 +353,7 @@ ISODateTime round_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute, 
 }
 
 // 5.5.11 DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-differenceisodatetime
-ThrowCompletionOr<TemporalDuration> difference_iso_date_time(GlobalObject& global_object, i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2, Object& calendar, StringView largest_unit, Object* options)
+ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_object, i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2, Object& calendar, StringView largest_unit, Object* options)
 {
     auto& vm = global_object.vm();
 
@@ -403,7 +403,7 @@ ThrowCompletionOr<TemporalDuration> difference_iso_date_time(GlobalObject& globa
     auto balance_result_ = TRY(balance_duration(global_object, date_difference->days(), time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, *js_bigint(vm, { (i32)time_difference.nanoseconds }), largest_unit));
 
     // 14. Return the Record { [[Years]]: dateDifference.[[Years]], [[Months]]: dateDifference.[[Months]], [[Weeks]]: dateDifference.[[Weeks]], [[Days]]: balanceResult.[[Days]], [[Hours]]: balanceResult.[[Hours]], [[Minutes]]: balanceResult.[[Minutes]], [[Seconds]]: balanceResult.[[Seconds]], [[Milliseconds]]: balanceResult.[[Milliseconds]], [[Microseconds]]: balanceResult.[[Microseconds]], [[Nanoseconds]]: balanceResult.[[Nanoseconds]] }.
-    return TemporalDuration { .years = date_difference->years(), .months = date_difference->months(), .weeks = date_difference->weeks(), .days = balance_result_.days, .hours = balance_result_.hours, .minutes = balance_result_.minutes, .seconds = balance_result_.seconds, .milliseconds = balance_result_.milliseconds, .microseconds = balance_result_.microseconds, .nanoseconds = balance_result_.nanoseconds };
+    return DurationRecord { .years = date_difference->years(), .months = date_difference->months(), .weeks = date_difference->weeks(), .days = balance_result_.days, .hours = balance_result_.hours, .minutes = balance_result_.minutes, .seconds = balance_result_.seconds, .milliseconds = balance_result_.milliseconds, .microseconds = balance_result_.microseconds, .nanoseconds = balance_result_.nanoseconds };
 }
 
 }

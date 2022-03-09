@@ -1368,7 +1368,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject& glo
 }
 
 // 13.39 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
-ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject& global_object, String const& iso_string)
+ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& global_object, String const& iso_string)
 {
     auto& vm = global_object.vm();
 
@@ -1506,7 +1506,7 @@ ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject&
     }
 
     // 21. Return the Record { [[Years]]: yearsMV × factor, [[Months]]: monthsMV × factor, [[Weeks]]: weeksMV × factor, [[Days]]: daysMV × factor, [[Hours]]: hoursMV × factor, [[Minutes]]: floor(minutesMV) × factor, [[Seconds]]: floor(secondsMV) × factor, [[Milliseconds]]: floor(millisecondsMV) × factor, [[Microseconds]]: floor(microsecondsMV) × factor, [[Nanoseconds]]: floor(nanosecondsMV) × factor }.
-    return TemporalDuration { .years = years * factor, .months = months * factor, .weeks = weeks * factor, .days = days * factor, .hours = hours * factor, .minutes = floor(minutes) * factor, .seconds = floor(seconds) * factor, .milliseconds = floor(milliseconds) * factor, .microseconds = floor(microseconds) * factor, .nanoseconds = floor(nanoseconds) * factor };
+    return DurationRecord { .years = years * factor, .months = months * factor, .weeks = weeks * factor, .days = days * factor, .hours = hours * factor, .minutes = floor(minutes) * factor, .seconds = floor(seconds) * factor, .milliseconds = floor(milliseconds) * factor, .microseconds = floor(microseconds) * factor, .nanoseconds = floor(nanoseconds) * factor };
 }
 
 // 13.40 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring

@@ -134,7 +134,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(G
 ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject&, String const& iso_string);
-ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
+ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject&, String const& iso_string);

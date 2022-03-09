@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -403,7 +403,7 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigI
 }
 
 // 6.5.6 DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetime
-ThrowCompletionOr<TemporalDuration> difference_zoned_date_time(GlobalObject& global_object, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object* options)
+ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& global_object, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object* options)
 {
     auto& vm = global_object.vm();
 
@@ -413,7 +413,7 @@ ThrowCompletionOr<TemporalDuration> difference_zoned_date_time(GlobalObject& glo
     // 3. If ns1 is ns2, then
     if (nanoseconds1.big_integer() == nanoseconds2.big_integer()) {
         // a. Return the Record { [[Years]]: 0, [[Months]]: 0, [[Weeks]]: 0, [[Days]]: 0, [[Hours]]: 0, [[Minutes]]: 0, [[Seconds]]: 0, [[Milliseconds]]: 0, [[Microseconds]]: 0, [[Nanoseconds]]: 0 }.
-        return TemporalDuration { .years = 0, .months = 0, .weeks = 0, .days = 0, .hours = 0, .minutes = 0, .seconds = 0, .milliseconds = 0, .microseconds = 0, .nanoseconds = 0 };
+        return DurationRecord { .years = 0, .months = 0, .weeks = 0, .days = 0, .hours = 0, .minutes = 0, .seconds = 0, .milliseconds = 0, .microseconds = 0, .nanoseconds = 0 };
     }
 
     // 4. Let startInstant be ! CreateTemporalInstant(ns1).
@@ -447,7 +447,7 @@ ThrowCompletionOr<TemporalDuration> difference_zoned_date_time(GlobalObject& glo
     auto time_difference = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *result.nanoseconds.cell(), "hour"sv));
 
     // 14. Return the Record { [[Years]]: dateDifference.[[Years]], [[Months]]: dateDifference.[[Months]], [[Weeks]]: dateDifference.[[Weeks]], [[Days]]: result.[[Days]], [[Hours]]: timeDifference.[[Hours]], [[Minutes]]: timeDifference.[[Minutes]], [[Seconds]]: timeDifference.[[Seconds]], [[Milliseconds]]: timeDifference.[[Milliseconds]], [[Microseconds]]: timeDifference.[[Microseconds]], [[Nanoseconds]]: timeDifference.[[Nanoseconds]] }.
-    return TemporalDuration { .years = date_difference.years, .months = date_difference.months, .weeks = date_difference.weeks, .days = result.days, .hours = time_difference.hours, .minutes = time_difference.minutes, .seconds = time_difference.seconds, .milliseconds = time_difference.milliseconds, .microseconds = time_difference.microseconds, .nanoseconds = time_difference.nanoseconds };
+    return DurationRecord { .years = date_difference.years, .months = date_difference.months, .weeks = date_difference.weeks, .days = result.days, .hours = time_difference.hours, .minutes = time_difference.minutes, .seconds = time_difference.seconds, .milliseconds = time_difference.milliseconds, .microseconds = time_difference.microseconds, .nanoseconds = time_difference.nanoseconds };
 }
 
 // 6.5.7 NanosecondsToDays ( nanoseconds, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-nanosecondstodays
