@@ -2308,6 +2308,41 @@ void GLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLe
     }
 }
 
+void GLContext::gl_array_element(GLint i)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_array_element, i);
+    RETURN_WITH_ERROR_IF(i < 0, GL_INVALID_VALUE);
+
+    // This is effectively the same as `gl_draw_elements`, except we only output a single
+    // vertex (this is done between a `gl_begin/end` call) that is to be rendered.
+    if (!m_client_side_vertex_array_enabled)
+        return;
+
+    if (m_client_side_color_array_enabled) {
+        float color[4] { 0, 0, 0, 1 };
+        read_from_vertex_attribute_pointer(m_client_color_pointer, i, color);
+        gl_color(color[0], color[1], color[2], color[3]);
+    }
+
+    for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
+        if (m_client_side_texture_coord_array_enabled[t]) {
+            float tex_coords[4] { 0, 0, 0, 0 };
+            read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords);
+            gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
+        }
+    }
+
+    if (m_client_side_normal_array_enabled) {
+        float normal[3];
+        read_from_vertex_attribute_pointer(m_client_normal_pointer, i, normal);
+        gl_normal(normal[0], normal[1], normal[2]);
+    }
+
+    float vertex[4] { 0, 0, 0, 1 };
+    read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
+    gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
+}
+
 void GLContext::gl_depth_range(GLdouble min, GLdouble max)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_depth_range, min, max);

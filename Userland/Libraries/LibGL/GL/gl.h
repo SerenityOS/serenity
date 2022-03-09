@@ -680,6 +680,7 @@ GLAPI void glRecti(GLint x1, GLint y1, GLint x2, GLint y2);
 GLAPI void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint* params);
 GLAPI void glPointSize(GLfloat size);
 GLAPI void glClipPlane(GLenum plane, GLdouble const* equation);
+GLAPI void glArrayElement(GLint i);
 
 #ifdef __cplusplus
 }
