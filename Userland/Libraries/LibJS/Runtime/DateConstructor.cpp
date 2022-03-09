@@ -79,7 +79,33 @@ static Value parse_simplified_iso8601(GlobalObject& global_object, const String&
         return false;
     };
     auto lex_seconds = [&]() { return lex_n_digits(2, seconds) && *seconds >= 0 && *seconds <= 59; };
-    auto lex_milliseconds = [&]() { return lex_n_digits(3, milliseconds); };
+    auto lex_milliseconds = [&]() {
+        // Date.parse() is allowed to accept an arbitrary number of implementation-defined formats.
+        // Milliseconds are parsed slightly different as other engines allow effectively any number of digits here.
+        // We require at least one digit and only use the first three.
+
+        auto digits_read = 0;
+        int result = 0;
+        while (!lexer.is_eof() && is_ascii_digit(lexer.peek())) {
+            char ch = lexer.consume();
+            if (digits_read < 3)
+                result = 10 * result + ch - '0';
+
+            ++digits_read;
+        }
+
+        if (digits_read == 0)
+            return false;
+
+        // If we got less than three digits pretend we have trailing zeros.
+        while (digits_read < 3) {
+            result *= 10;
+            ++digits_read;
+        }
+
+        milliseconds = result;
+        return true;
+    };
     auto lex_seconds_milliseconds = [&]() { return lex_seconds() && (!lexer.consume_specific('.') || lex_milliseconds()); };
     auto lex_timezone = [&]() {
         if (lexer.consume_specific('+')) {
