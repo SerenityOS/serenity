@@ -1046,10 +1046,10 @@ void Painter::blit(IntPoint const& position, Gfx::Bitmap const& source, IntRect 
         size_t const src_skip = source.pitch() / sizeof(u32);
         for (int row = first_row; row <= last_row; ++row) {
             for (int i = 0; i < clipped_rect.width(); ++i) {
-                u32 rgba = src[i];
-                u32 bgra = (rgba & 0xff00ff00)
-                    | ((rgba & 0x000000ff) << 16)
-                    | ((rgba & 0x00ff0000) >> 16);
+                u32 bgra = src[i];
+                u8 const r = reinterpret_cast<u8*>(&bgra)[1];
+                reinterpret_cast<u8*>(&bgra)[1] = reinterpret_cast<u8*>(&bgra)[3]; // r = b
+                reinterpret_cast<u8*>(&bgra)[3] = r;                               // b = r
                 dst[i] = bgra;
             }
             dst += dst_skip;
