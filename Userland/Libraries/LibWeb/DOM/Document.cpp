@@ -554,6 +554,8 @@ void Document::ensure_layout()
 
 void Document::update_layout()
 {
+    update_style();
+
     if (!m_needs_layout && m_layout_root)
         return;
 
@@ -561,8 +563,6 @@ void Document::update_layout()
         return;
 
     auto viewport_rect = browsing_context()->viewport_rect();
-
-    update_style();
 
     if (!m_layout_root) {
         Layout::TreeBuilder tree_builder;
