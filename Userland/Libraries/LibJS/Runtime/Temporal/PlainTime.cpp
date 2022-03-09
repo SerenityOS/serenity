@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,7 +40,7 @@ void PlainTime::visit_edges(Visitor& visitor)
 }
 
 // 4.5.1 DifferenceTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-differencetime
-BalancedDuration difference_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2)
+TimeDurationRecord difference_time(u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2)
 {
     // Assert: h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, and ns2 are integers.
 
@@ -69,7 +69,7 @@ BalancedDuration difference_time(u8 hour1, u8 minute1, u8 second1, u16 milliseco
     auto bt = balance_time(hours * sign, minutes * sign, seconds * sign, milliseconds * sign, microseconds * sign, nanoseconds * sign);
 
     // 10. Return the Record { [[Days]]: bt.[[Days]] × sign, [[Hours]]: bt.[[Hour]] × sign, [[Minutes]]: bt.[[Minute]] × sign, [[Seconds]]: bt.[[Second]] × sign, [[Milliseconds]]: bt.[[Millisecond]] × sign, [[Microseconds]]: bt.[[Microsecond]] × sign, [[Nanoseconds]]: bt.[[Nanosecond]] × sign }.
-    return BalancedDuration { .days = static_cast<double>(bt.days * sign), .hours = static_cast<double>(bt.hour * sign), .minutes = static_cast<double>(bt.minute * sign), .seconds = static_cast<double>(bt.second * sign), .milliseconds = static_cast<double>(bt.millisecond * sign), .microseconds = static_cast<double>(bt.microsecond * sign), .nanoseconds = static_cast<double>(bt.nanosecond * sign) };
+    return TimeDurationRecord { .days = static_cast<double>(bt.days * sign), .hours = static_cast<double>(bt.hour * sign), .minutes = static_cast<double>(bt.minute * sign), .seconds = static_cast<double>(bt.second * sign), .milliseconds = static_cast<double>(bt.millisecond * sign), .microseconds = static_cast<double>(bt.microsecond * sign), .nanoseconds = static_cast<double>(bt.nanosecond * sign) };
 }
 
 // 4.5.2 ToTemporalTime ( item [ , overflow ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltime

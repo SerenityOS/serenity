@@ -233,7 +233,10 @@ namespace Temporal {
     class PrototypeName;
 JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
-struct TemporalDuration;
+struct DurationRecord;
+struct DateDurationRecord;
+struct TimeDurationRecord;
+struct PartialDurationRecord;
 };
 
 template<typename T>
