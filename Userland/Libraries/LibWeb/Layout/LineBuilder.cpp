@@ -49,11 +49,11 @@ LineBox& LineBuilder::ensure_last_line_box()
     return line_boxes.last();
 }
 
-void LineBuilder::append_box(Box const& box, float leading_size, float trailing_size)
+void LineBuilder::append_box(Box const& box, float leading_size, float trailing_size, float leading_margin, float trailing_margin)
 {
     auto& box_state = m_formatting_state.get_mutable(box);
     auto& line_box = ensure_last_line_box();
-    line_box.add_fragment(box, 0, 0, leading_size, trailing_size, box_state.content_width, box_state.content_height, box_state.border_box_top(), box_state.border_box_bottom());
+    line_box.add_fragment(box, 0, 0, leading_size, trailing_size, leading_margin, trailing_margin, box_state.content_width, box_state.content_height, box_state.border_box_top(), box_state.border_box_bottom());
     m_max_height_on_current_line = max(m_max_height_on_current_line, box_state.border_box_height());
 
     box_state.containing_line_box_fragment = LineBoxFragmentCoordinate {
@@ -62,9 +62,9 @@ void LineBuilder::append_box(Box const& box, float leading_size, float trailing_
     };
 }
 
-void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_node, size_t length_in_node, float leading_size, float trailing_size, float content_width, float content_height)
+void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_node, size_t length_in_node, float leading_size, float trailing_size, float leading_margin, float trailing_margin, float content_width, float content_height)
 {
-    ensure_last_line_box().add_fragment(text_node, offset_in_node, length_in_node, leading_size, trailing_size, content_width, content_height, 0, 0);
+    ensure_last_line_box().add_fragment(text_node, offset_in_node, length_in_node, leading_size, trailing_size, leading_margin, trailing_margin, content_width, content_height, 0, 0);
     m_max_height_on_current_line = max(m_max_height_on_current_line, content_height);
 }
 

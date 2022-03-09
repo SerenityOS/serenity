@@ -15,7 +15,7 @@
 
 namespace Web::Layout {
 
-void LineBox::add_fragment(Node const& layout_node, int start, int length, float leading_size, float trailing_size, float content_width, float content_height, float border_box_top, float border_box_bottom, LineBoxFragment::Type fragment_type)
+void LineBox::add_fragment(Node const& layout_node, int start, int length, float leading_size, float trailing_size, float leading_margin, float trailing_margin, float content_width, float content_height, float border_box_top, float border_box_bottom, LineBoxFragment::Type fragment_type)
 {
     bool text_align_is_justify = layout_node.computed_values().text_align() == CSS::TextAlign::Justify;
     if (!text_align_is_justify && !m_fragments.is_empty() && &m_fragments.last().layout_node() == &layout_node) {
@@ -24,9 +24,11 @@ void LineBox::add_fragment(Node const& layout_node, int start, int length, float
         m_fragments.last().m_length = (start - m_fragments.last().m_start) + length;
         m_fragments.last().set_width(m_fragments.last().width() + content_width);
     } else {
-        m_fragments.append(LineBoxFragment { layout_node, start, length, Gfx::FloatPoint(m_width + leading_size, 0.0f), Gfx::FloatSize(content_width, content_height), border_box_top, border_box_bottom, fragment_type });
+        float x_offset = leading_margin + leading_size + m_width;
+        float y_offset = 0.0f;
+        m_fragments.append(LineBoxFragment { layout_node, start, length, Gfx::FloatPoint(x_offset, y_offset), Gfx::FloatSize(content_width, content_height), border_box_top, border_box_bottom, fragment_type });
     }
-    m_width += content_width + leading_size + trailing_size;
+    m_width += leading_margin + leading_size + content_width + trailing_size + trailing_margin;
 }
 
 void LineBox::trim_trailing_whitespace()

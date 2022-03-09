@@ -19,7 +19,7 @@ public:
     float bottom() const { return m_bottom; }
     float baseline() const { return m_baseline; }
 
-    void add_fragment(Node const& layout_node, int start, int length, float leading_size, float trailing_size, float content_width, float content_height, float border_box_top, float border_box_bottom, LineBoxFragment::Type = LineBoxFragment::Type::Normal);
+    void add_fragment(Node const& layout_node, int start, int length, float leading_size, float trailing_size, float leading_margin, float trailing_margin, float content_width, float content_height, float border_box_top, float border_box_bottom, LineBoxFragment::Type = LineBoxFragment::Type::Normal);
 
     Vector<LineBoxFragment> const& fragments() const { return m_fragments; }
     Vector<LineBoxFragment>& fragments() { return m_fragments; }
