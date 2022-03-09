@@ -80,5 +80,8 @@ describe("errors", () => {
         expect(() => {
             Temporal.PlainMonthDay.from("-000000-01-01");
         }).toThrowWithMessage(RangeError, "Invalid extended year, must not be negative zero");
+        expect(() => {
+            Temporal.PlainMonthDay.from("−000000-01-01"); // U+2212
+        }).toThrowWithMessage(RangeError, "Invalid extended year, must not be negative zero");
     });
 });
