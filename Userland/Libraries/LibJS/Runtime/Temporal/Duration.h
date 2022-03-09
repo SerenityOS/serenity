@@ -104,16 +104,7 @@ struct MoveRelativeDateResult {
 
 // Used by RoundDuration to temporarily hold values
 struct RoundedDuration {
-    double years;
-    double months;
-    double weeks;
-    double days;
-    double hours;
-    double minutes;
-    double seconds;
-    double milliseconds;
-    double microseconds;
-    double nanoseconds;
+    DurationRecord duration_record;
     double remainder;
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -453,8 +453,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::until)
         return MUST(create_temporal_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0));
     }
 
-    // 23. Let result be ? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate).
-    auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date));
+    // 23. Let result be (? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate)).[[DurationRecord]].
+    auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date)).duration_record;
 
     // 24. Return ! CreateTemporalDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
     return MUST(create_temporal_duration(global_object, round_result.years, round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));
@@ -536,8 +536,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::since)
         return MUST(create_temporal_duration(global_object, -result->years(), -result->months(), 0, 0, 0, 0, 0, 0, 0, 0));
     }
 
-    // 24. Let result be ? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate).
-    auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date));
+    // 24. Let result be (? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate)).[[DurationRecord]].
+    auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date)).duration_record;
 
     // 25. Return ! CreateTemporalDuration(−result.[[Years]], −result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
     return MUST(create_temporal_duration(global_object, -round_result.years, -round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));

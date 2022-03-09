@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -433,8 +433,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
     // 21. Let unbalanceResult be ? UnbalanceDurationRelative(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], largestUnit, relativeTo).
     auto unbalance_result = TRY(unbalance_duration_relative(global_object, duration->years(), duration->months(), duration->weeks(), duration->days(), *largest_unit, relative_to));
 
-    // 22. Let roundResult be ? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, relativeTo).
-    auto round_result = TRY(round_duration(global_object, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode, relative_to.is_object() ? &relative_to.as_object() : nullptr));
+    // 22. Let roundResult be (? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, relativeTo)).[[DurationRecord]].
+    auto round_result = TRY(round_duration(global_object, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode, relative_to.is_object() ? &relative_to.as_object() : nullptr)).duration_record;
 
     // 23. Let adjustResult be ? AdjustRoundedDurationDays(roundResult.[[Years]], roundResult.[[Months]], roundResult.[[Weeks]], roundResult.[[Days]], roundResult.[[Hours]], roundResult.[[Minutes]], roundResult.[[Seconds]], roundResult.[[Milliseconds]], roundResult.[[Microseconds]], roundResult.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode, relativeTo).
     auto adjust_result = TRY(adjust_rounded_duration_days(global_object, round_result.years, round_result.months, round_result.weeks, round_result.days, round_result.hours, round_result.minutes, round_result.seconds, round_result.milliseconds, round_result.microseconds, round_result.nanoseconds, rounding_increment, *smallest_unit, rounding_mode, relative_to.is_object() ? &relative_to.as_object() : nullptr));
@@ -510,57 +510,60 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
     // 11. Let balanceResult be ? BalanceDuration(unbalanceResult.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], unit, intermediate).
     auto balance_result = TRY(balance_duration(global_object, unbalance_result.days, duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), *js_bigint(vm, Crypto::SignedBigInteger::create_from(duration->nanoseconds())), unit, intermediate));
 
-    // 12. Let roundResult be ? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]], 1, unit, "trunc", relativeTo).
-    auto round_result = TRY(round_duration(global_object, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds, 1, unit, "trunc"sv, relative_to.is_object() ? &relative_to.as_object() : nullptr));
+    // 12. Let roundRecord be ? RoundDuration(unbalanceResult.[[Years]], unbalanceResult.[[Months]], unbalanceResult.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]], 1, unit, "trunc", relativeTo).
+    auto round_record = TRY(round_duration(global_object, unbalance_result.years, unbalance_result.months, unbalance_result.weeks, balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds, 1, unit, "trunc"sv, relative_to.is_object() ? &relative_to.as_object() : nullptr));
+
+    // 13. Let roundResult be roundRecord.[[DurationRecord]].
+    auto& round_result = round_record.duration_record;
 
     double whole;
 
-    // 13. If unit is "year", then
+    // 14. If unit is "year", then
     if (unit == "year"sv) {
         // a. Let whole be roundResult.[[Years]].
         whole = round_result.years;
     }
-    // 14. Else if unit is "month", then
+    // 15. Else if unit is "month", then
     else if (unit == "month"sv) {
         // a. Let whole be roundResult.[[Months]].
         whole = round_result.months;
     }
-    // 15. Else if unit is "week", then
+    // 16. Else if unit is "week", then
     else if (unit == "week"sv) {
         // a. Let whole be roundResult.[[Weeks]].
         whole = round_result.weeks;
     }
-    // 16. Else if unit is "day", then
+    // 17. Else if unit is "day", then
     else if (unit == "day"sv) {
         // a. Let whole be roundResult.[[Days]].
         whole = round_result.days;
     }
-    // 17. Else if unit is "hour", then
+    // 18. Else if unit is "hour", then
     else if (unit == "hour"sv) {
         // a. Let whole be roundResult.[[Hours]].
         whole = round_result.hours;
     }
-    // 18. Else if unit is "minute", then
+    // 19. Else if unit is "minute", then
     else if (unit == "minute"sv) {
         // a. Let whole be roundResult.[[Minutes]].
         whole = round_result.minutes;
     }
-    // 19. Else if unit is "second", then
+    // 20. Else if unit is "second", then
     else if (unit == "second"sv) {
         // a. Let whole be roundResult.[[Seconds]].
         whole = round_result.seconds;
     }
-    // 20. Else if unit is "millisecond", then
+    // 21. Else if unit is "millisecond", then
     else if (unit == "millisecond"sv) {
         // a. Let whole be roundResult.[[Milliseconds]].
         whole = round_result.milliseconds;
     }
-    // 21. Else if unit is "microsecond", then
+    // 22. Else if unit is "microsecond", then
     else if (unit == "microsecond"sv) {
         // a. Let whole be roundResult.[[Microseconds]].
         whole = round_result.microseconds;
     }
-    // 22. Else,
+    // 23. Else,
     else {
         // a. Assert: unit is "nanosecond".
         VERIFY(unit == "nanosecond"sv);
@@ -569,8 +572,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
         whole = round_result.nanoseconds;
     }
 
-    // 23. Return whole + roundResult.[[Remainder]].
-    return whole + round_result.remainder;
+    // 24. Return whole + roundRecord.[[Remainder]].
+    return whole + round_record.remainder;
 }
 
 // 7.3.22 Temporal.Duration.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tostring
@@ -593,8 +596,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::to_string)
     // 6. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
     auto rounding_mode = TRY(to_temporal_rounding_mode(global_object, *options, "trunc"sv));
 
-    // 7. Let result be ? RoundDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], precision.[[Increment]], precision.[[Unit]], roundingMode).
-    auto result = TRY(round_duration(global_object, duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), precision.increment, precision.unit, rounding_mode));
+    // 7. Let result be (? RoundDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], precision.[[Increment]], precision.[[Unit]], roundingMode)).[[DurationRecord]].
+    auto result = TRY(round_duration(global_object, duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), precision.increment, precision.unit, rounding_mode)).duration_record;
 
     // 8. Return ! TemporalDurationToString(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]], precision.[[Precision]]).
     return js_string(vm, temporal_duration_to_string(result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds, precision.precision));
