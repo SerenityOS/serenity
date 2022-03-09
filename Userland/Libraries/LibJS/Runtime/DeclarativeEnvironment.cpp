@@ -13,6 +13,14 @@
 
 namespace JS {
 
+DeclarativeEnvironment* DeclarativeEnvironment::create_for_per_iteration_bindings(Badge<ForStatement>, DeclarativeEnvironment& other, size_t bindings_size)
+{
+    auto bindings = other.m_bindings.span().slice(0, bindings_size);
+    auto* parent_scope = other.outer_environment();
+
+    return parent_scope->heap().allocate_without_global_object<DeclarativeEnvironment>(parent_scope, bindings);
+}
+
 DeclarativeEnvironment::DeclarativeEnvironment()
     : Environment(nullptr)
 {
@@ -20,6 +28,12 @@ DeclarativeEnvironment::DeclarativeEnvironment()
 
 DeclarativeEnvironment::DeclarativeEnvironment(Environment* parent_scope)
     : Environment(parent_scope)
+{
+}
+
+DeclarativeEnvironment::DeclarativeEnvironment(Environment* parent_scope, Span<Binding const> bindings)
+    : Environment(parent_scope)
+    , m_bindings(bindings)
 {
 }
 

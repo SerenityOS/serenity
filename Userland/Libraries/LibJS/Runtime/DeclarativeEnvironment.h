@@ -17,9 +17,21 @@ namespace JS {
 class DeclarativeEnvironment : public Environment {
     JS_ENVIRONMENT(DeclarativeEnvironment, Environment);
 
+    struct Binding {
+        FlyString name;
+        Value value;
+        bool strict { false };
+        bool mutable_ { false };
+        bool can_be_deleted { false };
+        bool initialized { false };
+    };
+
 public:
+    static DeclarativeEnvironment* create_for_per_iteration_bindings(Badge<ForStatement>, DeclarativeEnvironment& other, size_t bindings_size);
+
     DeclarativeEnvironment();
     explicit DeclarativeEnvironment(Environment* parent_scope);
+    explicit DeclarativeEnvironment(Environment* parent_scope, Span<Binding const> bindings);
     virtual ~DeclarativeEnvironment() override;
 
     virtual ThrowCompletionOr<bool> has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
@@ -49,11 +61,6 @@ public:
     ThrowCompletionOr<Value> get_binding_value_direct(GlobalObject&, size_t index, bool strict);
     ThrowCompletionOr<void> set_mutable_binding_direct(GlobalObject&, size_t index, Value, bool strict);
 
-    void ensure_capacity(size_t capacity)
-    {
-        m_bindings.ensure_capacity(capacity);
-    }
-
 protected:
     virtual void visit_edges(Visitor&) override;
 
@@ -70,15 +77,6 @@ private:
             return {};
         return it.index();
     }
-
-    struct Binding {
-        FlyString name;
-        Value value;
-        bool strict { false };
-        bool mutable_ { false };
-        bool can_be_deleted { false };
-        bool initialized { false };
-    };
 
     Vector<Binding> m_bindings;
 };
