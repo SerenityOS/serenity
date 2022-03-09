@@ -427,6 +427,8 @@ void Node::remove(bool suppress_observers)
     }
 
     parent->children_changed();
+
+    document().invalidate_style();
 }
 
 // https://dom.spec.whatwg.org/#concept-node-replace
