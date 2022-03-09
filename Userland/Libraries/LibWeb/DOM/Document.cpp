@@ -35,6 +35,7 @@
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/DOM/TreeWalker.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -1465,6 +1466,12 @@ ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String
 NonnullRefPtr<NodeIterator> Document::create_node_iterator(Node& root, unsigned what_to_show, RefPtr<NodeFilter> filter)
 {
     return NodeIterator::create(root, what_to_show, move(filter));
+}
+
+// https://dom.spec.whatwg.org/#dom-document-createtreewalker
+NonnullRefPtr<TreeWalker> Document::create_tree_walker(Node& root, unsigned what_to_show, RefPtr<NodeFilter> filter)
+{
+    return TreeWalker::create(root, what_to_show, move(filter));
 }
 
 }

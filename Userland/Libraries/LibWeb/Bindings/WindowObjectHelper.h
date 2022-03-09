@@ -302,6 +302,8 @@
 #include <LibWeb/Bindings/TextMetricsConstructor.h>
 #include <LibWeb/Bindings/TextMetricsPrototype.h>
 #include <LibWeb/Bindings/TextPrototype.h>
+#include <LibWeb/Bindings/TreeWalkerConstructor.h>
+#include <LibWeb/Bindings/TreeWalkerPrototype.h>
 #include <LibWeb/Bindings/UIEventConstructor.h>
 #include <LibWeb/Bindings/UIEventPrototype.h>
 #include <LibWeb/Bindings/URLConstructor.h>
@@ -475,6 +477,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(TextDecoder)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(TextEncoder)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(TextMetrics)                                                        \
+    ADD_WINDOW_OBJECT_INTERFACE(TreeWalker)                                                         \
     ADD_WINDOW_OBJECT_INTERFACE(UIEvent)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(URLSearchParams)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(URL)                                                                \
