@@ -158,13 +158,10 @@ String temporal_duration_to_string(double years, double months, double weeks, do
 template<typename EarlierObjectType, typename LaterObjectType>
 double days_until(GlobalObject& global_object, EarlierObjectType& earlier, LaterObjectType& later)
 {
-    // 1. Assert: earlier and later both have [[ISOYear]], [[ISOMonth]], and [[ISODay]] internal slots.
-    // NOTE: We could enforce this via concepts, but the compiler would complain anyway if either of the types doesn't have the methods used below.
-
-    // 2. Let difference be ! DifferenceISODate(earlier.[[ISOYear]], earlier.[[ISOMonth]], earlier.[[ISODay]], later.[[ISOYear]], later.[[ISOMonth]], later.[[ISODay]], "day").
+    // 1. Let difference be ! DifferenceISODate(earlier.[[ISOYear]], earlier.[[ISOMonth]], earlier.[[ISODay]], later.[[ISOYear]], later.[[ISOMonth]], later.[[ISODay]], "day").
     auto difference = difference_iso_date(global_object, earlier.iso_year(), earlier.iso_month(), earlier.iso_day(), later.iso_year(), later.iso_month(), later.iso_day(), "day"sv);
 
-    // 3. Return difference.[[Days]].
+    // 2. Return difference.[[Days]].
     return difference.days;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -151,10 +151,9 @@ ThrowCompletionOr<BigInt*> add_instant(GlobalObject& global_object, BigInt const
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: hours, minutes, seconds, milliseconds, microseconds, and nanoseconds are integer Number values.
     VERIFY(hours == trunc(hours) && minutes == trunc(minutes) && seconds == trunc(seconds) && milliseconds == trunc(milliseconds) && microseconds == trunc(microseconds) && nanoseconds == trunc(nanoseconds));
 
-    // 2. Let result be epochNanoseconds + ℤ(nanoseconds) + ℤ(microseconds) × 1000ℤ + ℤ(milliseconds) × 10^6ℤ + ℤ(seconds) × 10^9ℤ + ℤ(minutes) × 60ℤ × 10^9ℤ + ℤ(hours) × 3600ℤ × 10^9ℤ.
+    // 1. Let result be epochNanoseconds + ℤ(nanoseconds) + ℤ(microseconds) × 1000ℤ + ℤ(milliseconds) × 10^6ℤ + ℤ(seconds) × 10^9ℤ + ℤ(minutes) × 60ℤ × 10^9ℤ + ℤ(hours) × 3600ℤ × 10^9ℤ.
     // FIXME: Pretty sure i64's are not sufficient for the extreme cases.
     auto* result = js_bigint(vm,
         epoch_nanoseconds.big_integer()
@@ -165,11 +164,11 @@ ThrowCompletionOr<BigInt*> add_instant(GlobalObject& global_object, BigInt const
             .plus(Crypto::SignedBigInteger::create_from((i64)minutes).multiplied_by(Crypto::SignedBigInteger { 60 }).multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 }))
             .plus(Crypto::SignedBigInteger::create_from((i64)hours).multiplied_by(Crypto::SignedBigInteger { 3600 }).multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 })));
 
-    // If ! IsValidEpochNanoseconds(result) is false, throw a RangeError exception.
+    // 2. If ! IsValidEpochNanoseconds(result) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*result))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
 
-    // 4. Return result.
+    // 3. Return result.
     return result;
 }
 
