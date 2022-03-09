@@ -324,6 +324,8 @@ public:
     };
     static ExceptionOr<PrefixAndTagName> validate_qualified_name(String const& qualified_name);
 
+    NonnullRefPtr<NodeIterator> create_node_iterator(Node& root, unsigned what_to_show, RefPtr<NodeFilter>);
+
 private:
     explicit Document(const AK::URL&);
 

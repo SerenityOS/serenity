@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
@@ -31,6 +31,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/HTMLCollection.h>
+#include <LibWeb/DOM/NodeIterator.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
@@ -1458,6 +1459,12 @@ ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String
         .prefix = qualified_name.substring_view(0, *colon_offset),
         .tag_name = qualified_name.substring_view(*colon_offset + 1),
     };
+}
+
+// https://dom.spec.whatwg.org/#dom-document-createnodeiterator
+NonnullRefPtr<NodeIterator> Document::create_node_iterator(Node& root, unsigned what_to_show, RefPtr<NodeFilter> filter)
+{
+    return NodeIterator::create(root, what_to_show, move(filter));
 }
 
 }

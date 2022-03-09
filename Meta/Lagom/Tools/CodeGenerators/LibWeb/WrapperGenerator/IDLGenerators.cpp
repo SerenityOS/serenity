@@ -320,18 +320,23 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
             }
         }
-    } else if (parameter.type->name == "EventListener") {
+    } else if (parameter.type->name.is_one_of("EventListener", "NodeFilter")) {
         // FIXME: Replace this with support for callback interfaces. https://heycam.github.io/webidl/#idl-callback-interface
+
+        if (parameter.type->name == "EventListener")
+            scoped_generator.set("cpp_type", "IDLEventListener");
+        else
+            scoped_generator.set("cpp_type", parameter.type->name);
 
         if (parameter.type->nullable) {
             scoped_generator.append(R"~~~(
-    RefPtr<IDLEventListener> @cpp_name@;
+    RefPtr<@cpp_type@> @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish()) {
         if (!@js_name@@js_suffix@.is_object())
             return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
         CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
-        @cpp_name@ = adopt_ref(*new IDLEventListener(move(callback_type)));
+        @cpp_name@ = adopt_ref(*new @cpp_type@(move(callback_type)));
     }
 )~~~");
         } else {
@@ -340,7 +345,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
 
     CallbackType callback_type(JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object());
-    auto @cpp_name@ = adopt_ref(*new IDLEventListener(move(callback_type)));
+    auto @cpp_name@ = adopt_ref(*new @cpp_type@(move(callback_type)));
 )~~~");
         }
     } else if (IDL::is_wrappable_type(*parameter.type)) {
@@ -2803,6 +2808,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/IDLEventListener.h>
+#include <LibWeb/DOM/NodeFilter.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
