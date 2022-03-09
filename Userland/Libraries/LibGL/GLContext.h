@@ -101,6 +101,7 @@ public:
     void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid const* data);
     void gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* data);
     void gl_tex_parameter(GLenum target, GLenum pname, GLfloat param);
+    void gl_tex_parameterfv(GLenum target, GLenum pname, GLfloat const* params);
     void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q);
     void gl_multi_tex_coord(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
     void gl_tex_env(GLenum target, GLenum pname, GLfloat param);
@@ -366,6 +367,7 @@ private:
             decltype(&GLContext::gl_hint),
             decltype(&GLContext::gl_read_buffer),
             decltype(&GLContext::gl_tex_parameter),
+            decltype(&GLContext::gl_tex_parameterfv),
             decltype(&GLContext::gl_depth_mask),
             decltype(&GLContext::gl_draw_arrays),
             decltype(&GLContext::gl_draw_elements),
