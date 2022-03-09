@@ -37,6 +37,7 @@ The following `flags` are supported:
 * `MS_BIND`: Perform a bind-mount (see below).
 * `MS_RDONLY`: Mount the filesystem read-only.
 * `MS_REMOUNT`: Remount an already mounted filesystem (see below).
+* `MS_WXALLOWED`: Allow W^X protection circumvention for executables on this file system.
 
 These flags can be used as a security measure to limit the possible abuses of the newly
 mounted file system.
