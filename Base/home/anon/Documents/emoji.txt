@@ -37,7 +37,7 @@ Faces & Misc Emoji
 ⬆ - U+2B06 UPWARDS BLACK ARROW
 ⬇ - U+2B07 DOWNWARDS BLACK ARROW
 
-Yak Emoji
+Yak Emoji (limited cross-platform support)
 ---------
 
 􌴀 - U+10CD00 HAIRYAK
@@ -101,12 +101,12 @@ Yak Emoji
 ZWJ Sequence Flags
 ------------------
 
-🏳️‍🐞 - U+1F3F3 U+FE0F U+200D U+1F41E        SerenityOS flag
+🏳️‍🐞 - U+1F3F3 U+FE0F U+200D U+1F41E        SerenityOS flag (limited cross-platform support)
 🏳️‍🌈 - U+1F3F3 U+FE0F U+200D U+1F308        Rainbow flag
 🏳️‍⚧️ - U+1F3F3 U+FE0F U+200D U+26A7 U+FE0F  Transgender flag
 🏴‍☠️ - U+1F3F4 U+200D U+2620 U+FE0F         Pirate flag
-🏳️‍ - U+1F3F3 U+FE0F U+200D U+F8FF         Klingon flag
-🏳️‍🖖 - U+1F3F3 U+FE0F U+200D U+1F596        Vulcan flag
+🏳️‍ - U+1F3F3 U+FE0F U+200D U+F8FF         Klingon flag (limited cross-platform support)
+🏳️‍🖖 - U+1F3F3 U+FE0F U+200D U+1F596        Vulcan flag (limited cross-platform support)
 
 Regional Indicator Symbol Flags
 -------------------------------
@@ -133,6 +133,7 @@ Regional Indicator Symbol Flags
 🇳🇱 - U+1F1F3 U+1F1F1 NL Netherlands
 🇳🇴 - U+1F1F3 U+1F1F4 NO Norway
 🇵🇱 - U+1F1F5 U+1F1F1 PL Poland
+🇵🇸 - U+1F1F5 U+1F1F8 PS Palestine
 🇷🇺 - U+1F1F7 U+1F1FA RU Russia
 🇸🇪 - U+1F1F8 U+1F1EA SE Sweden
 🇹🇷 - U+1F1F9 U+1F1F7 TR Turkey
@@ -142,13 +143,27 @@ Regional Indicator Symbol Flags
 🇺🇸 - U+1F1FA U+1F1F8 US United States
 🇻🇳 - U+1F1FB U+1F1F3 VN Vietnam
 
-Emoji Tag Sequence Flags
+Emoji Tag Sequence Flags (limited cross-platform support)
 ------------------------
 
 🏴󠁣󠁡󠁱󠁣󠁿 - U+1F3F4 U+E0063 U+E0061 U+E0071 U+E0063 U+E007F CA-QC Quebec
 🏴󠁤󠁥󠁨󠁥󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0068 U+E0065 U+E007F DE-HE Hesse
 🏴󠁥󠁳󠁣󠁴󠁿 - U+1F3F4 U+E0065 U+E0073 U+E0063 U+E0074 U+E007F ES-CT Catalonia
 🏴󠁥󠁳󠁰󠁶󠁿 - U+1F3F4 U+E0065 U+E0073 U+E0070 U+E0076 U+E007F ES-PV Basque Country
+🏴󠁦󠁩󠀰󠀳󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0033 U+E007F FI-03 South Ostrobothnia
+🏴󠁦󠁩󠀰󠀴󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0034 U+E007F FI-04 South Savonia
+🏴󠁦󠁩󠀰󠀵󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0035 U+E007F FI-05 Kainuu
+🏴󠁦󠁩󠀰󠀶󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0036 U+E007F FI-06 Kanta-Häme (Tavastia Proper)
+🏴󠁦󠁩󠀰󠀷󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0037 U+E007F FI-07 Central Ostrobothnia
+🏴󠁦󠁩󠀰󠀸󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0038 U+E007F FI-08 Central Finland
+🏴󠁦󠁩󠀱󠀳󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0031 U+E0033 U+E007F FI-13 North Karelia
+🏴󠁦󠁩󠀱󠀵󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0031 U+E0035 U+E007F FI-15 Northern Savonia
+🏴󠁦󠁩󠀱󠀶󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0031 U+E0036 U+E007F FI-16 Päijänne Tavastia
+🏴󠁦󠁩󠀱󠀷󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0031 U+E0037 U+E007F FI-17 Satakunta
+🏴󠁦󠁩󠀱󠀸󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0031 U+E0038 U+E007F FI-18 Uusimaa
+🏴󠁩󠁥󠁬󠁿 - U+1F3F4 U+E0069 U+E0065 U+E006C U+E007F         IE-L Leinster
+🏴󠁩󠁥󠁭󠁿 - U+1F3F4 U+E0069 U+E0065 U+E006D U+E007F         IE-M Munster
+🏴󠁩󠁥󠁵󠁿 - U+1F3F4 U+E0069 U+E0065 U+E0075 U+E007F         IE-U Ulster
 🏴󠁳󠁥󠁭󠁿 - U+1F3F4 U+E0073 U+E0065 U+E006D U+E007F         SE-M  Skåne
 🏴󠁵󠁡󠀱󠀴󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0031 U+E0034 U+E007F UA-14 Donechchyna
 🏴󠁵󠁡󠀴󠀳󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0034 U+E0033 U+E007F UA-43 Crimea
