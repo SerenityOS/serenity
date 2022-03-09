@@ -74,7 +74,7 @@ static void add_a_css_style_sheet(DOM::Document& document, NonnullRefPtr<CSS::CS
 }
 
 // https://www.w3.org/TR/cssom/#create-a-css-style-sheet
-static void create_a_css_style_sheet(DOM::Document& document, String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, void* location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, NonnullRefPtr<CSS::CSSStyleSheet> sheet)
+static void create_a_css_style_sheet(DOM::Document& document, String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, String location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, NonnullRefPtr<CSS::CSSStyleSheet> sheet)
 {
     // 1. Create a new CSS style sheet object and set its properties as specified.
     // FIXME: We receive `sheet` from the caller already. This is weird.
@@ -87,7 +87,7 @@ static void create_a_css_style_sheet(DOM::Document& document, String type, DOM::
     sheet->set_title(move(title));
     sheet->set_alternate(alternate);
     sheet->set_origin_clean(origin_clean);
-    (void)location;
+    sheet->set_location(move(location));
 
     // 2. Then run the add a CSS style sheet steps for the newly created CSS style sheet.
     add_a_css_style_sheet(document, move(sheet));
@@ -144,7 +144,7 @@ void HTMLStyleElement::update_a_style_block()
         in_a_document_tree() ? attribute(HTML::AttributeNames::title) : String::empty(),
         false,
         true,
-        nullptr,
+        {},
         nullptr,
         nullptr,
         sheet.release_nonnull());

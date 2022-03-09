@@ -26,6 +26,11 @@ public:
     DOM::Element* owner_node() { return m_owner_node; }
     void set_owner_node(DOM::Element*);
 
+    String href() const { return m_location; }
+
+    String location() const { return m_location; }
+    void set_location(String location) { m_location = move(location); }
+
     String title() const { return m_title; }
     void set_title(String title) { m_title = move(title); }
 
@@ -51,6 +56,7 @@ private:
 
     WeakPtr<CSSStyleSheet> m_parent_style_sheet;
 
+    String m_location;
     String m_title;
     String m_type_string;
     String m_media_string;
