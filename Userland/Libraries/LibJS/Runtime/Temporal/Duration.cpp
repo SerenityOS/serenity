@@ -15,7 +15,7 @@
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/DurationConstructor.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
-#include <LibJS/Runtime/Temporal/PlainDateTime.h>
+#include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 
@@ -1193,21 +1193,15 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         if (is<ZonedDateTime>(relative_to_object)) {
             auto* relative_to_zoned_date_time = static_cast<ZonedDateTime*>(relative_to_object);
 
-            // i. Let instant be ! CreateTemporalInstant(relativeTo.[[Nanoseconds]]).
-            auto* instant = MUST(create_temporal_instant(global_object, relative_to_zoned_date_time->nanoseconds()));
-
-            // ii. Set zonedRelativeTo to relativeTo.
+            // i. Set zonedRelativeTo to relativeTo.
             zoned_relative_to = relative_to_zoned_date_time;
 
-            // iii. Let plainDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(relativeTo.[[TimeZone]], instant, relativeTo.[[Calendar]]).
-            auto* plain_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &relative_to_zoned_date_time->time_zone(), *instant, relative_to_zoned_date_time->calendar()));
-
-            // iv. Set relativeTo to ! CreateTemporalDate(plainDateTime.[[ISOYear]], plainDateTime.[[ISOMonth]], plainDateTime.[[ISODay]], relativeTo.[[Calendar]]).
-            relative_to = TRY(create_temporal_date(global_object, plain_date_time->iso_year(), plain_date_time->iso_month(), plain_date_time->iso_day(), relative_to_zoned_date_time->calendar()));
+            // ii. Set relativeTo to ? ToTemporalDate(relativeTo).
+            relative_to = TRY(to_temporal_date(global_object, relative_to_object));
         }
         // b. Else,
         else {
-            //     i. Assert: relativeTo has an [[InitializedTemporalDate]] internal slot.
+            // i. Assert: relativeTo has an [[InitializedTemporalDate]] internal slot.
             VERIFY(is<PlainDate>(relative_to_object));
 
             relative_to = static_cast<PlainDate*>(relative_to_object);
@@ -1216,8 +1210,10 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // c. Let calendar be relativeTo.[[Calendar]].
         calendar = &relative_to->calendar();
     }
+    // 6. Else,
+    //    a. NOTE: calendar will not be used below.
 
-    // 6. If unit is one of "year", "month", "week", or "day", then
+    // 7. If unit is one of "year", "month", "week", or "day", then
     if (unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
         auto* nanoseconds_bigint = js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)nanoseconds));
 
@@ -1248,16 +1244,16 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         microseconds = 0;
         nanoseconds = 0;
     }
-    // 7. Else,
+    // 8. Else,
     else {
         // a. Let fractionalSeconds be nanoseconds × 10^−9 + microseconds × 10^−6 + milliseconds × 10^−3 + seconds.
         fractional_seconds = nanoseconds * 0.000000001 + microseconds * 0.000001 + milliseconds * 0.001 + seconds;
     }
 
-    // 8. Let remainder be undefined.
+    // 9. Let remainder be undefined.
     double remainder = 0;
 
-    // 9. If unit is "year", then
+    // 10. If unit is "year", then
     if (unit == "year"sv) {
         VERIFY(relative_to);
 
@@ -1363,7 +1359,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         weeks = 0;
         days = 0;
     }
-    // 10. Else if unit is "month", then
+    // 11. Else if unit is "month", then
     else if (unit == "month"sv) {
         VERIFY(relative_to);
 
@@ -1447,7 +1443,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         weeks = 0;
         days = 0;
     }
-    // 11. Else if unit is "week", then
+    // 12. Else if unit is "week", then
     else if (unit == "week"sv) {
         VERIFY(relative_to);
 
@@ -1500,7 +1496,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // k. Set days to 0.
         days = 0;
     }
-    // 12. Else if unit is "day", then
+    // 13. Else if unit is "day", then
     else if (unit == "day"sv) {
         // a. Let fractionalDays be days.
         auto fractional_days = days;
@@ -1511,7 +1507,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // c. Set remainder to fractionalDays - days.
         remainder = fractional_days - days;
     }
-    // 13. Else if unit is "hour", then
+    // 14. Else if unit is "hour", then
     else if (unit == "hour"sv) {
         // a. Let fractionalHours be (fractionalSeconds / 60 + minutes) / 60 + hours.
         auto fractional_hours = (fractional_seconds / 60 + minutes) / 60 + hours;
@@ -1529,7 +1525,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         microseconds = 0;
         nanoseconds = 0;
     }
-    // 14. Else if unit is "minute", then
+    // 15. Else if unit is "minute", then
     else if (unit == "minute"sv) {
         // a. Let fractionalMinutes be fractionalSeconds / 60 + minutes.
         auto fractional_minutes = fractional_seconds / 60 + minutes;
@@ -1546,7 +1542,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         microseconds = 0;
         nanoseconds = 0;
     }
-    // 15. Else if unit is "second", then
+    // 16. Else if unit is "second", then
     else if (unit == "second"sv) {
         // a. Set seconds to ! RoundNumberToIncrement(fractionalSeconds, increment, roundingMode).
         seconds = (double)round_number_to_increment(fractional_seconds, increment, rounding_mode);
@@ -1559,7 +1555,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         microseconds = 0;
         nanoseconds = 0;
     }
-    // 16. Else if unit is "millisecond", then
+    // 17. Else if unit is "millisecond", then
     else if (unit == "millisecond"sv) {
         // a. Let fractionalMilliseconds be nanoseconds × 10^−6 + microseconds × 10^−3 + milliseconds.
         auto fractional_milliseconds = nanoseconds * 0.000001 + microseconds * 0.001 + milliseconds;
@@ -1574,7 +1570,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         microseconds = 0;
         nanoseconds = 0;
     }
-    // 17. Else if unit is "microsecond", then
+    // 18. Else if unit is "microsecond", then
     else if (unit == "microsecond"sv) {
         // a. Let fractionalMicroseconds be nanoseconds × 10^−3 + microseconds.
         auto fractional_microseconds = nanoseconds * 0.001 + microseconds;
@@ -1588,7 +1584,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // d. Set nanoseconds to 0.
         nanoseconds = 0;
     }
-    // 18. Else,
+    // 19. Else,
     else {
         // a. Assert: unit is "nanosecond".
         VERIFY(unit == "nanosecond"sv);
@@ -1603,7 +1599,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         remainder -= nanoseconds;
     }
 
-    // Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: weeks, [[Days]]: days, [[Hours]]: hours, [[Minutes]]: minutes, [[Seconds]]: seconds, [[Milliseconds]]: milliseconds, [[Microseconds]]: microseconds, [[Nanoseconds]]: nanoseconds, [[Remainder]]: remainder }.
+    // 20. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: weeks, [[Days]]: days, [[Hours]]: hours, [[Minutes]]: minutes, [[Seconds]]: seconds, [[Milliseconds]]: milliseconds, [[Microseconds]]: microseconds, [[Nanoseconds]]: nanoseconds, [[Remainder]]: remainder }.
     return RoundedDuration { .years = years, .months = months, .weeks = weeks, .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds, .remainder = remainder };
 }
 
