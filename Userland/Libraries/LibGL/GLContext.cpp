@@ -1028,6 +1028,33 @@ void GLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
     m_sampler_config_is_dirty = true;
 }
 
+void GLContext::gl_tex_parameterfv(GLenum target, GLenum pname, GLfloat const* params)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_parameterfv, target, pname, params);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: We currently only support GL_TETXURE_2D targets. 1D, 3D and CUBE should also be supported (https://docs.gl/gl2/glTexParameter)
+    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
+
+    // FIXME: implement the remaining parameters. (https://docs.gl/gl2/glTexParameter)
+    RETURN_WITH_ERROR_IF(!(pname == GL_TEXTURE_BORDER_COLOR), GL_INVALID_ENUM);
+
+    // We assume GL_TEXTURE_2D (see above)
+    auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    RETURN_WITH_ERROR_IF(texture_2d.is_null(), GL_INVALID_OPERATION);
+
+    switch (pname) {
+    case GL_TEXTURE_BORDER_COLOR:
+        texture_2d->sampler().set_border_color(params[0], params[1], params[2], params[3]);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    m_sampler_config_is_dirty = true;
+}
+
 void GLContext::gl_front_face(GLenum face)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_front_face, face);
@@ -3031,6 +3058,7 @@ void GLContext::sync_device_sampler_config()
             VERIFY_NOT_REACHED();
         }
 
+        config.border_color = sampler.border_color();
         m_rasterizer->set_sampler_config(i, config);
     }
 }

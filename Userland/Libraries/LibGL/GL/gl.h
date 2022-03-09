@@ -451,6 +451,7 @@ extern "C" {
 #define GL_REFLECTION_MAP 0x8512
 
 // Texture gen parameters
+#define GL_TEXTURE_BORDER_COLOR 0x1004
 #define GL_TEXTURE_GEN_MODE 0x2500
 #define GL_OBJECT_PLANE 0x2501
 #define GL_EYE_PLANE 0x2502
