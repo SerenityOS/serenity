@@ -550,6 +550,7 @@ NonnullRefPtr<GUI::Widget> build_storage_widget()
             check(MS_NOSUID, "nosuid");
             check(MS_BIND, "bind");
             check(MS_RDONLY, "ro");
+            check(MS_WXALLOWED, "wxallowed");
             if (builder.string_view().is_empty())
                 return String("defaults");
             return builder.to_string();
