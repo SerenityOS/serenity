@@ -477,6 +477,14 @@ extern "C" {
 
 #define GL_ADD 0x0104
 
+// User clipping planes
+#define GL_CLIP_PLANE0 0x3000
+#define GL_CLIP_PLANE1 0x3001
+#define GL_CLIP_PLANE2 0x3002
+#define GL_CLIP_PLANE3 0x3003
+#define GL_CLIP_PLANE4 0x3004
+#define GL_CLIP_PLANE5 0x3005
+
 GLAPI void glBegin(GLenum mode);
 GLAPI void glClear(GLbitfield mask);
 GLAPI void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
@@ -670,6 +678,7 @@ GLAPI void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
 GLAPI void glRecti(GLint x1, GLint y1, GLint x2, GLint y2);
 GLAPI void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint* params);
 GLAPI void glPointSize(GLfloat size);
+GLAPI void glClipPlane(GLenum plane, GLdouble const* equation);
 
 #ifdef __cplusplus
 }

@@ -156,6 +156,7 @@ public:
     void gl_color_material(GLenum face, GLenum mode);
     void gl_get_light(GLenum light, GLenum pname, void* params, GLenum type);
     void gl_get_material(GLenum face, GLenum pname, void* params, GLenum type);
+    void gl_clip_plane(GLenum plane, GLdouble const* equation);
     void present();
 
 private:
@@ -396,7 +397,8 @@ private:
             decltype(&GLContext::gl_materialfv),
             decltype(&GLContext::gl_materialiv),
             decltype(&GLContext::gl_color_material),
-            decltype(&GLContext::gl_get_light)>;
+            decltype(&GLContext::gl_get_light),
+            decltype(&GLContext::gl_clip_plane)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
