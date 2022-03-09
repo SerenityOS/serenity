@@ -115,6 +115,7 @@ ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(GlobalObject&
 
     // 4. Let list be a new empty List.
     auto list = MarkedVector<Value> { heap };
+    list.ensure_capacity(length);
 
     // 5. Let index be 0.
     // 6. Repeat, while index < len,
@@ -130,7 +131,7 @@ ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(GlobalObject&
             TRY(check_value(next));
 
         // d. Append next as the last element of list.
-        list.append(next);
+        list.unchecked_append(next);
     }
 
     // 7. Return list.
