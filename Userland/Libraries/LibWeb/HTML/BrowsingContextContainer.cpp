@@ -31,9 +31,17 @@ void BrowsingContextContainer::inserted()
     if (auto* browsing_context = document().browsing_context()) {
         VERIFY(browsing_context->page());
         m_nested_browsing_context = BrowsingContext::create_nested(*browsing_context->page(), *this);
+        browsing_context->append_child(*m_nested_browsing_context);
         m_nested_browsing_context->set_frame_nesting_levels(browsing_context->frame_nesting_levels());
         m_nested_browsing_context->register_frame_nesting(document().url());
     }
+}
+
+void BrowsingContextContainer::removed_from(Node* old_parent)
+{
+    HTMLElement::removed_from(old_parent);
+    if (m_nested_browsing_context && m_nested_browsing_context->parent())
+        m_nested_browsing_context->parent()->remove_child(*m_nested_browsing_context);
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#concept-bcc-content-document
