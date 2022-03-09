@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -327,6 +327,16 @@ public:
     NonnullRefPtr<NodeIterator> create_node_iterator(Node& root, unsigned what_to_show, RefPtr<NodeFilter>);
     NonnullRefPtr<TreeWalker> create_tree_walker(Node& root, unsigned what_to_show, RefPtr<NodeFilter>);
 
+    void register_node_iterator(Badge<NodeIterator>, NodeIterator&);
+    void unregister_node_iterator(Badge<NodeIterator>, NodeIterator&);
+
+    template<typename Callback>
+    void for_each_node_iterator(Callback callback)
+    {
+        for (auto* node_iterator : m_node_iterators)
+            callback(*node_iterator);
+    }
+
 private:
     explicit Document(const AK::URL&);
 
@@ -430,5 +440,8 @@ private:
     Vector<WeakPtr<CSS::MediaQueryList>> m_media_query_lists;
 
     bool m_needs_layout { false };
+
+    HashTable<NodeIterator*> m_node_iterators;
 };
+
 }

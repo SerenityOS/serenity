@@ -387,7 +387,10 @@ void Node::remove(bool suppress_observers)
     // FIXME: For each live range whose start node is parent and start offset is greater than index, decrease its start offset by 1.
     // FIXME: For each live range whose end node is parent and end offset is greater than index, decrease its end offset by 1.
 
-    // FIXME: For each NodeIterator object iterator whose root’s node document is node’s node document, run the NodeIterator pre-removing steps given node and iterator.
+    // For each NodeIterator object iterator whose root’s node document is node’s node document, run the NodeIterator pre-removing steps given node and iterator.
+    document().for_each_node_iterator([&](NodeIterator& node_iterator) {
+        node_iterator.run_pre_removing_steps(*this);
+    });
 
     // FIXME: Let oldPreviousSibling be node’s previous sibling. (Currently unused so not included)
     // FIXME: Let oldNextSibling be node’s next sibling. (Currently unused so not included)

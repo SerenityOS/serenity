@@ -17,6 +17,12 @@ NodeIterator::NodeIterator(Node& root)
     : m_root(root)
     , m_reference(root)
 {
+    root.document().register_node_iterator({}, *this);
+}
+
+NodeIterator::~NodeIterator()
+{
+    m_root->document().unregister_node_iterator({}, *this);
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createnodeiterator
@@ -158,6 +164,46 @@ JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::next_node()
 JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::previous_node()
 {
     return traverse(Direction::Previous);
+}
+
+// https://dom.spec.whatwg.org/#nodeiterator-pre-removing-steps
+void NodeIterator::run_pre_removing_steps(Node& to_be_removed_node)
+{
+    // NOTE: This function implements what the DOM specification tells us to do.
+    //       However, it's known to not match other browsers: https://github.com/whatwg/dom/issues/907
+
+    // 1. If toBeRemovedNode is not an inclusive ancestor of nodeIterator’s reference, or toBeRemovedNode is nodeIterator’s root, then return.
+    if (!to_be_removed_node.is_inclusive_ancestor_of(m_reference) || &to_be_removed_node == m_root)
+        return;
+
+    // 2. If nodeIterator’s pointer before reference is true, then:
+    if (m_pointer_before_reference) {
+        // 1. Let next be toBeRemovedNode’s first following node that is an inclusive descendant of nodeIterator’s root and is not an inclusive descendant of toBeRemovedNode, and null if there is no such node.
+        RefPtr<Node> next = to_be_removed_node.next_in_pre_order(m_root);
+        while (next && (!next->is_inclusive_descendant_of(m_root) || next->is_inclusive_descendant_of(to_be_removed_node)))
+            next = next->next_in_pre_order(m_root);
+
+        // 2. If next is non-null, then set nodeIterator’s reference to next and return.
+        if (next) {
+            m_reference = *next;
+            return;
+        }
+
+        // 3. Otherwise, set nodeIterator’s pointer before reference to false.
+        m_pointer_before_reference = false;
+    }
+
+    // 3. Set nodeIterator’s reference to toBeRemovedNode’s parent, if toBeRemovedNode’s previous sibling is null,
+    if (!to_be_removed_node.previous_sibling()) {
+        VERIFY(to_be_removed_node.parent());
+        m_reference = *to_be_removed_node.parent();
+    } else {
+        // ...and to the inclusive descendant of toBeRemovedNode’s previous sibling that appears last in tree order otherwise.
+        auto* node = to_be_removed_node.previous_sibling();
+        while (node->last_child())
+            node = node->last_child();
+        m_reference = *node;
+    }
 }
 
 }

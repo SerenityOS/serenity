@@ -1037,6 +1037,17 @@ void Document::adopt_node(Node& node)
             inclusive_descendant.adopted_from(old_document);
             return IterationDecision::Continue;
         });
+
+        // Transfer NodeIterators rooted at `node` from old_document to this document.
+        Vector<NodeIterator&> node_iterators_to_transfer;
+        for (auto* node_iterator : old_document.m_node_iterators) {
+            if (node_iterator->root() == &node)
+                node_iterators_to_transfer.append(*node_iterator);
+        }
+        for (auto& node_iterator : node_iterators_to_transfer) {
+            old_document.m_node_iterators.remove(&node_iterator);
+            m_node_iterators.set(&node_iterator);
+        }
     }
 }
 
@@ -1472,6 +1483,18 @@ NonnullRefPtr<NodeIterator> Document::create_node_iterator(Node& root, unsigned 
 NonnullRefPtr<TreeWalker> Document::create_tree_walker(Node& root, unsigned what_to_show, RefPtr<NodeFilter> filter)
 {
     return TreeWalker::create(root, what_to_show, move(filter));
+}
+
+void Document::register_node_iterator(Badge<NodeIterator>, NodeIterator& node_iterator)
+{
+    auto result = m_node_iterators.set(&node_iterator);
+    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+}
+
+void Document::unregister_node_iterator(Badge<NodeIterator>, NodeIterator& node_iterator)
+{
+    bool was_removed = m_node_iterators.remove(&node_iterator);
+    VERIFY(was_removed);
 }
 
 }

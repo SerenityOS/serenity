@@ -19,6 +19,8 @@ class NodeIterator
 public:
     using WrapperType = Bindings::NodeIteratorWrapper;
 
+    virtual ~NodeIterator() override;
+
     static NonnullRefPtr<NodeIterator> create(Node& root, unsigned what_to_show, RefPtr<NodeFilter>);
 
     NonnullRefPtr<Node> root() { return m_root; }
@@ -32,6 +34,8 @@ public:
     JS::ThrowCompletionOr<RefPtr<Node>> previous_node();
 
     void detach();
+
+    void run_pre_removing_steps(Node&);
 
 private:
     NodeIterator(Node& root);
