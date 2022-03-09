@@ -1599,8 +1599,11 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         remainder -= nanoseconds;
     }
 
-    // 20. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: weeks, [[Days]]: days, [[Hours]]: hours, [[Minutes]]: minutes, [[Seconds]]: seconds, [[Milliseconds]]: milliseconds, [[Microseconds]]: microseconds, [[Nanoseconds]]: nanoseconds, [[Remainder]]: remainder }.
-    return RoundedDuration { .years = years, .months = months, .weeks = weeks, .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds, .remainder = remainder };
+    // 20. Let duration be Duration Record { [[Years]]: years, [[Months]]: months,  [[Weeks]]: weeks, [[Days]]: days, [[Hours]]: hours, [[Minutes]]: minutes, [[Seconds]]: seconds, [[Milliseconds]]: milliseconds, [[Microseconds]]: microseconds, [[Nanoseconds]]: nanoseconds }.
+    auto duration = DurationRecord { .years = years, .months = months, .weeks = weeks, .days = days, .hours = hours, .minutes = minutes, .seconds = seconds, .milliseconds = milliseconds, .microseconds = microseconds, .nanoseconds = nanoseconds };
+
+    // 21. Return the Record { [[DurationRecord]]: duration, [[Remainder]]: remainder }.
+    return RoundedDuration { .duration_record = duration, .remainder = remainder };
 }
 
 // 7.5.23 AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ , relativeTo ] ), https://tc39.es/proposal-temporal/#sec-temporal-adjustroundeddurationdays
