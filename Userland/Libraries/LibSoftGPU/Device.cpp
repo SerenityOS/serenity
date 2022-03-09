@@ -991,6 +991,12 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
             quad.out_color.set_z(mix(quad.out_color.z(), texel.z(), dst_alpha));
             break;
         }
+        case GPU::TextureEnvMode::Add:
+            quad.out_color.set_x(quad.out_color.x() + texel.x());
+            quad.out_color.set_y(quad.out_color.y() + texel.y());
+            quad.out_color.set_z(quad.out_color.z() + texel.z());
+            quad.out_color.set_w(quad.out_color.w() * texel.w()); // FIXME: If texture format is `GL_INTENSITY` alpha components must be added (https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glTexEnv.xml)
+            break;
         default:
             VERIFY_NOT_REACHED();
         }

@@ -2057,6 +2057,7 @@ void GLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
     case GL_MODULATE:
     case GL_REPLACE:
     case GL_DECAL:
+    case GL_ADD:
         m_active_texture_unit->set_env_mode(param_enum);
         m_sampler_config_is_dirty = true;
         break;
@@ -3012,6 +3013,9 @@ void GLContext::sync_device_sampler_config()
             break;
         case GL_DECAL:
             config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Decal;
+            break;
+        case GL_ADD:
+            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Add;
             break;
         default:
             VERIFY_NOT_REACHED();

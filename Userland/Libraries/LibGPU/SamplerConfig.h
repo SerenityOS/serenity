@@ -34,6 +34,7 @@ enum class TextureEnvMode {
     Modulate,
     Replace,
     Decal,
+    Add,
 };
 
 struct SamplerConfig final {
