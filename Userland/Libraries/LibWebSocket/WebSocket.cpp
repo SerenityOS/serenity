@@ -437,7 +437,7 @@ void WebSocket::read_frame()
         auto payload_part = payload_part_result.release_value();
         // We read at most "actual_length - read" bytes, so this is safe to do.
         payload.overwrite(read_length, payload_part.data(), payload_part.size());
-        read_length -= payload_part.size();
+        read_length += payload_part.size();
     }
 
     if (is_masked) {
