@@ -13,13 +13,8 @@
 
 __BEGIN_DECLS
 
-// Note: wint_t is unsigned on gcc, and signed on clang.
 #ifndef WEOF
-#    ifdef __clang__
-#        define WEOF (-1)
-#    else
-#        define WEOF (0xffffffffu)
-#    endif
+#    define WEOF (0xffffffffu)
 #endif
 
 #undef WCHAR_MAX
