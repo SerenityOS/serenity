@@ -8,6 +8,7 @@
  */
 
 #include <AK/StringView.h>
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/ClassicStylePainter.h>
@@ -303,7 +304,8 @@ void ClassicStylePainter::paint_window_frame(Painter& painter, IntRect const& re
         // FIXME: This will draw "useless" pixels that'll get drawn over by the window contents.
         // preferrably we should just remove the corner pixels from the completely drawn window
         // but I don't know how to do that yet. :^)
-        painter.fill_rect_with_rounded_corners(rect, base_color, border_radius);
+        AntiAliasingPainter aa_painter { painter };
+        aa_painter.fill_rect_with_rounded_corners(rect, base_color, border_radius);
         return;
     }
 
