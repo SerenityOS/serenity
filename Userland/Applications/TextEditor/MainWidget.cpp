@@ -39,6 +39,7 @@
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
 #include <LibSQL/AST/SyntaxHighlighter.h>
+#include <LibSession/Session.h>
 #include <LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/OutOfProcessWebView.h>
@@ -69,6 +70,10 @@ MainWidget::MainWidget()
 
     m_editor->on_modified_change = [this](bool modified) {
         window()->set_modified(modified);
+        if (modified)
+            Session::Session::the().inhibit_exit();
+        else
+            Session::Session::the().allow_exit();
     };
 
     m_find_replace_widget = *find_descendant_of_type_named<GUI::GroupBox>("find_replace_widget");

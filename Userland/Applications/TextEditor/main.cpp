@@ -13,6 +13,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibMain/Main.h>
+#include <LibSession/Session.h>
 
 using namespace TextEditor;
 
@@ -32,6 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.parse(arguments);
 
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/portal/session", "rw"));
     TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
@@ -52,6 +54,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (text_widget->request_close())
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
+    };
+    Session::Session::the().on_inhibited_exit_prevented = [&] {
+        text_widget->request_close();
     };
 
     if (preview_mode_view == "auto") {
