@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -262,7 +262,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     if (vm.argument(0).is_string()) {
         // a. Let paramString be roundTo.
 
-        // b. Set roundTo to ! OrdinaryObjectCreate(null).
+        // b. Set roundTo to OrdinaryObjectCreate(null).
         round_to = Object::create(global_object, nullptr);
 
         // c. Perform ! CreateDataPropertyOrThrow(roundTo, "smallestUnit", paramString).

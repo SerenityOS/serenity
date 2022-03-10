@@ -432,7 +432,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(GlobalObject& global_object, Va
 
     // 4. If parseResult.[[Name]] is not undefined, then
     if (parse_result.name.has_value()) {
-        // a. If ParseText(! StringToCodePoints(parseResult.[[Name]], TimeZoneNumericUTCOffset)) is not a List of errors, then
+        // a. If ParseText(StringToCodePoints(parseResult.[[Name]], TimeZoneNumericUTCOffset)) is not a List of errors, then
         if (is_valid_time_zone_numeric_utc_offset_syntax(*parse_result.name)) {
             // i. If parseResult.[[OffsetString]] is not undefined, and ! ParseTimeZoneOffsetString(parseResult.[[OffsetString]]) ≠ ! ParseTimeZoneOffsetString(parseResult.[[Name]]), throw a RangeError exception.
             if (parse_result.offset_string.has_value() && (MUST(parse_time_zone_offset_string(global_object, *parse_result.offset_string)) != MUST(parse_time_zone_offset_string(global_object, *parse_result.name))))
@@ -472,7 +472,7 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(GlobalObject& global_object
     if (!offset_nanoseconds_value.is_number())
         return vm.throw_completion<TypeError>(global_object, ErrorType::IsNotA, "Offset nanoseconds value", "number");
 
-    // 4. If ! IsIntegralNumber(offsetNanoseconds) is false, throw a RangeError exception.
+    // 4. If IsIntegralNumber(offsetNanoseconds) is false, throw a RangeError exception.
     if (!offset_nanoseconds_value.is_integral_number())
         return vm.throw_completion<RangeError>(global_object, ErrorType::IsNotAn, "Offset nanoseconds value", "integral number");
 

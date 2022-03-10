@@ -118,7 +118,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
     if (!options)
         options = Object::create(global_object, nullptr);
 
@@ -201,7 +201,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         // e. Assert: timeZoneName is not undefined.
         VERIFY(time_zone_name.has_value());
 
-        // f. If ParseText(! StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is a List of errors, then
+        // f. If ParseText(StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is a List of errors, then
         if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
             // i. If ! IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
             if (!is_valid_time_zone_name(*time_zone_name))
@@ -367,7 +367,7 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(GlobalObject& globa
 // 6.5.5 AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-addzoneddatetime
 ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigInt const& epoch_nanoseconds, Value time_zone, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options)
 {
-    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
     if (!options)
         options = Object::create(global_object, nullptr);
 

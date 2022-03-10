@@ -640,7 +640,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::round)
     if (vm.argument(0).is_string()) {
         // a. Let paramString be roundTo.
 
-        // b. Set roundTo to ! OrdinaryObjectCreate(null).
+        // b. Set roundTo to OrdinaryObjectCreate(null).
         round_to = Object::create(global_object, nullptr);
 
         // c. Perform ! CreateDataPropertyOrThrow(roundTo, "smallestUnit", paramString).
@@ -844,7 +844,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::get_iso_fields)
     // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
     auto* date_time = TRY(typed_this_object(global_object));
 
-    // 3. Let fields be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
     auto* fields = Object::create(global_object, global_object.object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", dateTime.[[Calendar]]).

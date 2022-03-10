@@ -176,7 +176,7 @@ ThrowCompletionOr<double> to_integer_without_rounding(GlobalObject& global_objec
     if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
         return 0;
 
-    // 3. If ! IsIntegralNumber(number) is false, throw a RangeError exception.
+    // 3. If IsIntegralNumber(number) is false, throw a RangeError exception.
     if (!number.is_integral_number())
         return vm.template throw_completion<RangeError>(global_object, error_type, args...);
 

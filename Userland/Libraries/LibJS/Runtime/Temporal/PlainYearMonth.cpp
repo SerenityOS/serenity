@@ -35,7 +35,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
     if (!options)
         options = Object::create(global_object, nullptr);
 
@@ -79,7 +79,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
     // 8. Set result to ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[Day]]).
     auto* creation_result = TRY(create_temporal_year_month(global_object, result.year, result.month, *calendar, result.day));
 
-    // 9. Let canonicalYearMonthOptions be ! OrdinaryObjectCreate(null).
+    // 9. Let canonicalYearMonthOptions be OrdinaryObjectCreate(null).
     auto* canonical_year_month_options = Object::create(global_object, nullptr);
 
     // 10. Return ? YearMonthFromFields(calendar, result, canonicalYearMonthOptions).

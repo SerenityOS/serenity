@@ -57,13 +57,13 @@ BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, u8 month
     // 3. Assert: ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is true.
     VERIFY(is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond));
 
-    // 4. Let date be ! MakeDay(𝔽(year), 𝔽(month − 1), 𝔽(day)).
+    // 4. Let date be MakeDay(𝔽(year), 𝔽(month − 1), 𝔽(day)).
     auto date = make_day(global_object, Value(year), Value(month - 1), Value(day));
 
-    // 5. Let time be ! MakeTime(𝔽(hour), 𝔽(minute), 𝔽(second), 𝔽(millisecond)).
+    // 5. Let time be MakeTime(𝔽(hour), 𝔽(minute), 𝔽(second), 𝔽(millisecond)).
     auto time = make_time(global_object, Value(hour), Value(minute), Value(second), Value(millisecond));
 
-    // 6. Let ms be ! MakeDate(date, time).
+    // 6. Let ms be MakeDate(date, time).
     auto ms = make_date(date, time);
 
     // 7. Assert: ms is finite.
@@ -135,7 +135,7 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_obj
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
     if (!options)
         options = Object::create(global_object, nullptr);
 
@@ -355,7 +355,7 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
     if (!options)
         options = Object::create(global_object, nullptr);
 

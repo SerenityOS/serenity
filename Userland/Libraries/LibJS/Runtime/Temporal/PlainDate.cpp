@@ -73,7 +73,7 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
     if (!options)
         options = Object::create(global_object, nullptr);
 

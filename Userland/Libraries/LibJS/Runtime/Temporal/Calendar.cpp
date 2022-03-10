@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -88,7 +88,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject& global_object, O
     // 1. Let fields be ? GetMethod(calendar, "fields").
     auto fields = TRY(Value(&calendar).get_method(global_object, vm.names.fields));
 
-    // 2. Let fieldsArray be ! CreateArrayFromList(fieldNames).
+    // 2. Let fieldsArray be CreateArrayFromList(fieldNames).
     auto field_names_values = MarkedVector<Value> { vm.heap() };
     for (auto& field_name : field_names)
         field_names_values.append(js_string(vm, field_name));
@@ -774,7 +774,7 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
     }
 
-    // 11. If ! SameValueNonNumeric(monthCode, ! BuildISOMonthCode(numberPart)) is false, then
+    // 11. If SameValueNonNumeric(monthCode, ! BuildISOMonthCode(numberPart)) is false, then
     if (month_code_string != build_iso_month_code(number_part_integer)) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
@@ -983,7 +983,7 @@ ThrowCompletionOr<Object*> default_merge_fields(GlobalObject& global_object, Obj
 {
     auto& vm = global_object.vm();
 
-    // 1. Let merged be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 1. Let merged be OrdinaryObjectCreate(%Object.prototype%).
     auto* merged = Object::create(global_object, global_object.object_prototype());
 
     // 2. Let originalKeys be ? EnumerableOwnPropertyNames(fields, key).

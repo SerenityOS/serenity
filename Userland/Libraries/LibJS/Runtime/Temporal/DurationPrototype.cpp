@@ -356,7 +356,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
     if (vm.argument(0).is_string()) {
         // a. Let paramString be roundTo.
 
-        // b. Set roundTo to ! OrdinaryObjectCreate(null).
+        // b. Set roundTo to OrdinaryObjectCreate(null).
         round_to = Object::create(global_object, nullptr);
 
         // c. Perform ! CreateDataPropertyOrThrow(roundTo, "smallestUnit", paramString).
@@ -477,7 +477,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
     if (vm.argument(0).is_string()) {
         // a. Let paramString be totalOf.
 
-        // b. Set totalOf to ! OrdinaryObjectCreate(null).
+        // b. Set totalOf to OrdinaryObjectCreate(null).
         total_of = Object::create(global_object, nullptr);
 
         // c. Perform ! CreateDataPropertyOrThrow(totalOf, "unit", paramString).

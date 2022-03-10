@@ -630,13 +630,13 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(GlobalObject& 
 
         // d. Repeat, while years ≠ 0,
         while (years != 0) {
-            // i. Let addOptions be ! OrdinaryObjectCreate(null).
+            // i. Let addOptions be OrdinaryObjectCreate(null).
             auto* add_options = Object::create(global_object, nullptr);
 
             // ii. Let newRelativeTo be ? CalendarDateAdd(calendar, relativeTo, oneYear, addOptions, dateAdd).
             auto* new_relative_to = TRY(calendar_date_add(global_object, *calendar, relative_to, *one_year, add_options, date_add));
 
-            // iii. Let untilOptions be ! OrdinaryObjectCreate(null).
+            // iii. Let untilOptions be OrdinaryObjectCreate(null).
             auto* until_options = Object::create(global_object, nullptr);
 
             // iv. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
@@ -851,7 +851,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
         // i. Let dateAdd be ? GetMethod(calendar, "dateAdd").
         auto* date_add = TRY(Value(&calendar).get_method(global_object, vm.names.dateAdd));
 
-        // j. Let addOptions be ! OrdinaryObjectCreate(null).
+        // j. Let addOptions be OrdinaryObjectCreate(null).
         auto* add_options = Object::create(global_object, nullptr);
 
         // k. Let newRelativeTo be ? CalendarDateAdd(calendar, relativeTo, oneYear, addOptions, dateAdd).
@@ -860,7 +860,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
         // l. Let dateUntil be ? GetMethod(calendar, "dateUntil").
         auto* date_until = TRY(Value(&calendar).get_method(global_object, vm.names.dateUntil));
 
-        // m. Let untilOptions be ! OrdinaryObjectCreate(null).
+        // m. Let untilOptions be OrdinaryObjectCreate(null).
         auto* until_options = Object::create(global_object, nullptr);
 
         // n. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
@@ -883,13 +883,13 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
             // iii. Set relativeTo to newRelativeTo.
             relative_to = new_relative_to;
 
-            // iv. Set addOptions to ! OrdinaryObjectCreate(null).
+            // iv. Set addOptions to OrdinaryObjectCreate(null).
             add_options = Object::create(global_object, nullptr);
 
             // v. Set newRelativeTo to ? CalendarDateAdd(calendar, relativeTo, oneYear, addOptions, dateAdd).
             new_relative_to = TRY(calendar_date_add(global_object, calendar, relative_to, *one_year, add_options, date_add));
 
-            // vi. Set untilOptions to ! OrdinaryObjectCreate(null).
+            // vi. Set untilOptions to OrdinaryObjectCreate(null).
             until_options = Object::create(global_object, nullptr);
 
             // vii. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
@@ -1017,13 +1017,13 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
         // d. Let dateAdd be ? GetMethod(calendar, "dateAdd").
         auto* date_add = TRY(Value(&calendar).get_method(global_object, vm.names.dateAdd));
 
-        // e. Let firstAddOptions be ! OrdinaryObjectCreate(null).
+        // e. Let firstAddOptions be OrdinaryObjectCreate(null).
         auto* first_add_options = Object::create(global_object, nullptr);
 
         // f. Let intermediate be ? CalendarDateAdd(calendar, relativeTo, dateDuration1, firstAddOptions, dateAdd).
         auto* intermediate = TRY(calendar_date_add(global_object, calendar, &relative_to, *date_duration1, first_add_options, date_add));
 
-        // g. Let secondAddOptions be ! OrdinaryObjectCreate(null).
+        // g. Let secondAddOptions be OrdinaryObjectCreate(null).
         auto* second_add_options = Object::create(global_object, nullptr);
 
         // h. Let end be ? CalendarDateAdd(calendar, intermediate, dateDuration2, secondAddOptions, dateAdd).
@@ -1032,7 +1032,7 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
         // i. Let dateLargestUnit be ! LargerOfTwoTemporalUnits("day", largestUnit).
         auto date_largest_unit = larger_of_two_temporal_units("day"sv, largest_unit);
 
-        // j. Let differenceOptions be ! OrdinaryObjectCreate(null).
+        // j. Let differenceOptions be OrdinaryObjectCreate(null).
         auto* difference_options = Object::create(global_object, nullptr);
 
         // k. Perform ! CreateDataPropertyOrThrow(differenceOptions, "largestUnit", dateLargestUnit).
@@ -1084,7 +1084,7 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
 // 7.5.23 MoveRelativeDate ( calendar, relativeTo, duration ), https://tc39.es/proposal-temporal/#sec-temporal-moverelativedate
 ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(GlobalObject& global_object, Object& calendar, PlainDate& relative_to, Duration& duration)
 {
-    // 1. Let options be ! OrdinaryObjectCreate(null).
+    // 1. Let options be OrdinaryObjectCreate(null).
     auto* options = Object::create(global_object, nullptr);
 
     // 2. Let newDate be ? CalendarDateAdd(calendar, relativeTo, duration, options).
@@ -1210,7 +1210,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // b. Let dateAdd be ? GetMethod(calendar, "dateAdd").
         auto* date_add = TRY(Value(calendar).get_method(global_object, vm.names.dateAdd));
 
-        // c. Let firstAddOptions be ! OrdinaryObjectCreate(null).
+        // c. Let firstAddOptions be OrdinaryObjectCreate(null).
         auto* first_add_options = Object::create(global_object, nullptr);
 
         // d. Let yearsLater be ? CalendarDateAdd(calendar, relativeTo, yearsDuration, firstAddOptions, dateAdd).
@@ -1219,7 +1219,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // e. Let yearsMonthsWeeks be ? CreateTemporalDuration(years, months, weeks, 0, 0, 0, 0, 0, 0, 0).
         auto* years_months_weeks = TRY(create_temporal_duration(global_object, years, months, weeks, 0, 0, 0, 0, 0, 0, 0));
 
-        // f. Let secondAddOptions be ! OrdinaryObjectCreate(null).
+        // f. Let secondAddOptions be OrdinaryObjectCreate(null).
         auto* second_add_options = Object::create(global_object, nullptr);
 
         // g. Let yearsMonthsWeeksLater be ? CalendarDateAdd(calendar, relativeTo, yearsMonthsWeeks, secondAddOptions, dateAdd).
@@ -1237,13 +1237,13 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // k. Let daysDuration be ? CreateTemporalDuration(0, 0, 0, days, 0, 0, 0, 0, 0, 0).
         auto* days_duration = TRY(create_temporal_duration(global_object, 0, 0, 0, days, 0, 0, 0, 0, 0, 0));
 
-        // l. Let thirdAddOptions be ! OrdinaryObjectCreate(null).
+        // l. Let thirdAddOptions be OrdinaryObjectCreate(null).
         auto* third_add_options = Object::create(global_object, nullptr);
 
         // m. Let daysLater be ? CalendarDateAdd(calendar, relativeTo, daysDuration, thirdAddOptions, dateAdd).
         auto* days_later = TRY(calendar_date_add(global_object, *calendar, relative_to, *days_duration, third_add_options, date_add));
 
-        // n. Let untilOptions be ! OrdinaryObjectCreate(null).
+        // n. Let untilOptions be OrdinaryObjectCreate(null).
         auto* until_options = Object::create(global_object, nullptr);
 
         // o. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "year").
@@ -1264,7 +1264,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // t. Let yearsDuration be ? CreateTemporalDuration(yearsPassed, 0, 0, 0, 0, 0, 0, 0, 0, 0).
         years_duration = TRY(create_temporal_duration(global_object, years_passed, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-        // u. Let fourthAddOptions be ! OrdinaryObjectCreate(null).
+        // u. Let fourthAddOptions be OrdinaryObjectCreate(null).
         auto* fourth_add_options = Object::create(global_object, nullptr);
 
         // v. Set relativeTo to ? CalendarDateAdd(calendar, relativeTo, yearsDuration, fourthAddOptions, dateAdd).
@@ -1312,7 +1312,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // b. Let dateAdd be ? GetMethod(calendar, "dateAdd").
         auto* date_add = TRY(Value(calendar).get_method(global_object, vm.names.dateAdd));
 
-        // c. Let firstAddOptions be ! OrdinaryObjectCreate(null).
+        // c. Let firstAddOptions be OrdinaryObjectCreate(null).
         auto* first_add_options = Object::create(global_object, nullptr);
 
         // d. Let yearsMonthsLater be ? CalendarDateAdd(calendar, relativeTo, yearsMonths, firstAddOptions, dateAdd).
@@ -1321,7 +1321,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // e. Let yearsMonthsWeeks be ? CreateTemporalDuration(years, months, weeks, 0, 0, 0, 0, 0, 0, 0).
         auto* years_months_weeks = TRY(create_temporal_duration(global_object, years, months, weeks, 0, 0, 0, 0, 0, 0, 0));
 
-        // f. Let secondAddOptions be ! OrdinaryObjectCreate(null).
+        // f. Let secondAddOptions be OrdinaryObjectCreate(null).
         auto* seconds_add_options = Object::create(global_object, nullptr);
 
         // g. Let yearsMonthsWeeksLater be ? CalendarDateAdd(calendar, relativeTo, yearsMonthsWeeks, secondAddOptions, dateAdd).
