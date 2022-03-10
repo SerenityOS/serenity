@@ -25,6 +25,7 @@ public:
     virtual void after_children_paint(PaintContext&, PaintPhase) const { }
 
     Layout::Node const& layout_node() const { return m_layout_node; }
+    auto const& computed_values() const { return m_layout_node.computed_values(); }
 
 protected:
     explicit Paintable(Layout::Node const& layout_node)
@@ -48,7 +49,6 @@ public:
     Layout::Box const& layout_box() const { return static_cast<Layout::Box const&>(Paintable::layout_node()); }
 
     auto const& box_model() const { return layout_box().box_model(); }
-    auto const& computed_values() const { return layout_box().computed_values(); }
 
     struct OverflowData {
         Gfx::FloatRect scrollable_overflow_rect;

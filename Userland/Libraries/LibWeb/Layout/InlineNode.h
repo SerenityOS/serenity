@@ -15,11 +15,7 @@ public:
     InlineNode(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~InlineNode() override;
 
-    void paint_inline(PaintContext&, Painting::PaintPhase) const;
-
-private:
-    template<typename Callback>
-    void for_each_fragment(Callback) const;
+    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
 };
 
 }

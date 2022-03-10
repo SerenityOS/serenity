@@ -9,7 +9,6 @@
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Painting/StackingContext.h>
@@ -18,11 +17,8 @@ namespace Web::Painting {
 
 static void paint_node(Layout::Node const& layout_node, PaintContext& context, PaintPhase phase)
 {
-    // FIXME: This whole thing is hairy. Find a nicer solution for painting InlineNode.
-    if (layout_node.is_box())
-        static_cast<Layout::Box const&>(layout_node).paint_box()->paint(context, phase);
-    else if (is<Layout::InlineNode>(layout_node))
-        static_cast<Layout::InlineNode const&>(layout_node).paint_inline(context, phase);
+    if (auto const* paintable = layout_node.paintable())
+        paintable->paint(context, phase);
 }
 
 StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)

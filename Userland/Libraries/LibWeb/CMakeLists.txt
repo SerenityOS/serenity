@@ -288,6 +288,7 @@ set(SOURCES
     Painting/CanvasPaintable.cpp
     Painting/CheckBoxPaintable.cpp
     Painting/ImagePaintable.cpp
+    Painting/InlinePaintable.cpp
     Painting/MarkerPaintable.cpp
     Painting/NestedBrowsingContextPaintable.cpp
     Painting/PaintContext.cpp
