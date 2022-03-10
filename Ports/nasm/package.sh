@@ -5,4 +5,5 @@ files="https://www.nasm.us/pub/nasm/releasebuilds/${version}/nasm-${version}.tar
 auth_type=sha256
 useconfigure=true
 use_fresh_config_sub=true
+config_sub_path=autoconf/helpers/config.sub
 makeopts=()
