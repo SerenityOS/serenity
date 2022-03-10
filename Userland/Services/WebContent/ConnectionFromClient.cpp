@@ -304,7 +304,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
         };
         auto serialize_node_box_sizing_json = [](Web::Layout::Node const* layout_node) -> String {
             if (!layout_node || !layout_node->is_box()) {
-                return "";
+                return "{}";
             }
             auto* box = static_cast<Web::Layout::Box const*>(layout_node);
             auto box_model = box->box_model();
