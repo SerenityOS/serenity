@@ -73,7 +73,7 @@ struct Formatter<OwnPtr<Kernel::KString>> : Formatter<StringView> {
     {
         if (value)
             return Formatter<StringView>::format(builder, value->view());
-        return Formatter<StringView>::format(builder, "[out of memory]"sv);
+        return Formatter<StringView>::format(builder, "[nullptr]"sv);
     }
 };
 
