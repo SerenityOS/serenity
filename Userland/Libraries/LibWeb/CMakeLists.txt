@@ -295,6 +295,7 @@ set(SOURCES
     Painting/NestedBrowsingContextPaintable.cpp
     Painting/PaintContext.cpp
     Painting/Paintable.cpp
+    Painting/PaintableBox.cpp
     Painting/ProgressPaintable.cpp
     Painting/RadioButtonPaintable.cpp
     Painting/SVGGeometryPaintable.cpp

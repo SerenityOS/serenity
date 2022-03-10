@@ -13,7 +13,7 @@
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::HTML {
 

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <LibWeb/Layout/Progress.h>
-#include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::Painting {
 

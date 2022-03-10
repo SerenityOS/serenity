@@ -22,7 +22,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Painting/PaintContext.h>
-#include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 REGISTER_WIDGET(Web, InProcessWebView)
