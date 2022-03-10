@@ -398,8 +398,8 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
     // 12. Let balanceResult be ? BalanceDuration(dateDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
     auto balance_result_ = TRY(balance_duration(global_object, date_difference->days(), time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, *js_bigint(vm, { (i32)time_difference.nanoseconds }), largest_unit));
 
-    // 13. Return the Record { [[Years]]: dateDifference.[[Years]], [[Months]]: dateDifference.[[Months]], [[Weeks]]: dateDifference.[[Weeks]], [[Days]]: balanceResult.[[Days]], [[Hours]]: balanceResult.[[Hours]], [[Minutes]]: balanceResult.[[Minutes]], [[Seconds]]: balanceResult.[[Seconds]], [[Milliseconds]]: balanceResult.[[Milliseconds]], [[Microseconds]]: balanceResult.[[Microseconds]], [[Nanoseconds]]: balanceResult.[[Nanoseconds]] }.
-    return DurationRecord { .years = date_difference->years(), .months = date_difference->months(), .weeks = date_difference->weeks(), .days = balance_result_.days, .hours = balance_result_.hours, .minutes = balance_result_.minutes, .seconds = balance_result_.seconds, .milliseconds = balance_result_.milliseconds, .microseconds = balance_result_.microseconds, .nanoseconds = balance_result_.nanoseconds };
+    // 13. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]]).
+    return create_duration_record(date_difference->years(), date_difference->months(), date_difference->weeks(), balance_result_.days, balance_result_.hours, balance_result_.minutes, balance_result_.seconds, balance_result_.milliseconds, balance_result_.microseconds, balance_result_.nanoseconds);
 }
 
 }

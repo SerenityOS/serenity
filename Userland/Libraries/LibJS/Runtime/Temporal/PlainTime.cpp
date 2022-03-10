@@ -66,8 +66,8 @@ TimeDurationRecord difference_time(u8 hour1, u8 minute1, u8 second1, u16 millise
     // 8. Let bt be ! BalanceTime(hours × sign, minutes × sign, seconds × sign, milliseconds × sign, microseconds × sign, nanoseconds × sign).
     auto bt = balance_time(hours * sign, minutes * sign, seconds * sign, milliseconds * sign, microseconds * sign, nanoseconds * sign);
 
-    // 9. Return the Record { [[Days]]: bt.[[Days]] × sign, [[Hours]]: bt.[[Hour]] × sign, [[Minutes]]: bt.[[Minute]] × sign, [[Seconds]]: bt.[[Second]] × sign, [[Milliseconds]]: bt.[[Millisecond]] × sign, [[Microseconds]]: bt.[[Microsecond]] × sign, [[Nanoseconds]]: bt.[[Nanosecond]] × sign }.
-    return TimeDurationRecord { .days = static_cast<double>(bt.days * sign), .hours = static_cast<double>(bt.hour * sign), .minutes = static_cast<double>(bt.minute * sign), .seconds = static_cast<double>(bt.second * sign), .milliseconds = static_cast<double>(bt.millisecond * sign), .microseconds = static_cast<double>(bt.microsecond * sign), .nanoseconds = static_cast<double>(bt.nanosecond * sign) };
+    // 9. Return ! CreateTimeDurationRecord(bt.[[Days]] × sign, bt.[[Hour]] × sign, bt.[[Minute]] × sign, bt.[[Second]] × sign, bt.[[Millisecond]] × sign, bt.[[Microsecond]] × sign, bt.[[Nanosecond]] × sign).
+    return create_time_duration_record(static_cast<double>(bt.days * sign), static_cast<double>(bt.hour * sign), static_cast<double>(bt.minute * sign), static_cast<double>(bt.second * sign), static_cast<double>(bt.millisecond * sign), static_cast<double>(bt.microsecond * sign), static_cast<double>(bt.nanosecond * sign));
 }
 
 // 4.5.2 ToTemporalTime ( item [ , overflow ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltime
