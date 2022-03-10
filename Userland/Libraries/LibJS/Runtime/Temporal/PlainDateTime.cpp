@@ -368,20 +368,20 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
     // 4. Let dateSign be ! CompareISODate(y2, mon2, d2, y1, mon1, d1).
     auto date_sign = compare_iso_date(year2, month2, day2, year1, month1, day1);
 
-    // 5. Let balanceResult be ! BalanceISODate(y1, mon1, d1 + timeDifference.[[Days]]).
-    auto balance_result = balance_iso_date(year1, month1, day1 + time_difference.days);
+    // 5. Let adjustedDate be ! BalanceISODate(y1, mon1, d1 + timeDifference.[[Days]]).
+    auto adjusted_date = balance_iso_date(year1, month1, day1 + time_difference.days);
 
     // 6. If timeSign is -dateSign, then
     if (time_sign == -date_sign) {
-        // a. Set balanceResult to ! BalanceISODate(balanceResult.[[Year]], balanceResult.[[Month]], balanceResult.[[Day]] - timeSign).
-        balance_result = balance_iso_date(balance_result.year, balance_result.month, balance_result.day - time_sign);
+        // a. Set adjustedDate to ! BalanceISODate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]] - timeSign).
+        adjusted_date = balance_iso_date(adjusted_date.year, adjusted_date.month, adjusted_date.day - time_sign);
 
         // b. Set timeDifference to ? BalanceDuration(-timeSign, timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
         time_difference = TRY(balance_duration(global_object, -time_sign, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, *js_bigint(vm, { (i32)time_difference.nanoseconds }), largest_unit));
     }
 
-    // 7. Let date1 be ? CreateTemporalDate(balanceResult.[[Year]], balanceResult.[[Month]], balanceResult.[[Day]], calendar).
-    auto* date1 = TRY(create_temporal_date(global_object, balance_result.year, balance_result.month, balance_result.day, calendar));
+    // 7. Let date1 be ? CreateTemporalDate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]], calendar).
+    auto* date1 = TRY(create_temporal_date(global_object, adjusted_date.year, adjusted_date.month, adjusted_date.day, calendar));
 
     // 8. Let date2 be ? CreateTemporalDate(y2, mon2, d2, calendar).
     auto* date2 = TRY(create_temporal_date(global_object, year2, month2, day2, calendar));
@@ -396,10 +396,10 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
     auto* date_difference = TRY(calendar_date_until(global_object, calendar, date1, date2, *until_options));
 
     // 12. Let balanceResult be ? BalanceDuration(dateDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
-    auto balance_result_ = TRY(balance_duration(global_object, date_difference->days(), time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, *js_bigint(vm, { (i32)time_difference.nanoseconds }), largest_unit));
+    auto balance_result = TRY(balance_duration(global_object, date_difference->days(), time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, *js_bigint(vm, { (i32)time_difference.nanoseconds }), largest_unit));
 
     // 13. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]]).
-    return create_duration_record(date_difference->years(), date_difference->months(), date_difference->weeks(), balance_result_.days, balance_result_.hours, balance_result_.minutes, balance_result_.seconds, balance_result_.milliseconds, balance_result_.microseconds, balance_result_.nanoseconds);
+    return create_duration_record(date_difference->years(), date_difference->months(), date_difference->weeks(), balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds);
 }
 
 }
