@@ -34,7 +34,7 @@ StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)
     }
 }
 
-void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box, StackingContextPaintPhase phase)
+void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box, StackingContextPaintPhase phase) const
 {
     if (phase == StackingContextPaintPhase::Foreground)
         box.before_children_paint(context, PaintPhase::Foreground);
@@ -91,7 +91,7 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box
         box.after_children_paint(context, PaintPhase::Foreground);
 }
 
-void StackingContext::paint_internal(PaintContext& context)
+void StackingContext::paint_internal(PaintContext& context) const
 {
     // For a more elaborate description of the algorithm, see CSS 2.1 Appendix E
     // Draw the background and borders for the context root (steps 1, 2)
@@ -122,7 +122,7 @@ void StackingContext::paint_internal(PaintContext& context)
     paint_descendants(context, m_box, StackingContextPaintPhase::FocusAndOverlay);
 }
 
-void StackingContext::paint(PaintContext& context)
+void StackingContext::paint(PaintContext& context) const
 {
     Gfx::PainterStateSaver saver(context.painter());
     if (m_box.is_fixed_position()) {

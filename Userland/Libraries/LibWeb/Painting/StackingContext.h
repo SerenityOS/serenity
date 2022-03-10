@@ -34,8 +34,8 @@ public:
         FocusAndOverlay,
     };
 
-    void paint_descendants(PaintContext&, Layout::Node&, StackingContextPaintPhase);
-    void paint(PaintContext&);
+    void paint_descendants(PaintContext&, Layout::Node&, StackingContextPaintPhase) const;
+    void paint(PaintContext&) const;
     Layout::HitTestResult hit_test(Gfx::IntPoint const&, Layout::HitTestType) const;
 
     void dump(int indent = 0) const;
@@ -45,7 +45,7 @@ private:
     StackingContext* const m_parent { nullptr };
     Vector<StackingContext*> m_children;
 
-    void paint_internal(PaintContext&);
+    void paint_internal(PaintContext&) const;
 };
 
 }
