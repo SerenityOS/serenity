@@ -34,7 +34,7 @@ bool BlockContainer::should_clip_overflow() const
     return computed_values().overflow_x() != CSS::Overflow::Visible && computed_values().overflow_y() != CSS::Overflow::Visible;
 }
 
-void BlockContainer::paint(PaintContext& context, PaintPhase phase)
+void BlockContainer::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     if (!is_visible())
         return;
@@ -64,7 +64,7 @@ void BlockContainer::paint(PaintContext& context, PaintPhase phase)
     }
 
     // FIXME: Merge this loop with the above somehow..
-    if (phase == PaintPhase::FocusOutline) {
+    if (phase == Painting::PaintPhase::FocusOutline) {
         for (auto& line_box : m_paint_box->m_line_boxes) {
             for (auto& fragment : line_box.fragments()) {
                 auto* node = fragment.layout_node().dom_node();

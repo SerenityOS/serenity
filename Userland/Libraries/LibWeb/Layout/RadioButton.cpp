@@ -26,14 +26,14 @@ RadioButton::~RadioButton()
 {
 }
 
-void RadioButton::paint(PaintContext& context, PaintPhase phase)
+void RadioButton::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     if (!is_visible())
         return;
 
     LabelableNode::paint(context, phase);
 
-    if (phase == PaintPhase::Foreground) {
+    if (phase == Painting::PaintPhase::Foreground) {
         Gfx::StylePainter::paint_radio_button(context.painter(), enclosing_int_rect(m_paint_box->absolute_rect()), context.palette(), dom_node().checked(), m_being_pressed);
     }
 }

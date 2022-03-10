@@ -20,7 +20,7 @@ public:
     virtual ~ImageBox() override;
 
     virtual void prepare_for_replaced_layout() override;
-    virtual void paint(PaintContext&, PaintPhase) override;
+    virtual void paint(PaintContext&, Painting::PaintPhase) override;
 
     const DOM::Element& dom_node() const { return static_cast<const DOM::Element&>(ReplacedBox::dom_node()); }
 

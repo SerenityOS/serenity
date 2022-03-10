@@ -18,7 +18,7 @@ public:
     BlockContainer(DOM::Document&, DOM::Node*, CSS::ComputedValues);
     virtual ~BlockContainer() override;
 
-    virtual void paint(PaintContext&, PaintPhase) override;
+    virtual void paint(PaintContext&, Painting::PaintPhase) override;
 
     virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
 

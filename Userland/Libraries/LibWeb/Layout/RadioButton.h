@@ -16,7 +16,7 @@ public:
     RadioButton(DOM::Document&, HTML::HTMLInputElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~RadioButton() override;
 
-    virtual void paint(PaintContext&, PaintPhase) override;
+    virtual void paint(PaintContext&, Painting::PaintPhase) override;
 
     const HTML::HTMLInputElement& dom_node() const { return static_cast<const HTML::HTMLInputElement&>(LabelableNode::dom_node()); }
     HTML::HTMLInputElement& dom_node() { return static_cast<HTML::HTMLInputElement&>(LabelableNode::dom_node()); }

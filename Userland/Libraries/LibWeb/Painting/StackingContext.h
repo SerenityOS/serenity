@@ -9,11 +9,19 @@
 #include <AK/Vector.h>
 #include <LibWeb/Layout/Node.h>
 
-namespace Web::Layout {
+namespace Web::Painting {
+
+enum class PaintPhase {
+    Background,
+    Border,
+    Foreground,
+    FocusOutline,
+    Overlay,
+};
 
 class StackingContext {
 public:
-    StackingContext(Box&, StackingContext* parent);
+    StackingContext(Layout::Box&, StackingContext* parent);
 
     StackingContext* parent() { return m_parent; }
     const StackingContext* parent() const { return m_parent; }
@@ -26,14 +34,14 @@ public:
         FocusAndOverlay,
     };
 
-    void paint_descendants(PaintContext&, Node&, StackingContextPaintPhase);
+    void paint_descendants(PaintContext&, Layout::Node&, StackingContextPaintPhase);
     void paint(PaintContext&);
-    HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const;
+    Layout::HitTestResult hit_test(Gfx::IntPoint const&, Layout::HitTestType) const;
 
     void dump(int indent = 0) const;
 
 private:
-    Box& m_box;
+    Layout::Box& m_box;
     StackingContext* const m_parent { nullptr };
     Vector<StackingContext*> m_children;
 

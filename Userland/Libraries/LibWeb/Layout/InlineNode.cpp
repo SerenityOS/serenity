@@ -27,11 +27,11 @@ InlineNode::~InlineNode()
 {
 }
 
-void InlineNode::paint(PaintContext& context, PaintPhase phase)
+void InlineNode::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     auto& painter = context.painter();
 
-    if (phase == PaintPhase::Background) {
+    if (phase == Painting::PaintPhase::Background) {
         auto top_left_border_radius = computed_values().border_top_left_radius();
         auto top_right_border_radius = computed_values().border_top_right_radius();
         auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
@@ -74,7 +74,7 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
         });
     }
 
-    if (phase == PaintPhase::Border) {
+    if (phase == Painting::PaintPhase::Border) {
         auto top_left_border_radius = computed_values().border_top_left_radius();
         auto top_right_border_radius = computed_values().border_top_right_radius();
         auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
@@ -114,7 +114,7 @@ void InlineNode::paint(PaintContext& context, PaintPhase phase)
 
     // FIXME: We check for a non-null dom_node(), since pseudo-elements have a null one and were getting
     //        highlighted incorrectly. A better solution will be needed if we want to inspect them too.
-    if (phase == PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
+    if (phase == Painting::PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
         // FIXME: This paints a double-thick border between adjacent fragments, where ideally there
         //        would be none. Once we implement non-rectangular outlines for the `outline` CSS
         //        property, we can use that here instead.

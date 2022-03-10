@@ -113,11 +113,11 @@ void TextNode::paint_text_decoration(Gfx::Painter& painter, LineBoxFragment cons
     }
 }
 
-void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment, PaintPhase phase) const
+void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment, Painting::PaintPhase phase) const
 {
     auto& painter = context.painter();
 
-    if (phase == PaintPhase::Foreground) {
+    if (phase == Painting::PaintPhase::Foreground) {
         auto fragment_absolute_rect = fragment.absolute_rect();
 
         painter.set_font(font());
@@ -366,7 +366,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::It
     return {};
 }
 
-void TextNode::paint(PaintContext&, PaintPhase)
+void TextNode::paint(PaintContext&, Painting::PaintPhase)
 {
 }
 

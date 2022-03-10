@@ -25,14 +25,14 @@ void CanvasBox::prepare_for_replaced_layout()
     set_intrinsic_height(dom_node().height());
 }
 
-void CanvasBox::paint(PaintContext& context, PaintPhase phase)
+void CanvasBox::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     if (!is_visible())
         return;
 
     ReplacedBox::paint(context, phase);
 
-    if (phase == PaintPhase::Foreground) {
+    if (phase == Painting::PaintPhase::Foreground) {
         // FIXME: This should be done at a different level. Also rect() does not include padding etc!
         if (!context.viewport_rect().intersects(enclosing_int_rect(m_paint_box->absolute_rect())))
             return;

@@ -19,7 +19,7 @@ public:
     SVG::SVGGeometryElement& dom_node() { return verify_cast<SVG::SVGGeometryElement>(SVGGraphicsBox::dom_node()); }
     SVG::SVGGeometryElement const& dom_node() const { return verify_cast<SVG::SVGGeometryElement>(SVGGraphicsBox::dom_node()); }
 
-    virtual void paint(PaintContext& context, PaintPhase phase) override;
+    virtual void paint(PaintContext& context, Painting::PaintPhase phase) override;
 
     float viewbox_scaling() const;
     Gfx::FloatPoint viewbox_origin() const;

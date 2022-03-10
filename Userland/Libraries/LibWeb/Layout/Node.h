@@ -26,14 +26,6 @@ enum class LayoutMode {
     OnlyRequiredLineBreaks,
 };
 
-enum class PaintPhase {
-    Background,
-    Border,
-    Foreground,
-    FocusOutline,
-    Overlay,
-};
-
 struct HitTestResult {
     RefPtr<Node> layout_node;
     int index_in_node { 0 };
@@ -92,10 +84,10 @@ public:
     virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
     virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
 
-    virtual void before_children_paint(PaintContext&, PaintPhase) {};
-    virtual void paint(PaintContext&, PaintPhase) = 0;
-    virtual void paint_fragment(PaintContext&, const LineBoxFragment&, PaintPhase) const { }
-    virtual void after_children_paint(PaintContext&, PaintPhase) {};
+    virtual void before_children_paint(PaintContext&, Painting::PaintPhase) {};
+    virtual void paint(PaintContext&, Painting::PaintPhase) = 0;
+    virtual void paint_fragment(PaintContext&, const LineBoxFragment&, Painting::PaintPhase) const { }
+    virtual void after_children_paint(PaintContext&, Painting::PaintPhase) {};
 
     // These are used to optimize hot is<T> variants for some classes where dynamic_cast is too slow.
     virtual bool is_box() const { return false; }

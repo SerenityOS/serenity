@@ -15,7 +15,7 @@
 
 namespace Web::Layout {
 
-void LineBoxFragment::paint(PaintContext& context, PaintPhase phase)
+void LineBoxFragment::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     for (auto* ancestor = layout_node().parent(); ancestor; ancestor = ancestor->parent()) {
         if (!ancestor->is_visible())

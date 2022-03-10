@@ -14,9 +14,9 @@ SVGSVGBox::SVGSVGBox(DOM::Document& document, SVG::SVGSVGElement& element, Nonnu
 {
 }
 
-void SVGSVGBox::before_children_paint(PaintContext& context, PaintPhase phase)
+void SVGSVGBox::before_children_paint(PaintContext& context, Painting::PaintPhase phase)
 {
-    if (phase != PaintPhase::Foreground)
+    if (phase != Painting::PaintPhase::Foreground)
         return;
 
     if (!context.has_svg_context())
@@ -25,10 +25,10 @@ void SVGSVGBox::before_children_paint(PaintContext& context, PaintPhase phase)
     SVGGraphicsBox::before_children_paint(context, phase);
 }
 
-void SVGSVGBox::after_children_paint(PaintContext& context, PaintPhase phase)
+void SVGSVGBox::after_children_paint(PaintContext& context, Painting::PaintPhase phase)
 {
     SVGGraphicsBox::after_children_paint(context, phase);
-    if (phase != PaintPhase::Foreground)
+    if (phase != Painting::PaintPhase::Foreground)
         return;
     context.clear_svg_context();
 }

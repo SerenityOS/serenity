@@ -15,7 +15,7 @@ public:
     InlineNode(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~InlineNode() override;
 
-    virtual void paint(PaintContext&, PaintPhase) override;
+    virtual void paint(PaintContext&, Painting::PaintPhase) override;
 
 private:
     template<typename Callback>

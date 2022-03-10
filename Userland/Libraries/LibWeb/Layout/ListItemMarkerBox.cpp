@@ -55,9 +55,9 @@ ListItemMarkerBox::~ListItemMarkerBox()
 {
 }
 
-void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
+void ListItemMarkerBox::paint(PaintContext& context, Painting::PaintPhase phase)
 {
-    if (phase != PaintPhase::Foreground)
+    if (phase != Painting::PaintPhase::Foreground)
         return;
 
     auto enclosing = enclosing_int_rect(m_paint_box->absolute_rect());

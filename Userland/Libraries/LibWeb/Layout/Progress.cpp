@@ -21,12 +21,12 @@ Progress::~Progress()
 {
 }
 
-void Progress::paint(PaintContext& context, PaintPhase phase)
+void Progress::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     if (!is_visible())
         return;
 
-    if (phase == PaintPhase::Foreground) {
+    if (phase == Painting::PaintPhase::Foreground) {
         // FIXME: This does not support floating point value() and max()
         Gfx::StylePainter::paint_progressbar(context.painter(), enclosing_int_rect(m_paint_box->absolute_rect()), context.palette(), 0, dom_node().max(), dom_node().value(), "");
     }

@@ -31,14 +31,14 @@ void ButtonBox::prepare_for_replaced_layout()
     set_intrinsic_height(font().glyph_height());
 }
 
-void ButtonBox::paint(PaintContext& context, PaintPhase phase)
+void ButtonBox::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     if (!is_visible())
         return;
 
     LabelableNode::paint(context, phase);
 
-    if (phase == PaintPhase::Foreground) {
+    if (phase == Painting::PaintPhase::Foreground) {
         auto text_rect = enclosing_int_rect(m_paint_box->absolute_rect());
         if (m_being_pressed)
             text_rect.translate_by(1, 1);

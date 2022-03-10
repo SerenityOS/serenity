@@ -264,6 +264,7 @@ class PerformanceTiming;
 }
 
 namespace Web::Painting {
+enum class PaintPhase;
 class Box;
 }
 
@@ -299,7 +300,6 @@ class WebSocket;
 
 namespace Web::Layout {
 enum class LayoutMode;
-enum class PaintPhase;
 class BlockContainer;
 class BlockFormattingContext;
 class Box;

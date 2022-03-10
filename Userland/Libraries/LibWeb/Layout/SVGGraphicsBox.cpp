@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Layout/SVGGraphicsBox.h>
+#include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {
 
@@ -13,10 +14,10 @@ SVGGraphicsBox::SVGGraphicsBox(DOM::Document& document, SVG::SVGGraphicsElement&
 {
 }
 
-void SVGGraphicsBox::before_children_paint(PaintContext& context, PaintPhase phase)
+void SVGGraphicsBox::before_children_paint(PaintContext& context, Painting::PaintPhase phase)
 {
     SVGBox::before_children_paint(context, phase);
-    if (phase != PaintPhase::Foreground)
+    if (phase != Painting::PaintPhase::Foreground)
         return;
 
     auto& graphics_element = verify_cast<SVG::SVGGraphicsElement>(dom_node());

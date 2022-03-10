@@ -72,7 +72,7 @@ void ImageBox::prepare_for_replaced_layout()
     }
 }
 
-void ImageBox::paint(PaintContext& context, PaintPhase phase)
+void ImageBox::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     if (!is_visible())
         return;
@@ -83,7 +83,7 @@ void ImageBox::paint(PaintContext& context, PaintPhase phase)
 
     ReplacedBox::paint(context, phase);
 
-    if (phase == PaintPhase::Foreground) {
+    if (phase == Painting::PaintPhase::Foreground) {
         if (renders_as_alt_text()) {
             auto& image_element = verify_cast<HTML::HTMLImageElement>(dom_node());
             context.painter().set_font(Gfx::FontDatabase::default_font());

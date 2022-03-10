@@ -16,7 +16,7 @@ public:
     Progress(DOM::Document&, HTML::HTMLProgressElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~Progress() override;
 
-    virtual void paint(PaintContext&, PaintPhase) override;
+    virtual void paint(PaintContext&, Painting::PaintPhase) override;
 
     const HTML::HTMLProgressElement& dom_node() const { return static_cast<const HTML::HTMLProgressElement&>(LabelableNode::dom_node()); }
     HTML::HTMLProgressElement& dom_node() { return static_cast<HTML::HTMLProgressElement&>(LabelableNode::dom_node()); }

@@ -20,7 +20,7 @@ public:
 
 private:
     virtual bool is_break_node() const final { return true; }
-    virtual void paint(PaintContext&, PaintPhase) override;
+    virtual void paint(PaintContext&, Painting::PaintPhase) override;
 };
 
 template<>

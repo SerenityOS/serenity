@@ -32,11 +32,11 @@ void FrameBox::prepare_for_replaced_layout()
     set_intrinsic_height(dom_node().attribute(HTML::AttributeNames::height).to_int().value_or(150));
 }
 
-void FrameBox::paint(PaintContext& context, PaintPhase phase)
+void FrameBox::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     ReplacedBox::paint(context, phase);
 
-    if (phase == PaintPhase::Foreground) {
+    if (phase == Painting::PaintPhase::Foreground) {
         auto* hosted_document = dom_node().content_document_without_origin_check();
         if (!hosted_document)
             return;

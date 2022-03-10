@@ -34,21 +34,21 @@ Box::~Box()
 {
 }
 
-void Box::paint(PaintContext& context, PaintPhase phase)
+void Box::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     if (!is_visible())
         return;
 
-    if (phase == PaintPhase::Background) {
+    if (phase == Painting::PaintPhase::Background) {
         paint_background(context);
         paint_box_shadow(context);
     }
 
-    if (phase == PaintPhase::Border) {
+    if (phase == Painting::PaintPhase::Border) {
         paint_border(context);
     }
 
-    if (phase == PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
+    if (phase == Painting::PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
         auto content_rect = m_paint_box->absolute_rect();
 
         auto margin_box = box_model().margin_box();
@@ -88,7 +88,7 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text, Gfx::TextAlignment::Center, context.palette().color(Gfx::ColorRole::TooltipText));
     }
 
-    if (phase == PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && verify_cast<DOM::Element>(*dom_node()).is_focused()) {
+    if (phase == Painting::PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && verify_cast<DOM::Element>(*dom_node()).is_focused()) {
         context.painter().draw_rect(enclosing_int_rect(m_paint_box->absolute_rect()), context.palette().focus_outline());
     }
 }
@@ -217,7 +217,7 @@ bool Box::is_body() const
     return dom_node() && dom_node() == document().body();
 }
 
-StackingContext* Box::enclosing_stacking_context()
+Painting::StackingContext* Box::enclosing_stacking_context()
 {
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (!is<Box>(ancestor))
@@ -232,7 +232,7 @@ StackingContext* Box::enclosing_stacking_context()
     VERIFY_NOT_REACHED();
 }
 
-void Box::before_children_paint(PaintContext& context, PaintPhase phase)
+void Box::before_children_paint(PaintContext& context, Painting::PaintPhase phase)
 {
     NodeWithStyleAndBoxModelMetrics::before_children_paint(context, phase);
     // FIXME: Support more overflow variations.
@@ -242,7 +242,7 @@ void Box::before_children_paint(PaintContext& context, PaintPhase phase)
     }
 }
 
-void Box::after_children_paint(PaintContext& context, PaintPhase phase)
+void Box::after_children_paint(PaintContext& context, Painting::PaintPhase phase)
 {
     NodeWithStyleAndBoxModelMetrics::after_children_paint(context, phase);
     // FIXME: Support more overflow variations.

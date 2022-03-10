@@ -19,14 +19,14 @@ SVGGeometryBox::SVGGeometryBox(DOM::Document& document, SVG::SVGGeometryElement&
 {
 }
 
-void SVGGeometryBox::paint(PaintContext& context, PaintPhase phase)
+void SVGGeometryBox::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     if (!is_visible())
         return;
 
     SVGGraphicsBox::paint(context, phase);
 
-    if (phase != PaintPhase::Foreground)
+    if (phase != Painting::PaintPhase::Foreground)
         return;
 
     auto& geometry_element = dom_node();

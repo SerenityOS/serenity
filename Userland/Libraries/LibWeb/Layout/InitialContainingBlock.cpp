@@ -24,7 +24,7 @@ InitialContainingBlock::~InitialContainingBlock()
 
 void InitialContainingBlock::build_stacking_context_tree()
 {
-    set_stacking_context(make<StackingContext>(*this, nullptr));
+    set_stacking_context(make<Painting::StackingContext>(*this, nullptr));
 
     for_each_in_inclusive_subtree_of_type<Box>([&](Box& box) {
         if (&box == this)
@@ -35,7 +35,7 @@ void InitialContainingBlock::build_stacking_context_tree()
         }
         auto* parent_context = box.enclosing_stacking_context();
         VERIFY(parent_context);
-        box.set_stacking_context(make<StackingContext>(box, parent_context));
+        box.set_stacking_context(make<Painting::StackingContext>(box, parent_context));
         return IterationDecision::Continue;
     });
 }

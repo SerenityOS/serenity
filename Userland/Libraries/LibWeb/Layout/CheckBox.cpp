@@ -27,14 +27,14 @@ CheckBox::~CheckBox()
 {
 }
 
-void CheckBox::paint(PaintContext& context, PaintPhase phase)
+void CheckBox::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     if (!is_visible())
         return;
 
     LabelableNode::paint(context, phase);
 
-    if (phase == PaintPhase::Foreground) {
+    if (phase == Painting::PaintPhase::Foreground) {
         Gfx::StylePainter::paint_check_box(context.painter(), enclosing_int_rect(m_paint_box->absolute_rect()), context.palette(), dom_node().enabled(), dom_node().checked(), m_being_pressed);
     }
 }

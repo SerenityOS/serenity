@@ -20,8 +20,8 @@ public:
     SVG::SVGElement& dom_node() { return verify_cast<SVG::SVGElement>(*Box::dom_node()); }
     SVG::SVGElement const& dom_node() const { return verify_cast<SVG::SVGElement>(*Box::dom_node()); }
 
-    virtual void before_children_paint(PaintContext& context, PaintPhase phase) override;
-    virtual void after_children_paint(PaintContext& context, PaintPhase phase) override;
+    virtual void before_children_paint(PaintContext& context, Painting::PaintPhase phase) override;
+    virtual void after_children_paint(PaintContext& context, Painting::PaintPhase phase) override;
 
 private:
     virtual bool is_svg_box() const final { return true; }

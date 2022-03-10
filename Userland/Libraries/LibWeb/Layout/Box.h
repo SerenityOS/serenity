@@ -30,12 +30,12 @@ public:
 
     bool is_body() const;
 
-    StackingContext* stacking_context() { return m_stacking_context; }
-    const StackingContext* stacking_context() const { return m_stacking_context; }
-    void set_stacking_context(NonnullOwnPtr<StackingContext> context) { m_stacking_context = move(context); }
-    StackingContext* enclosing_stacking_context();
+    Painting::StackingContext* stacking_context() { return m_stacking_context; }
+    Painting::StackingContext const* stacking_context() const { return m_stacking_context; }
+    void set_stacking_context(NonnullOwnPtr<Painting::StackingContext> context) { m_stacking_context = move(context); }
+    Painting::StackingContext* enclosing_stacking_context();
 
-    virtual void paint(PaintContext&, PaintPhase) override;
+    virtual void paint(PaintContext&, Painting::PaintPhase) override;
     virtual void paint_border(PaintContext& context);
     virtual void paint_box_shadow(PaintContext& context);
     virtual void paint_background(PaintContext& context);
@@ -50,8 +50,8 @@ public:
     bool has_intrinsic_height() const { return intrinsic_height().has_value(); }
     bool has_intrinsic_aspect_ratio() const { return intrinsic_aspect_ratio().has_value(); }
 
-    virtual void before_children_paint(PaintContext&, PaintPhase) override;
-    virtual void after_children_paint(PaintContext&, PaintPhase) override;
+    virtual void before_children_paint(PaintContext&, Painting::PaintPhase) override;
+    virtual void after_children_paint(PaintContext&, Painting::PaintPhase) override;
 
     virtual ~Box() override;
 
@@ -64,7 +64,7 @@ protected:
 private:
     virtual bool is_box() const final { return true; }
 
-    OwnPtr<StackingContext> m_stacking_context;
+    OwnPtr<Painting::StackingContext> m_stacking_context;
 };
 
 template<>
