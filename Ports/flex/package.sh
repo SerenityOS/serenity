@@ -5,6 +5,7 @@ files="https://github.com/westes/flex/releases/download/v${version}/flex-${versi
 https://github.com/westes/flex/releases/download/v${version}/flex-${version}.tar.gz.sig flex-${version}.tar.gz.sig"
 useconfigure=true
 use_fresh_config_sub=true
+config_sub_path=build-aux/config.sub
 configopts=("--disable-bootstrap")
 depends=("m4" "pcre2")
 auth_type="sig"
