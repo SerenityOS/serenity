@@ -69,8 +69,8 @@ ThrowCompletionOr<Calendar*> get_builtin_calendar(GlobalObject& global_object, S
     if (!is_builtin_calendar(identifier))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, identifier);
 
-    // 2. Return ? Construct(%Temporal.Calendar%, « id »).
-    return static_cast<Calendar*>(TRY(construct(global_object, *global_object.temporal_calendar_constructor(), js_string(vm, identifier))));
+    // 2. Return ! CreateTemporalCalendar(id).
+    return MUST(create_temporal_calendar(global_object, identifier));
 }
 
 // 12.1.4 GetISO8601Calendar ( ), https://tc39.es/proposal-temporal/#sec-temporal-getiso8601calendar
