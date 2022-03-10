@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "SessionExitInhibitionDialog.h"
 #include "ShutdownDialog.h"
 #include "TaskbarWindow.h"
 #include <AK/Debug.h>
@@ -24,6 +25,7 @@
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Menu.h>
 #include <LibMain/Main.h>
+#include <LibSession/Session.h>
 #include <WindowServer/Window.h>
 #include <serenity.h>
 #include <signal.h>
@@ -52,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ConnectionToWindowMangerServer::the();
     Desktop::Launcher::ensure_connection();
 
-    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
+    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix"));
 
     auto menu = TRY(build_system_menu());
     menu->realize_menu_if_needed();
@@ -270,6 +272,12 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
     }));
     system_menu->add_separator();
     system_menu->add_action(GUI::Action::create("E&xit...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/power.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
+        if (Session::Session::the().is_exit_inhibited()) {
+            auto result = SessionExitInhibitionDialog::show();
+            if (result == SessionExitInhibitionDialog::ExecResult::ExecCancel)
+                return;
+        }
+
         auto command = ShutdownDialog::show();
 
         if (command.size() == 0)
