@@ -460,17 +460,17 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
     // 2. Set nanoseconds to ℝ(nanoseconds).
     auto nanoseconds = nanoseconds_bigint.big_integer();
 
-    // 3. Let sign be ! ℝ(Sign(𝔽(nanoseconds))).
-    auto sign = Temporal::sign(nanoseconds);
-
-    // 4. Let dayLengthNs be 8.64 × 10^13.
+    // 3. Let dayLengthNs be 8.64 × 10^13.
     auto day_length_ns = "86400000000000"_sbigint;
 
-    // 5. If sign is 0, then
-    if (sign == 0) {
+    // 4. If nanoseconds = 0, then
+    if (nanoseconds == "0"_bigint) {
         // a. Return the Record { [[Days]]: 0, [[Nanoseconds]]: 0, [[DayLength]]: dayLengthNs }.
         return NanosecondsToDaysResult { .days = 0, .nanoseconds = make_handle(js_bigint(vm, { 0 })), .day_length = day_length_ns.to_double() };
     }
+
+    // 5. If nanoseconds < 0, let sign be −1; else, let sign be 1.
+    auto sign = nanoseconds.is_negative() ? -1 : 1;
 
     // 6. If Type(relativeTo) is not Object or relativeTo does not have an [[InitializedTemporalZonedDateTime]] internal slot, then
     if (!relative_to_value.is_object() || !is<ZonedDateTime>(relative_to_value.as_object())) {
