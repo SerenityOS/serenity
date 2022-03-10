@@ -134,8 +134,8 @@ ThrowCompletionOr<Duration*> to_temporal_duration(GlobalObject& global_object, V
         result = TRY(parse_temporal_duration_string(global_object, string));
     }
 
-    // 3. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
-    return create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
+    // 3. Return ! CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
+    return MUST(create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
 }
 
 // 7.5.9 ToTemporalDurationRecord ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldurationrecord
@@ -188,7 +188,13 @@ ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject& glob
         return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
     }
 
-    // 6. Return result.
+    // 6. If ! IsValidDuration(result.[[Years]], result.[[Months]], result.[[Weeks]] result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]) is false, then
+    if (!is_valid_duration(result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds)) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
+    }
+
+    // 7. Return result.
     return result;
 }
 
@@ -1618,11 +1624,7 @@ ThrowCompletionOr<DurationRecord> to_limited_temporal_duration(GlobalObject& glo
         duration = TRY(to_temporal_duration_record(global_object, temporal_duration_like.as_object()));
     }
 
-    // 3. If ! IsValidDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]) is false, throw a RangeError exception.
-    if (!is_valid_duration(duration.years, duration.months, duration.weeks, duration.days, duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, duration.nanoseconds))
-        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
-
-    // 4. For each row of Table 7, except the header row, in table order, do
+    // 3. For each row of Table 7, except the header row, in table order, do
     for (auto& [field, property] : temporal_duration_like_properties<DurationRecord, double>(vm)) {
         // a. Let prop be the Property Name value of the current row.
 
@@ -1636,7 +1638,7 @@ ThrowCompletionOr<DurationRecord> to_limited_temporal_duration(GlobalObject& glo
         }
     }
 
-    // 5. Return duration.
+    // 4. Return duration.
     return duration;
 }
 
