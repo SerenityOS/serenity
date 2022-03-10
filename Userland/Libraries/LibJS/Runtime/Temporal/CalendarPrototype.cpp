@@ -535,7 +535,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
         field_names.append(next_value);
     }
 
-    // 8. Return ! CreateArrayFromList(fieldNames).
+    // 8. Return CreateArrayFromList(fieldNames).
     return Array::create_from(global_object, field_names);
 }
 

@@ -38,7 +38,7 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
     if (!options)
         options = Object::create(global_object, nullptr);
 
@@ -139,7 +139,7 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
     // 9. Set result to ? CreateTemporalMonthDay(result.[[Month]], result.[[Day]], calendar, referenceISOYear).
     auto* plain_month_day = TRY(create_temporal_month_day(global_object, result.month, result.day, *calendar, reference_iso_year));
 
-    // 10. Let canonicalMonthDayOptions be ! OrdinaryObjectCreate(null).
+    // 10. Let canonicalMonthDayOptions be OrdinaryObjectCreate(null).
     auto* canonical_month_day_options = Object::create(global_object, nullptr);
 
     // 11. Return ? MonthDayFromFields(calendar, result, canonicalMonthDayOptions).

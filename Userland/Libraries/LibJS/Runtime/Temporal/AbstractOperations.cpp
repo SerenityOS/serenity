@@ -84,7 +84,7 @@ ThrowCompletionOr<Object*> get_options_object(GlobalObject& global_object, Value
 
     // 1. If options is undefined, then
     if (options.is_undefined()) {
-        // a. Return ! OrdinaryObjectCreate(null).
+        // a. Return OrdinaryObjectCreate(null).
         return Object::create(global_object, nullptr);
     }
 
@@ -129,7 +129,7 @@ ThrowCompletionOr<Value> get_option(GlobalObject& global_object, Object const& o
 
     // 7. If type is Boolean, then
     if (type == OptionType::Boolean) {
-        // a. Set value to ! ToBoolean(value).
+        // a. Set value to ToBoolean(value).
         value = Value(value.to_boolean());
     }
     // 8. Else if type is Number, then
@@ -617,7 +617,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
         // e. Let fields be ? PrepareTemporalFields(value, fieldNames, «»).
         auto* fields = TRY(prepare_temporal_fields(global_object, value_object, field_names, {}));
 
-        // f. Let dateOptions be ! OrdinaryObjectCreate(null).
+        // f. Let dateOptions be OrdinaryObjectCreate(null).
         auto* date_options = Object::create(global_object, nullptr);
 
         // g. Perform ! CreateDataPropertyOrThrow(dateOptions, "overflow", "constrain").
@@ -666,7 +666,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
 
         // f. If timeZoneName is not undefined, then
         if (time_zone_name.has_value()) {
-            // i. If ParseText(! StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is not a List of errors, then
+            // i. If ParseText(StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is not a List of errors, then
             // FIXME: Logic error in the spec (check for no errors -> check for errors).
             //        See: https://github.com/tc39/proposal-temporal/pull/2000
             if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
@@ -828,7 +828,7 @@ ThrowCompletionOr<Object*> merge_largest_unit_option(GlobalObject& global_object
 {
     auto& vm = global_object.vm();
 
-    // 1. Let merged be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 1. Let merged be OrdinaryObjectCreate(%Object.prototype%).
     auto* merged = Object::create(global_object, global_object.object_prototype());
 
     // 2. Let keys be ? EnumerableOwnPropertyNames(options, key).
@@ -1113,7 +1113,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(GlobalObject& global_object, 
     else
         normalized_year = year_part.value_or("0");
 
-    // 7. If ! SameValue(year, "-000000") is true, throw a RangeError exception.
+    // 7. If SameValue(year, "-000000") is true, throw a RangeError exception.
     if (normalized_year == "-000000"sv)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidExtendedYearNegativeZero);
 
@@ -1345,7 +1345,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
 
     // 1. Assert: Type(isoString) is String.
 
-    // 2. Let duration be ParseText(! StringToCodePoints(isoString), TemporalDurationString).
+    // 2. Let duration be ParseText(StringToCodePoints(isoString), TemporalDurationString).
     auto parse_result = parse_iso8601(Production::TemporalDurationString, iso_string);
 
     // 3. If duration is a List of errors, throw a RangeError exception.
@@ -1390,7 +1390,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
         if (minutes_part.has_value() || f_minutes_part.has_value() || seconds_part.has_value() || f_seconds_part.has_value())
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationStringFractionNotLast, iso_string, "hours"sv, "minutes or seconds"sv);
 
-        // b. Let fHoursDigits be the substring of ! CodePointsToString(fHours) from 1.
+        // b. Let fHoursDigits be the substring of CodePointsToString(fHours) from 1.
         auto f_hours_digits = f_hours_part->substring_view(1);
 
         // c. Let fHoursScale be the length of fHoursDigits.
@@ -1413,7 +1413,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
         if (seconds_part.has_value() || f_seconds_part.has_value())
             return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDurationStringFractionNotLast, iso_string, "minutes"sv, "seconds"sv);
 
-        // b. Let fMinutesDigits be the substring of ! CodePointsToString(fMinutes) from 1.
+        // b. Let fMinutesDigits be the substring of CodePointsToString(fMinutes) from 1.
         auto f_minutes_digits = f_minutes_part->substring_view(1);
 
         // c. Let fMinutesScale be the length of fMinutesDigits.
@@ -1437,7 +1437,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
 
     // 15. If fSeconds is not empty, then
     if (f_seconds_part.has_value()) {
-        // a. Let fSecondsDigits be the substring of ! CodePointsToString(fSeconds) from 1.
+        // a. Let fSecondsDigits be the substring of CodePointsToString(fSeconds) from 1.
         auto f_seconds_digits = f_seconds_part->substring_view(1);
 
         // b. Let fSecondsScale be the length of fSecondsDigits.
@@ -1588,9 +1588,9 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject& global_
     // 4. Let result be ? ParseISODateTime(isoString).
     auto result = TRY(parse_iso_date_time(global_object, *parse_result));
 
-    // 5. Assert: ParseText(! StringToCodePoints(isoString), CalendarDate) is a List of errors.
-    // 6. Assert: ParseText(! StringToCodePoints(isoString), DateSpecYearMonth) is a List of errors.
-    // 7. Assert: ParseText(! StringToCodePoints(isoString), DateSpecMonthDay) is a List of errors.
+    // 5. Assert: ParseText(StringToCodePoints(isoString), CalendarDate) is a List of errors.
+    // 6. Assert: ParseText(StringToCodePoints(isoString), DateSpecYearMonth) is a List of errors.
+    // 7. Assert: ParseText(StringToCodePoints(isoString), DateSpecMonthDay) is a List of errors.
 
     // 8. Return the Record { [[Hour]]: result.[[Hour]], [[Minute]]: result.[[Minute]], [[Second]]: result.[[Second]], [[Millisecond]]: result.[[Millisecond]], [[Microsecond]]: result.[[Microsecond]], [[Nanosecond]]: result.[[Nanosecond]], [[Calendar]]: result.[[Calendar]] }.
     return TemporalTime { .hour = result.hour, .minute = result.minute, .second = result.second, .millisecond = result.millisecond, .microsecond = result.microsecond, .nanosecond = result.nanosecond, .calendar = move(result.calendar) };
@@ -1603,7 +1603,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
 
     // 1. Assert: Type(isoString) is String.
 
-    // 2. Let parseResult be ParseText(! StringToCodePoints(isoString), TemporalTimeZoneString).
+    // 2. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalTimeZoneString).
     auto parse_result = parse_iso8601(Production::TemporalTimeZoneString, iso_string);
 
     // 3. If parseResult is a List of errors, then
@@ -1620,7 +1620,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     // 5. If name is empty, then
     //    a. Set name to undefined.
     // 6. Else,
-    //    a. Set name to ! CodePointsToString(name).
+    //    a. Set name to CodePointsToString(name).
     // NOTE: No-op.
 
     // 7. If z is not empty, then
@@ -1632,7 +1632,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject
     // 8. If offsetString is empty, then
     //    a. Set offsetString to undefined.
     // 9. Else,
-    //    a. Set offsetString to ! CodePointsToString(offsetString).
+    //    a. Set offsetString to CodePointsToString(offsetString).
     // NOTE: No-op.
 
     // 10. Return the Record { [[Z]]: false, [[OffsetString]]: offsetString, [[Name]]: name }.
@@ -1691,7 +1691,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject& global_object, 
 
     // 1. Assert: Type(fields) is Object.
 
-    // 2. Let result be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 2. Let result be OrdinaryObjectCreate(%Object.prototype%).
     auto* result = Object::create(global_object, global_object.object_prototype());
     VERIFY(result);
 
@@ -1742,7 +1742,7 @@ ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject& global_
 
     // 1. Assert: Type(fields) is Object.
 
-    // 2. Let result be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 2. Let result be OrdinaryObjectCreate(%Object.prototype%).
     auto* result = Object::create(global_object, global_object.object_prototype());
 
     // 3. Let any be false.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -245,7 +245,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_plain_date)
     // 11. Set mergedFields to ? PrepareTemporalFields(mergedFields, mergedFieldNames, «»).
     merged_fields = TRY(prepare_temporal_fields(global_object, *merged_fields, merged_field_names, {}));
 
-    // 12. Let options be ! OrdinaryObjectCreate(null).
+    // 12. Let options be OrdinaryObjectCreate(null).
     auto* options = Object::create(global_object, nullptr);
 
     // 13. Perform ! CreateDataPropertyOrThrow(options, "overflow", "reject").
@@ -262,7 +262,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::get_iso_fields)
     // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
     auto* month_day = TRY(typed_this_object(global_object));
 
-    // 3. Let fields be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
     auto* fields = Object::create(global_object, global_object.object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", monthDay.[[Calendar]]).

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -143,7 +143,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
         // b. Let instant be ! CreateTemporalInstant(ℤ(epochNanoseconds − timeZone.[[OffsetNanoseconds]])).
         auto* instant = MUST(create_temporal_instant(global_object, *js_bigint(vm, epoch_nanoseconds->big_integer().minus(Crypto::SignedBigInteger::create_from(*time_zone->offset_nanoseconds())))));
 
-        // c. Return ! CreateArrayFromList(« instant »).
+        // c. Return CreateArrayFromList(« instant »).
         return Array::create_from(global_object, { instant });
     }
 
@@ -162,7 +162,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
         possible_instants.append(instant);
     }
 
-    // 8. Return ! CreateArrayFromList(possibleInstants).
+    // 8. Return CreateArrayFromList(possibleInstants).
     return Array::create_from(global_object, possible_instants);
 }
 

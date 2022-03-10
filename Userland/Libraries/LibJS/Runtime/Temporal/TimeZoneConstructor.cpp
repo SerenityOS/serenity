@@ -50,7 +50,7 @@ ThrowCompletionOr<Object*> TimeZoneConstructor::construct(FunctionObject& new_ta
     // 2. Set identifier to ? ToString(identifier).
     auto identifier = TRY(vm.argument(0).to_string(global_object));
 
-    // 3. Let parseResult be ParseText(! StringToCodePoints(identifier), TimeZoneNumericUTCOffset).
+    // 3. Let parseResult be ParseText(StringToCodePoints(identifier), TimeZoneNumericUTCOffset).
     // 4. If parseResult is a List of errors, then
     if (!is_valid_time_zone_numeric_utc_offset_syntax(identifier)) {
         // a. If ! IsValidTimeZoneName(identifier) is false, then
