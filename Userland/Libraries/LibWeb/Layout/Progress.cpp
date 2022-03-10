@@ -7,7 +7,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/Progress.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Layout {
 

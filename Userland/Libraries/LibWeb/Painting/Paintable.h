@@ -13,14 +13,14 @@
 
 namespace Web::Painting {
 
-class Box {
+class Paintable {
 public:
-    static NonnullOwnPtr<Box> create(Layout::Box const& layout_box)
+    static NonnullOwnPtr<Paintable> create(Layout::Box const& layout_box)
     {
-        return adopt_own(*new Box(layout_box));
+        return adopt_own(*new Paintable(layout_box));
     }
 
-    virtual ~Box();
+    virtual ~Paintable();
 
     Layout::Box const& m_layout_box;
 
@@ -110,19 +110,19 @@ public:
     StackingContext* enclosing_stacking_context();
 
 protected:
-    explicit Box(Layout::Box const&);
+    explicit Paintable(Layout::Box const&);
 
 private:
     OwnPtr<Painting::StackingContext> m_stacking_context;
 };
 
-class BoxWithLines : public Box {
+class PaintableWithLines : public Paintable {
 public:
-    static NonnullOwnPtr<BoxWithLines> create(Layout::BlockContainer const& block_container)
+    static NonnullOwnPtr<PaintableWithLines> create(Layout::BlockContainer const& block_container)
     {
-        return adopt_own(*new BoxWithLines(block_container));
+        return adopt_own(*new PaintableWithLines(block_container));
     }
-    virtual ~BoxWithLines() override;
+    virtual ~PaintableWithLines() override;
 
     Vector<Layout::LineBox> const& line_boxes() const { return m_line_boxes; }
     void set_line_boxes(Vector<Layout::LineBox>&& line_boxes) { m_line_boxes = move(line_boxes); }
@@ -139,7 +139,7 @@ public:
     }
 
 private:
-    BoxWithLines(Layout::BlockContainer const&);
+    PaintableWithLines(Layout::BlockContainer const&);
 
     Vector<Layout::LineBox> m_line_boxes;
 };

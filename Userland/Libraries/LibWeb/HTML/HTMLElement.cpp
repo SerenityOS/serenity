@@ -22,7 +22,7 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
 

@@ -26,7 +26,7 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/SVGBox.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <stdio.h>
 
 namespace Web {

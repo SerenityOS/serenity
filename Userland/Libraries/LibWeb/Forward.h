@@ -265,8 +265,8 @@ class PerformanceTiming;
 
 namespace Web::Painting {
 enum class PaintPhase;
-class Box;
-class BoxWithLines;
+class Paintable;
+class PaintableWithLines;
 }
 
 namespace Web::RequestIdleCallback {

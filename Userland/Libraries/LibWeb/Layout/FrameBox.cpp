@@ -10,7 +10,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Layout {
 

@@ -5,7 +5,7 @@
  */
 
 #include <LibWeb/Layout/SVGSVGBox.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Layout {
 

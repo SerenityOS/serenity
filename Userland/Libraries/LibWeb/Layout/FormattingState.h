@@ -10,7 +10,7 @@
 #include <LibGfx/Point.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Layout {
 
@@ -55,12 +55,12 @@ struct FormattingState {
         float border_box_width() const { return border_box_left() + content_width + border_box_right(); }
         float border_box_height() const { return border_box_top() + content_height + border_box_bottom(); }
 
-        Optional<Painting::Box::OverflowData> overflow_data;
+        Optional<Painting::Paintable::OverflowData> overflow_data;
 
-        Painting::Box::OverflowData& ensure_overflow_data()
+        Painting::Paintable::OverflowData& ensure_overflow_data()
         {
             if (!overflow_data.has_value())
-                overflow_data = Painting::Box::OverflowData {};
+                overflow_data = Painting::Paintable::OverflowData {};
             return *overflow_data;
         }
 

@@ -15,7 +15,7 @@
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/BorderPainting.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
 namespace Web::Layout {
@@ -34,7 +34,7 @@ Box::~Box()
 {
 }
 
-void Box::set_paint_box(OwnPtr<Painting::Box> paint_box)
+void Box::set_paint_box(OwnPtr<Painting::Paintable> paint_box)
 {
     m_paint_box = move(paint_box);
 }

@@ -35,7 +35,7 @@
 #include <LibWeb/Layout/TableRowGroupBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Namespace.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::DOM {
 

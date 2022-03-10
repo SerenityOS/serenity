@@ -11,7 +11,7 @@
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/ImageBox.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Layout {
 

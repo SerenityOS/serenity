@@ -12,7 +12,7 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <WebContent/WebContentClientEndpoint.h>
 
 namespace WebContent {

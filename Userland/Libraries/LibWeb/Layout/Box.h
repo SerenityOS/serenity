@@ -20,10 +20,10 @@ struct LineBoxFragmentCoordinate {
 
 class Box : public NodeWithStyleAndBoxModelMetrics {
 public:
-    Painting::Box const* paint_box() const { return m_paint_box.ptr(); }
-    void set_paint_box(OwnPtr<Painting::Box>);
+    Painting::Paintable const* paint_box() const { return m_paint_box.ptr(); }
+    void set_paint_box(OwnPtr<Painting::Paintable>);
 
-    OwnPtr<Painting::Box> m_paint_box;
+    OwnPtr<Painting::Paintable> m_paint_box;
 
     bool is_out_of_flow(FormattingContext const&) const;
 

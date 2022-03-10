@@ -21,8 +21,8 @@
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/EventHandler.h>
-#include <LibWeb/Painting/Box.h>
 #include <LibWeb/Painting/PaintContext.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 REGISTER_WIDGET(Web, InProcessWebView)

@@ -8,7 +8,7 @@
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 

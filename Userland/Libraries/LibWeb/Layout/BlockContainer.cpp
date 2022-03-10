@@ -11,7 +11,7 @@
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Layout {
 
@@ -131,9 +131,9 @@ bool BlockContainer::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&
     return true;
 }
 
-Painting::BoxWithLines const* BlockContainer::paint_box() const
+Painting::PaintableWithLines const* BlockContainer::paint_box() const
 {
-    return static_cast<Painting::BoxWithLines const*>(Box::paint_box());
+    return static_cast<Painting::PaintableWithLines const*>(Box::paint_box());
 }
 
 }

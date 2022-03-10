@@ -5,29 +5,29 @@
  */
 
 #include <LibWeb/Layout/BlockContainer.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Painting {
 
-Box::Box(Layout::Box const& layout_box)
+Paintable::Paintable(Layout::Box const& layout_box)
     : m_layout_box(layout_box)
 {
 }
 
-Box::~Box()
+Paintable::~Paintable()
 {
 }
 
-BoxWithLines::BoxWithLines(Layout::BlockContainer const& layout_box)
-    : Box(layout_box)
+PaintableWithLines::PaintableWithLines(Layout::BlockContainer const& layout_box)
+    : Paintable(layout_box)
 {
 }
 
-BoxWithLines::~BoxWithLines()
+PaintableWithLines::~PaintableWithLines()
 {
 }
 
-void Box::set_offset(const Gfx::FloatPoint& offset)
+void Paintable::set_offset(const Gfx::FloatPoint& offset)
 {
     if (m_offset == offset)
         return;
@@ -36,7 +36,7 @@ void Box::set_offset(const Gfx::FloatPoint& offset)
     const_cast<Layout::Box&>(m_layout_box).did_set_rect();
 }
 
-void Box::set_content_size(Gfx::FloatSize const& size)
+void Paintable::set_content_size(Gfx::FloatSize const& size)
 {
     if (m_content_size == size)
         return;
@@ -45,7 +45,7 @@ void Box::set_content_size(Gfx::FloatSize const& size)
     const_cast<Layout::Box&>(m_layout_box).did_set_rect();
 }
 
-Gfx::FloatPoint Box::effective_offset() const
+Gfx::FloatPoint Paintable::effective_offset() const
 {
     if (m_containing_line_box_fragment.has_value()) {
         auto const& fragment = m_layout_box.containing_block()->paint_box()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
@@ -54,7 +54,7 @@ Gfx::FloatPoint Box::effective_offset() const
     return m_offset;
 }
 
-Gfx::FloatRect Box::absolute_rect() const
+Gfx::FloatRect Paintable::absolute_rect() const
 {
     Gfx::FloatRect rect { effective_offset(), content_size() };
     for (auto* block = m_layout_box.containing_block(); block; block = block->containing_block())
@@ -62,12 +62,12 @@ Gfx::FloatRect Box::absolute_rect() const
     return rect;
 }
 
-void Box::set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate> fragment_coordinate)
+void Paintable::set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate> fragment_coordinate)
 {
     m_containing_line_box_fragment = fragment_coordinate;
 }
 
-Painting::StackingContext* Box::enclosing_stacking_context()
+Painting::StackingContext* Paintable::enclosing_stacking_context()
 {
     for (auto* ancestor = m_layout_box.parent(); ancestor; ancestor = ancestor->parent()) {
         if (!is<Layout::Box>(ancestor))

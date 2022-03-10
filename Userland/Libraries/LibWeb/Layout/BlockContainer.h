@@ -31,7 +31,7 @@ public:
     const Gfx::FloatPoint& scroll_offset() const { return m_scroll_offset; }
     void set_scroll_offset(const Gfx::FloatPoint&);
 
-    Painting::BoxWithLines const* paint_box() const;
+    Painting::PaintableWithLines const* paint_box() const;
 
 private:
     virtual bool is_block_container() const final { return true; }

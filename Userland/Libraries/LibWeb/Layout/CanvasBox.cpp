@@ -6,7 +6,7 @@
 
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/CanvasBox.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Layout {
 

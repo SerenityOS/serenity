@@ -8,7 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Layout {
 

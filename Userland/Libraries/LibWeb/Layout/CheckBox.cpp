@@ -12,7 +12,7 @@
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/Label.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Layout {
 

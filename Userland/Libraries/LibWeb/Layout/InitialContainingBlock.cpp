@@ -8,7 +8,7 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {

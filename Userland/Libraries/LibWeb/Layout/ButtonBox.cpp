@@ -12,7 +12,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/Label.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Layout {
 

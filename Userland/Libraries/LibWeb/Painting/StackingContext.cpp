@@ -10,7 +10,7 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/ReplacedBox.h>
-#include <LibWeb/Painting/Box.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Painting {
