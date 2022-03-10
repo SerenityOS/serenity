@@ -1279,8 +1279,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // y. If days < 0, let sign be −1; else, let sign be 1.
         auto sign = days < 0 ? -1 : 1;
 
-        // z. Let oneYear be ? CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
-        auto* one_year = TRY(create_temporal_duration(global_object, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        // z. Let oneYear be ! CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+        auto* one_year = MUST(create_temporal_duration(global_object, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // aa. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
         auto move_result = TRY(move_relative_date(global_object, *calendar, *relative_to, *one_year));
@@ -1339,8 +1339,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // k. If days < 0, let sign be −1; else, let sign be 1.
         auto sign = days < 0 ? -1 : 1;
 
-        // l. Let oneMonth be ? CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
-        auto* one_month = TRY(create_temporal_duration(global_object, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
+        // l. Let oneMonth be ! CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
+        auto* one_month = MUST(create_temporal_duration(global_object, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // m. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
         auto move_result = TRY(move_relative_date(global_object, *calendar, *relative_to, *one_month));
@@ -1389,8 +1389,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // a. If days < 0, let sign be −1; else, let sign be 1.
         auto sign = days < 0 ? -1 : 1;
 
-        // b. Let oneWeek be ? CreateTemporalDuration(0, 0, sign, 0, 0, 0, 0, 0, 0, 0).
-        auto* one_week = TRY(create_temporal_duration(global_object, 0, 0, sign, 0, 0, 0, 0, 0, 0, 0));
+        // b. Let oneWeek be ! CreateTemporalDuration(0, 0, sign, 0, 0, 0, 0, 0, 0, 0).
+        auto* one_week = MUST(create_temporal_duration(global_object, 0, 0, sign, 0, 0, 0, 0, 0, 0, 0));
 
         // c. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneWeek).
         auto move_result = TRY(move_relative_date(global_object, *calendar, *relative_to, *one_week));
