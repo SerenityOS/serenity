@@ -113,56 +113,53 @@ ThrowCompletionOr<TimeDurationRecord> create_time_duration_record(GlobalObject& 
 // 7.5.8 ToTemporalDuration ( item ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalduration
 ThrowCompletionOr<Duration*> to_temporal_duration(GlobalObject& global_object, Value item)
 {
-    DurationRecord result;
-
-    // 1. If Type(item) is Object, then
-    if (item.is_object()) {
-        // a. If item has an [[InitializedTemporalDuration]] internal slot, then
-        if (is<Duration>(item.as_object())) {
-            // i. Return item.
-            return &static_cast<Duration&>(item.as_object());
-        }
-        // b. Let result be ? ToTemporalDurationRecord(item).
-        result = TRY(to_temporal_duration_record(global_object, item.as_object()));
+    // 1. If Type(item) is Object and item has an [[InitializedTemporalDuration]] internal slot, then
+    if (item.is_object() && is<Duration>(item.as_object())) {
+        // a. Return item.
+        return &static_cast<Duration&>(item.as_object());
     }
-    // 2. Else,
-    else {
-        // a. Let string be ? ToString(item).
-        auto string = TRY(item.to_string(global_object));
 
-        // b. Let result be ? ParseTemporalDurationString(string).
-        result = TRY(parse_temporal_duration_string(global_object, string));
-    }
+    // 2. Let result be ? ToTemporalDurationRecord(item).
+    auto result = TRY(to_temporal_duration_record(global_object, item));
 
     // 3. Return ! CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
     return MUST(create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds));
 }
 
 // 7.5.9 ToTemporalDurationRecord ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldurationrecord
-ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject& global_object, Object const& temporal_duration_like)
+ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject& global_object, Value temporal_duration_like)
 {
     auto& vm = global_object.vm();
 
-    // 1. If temporalDurationLike has an [[InitializedTemporalDuration]] internal slot, then
-    if (is<Duration>(temporal_duration_like)) {
-        auto& duration = static_cast<Duration const&>(temporal_duration_like);
+    // 1. If Type(temporalDurationLike) is not Object, then
+    if (!temporal_duration_like.is_object()) {
+        // a. Let string be ? ToString(temporalDurationLike).
+        auto string = TRY(temporal_duration_like.to_string(global_object));
+
+        // b. Return ? ParseTemporalDurationString(string).
+        return parse_temporal_duration_string(global_object, string);
+    }
+
+    // 2. If temporalDurationLike has an [[InitializedTemporalDuration]] internal slot, then
+    if (is<Duration>(temporal_duration_like.as_object())) {
+        auto& duration = static_cast<Duration const&>(temporal_duration_like.as_object());
 
         // a. Return ! CreateDurationRecord(temporalDurationLike.[[Years]], temporalDurationLike.[[Months]], temporalDurationLike.[[Weeks]], temporalDurationLike.[[Days]], temporalDurationLike.[[Hours]], temporalDurationLike.[[Minutes]], temporalDurationLike.[[Seconds]], temporalDurationLike.[[Milliseconds]], temporalDurationLike.[[Microseconds]], temporalDurationLike.[[Nanoseconds]]).
         return create_duration_record(duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds());
     }
 
-    // 2. Let result be a new Duration Record.
+    // 3. Let result be a new Duration Record.
     auto result = DurationRecord {};
 
-    // 3. Let any be false.
+    // 4. Let any be false.
     auto any = false;
 
-    // 4. For each row of Table 7, except the header row, in table order, do
+    // 5. For each row of Table 7, except the header row, in table order, do
     for (auto& [field, property] : temporal_duration_like_properties<DurationRecord, double>(vm)) {
         // a. Let prop be the Property Name value of the current row.
 
         // b. Let val be ? Get(temporalDurationLike, prop).
-        auto value = TRY(temporal_duration_like.get(property));
+        auto value = TRY(temporal_duration_like.as_object().get(property));
 
         // c. If val is undefined, then
         if (value.is_undefined()) {
@@ -182,19 +179,19 @@ ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject& glob
         }
     }
 
-    // 5. If any is false, then
+    // 6. If any is false, then
     if (!any) {
         // a. Throw a TypeError exception.
         return vm.throw_completion<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
     }
 
-    // 6. If ! IsValidDuration(result.[[Years]], result.[[Months]], result.[[Weeks]] result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]) is false, then
+    // 7. If ! IsValidDuration(result.[[Years]], result.[[Months]], result.[[Weeks]] result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]) is false, then
     if (!is_valid_duration(result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds)) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
     }
 
-    // 7. Return result.
+    // 8. Return result.
     return result;
 }
 
@@ -1608,23 +1605,10 @@ ThrowCompletionOr<DurationRecord> to_limited_temporal_duration(GlobalObject& glo
 {
     auto& vm = global_object.vm();
 
-    DurationRecord duration;
+    // 1. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
+    auto duration = TRY(to_temporal_duration_record(global_object, temporal_duration_like));
 
-    // 1. If Type(temporalDurationLike) is not Object, then
-    if (!temporal_duration_like.is_object()) {
-        // a. Let str be ? ToString(temporalDurationLike).
-        auto str = TRY(temporal_duration_like.to_string(global_object));
-
-        // b. Let duration be ? ParseTemporalDurationString(str).
-        duration = TRY(parse_temporal_duration_string(global_object, str));
-    }
-    // 2. Else,
-    else {
-        // a. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
-        duration = TRY(to_temporal_duration_record(global_object, temporal_duration_like.as_object()));
-    }
-
-    // 3. For each row of Table 7, except the header row, in table order, do
+    // 2. For each row of Table 7, except the header row, in table order, do
     for (auto& [field, property] : temporal_duration_like_properties<DurationRecord, double>(vm)) {
         // a. Let prop be the Property Name value of the current row.
 
@@ -1638,7 +1622,7 @@ ThrowCompletionOr<DurationRecord> to_limited_temporal_duration(GlobalObject& glo
         }
     }
 
-    // 4. Return duration.
+    // 3. Return duration.
     return duration;
 }
 
