@@ -524,6 +524,9 @@ public:
     ErrorOr<void> require_promise(Pledge);
     ErrorOr<void> require_no_promises() const;
 
+    bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Memory::Region const* region = nullptr) const;
+    bool validate_inode_mmap_prot(int prot, const Inode& inode, bool map_shared) const;
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
