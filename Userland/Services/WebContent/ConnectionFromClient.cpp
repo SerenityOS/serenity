@@ -302,11 +302,12 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
             return builder.to_string();
         };
-        auto serialize_node_box_sizing_json = [](Web::DOM::Element const& element) -> String {
-            if (!element.layout_node()) {
+        auto serialize_node_box_sizing_json = [](Web::Layout::Node const* layout_node) -> String {
+            if (!layout_node || !layout_node->is_box()) {
                 return "";
             }
-            auto box_model = static_cast<Web::Layout::Box const&>(*element.layout_node()).box_model();
+            auto* box = static_cast<Web::Layout::Box const*>(layout_node);
+            auto box_model = box->box_model();
             StringBuilder builder;
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
             MUST(serializer.add("padding_top", box_model.padding.top));
@@ -321,8 +322,8 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             MUST(serializer.add("border_right", box_model.border.right));
             MUST(serializer.add("border_bottom", box_model.border.bottom));
             MUST(serializer.add("border_left", box_model.border.left));
-            MUST(serializer.add("content_width", static_cast<Web::Layout::Box const&>(*element.layout_node()).content_width()));
-            MUST(serializer.add("content_height", static_cast<Web::Layout::Box const&>(*element.layout_node()).content_height()));
+            MUST(serializer.add("content_width", box->content_width()));
+            MUST(serializer.add("content_height", box->content_height()));
 
             MUST(serializer.finish());
             return builder.to_string();
@@ -340,14 +341,14 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             String specified_values_json = serialize_json(pseudo_element_style);
             String computed_values_json = "{}";
             String custom_properties_json = "{}";
-            String node_box_sizing_json = "{}";
+            String node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
             return { true, specified_values_json, computed_values_json, custom_properties_json, node_box_sizing_json };
         }
 
         String specified_values_json = serialize_json(*element.specified_css_values());
         String computed_values_json = serialize_json(element.computed_style());
         String custom_properties_json = serialize_custom_properties_json(element);
-        String node_box_sizing_json = serialize_node_box_sizing_json(element);
+        String node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
         return { true, specified_values_json, computed_values_json, custom_properties_json, node_box_sizing_json };
     }
 
