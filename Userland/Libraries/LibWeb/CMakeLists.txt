@@ -246,6 +246,7 @@ set(SOURCES
     Layout/InlineLevelIterator.cpp
     Layout/InlineNode.cpp
     Layout/Label.cpp
+    Layout/LabelableNode.cpp
     Layout/LayoutPosition.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
@@ -289,6 +290,7 @@ set(SOURCES
     Painting/CheckBoxPaintable.cpp
     Painting/ImagePaintable.cpp
     Painting/InlinePaintable.cpp
+    Painting/LabelablePaintable.cpp
     Painting/MarkerPaintable.cpp
     Painting/NestedBrowsingContextPaintable.cpp
     Painting/PaintContext.cpp

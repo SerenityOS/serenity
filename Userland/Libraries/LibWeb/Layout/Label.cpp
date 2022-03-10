@@ -5,16 +5,14 @@
  */
 
 #include <LibGUI/Event.h>
-#include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/LabelableNode.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/LabelablePaintable.h>
 
 namespace Web::Layout {
 
@@ -27,18 +25,18 @@ Label::~Label()
 {
 }
 
-void Label::handle_mousedown_on_label(Badge<TextNode>, const Gfx::IntPoint&, unsigned button)
+void Label::handle_mousedown_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint const&, unsigned button)
 {
     if (button != GUI::MouseButton::Primary)
         return;
 
     if (auto* control = labeled_control(); control)
-        control->handle_associated_label_mousedown({});
+        control->paintable()->handle_associated_label_mousedown({});
 
     m_tracking_mouse = true;
 }
 
-void Label::handle_mouseup_on_label(Badge<TextNode>, const Gfx::IntPoint& position, unsigned button)
+void Label::handle_mouseup_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint const& position, unsigned button)
 {
     if (!m_tracking_mouse || button != GUI::MouseButton::Primary)
         return;
@@ -51,13 +49,13 @@ void Label::handle_mouseup_on_label(Badge<TextNode>, const Gfx::IntPoint& positi
         bool is_inside_label = enclosing_int_rect(paint_box()->absolute_rect()).contains(position);
 
         if (is_inside_control || is_inside_label)
-            control->handle_associated_label_mouseup({});
+            control->paintable()->handle_associated_label_mouseup({});
     }
 
     m_tracking_mouse = false;
 }
 
-void Label::handle_mousemove_on_label(Badge<TextNode>, const Gfx::IntPoint& position, unsigned)
+void Label::handle_mousemove_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint const& position, unsigned)
 {
     if (!m_tracking_mouse)
         return;
@@ -66,18 +64,18 @@ void Label::handle_mousemove_on_label(Badge<TextNode>, const Gfx::IntPoint& posi
         bool is_inside_control = enclosing_int_rect(control->paint_box()->absolute_rect()).contains(position);
         bool is_inside_label = enclosing_int_rect(paint_box()->absolute_rect()).contains(position);
 
-        control->handle_associated_label_mousemove({}, is_inside_control || is_inside_label);
+        control->paintable()->handle_associated_label_mousemove({}, is_inside_control || is_inside_label);
     }
 }
 
-bool Label::is_inside_associated_label(LabelableNode& control, const Gfx::IntPoint& position)
+bool Label::is_inside_associated_label(LabelableNode const& control, const Gfx::IntPoint& position)
 {
     if (auto* label = label_for_control_node(control); label)
         return enclosing_int_rect(label->paint_box()->absolute_rect()).contains(position);
     return false;
 }
 
-bool Label::is_associated_label_hovered(LabelableNode& control)
+bool Label::is_associated_label_hovered(LabelableNode const& control)
 {
     if (auto* label = label_for_control_node(control); label) {
         if (label->document().hovered_node() == &label->dom_node())
@@ -91,7 +89,7 @@ bool Label::is_associated_label_hovered(LabelableNode& control)
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#labeled-control
-Label* Label::label_for_control_node(LabelableNode& control)
+Label const* Label::label_for_control_node(LabelableNode const& control)
 {
     if (!control.document().layout_node())
         return nullptr;
@@ -102,7 +100,7 @@ Label* Label::label_for_control_node(LabelableNode& control)
     // whose ID is equal to the value of the for attribute, and the first such element in tree order is
     // a labelable element, then that element is the label element's labeled control.
     if (auto id = control.dom_node().attribute(HTML::AttributeNames::id); !id.is_empty()) {
-        Label* label = nullptr;
+        Label const* label = nullptr;
 
         control.document().layout_node()->for_each_in_inclusive_subtree_of_type<Label>([&](auto& node) {
             if (node.dom_node().for_() == id) {

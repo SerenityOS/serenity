@@ -29,7 +29,7 @@ HTMLInputElement::~HTMLInputElement()
 {
 }
 
-void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
+void HTMLInputElement::did_click_button(Badge<Painting::ButtonPaintable>)
 {
     // FIXME: This should be a PointerEvent.
     dispatch_event(DOM::Event::create(EventNames::click));
@@ -42,7 +42,7 @@ void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
     }
 }
 
-void HTMLInputElement::did_click_checkbox(Badge<Layout::CheckBox>)
+void HTMLInputElement::did_click_checkbox(Badge<Painting::CheckBoxPaintable>)
 {
     // FIXME: This should be a PointerEvent.
     auto click_event = DOM::Event::create(EventNames::click);

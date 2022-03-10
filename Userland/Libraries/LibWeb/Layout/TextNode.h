@@ -56,10 +56,6 @@ public:
 
 private:
     virtual bool is_text_node() const final { return true; }
-    virtual bool wants_mouse_events() const override;
-    virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
-    virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
-    virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
     void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
     void paint_text_decoration(Gfx::Painter&, LineBoxFragment const&) const;
 

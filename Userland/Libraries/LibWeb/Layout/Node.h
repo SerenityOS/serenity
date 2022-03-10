@@ -83,13 +83,6 @@ public:
 
     bool is_inline_block() const;
 
-    virtual bool wants_mouse_events() const { return false; }
-
-    virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
-    virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
-    virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
-    virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
-
     virtual void paint_fragment(PaintContext&, const LineBoxFragment&, Painting::PaintPhase) const { }
 
     // These are used to optimize hot is<T> variants for some classes where dynamic_cast is too slow.

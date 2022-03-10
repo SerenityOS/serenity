@@ -16,6 +16,7 @@
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/KeyboardEvent.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
@@ -123,9 +124,10 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
     // FIXME: Support wheel events in nested browsing contexts.
 
     auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
-    if (result.layout_node) {
-        if (result.layout_node->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y))
-            return true;
+    if (result.layout_node
+        && result.layout_node->paintable()
+        && result.layout_node->paintable()->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y)) {
+        return true;
     }
 
     if (auto* page = m_browsing_context.page()) {
@@ -142,7 +144,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
         return false;
 
     if (m_mouse_event_tracking_layout_node) {
-        m_mouse_event_tracking_layout_node->handle_mouseup({}, position, button, modifiers);
+        m_mouse_event_tracking_layout_node->paintable()->handle_mouseup({}, position, button, modifiers);
         return true;
     }
 
@@ -150,8 +152,8 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
 
     auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
 
-    if (result.layout_node && result.layout_node->wants_mouse_events()) {
-        result.layout_node->handle_mouseup({}, position, button, modifiers);
+    if (result.layout_node && result.layout_node->paintable() && result.layout_node->paintable()->wants_mouse_events()) {
+        result.layout_node->paintable()->handle_mouseup({}, position, button, modifiers);
 
         // Things may have changed as a consequence of Layout::Node::handle_mouseup(). Hit test again.
         if (!layout_root())
@@ -186,7 +188,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         return false;
 
     if (m_mouse_event_tracking_layout_node) {
-        m_mouse_event_tracking_layout_node->handle_mousedown({}, position, button, modifiers);
+        m_mouse_event_tracking_layout_node->paintable()->handle_mousedown({}, position, button, modifiers);
         return true;
     }
 
@@ -207,8 +209,8 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         node = result.layout_node->dom_node();
         document->set_hovered_node(node);
 
-        if (result.layout_node->wants_mouse_events()) {
-            result.layout_node->handle_mousedown({}, position, button, modifiers);
+        if (result.layout_node->paintable() && result.layout_node->paintable()->wants_mouse_events()) {
+            result.layout_node->paintable()->handle_mousedown({}, position, button, modifiers);
             return true;
         }
 
@@ -304,7 +306,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         return false;
 
     if (m_mouse_event_tracking_layout_node) {
-        m_mouse_event_tracking_layout_node->handle_mousemove({}, position, buttons, modifiers);
+        m_mouse_event_tracking_layout_node->paintable()->handle_mousemove({}, position, buttons, modifiers);
         return true;
     }
 
@@ -316,10 +318,9 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
     const HTML::HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
-
-        if (result.layout_node->wants_mouse_events()) {
+        if (result.layout_node->paintable() && result.layout_node->paintable()->wants_mouse_events()) {
             document.set_hovered_node(result.layout_node->dom_node());
-            result.layout_node->handle_mousemove({}, position, buttons, modifiers);
+            result.layout_node->paintable()->handle_mousemove({}, position, buttons, modifiers);
             // FIXME: It feels a bit aggressive to always update the cursor like this.
             if (auto* page = m_browsing_context.page())
                 page->client().page_did_request_cursor_change(Gfx::StandardCursor::None);

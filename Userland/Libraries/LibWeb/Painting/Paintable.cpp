@@ -287,4 +287,52 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     }
 }
 
+void Paintable::handle_mousedown(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
+{
+}
+
+void Paintable::handle_mouseup(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
+{
+}
+
+void Paintable::handle_mousemove(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
+{
+}
+
+bool Paintable::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
+{
+    if (auto* containing_block = layout_node().containing_block()) {
+        if (!containing_block->is_scrollable())
+            return false;
+        auto new_offset = containing_block->scroll_offset();
+        new_offset.translate_by(wheel_delta_x, wheel_delta_y);
+        // FIXME: This const_cast is gross.
+        // FIXME: Scroll offset shouldn't live in the layout tree.
+        const_cast<Layout::BlockContainer*>(containing_block)->set_scroll_offset(new_offset);
+        return true;
+    }
+
+    return false;
+}
+
+bool PaintableWithLines::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
+{
+    if (!layout_box().is_scrollable())
+        return false;
+    auto new_offset = layout_box().scroll_offset();
+    new_offset.translate_by(wheel_delta_x, wheel_delta_y);
+    const_cast<Layout::BlockContainer&>(layout_box()).set_scroll_offset(new_offset);
+    return true;
+}
+
+Layout::BlockContainer const& PaintableWithLines::layout_box() const
+{
+    return static_cast<Layout::BlockContainer const&>(PaintableBox::layout_box());
+}
+
+Layout::BlockContainer& PaintableWithLines::layout_box()
+{
+    return static_cast<Layout::BlockContainer&>(PaintableBox::layout_box());
+}
+
 }

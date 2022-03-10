@@ -514,32 +514,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     }
 }
 
-void Node::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)
-{
-}
-
-void Node::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)
-{
-}
-
-void Node::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)
-{
-}
-
-bool Node::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
-{
-    if (auto* containing_block = this->containing_block()) {
-        if (!containing_block->is_scrollable())
-            return false;
-        auto new_offset = containing_block->scroll_offset();
-        new_offset.translate_by(wheel_delta_x, wheel_delta_y);
-        containing_block->set_scroll_offset(new_offset);
-        return true;
-    }
-
-    return false;
-}
-
 bool Node::is_root_element() const
 {
     if (is_anonymous())

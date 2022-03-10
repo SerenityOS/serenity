@@ -19,24 +19,8 @@ public:
     const HTML::HTMLInputElement& dom_node() const { return static_cast<const HTML::HTMLInputElement&>(LabelableNode::dom_node()); }
     HTML::HTMLInputElement& dom_node() { return static_cast<HTML::HTMLInputElement&>(LabelableNode::dom_node()); }
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
-
-    bool being_pressed() const { return m_being_pressed; }
-
 private:
-    virtual bool wants_mouse_events() const override { return true; }
-    virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
-    virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
-    virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers) override;
-
-    virtual void handle_associated_label_mousedown(Badge<Label>) override;
-    virtual void handle_associated_label_mouseup(Badge<Label>) override;
-    virtual void handle_associated_label_mousemove(Badge<Label>, bool is_inside_node_or_label) override;
-
-    void set_checked_within_group();
-
-    bool m_being_pressed { false };
-    bool m_tracking_mouse { false };
+    virtual RefPtr<Painting::Paintable> create_paintable() const override;
 };
 
 }

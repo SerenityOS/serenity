@@ -159,6 +159,7 @@ public:
     Layout::Node* layout_node() { return m_layout_node; }
 
     Painting::PaintableBox const* paint_box() const;
+    Painting::Paintable const* paintable() const;
 
     void set_layout_node(Badge<Layout::Node>, Layout::Node*) const;
 

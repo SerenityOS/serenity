@@ -25,8 +25,21 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) const { }
 
+    virtual bool wants_mouse_events() const { return false; }
+    virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
+    virtual void handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
+    virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
+    virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
+
     Layout::Node const& layout_node() const { return m_layout_node; }
+    Layout::Node& layout_node() { return const_cast<Layout::Node&>(m_layout_node); }
+
     auto const& computed_values() const { return m_layout_node.computed_values(); }
+
+    HTML::BrowsingContext const& browsing_context() const { return m_layout_node.browsing_context(); }
+    HTML::BrowsingContext& browsing_context() { return layout_node().browsing_context(); }
+
+    void set_needs_display() const { const_cast<Layout::Node&>(m_layout_node).set_needs_display(); }
 
 protected:
     explicit Paintable(Layout::Node const& layout_node)
@@ -47,6 +60,7 @@ public:
 
     bool is_visible() const { return layout_box().is_visible(); }
 
+    Layout::Box& layout_box() { return static_cast<Layout::Box&>(Paintable::layout_node()); }
     Layout::Box const& layout_box() const { return static_cast<Layout::Box const&>(Paintable::layout_node()); }
 
     auto const& box_model() const { return layout_box().box_model(); }
@@ -134,7 +148,10 @@ public:
     StackingContext* enclosing_stacking_context();
 
     DOM::Node const* dom_node() const { return layout_box().dom_node(); }
+    DOM::Node* dom_node() { return layout_box().dom_node(); }
+
     DOM::Document const& document() const { return layout_box().document(); }
+    DOM::Document& document() { return layout_box().document(); }
 
     virtual void before_children_paint(PaintContext&, PaintPhase) const override;
     virtual void after_children_paint(PaintContext&, PaintPhase) const override;
@@ -160,6 +177,9 @@ public:
     }
     virtual ~PaintableWithLines() override;
 
+    Layout::BlockContainer const& layout_box() const;
+    Layout::BlockContainer& layout_box();
+
     Vector<Layout::LineBox> const& line_boxes() const { return m_line_boxes; }
     void set_line_boxes(Vector<Layout::LineBox>&& line_boxes) { m_line_boxes = move(line_boxes); }
 
@@ -175,6 +195,8 @@ public:
     }
 
     virtual void paint(PaintContext&, PaintPhase) const override;
+    virtual bool wants_mouse_events() const override { return false; }
+    virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
 
 private:
     PaintableWithLines(Layout::BlockContainer const&);
