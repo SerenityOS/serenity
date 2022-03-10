@@ -27,7 +27,7 @@ enum class LayoutMode {
 };
 
 struct HitTestResult {
-    RefPtr<Node> layout_node;
+    RefPtr<Painting::Paintable> paintable;
     int index_in_node { 0 };
 
     enum InternalPosition {

@@ -42,16 +42,16 @@ HitTestResult BlockContainer::hit_test(const Gfx::IntPoint& position, HitTestTyp
             if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
                 if (is<BlockContainer>(fragment.layout_node()))
                     return verify_cast<BlockContainer>(fragment.layout_node()).hit_test(position, type);
-                return { fragment.layout_node(), fragment.text_index_at(position.x()) };
+                return { fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
             }
             if (fragment.absolute_rect().top() <= position.y())
-                last_good_candidate = { fragment.layout_node(), fragment.text_index_at(position.x()) };
+                last_good_candidate = { fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
         }
     }
 
-    if (type == HitTestType::TextCursor && last_good_candidate.layout_node)
+    if (type == HitTestType::TextCursor && last_good_candidate.paintable)
         return last_good_candidate;
-    return { paint_box()->absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
+    return { paint_box()->absolute_border_box_rect().contains(position.x(), position.y()) ? paintable() : nullptr };
 }
 
 bool BlockContainer::is_scrollable() const
