@@ -140,7 +140,7 @@ ThrowCompletionOr<DateDurationRecord> create_date_duration_record(GlobalObject&,
 TimeDurationRecord create_time_duration_record(double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 ThrowCompletionOr<TimeDurationRecord> create_time_duration_record(GlobalObject&, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 ThrowCompletionOr<Duration*> to_temporal_duration(GlobalObject&, Value item);
-ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject&, Object const& temporal_duration_like);
+ThrowCompletionOr<DurationRecord> to_temporal_duration_record(GlobalObject&, Value temporal_duration_like);
 i8 duration_sign(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 bool is_valid_duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 StringView default_temporal_largest_unit(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds);

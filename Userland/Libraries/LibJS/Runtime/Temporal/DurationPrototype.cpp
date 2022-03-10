@@ -298,8 +298,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::add)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Set other to ? ToLimitedTemporalDuration(other, « »).
-    auto other = TRY(to_limited_temporal_duration(global_object, vm.argument(0), {}));
+    // 3. Set other to ? ToTemporalDurationRecord(other).
+    auto other = TRY(to_temporal_duration_record(global_object, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
@@ -321,8 +321,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::subtract)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Set other to ? ToLimitedTemporalDuration(other, « »).
-    auto other = TRY(to_limited_temporal_duration(global_object, vm.argument(0), {}));
+    // 3. Set other to ? ToTemporalDurationRecord(other).
+    auto other = TRY(to_temporal_duration_record(global_object, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
