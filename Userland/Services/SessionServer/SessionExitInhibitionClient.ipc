@@ -1,0 +1,4 @@
+endpoint SessionExitInhibitionClient
+{
+    on_inhibited_exit_prevented() =|
+}

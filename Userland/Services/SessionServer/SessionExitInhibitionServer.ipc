@@ -1,0 +1,7 @@
+endpoint SessionExitInhibitionServer
+{
+    inhibit_exit() =|
+    allow_exit() =|
+    is_exit_inhibited() => (bool is_exit_inhibited)
+    report_inhibited_exit_prevention() =|
+}
