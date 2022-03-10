@@ -5,23 +5,18 @@
  */
 
 #include "GeneratorUtil.h"
-#include <AK/ByteBuffer.h>
-#include <AK/JsonObject.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/File.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (argc != 2) {
-        warnln("usage: {} <path/to/CSS/Identifiers.json>", argv[0]);
+    if (arguments.argc != 2) {
+        warnln("usage: {} <path/to/CSS/Identifiers.json>", arguments.strings[0]);
         return 1;
     }
-    auto file = Core::File::construct(argv[1]);
-    if (!file->open(Core::OpenMode::ReadOnly))
-        return 1;
 
-    auto json = JsonValue::from_string(file->read_all()).release_value_but_fixme_should_propagate_errors();
+    auto json = TRY(read_entire_file_as_json(arguments.strings[1]));
     VERIFY(json.is_array());
 
     StringBuilder builder;
@@ -58,4 +53,5 @@ const char* string_from_value_id(ValueID);
 )~~~");
 
     outln("{}", generator.as_string_view());
+    return 0;
 }
