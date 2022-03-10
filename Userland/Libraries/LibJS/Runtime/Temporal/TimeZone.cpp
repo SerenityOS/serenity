@@ -267,32 +267,32 @@ ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject& global_obj
     if (!success)
         return vm.throw_completion<RangeError>(global_object, ErrorType::InvalidFormat, "TimeZone offset");
 
-    // 4. If either hours or sign are undefined, throw a RangeError exception.
-    // NOTE: Both of these checks are always false, due to the handling of Step 2
+    // 4. Assert: sign is not undefined.
+    // 5. Assert: hours is not undefined.
 
     double sign;
-    // 5. If sign is the code unit 0x002D (HYPHEN-MINUS) or 0x2212 (MINUS SIGN), then
+    // 6. If sign is the code unit 0x002D (HYPHEN-MINUS) or 0x2212 (MINUS SIGN), then
     if (sign_part.is_one_of("-", "\xE2\x88\x92")) {
         // a. Set sign to −1.
         sign = -1;
     }
-    // 6. Else,
+    // 7. Else,
     else {
         // a. Set sign to 1.
         sign = 1;
     }
 
-    // 7. Set hours to ! ToIntegerOrInfinity(hours).
+    // 8. Set hours to ! ToIntegerOrInfinity(hours).
     auto hours = *hours_part.to_uint<u8>();
 
-    // 8. Set minutes to ! ToIntegerOrInfinity(minutes).
+    // 9. Set minutes to ! ToIntegerOrInfinity(minutes).
     auto minutes = *minutes_part.value_or("0"sv).to_uint<u8>();
 
-    // 9. Set seconds to ! ToIntegerOrInfinity(seconds).
+    // 10. Set seconds to ! ToIntegerOrInfinity(seconds).
     auto seconds = *seconds_part.value_or("0"sv).to_uint<u8>();
 
     i32 nanoseconds;
-    // 10. If fraction is not undefined, then
+    // 11. If fraction is not undefined, then
     if (fraction_part.has_value()) {
         // a. Set fraction to the string-concatenation of the previous value of fraction and the string "000000000".
         auto fraction = String::formatted("{}000000000", *fraction_part);
@@ -300,12 +300,12 @@ ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject& global_obj
         // c. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
         nanoseconds = *fraction.substring(0, 9).to_int<i32>();
     }
-    // 11. Else,
+    // 12. Else,
     else {
         // a. Let nanoseconds be 0.
         nanoseconds = 0;
     }
-    // 12. Return sign × (((hours × 60 + minutes) × 60 + seconds) × 10^9 + nanoseconds).
+    // 13. Return sign × (((hours × 60 + minutes) × 60 + seconds) × 10^9 + nanoseconds).
     // NOTE: Decimal point in 10^9 is important, otherwise it's all integers and the result overflows!
     return sign * (((hours * 60 + minutes) * 60 + seconds) * 1000000000.0 + nanoseconds);
 }
