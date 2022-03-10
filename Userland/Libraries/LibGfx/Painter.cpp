@@ -428,7 +428,7 @@ void Painter::fill_rounded_corner(IntRect const& a_rect, int radius, Color color
 
 void Painter::draw_circle_arc_intersecting(IntRect const& a_rect, IntPoint const& center, int radius, Color color, int thickness)
 {
-    if (thickness <= 0)
+    if (thickness <= 0 || radius <= 0)
         return;
 
     // Care about clipping
