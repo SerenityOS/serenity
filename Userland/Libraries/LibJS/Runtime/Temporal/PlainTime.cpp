@@ -75,7 +75,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(GlobalObject& global_object, Valu
 {
     auto& vm = global_object.vm();
 
-    // 1. If overflow is not present, set it to "constrain".
+    // 1. If overflow is not present, set overflow to "constrain".
     if (!overflow.has_value())
         overflow = "constrain"sv;
 
@@ -361,7 +361,7 @@ ThrowCompletionOr<PlainTime*> create_temporal_time(GlobalObject& global_object, 
     if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
 
-    // 3. If newTarget is not present, set it to %Temporal.PlainTime%.
+    // 3. If newTarget is not present, set newTarget to %Temporal.PlainTime%.
     if (!new_target)
         new_target = global_object.temporal_plain_time_constructor();
 
@@ -533,7 +533,7 @@ DaysAndTime round_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 micro
 
     // 3. If unit is "day", then
     if (unit == "day"sv) {
-        // a. If dayLengthNs is not present, set it to 8.64 × 10^13.
+        // a. If dayLengthNs is not present, set dayLengthNs to 8.64 × 10^13.
         if (!day_length_ns.has_value())
             day_length_ns = 86400000000000;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -216,7 +216,7 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(GlobalObject& glob
     if (!iso_year_month_within_limits(iso_year, iso_month))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainYearMonth);
 
-    // 5. If newTarget is not present, set it to %Temporal.PlainYearMonth%.
+    // 5. If newTarget is not present, set newTarget to %Temporal.PlainYearMonth%.
     if (!new_target)
         new_target = global_object.temporal_plain_year_month_constructor();
 

@@ -54,7 +54,7 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(GlobalObject& global_object, 
     if (!iso_date_time_within_limits(global_object, iso_year, iso_month, iso_day, 12, 0, 0, 0, 0, 0))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
-    // 7. If newTarget is not present, set it to %Temporal.PlainDate%.
+    // 7. If newTarget is not present, set newTarget to %Temporal.PlainDate%.
     if (!new_target)
         new_target = global_object.temporal_plain_date_constructor();
 

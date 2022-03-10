@@ -334,7 +334,7 @@ ThrowCompletionOr<Duration*> create_temporal_duration(GlobalObject& global_objec
     if (!is_valid_duration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
 
-    // 2. If newTarget is not present, set it to %Temporal.Duration%.
+    // 2. If newTarget is not present, set newTarget to %Temporal.Duration%.
     if (!new_target)
         new_target = global_object.temporal_duration_constructor();
 
