@@ -152,9 +152,9 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
         // a. Let sign be -(! CompareISODate(y1, m1, d1, y2, m2, d2)).
         auto sign = -compare_iso_date(year1, month1, day1, year2, month2, day2);
 
-        // b. If sign is 0, return the Record { [[Years]]: 0, [[Months]]: 0, [[Weeks]]: 0, [[Days]]: 0 }.
+        // b. If sign is 0, return ! CreateDateDurationRecord(0, 0, 0, 0).
         if (sign == 0)
-            return { .years = 0, .months = 0, .weeks = 0, .days = 0 };
+            return create_date_duration_record(0, 0, 0, 0);
 
         // c. Let start be the Record { [[Year]]: y1, [[Month]]: m1, [[Day]]: d1 }.
         auto start = ISODate { .year = year1, .month = month1, .day = day1 };
@@ -173,12 +173,12 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
 
         // h. If midSign is 0, then
         if (mid_sign == 0) {
-            // i. If largestUnit is "year", return the Record { [[Years]]: years, [[Months]]: 0, [[Weeks]]: 0, [[Days]]: 0 }.
+            // i. If largestUnit is "year", return ! CreateDateDurationRecord(years, 0, 0, 0).
             if (largest_unit == "year"sv)
-                return { .years = years, .months = 0, .weeks = 0, .days = 0 };
+                return create_date_duration_record(years, 0, 0, 0);
 
-            // ii. Return the Record { [[Years]]: 0, [[Months]]: years × 12, [[Weeks]]: 0, [[Days]]: 0 }.
-            return { .years = 0, .months = years * 12, .weeks = 0, .days = 0 };
+            // ii. Return ! CreateDateDurationRecord(0, years × 12, 0, 0).
+            return create_date_duration_record(0, years * 12, 0, 0);
         }
 
         // i. Let months be end.[[Month]] − start.[[Month]].
@@ -201,12 +201,12 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
 
         // m. If midSign is 0, then
         if (mid_sign == 0) {
-            // i. If largestUnit is "year", return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: 0, [[Days]]: 0 }.
+            // i. If largestUnit is "year", return ! CreateDateDurationRecord(years, months, 0, 0).
             if (largest_unit == "year"sv)
-                return { .years = years, .months = months, .weeks = 0, .days = 0 };
+                return create_date_duration_record(years, months, 0, 0);
 
-            // ii. Return the Record { [[Years]]: 0, [[Months]]: months + years × 12, [[Weeks]]: 0, [[Days]]: 0 }.
-            return { .years = 0, .months = months + years * 12, .weeks = 0, .days = 0 };
+            // ii. Return ! CreateDateDurationRecord(0, months + years × 12, 0, 0).
+            return create_date_duration_record(0, months + years * 12, 0, 0);
         }
 
         // n. If midSign is not equal to sign, then
@@ -260,8 +260,8 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             years = 0;
         }
 
-        // t. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: 0, [[Days]]: days }.
-        return { .years = years, .months = months, .weeks = 0, .days = days };
+        // t. Return ! CreateDateDurationRecord(years, months, 0, days).
+        return create_date_duration_record(years, months, 0, days);
     }
     // 3. If largestUnit is "day" or "week", then
     else {
@@ -319,9 +319,9 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
             days = fmod(days, 7);
         }
 
-        // h. Return the Record { [[Years]]: 0, [[Months]]: 0, [[Weeks]]: weeks × sign, [[Days]]: days × sign }.
+        // h. Return ! CreateDateDurationRecord(0, 0, weeks × sign, days × sign).
         // NOTE: We set weeks and days conditionally to avoid negative zero for 0 * -1.
-        return { .years = 0, .months = 0, .weeks = (weeks != 0) ? weeks * sign : 0, .days = (days != 0) ? days * sign : 0 };
+        return create_date_duration_record(0, 0, (weeks != 0) ? weeks * sign : 0, (days != 0) ? days * sign : 0);
     }
     VERIFY_NOT_REACHED();
 }

@@ -412,8 +412,8 @@ ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& globa
 
     // 3. If ns1 is ns2, then
     if (nanoseconds1.big_integer() == nanoseconds2.big_integer()) {
-        // a. Return the Record { [[Years]]: 0, [[Months]]: 0, [[Weeks]]: 0, [[Days]]: 0, [[Hours]]: 0, [[Minutes]]: 0, [[Seconds]]: 0, [[Milliseconds]]: 0, [[Microseconds]]: 0, [[Nanoseconds]]: 0 }.
-        return DurationRecord { .years = 0, .months = 0, .weeks = 0, .days = 0, .hours = 0, .minutes = 0, .seconds = 0, .milliseconds = 0, .microseconds = 0, .nanoseconds = 0 };
+        // a. Return ! CreateDurationRecord(0, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+        return create_duration_record(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
     // 4. Let startInstant be ! CreateTemporalInstant(ns1).
@@ -446,8 +446,8 @@ ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& globa
     // 13. Let timeDifference be ! BalanceDuration(0, 0, 0, 0, 0, 0, result.[[Nanoseconds]], "hour").
     auto time_difference = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *result.nanoseconds.cell(), "hour"sv));
 
-    // 14. Return the Record { [[Years]]: dateDifference.[[Years]], [[Months]]: dateDifference.[[Months]], [[Weeks]]: dateDifference.[[Weeks]], [[Days]]: result.[[Days]], [[Hours]]: timeDifference.[[Hours]], [[Minutes]]: timeDifference.[[Minutes]], [[Seconds]]: timeDifference.[[Seconds]], [[Milliseconds]]: timeDifference.[[Milliseconds]], [[Microseconds]]: timeDifference.[[Microseconds]], [[Nanoseconds]]: timeDifference.[[Nanoseconds]] }.
-    return DurationRecord { .years = date_difference.years, .months = date_difference.months, .weeks = date_difference.weeks, .days = result.days, .hours = time_difference.hours, .minutes = time_difference.minutes, .seconds = time_difference.seconds, .milliseconds = time_difference.milliseconds, .microseconds = time_difference.microseconds, .nanoseconds = time_difference.nanoseconds };
+    // 14. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], result.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
+    return create_duration_record(date_difference.years, date_difference.months, date_difference.weeks, result.days, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, time_difference.nanoseconds);
 }
 
 // 6.5.7 NanosecondsToDays ( nanoseconds, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-nanosecondstodays

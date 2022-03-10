@@ -1505,8 +1505,8 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject& g
         factor = 1;
     }
 
-    // 21. Return the Record { [[Years]]: yearsMV × factor, [[Months]]: monthsMV × factor, [[Weeks]]: weeksMV × factor, [[Days]]: daysMV × factor, [[Hours]]: hoursMV × factor, [[Minutes]]: floor(minutesMV) × factor, [[Seconds]]: floor(secondsMV) × factor, [[Milliseconds]]: floor(millisecondsMV) × factor, [[Microseconds]]: floor(microsecondsMV) × factor, [[Nanoseconds]]: floor(nanosecondsMV) × factor }.
-    return DurationRecord { .years = years * factor, .months = months * factor, .weeks = weeks * factor, .days = days * factor, .hours = hours * factor, .minutes = floor(minutes) * factor, .seconds = floor(seconds) * factor, .milliseconds = floor(milliseconds) * factor, .microseconds = floor(microseconds) * factor, .nanoseconds = floor(nanoseconds) * factor };
+    // 21. Return ? CreateDurationRecord(yearsMV × factor, monthsMV × factor, weeksMV × factor, daysMV × factor, hoursMV × factor, floor(minutesMV) × factor, floor(secondsMV) × factor, floor(millisecondsMV) × factor, floor(microsecondsMV) × factor, floor(nanosecondsMV) × factor).
+    return create_duration_record(global_object, years * factor, months * factor, weeks * factor, days * factor, hours * factor, floor(minutes) * factor, floor(seconds) * factor, floor(milliseconds) * factor, floor(microseconds) * factor, floor(nanoseconds) * factor);
 }
 
 // 13.40 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring
