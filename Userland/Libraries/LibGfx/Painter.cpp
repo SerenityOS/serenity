@@ -1683,7 +1683,7 @@ void Painter::draw_text(Function<void(IntRect const&, Utf8CodePointIterator&)> d
     });
 }
 
-void Painter::set_pixel(IntPoint const& p, Color color)
+void Painter::set_pixel(IntPoint const& p, Color color, bool blend)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
@@ -1691,7 +1691,12 @@ void Painter::set_pixel(IntPoint const& p, Color color)
     point.translate_by(state().translation);
     if (!clip_rect().contains(point))
         return;
-    m_target->scanline(point.y())[point.x()] = color.value();
+    auto& dst = m_target->scanline(point.y())[point.x()];
+    if (!blend) {
+        dst = color.value();
+    } else {
+        dst = Color::from_argb(dst).blend(color).value();
+    }
 }
 
 ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color const& color)
