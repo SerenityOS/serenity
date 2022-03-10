@@ -63,20 +63,24 @@ index 357b0bed0..8e96b74e5 100644
  *-*-darwin*)
    tmake_file="t-darwin "
    tm_file="${tm_file} darwin.h"
-@@ -1084,6 +1091,19 @@ case ${target} in
+@@ -1084,6 +1091,23 @@ case ${target} in
  esac
  
  case ${target} in
 +i[34567]86-*-serenity*)
++    default_gnu_indirect_function=yes
 +    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h serenity.h i386/serenity.h"
 +    ;;
 +x86_64-*-serenity*)
++    default_gnu_indirect_function=yes
 +    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h i386/x86-64.h serenity.h i386/serenity.h"
 +    ;;
 +arm-*-serenity*)
++    default_gnu_indirect_function=yes
 +    tm_file="dbxelf.h elfos.h arm/elf.h arm/aout.h glibc-stdint.h arm/serenity-elf.h ${tm_file} serenity.h"
 +    ;;
 +aarch64-*-serenity*)
++    default_gnu_indirect_function=yes
 +    tm_file="${tm_file} dbxelf.h elfos.h aarch64/aarch64-elf.h glibc-stdint.h serenity.h"
 +    tmake_file="${tmake_file} aarch64/t-aarch64"
 +    ;;
