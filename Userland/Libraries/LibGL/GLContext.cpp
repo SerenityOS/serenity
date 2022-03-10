@@ -413,15 +413,7 @@ void GLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdou
         0, 0, c, d,
         0, 0, -1, 0
     };
-
-    if (m_current_matrix_mode == GL_PROJECTION)
-        m_projection_matrix = m_projection_matrix * frustum;
-    else if (m_current_matrix_mode == GL_MODELVIEW)
-        m_model_view_matrix = m_model_view_matrix * frustum;
-    else if (m_current_matrix_mode == GL_TEXTURE)
-        m_texture_matrix = m_texture_matrix * frustum;
-    else
-        VERIFY_NOT_REACHED();
+    *m_current_matrix = *m_current_matrix * frustum;
 }
 
 void GLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
@@ -444,15 +436,7 @@ void GLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdoubl
         0, 0, static_cast<float>(-2 / fn), static_cast<float>(tz),
         0, 0, 0, 1
     };
-
-    if (m_current_matrix_mode == GL_PROJECTION)
-        m_projection_matrix = m_projection_matrix * projection;
-    else if (m_current_matrix_mode == GL_MODELVIEW)
-        m_model_view_matrix = m_model_view_matrix * projection;
-    else if (m_current_matrix_mode == GL_TEXTURE)
-        m_texture_matrix = m_texture_matrix * projection;
-    else
-        VERIFY_NOT_REACHED();
+    *m_current_matrix = *m_current_matrix * projection;
 }
 
 GLenum GLContext::gl_get_error()
@@ -491,164 +475,111 @@ GLubyte* GLContext::gl_get_string(GLenum name)
 void GLContext::gl_load_identity()
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_load_identity);
-
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    if (m_current_matrix_mode == GL_PROJECTION)
-        m_projection_matrix = FloatMatrix4x4::identity();
-    else if (m_current_matrix_mode == GL_MODELVIEW)
-        m_model_view_matrix = FloatMatrix4x4::identity();
-    else if (m_current_matrix_mode == GL_TEXTURE)
-        m_texture_matrix = FloatMatrix4x4::identity();
-    else
-        VERIFY_NOT_REACHED();
+    *m_current_matrix = FloatMatrix4x4::identity();
 }
 
 void GLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
 {
     APPEND_TO_CALL_LIST_WITH_ARG_AND_RETURN_IF_NEEDED(gl_load_matrix, matrix);
-
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    if (m_current_matrix_mode == GL_PROJECTION)
-        m_projection_matrix = matrix;
-    else if (m_current_matrix_mode == GL_MODELVIEW)
-        m_model_view_matrix = matrix;
-    else if (m_current_matrix_mode == GL_TEXTURE)
-        m_texture_matrix = matrix;
-    else
-        VERIFY_NOT_REACHED();
+    *m_current_matrix = matrix;
 }
 
 void GLContext::gl_matrix_mode(GLenum mode)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_matrix_mode, mode);
-
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(mode < GL_MODELVIEW || mode > GL_TEXTURE, GL_INVALID_ENUM);
 
     m_current_matrix_mode = mode;
+    switch (mode) {
+    case GL_MODELVIEW:
+        m_current_matrix = &m_model_view_matrix;
+        m_current_matrix_stack = &m_model_view_matrix_stack;
+        break;
+    case GL_PROJECTION:
+        m_current_matrix = &m_projection_matrix;
+        m_current_matrix_stack = &m_projection_matrix_stack;
+        break;
+    case GL_TEXTURE:
+        m_current_matrix = &m_texture_matrix;
+        m_current_matrix_stack = &m_texture_matrix_stack;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+static constexpr size_t matrix_stack_limit(GLenum matrix_mode)
+{
+    switch (matrix_mode) {
+    case GL_MODELVIEW:
+        return MODELVIEW_MATRIX_STACK_LIMIT;
+    case GL_PROJECTION:
+        return PROJECTION_MATRIX_STACK_LIMIT;
+    case GL_TEXTURE:
+        return TEXTURE_MATRIX_STACK_LIMIT;
+    }
+    VERIFY_NOT_REACHED();
 }
 
 void GLContext::gl_push_matrix()
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_push_matrix);
-
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF((*m_current_matrix_stack).size() >= matrix_stack_limit(m_current_matrix_mode), GL_STACK_OVERFLOW);
 
-    switch (m_current_matrix_mode) {
-    case GL_PROJECTION:
-        RETURN_WITH_ERROR_IF(m_projection_matrix_stack.size() >= PROJECTION_MATRIX_STACK_LIMIT, GL_STACK_OVERFLOW);
-        m_projection_matrix_stack.append(m_projection_matrix);
-        break;
-    case GL_MODELVIEW:
-        RETURN_WITH_ERROR_IF(m_model_view_matrix_stack.size() >= MODELVIEW_MATRIX_STACK_LIMIT, GL_STACK_OVERFLOW);
-        m_model_view_matrix_stack.append(m_model_view_matrix);
-        break;
-    case GL_TEXTURE:
-        RETURN_WITH_ERROR_IF(m_texture_matrix_stack.size() >= TEXTURE_MATRIX_STACK_LIMIT, GL_STACK_OVERFLOW);
-        m_texture_matrix_stack.append(m_texture_matrix);
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
+    (*m_current_matrix_stack).append(*m_current_matrix);
 }
 
 void GLContext::gl_pop_matrix()
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_pop_matrix);
-
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF((*m_current_matrix_stack).is_empty(), GL_STACK_UNDERFLOW);
 
-    switch (m_current_matrix_mode) {
-    case GL_PROJECTION:
-        RETURN_WITH_ERROR_IF(m_projection_matrix_stack.size() == 0, GL_STACK_UNDERFLOW);
-        m_projection_matrix = m_projection_matrix_stack.take_last();
-        break;
-    case GL_MODELVIEW:
-        RETURN_WITH_ERROR_IF(m_model_view_matrix_stack.size() == 0, GL_STACK_UNDERFLOW);
-        m_model_view_matrix = m_model_view_matrix_stack.take_last();
-        break;
-    case GL_TEXTURE:
-        RETURN_WITH_ERROR_IF(m_texture_matrix_stack.size() == 0, GL_STACK_UNDERFLOW);
-        m_texture_matrix = m_texture_matrix_stack.take_last();
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
+    *m_current_matrix = (*m_current_matrix_stack).take_last();
 }
 
 void GLContext::gl_mult_matrix(FloatMatrix4x4 const& matrix)
 {
     APPEND_TO_CALL_LIST_WITH_ARG_AND_RETURN_IF_NEEDED(gl_mult_matrix, matrix);
-
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    if (m_current_matrix_mode == GL_MODELVIEW)
-        m_model_view_matrix = m_model_view_matrix * matrix;
-    else if (m_current_matrix_mode == GL_PROJECTION)
-        m_projection_matrix = m_projection_matrix * matrix;
-    else if (m_current_matrix_mode == GL_TEXTURE)
-        m_texture_matrix = m_texture_matrix * matrix;
-    else
-        VERIFY_NOT_REACHED();
+    *m_current_matrix = *m_current_matrix * matrix;
 }
 
 void GLContext::gl_rotate(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_rotate, angle, x, y, z);
-
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     FloatVector3 axis = { x, y, z };
     if (axis.length() > 0.f)
         axis.normalize();
     auto rotation_mat = Gfx::rotation_matrix(axis, angle * static_cast<float>(M_PI * 2 / 360));
-
-    if (m_current_matrix_mode == GL_MODELVIEW)
-        m_model_view_matrix = m_model_view_matrix * rotation_mat;
-    else if (m_current_matrix_mode == GL_PROJECTION)
-        m_projection_matrix = m_projection_matrix * rotation_mat;
-    else if (m_current_matrix_mode == GL_TEXTURE)
-        m_texture_matrix = m_texture_matrix * rotation_mat;
-    else
-        VERIFY_NOT_REACHED();
+    *m_current_matrix = *m_current_matrix * rotation_mat;
 }
 
 void GLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_scale, x, y, z);
-
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     auto scale_matrix = Gfx::scale_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
-
-    if (m_current_matrix_mode == GL_MODELVIEW)
-        m_model_view_matrix = m_model_view_matrix * scale_matrix;
-    else if (m_current_matrix_mode == GL_PROJECTION)
-        m_projection_matrix = m_projection_matrix * scale_matrix;
-    else if (m_current_matrix_mode == GL_TEXTURE)
-        m_texture_matrix = m_texture_matrix * scale_matrix;
-    else
-        VERIFY_NOT_REACHED();
+    *m_current_matrix = *m_current_matrix * scale_matrix;
 }
 
 void GLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_translate, x, y, z);
-
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     auto translation_matrix = Gfx::translation_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
-
-    if (m_current_matrix_mode == GL_MODELVIEW)
-        m_model_view_matrix = m_model_view_matrix * translation_matrix;
-    else if (m_current_matrix_mode == GL_PROJECTION)
-        m_projection_matrix = m_projection_matrix * translation_matrix;
-    else if (m_current_matrix_mode == GL_TEXTURE)
-        m_texture_matrix = m_texture_matrix * translation_matrix;
-    else
-        VERIFY_NOT_REACHED();
+    *m_current_matrix = *m_current_matrix * translation_matrix;
 }
 
 void GLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w)

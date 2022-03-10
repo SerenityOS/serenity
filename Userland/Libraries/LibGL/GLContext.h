@@ -196,15 +196,17 @@ private:
     [[nodiscard]] bool should_execute_after_appending_to_listing() const { return m_current_listing_index.has_value() && m_current_listing_index->mode == GL_COMPILE_AND_EXECUTE; }
 
     GLenum m_current_draw_mode;
-    GLenum m_current_matrix_mode;
-    FloatMatrix4x4 m_projection_matrix = FloatMatrix4x4::identity();
-    FloatMatrix4x4 m_model_view_matrix = FloatMatrix4x4::identity();
-    FloatMatrix4x4 m_texture_matrix = FloatMatrix4x4::identity();
+    GLenum m_current_matrix_mode { GL_MODELVIEW };
+    FloatMatrix4x4 m_projection_matrix { FloatMatrix4x4::identity() };
+    FloatMatrix4x4 m_model_view_matrix { FloatMatrix4x4::identity() };
+    FloatMatrix4x4 m_texture_matrix { FloatMatrix4x4::identity() };
+    FloatMatrix4x4* m_current_matrix { &m_model_view_matrix };
 
     Vector<FloatMatrix4x4> m_projection_matrix_stack;
     Vector<FloatMatrix4x4> m_model_view_matrix_stack;
     // FIXME: implement multi-texturing: the texture matrix stack should live inside a texture unit
     Vector<FloatMatrix4x4> m_texture_matrix_stack;
+    Vector<FloatMatrix4x4>* m_current_matrix_stack { &m_model_view_matrix_stack };
 
     Gfx::IntRect m_viewport;
 
