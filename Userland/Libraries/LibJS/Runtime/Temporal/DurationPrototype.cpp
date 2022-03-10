@@ -173,7 +173,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::sign_getter)
     // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
     auto* duration = TRY(typed_this_object(global_object));
 
-    // 3. Return ! DurationSign(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
+    // 3. Return 𝔽(! DurationSign(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]])).
     return Value(duration_sign(duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds()));
 }
 
@@ -572,8 +572,8 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::total)
         whole = round_result.nanoseconds;
     }
 
-    // 24. Return whole + roundRecord.[[Remainder]].
-    return whole + round_record.remainder;
+    // 24. Return 𝔽(whole + roundRecord.[[Remainder]]).
+    return Value(whole + round_record.remainder);
 }
 
 // 7.3.22 Temporal.Duration.prototype.toString ( [ options ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tostring
