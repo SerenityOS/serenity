@@ -1008,11 +1008,11 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
         // a. Let calendar be relativeTo.[[Calendar]].
         auto& calendar = relative_to.calendar();
 
-        // b. Let dateDuration1 be ? CreateTemporalDuration(y1, mon1, w1, d1, 0, 0, 0, 0, 0, 0).
-        auto* date_duration1 = TRY(create_temporal_duration(global_object, years1, months1, weeks1, days1, 0, 0, 0, 0, 0, 0));
+        // b. Let dateDuration1 be ! CreateTemporalDuration(y1, mon1, w1, d1, 0, 0, 0, 0, 0, 0).
+        auto* date_duration1 = MUST(create_temporal_duration(global_object, years1, months1, weeks1, days1, 0, 0, 0, 0, 0, 0));
 
-        // c. Let dateDuration2 be ? CreateTemporalDuration(y2, mon2, w2, d2, 0, 0, 0, 0, 0, 0).
-        auto* date_duration2 = TRY(create_temporal_duration(global_object, years2, months2, weeks2, days2, 0, 0, 0, 0, 0, 0));
+        // c. Let dateDuration2 be ! CreateTemporalDuration(y2, mon2, w2, d2, 0, 0, 0, 0, 0, 0).
+        auto* date_duration2 = MUST(create_temporal_duration(global_object, years2, months2, weeks2, days2, 0, 0, 0, 0, 0, 0));
 
         // d. Let dateAdd be ? GetMethod(calendar, "dateAdd").
         auto* date_add = TRY(Value(&calendar).get_method(global_object, vm.names.dateAdd));
@@ -1204,8 +1204,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     if (unit == "year"sv) {
         VERIFY(relative_to);
 
-        // a. Let yearsDuration be ? CreateTemporalDuration(years, 0, 0, 0, 0, 0, 0, 0, 0, 0).
-        auto* years_duration = TRY(create_temporal_duration(global_object, years, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        // a. Let yearsDuration be ! CreateTemporalDuration(years, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+        auto* years_duration = MUST(create_temporal_duration(global_object, years, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // b. Let dateAdd be ? GetMethod(calendar, "dateAdd").
         auto* date_add = TRY(Value(calendar).get_method(global_object, vm.names.dateAdd));
@@ -1216,8 +1216,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // d. Let yearsLater be ? CalendarDateAdd(calendar, relativeTo, yearsDuration, firstAddOptions, dateAdd).
         auto* years_later = TRY(calendar_date_add(global_object, *calendar, relative_to, *years_duration, first_add_options, date_add));
 
-        // e. Let yearsMonthsWeeks be ? CreateTemporalDuration(years, months, weeks, 0, 0, 0, 0, 0, 0, 0).
-        auto* years_months_weeks = TRY(create_temporal_duration(global_object, years, months, weeks, 0, 0, 0, 0, 0, 0, 0));
+        // e. Let yearsMonthsWeeks be ! CreateTemporalDuration(years, months, weeks, 0, 0, 0, 0, 0, 0, 0).
+        auto* years_months_weeks = MUST(create_temporal_duration(global_object, years, months, weeks, 0, 0, 0, 0, 0, 0, 0));
 
         // f. Let secondAddOptions be OrdinaryObjectCreate(null).
         auto* second_add_options = Object::create(global_object, nullptr);
@@ -1261,8 +1261,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // s. Let oldRelativeTo be relativeTo.
         auto* old_relative_to = relative_to;
 
-        // t. Let yearsDuration be ? CreateTemporalDuration(yearsPassed, 0, 0, 0, 0, 0, 0, 0, 0, 0).
-        years_duration = TRY(create_temporal_duration(global_object, years_passed, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+        // t. Let yearsDuration be ! CreateTemporalDuration(yearsPassed, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+        years_duration = MUST(create_temporal_duration(global_object, years_passed, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // u. Let fourthAddOptions be OrdinaryObjectCreate(null).
         auto* fourth_add_options = Object::create(global_object, nullptr);
@@ -1306,8 +1306,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     else if (unit == "month"sv) {
         VERIFY(relative_to);
 
-        // a. Let yearsMonths be ? CreateTemporalDuration(years, months, 0, 0, 0, 0, 0, 0, 0, 0).
-        auto* years_months = TRY(create_temporal_duration(global_object, years, months, 0, 0, 0, 0, 0, 0, 0, 0));
+        // a. Let yearsMonths be ! CreateTemporalDuration(years, months, 0, 0, 0, 0, 0, 0, 0, 0).
+        auto* years_months = MUST(create_temporal_duration(global_object, years, months, 0, 0, 0, 0, 0, 0, 0, 0));
 
         // b. Let dateAdd be ? GetMethod(calendar, "dateAdd").
         auto* date_add = TRY(Value(calendar).get_method(global_object, vm.names.dateAdd));
@@ -1318,8 +1318,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // d. Let yearsMonthsLater be ? CalendarDateAdd(calendar, relativeTo, yearsMonths, firstAddOptions, dateAdd).
         auto* years_months_later = TRY(calendar_date_add(global_object, *calendar, relative_to, *years_months, first_add_options, date_add));
 
-        // e. Let yearsMonthsWeeks be ? CreateTemporalDuration(years, months, weeks, 0, 0, 0, 0, 0, 0, 0).
-        auto* years_months_weeks = TRY(create_temporal_duration(global_object, years, months, weeks, 0, 0, 0, 0, 0, 0, 0));
+        // e. Let yearsMonthsWeeks be ! CreateTemporalDuration(years, months, weeks, 0, 0, 0, 0, 0, 0, 0).
+        auto* years_months_weeks = MUST(create_temporal_duration(global_object, years, months, weeks, 0, 0, 0, 0, 0, 0, 0));
 
         // f. Let secondAddOptions be OrdinaryObjectCreate(null).
         auto* seconds_add_options = Object::create(global_object, nullptr);

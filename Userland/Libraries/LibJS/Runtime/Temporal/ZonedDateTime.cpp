@@ -386,8 +386,8 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigI
     // 5. Let datePart be ? CreateTemporalDate(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], calendar).
     auto* date_part = TRY(create_temporal_date(global_object, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), calendar));
 
-    // 6. Let dateDuration be ? CreateTemporalDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
-    auto* date_duration = TRY(create_temporal_duration(global_object, years, months, weeks, days, 0, 0, 0, 0, 0, 0));
+    // 6. Let dateDuration be ! CreateTemporalDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
+    auto* date_duration = MUST(create_temporal_duration(global_object, years, months, weeks, days, 0, 0, 0, 0, 0, 0));
 
     // 7. Let addedDate be ? CalendarDateAdd(calendar, datePart, dateDuration, options).
     auto* added_date = TRY(calendar_date_add(global_object, calendar, date_part, *date_duration, options));
