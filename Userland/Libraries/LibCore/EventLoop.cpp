@@ -374,8 +374,17 @@ bool connect_to_inspector_server()
 #endif
 }
 
+#define VERIFY_EVENT_LOOP_INITIALIZED()                                              \
+    do {                                                                             \
+        if (!s_event_loop_stack) {                                                   \
+            warnln("EventLoop static API was called without prior EventLoop init!"); \
+            VERIFY_NOT_REACHED();                                                    \
+        }                                                                            \
+    } while (0)
+
 EventLoop& EventLoop::current()
 {
+    VERIFY_EVENT_LOOP_INITIALIZED();
     return s_event_loop_stack->last();
 }
 
@@ -628,6 +637,7 @@ void EventLoop::unregister_signal(int handler_id)
 
 void EventLoop::notify_forked(ForkEvent event)
 {
+    VERIFY_EVENT_LOOP_INITIALIZED();
     switch (event) {
     case ForkEvent::Child:
         s_main_event_loop.with_locked([]([[maybe_unused]] auto*& main_event_loop) { main_event_loop = nullptr; });
@@ -815,6 +825,7 @@ Optional<Time> EventLoop::get_next_timer_expiration()
 
 int EventLoop::register_timer(Object& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
+    VERIFY_EVENT_LOOP_INITIALIZED();
     VERIFY(milliseconds >= 0);
     auto timer = make<EventLoopTimer>();
     timer->owner = object;
@@ -830,6 +841,7 @@ int EventLoop::register_timer(Object& object, int milliseconds, bool should_relo
 
 bool EventLoop::unregister_timer(int timer_id)
 {
+    VERIFY_EVENT_LOOP_INITIALIZED();
     s_id_allocator.with_locked([&](auto& allocator) { allocator->deallocate(timer_id); });
     auto it = s_timers->find(timer_id);
     if (it == s_timers->end())
@@ -840,11 +852,13 @@ bool EventLoop::unregister_timer(int timer_id)
 
 void EventLoop::register_notifier(Badge<Notifier>, Notifier& notifier)
 {
+    VERIFY_EVENT_LOOP_INITIALIZED();
     s_notifiers->set(&notifier);
 }
 
 void EventLoop::unregister_notifier(Badge<Notifier>, Notifier& notifier)
 {
+    VERIFY_EVENT_LOOP_INITIALIZED();
     s_notifiers->remove(&notifier);
 }
 
