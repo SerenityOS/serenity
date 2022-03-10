@@ -30,9 +30,6 @@ static long long g_num_sampler_calls;
 static long long g_num_stencil_writes;
 static long long g_num_quads;
 
-using IntVector2 = Gfx::Vector2<int>;
-using IntVector3 = Gfx::Vector3<int>;
-
 using AK::SIMD::any;
 using AK::SIMD::exp;
 using AK::SIMD::expand4;
