@@ -155,7 +155,7 @@ void StackingContext::paint(PaintContext& context) const
         Gfx::Painter painter(bitmap);
         PaintContext paint_context(painter, context.palette(), context.scroll_offset());
         paint_internal(paint_context);
-        context.painter().blit(Gfx::IntPoint(m_box.m_paint_box->absolute_position()), bitmap, Gfx::IntRect(m_box.m_paint_box->absolute_rect()), opacity);
+        context.painter().blit(Gfx::IntPoint(m_box.paint_box()->absolute_position()), bitmap, Gfx::IntRect(m_box.paint_box()->absolute_rect()), opacity);
     } else {
         paint_internal(context);
     }
@@ -179,7 +179,7 @@ Layout::HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, L
     Layout::HitTestResult result;
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
-        if (box.is_positioned() && !box.m_paint_box->stacking_context()) {
+        if (box.is_positioned() && !box.paint_box()->stacking_context()) {
             result = box.hit_test(position, type);
             if (result.layout_node)
                 return IterationDecision::Break;
@@ -231,7 +231,7 @@ Layout::HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, L
     }
 
     // 1. the background and borders of the element forming the stacking context.
-    if (m_box.m_paint_box->absolute_border_box_rect().contains(position.to_type<float>())) {
+    if (m_box.paint_box()->absolute_border_box_rect().contains(position.to_type<float>())) {
         return Layout::HitTestResult {
             .layout_node = m_box,
         };
@@ -245,7 +245,7 @@ void StackingContext::dump(int indent) const
     StringBuilder builder;
     for (int i = 0; i < indent; ++i)
         builder.append(' ');
-    builder.appendff("SC for {} {} [children: {}] (z-index: ", m_box.debug_description(), m_box.m_paint_box->absolute_rect(), m_children.size());
+    builder.appendff("SC for {} {} [children: {}] (z-index: ", m_box.debug_description(), m_box.paint_box()->absolute_rect(), m_children.size());
     if (m_box.computed_values().z_index().has_value())
         builder.appendff("{}", m_box.computed_values().z_index().value());
     else

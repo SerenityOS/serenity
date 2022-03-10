@@ -124,7 +124,7 @@ void Node::set_needs_display()
 Gfx::FloatPoint Node::box_type_agnostic_position() const
 {
     if (is<Box>(*this))
-        return verify_cast<Box>(*this).m_paint_box->absolute_position();
+        return verify_cast<Box>(*this).paint_box()->absolute_position();
     VERIFY(is_inline());
     Gfx::FloatPoint position;
     if (auto* block = containing_block()) {

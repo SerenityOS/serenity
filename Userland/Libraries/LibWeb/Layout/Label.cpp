@@ -47,8 +47,8 @@ void Label::handle_mouseup_on_label(Badge<TextNode>, const Gfx::IntPoint& positi
     NonnullRefPtr protect = *this;
 
     if (auto* control = labeled_control(); control) {
-        bool is_inside_control = enclosing_int_rect(control->m_paint_box->absolute_rect()).contains(position);
-        bool is_inside_label = enclosing_int_rect(m_paint_box->absolute_rect()).contains(position);
+        bool is_inside_control = enclosing_int_rect(control->paint_box()->absolute_rect()).contains(position);
+        bool is_inside_label = enclosing_int_rect(paint_box()->absolute_rect()).contains(position);
 
         if (is_inside_control || is_inside_label)
             control->handle_associated_label_mouseup({});
@@ -63,8 +63,8 @@ void Label::handle_mousemove_on_label(Badge<TextNode>, const Gfx::IntPoint& posi
         return;
 
     if (auto* control = labeled_control(); control) {
-        bool is_inside_control = enclosing_int_rect(control->m_paint_box->absolute_rect()).contains(position);
-        bool is_inside_label = enclosing_int_rect(m_paint_box->absolute_rect()).contains(position);
+        bool is_inside_control = enclosing_int_rect(control->paint_box()->absolute_rect()).contains(position);
+        bool is_inside_label = enclosing_int_rect(paint_box()->absolute_rect()).contains(position);
 
         control->handle_associated_label_mousemove({}, is_inside_control || is_inside_label);
     }
@@ -73,7 +73,7 @@ void Label::handle_mousemove_on_label(Badge<TextNode>, const Gfx::IntPoint& posi
 bool Label::is_inside_associated_label(LabelableNode& control, const Gfx::IntPoint& position)
 {
     if (auto* label = label_for_control_node(control); label)
-        return enclosing_int_rect(label->m_paint_box->absolute_rect()).contains(position);
+        return enclosing_int_rect(label->paint_box()->absolute_rect()).contains(position);
     return false;
 }
 

@@ -429,15 +429,14 @@ bool Element::serializes_as_void() const
 NonnullRefPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
 {
     // FIXME: Support inline layout nodes as well.
-
-    if (!layout_node() || !layout_node()->is_box())
+    auto* paint_box = this->paint_box();
+    if (!paint_box)
         return Geometry::DOMRect::create(0, 0, 0, 0);
 
     VERIFY(document().browsing_context());
     auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
 
-    auto& box = static_cast<Layout::Box const&>(*layout_node());
-    return Geometry::DOMRect::create(box.m_paint_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
+    return Geometry::DOMRect::create(paint_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects

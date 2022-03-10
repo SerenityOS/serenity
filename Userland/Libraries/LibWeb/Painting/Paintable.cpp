@@ -62,7 +62,7 @@ Gfx::FloatRect Paintable::absolute_rect() const
 {
     Gfx::FloatRect rect { effective_offset(), content_size() };
     for (auto* block = m_layout_box.containing_block(); block; block = block->containing_block())
-        rect.translate_by(block->m_paint_box->effective_offset());
+        rect.translate_by(block->paint_box()->effective_offset());
     return rect;
 }
 
@@ -79,8 +79,8 @@ Painting::StackingContext* Paintable::enclosing_stacking_context()
         auto& ancestor_box = static_cast<Layout::Box&>(const_cast<Layout::NodeWithStyle&>(*ancestor));
         if (!ancestor_box.establishes_stacking_context())
             continue;
-        VERIFY(ancestor_box.m_paint_box->stacking_context());
-        return ancestor_box.m_paint_box->stacking_context();
+        VERIFY(ancestor_box.paint_box()->stacking_context());
+        return const_cast<StackingContext*>(ancestor_box.paint_box()->stacking_context());
     }
     // We should always reach the Layout::InitialContainingBlock stacking context.
     VERIFY_NOT_REACHED();

@@ -24,32 +24,32 @@ InitialContainingBlock::~InitialContainingBlock()
 
 void InitialContainingBlock::build_stacking_context_tree()
 {
-    m_paint_box->set_stacking_context(make<Painting::StackingContext>(*this, nullptr));
+    const_cast<Painting::PaintableWithLines*>(paint_box())->set_stacking_context(make<Painting::StackingContext>(*this, nullptr));
 
     for_each_in_inclusive_subtree_of_type<Box>([&](Box& box) {
         if (&box == this)
             return IterationDecision::Continue;
         if (!box.establishes_stacking_context()) {
-            VERIFY(!box.m_paint_box->stacking_context());
+            VERIFY(!box.paint_box()->stacking_context());
             return IterationDecision::Continue;
         }
-        auto* parent_context = box.m_paint_box->enclosing_stacking_context();
+        auto* parent_context = const_cast<Painting::Paintable*>(box.paint_box())->enclosing_stacking_context();
         VERIFY(parent_context);
-        box.m_paint_box->set_stacking_context(make<Painting::StackingContext>(box, parent_context));
+        const_cast<Painting::Paintable*>(box.paint_box())->set_stacking_context(make<Painting::StackingContext>(box, parent_context));
         return IterationDecision::Continue;
     });
 }
 
 void InitialContainingBlock::paint_all_phases(PaintContext& context)
 {
-    context.painter().fill_rect(enclosing_int_rect(m_paint_box->absolute_rect()), context.palette().base());
+    context.painter().fill_rect(enclosing_int_rect(paint_box()->absolute_rect()), context.palette().base());
     context.painter().translate(-context.viewport_rect().location());
-    m_paint_box->stacking_context()->paint(context);
+    paint_box()->stacking_context()->paint(context);
 }
 
 HitTestResult InitialContainingBlock::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
-    return m_paint_box->stacking_context()->hit_test(position, type);
+    return paint_box()->stacking_context()->hit_test(position, type);
 }
 
 void InitialContainingBlock::recompute_selection_states()

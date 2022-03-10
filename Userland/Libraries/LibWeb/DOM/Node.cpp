@@ -1016,7 +1016,7 @@ Painting::Paintable const* Node::paint_box() const
         return nullptr;
     if (!layout_node()->is_box())
         return nullptr;
-    return static_cast<Layout::Box const&>(*layout_node()).m_paint_box;
+    return static_cast<Layout::Box const&>(*layout_node()).paint_box();
 }
 
 }

@@ -37,7 +37,7 @@ void FrameBox::did_set_rect()
     ReplacedBox::did_set_rect();
 
     VERIFY(dom_node().nested_browsing_context());
-    dom_node().nested_browsing_context()->set_size(m_paint_box->content_size().to_type<int>());
+    dom_node().nested_browsing_context()->set_size(paint_box()->content_size().to_type<int>());
 }
 
 OwnPtr<Painting::Paintable> FrameBox::create_paintable() const

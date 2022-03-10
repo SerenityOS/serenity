@@ -190,7 +190,7 @@ void ConnectionFromClient::debug_request(const String& request, const String& ar
     if (request == "dump-stacking-context-tree") {
         if (auto* doc = page().top_level_browsing_context().active_document()) {
             if (auto* icb = doc->layout_node()) {
-                if (auto* stacking_context = icb->m_paint_box->stacking_context())
+                if (auto* stacking_context = icb->paint_box()->stacking_context())
                     stacking_context->dump();
             }
         }

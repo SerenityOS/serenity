@@ -36,7 +36,7 @@ void InlineNode::paint_inline(PaintContext& context, Painting::PaintPhase phase)
         auto top_right_border_radius = computed_values().border_top_right_radius();
         auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
         auto bottom_left_border_radius = computed_values().border_bottom_left_radius();
-        auto containing_block_position_in_absolute_coordinates = containing_block()->m_paint_box->absolute_position();
+        auto containing_block_position_in_absolute_coordinates = containing_block()->paint_box()->absolute_position();
 
         for_each_fragment([&](auto const& fragment, bool is_first_fragment, bool is_last_fragment) {
             Gfx::FloatRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
@@ -87,7 +87,7 @@ void InlineNode::paint_inline(PaintContext& context, Painting::PaintPhase phase)
             .left = computed_values().border_left(),
         };
 
-        auto containing_block_position_in_absolute_coordinates = containing_block()->m_paint_box->absolute_position();
+        auto containing_block_position_in_absolute_coordinates = containing_block()->paint_box()->absolute_position();
 
         for_each_fragment([&](auto const& fragment, bool is_first_fragment, bool is_last_fragment) {
             Gfx::FloatRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };

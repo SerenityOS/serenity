@@ -67,7 +67,7 @@ HitTestResult Box::hit_test(const Gfx::IntPoint& position, HitTestType type) con
     // FIXME: It would be nice if we could confidently skip over hit testing
     //        parts of the layout tree, but currently we can't just check
     //        m_rect.contains() since inline text rects can't be trusted..
-    HitTestResult result { m_paint_box->absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
+    HitTestResult result { paint_box()->absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
     for_each_child_in_paint_order([&](auto& child) {
         auto child_result = child.hit_test(position, type);
         if (child_result.layout_node)
@@ -79,7 +79,7 @@ HitTestResult Box::hit_test(const Gfx::IntPoint& position, HitTestType type) con
 void Box::set_needs_display()
 {
     if (!is_inline()) {
-        browsing_context().set_needs_display(enclosing_int_rect(m_paint_box->absolute_rect()));
+        browsing_context().set_needs_display(enclosing_int_rect(paint_box()->absolute_rect()));
         return;
     }
 

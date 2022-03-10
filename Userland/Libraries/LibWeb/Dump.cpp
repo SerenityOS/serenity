@@ -167,10 +167,10 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             builder.appendff("@{:p} ", &layout_node);
 
         builder.appendff("at ({},{}) content-size {}x{}",
-            box.m_paint_box->absolute_x(),
-            box.m_paint_box->absolute_y(),
-            box.m_paint_box->content_width(),
-            box.m_paint_box->content_height());
+            box.paint_box()->absolute_x(),
+            box.paint_box()->absolute_y(),
+            box.paint_box()->content_width(),
+            box.paint_box()->content_height());
 
         if (box.is_positioned())
             builder.appendff(" {}positioned{}", positioned_color_on, color_off);
@@ -205,7 +205,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().margin.left,
                 box.box_model().border.left,
                 box.box_model().padding.left,
-                box.m_paint_box->content_width(),
+                box.paint_box()->content_width(),
                 box.box_model().padding.right,
                 box.box_model().border.right,
                 box.box_model().margin.right);
@@ -215,7 +215,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().margin.top,
                 box.box_model().border.top,
                 box.box_model().padding.top,
-                box.m_paint_box->content_height(),
+                box.paint_box()->content_height(),
                 box.box_model().padding.bottom,
                 box.box_model().border.bottom,
                 box.box_model().margin.bottom);
