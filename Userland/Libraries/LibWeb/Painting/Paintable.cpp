@@ -37,7 +37,7 @@ void Paintable::set_offset(const Gfx::FloatPoint& offset)
         return;
     m_offset = offset;
     // FIXME: This const_cast is gross.
-    const_cast<Layout::Box&>(m_layout_box).did_set_rect();
+    const_cast<Layout::Box&>(layout_box()).did_set_rect();
 }
 
 void Paintable::set_content_size(Gfx::FloatSize const& size)
@@ -46,13 +46,13 @@ void Paintable::set_content_size(Gfx::FloatSize const& size)
         return;
     m_content_size = size;
     // FIXME: This const_cast is gross.
-    const_cast<Layout::Box&>(m_layout_box).did_set_rect();
+    const_cast<Layout::Box&>(layout_box()).did_set_rect();
 }
 
 Gfx::FloatPoint Paintable::effective_offset() const
 {
     if (m_containing_line_box_fragment.has_value()) {
-        auto const& fragment = m_layout_box.containing_block()->paint_box()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
+        auto const& fragment = layout_box().containing_block()->paint_box()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
         return fragment.offset();
     }
     return m_offset;
@@ -61,7 +61,7 @@ Gfx::FloatPoint Paintable::effective_offset() const
 Gfx::FloatRect Paintable::absolute_rect() const
 {
     Gfx::FloatRect rect { effective_offset(), content_size() };
-    for (auto* block = m_layout_box.containing_block(); block; block = block->containing_block())
+    for (auto* block = layout_box().containing_block(); block; block = block->containing_block())
         rect.translate_by(block->paint_box()->effective_offset());
     return rect;
 }
@@ -73,7 +73,7 @@ void Paintable::set_containing_line_box_fragment(Optional<Layout::LineBoxFragmen
 
 Painting::StackingContext* Paintable::enclosing_stacking_context()
 {
-    for (auto* ancestor = m_layout_box.parent(); ancestor; ancestor = ancestor->parent()) {
+    for (auto* ancestor = layout_box().parent(); ancestor; ancestor = ancestor->parent()) {
         if (!is<Layout::Box>(ancestor))
             continue;
         auto& ancestor_box = static_cast<Layout::Box&>(const_cast<Layout::NodeWithStyle&>(*ancestor));
@@ -100,7 +100,7 @@ void Paintable::paint(PaintContext& context, PaintPhase phase) const
         paint_border(context);
     }
 
-    if (phase == PaintPhase::Overlay && m_layout_box.dom_node() && m_layout_box.document().inspected_node() == m_layout_box.dom_node()) {
+    if (phase == PaintPhase::Overlay && layout_box().dom_node() && layout_box().document().inspected_node() == layout_box().dom_node()) {
         auto content_rect = absolute_rect();
 
         auto margin_box = box_model().margin_box();
@@ -124,10 +124,10 @@ void Paintable::paint(PaintContext& context, PaintPhase phase) const
         paint_inspector_rect(content_rect, Color::Magenta);
 
         StringBuilder builder;
-        if (m_layout_box.dom_node())
-            builder.append(m_layout_box.dom_node()->debug_description());
+        if (layout_box().dom_node())
+            builder.append(layout_box().dom_node()->debug_description());
         else
-            builder.append(m_layout_box.debug_description());
+            builder.append(layout_box().debug_description());
         builder.appendff(" {}x{} @ {},{}", border_rect.width(), border_rect.height(), border_rect.x(), border_rect.y());
         auto size_text = builder.to_string();
         auto size_text_rect = border_rect;
@@ -140,7 +140,7 @@ void Paintable::paint(PaintContext& context, PaintPhase phase) const
         context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text, Gfx::TextAlignment::Center, context.palette().color(Gfx::ColorRole::TooltipText));
     }
 
-    if (phase == PaintPhase::FocusOutline && m_layout_box.dom_node() && m_layout_box.dom_node()->is_element() && verify_cast<DOM::Element>(*m_layout_box.dom_node()).is_focused()) {
+    if (phase == PaintPhase::FocusOutline && layout_box().dom_node() && layout_box().dom_node()->is_element() && verify_cast<DOM::Element>(*layout_box().dom_node()).is_focused()) {
         context.painter().draw_rect(enclosing_int_rect(absolute_rect()), context.palette().focus_outline());
     }
 }
@@ -159,14 +159,14 @@ void Paintable::paint_border(PaintContext& context) const
 void Paintable::paint_background(PaintContext& context) const
 {
     // If the body's background properties were propagated to the root element, do no re-paint the body's background.
-    if (m_layout_box.is_body() && document().html_element()->should_use_body_background_properties())
+    if (layout_box().is_body() && document().html_element()->should_use_body_background_properties())
         return;
 
     Gfx::IntRect background_rect;
     Color background_color = computed_values().background_color();
     auto* background_layers = &computed_values().background_layers();
 
-    if (m_layout_box.is_root_element()) {
+    if (layout_box().is_root_element()) {
         // CSS 2.1 Appendix E.2: If the element is a root element, paint the background over the entire canvas.
         background_rect = context.viewport_rect();
 
@@ -185,7 +185,7 @@ void Paintable::paint_background(PaintContext& context) const
     if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
         background_rect = enclosing_int_rect(absolute_border_box_rect());
 
-    Painting::paint_background(context, m_layout_box, background_rect, background_color, background_layers, normalized_border_radius_data());
+    Painting::paint_background(context, layout_box(), background_rect, background_color, background_layers, normalized_border_radius_data());
 }
 
 void Paintable::paint_box_shadow(PaintContext& context) const
@@ -199,10 +199,10 @@ void Paintable::paint_box_shadow(PaintContext& context) const
     for (auto const& layer : box_shadow_data) {
         resolved_box_shadow_data.empend(
             layer.color,
-            static_cast<int>(layer.offset_x.to_px(m_layout_box)),
-            static_cast<int>(layer.offset_y.to_px(m_layout_box)),
-            static_cast<int>(layer.blur_radius.to_px(m_layout_box)),
-            static_cast<int>(layer.spread_distance.to_px(m_layout_box)),
+            static_cast<int>(layer.offset_x.to_px(layout_box())),
+            static_cast<int>(layer.offset_y.to_px(layout_box())),
+            static_cast<int>(layer.blur_radius.to_px(layout_box())),
+            static_cast<int>(layer.spread_distance.to_px(layout_box())),
             layer.placement == CSS::BoxShadowPlacement::Outer ? BoxShadowPlacement::Outer : BoxShadowPlacement::Inner);
     }
     Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), resolved_box_shadow_data);
@@ -210,7 +210,7 @@ void Paintable::paint_box_shadow(PaintContext& context) const
 
 BorderRadiusData Paintable::normalized_border_radius_data() const
 {
-    return Painting::normalized_border_radius_data(m_layout_box, absolute_border_box_rect(),
+    return Painting::normalized_border_radius_data(layout_box(), absolute_border_box_rect(),
         computed_values().border_top_left_radius(),
         computed_values().border_top_right_radius(),
         computed_values().border_bottom_right_radius(),
@@ -249,7 +249,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         context.painter().save();
         // FIXME: Handle overflow-x and overflow-y being different values.
         context.painter().add_clip_rect(enclosing_int_rect(absolute_padding_box_rect()));
-        auto scroll_offset = static_cast<Layout::BlockContainer const&>(m_layout_box).scroll_offset();
+        auto scroll_offset = static_cast<Layout::BlockContainer const&>(layout_box()).scroll_offset();
         context.painter().translate(-scroll_offset.to_type<int>());
     }
 

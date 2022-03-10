@@ -24,12 +24,14 @@ public:
 
     virtual void paint(PaintContext&, PaintPhase) const;
 
-    bool is_visible() const { return m_layout_box.is_visible(); }
+    bool is_visible() const { return layout_box().is_visible(); }
 
     Layout::Box const& m_layout_box;
 
-    auto const& box_model() const { return m_layout_box.box_model(); }
-    auto const& computed_values() const { return m_layout_box.computed_values(); }
+    Layout::Box const& layout_box() const { return m_layout_box; }
+
+    auto const& box_model() const { return layout_box().box_model(); }
+    auto const& computed_values() const { return layout_box().computed_values(); }
 
     struct OverflowData {
         Gfx::FloatRect scrollable_overflow_rect;
@@ -113,8 +115,8 @@ public:
     void set_stacking_context(NonnullOwnPtr<Painting::StackingContext> context) { m_stacking_context = move(context); }
     StackingContext* enclosing_stacking_context();
 
-    DOM::Node const* dom_node() const { return m_layout_box.dom_node(); }
-    DOM::Document const& document() const { return m_layout_box.document(); }
+    DOM::Node const* dom_node() const { return layout_box().dom_node(); }
+    DOM::Document const& document() const { return layout_box().document(); }
 
     virtual void before_children_paint(PaintContext&, PaintPhase) const;
     virtual void after_children_paint(PaintContext&, PaintPhase) const;
