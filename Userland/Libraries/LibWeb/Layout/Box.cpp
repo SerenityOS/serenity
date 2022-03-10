@@ -217,21 +217,6 @@ bool Box::is_body() const
     return dom_node() && dom_node() == document().body();
 }
 
-Painting::StackingContext* Box::enclosing_stacking_context()
-{
-    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-        if (!is<Box>(ancestor))
-            continue;
-        auto& ancestor_box = verify_cast<Box>(*ancestor);
-        if (!ancestor_box.establishes_stacking_context())
-            continue;
-        VERIFY(ancestor_box.stacking_context());
-        return ancestor_box.stacking_context();
-    }
-    // We should always reach the Layout::InitialContainingBlock stacking context.
-    VERIFY_NOT_REACHED();
-}
-
 void Box::before_children_paint(PaintContext& context, Painting::PaintPhase phase)
 {
     NodeWithStyleAndBoxModelMetrics::before_children_paint(context, phase);

@@ -570,7 +570,6 @@ void Document::update_layout()
 
     Layout::FormattingState formatting_state;
     Layout::BlockFormattingContext root_formatting_context(formatting_state, *m_layout_root, nullptr);
-    m_layout_root->build_stacking_context_tree();
 
     auto& icb = static_cast<Layout::InitialContainingBlock&>(*m_layout_root);
     auto& icb_state = formatting_state.get_mutable(icb);
@@ -582,6 +581,8 @@ void Document::update_layout()
 
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
     formatting_state.commit();
+
+    m_layout_root->build_stacking_context_tree();
 
     browsing_context()->set_needs_display();
 

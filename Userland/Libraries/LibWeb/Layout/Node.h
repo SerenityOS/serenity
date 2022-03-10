@@ -162,7 +162,7 @@ public:
                 return;
 
             auto& box_child = verify_cast<Box>(child);
-            auto* stacking_context = box_child.stacking_context();
+            auto* stacking_context = box_child.m_paint_box->stacking_context();
             if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() < 0)
                 callback(child);
         });
@@ -170,7 +170,7 @@ public:
         // 4. For all its in-flow, non-positioned, block-level descendants in tree order: If the element is a block, list-item,
         //    or other block equivalent:
         for_each_child([&](auto& child) {
-            if (is<Box>(child) && verify_cast<Box>(child).stacking_context())
+            if (is<Box>(child) && verify_cast<Box>(child).m_paint_box->stacking_context())
                 return;
             if (!child.is_positioned())
                 callback(child);
@@ -180,7 +180,7 @@ public:
         //    a new stacking context, but any positioned descendants and descendants which actually create a new stacking context
         //    should be considered part of the parent stacking context, not this new one.
         for_each_child([&](auto& child) {
-            if (is<Box>(child) && verify_cast<Box>(child).stacking_context())
+            if (is<Box>(child) && verify_cast<Box>(child).m_paint_box->stacking_context())
                 return;
             if (child.is_positioned())
                 callback(child);
@@ -195,7 +195,7 @@ public:
                 return;
 
             auto& box_child = verify_cast<Box>(child);
-            auto* stacking_context = box_child.stacking_context();
+            auto* stacking_context = box_child.m_paint_box->stacking_context();
             if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() == 0)
                 callback(child);
         });
@@ -208,7 +208,7 @@ public:
                 return;
 
             auto& box_child = verify_cast<Box>(child);
-            auto* stacking_context = box_child.stacking_context();
+            auto* stacking_context = box_child.m_paint_box->stacking_context();
             if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() > 0)
                 callback(child);
         });

@@ -9,6 +9,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
+#include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Painting {
 
@@ -121,6 +122,13 @@ public:
             }
         }
     }
+
+    StackingContext* stacking_context() { return m_stacking_context; }
+    StackingContext const* stacking_context() const { return m_stacking_context; }
+    void set_stacking_context(NonnullOwnPtr<Painting::StackingContext> context) { m_stacking_context = move(context); }
+    StackingContext* enclosing_stacking_context();
+
+    OwnPtr<Painting::StackingContext> m_stacking_context;
 };
 
 }

@@ -10,7 +10,6 @@
 #include <LibGfx/Rect.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/BorderPainting.h>
-#include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {
 
@@ -29,11 +28,6 @@ public:
     virtual void set_needs_display() override;
 
     bool is_body() const;
-
-    Painting::StackingContext* stacking_context() { return m_stacking_context; }
-    Painting::StackingContext const* stacking_context() const { return m_stacking_context; }
-    void set_stacking_context(NonnullOwnPtr<Painting::StackingContext> context) { m_stacking_context = move(context); }
-    Painting::StackingContext* enclosing_stacking_context();
 
     virtual void paint(PaintContext&, Painting::PaintPhase) override;
     virtual void paint_border(PaintContext& context);
@@ -63,8 +57,6 @@ protected:
 
 private:
     virtual bool is_box() const final { return true; }
-
-    OwnPtr<Painting::StackingContext> m_stacking_context;
 };
 
 template<>

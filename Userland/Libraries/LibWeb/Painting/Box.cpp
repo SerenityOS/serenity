@@ -49,4 +49,19 @@ void Box::set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoord
     m_containing_line_box_fragment = fragment_coordinate;
 }
 
+Painting::StackingContext* Box::enclosing_stacking_context()
+{
+    for (auto* ancestor = m_layout_box.parent(); ancestor; ancestor = ancestor->parent()) {
+        if (!is<Layout::Box>(ancestor))
+            continue;
+        auto& ancestor_box = static_cast<Layout::Box&>(const_cast<Layout::NodeWithStyle&>(*ancestor));
+        if (!ancestor_box.establishes_stacking_context())
+            continue;
+        VERIFY(ancestor_box.m_paint_box->stacking_context());
+        return ancestor_box.m_paint_box->stacking_context();
+    }
+    // We should always reach the Layout::InitialContainingBlock stacking context.
+    VERIFY_NOT_REACHED();
+}
+
 }

@@ -165,7 +165,7 @@ Layout::HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, L
     Layout::HitTestResult result;
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
-        if (box.is_positioned() && !box.stacking_context()) {
+        if (box.is_positioned() && !box.m_paint_box->stacking_context()) {
             result = box.hit_test(position, type);
             if (result.layout_node)
                 return IterationDecision::Break;
