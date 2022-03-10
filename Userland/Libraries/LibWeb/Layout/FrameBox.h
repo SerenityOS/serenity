@@ -16,11 +16,12 @@ public:
     FrameBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~FrameBox() override;
 
-    virtual void paint(PaintContext&, Painting::PaintPhase) override;
     virtual void prepare_for_replaced_layout() override;
 
     const HTML::HTMLIFrameElement& dom_node() const { return verify_cast<HTML::HTMLIFrameElement>(ReplacedBox::dom_node()); }
     HTML::HTMLIFrameElement& dom_node() { return verify_cast<HTML::HTMLIFrameElement>(ReplacedBox::dom_node()); }
+
+    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
 
 private:
     virtual void did_set_rect() override;

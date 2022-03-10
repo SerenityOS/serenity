@@ -20,11 +20,14 @@ public:
     virtual ~ImageBox() override;
 
     virtual void prepare_for_replaced_layout() override;
-    virtual void paint(PaintContext&, Painting::PaintPhase) override;
 
     const DOM::Element& dom_node() const { return static_cast<const DOM::Element&>(ReplacedBox::dom_node()); }
 
     bool renders_as_alt_text() const;
+
+    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
+
+    auto const& image_loader() const { return m_image_loader; }
 
 private:
     // ^BrowsingContext::ViewportClient

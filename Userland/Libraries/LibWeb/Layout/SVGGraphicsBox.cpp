@@ -14,20 +14,4 @@ SVGGraphicsBox::SVGGraphicsBox(DOM::Document& document, SVG::SVGGraphicsElement&
 {
 }
 
-void SVGGraphicsBox::before_children_paint(PaintContext& context, Painting::PaintPhase phase)
-{
-    SVGBox::before_children_paint(context, phase);
-    if (phase != Painting::PaintPhase::Foreground)
-        return;
-
-    auto& graphics_element = verify_cast<SVG::SVGGraphicsElement>(dom_node());
-
-    if (graphics_element.fill_color().has_value())
-        context.svg_context().set_fill_color(graphics_element.fill_color().value());
-    if (graphics_element.stroke_color().has_value())
-        context.svg_context().set_stroke_color(graphics_element.stroke_color().value());
-    if (graphics_element.stroke_width().has_value())
-        context.svg_context().set_stroke_width(graphics_element.stroke_width().value());
-}
-
 }

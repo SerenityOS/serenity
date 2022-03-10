@@ -18,8 +18,6 @@ public:
     BlockContainer(DOM::Document&, DOM::Node*, CSS::ComputedValues);
     virtual ~BlockContainer() override;
 
-    virtual void paint(PaintContext&, Painting::PaintPhase) override;
-
     virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
 
     BlockContainer* previous_sibling() { return verify_cast<BlockContainer>(Node::previous_sibling()); }
@@ -33,12 +31,12 @@ public:
 
     Painting::PaintableWithLines const* paint_box() const;
 
+    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
+
 private:
     virtual bool is_block_container() const final { return true; }
     virtual bool wants_mouse_events() const override { return false; }
     virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
-
-    bool should_clip_overflow() const;
 
     Gfx::FloatPoint m_scroll_offset;
 };

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +12,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/RadioButton.h>
-#include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/RadioButtonPaintable.h>
 
 namespace Web::Layout {
 
@@ -24,18 +25,6 @@ RadioButton::RadioButton(DOM::Document& document, HTML::HTMLInputElement& elemen
 
 RadioButton::~RadioButton()
 {
-}
-
-void RadioButton::paint(PaintContext& context, Painting::PaintPhase phase)
-{
-    if (!is_visible())
-        return;
-
-    LabelableNode::paint(context, phase);
-
-    if (phase == Painting::PaintPhase::Foreground) {
-        Gfx::StylePainter::paint_radio_button(context.painter(), enclosing_int_rect(m_paint_box->absolute_rect()), context.palette(), dom_node().checked(), m_being_pressed);
-    }
 }
 
 void RadioButton::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned)
@@ -123,6 +112,11 @@ void RadioButton::set_checked_within_group()
             element.set_checked(false, HTML::HTMLInputElement::ChangeSource::User);
         return IterationDecision::Continue;
     });
+}
+
+OwnPtr<Painting::Paintable> RadioButton::create_paintable() const
+{
+    return Painting::RadioButtonPaintable::create(*this);
 }
 
 }

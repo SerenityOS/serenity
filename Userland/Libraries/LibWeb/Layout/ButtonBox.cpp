@@ -12,7 +12,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/Label.h>
-#include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/ButtonPaintable.h>
 
 namespace Web::Layout {
 
@@ -29,21 +29,6 @@ void ButtonBox::prepare_for_replaced_layout()
 {
     set_intrinsic_width(font().width(dom_node().value()));
     set_intrinsic_height(font().glyph_height());
-}
-
-void ButtonBox::paint(PaintContext& context, Painting::PaintPhase phase)
-{
-    if (!is_visible())
-        return;
-
-    LabelableNode::paint(context, phase);
-
-    if (phase == Painting::PaintPhase::Foreground) {
-        auto text_rect = enclosing_int_rect(m_paint_box->absolute_rect());
-        if (m_being_pressed)
-            text_rect.translate_by(1, 1);
-        context.painter().draw_text(text_rect, dom_node().value(), font(), Gfx::TextAlignment::Center, computed_values().color());
-    }
 }
 
 void ButtonBox::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned)
@@ -119,6 +104,11 @@ void ButtonBox::handle_associated_label_mousemove(Badge<Label>, bool is_inside_n
 
     m_being_pressed = is_inside_node_or_label;
     set_needs_display();
+}
+
+OwnPtr<Painting::Paintable> ButtonBox::create_paintable() const
+{
+    return Painting::ButtonPaintable::create(*this);
 }
 
 }

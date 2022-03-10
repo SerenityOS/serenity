@@ -29,57 +29,6 @@ BlockContainer::~BlockContainer()
 {
 }
 
-bool BlockContainer::should_clip_overflow() const
-{
-    return computed_values().overflow_x() != CSS::Overflow::Visible && computed_values().overflow_y() != CSS::Overflow::Visible;
-}
-
-void BlockContainer::paint(PaintContext& context, Painting::PaintPhase phase)
-{
-    if (!is_visible())
-        return;
-
-    Box::paint(context, phase);
-
-    if (!children_are_inline())
-        return;
-
-    if (should_clip_overflow()) {
-        context.painter().save();
-        // FIXME: Handle overflow-x and overflow-y being different values.
-        context.painter().add_clip_rect(enclosing_int_rect(m_paint_box->absolute_padding_box_rect()));
-        context.painter().translate(-m_scroll_offset.to_type<int>());
-    }
-
-    for (auto& line_box : paint_box()->line_boxes()) {
-        for (auto& fragment : line_box.fragments()) {
-            if (context.should_show_line_box_borders())
-                context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
-            const_cast<LineBoxFragment&>(fragment).paint(context, phase);
-        }
-    }
-
-    if (should_clip_overflow()) {
-        context.painter().restore();
-    }
-
-    // FIXME: Merge this loop with the above somehow..
-    if (phase == Painting::PaintPhase::FocusOutline) {
-        for (auto& line_box : paint_box()->line_boxes()) {
-            for (auto& fragment : line_box.fragments()) {
-                auto* node = fragment.layout_node().dom_node();
-                if (!node)
-                    continue;
-                auto* parent = node->parent_element();
-                if (!parent)
-                    continue;
-                if (parent->is_focused())
-                    context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), context.palette().focus_outline());
-            }
-        }
-    }
-}
-
 HitTestResult BlockContainer::hit_test(const Gfx::IntPoint& position, HitTestType type) const
 {
     if (!children_are_inline())
@@ -134,6 +83,11 @@ bool BlockContainer::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&
 Painting::PaintableWithLines const* BlockContainer::paint_box() const
 {
     return static_cast<Painting::PaintableWithLines const*>(Box::paint_box());
+}
+
+OwnPtr<Painting::Paintable> BlockContainer::create_paintable() const
+{
+    return Painting::PaintableWithLines::create(*this);
 }
 
 }

@@ -10,7 +10,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/NestedBrowsingContextPaintable.h>
 
 namespace Web::Layout {
 
@@ -32,44 +32,17 @@ void FrameBox::prepare_for_replaced_layout()
     set_intrinsic_height(dom_node().attribute(HTML::AttributeNames::height).to_int().value_or(150));
 }
 
-void FrameBox::paint(PaintContext& context, Painting::PaintPhase phase)
-{
-    ReplacedBox::paint(context, phase);
-
-    if (phase == Painting::PaintPhase::Foreground) {
-        auto* hosted_document = dom_node().content_document_without_origin_check();
-        if (!hosted_document)
-            return;
-        auto* hosted_layout_tree = hosted_document->layout_node();
-        if (!hosted_layout_tree)
-            return;
-
-        context.painter().save();
-        auto old_viewport_rect = context.viewport_rect();
-
-        context.painter().add_clip_rect(enclosing_int_rect(m_paint_box->absolute_rect()));
-        context.painter().translate(m_paint_box->absolute_x(), m_paint_box->absolute_y());
-
-        context.set_viewport_rect({ {}, dom_node().nested_browsing_context()->size() });
-        const_cast<Layout::InitialContainingBlock*>(hosted_layout_tree)->paint_all_phases(context);
-
-        context.set_viewport_rect(old_viewport_rect);
-        context.painter().restore();
-
-        if constexpr (HIGHLIGHT_FOCUSED_FRAME_DEBUG) {
-            if (dom_node().nested_browsing_context()->is_focused_context()) {
-                context.painter().draw_rect(m_paint_box->absolute_rect().to_type<int>(), Color::Cyan);
-            }
-        }
-    }
-}
-
 void FrameBox::did_set_rect()
 {
     ReplacedBox::did_set_rect();
 
     VERIFY(dom_node().nested_browsing_context());
     dom_node().nested_browsing_context()->set_size(m_paint_box->content_size().to_type<int>());
+}
+
+OwnPtr<Painting::Paintable> FrameBox::create_paintable() const
+{
+    return Painting::NestedBrowsingContextPaintable::create(*this);
 }
 
 }

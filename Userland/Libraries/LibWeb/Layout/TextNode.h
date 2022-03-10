@@ -60,7 +60,6 @@ private:
     virtual void handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers) override;
     void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
     void paint_text_decoration(Gfx::Painter&, LineBoxFragment const&) const;
-    virtual void paint(PaintContext&, Painting::PaintPhase) override;
 
     String m_text_for_rendering;
 };

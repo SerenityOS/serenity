@@ -17,9 +17,10 @@ public:
     virtual ~CanvasBox() override;
 
     virtual void prepare_for_replaced_layout() override;
-    virtual void paint(PaintContext&, Painting::PaintPhase) override;
 
     const HTML::HTMLCanvasElement& dom_node() const { return static_cast<const HTML::HTMLCanvasElement&>(ReplacedBox::dom_node()); }
+
+    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
 };
 
 }

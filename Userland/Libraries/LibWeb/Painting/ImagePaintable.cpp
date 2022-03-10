@@ -1,0 +1,55 @@
+/*
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <LibGfx/StylePainter.h>
+#include <LibWeb/HTML/HTMLImageElement.h>
+#include <LibWeb/Layout/ImageBox.h>
+#include <LibWeb/Painting/ImagePaintable.h>
+
+namespace Web::Painting {
+
+NonnullOwnPtr<ImagePaintable> ImagePaintable::create(Layout::ImageBox const& layout_box)
+{
+    return adopt_own(*new ImagePaintable(layout_box));
+}
+
+ImagePaintable::ImagePaintable(Layout::ImageBox const& layout_box)
+    : Paintable(layout_box)
+{
+}
+
+Layout::ImageBox const& ImagePaintable::layout_box() const
+{
+    return static_cast<Layout::ImageBox const&>(m_layout_box);
+}
+
+void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
+{
+    if (!is_visible())
+        return;
+
+    // FIXME: This should be done at a different level. Also rect() does not include padding etc!
+    if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
+        return;
+
+    Paintable::paint(context, phase);
+
+    if (phase == PaintPhase::Foreground) {
+        if (layout_box().renders_as_alt_text()) {
+            auto& image_element = verify_cast<HTML::HTMLImageElement>(*dom_node());
+            context.painter().set_font(Gfx::FontDatabase::default_font());
+            Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
+            auto alt = image_element.alt();
+            if (alt.is_empty())
+                alt = image_element.src();
+            context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
+        } else if (auto bitmap = layout_box().image_loader().bitmap(layout_box().image_loader().current_frame_index())) {
+            context.painter().draw_scaled_bitmap(rounded_int_rect(absolute_rect()), *bitmap, bitmap->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
+        }
+    }
+}
+
+}

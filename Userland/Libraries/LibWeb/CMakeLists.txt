@@ -284,8 +284,20 @@ set(SOURCES
     Page/Page.cpp
     Painting/BackgroundPainting.cpp
     Painting/BorderPainting.cpp
-    Painting/Paintable.cpp
+    Painting/ButtonPaintable.cpp
+    Painting/CanvasPaintable.cpp
+    Painting/CheckBoxPaintable.cpp
+    Painting/ImagePaintable.cpp
+    Painting/MarkerPaintable.cpp
+    Painting/NestedBrowsingContextPaintable.cpp
     Painting/PaintContext.cpp
+    Painting/Paintable.cpp
+    Painting/ProgressPaintable.cpp
+    Painting/RadioButtonPaintable.cpp
+    Painting/SVGGeometryPaintable.cpp
+    Painting/SVGGraphicsPaintable.cpp
+    Painting/SVGPaintable.cpp
+    Painting/SVGSVGPaintable.cpp
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
     RequestIdleCallback/IdleDeadline.cpp

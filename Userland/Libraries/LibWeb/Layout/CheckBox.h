@@ -16,10 +16,12 @@ public:
     CheckBox(DOM::Document&, HTML::HTMLInputElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~CheckBox() override;
 
-    virtual void paint(PaintContext&, Painting::PaintPhase) override;
-
     const HTML::HTMLInputElement& dom_node() const { return static_cast<const HTML::HTMLInputElement&>(LabelableNode::dom_node()); }
     HTML::HTMLInputElement& dom_node() { return static_cast<HTML::HTMLInputElement&>(LabelableNode::dom_node()); }
+
+    bool being_pressed() const { return m_being_pressed; }
+
+    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
 
 private:
     virtual bool wants_mouse_events() const override { return true; }

@@ -27,7 +27,7 @@ InlineNode::~InlineNode()
 {
 }
 
-void InlineNode::paint(PaintContext& context, Painting::PaintPhase phase)
+void InlineNode::paint_inline(PaintContext& context, Painting::PaintPhase phase) const
 {
     auto& painter = context.painter();
 
@@ -126,7 +126,7 @@ void InlineNode::paint(PaintContext& context, Painting::PaintPhase phase)
 }
 
 template<typename Callback>
-void InlineNode::for_each_fragment(Callback callback)
+void InlineNode::for_each_fragment(Callback callback) const
 {
     // FIXME: This will be slow if the containing block has a lot of fragments!
     Vector<LineBoxFragment const&> fragments;

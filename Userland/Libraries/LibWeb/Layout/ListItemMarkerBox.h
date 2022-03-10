@@ -16,10 +16,12 @@ public:
     explicit ListItemMarkerBox(DOM::Document&, CSS::ListStyleType, size_t index, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~ListItemMarkerBox() override;
 
-    virtual void paint(PaintContext&, Painting::PaintPhase) override;
-
     Gfx::Bitmap const* list_style_image_bitmap() const;
     String const& text() const { return m_text; }
+
+    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
+
+    CSS::ListStyleType list_style_type() const { return m_list_style_type; }
 
 private:
     virtual bool can_have_children() const override { return false; }

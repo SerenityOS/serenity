@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,7 +12,7 @@
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/Label.h>
-#include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/CheckBoxPaintable.h>
 
 namespace Web::Layout {
 
@@ -25,18 +25,6 @@ CheckBox::CheckBox(DOM::Document& document, HTML::HTMLInputElement& element, Non
 
 CheckBox::~CheckBox()
 {
-}
-
-void CheckBox::paint(PaintContext& context, Painting::PaintPhase phase)
-{
-    if (!is_visible())
-        return;
-
-    LabelableNode::paint(context, phase);
-
-    if (phase == Painting::PaintPhase::Foreground) {
-        Gfx::StylePainter::paint_check_box(context.painter(), enclosing_int_rect(m_paint_box->absolute_rect()), context.palette(), dom_node().enabled(), dom_node().checked(), m_being_pressed);
-    }
 }
 
 void CheckBox::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned)
@@ -118,6 +106,11 @@ void CheckBox::handle_associated_label_mousemove(Badge<Label>, bool is_inside_no
 
     m_being_pressed = is_inside_node_or_label;
     set_needs_display();
+}
+
+OwnPtr<Painting::Paintable> CheckBox::create_paintable() const
+{
+    return Painting::CheckBoxPaintable::create(*this);
 }
 
 }

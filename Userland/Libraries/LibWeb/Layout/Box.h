@@ -32,13 +32,6 @@ public:
 
     bool is_body() const;
 
-    virtual void paint(PaintContext&, Painting::PaintPhase) override;
-    virtual void paint_border(PaintContext& context);
-    virtual void paint_box_shadow(PaintContext& context);
-    virtual void paint_background(PaintContext& context);
-
-    Painting::BorderRadiusData normalized_border_radius_data();
-
     virtual Optional<float> intrinsic_width() const { return {}; }
     virtual Optional<float> intrinsic_height() const { return {}; }
     virtual Optional<float> intrinsic_aspect_ratio() const { return {}; }
@@ -47,12 +40,11 @@ public:
     bool has_intrinsic_height() const { return intrinsic_height().has_value(); }
     bool has_intrinsic_aspect_ratio() const { return intrinsic_aspect_ratio().has_value(); }
 
-    virtual void before_children_paint(PaintContext&, Painting::PaintPhase) override;
-    virtual void after_children_paint(PaintContext&, Painting::PaintPhase) override;
-
     virtual ~Box() override;
 
     virtual void did_set_rect() { }
+
+    virtual OwnPtr<Painting::Paintable> create_paintable() const;
 
 protected:
     Box(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
