@@ -18,6 +18,7 @@
 #include <AK/Tuple.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
@@ -210,14 +211,20 @@ inline void TestRunnerGlobalObject::initialize_global_object()
 
 inline ByteBuffer load_entire_file(StringView path)
 {
-    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error()) {
-        warnln("Failed to open the following file: \"{}\"", path);
+    auto try_load_entire_file = [](StringView const& path) -> ErrorOr<ByteBuffer> {
+        auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+        auto file_size = TRY(file->size());
+        auto content = TRY(ByteBuffer::create_uninitialized(file_size));
+        TRY(file->read(content.bytes()));
+        return content;
+    };
+
+    auto buffer_or_error = try_load_entire_file(path);
+    if (buffer_or_error.is_error()) {
+        warnln("Failed to open the following file: \"{}\", error: {}", path, buffer_or_error.release_error());
         cleanup_and_exit();
     }
-
-    auto file = file_or_error.release_value();
-    return file->read_all();
+    return buffer_or_error.release_value();
 }
 
 inline AK::Result<NonnullRefPtr<JS::Script>, ParserError> parse_script(StringView path, JS::Realm& realm)
