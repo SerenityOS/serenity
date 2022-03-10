@@ -265,6 +265,9 @@ bool ISO8601Parser::parse_date_year()
                 return false;
         }
     }
+    // It is a Syntax Error if DateExtendedYear is "-000000" or "−000000" (U+2212 MINUS SIGN followed by 000000).
+    if (transaction.parsed_string_view().is_one_of("-000000"sv, "−000000"sv))
+        return false;
     m_state.parse_result.date_year = transaction.parsed_string_view();
     transaction.commit();
     return true;
