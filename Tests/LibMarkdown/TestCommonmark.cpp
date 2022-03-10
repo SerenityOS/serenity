@@ -8,20 +8,23 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/String.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibMarkdown/Document.h>
 #include <LibTest/TestCase.h>
 #include <LibTest/TestSuite.h>
 
 TEST_SETUP
 {
-    auto file = Core::File::construct("/home/anon/commonmark.spec.json");
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        file = Core::File::construct("./commonmark.spec.json");
-        VERIFY(file->open(Core::OpenMode::ReadOnly));
-    }
-
-    String test_data(file->read_all(), AK::ShouldChomp::NoChomp);
+    auto file_or_error = Core::Stream::File::open("/home/anon/commonmark.spec.json", Core::Stream::OpenMode::Read);
+    if (file_or_error.is_error())
+        file_or_error = Core::Stream::File::open("./commonmark.spec.json", Core::Stream::OpenMode::Read);
+    VERIFY(!file_or_error.is_error());
+    auto file = file_or_error.release_value();
+    auto file_size = MUST(file->size());
+    auto content = MUST(ByteBuffer::create_uninitialized(file_size));
+    if (!file->read_or_error(content.bytes()))
+        VERIFY_NOT_REACHED();
+    String test_data { content.bytes() };
 
     auto tests = JsonParser(test_data).parse().value().as_array();
     for (size_t i = 0; i < tests.size(); ++i) {
