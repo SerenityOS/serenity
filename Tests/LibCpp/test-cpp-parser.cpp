@@ -6,22 +6,21 @@
 
 #include <AK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCpp/Parser.h>
 #include <LibTest/TestCase.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
 constexpr char TESTS_ROOT_DIR[] = "/home/anon/cpp-tests/parser";
 
-static String read_all(const String& path)
+static String read_all(String const& path)
 {
-    auto result = Core::File::open(path, Core::OpenMode::ReadOnly);
-    VERIFY(!result.is_error());
-    auto content = result.value()->read_all();
-    return { reinterpret_cast<const char*>(content.data()), content.size() };
+    auto file = MUST(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto file_size = MUST(file->size());
+    auto content = MUST(ByteBuffer::create_uninitialized(file_size));
+    if (!file->read_or_error(content.bytes()))
+        VERIFY_NOT_REACHED();
+    return String { content.bytes() };
 }
 
 TEST_CASE(test_regression)
