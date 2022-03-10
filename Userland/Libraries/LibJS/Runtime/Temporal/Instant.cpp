@@ -127,8 +127,17 @@ ThrowCompletionOr<BigInt*> parse_temporal_instant(GlobalObject& global_object, S
     // 7. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(offsetString).
     auto offset_nanoseconds = TRY(parse_time_zone_offset_string(global_object, *offset_string));
 
-    // 8. Return utc − offsetNanoseconds.
-    return js_bigint(vm, utc->big_integer().minus(Crypto::SignedBigInteger::create_from(offset_nanoseconds)));
+    // 8. Let result be utc − offsetNanoseconds.
+    auto* result_ns = js_bigint(vm, utc->big_integer().minus(Crypto::SignedBigInteger::create_from(offset_nanoseconds)));
+
+    // 9. If ! IsValidEpochNanoseconds(ℤ(result)) is false, then
+    if (!is_valid_epoch_nanoseconds(*result_ns)) {
+        // a. Throw a RangeError exception.
+        return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+    }
+
+    // 10. Return result.
+    return result_ns;
 }
 
 // 8.5.5 CompareEpochNanoseconds ( epochNanosecondsOne, epochNanosecondsTwo ), https://tc39.es/proposal-temporal/#sec-temporal-compareepochnanoseconds
