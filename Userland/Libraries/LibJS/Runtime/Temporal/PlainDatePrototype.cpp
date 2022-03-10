@@ -492,8 +492,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::until)
         result = TRY(round_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, temporal_date)).duration_record;
     }
 
-    // 16. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0).
-    return TRY(create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0));
+    // 16. Return ! CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0).
+    return MUST(create_temporal_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0));
 }
 
 // 3.3.24 Temporal.PlainDate.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.since
@@ -541,20 +541,18 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::since)
     auto* until_options = TRY(merge_largest_unit_option(global_object, *options, move(*largest_unit)));
 
     // 15. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
-    auto* result = TRY(calendar_date_until(global_object, temporal_date->calendar(), temporal_date, other, *until_options));
+    auto* duration = TRY(calendar_date_until(global_object, temporal_date->calendar(), temporal_date, other, *until_options));
 
-    // 16. If smallestUnit is "day" and roundingIncrement = 1, then
-    if (*smallest_unit == "day"sv && rounding_increment == 1) {
-        // a. Return ? CreateTemporalDuration(−result.[[Years]], −result.[[Months]], −result.[[Weeks]], −result.[[Days]], 0, 0, 0, 0, 0, 0).
-        return TRY(create_temporal_duration(global_object, -result->years(), -result->months(), -result->weeks(), -result->days(), 0, 0, 0, 0, 0, 0));
+    DurationRecord result { duration->years(), duration->months(), duration->weeks(), duration->days(), 0, 0, 0, 0, 0, 0 };
+
+    // 16. If smallestUnit is not "day" or roundingIncrement ≠ 1, then
+    if (*smallest_unit != "day"sv || rounding_increment != 1) {
+        // a. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, temporalDate)).[[DurationRecord]].
+        result = TRY(round_duration(global_object, result.years, result.months, result.weeks, result.days, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, temporal_date)).duration_record;
     }
 
-    // 17. Set result to (? RoundDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, temporalDate)).[[DurationRecord]].
-    auto round_result = TRY(round_duration(global_object, result->years(), result->months(), result->weeks(), result->days(), 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, temporal_date)).duration_record;
-
-    // 18. Return ? CreateTemporalDuration(−result.[[Years]], −result.[[Months]], −result.[[Weeks]], −result.[[Days]], 0, 0, 0, 0, 0, 0).
-    // NOTE: `result` here refers to `round_result`.
-    return TRY(create_temporal_duration(global_object, -round_result.years, -round_result.months, -round_result.weeks, -round_result.days, 0, 0, 0, 0, 0, 0));
+    // 17. Return ! CreateTemporalDuration(−result.[[Years]], −result.[[Months]], −result.[[Weeks]], −result.[[Days]], 0, 0, 0, 0, 0, 0).
+    return TRY(create_temporal_duration(global_object, -result.years, -result.months, -result.weeks, -result.days, 0, 0, 0, 0, 0, 0));
 }
 
 // 3.3.25 Temporal.PlainDate.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.equals
