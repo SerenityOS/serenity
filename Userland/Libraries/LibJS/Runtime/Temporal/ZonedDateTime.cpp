@@ -273,7 +273,7 @@ ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(GlobalObject& 
     // 2. Assert: ! IsValidEpochNanoseconds(epochNanoseconds) is true.
     VERIFY(is_valid_epoch_nanoseconds(epoch_nanoseconds));
 
-    // 5. If newTarget is not present, set it to %Temporal.ZonedDateTime%.
+    // 5. If newTarget is not present, set newTarget to %Temporal.ZonedDateTime%.
     if (!new_target)
         new_target = global_object.temporal_zoned_date_time_constructor();
 
@@ -292,15 +292,15 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(GlobalObject& globa
 {
     // 1. Assert: Type(zonedDateTime) is Object and zonedDateTime has an [[InitializedTemporalZonedDateTime]] internal slot.
 
-    // 2. If increment is not present, set it to 1.
+    // 2. If increment is not present, set increment to 1.
     if (!increment.has_value())
         increment = 1;
 
-    // 3. If unit is not present, set it to "nanosecond".
+    // 3. If unit is not present, set unit to "nanosecond".
     if (!unit.has_value())
         unit = "nanosecond"sv;
 
-    // 4. If roundingMode is not present, set it to "trunc".
+    // 4. If roundingMode is not present, set roundingMode to "trunc".
     if (!rounding_mode.has_value())
         rounding_mode = "trunc"sv;
 

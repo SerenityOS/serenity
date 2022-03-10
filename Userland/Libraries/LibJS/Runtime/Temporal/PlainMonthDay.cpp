@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -158,7 +158,7 @@ ThrowCompletionOr<PlainMonthDay*> create_temporal_month_day(GlobalObject& global
     if (!is_valid_iso_date(reference_iso_year, iso_month, iso_day))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainMonthDay);
 
-    // 4. If newTarget is not present, set it to %Temporal.PlainMonthDay%.
+    // 4. If newTarget is not present, set newTarget to %Temporal.PlainMonthDay%.
     if (!new_target)
         new_target = global_object.temporal_plain_month_day_constructor();
 

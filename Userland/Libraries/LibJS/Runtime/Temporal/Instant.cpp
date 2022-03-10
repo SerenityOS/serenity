@@ -57,7 +57,7 @@ ThrowCompletionOr<Instant*> create_temporal_instant(GlobalObject& global_object,
     // 2. Assert: ! IsValidEpochNanoseconds(epochNanoseconds) is true.
     VERIFY(is_valid_epoch_nanoseconds(epoch_nanoseconds));
 
-    // 3. If newTarget is not present, set it to %Temporal.Instant%.
+    // 3. If newTarget is not present, set newTarget to %Temporal.Instant%.
     if (!new_target)
         new_target = global_object.temporal_instant_constructor();
 

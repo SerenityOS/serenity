@@ -65,7 +65,7 @@ String default_time_zone()
 // 11.6.1 CreateTemporalTimeZone ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltimezone
 ThrowCompletionOr<TimeZone*> create_temporal_time_zone(GlobalObject& global_object, String const& identifier, FunctionObject const* new_target)
 {
-    // 1. If newTarget is not present, set it to %Temporal.TimeZone%.
+    // 1. If newTarget is not present, set newTarget to %Temporal.TimeZone%.
     if (!new_target)
         new_target = global_object.temporal_time_zone_constructor();
 
