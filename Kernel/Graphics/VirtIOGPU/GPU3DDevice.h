@@ -91,6 +91,27 @@ public:
     GPU3DDevice() = delete;
     explicit GPU3DDevice(GraphicsAdapter& graphics_adapter);
 
+    class PerContextState : public RefCounted<PerContextState> {
+    public:
+        static ErrorOr<RefPtr<PerContextState>> try_create(ContextID context_id)
+        {
+            auto region_result = TRY(MM.allocate_kernel_region(
+                NUM_TRANSFER_REGION_PAGES * PAGE_SIZE,
+                "VIRGL3D userspace upload buffer",
+                Memory::Region::Access::ReadWrite,
+                AllocationStrategy::AllocateNow));
+            return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PerContextState(context_id, move(region_result))));
+        }
+        ContextID context_id() { return m_context_id; }
+        Memory::Region& transfer_buffer_region() { return *m_transfer_buffer_region; }
+
+    private:
+        PerContextState() = delete;
+        explicit PerContextState(ContextID context_id, OwnPtr<Memory::Region> transfer_buffer_region);
+        ContextID m_context_id;
+        OwnPtr<Memory::Region> m_transfer_buffer_region;
+    };
+
     virtual bool can_read(const OpenFileDescription&, u64) const override { return true; }
     virtual bool can_write(const OpenFileDescription&, u64) const override { return true; }
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return ENOTSUP; }
@@ -98,11 +119,15 @@ public:
     virtual StringView class_name() const override { return "virgl3d"; }
 
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
+    virtual void detach(OpenFileDescription&) override;
 
 private:
+    ErrorOr<RefPtr<PerContextState>> get_context_for_description(OpenFileDescription&);
+
     Kernel::Graphics::VirtIOGPU::GraphicsAdapter& m_graphics_adapter;
     // Context used for kernel operations (e.g. flushing resources to scanout)
     ContextID m_kernel_context_id;
+    HashMap<RefPtr<OpenFileDescription>, RefPtr<PerContextState>> m_context_state_lookup;
     // Memory management for backing buffers
     OwnPtr<Memory::Region> m_transfer_buffer_region;
     constexpr static size_t NUM_TRANSFER_REGION_PAGES = 256;

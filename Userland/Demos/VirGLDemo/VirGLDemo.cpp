@@ -133,6 +133,8 @@ static void init()
     // Open the device
     gpu_fd = open("/dev/gpu0", O_RDWR);
     VERIFY(gpu_fd >= 0);
+    // Create a virgl context for this file descriptor
+    VERIFY(ioctl(gpu_fd, VIRGL_IOCTL_CREATE_CONTEXT) >= 0);
     // Create a VertexElements resource
     VirGL3DResourceSpec vbo_spec {
         .target = to_underlying(Gallium::PipeTextureTarget::BUFFER), // pipe_texture_target
