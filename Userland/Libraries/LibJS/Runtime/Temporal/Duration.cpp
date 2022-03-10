@@ -765,28 +765,31 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
         return create_date_duration_record(years, months, weeks, days);
     }
 
-    // 2. Let sign be ! DurationSign(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
+    // 2. Assert: relativeTo is not undefined, because callers of this operation ensure relativeTo is required in conditions where this algorithm does not return in step 1.a.
+    VERIFY(!relative_to_value.is_undefined());
+
+    // 3. Let sign be ! DurationSign(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
     auto sign = duration_sign(years, months, weeks, days, 0, 0, 0, 0, 0, 0);
 
-    // 3. Assert: sign ≠ 0.
+    // 4. Assert: sign ≠ 0.
     VERIFY(sign != 0);
 
-    // 4. Let oneYear be ! CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+    // 5. Let oneYear be ! CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
     auto* one_year = MUST(create_temporal_duration(global_object, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-    // 5. Let oneMonth be ! CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
+    // 6. Let oneMonth be ! CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
     auto* one_month = MUST(create_temporal_duration(global_object, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
 
-    // 6. Let oneWeek be ! CreateTemporalDuration(0, 0, sign, 0, 0, 0, 0, 0, 0, 0).
+    // 7. Let oneWeek be ! CreateTemporalDuration(0, 0, sign, 0, 0, 0, 0, 0, 0, 0).
     auto* one_week = MUST(create_temporal_duration(global_object, 0, 0, sign, 0, 0, 0, 0, 0, 0, 0));
 
-    // 7. Set relativeTo to ? ToTemporalDate(relativeTo).
+    // 8. Set relativeTo to ? ToTemporalDate(relativeTo).
     auto* relative_to = TRY(to_temporal_date(global_object, relative_to_value));
 
-    // 8. Let calendar be relativeTo.[[Calendar]].
+    // 9. Let calendar be relativeTo.[[Calendar]].
     auto& calendar = relative_to->calendar();
 
-    // 9. If largestUnit is "year", then
+    // 10. If largestUnit is "year", then
     if (largest_unit == "year"sv) {
         // a. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
         auto move_result = TRY(move_relative_date(global_object, calendar, *relative_to, *one_year));
@@ -896,7 +899,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
             one_year_months = until_result->months();
         }
     }
-    // 10. Else if largestUnit is "month", then
+    // 11. Else if largestUnit is "month", then
     else if (largest_unit == "month"sv) {
         // a. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
         auto move_result = TRY(move_relative_date(global_object, calendar, *relative_to, *one_month));
@@ -925,7 +928,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
             one_month_days = move_result.days;
         }
     }
-    // 11. Else,
+    // 12. Else,
     else {
         // a. Assert: largestUnit is "week".
         VERIFY(largest_unit == "week"sv);
@@ -958,7 +961,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(GlobalObject& gl
         }
     }
 
-    // 12. Return ! CreateDateDurationRecord(years, months, weeks, days).
+    // 13. Return ! CreateDateDurationRecord(years, months, weeks, days).
     return create_date_duration_record(years, months, weeks, days);
 }
 
