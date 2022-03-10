@@ -1,28 +1,23 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "GeneratorUtil.h"
-#include <AK/ByteBuffer.h>
-#include <AK/JsonObject.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/File.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (argc != 2) {
-        warnln("usage: {} <path/to/CSS/Properties.json>", argv[0]);
+    if (arguments.argc != 2) {
+        warnln("usage: {} <path/to/CSS/Properties.json>", arguments.strings[0]);
         return 1;
     }
-    auto file = Core::File::construct(argv[1]);
-    if (!file->open(Core::OpenMode::ReadOnly))
-        return 1;
 
-    auto json = JsonValue::from_string(file->read_all()).release_value_but_fixme_should_propagate_errors();
+    auto json = TRY(read_entire_file_as_json(arguments.strings[1]));
     VERIFY(json.is_object());
 
     auto& properties = json.as_object();
@@ -416,4 +411,5 @@ size_t property_maximum_value_count(PropertyID property_id)
 )~~~");
 
     outln("{}", generator.as_string_view());
+    return 0;
 }
