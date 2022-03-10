@@ -190,9 +190,9 @@ describe("errors", () => {
     test("extended year must not be negative zero", () => {
         expect(() => {
             Temporal.PlainDateTime.from("-000000-01-01");
-        }).toThrowWithMessage(RangeError, "Invalid extended year, must not be negative zero");
+        }).toThrowWithMessage(RangeError, "Invalid date time string '-000000-01-01'");
         expect(() => {
             Temporal.PlainDateTime.from("−000000-01-01"); // U+2212
-        }).toThrowWithMessage(RangeError, "Invalid extended year, must not be negative zero");
+        }).toThrowWithMessage(RangeError, "Invalid date time string '−000000-01-01'");
     });
 });
