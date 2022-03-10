@@ -141,6 +141,16 @@ We always keep track of how much space is available on the current line. When st
 
 The result of performing a layout is a FormattingState object. This object contains final metrics (including line boxes) for all layout nodes that were in scope of the layout. The FormattingState can either be committed (via `commit()`) or simply discarded. This allows us to perform non-destructive (or "immutable") layouts if we're only interested in measuring something.
 
+### Paintable and the paint tree
+
+When layout is finished, we take all the final metrics for each box and generate a new tree: the paint tree. The paint tree hangs off of the layout tree, and you can reach the corresponding paintable for a given layout node via `Layout::Node::paintable()`. There's also a convenience accessor in the DOM: `DOM::Node::paintable()`.
+
+Unlike Layout::Node (which is basically a box tree node with associated style), Paintable is an object with fully finalized metrics. It has two jobs, painting and hit testing.
+
+Note that not every layout node will have a paintable. If a layout node cannot possibly be visible, it may not require a paintable.
+
+Every paintable has a corresponding layout node, and painting code will reach into the layout node for some information, to avoid having it in multiple places.
+
 ### Stacking contexts
 
 There's one final thing we have to do before we can paint: we have to create stacking contexts.
