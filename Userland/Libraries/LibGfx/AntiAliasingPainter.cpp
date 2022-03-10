@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, Ben Maxwell <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -168,4 +169,228 @@ void Gfx::AntiAliasingPainter::draw_cubic_bezier_curve(const FloatPoint& control
     Gfx::Painter::for_each_line_segment_on_cubic_bezier_curve(control_point_0, control_point_1, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
         draw_line(fp1, fp2, color, thickness, style);
     });
+}
+
+void Gfx::AntiAliasingPainter::draw_circle(IntPoint center, int radius, Color color)
+{
+    /*
+    Algorithm from: https://cs.uwaterloo.ca/research/tr/1984/CS-84-38.pdf
+    Inline comments are from the paper.
+    */
+
+    // TODO: Generalize to ellipses (see paper)
+
+    // These happen to be the same here, but are treated separately in the paper:
+    // intensity is the fill alpha
+    const int intensity = color.alpha();
+    // 0 to subpixel_resolution is the range of alpha values for the circle edges
+    const int subpixel_resolution = intensity;
+
+    // Note: Variable names below are based off the paper
+
+    // Current pixel address
+    int i = 0;
+    int q = radius;
+
+    // 1st and 2nd order differences of y
+    int delta_y = 0;
+    int delta2_y = 0;
+
+    // Exact and predicted values of f(i) -- the circle equation scaled by subpixel_resolution
+    int y = subpixel_resolution * radius;
+    int y_hat = 0;
+
+    // The value of f(i)*f(i)
+    int f_squared = y * y;
+
+    // 1st and 2nd order differences of f(i)*f(i)
+    int delta_f_squared = subpixel_resolution * subpixel_resolution;
+    int delta2_f_squared = -delta_f_squared - delta_f_squared;
+
+    // edge_intersection_area/subpixel_resolution = percentage of pixel intersected by circle
+    // (aka the alpha for the pixel)
+    int edge_intersection_area = 0;
+    int old_area = edge_intersection_area;
+
+    auto predict = [&] {
+        delta_y += delta2_y;
+        // y_hat is the predicted value of f(i)
+        y_hat = y + delta_y;
+    };
+
+    auto minimize = [&] {
+        // Initialize the minimization
+        delta_f_squared += delta2_f_squared;
+        f_squared += delta_f_squared;
+
+        int min_squared_error = y_hat * y_hat - f_squared;
+        int prediction_overshot = 1;
+        y = y_hat;
+
+        // Force error negative
+        if (min_squared_error > 0) {
+            min_squared_error = -min_squared_error;
+            prediction_overshot = -1;
+        }
+
+        // Minimize
+        int previous_error = min_squared_error;
+        while (min_squared_error < 0) {
+            y += prediction_overshot;
+            previous_error = min_squared_error;
+            min_squared_error += y + y - prediction_overshot;
+        }
+
+        if (min_squared_error + previous_error > 0)
+            y -= prediction_overshot;
+    };
+
+    auto correct = [&] {
+        int error = y - y_hat;
+        delta2_y += error;
+        delta_y += error;
+    };
+
+    auto pixel = [&](int x, int y, int alpha) {
+        if (alpha <= 0 || alpha > 255)
+            return;
+        auto pixel_colour = color;
+        pixel_colour.set_alpha(alpha);
+        m_underlying_painter.set_pixel(center + IntPoint { x, y }, pixel_colour, true);
+    };
+
+    auto fill = [&](int x, int ymax, int ymin, int alpha) {
+        while (ymin <= ymax) {
+            pixel(x, ymin, alpha);
+            ymin += 1;
+        }
+    };
+
+    auto eight_pixel = [&](int x, int y, int alpha) {
+        pixel(x, y, alpha);
+        pixel(x, -y - 1, alpha);
+        pixel(-x - 1, -y - 1, alpha);
+        pixel(-x - 1, y, alpha);
+        pixel(y, x, alpha);
+        pixel(y, -x - 1, alpha);
+        pixel(-y - 1, -x - 1, alpha);
+        pixel(-y - 1, x, alpha);
+    };
+
+    while (i < q) {
+        predict();
+        minimize();
+        correct();
+        old_area = edge_intersection_area;
+        edge_intersection_area += delta_y;
+        if (edge_intersection_area >= 0) {
+            // Single pixel on perimeter
+            eight_pixel(i, q, (edge_intersection_area + old_area) / 2);
+            fill(i, q - 1, -q, intensity);
+            fill(-i - 1, q - 1, -q, intensity);
+        } else {
+            // Two pixels on perimeter
+            edge_intersection_area += subpixel_resolution;
+            eight_pixel(i, q, old_area / 2);
+            q -= 1;
+            fill(i, q - 1, -q, intensity);
+            fill(-i - 1, q - 1, -q, intensity);
+            if (i < q) {
+                // Haven't gone below the diagonal
+                eight_pixel(i, q, (edge_intersection_area + subpixel_resolution) / 2);
+                fill(q, i - 1, -i, intensity);
+                fill(-q - 1, i - 1, -i, intensity);
+            } else {
+                // Went below the diagonal, fix edge_intersection_area for final pixels
+                edge_intersection_area += subpixel_resolution;
+            }
+        }
+        i += 1;
+    }
+
+    // Fill in 4 remaning pixels
+    int alpha = edge_intersection_area / 2;
+    pixel(q, q, alpha);
+    pixel(-q - 1, q, alpha);
+    pixel(-q - 1, -q - 1, alpha);
+    pixel(q, -q - 1, alpha);
+}
+
+void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, int radius)
+{
+    fill_rect_with_rounded_corners(a_rect, color, radius, radius, radius, radius);
+}
+
+void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius)
+{
+    if (!top_left_radius && !top_right_radius && !bottom_right_radius && !bottom_left_radius)
+        return m_underlying_painter.fill_rect(a_rect, color);
+
+    if (color.alpha() == 0)
+        return;
+
+    IntPoint top_left_corner {
+        a_rect.x() + top_left_radius,
+        a_rect.y() + top_left_radius,
+    };
+    IntPoint top_right_corner {
+        a_rect.x() + a_rect.width() - top_right_radius,
+        a_rect.y() + top_right_radius,
+    };
+    IntPoint bottom_right_corner {
+        a_rect.x() + bottom_left_radius,
+        a_rect.y() + a_rect.height() - bottom_right_radius
+    };
+    IntPoint bottom_left_corner {
+        a_rect.x() + a_rect.width() - bottom_left_radius,
+        a_rect.y() + a_rect.height() - bottom_left_radius
+    };
+
+    IntRect top_rect {
+        a_rect.x() + top_left_radius,
+        a_rect.y(),
+        a_rect.width() - top_left_radius - top_right_radius,
+        top_left_radius
+    };
+    IntRect right_rect {
+        a_rect.x() + a_rect.width() - top_right_radius,
+        a_rect.y() + top_right_radius,
+        top_right_radius,
+        a_rect.height() - top_right_radius - bottom_right_radius
+    };
+    IntRect bottom_rect {
+        a_rect.x() + bottom_left_radius,
+        a_rect.y() + a_rect.height() - bottom_right_radius,
+        a_rect.width() - bottom_left_radius - bottom_right_radius,
+        bottom_right_radius
+    };
+    IntRect left_rect {
+        a_rect.x(),
+        a_rect.y() + top_left_radius,
+        bottom_left_radius,
+        a_rect.height() - top_left_radius - bottom_left_radius
+    };
+
+    IntRect inner = {
+        left_rect.x() + left_rect.width(),
+        left_rect.y(),
+        a_rect.width() - left_rect.width() - right_rect.width(),
+        a_rect.height() - top_rect.height() - bottom_rect.height()
+    };
+
+    m_underlying_painter.fill_rect(top_rect, color);
+    m_underlying_painter.fill_rect(right_rect, color);
+    m_underlying_painter.fill_rect(bottom_rect, color);
+    m_underlying_painter.fill_rect(left_rect, color);
+    m_underlying_painter.fill_rect(inner, color);
+
+    // FIXME: Don't draw a whole circle each time
+    if (top_left_radius)
+        draw_circle(top_left_corner, top_left_radius, color);
+    if (top_right_radius)
+        draw_circle(top_right_corner, top_right_radius, color);
+    if (bottom_left_radius)
+        draw_circle(bottom_left_corner, bottom_left_radius, color);
+    if (bottom_right_radius)
+        draw_circle(bottom_right_corner, bottom_right_radius, color);
 }
