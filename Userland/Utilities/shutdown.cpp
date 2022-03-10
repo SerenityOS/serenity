@@ -6,14 +6,25 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/ArgsParser.h>
 #include <LibCore/Stream.h>
 #include <LibMain/Main.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <LibSession/Session.h>
 
-ErrorOr<int> serenity_main(Main::Arguments)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    Core::ArgsParser args_parser;
+    auto force = false;
+    args_parser.add_option(force, "Force shutdown even if it is inhibited", "force", 'f');
+    args_parser.parse(arguments);
+
+    auto& session = Session::Session::the();
+    if (session.is_exit_inhibited() && !force) {
+        warnln("Shutdown is inhibited, use \"shutdown -f\" to force");
+        session.report_inhibited_exit_prevention();
+        return 1;
+    }
+
     auto file = TRY(Core::Stream::File::open("/sys/firmware/power_state", Core::Stream::OpenMode::Write));
 
     const String file_contents = "2";
