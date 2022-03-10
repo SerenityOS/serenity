@@ -1010,7 +1010,7 @@ size_t Node::length() const
     return child_count();
 }
 
-Painting::Paintable const* Node::paint_box() const
+Painting::PaintableBox const* Node::paint_box() const
 {
     if (!layout_node())
         return nullptr;

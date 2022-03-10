@@ -14,13 +14,13 @@ NonnullOwnPtr<CanvasPaintable> CanvasPaintable::create(Layout::CanvasBox const& 
 }
 
 CanvasPaintable::CanvasPaintable(Layout::CanvasBox const& layout_box)
-    : Paintable(layout_box)
+    : PaintableBox(layout_box)
 {
 }
 
 Layout::CanvasBox const& CanvasPaintable::layout_box() const
 {
-    return static_cast<Layout::CanvasBox const&>(m_layout_box);
+    return static_cast<Layout::CanvasBox const&>(layout_node());
 }
 
 void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
@@ -28,7 +28,7 @@ void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (!layout_box().is_visible())
         return;
 
-    Paintable::paint(context, phase);
+    PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
         // FIXME: This should be done at a different level. Also rect() does not include padding etc!

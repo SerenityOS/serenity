@@ -16,13 +16,13 @@ NonnullOwnPtr<ButtonPaintable> ButtonPaintable::create(Layout::ButtonBox const& 
 }
 
 ButtonPaintable::ButtonPaintable(Layout::ButtonBox const& layout_box)
-    : Paintable(layout_box)
+    : PaintableBox(layout_box)
 {
 }
 
 Layout::ButtonBox const& ButtonPaintable::layout_box() const
 {
-    return static_cast<Layout::ButtonBox const&>(m_layout_box);
+    return static_cast<Layout::ButtonBox const&>(layout_node());
 }
 
 void ButtonPaintable::paint(PaintContext& context, PaintPhase phase) const
@@ -30,7 +30,7 @@ void ButtonPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (!is_visible())
         return;
 
-    Paintable::paint(context, phase);
+    PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
         auto text_rect = enclosing_int_rect(absolute_rect());

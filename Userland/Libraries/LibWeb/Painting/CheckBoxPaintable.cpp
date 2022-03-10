@@ -17,13 +17,13 @@ NonnullOwnPtr<CheckBoxPaintable> CheckBoxPaintable::create(Layout::CheckBox cons
 }
 
 CheckBoxPaintable::CheckBoxPaintable(Layout::CheckBox const& layout_box)
-    : Paintable(layout_box)
+    : PaintableBox(layout_box)
 {
 }
 
 Layout::CheckBox const& CheckBoxPaintable::layout_box() const
 {
-    return static_cast<Layout::CheckBox const&>(m_layout_box);
+    return static_cast<Layout::CheckBox const&>(layout_node());
 }
 
 void CheckBoxPaintable::paint(PaintContext& context, PaintPhase phase) const
@@ -31,7 +31,7 @@ void CheckBoxPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (!is_visible())
         return;
 
-    Paintable::paint(context, phase);
+    PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground)
         Gfx::StylePainter::paint_check_box(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), layout_box().dom_node().enabled(), layout_box().dom_node().checked(), layout_box().being_pressed());

@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-class ProgressPaintable final : public Paintable {
+class ProgressPaintable final : public PaintableBox {
 public:
     static NonnullOwnPtr<ProgressPaintable> create(Layout::Progress const&);
 

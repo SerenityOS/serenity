@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-class RadioButtonPaintable final : public Paintable {
+class RadioButtonPaintable final : public PaintableBox {
 public:
     static NonnullOwnPtr<RadioButtonPaintable> create(Layout::RadioButton const&);
 

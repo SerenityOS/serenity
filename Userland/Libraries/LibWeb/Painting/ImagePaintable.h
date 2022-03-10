@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-class ImagePaintable final : public Paintable {
+class ImagePaintable final : public PaintableBox {
 public:
     static NonnullOwnPtr<ImagePaintable> create(Layout::ImageBox const&);
 

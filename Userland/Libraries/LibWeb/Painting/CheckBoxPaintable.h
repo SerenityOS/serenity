@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-class CheckBoxPaintable final : public Paintable {
+class CheckBoxPaintable final : public PaintableBox {
 public:
     static NonnullOwnPtr<CheckBoxPaintable> create(Layout::CheckBox const&);
 

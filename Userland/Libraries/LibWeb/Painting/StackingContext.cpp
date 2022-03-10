@@ -47,8 +47,8 @@ StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)
 void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box, StackingContextPaintPhase phase) const
 {
     if (phase == StackingContextPaintPhase::Foreground) {
-        if (box.is_box())
-            static_cast<Layout::Box const&>(box).m_paint_box->before_children_paint(context, PaintPhase::Foreground);
+        if (auto* paintable = box.paintable())
+            paintable->before_children_paint(context, PaintPhase::Foreground);
     }
 
     box.for_each_child([&](auto& child) {
@@ -100,8 +100,8 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box
     });
 
     if (phase == StackingContextPaintPhase::Foreground) {
-        if (box.is_box())
-            static_cast<Layout::Box const&>(box).m_paint_box->after_children_paint(context, PaintPhase::Foreground);
+        if (auto* paintable = box.paintable())
+            paintable->after_children_paint(context, PaintPhase::Foreground);
     }
 }
 

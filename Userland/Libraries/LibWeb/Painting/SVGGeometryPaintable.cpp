@@ -23,7 +23,7 @@ SVGGeometryPaintable::SVGGeometryPaintable(Layout::SVGGeometryBox const& layout_
 
 Layout::SVGGeometryBox const& SVGGeometryPaintable::layout_box() const
 {
-    return static_cast<Layout::SVGGeometryBox const&>(m_layout_box);
+    return static_cast<Layout::SVGGeometryBox const&>(layout_node());
 }
 
 void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const

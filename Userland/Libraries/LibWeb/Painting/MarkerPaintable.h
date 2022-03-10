@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-class MarkerPaintable final : public Paintable {
+class MarkerPaintable final : public PaintableBox {
 public:
     static NonnullOwnPtr<MarkerPaintable> create(Layout::ListItemMarkerBox const&);
 

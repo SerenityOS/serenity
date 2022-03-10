@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-class NestedBrowsingContextPaintable final : public Paintable {
+class NestedBrowsingContextPaintable final : public PaintableBox {
 public:
     static NonnullOwnPtr<NestedBrowsingContextPaintable> create(Layout::FrameBox const&);
 

@@ -13,17 +13,22 @@
 
 namespace Web::Painting {
 
-Paintable::Paintable(Layout::Box const& layout_box)
-    : m_layout_box(layout_box)
+NonnullOwnPtr<PaintableBox> PaintableBox::create(Layout::Box const& layout_box)
+{
+    return adopt_own(*new PaintableBox(layout_box));
+}
+
+PaintableBox::PaintableBox(Layout::Box const& layout_box)
+    : Paintable(layout_box)
 {
 }
 
-Paintable::~Paintable()
+PaintableBox::~PaintableBox()
 {
 }
 
 PaintableWithLines::PaintableWithLines(Layout::BlockContainer const& layout_box)
-    : Paintable(layout_box)
+    : PaintableBox(layout_box)
 {
 }
 
@@ -31,7 +36,7 @@ PaintableWithLines::~PaintableWithLines()
 {
 }
 
-void Paintable::set_offset(const Gfx::FloatPoint& offset)
+void PaintableBox::set_offset(const Gfx::FloatPoint& offset)
 {
     if (m_offset == offset)
         return;
@@ -40,7 +45,7 @@ void Paintable::set_offset(const Gfx::FloatPoint& offset)
     const_cast<Layout::Box&>(layout_box()).did_set_rect();
 }
 
-void Paintable::set_content_size(Gfx::FloatSize const& size)
+void PaintableBox::set_content_size(Gfx::FloatSize const& size)
 {
     if (m_content_size == size)
         return;
@@ -49,7 +54,7 @@ void Paintable::set_content_size(Gfx::FloatSize const& size)
     const_cast<Layout::Box&>(layout_box()).did_set_rect();
 }
 
-Gfx::FloatPoint Paintable::effective_offset() const
+Gfx::FloatPoint PaintableBox::effective_offset() const
 {
     if (m_containing_line_box_fragment.has_value()) {
         auto const& fragment = layout_box().containing_block()->paint_box()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
@@ -58,7 +63,7 @@ Gfx::FloatPoint Paintable::effective_offset() const
     return m_offset;
 }
 
-Gfx::FloatRect Paintable::absolute_rect() const
+Gfx::FloatRect PaintableBox::absolute_rect() const
 {
     Gfx::FloatRect rect { effective_offset(), content_size() };
     for (auto* block = layout_box().containing_block(); block; block = block->containing_block())
@@ -66,12 +71,12 @@ Gfx::FloatRect Paintable::absolute_rect() const
     return rect;
 }
 
-void Paintable::set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate> fragment_coordinate)
+void PaintableBox::set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate> fragment_coordinate)
 {
     m_containing_line_box_fragment = fragment_coordinate;
 }
 
-Painting::StackingContext* Paintable::enclosing_stacking_context()
+Painting::StackingContext* PaintableBox::enclosing_stacking_context()
 {
     for (auto* ancestor = layout_box().parent(); ancestor; ancestor = ancestor->parent()) {
         if (!is<Layout::Box>(ancestor))
@@ -86,7 +91,7 @@ Painting::StackingContext* Paintable::enclosing_stacking_context()
     VERIFY_NOT_REACHED();
 }
 
-void Paintable::paint(PaintContext& context, PaintPhase phase) const
+void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
 {
     if (!is_visible())
         return;
@@ -145,7 +150,7 @@ void Paintable::paint(PaintContext& context, PaintPhase phase) const
     }
 }
 
-void Paintable::paint_border(PaintContext& context) const
+void PaintableBox::paint_border(PaintContext& context) const
 {
     auto borders_data = BordersData {
         .top = computed_values().border_top(),
@@ -156,7 +161,7 @@ void Paintable::paint_border(PaintContext& context) const
     paint_all_borders(context, absolute_border_box_rect(), normalized_border_radius_data(), borders_data);
 }
 
-void Paintable::paint_background(PaintContext& context) const
+void PaintableBox::paint_background(PaintContext& context) const
 {
     // If the body's background properties were propagated to the root element, do no re-paint the body's background.
     if (layout_box().is_body() && document().html_element()->should_use_body_background_properties())
@@ -188,7 +193,7 @@ void Paintable::paint_background(PaintContext& context) const
     Painting::paint_background(context, layout_box(), background_rect, background_color, background_layers, normalized_border_radius_data());
 }
 
-void Paintable::paint_box_shadow(PaintContext& context) const
+void PaintableBox::paint_box_shadow(PaintContext& context) const
 {
     auto box_shadow_data = computed_values().box_shadow();
     if (box_shadow_data.is_empty())
@@ -208,7 +213,7 @@ void Paintable::paint_box_shadow(PaintContext& context) const
     Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), resolved_box_shadow_data);
 }
 
-BorderRadiusData Paintable::normalized_border_radius_data() const
+BorderRadiusData PaintableBox::normalized_border_radius_data() const
 {
     return Painting::normalized_border_radius_data(layout_box(), absolute_border_box_rect(),
         computed_values().border_top_left_radius(),
@@ -217,7 +222,7 @@ BorderRadiusData Paintable::normalized_border_radius_data() const
         computed_values().border_bottom_left_radius());
 }
 
-void Paintable::before_children_paint(PaintContext& context, PaintPhase) const
+void PaintableBox::before_children_paint(PaintContext& context, PaintPhase) const
 {
     // FIXME: Support more overflow variations.
     if (computed_values().overflow_x() == CSS::Overflow::Hidden && computed_values().overflow_y() == CSS::Overflow::Hidden) {
@@ -226,7 +231,7 @@ void Paintable::before_children_paint(PaintContext& context, PaintPhase) const
     }
 }
 
-void Paintable::after_children_paint(PaintContext& context, PaintPhase) const
+void PaintableBox::after_children_paint(PaintContext& context, PaintPhase) const
 {
     // FIXME: Support more overflow variations.
     if (computed_values().overflow_x() == CSS::Overflow::Hidden && computed_values().overflow_y() == CSS::Overflow::Hidden)
@@ -238,7 +243,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
     if (!is_visible())
         return;
 
-    Paintable::paint(context, phase);
+    PaintableBox::paint(context, phase);
 
     if (m_line_boxes.is_empty())
         return;

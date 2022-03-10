@@ -15,13 +15,13 @@ NonnullOwnPtr<ProgressPaintable> ProgressPaintable::create(Layout::Progress cons
 }
 
 ProgressPaintable::ProgressPaintable(Layout::Progress const& layout_box)
-    : Paintable(layout_box)
+    : PaintableBox(layout_box)
 {
 }
 
 Layout::Progress const& ProgressPaintable::layout_box() const
 {
-    return static_cast<Layout::Progress const&>(m_layout_box);
+    return static_cast<Layout::Progress const&>(layout_node());
 }
 
 void ProgressPaintable::paint(PaintContext& context, PaintPhase phase) const

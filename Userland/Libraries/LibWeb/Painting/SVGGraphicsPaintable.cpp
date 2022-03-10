@@ -16,7 +16,7 @@ SVGGraphicsPaintable::SVGGraphicsPaintable(Layout::SVGGraphicsBox const& layout_
 
 Layout::SVGGraphicsBox const& SVGGraphicsPaintable::layout_box() const
 {
-    return static_cast<Layout::SVGGraphicsBox const&>(m_layout_box);
+    return static_cast<Layout::SVGGraphicsBox const&>(layout_node());
 }
 
 void SVGGraphicsPaintable::before_children_paint(PaintContext& context, PaintPhase phase) const

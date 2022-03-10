@@ -34,11 +34,6 @@ Box::~Box()
 {
 }
 
-void Box::set_paint_box(OwnPtr<Painting::Paintable> paint_box)
-{
-    m_paint_box = move(paint_box);
-}
-
 // https://www.w3.org/TR/css-display-3/#out-of-flow
 bool Box::is_out_of_flow(FormattingContext const& formatting_context) const
 {
@@ -93,7 +88,12 @@ bool Box::is_body() const
 
 OwnPtr<Painting::Paintable> Box::create_paintable() const
 {
-    return Painting::Paintable::create(*this);
+    return Painting::PaintableBox::create(*this);
+}
+
+Painting::PaintableBox const* Box::paint_box() const
+{
+    return static_cast<Painting::PaintableBox const*>(Node::paintable());
 }
 
 }

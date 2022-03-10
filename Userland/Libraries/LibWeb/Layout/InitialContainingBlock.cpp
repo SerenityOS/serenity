@@ -33,9 +33,9 @@ void InitialContainingBlock::build_stacking_context_tree()
             VERIFY(!box.paint_box()->stacking_context());
             return IterationDecision::Continue;
         }
-        auto* parent_context = const_cast<Painting::Paintable*>(box.paint_box())->enclosing_stacking_context();
+        auto* parent_context = const_cast<Painting::PaintableBox*>(box.paint_box())->enclosing_stacking_context();
         VERIFY(parent_context);
-        const_cast<Painting::Paintable*>(box.paint_box())->set_stacking_context(make<Painting::StackingContext>(box, parent_context));
+        const_cast<Painting::PaintableBox*>(box.paint_box())->set_stacking_context(make<Painting::StackingContext>(box, parent_context));
         return IterationDecision::Continue;
     });
 }

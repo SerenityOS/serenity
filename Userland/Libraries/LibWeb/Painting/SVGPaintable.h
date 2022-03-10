@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-class SVGPaintable : public Paintable {
+class SVGPaintable : public PaintableBox {
 public:
     static NonnullOwnPtr<SVGPaintable> create(Layout::SVGBox const&);
 

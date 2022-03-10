@@ -38,17 +38,19 @@ void FormattingState::commit()
         node.box_model().border = { node_state.border_top, node_state.border_right, node_state.border_bottom, node_state.border_left };
         node.box_model().margin = { node_state.margin_top, node_state.margin_right, node_state.margin_bottom, node_state.margin_left };
 
+        node.set_paintable(node.create_paintable());
+
         // For boxes, transfer all the state needed for painting.
         if (is<Layout::Box>(node)) {
             auto& box = static_cast<Layout::Box&>(node);
-            box.set_paint_box(box.create_paintable());
-            box.m_paint_box->set_offset(node_state.offset);
-            box.m_paint_box->set_content_size(node_state.content_width, node_state.content_height);
-            box.m_paint_box->set_overflow_data(move(node_state.overflow_data));
-            box.m_paint_box->set_containing_line_box_fragment(node_state.containing_line_box_fragment);
+            auto& paint_box = const_cast<Painting::PaintableBox&>(*box.paint_box());
+            paint_box.set_offset(node_state.offset);
+            paint_box.set_content_size(node_state.content_width, node_state.content_height);
+            paint_box.set_overflow_data(move(node_state.overflow_data));
+            paint_box.set_containing_line_box_fragment(node_state.containing_line_box_fragment);
 
             if (is<Layout::BlockContainer>(box))
-                static_cast<Painting::PaintableWithLines&>(*box.m_paint_box).set_line_boxes(move(node_state.line_boxes));
+                static_cast<Painting::PaintableWithLines&>(paint_box).set_line_boxes(move(node_state.line_boxes));
         }
     }
 }

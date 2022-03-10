@@ -17,13 +17,13 @@ NonnullOwnPtr<ImagePaintable> ImagePaintable::create(Layout::ImageBox const& lay
 }
 
 ImagePaintable::ImagePaintable(Layout::ImageBox const& layout_box)
-    : Paintable(layout_box)
+    : PaintableBox(layout_box)
 {
 }
 
 Layout::ImageBox const& ImagePaintable::layout_box() const
 {
-    return static_cast<Layout::ImageBox const&>(m_layout_box);
+    return static_cast<Layout::ImageBox const&>(layout_node());
 }
 
 void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
@@ -35,7 +35,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
     if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
         return;
 
-    Paintable::paint(context, phase);
+    PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
         if (layout_box().renders_as_alt_text()) {

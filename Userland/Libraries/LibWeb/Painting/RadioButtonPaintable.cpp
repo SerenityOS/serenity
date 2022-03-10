@@ -17,13 +17,13 @@ NonnullOwnPtr<RadioButtonPaintable> RadioButtonPaintable::create(Layout::RadioBu
 }
 
 RadioButtonPaintable::RadioButtonPaintable(Layout::RadioButton const& layout_box)
-    : Paintable(layout_box)
+    : PaintableBox(layout_box)
 {
 }
 
 Layout::RadioButton const& RadioButtonPaintable::layout_box() const
 {
-    return static_cast<Layout::RadioButton const&>(m_layout_box);
+    return static_cast<Layout::RadioButton const&>(layout_node());
 }
 
 void RadioButtonPaintable::paint(PaintContext& context, PaintPhase phase) const
@@ -31,7 +31,7 @@ void RadioButtonPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (!is_visible())
         return;
 
-    Paintable::paint(context, phase);
+    PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground)
         Gfx::StylePainter::paint_radio_button(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), layout_box().dom_node().checked(), layout_box().being_pressed());

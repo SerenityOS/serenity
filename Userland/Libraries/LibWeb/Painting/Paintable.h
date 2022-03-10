@@ -14,21 +14,38 @@
 namespace Web::Painting {
 
 class Paintable {
+    AK_MAKE_NONMOVABLE(Paintable);
+    AK_MAKE_NONCOPYABLE(Paintable);
+
 public:
-    static NonnullOwnPtr<Paintable> create(Layout::Box const& layout_box)
+    virtual ~Paintable() = default;
+
+    virtual void paint(PaintContext&, PaintPhase) const { }
+    virtual void before_children_paint(PaintContext&, PaintPhase) const { }
+    virtual void after_children_paint(PaintContext&, PaintPhase) const { }
+
+    Layout::Node const& layout_node() const { return m_layout_node; }
+
+protected:
+    explicit Paintable(Layout::Node const& layout_node)
+        : m_layout_node(layout_node)
     {
-        return adopt_own(*new Paintable(layout_box));
     }
 
-    virtual ~Paintable();
+private:
+    Layout::Node const& m_layout_node;
+};
 
-    virtual void paint(PaintContext&, PaintPhase) const;
+class PaintableBox : public Paintable {
+public:
+    static NonnullOwnPtr<PaintableBox> create(Layout::Box const&);
+    virtual ~PaintableBox();
+
+    virtual void paint(PaintContext&, PaintPhase) const override;
 
     bool is_visible() const { return layout_box().is_visible(); }
 
-    Layout::Box const& m_layout_box;
-
-    Layout::Box const& layout_box() const { return m_layout_box; }
+    Layout::Box const& layout_box() const { return static_cast<Layout::Box const&>(Paintable::layout_node()); }
 
     auto const& box_model() const { return layout_box().box_model(); }
     auto const& computed_values() const { return layout_box().computed_values(); }
@@ -118,11 +135,11 @@ public:
     DOM::Node const* dom_node() const { return layout_box().dom_node(); }
     DOM::Document const& document() const { return layout_box().document(); }
 
-    virtual void before_children_paint(PaintContext&, PaintPhase) const;
-    virtual void after_children_paint(PaintContext&, PaintPhase) const;
+    virtual void before_children_paint(PaintContext&, PaintPhase) const override;
+    virtual void after_children_paint(PaintContext&, PaintPhase) const override;
 
 protected:
-    explicit Paintable(Layout::Box const&);
+    explicit PaintableBox(Layout::Box const&);
 
     virtual void paint_border(PaintContext&) const;
     virtual void paint_background(PaintContext&) const;
@@ -134,7 +151,7 @@ private:
     OwnPtr<Painting::StackingContext> m_stacking_context;
 };
 
-class PaintableWithLines : public Paintable {
+class PaintableWithLines : public PaintableBox {
 public:
     static NonnullOwnPtr<PaintableWithLines> create(Layout::BlockContainer const& block_container)
     {

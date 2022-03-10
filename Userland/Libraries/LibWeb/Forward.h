@@ -266,6 +266,7 @@ class PerformanceTiming;
 namespace Web::Painting {
 enum class PaintPhase;
 class Paintable;
+class PaintableBox;
 class PaintableWithLines;
 }
 

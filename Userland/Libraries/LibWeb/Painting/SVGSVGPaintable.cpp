@@ -16,7 +16,7 @@ SVGSVGPaintable::SVGSVGPaintable(Layout::SVGSVGBox const& layout_box)
 
 Layout::SVGSVGBox const& SVGSVGPaintable::layout_box() const
 {
-    return static_cast<Layout::SVGSVGBox const&>(m_layout_box);
+    return static_cast<Layout::SVGSVGBox const&>(layout_node());
 }
 
 void SVGSVGPaintable::before_children_paint(PaintContext& context, PaintPhase phase) const

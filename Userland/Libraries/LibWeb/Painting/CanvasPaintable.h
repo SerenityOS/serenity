@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-class CanvasPaintable final : public Paintable {
+class CanvasPaintable final : public PaintableBox {
 public:
     static NonnullOwnPtr<CanvasPaintable> create(Layout::CanvasBox const&);
 

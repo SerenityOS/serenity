@@ -18,18 +18,18 @@ NonnullOwnPtr<NestedBrowsingContextPaintable> NestedBrowsingContextPaintable::cr
 }
 
 NestedBrowsingContextPaintable::NestedBrowsingContextPaintable(Layout::FrameBox const& layout_box)
-    : Paintable(layout_box)
+    : PaintableBox(layout_box)
 {
 }
 
 Layout::FrameBox const& NestedBrowsingContextPaintable::layout_box() const
 {
-    return static_cast<Layout::FrameBox const&>(m_layout_box);
+    return static_cast<Layout::FrameBox const&>(layout_node());
 }
 
 void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase phase) const
 {
-    Paintable::paint(context, phase);
+    PaintableBox::paint(context, phase);
 
     if (phase == PaintPhase::Foreground) {
         auto* hosted_document = layout_box().dom_node().content_document_without_origin_check();

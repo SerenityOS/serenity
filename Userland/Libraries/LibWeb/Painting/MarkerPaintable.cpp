@@ -16,13 +16,13 @@ NonnullOwnPtr<MarkerPaintable> MarkerPaintable::create(Layout::ListItemMarkerBox
 }
 
 MarkerPaintable::MarkerPaintable(Layout::ListItemMarkerBox const& layout_box)
-    : Paintable(layout_box)
+    : PaintableBox(layout_box)
 {
 }
 
 Layout::ListItemMarkerBox const& MarkerPaintable::layout_box() const
 {
-    return static_cast<Layout::ListItemMarkerBox const&>(m_layout_box);
+    return static_cast<Layout::ListItemMarkerBox const&>(layout_node());
 }
 
 void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
