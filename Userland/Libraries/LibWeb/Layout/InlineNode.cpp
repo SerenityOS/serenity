@@ -130,7 +130,7 @@ void InlineNode::for_each_fragment(Callback callback)
 {
     // FIXME: This will be slow if the containing block has a lot of fragments!
     Vector<LineBoxFragment const&> fragments;
-    containing_block()->m_paint_box->for_each_fragment([&](auto& fragment) {
+    containing_block()->paint_box()->for_each_fragment([&](auto& fragment) {
         if (is_inclusive_ancestor_of(fragment.layout_node()))
             fragments.append(fragment);
         return IterationDecision::Continue;

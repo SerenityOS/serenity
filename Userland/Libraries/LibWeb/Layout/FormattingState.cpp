@@ -41,12 +41,18 @@ void FormattingState::commit()
         // For boxes, transfer all the state needed for painting.
         if (is<Layout::Box>(node)) {
             auto& box = static_cast<Layout::Box&>(node);
-            box.m_paint_box = Painting::Box::create(box);
+            box.set_paint_box([](Layout::Box const& layout_box) -> OwnPtr<Painting::Box> {
+                if (is<Layout::BlockContainer>(layout_box))
+                    return Painting::BoxWithLines::create(static_cast<Layout::BlockContainer const&>(layout_box));
+                return Painting::Box::create(static_cast<Layout::Box const&>(layout_box));
+            }(box));
             box.m_paint_box->set_offset(node_state.offset);
             box.m_paint_box->set_content_size(node_state.content_width, node_state.content_height);
             box.m_paint_box->set_overflow_data(move(node_state.overflow_data));
             box.m_paint_box->set_containing_line_box_fragment(node_state.containing_line_box_fragment);
-            box.m_paint_box->set_line_boxes(move(node_state.line_boxes));
+
+            if (is<Layout::BlockContainer>(box))
+                static_cast<Painting::BoxWithLines&>(*box.m_paint_box).set_line_boxes(move(node_state.line_boxes));
         }
     }
 }

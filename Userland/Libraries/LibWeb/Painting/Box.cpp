@@ -9,6 +9,24 @@
 
 namespace Web::Painting {
 
+Box::Box(Layout::Box const& layout_box)
+    : m_layout_box(layout_box)
+{
+}
+
+Box::~Box()
+{
+}
+
+BoxWithLines::BoxWithLines(Layout::BlockContainer const& layout_box)
+    : Box(layout_box)
+{
+}
+
+BoxWithLines::~BoxWithLines()
+{
+}
+
 void Box::set_offset(const Gfx::FloatPoint& offset)
 {
     if (m_offset == offset)
@@ -30,7 +48,7 @@ void Box::set_content_size(Gfx::FloatSize const& size)
 Gfx::FloatPoint Box::effective_offset() const
 {
     if (m_containing_line_box_fragment.has_value()) {
-        auto const& fragment = m_layout_box.containing_block()->m_paint_box->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
+        auto const& fragment = m_layout_box.containing_block()->paint_box()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
         return fragment.offset();
     }
     return m_offset;

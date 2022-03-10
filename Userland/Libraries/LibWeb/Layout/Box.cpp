@@ -34,6 +34,11 @@ Box::~Box()
 {
 }
 
+void Box::set_paint_box(OwnPtr<Painting::Box> paint_box)
+{
+    m_paint_box = move(paint_box);
+}
+
 void Box::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     if (!is_visible())

@@ -51,11 +51,11 @@ void BlockContainer::paint(PaintContext& context, Painting::PaintPhase phase)
         context.painter().translate(-m_scroll_offset.to_type<int>());
     }
 
-    for (auto& line_box : m_paint_box->m_line_boxes) {
+    for (auto& line_box : paint_box()->line_boxes()) {
         for (auto& fragment : line_box.fragments()) {
             if (context.should_show_line_box_borders())
                 context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
-            fragment.paint(context, phase);
+            const_cast<LineBoxFragment&>(fragment).paint(context, phase);
         }
     }
 
@@ -65,7 +65,7 @@ void BlockContainer::paint(PaintContext& context, Painting::PaintPhase phase)
 
     // FIXME: Merge this loop with the above somehow..
     if (phase == Painting::PaintPhase::FocusOutline) {
-        for (auto& line_box : m_paint_box->m_line_boxes) {
+        for (auto& line_box : paint_box()->line_boxes()) {
             for (auto& fragment : line_box.fragments()) {
                 auto* node = fragment.layout_node().dom_node();
                 if (!node)
@@ -86,7 +86,7 @@ HitTestResult BlockContainer::hit_test(const Gfx::IntPoint& position, HitTestTyp
         return Box::hit_test(position, type);
 
     HitTestResult last_good_candidate;
-    for (auto& line_box : m_paint_box->m_line_boxes) {
+    for (auto& line_box : paint_box()->line_boxes()) {
         for (auto& fragment : line_box.fragments()) {
             if (is<Box>(fragment.layout_node()) && verify_cast<Box>(fragment.layout_node()).m_paint_box->stacking_context())
                 continue;
@@ -129,6 +129,11 @@ bool BlockContainer::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&
     set_scroll_offset(new_offset);
 
     return true;
+}
+
+Painting::BoxWithLines const* BlockContainer::paint_box() const
+{
+    return static_cast<Painting::BoxWithLines const*>(Box::paint_box());
 }
 
 }

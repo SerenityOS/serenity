@@ -20,10 +20,7 @@ public:
         return adopt_own(*new Box(layout_box));
     }
 
-    explicit Box(Layout::Box const& layout_box)
-        : m_layout_box(layout_box)
-    {
-    }
+    virtual ~Box();
 
     Layout::Box const& m_layout_box;
 
@@ -38,11 +35,6 @@ public:
 
     Gfx::FloatPoint m_offset;
     Gfx::FloatSize m_content_size;
-
-    Vector<Layout::LineBox> const& line_boxes() const { return m_line_boxes; }
-    void set_line_boxes(Vector<Layout::LineBox>&& line_boxes) { m_line_boxes = move(line_boxes); }
-
-    Vector<Layout::LineBox> m_line_boxes;
 
     // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
     Optional<Layout::LineBoxFragmentCoordinate> m_containing_line_box_fragment;
@@ -112,6 +104,29 @@ public:
     void set_overflow_data(Optional<OverflowData> data) { m_overflow_data = move(data); }
     void set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate>);
 
+    StackingContext* stacking_context() { return m_stacking_context; }
+    StackingContext const* stacking_context() const { return m_stacking_context; }
+    void set_stacking_context(NonnullOwnPtr<Painting::StackingContext> context) { m_stacking_context = move(context); }
+    StackingContext* enclosing_stacking_context();
+
+protected:
+    explicit Box(Layout::Box const&);
+
+private:
+    OwnPtr<Painting::StackingContext> m_stacking_context;
+};
+
+class BoxWithLines : public Box {
+public:
+    static NonnullOwnPtr<BoxWithLines> create(Layout::BlockContainer const& block_container)
+    {
+        return adopt_own(*new BoxWithLines(block_container));
+    }
+    virtual ~BoxWithLines() override;
+
+    Vector<Layout::LineBox> const& line_boxes() const { return m_line_boxes; }
+    void set_line_boxes(Vector<Layout::LineBox>&& line_boxes) { m_line_boxes = move(line_boxes); }
+
     template<typename Callback>
     void for_each_fragment(Callback callback) const
     {
@@ -123,12 +138,10 @@ public:
         }
     }
 
-    StackingContext* stacking_context() { return m_stacking_context; }
-    StackingContext const* stacking_context() const { return m_stacking_context; }
-    void set_stacking_context(NonnullOwnPtr<Painting::StackingContext> context) { m_stacking_context = move(context); }
-    StackingContext* enclosing_stacking_context();
+private:
+    BoxWithLines(Layout::BlockContainer const&);
 
-    OwnPtr<Painting::StackingContext> m_stacking_context;
+    Vector<Layout::LineBox> m_line_boxes;
 };
 
 }
