@@ -594,15 +594,16 @@ void GLContext::gl_mult_matrix(FloatMatrix4x4 const& matrix)
         VERIFY_NOT_REACHED();
 }
 
-void GLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdouble z)
+void GLContext::gl_rotate(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_rotate, angle, x, y, z);
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    FloatVector3 axis = { (float)x, (float)y, (float)z };
-    axis.normalize();
-    auto rotation_mat = Gfx::rotation_matrix(axis, static_cast<float>(angle * M_PI * 2 / 360));
+    FloatVector3 axis = { x, y, z };
+    if (axis.length() > 0.f)
+        axis.normalize();
+    auto rotation_mat = Gfx::rotation_matrix(axis, angle * static_cast<float>(M_PI * 2 / 360));
 
     if (m_current_matrix_mode == GL_MODELVIEW)
         m_model_view_matrix = m_model_view_matrix * rotation_mat;

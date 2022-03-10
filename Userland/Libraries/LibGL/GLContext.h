@@ -70,7 +70,7 @@ public:
     void gl_push_matrix();
     void gl_pop_matrix();
     void gl_mult_matrix(FloatMatrix4x4 const& matrix);
-    void gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdouble z);
+    void gl_rotate(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
     void gl_scale(GLdouble x, GLdouble y, GLdouble z);
     void gl_translate(GLdouble x, GLdouble y, GLdouble z);
     void gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w);
