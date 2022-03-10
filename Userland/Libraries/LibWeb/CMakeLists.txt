@@ -299,6 +299,7 @@ set(SOURCES
     Painting/SVGGraphicsPaintable.cpp
     Painting/SVGPaintable.cpp
     Painting/SVGSVGPaintable.cpp
+    Painting/TextPaintable.cpp
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
     RequestIdleCallback/IdleDeadline.cpp

@@ -9,6 +9,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
+#include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Painting {

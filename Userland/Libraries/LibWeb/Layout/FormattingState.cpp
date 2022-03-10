@@ -6,6 +6,7 @@
 
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingState.h>
+#include <LibWeb/Layout/TextNode.h>
 
 namespace Web::Layout {
 
@@ -28,6 +29,8 @@ FormattingState::NodeState const& FormattingState::get(NodeWithStyleAndBoxModelM
 
 void FormattingState::commit()
 {
+    HashTable<Layout::TextNode*> text_nodes;
+
     for (auto& it : nodes) {
         auto& node = const_cast<Layout::NodeWithStyleAndBoxModelMetrics&>(*it.key);
         auto& node_state = *it.value;
@@ -49,10 +52,20 @@ void FormattingState::commit()
             paint_box.set_overflow_data(move(node_state.overflow_data));
             paint_box.set_containing_line_box_fragment(node_state.containing_line_box_fragment);
 
-            if (is<Layout::BlockContainer>(box))
+            if (is<Layout::BlockContainer>(box)) {
+                for (auto& line_box : node_state.line_boxes) {
+                    for (auto& fragment : line_box.fragments()) {
+                        if (fragment.layout_node().is_text_node())
+                            text_nodes.set(static_cast<Layout::TextNode*>(const_cast<Layout::Node*>(&fragment.layout_node())));
+                    }
+                }
                 static_cast<Painting::PaintableWithLines&>(paint_box).set_line_boxes(move(node_state.line_boxes));
+            }
         }
     }
+
+    for (auto* text_node : text_nodes)
+        text_node->set_paintable(text_node->create_paintable());
 }
 
 Gfx::FloatRect margin_box_rect(Box const& box, FormattingState const& state)

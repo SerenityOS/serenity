@@ -14,6 +14,7 @@
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Painting/TextPaintable.h>
 
 namespace Web::Layout {
 
@@ -364,6 +365,11 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::It
     }
 
     return {};
+}
+
+OwnPtr<Painting::Paintable> TextNode::create_paintable() const
+{
+    return Painting::TextPaintable::create(*this);
 }
 
 }
