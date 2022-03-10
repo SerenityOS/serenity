@@ -609,7 +609,7 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
             auto const normal = vertex.normal;
             auto reflection = eye_unit_xyz - normal * 2 * normal.dot(eye_unit_xyz);
             reflection.set_z(reflection.z() + 1);
-            auto const reflection_value = (config_index == 0) ? reflection.x() : reflection.y();
+            auto const reflection_value = reflection[config_index];
             return reflection_value / (2 * reflection.length()) + 0.5f;
         }
         case TexCoordGenerationMode::ReflectionMap: {
@@ -617,29 +617,10 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
             FloatVector3 const eye_unit_xyz = eye_unit.xyz();
             auto const normal = vertex.normal;
             auto reflection = eye_unit_xyz - normal * 2 * normal.dot(eye_unit_xyz);
-            switch (config_index) {
-            case 0:
-                return reflection.x();
-            case 1:
-                return reflection.y();
-            case 2:
-                return reflection.z();
-            default:
-                VERIFY_NOT_REACHED();
-            }
+            return reflection[config_index];
         }
         case TexCoordGenerationMode::NormalMap: {
-            auto const normal = vertex.normal;
-            switch (config_index) {
-            case 0:
-                return normal.x();
-            case 1:
-                return normal.y();
-            case 2:
-                return normal.z();
-            default:
-                VERIFY_NOT_REACHED();
-            }
+            return vertex.normal[config_index];
         }
         default:
             VERIFY_NOT_REACHED();
