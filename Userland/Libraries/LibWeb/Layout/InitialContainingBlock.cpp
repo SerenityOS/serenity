@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Painter.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>

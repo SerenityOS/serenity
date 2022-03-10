@@ -5,7 +5,6 @@
  */
 
 #include <LibGUI/Event.h>
-#include <LibGfx/StylePainter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>

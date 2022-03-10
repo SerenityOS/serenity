@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Painter.h>
 #include <LibWeb/Layout/SVGBox.h>
-#include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {
 

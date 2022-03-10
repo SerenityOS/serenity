@@ -5,10 +5,7 @@
  */
 
 #include <LibGfx/FontDatabase.h>
-#include <LibGfx/Painter.h>
-#include <LibGfx/StylePainter.h>
 #include <LibWeb/CSS/StyleValue.h>
-#include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Painting/ImagePaintable.h>

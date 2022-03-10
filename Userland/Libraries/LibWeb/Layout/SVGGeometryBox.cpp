@@ -5,8 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/AntiAliasingPainter.h>
-#include <LibGfx/Painter.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
 #include <LibWeb/Painting/SVGGeometryPaintable.h>
 #include <LibWeb/SVG/SVGPathElement.h>

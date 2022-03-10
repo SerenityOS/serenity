@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Painter.h>
-#include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/Progress.h>
 #include <LibWeb/Painting/ProgressPaintable.h>
 

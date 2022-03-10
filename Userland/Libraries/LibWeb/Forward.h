@@ -273,6 +273,7 @@ class PaintableBox;
 class PaintableWithLines;
 class StackingContext;
 class TextPaintable;
+struct BorderRadiusData;
 }
 
 namespace Web::RequestIdleCallback {

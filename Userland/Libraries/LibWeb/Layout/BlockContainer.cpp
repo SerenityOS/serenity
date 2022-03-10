@@ -4,13 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Painter.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/Layout/BlockContainer.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Layout/InlineFormattingContext.h>
-#include <LibWeb/Layout/ReplacedBox.h>
-#include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::Layout {

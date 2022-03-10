@@ -9,7 +9,6 @@
 #include <AK/OwnPtr.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/Layout/Node.h>
-#include <LibWeb/Painting/BorderPainting.h>
 
 namespace Web::Layout {
 
