@@ -47,11 +47,6 @@ void InitialContainingBlock::paint_all_phases(PaintContext& context)
     paint_box()->stacking_context()->paint(context);
 }
 
-HitTestResult InitialContainingBlock::hit_test(const Gfx::IntPoint& position, HitTestType type) const
-{
-    return paint_box()->stacking_context()->hit_test(position, type);
-}
-
 void InitialContainingBlock::recompute_selection_states()
 {
     SelectionState state = SelectionState::None;

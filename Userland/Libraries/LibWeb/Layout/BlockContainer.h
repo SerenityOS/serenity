@@ -18,8 +18,6 @@ public:
     BlockContainer(DOM::Document&, DOM::Node*, CSS::ComputedValues);
     virtual ~BlockContainer() override;
 
-    virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
-
     BlockContainer* previous_sibling() { return verify_cast<BlockContainer>(Node::previous_sibling()); }
     const BlockContainer* previous_sibling() const { return verify_cast<BlockContainer>(Node::previous_sibling()); }
     BlockContainer* next_sibling() { return verify_cast<BlockContainer>(Node::next_sibling()); }

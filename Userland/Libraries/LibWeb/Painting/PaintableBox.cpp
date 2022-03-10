@@ -10,6 +10,7 @@
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/ShadowPainting.h>
+#include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Painting {
 
@@ -305,6 +306,118 @@ Layout::BlockContainer const& PaintableWithLines::layout_box() const
 Layout::BlockContainer& PaintableWithLines::layout_box()
 {
     return static_cast<Layout::BlockContainer&>(PaintableBox::layout_box());
+}
+
+void PaintableBox::set_stacking_context(NonnullOwnPtr<StackingContext> stacking_context)
+{
+    m_stacking_context = move(stacking_context);
+}
+
+template<typename Callback>
+void PaintableBox::for_each_child_in_paint_order(Callback callback) const
+{
+    // Element traversal using the order defined in https://www.w3.org/TR/CSS2/zindex.html#painting-order.
+    // Note: Some steps are skipped because they are not relevant to node traversal.
+
+    // 3. Stacking contexts formed by positioned descendants with negative z-indices (excluding 0) in z-index order
+    //    (most negative first) then tree order.
+    // FIXME: This does not retrieve elements in the z-index order.
+    layout_box().for_each_child([&](auto& child) {
+        if (!child.is_positioned() || !is<Layout::Box>(child))
+            return;
+
+        auto& box_child = verify_cast<Layout::Box>(child);
+        auto* stacking_context = box_child.paint_box()->stacking_context();
+        if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() < 0)
+            callback(child);
+    });
+
+    // 4. For all its in-flow, non-positioned, block-level descendants in tree order: If the element is a block, list-item,
+    //    or other block equivalent:
+    layout_box().for_each_child([&](auto& child) {
+        if (is<Layout::Box>(child) && verify_cast<Layout::Box>(child).paint_box()->stacking_context())
+            return;
+        if (!child.is_positioned())
+            callback(child);
+    });
+
+    // 5. All non-positioned floating descendants, in tree order. For each one of these, treat the element as if it created
+    //    a new stacking context, but any positioned descendants and descendants which actually create a new stacking context
+    //    should be considered part of the parent stacking context, not this new one.
+    layout_box().for_each_child([&](auto& child) {
+        if (is<Layout::Box>(child) && verify_cast<Layout::Box>(child).paint_box()->stacking_context())
+            return;
+        if (child.is_positioned())
+            callback(child);
+    });
+
+    // 8. All positioned descendants with 'z-index: auto' or 'z-index: 0', in tree order. For those with 'z-index: auto', treat
+    //    the element as if it created a new stacking context, but any positioned descendants and descendants which actually
+    //    create a new stacking context should be considered part of the parent stacking context, not this new one. For those
+    //    with 'z-index: 0', treat the stacking context generated atomically.
+    layout_box().for_each_child([&](auto& child) {
+        if (!child.is_positioned() || !is<Layout::Box>(child))
+            return;
+
+        auto& box_child = verify_cast<Layout::Box>(child);
+        auto* stacking_context = box_child.paint_box()->stacking_context();
+        if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() == 0)
+            callback(child);
+    });
+
+    // 9. Stacking contexts formed by positioned descendants with z-indices greater than or equal to 1 in z-index order
+    //    (smallest first) then tree order.
+    // FIXME: This does not retrieve elements in the z-index order.
+    layout_box().for_each_child([&](auto& child) {
+        if (!child.is_positioned() || !is<Layout::Box>(child))
+            return;
+
+        auto& box_child = verify_cast<Layout::Box>(child);
+        auto* stacking_context = box_child.paint_box()->stacking_context();
+        if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() > 0)
+            callback(child);
+    });
+}
+
+HitTestResult PaintableBox::hit_test(Gfx::IntPoint const& position, HitTestType type) const
+{
+    if (layout_box().is_initial_containing_block_box())
+        return stacking_context()->hit_test(position, type);
+
+    HitTestResult result { absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
+    for_each_child_in_paint_order([&](auto& child) {
+        if (child.paintable()) {
+            auto child_result = child.paintable()->hit_test(position, type);
+            if (child_result.paintable)
+                result = child_result;
+        }
+    });
+    return result;
+}
+
+HitTestResult PaintableWithLines::hit_test(const Gfx::IntPoint& position, HitTestType type) const
+{
+    if (!layout_box().children_are_inline())
+        return PaintableBox::hit_test(position, type);
+
+    HitTestResult last_good_candidate;
+    for (auto& line_box : m_line_boxes) {
+        for (auto& fragment : line_box.fragments()) {
+            if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paint_box()->stacking_context())
+                continue;
+            if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
+                if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
+                    return fragment.layout_node().paintable()->hit_test(position, type);
+                return { fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
+            }
+            if (fragment.absolute_rect().top() <= position.y())
+                last_good_candidate = { fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
+        }
+    }
+
+    if (type == HitTestType::TextCursor && last_good_candidate.paintable)
+        return last_good_candidate;
+    return { absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
 }
 
 }

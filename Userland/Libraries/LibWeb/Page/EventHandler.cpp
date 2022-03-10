@@ -113,9 +113,23 @@ Layout::InitialContainingBlock* EventHandler::layout_root()
     return m_browsing_context.active_document()->layout_node();
 }
 
+Painting::PaintableBox* EventHandler::paint_root()
+{
+    if (!m_browsing_context.active_document())
+        return nullptr;
+    return const_cast<Painting::PaintableBox*>(m_browsing_context.active_document()->paint_box());
+}
+
+Painting::PaintableBox const* EventHandler::paint_root() const
+{
+    if (!m_browsing_context.active_document())
+        return nullptr;
+    return const_cast<Painting::PaintableBox*>(m_browsing_context.active_document()->paint_box());
+}
+
 bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
 {
-    if (!layout_root())
+    if (!paint_root())
         return false;
 
     if (modifiers & KeyModifier::Mod_Shift)
@@ -123,7 +137,7 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
 
     // FIXME: Support wheel events in nested browsing contexts.
 
-    auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
+    auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
     if (result.paintable && result.paintable->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y))
         return true;
 
@@ -137,7 +151,7 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
 
 bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
-    if (!layout_root())
+    if (!paint_root())
         return false;
 
     if (m_mouse_event_tracking_layout_node) {
@@ -147,15 +161,15 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
 
     bool handled_event = false;
 
-    auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
+    auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
 
     if (result.paintable && result.paintable->wants_mouse_events()) {
         result.paintable->handle_mouseup({}, position, button, modifiers);
 
         // Things may have changed as a consequence of Layout::Node::handle_mouseup(). Hit test again.
-        if (!layout_root())
+        if (!paint_root())
             return true;
-        result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
+        result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
     }
 
     if (result.paintable && result.paintable->layout_node().dom_node()) {
@@ -181,7 +195,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
 
 bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
-    if (!layout_root())
+    if (!paint_root())
         return false;
 
     if (m_mouse_event_tracking_layout_node) {
@@ -194,7 +208,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
 
     {
         // TODO: Allow selecting element behind if one on top has pointer-events set to none.
-        auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
+        auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
         if (!result.paintable)
             return false;
 
@@ -229,7 +243,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     }
 
     // NOTE: Dispatching an event may have disturbed the world.
-    if (!layout_root() || layout_root() != node->document().layout_node())
+    if (!paint_root() || paint_root() != node->document().paint_box())
         return true;
 
     if (button == GUI::MouseButton::Secondary && is<HTML::HTMLImageElement>(*node)) {
@@ -268,7 +282,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         }
     } else {
         if (button == GUI::MouseButton::Primary) {
-            auto result = layout_root()->hit_test(position, Layout::HitTestType::TextCursor);
+            auto result = paint_root()->hit_test(position, Painting::HitTestType::TextCursor);
             if (result.paintable && result.paintable->layout_node().dom_node()) {
 
                 // See if we want to focus something.
@@ -299,7 +313,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
 
 bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned buttons, unsigned modifiers)
 {
-    if (!layout_root())
+    if (!paint_root())
         return false;
 
     if (m_mouse_event_tracking_layout_node) {
@@ -312,7 +326,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
     Gfx::StandardCursor hovered_node_cursor = Gfx::StandardCursor::None;
-    auto result = layout_root()->hit_test(position, Layout::HitTestType::Exact);
+    auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
     const HTML::HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.paintable) {
         if (result.paintable->wants_mouse_events()) {
@@ -361,11 +375,11 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
             auto offset = compute_mouse_event_offset(position, result.paintable->layout_node());
             node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousemove, offset.x(), offset.y(), position.x(), position.y()));
             // NOTE: Dispatching an event may have disturbed the world.
-            if (!layout_root() || layout_root() != node->document().layout_node())
+            if (!paint_root() || paint_root() != node->document().paint_box())
                 return true;
         }
         if (m_in_mouse_selection) {
-            auto hit = layout_root()->hit_test(position, Layout::HitTestType::TextCursor);
+            auto hit = paint_root()->hit_test(position, Painting::HitTestType::TextCursor);
             if (hit.paintable && hit.paintable->layout_node().dom_node()) {
                 m_browsing_context.set_cursor_position(DOM::Position(*hit.paintable->layout_node().dom_node(), result.index_in_node));
                 layout_root()->set_selection_end({ hit.paintable->layout_node(), hit.index_in_node });

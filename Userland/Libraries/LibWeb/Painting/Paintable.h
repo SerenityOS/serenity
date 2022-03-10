@@ -10,9 +10,34 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Painting {
+
+enum class PaintPhase {
+    Background,
+    Border,
+    Foreground,
+    FocusOutline,
+    Overlay,
+};
+
+struct HitTestResult {
+    RefPtr<Painting::Paintable> paintable;
+    int index_in_node { 0 };
+
+    enum InternalPosition {
+        None,
+        Before,
+        Inside,
+        After,
+    };
+    InternalPosition internal_position { None };
+};
+
+enum class HitTestType {
+    Exact,      // Exact matches only
+    TextCursor, // Clicking past the right/bottom edge of text will still hit the text
+};
 
 class Paintable : public RefCounted<Paintable> {
     AK_MAKE_NONMOVABLE(Paintable);
@@ -24,6 +49,8 @@ public:
     virtual void paint(PaintContext&, PaintPhase) const { }
     virtual void before_children_paint(PaintContext&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) const { }
+
+    virtual HitTestResult hit_test(Gfx::IntPoint const&, HitTestType) const;
 
     virtual bool wants_mouse_events() const { return false; }
     virtual void handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);

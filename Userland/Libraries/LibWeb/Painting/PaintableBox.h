@@ -103,7 +103,7 @@ public:
 
     StackingContext* stacking_context() { return m_stacking_context; }
     StackingContext const* stacking_context() const { return m_stacking_context; }
-    void set_stacking_context(NonnullOwnPtr<Painting::StackingContext> context) { m_stacking_context = move(context); }
+    void set_stacking_context(NonnullOwnPtr<Painting::StackingContext>);
     StackingContext* enclosing_stacking_context();
 
     DOM::Node const* dom_node() const { return layout_box().dom_node(); }
@@ -115,6 +115,8 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const override;
     virtual void after_children_paint(PaintContext&, PaintPhase) const override;
 
+    virtual HitTestResult hit_test(Gfx::IntPoint const&, HitTestType) const override;
+
 protected:
     explicit PaintableBox(Layout::Box const&);
 
@@ -123,6 +125,9 @@ protected:
     virtual void paint_box_shadow(PaintContext&) const;
 
 private:
+    template<typename Callback>
+    void for_each_child_in_paint_order(Callback) const;
+
     Painting::BorderRadiusData normalized_border_radius_data() const;
 
     OwnPtr<Painting::StackingContext> m_stacking_context;
@@ -156,6 +161,8 @@ public:
     virtual void paint(PaintContext&, PaintPhase) const override;
     virtual bool wants_mouse_events() const override { return false; }
     virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
+
+    virtual HitTestResult hit_test(Gfx::IntPoint const&, HitTestType) const override;
 
 private:
     PaintableWithLines(Layout::BlockContainer const&);

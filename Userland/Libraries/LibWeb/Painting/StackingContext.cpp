@@ -157,7 +157,7 @@ void StackingContext::paint(PaintContext& context) const
     }
 }
 
-Layout::HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, Layout::HitTestType type) const
+HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestType type) const
 {
     // NOTE: Hit testing basically happens in reverse painting order.
     // https://www.w3.org/TR/CSS22/visuren.html#z-index
@@ -172,11 +172,11 @@ Layout::HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, L
             return result;
     }
 
-    Layout::HitTestResult result;
+    HitTestResult result;
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
         if (box.is_positioned() && !box.paint_box()->stacking_context()) {
-            result = box.hit_test(position, type);
+            result = box.paint_box()->hit_test(position, type);
             if (result.paintable)
                 return IterationDecision::Break;
         }
@@ -187,7 +187,7 @@ Layout::HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, L
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     if (m_box.children_are_inline() && is<Layout::BlockContainer>(m_box)) {
-        auto result = m_box.hit_test(position, type);
+        auto result = m_box.paint_box()->hit_test(position, type);
         if (result.paintable)
             return result;
     }
@@ -195,7 +195,7 @@ Layout::HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, L
     // 4. the non-positioned floats.
     m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
         if (box.is_floating()) {
-            result = box.hit_test(position, type);
+            result = box.paint_box()->hit_test(position, type);
             if (result.paintable)
                 return IterationDecision::Break;
         }
@@ -206,7 +206,7 @@ Layout::HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, L
     if (!m_box.children_are_inline()) {
         m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
             if (!box.is_absolutely_positioned() && !box.is_floating()) {
-                result = box.hit_test(position, type);
+                result = box.paint_box()->hit_test(position, type);
                 if (result.paintable)
                     return IterationDecision::Break;
             }
@@ -228,7 +228,7 @@ Layout::HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, L
 
     // 1. the background and borders of the element forming the stacking context.
     if (m_box.paint_box()->absolute_border_box_rect().contains(position.to_type<float>())) {
-        return Layout::HitTestResult {
+        return HitTestResult {
             .paintable = m_box.paintable(),
         };
     }

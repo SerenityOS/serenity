@@ -271,6 +271,7 @@ class LabelablePaintable;
 class Paintable;
 class PaintableBox;
 class PaintableWithLines;
+class StackingContext;
 class TextPaintable;
 }
 

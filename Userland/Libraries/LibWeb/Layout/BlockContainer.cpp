@@ -29,31 +29,6 @@ BlockContainer::~BlockContainer()
 {
 }
 
-HitTestResult BlockContainer::hit_test(const Gfx::IntPoint& position, HitTestType type) const
-{
-    if (!children_are_inline())
-        return Box::hit_test(position, type);
-
-    HitTestResult last_good_candidate;
-    for (auto& line_box : paint_box()->line_boxes()) {
-        for (auto& fragment : line_box.fragments()) {
-            if (is<Box>(fragment.layout_node()) && verify_cast<Box>(fragment.layout_node()).paint_box()->stacking_context())
-                continue;
-            if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
-                if (is<BlockContainer>(fragment.layout_node()))
-                    return verify_cast<BlockContainer>(fragment.layout_node()).hit_test(position, type);
-                return { fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
-            }
-            if (fragment.absolute_rect().top() <= position.y())
-                last_good_candidate = { fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
-        }
-    }
-
-    if (type == HitTestType::TextCursor && last_good_candidate.paintable)
-        return last_good_candidate;
-    return { paint_box()->absolute_border_box_rect().contains(position.x(), position.y()) ? paintable() : nullptr };
-}
-
 bool BlockContainer::is_scrollable() const
 {
     // FIXME: Support horizontal scroll as well (overflow-x)

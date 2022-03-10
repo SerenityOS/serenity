@@ -24,7 +24,6 @@ public:
 
     bool is_out_of_flow(FormattingContext const&) const;
 
-    virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
     virtual void set_needs_display() override;
 
     bool is_body() const;

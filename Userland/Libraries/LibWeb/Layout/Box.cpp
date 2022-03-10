@@ -57,20 +57,6 @@ bool Box::is_out_of_flow(FormattingContext const& formatting_context) const
     return false;
 }
 
-HitTestResult Box::hit_test(const Gfx::IntPoint& position, HitTestType type) const
-{
-    // FIXME: It would be nice if we could confidently skip over hit testing
-    //        parts of the layout tree, but currently we can't just check
-    //        m_rect.contains() since inline text rects can't be trusted..
-    HitTestResult result { paint_box()->absolute_border_box_rect().contains(position.x(), position.y()) ? paint_box() : nullptr };
-    for_each_child_in_paint_order([&](auto& child) {
-        auto child_result = child.hit_test(position, type);
-        if (child_result.paintable)
-            result = child_result;
-    });
-    return result;
-}
-
 void Box::set_needs_display()
 {
     if (!is_inline()) {

@@ -8,16 +8,9 @@
 
 #include <AK/Vector.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Painting/Paintable.h>
 
 namespace Web::Painting {
-
-enum class PaintPhase {
-    Background,
-    Border,
-    Foreground,
-    FocusOutline,
-    Overlay,
-};
 
 class StackingContext {
 public:
@@ -36,7 +29,7 @@ public:
 
     void paint_descendants(PaintContext&, Layout::Node&, StackingContextPaintPhase) const;
     void paint(PaintContext&) const;
-    Layout::HitTestResult hit_test(Gfx::IntPoint const&, Layout::HitTestType) const;
+    HitTestResult hit_test(Gfx::IntPoint const&, HitTestType) const;
 
     void dump(int indent = 0) const;
 

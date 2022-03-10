@@ -41,6 +41,9 @@ private:
     Layout::InitialContainingBlock* layout_root();
     const Layout::InitialContainingBlock* layout_root() const;
 
+    Painting::PaintableBox* paint_root();
+    Painting::PaintableBox const* paint_root() const;
+
     HTML::BrowsingContext& m_browsing_context;
 
     bool m_in_mouse_selection { false };

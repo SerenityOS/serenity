@@ -80,11 +80,6 @@ bool Node::establishes_stacking_context() const
     return computed_values().opacity() < 1.0f;
 }
 
-HitTestResult Node::hit_test(Gfx::IntPoint const&, HitTestType) const
-{
-    VERIFY_NOT_REACHED();
-}
-
 HTML::BrowsingContext const& Node::browsing_context() const
 {
     VERIFY(document().browsing_context());
