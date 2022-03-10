@@ -1276,32 +1276,28 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // x. Set days to days - daysPassed.
         days -= days_passed;
 
-        // y. Let sign be ! Sign(days).
-        auto sign = JS::Temporal::sign(days);
+        // y. If days < 0, let sign be −1; else, let sign be 1.
+        auto sign = days < 0 ? -1 : 1;
 
-        // z. If sign is 0, set sign to 1.
-        if (sign == 0)
-            sign = 1;
-
-        // aa. Let oneYear be ? CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+        // z. Let oneYear be ? CreateTemporalDuration(sign, 0, 0, 0, 0, 0, 0, 0, 0, 0).
         auto* one_year = TRY(create_temporal_duration(global_object, sign, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-        // ab. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
+        // aa. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneYear).
         auto move_result = TRY(move_relative_date(global_object, *calendar, *relative_to, *one_year));
 
-        // ac. Let oneYearDays be moveResult.[[Days]].
+        // ab. Let oneYearDays be moveResult.[[Days]].
         auto one_year_days = move_result.days;
 
-        // ad. Let fractionalYears be years + days / abs(oneYearDays).
+        // ac. Let fractionalYears be years + days / abs(oneYearDays).
         auto fractional_years = years + days / fabs(one_year_days);
 
-        // ae. Set years to ! RoundNumberToIncrement(fractionalYears, increment, roundingMode).
+        // ad. Set years to ! RoundNumberToIncrement(fractionalYears, increment, roundingMode).
         years = (double)round_number_to_increment(fractional_years, increment, rounding_mode);
 
-        // af. Set remainder to fractionalYears - years.
+        // ae. Set remainder to fractionalYears - years.
         remainder = fractional_years - years;
 
-        // ag. Set months, weeks, and days to 0.
+        // af. Set months, weeks, and days to 0.
         months = 0;
         weeks = 0;
         days = 0;
@@ -1340,26 +1336,22 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         // j. Let days be days + weeksInDays.
         days += weeks_in_days;
 
-        // k. Let sign be ! Sign(days).
-        auto sign = JS::Temporal::sign(days);
+        // k. If days < 0, let sign be −1; else, let sign be 1.
+        auto sign = days < 0 ? -1 : 1;
 
-        // l. If sign is 0, set sign to 1.
-        if (sign == 0)
-            sign = 1;
-
-        // m. Let oneMonth be ? CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
+        // l. Let oneMonth be ? CreateTemporalDuration(0, sign, 0, 0, 0, 0, 0, 0, 0, 0).
         auto* one_month = TRY(create_temporal_duration(global_object, 0, sign, 0, 0, 0, 0, 0, 0, 0, 0));
 
-        // n. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
+        // m. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneMonth).
         auto move_result = TRY(move_relative_date(global_object, *calendar, *relative_to, *one_month));
 
-        // o. Set relativeTo to moveResult.[[RelativeTo]].
+        // n. Set relativeTo to moveResult.[[RelativeTo]].
         relative_to = move_result.relative_to.cell();
 
-        // p. Let oneMonthDays be moveResult.[[Days]].
+        // o. Let oneMonthDays be moveResult.[[Days]].
         auto one_month_days = move_result.days;
 
-        // q. Repeat, while abs(days) ≥ abs(oneMonthDays),
+        // p. Repeat, while abs(days) ≥ abs(oneMonthDays),
         while (fabs(days) >= fabs(one_month_days)) {
             // i. Set months to months + sign.
             months += sign;
@@ -1377,16 +1369,16 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
             one_month_days = move_result.days;
         }
 
-        // r. Let fractionalMonths be months + days / abs(oneMonthDays).
+        // q. Let fractionalMonths be months + days / abs(oneMonthDays).
         auto fractional_months = months + days / fabs(one_month_days);
 
-        // s. Set months to ! RoundNumberToIncrement(fractionalMonths, increment, roundingMode).
+        // r. Set months to ! RoundNumberToIncrement(fractionalMonths, increment, roundingMode).
         months = (double)round_number_to_increment(fractional_months, increment, rounding_mode);
 
-        // t. Set remainder to fractionalMonths - months.
+        // s. Set remainder to fractionalMonths - months.
         remainder = fractional_months - months;
 
-        // u. Set weeks and days to 0.
+        // t. Set weeks and days to 0.
         weeks = 0;
         days = 0;
     }
@@ -1394,26 +1386,22 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
     else if (unit == "week"sv) {
         VERIFY(relative_to);
 
-        // a. Let sign be ! Sign(days).
-        auto sign = JS::Temporal::sign(days);
+        // a. If days < 0, let sign be −1; else, let sign be 1.
+        auto sign = days < 0 ? -1 : 1;
 
-        // b. If sign is 0, set sign to 1.
-        if (sign == 0)
-            sign = 1;
-
-        // c. Let oneWeek be ? CreateTemporalDuration(0, 0, sign, 0, 0, 0, 0, 0, 0, 0).
+        // b. Let oneWeek be ? CreateTemporalDuration(0, 0, sign, 0, 0, 0, 0, 0, 0, 0).
         auto* one_week = TRY(create_temporal_duration(global_object, 0, 0, sign, 0, 0, 0, 0, 0, 0, 0));
 
-        // d. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneWeek).
+        // c. Let moveResult be ? MoveRelativeDate(calendar, relativeTo, oneWeek).
         auto move_result = TRY(move_relative_date(global_object, *calendar, *relative_to, *one_week));
 
-        // e. Set relativeTo to moveResult.[[RelativeTo]].
+        // d. Set relativeTo to moveResult.[[RelativeTo]].
         relative_to = move_result.relative_to.cell();
 
-        // f. Let oneWeekDays be moveResult.[[Days]].
+        // e. Let oneWeekDays be moveResult.[[Days]].
         auto one_week_days = move_result.days;
 
-        // g. Repeat, while abs(days) ≥ abs(oneWeekDays),
+        // f. Repeat, while abs(days) ≥ abs(oneWeekDays),
         while (fabs(days) >= fabs(one_week_days)) {
             // i. Set weeks to weeks + sign.
             weeks += sign;
@@ -1431,16 +1419,16 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
             one_week_days = move_result.days;
         }
 
-        // h. Let fractionalWeeks be weeks + days / abs(oneWeekDays).
+        // g. Let fractionalWeeks be weeks + days / abs(oneWeekDays).
         auto fractional_weeks = weeks + days / fabs(one_week_days);
 
-        // i. Set weeks to ! RoundNumberToIncrement(fractionalWeeks, increment, roundingMode).
+        // h. Set weeks to ! RoundNumberToIncrement(fractionalWeeks, increment, roundingMode).
         weeks = (double)round_number_to_increment(fractional_weeks, increment, rounding_mode);
 
-        // j. Set remainder to fractionalWeeks - weeks.
+        // i. Set remainder to fractionalWeeks - weeks.
         remainder = fractional_weeks - weeks;
 
-        // k. Set days to 0.
+        // j. Set days to 0.
         days = 0;
     }
     // 13. Else if unit is "day", then
@@ -1569,34 +1557,43 @@ ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& glo
     // 2. Let timeRemainderNs be ! TotalDurationNanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 0).
     auto time_remainder_ns = total_duration_nanoseconds(global_object, 0, hours, minutes, seconds, milliseconds, microseconds, *js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)nanoseconds)), 0)->big_integer();
 
-    // 3. Let direction be ! ℝ(Sign(𝔽(timeRemainderNs))).
-    auto direction = Temporal::sign(time_remainder_ns);
+    i32 direction;
 
-    // 4. Let dayStart be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], years, months, weeks, days, 0, 0, 0, 0, 0, 0).
+    // 3. If timeRemainderNs = 0, let direction be 0.
+    if (time_remainder_ns == "0"_bigint)
+        direction = 0;
+    // 4. Else if timeRemainderNs < 0, let direction be −1.
+    else if (time_remainder_ns.is_negative())
+        direction = -1;
+    // 5. Else, let direction be 1.
+    else
+        direction = 1;
+
+    // 6. Let dayStart be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], years, months, weeks, days, 0, 0, 0, 0, 0, 0).
     auto* day_start = TRY(add_zoned_date_time(global_object, relative_to.nanoseconds(), &relative_to.time_zone(), relative_to.calendar(), years, months, weeks, days, 0, 0, 0, 0, 0, 0));
 
-    // 5. Let dayEnd be ? AddZonedDateTime(dayStart, relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, direction, 0, 0, 0, 0, 0, 0).
+    // 7. Let dayEnd be ? AddZonedDateTime(dayStart, relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, direction, 0, 0, 0, 0, 0, 0).
     auto* day_end = TRY(add_zoned_date_time(global_object, *day_start, &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, direction, 0, 0, 0, 0, 0, 0));
 
-    // 6. Let dayLengthNs be ℝ(dayEnd − dayStart).
+    // 8. Let dayLengthNs be ℝ(dayEnd − dayStart).
     auto day_length_ns = day_end->big_integer().minus(day_start->big_integer());
 
-    // 7. If (timeRemainderNs − dayLengthNs) × direction < 0, then
-    if (time_remainder_ns.minus(day_length_ns).multiplied_by(Crypto::SignedBigInteger { (i32)direction }).is_negative()) {
+    // 9. If (timeRemainderNs − dayLengthNs) × direction < 0, then
+    if (time_remainder_ns.minus(day_length_ns).multiplied_by(Crypto::SignedBigInteger { direction }).is_negative()) {
         // a. Return ! CreateDurationRecord(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
         return create_duration_record(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
     }
 
-    // 8. Set timeRemainderNs to ! RoundTemporalInstant(ℤ(timeRemainderNs − dayLengthNs), increment, unit, roundingMode).
+    // 10. Set timeRemainderNs to ! RoundTemporalInstant(ℤ(timeRemainderNs − dayLengthNs), increment, unit, roundingMode).
     time_remainder_ns = round_temporal_instant(global_object, *js_bigint(vm, time_remainder_ns.minus(day_length_ns)), increment, unit, rounding_mode)->big_integer();
 
-    // 9. Let adjustedDateDuration be ? AddDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0, 0, 0, 0, direction, 0, 0, 0, 0, 0, 0, relativeTo).
+    // 11. Let adjustedDateDuration be ? AddDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0, 0, 0, 0, direction, 0, 0, 0, 0, 0, 0, relativeTo).
     auto adjusted_date_duration = TRY(add_duration(global_object, years, months, weeks, days, 0, 0, 0, 0, 0, 0, 0, 0, 0, direction, 0, 0, 0, 0, 0, 0, &relative_to));
 
-    // 10. Let adjustedTimeDuration be ? BalanceDuration(0, 0, 0, 0, 0, 0, timeRemainderNs, "hour").
+    // 12. Let adjustedTimeDuration be ? BalanceDuration(0, 0, 0, 0, 0, 0, timeRemainderNs, "hour").
     auto adjusted_time_duration = TRY(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *js_bigint(vm, move(time_remainder_ns)), "hour"sv));
 
-    // 11. Return ! CreateDurationRecord(adjustedDateDuration.[[Years]], adjustedDateDuration.[[Months]], adjustedDateDuration.[[Weeks]], adjustedDateDuration.[[Days]], adjustedTimeDuration.[[Hours]], adjustedTimeDuration.[[Minutes]], adjustedTimeDuration.[[Seconds]], adjustedTimeDuration.[[Milliseconds]], adjustedTimeDuration.[[Microseconds]], adjustedTimeDuration.[[Nanoseconds]]).
+    // 13. Return ! CreateDurationRecord(adjustedDateDuration.[[Years]], adjustedDateDuration.[[Months]], adjustedDateDuration.[[Weeks]], adjustedDateDuration.[[Days]], adjustedTimeDuration.[[Hours]], adjustedTimeDuration.[[Minutes]], adjustedTimeDuration.[[Seconds]], adjustedTimeDuration.[[Milliseconds]], adjustedTimeDuration.[[Microseconds]], adjustedTimeDuration.[[Nanoseconds]]).
     return create_duration_record(adjusted_date_duration.years, adjusted_date_duration.months, adjusted_date_duration.weeks, adjusted_date_duration.days, adjusted_time_duration.hours, adjusted_time_duration.minutes, adjusted_time_duration.seconds, adjusted_time_duration.milliseconds, adjusted_time_duration.microseconds, adjusted_time_duration.nanoseconds);
 }
 
