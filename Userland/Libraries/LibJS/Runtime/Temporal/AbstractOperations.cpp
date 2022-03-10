@@ -298,31 +298,31 @@ ThrowCompletionOr<u64> to_temporal_rounding_increment(GlobalObject& global_objec
     double maximum;
     // 1. If dividend is undefined, then
     if (!dividend.has_value()) {
-        // a. Let maximum be +∞.
+        // a. Let maximum be +∞𝔽.
         maximum = INFINITY;
     }
     // 2. Else if inclusive is true, then
     else if (inclusive) {
-        // a. Let maximum be dividend.
+        // a. Let maximum be 𝔽(dividend).
         maximum = *dividend;
     }
     // 3. Else if dividend is more than 1, then
     else if (*dividend > 1) {
-        // a. Let maximum be dividend − 1.
+        // a. Let maximum be 𝔽(dividend − 1).
         maximum = *dividend - 1;
     }
     // 4. Else,
     else {
-        // a. Let maximum be 1.
+        // a. Let maximum be 1𝔽.
         maximum = 1;
     }
 
-    // 5. Let increment be ? GetOption(normalizedOptions, "roundingIncrement", « Number », empty, 1).
+    // 5. Let increment be ? GetOption(normalizedOptions, "roundingIncrement", « Number », empty, 1𝔽).
     auto increment_value = TRY(get_option(global_object, normalized_options, vm.names.roundingIncrement, { OptionType::Number }, {}, Value(1)));
     VERIFY(increment_value.is_number());
     auto increment = increment_value.as_double();
 
-    // 6. If increment < 1 or increment > maximum, throw a RangeError exception.
+    // 6. If increment < 1𝔽 or increment > maximum, throw a RangeError exception.
     if (increment < 1 || increment > maximum)
         return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
 
