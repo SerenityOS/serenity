@@ -10,9 +10,9 @@
 
 namespace Web::Painting {
 
-NonnullOwnPtr<ButtonPaintable> ButtonPaintable::create(Layout::ButtonBox const& layout_box)
+NonnullRefPtr<ButtonPaintable> ButtonPaintable::create(Layout::ButtonBox const& layout_box)
 {
-    return adopt_own(*new ButtonPaintable(layout_box));
+    return adopt_ref(*new ButtonPaintable(layout_box));
 }
 
 ButtonPaintable::ButtonPaintable(Layout::ButtonBox const& layout_box)

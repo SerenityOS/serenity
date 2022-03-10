@@ -40,7 +40,7 @@ void FrameBox::did_set_rect()
     dom_node().nested_browsing_context()->set_size(paint_box()->content_size().to_type<int>());
 }
 
-OwnPtr<Painting::Paintable> FrameBox::create_paintable() const
+RefPtr<Painting::Paintable> FrameBox::create_paintable() const
 {
     return Painting::NestedBrowsingContextPaintable::create(*this);
 }

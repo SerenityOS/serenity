@@ -11,9 +11,9 @@
 
 namespace Web::Painting {
 
-NonnullOwnPtr<RadioButtonPaintable> RadioButtonPaintable::create(Layout::RadioButton const& layout_box)
+NonnullRefPtr<RadioButtonPaintable> RadioButtonPaintable::create(Layout::RadioButton const& layout_box)
 {
-    return adopt_own(*new RadioButtonPaintable(layout_box));
+    return adopt_ref(*new RadioButtonPaintable(layout_box));
 }
 
 RadioButtonPaintable::RadioButtonPaintable(Layout::RadioButton const& layout_box)

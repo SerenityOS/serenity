@@ -14,9 +14,9 @@
 
 namespace Web::Painting {
 
-NonnullOwnPtr<InlinePaintable> InlinePaintable::create(Layout::InlineNode const& layout_node)
+NonnullRefPtr<InlinePaintable> InlinePaintable::create(Layout::InlineNode const& layout_node)
 {
-    return adopt_own(*new InlinePaintable(layout_node));
+    return adopt_ref(*new InlinePaintable(layout_node));
 }
 
 InlinePaintable::InlinePaintable(Layout::InlineNode const& layout_node)

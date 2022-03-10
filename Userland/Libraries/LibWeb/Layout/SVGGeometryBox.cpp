@@ -8,7 +8,7 @@
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
-#include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/SVGGeometryPaintable.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
@@ -45,6 +45,11 @@ Gfx::FloatPoint SVGGeometryBox::viewbox_origin() const
     if (!svg_box || !svg_box->view_box().has_value())
         return { 0, 0 };
     return { svg_box->view_box().value().min_x, svg_box->view_box().value().min_y };
+}
+
+RefPtr<Painting::Paintable> SVGGeometryBox::create_paintable() const
+{
+    return Painting::SVGGeometryPaintable::create(*this);
 }
 
 }

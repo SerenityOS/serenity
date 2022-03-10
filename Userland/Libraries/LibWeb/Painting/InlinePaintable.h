@@ -13,7 +13,7 @@ namespace Web::Painting {
 
 class InlinePaintable final : public Paintable {
 public:
-    static NonnullOwnPtr<InlinePaintable> create(Layout::InlineNode const&);
+    static NonnullRefPtr<InlinePaintable> create(Layout::InlineNode const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

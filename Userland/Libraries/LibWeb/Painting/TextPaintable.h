@@ -12,7 +12,7 @@ namespace Web::Painting {
 
 class TextPaintable : public Paintable {
 public:
-    static NonnullOwnPtr<TextPaintable> create(Layout::TextNode const&);
+    static NonnullRefPtr<TextPaintable> create(Layout::TextNode const&);
 
     Layout::TextNode const& layout_node() const { return static_cast<Layout::TextNode const&>(Paintable::layout_node()); }
 

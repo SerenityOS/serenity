@@ -13,7 +13,7 @@ namespace Web::Painting {
 
 class ProgressPaintable final : public PaintableBox {
 public:
-    static NonnullOwnPtr<ProgressPaintable> create(Layout::Progress const&);
+    static NonnullRefPtr<ProgressPaintable> create(Layout::Progress const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

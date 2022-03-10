@@ -13,7 +13,7 @@ namespace Web::Painting {
 
 class RadioButtonPaintable final : public PaintableBox {
 public:
-    static NonnullOwnPtr<RadioButtonPaintable> create(Layout::RadioButton const&);
+    static NonnullRefPtr<RadioButtonPaintable> create(Layout::RadioButton const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

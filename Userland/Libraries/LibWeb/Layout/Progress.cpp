@@ -21,7 +21,7 @@ Progress::~Progress()
 {
 }
 
-OwnPtr<Painting::Paintable> Progress::create_paintable() const
+RefPtr<Painting::Paintable> Progress::create_paintable() const
 {
     return Painting::ProgressPaintable::create(*this);
 }

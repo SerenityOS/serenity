@@ -84,7 +84,7 @@ void ImageBox::browsing_context_did_set_viewport_rect(Gfx::IntRect const& viewpo
     m_image_loader.set_visible_in_viewport(viewport_rect.to_type<float>().intersects(paint_box()->absolute_rect()));
 }
 
-OwnPtr<Painting::Paintable> ImageBox::create_paintable() const
+RefPtr<Painting::Paintable> ImageBox::create_paintable() const
 {
     return Painting::ImagePaintable::create(*this);
 }

@@ -52,7 +52,7 @@ public:
 
     void compute_text_for_rendering(bool collapse, bool previous_is_empty_or_ends_in_whitespace);
 
-    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
+    virtual RefPtr<Painting::Paintable> create_paintable() const override;
 
 private:
     virtual bool is_text_node() const final { return true; }

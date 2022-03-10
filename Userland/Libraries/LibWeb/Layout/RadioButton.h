@@ -19,7 +19,7 @@ public:
     const HTML::HTMLInputElement& dom_node() const { return static_cast<const HTML::HTMLInputElement&>(LabelableNode::dom_node()); }
     HTML::HTMLInputElement& dom_node() { return static_cast<HTML::HTMLInputElement&>(LabelableNode::dom_node()); }
 
-    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
+    virtual RefPtr<Painting::Paintable> create_paintable() const override;
 
     bool being_pressed() const { return m_being_pressed; }
 

@@ -20,7 +20,7 @@ public:
 
     const HTML::HTMLCanvasElement& dom_node() const { return static_cast<const HTML::HTMLCanvasElement&>(ReplacedBox::dom_node()); }
 
-    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
+    virtual RefPtr<Painting::Paintable> create_paintable() const override;
 };
 
 }

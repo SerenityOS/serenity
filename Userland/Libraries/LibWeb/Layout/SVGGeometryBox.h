@@ -22,6 +22,8 @@ public:
     float viewbox_scaling() const;
     Gfx::FloatPoint viewbox_origin() const;
 
+    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+
 private:
     virtual bool is_svg_geometry_box() const final { return true; }
 };

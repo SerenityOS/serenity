@@ -9,9 +9,9 @@
 
 namespace Web::Painting {
 
-NonnullOwnPtr<ProgressPaintable> ProgressPaintable::create(Layout::Progress const& layout_box)
+NonnullRefPtr<ProgressPaintable> ProgressPaintable::create(Layout::Progress const& layout_box)
 {
-    return adopt_own(*new ProgressPaintable(layout_box));
+    return adopt_ref(*new ProgressPaintable(layout_box));
 }
 
 ProgressPaintable::ProgressPaintable(Layout::Progress const& layout_box)

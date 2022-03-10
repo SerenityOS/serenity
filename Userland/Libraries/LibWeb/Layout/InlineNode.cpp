@@ -25,7 +25,7 @@ InlineNode::~InlineNode()
 {
 }
 
-OwnPtr<Painting::Paintable> InlineNode::create_paintable() const
+RefPtr<Painting::Paintable> InlineNode::create_paintable() const
 {
     return Painting::InlinePaintable::create(*this);
 }

@@ -13,7 +13,7 @@ namespace Web::Painting {
 
 class NestedBrowsingContextPaintable final : public PaintableBox {
 public:
-    static NonnullOwnPtr<NestedBrowsingContextPaintable> create(Layout::FrameBox const&);
+    static NonnullRefPtr<NestedBrowsingContextPaintable> create(Layout::FrameBox const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

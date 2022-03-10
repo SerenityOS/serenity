@@ -12,9 +12,9 @@
 
 namespace Web::Painting {
 
-NonnullOwnPtr<NestedBrowsingContextPaintable> NestedBrowsingContextPaintable::create(Layout::FrameBox const& layout_box)
+NonnullRefPtr<NestedBrowsingContextPaintable> NestedBrowsingContextPaintable::create(Layout::FrameBox const& layout_box)
 {
-    return adopt_own(*new NestedBrowsingContextPaintable(layout_box));
+    return adopt_ref(*new NestedBrowsingContextPaintable(layout_box));
 }
 
 NestedBrowsingContextPaintable::NestedBrowsingContextPaintable(Layout::FrameBox const& layout_box)

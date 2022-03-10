@@ -14,7 +14,7 @@
 
 namespace Web::Painting {
 
-class Paintable {
+class Paintable : public RefCounted<Paintable> {
     AK_MAKE_NONMOVABLE(Paintable);
     AK_MAKE_NONCOPYABLE(Paintable);
 
@@ -40,7 +40,7 @@ private:
 
 class PaintableBox : public Paintable {
 public:
-    static NonnullOwnPtr<PaintableBox> create(Layout::Box const&);
+    static NonnullRefPtr<PaintableBox> create(Layout::Box const&);
     virtual ~PaintableBox();
 
     virtual void paint(PaintContext&, PaintPhase) const override;
@@ -154,9 +154,9 @@ private:
 
 class PaintableWithLines : public PaintableBox {
 public:
-    static NonnullOwnPtr<PaintableWithLines> create(Layout::BlockContainer const& block_container)
+    static NonnullRefPtr<PaintableWithLines> create(Layout::BlockContainer const& block_container)
     {
-        return adopt_own(*new PaintableWithLines(block_container));
+        return adopt_ref(*new PaintableWithLines(block_container));
     }
     virtual ~PaintableWithLines() override;
 

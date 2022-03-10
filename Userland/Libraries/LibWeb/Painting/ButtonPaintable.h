@@ -13,7 +13,7 @@ namespace Web::Painting {
 
 class ButtonPaintable final : public PaintableBox {
 public:
-    static NonnullOwnPtr<ButtonPaintable> create(Layout::ButtonBox const&);
+    static NonnullRefPtr<ButtonPaintable> create(Layout::ButtonBox const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

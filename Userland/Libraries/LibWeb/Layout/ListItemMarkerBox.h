@@ -19,7 +19,7 @@ public:
     Gfx::Bitmap const* list_style_image_bitmap() const;
     String const& text() const { return m_text; }
 
-    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
+    virtual RefPtr<Painting::Paintable> create_paintable() const override;
 
     CSS::ListStyleType list_style_type() const { return m_list_style_type; }
 

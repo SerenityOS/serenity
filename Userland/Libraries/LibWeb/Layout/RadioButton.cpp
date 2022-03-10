@@ -114,7 +114,7 @@ void RadioButton::set_checked_within_group()
     });
 }
 
-OwnPtr<Painting::Paintable> RadioButton::create_paintable() const
+RefPtr<Painting::Paintable> RadioButton::create_paintable() const
 {
     return Painting::RadioButtonPaintable::create(*this);
 }

@@ -41,7 +41,7 @@ public:
 
     virtual void did_set_rect() { }
 
-    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
+    virtual RefPtr<Painting::Paintable> create_paintable() const override;
 
 protected:
     Box(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);

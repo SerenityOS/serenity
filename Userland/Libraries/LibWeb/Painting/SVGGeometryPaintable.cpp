@@ -11,9 +11,9 @@
 
 namespace Web::Painting {
 
-NonnullOwnPtr<SVGGeometryPaintable> SVGGeometryPaintable::create(Layout::SVGGeometryBox const& layout_box)
+NonnullRefPtr<SVGGeometryPaintable> SVGGeometryPaintable::create(Layout::SVGGeometryBox const& layout_box)
 {
-    return adopt_own(*new SVGGeometryPaintable(layout_box));
+    return adopt_ref(*new SVGGeometryPaintable(layout_box));
 }
 
 SVGGeometryPaintable::SVGGeometryPaintable(Layout::SVGGeometryBox const& layout_box)

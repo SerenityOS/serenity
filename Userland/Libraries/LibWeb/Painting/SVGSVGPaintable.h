@@ -13,7 +13,7 @@ namespace Web::Painting {
 
 class SVGSVGPaintable : public SVGGraphicsPaintable {
 public:
-    static NonnullOwnPtr<SVGSVGPaintable> create(Layout::SVGSVGBox const&);
+    static NonnullRefPtr<SVGSVGPaintable> create(Layout::SVGSVGBox const&);
 
     virtual void before_children_paint(PaintContext&, PaintPhase) const override;
     virtual void after_children_paint(PaintContext&, PaintPhase) const override;

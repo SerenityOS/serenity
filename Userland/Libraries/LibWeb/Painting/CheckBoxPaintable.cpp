@@ -11,9 +11,9 @@
 
 namespace Web::Painting {
 
-NonnullOwnPtr<CheckBoxPaintable> CheckBoxPaintable::create(Layout::CheckBox const& layout_box)
+NonnullRefPtr<CheckBoxPaintable> CheckBoxPaintable::create(Layout::CheckBox const& layout_box)
 {
-    return adopt_own(*new CheckBoxPaintable(layout_box));
+    return adopt_ref(*new CheckBoxPaintable(layout_box));
 }
 
 CheckBoxPaintable::CheckBoxPaintable(Layout::CheckBox const& layout_box)

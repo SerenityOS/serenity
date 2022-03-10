@@ -584,12 +584,12 @@ NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
     return wrapper;
 }
 
-void Node::set_paintable(OwnPtr<Painting::Paintable> paintable)
+void Node::set_paintable(RefPtr<Painting::Paintable> paintable)
 {
     m_paintable = move(paintable);
 }
 
-OwnPtr<Painting::Paintable> Node::create_paintable() const
+RefPtr<Painting::Paintable> Node::create_paintable() const
 {
     return nullptr;
 }

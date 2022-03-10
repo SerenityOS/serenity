@@ -21,7 +21,7 @@ public:
 
     bool being_pressed() const { return m_being_pressed; }
 
-    virtual OwnPtr<Painting::Paintable> create_paintable() const override;
+    virtual RefPtr<Painting::Paintable> create_paintable() const override;
 
 private:
     virtual bool wants_mouse_events() const override { return true; }

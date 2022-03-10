@@ -106,7 +106,7 @@ void ButtonBox::handle_associated_label_mousemove(Badge<Label>, bool is_inside_n
     set_needs_display();
 }
 
-OwnPtr<Painting::Paintable> ButtonBox::create_paintable() const
+RefPtr<Painting::Paintable> ButtonBox::create_paintable() const
 {
     return Painting::ButtonPaintable::create(*this);
 }

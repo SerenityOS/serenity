@@ -19,6 +19,8 @@ public:
     SVG::SVGSVGElement& dom_node() { return verify_cast<SVG::SVGSVGElement>(SVGGraphicsBox::dom_node()); }
 
     virtual bool can_have_children() const override { return true; }
+
+    virtual RefPtr<Painting::Paintable> create_paintable() const override;
 };
 
 }

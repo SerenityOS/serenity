@@ -11,9 +11,9 @@
 
 namespace Web::Painting {
 
-NonnullOwnPtr<ImagePaintable> ImagePaintable::create(Layout::ImageBox const& layout_box)
+NonnullRefPtr<ImagePaintable> ImagePaintable::create(Layout::ImageBox const& layout_box)
 {
-    return adopt_own(*new ImagePaintable(layout_box));
+    return adopt_ref(*new ImagePaintable(layout_box));
 }
 
 ImagePaintable::ImagePaintable(Layout::ImageBox const& layout_box)

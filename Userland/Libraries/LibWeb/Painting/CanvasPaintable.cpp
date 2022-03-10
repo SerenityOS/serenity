@@ -8,9 +8,9 @@
 
 namespace Web::Painting {
 
-NonnullOwnPtr<CanvasPaintable> CanvasPaintable::create(Layout::CanvasBox const& layout_box)
+NonnullRefPtr<CanvasPaintable> CanvasPaintable::create(Layout::CanvasBox const& layout_box)
 {
-    return adopt_own(*new CanvasPaintable(layout_box));
+    return adopt_ref(*new CanvasPaintable(layout_box));
 }
 
 CanvasPaintable::CanvasPaintable(Layout::CanvasBox const& layout_box)

@@ -54,10 +54,11 @@ public:
     const DOM::Node* dom_node() const { return m_dom_node; }
     DOM::Node* dom_node() { return m_dom_node; }
 
+    Painting::Paintable* paintable() { return m_paintable; }
     Painting::Paintable const* paintable() const { return m_paintable; }
-    void set_paintable(OwnPtr<Painting::Paintable>);
+    void set_paintable(RefPtr<Painting::Paintable>);
 
-    virtual OwnPtr<Painting::Paintable> create_paintable() const;
+    virtual RefPtr<Painting::Paintable> create_paintable() const;
 
     DOM::Document& document() { return m_document; }
     const DOM::Document& document() const { return m_document; }
@@ -224,7 +225,7 @@ private:
 
     NonnullRefPtr<DOM::Document> m_document;
     RefPtr<DOM::Node> m_dom_node;
-    OwnPtr<Painting::Paintable> m_paintable;
+    RefPtr<Painting::Paintable> m_paintable;
 
     bool m_inline { false };
     bool m_has_style { false };

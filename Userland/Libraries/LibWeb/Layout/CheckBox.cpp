@@ -108,7 +108,7 @@ void CheckBox::handle_associated_label_mousemove(Badge<Label>, bool is_inside_no
     set_needs_display();
 }
 
-OwnPtr<Painting::Paintable> CheckBox::create_paintable() const
+RefPtr<Painting::Paintable> CheckBox::create_paintable() const
 {
     return Painting::CheckBoxPaintable::create(*this);
 }

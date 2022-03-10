@@ -13,9 +13,9 @@
 
 namespace Web::Painting {
 
-NonnullOwnPtr<PaintableBox> PaintableBox::create(Layout::Box const& layout_box)
+NonnullRefPtr<PaintableBox> PaintableBox::create(Layout::Box const& layout_box)
 {
-    return adopt_own(*new PaintableBox(layout_box));
+    return adopt_ref(*new PaintableBox(layout_box));
 }
 
 PaintableBox::PaintableBox(Layout::Box const& layout_box)

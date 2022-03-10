@@ -13,7 +13,7 @@ namespace Web::Painting {
 
 class CanvasPaintable final : public PaintableBox {
 public:
-    static NonnullOwnPtr<CanvasPaintable> create(Layout::CanvasBox const&);
+    static NonnullRefPtr<CanvasPaintable> create(Layout::CanvasBox const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

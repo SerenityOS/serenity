@@ -60,7 +60,7 @@ Gfx::Bitmap const* ListItemMarkerBox::list_style_image_bitmap() const
     return list_style_image() ? list_style_image()->bitmap() : nullptr;
 }
 
-OwnPtr<Painting::Paintable> ListItemMarkerBox::create_paintable() const
+RefPtr<Painting::Paintable> ListItemMarkerBox::create_paintable() const
 {
     return Painting::MarkerPaintable::create(*this);
 }

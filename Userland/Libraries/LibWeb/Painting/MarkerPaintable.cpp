@@ -10,9 +10,9 @@
 
 namespace Web::Painting {
 
-NonnullOwnPtr<MarkerPaintable> MarkerPaintable::create(Layout::ListItemMarkerBox const& layout_box)
+NonnullRefPtr<MarkerPaintable> MarkerPaintable::create(Layout::ListItemMarkerBox const& layout_box)
 {
-    return adopt_own(*new MarkerPaintable(layout_box));
+    return adopt_ref(*new MarkerPaintable(layout_box));
 }
 
 MarkerPaintable::MarkerPaintable(Layout::ListItemMarkerBox const& layout_box)
