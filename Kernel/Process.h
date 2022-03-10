@@ -17,6 +17,7 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/API/POSIX/sys/resource.h>
+#include <Kernel/API/Pledge.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/AtomicEdgeAction.h>
@@ -41,39 +42,6 @@ namespace Kernel {
 
 MutexProtected<OwnPtr<KString>>& hostname();
 Time kgettimeofday();
-
-#define ENUMERATE_PLEDGE_PROMISES         \
-    __ENUMERATE_PLEDGE_PROMISE(stdio)     \
-    __ENUMERATE_PLEDGE_PROMISE(rpath)     \
-    __ENUMERATE_PLEDGE_PROMISE(wpath)     \
-    __ENUMERATE_PLEDGE_PROMISE(cpath)     \
-    __ENUMERATE_PLEDGE_PROMISE(dpath)     \
-    __ENUMERATE_PLEDGE_PROMISE(inet)      \
-    __ENUMERATE_PLEDGE_PROMISE(id)        \
-    __ENUMERATE_PLEDGE_PROMISE(proc)      \
-    __ENUMERATE_PLEDGE_PROMISE(ptrace)    \
-    __ENUMERATE_PLEDGE_PROMISE(exec)      \
-    __ENUMERATE_PLEDGE_PROMISE(unix)      \
-    __ENUMERATE_PLEDGE_PROMISE(recvfd)    \
-    __ENUMERATE_PLEDGE_PROMISE(sendfd)    \
-    __ENUMERATE_PLEDGE_PROMISE(fattr)     \
-    __ENUMERATE_PLEDGE_PROMISE(tty)       \
-    __ENUMERATE_PLEDGE_PROMISE(chown)     \
-    __ENUMERATE_PLEDGE_PROMISE(thread)    \
-    __ENUMERATE_PLEDGE_PROMISE(video)     \
-    __ENUMERATE_PLEDGE_PROMISE(accept)    \
-    __ENUMERATE_PLEDGE_PROMISE(settime)   \
-    __ENUMERATE_PLEDGE_PROMISE(sigaction) \
-    __ENUMERATE_PLEDGE_PROMISE(setkeymap) \
-    __ENUMERATE_PLEDGE_PROMISE(prot_exec) \
-    __ENUMERATE_PLEDGE_PROMISE(map_fixed) \
-    __ENUMERATE_PLEDGE_PROMISE(getkeymap)
-
-enum class Pledge : u32 {
-#define __ENUMERATE_PLEDGE_PROMISE(x) x,
-    ENUMERATE_PLEDGE_PROMISES
-#undef __ENUMERATE_PLEDGE_PROMISE
-};
 
 enum class VeilState {
     None,
