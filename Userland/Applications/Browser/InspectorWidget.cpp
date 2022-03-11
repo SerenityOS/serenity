@@ -43,6 +43,9 @@ void InspectorWidget::set_selection(Selection selection)
 
 void InspectorWidget::set_selection(GUI::ModelIndex const index)
 {
+    if (!index.is_valid())
+        return;
+
     auto* json = static_cast<JsonObject const*>(index.internal_data());
     VERIFY(json);
 
