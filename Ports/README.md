@@ -153,13 +153,16 @@ auth_opts="foo-${version}.tar.xz.asc foo-${version}.tar.xz"
 
 The type of file validation to use, can be one of:
 
-- `md5`: Use MD5 hashes defined in [`files`](#files)
 - `sha256`: Use SHA256 hashes defined in [`files`](#files)
-- `sha1`: Use SHA1 hashes defined in [`files`](#files)
 - `sig`: Use PGP signatures (see [`auth_opts`](#auth_opts))
 
-Defaults to `md5`, most ports use `sig` though as `.asc` files are widely
-available.
+Most ports use `sig` as `.asc` files are widely available.
+
+This _has_ to be specified in order for `lint-ports` to pass.
+
+If no signature or hash is provided by the author of the files, just create the
+hash yourself by calling `sha256sum` on the downloaded file and specifying the
+hash along with the [`files`](#files).
 
 #### `configopts`
 
@@ -213,9 +216,14 @@ MD5, SHA1, or SHA256 hash that will be used for verification when
 
 For example:
 
+_With PGP signatures_
 ```bash
 files="https://example.com/foo-${version}.tar.xz foo-${version}.tar.xz
 https://example.com/foo-${version}.tar.xz.asc foo-${version}.tar.xz.asc"
+```
+_With a SHA256 hash_
+```bash
+files="https://example.com/foo-${version}.tar.xz foo-${version}.tar.xz 9acd50f9a2af37e471f761c3fe7b8dea5617e51dac802fe6c177b74abf0abb5a"
 ```
 
 If a file is a compressed tar archive, a gzip compressed file or a zip
