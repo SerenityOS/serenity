@@ -274,6 +274,10 @@ def genarg(spec):
                 return str(struct.unpack('>q', struct.pack('>Q', int(x, 16)))[0]) + 'n'
             if spec['type'] == 'i64':
                 # Make a bigint instead, since `double' cannot fit all i64 values.
+                if x.startswith('0'):
+                    x = x.lstrip('0')
+                if x == '':
+                    x = '0'
                 return x + 'n'
             return x
 
@@ -434,7 +438,7 @@ def compile_wasm_source(mod, outpath):
         with NamedTemporaryFile("w+") as temp:
             temp.write(mod[1])
             temp.flush()
-            rc = call(["wat2wasm", temp.name, "-o", outpath])
+            rc = call(["wat2wasm", "--enable-all", "--no-check", temp.name, "-o", outpath])
             return rc == 0
     return False
 
