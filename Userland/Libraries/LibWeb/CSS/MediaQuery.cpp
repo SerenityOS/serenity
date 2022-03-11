@@ -159,15 +159,12 @@ bool MediaFeature::compare(HTML::Window const& window, MediaFeatureValue left, C
         } else {
             Gfx::IntRect viewport_rect { 0, 0, window.inner_width(), window.inner_height() };
 
-            // FIXME: This isn't right - we want to query the initial-value font, which is the one used
-            //        if no author styles are defined.
-            auto& root_layout_node = *window.associated_document().root().layout_node();
-            auto const& font = root_layout_node.font();
-            Gfx::FontMetrics const& font_metrics = font.metrics('M');
-            float root_font_size = root_layout_node.computed_values().font_size();
+            auto const& initial_font = window.associated_document().style_computer().initial_font();
+            Gfx::FontMetrics const& initial_font_metrics = initial_font.metrics('M');
+            float initial_font_size = initial_font.presentation_size();
 
-            left_px = left.length().to_px(viewport_rect, font_metrics, root_font_size, root_font_size);
-            right_px = right.length().to_px(viewport_rect, font_metrics, root_font_size, root_font_size);
+            left_px = left.length().to_px(viewport_rect, initial_font_metrics, initial_font_size, initial_font_size);
+            right_px = right.length().to_px(viewport_rect, initial_font_metrics, initial_font_size, initial_font_size);
         }
 
         switch (comparison) {

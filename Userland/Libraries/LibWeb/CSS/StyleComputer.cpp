@@ -908,6 +908,12 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     style.set_computed_font(found_font.release_nonnull());
 }
 
+Gfx::Font const& StyleComputer::initial_font() const
+{
+    // FIXME: This is not correct.
+    return StyleProperties::font_fallback(false, false);
+}
+
 void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const
 {
     auto viewport_rect = document().browsing_context()->viewport_rect();
