@@ -732,7 +732,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
             //     ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
             //     iii. Set srcByteIndex to srcByteIndex + 1.
             //     iv. Set targetByteIndex to targetByteIndex + 1.
-            target_buffer->buffer().overwrite(target_byte_index, source_buffer->buffer().data(), limit - target_byte_index);
+            target_buffer->buffer().overwrite(target_byte_index, source_buffer->buffer().data() + source_byte_index, limit - target_byte_index);
         } else {
             // a. Repeat, while targetByteIndex < limit,
             while (target_byte_index < limit) {
