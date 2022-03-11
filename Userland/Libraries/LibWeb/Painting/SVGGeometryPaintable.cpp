@@ -85,7 +85,7 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
             }
             case Gfx::Segment::Type::EllipticalArcTo: {
                 auto& elliptical_arc_segment = static_cast<Gfx::EllipticalArcSegment const&>(segment);
-                new_path.elliptical_arc_to(transform_point(elliptical_arc_segment.point()), elliptical_arc_segment.radii().scaled(scaling, scaling), elliptical_arc_segment.x_axis_rotation(), false, false);
+                new_path.elliptical_arc_to(transform_point(elliptical_arc_segment.point()), elliptical_arc_segment.radii().scaled(scaling, scaling), elliptical_arc_segment.x_axis_rotation(), elliptical_arc_segment.large_arc(), elliptical_arc_segment.sweep());
                 break;
             }
             }
