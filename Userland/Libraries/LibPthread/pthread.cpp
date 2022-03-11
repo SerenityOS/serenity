@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
-#include <AK/Vector.h>
 #include <Kernel/API/Syscall.h>
 #include <LibSystem/syscall.h>
 #include <bits/pthread_integration.h>
@@ -37,12 +36,6 @@ static constexpr size_t highest_reasonable_stack_size = 8 * MiB; // That's the d
 
 __thread void* s_stack_location;
 __thread size_t s_stack_size;
-
-struct CleanupHandler {
-    void (*function)(void*) { nullptr };
-    void* argument { nullptr };
-};
-thread_local Vector<CleanupHandler> s_cleanup_handlers {};
 
 #define __RETURN_PTHREAD_ERROR(rc) \
     return ((rc) < 0 ? -(rc) : 0)
@@ -146,23 +139,19 @@ int pthread_create(pthread_t* thread, pthread_attr_t* attributes, void* (*start_
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_exit.html
 void pthread_exit(void* value_ptr)
 {
-    while (!s_cleanup_handlers.is_empty())
-        pthread_cleanup_pop(1);
     exit_thread(value_ptr, s_stack_location, s_stack_size);
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cleanup_push.html
-void pthread_cleanup_push(void (*routine)(void*), void* arg)
+void pthread_cleanup_push([[maybe_unused]] void (*routine)(void*), [[maybe_unused]] void* arg)
 {
-    s_cleanup_handlers.empend(routine, arg);
+    TODO();
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cleanup_pop.html
-void pthread_cleanup_pop(int execute)
+void pthread_cleanup_pop([[maybe_unused]] int execute)
 {
-    auto entry = s_cleanup_handlers.take_last();
-    if (execute != 0)
-        entry.function(entry.argument);
+    TODO();
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_join.html
