@@ -262,6 +262,10 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
      * be created, so SystemServer will not try to initialize WindowServer.
      */
 
+    ScopeGuard ensure_graphics_mode_disabled([&] {
+        deactivate_graphical_mode();
+    });
+
     if (PCI::Access::is_disabled()) {
         determine_and_initialize_isa_graphics_device();
         return true;

@@ -36,6 +36,8 @@ public:
 
     RecursiveSpinlock& tty_write_lock() { return m_tty_write_lock; }
 
+    void notify_graphical_mode_change(VirtualConsole const&);
+
 private:
     NonnullRefPtrVector<VirtualConsole, s_max_virtual_consoles> m_consoles;
     VirtualConsole* m_active_console { nullptr };
