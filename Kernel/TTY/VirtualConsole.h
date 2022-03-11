@@ -92,6 +92,7 @@ private:
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_name() const override;
     virtual ErrorOr<size_t> on_tty_write(UserOrKernelBuffer const&, size_t) override;
     virtual void echo(u8) override;
+    virtual ErrorOr<void> set_graphical_mode(bool enabled) override;
 
     // ^TerminalClient
     virtual void beep() override;

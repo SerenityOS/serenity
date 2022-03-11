@@ -7,6 +7,7 @@
  */
 
 #include <AK/StdLibExtras.h>
+#include <Kernel/Arch/x86/IO.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
@@ -100,6 +101,13 @@ void ConsoleImpl::scroll_right(u16 row, u16 column, size_t count)
 void VirtualConsole::set_graphical(bool graphical)
 {
     m_graphical = graphical;
+    ConsoleManagement::the().notify_graphical_mode_change(*this);
+}
+
+ErrorOr<void> VirtualConsole::set_graphical_mode(bool graphical)
+{
+    set_graphical(graphical);
+    return {};
 }
 
 ErrorOr<NonnullOwnPtr<KString>> VirtualConsole::pseudo_name() const

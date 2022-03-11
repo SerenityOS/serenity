@@ -49,6 +49,8 @@ public:
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_name() const = 0;
 
 protected:
+    virtual ErrorOr<void> set_graphical_mode(bool enabled);
+
     virtual ErrorOr<size_t> on_tty_write(UserOrKernelBuffer const&, size_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);
 

@@ -92,4 +92,18 @@ void ConsoleManagement::switch_to(unsigned index)
     m_active_console->set_active(true);
 }
 
+void ConsoleManagement::notify_graphical_mode_change(VirtualConsole const& console)
+{
+    SpinlockLocker lock(m_lock);
+    VERIFY(m_active_console);
+    if (m_active_console != &console)
+        return;
+    if (m_active_console->is_graphical()) {
+        GraphicsManagement::the().activate_graphical_mode();
+    }
+    if (!m_active_console->is_graphical()) {
+        GraphicsManagement::the().deactivate_graphical_mode();
+    }
+}
+
 }

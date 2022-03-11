@@ -81,6 +81,26 @@ static ErrorOr<void> determine_system_mode()
     } else if (rc == 0 && g_system_mode == "text") {
         dbgln("WARNING: Text mode with framebuffers won't work as expected! Consider using 'fbdev=off'.");
     }
+
+    if (g_system_mode == "graphical") {
+        // FIXME: We assume we land on /dev/tty0 but the user might have asked
+        // the Kernel to use other TTY device as the first TTY to switch into...
+        auto tty_device_fd = open("/dev/tty0", O_RDONLY);
+
+        if (tty_device_fd < 0) {
+            perror("failed to open /dev/tty0");
+            // FIXME: What kind of error should we return here?
+            return ENOENT;
+        }
+        if (ioctl(tty_device_fd, TIOCSETMODE, 1) < 0) {
+            close(tty_device_fd);
+            perror("failed to ioctl /dev/tty0 to set graphical mode");
+            // FIXME: What kind of error should we return here?
+            return EIO;
+        }
+        close(tty_device_fd);
+    }
+
     dbgln("System in {} mode", g_system_mode);
     return {};
 }

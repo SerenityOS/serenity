@@ -466,6 +466,11 @@ ErrorOr<void> TTY::set_termios(termios const& t)
     return rc;
 }
 
+ErrorOr<void> TTY::set_graphical_mode(bool)
+{
+    return Error::from_errno(ENOTSUP);
+}
+
 ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
     auto& current_process = Process::current();
@@ -478,6 +483,16 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
     }
 #endif
     switch (request) {
+    case TIOCSETMODE: {
+        auto graphical_mode_set = static_cast<int>(arg.ptr());
+        if (graphical_mode_set == 0)
+            TRY(set_graphical_mode(false));
+        else if (graphical_mode_set == 1)
+            TRY(set_graphical_mode(true));
+        else
+            return EINVAL;
+        return {};
+    }
     case TIOCGPGRP: {
         auto user_pgid = static_ptr_cast<pid_t*>(arg);
         auto pgid = this->pgid().value();

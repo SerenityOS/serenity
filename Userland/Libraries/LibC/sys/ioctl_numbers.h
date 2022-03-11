@@ -77,6 +77,7 @@ struct FBFlushRects {
 __END_DECLS
 
 enum IOCtlNumber {
+    TIOCSETMODE,
     TIOCGPGRP,
     TIOCSPGRP,
     TCGETS,
