@@ -11,12 +11,13 @@
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
+#include <Kernel/Graphics/VGA/GenericAdapter.h>
 #include <Kernel/Graphics/VGA/GenericDisplayConnector.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 
-class PCIVGAGenericAdapter : public GenericGraphicsAdapter
+class PCIVGAGenericAdapter : public VGAGenericAdapter
     , public PCI::Device {
 public:
     static NonnullRefPtr<PCIVGAGenericAdapter> must_create_with_preset_resolution(PCI::DeviceIdentifier const&, PhysicalAddress, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch);
@@ -26,8 +27,6 @@ public:
 
     virtual bool modesetting_capable() const override { return false; }
     virtual bool double_framebuffering_capable() const override { return false; }
-
-    virtual bool vga_compatible() const override final { return true; }
 
     virtual ErrorOr<void> set_resolution(size_t, size_t, size_t) override { return Error::from_errno(ENOTSUP); }
     virtual ErrorOr<void> set_y_offset(size_t, size_t) override { return Error::from_errno(ENOTSUP); }
