@@ -318,8 +318,12 @@ struct ModifierState {
     unsigned field_width { 0 };
     bool has_precision { false };
     unsigned precision { 6 };
+    unsigned short_qualifiers { 0 }; // TODO: Unimplemented.
     unsigned long_qualifiers { 0 };
-    bool size_qualifier { false };
+    bool intmax_qualifier { false };      // TODO: Unimplemented.
+    bool ptrdiff_qualifier { false };     // TODO: Unimplemented.
+    bool long_double_qualifier { false }; // TODO: Unimplemented.
+    bool size_qualifier { false };        // TODO: Unimplemented.
     bool alternate_form { 0 };
     bool always_sign { false };
 };
@@ -499,14 +503,28 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, IdentityType<CharType>* buffe
                 if (*(p + 1))
                     goto one_more;
             }
+            if (*p == 'h') {
+                ++state.short_qualifiers;
+                if (*(p + 1))
+                    goto one_more;
+            }
             if (*p == 'l') {
                 ++state.long_qualifiers;
                 if (*(p + 1))
                     goto one_more;
             }
+            if (*p == 'j') {
+                state.intmax_qualifier = true;
+                if (*(p + 1))
+                    goto one_more;
+            }
+            if (*p == 't') {
+                state.ptrdiff_qualifier = true;
+                if (*(p + 1))
+                    goto one_more;
+            }
             if (*p == 'L') {
-                // TODO: Implement this properly.
-                // For now just swallow, so the contents are actually rendered.
+                state.long_double_qualifier = true;
                 if (*(p + 1))
                     goto one_more;
             }
