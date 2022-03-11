@@ -1,0 +1,13 @@
+--- apl-1.8/src/sbrk.cc
++++ apl-1.8/src/sbrk.cc
+@@ -34,9 +34,6 @@ extern uint64_t top_of_memory();
+ uint64_t
+ top_of_memory()
+ {
+-   if (sizeof(const void *) == 4)
+-      return 0xFFFFFFFFULL & uint64_t(sbrk(0));
+-   else
+-      return uint64_t(sbrk(0));
++   return 0xFFFFFFFFULL;
+ }
+ 

@@ -1,0 +1,12 @@
+--- apl-1.8/src/Common.hh
++++ apl-1.8/src/Common.hh
+@@ -26,7 +26,8 @@
+ #include <netinet/in.h>
+ #include <sys/un.h>
+ #include <sys/stat.h>
+-#include <sys/fcntl.h>
++#include <fcntl.h>
++#include <sys/select.h>
+ 
+ #ifdef ENABLE_NLS
+ #include <libintl.h>
