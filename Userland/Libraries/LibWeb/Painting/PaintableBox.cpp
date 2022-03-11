@@ -58,7 +58,7 @@ void PaintableBox::set_content_size(Gfx::FloatSize const& size)
 Gfx::FloatPoint PaintableBox::effective_offset() const
 {
     if (m_containing_line_box_fragment.has_value()) {
-        auto const& fragment = layout_box().containing_block()->paint_box()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
+        auto const& fragment = containing_block()->paint_box()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
         return fragment.offset();
     }
     return m_offset;
@@ -66,10 +66,13 @@ Gfx::FloatPoint PaintableBox::effective_offset() const
 
 Gfx::FloatRect PaintableBox::absolute_rect() const
 {
-    Gfx::FloatRect rect { effective_offset(), content_size() };
-    for (auto* block = layout_box().containing_block(); block; block = block->containing_block())
-        rect.translate_by(block->paint_box()->effective_offset());
-    return rect;
+    if (!m_absolute_rect.has_value()) {
+        Gfx::FloatRect rect { effective_offset(), content_size() };
+        for (auto const* block = containing_block(); block && block->paintable(); block = block->paintable()->containing_block())
+            rect.translate_by(block->paint_box()->effective_offset());
+        m_absolute_rect = rect;
+    }
+    return *m_absolute_rect;
 }
 
 void PaintableBox::set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate> fragment_coordinate)

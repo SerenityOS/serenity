@@ -68,6 +68,13 @@ public:
 
     void set_needs_display() const { const_cast<Layout::Node&>(m_layout_node).set_needs_display(); }
 
+    Layout::BlockContainer const* containing_block() const
+    {
+        if (!m_containing_block.has_value())
+            m_containing_block = const_cast<Layout::Node&>(m_layout_node).containing_block();
+        return *m_containing_block;
+    }
+
 protected:
     explicit Paintable(Layout::Node const& layout_node)
         : m_layout_node(layout_node)
@@ -76,6 +83,7 @@ protected:
 
 private:
     Layout::Node const& m_layout_node;
+    Optional<Layout::BlockContainer*> mutable m_containing_block;
 };
 
 }

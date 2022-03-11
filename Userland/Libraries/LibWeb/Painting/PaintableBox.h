@@ -131,6 +131,8 @@ private:
     Painting::BorderRadiusData normalized_border_radius_data() const;
 
     OwnPtr<Painting::StackingContext> m_stacking_context;
+
+    Optional<Gfx::FloatRect> mutable m_absolute_rect;
 };
 
 class PaintableWithLines : public PaintableBox {

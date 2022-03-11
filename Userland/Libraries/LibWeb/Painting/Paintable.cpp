@@ -24,7 +24,7 @@ void Paintable::handle_mousemove(Badge<EventHandler>, Gfx::IntPoint const&, unsi
 
 bool Paintable::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
 {
-    if (auto* containing_block = layout_node().containing_block()) {
+    if (auto* containing_block = this->containing_block()) {
         if (!containing_block->is_scrollable())
             return false;
         auto new_offset = containing_block->scroll_offset();
