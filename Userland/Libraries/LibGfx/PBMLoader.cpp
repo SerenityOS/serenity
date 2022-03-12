@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin ASLITÜRK <asliturk@hotmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,42 +13,12 @@
 
 namespace Gfx {
 
-struct PBMLoadingContext {
-    enum Type {
-        Unknown,
-        ASCII,
-        RAWBITS
-    };
-
-    enum State {
-        NotDecoded = 0,
-        Error,
-        MagicNumber,
-        Width,
-        Height,
-        Bitmap,
-        Decoded
-    };
-
-    static constexpr auto ascii_magic_number = '1';
-    static constexpr auto binary_magic_number = '4';
-    static constexpr auto image_type = "PBM";
-
-    Type type { Type::Unknown };
-    State state { State::NotDecoded };
-    const u8* data { nullptr };
-    size_t data_size { 0 };
-    size_t width { 0 };
-    size_t height { 0 };
-    RefPtr<Gfx::Bitmap> bitmap;
-};
-
 static bool read_image_data(PBMLoadingContext& context, Streamer& streamer)
 {
     u8 byte;
     Vector<Gfx::Color> color_data;
 
-    if (context.type == PBMLoadingContext::ASCII) {
+    if (context.type == PBMLoadingContext::Type::ASCII) {
         while (streamer.read(byte)) {
             if (byte == '0') {
                 color_data.append(Color::White);
@@ -55,7 +26,7 @@ static bool read_image_data(PBMLoadingContext& context, Streamer& streamer)
                 color_data.append(Color::Black);
             }
         }
-    } else if (context.type == PBMLoadingContext::RAWBITS) {
+    } else if (context.type == PBMLoadingContext::Type::RAWBITS) {
         size_t color_index = 0;
 
         while (streamer.read(byte)) {
