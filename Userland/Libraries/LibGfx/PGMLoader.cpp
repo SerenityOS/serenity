@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin ASLITÜRK <asliturk@hotmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,46 +13,14 @@
 
 namespace Gfx {
 
-struct PGMLoadingContext {
-    enum Type {
-        Unknown,
-        ASCII,
-        RAWBITS
-    };
-
-    enum State {
-        NotDecoded = 0,
-        Error,
-        MagicNumber,
-        Width,
-        Height,
-        Maxval,
-        Bitmap,
-        Decoded
-    };
-
-    static constexpr auto ascii_magic_number = '2';
-    static constexpr auto binary_magic_number = '5';
-    static constexpr auto image_type = "PGM";
-
-    Type type { Type::Unknown };
-    State state { State::NotDecoded };
-    const u8* data { nullptr };
-    size_t data_size { 0 };
-    u16 width { 0 };
-    u16 height { 0 };
-    u16 max_val { 0 };
-    RefPtr<Gfx::Bitmap> bitmap;
-};
-
 static void set_adjusted_pixels(PGMLoadingContext& context, const Vector<Gfx::Color>& color_data)
 {
     size_t index = 0;
     for (size_t y = 0; y < context.height; ++y) {
         for (size_t x = 0; x < context.width; ++x) {
             Color color = color_data.at(index);
-            if (context.max_val < 255) {
-                color = adjust_color(context.max_val, color);
+            if (context.format_details.max_val < 255) {
+                color = adjust_color(context.format_details.max_val, color);
             }
             context.bitmap->set_pixel(x, y, color);
             ++index;
@@ -63,7 +32,7 @@ static bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
 {
     Vector<Gfx::Color> color_data;
 
-    if (context.type == PGMLoadingContext::ASCII) {
+    if (context.type == PGMLoadingContext::Type::ASCII) {
         u16 value;
 
         while (true) {
@@ -75,7 +44,7 @@ static bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
 
             color_data.append({ (u8)value, (u8)value, (u8)value });
         }
-    } else if (context.type == PGMLoadingContext::RAWBITS) {
+    } else if (context.type == PGMLoadingContext::Type::RAWBITS) {
         u8 pixel;
         while (streamer.read(pixel)) {
             color_data.append({ pixel, pixel, pixel });
