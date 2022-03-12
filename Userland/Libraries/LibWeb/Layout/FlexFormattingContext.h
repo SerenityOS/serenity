@@ -86,16 +86,16 @@ private:
 
     void generate_anonymous_flex_items();
 
-    void determine_available_main_and_cross_space(bool& main_size_is_infinite, bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size);
+    void determine_available_main_and_cross_space(bool& main_is_constrained, bool& cross_is_constrained, float& main_min_size, float& main_max_size, float& cross_min_size, float& cross_max_size);
 
-    float layout_for_maximum_main_size(Box const&);
+    float calculate_indefinite_main_size(FlexItem const&);
     void determine_flex_base_size_and_hypothetical_main_size(FlexItem&);
 
-    void determine_main_size_of_flex_container(bool main_is_constrained, bool main_size_is_infinite, float& main_available_size, float main_min_size, float main_max_size);
+    void determine_main_size_of_flex_container(bool main_is_constrained, float main_min_size, float main_max_size);
 
-    void collect_flex_items_into_flex_lines(float main_available_size);
+    void collect_flex_items_into_flex_lines();
 
-    void resolve_flexible_lengths(float main_available_size);
+    void resolve_flexible_lengths();
 
     void determine_hypothetical_cross_size_of_item(FlexItem&);
 
@@ -103,7 +103,7 @@ private:
 
     void determine_used_cross_size_of_each_flex_item();
 
-    void distribute_any_remaining_free_space(float main_available_size);
+    void distribute_any_remaining_free_space();
 
     void align_all_flex_items_along_the_cross_axis();
 
@@ -123,8 +123,8 @@ private:
     CSS::FlexDirection m_flex_direction {};
 
     struct AvailableSpace {
-        float main { 0 };
-        float cross { 0 };
+        Optional<float> main;
+        Optional<float> cross;
     };
     Optional<AvailableSpace> m_available_space;
 };
