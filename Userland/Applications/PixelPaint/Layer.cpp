@@ -142,16 +142,42 @@ void Layer::erase_selection(Selection const& selection)
     did_modify_bitmap(translated_to_layer_space);
 }
 
-void Layer::set_content_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
+ErrorOr<void> Layer::try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask)
 {
-    m_content_bitmap = move(bitmap);
+    if (mask && content->size() != mask->size())
+        return Error::from_string_literal("Layer content and mask must be same size"sv);
+
+    m_content_bitmap = move(content);
+    m_mask_bitmap = move(mask);
     update_cached_bitmap();
+    return {};
 }
 
-void Layer::set_mask_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
+void Layer::flip(Gfx::Orientation orientation)
 {
-    m_mask_bitmap = move(bitmap);
-    update_cached_bitmap();
+    m_content_bitmap = *m_content_bitmap->flipped(orientation).release_value_but_fixme_should_propagate_errors();
+    if (m_mask_bitmap)
+        m_mask_bitmap = *m_mask_bitmap->flipped(orientation).release_value_but_fixme_should_propagate_errors();
+
+    did_modify_bitmap();
+}
+
+void Layer::rotate(Gfx::RotationDirection direction)
+{
+    m_content_bitmap = *m_content_bitmap->rotated(direction).release_value_but_fixme_should_propagate_errors();
+    if (m_mask_bitmap)
+        m_mask_bitmap = *m_mask_bitmap->rotated(direction).release_value_but_fixme_should_propagate_errors();
+
+    did_modify_bitmap();
+}
+
+void Layer::crop(Gfx::IntRect const& rect)
+{
+    m_content_bitmap = *m_content_bitmap->cropped(rect).release_value_but_fixme_should_propagate_errors();
+    if (m_mask_bitmap)
+        m_mask_bitmap = *m_mask_bitmap->cropped(rect).release_value_but_fixme_should_propagate_errors();
+
+    did_modify_bitmap();
 }
 
 void Layer::update_cached_bitmap()
@@ -163,8 +189,9 @@ void Layer::update_cached_bitmap()
         return;
     }
 
-    if (m_content_bitmap.ptr() == m_cached_display_bitmap.ptr())
+    if (m_cached_display_bitmap.ptr() == m_content_bitmap.ptr() || m_cached_display_bitmap->size() != size()) {
         m_cached_display_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size()));
+    }
 
     // FIXME: This can probably be done nicer
     m_cached_display_bitmap->fill(Color::Transparent);

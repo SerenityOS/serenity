@@ -96,7 +96,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject
             auto mask_base64_encoded = mask_object.as_string();
             auto mask_data = TRY(decode_base64(mask_base64_encoded));
             auto mask = TRY(try_decode_bitmap(mask_data));
-            layer->set_mask_bitmap(move(mask));
+            TRY(layer->try_set_bitmaps(layer->content_bitmap(), mask));
         }
 
         auto width = layer_object.get("width").to_i32();
@@ -485,10 +485,7 @@ void ImageUndoCommand::redo()
 void Image::flip(Gfx::Orientation orientation)
 {
     for (auto& layer : m_layers) {
-        auto flipped = layer.content_bitmap().flipped(orientation).release_value_but_fixme_should_propagate_errors();
-        layer.set_content_bitmap(*flipped);
-        layer.did_modify_bitmap(rect());
-        // FIXME: Respect mask
+        layer.flip(orientation);
     }
 
     did_change();
@@ -497,10 +494,7 @@ void Image::flip(Gfx::Orientation orientation)
 void Image::rotate(Gfx::RotationDirection direction)
 {
     for (auto& layer : m_layers) {
-        auto rotated = layer.content_bitmap().rotated(direction).release_value_but_fixme_should_propagate_errors();
-        layer.set_content_bitmap(*rotated);
-        layer.did_modify_bitmap(rect());
-        // FIXME: Respect mask
+        layer.rotate(direction);
     }
 
     m_size = { m_size.height(), m_size.width() };
@@ -510,10 +504,7 @@ void Image::rotate(Gfx::RotationDirection direction)
 void Image::crop(Gfx::IntRect const& cropped_rect)
 {
     for (auto& layer : m_layers) {
-        auto cropped = layer.content_bitmap().cropped(cropped_rect).release_value_but_fixme_should_propagate_errors();
-        layer.set_content_bitmap(*cropped);
-        layer.did_modify_bitmap(rect());
-        // FIXME: Respect mask
+        layer.crop(cropped_rect);
     }
 
     m_size = { cropped_rect.width(), cropped_rect.height() };
