@@ -684,6 +684,18 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
         value_slot = get_inherit_value(property_id, element, pseudo_element);
         return;
     }
+
+    // https://www.w3.org/TR/css-cascade-4/#inherit-initial
+    // If the cascaded value of a property is the unset keyword,
+    if (value_slot->is_unset()) {
+        if (is_inherited_property(property_id)) {
+            // then if it is an inherited property, this is treated as inherit,
+            value_slot = get_inherit_value(property_id, element, pseudo_element);
+        } else {
+            // and if it is not, this is treated as initial.
+            value_slot = property_initial_value(property_id);
+        }
+    }
 }
 
 // https://www.w3.org/TR/css-cascade/#defaulting
