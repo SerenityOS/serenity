@@ -59,4 +59,26 @@ DOM::ExceptionOr<NonnullRefPtr<HTMLTableRowElement>> HTMLTableSectionElement::in
     return table_row;
 }
 
+// https://html.spec.whatwg.org/multipage/tables.html#dom-tbody-deleterow
+DOM::ExceptionOr<void> HTMLTableSectionElement::delete_row(long index)
+{
+    auto rows_collection = rows();
+    auto rows_collection_size = static_cast<long>(rows_collection->length());
+
+    // 1. If index is less than −1 or greater than or equal to the number of elements in the rows collection, then throw an "IndexSizeError" DOMException.
+    if (index < -1 || index >= rows_collection_size)
+        return DOM::IndexSizeError::create("Index is negative or greater than or equal to the number of rows");
+
+    // 2. If index is −1, then remove the last element in the rows collection from this element, or do nothing if the rows collection is empty.
+    if (index == -1) {
+        if (rows_collection_size > 0)
+            rows_collection->item(rows_collection_size - 1)->remove();
+    }
+    // 3. Otherwise, remove the indexth element in the rows collection from this element.
+    else {
+        rows_collection->item(index)->remove();
+    }
+    return {};
+}
+
 }
