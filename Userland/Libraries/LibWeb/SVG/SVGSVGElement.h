@@ -28,9 +28,18 @@ public:
     Optional<ViewBox> const& view_box() const { return m_view_box; }
 
 private:
+    virtual bool is_svg_svg_element() const override { return true; }
+
     virtual void parse_attribute(FlyString const& name, String const& value) override;
 
     Optional<ViewBox> m_view_box;
 };
+
+}
+
+namespace Web::DOM {
+
+template<>
+inline bool Node::fast_is<SVG::SVGSVGElement>() const { return is_svg_svg_element(); }
 
 }
