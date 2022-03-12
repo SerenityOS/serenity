@@ -811,4 +811,82 @@ void FormattingContext::compute_position(Box const& box)
     }
 }
 
+FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Layout::Box const& box) const
+{
+    // If we have cached intrinsic sizes for this box, use them.
+    auto it = m_state.intrinsic_sizes.find(&box);
+    if (it != m_state.intrinsic_sizes.end())
+        return it->value;
+
+    // Nothing cached, perform two throwaway layouts to determine the intrinsic sizes.
+    // FIXME: This should handle replaced elements with "native" intrinsic size properly!
+
+    auto& cached_box_sizes = m_state.intrinsic_sizes.ensure(&box);
+    auto const& containing_block = *box.containing_block();
+    {
+        auto throwaway_state = m_state;
+        throwaway_state.get_mutable(containing_block).content_width = INFINITY;
+        throwaway_state.get_mutable(containing_block).content_height = INFINITY;
+        auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
+        VERIFY(independent_formatting_context);
+
+        independent_formatting_context->run(box, LayoutMode::OnlyRequiredLineBreaks);
+        cached_box_sizes.max_content_size.set_width(greatest_child_width(throwaway_state, box));
+        cached_box_sizes.max_content_size.set_height(BlockFormattingContext::compute_theoretical_height(throwaway_state, box));
+    }
+
+    {
+        auto throwaway_state = m_state;
+        throwaway_state.get_mutable(containing_block).content_width = 0;
+        throwaway_state.get_mutable(containing_block).content_height = 0;
+        auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
+        VERIFY(independent_formatting_context);
+        independent_formatting_context->run(box, LayoutMode::AllPossibleLineBreaks);
+        cached_box_sizes.min_content_size.set_width(greatest_child_width(throwaway_state, box));
+        cached_box_sizes.min_content_size.set_height(BlockFormattingContext::compute_theoretical_height(throwaway_state, box));
+    }
+
+    return cached_box_sizes;
+}
+
+FormattingContext::MinAndMaxContentSize FormattingContext::calculate_min_and_max_content_width(Layout::Box const& box) const
+{
+    auto const& sizes = calculate_intrinsic_sizes(box);
+    return { sizes.min_content_size.width(), sizes.max_content_size.width() };
+}
+
+FormattingContext::MinAndMaxContentSize FormattingContext::calculate_min_and_max_content_height(Layout::Box const& box) const
+{
+    auto const& sizes = calculate_intrinsic_sizes(box);
+    return { sizes.min_content_size.height(), sizes.max_content_size.height() };
+}
+
+float FormattingContext::calculate_fit_content_size(float min_content_size, float max_content_size, Optional<float> available_space) const
+{
+    // If the available space in a given axis is definite, equal to clamp(min-content size, stretch-fit size, max-content size)
+    // (i.e. max(min-content size, min(max-content size, stretch-fit size))).
+    if (available_space.has_value()) {
+        // FIXME: Compute the real stretch-fit size.
+        auto stretch_fit_size = *available_space;
+        auto s = max(min_content_size, min(max_content_size, stretch_fit_size));
+        return s;
+    }
+
+    // FIXME: When sizing under a min-content constraint, equal to the min-content size.
+
+    // Otherwise, equal to the max-content size in that axis.
+    return max_content_size;
+}
+
+float FormattingContext::calculate_fit_content_width(Layout::Box const& box, Optional<float> available_space) const
+{
+    auto [min_content_size, max_content_size] = calculate_min_and_max_content_width(box);
+    return calculate_fit_content_size(min_content_size, max_content_size, available_space);
+}
+
+float FormattingContext::calculate_fit_content_height(Layout::Box const& box, Optional<float> available_space) const
+{
+    auto [min_content_size, max_content_size] = calculate_min_and_max_content_height(box);
+    return calculate_fit_content_size(min_content_size, max_content_size, available_space);
+}
 }

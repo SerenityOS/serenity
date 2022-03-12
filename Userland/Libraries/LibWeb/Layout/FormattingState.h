@@ -90,6 +90,14 @@ struct FormattingState {
     NodeState const& get(NodeWithStyleAndBoxModelMetrics const&) const;
 
     HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullRefPtr<NodeState>> nodes;
+
+    // We cache intrinsic sizes once determined, as they will not change over the course of a full layout.
+    // This avoids computing them several times while performing flex layout.
+    struct IntrinsicSizes {
+        Gfx::FloatSize min_content_size;
+        Gfx::FloatSize max_content_size;
+    };
+    HashMap<NodeWithStyleAndBoxModelMetrics const*, IntrinsicSizes> mutable intrinsic_sizes;
 };
 
 Gfx::FloatRect absolute_content_rect(Box const&, FormattingState const&);
