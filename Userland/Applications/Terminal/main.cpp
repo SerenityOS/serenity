@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FixedArray.h>
 #include <AK/QuickSort.h>
 #include <AK/URL.h>
 #include <LibConfig/Client.h>
@@ -132,7 +133,7 @@ static void utmp_update(String const& tty, pid_t pid, bool create)
     }
 }
 
-static void run_command(String command, bool keep_open)
+static ErrorOr<void> run_command(String command, bool keep_open)
 {
     String shell = "/bin/Shell";
     auto* pw = getpwuid(getuid());
@@ -141,20 +142,16 @@ static void run_command(String command, bool keep_open)
     }
     endpwent();
 
-    char const* args[5] = { shell.characters(), nullptr, nullptr, nullptr, nullptr };
+    Vector<StringView> arguments;
+    arguments.append(shell);
     if (!command.is_empty()) {
-        int arg_index = 1;
         if (keep_open)
-            args[arg_index++] = "--keep-open";
-        args[arg_index++] = "-c";
-        args[arg_index++] = command.characters();
+            arguments.append("--keep-open");
+        arguments.append("-c");
+        arguments.append(command);
     }
-    char const* envs[] = { "TERM=xterm", "PAGER=more", "PATH=/usr/local/bin:/usr/bin:/bin", nullptr };
-    int rc = execve(shell.characters(), const_cast<char**>(args), const_cast<char**>(envs));
-    if (rc < 0) {
-        perror("execve");
-        exit(1);
-    }
+    auto env = TRY(FixedArray<StringView>::try_create({ "TERM=xterm", "PAGER=more", "PATH=/usr/local/bin:/usr/bin:/bin" }));
+    TRY(Core::System::exec(shell, arguments, Core::System::SearchInPath::No, env.span()));
     VERIFY_NOT_REACHED();
 }
 
@@ -270,9 +267,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (shell_pid == 0) {
         close(ptm_fd);
         if (command_to_execute)
-            run_command(command_to_execute, keep_open);
+            TRY(run_command(command_to_execute, keep_open));
         else
-            run_command(Config::read_string("Terminal", "Startup", "Command", ""), false);
+            TRY(run_command(Config::read_string("Terminal", "Startup", "Command", ""), false));
         VERIFY_NOT_REACHED();
     }
 
