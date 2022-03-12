@@ -398,7 +398,7 @@ bool StyleProperties::operator==(const StyleProperties& other) const
 
     for (size_t i = 0; i < m_property_values.size(); ++i) {
         auto const& my_ptr = m_property_values[i];
-        auto const& other_ptr = m_property_values[i];
+        auto const& other_ptr = other.m_property_values[i];
         if (!my_ptr) {
             if (other_ptr)
                 return false;
