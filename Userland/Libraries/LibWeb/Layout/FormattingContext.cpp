@@ -846,6 +846,18 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
         cached_box_sizes.min_content_size.set_height(BlockFormattingContext::compute_theoretical_height(throwaway_state, box));
     }
 
+    if (cached_box_sizes.min_content_size.width() > cached_box_sizes.max_content_size.width()) {
+        float tmp = cached_box_sizes.min_content_size.width();
+        cached_box_sizes.min_content_size.set_width(cached_box_sizes.max_content_size.width());
+        cached_box_sizes.max_content_size.set_width(tmp);
+    }
+
+    if (cached_box_sizes.min_content_size.height() > cached_box_sizes.max_content_size.height()) {
+        float tmp = cached_box_sizes.min_content_size.height();
+        cached_box_sizes.min_content_size.set_height(cached_box_sizes.max_content_size.height());
+        cached_box_sizes.max_content_size.set_height(tmp);
+    }
+
     return cached_box_sizes;
 }
 
