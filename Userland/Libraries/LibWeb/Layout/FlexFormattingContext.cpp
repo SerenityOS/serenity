@@ -43,38 +43,6 @@ FlexFormattingContext::~FlexFormattingContext()
 {
 }
 
-void FlexFormattingContext::setup_initial_width_and_height()
-{
-    // FIXME: This does not correspond to any part of the spec, and will eventually disappear.
-    auto& containing_block_state = m_state.get(*flex_container().containing_block());
-    if (!flex_container().has_definite_width()) {
-        m_flex_container_state.content_width = containing_block_state.content_width;
-    } else {
-        auto container_width = containing_block_state.content_width;
-
-        auto& maybe_width = flex_container().computed_values().width();
-        if (maybe_width.has_value()) {
-            auto width = maybe_width->resolved(flex_container(), CSS::Length::make_px(container_width)).to_px(flex_container());
-            m_flex_container_state.content_width = width;
-        } else {
-            m_flex_container_state.content_width = 0;
-        }
-    }
-
-    if (!flex_container().has_definite_height()) {
-        m_flex_container_state.content_height = containing_block_state.content_height;
-    } else {
-        auto container_height = containing_block_state.content_height;
-        auto& maybe_height = flex_container().computed_values().height();
-        if (maybe_height.has_value()) {
-            auto height = maybe_height->resolved(flex_container(), CSS::Length::make_px(container_height)).to_px(flex_container());
-            m_flex_container_state.content_height = height;
-        } else {
-            m_flex_container_state.content_height = 0;
-        }
-    }
-}
-
 void FlexFormattingContext::run(Box const& run_box, LayoutMode)
 {
     VERIFY(&run_box == &flex_container());
@@ -82,9 +50,6 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
     // This implements https://www.w3.org/TR/css-flexbox-1/#layout-algorithm
 
     // FIXME: Implement reverse and ordering.
-
-    // AD-HOC: Set up initial width information
-    setup_initial_width_and_height();
 
     // 1. Generate anonymous flex items
     generate_anonymous_flex_items();

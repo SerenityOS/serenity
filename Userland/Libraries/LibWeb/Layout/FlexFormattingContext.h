@@ -80,7 +80,6 @@ private:
     void set_main_axis_first_margin(Box const&, float margin);
     void set_main_axis_second_margin(Box const&, float margin);
 
-    void setup_initial_width_and_height();
     void copy_dimensions_from_flex_items_to_boxes();
 
     void generate_anonymous_flex_items();
