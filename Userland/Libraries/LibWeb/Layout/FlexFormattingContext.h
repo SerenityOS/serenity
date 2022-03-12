@@ -23,6 +23,8 @@ public:
     Box const& flex_container() const { return context_box(); }
 
 private:
+    void dump_items() const;
+
     struct DirectionAgnosticMargins {
         float main_before { 0 };
         float main_after { 0 };

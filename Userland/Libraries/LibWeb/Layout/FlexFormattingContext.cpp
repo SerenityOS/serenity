@@ -980,6 +980,18 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
     }
 }
 
+void FlexFormattingContext::dump_items() const
+{
+    dbgln("\033[34;1mflex-container\033[0m {}, direction: {}, current-size: {}x{}", flex_container().debug_description(), is_row_layout() ? "row" : "column", m_flex_container_state.content_width, m_flex_container_state.content_height);
+    for (size_t i = 0; i < m_flex_lines.size(); ++i) {
+        dbgln("{} flex-line #{}:", flex_container().debug_description(), i);
+        for (size_t j = 0; j < m_flex_lines[i].items.size(); ++j) {
+            auto& item = *m_flex_lines[i].items[j];
+            dbgln("{}   flex-item #{}: {} (main:{}, cross:{})", flex_container().debug_description(), j, item.box.debug_description(), item.main_size, item.cross_size);
+        }
+    }
+}
+
 void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
 {
     // FIXME: Get the alignment via "align-self" of the item (which accesses "align-items" of the parent if unset)
