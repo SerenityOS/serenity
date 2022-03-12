@@ -164,6 +164,8 @@ public:
     void set_has_definite_height(bool b) { m_has_definite_height = b; }
     void set_has_definite_width(bool b) { m_has_definite_width = b; }
 
+    void did_insert_into_layout_tree(CSS::StyleProperties const&);
+
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     NodeWithStyle(DOM::Document&, DOM::Node*, CSS::ComputedValues);
