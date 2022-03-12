@@ -8,7 +8,7 @@
 #include "FileUtils.h"
 #include "FileOperationProgressWidget.h"
 #include <AK/LexicalPath.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibGUI/MessageBox.h>
 #include <unistd.h>
@@ -87,9 +87,6 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<String> const& 
     auto window = TRY(GUI::Window::try_create());
     TRY(file_operation_windows.try_set(window));
 
-    auto pipe_input_file = TRY(Core::File::try_create());
-    pipe_input_file->open(pipe_fds[0], Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
-
     switch (operation) {
     case FileOperation::Copy:
         window->set_title("Copying Files...");
@@ -104,7 +101,10 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<String> const& 
         VERIFY_NOT_REACHED();
     }
 
-    (void)TRY(window->try_set_main_widget<FileOperationProgressWidget>(operation, pipe_input_file));
+    auto pipe_input_file = TRY(Core::Stream::File::adopt_fd(pipe_fds[0], Core::Stream::OpenMode::Read));
+    auto buffered_pipe = TRY(Core::Stream::BufferedFile::create(move(pipe_input_file)));
+
+    (void)TRY(window->try_set_main_widget<FileOperationProgressWidget>(operation, move(buffered_pipe), pipe_fds[0]));
     window->resize(320, 190);
     if (parent_window)
         window->center_within(*parent_window);
