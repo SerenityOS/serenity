@@ -110,12 +110,12 @@ SpinlockProtected<HashMap<IPv4Address, MACAddress>>& arp_table()
     return *s_arp_table;
 }
 
-void update_arp_table(IPv4Address const& ip_addr, MACAddress const& addr, UpdateArp update)
+void update_arp_table(IPv4Address const& ip_addr, MACAddress const& addr, UpdateTable update)
 {
     arp_table().with([&](auto& table) {
-        if (update == UpdateArp::Set)
+        if (update == UpdateTable::Set)
             table.set(ip_addr, addr);
-        if (update == UpdateArp::Delete)
+        if (update == UpdateTable::Delete)
             table.remove(ip_addr);
     });
     s_arp_table_blocker_set->unblock_blockers_waiting_for_ipv4_address(ip_addr, addr);

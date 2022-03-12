@@ -19,12 +19,12 @@ struct RoutingDecision {
     bool is_zero() const;
 };
 
-enum class UpdateArp {
+enum class UpdateTable {
     Set,
     Delete,
 };
 
-void update_arp_table(IPv4Address const&, MACAddress const&, UpdateArp update);
+void update_arp_table(IPv4Address const&, MACAddress const&, UpdateTable update);
 
 enum class AllowUsingGateway {
     Yes,
