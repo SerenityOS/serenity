@@ -47,6 +47,7 @@ public:
     LengthBox length_box(CSS::PropertyID left_id, CSS::PropertyID top_id, CSS::PropertyID right_id, CSS::PropertyID bottom_id, const CSS::Length& default_value) const;
     Color color_or_fallback(CSS::PropertyID, Layout::NodeWithStyle const&, Color fallback) const;
     Optional<CSS::TextAlign> text_align() const;
+    Optional<CSS::TextJustify> text_justify() const;
     CSS::Display display() const;
     Optional<CSS::Float> float_() const;
     Optional<CSS::Clear> clear() const;

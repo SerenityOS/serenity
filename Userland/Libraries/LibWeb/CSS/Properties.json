@@ -1287,6 +1287,17 @@
       "unitless-length"
     ]
   },
+  "text-justify": {
+    "inherited": true,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto",
+      "none",
+      "inter-word",
+      "inter-character",
+      "distribute"
+    ]
+  },
   "text-transform": {
     "inherited": true,
     "initial": "none",

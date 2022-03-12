@@ -365,6 +365,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (text_align.has_value())
         computed_values.set_text_align(text_align.value());
 
+    auto text_justify = specified_style.text_justify();
+    if (text_align.has_value())
+        computed_values.set_text_justify(text_justify.value());
+
     auto white_space = specified_style.white_space();
     if (white_space.has_value())
         computed_values.set_white_space(white_space.value());
