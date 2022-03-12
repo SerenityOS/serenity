@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=git
-version=2.34.1
+version=2.35.1
 useconfigure="true"
-files="https://mirrors.edge.kernel.org/pub/software/scm/git/git-${version}.tar.xz git-${version}.tar.xz 3a0755dd1cfab71a24dd96df3498c29cd0acd13b04f3d08bf933e81286db802c"
+files="https://mirrors.edge.kernel.org/pub/software/scm/git/git-${version}.tar.xz git-${version}.tar.xz d768528e6443f65a203036266f1ca50f9d127ba89751e32ead37117ed9191080"
 auth_type=sha256
 configopts=("--target=${SERENITY_ARCH}-pc-serenity" "--with-lib=${SERENITY_INSTALL_ROOT}/usr/local" "CFLAGS=-DNO_IPV6" "LDFLAGS=-L${SERENITY_INSTALL_ROOT}/usr/local/lib")
 depends=("zlib" "curl")
