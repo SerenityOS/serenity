@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=less
-version=530
+version=590
 useconfigure="true"
 files="https://ftpmirror.gnu.org/gnu/less/less-${version}.tar.gz less-${version}.tar.gz
 https://ftpmirror.gnu.org/gnu/less/less-${version}.tar.gz.sig less-${version}.tar.gz.sig
