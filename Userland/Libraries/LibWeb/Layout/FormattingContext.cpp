@@ -824,7 +824,7 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
     auto& cached_box_sizes = m_state.intrinsic_sizes.ensure(&box);
     auto const& containing_block = *box.containing_block();
     {
-        auto throwaway_state = m_state;
+        FormattingState throwaway_state(&m_state);
         throwaway_state.get_mutable(containing_block).content_width = INFINITY;
         throwaway_state.get_mutable(containing_block).content_height = INFINITY;
         auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
@@ -836,7 +836,7 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
     }
 
     {
-        auto throwaway_state = m_state;
+        FormattingState throwaway_state(&m_state);
         throwaway_state.get_mutable(containing_block).content_width = 0;
         throwaway_state.get_mutable(containing_block).content_height = 0;
         auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);

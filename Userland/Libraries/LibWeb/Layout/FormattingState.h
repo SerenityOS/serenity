@@ -15,6 +15,12 @@
 namespace Web::Layout {
 
 struct FormattingState {
+    FormattingState() { }
+    explicit FormattingState(FormattingState const* parent)
+        : m_parent(parent)
+    {
+    }
+
     struct NodeState {
         float content_width { 0 };
         float content_height { 0 };
@@ -65,31 +71,17 @@ struct FormattingState {
         }
 
         Optional<LineBoxFragmentCoordinate> containing_line_box_fragment;
-
-        // NOTE: NodeState is ref-counted and accessed via copy-on-write helpers below.
-        size_t ref_count { 1 };
-        void ref()
-        {
-            VERIFY(ref_count);
-            ++ref_count;
-        }
-        void unref()
-        {
-            VERIFY(ref_count);
-            if (!--ref_count)
-                delete this;
-        }
     };
 
     void commit();
 
-    // NOTE: get_mutable() will CoW the NodeState if it's shared with another FormattingContext.
+    // NOTE: get_mutable() will CoW the NodeState if it's inherited from an ancestor state;
     NodeState& get_mutable(NodeWithStyleAndBoxModelMetrics const&);
 
     // NOTE: get() will not CoW the NodeState.
     NodeState const& get(NodeWithStyleAndBoxModelMetrics const&) const;
 
-    HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullRefPtr<NodeState>> nodes;
+    HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullOwnPtr<NodeState>> nodes;
 
     // We cache intrinsic sizes once determined, as they will not change over the course of a full layout.
     // This avoids computing them several times while performing flex layout.
@@ -98,6 +90,8 @@ struct FormattingState {
         Gfx::FloatSize max_content_size;
     };
     HashMap<NodeWithStyleAndBoxModelMetrics const*, IntrinsicSizes> mutable intrinsic_sizes;
+
+    FormattingState const* m_parent { nullptr };
 };
 
 Gfx::FloatRect absolute_content_rect(Box const&, FormattingState const&);

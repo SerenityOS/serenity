@@ -440,7 +440,7 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
 
     if (has_definite_cross_size(item.box)) {
         // For indefinite main sizes, we perform a throwaway layout and then measure it.
-        auto throwaway_state = m_state;
+        FormattingState throwaway_state(&m_state);
         auto& box_state = throwaway_state.get_mutable(item.box);
 
         // Item has definite cross size, layout with that as the used cross size.
@@ -470,7 +470,7 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
     // then layout with that and see what height comes out of it.
     float fit_content_cross_size = calculate_fit_content_width(item.box, m_available_space->cross);
 
-    auto throwaway_state = m_state;
+    FormattingState throwaway_state(&m_state);
     auto& box_state = throwaway_state.get_mutable(item.box);
 
     // Item has definite cross size, layout with that as the used cross size.
@@ -814,7 +814,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
 
     if (has_definite_main_size(item.box)) {
         // For indefinite cross sizes, we perform a throwaway layout and then measure it.
-        auto throwaway_state = m_state;
+        FormattingState throwaway_state(&m_state);
         auto& box_state = throwaway_state.get_mutable(item.box);
 
         // Item has definite main size, layout with that as the used main size.
@@ -842,7 +842,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
         else
             fit_content_main_size = calculate_fit_content_height(item.box, m_available_space->main);
 
-        auto throwaway_state = m_state;
+        FormattingState throwaway_state(&m_state);
         auto& box_state = throwaway_state.get_mutable(item.box);
 
         // Item has definite main size, layout with that as the used main size.

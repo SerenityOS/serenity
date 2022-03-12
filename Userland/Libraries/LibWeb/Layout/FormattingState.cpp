@@ -12,23 +12,39 @@ namespace Web::Layout {
 
 FormattingState::NodeState& FormattingState::get_mutable(NodeWithStyleAndBoxModelMetrics const& box)
 {
-    auto state = nodes.ensure(&box, [] { return adopt_ref(*new NodeState); });
-    // CoW if ref_count > 2 (1 for the entry in `this->nodes`, 1 for the `state` local in this function)
-    if (state->ref_count > 2) {
-        state = adopt_ref(*new NodeState { *state });
-        state->ref_count = 1;
-        nodes.set(&box, state);
+    if (auto it = nodes.find(&box); it != nodes.end())
+        return *it->value;
+
+    for (auto* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
+        if (auto it = ancestor->nodes.find(&box); it != ancestor->nodes.end()) {
+            auto cow_node_state = adopt_own(*new NodeState(*it->value));
+            auto* cow_node_state_ptr = cow_node_state.ptr();
+            nodes.set(&box, move(cow_node_state));
+            return *cow_node_state_ptr;
+        }
     }
-    return state;
+
+    return *nodes.ensure(&box, [] { return adopt_own(*new NodeState); });
 }
 
 FormattingState::NodeState const& FormattingState::get(NodeWithStyleAndBoxModelMetrics const& box) const
 {
-    return *const_cast<FormattingState&>(*this).nodes.ensure(&box, [] { return adopt_ref(*new NodeState); });
+    if (auto it = nodes.find(&box); it != nodes.end())
+        return *it->value;
+
+    for (auto* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
+        if (auto it = ancestor->nodes.find(&box); it != ancestor->nodes.end())
+            return *it->value;
+    }
+
+    return *const_cast<FormattingState&>(*this).nodes.ensure(&box, [] { return adopt_own(*new NodeState); });
 }
 
 void FormattingState::commit()
 {
+    // Only the top-level FormattingState should ever be committed.
+    VERIFY(!m_parent);
+
     HashTable<Layout::TextNode*> text_nodes;
 
     for (auto& it : nodes) {
