@@ -468,7 +468,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             VERIFY(editor);
             auto dialog = PixelPaint::ResizeImageDialog::construct(editor->image().size(), &window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
-                // TODO
+                editor->image().resize(dialog->desired_size(), dialog->scaling_mode());
             }
         }));
     m_image_menu->add_action(GUI::Action::create(

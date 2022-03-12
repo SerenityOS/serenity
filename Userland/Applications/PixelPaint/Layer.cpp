@@ -180,6 +180,31 @@ void Layer::crop(Gfx::IntRect const& rect)
     did_modify_bitmap();
 }
 
+void Layer::resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode)
+{
+    const Gfx::IntRect old_rect(Gfx::IntPoint(0, 0), size());
+    const Gfx::IntRect new_rect(Gfx::IntPoint(0, 0), new_size);
+
+    {
+        auto resized = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
+        Gfx::Painter painter(resized);
+
+        painter.draw_scaled_bitmap(new_rect, *m_content_bitmap, old_rect, 1.0f, scaling_mode);
+
+        m_content_bitmap = move(resized);
+    }
+
+    if (m_mask_bitmap) {
+        auto resized = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
+        Gfx::Painter painter(resized);
+
+        painter.draw_scaled_bitmap(new_rect, *m_mask_bitmap, old_rect, 1.0f, scaling_mode);
+        m_mask_bitmap = move(resized);
+    }
+
+    did_modify_bitmap();
+}
+
 void Layer::update_cached_bitmap()
 {
     if (!is_masked()) {
