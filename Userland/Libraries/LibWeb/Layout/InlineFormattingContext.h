@@ -36,7 +36,7 @@ public:
 
 private:
     void generate_line_boxes(LayoutMode);
-    void apply_justification_to_fragments(FormattingState::NodeState const& containing_block_state, LineBox&, bool is_last_line);
+    void apply_justification_to_fragments(FormattingState::NodeState const& containing_block_state, CSS::TextJustify, LineBox&, bool is_last_line);
 };
 
 }

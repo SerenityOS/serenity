@@ -166,8 +166,18 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     dump_tree(box);
 }
 
-void InlineFormattingContext::apply_justification_to_fragments(FormattingState::NodeState const& containing_block_state, LineBox& line_box, bool is_last_line)
+void InlineFormattingContext::apply_justification_to_fragments(FormattingState::NodeState const& containing_block_state, CSS::TextJustify text_justify, LineBox& line_box, bool is_last_line)
 {
+    switch (text_justify) {
+    case CSS::TextJustify::None:
+        return;
+    // FIXME: These two cases currently fall back to auto, handle them as well.
+    case CSS::TextJustify::InterCharacter:
+    case CSS::TextJustify::InterWord:
+    case CSS::TextJustify::Auto:
+        break;
+    }
+
     float excess_horizontal_space = containing_block_state.content_width - line_box.width();
 
     // Only justify the text if the excess horizontal space is less than or
@@ -265,12 +275,13 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 
     auto const& containing_block = this->containing_block();
     auto text_align = containing_block.computed_values().text_align();
+    auto text_justify = containing_block.computed_values().text_justify();
     if (text_align == CSS::TextAlign::Justify) {
         auto const& containing_block_state = m_state.get(containing_block);
         for (size_t i = 0; i < line_boxes.size(); i++) {
             auto& line_box = line_boxes[i];
             auto is_last_line = i == line_boxes.size() - 1;
-            apply_justification_to_fragments(containing_block_state, line_box, is_last_line);
+            apply_justification_to_fragments(containing_block_state, text_justify, line_box, is_last_line);
         }
     }
 }
