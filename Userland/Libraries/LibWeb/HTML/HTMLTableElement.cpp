@@ -284,7 +284,7 @@ DOM::ExceptionOr<NonnullRefPtr<HTMLTableRowElement>> HTMLTableElement::insert_ro
     auto rows = this->rows();
     auto rows_length = rows->length();
 
-    if (index < -1 || index >= (long)rows_length) {
+    if (index < -1 || index > (long)rows_length) {
         return DOM::IndexSizeError::create("Index is negative or greater than the number of rows");
     }
     auto tr = static_ptr_cast<HTMLTableRowElement>(DOM::create_element(document(), TagNames::tr, Namespace::HTML));
@@ -312,7 +312,7 @@ DOM::ExceptionOr<void> HTMLTableElement::delete_row(long index)
 
     // 1. If index is less than −1 or greater than or equal to the number of elements in the rows collection, then throw an "IndexSizeError" DOMException.
     if (index < -1 || index >= (long)rows_length)
-        return DOM::IndexSizeError::create("Index is negative or greater than the number of rows");
+        return DOM::IndexSizeError::create("Index is negative or greater than or equal to the number of rows");
 
     // 2. If index is −1, then remove the last element in the rows collection from its parent, or do nothing if the rows collection is empty.
     if (index == -1) {
