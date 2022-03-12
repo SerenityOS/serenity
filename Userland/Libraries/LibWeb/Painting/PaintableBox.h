@@ -166,9 +166,10 @@ public:
 
     virtual HitTestResult hit_test(Gfx::IntPoint const&, HitTestType) const override;
 
-private:
+protected:
     PaintableWithLines(Layout::BlockContainer const&);
 
+private:
     Vector<Layout::LineBox> m_line_boxes;
 };
 

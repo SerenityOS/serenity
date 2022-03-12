@@ -11,7 +11,7 @@
 
 namespace Web::Painting {
 
-class SVGPaintable : public PaintableBox {
+class SVGPaintable : public PaintableWithLines {
 public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const override;
     virtual void after_children_paint(PaintContext&, PaintPhase) const override;
