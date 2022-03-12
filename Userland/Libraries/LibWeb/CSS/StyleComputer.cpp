@@ -622,11 +622,11 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
 
     // FIXME: Normal user declarations
 
-    // Normal author declarations
-    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No, custom_properties);
-
     // Author presentational hints (NOTE: The spec doesn't say exactly how to prioritize these.)
     element.apply_presentational_hints(style);
+
+    // Normal author declarations
+    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No, custom_properties);
 
     // FIXME: Animation declarations [css-animations-1]
 
