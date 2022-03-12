@@ -274,6 +274,13 @@ enum class TextDecorationStyle {
     Wavy,
 };
 
+enum class TextJustify {
+    Auto,
+    None,
+    InterWord,
+    InterCharacter,
+};
+
 enum class TextTransform {
     None,
     Capitalize,

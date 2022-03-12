@@ -21,6 +21,7 @@ public:
     static CSS::Cursor cursor() { return CSS::Cursor::Auto; }
     static CSS::WhiteSpace white_space() { return CSS::WhiteSpace::Normal; }
     static CSS::TextAlign text_align() { return CSS::TextAlign::Left; }
+    static CSS::TextJustify text_justify() { return CSS::TextJustify::Auto; }
     static CSS::Position position() { return CSS::Position::Static; }
     static CSS::TextDecorationLine text_decoration_line() { return CSS::TextDecorationLine::None; }
     static CSS::Length text_decoration_thickness() { return Length::make_px(1); }
@@ -111,6 +112,7 @@ public:
     CSS::Display display() const { return m_noninherited.display; }
     Optional<int> const& z_index() const { return m_noninherited.z_index; }
     CSS::TextAlign text_align() const { return m_inherited.text_align; }
+    CSS::TextJustify text_justify() const { return m_inherited.text_justify; }
     CSS::TextDecorationLine text_decoration_line() const { return m_noninherited.text_decoration_line; }
     CSS::LengthPercentage text_decoration_thickness() const { return m_noninherited.text_decoration_thickness; }
     CSS::TextDecorationStyle text_decoration_style() const { return m_noninherited.text_decoration_style; }
@@ -185,6 +187,7 @@ protected:
         CSS::ImageRendering image_rendering { InitialValues::image_rendering() };
         CSS::PointerEvents pointer_events { InitialValues::pointer_events() };
         CSS::TextAlign text_align { InitialValues::text_align() };
+        CSS::TextJustify text_justify { InitialValues::text_justify() };
         CSS::TextTransform text_transform { InitialValues::text_transform() };
         CSS::WhiteSpace white_space { InitialValues::white_space() };
         CSS::ListStyleType list_style_type { InitialValues::list_style_type() };
@@ -259,6 +262,7 @@ public:
     void set_clear(CSS::Clear value) { m_noninherited.clear = value; }
     void set_z_index(Optional<int> value) { m_noninherited.z_index = value; }
     void set_text_align(CSS::TextAlign text_align) { m_inherited.text_align = text_align; }
+    void set_text_justify(CSS::TextJustify text_justify) { m_inherited.text_justify = text_justify; }
     void set_text_decoration_line(CSS::TextDecorationLine value) { m_noninherited.text_decoration_line = value; }
     void set_text_decoration_thickness(CSS::LengthPercentage value) { m_noninherited.text_decoration_thickness = value; }
     void set_text_decoration_style(CSS::TextDecorationStyle value) { m_noninherited.text_decoration_style = value; }

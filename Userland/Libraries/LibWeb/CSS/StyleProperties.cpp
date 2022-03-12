@@ -438,6 +438,26 @@ Optional<CSS::TextAlign> StyleProperties::text_align() const
     }
 }
 
+Optional<CSS::TextJustify> StyleProperties::text_justify() const
+{
+    auto value = property(CSS::PropertyID::TextJustify);
+    if (!value.has_value())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Auto:
+        return CSS::TextJustify::Auto;
+    case CSS::ValueID::None:
+        return CSS::TextJustify::None;
+    case CSS::ValueID::InterWord:
+        return CSS::TextJustify::InterWord;
+    case CSS::ValueID::Distribute:
+    case CSS::ValueID::InterCharacter:
+        return CSS::TextJustify::InterCharacter;
+    default:
+        return {};
+    }
+}
+
 Optional<CSS::PointerEvents> StyleProperties::pointer_events() const
 {
     auto value = property(CSS::PropertyID::PointerEvents);
