@@ -14,7 +14,7 @@
 
 int main()
 {
-    int fd = open("/dev/fb0", O_RDWR);
+    int fd = open("/dev/gpu/connector0", O_RDWR);
     if (fd < 0) {
         perror("open");
         return 1;
@@ -22,21 +22,19 @@ int main()
 
     size_t width = 17825;
     size_t height = 1000;
-    size_t pitch = width * 4;
-    size_t framebuffer_size_in_bytes = pitch * height * 2;
+    size_t refresh_rate = 0;
+    size_t framebuffer_size_in_bytes = width * sizeof(u32) * height * 2;
 
     FBHeadProperties original_properties;
-    original_properties.head_index = 0;
     if (ioctl(fd, FB_IOCTL_GET_HEAD_PROPERTIES, &original_properties) < 0) {
         perror("ioctl");
         return 1;
     }
 
     FBHeadResolution resolution;
-    resolution.head_index = 0;
     resolution.width = width;
     resolution.height = height;
-    resolution.pitch = pitch;
+    resolution.refresh_rate = refresh_rate;
 
     if (ioctl(fd, FB_IOCTL_SET_HEAD_RESOLUTION, &resolution) < 0) {
         perror("ioctl");
@@ -90,10 +88,9 @@ int main()
     }
 
     FBHeadResolution original_resolution;
-    original_resolution.head_index = 0;
     original_resolution.width = original_properties.width;
     original_resolution.height = original_properties.height;
-    original_resolution.pitch = original_properties.pitch;
+    original_resolution.refresh_rate = original_properties.refresh_rate;
     if (ioctl(fd, FB_IOCTL_SET_HEAD_RESOLUTION, &original_resolution) < 0) {
         perror("ioctl");
         return 1;

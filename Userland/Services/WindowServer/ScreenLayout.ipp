@@ -291,23 +291,23 @@ bool ScreenLayout::operator!=(const ScreenLayout& other) const
     return false;
 }
 
-bool ScreenLayout::try_auto_add_framebuffer(String const& device_path)
+bool ScreenLayout::try_auto_add_display_connector(String const& device_path)
 {
-    int framebuffer_fd = open(device_path.characters(), O_RDWR | O_CLOEXEC);
-    if (framebuffer_fd < 0) {
+    int display_connector_fd = open(device_path.characters(), O_RDWR | O_CLOEXEC);
+    if (display_connector_fd < 0) {
         int err = errno;
-        dbgln("Error ({}) opening framebuffer device {}", err, device_path);
+        dbgln("Error ({}) opening display connector device {}", err, device_path);
         return false;
     }
     ScopeGuard fd_guard([&] {
-        close(framebuffer_fd);
+        close(display_connector_fd);
     });
     // FIXME: Add multihead support for one framebuffer
     FBHeadResolution resolution {};
     memset(&resolution, 0, sizeof(FBHeadResolution));
-    if (fb_get_resolution(framebuffer_fd, &resolution) < 0) {
+    if (fb_get_resolution(display_connector_fd, &resolution) < 0) {
         int err = errno;
-        dbgln("Error ({}) querying resolution from framebuffer device {}", err, device_path);
+        dbgln("Error ({}) querying resolution from display connector device {}", err, device_path);
         return false;
     }
     if (resolution.width == 0 || resolution.height == 0) {
@@ -369,7 +369,7 @@ bool ScreenLayout::try_auto_add_framebuffer(String const& device_path)
         }
     }
 
-    dbgln("Failed to add framebuffer device {} with resolution {}x{} to screen layout", device_path, resolution.width, resolution.height);
+    dbgln("Failed to add display connector device {} with resolution {}x{} to screen layout", device_path, resolution.width, resolution.height);
     return false;
 }
 

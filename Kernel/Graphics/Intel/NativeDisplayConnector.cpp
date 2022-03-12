@@ -175,12 +175,14 @@ Optional<IntelGraphics::PLLSettings> IntelNativeDisplayConnector::create_pll_set
     return {};
 }
 
-NonnullOwnPtr<IntelNativeDisplayConnector> IntelNativeDisplayConnector::must_create(PhysicalAddress framebuffer_address, PhysicalAddress registers_region_address, size_t registers_region_length)
+NonnullRefPtr<IntelNativeDisplayConnector> IntelNativeDisplayConnector::must_create(PhysicalAddress framebuffer_address, PhysicalAddress registers_region_address, size_t registers_region_length)
 {
     auto registers_region = MUST(MM.allocate_kernel_region(PhysicalAddress(registers_region_address), registers_region_length, "Intel Native Graphics Registers", Memory::Region::Access::ReadWrite));
     // FIXME: Try to put the address as parameter to this function to allow creating this DisplayConnector for many generations...
     auto gmbus_connector = MUST(GMBusConnector::create_with_physical_address(registers_region_address.offset(to_underlying(IntelGraphics::RegisterIndex::GMBusClock))));
-    auto connector = adopt_own_if_nonnull(new (nothrow) IntelNativeDisplayConnector(framebuffer_address, move(gmbus_connector), move(registers_region))).release_nonnull();
+    auto device_or_error = DeviceManagement::try_create_device<IntelNativeDisplayConnector>(framebuffer_address, move(gmbus_connector), move(registers_region));
+    VERIFY(!device_or_error.is_error());
+    auto connector = device_or_error.release_value();
     MUST(connector->initialize_gmbus_settings_and_read_edid());
     // Note: This is very important to set the resolution to something safe so we
     // can create a framebuffer console with valid resolution.
@@ -229,7 +231,7 @@ ErrorOr<void> IntelNativeDisplayConnector::set_y_offset(size_t)
 ErrorOr<DisplayConnector::Resolution> IntelNativeDisplayConnector::get_resolution()
 {
     // FIXME: Get the refresh rate as this is real hardware...
-    return Resolution { m_framebuffer_width, m_framebuffer_height, 32, {} };
+    return Resolution { m_framebuffer_width, m_framebuffer_height, 32, m_framebuffer_width * sizeof(u32), {} };
 }
 
 ErrorOr<void> IntelNativeDisplayConnector::unblank()
@@ -435,6 +437,7 @@ bool IntelNativeDisplayConnector::set_crt_resolution(size_t width, size_t height
     m_framebuffer_width = width;
     m_framebuffer_height = height;
     m_framebuffer_pitch = width * 4;
+    m_framebuffer_region = MUST(MM.allocate_kernel_region(m_framebuffer_address.value(), m_framebuffer_pitch * m_framebuffer_height, "Intel Native Graphics Framebuffer", Memory::Region::Access::ReadWrite));
 
     return true;
 }

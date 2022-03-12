@@ -66,60 +66,9 @@ UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::Dev
     return {};
 }
 
-UNMAP_AFTER_INIT void BochsGraphicsAdapter::initialize_framebuffer_devices()
-{
-    // FIXME: Find a better way to determine default resolution...
-    m_framebuffer_device = FramebufferDevice::create(*this, PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
-    // While write-combine helps greatly on actual hardware, it greatly reduces performance in QEMU
-    m_framebuffer_device->enable_write_combine(false);
-    // FIXME: Would be nice to be able to return a ErrorOr<void> here.
-    VERIFY(!m_framebuffer_device->try_to_initialize().is_error());
-}
-
 bool BochsGraphicsAdapter::vga_compatible() const
 {
     return m_is_vga_capable;
-}
-
-ErrorOr<ByteBuffer> BochsGraphicsAdapter::get_edid(size_t output_port_index) const
-{
-    if (output_port_index != 0)
-        return Error::from_errno(ENODEV);
-    return m_display_connector->get_edid();
-}
-
-ErrorOr<void> BochsGraphicsAdapter::set_resolution(size_t output_port_index, size_t width, size_t height)
-{
-    if (output_port_index != 0)
-        return Error::from_errno(ENODEV);
-    return m_display_connector->set_resolution({ width, height, 32, {} });
-}
-ErrorOr<void> BochsGraphicsAdapter::set_y_offset(size_t output_port_index, size_t y)
-{
-    if (output_port_index != 0)
-        return Error::from_errno(ENODEV);
-    if (m_console_enabled)
-        return Error::from_errno(EBUSY);
-    return m_display_connector->set_y_offset(y);
-}
-
-void BochsGraphicsAdapter::enable_consoles()
-{
-    SpinlockLocker lock(m_console_mode_switch_lock);
-    m_console_enabled = true;
-    MUST(m_display_connector->set_y_offset(0));
-    if (m_framebuffer_device)
-        m_framebuffer_device->deactivate_writes();
-    m_display_connector->enable_console();
-}
-void BochsGraphicsAdapter::disable_consoles()
-{
-    SpinlockLocker lock(m_console_mode_switch_lock);
-    VERIFY(m_framebuffer_device);
-    m_console_enabled = false;
-    MUST(m_display_connector->set_y_offset(0));
-    m_display_connector->disable_console();
-    m_framebuffer_device->activate_writes();
 }
 
 }

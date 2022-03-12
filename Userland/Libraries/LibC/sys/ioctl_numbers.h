@@ -19,15 +19,18 @@ struct winsize {
 };
 
 struct FBProperties {
-    unsigned char multihead_support;
     unsigned char doublebuffer_support;
     unsigned char flushing_support;
     unsigned char partial_flushing_support;
+    // Note: This can indicate to userland if the underlying hardware requires
+    // a defined refresh rate being supplied when modesetting the screen resolution.
+    // Paravirtualized hardware don't need such setting and can safely ignore this.
+    unsigned char refresh_rate_support;
+    unsigned char hardware_3d_acceleration_command_set;
 };
 
 struct FBHeadProperties {
-    int head_index;
-
+    unsigned refresh_rate;
     unsigned pitch;
     unsigned width;
     unsigned height;
@@ -37,26 +40,21 @@ struct FBHeadProperties {
 };
 
 struct FBHeadResolution {
-    int head_index;
-    int pitch;
+    int refresh_rate;
     int width;
     int height;
 };
 
 struct FBHeadEDID {
-    int head_index;
-
     unsigned char* bytes;
     unsigned bytes_size;
 };
 
 struct FBHeadVerticalOffset {
-    int head_index;
     int offsetted;
 };
 
 struct FBRect {
-    int head_index;
     unsigned x;
     unsigned y;
     unsigned width;

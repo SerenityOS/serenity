@@ -12,29 +12,20 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<ISAVGAAdapter> ISAVGAAdapter::initialize()
+UNMAP_AFTER_INIT NonnullRefPtr<ISAVGAAdapter> ISAVGAAdapter::must_create_with_preset_resolution(PhysicalAddress framebuffer_address, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch)
 {
-    return adopt_ref(*new ISAVGAAdapter());
+    auto adapter = adopt_ref_if_nonnull(new (nothrow) ISAVGAAdapter()).release_nonnull();
+    MUST(adapter->initialize_adapter_with_preset_resolution(framebuffer_address, framebuffer_width, framebuffer_height, framebuffer_pitch));
+    return adapter;
+}
+UNMAP_AFTER_INIT NonnullRefPtr<ISAVGAAdapter> ISAVGAAdapter::must_create()
+{
+    auto adapter = adopt_ref_if_nonnull(new (nothrow) ISAVGAAdapter()).release_nonnull();
+    MUST(adapter->initialize_adapter());
+    return adapter;
 }
 
 UNMAP_AFTER_INIT ISAVGAAdapter::ISAVGAAdapter()
-{
-    m_framebuffer_console = Graphics::TextModeConsole::initialize();
-    GraphicsManagement::the().set_console(*m_framebuffer_console);
-}
-
-void ISAVGAAdapter::enable_consoles()
-{
-    VERIFY(m_framebuffer_console);
-    m_framebuffer_console->enable();
-}
-void ISAVGAAdapter::disable_consoles()
-{
-    VERIFY(m_framebuffer_console);
-    m_framebuffer_console->disable();
-}
-
-void ISAVGAAdapter::initialize_framebuffer_devices()
 {
 }
 

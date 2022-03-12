@@ -171,6 +171,8 @@ public:
 
     CompositorScreenData& compositor_screen_data() { return *m_compositor_screen_data; }
 
+    void write_all_display_contents();
+
 private:
     Screen(size_t);
     bool open_device();
@@ -187,7 +189,7 @@ private:
     static void update_bounding_rect();
     static void update_scale_factors_in_use();
 
-    bool is_opened() const { return m_framebuffer_fd >= 0; }
+    bool is_opened() const { return m_display_connector_fd >= 0; }
 
     void set_index(size_t index) { m_index = index; }
     void update_virtual_rect();
@@ -210,7 +212,7 @@ private:
 
     int m_pitch { 0 };
     Gfx::IntRect m_virtual_rect;
-    int m_framebuffer_fd { -1 };
+    int m_display_connector_fd { -1 };
     NonnullOwnPtr<ScreenFBData> m_framebuffer_data;
     NonnullOwnPtr<CompositorScreenData> m_compositor_screen_data;
 };

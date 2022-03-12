@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
-#include <Kernel/Graphics/VirtIOGPU/FramebufferDevice.h>
+#include <Kernel/Graphics/VirtIOGPU/DisplayConnector.h>
 #include <Kernel/TimerQueue.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
@@ -32,7 +32,7 @@ private:
 
 class Console final : public GenericFramebufferConsole {
 public:
-    static NonnullRefPtr<Console> initialize(RefPtr<FramebufferDevice> const&);
+    static NonnullRefPtr<Console> initialize(VirtIODisplayConnector& parent_display_connector);
 
     virtual void set_resolution(size_t width, size_t height, size_t pitch) override;
     virtual void flush(size_t x, size_t y, size_t width, size_t height) override;
@@ -42,8 +42,8 @@ private:
     void enqueue_refresh_timer();
     virtual u8* framebuffer_data() override;
 
-    Console(RefPtr<FramebufferDevice> const&);
-    RefPtr<FramebufferDevice> m_framebuffer_device;
+    Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::Resolution current_resolution);
+    NonnullRefPtr<VirtIODisplayConnector> m_parent_display_connector;
     DirtyRect m_dirty_rect;
 };
 
