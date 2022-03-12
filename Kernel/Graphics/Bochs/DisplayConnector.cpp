@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/Bochs/Definitions.h>
 #include <Kernel/Graphics/Bochs/DisplayConnector.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
@@ -12,30 +13,25 @@
 
 namespace Kernel {
 
-NonnullOwnPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(PhysicalAddress framebuffer_address, NonnullOwnPtr<Memory::Region> registers_region, size_t registers_region_offset)
+NonnullRefPtr<BochsDisplayConnector> BochsDisplayConnector::must_create(PhysicalAddress framebuffer_address, NonnullOwnPtr<Memory::Region> registers_region, size_t registers_region_offset)
 {
-    auto connector = adopt_own_if_nonnull(new (nothrow) BochsDisplayConnector(framebuffer_address, move(registers_region), registers_region_offset)).release_nonnull();
+    auto device_or_error = DeviceManagement::try_create_device<BochsDisplayConnector>(framebuffer_address, move(registers_region), registers_region_offset);
+    VERIFY(!device_or_error.is_error());
+    auto connector = device_or_error.release_value();
     MUST(connector->create_attached_framebuffer_console());
     return connector;
 }
 
 ErrorOr<void> BochsDisplayConnector::create_attached_framebuffer_console()
 {
+    auto rounded_size = TRY(Memory::page_round_up(1024 * sizeof(u32) * 768 * 2));
+    m_framebuffer_region = TRY(MM.allocate_kernel_region(m_framebuffer_address.page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+    [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
+    m_framebuffer_data = m_framebuffer_region->vaddr().offset(m_framebuffer_address.offset_in_page()).as_ptr();
     // We assume safe resolution is 1024x768x32
     m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(m_framebuffer_address, 1024, 768, 1024 * sizeof(u32));
     GraphicsManagement::the().set_console(*m_framebuffer_console);
     return {};
-}
-
-void BochsDisplayConnector::enable_console()
-{
-    VERIFY(m_framebuffer_console);
-    m_framebuffer_console->enable();
-}
-void BochsDisplayConnector::disable_console()
-{
-    VERIFY(m_framebuffer_console);
-    m_framebuffer_console->disable();
 }
 
 BochsDisplayConnector::BochsDisplayConnector(PhysicalAddress framebuffer_address)
@@ -83,7 +79,7 @@ void BochsDisplayConnector::set_framebuffer_to_little_endian_format()
 
 ErrorOr<void> BochsDisplayConnector::set_safe_resolution()
 {
-    DisplayConnector::Resolution safe_resolution { 1024, 768, 32, {} };
+    DisplayConnector::Resolution safe_resolution { 1024, 768, 32, 1024 * sizeof(u32), {} };
     return set_resolution(safe_resolution);
 }
 
@@ -96,6 +92,34 @@ ErrorOr<void> BochsDisplayConnector::unblank()
     return {};
 }
 
+ErrorOr<size_t> BochsDisplayConnector::write_to_first_surface(u64 offset, UserOrKernelBuffer const& buffer, size_t length)
+{
+    VERIFY(m_control_lock.is_locked());
+    if (offset + length > m_framebuffer_region->size())
+        return Error::from_errno(EOVERFLOW);
+    TRY(buffer.read(m_framebuffer_data + offset, 0, length));
+    return length;
+}
+
+void BochsDisplayConnector::enable_console()
+{
+    VERIFY(m_control_lock.is_locked());
+    VERIFY(m_framebuffer_console);
+    m_framebuffer_console->enable();
+}
+
+void BochsDisplayConnector::disable_console()
+{
+    VERIFY(m_control_lock.is_locked());
+    VERIFY(m_framebuffer_console);
+    m_framebuffer_console->disable();
+}
+
+ErrorOr<void> BochsDisplayConnector::flush_first_surface()
+{
+    return Error::from_errno(ENOTSUP);
+}
+
 ErrorOr<void> BochsDisplayConnector::set_y_offset(size_t y_offset)
 {
     MutexLocker locker(m_modeset_lock);
@@ -106,7 +130,7 @@ ErrorOr<void> BochsDisplayConnector::set_y_offset(size_t y_offset)
 ErrorOr<DisplayConnector::Resolution> BochsDisplayConnector::get_resolution()
 {
     MutexLocker locker(m_modeset_lock);
-    return Resolution { m_registers->bochs_regs.xres, m_registers->bochs_regs.yres, 32, {} };
+    return Resolution { m_registers->bochs_regs.xres, m_registers->bochs_regs.yres, 32, m_registers->bochs_regs.xres * sizeof(u32), {} };
 }
 
 ErrorOr<void> BochsDisplayConnector::set_resolution(Resolution const& resolution)
@@ -143,6 +167,10 @@ ErrorOr<void> BochsDisplayConnector::set_resolution(Resolution const& resolution
     if ((u16)width != m_registers->bochs_regs.xres || (u16)height != m_registers->bochs_regs.yres) {
         return Error::from_errno(ENOTIMPL);
     }
+    auto rounded_size = TRY(Memory::page_round_up(width * sizeof(u32) * height * 2));
+    m_framebuffer_region = TRY(MM.allocate_kernel_region(m_framebuffer_address.page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+    [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
+    m_framebuffer_data = m_framebuffer_region->vaddr().offset(m_framebuffer_address.offset_in_page()).as_ptr();
     m_framebuffer_console->set_resolution(width, height, width * sizeof(u32));
     return {};
 }

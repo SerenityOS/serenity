@@ -12,9 +12,10 @@ namespace Kernel {
 
 class VBoxDisplayConnector final
     : public BochsDisplayConnector {
+    friend class DeviceManagement;
 
 public:
-    static NonnullOwnPtr<VBoxDisplayConnector> must_create(PhysicalAddress framebuffer_address);
+    static NonnullRefPtr<VBoxDisplayConnector> must_create(PhysicalAddress framebuffer_address);
 
     virtual IndexID index_id() const override;
 

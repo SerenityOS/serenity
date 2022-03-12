@@ -12,9 +12,9 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Graphics/Console/Console.h>
+#include <Kernel/Graphics/DisplayConnector.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Graphics/VGA/GenericAdapter.h>
-#include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Memory/Region.h>
 
 namespace Kernel {
@@ -29,9 +29,11 @@ public:
     unsigned allocate_minor_device_number() { return m_current_minor_number++; };
     GraphicsManagement();
 
-    bool framebuffer_devices_console_only() const;
-    bool framebuffer_devices_use_bootloader_framebuffer() const;
-    bool framebuffer_devices_exist() const;
+    void attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector&);
+    void detach_display_connector(Badge<DisplayConnector>, DisplayConnector&);
+
+    bool console_mode_only() const;
+    bool use_bootloader_framebuffer_only() const;
 
     void set_vga_text_mode_cursor(size_t console_width, size_t x, size_t y);
     void disable_vga_text_mode_console_cursor();
@@ -47,7 +49,9 @@ private:
     void enable_vga_text_mode_console_cursor();
 
     bool determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
-    bool determine_and_initialize_isa_graphics_device();
+    bool initialize_isa_graphics_device();
+    bool initialize_isa_graphics_device_with_preset_resolution(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch);
+
     NonnullRefPtrVector<GenericGraphicsAdapter> m_graphics_devices;
     RefPtr<Graphics::Console> m_console;
 
@@ -55,6 +59,7 @@ private:
     RefPtr<VGAGenericAdapter> m_vga_adapter;
     unsigned m_current_minor_number { 0 };
 
+    IntrusiveList<&DisplayConnector::m_list_node> m_display_connector_nodes;
     RecursiveSpinlock m_main_vga_lock;
     bool m_vga_access_is_disabled { false };
 };

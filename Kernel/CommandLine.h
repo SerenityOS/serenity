@@ -74,7 +74,8 @@ public:
     [[nodiscard]] bool is_pci_disabled() const;
     [[nodiscard]] bool is_legacy_time_enabled() const;
     [[nodiscard]] bool is_pc_speaker_enabled() const;
-    [[nodiscard]] FrameBufferDevices are_framebuffer_devices_enabled() const;
+    [[nodiscard]] bool force_console_mode() const;
+    [[nodiscard]] bool force_simple_graphics_mode() const;
     [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
     [[nodiscard]] StringView system_mode() const;

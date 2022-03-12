@@ -9,7 +9,6 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/Definitions.h>
-#include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/Intel/NativeDisplayConnector.h>
 #include <Kernel/Graphics/VGA/PCIGenericAdapter.h>
 #include <Kernel/PhysicalAddress.h>
@@ -27,13 +26,5 @@ private:
     ErrorOr<void> initialize_adapter();
 
     explicit IntelNativeGraphicsAdapter(PCI::Address);
-
-    // ^GenericGraphicsAdapter
-    virtual void enable_consoles() override;
-    virtual void disable_consoles() override;
-
-    // ^GenericGraphicsAdapter
-    virtual void initialize_framebuffer_devices() override;
-    virtual ErrorOr<ByteBuffer> get_edid(size_t output_port_index) const override;
 };
 }

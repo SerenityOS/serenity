@@ -13,6 +13,7 @@
 #include <Kernel/Graphics/Intel/GMBusConnector.h>
 #include <Kernel/Graphics/VGA/GenericDisplayConnector.h>
 #include <Kernel/Memory/TypedMapping.h>
+#include <LibEDID/EDID.h>
 
 namespace Kernel {
 
@@ -61,9 +62,10 @@ struct PLLMaxSettings {
 class IntelNativeDisplayConnector
     : public VGAGenericDisplayConnector {
     friend class IntelNativeGraphicsAdapter;
+    friend class DeviceManagement;
 
 public:
-    static NonnullOwnPtr<IntelNativeDisplayConnector> must_create(PhysicalAddress framebuffer_address, PhysicalAddress registers_region_address, size_t registers_region_length);
+    static NonnullRefPtr<IntelNativeDisplayConnector> must_create(PhysicalAddress framebuffer_address, PhysicalAddress registers_region_address, size_t registers_region_length);
 
 private:
     // ^DisplayConnector

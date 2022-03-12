@@ -26,11 +26,9 @@ ALWAYS_INLINE int fb_get_head_properties(int fd, FBHeadProperties* info)
 ALWAYS_INLINE int fb_get_resolution(int fd, FBHeadResolution* info)
 {
     FBHeadProperties head_properties;
-    head_properties.head_index = info->head_index;
     if (auto rc = ioctl(fd, FB_IOCTL_GET_HEAD_PROPERTIES, &head_properties); rc < 0)
         return rc;
-    info->head_index = head_properties.head_index;
-    info->pitch = head_properties.pitch;
+    info->refresh_rate = head_properties.refresh_rate;
     info->width = head_properties.width;
     info->height = head_properties.height;
     return 0;
@@ -54,6 +52,11 @@ ALWAYS_INLINE int fb_get_head_vertical_offset_buffer(int fd, FBHeadVerticalOffse
 ALWAYS_INLINE int fb_set_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
 {
     return ioctl(fd, FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
+}
+
+ALWAYS_INLINE int fb_flush_everything(int fd)
+{
+    return ioctl(fd, FB_IOCTL_FLUSH_HEAD, 0);
 }
 
 ALWAYS_INLINE int fb_flush_buffers(int fd, int index, FBRect const* rects, unsigned count)

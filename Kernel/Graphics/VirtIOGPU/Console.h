@@ -7,10 +7,12 @@
 #pragma once
 
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
-#include <Kernel/Graphics/VirtIOGPU/FramebufferDevice.h>
+#include <Kernel/Graphics/VirtIOGPU/DisplayConnector.h>
 #include <Kernel/TimerQueue.h>
 
-namespace Kernel::Graphics::VirtIOGPU {
+namespace Kernel {
+
+namespace Graphics::VirtIOGPU {
 
 class DirtyRect {
 public:
@@ -30,9 +32,13 @@ private:
     size_t m_y1 { 0 };
 };
 
-class Console final : public GenericFramebufferConsole {
+}
+
+namespace Graphics {
+
+class VirtIOGPUConsole final : public GenericFramebufferConsole {
 public:
-    static NonnullRefPtr<Console> initialize(RefPtr<FramebufferDevice> const&);
+    static NonnullRefPtr<VirtIOGPUConsole> initialize(VirtIODisplayConnector& parent_display_connector);
 
     virtual void set_resolution(size_t width, size_t height, size_t pitch) override;
     virtual void flush(size_t x, size_t y, size_t width, size_t height) override;
@@ -42,9 +48,11 @@ private:
     void enqueue_refresh_timer();
     virtual u8* framebuffer_data() override;
 
-    Console(RefPtr<FramebufferDevice> const&);
-    RefPtr<FramebufferDevice> m_framebuffer_device;
-    DirtyRect m_dirty_rect;
+    VirtIOGPUConsole(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::Resolution current_resolution);
+    NonnullRefPtr<VirtIODisplayConnector> m_parent_display_connector;
+    VirtIOGPU::DirtyRect m_dirty_rect;
 };
+
+}
 
 }

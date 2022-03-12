@@ -82,19 +82,18 @@ set(KERNEL_SOURCES
     Graphics/Console/ContiguousFramebufferConsole.cpp
     Graphics/Console/TextModeConsole.cpp
     Graphics/Console/VGAConsole.cpp
-    Graphics/FramebufferDevice.cpp
     Graphics/GraphicsManagement.cpp
     Graphics/Intel/GMBusConnector.cpp
     Graphics/Intel/NativeDisplayConnector.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
+    Graphics/VirtIOGPU/Console.cpp
+    Graphics/VirtIOGPU/GraphicsAdapter.cpp
+    Graphics/VirtIOGPU/DisplayConnector.cpp
+    Graphics/VGA/GenericAdapter.cpp
     Graphics/VGA/GenericDisplayConnector.cpp
     Graphics/VGA/ISAAdapter.cpp
     Graphics/VGA/PCIGenericAdapter.cpp
-    Graphics/VirtIOGPU/FramebufferDevice.cpp
-    Graphics/VirtIOGPU/Console.cpp
-    Graphics/VirtIOGPU/GPU3DDevice.cpp
-    Graphics/VirtIOGPU/GraphicsAdapter.cpp
-    Graphics/GenericFramebufferDevice.cpp
+    Graphics/DisplayConnector.cpp
     SanCov.cpp
     Storage/ATA/AHCIController.cpp
     Storage/ATA/AHCIPort.cpp

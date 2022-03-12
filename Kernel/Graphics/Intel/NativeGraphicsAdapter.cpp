@@ -46,50 +46,15 @@ ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
     dmesgln("Intel Native Graphics Adapter @ {}, MMIO @ {}, space size is {:x} bytes", address, PhysicalAddress(PCI::get_BAR0(address)), bar0_space_size);
     dmesgln("Intel Native Graphics Adapter @ {}, framebuffer @ {}", address, PhysicalAddress(PCI::get_BAR2(address)));
     PCI::enable_bus_mastering(address);
+    PCI::enable_io_space(address);
 
-    m_display_connector = IntelNativeDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR2(address) & 0xfffffffc), PhysicalAddress(PCI::get_BAR0(address) & 0xfffffffc), bar0_space_size);
+    m_display_connector = IntelNativeDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR2(address) & 0xfffffff0), PhysicalAddress(PCI::get_BAR0(address) & 0xfffffff0), bar0_space_size);
     return {};
 }
 
 IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::Address address)
     : PCIVGAGenericAdapter(address)
 {
-}
-
-void IntelNativeGraphicsAdapter::enable_consoles()
-{
-    VERIFY(m_display_connector);
-    if (m_framebuffer_device)
-        m_framebuffer_device->deactivate_writes();
-    m_display_connector->enable_console();
-}
-void IntelNativeGraphicsAdapter::disable_consoles()
-{
-    VERIFY(m_framebuffer_device);
-    VERIFY(m_display_connector);
-    m_display_connector->disable_console();
-    m_framebuffer_device->activate_writes();
-}
-
-void IntelNativeGraphicsAdapter::initialize_framebuffer_devices()
-{
-    auto address = PhysicalAddress(PCI::get_BAR2(pci_address()) & 0xfffffff0);
-    VERIFY(!address.is_null());
-    auto resolution = MUST(m_display_connector->get_resolution());
-    m_framebuffer_device = FramebufferDevice::create(*this, address, resolution.width, resolution.height, resolution.width * sizeof(u32));
-    // FIXME: Would be nice to be able to return a ErrorOr<void> here.
-    auto framebuffer_result = m_framebuffer_device->try_to_initialize();
-    VERIFY(!framebuffer_result.is_error());
-}
-
-ErrorOr<ByteBuffer> IntelNativeGraphicsAdapter::get_edid(size_t output_port_index) const
-{
-    if (output_port_index != 0) {
-        dbgln("IntelNativeGraphicsAdapter: get_edid: Only one output supported");
-        return Error::from_errno(ENODEV);
-    }
-    VERIFY(m_display_connector);
-    return m_display_connector->get_edid();
 }
 
 }

@@ -282,14 +282,22 @@ PanicMode CommandLine::panic_mode(Validate should_validate) const
     return PanicMode::Halt;
 }
 
-UNMAP_AFTER_INIT auto CommandLine::are_framebuffer_devices_enabled() const -> FrameBufferDevices
+UNMAP_AFTER_INIT bool CommandLine::force_console_mode() const
 {
-    auto const fbdev_value = lookup("fbdev"sv).value_or("on"sv);
-    if (fbdev_value == "on"sv)
-        return FrameBufferDevices::Enabled;
-    if (fbdev_value == "bootloader"sv)
-        return FrameBufferDevices::BootloaderOnly;
-    return FrameBufferDevices::ConsoleOnly;
+    auto const value = system_mode();
+    if (value == "graphical"sv)
+        return false;
+    return true;
+}
+
+UNMAP_AFTER_INIT bool CommandLine::force_simple_graphics_mode() const
+{
+    auto const force_simple_graphics_mode = lookup("simple_graphics_mode"sv).value_or("off"sv);
+    if (force_simple_graphics_mode == "on"sv)
+        return true;
+    if (force_simple_graphics_mode == "off"sv)
+        return false;
+    PANIC("Unknown simple_graphics_mode: {}", force_simple_graphics_mode);
 }
 
 StringView CommandLine::userspace_init() const

@@ -84,8 +84,8 @@ public:
     static ErrorOr<Parser> from_bytes(ByteBuffer&&);
 
 #ifndef KERNEL
-    static ErrorOr<Parser> from_framebuffer_device(int, size_t);
-    static ErrorOr<Parser> from_framebuffer_device(String const&, size_t);
+    static ErrorOr<Parser> from_display_connector_device(int);
+    static ErrorOr<Parser> from_display_connector_device(String const&);
 #endif
 
     StringView legacy_manufacturer_id() const;
