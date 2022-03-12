@@ -127,6 +127,11 @@ ErrorOr<void> utime(StringView path, Optional<struct utimbuf>);
 ErrorOr<struct utsname> uname();
 ErrorOr<Array<int, 2>> pipe2(int flags);
 ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta);
+enum class SearchInPath {
+    No,
+    Yes,
+};
+ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath, Optional<Span<StringView>> environment = {});
 
 ErrorOr<int> socket(int domain, int type, int protocol);
 ErrorOr<void> bind(int sockfd, struct sockaddr const*, socklen_t);

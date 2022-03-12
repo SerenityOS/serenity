@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Kenneth Myhra <kennethmyhra@gmail.com>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Matthias Zimmerman <matthias291999@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FixedArray.h>
+#include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -903,6 +905,128 @@ ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
     if (::adjtime(delta, old_delta) < 0)
         return Error::from_syscall("adjtime"sv, -errno);
     return {};
+#endif
+}
+
+ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath search_in_path, Optional<Span<StringView>> environment)
+{
+#ifdef __serenity__
+    Syscall::SC_execve_params params;
+
+    auto argument_strings = TRY(FixedArray<Syscall::StringArgument>::try_create(arguments.size()));
+    for (size_t i = 0; i < arguments.size(); ++i) {
+        argument_strings[i] = { arguments[i].characters_without_null_termination(), arguments[i].length() };
+    }
+    params.arguments.strings = argument_strings.data();
+    params.arguments.length = argument_strings.size();
+
+    size_t env_count = 0;
+    if (environment.has_value()) {
+        env_count = environment->size();
+    } else {
+        for (size_t i = 0; environ[i]; ++i)
+            ++env_count;
+    }
+
+    auto environment_strings = TRY(FixedArray<Syscall::StringArgument>::try_create(env_count));
+    if (environment.has_value()) {
+        for (size_t i = 0; i < env_count; ++i) {
+            environment_strings[i] = { environment->at(i).characters_without_null_termination(), environment->at(i).length() };
+        }
+    } else {
+        for (size_t i = 0; i < env_count; ++i) {
+            environment_strings[i] = { environ[i], strlen(environ[i]) };
+        }
+    }
+    params.environment.strings = environment_strings.data();
+    params.environment.length = environment_strings.size();
+
+    auto run_exec = [](Syscall::SC_execve_params& params) -> ErrorOr<void> {
+        int rc = syscall(Syscall::SC_execve, &params);
+        if (rc < 0)
+            return Error::from_syscall("exec"sv, rc);
+        return {};
+    };
+
+    if (search_in_path == SearchInPath::Yes && !filename.contains('/')) {
+        StringView path = getenv("PATH");
+        if (path.is_empty())
+            path = "/bin:/usr/bin";
+        auto parts = path.split_view(':');
+        for (auto& part : parts) {
+            auto candidate = String::formatted("{}/{}", part, filename);
+            params.path = { candidate.characters(), candidate.length() };
+            auto result = run_exec(params);
+            if (result.is_error()) {
+                if (result.error().code() != ENOENT)
+                    return result.error();
+            } else {
+                VERIFY_NOT_REACHED();
+            }
+        }
+        return Error::from_syscall("exec"sv, -ENOENT);
+    } else {
+        params.path = { filename.characters_without_null_termination(), filename.length() };
+    }
+
+    TRY(run_exec(params));
+    VERIFY_NOT_REACHED();
+#else
+    String filename_string { filename };
+
+    auto argument_strings = TRY(FixedArray<String>::try_create(arguments.size()));
+    auto argv = TRY(FixedArray<char*>::try_create(arguments.size() + 1));
+    for (size_t i = 0; i < arguments.size(); ++i) {
+        argument_strings[i] = arguments[i].to_string();
+        argv[i] = const_cast<char*>(argument_strings[i].characters());
+    }
+    argv[arguments.size()] = nullptr;
+
+    int rc = 0;
+    if (environment.has_value()) {
+        auto environment_strings = TRY(FixedArray<String>::try_create(environment->size()));
+        auto envp = TRY(FixedArray<char*>::try_create(environment->size() + 1));
+        for (size_t i = 0; i < environment->size(); ++i) {
+            environment_strings[i] = environment->at(i).to_string();
+            envp[i] = const_cast<char*>(environment_strings[i].characters());
+        }
+        envp[environment->size()] = nullptr;
+
+        if (search_in_path == SearchInPath::Yes && !filename.contains('/')) {
+#    if defined(__APPLE__) || defined(__FreeBSD__)
+            // These BSDs don't support execvpe(), so we'll have to manually search the PATH.
+            // This is copy-pasted from LibC's execvpe() with minor changes.
+            ScopedValueRollback errno_rollback(errno);
+            String path = getenv("PATH");
+            if (path.is_empty())
+                path = "/bin:/usr/bin";
+            auto parts = path.split(':');
+            for (auto& part : parts) {
+                auto candidate = String::formatted("{}/{}", part, filename);
+                rc = ::execve(candidate.characters(), argv.data(), envp.data());
+                if (rc < 0 && errno != ENOENT) {
+                    errno_rollback.set_override_rollback_value(errno);
+                    return Error::from_syscall("exec"sv, rc);
+                }
+            }
+            errno_rollback.set_override_rollback_value(ENOENT);
+#    else
+            rc = ::execvpe(filename_string.characters(), argv.data(), envp.data());
+#    endif
+        } else {
+            rc = ::execve(filename_string.characters(), argv.data(), envp.data());
+        }
+
+    } else {
+        if (search_in_path == SearchInPath::Yes)
+            rc = ::execvp(filename_string.characters(), argv.data());
+        else
+            rc = ::execv(filename_string.characters(), argv.data());
+    }
+
+    if (rc < 0)
+        return Error::from_syscall("exec"sv, rc);
+    VERIFY_NOT_REACHED();
 #endif
 }
 
