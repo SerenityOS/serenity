@@ -81,8 +81,7 @@ void HTMLInputElement::set_checked(bool checked, ChangeSource change_source, Sho
         m_dirty_checkedness = true;
 
     m_checked = checked;
-    if (layout_node())
-        layout_node()->set_needs_display();
+    set_needs_style_update(true);
 
     if (should_run_activation_behavior == ShouldRunActivationBehavior::Yes)
         run_activation_behavior();
