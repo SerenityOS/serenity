@@ -125,19 +125,6 @@ void LineBuilder::update_last_line()
         break;
     }
 
-    float excess_horizontal_space_including_whitespace = excess_horizontal_space;
-    size_t whitespace_count = 0;
-    if (text_align == CSS::TextAlign::Justify) {
-        for (auto& fragment : line_box.fragments()) {
-            if (fragment.is_justifiable_whitespace()) {
-                ++whitespace_count;
-                excess_horizontal_space_including_whitespace += fragment.width();
-            }
-        }
-    }
-
-    float justified_space_width = whitespace_count > 0 ? (excess_horizontal_space_including_whitespace / static_cast<float>(whitespace_count)) : 0;
-
     auto fragment_baseline = [&](auto const& fragment) -> float {
         if (fragment.layout_node().is_text_node())
             return fragment.layout_node().font().baseline();
@@ -193,19 +180,6 @@ void LineBuilder::update_last_line()
         fragment.set_offset({ new_fragment_x, new_fragment_y });
 
         bottom = max(bottom, new_fragment_y + fragment.height() + fragment.border_box_bottom());
-
-        if (text_align == CSS::TextAlign::Justify
-            && fragment.is_justifiable_whitespace()
-            && fragment.width() != justified_space_width) {
-            float diff = justified_space_width - fragment.width();
-            fragment.set_width(justified_space_width);
-            // Shift subsequent sibling fragments to the right to adjust for change in width.
-            for (size_t j = i + 1; j < line_box.fragments().size(); ++j) {
-                auto offset = line_box.fragments()[j].offset();
-                offset.translate_by(diff, 0);
-                line_box.fragments()[j].set_offset(offset);
-            }
-        }
     }
 
     line_box.m_bottom = bottom;
