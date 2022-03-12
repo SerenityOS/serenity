@@ -11,5 +11,6 @@ interface HTMLTableSectionElement : HTMLElement {
 
     [SameObject] readonly attribute HTMLCollection rows;
     HTMLTableRowElement insertRow(optional long index = -1);
+    undefined deleteRow(long index);
 
 };
