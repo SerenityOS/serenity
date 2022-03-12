@@ -355,6 +355,11 @@ pushd "$DIR/Build/$ARCH"
 
     pushd binutils
         echo "XXX configure binutils"
+
+        # We don't need the documentation that is being built, so
+        # don't force people to install makeinfo just for that.
+        export ac_cv_prog_MAKEINFO=true
+
         buildstep "binutils/configure" "$DIR"/Tarballs/$BINUTILS_NAME/configure --prefix="$PREFIX" \
                                                  --target="$TARGET" \
                                                  --with-sysroot="$SYSROOT" \
