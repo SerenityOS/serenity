@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +9,7 @@
 #include "FileOperationProgressWidget.h"
 #include <AK/LexicalPath.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibGUI/MessageBox.h>
 #include <unistd.h>
 
@@ -35,32 +36,19 @@ void delete_paths(Vector<String> const& paths, bool should_confirm, GUI::Window*
             return;
     }
 
-    run_file_operation(FileOperation::Delete, paths, {}, parent_window);
+    if (run_file_operation(FileOperation::Delete, paths, {}, parent_window).is_error())
+        _exit(1);
 }
 
-void run_file_operation(FileOperation operation, Vector<String> const& sources, String const& destination, GUI::Window* parent_window)
+ErrorOr<void> run_file_operation(FileOperation operation, Vector<String> const& sources, String const& destination, GUI::Window* parent_window)
 {
-    int pipe_fds[2];
-    if (pipe(pipe_fds) < 0) {
-        perror("pipe");
-        VERIFY_NOT_REACHED();
-    }
+    auto pipe_fds = TRY(Core::System::pipe2(0));
 
-    pid_t child_pid = fork();
-    if (child_pid < 0) {
-        perror("fork");
-        VERIFY_NOT_REACHED();
-    }
+    pid_t child_pid = TRY(Core::System::fork());
 
     if (!child_pid) {
-        if (close(pipe_fds[0]) < 0) {
-            perror("close");
-            _exit(1);
-        }
-        if (dup2(pipe_fds[1], STDOUT_FILENO) < 0) {
-            perror("dup2");
-            _exit(1);
-        }
+        TRY(Core::System::close(pipe_fds[0]));
+        TRY(Core::System::dup2(pipe_fds[1], STDOUT_FILENO));
 
         Vector<char const*> file_operation_args;
         file_operation_args.append("/bin/FileOperation");
@@ -93,16 +81,13 @@ void run_file_operation(FileOperation operation, Vector<String> const& sources, 
         }
         VERIFY_NOT_REACHED();
     } else {
-        if (close(pipe_fds[1]) < 0) {
-            perror("close");
-            _exit(1);
-        }
+        TRY(Core::System::close(pipe_fds[1]));
     }
 
-    auto window = GUI::Window::construct();
-    file_operation_windows.set(window);
+    auto window = TRY(GUI::Window::try_create());
+    TRY(file_operation_windows.try_set(window));
 
-    auto pipe_input_file = Core::File::construct();
+    auto pipe_input_file = TRY(Core::File::try_create());
     pipe_input_file->open(pipe_fds[0], Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
 
     switch (operation) {
@@ -119,11 +104,13 @@ void run_file_operation(FileOperation operation, Vector<String> const& sources, 
         VERIFY_NOT_REACHED();
     }
 
-    window->set_main_widget<FileOperationProgressWidget>(operation, pipe_input_file);
+    (void)TRY(window->try_set_main_widget<FileOperationProgressWidget>(operation, pipe_input_file));
     window->resize(320, 190);
     if (parent_window)
         window->center_within(*parent_window);
     window->show();
+
+    return {};
 }
 
 }
