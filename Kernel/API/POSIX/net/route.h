@@ -14,6 +14,7 @@ extern "C" {
 #endif
 
 struct rtentry {
+    struct sockaddr rt_dst;     /* the target address */
     struct sockaddr rt_gateway; /* the gateway address */
     struct sockaddr rt_genmask; /* the target network mask */
     unsigned short int rt_flags;
