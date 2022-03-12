@@ -53,8 +53,11 @@ public:
     String const& name() const { return m_name; }
     void set_name(String);
 
-    void set_content_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap);
-    void set_mask_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap);
+    void flip(Gfx::Orientation orientation);
+    void rotate(Gfx::RotationDirection direction);
+    void crop(Gfx::IntRect const& rect);
+
+    ErrorOr<void> try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask);
 
     void did_modify_bitmap(Gfx::IntRect const& = {});
 
