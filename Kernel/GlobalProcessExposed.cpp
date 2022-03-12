@@ -100,6 +100,34 @@ private:
     }
 };
 
+class ProcFSRoute final : public ProcFSGlobalInformation {
+public:
+    static NonnullRefPtr<ProcFSRoute> must_create();
+
+private:
+    ProcFSRoute();
+    virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
+    {
+        auto array = TRY(JsonArraySerializer<>::try_create(builder));
+        TRY(routing_table().with([&](auto const& table) -> ErrorOr<void> {
+            for (auto& it : table) {
+                auto obj = TRY(array.add_object());
+                auto destination = TRY(it.destination.to_string());
+                TRY(obj.add("destination", destination->view()));
+                auto gateway = TRY(it.gateway.to_string());
+                TRY(obj.add("gateway", gateway->view()));
+                auto netmask = TRY(it.netmask.to_string());
+                TRY(obj.add("genmask", netmask->view()));
+                TRY(obj.add("interface", it.adapter->name()));
+                TRY(obj.finish());
+            }
+            return {};
+        }));
+        TRY(array.finish());
+        return {};
+    }
+};
+
 class ProcFSTCP final : public ProcFSGlobalInformation {
 public:
     static NonnullRefPtr<ProcFSTCP> must_create();
@@ -217,6 +245,10 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSARP> ProcFSARP::must_create()
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSARP).release_nonnull();
 }
+UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRoute> ProcFSRoute::must_create()
+{
+    return adopt_ref_if_nonnull(new (nothrow) ProcFSRoute).release_nonnull();
+}
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSTCP> ProcFSTCP::must_create()
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSTCP).release_nonnull();
@@ -235,6 +267,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSNetworkDirectory> ProcFSNetworkDirectory::m
     auto directory = adopt_ref(*new (nothrow) ProcFSNetworkDirectory(parent_directory));
     directory->m_components.append(ProcFSAdapters::must_create());
     directory->m_components.append(ProcFSARP::must_create());
+    directory->m_components.append(ProcFSRoute::must_create());
     directory->m_components.append(ProcFSTCP::must_create());
     directory->m_components.append(ProcFSLocalNet::must_create());
     directory->m_components.append(ProcFSUDP::must_create());
@@ -247,6 +280,10 @@ UNMAP_AFTER_INIT ProcFSAdapters::ProcFSAdapters()
 }
 UNMAP_AFTER_INIT ProcFSARP::ProcFSARP()
     : ProcFSGlobalInformation("arp"sv)
+{
+}
+UNMAP_AFTER_INIT ProcFSRoute::ProcFSRoute()
+    : ProcFSGlobalInformation("route"sv)
 {
 }
 UNMAP_AFTER_INIT ProcFSTCP::ProcFSTCP()
