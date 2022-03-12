@@ -59,6 +59,8 @@ private:
     bool has_definite_cross_size(Box const&) const;
     float specified_main_size(Box const&) const;
     float specified_cross_size(Box const&) const;
+    float resolved_definite_main_size(Box const&) const;
+    float resolved_definite_cross_size(Box const&) const;
     bool has_main_min_size(Box const&) const;
     bool has_cross_min_size(Box const&) const;
     float specified_main_max_size(Box const&) const;

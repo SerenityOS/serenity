@@ -197,6 +197,30 @@ float FlexFormattingContext::specified_cross_size(Box const& box) const
     return is_row_layout() ? box_state.content_height : box_state.content_width;
 }
 
+float FlexFormattingContext::resolved_definite_cross_size(Box const& box) const
+{
+    if (is_row_layout())
+        VERIFY(box.has_definite_height());
+    else
+        VERIFY(box.has_definite_width());
+    auto const& cross_value = is_row_layout() ? box.computed_values().height() : box.computed_values().width();
+    if (cross_value->is_length())
+        return cross_value->length().to_px(box);
+    return cross_value->resolved(box, CSS::Length::make_px(specified_cross_size(flex_container()))).to_px(box);
+}
+
+float FlexFormattingContext::resolved_definite_main_size(Box const& box) const
+{
+    if (is_row_layout())
+        VERIFY(box.has_definite_width());
+    else
+        VERIFY(box.has_definite_height());
+    auto const& cross_value = is_row_layout() ? box.computed_values().width() : box.computed_values().height();
+    if (cross_value->is_length())
+        return cross_value->length().to_px(box);
+    return cross_value->resolved(box, CSS::Length::make_px(specified_main_size(flex_container()))).to_px(box);
+}
+
 bool FlexFormattingContext::has_main_min_size(Box const& box) const
 {
     auto value = is_row_layout() ? box.computed_values().min_width() : box.computed_values().min_height();
