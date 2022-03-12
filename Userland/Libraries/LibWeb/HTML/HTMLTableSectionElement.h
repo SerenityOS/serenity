@@ -19,6 +19,7 @@ public:
     virtual ~HTMLTableSectionElement() override;
 
     NonnullRefPtr<DOM::HTMLCollection> rows() const;
+    DOM::ExceptionOr<NonnullRefPtr<HTMLTableRowElement>> insert_row(long index);
 };
 
 }

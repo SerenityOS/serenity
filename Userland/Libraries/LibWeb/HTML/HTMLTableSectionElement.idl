@@ -1,5 +1,6 @@
 #import <DOM/HTMLCollection.idl>
 #import <HTML/HTMLElement.idl>
+#import <HTML/HTMLTableRowElement.idl>
 
 interface HTMLTableSectionElement : HTMLElement {
 
@@ -9,5 +10,6 @@ interface HTMLTableSectionElement : HTMLElement {
     [Reflect=valign] attribute DOMString vAlign;
 
     [SameObject] readonly attribute HTMLCollection rows;
+    HTMLTableRowElement insertRow(optional long index = -1);
 
 };
