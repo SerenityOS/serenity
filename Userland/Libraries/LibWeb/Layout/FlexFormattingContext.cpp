@@ -1032,13 +1032,17 @@ void FlexFormattingContext::determine_flex_container_used_cross_size(float const
     } else {
         // Flex container has indefinite cross size.
         auto cross_size_value = is_row_layout() ? flex_container().computed_values().height() : flex_container().computed_values().width();
-        if (!cross_size_value.has_value() || (cross_size_value->is_length() && cross_size_value->length().is_auto())) {
+        if (!cross_size_value.has_value() || (cross_size_value->is_length() && cross_size_value->length().is_auto()) || cross_size_value->is_percentage()) {
             // If a content-based cross size is needed, use the sum of the flex lines' cross sizes.
             float sum_of_flex_lines_cross_sizes = 0;
             for (auto& flex_line : m_flex_lines) {
                 sum_of_flex_lines_cross_sizes += flex_line.cross_size;
             }
             cross_size = sum_of_flex_lines_cross_sizes;
+
+            if (cross_size_value->is_percentage()) {
+                // FIXME: Handle percentage values here! Right now we're just treating them as "auto"
+            }
         } else {
             // Otherwise, resolve the indefinite size at this point.
             cross_size = cross_size_value->resolved(flex_container(), CSS::Length::make_px(specified_cross_size(*flex_container().containing_block()))).to_px(flex_container());
