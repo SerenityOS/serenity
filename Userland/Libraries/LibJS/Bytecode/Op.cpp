@@ -400,22 +400,15 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
 
     auto this_value = interpreter.reg(m_this_value);
 
+    MarkedVector<Value> argument_values { interpreter.vm().heap() };
+    for (size_t i = 0; i < m_argument_count; ++i)
+        argument_values.append(interpreter.reg(m_arguments[i]));
+
     Value return_value;
-
-    if (m_argument_count == 0 && m_type == CallType::Call) {
-        auto return_value_or_error = call(interpreter.global_object(), function, this_value);
-        if (!return_value_or_error.is_error())
-            return_value = return_value_or_error.release_value();
-    } else {
-        MarkedVector<Value> argument_values { interpreter.vm().heap() };
-        for (size_t i = 0; i < m_argument_count; ++i)
-            argument_values.append(interpreter.reg(m_arguments[i]));
-
-        if (m_type == CallType::Call)
-            return_value = TRY(call(interpreter.global_object(), function, this_value, move(argument_values)));
-        else
-            return_value = TRY(construct(interpreter.global_object(), function, move(argument_values)));
-    }
+    if (m_type == CallType::Call)
+        return_value = TRY(call(interpreter.global_object(), function, this_value, move(argument_values)));
+    else
+        return_value = TRY(construct(interpreter.global_object(), function, move(argument_values)));
 
     interpreter.accumulator() = return_value;
     return {};
