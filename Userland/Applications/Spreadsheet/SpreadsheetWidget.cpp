@@ -253,24 +253,13 @@ void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
 
 void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 {
-    RefPtr<GUI::Widget> first_tab_widget;
     for (auto& sheet : new_sheets) {
-        auto& tab = m_tab_widget->add_tab<SpreadsheetView>(sheet.name(), sheet);
-        if (!first_tab_widget)
-            first_tab_widget = &tab;
-    }
-
-    auto change = [&](auto& selected_widget) {
-        if (m_selected_view) {
-            m_selected_view->on_selection_changed = nullptr;
-            m_selected_view->on_selection_dropped = nullptr;
-        }
-        m_selected_view = &static_cast<SpreadsheetView&>(selected_widget);
-        m_selected_view->model()->on_cell_data_change = [&](auto& cell, auto& previous_data) {
+        auto& new_view = m_tab_widget->add_tab<SpreadsheetView>(sheet.name(), sheet);
+        new_view.model()->on_cell_data_change = [&](auto& cell, auto& previous_data) {
             undo_stack().push(make<CellUndoCommand>(cell, previous_data));
             window()->set_modified(true);
         };
-        m_selected_view->on_selection_changed = [&](Vector<Position>&& selection) {
+        new_view.on_selection_changed = [&](Vector<Position>&& selection) {
             auto* sheet_ptr = m_selected_view->sheet_if_available();
             // How did this even happen?
             VERIFY(sheet_ptr);
@@ -335,7 +324,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             };
             static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&first_cell);
         };
-        m_selected_view->on_selection_dropped = [&]() {
+        new_view.on_selection_dropped = [&]() {
             m_current_cell_label->set_enabled(false);
             m_current_cell_label->set_text({});
             m_cell_value_editor->on_change = nullptr;
@@ -349,13 +338,10 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
             static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
         };
-    };
+    }
 
-    if (first_tab_widget)
-        change(*first_tab_widget);
-
-    m_tab_widget->on_change = [change = move(change)](auto& selected_widget) {
-        change(selected_widget);
+    m_tab_widget->on_change = [this](auto& selected_widget) {
+        m_selected_view = &static_cast<SpreadsheetView&>(selected_widget);
     };
 
     m_tab_widget->on_context_menu_request = [&](auto& widget, auto& event) {
