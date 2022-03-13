@@ -471,7 +471,7 @@ auto DynamicObject::lookup_symbol(HashSymbol const& symbol) const -> Optional<Sy
     auto symbol_result = result.value();
     if (symbol_result.is_undefined())
         return {};
-    return SymbolLookupResult { symbol_result.value(), symbol_result.size(), symbol_result.address(), symbol_result.bind(), this };
+    return SymbolLookupResult { symbol_result.value(), symbol_result.size(), symbol_result.address(), symbol_result.bind(), symbol_result.type(), this };
 }
 
 NonnullRefPtr<DynamicObject> DynamicObject::create(String const& filename, VirtualAddress base_address, VirtualAddress dynamic_section_address)
@@ -495,6 +495,9 @@ VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
     auto result = DynamicLoader::lookup_symbol(symbol);
     if (result.has_value()) {
         symbol_location = result.value().address;
+
+        if (result.value().type == STT_GNU_IFUNC)
+            symbol_location = VirtualAddress { reinterpret_cast<IfuncResolver>(symbol_location.get())() };
     } else if (symbol.bind() != STB_WEAK) {
         dbgln("did not find symbol while doing relocations for library {}: {}", m_filename, symbol.name());
         VERIFY_NOT_REACHED();

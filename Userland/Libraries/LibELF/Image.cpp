@@ -362,7 +362,7 @@ Optional<Image::Symbol> Image::find_demangled_function(StringView name) const
 {
     Optional<Image::Symbol> found;
     for_each_symbol([&](Image::Symbol const& symbol) {
-        if (symbol.type() != STT_FUNC)
+        if (symbol.type() != STT_FUNC && symbol.type() != STT_GNU_IFUNC)
             return IterationDecision::Continue;
         if (symbol.is_undefined())
             return IterationDecision::Continue;
