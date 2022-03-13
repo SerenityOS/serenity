@@ -26,18 +26,22 @@ StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)
     , m_parent(parent)
 {
     VERIFY(m_parent != this);
-    if (m_parent) {
+    if (m_parent)
         m_parent->m_children.append(this);
+}
 
-        // FIXME: Don't sort on every append..
-        quick_sort(m_parent->m_children, [](auto& a, auto& b) {
-            auto a_z_index = a->m_box.computed_values().z_index().value_or(0);
-            auto b_z_index = b->m_box.computed_values().z_index().value_or(0);
-            if (a_z_index == b_z_index)
-                return a->m_box.is_before(b->m_box);
-            return a_z_index < b_z_index;
-        });
-    }
+void StackingContext::sort()
+{
+    quick_sort(m_children, [](auto& a, auto& b) {
+        auto a_z_index = a->m_box.computed_values().z_index().value_or(0);
+        auto b_z_index = b->m_box.computed_values().z_index().value_or(0);
+        if (a_z_index == b_z_index)
+            return a->m_box.is_before(b->m_box);
+        return a_z_index < b_z_index;
+    });
+
+    for (auto* child : m_children)
+        child->sort();
 }
 
 void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box, StackingContextPaintPhase phase) const

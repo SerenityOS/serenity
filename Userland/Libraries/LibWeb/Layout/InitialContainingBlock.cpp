@@ -36,6 +36,8 @@ void InitialContainingBlock::build_stacking_context_tree()
         const_cast<Painting::PaintableBox*>(box.paint_box())->set_stacking_context(make<Painting::StackingContext>(box, parent_context));
         return IterationDecision::Continue;
     });
+
+    const_cast<Painting::PaintableWithLines*>(paint_box())->stacking_context()->sort();
 }
 
 void InitialContainingBlock::paint_all_phases(PaintContext& context)
