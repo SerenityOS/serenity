@@ -34,7 +34,7 @@ public:
 
     using WrapperType = Bindings::XMLHttpRequestWrapper;
 
-    static NonnullRefPtr<XMLHttpRequest> create(DOM::Window& window)
+    static NonnullRefPtr<XMLHttpRequest> create(HTML::Window& window)
     {
         return adopt_ref(*new XMLHttpRequest(window));
     }
@@ -86,9 +86,9 @@ private:
     Optional<Vector<String>> get_decode_and_split(String const& header_name, HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const;
     Optional<MimeSniff::MimeType> extract_mime_type(HashMap<String, String, CaseInsensitiveStringTraits> const& header_list) const;
 
-    explicit XMLHttpRequest(DOM::Window&);
+    explicit XMLHttpRequest(HTML::Window&);
 
-    NonnullRefPtr<DOM::Window> m_window;
+    NonnullRefPtr<HTML::Window> m_window;
 
     ReadyState m_ready_state { ReadyState::Unsent };
     unsigned m_status { 0 };

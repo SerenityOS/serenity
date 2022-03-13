@@ -387,7 +387,10 @@ void Node::remove(bool suppress_observers)
     // FIXME: For each live range whose start node is parent and start offset is greater than index, decrease its start offset by 1.
     // FIXME: For each live range whose end node is parent and end offset is greater than index, decrease its end offset by 1.
 
-    // FIXME: For each NodeIterator object iterator whose root’s node document is node’s node document, run the NodeIterator pre-removing steps given node and iterator.
+    // For each NodeIterator object iterator whose root’s node document is node’s node document, run the NodeIterator pre-removing steps given node and iterator.
+    document().for_each_node_iterator([&](NodeIterator& node_iterator) {
+        node_iterator.run_pre_removing_steps(*this);
+    });
 
     // FIXME: Let oldPreviousSibling be node’s previous sibling. (Currently unused so not included)
     // FIXME: Let oldNextSibling be node’s next sibling. (Currently unused so not included)
@@ -424,6 +427,8 @@ void Node::remove(bool suppress_observers)
     }
 
     parent->children_changed();
+
+    document().invalidate_style();
 }
 
 // https://dom.spec.whatwg.org/#concept-node-replace
@@ -771,6 +776,13 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
             child.serialize_tree_as_json(child_object);
             MUST(child_object.finish());
         });
+
+        // Pseudo-elements don't have DOM nodes,so we have to add them separately.
+        if (is_element()) {
+            auto const* element = static_cast<DOM::Element const*>(this);
+            element->serialize_pseudo_elements_as_json(children);
+        }
+
         MUST(children.finish());
     }
 }
@@ -996,6 +1008,22 @@ size_t Node::length() const
 
     // 3. Return the number of node’s children.
     return child_count();
+}
+
+Painting::Paintable const* Node::paintable() const
+{
+    if (!layout_node())
+        return nullptr;
+    return layout_node()->paintable();
+}
+
+Painting::PaintableBox const* Node::paint_box() const
+{
+    if (!layout_node())
+        return nullptr;
+    if (!layout_node()->is_box())
+        return nullptr;
+    return static_cast<Layout::Box const&>(*layout_node()).paint_box();
 }
 
 }

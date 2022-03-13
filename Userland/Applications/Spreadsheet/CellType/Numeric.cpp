@@ -28,7 +28,7 @@ JS::ThrowCompletionOr<String> NumericCell::display(Cell& cell, const CellTypeMet
             string = format_double(metadata.format.characters(), TRY(value.to_double(cell.sheet().global_object())));
 
         if (metadata.length >= 0)
-            return string.substring(0, metadata.length);
+            return string.substring(0, min(string.length(), metadata.length));
 
         return string;
     });

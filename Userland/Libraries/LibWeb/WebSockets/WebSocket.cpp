@@ -18,11 +18,11 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/CloseEvent.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/MessageEvent.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 
@@ -67,7 +67,7 @@ DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(
     return WebSocket::create(window.impl(), url_record);
 }
 
-WebSocket::WebSocket(DOM::Window& window, AK::URL& url)
+WebSocket::WebSocket(HTML::Window& window, AK::URL& url)
     : EventTarget()
     , m_window(window)
 {

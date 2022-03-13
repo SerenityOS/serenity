@@ -6,7 +6,6 @@
 
 #include <AK/Demangle.h>
 #include <LibGfx/FontDatabase.h>
-#include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -80,11 +79,6 @@ bool Node::establishes_stacking_context() const
     return computed_values().opacity() < 1.0f;
 }
 
-HitTestResult Node::hit_test(Gfx::IntPoint const&, HitTestType) const
-{
-    VERIFY_NOT_REACHED();
-}
-
 HTML::BrowsingContext const& Node::browsing_context() const
 {
     VERIFY(document().browsing_context());
@@ -112,7 +106,7 @@ InitialContainingBlock& Node::root()
 void Node::set_needs_display()
 {
     if (auto* block = containing_block()) {
-        block->for_each_fragment([&](auto& fragment) {
+        block->paint_box()->for_each_fragment([&](auto& fragment) {
             if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
                 browsing_context().set_needs_display(enclosing_int_rect(fragment.absolute_rect()));
             }
@@ -124,11 +118,11 @@ void Node::set_needs_display()
 Gfx::FloatPoint Node::box_type_agnostic_position() const
 {
     if (is<Box>(*this))
-        return verify_cast<Box>(*this).absolute_position();
+        return verify_cast<Box>(*this).paint_box()->absolute_position();
     VERIFY(is_inline());
     Gfx::FloatPoint position;
     if (auto* block = containing_block()) {
-        block->for_each_fragment([&](auto& fragment) {
+        block->paint_box()->for_each_fragment([&](auto& fragment) {
             if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
                 position = fragment.absolute_rect().location();
                 return IterationDecision::Break;
@@ -183,6 +177,43 @@ NodeWithStyle::NodeWithStyle(DOM::Document& document, DOM::Node* node, CSS::Comp
 {
     m_has_style = true;
     m_font = Gfx::FontDatabase::default_font();
+}
+
+void NodeWithStyle::did_insert_into_layout_tree(CSS::StyleProperties const& style)
+{
+    // https://drafts.csswg.org/css-sizing-3/#definite
+    auto is_definite_size = [&](CSS::PropertyID property_id, bool width) {
+        // A size that can be determined without performing layout; that is,
+        // a <length>,
+        // a measure of text (without consideration of line-wrapping),
+        // a size of the initial containing block,
+        // or a <percentage> or other formula (such as the “stretch-fit” sizing of non-replaced blocks [CSS2]) that is resolved solely against definite sizes.
+        auto maybe_value = style.property(property_id);
+
+        auto const* containing_block = this->containing_block();
+        auto containing_block_has_definite_size = containing_block && (width ? containing_block->m_has_definite_width : containing_block->m_has_definite_height);
+
+        if (!maybe_value.has_value() || maybe_value.value()->has_auto()) {
+            // NOTE: The width of a non-flex-item block is considered definite if it's auto and the containing block has definite width.
+            if (width && is_block_container() && parent() && !parent()->computed_values().display().is_flex_inside())
+                return containing_block_has_definite_size;
+            return false;
+        }
+
+        auto maybe_length_percentage = style.length_percentage(property_id);
+        if (!maybe_length_percentage.has_value())
+            return false;
+        auto length_percentage = maybe_length_percentage.release_value();
+        if (length_percentage.is_length())
+            return true;
+        if (length_percentage.is_percentage())
+            return containing_block_has_definite_size;
+        // FIXME: Determine if calc() value is definite.
+        return false;
+    };
+
+    m_has_definite_width = is_definite_size(CSS::PropertyID::Width, true);
+    m_has_definite_height = is_definite_size(CSS::PropertyID::Height, false);
 }
 
 void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
@@ -371,6 +402,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (text_align.has_value())
         computed_values.set_text_align(text_align.value());
 
+    auto text_justify = specified_style.text_justify();
+    if (text_align.has_value())
+        computed_values.set_text_justify(text_justify.value());
+
     auto white_space = specified_style.white_space();
     if (white_space.has_value())
         computed_values.set_white_space(white_space.value());
@@ -438,27 +473,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (computed_values.opacity() == 0)
         m_visible = false;
 
-    auto is_definite_size = [&](CSS::PropertyID property_id, bool width) {
-        auto maybe_value = specified_style.property(property_id);
-        if (!maybe_value.has_value() || maybe_value.value()->has_auto())
-            return false;
-        auto maybe_length_percentage = specified_style.length_percentage(property_id);
-        if (!maybe_length_percentage.has_value())
-            return false;
-        auto length_percentage = maybe_length_percentage.release_value();
-        if (length_percentage.is_length())
-            return true;
-        if (length_percentage.is_percentage()) {
-            auto* containing_block = this->containing_block();
-            return containing_block && (width ? containing_block->m_has_definite_width : containing_block->m_has_definite_height);
-        }
-        // FIXME: Determine if calc() value is definite.
-        return false;
-    };
-
-    m_has_definite_width = is_definite_size(CSS::PropertyID::Width, true);
-    m_has_definite_height = is_definite_size(CSS::PropertyID::Height, false);
-
     if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::Width); maybe_length_percentage.has_value())
         computed_values.set_width(maybe_length_percentage.release_value());
     if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::MinWidth); maybe_length_percentage.has_value())
@@ -514,32 +528,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     }
 }
 
-void Node::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)
-{
-}
-
-void Node::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)
-{
-}
-
-void Node::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned)
-{
-}
-
-bool Node::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
-{
-    if (auto* containing_block = this->containing_block()) {
-        if (!containing_block->is_scrollable())
-            return false;
-        auto new_offset = containing_block->scroll_offset();
-        new_offset.translate_by(wheel_delta_x, wheel_delta_y);
-        containing_block->set_scroll_offset(new_offset);
-        return true;
-    }
-
-    return false;
-}
-
 bool Node::is_root_element() const
 {
     if (is_anonymous())
@@ -582,6 +570,16 @@ NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
     wrapper->m_font = m_font;
     wrapper->m_line_height = m_line_height;
     return wrapper;
+}
+
+void Node::set_paintable(RefPtr<Painting::Paintable> paintable)
+{
+    m_paintable = move(paintable);
+}
+
+RefPtr<Painting::Paintable> Node::create_paintable() const
+{
+    return nullptr;
 }
 
 }

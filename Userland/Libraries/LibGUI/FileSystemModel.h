@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,7 +44,7 @@ public:
     };
 
     struct Node {
-        ~Node() { }
+        ~Node() = default;
 
         String name;
         String symlink_target;
@@ -102,7 +103,7 @@ public:
     {
         return adopt_ref(*new FileSystemModel(root_path, mode));
     }
-    virtual ~FileSystemModel() override;
+    virtual ~FileSystemModel() override = default;
 
     String root_path() const { return m_root_path; }
     void set_root_path(String);

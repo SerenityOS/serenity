@@ -1,0 +1,11 @@
+--- apl-1.8/src/Performance.cc
++++ apl-1.8/src/Performance.cc
+@@ -224,7 +224,7 @@ const uint64_t subsq_avg_AB = Statistics_record::average(sum_subsq_cycles_AB,
+    //
+ #define perfo_1(id, ab, _name, _thr)
+ #define perfo_2(id, ab, _name, _thr)
+-#define perfo_3(id, ab, _name, _thr) fs_ ## id ## ab.print(out);
++#define perfo_3(id, ab, _name, _thr)
+ #define perfo_4(id, ab, name, thr) perfo_3(id, ab, name, thr)
+ 
+ #include "Performance.def"

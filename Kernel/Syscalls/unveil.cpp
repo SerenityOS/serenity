@@ -30,11 +30,11 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*>
     auto params = TRY(copy_typed_from_user(user_params));
 
     if (!params.path.characters && !params.permissions.characters) {
-        m_veil_state = VeilState::Locked;
+        m_unveil_data.with([&](auto& unveil_data) { unveil_data.state = VeilState::Locked; });
         return 0;
     }
 
-    if (m_veil_state == VeilState::Locked)
+    if (veil_state() == VeilState::Locked)
         return EPERM;
 
     if (!params.path.characters || !params.permissions.characters)
@@ -94,39 +94,41 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*>
 
     auto path_parts = KLexicalPath::parts(new_unveiled_path->view());
     auto it = path_parts.begin();
-    auto& matching_node = m_unveiled_paths.traverse_until_last_accessible_node(it, path_parts.end());
-    if (it.is_end()) {
-        // If the path has already been explicitly unveiled, do not allow elevating its permissions.
-        if (matching_node.was_explicitly_unveiled()) {
-            if (new_permissions & ~matching_node.permissions())
-                return EPERM;
+    return m_unveil_data.with([&](auto& unveil_data) -> ErrorOr<FlatPtr> {
+        auto& matching_node = unveil_data.paths.traverse_until_last_accessible_node(it, path_parts.end());
+        if (it.is_end()) {
+            // If the path has already been explicitly unveiled, do not allow elevating its permissions.
+            if (matching_node.was_explicitly_unveiled()) {
+                if (new_permissions & ~matching_node.permissions())
+                    return EPERM;
+            }
+
+            // It is possible that nodes that are "grandchildren" of the matching node have already been unveiled.
+            // This means that there may be intermediate nodes between this one and the unveiled "grandchildren"
+            // that inherited the current node's previous permissions. Those nodes now need their permissions
+            // updated to match the current node.
+            if (matching_node.permissions() != new_permissions)
+                update_intermediate_node_permissions(matching_node, (UnveilAccess)new_permissions);
+
+            matching_node.metadata_value().explicitly_unveiled = true;
+            matching_node.metadata_value().permissions = (UnveilAccess)new_permissions;
+            unveil_data.state = VeilState::Dropped;
+            return 0;
         }
 
-        // It is possible that nodes that are "grandchildren" of the matching node have already been unveiled.
-        // This means that there may be intermediate nodes between this one and the unveiled "grandchildren"
-        // that inherited the current node's previous permissions. Those nodes now need their permissions
-        // updated to match the current node.
-        if (matching_node.permissions() != new_permissions)
-            update_intermediate_node_permissions(matching_node, (UnveilAccess)new_permissions);
+        TRY(matching_node.insert(
+            it,
+            path_parts.end(),
+            { new_unveiled_path.release_nonnull(), (UnveilAccess)new_permissions, true },
+            [](auto& parent, auto& it) -> ErrorOr<Optional<UnveilMetadata>> {
+                auto path = TRY(KString::formatted("{}/{}", parent.path(), *it));
+                return UnveilMetadata(move(path), parent.permissions(), false);
+            }));
 
-        matching_node.metadata_value().explicitly_unveiled = true;
-        matching_node.metadata_value().permissions = (UnveilAccess)new_permissions;
-        m_veil_state = VeilState::Dropped;
+        VERIFY(unveil_data.state != VeilState::Locked);
+        unveil_data.state = VeilState::Dropped;
         return 0;
-    }
-
-    TRY(matching_node.insert(
-        it,
-        path_parts.end(),
-        { new_unveiled_path.release_nonnull(), (UnveilAccess)new_permissions, true },
-        [](auto& parent, auto& it) -> ErrorOr<Optional<UnveilMetadata>> {
-            auto path = TRY(KString::formatted("{}/{}", parent.path(), *it));
-            return UnveilMetadata(move(path), parent.permissions(), false);
-        }));
-
-    VERIFY(m_veil_state != VeilState::Locked);
-    m_veil_state = VeilState::Dropped;
-    return 0;
+    });
 }
 
 }

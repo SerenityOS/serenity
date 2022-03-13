@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,7 +38,7 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_bitmap(Image& image, Nonnul
 
 ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_snapshot(Image& image, Layer const& layer)
 {
-    auto bitmap = TRY(layer.bitmap().clone());
+    auto bitmap = TRY(layer.content_bitmap().clone());
     auto snapshot = TRY(try_create_with_bitmap(image, move(bitmap), layer.name()));
 
     /*
@@ -57,13 +58,15 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_snapshot(Image& image, Layer con
 Layer::Layer(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, String name)
     : m_image(image)
     , m_name(move(name))
-    , m_bitmap(move(bitmap))
+    , m_content_bitmap(move(bitmap))
+    , m_cached_display_bitmap(m_content_bitmap)
 {
 }
 
 void Layer::did_modify_bitmap(Gfx::IntRect const& rect)
 {
     m_image.layer_did_modify_bitmap({}, *this, rect);
+    update_cached_bitmap();
 }
 
 void Layer::set_visible(bool visible)
@@ -110,12 +113,12 @@ RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
             auto layer_point = image_point - m_location;
             auto result_point = image_point - selection_rect.top_left();
 
-            if (!m_bitmap->physical_rect().contains(layer_point)) {
+            if (!m_content_bitmap->physical_rect().contains(layer_point)) {
                 result->set_pixel(result_point, Gfx::Color::Transparent);
                 continue;
             }
 
-            auto pixel = m_bitmap->get_pixel(layer_point);
+            auto pixel = m_content_bitmap->get_pixel(layer_point);
 
             // Widen to int before multiplying to avoid overflow issues
             auto pixel_alpha = static_cast<int>(pixel.alpha());
@@ -132,11 +135,75 @@ RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
 
 void Layer::erase_selection(Selection const& selection)
 {
-    Gfx::Painter painter { bitmap() };
+    Gfx::Painter painter { content_bitmap() };
     auto const image_and_selection_intersection = m_image.rect().intersected(selection.bounding_rect());
     auto const translated_to_layer_space = image_and_selection_intersection.translated(-location());
     painter.clear_rect(translated_to_layer_space, Color::Transparent);
     did_modify_bitmap(translated_to_layer_space);
+}
+
+void Layer::set_content_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
+{
+    m_content_bitmap = move(bitmap);
+    update_cached_bitmap();
+}
+
+void Layer::set_mask_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
+{
+    m_mask_bitmap = move(bitmap);
+    update_cached_bitmap();
+}
+
+void Layer::update_cached_bitmap()
+{
+    if (!is_masked()) {
+        if (m_content_bitmap.ptr() == m_cached_display_bitmap.ptr())
+            return;
+        m_cached_display_bitmap = m_content_bitmap;
+        return;
+    }
+
+    if (m_content_bitmap.ptr() == m_cached_display_bitmap.ptr())
+        m_cached_display_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size()));
+
+    // FIXME: This can probably be done nicer
+    m_cached_display_bitmap->fill(Color::Transparent);
+    for (int y = 0; y < size().height(); ++y) {
+        for (int x = 0; x < size().width(); ++x) {
+            auto opacity_multiplier = (float)m_mask_bitmap->get_pixel(x, y).to_grayscale().red() / 255;
+            auto content_color = m_content_bitmap->get_pixel(x, y);
+            content_color.set_alpha(content_color.alpha() * opacity_multiplier);
+            m_cached_display_bitmap->set_pixel(x, y, content_color);
+        }
+    }
+}
+
+void Layer::create_mask()
+{
+    m_mask_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size()));
+    m_mask_bitmap->fill(Gfx::Color::White);
+    update_cached_bitmap();
+}
+
+Gfx::Bitmap& Layer::currently_edited_bitmap()
+{
+    switch (edit_mode()) {
+    case EditMode::Mask:
+        if (is_masked())
+            return *mask_bitmap();
+        [[fallthrough]];
+    case EditMode::Content:
+        return content_bitmap();
+    }
+    VERIFY_NOT_REACHED();
+}
+
+void Layer::set_edit_mode(Layer::EditMode mode)
+{
+    if (m_edit_mode == mode)
+        return;
+
+    m_edit_mode = mode;
 }
 
 }

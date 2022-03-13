@@ -432,14 +432,24 @@ void HackStudioWidget::set_edit_mode(EditMode mode)
 
 NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu()
 {
-    m_new_file_actions.append(create_new_file_action("C++ Source File", "/res/icons/16x16/filetype-cplusplus.png", "cpp"));
-    m_new_file_actions.append(create_new_file_action("C++ Header File", "/res/icons/16x16/filetype-header.png", "h"));
-    m_new_file_actions.append(create_new_file_action("GML File", "/res/icons/16x16/filetype-gml.png", "gml"));
-    m_new_file_actions.append(create_new_file_action("JavaScript Source File", "/res/icons/16x16/filetype-javascript.png", "js"));
-    m_new_file_actions.append(create_new_file_action("HTML File", "/res/icons/16x16/filetype-html.png", "html"));
-    m_new_file_actions.append(create_new_file_action("CSS File", "/res/icons/16x16/filetype-css.png", "css"));
+    m_new_file_actions.append(create_new_file_action("&C++ Source File", "/res/icons/16x16/filetype-cplusplus.png", "cpp"));
+    m_new_file_actions.append(create_new_file_action("C++ &Header File", "/res/icons/16x16/filetype-header.png", "h"));
+    m_new_file_actions.append(create_new_file_action("&GML File", "/res/icons/16x16/filetype-gml.png", "gml"));
+    m_new_file_actions.append(create_new_file_action("P&ython Source File", "/res/icons/16x16/filetype-python.png", "py"));
+    m_new_file_actions.append(create_new_file_action("Ja&va Source File", "/res/icons/16x16/filetype-java.png", "java"));
+    m_new_file_actions.append(create_new_file_action("C Source File", "/res/icons/16x16/filetype-c.png", "c"));
 
-    m_new_plain_file_action = create_new_file_action("Plain File", "/res/icons/16x16/new.png", "");
+    m_new_file_actions.append(create_new_file_action("&JavaScript Source File", "/res/icons/16x16/filetype-javascript.png", "js"));
+    m_new_file_actions.append(create_new_file_action("HT&ML File", "/res/icons/16x16/filetype-html.png", "html"));
+    m_new_file_actions.append(create_new_file_action("C&SS File", "/res/icons/16x16/filetype-css.png", "css"));
+    m_new_file_actions.append(create_new_file_action("&PHP File", "/res/icons/16x16/filetype-php.png", "php"));
+    m_new_file_actions.append(create_new_file_action("&Wasm File", "/res/icons/16x16/filetype-wasm.png", "wasm"));
+
+    m_new_file_actions.append(create_new_file_action("&INI File", "/res/icons/16x16/filetype-ini.png", "ini"));
+    m_new_file_actions.append(create_new_file_action("JS&ON File", "/res/icons/16x16/filetype-json.png", "json"));
+    m_new_file_actions.append(create_new_file_action("Mark&down File", "/res/icons/16x16/filetype-markdown.png", "md"));
+
+    m_new_plain_file_action = create_new_file_action("Plain &File", "/res/icons/16x16/new.png", "");
 
     m_open_selected_action = create_open_selected_action();
     m_show_in_file_manager_action = create_show_in_file_manager_action();
@@ -451,7 +461,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
     });
     auto project_tree_view_context_menu = GUI::Menu::construct("Project Files");
 
-    auto& new_file_submenu = project_tree_view_context_menu->add_submenu("New");
+    auto& new_file_submenu = project_tree_view_context_menu->add_submenu("N&ew...");
     for (auto& new_file_action : m_new_file_actions) {
         new_file_submenu.add_action(new_file_action);
     }
@@ -512,7 +522,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action(String const
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
 {
-    return GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png").release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+    return GUI::Action::create("&Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png").release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         String directory_name;
         if (GUI::InputBox::show(window(), directory_name, "Enter name of new directory:", "Add new folder to project") != GUI::InputBox::ExecOK)
             return;
@@ -543,7 +553,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_selected_action()
 {
-    auto open_selected_action = GUI::Action::create("Open", [this](const GUI::Action&) {
+    auto open_selected_action = GUI::Action::create("&Open", [this](const GUI::Action&) {
         auto files = selected_file_paths();
         for (auto& file : files)
             open_file(file);
@@ -555,7 +565,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_selected_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_show_in_file_manager_action()
 {
-    auto show_in_file_manager_action = GUI::Action::create("Show in File Manager", [this](const GUI::Action&) {
+    auto show_in_file_manager_action = GUI::Action::create("Show in File &Manager", [this](const GUI::Action&) {
         auto files = selected_file_paths();
         for (auto& file : files)
             Desktop::Launcher::open(URL::create_with_file_protocol(m_project->root_path(), file));
@@ -623,7 +633,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_project_action()
 {
-    return GUI::Action::create("&New Project...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hackstudio-project.png").release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+    return GUI::Action::create("&Project...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hackstudio-project.png").release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         auto dialog = NewProjectDialog::construct(window());
         dialog->set_icon(window()->icon());
         auto result = dialog->exec();
@@ -1203,23 +1213,10 @@ void HackStudioWidget::update_recent_projects_submenu()
 void HackStudioWidget::create_file_menu(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File");
-    file_menu.add_action(*m_new_project_action);
-    file_menu.add_action(*m_open_action);
-    m_recent_projects_submenu = &file_menu.add_submenu("Open Recent");
-    m_recent_projects_submenu->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-recent.png").release_value_but_fixme_should_propagate_errors());
-    update_recent_projects_submenu();
-    file_menu.add_action(*m_save_action);
-    file_menu.add_action(*m_save_as_action);
-    file_menu.add_separator();
-    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the()->quit();
-    }));
-}
 
-void HackStudioWidget::create_project_menu(GUI::Window& window)
-{
-    auto& project_menu = window.add_menu("&Project");
-    auto& new_submenu = project_menu.add_submenu("New");
+    auto& new_submenu = file_menu.add_submenu("&New...");
+    new_submenu.add_action(*m_new_project_action);
+    new_submenu.add_separator();
     for (auto& new_file_action : m_new_file_actions) {
         new_submenu.add_action(new_file_action);
     }
@@ -1228,8 +1225,16 @@ void HackStudioWidget::create_project_menu(GUI::Window& window)
     new_submenu.add_separator();
     new_submenu.add_action(*m_new_directory_action);
 
-    m_toggle_semantic_highlighting_action = create_toggle_syntax_highlighting_mode_action();
-    project_menu.add_action(*m_toggle_semantic_highlighting_action);
+    file_menu.add_action(*m_open_action);
+    m_recent_projects_submenu = &file_menu.add_submenu("Open &Recent");
+    m_recent_projects_submenu->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-recent.png").release_value_but_fixme_should_propagate_errors());
+    update_recent_projects_submenu();
+    file_menu.add_action(*m_save_action);
+    file_menu.add_action(*m_save_as_action);
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the()->quit();
+    }));
 }
 
 void HackStudioWidget::create_edit_menu(GUI::Window& window)
@@ -1282,6 +1287,8 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
     view_menu.add_action(hide_action_tabs_action);
     view_menu.add_action(open_locator_action);
     view_menu.add_action(show_dotfiles_action);
+    m_toggle_semantic_highlighting_action = create_toggle_syntax_highlighting_mode_action();
+    view_menu.add_action(*m_toggle_semantic_highlighting_action);
     view_menu.add_separator();
 
     m_wrapping_mode_actions.set_exclusive(true);
@@ -1356,7 +1363,6 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_stop_action()
 void HackStudioWidget::initialize_menubar(GUI::Window& window)
 {
     create_file_menu(window);
-    create_project_menu(window);
     create_edit_menu(window);
     create_build_menu(window);
     create_view_menu(window);

@@ -25,6 +25,8 @@ public:
     void show_error_to_user(Error);
     void set_automatic_modifier(bool checked);
 
+    bool request_close();
+
 protected:
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void keyup_event(GUI::KeyEvent&) override;
@@ -44,6 +46,5 @@ private:
     String m_filename;
     Keyboard::CharacterMapData m_character_map;
     String m_current_map_name;
-    bool m_modified { false };
     bool m_automatic_modifier { false };
 };

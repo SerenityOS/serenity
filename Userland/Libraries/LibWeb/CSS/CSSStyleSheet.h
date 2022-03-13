@@ -48,7 +48,9 @@ public:
 
     void for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const;
     // Returns whether the match state of any media queries changed after evaluation.
-    bool evaluate_media_queries(DOM::Window const&);
+    bool evaluate_media_queries(HTML::Window const&);
+
+    void set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList*);
 
 private:
     explicit CSSStyleSheet(NonnullRefPtrVector<CSSRule>);
@@ -56,6 +58,8 @@ private:
     NonnullRefPtr<CSSRuleList> m_rules;
 
     WeakPtr<CSSRule> m_owner_css_rule;
+
+    WeakPtr<StyleSheetList> m_style_sheet_list;
 };
 
 }

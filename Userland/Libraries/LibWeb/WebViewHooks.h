@@ -29,11 +29,12 @@ public:
     Function<void(DOM::Document*)> on_set_document;
     Function<void(const AK::URL&, const String&)> on_get_source;
     Function<void(const String&)> on_get_dom_tree;
-    Function<void(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties)> on_get_dom_node_properties;
+    Function<void(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing)> on_get_dom_node_properties;
     Function<void(i32 message_id)> on_js_console_new_message;
     Function<void(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)> on_get_js_console_messages;
     Function<String(const AK::URL& url, Cookie::Source source)> on_get_cookie;
     Function<void(const AK::URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source)> on_set_cookie;
+    Function<void(i32 count_waiting)> on_resource_status_change;
 };
 
 }

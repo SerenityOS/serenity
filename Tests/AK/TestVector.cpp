@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/ReverseIterator.h"
 #include <LibTest/TestCase.h>
 
 #include <AK/NonnullOwnPtrVector.h>
@@ -532,4 +533,42 @@ TEST_CASE(reference_deletion_should_not_affect_object)
             references.append(counter);
     }
     EXPECT_EQ(times_deleted, 1u);
+}
+
+TEST_CASE(rbegin)
+{
+    Vector<int> v { 1, 2, 3, 4, 5, 6, 7, 8, 0 };
+
+    auto const expected = v.begin() + 4;
+    auto const expected_in_reverse = v.rbegin() + 4;
+    EXPECT_EQ(*expected, *expected_in_reverse);
+}
+
+TEST_CASE(rend)
+{
+    Vector<int> v { 1, 2, 3, 4, 5, 6, 7, 8, 0 };
+
+    const auto expected = v.end() - 5;
+    const auto expected_in_reverse = v.rend() - 5;
+    EXPECT_EQ(*expected, *expected_in_reverse);
+}
+
+TEST_CASE(reverse_iterator_for_loop)
+{
+    Vector<int> v { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    int index = 9;
+    for (auto rev = v.rbegin(); rev != v.rend(); ++rev)
+        EXPECT_EQ(*rev, index--);
+}
+
+TEST_CASE(reverse_range_for_loop)
+{
+    Vector<int> v { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    int index = 9;
+    for (auto item : AK::ReverseWrapper::in_reverse(v))
+        EXPECT_EQ(item, index--);
+
+    index = 9;
+    for (auto item : v.in_reverse())
+        EXPECT_EQ(item, index--);
 }

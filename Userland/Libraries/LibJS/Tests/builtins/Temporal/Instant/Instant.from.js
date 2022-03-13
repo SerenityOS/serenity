@@ -32,4 +32,20 @@ describe("errors", () => {
             Temporal.Instant.from("foo");
         }).toThrowWithMessage(RangeError, "Invalid instant string 'foo'");
     });
+
+    test("invalid epoch nanoseconds", () => {
+        // Test cases from https://github.com/tc39/proposal-temporal/commit/baead4d85bc3e9ecab1e9824c3d3fe4fdd77fc3a
+        expect(() => {
+            Temporal.Instant.from("-271821-04-20T00:00:00+00:01");
+        }).toThrowWithMessage(
+            RangeError,
+            "Invalid epoch nanoseconds value, must be in range -86400 * 10^17 to 86400 * 10^17"
+        );
+        expect(() => {
+            Temporal.Instant.from("+275760-09-13T00:00:00-00:01");
+        }).toThrowWithMessage(
+            RangeError,
+            "Invalid epoch nanoseconds value, must be in range -86400 * 10^17 to 86400 * 10^17"
+        );
+    });
 });

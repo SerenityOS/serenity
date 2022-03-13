@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -157,16 +157,16 @@ JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::compare)
     auto* nanoseconds2_bigint = js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)two->nanoseconds()));
     auto* ns2 = total_duration_nanoseconds(global_object, days2, two->hours(), two->minutes(), two->seconds(), two->milliseconds(), two->microseconds(), *nanoseconds2_bigint, shift2);
 
-    // 11. If ns1 > ns2, return 1.
+    // 11. If ns1 > ns2, return 1𝔽.
     if (ns1->big_integer() > ns2->big_integer())
-        return 1;
+        return Value(1);
 
-    // 12. If ns1 < ns2, return −1.
+    // 12. If ns1 < ns2, return −1𝔽.
     if (ns1->big_integer() < ns2->big_integer())
-        return -1;
+        return Value(-1);
 
-    // 13. Return 0.
-    return 0;
+    // 13. Return +0𝔽.
+    return Value(0);
 }
 
 }

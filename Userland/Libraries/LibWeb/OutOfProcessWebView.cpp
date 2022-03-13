@@ -354,10 +354,10 @@ void OutOfProcessWebView::notify_server_did_get_dom_tree(const String& dom_tree)
         on_get_dom_tree(dom_tree);
 }
 
-void OutOfProcessWebView::notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties)
+void OutOfProcessWebView::notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing)
 {
     if (on_get_dom_node_properties)
-        on_get_dom_node_properties(node_id, specified_style, computed_style, custom_properties);
+        on_get_dom_node_properties(node_id, specified_style, computed_style, custom_properties, node_box_sizing);
 }
 
 void OutOfProcessWebView::notify_server_did_output_js_console_message(i32 message_index)
@@ -389,6 +389,12 @@ void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, 
 {
     if (on_set_cookie)
         on_set_cookie(url, cookie, source);
+}
+
+void OutOfProcessWebView::notify_server_did_update_resource_count(i32 count_waiting)
+{
+    if (on_resource_status_change)
+        on_resource_status_change(count_waiting);
 }
 
 void OutOfProcessWebView::did_scroll()
@@ -433,21 +439,22 @@ void OutOfProcessWebView::inspect_dom_tree()
     client().async_inspect_dom_tree();
 }
 
-Optional<OutOfProcessWebView::DOMNodeProperties> OutOfProcessWebView::inspect_dom_node(i32 node_id)
+Optional<OutOfProcessWebView::DOMNodeProperties> OutOfProcessWebView::inspect_dom_node(i32 node_id, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
-    auto response = client().inspect_dom_node(node_id);
+    auto response = client().inspect_dom_node(node_id, pseudo_element);
     if (!response.has_style())
         return {};
     return DOMNodeProperties {
         .specified_values_json = response.specified_style(),
         .computed_values_json = response.computed_style(),
-        .custom_properties_json = response.custom_properties()
+        .custom_properties_json = response.custom_properties(),
+        .node_box_sizing_json = response.node_box_sizing()
     };
 }
 
 void OutOfProcessWebView::clear_inspected_dom_node()
 {
-    client().inspect_dom_node(0);
+    client().inspect_dom_node(0, {});
 }
 
 i32 OutOfProcessWebView::get_hovered_node_id()

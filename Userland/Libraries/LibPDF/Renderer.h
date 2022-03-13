@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -51,8 +51,8 @@ enum class TextRenderingMode : u8 {
 };
 
 struct TextState {
-    float character_spacing { 3.0f };
-    float word_spacing { 5.0f };
+    float character_spacing { 0.0f };
+    float word_spacing { 0.0f };
     float horizontal_scaling { 1.0f };
     float leading { 0.0f };
     FlyString font_family { "Liberation Serif" };
@@ -79,25 +79,25 @@ struct GraphicsState {
 
 class Renderer {
 public:
-    static void render(Document&, Page const&, RefPtr<Gfx::Bitmap>);
+    static PDFErrorOr<void> render(Document&, Page const&, RefPtr<Gfx::Bitmap>);
 
 private:
     Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>);
 
-    void render();
+    PDFErrorOr<void> render();
 
-    void handle_command(Command const&);
+    PDFErrorOr<void> handle_command(Command const&);
 #define V(name, snake_name, symbol) \
-    void handle_##snake_name(Vector<Value> const& args);
+    PDFErrorOr<void> handle_##snake_name(Vector<Value> const& args);
     ENUMERATE_COMMANDS(V)
 #undef V
-    void handle_text_next_line_show_string(Vector<Value> const& args);
-    void handle_text_next_line_show_string_set_spacing(Vector<Value> const& args);
+    PDFErrorOr<void> handle_text_next_line_show_string(Vector<Value> const& args);
+    PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(Vector<Value> const& args);
 
-    void set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
+    PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     // shift is the manual advance given in the TJ command array
     void show_text(String const&, float shift = 0.0f);
-    RefPtr<ColorSpace> get_color_space(Value const&);
+    PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space(Value const&);
 
     ALWAYS_INLINE GraphicsState const& state() const { return m_graphics_state_stack.last(); }
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }

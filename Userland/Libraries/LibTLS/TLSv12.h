@@ -242,7 +242,9 @@ struct Options {
         { HashAlgorithm::SHA384, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA256, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA1, SignatureAlgorithm::RSA });
-    OPTION_WITH_DEFAULTS(Vector<NamedCurve>, elliptic_curves, NamedCurve::x25519)
+    OPTION_WITH_DEFAULTS(Vector<NamedCurve>, elliptic_curves,
+        NamedCurve::x25519,
+        NamedCurve::x448)
     OPTION_WITH_DEFAULTS(Vector<ECPointFormat>, supported_ec_point_formats, ECPointFormat::Uncompressed)
 
     OPTION_WITH_DEFAULTS(bool, use_sni, true)
@@ -331,6 +333,8 @@ struct Context {
         ByteBuffer g;
         ByteBuffer Ys;
     } server_diffie_hellman_params;
+
+    NamedCurve server_curve_choice;
 };
 
 class TLSv12 final : public Core::Stream::Socket {
@@ -460,6 +464,9 @@ private:
     void build_rsa_pre_master_secret(PacketBuilder&);
     void build_dhe_rsa_pre_master_secret(PacketBuilder&);
     void build_ecdhe_rsa_pre_master_secret(PacketBuilder&);
+
+    static ErrorOr<ByteBuffer> named_curve_multiply(NamedCurve curve, ReadonlyBytes a, ReadonlyBytes b);
+    static ErrorOr<ByteBuffer> named_curve_generator_point(NamedCurve curve);
 
     ErrorOr<bool> flush();
     void write_into_socket();

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -89,10 +90,6 @@ Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread
         ip = next_ip.value();
         bp = next_bp.value();
     }
-}
-
-Backtrace::~Backtrace()
-{
 }
 
 void Backtrace::add_entry(const Reader& coredump, FlatPtr ip)

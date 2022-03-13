@@ -34,20 +34,45 @@ public:
     ThrowCompletionOr<void> initialize_or_set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value);
 
     // This is not a method defined in the spec! Do not use this in any LibJS (or other spec related) code.
-    [[nodiscard]] Vector<String> bindings() const;
+    [[nodiscard]] Vector<FlyString> bindings() const
+    {
+        Vector<FlyString> names;
+        names.ensure_capacity(m_bindings.size());
 
+        for (auto const& binding : m_bindings)
+            names.unchecked_append(binding.name);
+
+        return names;
+    }
+
+    ThrowCompletionOr<void> initialize_binding_direct(GlobalObject&, size_t index, Value);
     ThrowCompletionOr<Value> get_binding_value_direct(GlobalObject&, size_t index, bool strict);
     ThrowCompletionOr<void> set_mutable_binding_direct(GlobalObject&, size_t index, Value, bool strict);
+
+    void ensure_capacity(size_t capacity)
+    {
+        m_bindings.ensure_capacity(capacity);
+    }
 
 protected:
     virtual void visit_edges(Visitor&) override;
 
 private:
-    FlyString const& name_from_index(size_t) const;
-
     virtual bool is_declarative_environment() const override { return true; }
 
+    Optional<size_t> find_binding_index(FlyString const& name) const
+    {
+        auto it = m_bindings.find_if([&](auto const& binding) {
+            return binding.name == name;
+        });
+
+        if (it == m_bindings.end())
+            return {};
+        return it.index();
+    }
+
     struct Binding {
+        FlyString name;
         Value value;
         bool strict { false };
         bool mutable_ { false };
@@ -55,7 +80,6 @@ private:
         bool initialized { false };
     };
 
-    HashMap<FlyString, size_t> m_names;
     Vector<Binding> m_bindings;
 };
 

@@ -8,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/MessageBox.h>
 #include <LibMain/Main.h>
 #include <Services/LoginServer/LoginWindow.h>
 #include <errno.h>
@@ -73,11 +74,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto account = Core::Account::from_name(username.characters());
         if (account.is_error()) {
+            window->set_fail_message(String::formatted("Can't log in: {}.", account.error()));
             dbgln("failed graphical login for user {}: {}", username, account.error());
             return;
         }
 
         if (!account.value().authenticate(password)) {
+            window->set_fail_message("Can't log in: invalid password.");
             dbgln("failed graphical login for user {}: invalid password", username);
             return;
         }

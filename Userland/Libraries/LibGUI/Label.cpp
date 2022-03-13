@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,10 +32,6 @@ Label::Label(String text)
     REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_BOOL_PROPERTY("autosize", is_autosize, set_autosize);
     REGISTER_STRING_PROPERTY("icon", icon, set_icon_from_path);
-}
-
-Label::~Label()
-{
 }
 
 void Label::set_autosize(bool autosize)

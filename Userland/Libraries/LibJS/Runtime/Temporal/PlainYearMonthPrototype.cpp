@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -243,8 +243,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::add)
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
     auto* year_month = TRY(typed_this_object(global_object));
 
-    // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « »).
-    auto duration = TRY(to_limited_temporal_duration(global_object, vm.argument(0), {}));
+    // 3. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
+    auto duration = TRY(to_temporal_duration_record(global_object, vm.argument(0)));
 
     // 4. Let balanceResult be ? BalanceDuration(duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "day").
     auto balance_result = TRY(balance_duration(global_object, duration.days, duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, *js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)duration.nanoseconds)), "day"sv));
@@ -283,7 +283,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::add)
     // 12. Let durationToAdd be ! CreateTemporalDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
     auto* duration_to_add = MUST(create_temporal_duration(global_object, duration.years, duration.months, duration.weeks, balance_result.days, 0, 0, 0, 0, 0, 0));
 
-    // 13. Let optionsCopy be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 13. Let optionsCopy be OrdinaryObjectCreate(%Object.prototype%).
     auto* options_copy = Object::create(global_object, global_object.object_prototype());
 
     // 14. Let entries be ? EnumerableOwnPropertyNames(options, key+value).
@@ -315,8 +315,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::subtract)
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
     auto* year_month = TRY(typed_this_object(global_object));
 
-    // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « »).
-    auto duration = TRY(to_limited_temporal_duration(global_object, vm.argument(0), {}));
+    // 3. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
+    auto duration = TRY(to_temporal_duration_record(global_object, vm.argument(0)));
 
     // 4. Let balanceResult be ? BalanceDuration(duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "day").
     auto balance_result = TRY(balance_duration(global_object, duration.days, duration.hours, duration.minutes, duration.seconds, duration.milliseconds, duration.microseconds, *js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)duration.nanoseconds)), "day"sv));
@@ -355,7 +355,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::subtract)
     // 12. Let durationToAdd be ! CreateTemporalDuration(−duration.[[Years]], −duration.[[Months]], −duration.[[Weeks]], −balanceResult.[[Days]], 0, 0, 0, 0, 0, 0).
     auto* duration_to_add = MUST(create_temporal_duration(global_object, -duration.years, -duration.months, -duration.weeks, -balance_result.days, 0, 0, 0, 0, 0, 0));
 
-    // 13. Let optionsCopy be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 13. Let optionsCopy be OrdinaryObjectCreate(%Object.prototype%).
     auto* options_copy = Object::create(global_object, global_object.object_prototype());
 
     // 14. Let entries be ? EnumerableOwnPropertyNames(options, key+value).
@@ -453,8 +453,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::until)
         return MUST(create_temporal_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0));
     }
 
-    // 23. Let result be ? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate).
-    auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date));
+    // 23. Let result be (? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate)).[[DurationRecord]].
+    auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date)).duration_record;
 
     // 24. Return ! CreateTemporalDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
     return MUST(create_temporal_duration(global_object, round_result.years, round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));
@@ -536,8 +536,8 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::since)
         return MUST(create_temporal_duration(global_object, -result->years(), -result->months(), 0, 0, 0, 0, 0, 0, 0, 0));
     }
 
-    // 24. Let result be ? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate).
-    auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date));
+    // 24. Let result be (? RoundDuration(result.[[Years]], result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0, roundingIncrement, smallestUnit, roundingMode, thisDate)).[[DurationRecord]].
+    auto round_result = TRY(round_duration(global_object, result->years(), result->months(), 0, 0, 0, 0, 0, 0, 0, 0, rounding_increment, *smallest_unit, rounding_mode, this_date)).duration_record;
 
     // 25. Return ! CreateTemporalDuration(−result.[[Years]], −result.[[Months]], 0, 0, 0, 0, 0, 0, 0, 0).
     return MUST(create_temporal_duration(global_object, -round_result.years, -round_result.months, 0, 0, 0, 0, 0, 0, 0, 0));
@@ -663,7 +663,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::to_plain_date)
     // 11. Set mergedFields to ? PrepareTemporalFields(mergedFields, mergedFieldNames, «»).
     merged_fields = TRY(prepare_temporal_fields(global_object, *merged_fields, merged_field_names, {}));
 
-    // 12. Let options be ! OrdinaryObjectCreate(null).
+    // 12. Let options be OrdinaryObjectCreate(null).
     auto* options = Object::create(global_object, nullptr);
 
     // 13. Perform ! CreateDataPropertyOrThrow(options, "overflow", "reject").
@@ -680,7 +680,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::get_iso_fields)
     // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
     auto* year_month = TRY(typed_this_object(global_object));
 
-    // 3. Let fields be ! OrdinaryObjectCreate(%Object.prototype%).
+    // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
     auto* fields = Object::create(global_object, global_object.object_prototype());
 
     // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", yearMonth.[[Calendar]]).

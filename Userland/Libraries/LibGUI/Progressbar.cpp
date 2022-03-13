@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,10 +27,6 @@ Progressbar::Progressbar(Orientation orientation)
         { Format::ValueSlashMax, "ValueSlashMax" });
     REGISTER_INT_PROPERTY("min", min, set_min);
     REGISTER_INT_PROPERTY("max", max, set_max);
-}
-
-Progressbar::~Progressbar()
-{
 }
 
 void Progressbar::set_value(int value)

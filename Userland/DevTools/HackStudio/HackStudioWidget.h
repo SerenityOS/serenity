@@ -133,7 +133,6 @@ private:
     void create_action_tab(GUI::Widget& parent);
     void create_file_menu(GUI::Window&);
     void update_recent_projects_submenu();
-    void create_project_menu(GUI::Window&);
     void create_edit_menu(GUI::Window&);
     void create_build_menu(GUI::Window&);
     void create_view_menu(GUI::Window&);

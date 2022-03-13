@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ class SeparatorWidget : public Widget {
     C_OBJECT(SeparatorWidget);
 
 public:
-    virtual ~SeparatorWidget() override;
+    virtual ~SeparatorWidget() override = default;
 
 protected:
     explicit SeparatorWidget(Gfx::Orientation);
@@ -28,7 +29,7 @@ private:
 class VerticalSeparator final : public SeparatorWidget {
     C_OBJECT(VerticalSeparator)
 public:
-    virtual ~VerticalSeparator() override { }
+    virtual ~VerticalSeparator() override = default;
 
 private:
     VerticalSeparator()
@@ -40,7 +41,7 @@ private:
 class HorizontalSeparator final : public SeparatorWidget {
     C_OBJECT(HorizontalSeparator)
 public:
-    virtual ~HorizontalSeparator() override { }
+    virtual ~HorizontalSeparator() override = default;
 
 private:
     HorizontalSeparator()

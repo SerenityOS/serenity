@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,13 +34,8 @@ private:
     Notification* m_notification;
 };
 
-Notification::Notification()
-{
-}
-
-Notification::~Notification()
-{
-}
+Notification::Notification() = default;
+Notification::~Notification() = default;
 
 void Notification::show()
 {

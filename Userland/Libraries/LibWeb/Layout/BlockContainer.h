@@ -18,64 +18,26 @@ public:
     BlockContainer(DOM::Document&, DOM::Node*, CSS::ComputedValues);
     virtual ~BlockContainer() override;
 
-    virtual void paint(PaintContext&, PaintPhase) override;
-
-    virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
-
     BlockContainer* previous_sibling() { return verify_cast<BlockContainer>(Node::previous_sibling()); }
     const BlockContainer* previous_sibling() const { return verify_cast<BlockContainer>(Node::previous_sibling()); }
     BlockContainer* next_sibling() { return verify_cast<BlockContainer>(Node::next_sibling()); }
     const BlockContainer* next_sibling() const { return verify_cast<BlockContainer>(Node::next_sibling()); }
 
-    template<typename Callback>
-    void for_each_fragment(Callback);
-    template<typename Callback>
-    void for_each_fragment(Callback) const;
-
     bool is_scrollable() const;
     const Gfx::FloatPoint& scroll_offset() const { return m_scroll_offset; }
     void set_scroll_offset(const Gfx::FloatPoint&);
 
-    const Vector<LineBox>& line_boxes() const { return m_line_boxes; }
+    Painting::PaintableWithLines const* paint_box() const;
 
-    void set_line_boxes(Vector<LineBox>&& line_boxes) { m_line_boxes = move(line_boxes); }
-
-protected:
-    Vector<LineBox> m_line_boxes;
+    virtual RefPtr<Painting::Paintable> create_paintable() const override;
 
 private:
     virtual bool is_block_container() const final { return true; }
-    virtual bool wants_mouse_events() const override { return false; }
-    virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
-
-    bool should_clip_overflow() const;
 
     Gfx::FloatPoint m_scroll_offset;
 };
 
 template<>
 inline bool Node::fast_is<BlockContainer>() const { return is_block_container(); }
-
-template<typename Callback>
-void BlockContainer::for_each_fragment(Callback callback)
-{
-    for (auto& line_box : line_boxes()) {
-        for (auto& fragment : line_box.fragments()) {
-            if (callback(fragment) == IterationDecision::Break)
-                return;
-        }
-    }
-}
-
-template<typename Callback>
-void BlockContainer::for_each_fragment(Callback callback) const
-{
-    for (auto& line_box : line_boxes()) {
-        for (auto& fragment : line_box.fragments()) {
-            if (callback(fragment) == IterationDecision::Break)
-                return;
-        }
-    }
-}
 
 }

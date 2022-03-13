@@ -748,10 +748,10 @@ UnveilNode const& VirtualFileSystem::find_matching_unveiled_path(StringView path
 {
     auto& current_process = Process::current();
     VERIFY(current_process.veil_state() != VeilState::None);
-    auto& unveil_root = current_process.unveiled_paths();
-
-    auto path_parts = KLexicalPath::parts(path);
-    return unveil_root.traverse_until_last_accessible_node(path_parts.begin(), path_parts.end());
+    return current_process.unveil_data().with([&](auto const& unveil_data) -> UnveilNode const& {
+        auto path_parts = KLexicalPath::parts(path);
+        return unveil_data.paths.traverse_until_last_accessible_node(path_parts.begin(), path_parts.end());
+    });
 }
 
 ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(Custody const& custody, int options)

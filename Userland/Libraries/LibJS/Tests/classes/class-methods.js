@@ -61,3 +61,66 @@ test("method named 'async'", () => {
     expect("async" in a).toBeTrue();
     expect(a.async()).toBe("function named async");
 });
+
+test("can call other private methods from methods", () => {
+    class A {
+        #a() {
+            return 1;
+        }
+
+        async #b() {
+            return 2;
+        }
+
+        syncA() {
+            return this.#a();
+        }
+
+        async asyncA() {
+            return this.#a();
+        }
+
+        syncB() {
+            return this.#b();
+        }
+
+        async asyncB() {
+            return this.#b();
+        }
+    }
+
+    var called = false;
+
+    async function check() {
+        called = true;
+        const a = new A();
+
+        expect(a.syncA()).toBe(1);
+        expect(await a.asyncA()).toBe(1);
+        expect(await a.syncB()).toBe(2);
+        expect(await a.asyncB()).toBe(2);
+        return 3;
+    }
+
+    var error = null;
+    var failed = false;
+
+    check().then(
+        value => {
+            expect(called).toBeTrue();
+            expect(value).toBe(3);
+        },
+        thrownError => {
+            failed = true;
+            error = thrownError;
+        }
+    );
+
+    runQueuedPromiseJobs();
+
+    expect(called).toBeTrue();
+
+    if (failed) throw error;
+
+    expect(failed).toBeFalse();
+});

@@ -96,17 +96,19 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     auto& document = dom_node.document();
     auto& style_computer = document.style_computer();
     RefPtr<Layout::Node> layout_node;
+    RefPtr<CSS::StyleProperties> style;
 
     if (is<DOM::Element>(dom_node)) {
         auto& element = static_cast<DOM::Element&>(dom_node);
-        auto style = style_computer.compute_style(element);
+        element.clear_pseudo_element_nodes({});
+        style = style_computer.compute_style(element);
         if (style->display().is_none())
             return;
         element.set_specified_css_values(style);
-        layout_node = element.create_layout_node(move(style));
+        layout_node = element.create_layout_node(*style);
     } else if (is<DOM::Document>(dom_node)) {
-        auto style = style_computer.create_document_style();
-        layout_node = adopt_ref(*new Layout::InitialContainingBlock(static_cast<DOM::Document&>(dom_node), move(style)));
+        style = style_computer.create_document_style();
+        layout_node = adopt_ref(*new Layout::InitialContainingBlock(static_cast<DOM::Document&>(dom_node), *style));
     } else if (is<DOM::Text>(dom_node)) {
         layout_node = adopt_ref(*new Layout::TextNode(document, static_cast<DOM::Text&>(dom_node)));
     } else if (is<DOM::ShadowRoot>(dom_node)) {
@@ -148,6 +150,9 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     } else {
         insert_node_into_inline_or_block_ancestor(layout_node);
     }
+
+    if (layout_node->has_style() && style)
+        static_cast<Layout::NodeWithStyle&>(*layout_node).did_insert_into_layout_tree(*style);
 
     auto* shadow_root = is<DOM::Element>(dom_node) ? verify_cast<DOM::Element>(dom_node).shadow_root() : nullptr;
 
@@ -193,20 +198,26 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         };
 
         push_parent(verify_cast<NodeWithStyle>(*layout_node));
-        if (auto before_node = create_pseudo_element_if_needed(CSS::Selector::PseudoElement::Before))
+        if (auto before_node = create_pseudo_element_if_needed(CSS::Selector::PseudoElement::Before)) {
+            element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Before, before_node);
             insert_node_into_inline_or_block_ancestor(before_node, true);
-        if (auto after_node = create_pseudo_element_if_needed(CSS::Selector::PseudoElement::After))
+        }
+        if (auto after_node = create_pseudo_element_if_needed(CSS::Selector::PseudoElement::After)) {
+            element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::After, after_node);
             insert_node_into_inline_or_block_ancestor(after_node);
+        }
         pop_parent();
     }
 
     if (is<ListItemBox>(*layout_node)) {
+        auto& element = static_cast<DOM::Element&>(dom_node);
         int child_index = layout_node->parent()->index_of_child<ListItemBox>(*layout_node).value();
-        auto marker_style = style_computer.compute_style(static_cast<DOM::Element&>(dom_node), CSS::Selector::PseudoElement::Marker);
+        auto marker_style = style_computer.compute_style(element, CSS::Selector::PseudoElement::Marker);
         auto list_item_marker = adopt_ref(*new ListItemMarkerBox(document, layout_node->computed_values().list_style_type(), child_index + 1, *marker_style));
         if (layout_node->first_child())
             list_item_marker->set_inline(layout_node->first_child()->is_inline());
         static_cast<ListItemBox&>(*layout_node).set_marker(list_item_marker);
+        element.set_pseudo_element_node({}, CSS::Selector::PseudoElement::Marker, list_item_marker);
         layout_node->append_child(move(list_item_marker));
     }
 }

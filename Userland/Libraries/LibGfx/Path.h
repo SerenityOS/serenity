@@ -107,13 +107,15 @@ private:
 
 class EllipticalArcSegment final : public Segment {
 public:
-    EllipticalArcSegment(const FloatPoint& point, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta)
+    EllipticalArcSegment(const FloatPoint& point, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, bool large_arc, bool sweep)
         : Segment(point)
         , m_center(center)
         , m_radii(radii)
         , m_x_axis_rotation(x_axis_rotation)
         , m_theta_1(theta_1)
         , m_theta_delta(theta_delta)
+        , m_large_arc(large_arc)
+        , m_sweep(sweep)
     {
     }
 
@@ -124,6 +126,8 @@ public:
     float x_axis_rotation() const { return m_x_axis_rotation; }
     float theta_1() const { return m_theta_1; }
     float theta_delta() const { return m_theta_delta; }
+    bool large_arc() const { return m_large_arc; }
+    bool sweep() const { return m_sweep; }
 
 private:
     virtual Type type() const override { return Segment::Type::EllipticalArcTo; }
@@ -133,6 +137,8 @@ private:
     float m_x_axis_rotation;
     float m_theta_1;
     float m_theta_delta;
+    bool m_large_arc;
+    bool m_sweep;
 };
 
 class Path {
@@ -185,7 +191,7 @@ public:
     }
 
     // Note: This does not do any sanity checks!
-    void elliptical_arc_to(const FloatPoint& endpoint, const FloatPoint& center, const FloatPoint& radii, double x_axis_rotation, double theta, double theta_delta)
+    void elliptical_arc_to(const FloatPoint& endpoint, const FloatPoint& center, const FloatPoint& radii, double x_axis_rotation, double theta, double theta_delta, bool large_arc, bool sweep)
     {
         append_segment<EllipticalArcSegment>(
             endpoint,
@@ -193,7 +199,9 @@ public:
             radii,
             x_axis_rotation,
             theta,
-            theta_delta);
+            theta_delta,
+            large_arc,
+            sweep);
 
         invalidate_split_lines();
     }

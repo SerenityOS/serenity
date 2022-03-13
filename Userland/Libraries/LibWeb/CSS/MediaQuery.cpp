@@ -7,7 +7,7 @@
 #include <LibWeb/CSS/MediaQuery.h>
 #include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::CSS {
 
@@ -23,8 +23,9 @@ NonnullRefPtr<MediaQuery> MediaQuery::create_not_all()
 String MediaFeatureValue::to_string() const
 {
     return m_value.visit(
-        [](String const& ident) { return serialize_an_identifier(ident); },
+        [](ValueID const& ident) { return String { string_from_value_id(ident) }; },
         [](Length const& length) { return length.to_string(); },
+        [](Ratio const& ratio) { return ratio.to_string(); },
         [](Resolution const& resolution) { return resolution.to_string(); },
         [](double number) { return String::number(number); });
 }
@@ -32,8 +33,9 @@ String MediaFeatureValue::to_string() const
 bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const
 {
     return m_value.visit(
-        [&](String const&) { return other.is_ident(); },
+        [&](ValueID const&) { return other.is_ident(); },
         [&](Length const&) { return other.is_length(); },
+        [&](Ratio const&) { return other.is_ratio(); },
         [&](Resolution const&) { return other.is_resolution(); },
         [&](double) { return other.is_number(); });
 }
@@ -58,26 +60,26 @@ String MediaFeature::to_string() const
 
     switch (m_type) {
     case Type::IsTrue:
-        return serialize_an_identifier(m_name);
+        return string_from_media_feature_id(m_id);
     case Type::ExactValue:
-        return String::formatted("{}:{}", serialize_an_identifier(m_name), m_value->to_string());
+        return String::formatted("{}:{}", string_from_media_feature_id(m_id), m_value->to_string());
     case Type::MinValue:
-        return String::formatted("min-{}:{}", serialize_an_identifier(m_name), m_value->to_string());
+        return String::formatted("min-{}:{}", string_from_media_feature_id(m_id), m_value->to_string());
     case Type::MaxValue:
-        return String::formatted("max-{}:{}", serialize_an_identifier(m_name), m_value->to_string());
+        return String::formatted("max-{}:{}", string_from_media_feature_id(m_id), m_value->to_string());
     case Type::Range:
         if (!m_range->right_comparison.has_value())
-            return String::formatted("{} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), serialize_an_identifier(m_name));
+            return String::formatted("{} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id));
 
-        return String::formatted("{} {} {} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), serialize_an_identifier(m_name), comparison_string(*m_range->right_comparison), m_range->right_value->to_string());
+        return String::formatted("{} {} {} {} {}", m_range->left_value.to_string(), comparison_string(m_range->left_comparison), string_from_media_feature_id(m_id), comparison_string(*m_range->right_comparison), m_range->right_value->to_string());
     }
 
     VERIFY_NOT_REACHED();
 }
 
-bool MediaFeature::evaluate(DOM::Window const& window) const
+bool MediaFeature::evaluate(HTML::Window const& window) const
 {
-    auto maybe_queried_value = window.query_media_feature(m_name);
+    auto maybe_queried_value = window.query_media_feature(m_id);
     if (!maybe_queried_value.has_value())
         return false;
     auto queried_value = maybe_queried_value.release_value();
@@ -88,10 +90,13 @@ bool MediaFeature::evaluate(DOM::Window const& window) const
             return queried_value.number() != 0;
         if (queried_value.is_length())
             return queried_value.length().raw_value() != 0;
+        // FIXME: I couldn't figure out from the spec how ratios should be evaluated in a boolean context.
+        if (queried_value.is_ratio())
+            return !queried_value.ratio().is_degenerate();
         if (queried_value.is_resolution())
             return queried_value.resolution().to_dots_per_pixel() != 0;
         if (queried_value.is_ident())
-            return queried_value.ident() != "none";
+            return queried_value.ident() != ValueID::None;
         return false;
 
     case Type::ExactValue:
@@ -117,14 +122,14 @@ bool MediaFeature::evaluate(DOM::Window const& window) const
     VERIFY_NOT_REACHED();
 }
 
-bool MediaFeature::compare(DOM::Window const& window, MediaFeatureValue left, Comparison comparison, MediaFeatureValue right)
+bool MediaFeature::compare(HTML::Window const& window, MediaFeatureValue left, Comparison comparison, MediaFeatureValue right)
 {
     if (!left.is_same_type(right))
         return false;
 
     if (left.is_ident()) {
         if (comparison == Comparison::Equal)
-            return left.ident().equals_ignoring_case(right.ident());
+            return left.ident() == right.ident();
         return false;
     }
 
@@ -154,15 +159,12 @@ bool MediaFeature::compare(DOM::Window const& window, MediaFeatureValue left, Co
         } else {
             Gfx::IntRect viewport_rect { 0, 0, window.inner_width(), window.inner_height() };
 
-            // FIXME: This isn't right - we want to query the initial-value font, which is the one used
-            //        if no author styles are defined.
-            auto& root_layout_node = *window.associated_document().root().layout_node();
-            auto const& font = root_layout_node.font();
-            Gfx::FontMetrics const& font_metrics = font.metrics('M');
-            float root_font_size = root_layout_node.computed_values().font_size();
+            auto const& initial_font = window.associated_document().style_computer().initial_font();
+            Gfx::FontMetrics const& initial_font_metrics = initial_font.metrics('M');
+            float initial_font_size = initial_font.presentation_size();
 
-            left_px = left.length().to_px(viewport_rect, font_metrics, root_font_size, root_font_size);
-            right_px = right.length().to_px(viewport_rect, font_metrics, root_font_size, root_font_size);
+            left_px = left.length().to_px(viewport_rect, initial_font_metrics, initial_font_size, initial_font_size);
+            right_px = right.length().to_px(viewport_rect, initial_font_metrics, initial_font_size, initial_font_size);
         }
 
         switch (comparison) {
@@ -178,6 +180,25 @@ bool MediaFeature::compare(DOM::Window const& window, MediaFeatureValue left, Co
             return left_px >= right_px;
         }
 
+        VERIFY_NOT_REACHED();
+    }
+
+    if (left.is_ratio()) {
+        auto left_decimal = left.ratio().value();
+        auto right_decimal = right.ratio().value();
+
+        switch (comparison) {
+        case Comparison::Equal:
+            return left_decimal == right_decimal;
+        case Comparison::LessThan:
+            return left_decimal < right_decimal;
+        case Comparison::LessThanOrEqual:
+            return left_decimal <= right_decimal;
+        case Comparison::GreaterThan:
+            return left_decimal > right_decimal;
+        case Comparison::GreaterThanOrEqual:
+            return left_decimal >= right_decimal;
+        }
         VERIFY_NOT_REACHED();
     }
 
@@ -274,7 +295,7 @@ String MediaCondition::to_string() const
     return builder.to_string();
 }
 
-MatchResult MediaCondition::evaluate(DOM::Window const& window) const
+MatchResult MediaCondition::evaluate(HTML::Window const& window) const
 {
     switch (type) {
     case Type::Single:
@@ -345,7 +366,7 @@ String MediaQuery::to_string() const
     return builder.to_string();
 }
 
-bool MediaQuery::evaluate(DOM::Window const& window)
+bool MediaQuery::evaluate(HTML::Window const& window)
 {
     auto matches_media = [](MediaType media) -> MatchResult {
         switch (media) {

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,10 +20,6 @@ Desktop& Desktop::the()
 {
     static Desktop s_the;
     return s_the;
-}
-
-Desktop::Desktop()
-{
 }
 
 void Desktop::did_receive_screen_rects(Badge<ConnectionToWindowServer>, const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index, unsigned workspace_rows, unsigned workspace_columns)

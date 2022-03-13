@@ -10,10 +10,17 @@
 #include <LibGfx/Point.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/LineBox.h>
+#include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::Layout {
 
 struct FormattingState {
+    FormattingState() { }
+    explicit FormattingState(FormattingState const* parent)
+        : m_parent(parent)
+    {
+    }
+
     struct NodeState {
         float content_width { 0 };
         float content_height { 0 };
@@ -54,41 +61,37 @@ struct FormattingState {
         float border_box_width() const { return border_box_left() + content_width + border_box_right(); }
         float border_box_height() const { return border_box_top() + content_height + border_box_bottom(); }
 
-        Optional<Layout::Box::OverflowData> overflow_data;
+        Optional<Painting::PaintableBox::OverflowData> overflow_data;
 
-        Layout::Box::OverflowData& ensure_overflow_data()
+        Painting::PaintableBox::OverflowData& ensure_overflow_data()
         {
             if (!overflow_data.has_value())
-                overflow_data = Layout::Box::OverflowData {};
+                overflow_data = Painting::PaintableBox::OverflowData {};
             return *overflow_data;
         }
 
         Optional<LineBoxFragmentCoordinate> containing_line_box_fragment;
-
-        // NOTE: NodeState is ref-counted and accessed via copy-on-write helpers below.
-        size_t ref_count { 1 };
-        void ref()
-        {
-            VERIFY(ref_count);
-            ++ref_count;
-        }
-        void unref()
-        {
-            VERIFY(ref_count);
-            if (!--ref_count)
-                delete this;
-        }
     };
 
     void commit();
 
-    // NOTE: get_mutable() will CoW the NodeState if it's shared with another FormattingContext.
+    // NOTE: get_mutable() will CoW the NodeState if it's inherited from an ancestor state;
     NodeState& get_mutable(NodeWithStyleAndBoxModelMetrics const&);
 
     // NOTE: get() will not CoW the NodeState.
     NodeState const& get(NodeWithStyleAndBoxModelMetrics const&) const;
 
-    HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullRefPtr<NodeState>> nodes;
+    HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullOwnPtr<NodeState>> nodes;
+
+    // We cache intrinsic sizes once determined, as they will not change over the course of a full layout.
+    // This avoids computing them several times while performing flex layout.
+    struct IntrinsicSizes {
+        Gfx::FloatSize min_content_size;
+        Gfx::FloatSize max_content_size;
+    };
+    HashMap<NodeWithStyleAndBoxModelMetrics const*, IntrinsicSizes> mutable intrinsic_sizes;
+
+    FormattingState const* m_parent { nullptr };
 };
 
 Gfx::FloatRect absolute_content_rect(Box const&, FormattingState const&);

@@ -8,7 +8,7 @@
 
 namespace Web::NavigationTiming {
 
-PerformanceTiming::PerformanceTiming(DOM::Window& window)
+PerformanceTiming::PerformanceTiming(HTML::Window& window)
     : RefCountForwarder(window)
 {
 }

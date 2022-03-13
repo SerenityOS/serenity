@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,7 +41,7 @@ class ObjectClassRegistration {
 
 public:
     ObjectClassRegistration(StringView class_name, Function<RefPtr<Object>()> factory, ObjectClassRegistration* parent_class = nullptr);
-    ~ObjectClassRegistration();
+    ~ObjectClassRegistration() = default;
 
     String class_name() const { return m_class_name; }
     const ObjectClassRegistration* parent_class() const { return m_parent_class; }
@@ -376,8 +377,10 @@ T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<O
         { Gfx::TextAlignment::Center, "Center" },                       \
         { Gfx::TextAlignment::CenterLeft, "CenterLeft" },               \
         { Gfx::TextAlignment::CenterRight, "CenterRight" },             \
+        { Gfx::TextAlignment::TopLeft, "TopCenter" },                   \
         { Gfx::TextAlignment::TopLeft, "TopLeft" },                     \
         { Gfx::TextAlignment::TopRight, "TopRight" },                   \
+        { Gfx::TextAlignment::TopLeft, "BottomCenter" },                \
         { Gfx::TextAlignment::BottomLeft, "BottomLeft" },               \
         { Gfx::TextAlignment::BottomRight, "BottomRight" })
 

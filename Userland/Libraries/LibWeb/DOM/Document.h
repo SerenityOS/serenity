@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -141,12 +141,13 @@ public:
     void set_visited_link_color(Color);
 
     void force_layout();
-    void ensure_layout();
 
     void update_style();
     void update_layout();
 
     void set_needs_layout();
+
+    void invalidate_layout();
 
     virtual bool is_child_allowed(const Node&) const override;
 
@@ -242,7 +243,7 @@ public:
 
     void removed_last_ref();
 
-    Window& window() { return *m_window; }
+    HTML::Window& window() { return *m_window; }
 
     ExceptionOr<void> write(Vector<String> const& strings);
     ExceptionOr<void> writeln(Vector<String> const& strings);
@@ -250,7 +251,7 @@ public:
     ExceptionOr<Document*> open(String const& = "", String const& = "");
     ExceptionOr<void> close();
 
-    Window* default_view() { return m_window; }
+    HTML::Window* default_view() { return m_window; }
 
     const String& content_type() const { return m_content_type; }
     void set_content_type(const String& content_type) { m_content_type = content_type; }
@@ -293,12 +294,8 @@ public:
     Bindings::LocationObject* location();
 
     size_t number_of_things_delaying_the_load_event() { return m_number_of_things_delaying_the_load_event; }
-    void increment_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>) { ++m_number_of_things_delaying_the_load_event; }
-    void decrement_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>)
-    {
-        VERIFY(m_number_of_things_delaying_the_load_event);
-        --m_number_of_things_delaying_the_load_event;
-    }
+    void increment_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>);
+    void decrement_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>);
 
     bool page_showing() const { return m_page_showing; }
     void set_page_showing(bool value) { m_page_showing = value; }
@@ -323,6 +320,19 @@ public:
         FlyString tag_name;
     };
     static ExceptionOr<PrefixAndTagName> validate_qualified_name(String const& qualified_name);
+
+    NonnullRefPtr<NodeIterator> create_node_iterator(Node& root, unsigned what_to_show, RefPtr<NodeFilter>);
+    NonnullRefPtr<TreeWalker> create_tree_walker(Node& root, unsigned what_to_show, RefPtr<NodeFilter>);
+
+    void register_node_iterator(Badge<NodeIterator>, NodeIterator&);
+    void unregister_node_iterator(Badge<NodeIterator>, NodeIterator&);
+
+    template<typename Callback>
+    void for_each_node_iterator(Callback callback)
+    {
+        for (auto* node_iterator : m_node_iterators)
+            callback(*node_iterator);
+    }
 
 private:
     explicit Document(const AK::URL&);
@@ -360,7 +370,7 @@ private:
     WeakPtr<HTML::BrowsingContext> m_browsing_context;
     AK::URL m_url;
 
-    RefPtr<Window> m_window;
+    RefPtr<HTML::Window> m_window;
 
     RefPtr<Layout::InitialContainingBlock> m_layout_root;
 
@@ -427,5 +437,8 @@ private:
     Vector<WeakPtr<CSS::MediaQueryList>> m_media_query_lists;
 
     bool m_needs_layout { false };
+
+    HashTable<NodeIterator*> m_node_iterators;
 };
+
 }

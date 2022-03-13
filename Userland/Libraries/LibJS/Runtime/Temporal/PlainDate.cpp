@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
+#include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateConstructor.h>
@@ -53,7 +54,7 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(GlobalObject& global_object, 
     if (!iso_date_time_within_limits(global_object, iso_year, iso_month, iso_day, 12, 0, 0, 0, 0, 0))
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
 
-    // 7. If newTarget is not present, set it to %Temporal.PlainDate%.
+    // 7. If newTarget is not present, set newTarget to %Temporal.PlainDate%.
     if (!new_target)
         new_target = global_object.temporal_plain_date_constructor();
 
@@ -72,7 +73,7 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
     if (!options)
         options = Object::create(global_object, nullptr);
 
@@ -141,7 +142,7 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
 }
 
 // 3.5.3 DifferenceISODate ( y1, m1, d1, y2, m2, d2, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-differenceisodate
-DifferenceISODateResult difference_iso_date(GlobalObject& global_object, i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2, StringView largest_unit)
+DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2, StringView largest_unit)
 {
     // 1. Assert: largestUnit is one of "year", "month", "week", or "day".
     VERIFY(largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv));
@@ -151,9 +152,9 @@ DifferenceISODateResult difference_iso_date(GlobalObject& global_object, i32 yea
         // a. Let sign be -(! CompareISODate(y1, m1, d1, y2, m2, d2)).
         auto sign = -compare_iso_date(year1, month1, day1, year2, month2, day2);
 
-        // b. If sign is 0, return the Record { [[Years]]: 0, [[Months]]: 0, [[Weeks]]: 0, [[Days]]: 0 }.
+        // b. If sign is 0, return ! CreateDateDurationRecord(0, 0, 0, 0).
         if (sign == 0)
-            return { .years = 0, .months = 0, .weeks = 0, .days = 0 };
+            return create_date_duration_record(0, 0, 0, 0);
 
         // c. Let start be the Record { [[Year]]: y1, [[Month]]: m1, [[Day]]: d1 }.
         auto start = ISODate { .year = year1, .month = month1, .day = day1 };
@@ -172,12 +173,12 @@ DifferenceISODateResult difference_iso_date(GlobalObject& global_object, i32 yea
 
         // h. If midSign is 0, then
         if (mid_sign == 0) {
-            // i. If largestUnit is "year", return the Record { [[Years]]: years, [[Months]]: 0, [[Weeks]]: 0, [[Days]]: 0 }.
+            // i. If largestUnit is "year", return ! CreateDateDurationRecord(years, 0, 0, 0).
             if (largest_unit == "year"sv)
-                return { .years = years, .months = 0, .weeks = 0, .days = 0 };
+                return create_date_duration_record(years, 0, 0, 0);
 
-            // ii. Return the Record { [[Years]]: 0, [[Months]]: years × 12, [[Weeks]]: 0, [[Days]]: 0 }.
-            return { .years = 0, .months = years * 12, .weeks = 0, .days = 0 };
+            // ii. Return ! CreateDateDurationRecord(0, years × 12, 0, 0).
+            return create_date_duration_record(0, years * 12, 0, 0);
         }
 
         // i. Let months be end.[[Month]] − start.[[Month]].
@@ -200,12 +201,12 @@ DifferenceISODateResult difference_iso_date(GlobalObject& global_object, i32 yea
 
         // m. If midSign is 0, then
         if (mid_sign == 0) {
-            // i. If largestUnit is "year", return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: 0, [[Days]]: 0 }.
+            // i. If largestUnit is "year", return ! CreateDateDurationRecord(years, months, 0, 0).
             if (largest_unit == "year"sv)
-                return { .years = years, .months = months, .weeks = 0, .days = 0 };
+                return create_date_duration_record(years, months, 0, 0);
 
-            // ii. Return the Record { [[Years]]: 0, [[Months]]: months + years × 12, [[Weeks]]: 0, [[Days]]: 0 }.
-            return { .years = 0, .months = months + years * 12, .weeks = 0, .days = 0 };
+            // ii. Return ! CreateDateDurationRecord(0, months + years × 12, 0, 0).
+            return create_date_duration_record(0, months + years * 12, 0, 0);
         }
 
         // n. If midSign is not equal to sign, then
@@ -259,8 +260,8 @@ DifferenceISODateResult difference_iso_date(GlobalObject& global_object, i32 yea
             years = 0;
         }
 
-        // t. Return the Record { [[Years]]: years, [[Months]]: months, [[Weeks]]: 0, [[Days]]: days }.
-        return { .years = years, .months = months, .weeks = 0, .days = days };
+        // t. Return ! CreateDateDurationRecord(years, months, 0, days).
+        return create_date_duration_record(years, months, 0, days);
     }
     // 3. If largestUnit is "day" or "week", then
     else {
@@ -318,9 +319,9 @@ DifferenceISODateResult difference_iso_date(GlobalObject& global_object, i32 yea
             days = fmod(days, 7);
         }
 
-        // h. Return the Record { [[Years]]: 0, [[Months]]: 0, [[Weeks]]: weeks × sign, [[Days]]: days × sign }.
+        // h. Return ! CreateDateDurationRecord(0, 0, weeks × sign, days × sign).
         // NOTE: We set weeks and days conditionally to avoid negative zero for 0 * -1.
-        return { .years = 0, .months = 0, .weeks = (weeks != 0) ? weeks * sign : 0, .days = (days != 0) ? days * sign : 0 };
+        return create_date_duration_record(0, 0, (weeks != 0) ? weeks * sign : 0, (days != 0) ? days * sign : 0);
     }
     VERIFY_NOT_REACHED();
 }

@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <LibGUI/Model.h>
+#include <LibWeb/CSS/Selector.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {
@@ -30,7 +31,7 @@ public:
     virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex& parent = GUI::ModelIndex()) const override;
     virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
 
-    GUI::ModelIndex index_for_node(i32 node_id) const;
+    GUI::ModelIndex index_for_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element) const;
 
 private:
     DOMTreeModel(JsonObject, GUI::TreeView&);

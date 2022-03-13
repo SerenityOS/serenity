@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,10 +24,6 @@ AbstractSlider::AbstractSlider(Orientation orientation)
     REGISTER_ENUM_PROPERTY("orientation", this->orientation, set_orientation, Orientation,
         { Orientation::Horizontal, "Horizontal" },
         { Orientation::Vertical, "Vertical" });
-}
-
-AbstractSlider::~AbstractSlider()
-{
 }
 
 void AbstractSlider::set_orientation(Orientation value)

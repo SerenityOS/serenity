@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Layout/SVGSVGBox.h>
+#include <LibWeb/Painting/SVGSVGPaintable.h>
 
 namespace Web::Layout {
 
@@ -13,23 +14,9 @@ SVGSVGBox::SVGSVGBox(DOM::Document& document, SVG::SVGSVGElement& element, Nonnu
 {
 }
 
-void SVGSVGBox::before_children_paint(PaintContext& context, PaintPhase phase)
+RefPtr<Painting::Paintable> SVGSVGBox::create_paintable() const
 {
-    if (phase != PaintPhase::Foreground)
-        return;
-
-    if (!context.has_svg_context())
-        context.set_svg_context(SVGContext(absolute_rect()));
-
-    SVGGraphicsBox::before_children_paint(context, phase);
-}
-
-void SVGSVGBox::after_children_paint(PaintContext& context, PaintPhase phase)
-{
-    SVGGraphicsBox::after_children_paint(context, phase);
-    if (phase != PaintPhase::Foreground)
-        return;
-    context.clear_svg_context();
+    return Painting::SVGSVGPaintable::create(*this);
 }
 
 }

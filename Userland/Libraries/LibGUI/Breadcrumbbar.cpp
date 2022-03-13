@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +21,7 @@ class BreadcrumbButton : public Button {
     C_OBJECT(BreadcrumbButton);
 
 public:
-    virtual ~BreadcrumbButton() override { }
+    virtual ~BreadcrumbButton() override = default;
 
     virtual bool is_uncheckable() const override { return false; }
     virtual void drop_event(DropEvent& event) override
@@ -54,17 +55,13 @@ public:
     Function<void(DragEvent&)> on_drag_enter;
 
 private:
-    BreadcrumbButton() { }
+    BreadcrumbButton() = default;
 };
 
 Breadcrumbbar::Breadcrumbbar()
 {
     auto& layout = set_layout<HorizontalBoxLayout>();
     layout.set_spacing(0);
-}
-
-Breadcrumbbar::~Breadcrumbbar()
-{
 }
 
 void Breadcrumbbar::clear_segments()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -118,7 +118,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
     if (!options)
         options = Object::create(global_object, nullptr);
 
@@ -201,7 +201,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         // e. Assert: timeZoneName is not undefined.
         VERIFY(time_zone_name.has_value());
 
-        // f. If ParseText(! StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is a List of errors, then
+        // f. If ParseText(StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is a List of errors, then
         if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
             // i. If ! IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
             if (!is_valid_time_zone_name(*time_zone_name))
@@ -273,7 +273,7 @@ ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(GlobalObject& 
     // 2. Assert: ! IsValidEpochNanoseconds(epochNanoseconds) is true.
     VERIFY(is_valid_epoch_nanoseconds(epoch_nanoseconds));
 
-    // 5. If newTarget is not present, set it to %Temporal.ZonedDateTime%.
+    // 5. If newTarget is not present, set newTarget to %Temporal.ZonedDateTime%.
     if (!new_target)
         new_target = global_object.temporal_zoned_date_time_constructor();
 
@@ -292,15 +292,15 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(GlobalObject& globa
 {
     // 1. Assert: Type(zonedDateTime) is Object and zonedDateTime has an [[InitializedTemporalZonedDateTime]] internal slot.
 
-    // 2. If increment is not present, set it to 1.
+    // 2. If increment is not present, set increment to 1.
     if (!increment.has_value())
         increment = 1;
 
-    // 3. If unit is not present, set it to "nanosecond".
+    // 3. If unit is not present, set unit to "nanosecond".
     if (!unit.has_value())
         unit = "nanosecond"sv;
 
-    // 4. If roundingMode is not present, set it to "trunc".
+    // 4. If roundingMode is not present, set roundingMode to "trunc".
     if (!rounding_mode.has_value())
         rounding_mode = "trunc"sv;
 
@@ -367,7 +367,7 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(GlobalObject& globa
 // 6.5.5 AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-addzoneddatetime
 ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigInt const& epoch_nanoseconds, Value time_zone, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options)
 {
-    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
     if (!options)
         options = Object::create(global_object, nullptr);
 
@@ -386,8 +386,8 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigI
     // 5. Let datePart be ? CreateTemporalDate(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], calendar).
     auto* date_part = TRY(create_temporal_date(global_object, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), calendar));
 
-    // 6. Let dateDuration be ? CreateTemporalDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
-    auto* date_duration = TRY(create_temporal_duration(global_object, years, months, weeks, days, 0, 0, 0, 0, 0, 0));
+    // 6. Let dateDuration be ! CreateTemporalDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
+    auto* date_duration = MUST(create_temporal_duration(global_object, years, months, weeks, days, 0, 0, 0, 0, 0, 0));
 
     // 7. Let addedDate be ? CalendarDateAdd(calendar, datePart, dateDuration, options).
     auto* added_date = TRY(calendar_date_add(global_object, calendar, date_part, *date_duration, options));
@@ -403,7 +403,7 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigI
 }
 
 // 6.5.6 DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetime
-ThrowCompletionOr<TemporalDuration> difference_zoned_date_time(GlobalObject& global_object, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object* options)
+ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& global_object, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object* options)
 {
     auto& vm = global_object.vm();
 
@@ -412,8 +412,8 @@ ThrowCompletionOr<TemporalDuration> difference_zoned_date_time(GlobalObject& glo
 
     // 3. If ns1 is ns2, then
     if (nanoseconds1.big_integer() == nanoseconds2.big_integer()) {
-        // a. Return the Record { [[Years]]: 0, [[Months]]: 0, [[Weeks]]: 0, [[Days]]: 0, [[Hours]]: 0, [[Minutes]]: 0, [[Seconds]]: 0, [[Milliseconds]]: 0, [[Microseconds]]: 0, [[Nanoseconds]]: 0 }.
-        return TemporalDuration { .years = 0, .months = 0, .weeks = 0, .days = 0, .hours = 0, .minutes = 0, .seconds = 0, .milliseconds = 0, .microseconds = 0, .nanoseconds = 0 };
+        // a. Return ! CreateDurationRecord(0, 0, 0, 0, 0, 0, 0, 0, 0, 0).
+        return create_duration_record(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
     // 4. Let startInstant be ! CreateTemporalInstant(ns1).
@@ -446,8 +446,8 @@ ThrowCompletionOr<TemporalDuration> difference_zoned_date_time(GlobalObject& glo
     // 13. Let timeDifference be ! BalanceDuration(0, 0, 0, 0, 0, 0, result.[[Nanoseconds]], "hour").
     auto time_difference = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *result.nanoseconds.cell(), "hour"sv));
 
-    // 14. Return the Record { [[Years]]: dateDifference.[[Years]], [[Months]]: dateDifference.[[Months]], [[Weeks]]: dateDifference.[[Weeks]], [[Days]]: result.[[Days]], [[Hours]]: timeDifference.[[Hours]], [[Minutes]]: timeDifference.[[Minutes]], [[Seconds]]: timeDifference.[[Seconds]], [[Milliseconds]]: timeDifference.[[Milliseconds]], [[Microseconds]]: timeDifference.[[Microseconds]], [[Nanoseconds]]: timeDifference.[[Nanoseconds]] }.
-    return TemporalDuration { .years = date_difference.years, .months = date_difference.months, .weeks = date_difference.weeks, .days = result.days, .hours = time_difference.hours, .minutes = time_difference.minutes, .seconds = time_difference.seconds, .milliseconds = time_difference.milliseconds, .microseconds = time_difference.microseconds, .nanoseconds = time_difference.nanoseconds };
+    // 14. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], result.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
+    return create_duration_record(date_difference.years, date_difference.months, date_difference.weeks, result.days, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, time_difference.nanoseconds);
 }
 
 // 6.5.7 NanosecondsToDays ( nanoseconds, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-nanosecondstodays
@@ -460,17 +460,17 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
     // 2. Set nanoseconds to ℝ(nanoseconds).
     auto nanoseconds = nanoseconds_bigint.big_integer();
 
-    // 3. Let sign be ! ℝ(Sign(𝔽(nanoseconds))).
-    auto sign = Temporal::sign(nanoseconds);
-
-    // 4. Let dayLengthNs be 8.64 × 10^13.
+    // 3. Let dayLengthNs be 8.64 × 10^13.
     auto day_length_ns = "86400000000000"_sbigint;
 
-    // 5. If sign is 0, then
-    if (sign == 0) {
+    // 4. If nanoseconds = 0, then
+    if (nanoseconds == "0"_bigint) {
         // a. Return the Record { [[Days]]: 0, [[Nanoseconds]]: 0, [[DayLength]]: dayLengthNs }.
         return NanosecondsToDaysResult { .days = 0, .nanoseconds = make_handle(js_bigint(vm, { 0 })), .day_length = day_length_ns.to_double() };
     }
+
+    // 5. If nanoseconds < 0, let sign be −1; else, let sign be 1.
+    auto sign = nanoseconds.is_negative() ? -1 : 1;
 
     // 6. If Type(relativeTo) is not Object or relativeTo does not have an [[InitializedTemporalZonedDateTime]] internal slot, then
     if (!relative_to_value.is_object() || !is<ZonedDateTime>(relative_to_value.as_object())) {

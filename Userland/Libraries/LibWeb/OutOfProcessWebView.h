@@ -9,6 +9,7 @@
 #include <AK/URL.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Widget.h>
+#include <LibWeb/CSS/Selector.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/WebViewHooks.h>
 
@@ -38,8 +39,9 @@ public:
         String specified_values_json;
         String computed_values_json;
         String custom_properties_json;
+        String node_box_sizing_json;
     };
-    Optional<DOMNodeProperties> inspect_dom_node(i32 node_id);
+    Optional<DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<CSS::Selector::PseudoElement>);
     void clear_inspected_dom_node();
     i32 get_hovered_node_id();
 
@@ -81,12 +83,13 @@ public:
     String notify_server_did_request_prompt(Badge<WebContentClient>, const String& message, const String& default_);
     void notify_server_did_get_source(const AK::URL& url, const String& source);
     void notify_server_did_get_dom_tree(const String& dom_tree);
-    void notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties);
+    void notify_server_did_get_dom_node_properties(i32 node_id, String const& specified_style, String const& computed_style, String const& custom_properties, String const& node_box_sizing);
     void notify_server_did_output_js_console_message(i32 message_index);
     void notify_server_did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages);
     void notify_server_did_change_favicon(const Gfx::Bitmap& favicon);
     String notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Cookie::Source source);
     void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source);
+    void notify_server_did_update_resource_count(i32 count_waiting);
 
 private:
     OutOfProcessWebView();

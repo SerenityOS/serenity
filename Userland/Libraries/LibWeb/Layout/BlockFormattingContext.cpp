@@ -462,7 +462,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
             if (relevant_sibling_state.border_box_height() > 0)
                 break;
         }
-        relevant_sibling = relevant_sibling->previous_sibling();
+        relevant_sibling = relevant_sibling->previous_sibling_of_type<Layout::BlockContainer>();
     }
 
     if (relevant_sibling) {

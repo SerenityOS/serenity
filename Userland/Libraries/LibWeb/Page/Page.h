@@ -103,6 +103,7 @@ public:
     virtual String page_did_request_prompt(const String&, const String&) { return {}; }
     virtual String page_did_request_cookie(const AK::URL&, Cookie::Source) { return {}; }
     virtual void page_did_set_cookie(const AK::URL&, const Cookie::ParsedCookie&, Cookie::Source) { }
+    virtual void page_did_update_resource_count(i32) { }
 
 protected:
     virtual ~PageClient() = default;

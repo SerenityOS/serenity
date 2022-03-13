@@ -11,7 +11,7 @@
 
 namespace Web::CSS {
 
-Screen::Screen(DOM::Window& window)
+Screen::Screen(HTML::Window& window)
     : RefCountForwarder(window)
 {
 }

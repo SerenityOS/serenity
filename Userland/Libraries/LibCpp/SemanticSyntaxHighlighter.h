@@ -18,7 +18,7 @@ namespace Cpp {
 class SemanticSyntaxHighlighter final : public Syntax::Highlighter {
 
 public:
-    SemanticSyntaxHighlighter() { }
+    SemanticSyntaxHighlighter() = default;
     virtual ~SemanticSyntaxHighlighter() override = default;
 
     virtual bool is_identifier(u64 token) const override;

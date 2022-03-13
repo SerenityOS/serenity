@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,14 +12,6 @@
 REGISTER_WIDGET(GUI, StackWidget);
 
 namespace GUI {
-
-StackWidget::StackWidget()
-{
-}
-
-StackWidget::~StackWidget()
-{
-}
 
 void StackWidget::set_active_widget(Widget* widget)
 {

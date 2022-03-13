@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,10 +32,6 @@ Splitter::Splitter(Orientation orientation)
         layout()->set_spacing(3);
     else
         layout()->set_spacing(4);
-}
-
-Splitter::~Splitter()
-{
 }
 
 void Splitter::paint_event(PaintEvent& event)

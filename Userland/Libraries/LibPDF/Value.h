@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021-2022, Matthew Olsson <mattco@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,6 +26,13 @@ public:
     {
         if (refptr)
             set<NonnullRefPtr<Object>>(*refptr);
+    }
+
+    template<IsObject T>
+    Value(NonnullRefPtr<T> const& refptr) requires(!IsSame<Object, T>)
+        : Variant(nullptr)
+    {
+        set<NonnullRefPtr<Object>>(*refptr);
     }
 
     [[nodiscard]] String to_string(int indent = 0) const;

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,10 +17,6 @@ ScrollableContainerWidget::ScrollableContainerWidget()
 {
     REGISTER_BOOL_PROPERTY("scrollbars_enabled", is_scrollbars_enabled, set_scrollbars_enabled);
     REGISTER_BOOL_PROPERTY("should_hide_unnecessary_scrollbars", should_hide_unnecessary_scrollbars, set_should_hide_unnecessary_scrollbars);
-}
-
-ScrollableContainerWidget::~ScrollableContainerWidget()
-{
 }
 
 void ScrollableContainerWidget::did_scroll()

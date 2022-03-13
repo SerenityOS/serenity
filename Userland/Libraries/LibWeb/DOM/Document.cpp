@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
@@ -31,10 +31,11 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/HTMLCollection.h>
+#include <LibWeb/DOM/NodeIterator.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/DOM/Window.h>
+#include <LibWeb/DOM/TreeWalker.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -56,6 +57,7 @@
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
@@ -75,7 +77,7 @@ Document::Document(const AK::URL& url)
     , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_style_sheets(CSS::StyleSheetList::create(*this))
     , m_url(url)
-    , m_window(Window::create_with_document(*this))
+    , m_window(HTML::Window::create_with_document(*this))
     , m_implementation(DOMImplementation::create({}, *this))
     , m_history(HTML::History::create(*this))
 {
@@ -544,14 +546,15 @@ void Document::force_layout()
     update_layout();
 }
 
-void Document::ensure_layout()
+void Document::invalidate_layout()
 {
-    if (m_needs_layout || !m_layout_root)
-        update_layout();
+    tear_down_layout_tree();
 }
 
 void Document::update_layout()
 {
+    update_style();
+
     if (!m_needs_layout && m_layout_root)
         return;
 
@@ -560,8 +563,6 @@ void Document::update_layout()
 
     auto viewport_rect = browsing_context()->viewport_rect();
 
-    update_style();
-
     if (!m_layout_root) {
         Layout::TreeBuilder tree_builder;
         m_layout_root = static_ptr_cast<Layout::InitialContainingBlock>(tree_builder.build(*this));
@@ -569,7 +570,6 @@ void Document::update_layout()
 
     Layout::FormattingState formatting_state;
     Layout::BlockFormattingContext root_formatting_context(formatting_state, *m_layout_root, nullptr);
-    m_layout_root->build_stacking_context_tree();
 
     auto& icb = static_cast<Layout::InitialContainingBlock&>(*m_layout_root);
     auto& icb_state = formatting_state.get_mutable(icb);
@@ -581,6 +581,8 @@ void Document::update_layout()
 
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
     formatting_state.commit();
+
+    m_layout_root->build_stacking_context_tree();
 
     browsing_context()->set_needs_display();
 
@@ -1035,6 +1037,17 @@ void Document::adopt_node(Node& node)
             inclusive_descendant.adopted_from(old_document);
             return IterationDecision::Continue;
         });
+
+        // Transfer NodeIterators rooted at `node` from old_document to this document.
+        Vector<NodeIterator&> node_iterators_to_transfer;
+        for (auto* node_iterator : old_document.m_node_iterators) {
+            if (node_iterator->root() == &node)
+                node_iterators_to_transfer.append(*node_iterator);
+        }
+        for (auto& node_iterator : node_iterators_to_transfer) {
+            old_document.m_node_iterators.remove(&node_iterator);
+            m_node_iterators.set(&node_iterator);
+        }
     }
 }
 
@@ -1458,6 +1471,47 @@ ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_name(String
         .prefix = qualified_name.substring_view(0, *colon_offset),
         .tag_name = qualified_name.substring_view(*colon_offset + 1),
     };
+}
+
+// https://dom.spec.whatwg.org/#dom-document-createnodeiterator
+NonnullRefPtr<NodeIterator> Document::create_node_iterator(Node& root, unsigned what_to_show, RefPtr<NodeFilter> filter)
+{
+    return NodeIterator::create(root, what_to_show, move(filter));
+}
+
+// https://dom.spec.whatwg.org/#dom-document-createtreewalker
+NonnullRefPtr<TreeWalker> Document::create_tree_walker(Node& root, unsigned what_to_show, RefPtr<NodeFilter> filter)
+{
+    return TreeWalker::create(root, what_to_show, move(filter));
+}
+
+void Document::register_node_iterator(Badge<NodeIterator>, NodeIterator& node_iterator)
+{
+    auto result = m_node_iterators.set(&node_iterator);
+    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+}
+
+void Document::unregister_node_iterator(Badge<NodeIterator>, NodeIterator& node_iterator)
+{
+    bool was_removed = m_node_iterators.remove(&node_iterator);
+    VERIFY(was_removed);
+}
+
+void Document::increment_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>)
+{
+    ++m_number_of_things_delaying_the_load_event;
+
+    if (auto* page = this->page())
+        page->client().page_did_update_resource_count(m_number_of_things_delaying_the_load_event);
+}
+
+void Document::decrement_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>)
+{
+    VERIFY(m_number_of_things_delaying_the_load_event);
+    --m_number_of_things_delaying_the_load_event;
+
+    if (auto* page = this->page())
+        page->client().page_did_update_resource_count(m_number_of_things_delaying_the_load_event);
 }
 
 }

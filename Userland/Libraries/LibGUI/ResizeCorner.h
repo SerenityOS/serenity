@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,7 @@ namespace GUI {
 class ResizeCorner : public Widget {
     C_OBJECT(ResizeCorner)
 public:
-    virtual ~ResizeCorner() override;
+    virtual ~ResizeCorner() override = default;
 
 protected:
     ResizeCorner();

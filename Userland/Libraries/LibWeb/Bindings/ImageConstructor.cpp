@@ -9,7 +9,7 @@
 #include <LibWeb/Bindings/ImageConstructor.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Namespace.h>
 
 namespace Web::Bindings {

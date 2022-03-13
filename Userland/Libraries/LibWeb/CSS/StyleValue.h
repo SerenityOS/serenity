@@ -274,6 +274,13 @@ enum class TextDecorationStyle {
     Wavy,
 };
 
+enum class TextJustify {
+    Auto,
+    None,
+    InterWord,
+    InterCharacter,
+};
+
 enum class TextTransform {
     None,
     Capitalize,
@@ -1400,6 +1407,17 @@ public:
     LengthPercentage const& offset_y() const { return m_offset_y; }
 
     virtual String to_string() const override;
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        auto const& typed_other = static_cast<PositionStyleValue const&>(other);
+        return m_edge_x == typed_other.m_edge_x
+            && m_offset_x == typed_other.m_offset_x
+            && m_edge_y == typed_other.m_edge_y
+            && m_offset_y == typed_other.m_offset_y;
+    }
 
 private:
     PositionStyleValue(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)

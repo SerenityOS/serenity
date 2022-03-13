@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@ namespace GUI {
 class Toolbar : public Widget {
     C_OBJECT(Toolbar)
 public:
-    virtual ~Toolbar() override;
+    virtual ~Toolbar() override = default;
 
     ErrorOr<NonnullRefPtr<GUI::Button>> try_add_action(GUI::Action&);
     ErrorOr<void> try_add_separator();

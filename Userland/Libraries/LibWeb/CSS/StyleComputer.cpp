@@ -622,11 +622,11 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
 
     // FIXME: Normal user declarations
 
-    // Normal author declarations
-    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No, custom_properties);
-
     // Author presentational hints (NOTE: The spec doesn't say exactly how to prioritize these.)
     element.apply_presentational_hints(style);
+
+    // Normal author declarations
+    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No, custom_properties);
 
     // FIXME: Animation declarations [css-animations-1]
 
@@ -683,6 +683,18 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
     if (value_slot->is_inherit()) {
         value_slot = get_inherit_value(property_id, element, pseudo_element);
         return;
+    }
+
+    // https://www.w3.org/TR/css-cascade-4/#inherit-initial
+    // If the cascaded value of a property is the unset keyword,
+    if (value_slot->is_unset()) {
+        if (is_inherited_property(property_id)) {
+            // then if it is an inherited property, this is treated as inherit,
+            value_slot = get_inherit_value(property_id, element, pseudo_element);
+        } else {
+            // and if it is not, this is treated as initial.
+            value_slot = property_initial_value(property_id);
+        }
     }
 }
 
@@ -906,6 +918,12 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     style.set_property(CSS::PropertyID::FontWeight, NumericStyleValue::create_integer(weight));
 
     style.set_computed_font(found_font.release_nonnull());
+}
+
+Gfx::Font const& StyleComputer::initial_font() const
+{
+    // FIXME: This is not correct.
+    return StyleProperties::font_fallback(false, false);
 }
 
 void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const

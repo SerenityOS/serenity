@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -382,7 +383,7 @@ public:
     virtual ~UDPSocket() override { close(); }
 
 private:
-    UDPSocket() { }
+    UDPSocket() = default;
 
     void setup_notifier()
     {
@@ -452,7 +453,7 @@ public:
     virtual ~LocalSocket() { close(); }
 
 private:
-    LocalSocket() { }
+    LocalSocket() = default;
 
     void setup_notifier()
     {
@@ -774,7 +775,7 @@ public:
 
     size_t buffer_size() const { return m_helper.buffer_size(); }
 
-    virtual ~BufferedSeekable() override { }
+    virtual ~BufferedSeekable() override = default;
 
 private:
     BufferedSeekable(NonnullOwnPtr<T> stream, ByteBuffer buffer)
@@ -843,7 +844,7 @@ public:
 
     virtual size_t buffer_size() const override { return m_helper.buffer_size(); }
 
-    virtual ~BufferedSocket() override { }
+    virtual ~BufferedSocket() override = default;
 
 private:
     BufferedSocket(NonnullOwnPtr<T> stream, ByteBuffer buffer)

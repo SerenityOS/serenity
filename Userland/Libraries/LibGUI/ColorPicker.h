@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +21,7 @@ class ColorPicker final : public Dialog {
     C_OBJECT(ColorPicker)
 
 public:
-    virtual ~ColorPicker() override;
+    virtual ~ColorPicker() override = default;
 
     bool color_has_alpha_channel() const { return m_color_has_alpha_channel; }
     void set_color_has_alpha_channel(bool);

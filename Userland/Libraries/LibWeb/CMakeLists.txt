@@ -14,6 +14,7 @@ set(SOURCES
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapperFactory.cpp
     Bindings/WindowObject.cpp
+    Bindings/WindowProxy.cpp
     Bindings/Wrappable.cpp
     Crypto/Crypto.cpp
     Crypto/SubtleCrypto.cpp
@@ -32,6 +33,8 @@ set(SOURCES
     CSS/Display.cpp
     CSS/Frequency.cpp
     CSS/Length.cpp
+    CSS/MediaFeatureID.cpp
+    CSS/MediaFeatureID.h
     CSS/MediaList.cpp
     CSS/MediaQuery.cpp
     CSS/MediaQueryList.cpp
@@ -44,6 +47,7 @@ set(SOURCES
     CSS/PropertyID.cpp
     CSS/PropertyID.h
     CSS/QuirksModeStyleSheetSource.cpp
+    CSS/Ratio.cpp
     CSS/Resolution.cpp
     CSS/ResolvedCSSStyleDeclaration.cpp
     CSS/Screen.cpp
@@ -86,6 +90,7 @@ set(SOURCES
     DOM/LiveNodeList.cpp
     DOM/NamedNodeMap.cpp
     DOM/Node.cpp
+    DOM/NodeIterator.cpp
     DOM/NodeOperations.cpp
     DOM/ParentNode.cpp
     DOM/Position.cpp
@@ -97,8 +102,7 @@ set(SOURCES
     DOM/StaticRange.cpp
     DOM/Text.cpp
     DOM/Text.idl
-    DOM/Timer.cpp
-    DOM/Window.cpp
+    DOM/TreeWalker.cpp
     DOMParsing/InnerHTML.cpp
     DOMTreeModel.cpp
     Dump.cpp
@@ -112,6 +116,7 @@ set(SOURCES
     HTML/BrowsingContextContainer.cpp
     HTML/CanvasGradient.cpp
     HTML/CanvasRenderingContext2D.cpp
+    HTML/CrossOrigin/Reporting.cpp
     HTML/DOMParser.cpp
     HTML/DOMStringMap.cpp
     HTML/EventLoop/EventLoop.cpp
@@ -213,6 +218,8 @@ set(SOURCES
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/TextMetrics.cpp
+    HTML/Timer.cpp
+    HTML/Window.cpp
     HTML/Worker.cpp
     HTML/WorkerDebugConsoleClient.cpp
     HTML/WorkerGlobalScope.cpp
@@ -239,6 +246,7 @@ set(SOURCES
     Layout/InlineLevelIterator.cpp
     Layout/InlineNode.cpp
     Layout/Label.cpp
+    Layout/LabelableNode.cpp
     Layout/LayoutPosition.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
@@ -277,7 +285,24 @@ set(SOURCES
     Page/Page.cpp
     Painting/BackgroundPainting.cpp
     Painting/BorderPainting.cpp
+    Painting/ButtonPaintable.cpp
+    Painting/CanvasPaintable.cpp
+    Painting/CheckBoxPaintable.cpp
+    Painting/ImagePaintable.cpp
+    Painting/InlinePaintable.cpp
+    Painting/LabelablePaintable.cpp
+    Painting/MarkerPaintable.cpp
+    Painting/NestedBrowsingContextPaintable.cpp
     Painting/PaintContext.cpp
+    Painting/Paintable.cpp
+    Painting/PaintableBox.cpp
+    Painting/ProgressPaintable.cpp
+    Painting/RadioButtonPaintable.cpp
+    Painting/SVGGeometryPaintable.cpp
+    Painting/SVGGraphicsPaintable.cpp
+    Painting/SVGPaintable.cpp
+    Painting/SVGSVGPaintable.cpp
+    Painting/TextPaintable.cpp
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
     RequestIdleCallback/IdleDeadline.cpp
@@ -433,12 +458,14 @@ libweb_js_wrapper(DOM/EventTarget)
 libweb_js_wrapper(DOM/HTMLCollection)
 libweb_js_wrapper(DOM/NamedNodeMap)
 libweb_js_wrapper(DOM/Node)
+libweb_js_wrapper(DOM/NodeIterator)
 libweb_js_wrapper(DOM/NodeList)
 libweb_js_wrapper(DOM/ProcessingInstruction)
 libweb_js_wrapper(DOM/Range)
 libweb_js_wrapper(DOM/ShadowRoot)
 libweb_js_wrapper(DOM/StaticRange)
 libweb_js_wrapper(DOM/Text)
+libweb_js_wrapper(DOM/TreeWalker)
 libweb_js_wrapper(Encoding/TextDecoder)
 libweb_js_wrapper(Encoding/TextEncoder)
 libweb_js_wrapper(Geometry/DOMRect)
@@ -562,6 +589,32 @@ libweb_js_wrapper(WebSockets/WebSocket)
 libweb_js_wrapper(XHR/ProgressEvent)
 libweb_js_wrapper(XHR/XMLHttpRequest)
 libweb_js_wrapper(XHR/XMLHttpRequestEventTarget)
+
+add_custom_command(
+    OUTPUT CSS/MediaFeatureID.h
+    COMMAND ${CMAKE_COMMAND} -E make_directory CSS
+    COMMAND "$<TARGET_FILE:Lagom::Generate_CSS_MediaFeatureID_h>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/MediaFeatures.json" > CSS/MediaFeatureID.h.tmp
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/MediaFeatureID.h.tmp CSS/MediaFeatureID.h
+    COMMAND "${CMAKE_COMMAND}" -E remove CSS/MediaFeatureID.h.tmp
+    VERBATIM
+    DEPENDS Lagom::Generate_CSS_MediaFeatureID_h
+    MAIN_DEPENDENCY CSS/MediaFeatures.json
+)
+add_custom_target(generate_MediaFeatureID.h DEPENDS CSS/MediaFeatureID.h)
+add_dependencies(all_generated generate_MediaFeatureID.h)
+
+add_custom_command(
+    OUTPUT CSS/MediaFeatureID.cpp
+    COMMAND ${CMAKE_COMMAND} -E make_directory CSS
+    COMMAND "$<TARGET_FILE:Lagom::Generate_CSS_MediaFeatureID_cpp>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/MediaFeatures.json" > CSS/MediaFeatureID.cpp.tmp
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/MediaFeatureID.cpp.tmp CSS/MediaFeatureID.cpp
+    COMMAND "${CMAKE_COMMAND}" -E remove CSS/MediaFeatureID.cpp.tmp
+    VERBATIM
+    DEPENDS Lagom::Generate_CSS_MediaFeatureID_cpp
+    MAIN_DEPENDENCY CSS/MediaFeatures.json
+)
+add_custom_target(generate_MediaFeatureID.cpp DEPENDS CSS/MediaFeatureID.cpp)
+add_dependencies(all_generated generate_MediaFeatureID.cpp)
 
 add_custom_command(
     OUTPUT CSS/PropertyID.h

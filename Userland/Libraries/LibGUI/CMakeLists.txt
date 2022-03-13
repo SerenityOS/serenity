@@ -26,7 +26,6 @@ set(SOURCES
     CommonActions.cpp
     CommonLocationsProvider.cpp
     ComboBox.cpp
-    Command.cpp
     CommandPalette.cpp
     Desktop.cpp
     Dialog.cpp

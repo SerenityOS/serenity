@@ -378,11 +378,23 @@ void IntelNativeGraphicsAdapter::gmbus_read_edid()
         SpinlockLocker control_lock(m_control_lock);
         gmbus_write(DDC2_I2C_ADDRESS, 0);
         gmbus_read(DDC2_I2C_ADDRESS, (u8*)&m_crt_edid_bytes, sizeof(m_crt_edid_bytes));
+        // FIXME: It seems like the returned EDID is almost correct,
+        // but the first byte is set to 0xD0 instead of 0x00.
+        // For now, this "hack" works well enough.
+        m_crt_edid_bytes[0] = 0x0;
     }
     if (auto parsed_edid = EDID::Parser::from_bytes({ m_crt_edid_bytes, sizeof(m_crt_edid_bytes) }); !parsed_edid.is_error()) {
         m_crt_edid = parsed_edid.release_value();
     } else {
-        dbgln("IntelNativeGraphicsAdapter: Parsing EDID failed: {}", parsed_edid.error());
+        for (size_t x = 0; x < 128; x = x + 16) {
+            dmesgln("IntelNativeGraphicsAdapter: Print offending EDID");
+            dmesgln("{:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
+                m_crt_edid_bytes[x], m_crt_edid_bytes[x + 1], m_crt_edid_bytes[x + 2], m_crt_edid_bytes[x + 3],
+                m_crt_edid_bytes[x + 4], m_crt_edid_bytes[x + 5], m_crt_edid_bytes[x + 6], m_crt_edid_bytes[x + 7],
+                m_crt_edid_bytes[x + 8], m_crt_edid_bytes[x + 9], m_crt_edid_bytes[x + 10], m_crt_edid_bytes[x + 11],
+                m_crt_edid_bytes[x + 12], m_crt_edid_bytes[x + 13], m_crt_edid_bytes[x + 14], m_crt_edid_bytes[x + 15]);
+        }
+        dmesgln("IntelNativeGraphicsAdapter: Parsing EDID failed: {}", parsed_edid.error());
         m_crt_edid = {};
     }
 }

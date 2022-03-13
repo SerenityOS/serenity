@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ class RadioButton : public AbstractButton {
     C_OBJECT(RadioButton);
 
 public:
-    virtual ~RadioButton() override;
+    virtual ~RadioButton() override = default;
 
     virtual void click(unsigned modifiers = 0) override;
 

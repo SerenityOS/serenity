@@ -31,8 +31,6 @@ private:
     ErrorOr<JsonValue> parse_false();
     ErrorOr<JsonValue> parse_true();
     ErrorOr<JsonValue> parse_null();
-
-    String m_last_string_starting_with_character[256];
 };
 
 }

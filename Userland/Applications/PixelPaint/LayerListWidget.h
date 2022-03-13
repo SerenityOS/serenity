@@ -39,6 +39,7 @@ private:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
+    virtual void doubleclick_event(GUI::MouseEvent&) override;
 
     virtual void image_did_add_layer(size_t) override;
     virtual void image_did_remove_layer(size_t) override;
@@ -59,7 +60,7 @@ private:
         Gfx::IntPoint movement_delta;
     };
 
-    void get_gadget_rects(Gadget const&, Gfx::IntRect& outer_rect, Gfx::IntRect& outer_thumbnail_rect, Gfx::IntRect& inner_thumbnail_rect, Gfx::IntRect& text_rect);
+    void get_gadget_rects(Gadget const& gadget, bool is_masked, Gfx::IntRect& outer_rect, Gfx::IntRect& outer_thumbnail_rect, Gfx::IntRect& inner_thumbnail_rect, Gfx::IntRect& outer_mask_thumbnail_rect, Gfx::IntRect& inner_mask_thumbnail_rect, Gfx::IntRect& text_rect);
     bool is_moving_gadget() const { return m_moving_gadget_index.has_value(); }
 
     Optional<size_t> gadget_at(Gfx::IntPoint const&);

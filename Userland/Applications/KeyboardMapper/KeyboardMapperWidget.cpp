@@ -21,6 +21,22 @@ KeyboardMapperWidget::KeyboardMapperWidget()
     create_frame();
 }
 
+bool KeyboardMapperWidget::request_close()
+{
+    if (!window()->is_modified())
+        return true;
+    auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_filename);
+    if (result == GUI::MessageBox::ExecYes) {
+        ErrorOr<void> error_or = save();
+        if (error_or.is_error())
+            show_error_to_user(error_or.error());
+
+        if (!window()->is_modified())
+            return true;
+    }
+    return result == GUI::MessageBox::ExecNo;
+}
+
 void KeyboardMapperWidget::create_frame()
 {
     set_fill_with_background_color(true);
@@ -57,8 +73,7 @@ void KeyboardMapperWidget::create_frame()
                 else
                     map[index] = value[0];
 
-                m_modified = true;
-                update_window_title();
+                window()->set_modified(true);
             }
         };
 
@@ -125,6 +140,7 @@ ErrorOr<void> KeyboardMapperWidget::load_map_from_file(const String& filename)
         radio_button.set_checked(radio_button.name() == "map");
     }
 
+    window()->set_modified(false);
     update_window_title();
     return {};
 }
@@ -180,7 +196,7 @@ ErrorOr<void> KeyboardMapperWidget::save_to_file(StringView filename)
     TRY(file->write(file_content.bytes()));
     file->close();
 
-    m_modified = false;
+    window()->set_modified(false);
     m_filename = filename;
     update_window_title();
     return {};
@@ -241,9 +257,7 @@ void KeyboardMapperWidget::update_window_title()
 {
     StringBuilder sb;
     sb.append(m_filename);
-    if (m_modified)
-        sb.append(" (*)");
-    sb.append(" - Keyboard Mapper");
+    sb.append("[*] - Keyboard Mapper");
 
     window()->set_title(sb.to_string());
 }

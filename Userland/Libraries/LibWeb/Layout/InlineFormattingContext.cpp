@@ -17,6 +17,8 @@
 
 namespace Web::Layout {
 
+constexpr float text_justification_threshold = 0.1;
+
 InlineFormattingContext::InlineFormattingContext(FormattingState& state, BlockContainer const& containing_block, BlockFormattingContext& parent)
     : FormattingContext(Type::Inline, state, containing_block, &parent)
 {
@@ -74,14 +76,6 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
     VERIFY(containing_block().children_are_inline());
 
     generate_line_boxes(layout_mode);
-
-    containing_block().for_each_child([&](auto& child) {
-        VERIFY(child.is_inline());
-        if (is<Box>(child) && child.is_absolutely_positioned()) {
-            parent().add_absolutely_positioned_box(static_cast<Box&>(child));
-            return;
-        }
-    });
 
     float min_line_height = containing_block().line_height();
     float max_line_width = 0;
@@ -172,6 +166,55 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     dump_tree(box);
 }
 
+void InlineFormattingContext::apply_justification_to_fragments(FormattingState::NodeState const& containing_block_state, CSS::TextJustify text_justify, LineBox& line_box, bool is_last_line)
+{
+    switch (text_justify) {
+    case CSS::TextJustify::None:
+        return;
+    // FIXME: These two cases currently fall back to auto, handle them as well.
+    case CSS::TextJustify::InterCharacter:
+    case CSS::TextJustify::InterWord:
+    case CSS::TextJustify::Auto:
+        break;
+    }
+
+    float excess_horizontal_space = containing_block_state.content_width - line_box.width();
+
+    // Only justify the text if the excess horizontal space is less than or
+    // equal to 10%, or if we are not looking at the last line box.
+    if (is_last_line && excess_horizontal_space / containing_block_state.content_width > text_justification_threshold)
+        return;
+
+    float excess_horizontal_space_including_whitespace = excess_horizontal_space;
+    size_t whitespace_count = 0;
+    for (auto& fragment : line_box.fragments()) {
+        if (fragment.is_justifiable_whitespace()) {
+            ++whitespace_count;
+            excess_horizontal_space_including_whitespace += fragment.width();
+        }
+    }
+
+    float justified_space_width = whitespace_count > 0 ? (excess_horizontal_space_including_whitespace / static_cast<float>(whitespace_count)) : 0;
+
+    // This is the amount that each fragment will be offset by. If a whitespace
+    // fragment is shorter than the justified space width, it increases to push
+    // subsequent fragments, and decreases to pull them back otherwise.
+    float running_diff = 0;
+    for (size_t i = 0; i < line_box.fragments().size(); ++i) {
+        auto& fragment = line_box.fragments()[i];
+
+        auto offset = fragment.offset();
+        offset.translate_by(running_diff, 0);
+        fragment.set_offset(offset);
+
+        if (fragment.is_justifiable_whitespace()
+            && fragment.width() != justified_space_width) {
+            running_diff += justified_space_width - fragment.width();
+            fragment.set_width(justified_space_width);
+        }
+    }
+}
+
 void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 {
     auto& containing_block_state = m_state.get_mutable(containing_block());
@@ -198,9 +241,14 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
             line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break);
-            line_builder.append_box(box, item.border_start + item.padding_start, item.padding_end + item.border_end);
+            line_builder.append_box(box, item.border_start + item.padding_start, item.padding_end + item.border_end, item.margin_start, item.margin_end);
             break;
         }
+        case InlineLevelIterator::Item::Type::AbsolutelyPositionedElement:
+            if (is<Box>(*item.node))
+                parent().add_absolutely_positioned_box(static_cast<Layout::Box const&>(*item.node));
+            break;
+
         case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
             line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break);
@@ -210,6 +258,8 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
                 item.length_in_node,
                 item.border_start + item.padding_start,
                 item.padding_end + item.border_end,
+                item.margin_start,
+                item.margin_end,
                 item.width,
                 text_node.computed_values().font_size());
             break;
@@ -222,6 +272,18 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
     }
 
     line_builder.remove_last_line_if_empty();
+
+    auto const& containing_block = this->containing_block();
+    auto text_align = containing_block.computed_values().text_align();
+    auto text_justify = containing_block.computed_values().text_justify();
+    if (text_align == CSS::TextAlign::Justify) {
+        auto const& containing_block_state = m_state.get(containing_block);
+        for (size_t i = 0; i < line_boxes.size(); i++) {
+            auto& line_box = line_boxes[i];
+            auto is_last_line = i == line_boxes.size() - 1;
+            apply_justification_to_fragments(containing_block_state, text_justify, line_box, is_last_line);
+        }
+    }
 }
 
 }

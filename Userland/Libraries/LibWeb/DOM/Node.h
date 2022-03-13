@@ -75,6 +75,7 @@ public:
 
     virtual bool requires_svg_container() const { return false; }
     virtual bool is_svg_container() const { return false; }
+    virtual bool is_svg_svg_element() const { return false; }
 
     bool in_a_document_tree() const;
 
@@ -157,6 +158,9 @@ public:
 
     const Layout::Node* layout_node() const { return m_layout_node; }
     Layout::Node* layout_node() { return m_layout_node; }
+
+    Painting::PaintableBox const* paint_box() const;
+    Painting::Paintable const* paintable() const;
 
     void set_layout_node(Badge<Layout::Node>, Layout::Node*) const;
 

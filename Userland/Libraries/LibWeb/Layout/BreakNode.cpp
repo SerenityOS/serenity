@@ -20,8 +20,4 @@ BreakNode::~BreakNode()
 {
 }
 
-void BreakNode::paint(PaintContext&, PaintPhase)
-{
-}
-
 }

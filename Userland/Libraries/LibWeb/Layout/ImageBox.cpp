@@ -1,16 +1,14 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGfx/FontDatabase.h>
-#include <LibGfx/Painter.h>
-#include <LibGfx/StylePainter.h>
 #include <LibWeb/CSS/StyleValue.h>
-#include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/ImageBox.h>
+#include <LibWeb/Painting/ImagePaintable.h>
 
 namespace Web::Layout {
 
@@ -67,34 +65,7 @@ void ImageBox::prepare_for_replaced_layout()
     }
 
     if (!has_intrinsic_width() && !has_intrinsic_height()) {
-        set_content_width(16);
-        set_content_height(16);
-    }
-}
-
-void ImageBox::paint(PaintContext& context, PaintPhase phase)
-{
-    if (!is_visible())
-        return;
-
-    // FIXME: This should be done at a different level. Also rect() does not include padding etc!
-    if (!context.viewport_rect().intersects(enclosing_int_rect(absolute_rect())))
-        return;
-
-    ReplacedBox::paint(context, phase);
-
-    if (phase == PaintPhase::Foreground) {
-        if (renders_as_alt_text()) {
-            auto& image_element = verify_cast<HTML::HTMLImageElement>(dom_node());
-            context.painter().set_font(Gfx::FontDatabase::default_font());
-            Gfx::StylePainter::paint_frame(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
-            auto alt = image_element.alt();
-            if (alt.is_empty())
-                alt = image_element.src();
-            context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
-        } else if (auto bitmap = m_image_loader.bitmap(m_image_loader.current_frame_index())) {
-            context.painter().draw_scaled_bitmap(rounded_int_rect(absolute_rect()), *bitmap, bitmap->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
-        }
+        // FIXME: Do something.
     }
 }
 
@@ -107,7 +78,12 @@ bool ImageBox::renders_as_alt_text() const
 
 void ImageBox::browsing_context_did_set_viewport_rect(Gfx::IntRect const& viewport_rect)
 {
-    m_image_loader.set_visible_in_viewport(viewport_rect.to_type<float>().intersects(absolute_rect()));
+    m_image_loader.set_visible_in_viewport(viewport_rect.to_type<float>().intersects(paint_box()->absolute_rect()));
+}
+
+RefPtr<Painting::Paintable> ImageBox::create_paintable() const
+{
+    return Painting::ImagePaintable::create(*this);
 }
 
 }

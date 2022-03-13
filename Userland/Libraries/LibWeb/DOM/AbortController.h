@@ -11,8 +11,8 @@
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/DOM/AbortSignal.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 

@@ -1,64 +1,23 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
-#include <AK/JsonObject.h>
+#include "GeneratorUtil.h"
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/File.h>
-#include <ctype.h>
+#include <LibMain/Main.h>
 
-static String title_casify(const String& dashy_name)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    auto parts = dashy_name.split('-');
-    StringBuilder builder;
-    for (auto& part : parts) {
-        if (part.is_empty())
-            continue;
-        builder.append(toupper(part[0]));
-        if (part.length() == 1)
-            continue;
-        builder.append(part.substring_view(1, part.length() - 1));
-    }
-    return builder.to_string();
-}
-
-static String camel_casify(StringView dashy_name)
-{
-    auto parts = dashy_name.split_view('-');
-    StringBuilder builder;
-    bool first = true;
-    for (auto& part : parts) {
-        if (part.is_empty())
-            continue;
-        char ch = part[0];
-        if (!first)
-            ch = toupper(ch);
-        else
-            first = false;
-        builder.append(ch);
-        if (part.length() == 1)
-            continue;
-        builder.append(part.substring_view(1, part.length() - 1));
-    }
-    return builder.to_string();
-}
-
-int main(int argc, char** argv)
-{
-    if (argc != 2) {
-        warnln("usage: {} <path/to/CSS/Properties.json>", argv[0]);
+    if (arguments.argc != 2) {
+        warnln("usage: {} <path/to/CSS/Properties.json>", arguments.strings[0]);
         return 1;
     }
-    auto file = Core::File::construct(argv[1]);
-    if (!file->open(Core::OpenMode::ReadOnly))
-        return 1;
 
-    auto json = JsonValue::from_string(file->read_all()).release_value_but_fixme_should_propagate_errors();
+    auto json = TRY(read_entire_file_as_json(arguments.strings[1]));
     VERIFY(json.is_object());
 
     auto& properties = json.as_object();
@@ -452,4 +411,5 @@ size_t property_maximum_value_count(PropertyID property_id)
 )~~~");
 
     outln("{}", generator.as_string_view());
+    return 0;
 }

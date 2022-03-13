@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -69,10 +70,6 @@ MessageBox::MessageBox(Window* parent_window, StringView text, StringView title,
 {
     set_title(title);
     build();
-}
-
-MessageBox::~MessageBox()
-{
 }
 
 RefPtr<Gfx::Bitmap> MessageBox::icon() const

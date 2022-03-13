@@ -16,7 +16,6 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
@@ -27,6 +26,7 @@
 #include <LibWeb/HTML/Parser/HTMLEncodingDetection.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/SVG/TagNames.h>
 
@@ -276,7 +276,7 @@ void HTMLParser::the_end()
             return;
 
         // 3. Let window be the Document's relevant global object.
-        NonnullRefPtr<DOM::Window> window = document->window();
+        NonnullRefPtr<Window> window = document->window();
 
         // FIXME: 4. Set the Document's load timing info's load event start time to the current high resolution time given window.
 

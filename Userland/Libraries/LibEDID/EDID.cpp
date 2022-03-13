@@ -665,7 +665,9 @@ Optional<FixedPoint<16>> Parser::gamma() const
 
 u32 Parser::DetailedTiming::pixel_clock_khz() const
 {
-    return (u32)m_edid.read_le(&m_detailed_timings.pixel_clock) * 10000;
+    // Note: The stored value is in units of 10 kHz, which means that to get the
+    // value in kHz, we need to multiply it by 10.
+    return (u32)m_edid.read_le(&m_detailed_timings.pixel_clock) * 10;
 }
 
 u16 Parser::DetailedTiming::horizontal_addressable_pixels() const
@@ -768,7 +770,8 @@ FixedPoint<16, u32> Parser::DetailedTiming::refresh_rate() const
     if (total_pixels == 0)
         return {};
     // Use a bigger fixed point representation due to the large numbers involved and then downcast
-    return FixedPoint<32, u64>(pixel_clock_khz()) / total_pixels;
+    // Note: We need to convert the pixel clock from kHz to Hertz to actually calculate this correctly.
+    return FixedPoint<32, u64>(pixel_clock_khz() * 1000) / total_pixels;
 }
 
 ErrorOr<IterationDecision> Parser::for_each_established_timing(Function<IterationDecision(EstablishedTiming const&)> callback) const

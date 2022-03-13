@@ -12,6 +12,7 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Painting/PaintableBox.h>
 #include <WebContent/WebContentClientEndpoint.h>
 
 namespace WebContent {
@@ -121,10 +122,10 @@ void PageHost::page_did_layout()
     auto* layout_root = this->layout_root();
     VERIFY(layout_root);
     Gfx::IntSize content_size;
-    if (layout_root->has_overflow())
-        content_size = enclosing_int_rect(layout_root->scrollable_overflow_rect().value()).size();
+    if (layout_root->paint_box()->has_overflow())
+        content_size = enclosing_int_rect(layout_root->paint_box()->scrollable_overflow_rect().value()).size();
     else
-        content_size = enclosing_int_rect(layout_root->absolute_rect()).size();
+        content_size = enclosing_int_rect(layout_root->paint_box()->absolute_rect()).size();
     m_client.async_did_layout(content_size);
 }
 
@@ -254,6 +255,11 @@ String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source sou
 void PageHost::page_did_set_cookie(const URL& url, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)
 {
     m_client.async_did_set_cookie(url, cookie, static_cast<u8>(source));
+}
+
+void PageHost::page_did_update_resource_count(i32 count_waiting)
+{
+    m_client.async_did_update_resource_count(count_waiting);
 }
 
 }

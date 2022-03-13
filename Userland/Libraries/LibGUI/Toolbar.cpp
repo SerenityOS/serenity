@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,15 +36,11 @@ Toolbar::Toolbar(Orientation orientation, int button_size)
     layout()->set_margins({ 2, 2, 2, 2 });
 }
 
-Toolbar::~Toolbar()
-{
-}
-
 class ToolbarButton final : public Button {
     C_OBJECT(ToolbarButton);
 
 public:
-    virtual ~ToolbarButton() override { }
+    virtual ~ToolbarButton() override = default;
 
 private:
     explicit ToolbarButton(Action& action)

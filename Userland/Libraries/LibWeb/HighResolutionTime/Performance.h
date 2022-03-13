@@ -21,7 +21,7 @@ public:
     using WrapperType = Bindings::PerformanceWrapper;
     using AllowOwnPtr = TrueType;
 
-    explicit Performance(DOM::Window&);
+    explicit Performance(HTML::Window&);
     ~Performance();
 
     double now() const { return m_timer.elapsed(); }
@@ -35,7 +35,7 @@ public:
     virtual JS::Object* create_wrapper(JS::GlobalObject&) override;
 
 private:
-    DOM::Window& m_window;
+    HTML::Window& m_window;
     Core::ElapsedTimer m_timer;
 
     OwnPtr<NavigationTiming::PerformanceTiming> m_timing;

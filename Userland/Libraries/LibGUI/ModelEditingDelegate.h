@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,7 @@ public:
         SelectAll,
     };
 
-    virtual ~ModelEditingDelegate() { }
+    virtual ~ModelEditingDelegate() = default;
 
     void bind(Model& model, const ModelIndex& index)
     {
@@ -43,7 +44,7 @@ public:
     virtual void will_begin_editing() { }
 
 protected:
-    ModelEditingDelegate() { }
+    ModelEditingDelegate() = default;
 
     virtual RefPtr<Widget> create_widget() = 0;
     void commit()
@@ -72,8 +73,8 @@ private:
 
 class StringModelEditingDelegate : public ModelEditingDelegate {
 public:
-    StringModelEditingDelegate() { }
-    virtual ~StringModelEditingDelegate() override { }
+    StringModelEditingDelegate() = default;
+    virtual ~StringModelEditingDelegate() override = default;
 
     virtual RefPtr<Widget> create_widget() override
     {

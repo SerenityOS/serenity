@@ -32,6 +32,7 @@ set(AK_TEST_SOURCES
     TestHashTable.cpp
     TestHex.cpp
     TestIPv4Address.cpp
+    TestIPv6Address.cpp
     TestIndexSequence.cpp
     TestIntegerMath.cpp
     TestIntrusiveList.cpp

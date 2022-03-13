@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibTest/JavaScriptTestRunner.h>
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/Types.h>
@@ -15,12 +15,20 @@ TEST_ROOT("Userland/Libraries/LibWasm/Tests");
 TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
 {
     auto filename = TRY(vm.argument(0).to_string(global_object));
-    auto file = Core::File::open(filename, Core::OpenMode::ReadOnly);
+    auto file = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file.is_error())
         return vm.throw_completion<JS::TypeError>(global_object, strerror(file.error().code()));
-    auto contents = file.value()->read_all();
-    auto* array = TRY(JS::Uint8Array::create(global_object, contents.size()));
-    contents.span().copy_to(array->data());
+
+    auto file_size = file.value()->size();
+    if (file_size.is_error())
+        return vm.throw_completion<JS::TypeError>(global_object, strerror(file_size.error().code()));
+
+    auto* array = TRY(JS::Uint8Array::create(global_object, file_size.value()));
+
+    auto read = file.value()->read(array->data());
+    if (read.is_error())
+        return vm.throw_completion<JS::TypeError>(global_object, strerror(read.error().code()));
+
     return JS::Value(array);
 }
 

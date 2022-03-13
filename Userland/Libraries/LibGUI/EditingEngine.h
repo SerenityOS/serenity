@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,7 +27,7 @@ class EditingEngine {
     AK_MAKE_NONMOVABLE(EditingEngine);
 
 public:
-    virtual ~EditingEngine();
+    virtual ~EditingEngine() = default;
 
     virtual CursorWidth cursor_width() const { return NARROW; }
 
@@ -46,7 +46,7 @@ public:
     bool is_vim() const { return engine_type() == EngineType::Vim; }
 
 protected:
-    EditingEngine() { }
+    EditingEngine() = default;
 
     WeakPtr<TextEditor> m_editor;
 

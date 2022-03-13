@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,6 +22,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Painting/PaintContext.h>
+#include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
 REGISTER_WIDGET(Web, InProcessWebView)
@@ -61,7 +62,8 @@ void InProcessWebView::set_preferred_color_scheme(CSS::PreferredColorScheme colo
 void InProcessWebView::page_did_layout()
 {
     VERIFY(layout_root());
-    set_content_size(layout_root()->content_size().to_type<int>());
+    VERIFY(layout_root()->paint_box());
+    set_content_size(layout_root()->paint_box()->content_size().to_type<int>());
 }
 
 void InProcessWebView::page_did_change_title(const String& title)
@@ -177,13 +179,13 @@ void InProcessWebView::layout_and_sync_size()
     bool had_horizontal_scrollbar = horizontal_scrollbar().is_visible();
 
     page().top_level_browsing_context().set_size(available_size());
-    set_content_size(layout_root()->content_size().to_type<int>());
+    set_content_size(layout_root()->paint_box()->content_size().to_type<int>());
 
     // NOTE: If layout caused us to gain or lose scrollbars, we have to lay out again
     //       since the scrollbars now take up some of the available space.
     if (had_vertical_scrollbar != vertical_scrollbar().is_visible() || had_horizontal_scrollbar != horizontal_scrollbar().is_visible()) {
         page().top_level_browsing_context().set_size(available_size());
-        set_content_size(layout_root()->content_size().to_type<int>());
+        set_content_size(layout_root()->paint_box()->content_size().to_type<int>());
     }
 
     page().top_level_browsing_context().set_viewport_scroll_offset({ horizontal_scrollbar().value(), vertical_scrollbar().value() });

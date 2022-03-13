@@ -7,9 +7,12 @@
 #import <DOM/Event.idl>
 #import <DOM/HTMLCollection.idl>
 #import <DOM/Node.idl>
+#import <DOM/NodeFilter.idl>
+#import <DOM/NodeIterator.idl>
 #import <DOM/NodeList.idl>
 #import <DOM/Range.idl>
 #import <DOM/Text.idl>
+#import <DOM/TreeWalker.idl>
 #import <HTML/HTMLElement.idl>
 #import <HTML/HTMLHeadElement.idl>
 #import <HTML/HTMLScriptElement.idl>
@@ -33,7 +36,7 @@ interface Document : Node {
     readonly attribute Window? defaultView;
 
     [CEReactions] Document open(optional DOMString unused1, optional DOMString unused2);
-    // FIXME: implement ExceptionOr<Window> Document::open(...)
+    // FIXME: implement ExceptionOr<HTML::Window> Document::open(...)
     // WindowProxy? open(USVString url, DOMString name, DOMString features);
     [CEReactions] undefined close();
     [CEReactions] undefined write(DOMString... text);
@@ -172,5 +175,8 @@ interface Document : Node {
 
     readonly boolean hidden;
     readonly DOMString visibilityState;
+
+    [NewObject] NodeIterator createNodeIterator(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
+    [NewObject] TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
 
 };

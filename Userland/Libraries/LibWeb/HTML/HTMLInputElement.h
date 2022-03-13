@@ -73,8 +73,8 @@ public:
     };
     void set_checked(bool, ChangeSource = ChangeSource::Programmatic, ShouldRunActivationBehavior = ShouldRunActivationBehavior::Yes);
 
-    void did_click_button(Badge<Layout::ButtonBox>);
-    void did_click_checkbox(Badge<Layout::CheckBox>);
+    void did_click_button(Badge<Painting::ButtonPaintable>);
+    void did_click_checkbox(Badge<Painting::CheckBoxPaintable>);
 
     void did_edit_text_node(Badge<BrowsingContext>);
 

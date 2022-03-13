@@ -29,7 +29,7 @@ HTMLInputElement::~HTMLInputElement()
 {
 }
 
-void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
+void HTMLInputElement::did_click_button(Badge<Painting::ButtonPaintable>)
 {
     // FIXME: This should be a PointerEvent.
     dispatch_event(DOM::Event::create(EventNames::click));
@@ -42,7 +42,7 @@ void HTMLInputElement::did_click_button(Badge<Layout::ButtonBox>)
     }
 }
 
-void HTMLInputElement::did_click_checkbox(Badge<Layout::CheckBox>)
+void HTMLInputElement::did_click_checkbox(Badge<Painting::CheckBoxPaintable>)
 {
     // FIXME: This should be a PointerEvent.
     auto click_event = DOM::Event::create(EventNames::click);
@@ -81,8 +81,7 @@ void HTMLInputElement::set_checked(bool checked, ChangeSource change_source, Sho
         m_dirty_checkedness = true;
 
     m_checked = checked;
-    if (layout_node())
-        layout_node()->set_needs_display();
+    set_needs_style_update(true);
 
     if (should_run_activation_behavior == ShouldRunActivationBehavior::Yes)
         run_activation_behavior();

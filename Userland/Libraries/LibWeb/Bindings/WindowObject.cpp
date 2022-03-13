@@ -38,18 +38,18 @@
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Storage.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 namespace Web::Bindings {
 
-WindowObject::WindowObject(DOM::Window& impl)
+WindowObject::WindowObject(HTML::Window& impl)
     : m_impl(impl)
 {
     impl.set_wrapper({}, *this);
@@ -114,6 +114,7 @@ void WindowObject::initialize_global_object()
     define_direct_property("CSS", heap().allocate<CSSNamespace>(*this, *this), 0);
 
     define_native_accessor("localStorage", local_storage_getter, {}, attr);
+    define_native_accessor("sessionStorage", session_storage_getter, {}, attr);
     define_native_accessor("origin", origin_getter, {}, attr);
 
     // Legacy
@@ -164,7 +165,7 @@ JS::ThrowCompletionOr<bool> WindowObject::internal_set_prototype_of(JS::Object* 
     return set_immutable_prototype(prototype);
 }
 
-static JS::ThrowCompletionOr<DOM::Window*> impl_from(JS::VM& vm, JS::GlobalObject& global_object)
+static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
     // Since this is a non built-in function we must treat it as non-strict mode
     // this means that a nullish this_value should be converted to the
@@ -647,6 +648,13 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::local_storage_getter)
     auto* impl = TRY(impl_from(vm, global_object));
     // FIXME: localStorage may throw. We have to deal with that here.
     return wrap(global_object, *impl->local_storage());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::session_storage_getter)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    // FIXME: sessionStorage may throw. We have to deal with that here.
+    return wrap(global_object, *impl->session_storage());
 }
 
 #define __ENUMERATE(attribute, event_name)                                                                                 \

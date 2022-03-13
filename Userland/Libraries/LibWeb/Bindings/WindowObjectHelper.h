@@ -233,6 +233,8 @@
 #include <LibWeb/Bindings/MouseEventConstructor.h>
 #include <LibWeb/Bindings/MouseEventPrototype.h>
 #include <LibWeb/Bindings/NodeConstructor.h>
+#include <LibWeb/Bindings/NodeIteratorConstructor.h>
+#include <LibWeb/Bindings/NodeIteratorPrototype.h>
 #include <LibWeb/Bindings/NodeListConstructor.h>
 #include <LibWeb/Bindings/NodeListPrototype.h>
 #include <LibWeb/Bindings/NodePrototype.h>
@@ -300,6 +302,8 @@
 #include <LibWeb/Bindings/TextMetricsConstructor.h>
 #include <LibWeb/Bindings/TextMetricsPrototype.h>
 #include <LibWeb/Bindings/TextPrototype.h>
+#include <LibWeb/Bindings/TreeWalkerConstructor.h>
+#include <LibWeb/Bindings/TreeWalkerPrototype.h>
 #include <LibWeb/Bindings/UIEventConstructor.h>
 #include <LibWeb/Bindings/UIEventPrototype.h>
 #include <LibWeb/Bindings/URLConstructor.h>
@@ -439,6 +443,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(MessageEvent)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(MouseEvent)                                                         \
     ADD_WINDOW_OBJECT_INTERFACE(Node)                                                               \
+    ADD_WINDOW_OBJECT_INTERFACE(NodeIterator)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(NodeList)                                                           \
     ADD_WINDOW_OBJECT_INTERFACE(PageTransitionEvent)                                                \
     ADD_WINDOW_OBJECT_INTERFACE(Performance)                                                        \
@@ -472,6 +477,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(TextDecoder)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(TextEncoder)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(TextMetrics)                                                        \
+    ADD_WINDOW_OBJECT_INTERFACE(TreeWalker)                                                         \
     ADD_WINDOW_OBJECT_INTERFACE(UIEvent)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(URLSearchParams)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(URL)                                                                \

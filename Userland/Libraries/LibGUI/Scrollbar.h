@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <LibCore/Timer.h>
 #include <LibGUI/AbstractSlider.h>
 
 namespace GUI {
@@ -15,11 +17,21 @@ class Scrollbar : public AbstractSlider {
     C_OBJECT(Scrollbar);
 
 public:
-    virtual ~Scrollbar() override;
+    virtual ~Scrollbar() override = default;
 
     bool is_scrollable() const { return max() != min(); }
 
     bool has_scrubber() const;
+
+    virtual void set_value(int, AllowCallback = AllowCallback::Yes) override;
+    void set_target_value(int);
+
+    virtual void increase_slider_by(int delta) override { set_target_value(m_target_value + delta); }
+    virtual void decrease_slider_by(int delta) override { set_target_value(m_target_value - delta); }
+    virtual void increase_slider_by_page_steps(int page_steps) override { set_target_value(m_target_value + page_step() * page_steps); }
+    virtual void decrease_slider_by_page_steps(int page_steps) override { set_target_value(m_target_value - page_step() * page_steps); }
+    virtual void increase_slider_by_steps(int steps) override { set_target_value(m_target_value + step() * steps); }
+    virtual void decrease_slider_by_steps(int steps) override { set_target_value(m_target_value - step() * steps); }
 
     enum Component {
         None,
@@ -66,6 +78,12 @@ private:
 
     Component component_at_position(const Gfx::IntPoint&);
 
+    void update_animated_scroll();
+
+    int m_target_value { 0 };
+    int m_start_value { 0 };
+    double m_animation_time_elapsed { 0 };
+
     int m_scrub_start_value { 0 };
     Gfx::IntPoint m_scrub_origin;
 
@@ -74,6 +92,7 @@ private:
     Gfx::IntPoint m_last_mouse_position;
 
     RefPtr<Core::Timer> m_automatic_scrolling_timer;
+    RefPtr<Core::Timer> m_animated_scrolling_timer;
 };
 
 }

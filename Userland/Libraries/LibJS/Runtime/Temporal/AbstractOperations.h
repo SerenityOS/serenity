@@ -134,7 +134,7 @@ ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_zoned_date_time_string(G
 ThrowCompletionOr<String> parse_temporal_calendar_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalDate> parse_temporal_date_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(GlobalObject&, String const& iso_string);
-ThrowCompletionOr<TemporalDuration> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
+ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalZonedDateTime> parse_temporal_relative_to_string(GlobalObject&, String const& iso_string);
 ThrowCompletionOr<TemporalTime> parse_temporal_time_string(GlobalObject&, String const& iso_string);
@@ -144,7 +144,7 @@ ThrowCompletionOr<double> to_positive_integer(GlobalObject&, Value argument);
 ThrowCompletionOr<Object*> prepare_temporal_fields(GlobalObject&, Object const& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields);
 ThrowCompletionOr<Object*> prepare_partial_temporal_fields(GlobalObject&, Object const& fields, Vector<String> const& field_names);
 
-// 13.46 ToIntegerThrowOnInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerthrowoninfinity
+// 13.45 ToIntegerThrowOnInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerthrowoninfinity
 template<typename... Args>
 ThrowCompletionOr<double> to_integer_throw_on_infinity(GlobalObject& global_object, Value argument, ErrorType error_type, Args... args)
 {
@@ -163,7 +163,7 @@ ThrowCompletionOr<double> to_integer_throw_on_infinity(GlobalObject& global_obje
     return integer;
 }
 
-// 13.47 ToIntegerWithoutRounding ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerwithoutrounding
+// 13.46 ToIntegerWithoutRounding ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-tointegerwithoutrounding
 template<typename... Args>
 ThrowCompletionOr<double> to_integer_without_rounding(GlobalObject& global_object, Value argument, ErrorType error_type, Args... args)
 {
@@ -176,7 +176,7 @@ ThrowCompletionOr<double> to_integer_without_rounding(GlobalObject& global_objec
     if (number.is_nan() || number.is_positive_zero() || number.is_negative_zero())
         return 0;
 
-    // 3. If ! IsIntegralNumber(number) is false, throw a RangeError exception.
+    // 3. If IsIntegralNumber(number) is false, throw a RangeError exception.
     if (!number.is_integral_number())
         return vm.template throw_completion<RangeError>(global_object, error_type, args...);
 

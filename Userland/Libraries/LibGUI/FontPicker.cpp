@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -167,10 +168,6 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     };
 
     set_font(current_font);
-}
-
-FontPicker::~FontPicker()
-{
 }
 
 void FontPicker::set_font(const Gfx::Font* font)

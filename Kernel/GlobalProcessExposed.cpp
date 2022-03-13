@@ -661,7 +661,9 @@ private:
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
         auto json = TRY(JsonObjectSerializer<>::try_create(builder));
-        TRY(json.add("keymap", HIDManagement::the().keymap_name()));
+        TRY(HIDManagement::the().keymap_data().with([&](auto const& keymap_data) {
+            return json.add("keymap", keymap_data.character_map_name->view());
+        }));
         TRY(json.finish());
         return {};
     }

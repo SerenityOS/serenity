@@ -290,21 +290,26 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
 
 ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
 {
-    auto x25519_key_size_bytes = named_curve_key_size(NamedCurve::x25519) / 8;
-    if (buffer.size() < x25519_key_size_bytes + 7)
+    size_t size_required_for_curve_name = 6;
+    if (buffer.size() < size_required_for_curve_name)
         return (i8)Error::NeedMoreData;
 
     auto curve_type = buffer[3];
     if (curve_type != (u8)ECCurveType::NamedCurve)
         return (i8)Error::NotUnderstood;
 
-    auto curve = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(4)));
-    if (curve != (u16)NamedCurve::x25519)
+    auto curve = static_cast<NamedCurve>(AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(4))));
+    if (!m_context.options.elliptic_curves.contains_slow(curve))
         return (i8)Error::NotUnderstood;
 
+    m_context.server_curve_choice = curve;
+    auto curve_key_size_bytes = named_curve_key_size(curve) / 8;
+    if (buffer.size() < curve_key_size_bytes + 1)
+        return (i8)Error::NeedMoreData;
+
     auto server_public_key_length = buffer[6];
-    if (server_public_key_length != x25519_key_size_bytes)
-        return (i8)Error::NotUnderstood;
+    if (server_public_key_length != curve_key_size_bytes)
+        return (i8)Error::FeatureNotSupported;
 
     auto server_public_key = buffer.slice(7, server_public_key_length);
     auto server_public_key_copy_result = ByteBuffer::copy(server_public_key);

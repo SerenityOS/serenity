@@ -421,16 +421,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         window);
 
+    auto app_icon = GUI::Icon::default_icon("app-mandelbrot");
+    window->set_icon(app_icon.bitmap_for_size(16));
+
     auto view_menu = TRY(window->try_add_menu("&View"));
     TRY(view_menu->try_add_action(zoom_in_action));
     TRY(view_menu->try_add_action(reset_zoom_action));
     TRY(view_menu->try_add_action(zoom_out_action));
 
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Mandelbrot Demo", app_icon, window)));
+
     window->show();
-
-    auto app_icon = GUI::Icon::default_icon("app-mandelbrot");
-    window->set_icon(app_icon.bitmap_for_size(16));
     window->set_cursor(Gfx::StandardCursor::Zoom);
-
     return app->exec();
 }

@@ -35,6 +35,7 @@
 #include <LibWeb/Layout/TableRowGroupBox.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/Namespace.h>
+#include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::DOM {
 
@@ -120,7 +121,6 @@ ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString 
     // 5. If qualifiedName contains a U+003A (:), then strictly split the string on it and set prefix to the part before and localName to the part after.
     if (qualified_name.view().contains(':')) {
         auto parts = qualified_name.view().split_view(':');
-        // FIXME: Handle parts > 2
         prefix = parts[0];
         local_name = parts[1];
     }
@@ -267,74 +267,18 @@ void Element::parse_attribute(const FlyString& name, const String& value)
     }
 }
 
-enum class StyleDifference {
-    None,
-    NeedsRepaint,
-    NeedsRelayout,
-};
-
-static StyleDifference compute_style_difference(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style, Layout::NodeWithStyle const& node)
-{
-    if (old_style == new_style)
-        return StyleDifference::None;
-
-    bool needs_repaint = false;
-    bool needs_relayout = false;
-
-    if (new_style.display() != old_style.display())
-        needs_relayout = true;
-
-    if (new_style.color_or_fallback(CSS::PropertyID::Color, node, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::Color, node, Color::Black))
-        needs_repaint = true;
-    else if (new_style.color_or_fallback(CSS::PropertyID::BackgroundColor, node, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::BackgroundColor, node, Color::Black))
-        needs_repaint = true;
-
-    if (needs_relayout)
-        return StyleDifference::NeedsRelayout;
-    if (needs_repaint)
-        return StyleDifference::NeedsRepaint;
-    return StyleDifference::None;
-}
-
 void Element::recompute_style()
 {
     set_needs_style_update(false);
     VERIFY(parent());
-    auto old_specified_css_values = m_specified_css_values;
     auto new_specified_css_values = document().style_computer().compute_style(*this);
-    m_specified_css_values = new_specified_css_values;
-    if (!layout_node()) {
-        // This element doesn't have a corresponding layout node.
 
-        // If the new style is display:none, bail.
-        if (new_specified_css_values->display().is_none())
-            return;
-
-        // If we're inside a display:none ancestor or an ancestor that can't have children, bail.
-        for (auto* ancestor = parent_element(); ancestor; ancestor = ancestor->parent_element()) {
-            if (!ancestor->layout_node() || !ancestor->layout_node()->can_have_children())
-                return;
-        }
-
-        // Okay, we need a new layout subtree here.
-        Layout::TreeBuilder tree_builder;
-        (void)tree_builder.build(*this);
+    if (m_specified_css_values && *m_specified_css_values == *new_specified_css_values)
         return;
-    }
 
-    auto diff = StyleDifference::NeedsRelayout;
-    if (old_specified_css_values && layout_node())
-        diff = compute_style_difference(*old_specified_css_values, *new_specified_css_values, *layout_node());
-    if (diff == StyleDifference::None)
-        return;
-    layout_node()->apply_style(*new_specified_css_values);
-    if (diff == StyleDifference::NeedsRelayout) {
-        document().set_needs_layout();
-        return;
-    }
-    if (diff == StyleDifference::NeedsRepaint) {
-        layout_node()->set_needs_display();
-    }
+    m_specified_css_values = move(new_specified_css_values);
+
+    document().invalidate_layout();
 }
 
 NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
@@ -484,15 +428,14 @@ bool Element::serializes_as_void() const
 NonnullRefPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
 {
     // FIXME: Support inline layout nodes as well.
-
-    if (!layout_node() || !layout_node()->is_box())
+    auto* paint_box = this->paint_box();
+    if (!paint_box)
         return Geometry::DOMRect::create(0, 0, 0, 0);
 
     VERIFY(document().browsing_context());
     auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
 
-    auto& box = static_cast<Layout::Box const&>(*layout_node());
-    return Geometry::DOMRect::create(box.absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
+    return Geometry::DOMRect::create(paint_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()));
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
@@ -521,40 +464,66 @@ NonnullRefPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
 int Element::client_top() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    auto& box = static_cast<Layout::Box const&>(*layout_node());
-    return box.absolute_rect().top();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->absolute_rect().top();
+    return 0;
 }
 
 int Element::client_left() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    auto& box = static_cast<Layout::Box const&>(*layout_node());
-    return box.absolute_rect().left();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->absolute_rect().left();
+    return 0;
 }
 
 int Element::client_width() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    auto& box = static_cast<Layout::Box const&>(*layout_node());
-    return box.absolute_rect().width();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->absolute_rect().width();
+    return 0;
 }
 
 int Element::client_height() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    auto& box = static_cast<Layout::Box const&>(*layout_node());
-    return box.absolute_rect().height();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->absolute_rect().height();
+    return 0;
 }
 
 void Element::children_changed()
 {
     Node::children_changed();
     set_needs_style_update(true);
+}
+
+void Element::set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement pseudo_element, RefPtr<Layout::Node> pseudo_element_node)
+{
+    m_pseudo_element_nodes[to_underlying(pseudo_element)] = move(pseudo_element_node);
+}
+
+RefPtr<Layout::Node> Element::get_pseudo_element_node(CSS::Selector::PseudoElement pseudo_element) const
+{
+    return m_pseudo_element_nodes[to_underlying(pseudo_element)];
+}
+
+void Element::clear_pseudo_element_nodes(Badge<Layout::TreeBuilder>)
+{
+    m_pseudo_element_nodes.fill(nullptr);
+}
+
+void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilder>& children_array) const
+{
+    for (size_t i = 0; i < m_pseudo_element_nodes.size(); ++i) {
+        auto& pseudo_element_node = m_pseudo_element_nodes[i];
+        if (!pseudo_element_node)
+            continue;
+        auto object = MUST(children_array.add_object());
+        MUST(object.add("name", String::formatted("::{}", CSS::pseudo_element_name(static_cast<CSS::Selector::PseudoElement>(i)))));
+        MUST(object.add("type", "pseudo-element"));
+        MUST(object.add("parent-id", id()));
+        MUST(object.add("pseudo-element", i));
+        MUST(object.finish());
+    }
 }
 
 }

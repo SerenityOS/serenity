@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -204,7 +205,7 @@ public:
     {
     }
 
-    ~RSA_PKCS1_EME() { }
+    ~RSA_PKCS1_EME() = default;
 
     virtual void encrypt(ReadonlyBytes in, Bytes& out) override;
     virtual void decrypt(ReadonlyBytes in, Bytes& out) override;

@@ -11,5 +11,5 @@
 #if ARCH(X86_64) || ARCH(I386)
 #    include <Kernel/Arch/x86/mcontext.h>
 #elif ARCH(AARCH64)
-#    error "Unknown architecture"
+#    include <Kernel/Arch/aarch64/mcontext.h>
 #endif

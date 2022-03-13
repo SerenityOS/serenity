@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,13 +12,9 @@
 
 namespace GUI {
 
-Model::Model()
-{
-}
+Model::Model() = default;
 
-Model::~Model()
-{
-}
+Model::~Model() = default;
 
 void Model::register_view(Badge<AbstractView>, AbstractView& view)
 {

@@ -10,10 +10,6 @@
 #include <AK/Types.h>
 #include <AK/Userspace.h>
 
-#ifdef __serenity__
-#    include <LibC/fd_set.h>
-#endif
-
 constexpr int syscall_vector = 0x82;
 
 extern "C" {
@@ -49,11 +45,11 @@ enum class NeedsBigProcessLock {
     S(adjtime, NeedsBigProcessLock::Yes)                    \
     S(alarm, NeedsBigProcessLock::Yes)                      \
     S(allocate_tls, NeedsBigProcessLock::Yes)               \
-    S(anon_create, NeedsBigProcessLock::Yes)                \
+    S(anon_create, NeedsBigProcessLock::No)                 \
     S(beep, NeedsBigProcessLock::No)                        \
     S(bind, NeedsBigProcessLock::Yes)                       \
-    S(chdir, NeedsBigProcessLock::Yes)                      \
-    S(chmod, NeedsBigProcessLock::Yes)                      \
+    S(chdir, NeedsBigProcessLock::No)                       \
+    S(chmod, NeedsBigProcessLock::No)                       \
     S(chown, NeedsBigProcessLock::Yes)                      \
     S(clock_gettime, NeedsBigProcessLock::No)               \
     S(clock_nanosleep, NeedsBigProcessLock::No)             \
@@ -66,26 +62,26 @@ enum class NeedsBigProcessLock {
     S(detach_thread, NeedsBigProcessLock::Yes)              \
     S(disown, NeedsBigProcessLock::Yes)                     \
     S(dump_backtrace, NeedsBigProcessLock::No)              \
-    S(dup2, NeedsBigProcessLock::Yes)                       \
-    S(emuctl, NeedsBigProcessLock::Yes)                     \
+    S(dup2, NeedsBigProcessLock::No)                        \
+    S(emuctl, NeedsBigProcessLock::No)                      \
     S(execve, NeedsBigProcessLock::Yes)                     \
     S(exit, NeedsBigProcessLock::Yes)                       \
     S(exit_thread, NeedsBigProcessLock::Yes)                \
-    S(fchdir, NeedsBigProcessLock::Yes)                     \
-    S(fchmod, NeedsBigProcessLock::Yes)                     \
+    S(fchdir, NeedsBigProcessLock::No)                      \
+    S(fchmod, NeedsBigProcessLock::No)                      \
     S(fchown, NeedsBigProcessLock::Yes)                     \
     S(fcntl, NeedsBigProcessLock::Yes)                      \
     S(fork, NeedsBigProcessLock::Yes)                       \
-    S(fstat, NeedsBigProcessLock::Yes)                      \
-    S(fstatvfs, NeedsBigProcessLock::Yes)                   \
-    S(fsync, NeedsBigProcessLock::Yes)                      \
-    S(ftruncate, NeedsBigProcessLock::Yes)                  \
+    S(fstat, NeedsBigProcessLock::No)                       \
+    S(fstatvfs, NeedsBigProcessLock::No)                    \
+    S(fsync, NeedsBigProcessLock::No)                       \
+    S(ftruncate, NeedsBigProcessLock::No)                   \
     S(futex, NeedsBigProcessLock::Yes)                      \
     S(get_dir_entries, NeedsBigProcessLock::Yes)            \
     S(get_process_name, NeedsBigProcessLock::Yes)           \
     S(get_stack_bounds, NeedsBigProcessLock::No)            \
     S(get_thread_name, NeedsBigProcessLock::Yes)            \
-    S(getcwd, NeedsBigProcessLock::Yes)                     \
+    S(getcwd, NeedsBigProcessLock::No)                      \
     S(getegid, NeedsBigProcessLock::Yes)                    \
     S(geteuid, NeedsBigProcessLock::Yes)                    \
     S(getgid, NeedsBigProcessLock::Yes)                     \
@@ -115,7 +111,7 @@ enum class NeedsBigProcessLock {
     S(killpg, NeedsBigProcessLock::Yes)                     \
     S(link, NeedsBigProcessLock::Yes)                       \
     S(listen, NeedsBigProcessLock::Yes)                     \
-    S(lseek, NeedsBigProcessLock::Yes)                      \
+    S(lseek, NeedsBigProcessLock::No)                       \
     S(madvise, NeedsBigProcessLock::Yes)                    \
     S(map_time_page, NeedsBigProcessLock::Yes)              \
     S(mkdir, NeedsBigProcessLock::Yes)                      \
@@ -142,9 +138,9 @@ enum class NeedsBigProcessLock {
     S(purge, NeedsBigProcessLock::Yes)                      \
     S(read, NeedsBigProcessLock::Yes)                       \
     S(pread, NeedsBigProcessLock::Yes)                      \
-    S(readlink, NeedsBigProcessLock::Yes)                   \
+    S(readlink, NeedsBigProcessLock::No)                    \
     S(readv, NeedsBigProcessLock::Yes)                      \
-    S(realpath, NeedsBigProcessLock::Yes)                   \
+    S(realpath, NeedsBigProcessLock::No)                    \
     S(recvfd, NeedsBigProcessLock::Yes)                     \
     S(recvmsg, NeedsBigProcessLock::Yes)                    \
     S(rename, NeedsBigProcessLock::Yes)                     \
@@ -162,7 +158,7 @@ enum class NeedsBigProcessLock {
     S(setgid, NeedsBigProcessLock::Yes)                     \
     S(setgroups, NeedsBigProcessLock::Yes)                  \
     S(sethostname, NeedsBigProcessLock::No)                 \
-    S(setkeymap, NeedsBigProcessLock::Yes)                  \
+    S(setkeymap, NeedsBigProcessLock::No)                   \
     S(setpgid, NeedsBigProcessLock::Yes)                    \
     S(setresgid, NeedsBigProcessLock::Yes)                  \
     S(setresuid, NeedsBigProcessLock::Yes)                  \
@@ -179,7 +175,7 @@ enum class NeedsBigProcessLock {
     S(sigtimedwait, NeedsBigProcessLock::Yes)               \
     S(socket, NeedsBigProcessLock::Yes)                     \
     S(socketpair, NeedsBigProcessLock::Yes)                 \
-    S(stat, NeedsBigProcessLock::Yes)                       \
+    S(stat, NeedsBigProcessLock::No)                        \
     S(statvfs, NeedsBigProcessLock::Yes)                    \
     S(symlink, NeedsBigProcessLock::Yes)                    \
     S(sync, NeedsBigProcessLock::No)                        \

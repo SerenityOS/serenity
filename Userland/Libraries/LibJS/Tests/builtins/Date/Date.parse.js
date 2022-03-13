@@ -36,3 +36,29 @@ test("time clip", () => {
     expect(Date.parse("+999999")).toBeNaN();
     expect(Date.parse("-999999")).toBeNaN();
 });
+
+test("extra micro seconds extension", () => {
+    expect(Date.parse("2021-04-30T15:19:02.937+00:00")).toBe(1619795942937);
+    expect(Date.parse("2021-04-30T15:19:02.9370+00:00")).toBe(1619795942937);
+    expect(Date.parse("2021-04-30T15:19:02.93700+00:00")).toBe(1619795942937);
+    expect(Date.parse("2021-04-30T15:19:02.937000+00:00")).toBe(1619795942937);
+
+    expect(Date.parse("2021-04-30T15:19:02.93+00:00")).toBe(1619795942930);
+    expect(Date.parse("2021-04-30T15:19:02.9+00:00")).toBe(1619795942900);
+
+    // These values are just checked against NaN since they don't have a specified timezone.
+    expect(Date.parse("2021-04-30T15:19:02.93")).not.toBe(NaN);
+    expect(Date.parse("2021-04-30T15:19:02.9")).not.toBe(NaN);
+
+    expect(Date.parse("2021-04-30T15:19:02.+00:00")).toBe(NaN);
+    expect(Date.parse("2021-04-30T15:19:02.")).toBe(NaN);
+    expect(Date.parse("2021-04-30T15:19:02.a")).toBe(NaN);
+    expect(Date.parse("2021-04-30T15:19:02.000a")).toBe(NaN);
+
+    expect(Date.parse("2021-04-30T15:19:02.937001+00:00")).toBe(1619795942937);
+    expect(Date.parse("2021-04-30T15:19:02.937999+00:00")).toBe(1619795942937);
+
+    expect(Date.parse("2021-06-26T07:24:40.007000+00:00")).toBe(1624692280007);
+    expect(Date.parse("2021-06-26T07:24:40.0079999999999999999+00:00")).toBe(1624692280007);
+    expect(Date.parse("2021-04-15T18:47:25.606000+00:00")).toBe(1618512445606);
+});

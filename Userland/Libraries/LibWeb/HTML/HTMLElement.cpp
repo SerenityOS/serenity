@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/ReverseIterator.h"
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
@@ -11,16 +12,17 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ExceptionOr.h>
 #include <LibWeb/DOM/IDLEventListener.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
 
@@ -149,17 +151,17 @@ int HTMLElement::offset_left() const
 // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetwidth
 int HTMLElement::offset_width() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    return static_cast<Layout::Box const&>(*layout_node()).border_box_width();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->border_box_width();
+    return 0;
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetheight
 int HTMLElement::offset_height() const
 {
-    if (!layout_node() || !layout_node()->is_box())
-        return 0;
-    return static_cast<Layout::Box const&>(*layout_node()).border_box_height();
+    if (auto* paint_box = this->paint_box())
+        return paint_box->border_box_height();
+    return 0;
 }
 
 bool HTMLElement::cannot_navigate() const
@@ -242,9 +244,7 @@ static void run_focus_update_steps(NonnullRefPtrVector<DOM::Node> old_chain, Non
     (void)new_focus_target;
 
     // 4. For each entry entry in new chain, in reverse order, run these substeps:
-    for (ssize_t i = new_chain.size() - 1; i >= 0; --i) {
-        auto& entry = new_chain[i];
-
+    for (auto& entry : new_chain.in_reverse()) {
         // 1. If entry is a focusable area: designate entry as the focused area of the document.
         // FIXME: This isn't entirely right.
         if (is<DOM::Element>(entry))

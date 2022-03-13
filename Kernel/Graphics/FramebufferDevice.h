@@ -67,6 +67,7 @@ private:
 
     bool m_graphical_writes_enabled { true };
     bool m_write_combine { true };
+    bool m_initialized { false };
 
     RefPtr<Memory::AnonymousVMObject> m_userspace_real_framebuffer_vmobject;
     Memory::Region* m_userspace_framebuffer_region { nullptr };

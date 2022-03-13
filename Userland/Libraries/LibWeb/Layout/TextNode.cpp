@@ -9,11 +9,10 @@
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
-#include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Painting/TextPaintable.h>
 
 namespace Web::Layout {
 
@@ -113,11 +112,11 @@ void TextNode::paint_text_decoration(Gfx::Painter& painter, LineBoxFragment cons
     }
 }
 
-void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment, PaintPhase phase) const
+void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment, Painting::PaintPhase phase) const
 {
     auto& painter = context.painter();
 
-    if (phase == PaintPhase::Foreground) {
+    if (phase == Painting::PaintPhase::Foreground) {
         auto fragment_absolute_rect = fragment.absolute_rect();
 
         painter.set_font(font());
@@ -240,41 +239,6 @@ void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_
     m_text_for_rendering = builder.to_string();
 }
 
-bool TextNode::wants_mouse_events() const
-{
-    return first_ancestor_of_type<Label>();
-}
-
-void TextNode::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
-{
-    auto* label = first_ancestor_of_type<Label>();
-    if (!label)
-        return;
-    label->handle_mousedown_on_label({}, position, button);
-    browsing_context().event_handler().set_mouse_event_tracking_layout_node(this);
-}
-
-void TextNode::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
-{
-    auto* label = first_ancestor_of_type<Label>();
-    if (!label)
-        return;
-
-    // NOTE: Changing the state of the DOM node may run arbitrary JS, which could disappear this node.
-    NonnullRefPtr protect = *this;
-
-    label->handle_mouseup_on_label({}, position, button);
-    browsing_context().event_handler().set_mouse_event_tracking_layout_node(nullptr);
-}
-
-void TextNode::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
-{
-    auto* label = first_ancestor_of_type<Label>();
-    if (!label)
-        return;
-    label->handle_mousemove_on_label({}, position, button);
-}
-
 TextNode::ChunkIterator::ChunkIterator(StringView text, LayoutMode layout_mode, bool wrap_lines, bool respect_linebreaks)
     : m_layout_mode(layout_mode)
     , m_wrap_lines(wrap_lines)
@@ -344,7 +308,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
     return {};
 }
 
-Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::Iterator const& start, Utf8View::Iterator const& end, bool has_breaking_newline, bool must_commit)
+Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::Iterator const& start, Utf8View::Iterator const& end, bool has_breaking_newline, bool must_commit) const
 {
     if (m_layout_mode == LayoutMode::OnlyRequiredLineBreaks && !must_commit)
         return {};
@@ -366,8 +330,9 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::It
     return {};
 }
 
-void TextNode::paint(PaintContext&, PaintPhase)
+RefPtr<Painting::Paintable> TextNode::create_paintable() const
 {
+    return Painting::TextPaintable::create(*this);
 }
 
 }

@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibWeb/HTML/Parser/HTMLTokenizer.h>
 
 using Tokenizer = Web::HTML::HTMLTokenizer;
@@ -201,9 +201,11 @@ TEST_CASE(doctype)
 //       If that changes, or something is added to the test HTML, the hash needs to be adjusted.
 TEST_CASE(regression)
 {
-    auto file = Core::File::open("/usr/Tests/LibWeb/tokenizer-test.html", Core::OpenMode::ReadOnly);
-    VERIFY(!file.is_error());
-    auto file_contents = file.value()->read_all();
+    auto file = MUST(Core::Stream::File::open("/usr/Tests/LibWeb/tokenizer-test.html", Core::Stream::OpenMode::Read));
+    auto file_size = MUST(file->size());
+    auto content = MUST(ByteBuffer::create_uninitialized(file_size));
+    MUST(file->read(content.bytes()));
+    String file_contents { content.bytes() };
     auto tokens = run_tokenizer(file_contents);
     u32 hash = hash_tokens(tokens);
     EXPECT_EQ(hash, 710375345u);

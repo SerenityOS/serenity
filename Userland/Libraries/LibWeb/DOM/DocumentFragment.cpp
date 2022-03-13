@@ -5,7 +5,7 @@
  */
 
 #include <LibWeb/DOM/DocumentFragment.h>
-#include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
 

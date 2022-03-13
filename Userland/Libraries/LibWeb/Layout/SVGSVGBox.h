@@ -18,10 +18,9 @@ public:
 
     SVG::SVGSVGElement& dom_node() { return verify_cast<SVG::SVGSVGElement>(SVGGraphicsBox::dom_node()); }
 
-    virtual void before_children_paint(PaintContext& context, PaintPhase phase) override;
-    virtual void after_children_paint(PaintContext& context, PaintPhase phase) override;
-
     virtual bool can_have_children() const override { return true; }
+
+    virtual RefPtr<Painting::Paintable> create_paintable() const override;
 };
 
 }

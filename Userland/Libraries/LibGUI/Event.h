@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -72,12 +73,12 @@ public:
         __End_WM_Events,
     };
 
-    Event() { }
+    Event() = default;
     explicit Event(Type type)
         : Core::Event(type)
     {
     }
-    virtual ~Event() { }
+    virtual ~Event() = default;
 
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
     bool is_paint_event() const { return type() == Paint; }
@@ -454,7 +455,7 @@ class DropEvent final : public Event {
 public:
     DropEvent(const Gfx::IntPoint&, const String& text, NonnullRefPtr<Core::MimeData> mime_data);
 
-    ~DropEvent();
+    ~DropEvent() = default;
 
     const Gfx::IntPoint& position() const { return m_position; }
     const String& text() const { return m_text; }
@@ -530,7 +531,7 @@ private:
 class ActionEvent final : public Event {
 public:
     ActionEvent(Type, Action&);
-    ~ActionEvent();
+    ~ActionEvent() = default;
 
     Action const& action() const { return *m_action; }
     Action& action() { return *m_action; }

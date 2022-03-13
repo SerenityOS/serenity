@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,7 @@ namespace GUI {
 class Progressbar : public Frame {
     C_OBJECT(Progressbar)
 public:
-    virtual ~Progressbar() override;
+    virtual ~Progressbar() override = default;
 
     void set_range(int min, int max);
     void set_min(int min) { set_range(min, max()); }
@@ -56,7 +57,7 @@ class VerticalProgressbar final : public Progressbar {
     C_OBJECT(VerticalProgressbar);
 
 public:
-    virtual ~VerticalProgressbar() override { }
+    virtual ~VerticalProgressbar() override = default;
 
 private:
     VerticalProgressbar()
@@ -69,7 +70,7 @@ class HorizontalProgressbar final : public Progressbar {
     C_OBJECT(HorizontalProgressbar);
 
 public:
-    virtual ~HorizontalProgressbar() override { }
+    virtual ~HorizontalProgressbar() override = default;
 
 private:
     HorizontalProgressbar()

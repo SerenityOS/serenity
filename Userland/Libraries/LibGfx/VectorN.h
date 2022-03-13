@@ -56,6 +56,12 @@ public:
     constexpr void set_z(T value) requires(N >= 3) { m_data[2] = value; }
     constexpr void set_w(T value) requires(N >= 4) { m_data[3] = value; }
 
+    [[nodiscard]] constexpr T operator[](size_t index) const
+    {
+        VERIFY(index < N);
+        return m_data[index];
+    }
+
     constexpr VectorN& operator+=(const VectorN& other)
     {
         UNROLL_LOOP
@@ -193,15 +199,19 @@ public:
 
     [[nodiscard]] constexpr T length() const
     {
-        if constexpr (N == 2)
-            return AK::hypot(m_data[0] * m_data[0] + m_data[1] * m_data[1]);
-        else if constexpr (N == 3)
-            return AK::sqrt(m_data[0] * m_data[0] + m_data[1] * m_data[1] + m_data[2] * m_data[2]);
-        else
-            return AK::sqrt(m_data[0] * m_data[0] + m_data[1] * m_data[1] + m_data[2] * m_data[2] + m_data[3] * m_data[3]);
+        T squared_sum {};
+        UNROLL_LOOP
+        for (auto i = 0u; i < N; ++i)
+            squared_sum += m_data[i] * m_data[i];
+        return AK::sqrt(squared_sum);
     }
 
-    [[nodiscard]] constexpr VectorN<3, T> xyz() const requires(N == 4)
+    [[nodiscard]] constexpr VectorN<2, T> xy() const requires(N >= 3)
+    {
+        return VectorN<2, T>(x(), y());
+    }
+
+    [[nodiscard]] constexpr VectorN<3, T> xyz() const requires(N >= 4)
     {
         return VectorN<3, T>(x(), y(), z());
     }

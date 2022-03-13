@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -60,10 +60,6 @@ Calendar::Calendar(Core::DateTime date_time, Mode mode)
     }
 
     update_tiles(m_selected_date.year(), m_selected_date.month());
-}
-
-Calendar::~Calendar()
-{
 }
 
 void Calendar::set_grid(bool show)

@@ -80,6 +80,29 @@ void Tab::view_source(const URL& url, const String& source)
     window->show();
 }
 
+void Tab::update_status(Optional<String> text_override, i32 count_waiting)
+{
+    if (text_override.has_value()) {
+        m_statusbar->set_text(*text_override);
+        return;
+    }
+
+    if (m_loaded) {
+        m_statusbar->set_text("");
+        return;
+    }
+
+    VERIFY(m_navigating_url.has_value());
+
+    if (count_waiting == 0) {
+        // ex: "Loading google.com"
+        m_statusbar->set_text(String::formatted("Loading {}", m_navigating_url->host()));
+    } else {
+        // ex: "google.com is waiting on 5 resources"
+        m_statusbar->set_text(String::formatted("{} is waiting on {} resource{}", m_navigating_url->host(), count_waiting, count_waiting == 1 ? ""sv : "s"sv));
+    }
+}
+
 Tab::Tab(BrowserWindow& window)
 {
     load_from_gml(tab_gml);
@@ -165,6 +188,11 @@ Tab::Tab(BrowserWindow& window)
         this);
 
     hooks().on_load_start = [this](auto& url) {
+        m_navigating_url = url;
+        m_loaded = false;
+
+        update_status();
+
         m_location_box->set_icon(nullptr);
         m_location_box->set_text(url.to_string());
 
@@ -184,6 +212,11 @@ Tab::Tab(BrowserWindow& window)
     };
 
     hooks().on_load_finish = [this](auto&) {
+        m_navigating_url = {};
+        m_loaded = true;
+
+        update_status();
+
         if (m_dom_inspector_widget)
             m_web_content_view->inspect_dom_tree();
     };
@@ -194,6 +227,10 @@ Tab::Tab(BrowserWindow& window)
         } else {
             load(url);
         }
+    };
+
+    hooks().on_resource_status_change = [this](auto count_waiting) {
+        update_status({}, count_waiting);
     };
 
     m_link_context_menu = GUI::Menu::construct();
@@ -292,8 +329,8 @@ Tab::Tab(BrowserWindow& window)
             m_dom_inspector_widget->set_dom_json(dom_tree);
     };
 
-    hooks().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties) {
-        m_dom_inspector_widget->set_dom_node_properties_json(node_id, specified, computed, custom_properties);
+    hooks().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties, auto& node_box_sizing) {
+        m_dom_inspector_widget->set_dom_node_properties_json({ node_id }, specified, computed, custom_properties, node_box_sizing);
     };
 
     hooks().on_js_console_new_message = [this](auto message_index) {
@@ -317,9 +354,9 @@ Tab::Tab(BrowserWindow& window)
 
     hooks().on_link_hover = [this](auto& url) {
         if (url.is_valid())
-            m_statusbar->set_text(url.to_string());
+            update_status(url.to_string());
         else
-            m_statusbar->set_text("");
+            update_status();
     };
 
     hooks().on_url_drop = [this](auto& url) {
@@ -500,9 +537,9 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
     }
 
     if (inspector_target == InspectorTarget::HoveredElement) {
-        Optional<i32> hovered_node = m_web_content_view->get_hovered_node_id();
-        VERIFY(hovered_node.has_value());
-        m_dom_inspector_widget->set_inspected_node(hovered_node.value());
+        // FIXME: Handle pseudo-elements
+        auto hovered_node = m_web_content_view->get_hovered_node_id();
+        m_dom_inspector_widget->set_selection({ hovered_node });
     } else {
         VERIFY(inspector_target == InspectorTarget::Document);
         m_dom_inspector_widget->select_default_node();

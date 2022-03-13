@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,7 +37,7 @@ public:
         __Count
     };
 
-    virtual ~Card() override;
+    virtual ~Card() override = default;
 
     Gfx::IntRect& rect() { return m_rect; }
     Gfx::IntPoint position() const { return m_rect.location(); }

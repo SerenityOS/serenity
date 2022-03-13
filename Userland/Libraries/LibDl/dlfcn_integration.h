@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Gunnar Beutner <gunnar@beutner.name>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +19,7 @@ struct DlErrorMessage {
     // The virtual destructor is required because we're passing this
     // struct to the dynamic loader - whose operator delete differs
     // from the one in libc.so
-    virtual ~DlErrorMessage() { }
+    virtual ~DlErrorMessage() = default;
 
     String text;
 };

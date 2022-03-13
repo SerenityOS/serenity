@@ -398,7 +398,7 @@ bool StyleProperties::operator==(const StyleProperties& other) const
 
     for (size_t i = 0; i < m_property_values.size(); ++i) {
         auto const& my_ptr = m_property_values[i];
-        auto const& other_ptr = m_property_values[i];
+        auto const& other_ptr = other.m_property_values[i];
         if (!my_ptr) {
             if (other_ptr)
                 return false;
@@ -433,6 +433,26 @@ Optional<CSS::TextAlign> StyleProperties::text_align() const
         return CSS::TextAlign::Justify;
     case CSS::ValueID::LibwebCenter:
         return CSS::TextAlign::LibwebCenter;
+    default:
+        return {};
+    }
+}
+
+Optional<CSS::TextJustify> StyleProperties::text_justify() const
+{
+    auto value = property(CSS::PropertyID::TextJustify);
+    if (!value.has_value())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Auto:
+        return CSS::TextJustify::Auto;
+    case CSS::ValueID::None:
+        return CSS::TextJustify::None;
+    case CSS::ValueID::InterWord:
+        return CSS::TextJustify::InterWord;
+    case CSS::ValueID::Distribute:
+    case CSS::ValueID::InterCharacter:
+        return CSS::TextJustify::InterCharacter;
     default:
         return {};
     }

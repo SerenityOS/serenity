@@ -110,7 +110,9 @@ void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, d
         { rx, ry },
         x_axis_rotation,
         theta_1,
-        theta_delta);
+        theta_delta,
+        large_arc,
+        sweep);
 }
 
 void Path::close()

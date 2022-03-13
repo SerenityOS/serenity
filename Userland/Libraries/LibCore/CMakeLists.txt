@@ -20,7 +20,6 @@ set(SOURCES
     MappedFile.cpp
     MimeData.cpp
     NetworkJob.cpp
-    NetworkResponse.cpp
     Notifier.cpp
     Object.cpp
     Process.cpp

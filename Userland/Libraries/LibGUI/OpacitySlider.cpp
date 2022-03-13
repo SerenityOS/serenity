@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,10 +24,6 @@ OpacitySlider::OpacitySlider(Gfx::Orientation orientation)
     set_max(100);
     set_value(100);
     set_fixed_height(20);
-}
-
-OpacitySlider::~OpacitySlider()
-{
 }
 
 Gfx::IntRect OpacitySlider::frame_inner_rect() const

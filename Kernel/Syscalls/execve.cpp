@@ -523,9 +523,12 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     m_arguments = move(arguments);
     m_environment = move(environment);
 
-    m_veil_state = VeilState::None;
-    m_unveiled_paths.clear();
-    m_unveiled_paths.set_metadata({ TRY(KString::try_create("/"sv)), UnveilAccess::None, false });
+    TRY(m_unveil_data.with([&](auto& unveil_data) -> ErrorOr<void> {
+        unveil_data.state = VeilState::None;
+        unveil_data.paths.clear();
+        unveil_data.paths.set_metadata({ TRY(KString::try_create("/"sv)), UnveilAccess::None, false });
+        return {};
+    }));
 
     for (auto& property : m_coredump_properties)
         property = {};

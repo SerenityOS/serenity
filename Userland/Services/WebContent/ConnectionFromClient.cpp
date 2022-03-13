@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -17,14 +17,16 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Storage.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/StackingContext.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebContentClientEndpoint.h>
@@ -189,7 +191,7 @@ void ConnectionFromClient::debug_request(const String& request, const String& ar
     if (request == "dump-stacking-context-tree") {
         if (auto* doc = page().top_level_browsing_context().active_document()) {
             if (auto* icb = doc->layout_node()) {
-                if (auto* stacking_context = icb->stacking_context())
+                if (auto* stacking_context = icb->paint_box()->stacking_context())
                     stacking_context->dump();
             }
         }
@@ -245,7 +247,7 @@ void ConnectionFromClient::inspect_dom_tree()
     }
 }
 
-Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect_dom_node(i32 node_id)
+Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element)
 {
     auto& top_context = page().top_level_browsing_context();
 
@@ -258,15 +260,16 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
     Web::DOM::Node* node = Web::DOM::Node::from_id(node_id);
     if (!node) {
-        return { false, "", "", "" };
+        return { false, "", "", "", "" };
     }
 
+    // FIXME: Pass the pseudo-element here.
     node->document().set_inspected_node(node);
 
     if (node->is_element()) {
         auto& element = verify_cast<Web::DOM::Element>(*node);
         if (!element.specified_css_values())
-            return { false, "", "", "" };
+            return { false, "", "", "", "" };
 
         auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> String {
             StringBuilder builder;
@@ -301,14 +304,62 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
             return builder.to_string();
         };
+        auto serialize_node_box_sizing_json = [](Web::Layout::Node const* layout_node) -> String {
+            if (!layout_node || !layout_node->is_box()) {
+                return "{}";
+            }
+            auto* box = static_cast<Web::Layout::Box const*>(layout_node);
+            auto box_model = box->box_model();
+            StringBuilder builder;
+            auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
+            MUST(serializer.add("padding_top", box_model.padding.top));
+            MUST(serializer.add("padding_right", box_model.padding.right));
+            MUST(serializer.add("padding_bottom", box_model.padding.bottom));
+            MUST(serializer.add("padding_left", box_model.padding.left));
+            MUST(serializer.add("margin_top", box_model.margin.top));
+            MUST(serializer.add("margin_right", box_model.margin.top));
+            MUST(serializer.add("margin_bottom", box_model.margin.top));
+            MUST(serializer.add("margin_left", box_model.margin.top));
+            MUST(serializer.add("border_top", box_model.border.top));
+            MUST(serializer.add("border_right", box_model.border.right));
+            MUST(serializer.add("border_bottom", box_model.border.bottom));
+            MUST(serializer.add("border_left", box_model.border.left));
+            if (auto* paint_box = box->paint_box()) {
+                MUST(serializer.add("content_width", paint_box->content_width()));
+                MUST(serializer.add("content_height", paint_box->content_height()));
+            } else {
+                MUST(serializer.add("content_width", 0));
+                MUST(serializer.add("content_height", 0));
+            }
+
+            MUST(serializer.finish());
+            return builder.to_string();
+        };
+
+        if (pseudo_element.has_value()) {
+            auto pseudo_element_node = element.get_pseudo_element_node(pseudo_element.value());
+            if (pseudo_element_node.is_null())
+                return { false, "", "", "", "" };
+
+            // FIXME: Pseudo-elements only exist as Layout::Nodes, which don't have style information
+            //        in a format we can use. So, we run the StyleComputer again to get the specified
+            //        values, and have to ignore the computed values and custom properties.
+            auto pseudo_element_style = page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element);
+            String specified_values_json = serialize_json(pseudo_element_style);
+            String computed_values_json = "{}";
+            String custom_properties_json = "{}";
+            String node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
+            return { true, specified_values_json, computed_values_json, custom_properties_json, node_box_sizing_json };
+        }
 
         String specified_values_json = serialize_json(*element.specified_css_values());
         String computed_values_json = serialize_json(element.computed_style());
         String custom_properties_json = serialize_custom_properties_json(element);
-        return { true, specified_values_json, computed_values_json, custom_properties_json };
+        String node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
+        return { true, specified_values_json, computed_values_json, custom_properties_json, node_box_sizing_json };
     }
 
-    return { false, "", "", "" };
+    return { false, "", "", "", "" };
 }
 
 Messages::WebContentServer::GetHoveredNodeIdResponse ConnectionFromClient::get_hovered_node_id()

@@ -26,6 +26,7 @@ public:
             Text,
             Element,
             ForcedBreak,
+            AbsolutelyPositionedElement,
         };
         Type type {};
         Layout::Node const* node { nullptr };

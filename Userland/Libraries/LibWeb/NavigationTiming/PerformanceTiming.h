@@ -9,18 +9,18 @@
 #include <AK/RefCountForwarder.h>
 #include <AK/StdLibExtras.h>
 #include <LibWeb/Bindings/Wrappable.h>
-#include <LibWeb/DOM/Window.h>
+#include <LibWeb/HTML/Window.h>
 
 namespace Web::NavigationTiming {
 
 class PerformanceTiming final
-    : public RefCountForwarder<DOM::Window>
+    : public RefCountForwarder<HTML::Window>
     , public Bindings::Wrappable {
 public:
     using WrapperType = Bindings::PerformanceTimingWrapper;
     using AllowOwnPtr = TrueType;
 
-    explicit PerformanceTiming(DOM::Window&);
+    explicit PerformanceTiming(HTML::Window&);
     ~PerformanceTiming();
 
     u32 navigation_start() { return 0; }

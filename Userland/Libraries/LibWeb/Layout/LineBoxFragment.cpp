@@ -15,7 +15,7 @@
 
 namespace Web::Layout {
 
-void LineBoxFragment::paint(PaintContext& context, PaintPhase phase)
+void LineBoxFragment::paint(PaintContext& context, Painting::PaintPhase phase)
 {
     for (auto* ancestor = layout_node().parent(); ancestor; ancestor = ancestor->parent()) {
         if (!ancestor->is_visible())
@@ -48,7 +48,7 @@ StringView LineBoxFragment::text() const
 const Gfx::FloatRect LineBoxFragment::absolute_rect() const
 {
     Gfx::FloatRect rect { {}, size() };
-    rect.set_location(m_layout_node.containing_block()->absolute_position());
+    rect.set_location(m_layout_node.containing_block()->paint_box()->absolute_position());
     rect.translate_by(offset());
     return rect;
 }

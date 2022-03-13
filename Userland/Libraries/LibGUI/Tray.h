@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,7 @@ class Tray : public GUI::Frame {
     C_OBJECT(Tray);
 
 public:
-    virtual ~Tray() override;
+    virtual ~Tray() override = default;
 
     size_t add_item(String text, RefPtr<Gfx::Bitmap>, String custom_data);
 

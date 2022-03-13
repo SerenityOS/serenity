@@ -4,9 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Painter.h>
-#include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/Progress.h>
+#include <LibWeb/Painting/ProgressPaintable.h>
 
 namespace Web::Layout {
 
@@ -20,15 +19,9 @@ Progress::~Progress()
 {
 }
 
-void Progress::paint(PaintContext& context, PaintPhase phase)
+RefPtr<Painting::Paintable> Progress::create_paintable() const
 {
-    if (!is_visible())
-        return;
-
-    if (phase == PaintPhase::Foreground) {
-        // FIXME: This does not support floating point value() and max()
-        Gfx::StylePainter::paint_progressbar(context.painter(), enclosing_int_rect(absolute_rect()), context.palette(), 0, dom_node().max(), dom_node().value(), "");
-    }
+    return Painting::ProgressPaintable::create(*this);
 }
 
 }

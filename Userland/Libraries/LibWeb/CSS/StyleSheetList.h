@@ -16,6 +16,7 @@ namespace Web::CSS {
 
 class StyleSheetList
     : public RefCounted<StyleSheetList>
+    , public Weakable<StyleSheetList>
     , public Bindings::Wrappable {
 public:
     using WrapperType = Bindings::StyleSheetListWrapper;
@@ -44,6 +45,9 @@ public:
 
     int generation() const { return m_generation; }
     void bump_generation() { ++m_generation; }
+
+    DOM::Document& document() { return m_document; }
+    DOM::Document const& document() const { return m_document; }
 
 private:
     explicit StyleSheetList(DOM::Document&);

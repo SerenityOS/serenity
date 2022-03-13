@@ -81,3 +81,64 @@ test("static function named 'async'", () => {
     expect("async" in A).toBeTrue();
     expect(A.async()).toBe("static function named async");
 });
+
+test("can call other private methods from static method", () => {
+    class A {
+        static #a() {
+            return 1;
+        }
+
+        static async #b() {
+            return 2;
+        }
+
+        static syncA() {
+            return this.#a();
+        }
+
+        static async asyncA() {
+            return this.#a();
+        }
+
+        static syncB() {
+            return this.#b();
+        }
+
+        static async asyncB() {
+            return this.#b();
+        }
+    }
+
+    var called = false;
+
+    async function check() {
+        called = true;
+        expect(A.syncA()).toBe(1);
+        expect(await A.asyncA()).toBe(1);
+        expect(await A.syncB()).toBe(2);
+        expect(await A.asyncB()).toBe(2);
+        return 3;
+    }
+
+    var error = null;
+    var failed = false;
+
+    check().then(
+        value => {
+            expect(called).toBeTrue();
+            expect(value).toBe(3);
+        },
+        thrownError => {
+            failed = true;
+            error = thrownError;
+        }
+    );
+
+    runQueuedPromiseJobs();
+
+    expect(called).toBeTrue();
+
+    if (failed) throw error;
+
+    expect(failed).toBeFalse();
+});

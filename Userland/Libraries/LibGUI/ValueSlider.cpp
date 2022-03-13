@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Marcus Nilsson <brainbomb@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -65,10 +66,6 @@ ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
         m_textbox->set_text(formatted_value());
         parent_widget()->set_focus(true);
     };
-}
-
-ValueSlider::~ValueSlider()
-{
 }
 
 String ValueSlider::formatted_value() const

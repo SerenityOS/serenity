@@ -73,6 +73,7 @@ class StringStyleValue;
 class StyleComputer;
 class StyleProperties;
 class StyleSheet;
+class StyleSheetList;
 class StyleValue;
 class StyleValueList;
 class Supports;
@@ -110,6 +111,8 @@ class IDLEventListener;
 class LiveNodeList;
 class NamedNodeMap;
 class Node;
+class NodeFilter;
+class NodeIterator;
 class NodeList;
 class ParentNode;
 class Position;
@@ -119,8 +122,7 @@ class ShadowRoot;
 class StaticNodeList;
 class StaticRange;
 class Text;
-class Timer;
-class Window;
+class TreeWalker;
 enum class QuirksMode;
 struct EventListenerOptions;
 struct AddEventListenerOptions;
@@ -235,6 +237,8 @@ class WorkerDebugConsoleClient;
 class Storage;
 class SubmitEvent;
 class TextMetrics;
+class Timer;
+class Window;
 class WindowEnvironmentSettingsObject;
 class Worker;
 class WorkerEnvironmentSettingsObject;
@@ -257,6 +261,19 @@ class MimeType;
 
 namespace Web::NavigationTiming {
 class PerformanceTiming;
+}
+
+namespace Web::Painting {
+enum class PaintPhase;
+class ButtonPaintable;
+class CheckBoxPaintable;
+class LabelablePaintable;
+class Paintable;
+class PaintableBox;
+class PaintableWithLines;
+class StackingContext;
+class TextPaintable;
+struct BorderRadiusData;
 }
 
 namespace Web::RequestIdleCallback {
@@ -291,7 +308,6 @@ class WebSocket;
 
 namespace Web::Layout {
 enum class LayoutMode;
-enum class PaintPhase;
 class BlockContainer;
 class BlockFormattingContext;
 class Box;
@@ -469,6 +485,8 @@ class MessageEventWrapper;
 class MessagePortWrapper;
 class MouseEventWrapper;
 class NamedNodeMapWrapper;
+class NodeFilterWrapper;
+class NodeIteratorWrapper;
 class NodeListWrapper;
 class NodeWrapper;
 class PageTransitionEventWrapper;
@@ -504,6 +522,7 @@ class TextDecoderWrapper;
 class TextEncoderWrapper;
 class TextMetricsWrapper;
 class TextWrapper;
+class TreeWalkerWrapper;
 class UIEventWrapper;
 class URLConstructor;
 class URLPrototype;
@@ -515,6 +534,7 @@ class URLSearchParamsWrapper;
 class URLWrapper;
 class WebSocketWrapper;
 class WindowObject;
+class WindowProxy;
 class WorkerWrapper;
 class WorkerGlobalScopeWrapper;
 class WorkerLocationWrapper;

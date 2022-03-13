@@ -69,6 +69,8 @@ public:
 
     void invalidate_rule_cache();
 
+    Gfx::Font const& initial_font() const;
+
 private:
     void compute_cascaded_values(StyleProperties&, DOM::Element&, Optional<CSS::Selector::PseudoElement>) const;
     void compute_font(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;

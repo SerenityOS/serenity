@@ -44,6 +44,8 @@ class Heap {
     }
 
 public:
+    static constexpr size_t AllocationHeaderSize = sizeof(AllocationHeader);
+
     Heap(u8* memory, size_t memory_size)
         : m_total_chunks(calculate_chunks(memory_size))
         , m_chunks(memory)

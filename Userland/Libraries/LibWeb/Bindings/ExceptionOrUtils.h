@@ -20,6 +20,12 @@ constexpr bool IsExceptionOr = false;
 template<typename T>
 constexpr bool IsExceptionOr<DOM::ExceptionOr<T>> = true;
 
+template<typename>
+constexpr bool IsThrowCompletionOr = false;
+
+template<typename T>
+constexpr bool IsThrowCompletionOr<JS::ThrowCompletionOr<T>> = true;
+
 namespace Detail {
 
 template<typename T>
@@ -29,6 +35,11 @@ struct ExtractExceptionOrValueType {
 
 template<typename T>
 struct ExtractExceptionOrValueType<DOM::ExceptionOr<T>> {
+    using Type = T;
+};
+
+template<typename T>
+struct ExtractExceptionOrValueType<JS::ThrowCompletionOr<T>> {
     using Type = T;
 };
 
@@ -79,7 +90,7 @@ using ExtractExceptionOrValueType = typename Detail::ExtractExceptionOrValueType
 // void or ExceptionOr<void>: JS::ThrowCompletionOr<JS::Value>, always returns JS::js_undefined()
 // ExceptionOr<T>: JS::ThrowCompletionOr<T>
 // T: JS::ThrowCompletionOr<T>
-template<typename F, typename T = decltype(declval<F>()()), typename Ret = Conditional<!IsExceptionOr<T> && !IsVoid<T>, T, ExtractExceptionOrValueType<T>>>
+template<typename F, typename T = decltype(declval<F>()()), typename Ret = Conditional<!IsExceptionOr<T> && !IsVoid<T> && !IsThrowCompletionOr<T>, T, ExtractExceptionOrValueType<T>>>
 JS::ThrowCompletionOr<Ret> throw_dom_exception_if_needed(auto&& global_object, F&& fn)
 {
     if constexpr (IsExceptionOr<T>) {

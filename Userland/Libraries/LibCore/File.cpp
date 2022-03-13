@@ -473,7 +473,7 @@ ErrorOr<void, File::CopyError> File::copy_directory(String const& dst_path, Stri
     if (!dst_rp.is_empty() && dst_rp.starts_with(src_rp))
         return CopyError { errno, false };
 
-    DirIterator di(src_path, DirIterator::SkipDots);
+    DirIterator di(src_path, DirIterator::SkipParentAndBaseDir);
     if (di.has_error())
         return CopyError { errno, false };
 

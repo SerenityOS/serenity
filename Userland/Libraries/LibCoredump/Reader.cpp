@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -74,10 +75,6 @@ Optional<ByteBuffer> Reader::decompress_coredump(ReadonlyBytes raw_coredump)
     if (bytebuffer.is_error())
         return {};
     return bytebuffer.release_value();
-}
-
-Reader::~Reader()
-{
 }
 
 Reader::NotesEntryIterator::NotesEntryIterator(const u8* notes_data)

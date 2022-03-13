@@ -97,6 +97,8 @@ extern "C" [[noreturn]] void init(BootInfo const&);
 
 READONLY_AFTER_INIT VirtualConsole* tty0;
 
+ProcessID g_init_pid { 0 };
+
 static Processor s_bsp_processor; // global but let's keep it "private"
 
 // SerenityOS Kernel C++ entry point :^)
@@ -373,6 +375,8 @@ void init_stage2(void*)
     auto init_or_error = Process::try_create_user_process(thread, userspace_init, UserID(0), GroupID(0), move(init_args), {}, tty0);
     if (init_or_error.is_error())
         PANIC("init_stage2: Error spawning init process: {}", init_or_error.error());
+
+    g_init_pid = init_or_error.value()->pid();
 
     thread->set_priority(THREAD_PRIORITY_HIGH);
 

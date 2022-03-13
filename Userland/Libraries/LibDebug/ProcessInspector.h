@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@ namespace Debug {
 
 class ProcessInspector {
 public:
-    virtual ~ProcessInspector() { }
+    virtual ~ProcessInspector() = default;
     virtual bool poke(FlatPtr address, FlatPtr data) = 0;
     virtual Optional<FlatPtr> peek(FlatPtr address) const = 0;
     virtual PtraceRegisters get_registers() const = 0;

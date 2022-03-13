@@ -8,6 +8,7 @@
 
 #include <AK/Function.h>
 #include <LibGUI/AbstractButton.h>
+#include <LibGUI/Action.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/TextAlignment.h>

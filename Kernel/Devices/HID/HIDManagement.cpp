@@ -86,17 +86,23 @@ size_t HIDManagement::generate_minor_device_number_for_keyboard()
     return m_keyboard_minor_number++;
 }
 
+UNMAP_AFTER_INIT HIDManagement::KeymapData::KeymapData()
+    : character_map_name(KString::must_create("en-us"sv))
+    , character_map(DEFAULT_CHARACTER_MAP)
+{
+}
+
 UNMAP_AFTER_INIT HIDManagement::HIDManagement()
-    : m_character_map_name(KString::must_create("en-us"sv))
-    , m_character_map(DEFAULT_CHARACTER_MAP)
 {
 }
 
 void HIDManagement::set_maps(NonnullOwnPtr<KString> character_map_name, Keyboard::CharacterMapData const& character_map_data)
 {
-    m_character_map_name = move(character_map_name);
-    m_character_map = character_map_data;
-    dbgln("New Character map '{}' passed in by client.", m_character_map_name);
+    m_keymap_data.with([&](auto& keymap_data) {
+        keymap_data.character_map_name = move(character_map_name);
+        keymap_data.character_map = character_map_data;
+        dbgln("New Character map '{}' passed in by client.", keymap_data.character_map_name);
+    });
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
@@ -150,17 +156,19 @@ u32 HIDManagement::get_char_from_character_map(KeyEvent event) const
     auto index = event.scancode & 0xFF; // Index is last byte of scan code.
     auto caps_lock_on = event.caps_lock_on;
 
-    u32 code_point;
-    if (modifiers & Mod_Alt)
-        code_point = m_character_map.alt_map[index];
-    else if ((modifiers & Mod_Shift) && (modifiers & Mod_AltGr))
-        code_point = m_character_map.shift_altgr_map[index];
-    else if (modifiers & Mod_Shift)
-        code_point = m_character_map.shift_map[index];
-    else if (modifiers & Mod_AltGr)
-        code_point = m_character_map.altgr_map[index];
-    else
-        code_point = m_character_map.map[index];
+    u32 code_point = 0;
+    m_keymap_data.with([&](auto& keymap_data) {
+        if (modifiers & Mod_Alt)
+            code_point = keymap_data.character_map.alt_map[index];
+        else if ((modifiers & Mod_Shift) && (modifiers & Mod_AltGr))
+            code_point = keymap_data.character_map.shift_altgr_map[index];
+        else if (modifiers & Mod_Shift)
+            code_point = keymap_data.character_map.shift_map[index];
+        else if (modifiers & Mod_AltGr)
+            code_point = keymap_data.character_map.altgr_map[index];
+        else
+            code_point = keymap_data.character_map.map[index];
+    });
 
     if (caps_lock_on && (modifiers == 0 || modifiers == Mod_Shift)) {
         if (code_point >= 'a' && code_point <= 'z')

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,10 +28,6 @@ ColorInput::ColorInput()
 
     REGISTER_STRING_PROPERTY("color_picker_title", color_picker_title, set_color_picker_title);
     REGISTER_BOOL_PROPERTY("has_alpha_channel", has_alpha_channel, set_color_has_alpha_channel);
-}
-
-ColorInput::~ColorInput()
-{
 }
 
 Gfx::IntRect ColorInput::color_rect() const
