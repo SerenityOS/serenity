@@ -205,7 +205,7 @@ String Selector::serialize() const
         // 1. If there is only one simple selector in the compound selectors which is a universal selector, append the result of serializing the universal selector to s.
         if (compound_selector.simple_selectors.size() == 1
             && compound_selector.simple_selectors.first().type == Selector::SimpleSelector::Type::Universal) {
-            s.append(compound_selectors().first().simple_selectors.first().serialize());
+            s.append(compound_selector.simple_selectors.first().serialize());
         }
         // 2. Otherwise, for each simple selector in the compound selectors...
         //    FIXME: ...that is not a universal selector of which the namespace prefix maps to a namespace that is not the default namespace...
