@@ -10,6 +10,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibCore/SyscallMacros.h>
 #include <LibCore/System.h>
 #include <LibSystem/syscall.h>
 #include <limits.h>
@@ -39,12 +40,6 @@ static int memfd_create(const char* name, unsigned int flags)
 #if defined(__APPLE__)
 #    include <sys/mman.h>
 #endif
-
-#define HANDLE_SYSCALL_RETURN_VALUE(syscall_name, rc, success_value) \
-    if ((rc) < 0) {                                                  \
-        return Error::from_syscall(syscall_name, rc);                \
-    }                                                                \
-    return success_value;
 
 namespace Core::System {
 
