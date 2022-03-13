@@ -92,6 +92,7 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
         }
 
         Vector<MatchingRule> matching_rules;
+        matching_rules.ensure_capacity(rules_to_run.size());
         for (auto const& rule_to_run : rules_to_run) {
             auto const& selector = rule_to_run.rule->selectors()[rule_to_run.selector_index];
             if (SelectorEngine::matches(selector, element, pseudo_element))
