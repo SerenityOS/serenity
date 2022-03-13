@@ -1618,4 +1618,13 @@ Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecod
     return {};
 }
 
+Bytecode::CodeGenerationErrorOr<void> WithStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    TRY(m_object->generate_bytecode(generator));
+    generator.emit<Bytecode::Op::EnterObjectEnvironment>();
+    TRY(m_body->generate_bytecode(generator));
+    generator.emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+    return {};
+}
+
 }

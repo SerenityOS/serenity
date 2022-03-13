@@ -18,6 +18,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -271,6 +272,15 @@ ThrowCompletionOr<void> CreateEnvironment::execute_impl(Bytecode::Interpreter& i
         interpreter.saved_lexical_environment_stack().append(make_and_swap_envs(interpreter.vm().running_execution_context().lexical_environment));
     else if (m_mode == EnvironmentMode::Var)
         interpreter.saved_variable_environment_stack().append(make_and_swap_envs(interpreter.vm().running_execution_context().variable_environment));
+    return {};
+}
+
+ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& old_environment = interpreter.vm().running_execution_context().lexical_environment;
+    interpreter.saved_lexical_environment_stack().append(old_environment);
+    auto object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    interpreter.vm().running_execution_context().lexical_environment = new_object_environment(*object, true, old_environment);
     return {};
 }
 
@@ -693,6 +703,11 @@ String CreateVariable::to_string_impl(Bytecode::Executable const& executable) co
 {
     auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
     return String::formatted("CreateVariable env:{} immutable:{} {} ({})", mode_string, m_is_immutable, m_identifier, executable.identifier_table->get(m_identifier));
+}
+
+String EnterObjectEnvironment::to_string_impl(const Executable&) const
+{
+    return String::formatted("EnterObjectEnvironment");
 }
 
 String SetVariable::to_string_impl(Bytecode::Executable const& executable) const

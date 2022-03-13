@@ -25,6 +25,7 @@
     O(Decrement)                     \
     O(Div)                           \
     O(EnterUnwindContext)            \
+    O(EnterObjectEnvironment)        \
     O(Exp)                           \
     O(FinishUnwind)                  \
     O(GetById)                       \
