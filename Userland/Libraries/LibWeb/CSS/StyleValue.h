@@ -590,6 +590,14 @@ public:
 
     virtual String to_string() const override;
 
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        auto& other_value = static_cast<BackgroundRepeatStyleValue const&>(other);
+        return m_repeat_x == other_value.m_repeat_x && m_repeat_y == other_value.m_repeat_y;
+    }
+
 private:
     BackgroundRepeatStyleValue(Repeat repeat_x, Repeat repeat_y)
         : StyleValue(Type::BackgroundRepeat)
@@ -615,6 +623,14 @@ public:
     LengthPercentage size_y() const { return m_size_y; }
 
     virtual String to_string() const override;
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        auto& other_value = static_cast<BackgroundSizeStyleValue const&>(other);
+        return m_size_x == other_value.m_size_x && m_size_y == other_value.m_size_y;
+    }
 
 private:
     BackgroundSizeStyleValue(LengthPercentage size_x, LengthPercentage size_y)
@@ -719,6 +735,19 @@ public:
     BoxShadowPlacement placement() const { return m_placement; }
 
     virtual String to_string() const override;
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        auto& other_value = static_cast<BoxShadowStyleValue const&>(other);
+        return m_color == other_value.m_color
+            && m_offset_x == other_value.m_offset_x
+            && m_offset_y == other_value.m_offset_y
+            && m_blur_radius == other_value.m_blur_radius
+            && m_spread_distance == other_value.m_spread_distance
+            && m_placement == other_value.m_placement;
+    }
 
 private:
     explicit BoxShadowStyleValue(Color const& color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, BoxShadowPlacement placement)
@@ -1638,6 +1667,22 @@ public:
     }
 
     virtual String to_string() const override;
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        auto& other_value = static_cast<StyleValueList const&>(other);
+        if (m_separator != other_value.m_separator)
+            return false;
+        if (m_values.size() != other_value.m_values.size())
+            return false;
+        for (size_t i = 0; i < m_values.size(); ++i) {
+            if (!m_values[i].equals(other_value.m_values[i]))
+                return false;
+        }
+        return true;
+    }
 
 private:
     StyleValueList(NonnullRefPtrVector<StyleValue>&& values, Separator separator)
