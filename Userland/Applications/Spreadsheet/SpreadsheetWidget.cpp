@@ -242,6 +242,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
 
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
+    m_paste_action->set_enabled(false);
 
     m_tab_widget->on_context_menu_request = [&](auto& widget, auto& event) {
         m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
@@ -271,6 +272,12 @@ void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
         m_inline_documentation_window->set_rect(m_cell_value_editor->screen_relative_rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
 }
 
+void SpreadsheetWidget::clipboard_content_did_change(String const& mime_type)
+{
+    if (auto* sheet = current_worksheet_if_available())
+        m_paste_action->set_enabled(!sheet->selected_cells().is_empty() && mime_type.starts_with("text/"));
+}
+
 void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 {
     for (auto& sheet : new_sheets) {
@@ -288,6 +295,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             VERIFY(!selection.is_empty());
             m_cut_action->set_enabled(true);
             m_copy_action->set_enabled(true);
+            m_paste_action->set_enabled(GUI::Clipboard::the().fetch_mime_type().starts_with("text/"));
             m_current_cell_label->set_enabled(true);
             m_cell_value_editor->set_enabled(true);
 
@@ -355,6 +363,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
             m_cut_action->set_enabled(false);
             m_copy_action->set_enabled(false);
+            m_paste_action->set_enabled(false);
 
             static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
         };
