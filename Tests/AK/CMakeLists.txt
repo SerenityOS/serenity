@@ -41,7 +41,7 @@ set(AK_TEST_SOURCES
     TestLEB128.cpp
     TestLexicalPath.cpp
     TestMACAddress.cpp
-    TestMemMem.cpp
+    TestMemory.cpp
     TestMemoryStream.cpp
     TestNeverDestroyed.cpp
     TestNonnullRefPtr.cpp
