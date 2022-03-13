@@ -51,6 +51,12 @@ HexEditorWidget::HexEditorWidget()
         m_statusbar->set_text(2, String::formatted("Selection Start: {}", selection_start));
         m_statusbar->set_text(3, String::formatted("Selection End: {}", selection_end));
         m_statusbar->set_text(4, String::formatted("Selected Bytes: {}", m_editor->selection_size()));
+
+        bool has_selection = m_editor->has_selection();
+        m_copy_hex_action->set_enabled(has_selection);
+        m_copy_text_action->set_enabled(has_selection);
+        m_copy_as_c_code_action->set_enabled(has_selection);
+        m_fill_selection_action->set_enabled(has_selection);
     };
 
     m_editor->on_change = [this] {
@@ -183,6 +189,30 @@ HexEditorWidget::HexEditorWidget()
         set_search_results_visible(action.is_checked());
     });
 
+    m_copy_hex_action = GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hex.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+        m_editor->copy_selected_hex_to_clipboard();
+    });
+    m_copy_hex_action->set_enabled(false);
+
+    m_copy_text_action = GUI::Action::create("Copy &Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+        m_editor->copy_selected_text_to_clipboard();
+    });
+    m_copy_text_action->set_enabled(false);
+
+    m_copy_as_c_code_action = GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/c.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+        m_editor->copy_selected_hex_to_clipboard_as_c_code();
+    });
+    m_copy_as_c_code_action->set_enabled(false);
+
+    m_fill_selection_action = GUI::Action::create("Fill &Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
+        String value;
+        if (GUI::InputBox::show(window(), value, "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecOK && !value.is_empty()) {
+            auto fill_byte = strtol(value.characters(), nullptr, 16);
+            m_editor->fill_selection(fill_byte);
+        }
+    });
+    m_fill_selection_action->set_enabled(false);
+
     m_toolbar->add_action(*m_new_action);
     m_toolbar->add_action(*m_open_action);
     m_toolbar->add_action(*m_save_action);
@@ -215,23 +245,11 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
         m_editor->select_all();
         m_editor->update();
     }));
-    edit_menu.add_action(GUI::Action::create("Fill &Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
-        String value;
-        if (GUI::InputBox::show(&window, value, "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecOK && !value.is_empty()) {
-            auto fill_byte = strtol(value.characters(), nullptr, 16);
-            m_editor->fill_selection(fill_byte);
-        }
-    }));
+    edit_menu.add_action(*m_fill_selection_action);
     edit_menu.add_separator();
-    edit_menu.add_action(GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hex.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
-        m_editor->copy_selected_hex_to_clipboard();
-    }));
-    edit_menu.add_action(GUI::Action::create("Copy &Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
-        m_editor->copy_selected_text_to_clipboard();
-    }));
-    edit_menu.add_action(GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/c.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
-        m_editor->copy_selected_hex_to_clipboard_as_c_code();
-    }));
+    edit_menu.add_action(*m_copy_hex_action);
+    edit_menu.add_action(*m_copy_text_action);
+    edit_menu.add_action(*m_copy_as_c_code_action);
     edit_menu.add_separator();
     edit_menu.add_action(*m_find_action);
     edit_menu.add_action(GUI::Action::create("Find &Next", { Mod_None, Key_F3 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png").release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
