@@ -171,7 +171,7 @@ private:
         // When a value cannot be explicitly supported due to range/precision limitations, it must be converted
         // to the closest value supported by the implementation, but how the implementation defines "closest"
         // is explicitly undefined as well.
-        return static_cast<i64>(clamp(round(value), NumericLimits<i64>::min(), NumericLimits<i64>::max()));
+        return llround(value);
     }
 
     Type m_type { Type::Invalid };
