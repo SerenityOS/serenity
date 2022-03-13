@@ -176,6 +176,8 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
                 if (!declared_function_names.contains(function_name) && !declared_var_names.contains(function_name)) {
                     // i. Perform ? env.CreateGlobalVarBinding(F, false).
                     generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Var, false);
+                    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+                    generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Var);
 
                     // ii. Append F to declaredFunctionOrVarNames.
                     declared_function_names.set(function_name);
@@ -848,7 +850,7 @@ Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Byt
     if (m_is_hoisted) {
         auto index = generator.intern_identifier(name());
         generator.emit<Bytecode::Op::GetVariable>(index);
-        generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Var);
+        generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode::Var);
     }
     return {};
 }
@@ -1127,10 +1129,11 @@ Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Byt
             generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
 
         auto initialization_mode = is_lexical_declaration() ? Bytecode::Op::SetVariable::InitializationMode::Initialize : Bytecode::Op::SetVariable::InitializationMode::Set;
+        auto environment_mode = is_lexical_declaration() ? Bytecode::Op::EnvironmentMode::Lexical : Bytecode::Op::EnvironmentMode::Var;
 
         TRY(declarator.target().visit(
             [&](NonnullRefPtr<Identifier> const& id) -> Bytecode::CodeGenerationErrorOr<void> {
-                generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()), initialization_mode);
+                generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()), initialization_mode, environment_mode);
                 return {};
             },
             [&](NonnullRefPtr<BindingPattern> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
