@@ -9,12 +9,15 @@
 #include "SpreadsheetView.h"
 #include "Workbook.h"
 #include <AK/NonnullRefPtrVector.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Widget.h>
 
 namespace Spreadsheet {
 
-class SpreadsheetWidget final : public GUI::Widget {
+class SpreadsheetWidget final
+    : public GUI::Widget
+    , public GUI::Clipboard::ClipboardClient {
     C_OBJECT(SpreadsheetWidget);
 
 public:
@@ -49,7 +52,11 @@ public:
     auto& undo_stack() { return m_undo_stack; }
 
 private:
+    // ^GUI::Widget
     virtual void resize_event(GUI::ResizeEvent&) override;
+
+    // ^GUI::Clipboard::ClipboardClient
+    virtual void clipboard_content_did_change(String const& mime_type) override;
 
     explicit SpreadsheetWidget(GUI::Window& window, NonnullRefPtrVector<Sheet>&& sheets = {}, bool should_add_sheet_if_empty = true);
 
