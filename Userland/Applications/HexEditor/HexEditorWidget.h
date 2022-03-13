@@ -55,6 +55,11 @@ private:
     RefPtr<GUI::Action> m_layout_toolbar_action;
     RefPtr<GUI::Action> m_layout_search_results_action;
 
+    RefPtr<GUI::Action> m_copy_hex_action;
+    RefPtr<GUI::Action> m_copy_text_action;
+    RefPtr<GUI::Action> m_copy_as_c_code_action;
+    RefPtr<GUI::Action> m_fill_selection_action;
+
     GUI::ActionGroup m_bytes_per_row_actions;
 
     RefPtr<GUI::Statusbar> m_statusbar;
