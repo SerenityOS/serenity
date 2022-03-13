@@ -423,18 +423,23 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 dbgln_if(CSS_PARSER_DEBUG, "Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_debug_string(), delim_second_part.to_debug_string());
                 return ParsingResult::SyntaxError;
             }
-
-            if (delim_part.token().delim() == '~') {
+            switch (delim_part.token().delim()) {
+            case '~':
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsWord;
-            } else if (delim_part.token().delim() == '*') {
+                break;
+            case '*':
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsString;
-            } else if (delim_part.token().delim() == '|') {
+                break;
+            case '|':
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment;
-            } else if (delim_part.token().delim() == '^') {
+                break;
+            case '^':
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithString;
-            } else if (delim_part.token().delim() == '$') {
+                break;
+            case '$':
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::EndsWithString;
-            } else {
+                break;
+            default:
                 attribute_tokens.reconsume_current_input_token();
             }
         }
