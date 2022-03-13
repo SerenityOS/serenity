@@ -20,7 +20,7 @@ class StyleBlockRule : public RefCounted<StyleBlockRule> {
 public:
     StyleBlockRule();
     explicit StyleBlockRule(Token token, Vector<StyleComponentValueRule>&& values)
-        : m_token(token)
+        : m_token(move(token))
         , m_values(move(values))
     {
     }
