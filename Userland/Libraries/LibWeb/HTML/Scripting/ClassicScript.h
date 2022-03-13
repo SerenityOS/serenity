@@ -23,7 +23,7 @@ public:
         No,
         Yes,
     };
-    static NonnullRefPtr<ClassicScript> create(String filename, StringView source, EnvironmentSettingsObject&, AK::URL base_url, MutedErrors = MutedErrors::No);
+    static NonnullRefPtr<ClassicScript> create(String filename, StringView source, EnvironmentSettingsObject&, AK::URL base_url, size_t source_line_number = 1, MutedErrors = MutedErrors::No);
 
     JS::Script* script_record() { return m_script_record; }
     JS::Script const* script_record() const { return m_script_record; }

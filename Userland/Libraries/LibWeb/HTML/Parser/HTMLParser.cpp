@@ -790,6 +790,7 @@ void HTMLParser::handle_in_head(HTMLToken& token)
         auto& script_element = verify_cast<HTMLScriptElement>(*element);
         script_element.set_parser_document({}, document());
         script_element.set_non_blocking({}, false);
+        script_element.set_source_line_number({}, token.start_position().line + 1); // FIXME: This +1 is incorrect for script tags whose script does not start on a new line
 
         if (m_parsing_fragment) {
             script_element.set_already_started({}, true);

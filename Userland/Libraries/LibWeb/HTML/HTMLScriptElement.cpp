@@ -329,7 +329,7 @@ void HTMLScriptElement::prepare_script()
             // 1. Let script be the result of creating a classic script using source text, settings object, base URL, and options.
 
             // FIXME: Pass settings, base URL and options.
-            auto script = ClassicScript::create(m_document->url().to_string(), source_text, document().relevant_settings_object(), AK::URL());
+            auto script = ClassicScript::create(m_document->url().to_string(), source_text, document().relevant_settings_object(), AK::URL(), m_source_line_number);
 
             // 2. Set the script's script to script.
             m_script = script;
