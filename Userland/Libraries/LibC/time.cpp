@@ -146,7 +146,7 @@ static time_t tm_to_time(struct tm* tm, long timezone_adjust_seconds)
 time_t mktime(struct tm* tm)
 {
     tzset();
-    return tm_to_time(tm, timezone);
+    return tm_to_time(tm, daylight ? altzone : timezone);
 }
 
 struct tm* localtime(const time_t* t)
@@ -162,7 +162,7 @@ struct tm* localtime_r(const time_t* t, struct tm* tm)
     if (!t)
         return nullptr;
 
-    time_to_tm(tm, *t - timezone);
+    time_to_tm(tm, *t - (daylight ? altzone : timezone));
     return tm;
 }
 
