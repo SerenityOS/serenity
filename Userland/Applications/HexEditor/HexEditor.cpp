@@ -185,12 +185,12 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
     output_string_builder.append("    ");
     for (size_t i = m_selection_start, j = 1; i < m_selection_end; i++, j++) {
         output_string_builder.appendff("{:#02X}", m_document->get(i).value);
-        if (i != m_selection_end)
+        if (i >= m_selection_end - 1)
+            continue;
+        if ((j % 12) == 0)
+            output_string_builder.append(",\n    ");
+        else
             output_string_builder.append(", ");
-        if ((j % 12) == 0) {
-            output_string_builder.append("\n");
-            output_string_builder.append("    ");
-        }
     }
     output_string_builder.append("\n};\n");
 
