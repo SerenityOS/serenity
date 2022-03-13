@@ -315,6 +315,9 @@ private:
     Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<StyleComponentValueRule>&, SelectorType);
     Result<Selector::CompoundSelector, ParsingResult> parse_compound_selector(TokenStream<StyleComponentValueRule>&);
     Optional<Selector::Combinator> parse_selector_combinator(TokenStream<StyleComponentValueRule>&);
+
+    Result<Selector::SimpleSelector, ParsingResult> parse_attribute_simple_selector(StyleComponentValueRule const&);
+    Result<Selector::SimpleSelector, ParsingResult> parse_pseudo_simple_selector(TokenStream<StyleComponentValueRule>&);
     Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
 
     NonnullRefPtr<MediaQuery> parse_media_query(TokenStream<StyleComponentValueRule>&);
