@@ -190,6 +190,9 @@ HexEditorWidget::HexEditorWidget()
     m_toolbar->add_action(*m_find_action);
     m_toolbar->add_action(*m_goto_offset_action);
 
+    m_statusbar->segment(0).set_clickable(true);
+    m_statusbar->segment(0).set_action(*m_goto_offset_action);
+
     m_editor->set_focus(true);
 }
 
