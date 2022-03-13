@@ -9,6 +9,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/String.h>
+#include <AK/Utf8View.h>
 #include <math.h>
 
 namespace Web::CSS {
@@ -76,10 +77,10 @@ public:
         return m_value.view();
     }
 
-    StringView delim() const
+    u32 delim() const
     {
         VERIFY(m_type == Type::Delim);
-        return m_value.view();
+        return *Utf8View(m_value.view()).begin();
     }
 
     StringView string() const

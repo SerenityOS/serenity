@@ -281,21 +281,21 @@ Result<Selector::CompoundSelector, Parser::ParsingResult> Parser::parse_compound
 
 Optional<Selector::Combinator> Parser::parse_selector_combinator(TokenStream<StyleComponentValueRule>& tokens)
 {
-    auto& current_value = tokens.next_token();
+    auto const& current_value = tokens.next_token();
     if (current_value.is(Token::Type::Delim)) {
         auto delim = current_value.token().delim();
-        if (delim == ">"sv) {
+        if (delim == '>') {
             return Selector::Combinator::ImmediateChild;
-        } else if (delim == "+"sv) {
+        } else if (delim == '+') {
             return Selector::Combinator::NextSibling;
-        } else if (delim == "~"sv) {
+        } else if (delim == '~') {
             return Selector::Combinator::SubsequentSibling;
-        } else if (delim == "|"sv) {
-            auto& next = tokens.peek_token();
+        } else if (delim == '|') {
+            auto const& next = tokens.peek_token();
             if (next.is(Token::Type::EndOfFile))
                 return {};
 
-            if (next.is(Token::Type::Delim) && next.token().delim() == "|"sv) {
+            if (next.is(Token::Type::Delim) && next.token().delim() == '|') {
                 tokens.next_token();
                 return Selector::Combinator::Column;
             }
@@ -316,9 +316,9 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
     if (peek_token_ends_selector())
         return ParsingResult::Done;
 
-    auto& first_value = tokens.next_token();
+    auto const& first_value = tokens.next_token();
 
-    if (first_value.is(Token::Type::Delim) && first_value.token().delim() == "*"sv) {
+    if (first_value.is(Token::Type::Delim) && first_value.token().delim() == '*') {
         return Selector::SimpleSelector {
             .type = Selector::SimpleSelector::Type::Universal
         };
@@ -333,7 +333,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             .value = first_value.token().hash_value()
         };
 
-    } else if (first_value.is(Token::Type::Delim) && first_value.token().delim() == "."sv) {
+    } else if (first_value.is(Token::Type::Delim) && first_value.token().delim() == '.') {
         if (peek_token_ends_selector())
             return ParsingResult::SyntaxError;
 
@@ -393,7 +393,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             return ParsingResult::SyntaxError;
         }
 
-        if (delim_part.token().delim() == "="sv) {
+        if (delim_part.token().delim() == '=') {
             simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch;
         } else {
             if (!attribute_tokens.has_next_token()) {
@@ -402,20 +402,20 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             }
 
             auto& delim_second_part = attribute_tokens.next_token();
-            if (!(delim_second_part.is(Token::Type::Delim) && delim_second_part.token().delim() == "=")) {
+            if (!(delim_second_part.is(Token::Type::Delim) && delim_second_part.token().delim() == '=')) {
                 dbgln_if(CSS_PARSER_DEBUG, "Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_debug_string(), delim_second_part.to_debug_string());
                 return ParsingResult::SyntaxError;
             }
 
-            if (delim_part.token().delim() == "~"sv) {
+            if (delim_part.token().delim() == '~') {
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsWord;
-            } else if (delim_part.token().delim() == "*"sv) {
+            } else if (delim_part.token().delim() == '*') {
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsString;
-            } else if (delim_part.token().delim() == "|"sv) {
+            } else if (delim_part.token().delim() == '|') {
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment;
-            } else if (delim_part.token().delim() == "^"sv) {
+            } else if (delim_part.token().delim() == '^') {
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithString;
-            } else if (delim_part.token().delim() == "$"sv) {
+            } else if (delim_part.token().delim() == '$') {
                 simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::EndsWithString;
             } else {
                 attribute_tokens.reconsume_current_input_token();
@@ -646,7 +646,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
     // So, if we see a combinator, return that this compound-selector is done, instead of a syntax error.
     if (first_value.is(Token::Type::Delim)) {
         auto delim = first_value.token().delim();
-        if ((delim == ">"sv) || (delim == "+"sv) || (delim == "~"sv) || (delim == "|"sv)) {
+        if ((delim == '>') || (delim == '+') || (delim == '~') || (delim == '|')) {
             tokens.reconsume_current_input_token();
             return ParsingResult::Done;
         }
@@ -970,19 +970,19 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
         auto& first = tokens.next_token();
         if (first.is(Token::Type::Delim)) {
             auto first_delim = first.token().delim();
-            if (first_delim == "="sv)
+            if (first_delim == '=')
                 return MediaFeature::Comparison::Equal;
-            if (first_delim == "<"sv) {
+            if (first_delim == '<') {
                 auto& second = tokens.peek_token();
-                if (second.is(Token::Type::Delim) && second.token().delim() == "="sv) {
+                if (second.is(Token::Type::Delim) && second.token().delim() == '=') {
                     tokens.next_token();
                     return MediaFeature::Comparison::LessThanOrEqual;
                 }
                 return MediaFeature::Comparison::LessThan;
             }
-            if (first_delim == ">"sv) {
+            if (first_delim == '>') {
                 auto& second = tokens.peek_token();
-                if (second.is(Token::Type::Delim) && second.token().delim() == "="sv) {
+                if (second.is(Token::Type::Delim) && second.token().delim() == '=') {
                     tokens.next_token();
                     return MediaFeature::Comparison::GreaterThanOrEqual;
                 }
@@ -1698,7 +1698,7 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
             Optional<size_t> bang_index;
             for (size_t i = important_index.value() - 1; i > 0; i--) {
                 auto value = declaration.m_values[i];
-                if (value.is(Token::Type::Delim) && value.token().delim() == "!"sv) {
+                if (value.is(Token::Type::Delim) && value.token().delim() == '!') {
                     bang_index = i;
                     break;
                 }
@@ -2322,7 +2322,7 @@ Optional<Ratio> Parser::parse_ratio(TokenStream<StyleComponentValueRule>& tokens
     auto solidus = tokens.next_token();
     tokens.skip_whitespace();
     auto second_number = tokens.next_token();
-    if (solidus.is(Token::Type::Delim) && solidus.token().delim() == "/"
+    if (solidus.is(Token::Type::Delim) && solidus.token().delim() == '/'
         && second_number.is(Token::Type::Number) && second_number.token().number_value() > 0) {
         // Two-value ratio
         return Ratio { static_cast<float>(first_number.token().number_value()), static_cast<float>(second_number.token().number_value()) };
@@ -2781,7 +2781,7 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<StyleComponentValueRule
                 // Attempt to parse `/ <background-size>`
                 auto before_slash = tokens.position();
                 auto& maybe_slash = tokens.next_token();
-                if (maybe_slash.is(Token::Type::Delim) && maybe_slash.token().delim() == "/"sv) {
+                if (maybe_slash.is(Token::Type::Delim) && maybe_slash.token().delim() == '/') {
                     if (auto maybe_background_size = parse_single_background_size_value(tokens)) {
                         background_size = maybe_background_size.release_nonnull();
                         continue;
@@ -3244,7 +3244,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
     bool reading_vertical = false;
 
     for (auto& value : component_values) {
-        if (value.is(Token::Type::Delim) && value.token().delim() == "/"sv) {
+        if (value.is(Token::Type::Delim) && value.token().delim() == '/') {
             if (reading_vertical || horizontal_radii.is_empty())
                 return nullptr;
 
@@ -3418,7 +3418,7 @@ RefPtr<StyleValue> Parser::parse_content_value(Vector<StyleComponentValueRule> c
     bool in_alt_text = false;
 
     for (auto const& value : component_values) {
-        if (value.is(Token::Type::Delim) && value.token().delim() == "/"sv) {
+        if (value.is(Token::Type::Delim) && value.token().delim() == '/') {
             if (in_alt_text || content_values.is_empty())
                 return {};
             in_alt_text = true;
@@ -3605,7 +3605,7 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<StyleComponentValueRule> cons
             // Consume `/ line-height` if present
             if (i + 2 < component_values.size()) {
                 auto maybe_solidus = component_values[i + 1];
-                if (maybe_solidus.is(Token::Type::Delim) && maybe_solidus.token().delim() == "/"sv) {
+                if (maybe_solidus.is(Token::Type::Delim) && maybe_solidus.token().delim() == '/') {
                     auto maybe_line_height = parse_css_value(component_values[i + 2]);
                     if (!(maybe_line_height && property_accepts_value(PropertyID::LineHeight, *maybe_line_height)))
                         return nullptr;
@@ -4220,8 +4220,8 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     auto is_dashndash = [](StyleComponentValueRule const& value) -> bool {
         return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("-n-"sv);
     };
-    auto is_delim = [](StyleComponentValueRule const& value, StringView delim) -> bool {
-        return value.is(Token::Type::Delim) && value.token().delim().equals_ignoring_case(delim);
+    auto is_delim = [](StyleComponentValueRule const& value, u32 delim) -> bool {
+        return value.is(Token::Type::Delim) && value.token().delim() == delim;
     };
     auto is_n_dimension = [](StyleComponentValueRule const& value) -> bool {
         if (!value.is(Token::Type::Dimension))
@@ -4331,9 +4331,9 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
 
         values.skip_whitespace();
         auto& third_value = values.next_token();
-        if ((is_delim(second_value, "+"sv) || is_delim(second_value, "-"sv)) && is_signless_integer(third_value)) {
+        if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
             // <n-dimension> ['+' | '-'] <signless-integer>
-            b = third_value.token().to_integer() * (is_delim(second_value, "+"sv) ? 1 : -1);
+            b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
             return make_return_value();
         }
 
@@ -4392,9 +4392,9 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
 
         values.skip_whitespace();
         auto& third_value = values.next_token();
-        if ((is_delim(second_value, "+"sv) || is_delim(second_value, "-"sv)) && is_signless_integer(third_value)) {
+        if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
             // -n ['+' | '-'] <signless-integer>
-            b = third_value.token().to_integer() * (is_delim(second_value, "+"sv) ? 1 : -1);
+            b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
             return make_return_value();
         }
 
@@ -4421,7 +4421,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // '+'?† <ndashdigit-ident>
     // In all of these cases, the + is optional, and has no effect.
     // So, we just skip the +, and carry on.
-    if (!is_delim(first_value, "+"sv)) {
+    if (!is_delim(first_value, '+')) {
         values.reconsume_current_input_token();
         // We do *not* skip whitespace here.
     }
@@ -4445,9 +4445,9 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
 
         values.skip_whitespace();
         auto& third_value = values.next_token();
-        if ((is_delim(second_value, "+"sv) || is_delim(second_value, "-"sv)) && is_signless_integer(third_value)) {
+        if ((is_delim(second_value, '+') || is_delim(second_value, '-')) && is_signless_integer(third_value)) {
             // '+'?† n ['+' | '-'] <signless-integer>
-            b = third_value.token().to_integer() * (is_delim(second_value, "+"sv) ? 1 : -1);
+            b = third_value.token().to_integer() * (is_delim(second_value, '+') ? 1 : -1);
             return make_return_value();
         }
 
@@ -4547,7 +4547,7 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
         return nullptr;
 
     auto op = op_token.token().delim();
-    if (op == "*"sv) {
+    if (op == '*') {
         tokens.next_token();
         tokens.skip_whitespace();
         product_with_operator->op = CalculatedStyleValue::ProductOperation::Multiply;
@@ -4556,7 +4556,7 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
             return nullptr;
         product_with_operator->value = { parsed_calc_value.release_value() };
 
-    } else if (op == "/"sv) {
+    } else if (op == '/') {
         // FIXME: Detect divide-by-zero if possible
         tokens.next_token();
         tokens.skip_whitespace();
@@ -4586,11 +4586,11 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
         return nullptr;
 
     auto op = op_token.token().delim();
-    if (op == "*"sv) {
+    if (op == '*') {
         tokens.next_token();
         tokens.skip_whitespace();
         number_product_with_operator->op = CalculatedStyleValue::ProductOperation::Multiply;
-    } else if (op == "/"sv) {
+    } else if (op == '/') {
         // FIXME: Detect divide-by-zero if possible
         tokens.next_token();
         tokens.skip_whitespace();
@@ -4631,7 +4631,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_produc
 OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> Parser::parse_calc_number_sum_part_with_operator(TokenStream<StyleComponentValueRule>& tokens)
 {
     if (!(tokens.peek_token().is(Token::Type::Delim)
-            && tokens.peek_token().token().delim().is_one_of("+"sv, "-"sv)
+            && (tokens.peek_token().token().delim() == '+' || tokens.peek_token().token().delim() == '-')
             && tokens.peek_token(1).is(Token::Type::Whitespace)))
         return nullptr;
 
@@ -4640,9 +4640,9 @@ OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> Parser::parse_calc_n
 
     CalculatedStyleValue::SumOperation op;
     auto delim = token.token().delim();
-    if (delim == "+"sv)
+    if (delim == '+')
         op = CalculatedStyleValue::SumOperation::Add;
-    else if (delim == "-"sv)
+    else if (delim == '-')
         op = CalculatedStyleValue::SumOperation::Subtract;
     else
         return nullptr;
@@ -4721,7 +4721,7 @@ OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> Parser::parse_calc_sum_par
     // The following has to have the shape of <Whitespace><+ or -><Whitespace>
     // But the first whitespace gets eaten in parse_calc_product_part_with_operator().
     if (!(tokens.peek_token().is(Token::Type::Delim)
-            && tokens.peek_token().token().delim().is_one_of("+"sv, "-"sv)
+            && (tokens.peek_token().token().delim() == '+' || tokens.peek_token().token().delim() == '-')
             && tokens.peek_token(1).is(Token::Type::Whitespace)))
         return nullptr;
 
@@ -4730,9 +4730,9 @@ OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> Parser::parse_calc_sum_par
 
     CalculatedStyleValue::SumOperation op;
     auto delim = token.token().delim();
-    if (delim == "+"sv)
+    if (delim == '+')
         op = CalculatedStyleValue::SumOperation::Add;
-    else if (delim == "-"sv)
+    else if (delim == '-')
         op = CalculatedStyleValue::SumOperation::Subtract;
     else
         return nullptr;
