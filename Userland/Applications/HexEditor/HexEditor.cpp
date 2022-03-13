@@ -93,9 +93,8 @@ void HexEditor::fill_selection(u8 fill_byte)
     if (!has_selection())
         return;
 
-    for (size_t i = m_selection_start; i <= m_selection_end; i++) {
+    for (size_t i = m_selection_start; i < m_selection_end; i++)
         m_document->set(i, fill_byte);
-    }
 
     update();
     did_change();
