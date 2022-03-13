@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/kmalloc.h>
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/SafeMem.h>
@@ -185,16 +184,8 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
         return EINVAL;
 
     Memory::Region* region = nullptr;
-    Memory::VirtualRange range { {}, 0 };
 
-    ArmedScopeGuard scope_guard = [&] {
-        if (region)
-            address_space().deallocate_region(*region);
-        else if (range.is_valid())
-            address_space().page_directory().range_allocator().deallocate(range);
-    };
-
-    range = TRY([&]() -> ErrorOr<Memory::VirtualRange> {
+    auto range = TRY([&]() -> ErrorOr<Memory::VirtualRange> {
         if (map_randomized)
             return address_space().page_directory().range_allocator().try_allocate_randomized(rounded_size, alignment);
 
@@ -256,8 +247,6 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> use
     region->set_name(move(name));
 
     PerformanceManager::add_mmap_perf_event(*this, *region);
-
-    scope_guard.disarm();
 
     return region->vaddr().get();
 }
