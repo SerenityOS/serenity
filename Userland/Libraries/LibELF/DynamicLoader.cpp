@@ -2,6 +2,7 @@
  * Copyright (c) 2019-2020, Andrew Kaster <akaster@serenityos.org>
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Daniel Bertalan <dani@danielbertalan.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -177,6 +178,15 @@ bool DynamicLoader::load_stage_2(unsigned flags)
                 return false;
             }
         }
+    } else {
+        // .text needs to be executable while we process relocations because it might contain IFUNC resolvers.
+        // We don't allow IFUNC resolvers in objects with textrels.
+        for (auto& text_segment : m_text_segments) {
+            if (mprotect(text_segment.address().as_ptr(), text_segment.size(), PROT_READ | PROT_EXEC) < 0) {
+                perror("mprotect .text: PROT_READ | PROT_EXEC");
+                return false;
+            }
+        }
     }
     do_main_relocations();
     return true;
@@ -210,9 +220,12 @@ Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3
             setup_plt_trampoline();
     }
 
-    for (auto& text_segment : m_text_segments) {
-        if (mprotect(text_segment.address().as_ptr(), text_segment.size(), PROT_READ | PROT_EXEC) < 0) {
-            return DlErrorMessage { String::formatted("mprotect .text: PROT_READ | PROT_EXEC: {}", strerror(errno)) };
+    if (m_dynamic_object->has_text_relocations()) {
+        // If we don't have textrels, .text has already been made executable by this point in load_stage_2.
+        for (auto& text_segment : m_text_segments) {
+            if (mprotect(text_segment.address().as_ptr(), text_segment.size(), PROT_READ | PROT_EXEC) < 0) {
+                return DlErrorMessage { String::formatted("mprotect .text: PROT_READ | PROT_EXEC: {}", strerror(errno)) };
+            }
         }
     }
 
@@ -411,6 +424,10 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
     else
         patch_ptr = (FlatPtr*)(FlatPtr)relocation.offset();
 
+    auto call_ifunc_resolver = [](VirtualAddress address) {
+        return VirtualAddress { reinterpret_cast<DynamicObject::IfuncResolver>(address.get())() };
+    };
+
     switch (relocation.type()) {
 #if ARCH(I386)
     case R_386_NONE:
@@ -438,6 +455,8 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             *patch_ptr = symbol_address.get() + relocation.addend();
         else
             *patch_ptr += symbol_address.get();
+        if (res.value().type == STT_GNU_IFUNC)
+            *patch_ptr = call_ifunc_resolver(VirtualAddress { *patch_ptr }).get();
         break;
     }
 #if ARCH(I386)
@@ -467,8 +486,11 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             }
 
             symbol_location = VirtualAddress { (FlatPtr)0 };
-        } else
+        } else {
             symbol_location = res.value().address;
+            if (res.value().type == STT_GNU_IFUNC)
+                symbol_location = call_ifunc_resolver(symbol_location);
+        }
         VERIFY(symbol_location != m_dynamic_object->base_address());
         *patch_ptr = symbol_location.get();
         break;
@@ -500,6 +522,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             auto res = lookup_symbol(symbol);
             if (!res.has_value())
                 break;
+            VERIFY(symbol.type() != STT_GNU_IFUNC);
             symbol_value = res.value().value;
             dynamic_object_of_symbol = res.value().dynamic_object;
         } else {
@@ -527,6 +550,19 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             if (m_elf_image.is_dynamic())
                 *relocation_address += m_dynamic_object->base_address().get();
         }
+        break;
+    }
+#if ARCH(I386)
+    case R_386_IRELATIVE: {
+#else
+    case R_X86_64_IRELATIVE: {
+#endif
+        VirtualAddress resolver;
+        if (relocation.addend_used())
+            resolver = m_dynamic_object->base_address().offset(relocation.addend());
+        else
+            resolver = m_dynamic_object->base_address().offset(*patch_ptr);
+        *patch_ptr = call_ifunc_resolver(resolver).get();
         break;
     }
     default:
@@ -635,7 +671,7 @@ Optional<DynamicObject::SymbolLookupResult> DynamicLoader::lookup_symbol(const E
     if (symbol.is_undefined() || symbol.bind() == STB_WEAK)
         return DynamicLinker::lookup_global_symbol(symbol.name());
 
-    return DynamicObject::SymbolLookupResult { symbol.value(), symbol.size(), symbol.address(), symbol.bind(), &symbol.object() };
+    return DynamicObject::SymbolLookupResult { symbol.value(), symbol.size(), symbol.address(), symbol.bind(), symbol.type(), &symbol.object() };
 }
 
 } // end namespace ELF
