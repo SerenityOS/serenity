@@ -244,7 +244,7 @@ DynamicObject::RelocationSection DynamicObject::relocation_section() const
 
 DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
 {
-    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv), false);
+    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv), m_procedure_linkage_table_relocation_type & DT_RELA);
 }
 
 DynamicObject::Section DynamicObject::relr_relocation_section() const
