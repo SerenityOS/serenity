@@ -197,9 +197,9 @@ void DynamicLoader::do_main_relocations()
         }
     };
 
+    do_relr_relocations();
     m_dynamic_object->relocation_section().for_each_relocation(do_single_relocation);
     m_dynamic_object->plt_relocation_section().for_each_relocation(do_single_relocation);
-    do_relr_relocations();
 }
 
 Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3(unsigned flags)
