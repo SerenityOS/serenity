@@ -152,6 +152,8 @@ static char const* object_symbol_type_to_string(ElfW(Word) type)
         return "FILE";
     case STT_TLS:
         return "TLS";
+    case STT_GNU_IFUNC:
+        return "IFUNC";
     case STT_LOPROC:
         return "LOPROC";
     case STT_HIPROC:
