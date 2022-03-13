@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Alex McGrath <amk@amk.ie>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -48,7 +49,7 @@ void LinkLabel::set_hovered(bool hover)
 
 void LinkLabel::mousemove_event(MouseEvent& event)
 {
-    static const int extra_target_width = 3;
+    constexpr int extra_target_width = 3;
     set_hovered(event.position().x() <= font().width(text()) + extra_target_width);
 }
 

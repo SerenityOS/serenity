@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 #include <AK/JsonObject.h>
 #include <AK/String.h>
 #include <AK/StringUtils.h>
+#include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -19,9 +21,9 @@
 static bool flag_show_numerical = false;
 static bool flag_verbose = false;
 
-static const char* format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
-static const char* format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
-static const char* format_region = "\tBAR {}: {} region @ {:#x}";
+static constexpr StringView format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
+static constexpr StringView format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
+static constexpr StringView format_region = "\tBAR {}: {} region @ {:#x}";
 
 static u32 read_hex_string_from_bytebuffer(ByteBuffer const& buf)
 {
@@ -50,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_verbose, "Show verbose info on devices", "verbose", 'v');
     args_parser.parse(arguments);
 
-    const char* format = flag_show_numerical ? format_numerical : format_textual;
+    auto const format = flag_show_numerical ? format_numerical : format_textual;
 
     RefPtr<PCIDB::Database> db;
     if (!flag_show_numerical) {

@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2022, Sahan Fernando <sahan.h.fernando@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <sys/ioctl_numbers.h>
 
@@ -28,7 +30,7 @@ public:
     void append_gl_viewport();
     void append_set_framebuffer_state_no_attach();
     void append_set_constant_buffer(Vector<float> const& constant_buffer);
-    void append_create_shader(ObjectHandle handle, Gallium::ShaderType shader_type, const char* shader_data);
+    void append_create_shader(ObjectHandle handle, Gallium::ShaderType shader_type, StringView shader_data);
     void append_bind_shader(ObjectHandle handle, Gallium::ShaderType shader_type);
     void append_create_rasterizer(ObjectHandle handle);
     void append_bind_rasterizer(ObjectHandle handle);

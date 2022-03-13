@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2021, Gunnar Beutner <gunnar@beutner.name>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibC/bits/pthread_forward.h>
 
-static const PthreadFunctions s_functions = {
+static constexpr PthreadFunctions s_functions = {
     .pthread_mutex_trylock = pthread_mutex_trylock,
     .pthread_mutex_destroy = pthread_mutex_destroy,
 

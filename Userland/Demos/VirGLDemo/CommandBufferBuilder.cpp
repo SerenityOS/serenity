@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2022, Sahan Fernando <sahan.h.fernando@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringView.h>
 #include <Kernel/API/VirGL.h>
 #include <sys/ioctl_numbers.h>
 
@@ -235,9 +237,9 @@ void CommandBufferBuilder::append_set_constant_buffer(Vector<float> const& const
     }
 }
 
-void CommandBufferBuilder::append_create_shader(ObjectHandle handle, Gallium::ShaderType shader_type, const char* shader_data)
+void CommandBufferBuilder::append_create_shader(ObjectHandle handle, Gallium::ShaderType shader_type, StringView shader_data)
 {
-    size_t shader_len = strlen(shader_data) + 1; // Need to remember to copy null terminator as well if needed
+    size_t shader_len = shader_data.length() + 1; // Need to remember to copy null terminator as well if needed
     CommandBuilder builder(m_buffer, Protocol::VirGLCommand::CREATE_OBJECT, to_underlying(Protocol::ObjectType::SHADER));
     builder.appendu32(handle.value()); // VIRGL_OBJ_CREATE_HANDLE
     builder.appendu32(to_underlying(shader_type));
