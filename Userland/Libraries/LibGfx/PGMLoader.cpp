@@ -28,7 +28,7 @@ static void set_adjusted_pixels(PGMLoadingContext& context, const Vector<Gfx::Co
     }
 }
 
-static bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
+bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
 {
     Vector<Gfx::Color> color_data;
 
@@ -65,91 +65,4 @@ static bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
     context.state = PGMLoadingContext::State::Bitmap;
     return true;
 }
-
-PGMImageDecoderPlugin::PGMImageDecoderPlugin(const u8* data, size_t size)
-{
-    m_context = make<PGMLoadingContext>();
-    m_context->data = data;
-    m_context->data_size = size;
-}
-
-PGMImageDecoderPlugin::~PGMImageDecoderPlugin()
-{
-}
-
-IntSize PGMImageDecoderPlugin::size()
-{
-    if (m_context->state == PGMLoadingContext::State::Error)
-        return {};
-
-    if (m_context->state < PGMLoadingContext::State::Decoded) {
-        bool success = decode(*m_context);
-        if (!success)
-            return {};
-    }
-
-    return { m_context->width, m_context->height };
-}
-
-void PGMImageDecoderPlugin::set_volatile()
-{
-    if (m_context->bitmap)
-        m_context->bitmap->set_volatile();
-}
-
-bool PGMImageDecoderPlugin::set_nonvolatile(bool& was_purged)
-{
-    if (!m_context->bitmap)
-        return false;
-
-    return m_context->bitmap->set_nonvolatile(was_purged);
-}
-
-bool PGMImageDecoderPlugin::sniff()
-{
-    if (m_context->data_size < 2)
-        return false;
-
-    if (m_context->data[0] == 'P' && m_context->data[1] == '2')
-        return true;
-
-    if (m_context->data[0] == 'P' && m_context->data[1] == '5')
-        return true;
-
-    return false;
-}
-
-bool PGMImageDecoderPlugin::is_animated()
-{
-    return false;
-}
-
-size_t PGMImageDecoderPlugin::loop_count()
-{
-    return 0;
-}
-
-size_t PGMImageDecoderPlugin::frame_count()
-{
-    return 1;
-}
-
-ErrorOr<ImageFrameDescriptor> PGMImageDecoderPlugin::frame(size_t index)
-{
-    if (index > 0)
-        return Error::from_string_literal("PGMImageDecoderPlugin: Invalid frame index"sv);
-
-    if (m_context->state == PGMLoadingContext::State::Error)
-        return Error::from_string_literal("PGMImageDecoderPlugin: Decoding failed"sv);
-
-    if (m_context->state < PGMLoadingContext::State::Decoded) {
-        bool success = decode(*m_context);
-        if (!success)
-            return Error::from_string_literal("PGMImageDecoderPlugin: Decoding failed"sv);
-    }
-
-    VERIFY(m_context->bitmap);
-    return ImageFrameDescriptor { m_context->bitmap, 0 };
-}
-
 }

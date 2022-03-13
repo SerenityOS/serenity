@@ -11,6 +11,7 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/PortableImageLoaderCommon.h>
 
 namespace Gfx {
 
@@ -45,4 +46,117 @@ struct PortableImageMapLoadingContext {
     RefPtr<Gfx::Bitmap> bitmap;
 };
 
+template<typename TContext>
+class PortableImageDecoderPlugin final : public ImageDecoderPlugin {
+public:
+    PortableImageDecoderPlugin(const u8*, size_t);
+    virtual ~PortableImageDecoderPlugin() override = default;
+
+    virtual IntSize size() override;
+
+    virtual void set_volatile() override;
+    [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
+
+    virtual bool sniff() override;
+
+    virtual bool is_animated() override;
+    virtual size_t loop_count() override;
+    virtual size_t frame_count() override;
+    virtual ErrorOr<ImageFrameDescriptor> frame(size_t index) override;
+
+private:
+    OwnPtr<TContext> m_context;
+};
+
+template<typename TContext>
+PortableImageDecoderPlugin<TContext>::PortableImageDecoderPlugin(const u8* data, size_t size)
+{
+    m_context = make<TContext>();
+    m_context->data = data;
+    m_context->data_size = size;
+}
+
+template<typename TContext>
+IntSize PortableImageDecoderPlugin<TContext>::size()
+{
+    if (m_context->state == TContext::State::Error)
+        return {};
+
+    if (m_context->state < TContext::State::Decoded) {
+        bool success = decode(*m_context);
+        if (!success)
+            return {};
+    }
+
+    return { m_context->width, m_context->height };
+}
+
+template<typename TContext>
+void PortableImageDecoderPlugin<TContext>::set_volatile()
+{
+    if (m_context->bitmap)
+        m_context->bitmap->set_volatile();
+}
+
+template<typename TContext>
+bool PortableImageDecoderPlugin<TContext>::set_nonvolatile(bool& was_purged)
+{
+    if (!m_context->bitmap)
+        return false;
+
+    return m_context->bitmap->set_nonvolatile(was_purged);
+}
+
+template<typename TContext>
+bool PortableImageDecoderPlugin<TContext>::sniff()
+{
+    using Context = TContext;
+    if (m_context->data_size < 2)
+        return false;
+
+    if (m_context->data[0] == 'P' && m_context->data[1] == Context::FormatDetails::ascii_magic_number)
+        return true;
+
+    if (m_context->data[0] == 'P' && m_context->data[1] == Context::FormatDetails::binary_magic_number)
+        return true;
+
+    return false;
+}
+
+template<typename TContext>
+bool PortableImageDecoderPlugin<TContext>::is_animated()
+{
+    return false;
+}
+
+template<typename TContext>
+size_t PortableImageDecoderPlugin<TContext>::loop_count()
+{
+    return 0;
+}
+
+template<typename TContext>
+size_t PortableImageDecoderPlugin<TContext>::frame_count()
+{
+    return 1;
+}
+
+template<typename TContext>
+ErrorOr<ImageFrameDescriptor> PortableImageDecoderPlugin<TContext>::frame(size_t index)
+{
+    if (index > 0)
+        return Error::from_string_literal("PortableImageDecoderPlugin: Invalid frame index"sv);
+
+    if (m_context->state == TContext::State::Error)
+        return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed"sv);
+
+    if (m_context->state < TContext::State::Decoded) {
+        bool success = decode(*m_context);
+        if (!success)
+            return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed"sv);
+    }
+
+    VERIFY(m_context->bitmap);
+    return ImageFrameDescriptor { m_context->bitmap, 0 };
+}
 }
