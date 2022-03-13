@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/Function.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -19,7 +21,7 @@
 
 namespace JS {
 
-static const u8 max_precision_for_radix[37] = {
+static constexpr AK::Array<u8, 37> max_precision_for_radix = {
     // clang-format off
     0,  0,  52, 32, 26, 22, 20, 18, 17, 16,
     15, 15, 14, 14, 13, 13, 13, 12, 12, 12,
@@ -28,7 +30,11 @@ static const u8 max_precision_for_radix[37] = {
     // clang-format on
 };
 
-static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+static constexpr AK::Array<char, 36> digits = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+};
 
 static String decimal_digits_to_string(double number)
 {

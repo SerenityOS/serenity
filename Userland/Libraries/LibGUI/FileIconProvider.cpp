@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <LibCore/ConfigFile.h>
@@ -178,7 +180,10 @@ Icon FileIconProvider::icon_for_executable(const String& path)
         int image_size;
     };
 
-    static const IconSection icon_sections[] = { { .section_name = "serenity_icon_s", .image_size = 16 }, { .section_name = "serenity_icon_m", .image_size = 32 } };
+    static constexpr Array<IconSection, 2> icon_sections = {
+        IconSection { .section_name = "serenity_icon_s", .image_size = 16 },
+        IconSection { .section_name = "serenity_icon_m", .image_size = 32 }
+    };
 
     bool had_error = false;
     for (const auto& icon_section : icon_sections) {

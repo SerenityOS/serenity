@@ -23,6 +23,7 @@
  *  [ ] handle fire bitmap edges better
  */
 
+#include <AK/Array.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
@@ -45,7 +46,7 @@
 #define FIRE_HEIGHT 200
 #define FIRE_MAX 29
 
-static const Color s_palette[] = {
+static constexpr Array<Color, 30> s_palette = {
     Color(0x07, 0x07, 0x07), Color(0x1F, 0x07, 0x07), Color(0x2F, 0x0F, 0x07),
     Color(0x47, 0x0F, 0x07), Color(0x57, 0x17, 0x07), Color(0x67, 0x1F, 0x07),
     Color(0x77, 0x1F, 0x07), Color(0x9F, 0x2F, 0x07), Color(0xAF, 0x3F, 0x07),

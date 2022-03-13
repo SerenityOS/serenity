@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -15,7 +15,7 @@
 
 // U+FFFD REPLACEMENT CHARACTER (�)
 #define REPLACEMENT_CHARACTER 0xFFFD
-static const u32 TOKENIZER_EOF = 0xFFFFFFFF;
+static constexpr u32 TOKENIZER_EOF = 0xFFFFFFFF;
 
 static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
 {

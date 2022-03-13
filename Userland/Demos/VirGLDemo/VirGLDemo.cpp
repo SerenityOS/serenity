@@ -1,10 +1,13 @@
 /*
  * Copyright (c) 2022, Sahan Fernando <sahan.h.fernando@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <Kernel/API/VirGL.h>
 #include <LibGUI/Application.h>
@@ -23,26 +26,26 @@
 #include "VirGLProtocol.h"
 #include "Widget.h"
 
-static const char* frag_shader = "FRAG\n"
-                                 "PROPERTY FS_COLOR0_WRITES_ALL_CBUFS 1\n"
-                                 "DCL IN[0], COLOR, COLOR\n"
-                                 "DCL OUT[0], COLOR\n"
-                                 "  0: MOV OUT[0], IN[0]\n"
-                                 "  1: END\n";
+static constexpr StringView frag_shader = "FRAG\n"
+                                          "PROPERTY FS_COLOR0_WRITES_ALL_CBUFS 1\n"
+                                          "DCL IN[0], COLOR, COLOR\n"
+                                          "DCL OUT[0], COLOR\n"
+                                          "  0: MOV OUT[0], IN[0]\n"
+                                          "  1: END\n";
 
-static const char* vert_shader = "VERT\n"
-                                 "DCL IN[0]\n"
-                                 "DCL IN[1]\n"
-                                 "DCL OUT[0], POSITION\n"
-                                 "DCL OUT[1], COLOR\n"
-                                 "DCL CONST[0..3]\n"
-                                 "DCL TEMP[0..1]\n"
-                                 "  0: MUL TEMP[0], IN[0].xxxx, CONST[0]\n"
-                                 "  1: MAD TEMP[1], IN[0].yyyy, CONST[1], TEMP[0]\n"
-                                 "  2: MAD TEMP[0], IN[0].zzzz, CONST[2], TEMP[1]\n"
-                                 "  3: MAD OUT[0], IN[0].wwww, CONST[3], TEMP[0]\n"
-                                 "  4: MOV_SAT OUT[1], IN[1]\n"
-                                 "  5: END\n";
+static constexpr StringView vert_shader = "VERT\n"
+                                          "DCL IN[0]\n"
+                                          "DCL IN[1]\n"
+                                          "DCL OUT[0], POSITION\n"
+                                          "DCL OUT[1], COLOR\n"
+                                          "DCL CONST[0..3]\n"
+                                          "DCL TEMP[0..1]\n"
+                                          "  0: MUL TEMP[0], IN[0].xxxx, CONST[0]\n"
+                                          "  1: MAD TEMP[1], IN[0].yyyy, CONST[1], TEMP[0]\n"
+                                          "  2: MAD TEMP[0], IN[0].zzzz, CONST[2], TEMP[1]\n"
+                                          "  3: MAD OUT[0], IN[0].wwww, CONST[3], TEMP[0]\n"
+                                          "  4: MOV_SAT OUT[1], IN[1]\n"
+                                          "  5: END\n";
 
 struct VertexData {
     float r;
@@ -92,7 +95,7 @@ static ResourceID create_virgl_resource(VirGL3DResourceSpec& spec)
 static Vector<VertexData> gen_vertex_data()
 {
     Vector<VertexData> data;
-    static const VertexData vertices[8] = {
+    static constexpr Array<VertexData, 8> vertices = {
         VertexData { .r = 0, .g = 0, .b = 0, .x = -0.5, .y = -0.5, .z = -0.5 },
         VertexData { .r = 0, .g = 0, .b = 0, .x = 0.5, .y = -0.5, .z = -0.5 },
         VertexData { .r = 0, .g = 0, .b = 0, .x = -0.5, .y = 0.5, .z = -0.5 },
@@ -102,7 +105,7 @@ static Vector<VertexData> gen_vertex_data()
         VertexData { .r = 0, .g = 0, .b = 0, .x = -0.5, .y = 0.5, .z = 0.5 },
         VertexData { .r = 0, .g = 0, .b = 0, .x = 0.5, .y = 0.5, .z = 0.5 },
     };
-    size_t tris[36] = {
+    static constexpr Array<size_t, 36> tris = {
         0, 1, 2, 1, 3, 2, // Top
         4, 0, 6, 0, 2, 6, // Left
         4, 5, 0, 5, 1, 0, // Up

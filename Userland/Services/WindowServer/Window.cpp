@@ -19,7 +19,7 @@
 
 namespace WindowServer {
 
-const static Gfx::IntSize s_default_normal_minimum_size = { 50, 50 };
+static constexpr Gfx::IntSize s_default_normal_minimum_size = { 50, 50 };
 
 static String default_window_icon_path()
 {

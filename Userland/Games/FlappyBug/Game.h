@@ -22,8 +22,8 @@ class Game final : public GUI::Frame {
     C_OBJECT(Game);
 
 public:
-    static const int game_width = 560;
-    static const int game_height = 480;
+    static constexpr int game_width = 560;
+    static constexpr int game_height = 480;
 
     Function<u32(u32)> on_game_end;
 

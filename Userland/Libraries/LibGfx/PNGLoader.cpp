@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/Vector.h>
@@ -17,7 +19,7 @@
 
 namespace Gfx {
 
-static const u8 png_header[8] = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
+static constexpr Array<u8, 8> png_header = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
 
 struct PNG_IHDR {
     NetworkOrdered<u32> width;
@@ -516,7 +518,7 @@ static bool decode_png_header(PNGLoadingContext& context)
         return false;
     }
 
-    if (memcmp(context.data, png_header, sizeof(png_header)) != 0) {
+    if (memcmp(context.data, png_header.span().data(), sizeof(png_header)) != 0) {
         dbgln_if(PNG_DEBUG, "Invalid PNG header");
         context.state = PNGLoadingContext::State::Error;
         return false;
