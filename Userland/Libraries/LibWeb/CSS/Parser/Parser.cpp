@@ -307,6 +307,294 @@ Optional<Selector::Combinator> Parser::parse_selector_combinator(TokenStream<Sty
     return {};
 }
 
+Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_attribute_simple_selector(StyleComponentValueRule const& first_value)
+{
+    auto attribute_tokens = TokenStream { first_value.block().values() };
+
+    attribute_tokens.skip_whitespace();
+
+    if (!attribute_tokens.has_next_token()) {
+        dbgln_if(CSS_PARSER_DEBUG, "CSS attribute selector is empty!");
+        return ParsingResult::SyntaxError;
+    }
+
+    // FIXME: Handle namespace prefix for attribute name.
+    auto const& attribute_part = attribute_tokens.next_token();
+    if (!attribute_part.is(Token::Type::Ident)) {
+        dbgln_if(CSS_PARSER_DEBUG, "Expected ident for attribute name, got: '{}'", attribute_part.to_debug_string());
+        return ParsingResult::SyntaxError;
+    }
+
+    Selector::SimpleSelector simple_selector {
+        .type = Selector::SimpleSelector::Type::Attribute,
+        .attribute = {
+            .match_type = Selector::SimpleSelector::Attribute::MatchType::HasAttribute,
+            // FIXME: Case-sensitivity is defined by the document language.
+            // HTML is insensitive with attribute names, and our code generally assumes
+            // they are converted to lowercase, so we do that here too. If we want to be
+            // correct with XML later, we'll need to keep the original case and then do
+            // a case-insensitive compare later.
+            .name = attribute_part.token().ident().to_lowercase_string(),
+        }
+    };
+
+    attribute_tokens.skip_whitespace();
+    if (!attribute_tokens.has_next_token())
+        return simple_selector;
+
+    auto const& delim_part = attribute_tokens.next_token();
+    if (!delim_part.is(Token::Type::Delim)) {
+        dbgln_if(CSS_PARSER_DEBUG, "Expected a delim for attribute comparison, got: '{}'", delim_part.to_debug_string());
+        return ParsingResult::SyntaxError;
+    }
+
+    if (delim_part.token().delim() == '=') {
+        simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch;
+    } else {
+        if (!attribute_tokens.has_next_token()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Attribute selector ended part way through a match type.");
+            return ParsingResult::SyntaxError;
+        }
+
+        auto const& delim_second_part = attribute_tokens.next_token();
+        if (!(delim_second_part.is(Token::Type::Delim) && delim_second_part.token().delim() == '=')) {
+            dbgln_if(CSS_PARSER_DEBUG, "Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_debug_string(), delim_second_part.to_debug_string());
+            return ParsingResult::SyntaxError;
+        }
+        switch (delim_part.token().delim()) {
+        case '~':
+            simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsWord;
+            break;
+        case '*':
+            simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsString;
+            break;
+        case '|':
+            simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment;
+            break;
+        case '^':
+            simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithString;
+            break;
+        case '$':
+            simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::EndsWithString;
+            break;
+        default:
+            attribute_tokens.reconsume_current_input_token();
+        }
+    }
+
+    attribute_tokens.skip_whitespace();
+    if (!attribute_tokens.has_next_token()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Attribute selector ended without a value to match.");
+        return ParsingResult::SyntaxError;
+    }
+
+    auto const& value_part = attribute_tokens.next_token();
+    if (!value_part.is(Token::Type::Ident) && !value_part.is(Token::Type::String)) {
+        dbgln_if(CSS_PARSER_DEBUG, "Expected a string or ident for the value to match attribute against, got: '{}'", value_part.to_debug_string());
+        return ParsingResult::SyntaxError;
+    }
+    simple_selector.attribute.value = value_part.token().is(Token::Type::Ident) ? value_part.token().ident() : value_part.token().string();
+
+    attribute_tokens.skip_whitespace();
+
+    // FIXME: Handle case-sensitivity suffixes. https://www.w3.org/TR/selectors-4/#attribute-case
+    return simple_selector;
+}
+
+Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_pseudo_simple_selector(TokenStream<StyleComponentValueRule>& tokens)
+{
+    auto peek_token_ends_selector = [&]() -> bool {
+        auto const& value = tokens.peek_token();
+        return (value.is(Token::Type::EndOfFile) || value.is(Token::Type::Whitespace) || value.is(Token::Type::Comma));
+    };
+
+    if (peek_token_ends_selector())
+        return ParsingResult::SyntaxError;
+
+    bool is_pseudo = false;
+    if (tokens.peek_token().is(Token::Type::Colon)) {
+        is_pseudo = true;
+        tokens.next_token();
+        if (peek_token_ends_selector())
+            return ParsingResult::SyntaxError;
+    }
+
+    if (is_pseudo) {
+        Selector::SimpleSelector simple_selector {
+            .type = Selector::SimpleSelector::Type::PseudoElement
+        };
+
+        auto const& name_token = tokens.next_token();
+        if (!name_token.is(Token::Type::Ident)) {
+            dbgln_if(CSS_PARSER_DEBUG, "Expected an ident for pseudo-element, got: '{}'", name_token.to_debug_string());
+            return ParsingResult::SyntaxError;
+        }
+
+        auto pseudo_name = name_token.token().ident();
+        if (has_ignored_vendor_prefix(pseudo_name))
+            return ParsingResult::IncludesIgnoredVendorPrefix;
+
+        auto pseudo_element = pseudo_element_from_string(pseudo_name);
+        if (!pseudo_element.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
+            return ParsingResult::SyntaxError;
+        }
+        simple_selector.pseudo_element = pseudo_element.value();
+
+        return simple_selector;
+    }
+
+    if (peek_token_ends_selector())
+        return ParsingResult::SyntaxError;
+
+    auto const& pseudo_class_token = tokens.next_token();
+    Selector::SimpleSelector simple_selector {
+        .type = Selector::SimpleSelector::Type::PseudoClass
+    };
+
+    if (pseudo_class_token.is(Token::Type::Ident)) {
+        auto pseudo_name = pseudo_class_token.token().ident();
+        if (has_ignored_vendor_prefix(pseudo_name))
+            return ParsingResult::IncludesIgnoredVendorPrefix;
+
+        if (pseudo_name.equals_ignoring_case("active")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Active;
+        } else if (pseudo_name.equals_ignoring_case("checked")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Checked;
+        } else if (pseudo_name.equals_ignoring_case("disabled")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Disabled;
+        } else if (pseudo_name.equals_ignoring_case("empty")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Empty;
+        } else if (pseudo_name.equals_ignoring_case("enabled")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Enabled;
+        } else if (pseudo_name.equals_ignoring_case("first-child")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FirstChild;
+        } else if (pseudo_name.equals_ignoring_case("first-of-type")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FirstOfType;
+        } else if (pseudo_name.equals_ignoring_case("focus")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Focus;
+        } else if (pseudo_name.equals_ignoring_case("focus-within")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FocusWithin;
+        } else if (pseudo_name.equals_ignoring_case("hover")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Hover;
+        } else if (pseudo_name.equals_ignoring_case("last-child")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::LastChild;
+        } else if (pseudo_name.equals_ignoring_case("last-of-type")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::LastOfType;
+        } else if (pseudo_name.equals_ignoring_case("link")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Link;
+        } else if (pseudo_name.equals_ignoring_case("only-child")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::OnlyChild;
+        } else if (pseudo_name.equals_ignoring_case("only-of-type")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::OnlyOfType;
+        } else if (pseudo_name.equals_ignoring_case("root")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Root;
+        } else if (pseudo_name.equals_ignoring_case("visited")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Visited;
+
+        } else if (pseudo_name.equals_ignoring_case("after")) {
+            // Single-colon syntax allowed for compatibility. https://www.w3.org/TR/selectors/#pseudo-element-syntax
+            simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
+            simple_selector.pseudo_element = Selector::PseudoElement::After;
+        } else if (pseudo_name.equals_ignoring_case("before")) {
+            // See :after
+            simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
+            simple_selector.pseudo_element = Selector::PseudoElement::Before;
+        } else if (pseudo_name.equals_ignoring_case("first-letter")) {
+            // See :after
+            simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
+            simple_selector.pseudo_element = Selector::PseudoElement::FirstLetter;
+        } else if (pseudo_name.equals_ignoring_case("first-line")) {
+            // See :after
+            simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
+            simple_selector.pseudo_element = Selector::PseudoElement::FirstLine;
+        } else {
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class: ':{}'", pseudo_name);
+            return ParsingResult::SyntaxError;
+        }
+
+        return simple_selector;
+    }
+    if (pseudo_class_token.is_function()) {
+        auto parse_nth_child_pattern = [this](Selector::SimpleSelector& simple_selector, StyleFunctionRule const& pseudo_function, bool allow_of = false) -> bool {
+            auto function_values = TokenStream<StyleComponentValueRule>(pseudo_function.values());
+            auto nth_child_pattern = parse_a_n_plus_b_pattern(function_values, allow_of ? AllowTrailingTokens::Yes : AllowTrailingTokens::No);
+            if (nth_child_pattern.has_value()) {
+                simple_selector.pseudo_class.nth_child_pattern = nth_child_pattern.value();
+            } else {
+                dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid format for {}", pseudo_function.name());
+                return false;
+            }
+            if (!allow_of)
+                return true;
+
+            function_values.skip_whitespace();
+            if (!function_values.has_next_token())
+                return true;
+
+            // Parse the `of <selector-list>` syntax
+            auto const& maybe_of = function_values.next_token();
+            if (!(maybe_of.is(Token::Type::Ident) && maybe_of.token().ident().equals_ignoring_case("of"sv)))
+                return false;
+
+            function_values.skip_whitespace();
+            auto selector_list = parse_a_selector_list(function_values, SelectorType::Standalone);
+            if (selector_list.is_error())
+                return false;
+
+            function_values.skip_whitespace();
+            if (function_values.has_next_token())
+                return false;
+
+            simple_selector.pseudo_class.argument_selector_list = selector_list.value();
+            return true;
+        };
+
+        auto const& pseudo_function = pseudo_class_token.function();
+        if (pseudo_function.name().equals_ignoring_case("not")) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Not;
+            auto function_token_stream = TokenStream(pseudo_function.values());
+            auto not_selector = parse_a_selector_list(function_token_stream, SelectorType::Standalone);
+            if (not_selector.is_error()) {
+                dbgln_if(CSS_PARSER_DEBUG, "Invalid selector in :not() clause");
+                return ParsingResult::SyntaxError;
+            }
+            simple_selector.pseudo_class.argument_selector_list = not_selector.release_value();
+        } else if (pseudo_function.name().equals_ignoring_case("lang"sv)) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Lang;
+            if (pseudo_function.values().is_empty()) {
+                dbgln_if(CSS_PARSER_DEBUG, "Empty :lang() selector");
+                return ParsingResult::SyntaxError;
+            }
+            // FIXME: Support multiple, comma-separated, language ranges.
+            simple_selector.pseudo_class.languages.append(pseudo_function.values().first().token().to_string());
+        } else if (pseudo_function.name().equals_ignoring_case("nth-child"sv)) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthChild;
+            if (!parse_nth_child_pattern(simple_selector, pseudo_function, true))
+                return ParsingResult::SyntaxError;
+        } else if (pseudo_function.name().equals_ignoring_case("nth-last-child"sv)) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthLastChild;
+            if (!parse_nth_child_pattern(simple_selector, pseudo_function, true))
+                return ParsingResult::SyntaxError;
+        } else if (pseudo_function.name().equals_ignoring_case("nth-of-type"sv)) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthOfType;
+            if (!parse_nth_child_pattern(simple_selector, pseudo_function))
+                return ParsingResult::SyntaxError;
+        } else if (pseudo_function.name().equals_ignoring_case("nth-last-of-type"sv)) {
+            simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthLastOfType;
+            if (!parse_nth_child_pattern(simple_selector, pseudo_function))
+                return ParsingResult::SyntaxError;
+        } else {
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
+            return ParsingResult::SyntaxError;
+        }
+
+        return simple_selector;
+    }
+    dbgln_if(CSS_PARSER_DEBUG, "Unexpected Block in pseudo-class name, expected a function or identifier. '{}'", pseudo_class_token.to_debug_string());
+    return ParsingResult::SyntaxError;
+}
+
 Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_selector(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto peek_token_ends_selector = [&]() -> bool {
@@ -370,286 +658,11 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             .value = first_value.token().ident()
         };
     }
-    if (first_value.is_block() && first_value.block().is_square()) {
-        auto attribute_tokens = TokenStream { first_value.block().values() };
+    if (first_value.is_block() && first_value.block().is_square())
+        return parse_attribute_simple_selector(first_value);
 
-        attribute_tokens.skip_whitespace();
-
-        if (!attribute_tokens.has_next_token()) {
-            dbgln_if(CSS_PARSER_DEBUG, "CSS attribute selector is empty!");
-            return ParsingResult::SyntaxError;
-        }
-
-        // FIXME: Handle namespace prefix for attribute name.
-        auto const& attribute_part = attribute_tokens.next_token();
-        if (!attribute_part.is(Token::Type::Ident)) {
-            dbgln_if(CSS_PARSER_DEBUG, "Expected ident for attribute name, got: '{}'", attribute_part.to_debug_string());
-            return ParsingResult::SyntaxError;
-        }
-
-        Selector::SimpleSelector simple_selector {
-            .type = Selector::SimpleSelector::Type::Attribute,
-            .attribute = {
-                .match_type = Selector::SimpleSelector::Attribute::MatchType::HasAttribute,
-                // FIXME: Case-sensitivity is defined by the document language.
-                // HTML is insensitive with attribute names, and our code generally assumes
-                // they are converted to lowercase, so we do that here too. If we want to be
-                // correct with XML later, we'll need to keep the original case and then do
-                // a case-insensitive compare later.
-                .name = attribute_part.token().ident().to_lowercase_string(),
-            }
-        };
-
-        attribute_tokens.skip_whitespace();
-        if (!attribute_tokens.has_next_token())
-            return simple_selector;
-
-        auto const& delim_part = attribute_tokens.next_token();
-        if (!delim_part.is(Token::Type::Delim)) {
-            dbgln_if(CSS_PARSER_DEBUG, "Expected a delim for attribute comparison, got: '{}'", delim_part.to_debug_string());
-            return ParsingResult::SyntaxError;
-        }
-
-        if (delim_part.token().delim() == '=') {
-            simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch;
-        } else {
-            if (!attribute_tokens.has_next_token()) {
-                dbgln_if(CSS_PARSER_DEBUG, "Attribute selector ended part way through a match type.");
-                return ParsingResult::SyntaxError;
-            }
-
-            auto const& delim_second_part = attribute_tokens.next_token();
-            if (!(delim_second_part.is(Token::Type::Delim) && delim_second_part.token().delim() == '=')) {
-                dbgln_if(CSS_PARSER_DEBUG, "Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_debug_string(), delim_second_part.to_debug_string());
-                return ParsingResult::SyntaxError;
-            }
-            switch (delim_part.token().delim()) {
-            case '~':
-                simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsWord;
-                break;
-            case '*':
-                simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsString;
-                break;
-            case '|':
-                simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment;
-                break;
-            case '^':
-                simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithString;
-                break;
-            case '$':
-                simple_selector.attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::EndsWithString;
-                break;
-            default:
-                attribute_tokens.reconsume_current_input_token();
-            }
-        }
-
-        attribute_tokens.skip_whitespace();
-        if (!attribute_tokens.has_next_token()) {
-            dbgln_if(CSS_PARSER_DEBUG, "Attribute selector ended without a value to match.");
-            return ParsingResult::SyntaxError;
-        }
-
-        auto const& value_part = attribute_tokens.next_token();
-        if (!value_part.is(Token::Type::Ident) && !value_part.is(Token::Type::String)) {
-            dbgln_if(CSS_PARSER_DEBUG, "Expected a string or ident for the value to match attribute against, got: '{}'", value_part.to_debug_string());
-            return ParsingResult::SyntaxError;
-        }
-        simple_selector.attribute.value = value_part.token().is(Token::Type::Ident) ? value_part.token().ident() : value_part.token().string();
-
-        attribute_tokens.skip_whitespace();
-
-        // FIXME: Handle case-sensitivity suffixes. https://www.w3.org/TR/selectors-4/#attribute-case
-        return simple_selector;
-    }
-    if (first_value.is(Token::Type::Colon)) {
-        if (peek_token_ends_selector())
-            return ParsingResult::SyntaxError;
-
-        bool is_pseudo = false;
-        if (tokens.peek_token().is(Token::Type::Colon)) {
-            is_pseudo = true;
-            tokens.next_token();
-            if (peek_token_ends_selector())
-                return ParsingResult::SyntaxError;
-        }
-
-        if (is_pseudo) {
-            Selector::SimpleSelector simple_selector {
-                .type = Selector::SimpleSelector::Type::PseudoElement
-            };
-
-            auto const& name_token = tokens.next_token();
-            if (!name_token.is(Token::Type::Ident)) {
-                dbgln_if(CSS_PARSER_DEBUG, "Expected an ident for pseudo-element, got: '{}'", name_token.to_debug_string());
-                return ParsingResult::SyntaxError;
-            }
-
-            auto pseudo_name = name_token.token().ident();
-            if (has_ignored_vendor_prefix(pseudo_name))
-                return ParsingResult::IncludesIgnoredVendorPrefix;
-
-            auto pseudo_element = pseudo_element_from_string(pseudo_name);
-            if (!pseudo_element.has_value()) {
-                dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
-                return ParsingResult::SyntaxError;
-            }
-            simple_selector.pseudo_element = pseudo_element.value();
-
-            return simple_selector;
-        }
-
-        if (peek_token_ends_selector())
-            return ParsingResult::SyntaxError;
-
-        auto const& pseudo_class_token = tokens.next_token();
-        Selector::SimpleSelector simple_selector {
-            .type = Selector::SimpleSelector::Type::PseudoClass
-        };
-
-        if (pseudo_class_token.is(Token::Type::Ident)) {
-            auto pseudo_name = pseudo_class_token.token().ident();
-            if (has_ignored_vendor_prefix(pseudo_name))
-                return ParsingResult::IncludesIgnoredVendorPrefix;
-
-            if (pseudo_name.equals_ignoring_case("active")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Active;
-            } else if (pseudo_name.equals_ignoring_case("checked")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Checked;
-            } else if (pseudo_name.equals_ignoring_case("disabled")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Disabled;
-            } else if (pseudo_name.equals_ignoring_case("empty")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Empty;
-            } else if (pseudo_name.equals_ignoring_case("enabled")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Enabled;
-            } else if (pseudo_name.equals_ignoring_case("first-child")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FirstChild;
-            } else if (pseudo_name.equals_ignoring_case("first-of-type")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FirstOfType;
-            } else if (pseudo_name.equals_ignoring_case("focus")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Focus;
-            } else if (pseudo_name.equals_ignoring_case("focus-within")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FocusWithin;
-            } else if (pseudo_name.equals_ignoring_case("hover")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Hover;
-            } else if (pseudo_name.equals_ignoring_case("last-child")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::LastChild;
-            } else if (pseudo_name.equals_ignoring_case("last-of-type")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::LastOfType;
-            } else if (pseudo_name.equals_ignoring_case("link")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Link;
-            } else if (pseudo_name.equals_ignoring_case("only-child")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::OnlyChild;
-            } else if (pseudo_name.equals_ignoring_case("only-of-type")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::OnlyOfType;
-            } else if (pseudo_name.equals_ignoring_case("root")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Root;
-            } else if (pseudo_name.equals_ignoring_case("visited")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Visited;
-
-            } else if (pseudo_name.equals_ignoring_case("after")) {
-                // Single-colon syntax allowed for compatibility. https://www.w3.org/TR/selectors/#pseudo-element-syntax
-                simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::PseudoElement::After;
-            } else if (pseudo_name.equals_ignoring_case("before")) {
-                // See :after
-                simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::PseudoElement::Before;
-            } else if (pseudo_name.equals_ignoring_case("first-letter")) {
-                // See :after
-                simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::PseudoElement::FirstLetter;
-            } else if (pseudo_name.equals_ignoring_case("first-line")) {
-                // See :after
-                simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-                simple_selector.pseudo_element = Selector::PseudoElement::FirstLine;
-            } else {
-                dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class: ':{}'", pseudo_name);
-                return ParsingResult::SyntaxError;
-            }
-
-            return simple_selector;
-        }
-        if (pseudo_class_token.is_function()) {
-
-            auto parse_nth_child_pattern = [this](Selector::SimpleSelector& simple_selector, StyleFunctionRule const& pseudo_function, bool allow_of = false) -> bool {
-                auto function_values = TokenStream<StyleComponentValueRule>(pseudo_function.values());
-                auto nth_child_pattern = parse_a_n_plus_b_pattern(function_values, allow_of ? AllowTrailingTokens::Yes : AllowTrailingTokens::No);
-                if (nth_child_pattern.has_value()) {
-                    simple_selector.pseudo_class.nth_child_pattern = nth_child_pattern.value();
-                } else {
-                    dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid format for {}", pseudo_function.name());
-                    return false;
-                }
-                if (!allow_of)
-                    return true;
-
-                function_values.skip_whitespace();
-                if (!function_values.has_next_token())
-                    return true;
-
-                // Parse the `of <selector-list>` syntax
-                auto const& maybe_of = function_values.next_token();
-                if (!(maybe_of.is(Token::Type::Ident) && maybe_of.token().ident().equals_ignoring_case("of"sv)))
-                    return false;
-
-                function_values.skip_whitespace();
-                auto selector_list = parse_a_selector_list(function_values, SelectorType::Standalone);
-                if (selector_list.is_error())
-                    return false;
-
-                function_values.skip_whitespace();
-                if (function_values.has_next_token())
-                    return false;
-
-                simple_selector.pseudo_class.argument_selector_list = selector_list.value();
-                return true;
-            };
-
-            auto const& pseudo_function = pseudo_class_token.function();
-            if (pseudo_function.name().equals_ignoring_case("not")) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Not;
-                auto function_token_stream = TokenStream(pseudo_function.values());
-                auto not_selector = parse_a_selector_list(function_token_stream, SelectorType::Standalone);
-                if (not_selector.is_error()) {
-                    dbgln_if(CSS_PARSER_DEBUG, "Invalid selector in :not() clause");
-                    return ParsingResult::SyntaxError;
-                }
-                simple_selector.pseudo_class.argument_selector_list = not_selector.release_value();
-            } else if (pseudo_function.name().equals_ignoring_case("lang"sv)) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Lang;
-                if (pseudo_function.values().is_empty()) {
-                    dbgln_if(CSS_PARSER_DEBUG, "Empty :lang() selector");
-                    return ParsingResult::SyntaxError;
-                }
-                // FIXME: Support multiple, comma-separated, language ranges.
-                simple_selector.pseudo_class.languages.append(pseudo_function.values().first().token().to_string());
-            } else if (pseudo_function.name().equals_ignoring_case("nth-child"sv)) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthChild;
-                if (!parse_nth_child_pattern(simple_selector, pseudo_function, true))
-                    return ParsingResult::SyntaxError;
-            } else if (pseudo_function.name().equals_ignoring_case("nth-last-child"sv)) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthLastChild;
-                if (!parse_nth_child_pattern(simple_selector, pseudo_function, true))
-                    return ParsingResult::SyntaxError;
-            } else if (pseudo_function.name().equals_ignoring_case("nth-of-type"sv)) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthOfType;
-                if (!parse_nth_child_pattern(simple_selector, pseudo_function))
-                    return ParsingResult::SyntaxError;
-            } else if (pseudo_function.name().equals_ignoring_case("nth-last-of-type"sv)) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthLastOfType;
-                if (!parse_nth_child_pattern(simple_selector, pseudo_function))
-                    return ParsingResult::SyntaxError;
-            } else {
-                dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
-                return ParsingResult::SyntaxError;
-            }
-
-            return simple_selector;
-        }
-        dbgln_if(CSS_PARSER_DEBUG, "Unexpected Block in pseudo-class name, expected a function or identifier. '{}'", pseudo_class_token.to_debug_string());
-        return ParsingResult::SyntaxError;
-    }
+    if (first_value.is(Token::Type::Colon))
+        return parse_pseudo_simple_selector(tokens);
 
     dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid simple selector!");
     return ParsingResult::SyntaxError;
@@ -4901,7 +4914,6 @@ TimePercentage Parser::Dimension::time_percentage() const
         return percentage();
     VERIFY_NOT_REACHED();
 }
-
 }
 
 namespace Web {
