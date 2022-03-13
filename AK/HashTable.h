@@ -519,7 +519,6 @@ private:
         if (should_grow())
             TRY(try_rehash(capacity() * 2));
         auto hash = TraitsForT::hash(value);
-        BucketType* first_empty_bucket = nullptr;
         for (;;) {
             auto& bucket = m_buckets[hash % m_capacity];
 
@@ -527,11 +526,7 @@ private:
                 return &bucket;
 
             if (!bucket.used) {
-                if (!first_empty_bucket)
-                    first_empty_bucket = &bucket;
-
-                if (!bucket.deleted)
-                    return const_cast<BucketType*>(first_empty_bucket);
+                return &bucket;
             }
 
             hash = double_hash(hash);
