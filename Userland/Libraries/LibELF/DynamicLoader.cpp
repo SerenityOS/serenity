@@ -162,6 +162,7 @@ bool DynamicLoader::load_stage_2(unsigned flags)
     VERIFY(flags & RTLD_GLOBAL);
 
     if (m_dynamic_object->has_text_relocations()) {
+        dbgln("\033[33mWarning:\033[0m Dynamic object {} has text relocations", m_dynamic_object->filename());
         for (auto& text_segment : m_text_segments) {
             VERIFY(text_segment.address().get() != 0);
 
@@ -488,8 +489,13 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             symbol_location = VirtualAddress { (FlatPtr)0 };
         } else {
             symbol_location = res.value().address;
-            if (res.value().type == STT_GNU_IFUNC)
+            if (res.value().type == STT_GNU_IFUNC) {
+                if (res.value().dynamic_object != nullptr && res.value().dynamic_object->has_text_relocations()) {
+                    dbgln("\033[31mError:\033[0m Refusing to call IFUNC resolver defined in an object with text relocations.");
+                    return RelocationResult::Failed;
+                }
                 symbol_location = call_ifunc_resolver(symbol_location);
+            }
         }
         VERIFY(symbol_location != m_dynamic_object->base_address());
         *patch_ptr = symbol_location.get();
@@ -562,6 +568,12 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             resolver = m_dynamic_object->base_address().offset(relocation.addend());
         else
             resolver = m_dynamic_object->base_address().offset(*patch_ptr);
+
+        if (m_dynamic_object->has_text_relocations()) {
+            dbgln("\033[31mError:\033[0m Refusing to call IFUNC resolver defined in an object with text relocations.");
+            return RelocationResult::Failed;
+        }
+
         *patch_ptr = call_ifunc_resolver(resolver).get();
         break;
     }
