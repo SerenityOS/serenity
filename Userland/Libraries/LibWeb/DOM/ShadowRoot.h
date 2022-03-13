@@ -34,11 +34,15 @@ public:
 private:
     // ^Node
     virtual FlyString node_name() const override { return "#shadow-root"; }
+    virtual bool is_shadow_root() const final { return true; }
 
     // NOTE: The specification doesn't seem to specify a default value for closed. Assuming false for now.
     bool m_closed { false };
     bool m_delegates_focus { false };
     bool m_available_to_element_internals { false };
 };
+
+template<>
+inline bool Node::fast_is<ShadowRoot>() const { return is_shadow_root(); }
 
 }
