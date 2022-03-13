@@ -1207,10 +1207,13 @@ Bytecode::CodeGenerationErrorOr<void> ReturnStatement::generate_bytecode(Bytecod
     if (m_argument)
         TRY(m_argument->generate_bytecode(generator));
 
-    if (generator.is_in_generator_or_async_function())
+    if (generator.is_in_generator_or_async_function()) {
+        generator.perform_needed_unwinds<Bytecode::Op::Yield>();
         generator.emit<Bytecode::Op::Yield>(nullptr);
-    else
+    } else {
+        generator.perform_needed_unwinds<Bytecode::Op::Return>();
         generator.emit<Bytecode::Op::Return>();
+    }
 
     return {};
 }
@@ -1279,6 +1282,7 @@ Bytecode::CodeGenerationErrorOr<void> IfStatement::generate_bytecode(Bytecode::G
 
 Bytecode::CodeGenerationErrorOr<void> ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    generator.perform_needed_unwinds<Bytecode::Op::Jump>();
     generator.emit<Bytecode::Op::Jump>().set_targets(
         generator.nearest_continuable_scope(),
         {});
@@ -1438,6 +1442,7 @@ Bytecode::CodeGenerationErrorOr<void> ThrowStatement::generate_bytecode(Bytecode
 
 Bytecode::CodeGenerationErrorOr<void> BreakStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    generator.perform_needed_unwinds<Bytecode::Op::Jump>(true);
     generator.emit<Bytecode::Op::Jump>().set_targets(
         generator.nearest_breakable_scope(),
         {});
@@ -1502,6 +1507,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
     auto& target_block = generator.make_block();
     generator.switch_to_basic_block(saved_block);
     generator.emit<Bytecode::Op::EnterUnwindContext>(Bytecode::Label { target_block }, handler_target, finalizer_target);
+    generator.start_boundary(Bytecode::Generator::BlockBoundaryType::Unwind);
 
     generator.switch_to_basic_block(target_block);
     TRY(m_block->generate_bytecode(generator));
@@ -1514,6 +1520,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
             next_block = &block;
         }
     }
+    generator.end_boundary(Bytecode::Generator::BlockBoundaryType::Unwind);
 
     generator.switch_to_basic_block(next_block ? *next_block : saved_block);
     return {};

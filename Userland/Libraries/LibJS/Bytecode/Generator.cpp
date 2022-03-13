@@ -79,11 +79,13 @@ Label Generator::nearest_continuable_scope() const
 void Generator::begin_continuable_scope(Label continue_target)
 {
     m_continuable_scopes.append(continue_target);
+    start_boundary(BlockBoundaryType::Continue);
 }
 
 void Generator::end_continuable_scope()
 {
     m_continuable_scopes.take_last();
+    end_boundary(BlockBoundaryType::Continue);
 }
 Label Generator::nearest_breakable_scope() const
 {
@@ -92,11 +94,13 @@ Label Generator::nearest_breakable_scope() const
 void Generator::begin_breakable_scope(Label breakable_target)
 {
     m_breakable_scopes.append(breakable_target);
+    start_boundary(BlockBoundaryType::Break);
 }
 
 void Generator::end_breakable_scope()
 {
     m_breakable_scopes.take_last();
+    end_boundary(BlockBoundaryType::Break);
 }
 
 CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode const& node)
