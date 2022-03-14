@@ -129,7 +129,7 @@ ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interprete
 {
     auto* array = MUST(Array::create(interpreter.global_object(), 0));
     for (size_t i = 0; i < m_element_count; i++) {
-        auto& value = interpreter.reg(m_elements[i]);
+        auto& value = interpreter.reg(Register(m_elements[0].index() + i));
         array->indexed_properties().put(i, value, default_attributes);
     }
     interpreter.accumulator() = array;

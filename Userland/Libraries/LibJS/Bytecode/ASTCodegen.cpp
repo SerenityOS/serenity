@@ -846,23 +846,32 @@ Bytecode::CodeGenerationErrorOr<void> ArrayExpression::generate_bytecode(Bytecod
 {
     Vector<Bytecode::Register> element_regs;
     for (auto& element : m_elements) {
+        if (element && is<SpreadExpression>(*element)) {
+            return Bytecode::CodeGenerationError {
+                this,
+                "Unimplemented element kind: SpreadExpression"sv,
+            };
+        }
+        element_regs.append(generator.allocate_register());
+    }
+    size_t i = 0;
+    for (auto& element : m_elements) {
         if (element) {
             TRY(element->generate_bytecode(generator));
 
-            if (is<SpreadExpression>(*element)) {
-                return Bytecode::CodeGenerationError {
-                    this,
-                    "Unimplemented element kind: SpreadExpression"sv,
-                };
-            }
+            if (is<SpreadExpression>(*element))
+                VERIFY_NOT_REACHED();
         } else {
             generator.emit<Bytecode::Op::LoadImmediate>(Value {});
         }
-        auto element_reg = generator.allocate_register();
+        auto& element_reg = element_regs[i++];
         generator.emit<Bytecode::Op::Store>(element_reg);
-        element_regs.append(element_reg);
     }
-    generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(element_regs.size(), element_regs);
+    if (element_regs.is_empty()) {
+        generator.emit<Bytecode::Op::NewArray>();
+    } else {
+        generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2u, AK::Array { element_regs.first(), element_regs.last() });
+    }
     return {};
 }
 
@@ -1394,14 +1403,24 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
     for (size_t i = 0; i < expressions.size(); ++i) {
         if (i % 2 != 0)
             continue;
-
-        TRY(expressions[i].generate_bytecode(generator));
-        auto string_reg = generator.allocate_register();
-        generator.emit<Bytecode::Op::Store>(string_reg);
-        string_regs.append(string_reg);
+        string_regs.append(generator.allocate_register());
     }
 
-    generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(string_regs.size(), string_regs);
+    size_t reg_index = 0;
+    for (size_t i = 0; i < expressions.size(); ++i) {
+        if (i % 2 != 0)
+            continue;
+
+        TRY(expressions[i].generate_bytecode(generator));
+        auto string_reg = string_regs[reg_index++];
+        generator.emit<Bytecode::Op::Store>(string_reg);
+    }
+
+    if (string_regs.is_empty()) {
+        generator.emit<Bytecode::Op::NewArray>();
+    } else {
+        generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2u, AK::Array { string_regs.first(), string_regs.last() });
+    }
     auto strings_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(strings_reg);
 
@@ -1418,14 +1437,22 @@ Bytecode::CodeGenerationErrorOr<void> TaggedTemplateLiteral::generate_bytecode(B
     }
 
     Vector<Bytecode::Register> raw_string_regs;
+    for ([[maybe_unused]] auto& raw_string : m_template_literal->raw_strings())
+        string_regs.append(generator.allocate_register());
+
+    reg_index = 0;
     for (auto& raw_string : m_template_literal->raw_strings()) {
         TRY(raw_string.generate_bytecode(generator));
-        auto raw_string_reg = generator.allocate_register();
+        auto raw_string_reg = string_regs[reg_index++];
         generator.emit<Bytecode::Op::Store>(raw_string_reg);
         raw_string_regs.append(raw_string_reg);
     }
 
-    generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(raw_string_regs.size(), raw_string_regs);
+    if (raw_string_regs.is_empty()) {
+        generator.emit<Bytecode::Op::NewArray>();
+    } else {
+        generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(2u, AK::Array { raw_string_regs.first(), raw_string_regs.last() });
+    }
     auto raw_strings_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(raw_strings_reg);
 
