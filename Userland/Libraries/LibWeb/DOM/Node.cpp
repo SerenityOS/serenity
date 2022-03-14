@@ -701,7 +701,14 @@ u16 Node::compare_document_position(RefPtr<Node> other)
 // https://dom.spec.whatwg.org/#concept-tree-host-including-inclusive-ancestor
 bool Node::is_host_including_inclusive_ancestor_of(const Node& other) const
 {
-    return is_inclusive_ancestor_of(other) || (is<DocumentFragment>(other.root()) && verify_cast<DocumentFragment>(other.root()).host() && is_inclusive_ancestor_of(*verify_cast<DocumentFragment>(other.root()).host().ptr()));
+    if (is_inclusive_ancestor_of(other))
+        return true;
+    if (is<DocumentFragment>(other.root())
+        && static_cast<DocumentFragment const&>(other.root()).host()
+        && is_inclusive_ancestor_of(*static_cast<DocumentFragment const&>(other.root()).host())) {
+        return true;
+    }
+    return false;
 }
 
 // https://dom.spec.whatwg.org/#dom-node-ownerdocument

@@ -26,13 +26,14 @@ public:
 
     virtual FlyString node_name() const override { return "#document-fragment"; }
 
-    RefPtr<Element> host() { return m_host; }
-    const RefPtr<Element> host() const { return m_host; }
+    Element* host() { return m_host; }
+    Element const* host() const { return m_host; }
 
     void set_host(Element& host) { m_host = host; }
 
 private:
-    RefPtr<Element> m_host;
+    // https://dom.spec.whatwg.org/#concept-documentfragment-host
+    WeakPtr<Element> m_host;
 };
 
 }
