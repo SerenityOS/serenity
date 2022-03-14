@@ -183,17 +183,22 @@ String File::real_path_for(String const& filename)
 
 bool File::ensure_parent_directories(String const& path)
 {
-    VERIFY(path.starts_with("/"));
-
-    int saved_errno = 0;
-    ScopeGuard restore_errno = [&saved_errno] { errno = saved_errno; };
-
     char* parent_buffer = strdup(path.characters());
     ScopeGuard free_buffer = [parent_buffer] { free(parent_buffer); };
 
     char const* parent = dirname(parent_buffer);
 
-    int rc = mkdir(parent, 0755);
+    return ensure_directories(parent);
+}
+
+bool File::ensure_directories(String const& path)
+{
+    VERIFY(path.starts_with("/"));
+
+    int saved_errno = 0;
+    ScopeGuard restore_errno = [&saved_errno] { errno = saved_errno; };
+
+    int rc = mkdir(path.characters(), 0755);
     saved_errno = errno;
 
     if (rc == 0 || errno == EEXIST)
@@ -202,12 +207,12 @@ bool File::ensure_parent_directories(String const& path)
     if (errno != ENOENT)
         return false;
 
-    bool ok = ensure_parent_directories(parent);
+    bool ok = ensure_parent_directories(path);
     saved_errno = errno;
     if (!ok)
         return false;
 
-    rc = mkdir(parent, 0755);
+    rc = mkdir(path.characters(), 0755);
     saved_errno = errno;
     return rc == 0;
 }
