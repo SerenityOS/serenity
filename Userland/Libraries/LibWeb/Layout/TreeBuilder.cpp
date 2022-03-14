@@ -224,11 +224,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
 
 RefPtr<Node> TreeBuilder::build(DOM::Node& dom_node)
 {
-    if (dom_node.parent()) {
-        // We're building a partial layout tree, so start by building up the stack of parent layout nodes.
-        for (auto* ancestor = dom_node.parent()->layout_node(); ancestor; ancestor = ancestor->parent())
-            m_parent_stack.prepend(verify_cast<NodeWithStyle>(ancestor));
-    }
+    VERIFY(dom_node.is_document());
 
     Context context;
     create_layout_tree(dom_node, context);
@@ -263,8 +259,6 @@ void TreeBuilder::for_each_in_tree_with_inside_display(NodeWithStyle& root, Call
 
 void TreeBuilder::fixup_tables(NodeWithStyle& root)
 {
-    // NOTE: Even if we only do a partial build, we always do fixup from the root.
-
     remove_irrelevant_boxes(root);
     generate_missing_child_wrappers(root);
     generate_missing_parents(root);
