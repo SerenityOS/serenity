@@ -29,7 +29,7 @@ static consteval auto make_lookup_table()
     Array<i16, 256> table;
     table.fill(-1);
     for (size_t i = 0; i < alphabet.size(); ++i) {
-        table[alphabet[i]] = i;
+        table[alphabet[i]] = static_cast<i16>(i);
     }
     return table;
 }
@@ -126,10 +126,10 @@ String encode_base64(ReadonlyBytes input)
         const u8 index2 = ((in1 << 2) | (in2 >> 6)) & 0x3f;
         const u8 index3 = in2 & 0x3f;
 
-        const u8 out0 = alphabet[index0];
-        const u8 out1 = alphabet[index1];
-        const u8 out2 = is_16bit ? '=' : alphabet[index2];
-        const u8 out3 = is_8bit ? '=' : alphabet[index3];
+        const char out0 = alphabet[index0];
+        const char out1 = alphabet[index1];
+        const char out2 = is_16bit ? '=' : alphabet[index2];
+        const char out3 = is_8bit ? '=' : alphabet[index3];
 
         output.append(out0);
         output.append(out1);
