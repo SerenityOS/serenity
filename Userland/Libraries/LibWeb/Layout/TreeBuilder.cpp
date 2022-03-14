@@ -101,10 +101,10 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
     if (is<DOM::Element>(dom_node)) {
         auto& element = static_cast<DOM::Element&>(dom_node);
         element.clear_pseudo_element_nodes({});
-        style = style_computer.compute_style(element);
+        VERIFY(!element.needs_style_update());
+        style = element.computed_css_values();
         if (style->display().is_none())
             return;
-        element.set_computed_css_values(style);
         layout_node = element.create_layout_node(*style);
     } else if (is<DOM::Document>(dom_node)) {
         style = style_computer.create_document_style();
