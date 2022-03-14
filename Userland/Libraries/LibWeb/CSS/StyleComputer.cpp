@@ -1071,7 +1071,7 @@ bool PropertyDependencyNode::has_cycles()
 
 void StyleComputer::build_rule_cache_if_needed() const
 {
-    if (m_rule_cache && m_rule_cache->generation == m_document.style_sheets().generation())
+    if (m_rule_cache)
         return;
     const_cast<StyleComputer&>(*this).build_rule_cache();
 }
@@ -1146,8 +1146,6 @@ void StyleComputer::build_rule_cache()
         dbgln("        Other: {}", m_rule_cache->other_rules.size());
         dbgln("        Total: {}", num_class_rules + num_id_rules + num_tag_name_rules + m_rule_cache->other_rules.size());
     }
-
-    m_rule_cache->generation = m_document.style_sheets().generation();
 }
 
 void StyleComputer::invalidate_rule_cache()

@@ -104,7 +104,6 @@ private:
         HashMap<FlyString, Vector<MatchingRule>> rules_by_tag_name;
         HashMap<Selector::PseudoElement, Vector<MatchingRule>> rules_by_pseudo_element;
         Vector<MatchingRule> other_rules;
-        int generation { 0 };
     };
     OwnPtr<RuleCache> m_rule_cache;
 };

@@ -43,9 +43,6 @@ public:
 
     bool is_supported_property_index(u32) const;
 
-    int generation() const { return m_generation; }
-    void bump_generation() { ++m_generation; }
-
     DOM::Document& document() { return m_document; }
     DOM::Document const& document() const { return m_document; }
 
