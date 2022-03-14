@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/Format.h>
+#include <AK/Memory.h>
 #include <AK/Random.h>
 #include <AK/Vector.h>
 #include <LibCrypto/PK/Code/Code.h>
@@ -140,7 +141,7 @@ public:
         hash_fn.update(m_prime_buffer);
         auto H_prime = hash_fn.digest();
 
-        if (__builtin_memcmp(message_hash.data, H_prime.data, HashFunction::DigestSize) != 0)
+        if (!timing_safe_compare(message_hash.data, H_prime.data, HashFunction::DigestSize))
             return VerificationConsistency::Inconsistent;
 
         return VerificationConsistency::Consistent;
