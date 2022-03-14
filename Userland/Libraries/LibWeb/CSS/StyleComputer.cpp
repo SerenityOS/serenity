@@ -800,7 +800,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             // Percentages refer to parent element's font size
             auto percentage = font_size->as_percentage().percentage();
             auto parent_font_size = size;
-            if (parent_element && parent_element->layout_node() && parent_element->specified_css_values()) {
+            if (parent_element && parent_element->specified_css_values()) {
                 auto value = parent_element->specified_css_values()->property(CSS::PropertyID::FontSize).value();
                 if (value->is_length()) {
                     auto length = static_cast<LengthStyleValue const&>(*value).to_length();
@@ -954,8 +954,8 @@ static BoxTypeTransformation required_box_type_transformation(StyleProperties co
     // FIXME: Containment in a ruby container inlinifies the box’s display type, as described in [CSS-RUBY-1].
 
     // A parent with a grid or flex display value blockifies the box’s display type. [CSS-GRID-1] [CSS-FLEXBOX-1]
-    if (element.parent() && element.parent()->layout_node()) {
-        auto const& parent_display = element.parent()->layout_node()->computed_values().display();
+    if (element.parent_element() && element.parent_element()->specified_css_values()) {
+        auto const& parent_display = element.parent_element()->specified_css_values()->display();
         if (parent_display.is_grid_inside() || parent_display.is_flex_inside())
             return BoxTypeTransformation::Blockify;
     }
