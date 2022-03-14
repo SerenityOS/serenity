@@ -11,6 +11,9 @@
 
 namespace Web::Painting {
 
+// FIXME: ProgressPaintable should inherit from LabelablePaintable, as it is a LabelableNode.
+//        LabelablePaintable should be split into FormAssociatedLabelablePaintable once this
+//        happens.
 class ProgressPaintable final : public PaintableBox {
 public:
     static NonnullRefPtr<ProgressPaintable> create(Layout::Progress const&);

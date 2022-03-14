@@ -55,12 +55,10 @@ public:
     // NOTE: These only exist for checkbox and radio input elements.
     virtual void legacy_pre_activation_behavior() { }
     virtual void legacy_cancelled_activation_behavior() { }
+    virtual void legacy_cancelled_activation_behavior_was_not_called() { }
 
     Bindings::CallbackType* event_handler_attribute(FlyString const& name);
     void set_event_handler_attribute(FlyString const& name, Optional<Bindings::CallbackType>);
-
-    // https://dom.spec.whatwg.org/#eventtarget-activation-behavior
-    virtual void run_activation_behavior() { }
 
 protected:
     EventTarget();
