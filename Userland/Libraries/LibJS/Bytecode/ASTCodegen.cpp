@@ -1625,8 +1625,15 @@ Bytecode::CodeGenerationErrorOr<void> WithStatement::generate_bytecode(Bytecode:
 {
     TRY(m_object->generate_bytecode(generator));
     generator.emit<Bytecode::Op::EnterObjectEnvironment>();
+
+    // EnterObjectEnvironment sets the running execution context's lexical_environment to a new Object Environment.
+    generator.start_boundary(Bytecode::Generator::BlockBoundaryType::LeaveLexicalEnvironment);
     TRY(m_body->generate_bytecode(generator));
-    generator.emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+    generator.end_boundary(Bytecode::Generator::BlockBoundaryType::LeaveLexicalEnvironment);
+
+    if (!generator.is_current_block_terminated())
+        generator.emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+
     return {};
 }
 
