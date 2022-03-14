@@ -328,6 +328,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
         if (!event->cancelled()) {
             // NOTE: Since activation_target is set, it will have activation behavior.
             activation_target->activation_behavior(event);
+            activation_target->legacy_cancelled_activation_behavior_was_not_called();
         } else {
             activation_target->legacy_cancelled_activation_behavior();
         }

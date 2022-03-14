@@ -10,16 +10,19 @@
 
 namespace Web::Painting {
 
-void Paintable::handle_mousedown(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
+Paintable::DispatchEventOfSameName Paintable::handle_mousedown(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
 {
+    return DispatchEventOfSameName::Yes;
 }
 
-void Paintable::handle_mouseup(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
+Paintable::DispatchEventOfSameName Paintable::handle_mouseup(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
 {
+    return DispatchEventOfSameName::Yes;
 }
 
-void Paintable::handle_mousemove(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
+Paintable::DispatchEventOfSameName Paintable::handle_mousemove(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned)
 {
+    return DispatchEventOfSameName::Yes;
 }
 
 bool Paintable::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint const&, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
