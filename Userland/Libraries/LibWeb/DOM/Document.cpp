@@ -1354,8 +1354,10 @@ void Document::evaluate_media_queries_and_report_changes()
             any_media_queries_changed_match_state = true;
     }
 
-    if (any_media_queries_changed_match_state)
+    if (any_media_queries_changed_match_state) {
         style_computer().invalidate_rule_cache();
+        invalidate_style();
+    }
 }
 
 NonnullRefPtr<DOMImplementation> Document::implementation() const
