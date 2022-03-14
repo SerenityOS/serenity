@@ -84,6 +84,9 @@ void CSSImportRule::resource_did_load()
     }
 
     m_style_sheet = move(sheet);
+
+    m_document->style_sheets().bump_generation();
+    m_document->invalidate_style();
 }
 
 }
