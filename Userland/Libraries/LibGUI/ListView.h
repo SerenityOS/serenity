@@ -15,7 +15,7 @@ class ListView : public AbstractView {
 public:
     virtual ~ListView() override;
 
-    int item_height() const { return 16; }
+    int item_height() const { return font().preferred_line_height() + vertical_padding(); }
 
     bool alternating_row_colors() const { return m_alternating_row_colors; }
     void set_alternating_row_colors(bool b) { m_alternating_row_colors = b; }
@@ -24,6 +24,7 @@ public:
     void set_hover_highlighting(bool b) { m_hover_highlighting = b; }
 
     int horizontal_padding() const { return m_horizontal_padding; }
+    int vertical_padding() const { return m_vertical_padding; }
 
     virtual void scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically) override;
 
@@ -58,6 +59,7 @@ private:
     void update_content_size();
 
     int m_horizontal_padding { 2 };
+    int m_vertical_padding { 2 };
     int m_model_column { 0 };
     bool m_alternating_row_colors { true };
     bool m_hover_highlighting { false };
