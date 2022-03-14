@@ -56,6 +56,13 @@ public:
         }
     }
 
+    void font_changed(Gfx::IntRect window_rect)
+    {
+        m_next_menu_location = { 0, 0 };
+        for (auto& menu : m_menus)
+            layout_menu(menu, window_rect);
+    }
+
 private:
     void layout_menu(Menu&, Gfx::IntRect window_rect);
 
