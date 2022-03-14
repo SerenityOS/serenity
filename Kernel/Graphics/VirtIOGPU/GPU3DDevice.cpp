@@ -80,7 +80,8 @@ ErrorOr<void> GPU3DDevice::ioctl(OpenFileDescription&, unsigned request, Userspa
             .array_size = spec.array_size,
             .last_level = spec.last_level,
             .nr_samples = spec.nr_samples,
-            .flags = spec.flags
+            .flags = spec.flags,
+            .padding = 0,
         };
         MutexLocker locker(m_graphics_adapter.operation_lock());
         auto resource_id = m_graphics_adapter.create_3d_resource(resource_spec).value();
