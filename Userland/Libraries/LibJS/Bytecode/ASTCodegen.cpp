@@ -1479,11 +1479,14 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
     if (m_handler) {
         auto& handler_block = generator.make_block();
         generator.switch_to_basic_block(handler_block);
+        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Block);
         TRY(m_handler->parameter().visit(
             [&](FlyString const& parameter) -> Bytecode::CodeGenerationErrorOr<void> {
                 if (!parameter.is_empty()) {
-                    // FIXME: We need a separate DeclarativeEnvironment here
-                    generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(parameter));
+                    auto parameter_identifier = generator.intern_identifier(parameter);
+                    generator.register_binding(parameter_identifier);
+                    generator.emit<Bytecode::Op::CreateVariable>(parameter_identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
+                    generator.emit<Bytecode::Op::SetVariable>(parameter_identifier, Bytecode::Op::SetVariable::InitializationMode::Initialize);
                 }
                 return {};
             },
@@ -1497,6 +1500,8 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
 
         TRY(m_handler->body().generate_bytecode(generator));
         handler_target = Bytecode::Label { handler_block };
+        generator.end_variable_scope();
+
         if (!generator.is_current_block_terminated()) {
             if (m_finalizer) {
                 generator.emit<Bytecode::Op::LeaveUnwindContext>();
