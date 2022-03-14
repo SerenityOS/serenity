@@ -426,8 +426,12 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     // The spec makes an iterator here to do IteratorBindingInitialization but we just do it manually
     auto& execution_context_arguments = vm.running_execution_context().arguments;
 
+    size_t default_parameter_index = 0;
     for (size_t i = 0; i < m_formal_parameters.size(); ++i) {
         auto& parameter = m_formal_parameters[i];
+        if (parameter.default_value)
+            ++default_parameter_index;
+
         TRY(parameter.binding.visit(
             [&](auto const& param) -> ThrowCompletionOr<void> {
                 Value argument_value;
@@ -439,9 +443,15 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 } else if (i < execution_context_arguments.size() && !execution_context_arguments[i].is_undefined()) {
                     argument_value = execution_context_arguments[i];
                 } else if (parameter.default_value) {
-                    // FIXME: Support default arguments in the bytecode world!
-                    if (interpreter)
+                    if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
+                        auto value_and_frame = bytecode_interpreter->run_and_return_frame(*m_default_parameter_bytecode_executables[default_parameter_index - 1], nullptr);
+                        if (value_and_frame.value.is_error())
+                            return value_and_frame.value.release_error();
+                        // Resulting value is in the accumulator.
+                        argument_value = value_and_frame.frame->registers.at(0);
+                    } else if (interpreter) {
                         argument_value = TRY(parameter.default_value->execute(*interpreter, global_object())).release_value();
+                    }
                 } else {
                     argument_value = js_undefined();
                 }
@@ -769,24 +779,37 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
         return vm.throw_completion<InternalError>(global_object(), ErrorType::NotImplemented, "Async Generator function execution");
 
     if (bytecode_interpreter) {
-        // FIXME: pass something to evaluate default arguments with
-        TRY(function_declaration_instantiation(nullptr));
         if (!m_bytecode_executable) {
-            auto executable_result = JS::Bytecode::Generator::generate(m_ecmascript_code, m_kind);
-            if (executable_result.is_error())
-                return vm.throw_completion<InternalError>(bytecode_interpreter->global_object(), ErrorType::NotImplemented, executable_result.error().to_string());
+            auto compile = [&](auto& node, auto kind, auto name) -> ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> {
+                auto executable_result = JS::Bytecode::Generator::generate(node, kind);
+                if (executable_result.is_error())
+                    return vm.throw_completion<InternalError>(bytecode_interpreter->global_object(), ErrorType::NotImplemented, executable_result.error().to_string());
 
-            m_bytecode_executable = executable_result.release_value();
-            m_bytecode_executable->name = m_name;
-            auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
-            passes.perform(*m_bytecode_executable);
-            if constexpr (JS_BYTECODE_DEBUG) {
-                dbgln("Optimisation passes took {}us", passes.elapsed());
-                dbgln("Compiled Bytecode::Block for function '{}':", m_name);
+                auto bytecode_executable = executable_result.release_value();
+                bytecode_executable->name = name;
+                auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
+                passes.perform(*bytecode_executable);
+                if constexpr (JS_BYTECODE_DEBUG) {
+                    dbgln("Optimisation passes took {}us", passes.elapsed());
+                    dbgln("Compiled Bytecode::Block for function '{}':", m_name);
+                }
+                if (JS::Bytecode::g_dump_bytecode)
+                    bytecode_executable->dump();
+
+                return bytecode_executable;
+            };
+
+            m_bytecode_executable = TRY(compile(*m_ecmascript_code, m_kind, m_name));
+
+            size_t default_parameter_index = 0;
+            for (auto& parameter : m_formal_parameters) {
+                if (!parameter.default_value)
+                    continue;
+                auto executable = TRY(compile(*parameter.default_value, FunctionKind::Normal, String::formatted("default parameter #{} for {}", default_parameter_index, m_name)));
+                m_default_parameter_bytecode_executables.append(move(executable));
             }
-            if (JS::Bytecode::g_dump_bytecode)
-                m_bytecode_executable->dump();
         }
+        TRY(function_declaration_instantiation(nullptr));
         auto result_and_frame = bytecode_interpreter->run_and_return_frame(*m_bytecode_executable, nullptr);
 
         VERIFY(result_and_frame.frame != nullptr);
