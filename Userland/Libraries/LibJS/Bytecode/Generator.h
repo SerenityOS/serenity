@@ -167,6 +167,8 @@ public:
         Optional<BlockBoundaryType> boundary_to_stop_at;
         if constexpr (IsSame<OpType, Bytecode::Op::Return> || IsSame<OpType, Bytecode::Op::Yield>)
             VERIFY(!is_break_node);
+        else if constexpr (IsSame<OpType, Bytecode::Op::Throw>)
+            boundary_to_stop_at = BlockBoundaryType::Unwind;
         else
             boundary_to_stop_at = is_break_node ? BlockBoundaryType::Break : BlockBoundaryType::Continue;
 
