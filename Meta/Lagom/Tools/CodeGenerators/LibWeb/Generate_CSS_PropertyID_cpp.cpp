@@ -129,8 +129,10 @@ bool is_inherited_property(PropertyID property_id)
 
 NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
 {
-    static HashMap<PropertyID, NonnullRefPtr<StyleValue>> initial_values;
-    if (initial_values.is_empty()) {
+    static Array<RefPtr<StyleValue>, to_underlying(last_property_id) + 1> initial_values;
+    static bool initialized = false;
+    if (!initialized) {
+        initialized = true;
         ParsingContext parsing_context;
 )~~~");
 
@@ -155,7 +157,7 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
         {
             auto parsed_value = Parser(parsing_context, "@initial_value_string@").parse_as_css_value(PropertyID::@name:titlecase@);
             VERIFY(!parsed_value.is_null());
-            initial_values.set(PropertyID::@name:titlecase@, parsed_value.release_nonnull());
+            initial_values[to_underlying(PropertyID::@name:titlecase@)] = parsed_value.release_nonnull();
         }
 )~~~");
     };
@@ -177,7 +179,7 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
     generator.append(R"~~~(
     }
 
-    return *initial_values.find(property_id)->value;
+    return *initial_values[to_underlying(property_id)];
 }
 
 bool property_has_quirk(PropertyID property_id, Quirk quirk)

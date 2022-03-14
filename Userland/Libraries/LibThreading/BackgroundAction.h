@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,7 +27,7 @@ class BackgroundActionBase {
     friend class BackgroundAction;
 
 private:
-    BackgroundActionBase() { }
+    BackgroundActionBase() = default;
 
     static void enqueue_work(Function<void()>);
     static Thread& background_thread();
@@ -48,7 +49,7 @@ public:
         return m_cancelled;
     }
 
-    virtual ~BackgroundAction() { }
+    virtual ~BackgroundAction() = default;
 
 private:
     BackgroundAction(Function<Result(BackgroundAction&)> action, Function<void(Result)> on_complete)

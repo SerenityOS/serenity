@@ -16,7 +16,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-classic-script
-NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView source, EnvironmentSettingsObject& environment_settings_object, AK::URL base_url, MutedErrors muted_errors)
+NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView source, EnvironmentSettingsObject& environment_settings_object, AK::URL base_url, size_t source_line_number, MutedErrors muted_errors)
 {
     // 1. If muted errors was not provided, let it be false. (NOTE: This is taken care of by the default argument.)
 
@@ -43,7 +43,7 @@ NonnullRefPtr<ClassicScript> ClassicScript::create(String filename, StringView s
 
     // 10. Let result be ParseScript(source, settings's Realm, script).
     auto parse_timer = Core::ElapsedTimer::start_new();
-    auto result = JS::Script::parse(source, environment_settings_object.realm(), script->filename(), script.ptr());
+    auto result = JS::Script::parse(source, environment_settings_object.realm(), script->filename(), script.ptr(), source_line_number);
     dbgln_if(HTML_SCRIPT_DEBUG, "ClassicScript: Parsed {} in {}ms", script->filename(), parse_timer.elapsed());
 
     // 11. If result is a list of errors, then:

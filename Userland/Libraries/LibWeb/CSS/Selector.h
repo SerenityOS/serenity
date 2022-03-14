@@ -135,7 +135,7 @@ public:
     ~Selector();
 
     Vector<CompoundSelector> const& compound_selectors() const { return m_compound_selectors; }
-    Optional<PseudoElement> pseudo_element() const;
+    Optional<PseudoElement> pseudo_element() const { return m_pseudo_element; }
     u32 specificity() const;
     String serialize() const;
 
@@ -144,6 +144,7 @@ private:
 
     Vector<CompoundSelector> m_compound_selectors;
     mutable Optional<u32> m_specificity;
+    Optional<Selector::PseudoElement> m_pseudo_element;
 };
 
 constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)

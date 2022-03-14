@@ -74,6 +74,8 @@ public:
     virtual bool is_svg_box() const { return false; }
     virtual bool is_svg_geometry_box() const { return false; }
     virtual bool is_label() const { return false; }
+    virtual bool is_replaced_box() const { return false; }
+    virtual bool is_list_item_marker_box() const { return false; }
 
     template<typename T>
     bool fast_is() const = delete;

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,7 +31,7 @@ class ConnectionBase : public Core::Object {
     C_OBJECT_ABSTRACT(ConnectionBase);
 
 public:
-    virtual ~ConnectionBase() override;
+    virtual ~ConnectionBase() override = default;
 
     bool is_open() const { return m_socket->is_open(); }
     ErrorOr<void> post_message(Message const&);

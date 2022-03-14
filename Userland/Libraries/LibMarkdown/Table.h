@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,8 +31,8 @@ public:
         RecursionDecision walk(Visitor&) const;
     };
 
-    Table() { }
-    virtual ~Table() override { }
+    Table() = default;
+    virtual ~Table() override = default;
 
     virtual String render_to_html(bool tight = false) const override;
     virtual String render_for_terminal(size_t view_width = 0) const override;

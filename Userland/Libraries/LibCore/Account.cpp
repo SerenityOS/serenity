@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2020, Peter Elliott <pelliott@serenityos.org>
+ * Copyright (c) 2021-2022, Brian Gianforcaro <bgianf@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Base64.h>
+#include <AK/Memory.h>
 #include <AK/Random.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
@@ -134,7 +136,7 @@ bool Account::authenticate(SecretString const& password) const
 
     // FIXME: Use crypt_r if it can be built in lagom.
     char* hash = crypt(password.characters(), m_password_hash.characters());
-    return hash != nullptr && strcmp(hash, m_password_hash.characters()) == 0;
+    return hash != nullptr && AK::timing_safe_compare(hash, m_password_hash.characters(), m_password_hash.length());
 }
 
 bool Account::login() const

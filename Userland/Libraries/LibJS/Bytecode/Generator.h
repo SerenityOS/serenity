@@ -171,6 +171,36 @@ public:
         }
     }
 
+    enum class BlockBoundaryType {
+        Break,
+        Continue,
+        Unwind,
+    };
+    template<typename OpType>
+    void perform_needed_unwinds(bool is_break_node = false) requires(OpType::IsTerminator)
+    {
+        Optional<BlockBoundaryType> boundary_to_stop_at;
+        if constexpr (IsSame<OpType, Bytecode::Op::Return> || IsSame<OpType, Bytecode::Op::Yield>)
+            VERIFY(!is_break_node);
+        else
+            boundary_to_stop_at = is_break_node ? BlockBoundaryType::Break : BlockBoundaryType::Continue;
+
+        for (size_t i = m_boundaries.size(); i > 0; --i) {
+            auto boundary = m_boundaries[i - 1];
+            if (boundary_to_stop_at.has_value() && boundary == *boundary_to_stop_at)
+                break;
+            if (boundary == BlockBoundaryType::Unwind)
+                emit<Bytecode::Op::LeaveUnwindContext>();
+        }
+    }
+
+    void start_boundary(BlockBoundaryType type) { m_boundaries.append(type); }
+    void end_boundary(BlockBoundaryType type)
+    {
+        VERIFY(m_boundaries.last() == type);
+        m_boundaries.take_last();
+    }
+
 private:
     Generator();
     ~Generator();
@@ -189,6 +219,7 @@ private:
     Vector<Label> m_continuable_scopes;
     Vector<Label> m_breakable_scopes;
     Vector<LexicalScope> m_variable_scopes;
+    Vector<BlockBoundaryType> m_boundaries;
 };
 
 }

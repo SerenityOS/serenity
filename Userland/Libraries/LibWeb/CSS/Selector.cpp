@@ -13,23 +13,20 @@ namespace Web::CSS {
 Selector::Selector(Vector<CompoundSelector>&& compound_selectors)
     : m_compound_selectors(move(compound_selectors))
 {
+    // Note: This assumes that only one pseudo-element is allowed in a selector, and that it appears at the end.
+    //       This is true currently, and there are no current proposals to change this, but you never know!
+    if (!m_compound_selectors.is_empty()) {
+        for (auto const& simple_selector : m_compound_selectors.last().simple_selectors) {
+            if (simple_selector.type == SimpleSelector::Type::PseudoElement) {
+                m_pseudo_element = simple_selector.pseudo_element;
+                break;
+            }
+        }
+    }
 }
 
 Selector::~Selector()
 {
-}
-
-Optional<Selector::PseudoElement> Selector::pseudo_element() const
-{
-    // Note: This assumes that only one pseudo-element is allowed in a selector, and that it appears at the end.
-    //       This is true currently, and there are no current proposals to change this, but you never know!
-    if (compound_selectors().is_empty())
-        return {};
-    for (auto const& simple_selector : compound_selectors().last().simple_selectors) {
-        if (simple_selector.type == SimpleSelector::Type::PseudoElement)
-            return simple_selector.pseudo_element;
-    }
-    return {};
 }
 
 // https://www.w3.org/TR/selectors-4/#specificity-rules
@@ -205,7 +202,7 @@ String Selector::serialize() const
         // 1. If there is only one simple selector in the compound selectors which is a universal selector, append the result of serializing the universal selector to s.
         if (compound_selector.simple_selectors.size() == 1
             && compound_selector.simple_selectors.first().type == Selector::SimpleSelector::Type::Universal) {
-            s.append(compound_selectors().first().simple_selectors.first().serialize());
+            s.append(compound_selector.simple_selectors.first().serialize());
         }
         // 2. Otherwise, for each simple selector in the compound selectors...
         //    FIXME: ...that is not a universal selector of which the namespace prefix maps to a namespace that is not the default namespace...

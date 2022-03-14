@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Dylan Katz <dykatz@uw.edu>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,8 +13,8 @@ namespace SQL::AST {
 
 class SyntaxHighlighter final : public Syntax::Highlighter {
 public:
-    SyntaxHighlighter() { }
-    virtual ~SyntaxHighlighter() override;
+    SyntaxHighlighter() = default;
+    virtual ~SyntaxHighlighter() override = default;
 
     virtual bool is_identifier(u64) const override;
 

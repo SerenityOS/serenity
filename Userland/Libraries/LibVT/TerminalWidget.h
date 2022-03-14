@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,7 +28,7 @@ class TerminalWidget final
     C_OBJECT(TerminalWidget);
 
 public:
-    virtual ~TerminalWidget() override;
+    virtual ~TerminalWidget() override = default;
 
     void set_pty_master_fd(int fd);
     void inject_string(StringView string)

@@ -18,6 +18,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -274,6 +275,15 @@ ThrowCompletionOr<void> CreateEnvironment::execute_impl(Bytecode::Interpreter& i
     return {};
 }
 
+ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& old_environment = interpreter.vm().running_execution_context().lexical_environment;
+    interpreter.saved_lexical_environment_stack().append(old_environment);
+    auto object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    interpreter.vm().running_execution_context().lexical_environment = new_object_environment(*object, true, old_environment);
+    return {};
+}
+
 ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -400,22 +410,15 @@ ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) c
 
     auto this_value = interpreter.reg(m_this_value);
 
+    MarkedVector<Value> argument_values { interpreter.vm().heap() };
+    for (size_t i = 0; i < m_argument_count; ++i)
+        argument_values.append(interpreter.reg(m_arguments[i]));
+
     Value return_value;
-
-    if (m_argument_count == 0 && m_type == CallType::Call) {
-        auto return_value_or_error = call(interpreter.global_object(), function, this_value);
-        if (!return_value_or_error.is_error())
-            return_value = return_value_or_error.release_value();
-    } else {
-        MarkedVector<Value> argument_values { interpreter.vm().heap() };
-        for (size_t i = 0; i < m_argument_count; ++i)
-            argument_values.append(interpreter.reg(m_arguments[i]));
-
-        if (m_type == CallType::Call)
-            return_value = TRY(call(interpreter.global_object(), function, this_value, move(argument_values)));
-        else
-            return_value = TRY(construct(interpreter.global_object(), function, move(argument_values)));
-    }
+    if (m_type == CallType::Call)
+        return_value = TRY(call(interpreter.global_object(), function, this_value, move(argument_values)));
+    else
+        return_value = TRY(construct(interpreter.global_object(), function, move(argument_values)));
 
     interpreter.accumulator() = return_value;
     return {};
@@ -700,6 +703,11 @@ String CreateVariable::to_string_impl(Bytecode::Executable const& executable) co
 {
     auto mode_string = m_mode == EnvironmentMode::Lexical ? "Lexical" : "Variable";
     return String::formatted("CreateVariable env:{} immutable:{} {} ({})", mode_string, m_is_immutable, m_identifier, executable.identifier_table->get(m_identifier));
+}
+
+String EnterObjectEnvironment::to_string_impl(const Executable&) const
+{
+    return String::formatted("EnterObjectEnvironment");
 }
 
 String SetVariable::to_string_impl(Bytecode::Executable const& executable) const

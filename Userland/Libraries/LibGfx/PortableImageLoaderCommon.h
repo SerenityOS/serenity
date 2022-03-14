@@ -1,13 +1,12 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/Array.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/ScopeGuard.h>
@@ -82,31 +81,31 @@ static bool read_magic_number(TContext& context, Streamer& streamer)
 
     if (!context.data || context.data_size < 2) {
         context.state = TContext::State::Error;
-        dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "There is no enough data for {}", TContext::image_type);
+        dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "There is no enough data for {}", TContext::FormatDetails::image_type);
         return false;
     }
 
     u8 magic_number[2] {};
     if (!streamer.read_bytes(magic_number, 2)) {
         context.state = TContext::State::Error;
-        dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "We can't read magic number for {}", TContext::image_type);
+        dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "We can't read magic number for {}", TContext::FormatDetails::image_type);
         return false;
     }
 
-    if (magic_number[0] == 'P' && magic_number[1] == TContext::ascii_magic_number) {
+    if (magic_number[0] == 'P' && magic_number[1] == TContext::FormatDetails::ascii_magic_number) {
         context.type = TContext::Type::ASCII;
         context.state = TContext::State::MagicNumber;
         return true;
     }
 
-    if (magic_number[0] == 'P' && magic_number[1] == TContext::binary_magic_number) {
+    if (magic_number[0] == 'P' && magic_number[1] == TContext::FormatDetails::binary_magic_number) {
         context.type = TContext::Type::RAWBITS;
         context.state = TContext::State::MagicNumber;
         return true;
     }
 
     context.state = TContext::State::Error;
-    dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "Magic number is not valid for {}{}{}", magic_number[0], magic_number[1], TContext::image_type);
+    dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "Magic number is not valid for {}{}{}", magic_number[0], magic_number[1], TContext::FormatDetails::image_type);
     return false;
 }
 
@@ -139,7 +138,7 @@ static bool read_width(TContext& context, Streamer& streamer)
         return false;
     }
 
-    context.state = TContext::Width;
+    context.state = TContext::State::Width;
     return true;
 }
 
@@ -151,25 +150,25 @@ static bool read_height(TContext& context, Streamer& streamer)
         return false;
     }
 
-    context.state = TContext::Height;
+    context.state = TContext::State::Height;
     return true;
 }
 
 template<typename TContext>
 static bool read_max_val(TContext& context, Streamer& streamer)
 {
-    if (const bool result = read_number(streamer, &context.max_val);
-        !result || context.max_val == 0) {
+    if (const bool result = read_number(streamer, &context.format_details.max_val);
+        !result || context.format_details.max_val == 0) {
         return false;
     }
 
-    if (context.max_val > 255) {
-        dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "We can't parse 2 byte color for {}", TContext::image_type);
-        context.state = TContext::Error;
+    if (context.format_details.max_val > 255) {
+        dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "We can't parse 2 byte color for {}", TContext::FormatDetails::image_type);
+        context.state = TContext::State::Error;
         return false;
     }
 
-    context.state = TContext::Maxval;
+    context.state = TContext::State::Maxval;
     return true;
 }
 
@@ -232,7 +231,7 @@ static bool decode(TContext& context)
     if (!read_whitespace(context, streamer))
         return false;
 
-    if constexpr (requires { context.max_val; }) {
+    if constexpr (requires { context.format_details.max_val; }) {
         if (!read_max_val(context, streamer))
             return false;
 
@@ -266,7 +265,7 @@ static RefPtr<Gfx::Bitmap> load_from_memory(u8 const* data, size_t length, Strin
 {
     auto bitmap = load_impl<TContext>(data, length);
     if (bitmap)
-        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded {}: {}", bitmap->size(), TContext::image_type, mmap_name));
+        bitmap->set_mmap_name(String::formatted("Gfx::Bitmap [{}] - Decoded {}: {}", bitmap->size(), TContext::FormatDetails::image_type, mmap_name));
     return bitmap;
 }
 

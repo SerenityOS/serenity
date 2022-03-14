@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +11,7 @@
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <sched.h>
@@ -38,7 +38,7 @@ static ErrorOr<int> perform_copy(Vector<StringView> const& sources, String const
 static ErrorOr<int> perform_move(Vector<StringView> const& sources, String const& destination);
 static ErrorOr<int> perform_delete(Vector<StringView> const& sources);
 static ErrorOr<int> execute_work_items(Vector<WorkItem> const& items);
-static ErrorOr<NonnullRefPtr<Core::File>> open_destination_file(String const& destination);
+static ErrorOr<NonnullOwnPtr<Core::Stream::File>> open_destination_file(String const& destination);
 static String deduplicate_destination_file_name(String const& destination);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -230,22 +230,23 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
         };
 
         auto copy_file = [&](String const& source, String const& destination) -> ErrorOr<int> {
-            auto source_file = TRY(Core::File::open(source, Core::OpenMode::ReadOnly));
+            auto source_file = TRY(Core::Stream::File::open(source, Core::Stream::OpenMode::Read));
             // FIXME: When the file already exists, let the user choose the next action instead of renaming it by default.
             auto destination_file = TRY(open_destination_file(destination));
+            auto buffer = TRY(ByteBuffer::create_zeroed(64 * KiB));
 
             while (true) {
                 print_progress();
-                auto buffer = source_file->read(65536);
-                if (buffer.is_empty())
+                auto bytes_read = TRY(source_file->read(buffer.bytes()));
+                if (bytes_read == 0)
                     break;
-                if (auto result = destination_file->write(buffer); !result) {
+                if (auto result = destination_file->write(buffer); result.is_error()) {
                     // FIXME: Return the formatted string directly. There is no way to do this right now without the temporary going out of scope and being destroyed.
-                    report_warning(String::formatted("Failed to write to destination file: {}", destination_file->error_string()));
-                    return result;
+                    report_warning(String::formatted("Failed to write to destination file: {}", result.error()));
+                    return result.error();
                 }
-                item_done += buffer.size();
-                executed_work_bytes += buffer.size();
+                item_done += bytes_read;
+                executed_work_bytes += bytes_read;
                 print_progress();
                 // FIXME: Remove this once the kernel is smart enough to schedule other threads
                 //        while we're doing heavy I/O. Right now, copying a large file will totally
@@ -326,9 +327,9 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
     return 0;
 }
 
-ErrorOr<NonnullRefPtr<Core::File>> open_destination_file(String const& destination)
+ErrorOr<NonnullOwnPtr<Core::Stream::File>> open_destination_file(String const& destination)
 {
-    auto destination_file_or_error = Core::File::open(destination, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate | Core::OpenMode::MustBeNew));
+    auto destination_file_or_error = Core::Stream::File::open(destination, (Core::Stream::OpenMode)(Core::Stream::OpenMode::Write | Core::Stream::OpenMode::Truncate | Core::Stream::OpenMode::MustBeNew));
     if (destination_file_or_error.is_error() && destination_file_or_error.error().code() == EEXIST) {
         return open_destination_file(deduplicate_destination_file_name(destination));
     }

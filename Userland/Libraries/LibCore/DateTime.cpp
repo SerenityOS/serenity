@@ -106,7 +106,9 @@ String DateTime::to_string(StringView format) const
     const int format_len = format.length();
 
     auto format_time_zone_offset = [&](bool with_separator) {
-#ifndef __FreeBSD__
+#if defined(__serenity__)
+        auto offset_seconds = daylight ? -altzone : -timezone;
+#elif !defined(__FreeBSD__)
         auto offset_seconds = -timezone;
 #else
         auto offset_seconds = 0;
@@ -251,7 +253,7 @@ String DateTime::to_string(StringView format) const
                 format_time_zone_offset(true);
                 break;
             case 'Z':
-                builder.append(tzname[0]);
+                builder.append(tzname[daylight]);
                 break;
             case '%':
                 builder.append('%');

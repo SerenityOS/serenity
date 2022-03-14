@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +18,7 @@ class Editor;
 
 class SuggestionDisplay {
 public:
-    virtual ~SuggestionDisplay() { }
+    virtual ~SuggestionDisplay() = default;
     virtual void display(SuggestionManager const&) = 0;
     virtual bool cleanup() = 0;
     virtual void finish() = 0;
@@ -62,7 +62,7 @@ public:
         , m_num_columns(columns)
     {
     }
-    virtual ~XtermSuggestionDisplay() override { }
+    virtual ~XtermSuggestionDisplay() override = default;
     virtual void display(SuggestionManager const&) override;
     virtual bool cleanup() override;
     virtual void finish() override

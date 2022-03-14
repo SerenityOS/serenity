@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -147,10 +148,6 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     update_paste_action();
 
     set_color_scheme(Config::read_string("Terminal", "Window", "ColorScheme", "Default"));
-}
-
-TerminalWidget::~TerminalWidget()
-{
 }
 
 Gfx::IntRect TerminalWidget::glyph_rect(u16 row, u16 column)

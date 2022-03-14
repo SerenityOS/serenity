@@ -1,5 +1,5 @@
---- zstd-1.5.1/programs/platform.h.orig	2022-01-08 01:30:53.468728340 +0000
-+++ zstd-1.5.1/programs/platform.h	2022-01-08 01:31:01.480646197 +0000
+--- zstd-1.5.2/programs/platform.h.orig	2022-01-08 01:30:53.468728340 +0000
++++ zstd-1.5.2/programs/platform.h	2022-01-08 01:31:01.480646197 +0000
 @@ -98,7 +98,11 @@
  #    endif
  #    include <unistd.h>  /* declares _POSIX_VERSION */
