@@ -165,7 +165,7 @@ private:
 
     OwnPtr<Memory::Region> m_buffer_descriptor_list;
     u8 m_buffer_descriptor_list_index { 0 };
-    AC97Revision m_codec_revision;
+    AC97Revision m_codec_revision { AC97Revision::Revision21OrEarlier };
     bool m_double_rate_pcm_enabled { false };
     IOAddress m_io_mixer_base;
     IOAddress m_io_bus_base;
