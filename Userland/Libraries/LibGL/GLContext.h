@@ -17,6 +17,7 @@
 #include <LibGL/Tex/NameAllocator.h>
 #include <LibGL/Tex/Texture.h>
 #include <LibGL/Tex/TextureUnit.h>
+#include <LibGPU/DeviceInfo.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
@@ -304,7 +305,7 @@ private:
     }
 
     SoftGPU::Device m_rasterizer;
-    SoftGPU::DeviceInfo const m_device_info;
+    GPU::DeviceInfo const m_device_info;
     bool m_sampler_config_is_dirty { true };
     bool m_light_state_is_dirty { true };
 

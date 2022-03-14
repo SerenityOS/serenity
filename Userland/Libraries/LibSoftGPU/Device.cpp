@@ -577,7 +577,7 @@ Device::Device(Gfx::IntSize const& size)
     m_options.viewport = m_frame_buffer->rect();
 }
 
-DeviceInfo Device::info() const
+GPU::DeviceInfo Device::info() const
 {
     return {
         .vendor_name = "SerenityOS",
