@@ -642,12 +642,13 @@ Bytecode::CodeGenerationErrorOr<void> WhileStatement::generate_bytecode(Bytecode
     generator.begin_continuable_scope(Bytecode::Label { test_block });
     generator.begin_breakable_scope(Bytecode::Label { end_block });
     TRY(m_body->generate_bytecode(generator));
+    generator.end_breakable_scope();
+    generator.end_continuable_scope();
+
     if (!generator.is_current_block_terminated()) {
         generator.emit<Bytecode::Op::Jump>().set_targets(
             Bytecode::Label { test_block },
             {});
-        generator.end_continuable_scope();
-        generator.end_breakable_scope();
         generator.switch_to_basic_block(end_block);
         generator.emit<Bytecode::Op::Load>(result_reg);
     }
@@ -687,12 +688,13 @@ Bytecode::CodeGenerationErrorOr<void> DoWhileStatement::generate_bytecode(Byteco
     generator.begin_continuable_scope(Bytecode::Label { test_block });
     generator.begin_breakable_scope(Bytecode::Label { end_block });
     TRY(m_body->generate_bytecode(generator));
+    generator.end_breakable_scope();
+    generator.end_continuable_scope();
+
     if (!generator.is_current_block_terminated()) {
         generator.emit<Bytecode::Op::Jump>().set_targets(
             Bytecode::Label { test_block },
             {});
-        generator.end_continuable_scope();
-        generator.end_breakable_scope();
         generator.switch_to_basic_block(end_block);
         generator.emit<Bytecode::Op::Load>(result_reg);
     }
@@ -756,6 +758,7 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_bytecode(Bytecode::
     generator.begin_continuable_scope(Bytecode::Label { *update_block_ptr });
     generator.begin_breakable_scope(Bytecode::Label { end_block });
     TRY(m_body->generate_bytecode(generator));
+    generator.end_breakable_scope();
     generator.end_continuable_scope();
 
     if (!generator.is_current_block_terminated()) {
@@ -772,7 +775,6 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_bytecode(Bytecode::
             Bytecode::Label { *test_block_ptr },
             {});
 
-        generator.end_breakable_scope();
         generator.switch_to_basic_block(end_block);
         generator.emit<Bytecode::Op::Load>(result_reg);
     }
