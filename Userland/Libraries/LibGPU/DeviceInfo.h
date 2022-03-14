@@ -8,7 +8,7 @@
 
 #include <AK/String.h>
 
-namespace SoftGPU {
+namespace GPU {
 
 struct DeviceInfo final {
     String vendor_name;
