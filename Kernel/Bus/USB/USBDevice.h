@@ -52,9 +52,9 @@ protected:
     u8 m_address { 0 };         // USB address assigned to this device
 
     // Device description
-    u16 m_vendor_id { 0 };                   // This device's vendor ID assigned by the USB group
-    u16 m_product_id { 0 };                  // This device's product ID assigned by the USB group
-    USBDeviceDescriptor m_device_descriptor; // Device Descriptor obtained from USB Device
+    u16 m_vendor_id { 0 };                      // This device's vendor ID assigned by the USB group
+    u16 m_product_id { 0 };                     // This device's product ID assigned by the USB group
+    USBDeviceDescriptor m_device_descriptor {}; // Device Descriptor obtained from USB Device
 
     NonnullRefPtr<USBController> m_controller;
     NonnullOwnPtr<Pipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration
