@@ -127,11 +127,12 @@ ThrowCompletionOr<void> NewBigInt::execute_impl(Bytecode::Interpreter& interpret
 
 ThrowCompletionOr<void> NewArray::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    Vector<Value> elements;
-    elements.ensure_capacity(m_element_count);
-    for (size_t i = 0; i < m_element_count; i++)
-        elements.append(interpreter.reg(m_elements[i]));
-    interpreter.accumulator() = Array::create_from(interpreter.global_object(), elements);
+    auto* array = MUST(Array::create(interpreter.global_object(), 0));
+    for (size_t i = 0; i < m_element_count; i++) {
+        auto& value = interpreter.reg(m_elements[i]);
+        array->indexed_properties().put(i, value, default_attributes);
+    }
+    interpreter.accumulator() = array;
     return {};
 }
 
