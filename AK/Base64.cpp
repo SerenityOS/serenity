@@ -13,24 +13,19 @@
 
 namespace AK {
 
-static constexpr auto make_alphabet()
-{
-    Array alphabet = {
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
-        'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-        'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
-        'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
-        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-        'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
-        'w', 'x', 'y', 'z', '0', '1', '2', '3',
-        '4', '5', '6', '7', '8', '9', '+', '/'
-    };
-    return alphabet;
-}
+static constexpr Array alphabet = {
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+    'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+    'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+    'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+    'w', 'x', 'y', 'z', '0', '1', '2', '3',
+    '4', '5', '6', '7', '8', '9', '+', '/'
+};
 
-static constexpr auto make_lookup_table()
+static consteval auto make_lookup_table()
 {
-    constexpr auto alphabet = make_alphabet();
     Array<i16, 256> table;
     table.fill(-1);
     for (size_t i = 0; i < alphabet.size(); ++i) {
@@ -38,6 +33,8 @@ static constexpr auto make_lookup_table()
     }
     return table;
 }
+
+static constexpr auto alphabet_lookup_table = make_lookup_table();
 
 size_t calculate_base64_decoded_length(StringView input)
 {
@@ -52,7 +49,6 @@ size_t calculate_base64_encoded_length(ReadonlyBytes input)
 ErrorOr<ByteBuffer> decode_base64(StringView input)
 {
     auto get = [&](size_t& offset, bool* is_padding, bool& parsed_something) -> ErrorOr<u8> {
-        constexpr auto table = make_lookup_table();
         while (offset < input.length() && is_ascii_space(input[offset]))
             ++offset;
         if (offset >= input.length())
@@ -65,7 +61,7 @@ ErrorOr<ByteBuffer> decode_base64(StringView input)
             *is_padding = true;
             return 0;
         }
-        i16 result = table[ch];
+        i16 result = alphabet_lookup_table[ch];
         if (result < 0)
             return Error::from_string_literal("Invalid character in base64 data");
         VERIFY(result < 256);
@@ -106,7 +102,6 @@ ErrorOr<ByteBuffer> decode_base64(StringView input)
 
 String encode_base64(ReadonlyBytes input)
 {
-    constexpr auto alphabet = make_alphabet();
     StringBuilder output(calculate_base64_encoded_length(input));
 
     auto get = [&](const size_t offset, bool* need_padding = nullptr) -> u8 {
