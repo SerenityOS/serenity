@@ -616,7 +616,7 @@ void Node::set_needs_style_update(bool value)
     m_needs_style_update = value;
 
     if (m_needs_style_update) {
-        for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+        for (auto* ancestor = parent_or_shadow_host(); ancestor; ancestor = ancestor->parent_or_shadow_host()) {
             ancestor->m_child_needs_style_update = true;
         }
         document().schedule_style_update();
