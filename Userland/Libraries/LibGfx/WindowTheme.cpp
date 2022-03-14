@@ -15,8 +15,4 @@ WindowTheme& WindowTheme::current()
     return theme;
 }
 
-WindowTheme::~WindowTheme()
-{
-}
-
 }

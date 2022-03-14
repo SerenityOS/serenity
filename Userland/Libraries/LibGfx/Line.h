@@ -19,7 +19,7 @@ namespace Gfx {
 template<typename T>
 class Line {
 public:
-    Line() { }
+    Line() = default;
 
     Line(Point<T> a, Point<T> b)
         : m_a(a)

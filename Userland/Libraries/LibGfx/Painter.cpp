@@ -72,10 +72,6 @@ Painter::Painter(Gfx::Bitmap& bitmap)
     m_clip_origin = state().clip_rect;
 }
 
-Painter::~Painter()
-{
-}
-
 void Painter::fill_rect_with_draw_op(IntRect const& a_rect, Color color)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.

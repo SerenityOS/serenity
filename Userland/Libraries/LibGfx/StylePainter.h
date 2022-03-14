@@ -34,7 +34,7 @@ enum class FrameShape {
 // FIXME: should this be in its own header?
 class BaseStylePainter {
 public:
-    virtual ~BaseStylePainter() { }
+    virtual ~BaseStylePainter() = default;
 
     virtual void paint_button(Painter&, IntRect const&, Palette const&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true, bool focused = false, bool default_button = false) = 0;
     virtual void paint_tab_button(Painter&, IntRect const&, Palette const&, bool active, bool hovered, bool enabled, bool top, bool in_active_window) = 0;
@@ -47,7 +47,7 @@ public:
     virtual void paint_simple_rect_shadow(Painter&, IntRect const&, Bitmap const& shadow_bitmap, bool shadow_includes_frame = false, bool fill_content = false) = 0;
 
 protected:
-    BaseStylePainter() { }
+    BaseStylePainter() = default;
 };
 
 class StylePainter {

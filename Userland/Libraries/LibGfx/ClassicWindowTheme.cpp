@@ -16,14 +16,6 @@ namespace Gfx {
 
 static constexpr int menubar_height = 20;
 
-ClassicWindowTheme::ClassicWindowTheme()
-{
-}
-
-ClassicWindowTheme::~ClassicWindowTheme()
-{
-}
-
 Gfx::IntRect ClassicWindowTheme::titlebar_icon_rect(WindowType window_type, const IntRect& window_rect, const Palette& palette) const
 {
     if (window_type == WindowType::ToolWindow)

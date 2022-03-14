@@ -79,8 +79,4 @@ ImageDecoder::ImageDecoder(NonnullOwnPtr<ImageDecoderPlugin> plugin)
 {
 }
 
-ImageDecoder::~ImageDecoder()
-{
-}
-
 }

@@ -143,7 +143,7 @@ private:
 
 class Path {
 public:
-    Path() { }
+    Path() = default;
 
     void move_to(const FloatPoint& point)
     {

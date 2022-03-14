@@ -17,9 +17,9 @@ public:
     public:
         virtual bool is_generic_convolution_filter() const { return false; }
 
-        virtual ~Parameters() { }
+        virtual ~Parameters() = default;
     };
-    virtual ~Filter() { }
+    virtual ~Filter() = default;
 
     virtual const char* class_name() const = 0;
 
@@ -27,7 +27,7 @@ public:
     virtual void apply(Bitmap&, IntRect const&, Bitmap const&, IntRect const&) {};
 
 protected:
-    Filter() { }
+    Filter() = default;
 };
 
 }

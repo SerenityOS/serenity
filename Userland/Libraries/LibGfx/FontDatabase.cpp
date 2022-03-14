@@ -119,10 +119,6 @@ FontDatabase::FontDatabase()
     }
 }
 
-FontDatabase::~FontDatabase()
-{
-}
-
 void FontDatabase::for_each_font(Function<void(const Gfx::Font&)> callback)
 {
     Vector<RefPtr<Gfx::Font>> fonts;

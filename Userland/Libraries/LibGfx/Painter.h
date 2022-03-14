@@ -26,7 +26,7 @@ namespace Gfx {
 class Painter {
 public:
     explicit Painter(Gfx::Bitmap&);
-    ~Painter();
+    ~Painter() = default;
 
     enum class LineStyle {
         Solid,

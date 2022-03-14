@@ -13,8 +13,8 @@ namespace Gfx {
 template<size_t N>
 class BoxBlurFilter : public GenericConvolutionFilter<N> {
 public:
-    BoxBlurFilter() { }
-    virtual ~BoxBlurFilter() { }
+    BoxBlurFilter() = default;
+    virtual ~BoxBlurFilter() = default;
 
     virtual const char* class_name() const override { return "BoxBlurFilter"; }
 };

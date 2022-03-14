@@ -12,8 +12,8 @@ namespace Gfx {
 
 class InvertFilter : public ColorFilter {
 public:
-    InvertFilter() { }
-    virtual ~InvertFilter() { }
+    InvertFilter() = default;
+    virtual ~InvertFilter() = default;
 
     virtual char const* class_name() const override { return "InvertFilter"; }
 

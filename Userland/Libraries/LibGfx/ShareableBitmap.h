@@ -14,7 +14,7 @@ namespace Gfx {
 
 class ShareableBitmap {
 public:
-    ShareableBitmap() { }
+    ShareableBitmap() = default;
 
     enum Tag { ConstructWithKnownGoodBitmap };
     ShareableBitmap(NonnullRefPtr<Gfx::Bitmap>, Tag);
