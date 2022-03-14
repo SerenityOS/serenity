@@ -37,9 +37,7 @@ InProcessWebView::InProcessWebView()
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 }
 
-InProcessWebView::~InProcessWebView()
-{
-}
+InProcessWebView::~InProcessWebView() = default;
 
 void InProcessWebView::select_all()
 {

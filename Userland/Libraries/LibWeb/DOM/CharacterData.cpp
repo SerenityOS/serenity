@@ -15,10 +15,6 @@ CharacterData::CharacterData(Document& document, NodeType type, const String& da
 {
 }
 
-CharacterData::~CharacterData()
-{
-}
-
 void CharacterData::set_data(String data)
 {
     if (m_data == data)

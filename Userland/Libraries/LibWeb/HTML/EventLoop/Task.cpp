@@ -16,9 +16,7 @@ Task::Task(Source source, DOM::Document* document, Function<void()> steps)
 {
 }
 
-Task::~Task()
-{
-}
+Task::~Task() = default;
 
 void Task::execute()
 {

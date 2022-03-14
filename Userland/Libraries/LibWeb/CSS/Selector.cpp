@@ -25,10 +25,6 @@ Selector::Selector(Vector<CompoundSelector>&& compound_selectors)
     }
 }
 
-Selector::~Selector()
-{
-}
-
 // https://www.w3.org/TR/selectors-4/#specificity-rules
 u32 Selector::specificity() const
 {

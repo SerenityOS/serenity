@@ -13,8 +13,6 @@ HTMLOListElement::HTMLOListElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLOListElement::~HTMLOListElement()
-{
-}
+HTMLOListElement::~HTMLOListElement() = default;
 
 }

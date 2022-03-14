@@ -13,8 +13,5 @@ HTMLFrameSetElement::HTMLFrameSetElement(DOM::Document& document, DOM::Qualified
 {
 }
 
-HTMLFrameSetElement::~HTMLFrameSetElement()
-{
-}
-
+HTMLFrameSetElement::~HTMLFrameSetElement() = default;
 }

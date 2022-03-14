@@ -29,10 +29,6 @@ void AudioConstructor::initialize(JS::GlobalObject& global_object)
     define_direct_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
 }
 
-AudioConstructor::~AudioConstructor()
-{
-}
-
 JS::ThrowCompletionOr<JS::Value> AudioConstructor::call()
 {
     return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "Audio");

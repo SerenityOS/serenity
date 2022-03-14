@@ -13,8 +13,5 @@ HTMLFieldSetElement::HTMLFieldSetElement(DOM::Document& document, DOM::Qualified
 {
 }
 
-HTMLFieldSetElement::~HTMLFieldSetElement()
-{
-}
-
+HTMLFieldSetElement::~HTMLFieldSetElement() = default;
 }

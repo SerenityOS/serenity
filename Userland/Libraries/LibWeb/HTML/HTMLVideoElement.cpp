@@ -13,8 +13,6 @@ HTMLVideoElement::HTMLVideoElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLVideoElement::~HTMLVideoElement()
-{
-}
+HTMLVideoElement::~HTMLVideoElement() = default;
 
 }

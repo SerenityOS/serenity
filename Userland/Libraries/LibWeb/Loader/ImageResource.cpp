@@ -15,9 +15,7 @@ ImageResource::ImageResource(const LoadRequest& request)
 {
 }
 
-ImageResource::~ImageResource()
-{
-}
+ImageResource::~ImageResource() = default;
 
 int ImageResource::frame_duration(size_t frame_index) const
 {
@@ -97,8 +95,6 @@ void ImageResource::update_volatility()
     m_has_attempted_decode = false;
 }
 
-ImageResourceClient::~ImageResourceClient()
-{
-}
+ImageResourceClient::~ImageResourceClient() = default;
 
 }

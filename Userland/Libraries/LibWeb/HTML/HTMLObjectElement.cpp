@@ -35,9 +35,7 @@ HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName
     };
 }
 
-HTMLObjectElement::~HTMLObjectElement()
-{
-}
+HTMLObjectElement::~HTMLObjectElement() = default;
 
 void HTMLObjectElement::parse_attribute(const FlyString& name, const String& value)
 {

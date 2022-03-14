@@ -22,7 +22,7 @@ class CSSRule
 public:
     using WrapperType = Bindings::CSSRuleWrapper;
 
-    virtual ~CSSRule();
+    virtual ~CSSRule() = default;
 
     enum class Type : u32 {
         Style,

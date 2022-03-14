@@ -14,10 +14,6 @@ DocumentFragment::DocumentFragment(Document& document)
 {
 }
 
-DocumentFragment::~DocumentFragment()
-{
-}
-
 // https://dom.spec.whatwg.org/#dom-documentfragment-documentfragment
 NonnullRefPtr<DocumentFragment> DocumentFragment::create_with_global_object(Bindings::WindowObject& window)
 {

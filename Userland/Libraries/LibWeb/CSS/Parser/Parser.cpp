@@ -71,11 +71,6 @@ TokenStream<T>::TokenStream(Vector<T> const& tokens)
 }
 
 template<typename T>
-TokenStream<T>::~TokenStream()
-{
-}
-
-template<typename T>
 bool TokenStream<T>::has_next_token()
 {
     return (size_t)(m_iterator_offset + 1) < m_tokens.size();
@@ -161,10 +156,6 @@ Parser::Parser(ParsingContext const& context, StringView input, String const& en
     , m_tokenizer(input, encoding)
     , m_tokens(m_tokenizer.parse())
     , m_token_stream(TokenStream(m_tokens))
-{
-}
-
-Parser::~Parser()
 {
 }
 

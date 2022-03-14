@@ -23,9 +23,7 @@ StylePropertiesModel::StylePropertiesModel(JsonObject properties)
     quick_sort(m_values, [](auto& a, auto& b) { return a.name < b.name; });
 }
 
-StylePropertiesModel::~StylePropertiesModel()
-{
-}
+StylePropertiesModel::~StylePropertiesModel() = default;
 
 int StylePropertiesModel::row_count(GUI::ModelIndex const&) const
 {

@@ -12,9 +12,7 @@ namespace Web::HTML {
 
 static Vector<FlyString> s_base_list { "applet", "caption", "html", "table", "td", "th", "marquee", "object", "template" };
 
-StackOfOpenElements::~StackOfOpenElements()
-{
-}
+StackOfOpenElements::~StackOfOpenElements() = default;
 
 bool StackOfOpenElements::has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>& list) const
 {

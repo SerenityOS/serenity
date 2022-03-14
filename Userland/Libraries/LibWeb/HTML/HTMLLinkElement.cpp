@@ -21,9 +21,7 @@ HTMLLinkElement::HTMLLinkElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLLinkElement::~HTMLLinkElement()
-{
-}
+HTMLLinkElement::~HTMLLinkElement() = default;
 
 void HTMLLinkElement::inserted()
 {

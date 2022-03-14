@@ -33,9 +33,7 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
     };
 }
 
-HTMLInputElement::~HTMLInputElement()
-{
-}
+HTMLInputElement::~HTMLInputElement() = default;
 
 RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {

@@ -24,9 +24,7 @@
 
 namespace Web::Layout {
 
-TreeBuilder::TreeBuilder()
-{
-}
+TreeBuilder::TreeBuilder() = default;
 
 // The insertion_parent_for_*() functions maintain the invariant that block-level boxes must have either
 // only block-level children or only inline-level children.

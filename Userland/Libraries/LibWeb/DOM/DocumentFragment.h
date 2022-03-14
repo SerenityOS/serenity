@@ -22,7 +22,7 @@ public:
     static NonnullRefPtr<DocumentFragment> create_with_global_object(Bindings::WindowObject& window);
 
     explicit DocumentFragment(Document& document);
-    virtual ~DocumentFragment() override;
+    virtual ~DocumentFragment() override = default;
 
     virtual FlyString node_name() const override { return "#document-fragment"; }
 

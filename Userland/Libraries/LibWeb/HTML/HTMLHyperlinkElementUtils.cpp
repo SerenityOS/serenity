@@ -10,9 +10,7 @@
 
 namespace Web::HTML {
 
-HTMLHyperlinkElementUtils::~HTMLHyperlinkElementUtils()
-{
-}
+HTMLHyperlinkElementUtils::~HTMLHyperlinkElementUtils() = default;
 
 // https://html.spec.whatwg.org/multipage/links.html#reinitialise-url
 void HTMLHyperlinkElementUtils::reinitialize_url() const

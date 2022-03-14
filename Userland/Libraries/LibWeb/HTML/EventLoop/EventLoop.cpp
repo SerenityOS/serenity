@@ -23,9 +23,7 @@ EventLoop::EventLoop()
 {
 }
 
-EventLoop::~EventLoop()
-{
-}
+EventLoop::~EventLoop() = default;
 
 void EventLoop::schedule()
 {

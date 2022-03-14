@@ -20,9 +20,7 @@ Label::Label(DOM::Document& document, HTML::HTMLLabelElement* element, NonnullRe
 {
 }
 
-Label::~Label()
-{
-}
+Label::~Label() = default;
 
 void Label::handle_mousedown_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint const&, unsigned button)
 {

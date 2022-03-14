@@ -49,9 +49,7 @@ ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType
     }
 }
 
-ListItemMarkerBox::~ListItemMarkerBox()
-{
-}
+ListItemMarkerBox::~ListItemMarkerBox() = default;
 
 Gfx::Bitmap const* ListItemMarkerBox::list_style_image_bitmap() const
 {

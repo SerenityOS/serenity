@@ -13,8 +13,6 @@ HTMLTrackElement::HTMLTrackElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLTrackElement::~HTMLTrackElement()
-{
-}
+HTMLTrackElement::~HTMLTrackElement() = default;
 
 }

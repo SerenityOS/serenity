@@ -30,10 +30,6 @@ StyleComputer::StyleComputer(DOM::Document& document)
 {
 }
 
-StyleComputer::~StyleComputer()
-{
-}
-
 static StyleSheet& default_stylesheet()
 {
     static StyleSheet* sheet;

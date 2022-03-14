@@ -100,9 +100,7 @@ WebSocket::WebSocket(HTML::Window& window, AK::URL& url)
     };
 }
 
-WebSocket::~WebSocket()
-{
-}
+WebSocket::~WebSocket() = default;
 
 // https://websockets.spec.whatwg.org/#dom-websocket-readystate
 WebSocket::ReadyState WebSocket::ready_state() const

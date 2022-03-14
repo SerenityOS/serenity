@@ -15,9 +15,7 @@ Page::Page(PageClient& client)
     m_top_level_browsing_context = HTML::BrowsingContext::create(*this);
 }
 
-Page::~Page()
-{
-}
+Page::~Page() = default;
 
 HTML::BrowsingContext& Page::focused_context()
 {

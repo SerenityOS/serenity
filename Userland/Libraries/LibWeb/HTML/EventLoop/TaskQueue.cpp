@@ -14,9 +14,7 @@ TaskQueue::TaskQueue(HTML::EventLoop& event_loop)
 {
 }
 
-TaskQueue::~TaskQueue()
-{
-}
+TaskQueue::~TaskQueue() = default;
 
 void TaskQueue::add(NonnullOwnPtr<Task> task)
 {

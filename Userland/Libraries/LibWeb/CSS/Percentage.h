@@ -60,7 +60,7 @@ public:
     {
     }
 
-    virtual ~PercentageOr() { }
+    virtual ~PercentageOr() = default;
 
     PercentageOr<T>& operator=(T t)
     {

@@ -15,7 +15,7 @@ class Range final : public AbstractRange {
 public:
     using WrapperType = Bindings::RangeWrapper;
 
-    virtual ~Range() override;
+    virtual ~Range() override = default;
 
     static NonnullRefPtr<Range> create(Document&);
     static NonnullRefPtr<Range> create(HTML::Window&);

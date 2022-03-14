@@ -35,9 +35,7 @@ BrowsingContext::BrowsingContext(Page& page, HTML::BrowsingContextContainer* con
     });
 }
 
-BrowsingContext::~BrowsingContext()
-{
-}
+BrowsingContext::~BrowsingContext() = default;
 
 void BrowsingContext::did_edit(Badge<EditEventHandler>)
 {

@@ -15,7 +15,7 @@ namespace Web::DOM {
 
 class Position {
 public:
-    Position() { }
+    Position() = default;
     Position(Node&, unsigned offset);
 
     bool is_valid() const { return m_node; }

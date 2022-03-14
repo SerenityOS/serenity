@@ -132,7 +132,7 @@ public:
         return adopt_ref(*new Selector(move(compound_selectors)));
     }
 
-    ~Selector();
+    ~Selector() = default;
 
     Vector<CompoundSelector> const& compound_selectors() const { return m_compound_selectors; }
     Optional<PseudoElement> pseudo_element() const { return m_pseudo_element; }

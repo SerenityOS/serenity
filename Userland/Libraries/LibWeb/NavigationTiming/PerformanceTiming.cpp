@@ -13,8 +13,6 @@ PerformanceTiming::PerformanceTiming(HTML::Window& window)
 {
 }
 
-PerformanceTiming::~PerformanceTiming()
-{
-}
+PerformanceTiming::~PerformanceTiming() = default;
 
 }

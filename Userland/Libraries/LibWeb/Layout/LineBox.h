@@ -13,7 +13,7 @@ namespace Web::Layout {
 
 class LineBox {
 public:
-    LineBox() { }
+    LineBox() = default;
 
     float width() const { return m_width; }
     float bottom() const { return m_bottom; }

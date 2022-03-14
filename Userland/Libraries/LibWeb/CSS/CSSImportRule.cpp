@@ -28,10 +28,6 @@ CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 }
 
-CSSImportRule::~CSSImportRule()
-{
-}
-
 // https://www.w3.org/TR/cssom/#serialize-a-css-rule
 String CSSImportRule::serialized() const
 {

@@ -27,7 +27,7 @@ public:
         return adopt_ref(*new CSSStyleRule(move(selectors), move(declaration)));
     }
 
-    virtual ~CSSStyleRule() override;
+    virtual ~CSSStyleRule() override = default;
 
     const NonnullRefPtrVector<Selector>& selectors() const { return m_selectors; }
     const CSSStyleDeclaration& declaration() const { return m_declaration; }

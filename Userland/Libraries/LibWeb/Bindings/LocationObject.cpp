@@ -53,10 +53,6 @@ void LocationObject::initialize(JS::GlobalObject& global_object)
     m_default_properties.extend(MUST(Object::internal_own_property_keys()));
 }
 
-LocationObject::~LocationObject()
-{
-}
-
 // https://html.spec.whatwg.org/multipage/history.html#relevant-document
 DOM::Document const* LocationObject::relevant_document() const
 {

@@ -16,9 +16,7 @@ InitialContainingBlock::InitialContainingBlock(DOM::Document& document, NonnullR
 {
 }
 
-InitialContainingBlock::~InitialContainingBlock()
-{
-}
+InitialContainingBlock::~InitialContainingBlock() = default;
 
 void InitialContainingBlock::build_stacking_context_tree()
 {

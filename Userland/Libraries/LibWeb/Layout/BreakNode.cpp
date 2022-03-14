@@ -16,8 +16,6 @@ BreakNode::BreakNode(DOM::Document& document, HTML::HTMLBRElement& element, Nonn
     set_inline(true);
 }
 
-BreakNode::~BreakNode()
-{
-}
+BreakNode::~BreakNode() = default;
 
 }

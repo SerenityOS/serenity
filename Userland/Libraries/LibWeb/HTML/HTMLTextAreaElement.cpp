@@ -13,8 +13,6 @@ HTMLTextAreaElement::HTMLTextAreaElement(DOM::Document& document, DOM::Qualified
 {
 }
 
-HTMLTextAreaElement::~HTMLTextAreaElement()
-{
-}
+HTMLTextAreaElement::~HTMLTextAreaElement() = default;
 
 }

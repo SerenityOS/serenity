@@ -14,9 +14,7 @@ HTMLTableCellElement::HTMLTableCellElement(DOM::Document& document, DOM::Qualifi
 {
 }
 
-HTMLTableCellElement::~HTMLTableCellElement()
-{
-}
+HTMLTableCellElement::~HTMLTableCellElement() = default;
 
 void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {

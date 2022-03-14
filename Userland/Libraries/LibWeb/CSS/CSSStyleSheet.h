@@ -29,7 +29,7 @@ public:
         return adopt_ref(*new CSSStyleSheet(move(rules)));
     }
 
-    virtual ~CSSStyleSheet() override;
+    virtual ~CSSStyleSheet() override = default;
 
     void set_owner_css_rule(CSSRule* rule) { m_owner_css_rule = rule; }
 

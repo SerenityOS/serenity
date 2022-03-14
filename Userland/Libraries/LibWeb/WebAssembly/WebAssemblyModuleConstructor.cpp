@@ -19,9 +19,7 @@ WebAssemblyModuleConstructor::WebAssemblyModuleConstructor(JS::GlobalObject& glo
 {
 }
 
-WebAssemblyModuleConstructor::~WebAssemblyModuleConstructor()
-{
-}
+WebAssemblyModuleConstructor::~WebAssemblyModuleConstructor() = default;
 
 JS::ThrowCompletionOr<JS::Value> WebAssemblyModuleConstructor::call()
 {

@@ -14,8 +14,6 @@ Script::Script(AK::URL base_url, String filename)
 {
 }
 
-Script::~Script()
-{
-}
+Script::~Script() = default;
 
 }

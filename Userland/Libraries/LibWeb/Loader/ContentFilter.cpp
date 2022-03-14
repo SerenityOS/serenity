@@ -15,13 +15,9 @@ ContentFilter& ContentFilter::the()
     return filter;
 }
 
-ContentFilter::ContentFilter()
-{
-}
+ContentFilter::ContentFilter() = default;
 
-ContentFilter::~ContentFilter()
-{
-}
+ContentFilter::~ContentFilter() = default;
 
 bool ContentFilter::is_filtered(const AK::URL& url) const
 {

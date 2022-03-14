@@ -13,8 +13,5 @@ HTMLDataElement::HTMLDataElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLDataElement::~HTMLDataElement()
-{
-}
-
+HTMLDataElement::~HTMLDataElement() = default;
 }

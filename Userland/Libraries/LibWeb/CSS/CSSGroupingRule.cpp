@@ -14,10 +14,6 @@ CSSGroupingRule::CSSGroupingRule(NonnullRefPtrVector<CSSRule>&& rules)
 {
 }
 
-CSSGroupingRule::~CSSGroupingRule()
-{
-}
-
 size_t CSSGroupingRule::insert_rule(StringView, size_t)
 {
     // https://www.w3.org/TR/cssom-1/#insert-a-css-rule

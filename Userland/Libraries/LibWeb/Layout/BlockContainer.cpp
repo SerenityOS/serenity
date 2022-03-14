@@ -19,9 +19,7 @@ BlockContainer::BlockContainer(DOM::Document& document, DOM::Node* node, CSS::Co
 {
 }
 
-BlockContainer::~BlockContainer()
-{
-}
+BlockContainer::~BlockContainer() = default;
 
 bool BlockContainer::is_scrollable() const
 {

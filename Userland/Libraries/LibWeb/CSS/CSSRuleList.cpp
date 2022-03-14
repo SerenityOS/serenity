@@ -18,10 +18,6 @@ CSSRuleList::CSSRuleList(NonnullRefPtrVector<CSSRule>&& rules)
 {
 }
 
-CSSRuleList::~CSSRuleList()
-{
-}
-
 bool CSSRuleList::is_supported_property_index(u32 index) const
 {
     // The object’s supported property indices are the numbers in the range zero to one less than the number of CSSRule objects represented by the collection.

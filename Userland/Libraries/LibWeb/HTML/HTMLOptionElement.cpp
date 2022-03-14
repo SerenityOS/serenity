@@ -13,8 +13,6 @@ HTMLOptionElement::HTMLOptionElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-HTMLOptionElement::~HTMLOptionElement()
-{
-}
+HTMLOptionElement::~HTMLOptionElement() = default;
 
 }

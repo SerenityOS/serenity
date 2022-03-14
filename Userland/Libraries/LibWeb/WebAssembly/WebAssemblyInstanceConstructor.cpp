@@ -19,9 +19,7 @@ WebAssemblyInstanceConstructor::WebAssemblyInstanceConstructor(JS::GlobalObject&
 {
 }
 
-WebAssemblyInstanceConstructor::~WebAssemblyInstanceConstructor()
-{
-}
+WebAssemblyInstanceConstructor::~WebAssemblyInstanceConstructor() = default;
 
 JS::ThrowCompletionOr<JS::Value> WebAssemblyInstanceConstructor::call()
 {

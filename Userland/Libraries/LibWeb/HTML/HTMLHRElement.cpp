@@ -13,8 +13,5 @@ HTMLHRElement::HTMLHRElement(DOM::Document& document, DOM::QualifiedName qualifi
 {
 }
 
-HTMLHRElement::~HTMLHRElement()
-{
-}
-
+HTMLHRElement::~HTMLHRElement() = default;
 }

@@ -19,7 +19,7 @@ class CSSGroupingRule : public CSSRule {
     AK_MAKE_NONMOVABLE(CSSGroupingRule);
 
 public:
-    ~CSSGroupingRule();
+    ~CSSGroupingRule() = default;
 
     CSSRuleList const& css_rules() const { return m_rules; }
     CSSRuleList& css_rules() { return m_rules; }

@@ -34,9 +34,7 @@ HTMLElement::HTMLElement(DOM::Document& document, DOM::QualifiedName qualified_n
 {
 }
 
-HTMLElement::~HTMLElement()
-{
-}
+HTMLElement::~HTMLElement() = default;
 
 HTMLElement::ContentEditableState HTMLElement::content_editable_state() const
 {

@@ -16,10 +16,6 @@ Text::Text(Document& document, const String& data)
 {
 }
 
-Text::~Text()
-{
-}
-
 // https://dom.spec.whatwg.org/#dom-text-text
 NonnullRefPtr<Text> Text::create_with_global_object(Bindings::WindowObject& window, String const& data)
 {

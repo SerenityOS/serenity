@@ -13,8 +13,6 @@ HTMLOptGroupElement::HTMLOptGroupElement(DOM::Document& document, DOM::Qualified
 {
 }
 
-HTMLOptGroupElement::~HTMLOptGroupElement()
-{
-}
+HTMLOptGroupElement::~HTMLOptGroupElement() = default;
 
 }

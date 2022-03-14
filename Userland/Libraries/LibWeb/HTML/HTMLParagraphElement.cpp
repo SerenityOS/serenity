@@ -13,8 +13,6 @@ HTMLParagraphElement::HTMLParagraphElement(DOM::Document& document, DOM::Qualifi
 {
 }
 
-HTMLParagraphElement::~HTMLParagraphElement()
-{
-}
+HTMLParagraphElement::~HTMLParagraphElement() = default;
 
 }

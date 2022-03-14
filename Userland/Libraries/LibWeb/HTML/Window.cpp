@@ -121,9 +121,7 @@ Window::Window(DOM::Document& document)
 {
 }
 
-Window::~Window()
-{
-}
+Window::~Window() = default;
 
 void Window::set_wrapper(Badge<Bindings::WindowObject>, Bindings::WindowObject& wrapper)
 {

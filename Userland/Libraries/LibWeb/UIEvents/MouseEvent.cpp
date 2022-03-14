@@ -20,9 +20,7 @@ MouseEvent::MouseEvent(const FlyString& event_name, double offset_x, double offs
     set_event_characteristics();
 }
 
-MouseEvent::~MouseEvent()
-{
-}
+MouseEvent::~MouseEvent() = default;
 
 void MouseEvent::set_event_characteristics()
 {

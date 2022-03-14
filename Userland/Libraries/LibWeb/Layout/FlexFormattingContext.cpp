@@ -39,9 +39,7 @@ FlexFormattingContext::FlexFormattingContext(FormattingState& state, Box const& 
 {
 }
 
-FlexFormattingContext::~FlexFormattingContext()
-{
-}
+FlexFormattingContext::~FlexFormattingContext() = default;
 
 void FlexFormattingContext::run(Box const& run_box, LayoutMode)
 {

@@ -13,9 +13,7 @@ HTMLMarqueeElement::HTMLMarqueeElement(DOM::Document& document, DOM::QualifiedNa
 {
 }
 
-HTMLMarqueeElement::~HTMLMarqueeElement()
-{
-}
+HTMLMarqueeElement::~HTMLMarqueeElement() = default;
 
 void HTMLMarqueeElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {

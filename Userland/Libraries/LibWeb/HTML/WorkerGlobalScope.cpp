@@ -25,7 +25,7 @@ WorkerGlobalScope::WorkerGlobalScope()
 {
 }
 
-WorkerGlobalScope::~WorkerGlobalScope() { }
+WorkerGlobalScope::~WorkerGlobalScope() = default;
 
 // https://html.spec.whatwg.org/multipage/workers.html#importing-scripts-and-libraries
 DOM::ExceptionOr<void> WorkerGlobalScope::import_scripts(Vector<String> urls)

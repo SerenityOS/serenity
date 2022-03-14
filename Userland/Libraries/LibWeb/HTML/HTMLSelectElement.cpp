@@ -16,9 +16,7 @@ HTMLSelectElement::HTMLSelectElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-HTMLSelectElement::~HTMLSelectElement()
-{
-}
+HTMLSelectElement::~HTMLSelectElement() = default;
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-options
 RefPtr<HTMLOptionsCollection> const& HTMLSelectElement::options()

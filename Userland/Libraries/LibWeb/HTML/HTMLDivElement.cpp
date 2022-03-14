@@ -13,8 +13,5 @@ HTMLDivElement::HTMLDivElement(DOM::Document& document, DOM::QualifiedName quali
 {
 }
 
-HTMLDivElement::~HTMLDivElement()
-{
-}
-
+HTMLDivElement::~HTMLDivElement() = default;
 }

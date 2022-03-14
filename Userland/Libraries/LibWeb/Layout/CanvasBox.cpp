@@ -15,9 +15,7 @@ CanvasBox::CanvasBox(DOM::Document& document, HTML::HTMLCanvasElement& element, 
 {
 }
 
-CanvasBox::~CanvasBox()
-{
-}
+CanvasBox::~CanvasBox() = default;
 
 void CanvasBox::prepare_for_replaced_layout()
 {

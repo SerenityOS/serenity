@@ -23,7 +23,7 @@ public:
         return adopt_ref(*new CSSMediaRule(move(media_queries), move(rules)));
     }
 
-    ~CSSMediaRule();
+    ~CSSMediaRule() = default;
 
     virtual StringView class_name() const override { return "CSSMediaRule"; };
     virtual Type type() const override { return Type::Media; };

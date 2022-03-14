@@ -48,7 +48,7 @@ private:
 class StyleComputer {
 public:
     explicit StyleComputer(DOM::Document&);
-    ~StyleComputer();
+    ~StyleComputer() = default;
 
     DOM::Document& document() { return m_document; }
     DOM::Document const& document() const { return m_document; }

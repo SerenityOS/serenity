@@ -16,9 +16,7 @@ ButtonBox::ButtonBox(DOM::Document& document, HTML::HTMLInputElement& element, N
 {
 }
 
-ButtonBox::~ButtonBox()
-{
-}
+ButtonBox::~ButtonBox() = default;
 
 void ButtonBox::prepare_for_replaced_layout()
 {

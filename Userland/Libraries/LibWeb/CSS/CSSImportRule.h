@@ -26,7 +26,7 @@ public:
         return adopt_ref(*new CSSImportRule(move(url), document));
     }
 
-    ~CSSImportRule();
+    ~CSSImportRule() = default;
 
     const AK::URL& url() const { return m_url; }
 

@@ -30,7 +30,7 @@ public:
 
     class ViewportClient {
     public:
-        virtual ~ViewportClient() { }
+        virtual ~ViewportClient() = default;
         virtual void browsing_context_did_set_viewport_rect(Gfx::IntRect const&) = 0;
     };
     void register_viewport_client(ViewportClient&);

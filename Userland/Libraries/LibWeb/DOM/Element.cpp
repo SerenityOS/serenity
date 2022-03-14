@@ -47,9 +47,7 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
     make_html_uppercased_qualified_name();
 }
 
-Element::~Element()
-{
-}
+Element::~Element() = default;
 
 // https://dom.spec.whatwg.org/#dom-element-getattribute
 String Element::get_attribute(const FlyString& name) const

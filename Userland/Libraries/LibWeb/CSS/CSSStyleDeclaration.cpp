@@ -16,14 +16,6 @@ PropertyOwningCSSStyleDeclaration::PropertyOwningCSSStyleDeclaration(Vector<Styl
 {
 }
 
-PropertyOwningCSSStyleDeclaration::~PropertyOwningCSSStyleDeclaration()
-{
-}
-
-CSSStyleDeclaration::~CSSStyleDeclaration()
-{
-}
-
 String PropertyOwningCSSStyleDeclaration::item(size_t index) const
 {
     if (index >= m_properties.size())
@@ -40,10 +32,6 @@ ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element&
 ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element& element, PropertyOwningCSSStyleDeclaration& declaration)
     : PropertyOwningCSSStyleDeclaration(move(declaration.m_properties), move(declaration.m_custom_properties))
     , m_element(element.make_weak_ptr<DOM::Element>())
-{
-}
-
-ElementInlineCSSStyleDeclaration::~ElementInlineCSSStyleDeclaration()
 {
 }
 

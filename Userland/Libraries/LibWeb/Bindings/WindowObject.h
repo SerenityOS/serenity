@@ -32,7 +32,7 @@ class WindowObject
 public:
     explicit WindowObject(HTML::Window&);
     virtual void initialize_global_object() override;
-    virtual ~WindowObject() override;
+    virtual ~WindowObject() override = default;
 
     HTML::Window& impl() { return *m_impl; }
     const HTML::Window& impl() const { return *m_impl; }

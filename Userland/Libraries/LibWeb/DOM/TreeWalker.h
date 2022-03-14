@@ -20,7 +20,7 @@ public:
     using WrapperType = Bindings::TreeWalkerWrapper;
 
     static NonnullRefPtr<TreeWalker> create(Node& root, unsigned what_to_show, RefPtr<NodeFilter>);
-    virtual ~TreeWalker() override;
+    virtual ~TreeWalker() override = default;
 
     NonnullRefPtr<Node> current_node() const;
     void set_current_node(Node&);

@@ -14,8 +14,6 @@ FocusEvent::FocusEvent(FlyString const& event_name, FocusEventInit const& event_
     set_related_target(const_cast<DOM::EventTarget*>(event_init.related_target.ptr()));
 }
 
-FocusEvent::~FocusEvent()
-{
-}
+FocusEvent::~FocusEvent() = default;
 
 }

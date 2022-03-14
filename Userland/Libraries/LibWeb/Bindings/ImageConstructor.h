@@ -14,7 +14,7 @@ class ImageConstructor final : public JS::NativeFunction {
 public:
     explicit ImageConstructor(JS::GlobalObject&);
     virtual void initialize(JS::GlobalObject&) override;
-    virtual ~ImageConstructor() override;
+    virtual ~ImageConstructor() override = default;
 
     virtual JS::ThrowCompletionOr<JS::Value> call() override;
     virtual JS::ThrowCompletionOr<JS::Object*> construct(JS::FunctionObject& new_target) override;

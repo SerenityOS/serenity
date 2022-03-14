@@ -16,7 +16,7 @@ public:
     using WrapperType = Bindings::CommentWrapper;
 
     explicit Comment(Document&, const String&);
-    virtual ~Comment() override;
+    virtual ~Comment() override = default;
 
     virtual FlyString node_name() const override { return "#comment"; }
 

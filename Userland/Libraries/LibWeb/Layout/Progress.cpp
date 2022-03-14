@@ -15,9 +15,7 @@ Progress::Progress(DOM::Document& document, HTML::HTMLProgressElement& element, 
     set_intrinsic_height(12);
 }
 
-Progress::~Progress()
-{
-}
+Progress::~Progress() = default;
 
 RefPtr<Painting::Paintable> Progress::create_paintable() const
 {

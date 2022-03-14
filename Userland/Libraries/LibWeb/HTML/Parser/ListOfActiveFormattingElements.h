@@ -14,7 +14,7 @@ namespace Web::HTML {
 
 class ListOfActiveFormattingElements {
 public:
-    ListOfActiveFormattingElements() { }
+    ListOfActiveFormattingElements() = default;
     ~ListOfActiveFormattingElements();
 
     struct Entry {

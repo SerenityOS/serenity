@@ -13,8 +13,5 @@ HTMLFrameElement::HTMLFrameElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLFrameElement::~HTMLFrameElement()
-{
-}
-
+HTMLFrameElement::~HTMLFrameElement() = default;
 }

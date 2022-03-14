@@ -19,10 +19,6 @@ ResolvedCSSStyleDeclaration::ResolvedCSSStyleDeclaration(DOM::Element& element)
 {
 }
 
-ResolvedCSSStyleDeclaration::~ResolvedCSSStyleDeclaration()
-{
-}
-
 size_t ResolvedCSSStyleDeclaration::length() const
 {
     return 0;

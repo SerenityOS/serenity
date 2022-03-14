@@ -13,8 +13,6 @@ HTMLTimeElement::HTMLTimeElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLTimeElement::~HTMLTimeElement()
-{
-}
+HTMLTimeElement::~HTMLTimeElement() = default;
 
 }

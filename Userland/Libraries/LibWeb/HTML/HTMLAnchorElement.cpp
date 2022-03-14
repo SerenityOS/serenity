@@ -13,9 +13,7 @@ HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-HTMLAnchorElement::~HTMLAnchorElement()
-{
-}
+HTMLAnchorElement::~HTMLAnchorElement() = default;
 
 void HTMLAnchorElement::parse_attribute(FlyString const& name, String const& value)
 {

@@ -44,9 +44,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
     };
 }
 
-HTMLImageElement::~HTMLImageElement()
-{
-}
+HTMLImageElement::~HTMLImageElement() = default;
 
 void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {

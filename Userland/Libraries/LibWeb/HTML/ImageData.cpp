@@ -37,9 +37,7 @@ ImageData::ImageData(NonnullRefPtr<Gfx::Bitmap> bitmap, JS::Handle<JS::Uint8Clam
 {
 }
 
-ImageData::~ImageData()
-{
-}
+ImageData::~ImageData() = default;
 
 unsigned ImageData::width() const
 {

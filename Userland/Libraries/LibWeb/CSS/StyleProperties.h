@@ -18,7 +18,7 @@ namespace Web::CSS {
 
 class StyleProperties : public RefCounted<StyleProperties> {
 public:
-    StyleProperties();
+    StyleProperties() = default;
 
     explicit StyleProperties(const StyleProperties&);
 

@@ -15,10 +15,6 @@ CSSStyleRule::CSSStyleRule(NonnullRefPtrVector<Selector>&& selectors, NonnullRef
 {
 }
 
-CSSStyleRule::~CSSStyleRule()
-{
-}
-
 // https://www.w3.org/TR/cssom/#dom-cssstylerule-style
 CSSStyleDeclaration* CSSStyleRule::style()
 {

@@ -23,7 +23,7 @@ struct LayoutPosition {
 
 class LayoutRange {
 public:
-    LayoutRange() { }
+    LayoutRange() = default;
     LayoutRange(const LayoutPosition& start, const LayoutPosition& end)
         : m_start(start)
         , m_end(end)

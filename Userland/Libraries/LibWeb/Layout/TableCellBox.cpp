@@ -20,9 +20,7 @@ TableCellBox::TableCellBox(DOM::Document& document, DOM::Element* element, CSS::
 {
 }
 
-TableCellBox::~TableCellBox()
-{
-}
+TableCellBox::~TableCellBox() = default;
 
 size_t TableCellBox::colspan() const
 {

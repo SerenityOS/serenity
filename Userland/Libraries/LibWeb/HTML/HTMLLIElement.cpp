@@ -13,8 +13,5 @@ HTMLLIElement::HTMLLIElement(DOM::Document& document, DOM::QualifiedName qualifi
 {
 }
 
-HTMLLIElement::~HTMLLIElement()
-{
-}
-
+HTMLLIElement::~HTMLLIElement() = default;
 }

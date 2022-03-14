@@ -20,9 +20,7 @@ CheckBox::CheckBox(DOM::Document& document, HTML::HTMLInputElement& element, Non
     set_intrinsic_height(13);
 }
 
-CheckBox::~CheckBox()
-{
-}
+CheckBox::~CheckBox() = default;
 
 RefPtr<Painting::Paintable> CheckBox::create_paintable() const
 {

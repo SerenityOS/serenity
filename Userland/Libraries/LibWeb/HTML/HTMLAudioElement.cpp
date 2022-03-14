@@ -13,8 +13,5 @@ HTMLAudioElement::HTMLAudioElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLAudioElement::~HTMLAudioElement()
-{
-}
-
+HTMLAudioElement::~HTMLAudioElement() = default;
 }

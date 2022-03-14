@@ -15,9 +15,7 @@ DOMStringMap::DOMStringMap(DOM::Element& associated_element)
 {
 }
 
-DOMStringMap::~DOMStringMap()
-{
-}
+DOMStringMap::~DOMStringMap() = default;
 
 // https://html.spec.whatwg.org/multipage/dom.html#concept-domstringmap-pairs
 Vector<DOMStringMap::NameValuePair> DOMStringMap::get_name_value_pairs() const

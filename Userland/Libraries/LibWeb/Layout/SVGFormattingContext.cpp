@@ -18,9 +18,7 @@ SVGFormattingContext::SVGFormattingContext(FormattingState& state, Box const& bo
 {
 }
 
-SVGFormattingContext::~SVGFormattingContext()
-{
-}
+SVGFormattingContext::~SVGFormattingContext() = default;
 
 void SVGFormattingContext::run(Box const& box, LayoutMode)
 {

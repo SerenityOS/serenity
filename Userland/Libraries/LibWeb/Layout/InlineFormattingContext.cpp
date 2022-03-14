@@ -24,9 +24,7 @@ InlineFormattingContext::InlineFormattingContext(FormattingState& state, BlockCo
 {
 }
 
-InlineFormattingContext::~InlineFormattingContext()
-{
-}
+InlineFormattingContext::~InlineFormattingContext() = default;
 
 BlockFormattingContext& InlineFormattingContext::parent()
 {
