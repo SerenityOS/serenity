@@ -34,7 +34,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode)
 
             SVG::SVGSVGElement* svg_element = dom_node.first_ancestor_of_type<SVG::SVGSVGElement>();
 
-            if (svg_element->has_attribute(HTML::AttributeNames::width) && svg_element->has_attribute(HTML::AttributeNames::width)) {
+            if (svg_element->has_attribute(HTML::AttributeNames::width) && svg_element->has_attribute(HTML::AttributeNames::height)) {
                 geometry_box_state.offset = { 0, 0 };
                 auto& layout_node = static_cast<Layout::Node&>(*(svg_element->layout_node()));
 
