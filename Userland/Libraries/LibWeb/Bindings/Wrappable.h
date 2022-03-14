@@ -15,7 +15,7 @@ namespace Web::Bindings {
 
 class Wrappable {
 public:
-    virtual ~Wrappable();
+    virtual ~Wrappable() = default;
 
     void set_wrapper(Wrapper&);
     Wrapper* wrapper() { return m_wrapper; }

@@ -10,10 +10,6 @@
 namespace Web {
 namespace Bindings {
 
-Wrappable::~Wrappable()
-{
-}
-
 void Wrappable::set_wrapper(Wrapper& wrapper)
 {
     VERIFY(!m_wrapper);

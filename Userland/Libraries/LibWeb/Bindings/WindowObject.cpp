@@ -140,10 +140,6 @@ void WindowObject::initialize_global_object()
     ADD_WINDOW_OBJECT_INTERFACES;
 }
 
-WindowObject::~WindowObject()
-{
-}
-
 void WindowObject::visit_edges(Visitor& visitor)
 {
     GlobalObject::visit_edges(visitor);

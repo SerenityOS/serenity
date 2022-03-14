@@ -18,9 +18,7 @@ HTMLTableSectionElement::HTMLTableSectionElement(DOM::Document& document, DOM::Q
 {
 }
 
-HTMLTableSectionElement::~HTMLTableSectionElement()
-{
-}
+HTMLTableSectionElement::~HTMLTableSectionElement() = default;
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-tbody-rows
 NonnullRefPtr<DOM::HTMLCollection> HTMLTableSectionElement::rows() const

@@ -13,8 +13,6 @@ HTMLMeterElement::HTMLMeterElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLMeterElement::~HTMLMeterElement()
-{
-}
+HTMLMeterElement::~HTMLMeterElement() = default;
 
 }

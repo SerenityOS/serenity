@@ -49,9 +49,7 @@ HTMLButtonElement::HTMLButtonElement(DOM::Document& document, DOM::QualifiedName
     };
 }
 
-HTMLButtonElement::~HTMLButtonElement()
-{
-}
+HTMLButtonElement::~HTMLButtonElement() = default;
 
 String HTMLButtonElement::type() const
 {

@@ -19,9 +19,7 @@ HTMLBlinkElement::HTMLBlinkElement(DOM::Document& document, DOM::QualifiedName q
     m_timer->start();
 }
 
-HTMLBlinkElement::~HTMLBlinkElement()
-{
-}
+HTMLBlinkElement::~HTMLBlinkElement() = default;
 
 void HTMLBlinkElement::blink()
 {

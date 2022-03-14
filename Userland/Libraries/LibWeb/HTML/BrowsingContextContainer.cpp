@@ -19,9 +19,7 @@ BrowsingContextContainer::BrowsingContextContainer(DOM::Document& document, DOM:
 {
 }
 
-BrowsingContextContainer::~BrowsingContextContainer()
-{
-}
+BrowsingContextContainer::~BrowsingContextContainer() = default;
 
 void BrowsingContextContainer::inserted()
 {

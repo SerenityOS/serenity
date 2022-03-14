@@ -14,9 +14,7 @@ History::History(DOM::Document& document)
 {
 }
 
-History::~History()
-{
-}
+History::~History() = default;
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-history-pushstate
 DOM::ExceptionOr<void> History::push_state(JS::Value data, String const&, String const& url)

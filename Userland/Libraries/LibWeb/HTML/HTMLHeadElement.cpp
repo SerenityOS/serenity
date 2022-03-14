@@ -13,8 +13,5 @@ HTMLHeadElement::HTMLHeadElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLHeadElement::~HTMLHeadElement()
-{
-}
-
+HTMLHeadElement::~HTMLHeadElement() = default;
 }

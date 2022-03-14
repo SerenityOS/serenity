@@ -15,10 +15,6 @@
 
 namespace Web::CSS {
 
-StyleProperties::StyleProperties()
-{
-}
-
 StyleProperties::StyleProperties(const StyleProperties& other)
     : m_property_values(other.m_property_values)
 {

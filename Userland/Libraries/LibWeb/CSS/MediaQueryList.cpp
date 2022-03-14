@@ -22,10 +22,6 @@ MediaQueryList::MediaQueryList(DOM::Document& document, NonnullRefPtrVector<Medi
     evaluate();
 }
 
-MediaQueryList::~MediaQueryList()
-{
-}
-
 // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-media
 String MediaQueryList::media() const
 {

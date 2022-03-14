@@ -13,8 +13,6 @@ HTMLPictureElement::HTMLPictureElement(DOM::Document& document, DOM::QualifiedNa
 {
 }
 
-HTMLPictureElement::~HTMLPictureElement()
-{
-}
+HTMLPictureElement::~HTMLPictureElement() = default;
 
 }

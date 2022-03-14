@@ -17,7 +17,7 @@ class CSSConditionRule : public CSSGroupingRule {
     AK_MAKE_NONMOVABLE(CSSConditionRule);
 
 public:
-    ~CSSConditionRule();
+    ~CSSConditionRule() = default;
 
     virtual String condition_text() const = 0;
     virtual void set_condition_text(String) = 0;

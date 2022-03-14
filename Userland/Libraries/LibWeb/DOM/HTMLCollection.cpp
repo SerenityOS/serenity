@@ -18,9 +18,7 @@ HTMLCollection::HTMLCollection(ParentNode& root, Function<bool(Element const&)> 
 {
 }
 
-HTMLCollection::~HTMLCollection()
-{
-}
+HTMLCollection::~HTMLCollection() = default;
 
 Vector<NonnullRefPtr<Element>> HTMLCollection::collect_matching_elements() const
 {

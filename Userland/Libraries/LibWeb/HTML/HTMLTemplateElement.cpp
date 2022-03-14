@@ -16,9 +16,7 @@ HTMLTemplateElement::HTMLTemplateElement(DOM::Document& document, DOM::Qualified
     m_content->set_host(this);
 }
 
-HTMLTemplateElement::~HTMLTemplateElement()
-{
-}
+HTMLTemplateElement::~HTMLTemplateElement() = default;
 
 DOM::Document& HTMLTemplateElement::appropriate_template_contents_owner_document(DOM::Document& document)
 {

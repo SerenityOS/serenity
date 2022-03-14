@@ -13,7 +13,7 @@ namespace Web {
 
 class Origin {
 public:
-    Origin() { }
+    Origin() = default;
     Origin(const String& protocol, const String& host, u16 port)
         : m_protocol(protocol)
         , m_host(host)

@@ -13,8 +13,6 @@ HTMLSlotElement::HTMLSlotElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLSlotElement::~HTMLSlotElement()
-{
-}
+HTMLSlotElement::~HTMLSlotElement() = default;
 
 }

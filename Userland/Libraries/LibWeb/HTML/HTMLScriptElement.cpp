@@ -24,9 +24,7 @@ HTMLScriptElement::HTMLScriptElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-HTMLScriptElement::~HTMLScriptElement()
-{
-}
+HTMLScriptElement::~HTMLScriptElement() = default;
 
 void HTMLScriptElement::set_parser_document(Badge<HTMLParser>, DOM::Document& document)
 {

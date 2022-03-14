@@ -27,7 +27,7 @@ public:
     {
         return adopt_ref(*new CSSRuleList(move(rules)));
     }
-    ~CSSRuleList();
+    ~CSSRuleList() = default;
 
     RefPtr<CSSRule> item(size_t index) const
     {

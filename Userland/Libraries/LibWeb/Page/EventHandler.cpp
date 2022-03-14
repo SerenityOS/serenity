@@ -95,9 +95,7 @@ EventHandler::EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& 
 {
 }
 
-EventHandler::~EventHandler()
-{
-}
+EventHandler::~EventHandler() = default;
 
 const Layout::InitialContainingBlock* EventHandler::layout_root() const
 {

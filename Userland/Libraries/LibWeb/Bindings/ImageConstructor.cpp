@@ -29,10 +29,6 @@ void ImageConstructor::initialize(JS::GlobalObject& global_object)
     define_direct_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
 }
 
-ImageConstructor::~ImageConstructor()
-{
-}
-
 JS::ThrowCompletionOr<JS::Value> ImageConstructor::call()
 {
     return vm().throw_completion<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "Image");

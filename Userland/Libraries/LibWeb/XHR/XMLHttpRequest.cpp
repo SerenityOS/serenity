@@ -42,9 +42,7 @@ XMLHttpRequest::XMLHttpRequest(HTML::Window& window)
 {
 }
 
-XMLHttpRequest::~XMLHttpRequest()
-{
-}
+XMLHttpRequest::~XMLHttpRequest() = default;
 
 void XMLHttpRequest::set_ready_state(ReadyState ready_state)
 {

@@ -37,13 +37,8 @@
 
 namespace Web::DOM {
 
-EventTarget::EventTarget()
-{
-}
-
-EventTarget::~EventTarget()
-{
-}
+EventTarget::EventTarget() = default;
+EventTarget::~EventTarget() = default;
 
 // https://dom.spec.whatwg.org/#concept-flatten-options
 static bool flatten_event_listener_options(Variant<EventListenerOptions, bool> const& options)

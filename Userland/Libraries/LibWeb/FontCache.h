@@ -38,6 +38,6 @@ public:
     void set(const FontSelector&, NonnullRefPtr<Gfx::Font>);
 
 private:
-    FontCache() { }
+    FontCache() = default;
     mutable HashMap<FontSelector, NonnullRefPtr<Gfx::Font>> m_fonts;
 };

@@ -18,10 +18,6 @@ CSSNamespace::CSSNamespace(JS::GlobalObject& global_object)
 {
 }
 
-CSSNamespace::~CSSNamespace()
-{
-}
-
 void CSSNamespace::initialize(JS::GlobalObject& global_object)
 {
     Object::initialize(global_object);

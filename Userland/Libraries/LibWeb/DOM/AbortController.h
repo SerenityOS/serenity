@@ -34,7 +34,7 @@ public:
         return AbortController::create();
     }
 
-    virtual ~AbortController() override;
+    virtual ~AbortController() override = default;
 
     // https://dom.spec.whatwg.org/#dom-abortcontroller-signal
     NonnullRefPtr<AbortSignal> signal() const { return m_signal; }

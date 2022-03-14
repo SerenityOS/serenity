@@ -25,9 +25,7 @@ Resource::Resource(Type type, const LoadRequest& request)
 {
 }
 
-Resource::~Resource()
-{
-}
+Resource::~Resource() = default;
 
 void Resource::for_each_client(Function<void(ResourceClient&)> callback)
 {

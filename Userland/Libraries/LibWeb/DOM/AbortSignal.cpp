@@ -19,10 +19,6 @@ AbortSignal::AbortSignal()
 {
 }
 
-AbortSignal::~AbortSignal()
-{
-}
-
 JS::Object* AbortSignal::create_wrapper(JS::GlobalObject& global_object)
 {
     return wrap(global_object, *this);

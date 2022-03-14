@@ -13,8 +13,6 @@ HTMLModElement::HTMLModElement(DOM::Document& document, DOM::QualifiedName quali
 {
 }
 
-HTMLModElement::~HTMLModElement()
-{
-}
+HTMLModElement::~HTMLModElement() = default;
 
 }

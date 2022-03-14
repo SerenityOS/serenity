@@ -14,13 +14,9 @@ NonnullRefPtr<Storage> Storage::create()
     return adopt_ref(*new Storage);
 }
 
-Storage::Storage()
-{
-}
+Storage::Storage() = default;
 
-Storage::~Storage()
-{
-}
+Storage::~Storage() = default;
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-storage-length
 size_t Storage::length() const

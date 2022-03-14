@@ -35,9 +35,7 @@ MimeType::MimeType(String type, String subtype)
     VERIFY(contains_only_http_quoted_string_token_code_points(subtype));
 }
 
-MimeType::~MimeType()
-{
-}
+MimeType::~MimeType() = default;
 
 static bool contains_only_http_token_code_points(StringView string)
 {

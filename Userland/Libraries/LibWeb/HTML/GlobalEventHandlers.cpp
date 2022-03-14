@@ -28,8 +28,5 @@ namespace Web::HTML {
 ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
-GlobalEventHandlers::~GlobalEventHandlers()
-{
-}
-
+GlobalEventHandlers::~GlobalEventHandlers() = default;
 }

@@ -13,8 +13,5 @@ HTMLMapElement::HTMLMapElement(DOM::Document& document, DOM::QualifiedName quali
 {
 }
 
-HTMLMapElement::~HTMLMapElement()
-{
-}
-
+HTMLMapElement::~HTMLMapElement() = default;
 }

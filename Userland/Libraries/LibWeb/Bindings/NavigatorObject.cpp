@@ -40,10 +40,6 @@ void NavigatorObject::initialize(JS::GlobalObject& global_object)
     define_direct_property("onLine", JS::Value(true), attr);
 }
 
-NavigatorObject::~NavigatorObject()
-{
-}
-
 JS_DEFINE_NATIVE_FUNCTION(NavigatorObject::user_agent_getter)
 {
     return JS::js_string(vm, ResourceLoader::the().user_agent());

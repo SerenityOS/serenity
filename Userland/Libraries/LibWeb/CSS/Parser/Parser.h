@@ -59,7 +59,7 @@ template<typename T>
 class TokenStream {
 public:
     explicit TokenStream(Vector<T> const&);
-    ~TokenStream();
+    ~TokenStream() = default;
 
     TokenStream(TokenStream<T> const&) = delete;
 
@@ -87,7 +87,7 @@ private:
 class Parser {
 public:
     Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
-    ~Parser();
+    ~Parser() = default;
 
     // The normal parser entry point, for parsing stylesheets.
     NonnullRefPtr<CSSStyleSheet> parse_as_stylesheet();

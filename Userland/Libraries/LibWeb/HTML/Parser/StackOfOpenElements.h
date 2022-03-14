@@ -20,7 +20,7 @@ public:
     // and the bottommost node of the stack is the most recently added node in the stack
     // (notwithstanding when the stack is manipulated in a random access fashion as part of the handling for misnested tags).
 
-    StackOfOpenElements() { }
+    StackOfOpenElements() = default;
     ~StackOfOpenElements();
 
     DOM::Element& first() { return m_elements.first(); }

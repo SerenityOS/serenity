@@ -27,9 +27,7 @@ FormattingContext::FormattingContext(Type type, FormattingState& state, Box cons
 {
 }
 
-FormattingContext::~FormattingContext()
-{
-}
+FormattingContext::~FormattingContext() = default;
 
 bool FormattingContext::creates_block_formatting_context(const Box& box)
 {

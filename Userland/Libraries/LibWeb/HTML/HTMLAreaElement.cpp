@@ -13,9 +13,7 @@ HTMLAreaElement::HTMLAreaElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLAreaElement::~HTMLAreaElement()
-{
-}
+HTMLAreaElement::~HTMLAreaElement() = default;
 
 void HTMLAreaElement::parse_attribute(FlyString const& name, String const& value)
 {

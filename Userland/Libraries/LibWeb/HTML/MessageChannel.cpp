@@ -22,8 +22,6 @@ MessageChannel::MessageChannel()
     m_port1->entangle_with(*m_port2);
 }
 
-MessageChannel::~MessageChannel()
-{
-}
+MessageChannel::~MessageChannel() = default;
 
 }

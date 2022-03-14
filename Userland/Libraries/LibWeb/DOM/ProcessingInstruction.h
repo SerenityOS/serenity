@@ -16,7 +16,7 @@ public:
     using WrapperType = Bindings::ProcessingInstructionWrapper;
 
     ProcessingInstruction(Document&, const String& data, const String& target);
-    virtual ~ProcessingInstruction() override;
+    virtual ~ProcessingInstruction() override = default;
 
     virtual FlyString node_name() const override { return m_target; }
 

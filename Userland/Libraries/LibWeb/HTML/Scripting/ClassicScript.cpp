@@ -152,8 +152,6 @@ ClassicScript::ClassicScript(AK::URL base_url, String filename, EnvironmentSetti
 {
 }
 
-ClassicScript::~ClassicScript()
-{
-}
+ClassicScript::~ClassicScript() = default;
 
 }

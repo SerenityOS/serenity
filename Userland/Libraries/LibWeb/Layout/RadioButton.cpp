@@ -18,9 +18,7 @@ RadioButton::RadioButton(DOM::Document& document, HTML::HTMLInputElement& elemen
     set_intrinsic_height(12);
 }
 
-RadioButton::~RadioButton()
-{
-}
+RadioButton::~RadioButton() = default;
 
 RefPtr<Painting::Paintable> RadioButton::create_paintable() const
 {

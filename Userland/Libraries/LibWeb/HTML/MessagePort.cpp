@@ -19,9 +19,7 @@ MessagePort::MessagePort()
 {
 }
 
-MessagePort::~MessagePort()
-{
-}
+MessagePort::~MessagePort() = default;
 
 void MessagePort::disentangle()
 {

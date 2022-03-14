@@ -24,7 +24,7 @@ public:
     }
 
     explicit DocumentType(Document&);
-    virtual ~DocumentType() override;
+    virtual ~DocumentType() override = default;
 
     virtual FlyString node_name() const override { return "#doctype"; }
 

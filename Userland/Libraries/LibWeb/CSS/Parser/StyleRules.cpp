@@ -25,16 +25,16 @@ DeclarationOrAtRule::DeclarationOrAtRule(StyleDeclarationRule declaration)
     , m_declaration(move(declaration))
 {
 }
-DeclarationOrAtRule::~DeclarationOrAtRule() { }
+DeclarationOrAtRule::~DeclarationOrAtRule() = default;
 
 StyleRule::StyleRule(StyleRule::Type type)
     : m_type(type)
 {
 }
-StyleRule::~StyleRule() { }
+StyleRule::~StyleRule() = default;
 
-StyleBlockRule::StyleBlockRule() { }
-StyleBlockRule::~StyleBlockRule() { }
+StyleBlockRule::StyleBlockRule() = default;
+StyleBlockRule::~StyleBlockRule() = default;
 
 StyleComponentValueRule::StyleComponentValueRule(Token token)
     : m_type(StyleComponentValueRule::ComponentType::Token)
@@ -51,10 +51,10 @@ StyleComponentValueRule::StyleComponentValueRule(NonnullRefPtr<StyleBlockRule> b
     , m_block(block)
 {
 }
-StyleComponentValueRule::~StyleComponentValueRule() { }
+StyleComponentValueRule::~StyleComponentValueRule() = default;
 
-StyleDeclarationRule::StyleDeclarationRule() { }
-StyleDeclarationRule::~StyleDeclarationRule() { }
+StyleDeclarationRule::StyleDeclarationRule() = default;
+StyleDeclarationRule::~StyleDeclarationRule() = default;
 
 StyleFunctionRule::StyleFunctionRule(String name)
     : m_name(move(name))
@@ -66,7 +66,7 @@ StyleFunctionRule::StyleFunctionRule(String name, Vector<StyleComponentValueRule
     , m_values(move(values))
 {
 }
-StyleFunctionRule::~StyleFunctionRule() { }
+StyleFunctionRule::~StyleFunctionRule() = default;
 
 template<class SeparatorType, class CollectionType>
 void append_with_to_string(StringBuilder& builder, SeparatorType& separator, CollectionType& collection)

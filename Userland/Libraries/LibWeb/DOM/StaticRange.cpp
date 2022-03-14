@@ -17,10 +17,6 @@ StaticRange::StaticRange(Node& start_container, u32 start_offset, Node& end_cont
 {
 }
 
-StaticRange::~StaticRange()
-{
-}
-
 // https://dom.spec.whatwg.org/#dom-staticrange-staticrange
 ExceptionOr<NonnullRefPtr<StaticRange>> StaticRange::create_with_global_object(JS::GlobalObject&, StaticRangeInit& init)
 {

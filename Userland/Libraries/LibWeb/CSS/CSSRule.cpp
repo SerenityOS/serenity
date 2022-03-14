@@ -8,10 +8,6 @@
 
 namespace Web::CSS {
 
-CSSRule::~CSSRule()
-{
-}
-
 // https://www.w3.org/TR/cssom/#dom-cssrule-csstext
 String CSSRule::css_text() const
 {

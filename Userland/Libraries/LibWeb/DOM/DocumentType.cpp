@@ -13,8 +13,4 @@ DocumentType::DocumentType(Document& document)
 {
 }
 
-DocumentType::~DocumentType()
-{
-}
-
 }

@@ -23,10 +23,6 @@ StyleValue::StyleValue(Type type)
 {
 }
 
-StyleValue::~StyleValue()
-{
-}
-
 AngleStyleValue const& StyleValue::as_angle() const
 {
     VERIFY(is_angle());

@@ -13,9 +13,7 @@ HTMLHtmlElement::HTMLHtmlElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLHtmlElement::~HTMLHtmlElement()
-{
-}
+HTMLHtmlElement::~HTMLHtmlElement() = default;
 
 bool HTMLHtmlElement::should_use_body_background_properties() const
 {

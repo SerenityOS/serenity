@@ -21,9 +21,7 @@ Performance::Performance(HTML::Window& window)
     m_timer.start();
 }
 
-Performance::~Performance()
-{
-}
+Performance::~Performance() = default;
 
 double Performance::time_origin() const
 {

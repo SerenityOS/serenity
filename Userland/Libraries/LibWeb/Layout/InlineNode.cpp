@@ -20,9 +20,7 @@ InlineNode::InlineNode(DOM::Document& document, DOM::Element* element, NonnullRe
     set_inline(true);
 }
 
-InlineNode::~InlineNode()
-{
-}
+InlineNode::~InlineNode() = default;
 
 RefPtr<Painting::Paintable> InlineNode::create_paintable() const
 {

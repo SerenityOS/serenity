@@ -14,9 +14,7 @@ HTMLMediaElement::HTMLMediaElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLMediaElement::~HTMLMediaElement()
-{
-}
+HTMLMediaElement::~HTMLMediaElement() = default;
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-navigator-canplaytype
 Bindings::CanPlayTypeResult HTMLMediaElement::can_play_type(String const& type) const

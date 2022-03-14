@@ -145,7 +145,7 @@ private:
 
 class NodeWithStyle : public Node {
 public:
-    virtual ~NodeWithStyle() override { }
+    virtual ~NodeWithStyle() override = default;
 
     const CSS::ImmutableComputedValues& computed_values() const { return static_cast<const CSS::ImmutableComputedValues&>(m_computed_values); }
 

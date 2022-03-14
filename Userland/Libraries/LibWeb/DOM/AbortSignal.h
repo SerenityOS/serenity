@@ -37,7 +37,7 @@ public:
         return AbortSignal::create();
     }
 
-    virtual ~AbortSignal() override;
+    virtual ~AbortSignal() override = default;
 
     void add_abort_algorithm(Function<void()>);
 

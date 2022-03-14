@@ -19,8 +19,6 @@ TableRowBox::TableRowBox(DOM::Document& document, DOM::Element* element, CSS::Co
 {
 }
 
-TableRowBox::~TableRowBox()
-{
-}
+TableRowBox::~TableRowBox() = default;
 
 }

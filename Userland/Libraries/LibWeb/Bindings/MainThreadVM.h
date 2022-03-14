@@ -15,7 +15,7 @@
 namespace Web::Bindings {
 
 struct WebEngineCustomData final : public JS::VM::CustomData {
-    virtual ~WebEngineCustomData() override { }
+    virtual ~WebEngineCustomData() override = default;
 
     HTML::EventLoop event_loop;
 };
@@ -27,7 +27,7 @@ struct WebEngineCustomJobCallbackData final : public JS::JobCallback::CustomData
     {
     }
 
-    virtual ~WebEngineCustomJobCallbackData() override { }
+    virtual ~WebEngineCustomJobCallbackData() override = default;
 
     HTML::EnvironmentSettingsObject& incumbent_settings;
     OwnPtr<JS::ExecutionContext> active_script_context;

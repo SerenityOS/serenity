@@ -13,8 +13,6 @@ HTMLTableColElement::HTMLTableColElement(DOM::Document& document, DOM::Qualified
 {
 }
 
-HTMLTableColElement::~HTMLTableColElement()
-{
-}
+HTMLTableColElement::~HTMLTableColElement() = default;
 
 }

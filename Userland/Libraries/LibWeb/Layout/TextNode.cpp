@@ -21,9 +21,7 @@ TextNode::TextNode(DOM::Document& document, DOM::Text& text)
     set_inline(true);
 }
 
-TextNode::~TextNode()
-{
-}
+TextNode::~TextNode() = default;
 
 static bool is_all_whitespace(StringView string)
 {

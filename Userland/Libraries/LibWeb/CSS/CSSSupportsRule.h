@@ -26,7 +26,7 @@ public:
         return adopt_ref(*new CSSSupportsRule(move(supports), move(rules)));
     }
 
-    ~CSSSupportsRule();
+    ~CSSSupportsRule() = default;
 
     virtual StringView class_name() const override { return "CSSSupportsRule"; };
     virtual Type type() const override { return Type::Supports; };

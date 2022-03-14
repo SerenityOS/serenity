@@ -30,9 +30,7 @@ OutOfProcessWebView::OutOfProcessWebView()
     create_client();
 }
 
-OutOfProcessWebView::~OutOfProcessWebView()
-{
-}
+OutOfProcessWebView::~OutOfProcessWebView() = default;
 
 void OutOfProcessWebView::handle_web_content_process_crash()
 {

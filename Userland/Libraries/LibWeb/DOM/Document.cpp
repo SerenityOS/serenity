@@ -92,9 +92,7 @@ Document::Document(const AK::URL& url)
     });
 }
 
-Document::~Document()
-{
-}
+Document::~Document() = default;
 
 void Document::removed_last_ref()
 {

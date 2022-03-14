@@ -9,9 +9,7 @@
 
 namespace Web::HTML {
 
-ListOfActiveFormattingElements::~ListOfActiveFormattingElements()
-{
-}
+ListOfActiveFormattingElements::~ListOfActiveFormattingElements() = default;
 
 void ListOfActiveFormattingElements::add(DOM::Element& element)
 {

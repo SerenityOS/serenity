@@ -20,7 +20,7 @@ public:
     {
         return adopt_ref(*new MediaList(move(media)));
     }
-    ~MediaList();
+    ~MediaList() = default;
 
     String media_text() const;
     void set_media_text(String const&);

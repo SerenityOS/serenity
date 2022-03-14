@@ -15,9 +15,7 @@ HTMLProgressElement::HTMLProgressElement(DOM::Document& document, DOM::Qualified
 {
 }
 
-HTMLProgressElement::~HTMLProgressElement()
-{
-}
+HTMLProgressElement::~HTMLProgressElement() = default;
 
 RefPtr<Layout::Node> HTMLProgressElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {

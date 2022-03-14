@@ -16,9 +16,7 @@ TableRowGroupBox::TableRowGroupBox(DOM::Document& document, DOM::Element* elemen
 {
 }
 
-TableRowGroupBox::~TableRowGroupBox()
-{
-}
+TableRowGroupBox::~TableRowGroupBox() = default;
 
 size_t TableRowGroupBox::column_count() const
 {

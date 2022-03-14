@@ -15,10 +15,6 @@ AbortController::AbortController()
 {
 }
 
-AbortController::~AbortController()
-{
-}
-
 // https://dom.spec.whatwg.org/#dom-abortcontroller-abort
 void AbortController::abort(JS::Value reason)
 {

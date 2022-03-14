@@ -13,8 +13,5 @@ HTMLDListElement::HTMLDListElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLDListElement::~HTMLDListElement()
-{
-}
-
+HTMLDListElement::~HTMLDListElement() = default;
 }

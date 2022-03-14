@@ -18,8 +18,6 @@ ReplacedBox::ReplacedBox(DOM::Document& document, DOM::Element& element, Nonnull
     set_inline(true);
 }
 
-ReplacedBox::~ReplacedBox()
-{
-}
+ReplacedBox::~ReplacedBox() = default;
 
 }

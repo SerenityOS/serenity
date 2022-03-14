@@ -20,9 +20,7 @@ HTMLTableElement::HTMLTableElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLTableElement::~HTMLTableElement()
-{
-}
+HTMLTableElement::~HTMLTableElement() = default;
 
 void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {

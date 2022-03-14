@@ -15,9 +15,7 @@ HTMLTitleElement::HTMLTitleElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLTitleElement::~HTMLTitleElement()
-{
-}
+HTMLTitleElement::~HTMLTitleElement() = default;
 
 void HTMLTitleElement::children_changed()
 {

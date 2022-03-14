@@ -13,8 +13,5 @@ HTMLDataListElement::HTMLDataListElement(DOM::Document& document, DOM::Qualified
 {
 }
 
-HTMLDataListElement::~HTMLDataListElement()
-{
-}
-
+HTMLDataListElement::~HTMLDataListElement() = default;
 }

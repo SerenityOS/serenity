@@ -17,10 +17,6 @@ CSSStyleSheet::CSSStyleSheet(NonnullRefPtrVector<CSSRule> rules)
 {
 }
 
-CSSStyleSheet::~CSSStyleSheet()
-{
-}
-
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-insertrule
 DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned index)
 {

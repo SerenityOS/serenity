@@ -13,8 +13,6 @@ HTMLQuoteElement::HTMLQuoteElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLQuoteElement::~HTMLQuoteElement()
-{
-}
+HTMLQuoteElement::~HTMLQuoteElement() = default;
 
 }

@@ -43,9 +43,7 @@ CanvasGradient::CanvasGradient(Type type)
 {
 }
 
-CanvasGradient::~CanvasGradient()
-{
-}
+CanvasGradient::~CanvasGradient() = default;
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvasgradient-addcolorstop
 DOM::ExceptionOr<void> CanvasGradient::add_color_stop(double offset, String const& color)

@@ -21,9 +21,7 @@ TableFormattingContext::TableFormattingContext(FormattingState& state, BlockCont
 {
 }
 
-TableFormattingContext::~TableFormattingContext()
-{
-}
+TableFormattingContext::~TableFormattingContext() = default;
 
 void TableFormattingContext::run(Box const& box, LayoutMode)
 {

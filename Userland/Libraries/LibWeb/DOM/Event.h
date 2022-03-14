@@ -56,7 +56,7 @@ public:
         return Event::create(event_name, event_init);
     }
 
-    virtual ~Event() { }
+    virtual ~Event() = default;
 
     double time_stamp() const;
 

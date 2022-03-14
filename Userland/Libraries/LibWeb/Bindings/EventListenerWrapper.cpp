@@ -18,9 +18,5 @@ EventListenerWrapper::EventListenerWrapper(JS::GlobalObject& global_object, DOM:
 {
 }
 
-EventListenerWrapper::~EventListenerWrapper()
-{
-}
-
 }
 }

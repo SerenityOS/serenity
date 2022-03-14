@@ -13,8 +13,5 @@ HTMLBaseElement::HTMLBaseElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLBaseElement::~HTMLBaseElement()
-{
-}
-
+HTMLBaseElement::~HTMLBaseElement() = default;
 }

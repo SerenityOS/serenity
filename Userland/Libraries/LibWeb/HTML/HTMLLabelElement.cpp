@@ -15,9 +15,7 @@ HTMLLabelElement::HTMLLabelElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLLabelElement::~HTMLLabelElement()
-{
-}
+HTMLLabelElement::~HTMLLabelElement() = default;
 
 RefPtr<Layout::Node> HTMLLabelElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {

@@ -25,9 +25,7 @@ DOMTreeModel::DOMTreeModel(JsonObject dom_tree, GUI::TreeView& tree_view)
     map_dom_nodes_to_parent(nullptr, &m_dom_tree);
 }
 
-DOMTreeModel::~DOMTreeModel()
-{
-}
+DOMTreeModel::~DOMTreeModel() = default;
 
 GUI::ModelIndex DOMTreeModel::index(int row, int column, const GUI::ModelIndex& parent) const
 {

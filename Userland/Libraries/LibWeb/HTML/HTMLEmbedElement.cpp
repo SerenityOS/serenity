@@ -13,8 +13,5 @@ HTMLEmbedElement::HTMLEmbedElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLEmbedElement::~HTMLEmbedElement()
-{
-}
-
+HTMLEmbedElement::~HTMLEmbedElement() = default;
 }

@@ -34,7 +34,7 @@ public:
         return adopt_ref(*new MediaQueryList(document, move(media_queries)));
     }
 
-    virtual ~MediaQueryList() override;
+    virtual ~MediaQueryList() override = default;
 
     String media() const;
     bool matches() const;

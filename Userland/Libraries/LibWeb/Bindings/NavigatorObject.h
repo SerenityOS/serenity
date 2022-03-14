@@ -18,7 +18,7 @@ class NavigatorObject final : public JS::Object {
 public:
     NavigatorObject(JS::GlobalObject&);
     virtual void initialize(JS::GlobalObject&) override;
-    virtual ~NavigatorObject() override;
+    virtual ~NavigatorObject() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(user_agent_getter);

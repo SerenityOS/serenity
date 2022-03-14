@@ -28,9 +28,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(HTMLCanvasElement& element)
 {
 }
 
-CanvasRenderingContext2D::~CanvasRenderingContext2D()
-{
-}
+CanvasRenderingContext2D::~CanvasRenderingContext2D() = default;
 
 void CanvasRenderingContext2D::set_fill_style(String style)
 {

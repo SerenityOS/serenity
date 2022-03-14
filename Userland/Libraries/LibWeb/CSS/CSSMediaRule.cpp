@@ -14,10 +14,6 @@ CSSMediaRule::CSSMediaRule(NonnullRefPtr<MediaList>&& media, NonnullRefPtrVector
 {
 }
 
-CSSMediaRule::~CSSMediaRule()
-{
-}
-
 String CSSMediaRule::condition_text() const
 {
     return m_media->media_text();
