@@ -2080,6 +2080,7 @@ void WindowManager::invalidate_after_theme_or_font_change()
     for_each_window_stack([&](auto& window_stack) {
         window_stack.for_each_window([&](Window& window) {
             window.frame().theme_changed();
+            window.menubar().font_changed(window.rect());
             return IterationDecision::Continue;
         });
         return IterationDecision::Continue;
