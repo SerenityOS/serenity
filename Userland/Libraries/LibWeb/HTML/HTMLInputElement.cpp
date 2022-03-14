@@ -64,7 +64,6 @@ RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::Sty
     if (type() == "radio")
         return adopt_ref(*new Layout::RadioButton(document(), *this, move(style)));
 
-    create_shadow_tree_if_needed();
     auto layout_node = adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
     layout_node->set_inline(true);
     return layout_node;
@@ -282,6 +281,11 @@ String HTMLInputElement::value_sanitization_algorithm(String value) const
 
     // FIXME: Implement remaining value sanitation algorithms
     return value;
+}
+
+void HTMLInputElement::inserted()
+{
+    create_shadow_tree_if_needed();
 }
 
 }

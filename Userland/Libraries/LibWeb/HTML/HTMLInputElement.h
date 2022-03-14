@@ -100,6 +100,8 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return type_state() != TypeAttributeState::Hidden; }
 
+    virtual void inserted() override;
+
 private:
     // ^DOM::EventTarget
     virtual void did_receive_focus() override;
