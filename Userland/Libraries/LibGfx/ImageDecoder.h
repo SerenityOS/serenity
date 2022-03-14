@@ -27,7 +27,7 @@ struct ImageFrameDescriptor {
 
 class ImageDecoderPlugin {
 public:
-    virtual ~ImageDecoderPlugin() { }
+    virtual ~ImageDecoderPlugin() = default;
 
     virtual IntSize size() = 0;
 
@@ -42,13 +42,13 @@ public:
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index) = 0;
 
 protected:
-    ImageDecoderPlugin() { }
+    ImageDecoderPlugin() = default;
 };
 
 class ImageDecoder : public RefCounted<ImageDecoder> {
 public:
     static RefPtr<ImageDecoder> try_create(ReadonlyBytes);
-    ~ImageDecoder();
+    ~ImageDecoder() = default;
 
     IntSize size() const { return m_plugin->size(); }
     int width() const { return size().width(); }

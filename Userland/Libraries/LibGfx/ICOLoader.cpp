@@ -286,7 +286,7 @@ ICOImageDecoderPlugin::ICOImageDecoderPlugin(const u8* data, size_t size)
     m_context->data_size = size;
 }
 
-ICOImageDecoderPlugin::~ICOImageDecoderPlugin() { }
+ICOImageDecoderPlugin::~ICOImageDecoderPlugin() = default;
 
 IntSize ICOImageDecoderPlugin::size()
 {

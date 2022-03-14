@@ -54,7 +54,7 @@ public:
 
 private:
     FontDatabase();
-    ~FontDatabase();
+    ~FontDatabase() = default;
 
     RefPtr<Typeface> get_or_create_typeface(const String& family, const String& variant);
 

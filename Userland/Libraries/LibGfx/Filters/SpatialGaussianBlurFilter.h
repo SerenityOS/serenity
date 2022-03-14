@@ -14,8 +14,8 @@ namespace Gfx {
 template<size_t N, typename = typename EnableIf<N % 2 == 1>::Type>
 class SpatialGaussianBlurFilter : public GenericConvolutionFilter<N> {
 public:
-    SpatialGaussianBlurFilter() { }
-    virtual ~SpatialGaussianBlurFilter() { }
+    SpatialGaussianBlurFilter() = default;
+    virtual ~SpatialGaussianBlurFilter() = default;
 
     virtual const char* class_name() const override { return "SpatialGaussianBlurFilter"; }
 };

@@ -13,8 +13,8 @@ namespace Gfx {
 
 class ClassicWindowTheme final : public WindowTheme {
 public:
-    ClassicWindowTheme();
-    virtual ~ClassicWindowTheme() override;
+    ClassicWindowTheme() = default;
+    virtual ~ClassicWindowTheme() override = default;
 
     virtual void paint_normal_frame(Painter& painter, WindowState window_state, const IntRect& window_rect, StringView window_title, const Bitmap& icon, const Palette& palette, const IntRect& leftmost_button_rect, int menu_row_count, bool window_modified) const override;
     virtual void paint_tool_window_frame(Painter&, WindowState, const IntRect& window_rect, StringView title, const Palette&, const IntRect& leftmost_button_rect) const override;

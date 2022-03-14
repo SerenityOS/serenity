@@ -918,9 +918,7 @@ PNGImageDecoderPlugin::PNGImageDecoderPlugin(const u8* data, size_t size)
     m_context->data_size = size;
 }
 
-PNGImageDecoderPlugin::~PNGImageDecoderPlugin()
-{
-}
+PNGImageDecoderPlugin::~PNGImageDecoderPlugin() = default;
 
 IntSize PNGImageDecoderPlugin::size()
 {

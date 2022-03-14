@@ -12,8 +12,8 @@ namespace Gfx {
 
 class GrayscaleFilter : public ColorFilter {
 public:
-    GrayscaleFilter() { }
-    virtual ~GrayscaleFilter() { }
+    GrayscaleFilter() = default;
+    virtual ~GrayscaleFilter() = default;
 
     virtual char const* class_name() const override { return "GrayscaleFilter"; }
 

@@ -18,7 +18,7 @@ public:
         : m_amount(amount)
     {
     }
-    virtual ~SepiaFilter() { }
+    virtual ~SepiaFilter() = default;
 
     virtual char const* class_name() const override { return "SepiaFilter"; }
 

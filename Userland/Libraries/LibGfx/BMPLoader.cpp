@@ -1307,9 +1307,7 @@ BMPImageDecoderPlugin::BMPImageDecoderPlugin(const u8* data, size_t data_size)
     m_context->file_size = data_size;
 }
 
-BMPImageDecoderPlugin::~BMPImageDecoderPlugin()
-{
-}
+BMPImageDecoderPlugin::~BMPImageDecoderPlugin() = default;
 
 IntSize BMPImageDecoderPlugin::size()
 {

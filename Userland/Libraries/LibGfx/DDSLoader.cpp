@@ -944,9 +944,7 @@ DDSImageDecoderPlugin::DDSImageDecoderPlugin(const u8* data, size_t size)
     m_context->data_size = size;
 }
 
-DDSImageDecoderPlugin::~DDSImageDecoderPlugin()
-{
-}
+DDSImageDecoderPlugin::~DDSImageDecoderPlugin() = default;
 
 IntSize DDSImageDecoderPlugin::size()
 {

@@ -58,8 +58,8 @@ public:
         RefPtr<Gfx::Bitmap> m_target;
     };
 
-    GenericConvolutionFilter() { }
-    virtual ~GenericConvolutionFilter() { }
+    GenericConvolutionFilter() = default;
+    virtual ~GenericConvolutionFilter() = default;
 
     virtual const char* class_name() const override { return "GenericConvolutionFilter"; }
 

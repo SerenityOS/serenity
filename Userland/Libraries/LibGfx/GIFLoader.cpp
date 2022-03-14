@@ -605,7 +605,7 @@ GIFImageDecoderPlugin::GIFImageDecoderPlugin(const u8* data, size_t size)
     m_context->data_size = size;
 }
 
-GIFImageDecoderPlugin::~GIFImageDecoderPlugin() { }
+GIFImageDecoderPlugin::~GIFImageDecoderPlugin() = default;
 
 IntSize GIFImageDecoderPlugin::size()
 {
