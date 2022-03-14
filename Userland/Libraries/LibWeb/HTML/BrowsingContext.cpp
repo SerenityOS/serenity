@@ -54,7 +54,8 @@ void BrowsingContext::reset_cursor_blink_cycle()
 {
     m_cursor_blink_state = true;
     m_cursor_blink_timer->restart();
-    m_cursor_position.node()->layout_node()->set_needs_display();
+    if (m_cursor_position.is_valid() && m_cursor_position.node()->layout_node())
+        m_cursor_position.node()->layout_node()->set_needs_display();
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#top-level-browsing-context
