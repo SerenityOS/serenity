@@ -97,8 +97,10 @@ void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
 
     if (m_size != rect.size()) {
         m_size = rect.size();
-        if (auto* document = active_document())
-            document->set_needs_layout();
+        if (auto* document = active_document()) {
+            // NOTE: Resizing the viewport changes the reference value for viewport-relative CSS lengths.
+            document->invalidate_style();
+        }
         did_change = true;
     }
 
