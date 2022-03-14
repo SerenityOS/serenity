@@ -58,7 +58,7 @@ private:
 
     struct InnerBuffer {
         u8* data { nullptr };
-        size_t size;
+        size_t size { 0 };
     };
 
     InnerBuffer* m_write_buffer { nullptr };
