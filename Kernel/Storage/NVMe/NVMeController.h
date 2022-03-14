@@ -73,10 +73,10 @@ private:
     NonnullRefPtrVector<NVMeNameSpace> m_namespaces;
     Memory::TypedMapping<volatile ControllerRegister> m_controller_regs;
     bool m_admin_queue_ready { false };
-    size_t m_device_count {};
+    size_t m_device_count { 0 };
     AK::Time m_ready_timeout;
-    u32 m_bar;
-    u8 m_dbl_stride;
+    u32 m_bar { 0 };
+    u8 m_dbl_stride { 0 };
     static Atomic<u8> controller_id;
 };
 }
