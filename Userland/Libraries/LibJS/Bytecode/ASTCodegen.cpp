@@ -723,8 +723,29 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_bytecode(Bytecode::
 
     auto& end_block = generator.make_block();
 
-    if (m_init)
+    bool has_lexical_environment = false;
+
+    if (m_init) {
+        if (m_init->is_variable_declaration()) {
+            auto& variable_declaration = verify_cast<VariableDeclaration>(*m_init);
+
+            if (variable_declaration.is_lexical_declaration()) {
+                has_lexical_environment = true;
+
+                // FIXME: Is Block correct?
+                generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Block);
+
+                bool is_const = variable_declaration.is_constant_declaration();
+                variable_declaration.for_each_bound_name([&](auto const& name) {
+                    auto index = generator.intern_identifier(name);
+                    generator.register_binding(index);
+                    generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_const);
+                });
+            }
+        }
+
         TRY(m_init->generate_bytecode(generator));
+    }
 
     body_block_ptr = &generator.make_block();
 
@@ -760,6 +781,9 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_bytecode(Bytecode::
     TRY(m_body->generate_bytecode(generator));
     generator.end_breakable_scope();
     generator.end_continuable_scope();
+
+    if (has_lexical_environment)
+        generator.end_variable_scope();
 
     if (!generator.is_current_block_terminated()) {
         if (m_update) {
