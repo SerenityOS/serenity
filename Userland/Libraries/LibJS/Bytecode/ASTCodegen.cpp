@@ -1441,6 +1441,7 @@ Bytecode::CodeGenerationErrorOr<void> UpdateExpression::generate_bytecode(Byteco
 Bytecode::CodeGenerationErrorOr<void> ThrowStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     TRY(m_argument->generate_bytecode(generator));
+    generator.perform_needed_unwinds<Bytecode::Op::Throw>();
     generator.emit<Bytecode::Op::Throw>();
     return {};
 }
