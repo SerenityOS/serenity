@@ -186,8 +186,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return false;
         };
 
+        bool did_match_something = false;
+
         auto handle_file = [&matches, binary_mode, suppress_errors, count_lines, quiet_mode,
-                               user_specified_multiple_files, &matched_line_count](StringView filename, bool print_filename) -> bool {
+                               user_specified_multiple_files, &matched_line_count, &did_match_something](StringView filename, bool print_filename) -> bool {
             auto file = Core::File::construct(filename);
             if (!file->open(Core::OpenMode::ReadOnly)) {
                 if (!suppress_errors)
@@ -208,7 +210,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 auto line = file->read_line(file_size);
                 auto is_binary = memchr(line.characters(), 0, line.length()) != nullptr;
 
-                if (matches(line, filename, line_number, print_filename, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
+                auto matched = matches(line, filename, line_number, print_filename, is_binary);
+                did_match_something = did_match_something || matched;
+                if (matched && is_binary && binary_mode == BinaryFileMode::Binary)
                     break;
             }
 
@@ -236,7 +240,6 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             }
         };
 
-        bool did_match_something = false;
         if (!files.size() && !recursive) {
             char* line = nullptr;
             size_t line_len = 0;
