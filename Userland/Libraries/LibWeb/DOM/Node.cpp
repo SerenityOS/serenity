@@ -334,6 +334,8 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
     }
 
     children_changed();
+
+    document().invalidate_style();
 }
 
 // https://dom.spec.whatwg.org/#concept-node-pre-insert
