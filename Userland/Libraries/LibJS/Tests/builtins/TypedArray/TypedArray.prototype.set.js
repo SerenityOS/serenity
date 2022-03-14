@@ -47,4 +47,56 @@ describe("normal behavior", () => {
             expect(secondTypedArray[1]).toBe(maxUnsignedInteger);
         });
     });
+
+    test("set works when source is TypedArray", () => {
+        function argumentTests({ array, maxUnsignedInteger }) {
+            const firstTypedArray = new array(1);
+            const secondTypedArray = new array([maxUnsignedInteger]);
+            firstTypedArray.set(secondTypedArray, 0);
+            expect(firstTypedArray[0]).toBe(maxUnsignedInteger);
+        }
+
+        TYPED_ARRAYS.forEach(T => argumentTests(T));
+        BIGINT_TYPED_ARRAYS.forEach(T => argumentTests(T));
+    });
+
+    test("set works when source is Array", () => {
+        function argumentTests({ array, maxUnsignedInteger }) {
+            const firstTypedArray = new array(1);
+            firstTypedArray.set([maxUnsignedInteger], 0);
+            expect(firstTypedArray[0]).toBe(maxUnsignedInteger);
+        }
+
+        TYPED_ARRAYS.forEach(T => argumentTests(T));
+        BIGINT_TYPED_ARRAYS.forEach(T => argumentTests(T));
+    });
+});
+
+test("length is 1", () => {
+    TYPED_ARRAYS.forEach(({ array: T }) => {
+        expect(T.prototype.set).toHaveLength(1);
+    });
+
+    BIGINT_TYPED_ARRAYS.forEach(({ array: T }) => {
+        expect(T.prototype.set).toHaveLength(1);
+    });
+});
+
+describe("errors", () => {
+    function argumentErrorTests(T) {
+        test(`requires at least one argument (${T.name})`, () => {
+            expect(() => {
+                new T().set();
+            }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+        });
+
+        test(`source array in bounds (${T.name})`, () => {
+            expect(() => {
+                new T().set([0]);
+            }).toThrowWithMessage(RangeError, "Overflow or out of bounds in target length");
+        });
+    }
+
+    TYPED_ARRAYS.forEach(({ array: T }) => argumentErrorTests(T));
+    BIGINT_TYPED_ARRAYS.forEach(({ array: T }) => argumentErrorTests(T));
 });

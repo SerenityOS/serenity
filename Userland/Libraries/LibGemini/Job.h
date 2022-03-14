@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +18,7 @@ class Job : public Core::NetworkJob {
 
 public:
     explicit Job(const GeminiRequest&, Core::Stream::Stream&);
-    virtual ~Job() override;
+    virtual ~Job() override = default;
 
     virtual void start(Core::Stream::Socket&) override;
     virtual void shutdown(ShutdownMode) override;

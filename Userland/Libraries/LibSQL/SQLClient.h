@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,7 @@ class SQLClient
     : public IPC::ConnectionToServer<SQLClientEndpoint, SQLServerEndpoint>
     , public SQLClientEndpoint {
     IPC_CLIENT_CONNECTION(SQLClient, "/tmp/portal/sql")
-    virtual ~SQLClient();
+    virtual ~SQLClient() = default;
 
     Function<void(int, String const&)> on_connected;
     Function<void(int)> on_disconnected;

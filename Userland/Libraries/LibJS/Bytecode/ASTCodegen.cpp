@@ -176,6 +176,8 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
                 if (!declared_function_names.contains(function_name) && !declared_var_names.contains(function_name)) {
                     // i. Perform ? env.CreateGlobalVarBinding(F, false).
                     generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Var, false);
+                    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+                    generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Var);
 
                     // ii. Append F to declaredFunctionOrVarNames.
                     declared_function_names.set(function_name);
@@ -848,7 +850,7 @@ Bytecode::CodeGenerationErrorOr<void> FunctionDeclaration::generate_bytecode(Byt
     if (m_is_hoisted) {
         auto index = generator.intern_identifier(name());
         generator.emit<Bytecode::Op::GetVariable>(index);
-        generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Var);
+        generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Op::EnvironmentMode::Var);
     }
     return {};
 }
@@ -1127,10 +1129,11 @@ Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Byt
             generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
 
         auto initialization_mode = is_lexical_declaration() ? Bytecode::Op::SetVariable::InitializationMode::Initialize : Bytecode::Op::SetVariable::InitializationMode::Set;
+        auto environment_mode = is_lexical_declaration() ? Bytecode::Op::EnvironmentMode::Lexical : Bytecode::Op::EnvironmentMode::Var;
 
         TRY(declarator.target().visit(
             [&](NonnullRefPtr<Identifier> const& id) -> Bytecode::CodeGenerationErrorOr<void> {
-                generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()), initialization_mode);
+                generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()), initialization_mode, environment_mode);
                 return {};
             },
             [&](NonnullRefPtr<BindingPattern> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
@@ -1207,10 +1210,13 @@ Bytecode::CodeGenerationErrorOr<void> ReturnStatement::generate_bytecode(Bytecod
     if (m_argument)
         TRY(m_argument->generate_bytecode(generator));
 
-    if (generator.is_in_generator_or_async_function())
+    if (generator.is_in_generator_or_async_function()) {
+        generator.perform_needed_unwinds<Bytecode::Op::Yield>();
         generator.emit<Bytecode::Op::Yield>(nullptr);
-    else
+    } else {
+        generator.perform_needed_unwinds<Bytecode::Op::Return>();
         generator.emit<Bytecode::Op::Return>();
+    }
 
     return {};
 }
@@ -1279,6 +1285,7 @@ Bytecode::CodeGenerationErrorOr<void> IfStatement::generate_bytecode(Bytecode::G
 
 Bytecode::CodeGenerationErrorOr<void> ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    generator.perform_needed_unwinds<Bytecode::Op::Jump>();
     generator.emit<Bytecode::Op::Jump>().set_targets(
         generator.nearest_continuable_scope(),
         {});
@@ -1438,6 +1445,7 @@ Bytecode::CodeGenerationErrorOr<void> ThrowStatement::generate_bytecode(Bytecode
 
 Bytecode::CodeGenerationErrorOr<void> BreakStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    generator.perform_needed_unwinds<Bytecode::Op::Jump>(true);
     generator.emit<Bytecode::Op::Jump>().set_targets(
         generator.nearest_breakable_scope(),
         {});
@@ -1502,6 +1510,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
     auto& target_block = generator.make_block();
     generator.switch_to_basic_block(saved_block);
     generator.emit<Bytecode::Op::EnterUnwindContext>(Bytecode::Label { target_block }, handler_target, finalizer_target);
+    generator.start_boundary(Bytecode::Generator::BlockBoundaryType::Unwind);
 
     generator.switch_to_basic_block(target_block);
     TRY(m_block->generate_bytecode(generator));
@@ -1514,6 +1523,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
             next_block = &block;
         }
     }
+    generator.end_boundary(Bytecode::Generator::BlockBoundaryType::Unwind);
 
     generator.switch_to_basic_block(next_block ? *next_block : saved_block);
     return {};
@@ -1605,6 +1615,15 @@ Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecod
     auto& continuation_block = generator.make_block();
     generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
     generator.switch_to_basic_block(continuation_block);
+    return {};
+}
+
+Bytecode::CodeGenerationErrorOr<void> WithStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    TRY(m_object->generate_bytecode(generator));
+    generator.emit<Bytecode::Op::EnterObjectEnvironment>();
+    TRY(m_body->generate_bytecode(generator));
+    generator.emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
     return {};
 }
 

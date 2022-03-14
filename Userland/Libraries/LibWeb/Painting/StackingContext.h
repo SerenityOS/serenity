@@ -33,6 +33,8 @@ public:
 
     void dump(int indent = 0) const;
 
+    void sort();
+
 private:
     Layout::Box& m_box;
     StackingContext* const m_parent { nullptr };

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #pragma once
 
 #include <LibIPC/Connection.h>
+#include <LibIPC/Stub.h>
 
 namespace IPC {
 
@@ -36,9 +38,7 @@ public:
         };
     }
 
-    virtual ~ConnectionFromClient() override
-    {
-    }
+    virtual ~ConnectionFromClient() override = default;
 
     void did_misbehave()
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +7,8 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/MemMem.h>
+#include <AK/Memory.h>
+#include <AK/String.h>
 
 TEST_CASE(bitap)
 {
@@ -65,4 +67,13 @@ TEST_CASE(kmp_two_chunks)
     EXPECT_EQ(result_1.value_or(9), 2u);
     EXPECT_EQ(result_2.value_or(9), 4u);
     EXPECT(!result_3.has_value());
+}
+
+TEST_CASE(timing_safe_compare)
+{
+    String data_set = "abcdefghijklmnopqrstuvwxyz123456789";
+    EXPECT_EQ(true, AK::timing_safe_compare(data_set.characters(), data_set.characters(), data_set.length()));
+
+    String reversed = data_set.reverse();
+    EXPECT_EQ(false, AK::timing_safe_compare(data_set.characters(), reversed.characters(), reversed.length()));
 }

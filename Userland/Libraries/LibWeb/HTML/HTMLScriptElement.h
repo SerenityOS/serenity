@@ -40,6 +40,8 @@ public:
         return type.is_one_of("classic", "module");
     }
 
+    void set_source_line_number(Badge<HTMLParser>, size_t source_line_number) { m_source_line_number = source_line_number; }
+
 private:
     void prepare_script();
     void script_became_ready();
@@ -66,6 +68,8 @@ private:
     RefPtr<Script> m_script;
 
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
+
+    size_t m_source_line_number { 1 };
 };
 
 }

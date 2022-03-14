@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,10 +15,6 @@ namespace Gemini {
 Job::Job(const GeminiRequest& request, Core::Stream::Stream& output_stream)
     : Core::NetworkJob(output_stream)
     , m_request(request)
-{
-}
-
-Job::~Job()
 {
 }
 

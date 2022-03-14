@@ -650,7 +650,7 @@ void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent con
     }
 
     if (!paths_to_copy.is_empty())
-        run_file_operation(FileOperation::Copy, paths_to_copy, target_node.full_path(), window());
+        MUST(run_file_operation(FileOperation::Copy, paths_to_copy, target_node.full_path(), window()));
 
     if (had_accepted_drop && on_accepted_drop)
         on_accepted_drop();

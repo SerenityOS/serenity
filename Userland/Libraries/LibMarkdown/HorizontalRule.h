@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,10 +17,8 @@ namespace Markdown {
 
 class HorizontalRule final : public Block {
 public:
-    HorizontalRule()
-    {
-    }
-    virtual ~HorizontalRule() override { }
+    HorizontalRule() = default;
+    virtual ~HorizontalRule() override = default;
 
     virtual String render_to_html(bool tight = false) const override;
     virtual String render_for_terminal(size_t view_width = 0) const override;

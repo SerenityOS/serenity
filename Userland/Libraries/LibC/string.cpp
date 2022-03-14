@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Brian Gianforcaro <bgianf@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -119,6 +120,11 @@ int memcmp(const void* v1, const void* v2, size_t n)
             return s1[-1] < s2[-1] ? -1 : 1;
     }
     return 0;
+}
+
+int timingsafe_memcmp(const void* b1, const void* b2, size_t len)
+{
+    return AK::timing_safe_compare(b1, b2, len) ? 1 : 0;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memcpy.html

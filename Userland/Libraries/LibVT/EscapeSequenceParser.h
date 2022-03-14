@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@
 namespace VT {
 class EscapeSequenceExecutor {
 public:
-    virtual ~EscapeSequenceExecutor() { }
+    virtual ~EscapeSequenceExecutor() = default;
 
     using Parameters = Span<const unsigned>;
     using Intermediates = Span<const u8>;
@@ -37,7 +37,7 @@ public:
 class EscapeSequenceParser {
 public:
     explicit EscapeSequenceParser(EscapeSequenceExecutor&);
-    ~EscapeSequenceParser();
+    ~EscapeSequenceParser() = default;
 
     ALWAYS_INLINE void on_input(u8 byte)
     {

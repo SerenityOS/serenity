@@ -303,6 +303,18 @@ private:
     EnvironmentMode m_mode { EnvironmentMode::Lexical };
 };
 
+class EnterObjectEnvironment final : public Instruction {
+public:
+    explicit EnterObjectEnvironment()
+        : Instruction(Type::EnterObjectEnvironment)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+};
+
 class CreateVariable final : public Instruction {
 public:
     explicit CreateVariable(IdentifierTableIndex identifier, EnvironmentMode mode, bool is_immutable)

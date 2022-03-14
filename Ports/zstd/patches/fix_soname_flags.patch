@@ -1,5 +1,5 @@
---- zstd-1.5.1/lib/Makefile.orig	2022-01-08 01:21:29.874503163 +0000
-+++ zstd-1.5.1/lib/Makefile	2022-01-08 01:21:43.026368517 +0000
+--- zstd-1.5.2/lib/Makefile.orig	2022-01-08 01:21:29.874503163 +0000
++++ zstd-1.5.2/lib/Makefile	2022-01-08 01:21:43.026368517 +0000
 @@ -69,22 +69,10 @@
  
  # macOS linker doesn't support -soname, and use different extension

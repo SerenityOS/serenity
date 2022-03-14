@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,7 @@ namespace IPC {
 
 class Dictionary {
 public:
-    Dictionary() { }
+    Dictionary() = default;
 
     Dictionary(const HashMap<String, String>& initial_entries)
         : m_entries(initial_entries)

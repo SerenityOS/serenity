@@ -24,6 +24,7 @@ public:
     CSS::ListStyleType list_style_type() const { return m_list_style_type; }
 
 private:
+    virtual bool is_list_item_marker_box() const final { return true; }
     virtual bool can_have_children() const override { return false; }
 
     CSS::ListStyleType m_list_style_type { CSS::ListStyleType::None };
@@ -31,5 +32,8 @@ private:
 
     String m_text {};
 };
+
+template<>
+inline bool Node::fast_is<ListItemMarkerBox>() const { return is_list_item_marker_box(); }
 
 }
