@@ -72,6 +72,7 @@ void operator delete[](void* ptrs) noexcept DISALLOW("All deletes in the kernel 
 void operator delete[](void* ptr, size_t) noexcept;
 
 [[gnu::malloc, gnu::alloc_size(1)]] void* kmalloc(size_t);
+[[gnu::malloc, gnu::alloc_size(1, 2)]] void* kcalloc(size_t, size_t);
 
 [[gnu::malloc, gnu::alloc_size(1), gnu::alloc_align(2)]] void* kmalloc_aligned(size_t size, size_t alignment);
 

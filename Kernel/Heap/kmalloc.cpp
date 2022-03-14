@@ -449,6 +449,18 @@ void* kmalloc(size_t size)
     return ptr;
 }
 
+void* kcalloc(size_t count, size_t size)
+{
+    if (Checked<size_t>::multiplication_would_overflow(count, size))
+        return nullptr;
+    size_t new_size = count * size;
+    auto* ptr = kmalloc(new_size);
+    // FIXME: Avoid redundantly scrubbing the memory in kmalloc()
+    if (ptr)
+        memset(ptr, 0, new_size);
+    return ptr;
+}
+
 void kfree_sized(void* ptr, size_t size)
 {
     if (!ptr)
