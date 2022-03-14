@@ -19,7 +19,7 @@ class FunctionObject : public Object {
     JS_OBJECT(Function, Object);
 
 public:
-    virtual ~FunctionObject();
+    virtual ~FunctionObject() = default;
     virtual void initialize(GlobalObject&) override { }
 
     // Table 7: Additional Essential Internal Methods of Function Objects, https://tc39.es/ecma262/#table-additional-essential-internal-methods-of-function-objects

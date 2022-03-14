@@ -16,7 +16,7 @@ class ArrayConstructor final : public NativeFunction {
 public:
     explicit ArrayConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~ArrayConstructor() override;
+    virtual ~ArrayConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;

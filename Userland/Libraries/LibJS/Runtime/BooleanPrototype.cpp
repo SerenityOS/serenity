@@ -26,10 +26,6 @@ void BooleanPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
-BooleanPrototype::~BooleanPrototype()
-{
-}
-
 // 20.3.3.2 Boolean.prototype.toString ( ), https://tc39.es/ecma262/#sec-boolean.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::to_string)
 {

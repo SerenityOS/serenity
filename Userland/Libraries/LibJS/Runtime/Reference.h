@@ -24,7 +24,7 @@ public:
         Environment,
     };
 
-    Reference() { }
+    Reference() = default;
     Reference(BaseType type, PropertyKey name, bool strict)
         : m_base_type(type)
         , m_name(move(name))

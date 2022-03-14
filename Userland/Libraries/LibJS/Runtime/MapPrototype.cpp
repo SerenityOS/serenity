@@ -39,10 +39,6 @@ void MapPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.Map.as_string()), Attribute::Configurable);
 }
 
-MapPrototype::~MapPrototype()
-{
-}
-
 // 24.1.3.1 Map.prototype.clear ( ), https://tc39.es/ecma262/#sec-map.prototype.clear
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::clear)
 {

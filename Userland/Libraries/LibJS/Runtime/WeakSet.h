@@ -22,7 +22,7 @@ public:
     static WeakSet* create(GlobalObject&);
 
     explicit WeakSet(Object& prototype);
-    virtual ~WeakSet() override;
+    virtual ~WeakSet() override = default;
 
     HashTable<Cell*> const& values() const { return m_values; };
     HashTable<Cell*>& values() { return m_values; };

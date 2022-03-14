@@ -37,10 +37,6 @@ void BigIntConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
-BigIntConstructor::~BigIntConstructor()
-{
-}
-
 // 21.2.1.1 BigInt ( value ), https://tc39.es/ecma262/#sec-bigint-constructor-number-value
 ThrowCompletionOr<Value> BigIntConstructor::call()
 {

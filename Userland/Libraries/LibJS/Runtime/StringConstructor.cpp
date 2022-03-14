@@ -38,10 +38,6 @@ void StringConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
-StringConstructor::~StringConstructor()
-{
-}
-
 // 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
 ThrowCompletionOr<Value> StringConstructor::call()
 {

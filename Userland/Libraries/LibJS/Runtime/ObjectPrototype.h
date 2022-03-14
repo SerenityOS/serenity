@@ -17,7 +17,7 @@ class ObjectPrototype final : public Object {
 public:
     explicit ObjectPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~ObjectPrototype() override;
+    virtual ~ObjectPrototype() override = default;
 
     // 10.4.7 Immutable Prototype Exotic Objects, https://tc39.es/ecma262/#sec-immutable-prototype-exotic-objects
 

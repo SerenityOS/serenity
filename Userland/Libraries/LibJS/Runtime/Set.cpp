@@ -19,10 +19,6 @@ Set::Set(Object& prototype)
 {
 }
 
-Set::~Set()
-{
-}
-
 void Set::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

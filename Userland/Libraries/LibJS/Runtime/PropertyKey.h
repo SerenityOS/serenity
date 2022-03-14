@@ -37,7 +37,7 @@ public:
         return TRY(value.to_string(global_object));
     }
 
-    PropertyKey() { }
+    PropertyKey() = default;
 
     template<Integral T>
     PropertyKey(T index)

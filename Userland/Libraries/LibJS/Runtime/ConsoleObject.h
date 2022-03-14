@@ -16,7 +16,7 @@ class ConsoleObject final : public Object {
 public:
     explicit ConsoleObject(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~ConsoleObject() override;
+    virtual ~ConsoleObject() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(log);

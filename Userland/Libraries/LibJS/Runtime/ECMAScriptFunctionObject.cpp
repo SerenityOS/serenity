@@ -134,10 +134,6 @@ void ECMAScriptFunctionObject::initialize(GlobalObject& global_object)
     }
 }
 
-ECMAScriptFunctionObject::~ECMAScriptFunctionObject()
-{
-}
-
 // 10.2.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist
 ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argument, MarkedVector<Value> arguments_list)
 {

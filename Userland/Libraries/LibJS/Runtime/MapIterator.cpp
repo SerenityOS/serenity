@@ -22,10 +22,6 @@ MapIterator::MapIterator(Map& map, Object::PropertyKind iteration_kind, Object& 
 {
 }
 
-MapIterator::~MapIterator()
-{
-}
-
 void MapIterator::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

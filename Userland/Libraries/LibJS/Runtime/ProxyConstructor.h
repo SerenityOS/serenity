@@ -17,7 +17,7 @@ class ProxyConstructor final : public NativeFunction {
 public:
     explicit ProxyConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~ProxyConstructor() override;
+    virtual ~ProxyConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;

@@ -17,7 +17,7 @@ class FinalizationRegistryPrototype final : public PrototypeObject<FinalizationR
 public:
     FinalizationRegistryPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~FinalizationRegistryPrototype() override;
+    virtual ~FinalizationRegistryPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(cleanup_some);

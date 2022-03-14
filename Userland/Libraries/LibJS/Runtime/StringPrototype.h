@@ -26,7 +26,7 @@ class StringPrototype final : public StringObject {
 public:
     explicit StringPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~StringPrototype() override;
+    virtual ~StringPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(char_at);

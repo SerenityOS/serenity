@@ -37,10 +37,6 @@ void SymbolPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Symbol"), Attribute::Configurable);
 }
 
-SymbolPrototype::~SymbolPrototype()
-{
-}
-
 // thisSymbolValue ( value ), https://tc39.es/ecma262/#thissymbolvalue
 static ThrowCompletionOr<Symbol*> this_symbol_value(GlobalObject& global_object, Value value)
 {

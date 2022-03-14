@@ -124,9 +124,4 @@ bool SyntaxHighlighter::token_types_equal(u64 token1, u64 token2) const
 {
     return static_cast<JS::TokenType>(token1) == static_cast<JS::TokenType>(token2);
 }
-
-SyntaxHighlighter::~SyntaxHighlighter()
-{
-}
-
 }

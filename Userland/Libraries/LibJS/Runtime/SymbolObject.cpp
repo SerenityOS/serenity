@@ -21,10 +21,6 @@ SymbolObject::SymbolObject(Symbol& symbol, Object& prototype)
 {
 }
 
-SymbolObject::~SymbolObject()
-{
-}
-
 void SymbolObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

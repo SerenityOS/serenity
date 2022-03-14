@@ -18,7 +18,7 @@ public:
     static StringIterator* create(GlobalObject&, String string);
 
     explicit StringIterator(String string, Object& prototype);
-    virtual ~StringIterator() override;
+    virtual ~StringIterator() override = default;
 
     Utf8CodePointIterator& iterator() { return m_iterator; }
     bool done() const { return m_done; }

@@ -18,7 +18,7 @@ public:
     static BigIntObject* create(GlobalObject&, BigInt&);
 
     BigIntObject(BigInt&, Object& prototype);
-    virtual ~BigIntObject();
+    virtual ~BigIntObject() override = default;
 
     BigInt const& bigint() const { return m_bigint; }
     BigInt& bigint() { return m_bigint; }

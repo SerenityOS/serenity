@@ -13,7 +13,7 @@ namespace JS {
 
 class BlockAllocator {
 public:
-    BlockAllocator();
+    BlockAllocator() = default;
     ~BlockAllocator();
 
     void* allocate_block(char const* name);

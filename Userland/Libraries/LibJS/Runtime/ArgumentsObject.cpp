@@ -23,10 +23,6 @@ void ArgumentsObject::initialize(GlobalObject& global_object)
     m_parameter_map = Object::create(global_object, nullptr);
 }
 
-ArgumentsObject::~ArgumentsObject()
-{
-}
-
 void ArgumentsObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

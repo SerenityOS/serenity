@@ -39,10 +39,6 @@ void ProxyConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }
 
-ProxyConstructor::~ProxyConstructor()
-{
-}
-
 // 28.2.1.1 Proxy ( target, handler ), https://tc39.es/ecma262/#sec-proxy-target-handler
 ThrowCompletionOr<Value> ProxyConstructor::call()
 {

@@ -16,7 +16,7 @@ class BooleanConstructor final : public NativeFunction {
 public:
     explicit BooleanConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~BooleanConstructor() override;
+    virtual ~BooleanConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;

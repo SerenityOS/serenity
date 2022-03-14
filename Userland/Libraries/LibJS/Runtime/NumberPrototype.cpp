@@ -95,10 +95,6 @@ void NumberPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
-NumberPrototype::~NumberPrototype()
-{
-}
-
 // thisNumberValue ( value ), https://tc39.es/ecma262/#thisnumbervalue
 static ThrowCompletionOr<Value> this_number_value(GlobalObject& global_object, Value value)
 {

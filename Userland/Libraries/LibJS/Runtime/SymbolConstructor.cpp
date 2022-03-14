@@ -35,10 +35,6 @@ void SymbolConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
 
-SymbolConstructor::~SymbolConstructor()
-{
-}
-
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
 ThrowCompletionOr<Value> SymbolConstructor::call()
 {

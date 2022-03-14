@@ -60,10 +60,6 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::react_to_async_task_complet
     return promise->perform_then(m_on_fulfillment, m_on_rejection, PromiseCapability { promise, m_on_fulfillment, m_on_rejection });
 }
 
-AsyncFunctionDriverWrapper::~AsyncFunctionDriverWrapper()
-{
-}
-
 void AsyncFunctionDriverWrapper::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

@@ -21,7 +21,7 @@ public:
     static ThrowCompletionOr<Value> create(GlobalObject&, GeneratorObject*);
     explicit AsyncFunctionDriverWrapper(GlobalObject&, GeneratorObject*);
 
-    virtual ~AsyncFunctionDriverWrapper() override;
+    virtual ~AsyncFunctionDriverWrapper() override = default;
     void visit_edges(Cell::Visitor&) override;
 
     ThrowCompletionOr<Value> react_to_async_task_completion(VM&, GlobalObject&, Value, bool is_successful);

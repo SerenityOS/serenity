@@ -19,7 +19,7 @@ class Cell {
 
 public:
     virtual void initialize(GlobalObject&) { }
-    virtual ~Cell() { }
+    virtual ~Cell() = default;
 
     bool is_marked() const { return m_mark; }
     void set_marked(bool b) { m_mark = b; }
@@ -55,7 +55,7 @@ public:
     VM& vm() const;
 
 protected:
-    Cell() { }
+    Cell() = default;
 
 private:
     bool m_mark : 1 { false };

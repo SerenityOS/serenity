@@ -21,10 +21,6 @@ FunctionObject::FunctionObject(Object& prototype)
 {
 }
 
-FunctionObject::~FunctionObject()
-{
-}
-
 // 10.2.9 SetFunctionName ( F, name [ , prefix ] ), https://tc39.es/ecma262/#sec-setfunctionname
 void FunctionObject::set_function_name(Variant<PropertyKey, PrivateName> const& name_arg, Optional<StringView> const& prefix)
 {

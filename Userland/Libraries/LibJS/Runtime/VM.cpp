@@ -137,10 +137,6 @@ VM::VM(OwnPtr<CustomData> custom_data)
 #undef __JS_ENUMERATE
 }
 
-VM::~VM()
-{
-}
-
 void VM::enable_default_host_import_module_dynamically_hook()
 {
     host_import_module_dynamically = [&](ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier, PromiseCapability promise_capability) {
@@ -703,10 +699,6 @@ void VM::dump_backtrace() const
             dbgln("-> {}", frame->function_name);
         }
     }
-}
-
-VM::CustomData::~CustomData()
-{
 }
 
 void VM::save_execution_context_stack()

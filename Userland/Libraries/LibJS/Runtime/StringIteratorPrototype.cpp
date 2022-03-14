@@ -28,10 +28,6 @@ void StringIteratorPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "String Iterator"), Attribute::Configurable);
 }
 
-StringIteratorPrototype::~StringIteratorPrototype()
-{
-}
-
 // 22.1.5.1.1 %StringIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next
 JS_DEFINE_NATIVE_FUNCTION(StringIteratorPrototype::next)
 {

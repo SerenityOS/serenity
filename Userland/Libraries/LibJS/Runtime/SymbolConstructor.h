@@ -16,7 +16,7 @@ class SymbolConstructor final : public NativeFunction {
 public:
     explicit SymbolConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~SymbolConstructor() override;
+    virtual ~SymbolConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;

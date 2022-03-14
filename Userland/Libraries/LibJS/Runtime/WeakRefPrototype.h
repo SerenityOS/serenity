@@ -17,7 +17,7 @@ class WeakRefPrototype final : public PrototypeObject<WeakRefPrototype, WeakRef>
 public:
     WeakRefPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~WeakRefPrototype() override;
+    virtual ~WeakRefPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(deref);

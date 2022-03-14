@@ -16,7 +16,7 @@ class ReflectObject final : public Object {
 public:
     explicit ReflectObject(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~ReflectObject() override;
+    virtual ~ReflectObject() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(apply);

@@ -22,10 +22,6 @@ SetIterator::SetIterator(Set& set, Object::PropertyKind iteration_kind, Object& 
 {
 }
 
-SetIterator::~SetIterator()
-{
-}
-
 void SetIterator::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

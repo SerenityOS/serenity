@@ -55,10 +55,6 @@ void NumberConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
-NumberConstructor::~NumberConstructor()
-{
-}
-
 // Most of 21.1.1.1 Number ( value ) factored into a separate function for sharing between call() and construct().
 static ThrowCompletionOr<Value> get_value_from_constructor_argument(GlobalObject& global_object)
 {

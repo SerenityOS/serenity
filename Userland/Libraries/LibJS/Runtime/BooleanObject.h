@@ -16,7 +16,7 @@ public:
     static BooleanObject* create(GlobalObject&, bool);
 
     BooleanObject(bool, Object& prototype);
-    virtual ~BooleanObject() override;
+    virtual ~BooleanObject() override = default;
 
     bool boolean() const { return m_value; }
 

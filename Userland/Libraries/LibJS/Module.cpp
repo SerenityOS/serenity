@@ -17,10 +17,6 @@ Module::Module(Realm& realm, String filename)
 {
 }
 
-Module::~Module()
-{
-}
-
 // 16.2.1.5.1.1 InnerModuleLinking ( module, stack, index ), https://tc39.es/ecma262/#sec-InnerModuleLinking
 ThrowCompletionOr<u32> Module::inner_module_linking(VM& vm, Vector<Module*>&, u32 index)
 {

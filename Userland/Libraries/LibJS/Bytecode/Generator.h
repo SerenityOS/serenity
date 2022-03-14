@@ -194,7 +194,7 @@ public:
 
 private:
     Generator();
-    ~Generator();
+    ~Generator() = default;
 
     void grow(size_t);
     void* next_slot();

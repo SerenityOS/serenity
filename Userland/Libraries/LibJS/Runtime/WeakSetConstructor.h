@@ -16,7 +16,7 @@ class WeakSetConstructor final : public NativeFunction {
 public:
     explicit WeakSetConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~WeakSetConstructor() override;
+    virtual ~WeakSetConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject&) override;

@@ -16,7 +16,7 @@ class FunctionPrototype final : public Object {
 public:
     explicit FunctionPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~FunctionPrototype() override;
+    virtual ~FunctionPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(apply);

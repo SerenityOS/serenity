@@ -31,7 +31,7 @@ public:
 
     ArrayBuffer(ByteBuffer buffer, Object& prototype);
     ArrayBuffer(ByteBuffer* buffer, Object& prototype);
-    virtual ~ArrayBuffer() override;
+    virtual ~ArrayBuffer() override = default;
 
     size_t byte_length() const { return buffer_impl().size(); }
     size_t max_byte_length() const { return m_max_byte_length.value(); } // Will VERIFY() that it has value

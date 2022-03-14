@@ -23,7 +23,7 @@ class FinalizationRegistry final
 
 public:
     explicit FinalizationRegistry(Realm&, JS::JobCallback, Object& prototype);
-    virtual ~FinalizationRegistry() override;
+    virtual ~FinalizationRegistry() override = default;
 
     void add_finalization_record(Cell& target, Value held_value, Object* unregister_token);
     bool remove_by_token(Object& unregister_token);

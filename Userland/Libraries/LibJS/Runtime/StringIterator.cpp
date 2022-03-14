@@ -21,9 +21,4 @@ StringIterator::StringIterator(String string, Object& prototype)
     , m_iterator(Utf8View(m_string).begin())
 {
 }
-
-StringIterator::~StringIterator()
-{
-}
-
 }

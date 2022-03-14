@@ -16,10 +16,6 @@ FunctionEnvironment::FunctionEnvironment(Environment* parent_scope)
 {
 }
 
-FunctionEnvironment::~FunctionEnvironment()
-{
-}
-
 void FunctionEnvironment::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);

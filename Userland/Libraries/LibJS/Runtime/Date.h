@@ -19,7 +19,7 @@ public:
     static Date* now(GlobalObject&);
 
     Date(double date_value, Object& prototype);
-    virtual ~Date() override;
+    virtual ~Date() override = default;
 
     double date_value() const { return m_date_value; }
     void set_date_value(double value) { m_date_value = value; }

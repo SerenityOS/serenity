@@ -27,10 +27,6 @@ void GeneratorPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Generator"), Attribute::Configurable);
 }
 
-GeneratorPrototype::~GeneratorPrototype()
-{
-}
-
 // 27.5.1.2 Generator.prototype.next ( value ), https://tc39.es/ecma262/#sec-generator.prototype.next
 JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::next)
 {

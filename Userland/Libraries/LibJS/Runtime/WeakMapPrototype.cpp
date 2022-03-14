@@ -30,10 +30,6 @@ void WeakMapPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.WeakMap.as_string()), Attribute::Configurable);
 }
 
-WeakMapPrototype::~WeakMapPrototype()
-{
-}
-
 // 24.3.3.2 WeakMap.prototype.delete ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::delete_)
 {

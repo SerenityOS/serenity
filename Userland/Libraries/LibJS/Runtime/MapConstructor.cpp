@@ -31,10 +31,6 @@ void MapConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
 
-MapConstructor::~MapConstructor()
-{
-}
-
 // 24.1.1.1 Map ( [ iterable ] ), https://tc39.es/ecma262/#sec-map-iterable
 ThrowCompletionOr<Value> MapConstructor::call()
 {

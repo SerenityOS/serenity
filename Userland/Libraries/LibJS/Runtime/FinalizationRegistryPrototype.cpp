@@ -28,10 +28,6 @@ void FinalizationRegistryPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.FinalizationRegistry.as_string()), Attribute::Configurable);
 }
 
-FinalizationRegistryPrototype::~FinalizationRegistryPrototype()
-{
-}
-
 // @STAGE 2@ FinalizationRegistry.prototype.cleanupSome ( [ callback ] ), https://github.com/tc39/proposal-cleanup-some/blob/master/spec/finalization-registry.html
 JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::cleanup_some)
 {

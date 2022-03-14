@@ -173,7 +173,7 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
 
 class MarkingVisitor final : public Cell::Visitor {
 public:
-    MarkingVisitor() { }
+    MarkingVisitor() = default;
 
     virtual void visit_impl(Cell& cell) override
     {

@@ -16,7 +16,7 @@ class DataViewConstructor final : public NativeFunction {
 public:
     explicit DataViewConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~DataViewConstructor() override;
+    virtual ~DataViewConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject&) override;

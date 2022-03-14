@@ -51,10 +51,6 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
 #undef __JS_ENUMERATE
 }
 
-RegExpPrototype::~RegExpPrototype()
-{
-}
-
 // Non-standard abstraction around steps used by multiple prototypes.
 static ThrowCompletionOr<void> increment_last_index(GlobalObject& global_object, Object& regexp_object, Utf16View const& string, bool unicode)
 {

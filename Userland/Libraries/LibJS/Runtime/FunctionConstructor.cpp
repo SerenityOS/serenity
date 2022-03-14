@@ -35,10 +35,6 @@ void FunctionConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
-FunctionConstructor::~FunctionConstructor()
-{
-}
-
 // 20.2.1.1.1 CreateDynamicFunction ( constructor, newTarget, kind, args ), https://tc39.es/ecma262/#sec-createdynamicfunction
 ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic_function(GlobalObject& global_object, FunctionObject& constructor, FunctionObject* new_target, FunctionKind kind, MarkedVector<Value> const& args)
 {

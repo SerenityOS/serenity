@@ -19,7 +19,7 @@ public:
     static ProxyObject* create(GlobalObject&, Object& target, Object& handler);
 
     ProxyObject(Object& target, Object& handler, Object& prototype);
-    virtual ~ProxyObject() override;
+    virtual ~ProxyObject() override = default;
 
     virtual const FlyString& name() const override;
     virtual bool has_constructor() const override;

@@ -27,10 +27,6 @@ void MapIteratorPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Map Iterator"), Attribute::Configurable);
 }
 
-MapIteratorPrototype::~MapIteratorPrototype()
-{
-}
-
 // 24.1.5.2.1 %MapIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next
 JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
 {

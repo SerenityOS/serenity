@@ -24,7 +24,7 @@ public:
         virtual ~HostDefined() = default;
     };
 
-    ~Script();
+    ~Script() = default;
     static Result<NonnullRefPtr<Script>, Vector<Parser::Error>> parse(StringView source_text, Realm&, StringView filename = {}, HostDefined* = nullptr, size_t line_number_offset = 1);
 
     Realm& realm() { return *m_realm.cell(); }
