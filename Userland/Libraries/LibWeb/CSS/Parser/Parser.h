@@ -39,6 +39,7 @@ class ParsingContext {
 public:
     ParsingContext() = default;
     explicit ParsingContext(DOM::Document const&);
+    explicit ParsingContext(DOM::Document const&, Optional<AK::URL> const);
     explicit ParsingContext(DOM::ParentNode&);
 
     bool in_quirks_mode() const;
@@ -51,6 +52,7 @@ public:
 private:
     DOM::Document const* m_document { nullptr };
     PropertyID m_current_property_id { PropertyID::Invalid };
+    Optional<AK::URL> m_url;
 };
 
 template<typename T>

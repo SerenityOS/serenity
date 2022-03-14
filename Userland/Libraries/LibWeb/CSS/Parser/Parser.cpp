@@ -34,13 +34,21 @@ static void log_parse_error(const SourceLocation& location = SourceLocation::cur
 
 namespace Web::CSS {
 
+ParsingContext::ParsingContext(DOM::Document const& document, Optional<AK::URL> const url)
+    : m_document(&document)
+    , m_url(move(url))
+{
+}
+
 ParsingContext::ParsingContext(DOM::Document const& document)
     : m_document(&document)
+    , m_url(document.url())
 {
 }
 
 ParsingContext::ParsingContext(DOM::ParentNode& parent_node)
     : m_document(&parent_node.document())
+    , m_url(parent_node.document().url())
 {
 }
 
@@ -49,9 +57,10 @@ bool ParsingContext::in_quirks_mode() const
     return m_document ? m_document->in_quirks_mode() : false;
 }
 
+// https://www.w3.org/TR/css-values-4/#relative-urls
 AK::URL ParsingContext::complete_url(String const& addr) const
 {
-    return m_document ? m_document->url().complete_url(addr) : AK::URL::create_with_url_or_path(addr);
+    return m_url.has_value() ? m_url->complete_url(addr) : AK::URL::create_with_url_or_path(addr);
 }
 
 template<typename T>
