@@ -92,6 +92,11 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
                 if (unwind_context.handler) {
                     block = unwind_context.handler;
                     unwind_context.handler = nullptr;
+
+                    // If there's no finalizer, there's nowhere for the handler block to unwind to, so the unwind context is no longer needed.
+                    if (!unwind_context.finalizer)
+                        m_unwind_contexts.take_last();
+
                     accumulator() = exception_value;
                     m_saved_exception = {};
                     will_jump = true;
@@ -103,6 +108,9 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
                     will_jump = true;
                     break;
                 }
+                // An unwind context with no handler or finalizer? We have nowhere to jump, and continuing on will make us crash on the next `Call` to a non-native function if there's an exception! So let's crash here instead.
+                // If you run into this, you probably forgot to remove the current unwind_context somewhere.
+                VERIFY_NOT_REACHED();
             }
             if (m_pending_jump.has_value()) {
                 block = m_pending_jump.release_value();
