@@ -19,17 +19,18 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
+    using enum Kernel::Pledge;
     if constexpr (TLS_SSL_KEYLOG_DEBUG)
-        TRY(Core::System::pledge("stdio inet accept unix cpath wpath rpath sendfd recvfd sigaction"));
+        TRY((Core::System::Promise<stdio, inet, Kernel::Pledge::accept, unix, cpath, wpath, rpath, Kernel::Pledge::sendfd, Kernel::Pledge::recvfd, Kernel::Pledge::sigaction>::pledge()));
     else
-        TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd sigaction"));
+        TRY((Core::System::Promise<stdio, inet, Kernel::Pledge::accept, unix, rpath, Kernel::Pledge::sendfd, Kernel::Pledge::recvfd, Kernel::Pledge::sigaction>::pledge()));
 
     signal(SIGINFO, [](int) { RequestServer::ConnectionCache::dump_jobs(); });
 
     if constexpr (TLS_SSL_KEYLOG_DEBUG)
-        TRY(Core::System::pledge("stdio inet accept unix cpath wpath rpath sendfd recvfd"));
+        TRY((Core::System::Promise<stdio, inet, Kernel::Pledge::accept, unix, cpath, wpath, rpath, Kernel::Pledge::sendfd, Kernel::Pledge::recvfd>::pledge()));
     else
-        TRY(Core::System::pledge("stdio inet accept unix rpath sendfd recvfd"));
+        TRY((Core::System::Promise<stdio, inet, Kernel::Pledge::accept, unix, rpath, Kernel::Pledge::sendfd, Kernel::Pledge::recvfd>::pledge()));
 
     // Ensure the certificates are read out here.
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();

@@ -98,7 +98,8 @@ static NonnullOwnPtr<HashMap<FlatPtr, X86::Instruction>> instrument_code()
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio proc exec rpath sigaction ptrace"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, proc, exec, rpath, Kernel::Pledge::sigaction, Kernel::Pledge::ptrace>::pledge()));
 
     if (isatty(STDOUT_FILENO))
         g_should_output_color = true;

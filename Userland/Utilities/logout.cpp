@@ -20,7 +20,8 @@ static Core::ProcessStatistics const& get_proc(Core::AllProcessesStatistics cons
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio proc rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, proc, rpath>::pledge()));
     TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

@@ -12,14 +12,15 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd accept rpath unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, Kernel::Pledge::accept, rpath, unix>::pledge()));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto server = TRY(IPC::MultiServer<NotificationServer::ConnectionFromClient>::try_create());
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
-    TRY(Core::System::pledge("stdio recvfd sendfd accept rpath"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, Kernel::Pledge::accept, rpath>::pledge()));
 
     return app->exec();
 }

@@ -11,7 +11,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
     auto file = TRY(Core::File::open("/proc/cpuinfo", Core::OpenMode::ReadOnly));
 
     auto buffer = file->read_all();

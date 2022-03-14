@@ -40,7 +40,8 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments main_arguments)
 {
-    TRY(Core::System::pledge("stdio rpath proc exec", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, proc, exec>::pledge()));
 
     const char* placeholder = nullptr;
     bool split_with_nulls = false;

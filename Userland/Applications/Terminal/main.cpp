@@ -232,7 +232,8 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix sigaction"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, tty, rpath, cpath, wpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, proc, exec, unix, Kernel::Pledge::sigaction>::pledge()));
 
     struct sigaction act;
     memset(&act, 0, sizeof(act));
@@ -243,7 +244,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix"));
+    TRY((Core::System::Promise<stdio, tty, rpath, cpath, wpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, proc, exec, unix>::pledge()));
 
     Config::pledge_domain("Terminal");
 

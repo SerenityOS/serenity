@@ -13,7 +13,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio settime rpath", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, settime, rpath>::pledge()));
 
     bool print_unix_date = false;
     bool print_iso_8601 = false;

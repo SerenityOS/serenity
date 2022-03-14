@@ -17,7 +17,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio wpath rpath cpath fattr proc exec"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, wpath, rpath, cpath, fattr, proc, exec>::pledge()));
     TRY(Core::System::unveil("/etc/", "rwc"));
     TRY(Core::System::unveil("/bin/rm", "x"));
 

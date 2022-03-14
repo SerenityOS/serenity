@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/Pledge.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -13,7 +14,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"sv));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     Vector<StringView> paths;
     Core::ArgsParser args_parser;
@@ -48,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    TRY(Core::System::pledge("stdio"sv));
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     for (auto* stream : streams) {
         for (;;) {

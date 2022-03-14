@@ -1368,7 +1368,8 @@ private:
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
 #ifdef __serenity__
-    TRY(Core::System::pledge("stdio rpath wpath cpath tty sigaction"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, wpath, cpath, tty, Kernel::Pledge::sigaction>::pledge()));
 #endif
 
     bool gc_on_every_allocation = false;

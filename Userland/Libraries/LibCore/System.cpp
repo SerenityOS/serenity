@@ -10,6 +10,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <Kernel/API/Pledge.h>
 #include <LibCore/SyscallMacros.h>
 #include <LibCore/System.h>
 #include <LibSystem/syscall.h>
@@ -59,16 +60,6 @@ ErrorOr<void> beep()
     if (rc < 0)
         return Error::from_syscall("beep"sv, -errno);
     return {};
-}
-
-ErrorOr<void> pledge(StringView promises, StringView execpromises)
-{
-    Syscall::SC_pledge_params params {
-        { promises.characters_without_null_termination(), promises.length() },
-        { execpromises.characters_without_null_termination(), execpromises.length() },
-    };
-    int rc = syscall(SC_pledge, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("pledge"sv, rc, {});
 }
 
 ErrorOr<void> unveil(StringView path, StringView permissions)

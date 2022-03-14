@@ -14,7 +14,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    TRY(Core::System::pledge("stdio unix", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, unix>::pledge()));
 
     const char* name_or_ip = nullptr;
     Core::ArgsParser args_parser;

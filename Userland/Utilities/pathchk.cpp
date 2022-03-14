@@ -14,7 +14,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
     bool fail = false;
     static bool flag_most_posix = false;
     static bool flag_portability = false;

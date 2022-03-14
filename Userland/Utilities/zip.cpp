@@ -28,7 +28,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(force, "Overwrite existing zip file", "force", 'f');
     args_parser.parse(arguments);
 
-    TRY(Core::System::pledge("stdio rpath wpath cpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, wpath, cpath>::pledge()));
 
     auto cwd = TRY(Core::System::getcwd());
     TRY(Core::System::unveil(LexicalPath::absolute_path(cwd, zip_path), "wc"));

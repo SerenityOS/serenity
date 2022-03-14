@@ -17,7 +17,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
 
-    TRY(Core::System::pledge("stdio unix accept"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, unix, Kernel::Pledge::accept>::pledge()));
 
     auto server = TRY(IPC::MultiServer<InspectorServer::ConnectionFromClient>::try_create("/tmp/portal/inspector"));
 

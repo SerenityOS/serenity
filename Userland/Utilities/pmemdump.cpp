@@ -85,7 +85,8 @@ static void try_to_dump_with_read(int fd, u64 offset, u64 length)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     StringView arg_offset;
     StringView arg_length;

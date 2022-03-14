@@ -29,7 +29,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio wpath rpath cpath fattr proc exec"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, wpath, rpath, cpath, fattr, proc, exec>::pledge()));
     TRY(Core::System::unveil("/etc/", "rwc"));
     TRY(Core::System::unveil("/bin/rm", "x"));
 
@@ -53,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (remove_home) {
         TRY(Core::System::unveil(target_account.home_directory().characters(), "c"));
     } else {
-        TRY(Core::System::pledge("stdio wpath rpath cpath fattr"));
+        TRY((Core::System::Promise<stdio, wpath, rpath, cpath, fattr>::pledge()));
     }
     TRY(Core::System::unveil(nullptr, nullptr));
 

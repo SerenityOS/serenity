@@ -14,7 +14,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio wpath rpath cpath chown"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, wpath, rpath, cpath, Kernel::Pledge::chown>::pledge()));
 
     gid_t gid = 0;
     StringView group_name;

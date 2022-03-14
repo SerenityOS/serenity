@@ -113,7 +113,7 @@ int ftruncate(int fd, off_t length);
 int truncate(const char* path, off_t length);
 int mount(int source_fd, const char* target, const char* fs_type, int flags);
 int umount(const char* mountpoint);
-int pledge(const char* promises, const char* execpromises);
+int pledge(unsigned char mode, unsigned int promises, unsigned int execpromises);
 int unveil(const char* path, const char* permissions);
 char* getpass(const char* prompt);
 int pause(void);

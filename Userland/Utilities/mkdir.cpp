@@ -18,7 +18,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio cpath rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, cpath, rpath>::pledge()));
 
     bool create_parents = false;
     String mode_string;

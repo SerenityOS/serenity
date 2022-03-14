@@ -862,11 +862,12 @@ int set_process_name(const char* name, size_t name_length)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int pledge(const char* promises, const char* execpromises)
+int pledge(unsigned char mode, unsigned int promises, unsigned int execpromises)
 {
     Syscall::SC_pledge_params params {
-        { promises, promises ? strlen(promises) : 0 },
-        { execpromises, execpromises ? strlen(execpromises) : 0 }
+        mode,
+        promises,
+        execpromises,
     };
     int rc = syscall(SC_pledge, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);

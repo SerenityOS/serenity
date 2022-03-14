@@ -88,7 +88,8 @@ static ErrorOr<int> stat(StringView file, bool should_follow_links)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     bool should_follow_links = false;
     Vector<StringView> files;

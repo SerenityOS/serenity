@@ -8,6 +8,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
+#include <Kernel/API/Pledge.h>
 #include <LibCore/File.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -492,7 +493,8 @@ static OwnPtr<Condition> parse_complex_expression(char* argv[])
 
 int main(int argc, char* argv[])
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
+    using namespace Kernel::PledgeBits;
+    if (pledge((u8)Kernel::PledgeMode::Promises, rpath | stdio, 0) < 0) {
         perror("pledge");
         return 126;
     }

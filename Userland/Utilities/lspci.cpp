@@ -39,7 +39,8 @@ static u32 convert_sysfs_value_to_uint(String const& value)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
     TRY(Core::System::unveil("/res/pci.ids", "r"));
     TRY(Core::System::unveil("/sys/bus/pci", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
@@ -67,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio rpath"));
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     while (di.has_next()) {
         auto dir = di.next_path();

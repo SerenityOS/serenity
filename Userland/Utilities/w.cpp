@@ -17,7 +17,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
     TRY(Core::System::unveil("/dev", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));

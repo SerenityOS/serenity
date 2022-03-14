@@ -14,7 +14,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio inet unix rpath sendfd recvfd"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, inet, unix, rpath, Kernel::Pledge::sendfd, Kernel::Pledge::recvfd>::pledge()));
 
     // Ensure the certificates are read out here.
     [[maybe_unused]] auto& certs = DefaultRootCACertificates::the();

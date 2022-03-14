@@ -32,11 +32,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 ErrorOr<int> mode_server()
 {
     Core::EventLoop event_loop;
-    TRY(Core::System::pledge("stdio unix recvfd rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, unix, Kernel::Pledge::recvfd, rpath>::pledge()));
 
     auto client = TRY(IPC::take_over_accepted_client_from_system_server<LanguageServers::Cpp::ConnectionFromClient>());
 
-    TRY(Core::System::pledge("stdio recvfd rpath"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, rpath>::pledge()));
     TRY(Core::System::unveil("/usr/include", "r"));
 
     // unveil will be sealed later, when we know the project's root path.

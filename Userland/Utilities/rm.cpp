@@ -15,7 +15,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath cpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, cpath>::pledge()));
 
     bool recursive = false;
     bool force = false;

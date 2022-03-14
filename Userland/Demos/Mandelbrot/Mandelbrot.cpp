@@ -377,7 +377,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath wpath cpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, thread, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, wpath, cpath>::pledge()));
 
 #if 0
     TRY(Core::System::unveil("/res", "r"));

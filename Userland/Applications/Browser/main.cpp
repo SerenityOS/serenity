@@ -57,7 +57,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath proc exec"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, unix, cpath, rpath, wpath, proc, exec>::pledge()));
 
     const char* specified_url = nullptr;
 

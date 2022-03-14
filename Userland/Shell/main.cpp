@@ -42,7 +42,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
 
 #ifdef __serenity__
-    TRY(Core::System::pledge("stdio rpath wpath cpath proc exec tty sigaction unix fattr", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, wpath, cpath, proc, exec, tty, Kernel::Pledge::sigaction, unix, fattr>::pledge()));
 #endif
 
     RefPtr<::Shell::Shell> shell;

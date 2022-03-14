@@ -17,7 +17,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     bool decode = false;
     const char* filepath = nullptr;
@@ -43,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         buffer = file->read_all();
     }
 
-    TRY(Core::System::pledge("stdio"));
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     if (decode) {
         auto decoded = TRY(decode_base64(StringView(buffer)));

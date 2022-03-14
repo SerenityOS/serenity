@@ -33,12 +33,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domain("Hearts");
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, unix>::pledge()));
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man6/Hearts.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath>::pledge()));
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/portal/launch", "rw"));

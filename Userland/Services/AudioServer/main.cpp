@@ -13,7 +13,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd thread accept cpath rpath wpath unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, thread, Kernel::Pledge::accept, cpath, rpath, wpath, unix>::pledge()));
 
     auto config = TRY(Core::ConfigFile::open_for_app("Audio", Core::ConfigFile::AllowWriting::Yes));
     TRY(Core::System::unveil(config->filename(), "rwc"));
@@ -31,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         (void)IPC::new_client_connection<AudioServer::ConnectionFromClient>(move(client_socket), client_id, *mixer);
     };
 
-    TRY(Core::System::pledge("stdio recvfd thread accept cpath rpath wpath"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, thread, Kernel::Pledge::accept, cpath, rpath, wpath>::pledge()));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     return event_loop.exec();

@@ -6,6 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/String.h>
+#include <Kernel/API/Pledge.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <arpa/inet.h>
@@ -21,7 +22,8 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio id inet unix", nullptr) < 0) {
+    using namespace Kernel::PledgeBits;
+    if (pledge((u8)Kernel::PledgeMode::Promises, stdio | id | inet | unix, 0) < 0) {
         perror("pledge");
         return 1;
     }
@@ -70,7 +72,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio inet unix", nullptr) < 0) {
+    if (pledge((u8)Kernel::PledgeMode::Promises, stdio | inet | unix, 0) < 0) {
         perror("pledge");
         return 1;
     }

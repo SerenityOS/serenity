@@ -74,7 +74,8 @@ static off_t find_seek_pos(Core::File& file, int wanted_lines)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     bool follow = false;
     int line_count = DEFAULT_LINE_COUNT;
@@ -88,7 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto f = TRY(Core::File::open(file, Core::OpenMode::ReadOnly));
-    TRY(Core::System::pledge("stdio"));
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     auto pos = find_seek_pos(*f, line_count);
     return tail_from_pos(*f, pos, follow);

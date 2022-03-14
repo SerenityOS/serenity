@@ -34,7 +34,8 @@ void fail(StringView format, Ts... args)
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    TRY(Core::System::pledge("stdio rpath", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     Vector<const char*> files;
 

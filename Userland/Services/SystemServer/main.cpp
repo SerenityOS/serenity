@@ -478,7 +478,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(prepare_synthetic_filesystems());
     }
 
-    TRY(Core::System::pledge("stdio proc exec tty accept unix rpath wpath cpath chown fattr id sigaction"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, proc, exec, tty, Kernel::Pledge::accept, unix, rpath, wpath, cpath, Kernel::Pledge::chown, fattr, id, Kernel::Pledge::sigaction>::pledge()));
 
     if (!user) {
         TRY(create_tmp_coredump_directory());

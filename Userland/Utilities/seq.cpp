@@ -6,6 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/API/Pledge.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,7 +43,7 @@ static double get_double(const char* name, const char* d_string, int* number_of_
 
 int main(int argc, const char* argv[])
 {
-    if (pledge("stdio", nullptr) < 0) {
+    if (pledge((u8)Kernel::PledgeMode::Promises, Kernel::PledgeBits::stdio, 0) < 0) {
         perror("pledge");
         return 1;
     }

@@ -19,7 +19,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, thread, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, cpath, wpath, unix>::pledge()));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("WindowManager");

@@ -21,7 +21,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix wpath cpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, thread, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, unix, wpath, cpath>::pledge()));
 
     auto app = GUI::Application::construct(arguments);
     Config::pledge_domain("PixelPaint");

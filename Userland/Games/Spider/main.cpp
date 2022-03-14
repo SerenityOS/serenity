@@ -39,14 +39,15 @@ static String format_seconds(uint64_t seconds_elapsed)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, unix>::pledge()));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-spider"));
 
     Config::pledge_domain("Spider");
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath>::pledge()));
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

@@ -13,11 +13,12 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    TRY(Core::System::pledge("stdio recvfd sendfd unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, unix>::pledge()));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto client = TRY(IPC::take_over_accepted_client_from_system_server<ImageDecoder::ConnectionFromClient>());
 
-    TRY(Core::System::pledge("stdio recvfd sendfd"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd>::pledge()));
     return event_loop.exec();
 }

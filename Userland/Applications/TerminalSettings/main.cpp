@@ -16,11 +16,12 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, unix>::pledge()));
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("Terminal");
 
-    TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
+    TRY((Core::System::Promise<stdio, rpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd>::pledge()));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

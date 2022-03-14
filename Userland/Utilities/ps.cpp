@@ -13,10 +13,11 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, tty>::pledge()));
     String this_tty = ttyname(STDIN_FILENO);
 
-    TRY(Core::System::pledge("stdio rpath"));
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
     TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

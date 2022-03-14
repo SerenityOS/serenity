@@ -36,7 +36,8 @@ using namespace Inspector;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, unix>::pledge()));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin", "r"));
     TRY(Core::System::unveil("/tmp", "rwc"));
@@ -146,6 +147,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
     remote_process.update();
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath>::pledge()));
     return app->exec();
 }

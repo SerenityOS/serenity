@@ -39,7 +39,8 @@ static FILE* get_stream(const char* filepath, const char* perms)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, wpath, cpath>::pledge()));
 
     const char* inpath = nullptr;
     const char* outpath = nullptr;

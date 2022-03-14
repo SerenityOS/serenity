@@ -18,7 +18,8 @@ int head(const String& filename, bool print_filename, ssize_t line_count, ssize_
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    TRY(Core::System::pledge("stdio rpath", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     int line_count = -1;
     int byte_count = -1;

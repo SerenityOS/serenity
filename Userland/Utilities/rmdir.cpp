@@ -13,7 +13,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio cpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, cpath>::pledge()));
 
     Vector<const char*> paths;
 

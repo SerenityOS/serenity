@@ -23,7 +23,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(command, "Command to run at elevated privilege level", "command");
     args_parser.parse(arguments);
 
-    TRY(Core::System::pledge("stdio rpath exec id tty"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, exec, id, tty>::pledge()));
 
     TRY(Core::System::seteuid(0));
 
@@ -39,12 +40,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    TRY(Core::System::pledge("stdio rpath exec id"));
+    TRY((Core::System::Promise<stdio, rpath, exec, id>::pledge()));
 
     TRY(Core::System::setgid(0));
     TRY(Core::System::setuid(as_user_uid));
 
-    TRY(Core::System::pledge("stdio rpath exec"));
+    TRY((Core::System::Promise<stdio, rpath, exec>::pledge()));
 
     Vector<char const*> exec_arguments;
     for (auto const& arg : command)

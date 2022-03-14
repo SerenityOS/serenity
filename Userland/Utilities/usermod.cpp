@@ -23,7 +23,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::setegid(0));
 
-    TRY(Core::System::pledge("stdio wpath rpath cpath fattr tty"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, wpath, rpath, cpath, fattr, tty>::pledge()));
     TRY(Core::System::unveil("/etc", "rwc"));
 
     int uid = 0;
@@ -133,7 +134,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         target_account.set_gecos(gecos);
     }
 
-    TRY(Core::System::pledge("stdio wpath rpath cpath fattr"));
+    TRY((Core::System::Promise<stdio, wpath, rpath, cpath, fattr>::pledge()));
 
     TRY(target_account.sync());
 

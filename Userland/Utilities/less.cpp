@@ -524,7 +524,8 @@ static void cat_file(FILE* file)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty sigaction", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, tty, Kernel::Pledge::sigaction>::pledge()));
 
     char const* filename = "-";
     char const* prompt = "?f%f :.(line %l)?e (END):.";
@@ -557,7 +558,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         g_resized = true;
     });
 
-    TRY(Core::System::pledge("stdio tty", nullptr));
+    TRY((Core::System::Promise<stdio, tty>::pledge()));
 
     if (emulate_more) {
         // Configure options that match more's behavior

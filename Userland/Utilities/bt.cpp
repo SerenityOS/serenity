@@ -17,7 +17,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
     auto hostname = TRY(Core::System::gethostname());
 
     Core::ArgsParser args_parser;

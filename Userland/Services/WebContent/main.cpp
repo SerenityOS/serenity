@@ -14,7 +14,8 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop event_loop;
-    TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, Kernel::Pledge::accept, unix, rpath>::pledge()));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/tmp/portal/request", "rw"));

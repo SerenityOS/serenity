@@ -101,7 +101,8 @@ static void display_entry(const OpenFile& file, const Core::ProcessStatistics& s
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath proc"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, proc>::pledge()));
 
     TRY(Core::System::unveil("/proc", "r"));
     // needed by ProcessStatisticsReader::get_all()

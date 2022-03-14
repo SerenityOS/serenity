@@ -24,7 +24,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("PDF Viewer");
     window->resize(640, 400);
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, unix>::pledge()));
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));

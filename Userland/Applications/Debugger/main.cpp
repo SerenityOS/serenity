@@ -212,7 +212,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     editor = Line::Editor::construct();
 
-    TRY(Core::System::pledge("stdio proc ptrace exec rpath tty sigaction cpath unix", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, proc, Kernel::Pledge::ptrace, exec, rpath, tty, Kernel::Pledge::sigaction, cpath, unix>::pledge()));
 
     const char* command = nullptr;
     Core::ArgsParser args_parser;

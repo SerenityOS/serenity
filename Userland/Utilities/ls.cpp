@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Kernel/API/Pledge.h"
+#include "LibCore/System/Promise.h"
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
 #include <AK/NumberFormat.h>
@@ -77,7 +79,8 @@ static bool is_a_tty = false;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, tty>::pledge()));
 
     struct winsize ws;
     int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
@@ -94,10 +97,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         flag_colorize = true;
     }
 
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     Vector<StringView> paths;
 

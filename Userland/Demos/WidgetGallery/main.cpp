@@ -14,10 +14,11 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix thread"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, unix, thread>::pledge()));
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath thread"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, thread>::pledge()));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/home/anon", "r"));
     TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));

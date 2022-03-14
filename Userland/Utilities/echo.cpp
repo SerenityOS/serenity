@@ -99,7 +99,8 @@ static String interpret_backslash_escapes(StringView string, bool& no_trailing_n
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     Vector<const char*> text;
     bool no_trailing_newline = false;

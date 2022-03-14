@@ -132,7 +132,8 @@ static void unlink_coredump(StringView const& coredump_path)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd cpath rpath unix proc exec thread"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, cpath, rpath, unix, proc, exec, thread>::pledge()));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 

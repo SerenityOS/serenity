@@ -14,7 +14,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio accept unix rpath wpath cpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::accept, unix, rpath, wpath, cpath>::pledge()));
 
     if (mkdir("/home/anon/sql", 0700) < 0 && errno != EEXIST) {
         perror("mkdir");

@@ -56,7 +56,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = GUI::Application::construct(arguments);
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath exec proc id"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, exec, proc, id>::pledge()));
     TRY(Core::System::unveil("/home", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/shadow", "r"));

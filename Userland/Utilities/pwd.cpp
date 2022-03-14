@@ -11,7 +11,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("rpath stdio"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<rpath, stdio>::pledge()));
     outln(TRY(Core::System::getcwd()));
     return 0;
 }

@@ -34,7 +34,8 @@ int set_keymap(String const& keymap)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio setkeymap getkeymap rpath wpath cpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, setkeymap, getkeymap, rpath, wpath, cpath>::pledge()));
     TRY(Core::System::unveil("/res/keymaps", "r"));
     TRY(Core::System::unveil("/etc/Keyboard.ini", "rwc"));
 

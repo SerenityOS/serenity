@@ -7,6 +7,7 @@
 #include <AK/Base64.h>
 #include <AK/Format.h>
 #include <AK/URL.h>
+#include <Kernel/API/Pledge.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -17,7 +18,8 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio unix inet accept rpath wpath cpath fattr tty sigaction", nullptr) < 0) {
+    using namespace Kernel::PledgeBits;
+    if (pledge((u8)Kernel::PledgeMode::Promises, stdio | unix | inet | Kernel::PledgeBits::accept | rpath | wpath | cpath | fattr | tty | sigaction, 0) < 0) {
         perror("pledge");
         return 1;
     }
@@ -76,7 +78,7 @@ int main(int argc, char** argv)
         Core::EventLoop::current().quit(0);
     };
 
-    if (pledge("stdio unix inet accept rpath wpath tty sigaction", nullptr) < 0) {
+    if (pledge((u8)Kernel::PledgeMode::Promises, stdio | unix | inet | Kernel::PledgeBits::accept | rpath | wpath | tty | sigaction, 0) < 0) {
         perror("pledge");
         return 1;
     }

@@ -24,7 +24,8 @@ static void print_indent(int indent, int spaces_per_indent)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     StringView path;
     int spaces_in_indent = 4;
@@ -42,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     else
         file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
 
-    TRY(Core::System::pledge("stdio"));
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     auto file_contents = file->read_all();
     auto json = TRY(JsonValue::from_string(file_contents));

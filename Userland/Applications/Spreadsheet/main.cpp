@@ -26,7 +26,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath fattr unix cpath wpath thread", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, fattr, unix, cpath, wpath, thread>::pledge()));
 
     auto app = GUI::Application::construct(arguments);
 

@@ -104,7 +104,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         sched_setparam(0, &param);
     }
 
-    TRY(Core::System::pledge("stdio thread proc recvfd sendfd rpath exec unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, thread, proc, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, exec, unix>::pledge()));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 

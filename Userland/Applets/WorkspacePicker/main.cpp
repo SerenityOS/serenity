@@ -14,14 +14,15 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, unix>::pledge()));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
     // We need to obtain the WM connection here as well before the pledge shortening.
     GUI::ConnectionToWindowMangerServer::the();
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath>::pledge()));
 
     auto window = TRY(DesktopStatusWindow::try_create());
     window->set_title("WorkspacePicker");

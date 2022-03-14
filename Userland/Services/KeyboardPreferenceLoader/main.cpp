@@ -16,7 +16,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio proc exec rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, proc, exec, rpath>::pledge()));
     auto keyboard_settings_config = TRY(Core::ConfigFile::open_for_app("KeyboardSettings"));
 
     TRY(Core::System::unveil("/bin/keymap", "x"));

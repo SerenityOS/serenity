@@ -25,7 +25,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, tty>::pledge()));
     TRY(Core::System::unveil("/proc/net/arp", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

@@ -191,11 +191,12 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, proc, exec, rpath, unix>::pledge()));
 
     auto app = GUI::Application::construct(arguments);
 
-    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, proc, exec, rpath>::pledge()));
 
     const char* cpu = nullptr;
     const char* memory = nullptr;

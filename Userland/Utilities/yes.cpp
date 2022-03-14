@@ -11,7 +11,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     const char* string = "yes";
 

@@ -23,11 +23,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "Keyboard character mapping file.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    TRY(Core::System::pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, getkeymap, thread, rpath, cpath, wpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, unix>::pledge()));
 
     auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
-    TRY(Core::System::pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd"));
+    TRY((Core::System::Promise<stdio, getkeymap, thread, rpath, cpath, wpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd>::pledge()));
 
     auto app_icon = GUI::Icon::default_icon("app-keyboard-mapper");
 
@@ -43,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     else
         TRY(keyboard_mapper_widget->load_map_from_file(path));
 
-    TRY(Core::System::pledge("stdio thread rpath cpath wpath recvfd sendfd"));
+    TRY((Core::System::Promise<stdio, thread, rpath, cpath, wpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd>::pledge()));
 
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {

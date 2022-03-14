@@ -20,7 +20,8 @@ enum TruncateOperation {
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, wpath, cpath>::pledge()));
 
     const char* resize = nullptr;
     const char* reference = nullptr;

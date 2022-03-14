@@ -34,7 +34,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
-    TRY(Core::System::pledge("stdio sigaction", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::sigaction>::pledge()));
 
     double whole_seconds = static_cast<time_t>(secs);
     double fraction = secs - whole_seconds;

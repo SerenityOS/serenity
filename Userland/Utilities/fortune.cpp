@@ -73,7 +73,8 @@ static Vector<Quote> parse_all(const JsonArray& array)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     const char* path = "/res/fortunes.json";
 

@@ -36,7 +36,8 @@ static Optional<String> last_opened_project_path();
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd tty rpath cpath wpath proc exec unix fattr thread ptrace"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, tty, rpath, cpath, wpath, proc, exec, unix, fattr, thread, Kernel::Pledge::ptrace>::pledge()));
 
     auto app = GUI::Application::construct(arguments.argc, arguments.argv);
     Config::pledge_domains({ "HackStudio", "Terminal" });

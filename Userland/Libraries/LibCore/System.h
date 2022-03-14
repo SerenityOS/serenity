@@ -9,7 +9,10 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/Optional.h>
 #include <AK/StringView.h>
+#include <Kernel/API/Pledge.h>
+#include <LibCore/System/Promise.h>
 #include <fcntl.h>
 #include <grp.h>
 #include <pwd.h>
@@ -33,7 +36,8 @@ namespace Core::System {
 
 #ifdef __serenity__
 ErrorOr<void> beep();
-ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
+
+// pledge() is provided by Core::System::Promise, which this header includes for user convenience.
 ErrorOr<void> unveil(StringView path, StringView permissions);
 ErrorOr<void> sendfd(int sockfd, int fd);
 ErrorOr<int> recvfd(int sockfd, int options);

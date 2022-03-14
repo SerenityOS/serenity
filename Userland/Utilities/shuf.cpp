@@ -16,7 +16,8 @@
 
 ErrorOr<int> serenity_main([[maybe_unused]] Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio"sv));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     Vector<String> lines;
 

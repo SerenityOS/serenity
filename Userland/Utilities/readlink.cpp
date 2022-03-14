@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/Pledge.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <stdio.h>
@@ -11,7 +12,8 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
+    using namespace Kernel::PledgeBits;
+    if (pledge((u8)Kernel::PledgeMode::Both, stdio | rpath, 0) < 0) {
         perror("pledge");
         return 1;
     }

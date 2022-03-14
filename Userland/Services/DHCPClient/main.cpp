@@ -11,7 +11,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio unix inet cpath rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, unix, inet, cpath, rpath>::pledge()));
     Core::EventLoop event_loop;
 
     TRY(Core::System::unveil("/proc/net/", "r"));
@@ -19,6 +20,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     auto client = TRY(DHCPv4Client::try_create());
 
-    TRY(Core::System::pledge("stdio inet cpath rpath"));
+    TRY((Core::System::Promise<stdio, inet, cpath, rpath>::pledge()));
     return event_loop.exec();
 }

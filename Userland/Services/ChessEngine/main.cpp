@@ -12,7 +12,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, unix>::pledge()));
     Core::EventLoop loop;
     TRY(Core::System::unveil(nullptr, nullptr));
 

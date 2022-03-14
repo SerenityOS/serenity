@@ -13,7 +13,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     Vector<StringView> paths;
 
@@ -53,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    TRY(Core::System::pledge("stdio"));
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     for (auto* stream : streams) {
         Vector<String> lines;

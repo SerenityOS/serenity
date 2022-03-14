@@ -13,7 +13,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath chown", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, Kernel::Pledge::chown>::pledge()));
 
     const char* gid_arg = nullptr;
     const char* path = nullptr;

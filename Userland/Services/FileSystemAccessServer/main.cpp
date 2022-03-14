@@ -12,7 +12,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath wpath unix thread"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, cpath, wpath, unix, thread>::pledge()));
 
     auto app = GUI::Application::construct(0, nullptr);
     app->set_quit_when_last_window_deleted(false);

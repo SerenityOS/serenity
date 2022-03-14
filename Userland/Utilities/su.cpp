@@ -15,7 +15,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty exec id"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, tty, exec, id>::pledge()));
 
     if (!TRY(Core::System::isatty(STDIN_FILENO)))
         return Error::from_string_literal("Standard input is not a terminal");
@@ -31,7 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto account = TRY(user ? Core::Account::from_name(user) : Core::Account::from_uid(0));
 
-    TRY(Core::System::pledge("stdio tty exec id"));
+    TRY((Core::System::Promise<stdio, tty, exec, id>::pledge()));
 
     if (getuid() != 0 && account.has_password()) {
         auto password = TRY(Core::get_password());
@@ -39,14 +40,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return Error::from_string_literal("Incorrect or disabled password.");
     }
 
-    TRY(Core::System::pledge("stdio exec id"));
+    TRY((Core::System::Promise<stdio, exec, id>::pledge()));
 
     if (!account.login()) {
         perror("Core::Account::login");
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio exec"));
+    TRY((Core::System::Promise<stdio, exec>::pledge()));
 
     execl(account.shell().characters(), account.shell().characters(), nullptr);
     perror("execl");

@@ -32,7 +32,8 @@ static bool file_exists(const char* path)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath cpath fattr"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, cpath, fattr>::pledge()));
 
     Vector<const char*> paths;
 

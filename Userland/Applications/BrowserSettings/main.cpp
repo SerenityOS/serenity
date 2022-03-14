@@ -15,7 +15,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, wpath, cpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, unix>::pledge()));
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("Browser");
 

@@ -22,8 +22,8 @@ static void print_usage_and_exit()
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-
-    TRY(Core::System::pledge("stdio proc"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, proc>::pledge()));
 
     int argc = arguments.argc;
     auto strings = arguments.strings;

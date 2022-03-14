@@ -13,11 +13,12 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath recvfd sendfd unix proc exec"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, unix, proc, exec>::pledge()));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio rpath recvfd sendfd proc exec"));
+    TRY((Core::System::Promise<stdio, rpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, proc, exec>::pledge()));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/timezone", "x"));
     TRY(Core::System::unveil("/etc/timezone", "r"));

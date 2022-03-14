@@ -37,7 +37,8 @@ static ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu();
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix sigaction"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, proc, exec, rpath, unix, Kernel::Pledge::sigaction>::pledge()));
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("Taskbar");
     Config::monitor_domain("Taskbar");
@@ -47,12 +48,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             ;
     });
 
-    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath unix"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, proc, exec, rpath, unix>::pledge()));
 
     GUI::ConnectionToWindowMangerServer::the();
     Desktop::Launcher::ensure_connection();
 
-    TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, proc, exec, rpath>::pledge()));
 
     auto menu = TRY(build_system_menu());
     menu->realize_menu_if_needed();

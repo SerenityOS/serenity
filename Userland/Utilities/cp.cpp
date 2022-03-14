@@ -14,7 +14,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath fattr chown"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, wpath, cpath, fattr, Kernel::Pledge::chown>::pledge()));
 
     bool link = false;
     bool preserve = false;
@@ -36,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (preserve) {
         umask(0);
     } else {
-        TRY(Core::System::pledge("stdio rpath wpath cpath fattr"));
+        TRY((Core::System::Promise<stdio, rpath, wpath, cpath, fattr>::pledge()));
     }
 
     bool destination_is_existing_dir = Core::File::is_directory(destination);

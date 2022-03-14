@@ -60,7 +60,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio accept rpath inet unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::accept, rpath, inet, unix>::pledge()));
 
     WebServer::Configuration configuration(real_root_path);
 
@@ -99,6 +100,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(real_root_path.characters(), "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    TRY(Core::System::pledge("stdio accept rpath"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::accept, rpath>::pledge()));
     return loop.exec();
 }

@@ -54,7 +54,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (view_width == 0)
         view_width = 80;
 
-    TRY(Core::System::pledge("stdio rpath exec proc"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, exec, proc>::pledge()));
     TRY(Core::System::unveil("/usr/share/man", "r"));
     TRY(Core::System::unveil("/bin", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
@@ -110,7 +111,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file = TRY(Core::File::open(filename, Core::OpenMode::ReadOnly));
 
-    TRY(Core::System::pledge("stdio proc"));
+    TRY((Core::System::Promise<stdio, proc>::pledge()));
 
     dbgln("Loading man page from {}", file->filename());
     auto buffer = file->read_all();

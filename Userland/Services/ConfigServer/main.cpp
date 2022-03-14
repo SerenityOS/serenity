@@ -12,7 +12,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio accept rpath wpath cpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::accept, rpath, wpath, cpath>::pledge()));
     TRY(Core::System::unveil(Core::StandardPaths::config_directory(), "rwc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

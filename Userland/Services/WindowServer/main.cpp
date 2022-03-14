@@ -21,7 +21,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc sigaction exec"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, video, thread, Kernel::Pledge::sendfd, Kernel::Pledge::recvfd, Kernel::Pledge::accept, rpath, wpath, cpath, unix, proc, Kernel::Pledge::sigaction, exec>::pledge()));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp", "cw"));
     TRY(Core::System::unveil("/etc/WindowServer.ini", "rwc"));
@@ -34,7 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     act.sa_flags = SA_NOCLDWAIT;
     act.sa_handler = SIG_IGN;
     TRY(Core::System::sigaction(SIGCHLD, &act, nullptr));
-    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc exec"));
+    TRY((Core::System::Promise<stdio, video, thread, Kernel::Pledge::sendfd, Kernel::Pledge::recvfd, Kernel::Pledge::accept, rpath, wpath, cpath, unix, proc, exec>::pledge()));
 
     auto wm_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini"));
     auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
@@ -52,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     WindowServer::EventLoop loop;
 
-    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath proc exec"));
+    TRY((Core::System::Promise<stdio, video, thread, Kernel::Pledge::sendfd, Kernel::Pledge::recvfd, Kernel::Pledge::accept, rpath, wpath, cpath, proc, exec>::pledge()));
 
     // First check which screens are explicitly configured
     {

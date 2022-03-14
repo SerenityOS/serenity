@@ -14,7 +14,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     auto program_name = LexicalPath::basename(arguments.strings[0]);
     auto hash_kind = Crypto::Hash::HashKind::None;

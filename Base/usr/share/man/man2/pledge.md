@@ -7,14 +7,14 @@ pledge - reduce process capabilities
 ```**c++
 #include <unistd.h>
 
-int pledge(const char* promises, const char* execpromises);
+int pledge(unsigned char mode, unsigned int promises, unsigned int execpromises);
 ```
 
 ## Description
 
 `pledge()` makes a promise to the kernel that from this moment on, the calling process will only use a subset of system functionality.
 
-Functionality is divided into a curated set of promises (described below), which can be combined to cover the program's needs. Both arguments are space-separated lists of promises.
+Functionality is divided into a curated set of promises (described below), which can be combined to cover the program's needs. Both arguments are bitfields with every promise set being assigned a unique bit.
 
 Note that `pledge()` can be called repeatedly to remove previously-pledged promises, but it can never regain capabilities once lost.
 
@@ -22,13 +22,15 @@ Note that `pledge()` can be called repeatedly to remove previously-pledged promi
 
 `execpromises` are applied if/when a new process image is created with [`exec`(2)](help://man/2/exec).
 
-If `promises` or `execpromises` is null, the corresponding value is unchanged.
+Because a zero as either promise collection signals a drop of all promises, the `mode` determines which of the promises are actually set by the call to `pledge()`. If the `mode`'s 1 bit is set, the `promises` are applied. If the `mode`'s 2 bit is set, the `execpromises` are applied. If both are set, both are applied, if none are set, `pledge()` is a no-op.
 
 If the process later attempts to use any system functionality it has previously promised *not* to use, the process is instantly terminated. Note that a process that has not ever called `pledge()` is considered to not have made any promises, and is allowed use any system functionality (subject to regular permission checks).
 
 `pledge()` is intended to be used in programs that want to sandbox themselves, either to limit the impact of a possible vulnerability exploitation, or before intentionally executing untrusted code.
 
 ## Promises
+
+The symbolic constants listed below can be found as enum members of `PledgeBit`.
 
 * `stdio`: Basic I/O, memory allocation, information about self, various non-destructive syscalls
 * `thread`: The POSIX threading API (\*)
@@ -59,13 +61,12 @@ Promises marked with an asterisk (\*) are SerenityOS specific extensions not sup
 
 ## Errors
 
-* `EFAULT`: `promises` and/or `execpromises` are not null and not in readable memory.
 * `EINVAL`: One or more invalid promises were specified.
 * `EPERM`: An attempt to increase capabilities was rejected.
 
 ## History
 
-The `pledge()` system call was first introduced by OpenBSD. The implementation in SerenityOS differs in many ways and is by no means final.
+The `pledge()` system call was first introduced by OpenBSD. The implementation in SerenityOS differs in many ways, most prominently that it uses a mode and bitfields as arguments instead of optionally null strings.
 
 ## See also
 

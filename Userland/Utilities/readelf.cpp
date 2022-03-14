@@ -7,6 +7,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <Kernel/API/Pledge.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
@@ -226,7 +227,8 @@ static const char* object_relocation_type_to_string(ElfW(Word) type)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
+    using namespace Kernel::PledgeBits;
+    if (pledge((u8)Kernel::PledgeMode::Promises, stdio | rpath, 0) < 0) {
         perror("pledge");
         return 1;
     }

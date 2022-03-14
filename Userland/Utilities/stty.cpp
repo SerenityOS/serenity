@@ -532,7 +532,8 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio tty rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, tty, rpath>::pledge()));
     TRY(Core::System::unveil("/dev", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

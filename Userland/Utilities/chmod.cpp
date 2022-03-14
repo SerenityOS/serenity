@@ -20,7 +20,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath fattr"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, fattr>::pledge()));
 
     if (arguments.strings.size() < 3) {
         warnln("usage: chmod <octal-mode> <path...>");

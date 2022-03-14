@@ -21,7 +21,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
     launcher.load_handlers();
     launcher.load_config(TRY(Core::ConfigFile::open_for_app("LaunchServer")));
 
-    TRY(Core::System::pledge("stdio accept rpath proc exec"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::accept, rpath, proc, exec>::pledge()));
 
     return event_loop.exec();
 }

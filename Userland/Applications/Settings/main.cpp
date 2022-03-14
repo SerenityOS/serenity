@@ -70,11 +70,12 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath unix proc exec"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, thread, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, cpath, wpath, unix, proc, exec>::pledge()));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath proc exec"));
+    TRY((Core::System::Promise<stdio, thread, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, cpath, wpath, proc, exec>::pledge()));
 
     auto app_icon = GUI::Icon::default_icon("app-settings");
 

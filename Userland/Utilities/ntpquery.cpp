@@ -11,6 +11,7 @@
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
+#include <LibCore/System/Promise.h>
 #include <LibMain/Main.h>
 #include <arpa/inet.h>
 #include <inttypes.h>
@@ -97,7 +98,8 @@ int main(int argc, char** argv)
 #endif
 {
 #ifdef __serenity__
-    TRY(Core::System::pledge("stdio inet unix settime"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, inet, unix, settime>::pledge()));
 #endif
 
     bool adjust_time = false;
@@ -132,7 +134,7 @@ int main(int argc, char** argv)
 
 #ifdef __serenity__
     if (!adjust_time && !set_time) {
-        TRY(Core::System::pledge("stdio inet unix"));
+        TRY((Core::System::Promise<stdio, inet, unix>::pledge()));
     }
 #endif
 
@@ -143,7 +145,11 @@ int main(int argc, char** argv)
     }
 
 #ifdef __serenity__
-    TRY(Core::System::pledge((adjust_time || set_time) ? "stdio inet settime" : "stdio inet"));
+    if (adjust_time || set_time) {
+        TRY((Core::System::Promise<stdio, inet, settime>::pledge()));
+    } else {
+        TRY((Core::System::Promise<stdio, inet>::pledge()));
+    }
     TRY(Core::System::unveil(nullptr, nullptr));
 #endif
 

@@ -139,7 +139,8 @@ static Optional<String> get_description_from_mime_type(const String& mime, const
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     Vector<const char*> paths;
     bool flag_mime_only = false;

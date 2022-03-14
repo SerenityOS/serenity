@@ -8,6 +8,7 @@
 #include <AK/Assertions.h>
 #include <AK/Function.h>
 #include <AK/String.h>
+#include <Kernel/API/Pledge.h>
 #include <Kernel/Arch/x86/IO.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Object.h>
@@ -277,7 +278,7 @@ int main(int argc, char** argv)
 
     if (do_pledge_violation || do_all_crash_types) {
         any_failures |= !Crash("Violate pledge()'d promises", [] {
-            if (pledge("", nullptr) < 0) {
+            if (pledge((u8)Kernel::PledgeMode::Promises, 0, 0) < 0) {
                 perror("pledge");
                 return Crash::Failure::DidNotCrash;
             }

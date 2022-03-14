@@ -17,7 +17,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath fattr"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, wpath, cpath, fattr>::pledge()));
 
     // NOTE: The "force" option is a dummy for now, it's just here to silence scripts that use "mv -f"
     //       In the future, it might be used to cancel out an "-i" interactive option.

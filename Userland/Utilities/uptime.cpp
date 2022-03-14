@@ -12,7 +12,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     FILE* fp = fopen("/proc/uptime", "r");
     if (!fp) {
@@ -20,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio"));
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     char buffer[BUFSIZ];
     auto* p = fgets(buffer, sizeof(buffer), fp);

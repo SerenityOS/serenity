@@ -88,7 +88,8 @@ static Count get_total_count(const Vector<Count>& counts)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     Vector<const char*> file_specifiers;
 
@@ -106,7 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (const auto& file_specifier : file_specifiers)
         counts.append(get_count(file_specifier));
 
-    TRY(Core::System::pledge("stdio"));
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     if (file_specifiers.is_empty())
         counts.append(get_count("-"));

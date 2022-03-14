@@ -425,8 +425,9 @@ struct SC_mount_params {
 };
 
 struct SC_pledge_params {
-    StringArgument promises;
-    StringArgument execpromises;
+    u8 mode;
+    u32 promises;
+    u32 execpromises;
 };
 
 struct SC_unveil_params {

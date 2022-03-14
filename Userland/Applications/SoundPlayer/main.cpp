@@ -25,12 +25,13 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath thread unix"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, thread, unix>::pledge()));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto audio_client = TRY(Audio::ConnectionFromClient::try_create());
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath thread"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, thread>::pledge()));
 
     auto app_icon = GUI::Icon::default_icon("app-sound-player");
 

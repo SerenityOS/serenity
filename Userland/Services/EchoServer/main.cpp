@@ -15,7 +15,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio unix inet id accept", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, unix, inet, id, Kernel::Pledge::accept>::pledge()));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     int port = 7;

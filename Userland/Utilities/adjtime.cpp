@@ -14,7 +14,8 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
 #ifdef __serenity__
-    TRY(Core::System::pledge("stdio settime"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, settime>::pledge()));
 #endif
 
     Core::ArgsParser args_parser;
@@ -35,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
 #ifdef __serenity__
-    TRY(Core::System::pledge("stdio"));
+    TRY((Core::System::Promise<stdio>::pledge()));
 #endif
 
     timeval remaining_delta_timeval;

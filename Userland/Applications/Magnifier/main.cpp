@@ -17,10 +17,11 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd unix", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, cpath, rpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, unix>::pledge()));
     auto app = GUI::Application::construct(arguments);
 
-    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd", nullptr));
+    TRY((Core::System::Promise<stdio, cpath, rpath, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd>::pledge()));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

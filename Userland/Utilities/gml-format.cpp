@@ -49,7 +49,8 @@ ErrorOr<bool> format_file(StringView path, bool inplace)
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
 #ifdef __serenity__
-    TRY(Core::System::pledge("stdio rpath wpath cpath", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, wpath, cpath>::pledge()));
 #endif
 
     bool inplace = false;
@@ -63,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
 #ifdef __serenity__
     if (!inplace)
-        TRY(Core::System::pledge("stdio rpath", nullptr));
+        TRY((Core::System::Promise<stdio, rpath>::pledge()));
 #endif
 
     if (files.is_empty())

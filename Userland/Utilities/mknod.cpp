@@ -19,7 +19,8 @@ static int usage()
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio dpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, dpath>::pledge()));
 
     // FIXME: Add some kind of option for specifying the file permissions.
     if (arguments.strings.size() < 3)

@@ -43,7 +43,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     TRY(Core::System::unveil(nullptr, nullptr));
-    TRY(Core::System::pledge("stdio rpath wpath recvfd", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, wpath, Kernel::Pledge::recvfd>::pledge()));
 
     if (command.equals_ignoring_case("get") || command == "g") {
         // Get variables

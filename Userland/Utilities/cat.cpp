@@ -14,7 +14,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     Vector<StringView> paths;
 
@@ -43,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    TRY(Core::System::pledge("stdio"));
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     Array<u8, 32768> buffer;
     for (auto& fd : fds) {

@@ -11,7 +11,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio dpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, dpath>::pledge()));
 
     mode_t mode = 0666;
     Vector<StringView> paths;

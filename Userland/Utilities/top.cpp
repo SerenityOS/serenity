@@ -179,7 +179,8 @@ static void parse_args(Main::Arguments arguments, TopOption& top_option)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty sigaction"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, tty, Kernel::Pledge::sigaction>::pledge()));
     TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     unveil(nullptr, nullptr);
@@ -188,7 +189,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         g_window_size_changed = true;
     });
 
-    TRY(Core::System::pledge("stdio rpath tty"));
+    TRY((Core::System::Promise<stdio, rpath, tty>::pledge()));
     TopOption top_option;
     parse_args(arguments, top_option);
 

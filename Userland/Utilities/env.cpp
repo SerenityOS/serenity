@@ -14,7 +14,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath exec"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, exec>::pledge()));
 
     bool ignore_env = false;
     const char* split_string = nullptr;

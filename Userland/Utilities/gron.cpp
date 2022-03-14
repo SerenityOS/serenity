@@ -27,12 +27,13 @@ static StringView color_off = ""sv;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, tty>::pledge()));
 
     if (isatty(STDOUT_FILENO))
         use_color = true;
 
-    TRY(Core::System::pledge("stdio rpath"));
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print each value in a JSON file with its fully expanded key.");
@@ -48,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     else
         file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
 
-    TRY(Core::System::pledge("stdio"));
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     auto file_contents = file->read_all();
     auto json = TRY(JsonValue::from_string(file_contents));

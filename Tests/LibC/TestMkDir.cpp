@@ -6,6 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
+#include <Kernel/API/Pledge.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -63,7 +64,8 @@ TEST_CASE(parent_is_file)
 
 TEST_CASE(pledge)
 {
-    int res = pledge("stdio cpath", nullptr);
+    using namespace Kernel::PledgeBits;
+    auto res = pledge((u8)Kernel::PledgeMode::Promises, stdio | cpath, 0);
     EXPECT(res == 0);
 
     auto dirname = random_dirname();

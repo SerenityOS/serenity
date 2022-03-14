@@ -21,7 +21,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath unix cpath wpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, thread, rpath, unix, cpath, wpath>::pledge()));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
@@ -29,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::seal_allowlist());
 
     Config::pledge_domain("FontEditor");
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, thread, rpath, cpath, wpath>::pledge()));
 
     char const* path = nullptr;
     Core::ArgsParser args_parser;

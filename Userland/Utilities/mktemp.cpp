@@ -54,7 +54,8 @@ static ErrorOr<String> make_temp(String const& pattern, bool directory, bool dry
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath wpath cpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, wpath, cpath>::pledge()));
 
     StringView file_template;
     bool create_directory = false;

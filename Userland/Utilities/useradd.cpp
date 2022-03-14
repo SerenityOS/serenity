@@ -29,7 +29,8 @@ constexpr const char* DEFAULT_SHELL = "/bin/sh";
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio wpath rpath cpath chown"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, wpath, rpath, cpath, Kernel::Pledge::chown>::pledge()));
 
     const char* home_path = nullptr;
     int uid = 0;

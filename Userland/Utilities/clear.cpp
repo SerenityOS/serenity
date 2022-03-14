@@ -10,7 +10,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio>::pledge()));
     printf("\033[3J\033[H\033[2J");
     fflush(stdout);
     return 0;

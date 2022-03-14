@@ -15,7 +15,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, tty>::pledge()));
 
     const char* filename = nullptr;
     bool html = false;
@@ -53,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio"));
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     auto buffer = file->read_all();
     dbgln("Read size {}", buffer.size());

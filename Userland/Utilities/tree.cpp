@@ -104,7 +104,8 @@ static void print_directory_tree(const String& root_path, int depth, const Strin
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath tty"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath, tty>::pledge()));
 
     Vector<const char*> directories;
 

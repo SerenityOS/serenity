@@ -4,16 +4,19 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/Pledge.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/GetPassword.h>
 #include <LibIMAP/Client.h>
 #include <LibMain/Main.h>
+#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio inet tty rpath unix", nullptr) < 0) {
+    using namespace Kernel::PledgeBits;
+    if (pledge((u8)Kernel::PledgeMode::Promises, stdio | inet | tty | rpath | unix, 0) < 0) {
         perror("pledge");
         return 1;
     }

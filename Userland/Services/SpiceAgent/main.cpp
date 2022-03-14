@@ -16,7 +16,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     Core::EventLoop loop;
 
-    TRY(Core::System::pledge("unix rpath wpath stdio sendfd recvfd", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<unix, rpath, wpath, stdio, Kernel::Pledge::sendfd, Kernel::Pledge::recvfd>::pledge()));
     TRY(Core::System::unveil(SPICE_DEVICE, "rw"));
     TRY(Core::System::unveil("/tmp/portal/clipboard", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));

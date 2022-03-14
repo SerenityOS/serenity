@@ -575,7 +575,7 @@ NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence 
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio"sv));
+    TRY((Core::System::Promise<Kernel::Pledge::stdio>::pledge()));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     if ((arguments.strings.size() == 2 && "--help"sv == arguments.strings[1]) || arguments.strings.size() == 1)

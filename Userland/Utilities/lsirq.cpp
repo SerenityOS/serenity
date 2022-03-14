@@ -12,13 +12,14 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, rpath>::pledge()));
     TRY(Core::System::unveil("/proc/interrupts", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto proc_interrupts = TRY(Core::File::open("/proc/interrupts", Core::OpenMode::ReadOnly));
 
-    TRY(Core::System::pledge("stdio"));
+    TRY((Core::System::Promise<stdio>::pledge()));
 
     outln("      CPU0");
     auto file_contents = proc_interrupts->read_all();

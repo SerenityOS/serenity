@@ -31,11 +31,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(grid_columns, "Number of columns in grid (incompatible with --number)", "grid-cols", 'c', "number");
     args_parser.parse(arguments);
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix cpath wpath thread"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, unix, cpath, wpath, thread>::pledge()));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath wpath thread"));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, rpath, cpath, wpath, thread>::pledge()));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

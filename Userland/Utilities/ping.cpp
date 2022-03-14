@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Kernel/API/Pledge.h"
+#include "LibCore/System/Promise.h"
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <LibCore/ArgsParser.h>
@@ -59,7 +61,8 @@ static void closing_statistics()
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio id inet unix sigaction"));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, id, inet, unix, Kernel::Pledge::sigaction>::pledge()));
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(host, "Host to ping", "host");
@@ -88,10 +91,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    if (pledge("stdio inet unix sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY((Core::System::Promise<stdio, inet, unix, sigaction>::pledge()));
 
     struct timeval timeout {
         1, 0
@@ -109,10 +109,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    if (pledge("stdio inet sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY((Core::System::Promise<stdio, inet, Kernel::Pledge::sigaction>::pledge()));
 
     pid_t pid = getpid();
 

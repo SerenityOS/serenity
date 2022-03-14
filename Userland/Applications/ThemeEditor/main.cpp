@@ -159,7 +159,8 @@ public:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath unix", nullptr));
+    using enum Kernel::Pledge;
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, thread, rpath, cpath, wpath, unix>::pledge()));
 
     auto app = GUI::Application::construct(arguments);
 
@@ -182,7 +183,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath unix", nullptr));
+    TRY((Core::System::Promise<stdio, Kernel::Pledge::recvfd, Kernel::Pledge::sendfd, thread, rpath, unix>::pledge()));
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
