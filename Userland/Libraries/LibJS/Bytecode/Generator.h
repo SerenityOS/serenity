@@ -150,31 +150,16 @@ public:
         }
         return false;
     }
-    void begin_variable_scope(BindingMode mode = BindingMode::Lexical, SurroundingScopeKind kind = SurroundingScopeKind::Block)
-    {
-        m_variable_scopes.append({ kind, mode, {} });
-        if (mode != BindingMode::Global) {
-            emit<Bytecode::Op::CreateEnvironment>(
-                mode == BindingMode::Lexical
-                    ? Bytecode::Op::EnvironmentMode::Lexical
-                    : Bytecode::Op::EnvironmentMode::Var);
-        }
-    }
-    void end_variable_scope()
-    {
-        auto mode = m_variable_scopes.take_last().mode;
-        if (mode != BindingMode::Global && !m_current_basic_block->is_terminated()) {
-            emit<Bytecode::Op::LeaveEnvironment>(
-                mode == BindingMode::Lexical
-                    ? Bytecode::Op::EnvironmentMode::Lexical
-                    : Bytecode::Op::EnvironmentMode::Var);
-        }
-    }
+
+    void begin_variable_scope(BindingMode mode = BindingMode::Lexical, SurroundingScopeKind kind = SurroundingScopeKind::Block);
+    void end_variable_scope();
 
     enum class BlockBoundaryType {
         Break,
         Continue,
         Unwind,
+        LeaveLexicalEnvironment,
+        LeaveVariableEnvironment,
     };
     template<typename OpType>
     void perform_needed_unwinds(bool is_break_node = false) requires(OpType::IsTerminator)
@@ -191,6 +176,10 @@ public:
                 break;
             if (boundary == BlockBoundaryType::Unwind)
                 emit<Bytecode::Op::LeaveUnwindContext>();
+            else if (boundary == BlockBoundaryType::LeaveLexicalEnvironment)
+                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+            else if (boundary == BlockBoundaryType::LeaveVariableEnvironment)
+                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Var);
         }
     }
 

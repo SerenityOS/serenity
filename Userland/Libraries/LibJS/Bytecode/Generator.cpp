@@ -76,6 +76,33 @@ Label Generator::nearest_continuable_scope() const
     return m_continuable_scopes.last();
 }
 
+void Generator::begin_variable_scope(BindingMode mode, SurroundingScopeKind kind)
+{
+    m_variable_scopes.append({ kind, mode, {} });
+    if (mode != BindingMode::Global) {
+        start_boundary(mode == BindingMode::Lexical ? BlockBoundaryType::LeaveLexicalEnvironment : BlockBoundaryType::LeaveVariableEnvironment);
+        emit<Bytecode::Op::CreateEnvironment>(
+            mode == BindingMode::Lexical
+                ? Bytecode::Op::EnvironmentMode::Lexical
+                : Bytecode::Op::EnvironmentMode::Var);
+    }
+}
+
+void Generator::end_variable_scope()
+{
+    auto mode = m_variable_scopes.take_last().mode;
+    if (mode != BindingMode::Global) {
+        end_boundary(mode == BindingMode::Lexical ? BlockBoundaryType::LeaveLexicalEnvironment : BlockBoundaryType::LeaveVariableEnvironment);
+
+        if (!m_current_basic_block->is_terminated()) {
+            emit<Bytecode::Op::LeaveEnvironment>(
+                mode == BindingMode::Lexical
+                    ? Bytecode::Op::EnvironmentMode::Lexical
+                    : Bytecode::Op::EnvironmentMode::Var);
+        }
+    }
+}
+
 void Generator::begin_continuable_scope(Label continue_target)
 {
     m_continuable_scopes.append(continue_target);
