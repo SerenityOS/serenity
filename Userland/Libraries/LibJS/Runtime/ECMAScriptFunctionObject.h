@@ -109,6 +109,7 @@ private:
 
     FlyString m_name;
     OwnPtr<Bytecode::Executable> m_bytecode_executable;
+    Vector<OwnPtr<Bytecode::Executable>> m_default_parameter_bytecode_executables;
     i32 m_function_length { 0 };
 
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
