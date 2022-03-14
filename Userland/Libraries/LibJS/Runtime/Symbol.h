@@ -17,7 +17,7 @@ class Symbol final : public Cell {
 
 public:
     Symbol(Optional<String>, bool);
-    virtual ~Symbol();
+    virtual ~Symbol() = default;
 
     String description() const { return m_description.value_or(""); }
     const Optional<String>& raw_description() const { return m_description; }

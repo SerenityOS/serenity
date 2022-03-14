@@ -36,10 +36,6 @@ Interpreter::Interpreter(VM& vm)
 {
 }
 
-Interpreter::~Interpreter()
-{
-}
-
 // 16.1.6 ScriptEvaluation ( scriptRecord ), https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation
 ThrowCompletionOr<Value> Interpreter::run(Script& script_record)
 {

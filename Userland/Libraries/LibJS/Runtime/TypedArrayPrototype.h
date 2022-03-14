@@ -17,7 +17,7 @@ class TypedArrayPrototype final : public Object {
 public:
     explicit TypedArrayPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~TypedArrayPrototype() override;
+    virtual ~TypedArrayPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(length_getter);

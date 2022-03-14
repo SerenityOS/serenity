@@ -19,10 +19,6 @@ Generator::Generator()
 {
 }
 
-Generator::~Generator()
-{
-}
-
 CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind)
 {
     Generator generator;

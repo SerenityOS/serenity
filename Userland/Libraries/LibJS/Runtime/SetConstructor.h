@@ -16,7 +16,7 @@ class SetConstructor final : public NativeFunction {
 public:
     explicit SetConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~SetConstructor() override;
+    virtual ~SetConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject&) override;

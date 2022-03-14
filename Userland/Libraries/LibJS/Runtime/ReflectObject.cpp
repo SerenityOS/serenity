@@ -43,10 +43,6 @@ void ReflectObject::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.Reflect.as_string()), Attribute::Configurable);
 }
 
-ReflectObject::~ReflectObject()
-{
-}
-
 // 28.1.1 Reflect.apply ( target, thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-reflect.apply
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::apply)
 {

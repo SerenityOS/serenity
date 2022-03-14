@@ -37,7 +37,7 @@ class Shape final
     : public Cell
     , public Weakable<Shape> {
 public:
-    virtual ~Shape() override;
+    virtual ~Shape() override = default;
 
     enum class TransitionType {
         Invalid,
@@ -48,7 +48,7 @@ public:
 
     enum class ShapeWithoutGlobalObjectTag { Tag };
 
-    explicit Shape(ShapeWithoutGlobalObjectTag);
+    explicit Shape(ShapeWithoutGlobalObjectTag) {};
     explicit Shape(Object& global_object);
     Shape(Shape& previous_shape, const StringOrSymbol& property_key, PropertyAttributes attributes, TransitionType);
     Shape(Shape& previous_shape, Object* new_prototype);

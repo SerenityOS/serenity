@@ -104,10 +104,6 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.toGMTString, get_without_side_effects(vm.names.toUTCString), attr);
 }
 
-DatePrototype::~DatePrototype()
-{
-}
-
 // thisTimeValue ( value ), https://tc39.es/ecma262/#thistimevalue
 ThrowCompletionOr<Value> this_time_value(GlobalObject& global_object, Value value)
 {

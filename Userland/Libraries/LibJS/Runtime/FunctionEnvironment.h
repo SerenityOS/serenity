@@ -23,7 +23,7 @@ public:
     };
 
     explicit FunctionEnvironment(Environment* parent_scope);
-    virtual ~FunctionEnvironment() override;
+    virtual ~FunctionEnvironment() override = default;
 
     ThisBindingStatus this_binding_status() const { return m_this_binding_status; }
     void set_this_binding_status(ThisBindingStatus status) { m_this_binding_status = status; }

@@ -46,7 +46,7 @@ create_ast_node(SourceRange range, Args&&... args)
 
 class ASTNode : public RefCounted<ASTNode> {
 public:
-    virtual ~ASTNode() { }
+    virtual ~ASTNode() = default;
     virtual Completion execute(Interpreter&, GlobalObject&) const = 0;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const;
     virtual void dump(int indent) const;

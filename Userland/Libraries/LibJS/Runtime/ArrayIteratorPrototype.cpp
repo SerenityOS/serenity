@@ -30,10 +30,6 @@ void ArrayIteratorPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Array Iterator"), Attribute::Configurable);
 }
 
-ArrayIteratorPrototype::~ArrayIteratorPrototype()
-{
-}
-
 // 23.1.5.2.1 %ArrayIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next
 // FIXME: This seems to be CreateArrayIterator (https://tc39.es/ecma262/#sec-createarrayiterator) instead of %ArrayIteratorPrototype%.next.
 JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)

@@ -17,7 +17,7 @@ class ObjectConstructor final : public NativeFunction {
 public:
     explicit ObjectConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~ObjectConstructor() override;
+    virtual ~ObjectConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;

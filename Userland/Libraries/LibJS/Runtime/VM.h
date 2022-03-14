@@ -33,11 +33,11 @@ struct BindingPattern;
 class VM : public RefCounted<VM> {
 public:
     struct CustomData {
-        virtual ~CustomData();
+        virtual ~CustomData() = default;
     };
 
     static NonnullRefPtr<VM> create(OwnPtr<CustomData> = {});
-    ~VM();
+    ~VM() = default;
 
     enum class HostResizeArrayBufferResult {
         Unhandled,

@@ -29,10 +29,6 @@ void WeakMapConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
 
-WeakMapConstructor::~WeakMapConstructor()
-{
-}
-
 // 24.3.1.1 WeakMap ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakmap-iterable
 ThrowCompletionOr<Value> WeakMapConstructor::call()
 {

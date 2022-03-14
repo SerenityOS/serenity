@@ -49,7 +49,7 @@ public:
     explicit Object(Object& prototype);
     explicit Object(Shape&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~Object();
+    virtual ~Object() = default;
 
     enum class PropertyKind {
         Key,

@@ -32,7 +32,7 @@ public:
     DeclarativeEnvironment();
     explicit DeclarativeEnvironment(Environment* parent_scope);
     explicit DeclarativeEnvironment(Environment* parent_scope, Span<Binding const> bindings);
-    virtual ~DeclarativeEnvironment() override;
+    virtual ~DeclarativeEnvironment() override = default;
 
     virtual ThrowCompletionOr<bool> has_binding(FlyString const& name, Optional<size_t>* = nullptr) const override;
     virtual ThrowCompletionOr<void> create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted) override;

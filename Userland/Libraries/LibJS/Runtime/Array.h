@@ -35,7 +35,7 @@ public:
     }
 
     explicit Array(Object& prototype);
-    virtual ~Array() override;
+    virtual ~Array() override = default;
 
     virtual ThrowCompletionOr<Optional<PropertyDescriptor>> internal_get_own_property(PropertyKey const&) const override;
     virtual ThrowCompletionOr<bool> internal_define_own_property(PropertyKey const&, PropertyDescriptor const&) override;

@@ -17,7 +17,7 @@ class WeakMapPrototype final : public PrototypeObject<WeakMapPrototype, WeakMap>
 public:
     WeakMapPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~WeakMapPrototype() override;
+    virtual ~WeakMapPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(delete_);

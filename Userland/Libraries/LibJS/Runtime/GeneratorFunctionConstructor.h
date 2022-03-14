@@ -17,7 +17,7 @@ class GeneratorFunctionConstructor final : public NativeFunction {
 public:
     explicit GeneratorFunctionConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~GeneratorFunctionConstructor() override;
+    virtual ~GeneratorFunctionConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;

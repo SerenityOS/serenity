@@ -101,7 +101,7 @@ public:
 
     static NonnullOwnPtr<Interpreter> create_with_existing_realm(Realm&);
 
-    ~Interpreter();
+    ~Interpreter() = default;
 
     ThrowCompletionOr<Value> run(Script&);
     ThrowCompletionOr<Value> run(SourceTextModule&);

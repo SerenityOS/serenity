@@ -18,7 +18,7 @@ public:
 
     StringObject(PrimitiveString&, Object& prototype);
     virtual void initialize(GlobalObject&) override;
-    virtual ~StringObject() override;
+    virtual ~StringObject() override = default;
 
     PrimitiveString const& primitive_string() const { return m_string; }
     PrimitiveString& primitive_string() { return m_string; }

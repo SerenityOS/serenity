@@ -23,7 +23,7 @@ class GenericIndexedPropertyStorage;
 
 class IndexedPropertyStorage {
 public:
-    virtual ~IndexedPropertyStorage() {};
+    virtual ~IndexedPropertyStorage() = default;
 
     virtual bool has_index(u32 index) const = 0;
     virtual Optional<ValueAndAttributes> get(u32 index) const = 0;
@@ -72,7 +72,7 @@ private:
 class GenericIndexedPropertyStorage final : public IndexedPropertyStorage {
 public:
     explicit GenericIndexedPropertyStorage(SimpleIndexedPropertyStorage&&);
-    explicit GenericIndexedPropertyStorage();
+    explicit GenericIndexedPropertyStorage() = default;
 
     virtual bool has_index(u32 index) const override;
     virtual Optional<ValueAndAttributes> get(u32 index) const override;

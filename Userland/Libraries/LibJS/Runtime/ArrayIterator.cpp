@@ -21,10 +21,6 @@ ArrayIterator::ArrayIterator(Value array, Object::PropertyKind iteration_kind, O
 {
 }
 
-ArrayIterator::~ArrayIterator()
-{
-}
-
 void ArrayIterator::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

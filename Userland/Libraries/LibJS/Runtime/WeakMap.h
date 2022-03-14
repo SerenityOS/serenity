@@ -22,7 +22,7 @@ public:
     static WeakMap* create(GlobalObject&);
 
     explicit WeakMap(Object& prototype);
-    virtual ~WeakMap() override;
+    virtual ~WeakMap() override = default;
 
     HashMap<Cell*, Value> const& values() const { return m_values; };
     HashMap<Cell*, Value>& values() { return m_values; };

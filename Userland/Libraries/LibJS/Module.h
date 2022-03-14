@@ -59,7 +59,7 @@ class Module
     : public RefCounted<Module>
     , public Weakable<Module> {
 public:
-    virtual ~Module();
+    virtual ~Module() = default;
 
     Realm& realm() { return *m_realm.cell(); }
     Realm const& realm() const { return *m_realm.cell(); }

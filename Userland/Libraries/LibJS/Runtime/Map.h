@@ -23,7 +23,7 @@ public:
     static Map* create(GlobalObject&);
 
     explicit Map(Object& prototype);
-    virtual ~Map() override;
+    virtual ~Map() override = default;
 
     void map_clear();
     bool map_remove(Value const&);

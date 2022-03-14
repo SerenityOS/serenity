@@ -24,10 +24,6 @@ void WeakRefPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.WeakRef.as_string()), Attribute::Configurable);
 }
 
-WeakRefPrototype::~WeakRefPrototype()
-{
-}
-
 // 26.1.3.2 WeakRef.prototype.deref ( ), https://tc39.es/ecma262/#sec-weak-ref.prototype.deref
 JS_DEFINE_NATIVE_FUNCTION(WeakRefPrototype::deref)
 {

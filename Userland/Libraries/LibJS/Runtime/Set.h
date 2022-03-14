@@ -20,7 +20,7 @@ public:
     static Set* create(GlobalObject&);
 
     explicit Set(Object& prototype);
-    virtual ~Set() override;
+    virtual ~Set() override = default;
 
     // NOTE: Unlike what the spec says, we implement Sets using an underlying map,
     //       so all the functions below do not directly implement the operations as

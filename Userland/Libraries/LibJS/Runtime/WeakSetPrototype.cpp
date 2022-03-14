@@ -29,10 +29,6 @@ void WeakSetPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.WeakSet.as_string()), Attribute::Configurable);
 }
 
-WeakSetPrototype::~WeakSetPrototype()
-{
-}
-
 // 24.4.3.1 WeakSet.prototype.add ( value ), https://tc39.es/ecma262/#sec-weakset.prototype.add
 JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::add)
 {

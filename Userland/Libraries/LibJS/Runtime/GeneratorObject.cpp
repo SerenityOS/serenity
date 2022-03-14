@@ -43,10 +43,6 @@ void GeneratorObject::initialize(GlobalObject&)
 {
 }
 
-GeneratorObject::~GeneratorObject()
-{
-}
-
 void GeneratorObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

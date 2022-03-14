@@ -37,10 +37,6 @@ DeclarativeEnvironment::DeclarativeEnvironment(Environment* parent_scope, Span<B
 {
 }
 
-DeclarativeEnvironment::~DeclarativeEnvironment()
-{
-}
-
 void DeclarativeEnvironment::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);

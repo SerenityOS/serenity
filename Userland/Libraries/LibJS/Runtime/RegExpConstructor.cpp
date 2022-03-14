@@ -29,10 +29,6 @@ void RegExpConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }
 
-RegExpConstructor::~RegExpConstructor()
-{
-}
-
 // 22.2.3.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
 ThrowCompletionOr<Value> RegExpConstructor::call()
 {

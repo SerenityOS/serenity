@@ -82,10 +82,6 @@ bool SimpleIndexedPropertyStorage::set_array_like_size(size_t new_size)
     return true;
 }
 
-GenericIndexedPropertyStorage::GenericIndexedPropertyStorage()
-{
-}
-
 GenericIndexedPropertyStorage::GenericIndexedPropertyStorage(SimpleIndexedPropertyStorage&& storage)
 {
     m_array_size = storage.array_like_size();

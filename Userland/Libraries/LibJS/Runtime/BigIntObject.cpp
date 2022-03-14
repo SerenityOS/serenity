@@ -20,10 +20,6 @@ BigIntObject::BigIntObject(BigInt& bigint, Object& prototype)
 {
 }
 
-BigIntObject::~BigIntObject()
-{
-}
-
 void BigIntObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

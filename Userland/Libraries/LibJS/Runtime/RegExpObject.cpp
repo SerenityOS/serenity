@@ -128,10 +128,6 @@ RegExpObject::RegExpObject(Regex<ECMA262> regex, String pattern, String flags, O
     VERIFY(m_regex->parser_result.error == regex::Error::NoError);
 }
 
-RegExpObject::~RegExpObject()
-{
-}
-
 void RegExpObject::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();

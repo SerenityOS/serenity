@@ -27,10 +27,6 @@ ProxyObject::ProxyObject(Object& target, Object& handler, Object& prototype)
 {
 }
 
-ProxyObject::~ProxyObject()
-{
-}
-
 static Value property_key_to_value(VM& vm, PropertyKey const& property_key)
 {
     VERIFY(property_key.is_valid());

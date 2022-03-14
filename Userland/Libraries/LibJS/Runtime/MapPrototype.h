@@ -17,7 +17,7 @@ class MapPrototype final : public PrototypeObject<MapPrototype, Map> {
 public:
     MapPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~MapPrototype() override;
+    virtual ~MapPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(clear);

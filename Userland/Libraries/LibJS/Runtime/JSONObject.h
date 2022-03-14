@@ -16,7 +16,7 @@ class JSONObject final : public Object {
 public:
     explicit JSONObject(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~JSONObject() override;
+    virtual ~JSONObject() override = default;
 
     // The base implementation of stringify is exposed because it is used by
     // test-js to communicate between the JS tests and the C++ test runner.

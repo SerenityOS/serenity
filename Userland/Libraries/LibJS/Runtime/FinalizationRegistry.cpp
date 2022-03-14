@@ -17,10 +17,6 @@ FinalizationRegistry::FinalizationRegistry(Realm& realm, JS::JobCallback cleanup
 {
 }
 
-FinalizationRegistry::~FinalizationRegistry()
-{
-}
-
 void FinalizationRegistry::add_finalization_record(Cell& target, Value held_value, Object* unregister_token)
 {
     VERIFY(!held_value.is_empty());

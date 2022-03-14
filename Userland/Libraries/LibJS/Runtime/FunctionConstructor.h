@@ -19,7 +19,7 @@ public:
 
     explicit FunctionConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~FunctionConstructor() override;
+    virtual ~FunctionConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;

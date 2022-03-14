@@ -16,7 +16,7 @@ class SymbolPrototype final : public Object {
 public:
     explicit SymbolPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~SymbolPrototype() override;
+    virtual ~SymbolPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(description_getter);

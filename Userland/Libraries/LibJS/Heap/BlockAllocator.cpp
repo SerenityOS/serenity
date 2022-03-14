@@ -17,10 +17,6 @@
 
 namespace JS {
 
-BlockAllocator::BlockAllocator()
-{
-}
-
 BlockAllocator::~BlockAllocator()
 {
     for (auto* block : m_blocks) {

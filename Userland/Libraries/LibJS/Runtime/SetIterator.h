@@ -19,7 +19,7 @@ public:
     static SetIterator* create(GlobalObject&, Set& set, Object::PropertyKind iteration_kind);
 
     explicit SetIterator(Set& set, Object::PropertyKind iteration_kind, Object& prototype);
-    virtual ~SetIterator() override;
+    virtual ~SetIterator() override = default;
 
     Set& set() const { return m_set; }
     bool done() const { return m_done; }

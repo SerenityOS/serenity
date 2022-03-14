@@ -17,7 +17,7 @@ public:
     static ArrayIterator* create(GlobalObject&, Value array, Object::PropertyKind iteration_kind);
 
     explicit ArrayIterator(Value array, Object::PropertyKind iteration_kind, Object& prototype);
-    virtual ~ArrayIterator() override;
+    virtual ~ArrayIterator() override = default;
 
     Value array() const { return m_array; }
     Object::PropertyKind iteration_kind() const { return m_iteration_kind; }

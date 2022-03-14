@@ -57,10 +57,6 @@ void ObjectConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
-ObjectConstructor::~ObjectConstructor()
-{
-}
-
 // 20.1.1.1 Object ( [ value ] ), https://tc39.es/ecma262/#sec-object-value
 ThrowCompletionOr<Value> ObjectConstructor::call()
 {

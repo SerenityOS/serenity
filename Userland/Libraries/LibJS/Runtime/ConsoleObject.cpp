@@ -40,10 +40,6 @@ void ConsoleObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.timeEnd, time_end, 0, attr);
 }
 
-ConsoleObject::~ConsoleObject()
-{
-}
-
 // 1.1.6. log(...data), https://console.spec.whatwg.org/#log
 JS_DEFINE_NATIVE_FUNCTION(ConsoleObject::log)
 {

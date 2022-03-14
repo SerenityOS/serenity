@@ -16,7 +16,7 @@ class BigIntPrototype final : public Object {
 public:
     explicit BigIntPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~BigIntPrototype() override;
+    virtual ~BigIntPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(to_string);

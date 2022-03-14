@@ -18,7 +18,7 @@ public:
     static ThrowCompletionOr<BoundFunction*> create(GlobalObject&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments);
 
     BoundFunction(GlobalObject&, FunctionObject& target_function, Value bound_this, Vector<Value> bound_arguments, Object* prototype);
-    virtual ~BoundFunction();
+    virtual ~BoundFunction() override = default;
 
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;
     virtual ThrowCompletionOr<Object*> internal_construct(MarkedVector<Value> arguments_list, FunctionObject& new_target) override;

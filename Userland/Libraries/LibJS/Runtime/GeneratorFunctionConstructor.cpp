@@ -27,10 +27,6 @@ void GeneratorFunctionConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.generator_function_prototype(), 0);
 }
 
-GeneratorFunctionConstructor::~GeneratorFunctionConstructor()
-{
-}
-
 // 27.3.1.1 GeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-generatorfunction
 ThrowCompletionOr<Value> GeneratorFunctionConstructor::call()
 {

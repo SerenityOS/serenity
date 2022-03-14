@@ -42,10 +42,6 @@ BoundFunction::BoundFunction(GlobalObject& global_object, FunctionObject& bound_
 {
 }
 
-BoundFunction::~BoundFunction()
-{
-}
-
 // 10.4.1.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-bound-function-exotic-objects-call-thisargument-argumentslist
 ThrowCompletionOr<Value> BoundFunction::internal_call([[maybe_unused]] Value this_argument, MarkedVector<Value> arguments_list)
 {

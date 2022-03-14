@@ -21,10 +21,6 @@ WeakRef::WeakRef(Object* object, Object& prototype)
 {
 }
 
-WeakRef::~WeakRef()
-{
-}
-
 void WeakRef::remove_dead_cells(Badge<Heap>)
 {
     VERIFY(m_value);

@@ -16,7 +16,7 @@ class DateConstructor final : public NativeFunction {
 public:
     explicit DateConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~DateConstructor() override;
+    virtual ~DateConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;

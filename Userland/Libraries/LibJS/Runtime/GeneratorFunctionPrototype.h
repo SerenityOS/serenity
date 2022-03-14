@@ -18,7 +18,7 @@ class GeneratorFunctionPrototype final : public Object {
 public:
     explicit GeneratorFunctionPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~GeneratorFunctionPrototype() override;
+    virtual ~GeneratorFunctionPrototype() override = default;
 };
 
 }

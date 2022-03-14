@@ -16,7 +16,7 @@ class WeakMapConstructor final : public NativeFunction {
 public:
     explicit WeakMapConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~WeakMapConstructor() override;
+    virtual ~WeakMapConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject&) override;

@@ -19,10 +19,6 @@ WeakMap::WeakMap(Object& prototype)
 {
 }
 
-WeakMap::~WeakMap()
-{
-}
-
 void WeakMap::remove_dead_cells(Badge<Heap>)
 {
     m_values.remove_all_matching([](Cell* key, Value) {
