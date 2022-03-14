@@ -195,8 +195,17 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 return false;
             }
 
+            auto file_size_or_error = Core::File::size(filename);
+            if (file_size_or_error.is_error()) {
+                if (!suppress_errors)
+                    warnln("Failed to retrieve size of {}: {}", filename, strerror(file_size_or_error.error().code()));
+                return false;
+            }
+
+            auto file_size = file_size_or_error.release_value();
+
             for (size_t line_number = 1; file->can_read_line(); ++line_number) {
-                auto line = file->read_line();
+                auto line = file->read_line(file_size);
                 auto is_binary = memchr(line.characters(), 0, line.length()) != nullptr;
 
                 if (matches(line, filename, line_number, print_filename, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
