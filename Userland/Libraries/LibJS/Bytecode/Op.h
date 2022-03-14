@@ -232,12 +232,12 @@ public:
     {
     }
 
-    explicit NewArray(Vector<Register> const& elements)
+    explicit NewArray(AK::Array<Register, 2> const& elements_range)
         : Instruction(Type::NewArray)
-        , m_element_count(elements.size())
+        , m_element_count(elements_range[1].index() - elements_range[0].index() + 1)
     {
-        for (size_t i = 0; i < m_element_count; ++i)
-            m_elements[i] = elements[i];
+        m_elements[0] = elements_range[0];
+        m_elements[1] = elements_range[1];
     }
 
     ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
@@ -246,7 +246,7 @@ public:
 
     size_t length_impl() const
     {
-        return sizeof(*this) + sizeof(Register) * m_element_count;
+        return sizeof(*this) + sizeof(Register) * (m_element_count == 0 ? 0 : 2);
     }
 
 private:
