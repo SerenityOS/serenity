@@ -602,6 +602,12 @@ static void update_style_recursively(DOM::Node& node)
     node.set_needs_style_update(false);
 
     if (node.child_needs_style_update()) {
+        if (node.is_element()) {
+            if (auto* shadow_root = static_cast<DOM::Element&>(node).shadow_root()) {
+                if (shadow_root->needs_style_update() || shadow_root->child_needs_style_update())
+                    update_style_recursively(*shadow_root);
+            }
+        }
         node.for_each_child([&](auto& child) {
             if (child.needs_style_update() || child.child_needs_style_update())
                 update_style_recursively(child);
