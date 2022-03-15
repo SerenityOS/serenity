@@ -10,7 +10,7 @@
 
 namespace JS::Intl {
 
-// 17.4 Properties of the Intl.RelativeTimeFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-relativetimeformat-prototype-object
+// 17.3 Properties of the Intl.RelativeTimeFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-relativetimeformat-prototype-object
 RelativeTimeFormatPrototype::RelativeTimeFormatPrototype(GlobalObject& global_object)
     : PrototypeObject(*global_object.object_prototype())
 {
@@ -22,7 +22,7 @@ void RelativeTimeFormatPrototype::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 17.4.2 Intl.RelativeTimeFormat.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype-toStringTag
+    // 17.3.2 Intl.RelativeTimeFormat.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype-toStringTag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.RelativeTimeFormat"sv), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -31,7 +31,7 @@ void RelativeTimeFormatPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
-// 17.4.3 Intl.RelativeTimeFormat.prototype.format ( value, unit ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype.format
+// 17.3.3 Intl.RelativeTimeFormat.prototype.format ( value, unit ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype.format
 JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format)
 {
     // 1. Let relativeTimeFormat be the this value.
@@ -49,7 +49,7 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format)
     return js_string(vm, move(formatted));
 }
 
-// 17.4.4 Intl.RelativeTimeFormat.prototype.formatToParts ( value, unit ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype.formatToParts
+// 17.3.4 Intl.RelativeTimeFormat.prototype.formatToParts ( value, unit ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype.formatToParts
 JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format_to_parts)
 {
     // 1. Let relativeTimeFormat be the this value.
@@ -66,7 +66,7 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format_to_parts)
     return TRY(format_relative_time_to_parts(global_object, *relative_time_format, value.as_double(), unit));
 }
 
-// 17.4.5 Intl.RelativeTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.relativetimeformat.prototype.resolvedoptions
+// 17.3.5 Intl.RelativeTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.relativetimeformat.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::resolved_options)
 {
     // 1. Let relativeTimeFormat be the this value.
