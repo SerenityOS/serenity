@@ -92,15 +92,15 @@ InspectorWidget::InspectorWidget()
 
     auto& bottom_tab_widget = splitter.add<GUI::TabWidget>();
 
-    auto& style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Styles");
-    style_table_container.set_layout<GUI::VerticalBoxLayout>();
-    style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
-    m_style_table_view = style_table_container.add<GUI::TableView>();
-
     auto& computed_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Computed");
     computed_style_table_container.set_layout<GUI::VerticalBoxLayout>();
     computed_style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
-    m_computed_style_table_view = computed_style_table_container.add<GUI::TableView>();
+    m_style_table_view = computed_style_table_container.add<GUI::TableView>();
+
+    auto& resolved_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Resolved");
+    resolved_style_table_container.set_layout<GUI::VerticalBoxLayout>();
+    resolved_style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
+    m_computed_style_table_view = resolved_style_table_container.add<GUI::TableView>();
 
     auto& custom_properties_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Variables");
     custom_properties_table_container.set_layout<GUI::VerticalBoxLayout>();
