@@ -69,17 +69,29 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
     return js_string(vm, String::formatted("{}: {}", name, message));
 }
 
+// B.1.1 get Error.prototype.stack ( ), https://tc39.es/proposal-error-stacks/#sec-get-error.prototype-stack
 JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
 {
-    auto* error = TRY(typed_this_value(global_object));
+    // 1. Let E be the this value.
+    // 2. If ! Type(E) is not Object, throw a TypeError exception.
+    auto* this_object = TRY(PrototypeObject::this_object(global_object));
+
+    // 3. If E does not have an [[ErrorData]] internal slot, return undefined.
+    if (!is<Error>(this_object))
+        return js_undefined();
+
+    auto& error = static_cast<Error&>(*this_object);
+
+    // 4. Return ? GetStackString(error).
+    // NOTE: These steps are not implemented based on the proposal, but to roughly follow behavior of other browsers.
 
     String name = "Error";
-    auto name_property = TRY(error->get(vm.names.name));
+    auto name_property = TRY(error.get(vm.names.name));
     if (!name_property.is_undefined())
         name = TRY(name_property.to_string(global_object));
 
     String message = "";
-    auto message_property = TRY(error->get(vm.names.message));
+    auto message_property = TRY(error.get(vm.names.message));
     if (!message_property.is_undefined())
         message = TRY(message_property.to_string(global_object));
 
@@ -87,8 +99,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
     if (!message.is_empty())
         header = String::formatted("{}: {}", name, message);
 
-    return js_string(vm,
-        String::formatted("{}\n{}", header, error->stack_string()));
+    return js_string(vm, String::formatted("{}\n{}", header, error.stack_string()));
 }
 
 // B.1.2 set Error.prototype.stack ( value ), https://tc39.es/proposal-error-stacks/#sec-set-error.prototype-stack

@@ -1,4 +1,5 @@
 const stackDescriptor = Object.getOwnPropertyDescriptor(Error.prototype, "stack");
+const stackGetter = stackDescriptor.get;
 const stackSetter = stackDescriptor.set;
 
 describe("getter - normal behavior", () => {
@@ -7,9 +8,9 @@ describe("getter - normal behavior", () => {
             /^    at .*Error \(.*\/Error\.prototype\.stack\.js:\d+:\d+\)$/,
             /^    at .+\/Error\/Error\.prototype\.stack\.js:\d+:\d+$/,
             /^    at test \(.+\/test-common.js:557:21\)$/,
-            /^    at .+\/Error\/Error\.prototype\.stack\.js:5:33$/,
+            /^    at .+\/Error\/Error\.prototype\.stack\.js:6:33$/,
             /^    at describe \(.+\/test-common\.js:534:21\)$/,
-            /^    at .+\/Error\/Error\.prototype\.stack\.js:4:38$/,
+            /^    at .+\/Error\/Error\.prototype\.stack\.js:5:38$/,
         ];
         const values = [
             {
@@ -40,6 +41,19 @@ describe("getter - normal behavior", () => {
                 expect(!!stackFrame.match(expectedStackFrame)).toBeTrue();
             }
         }
+    });
+
+    test("this value must be an object", () => {
+        expect(() => {
+            stackGetter.call("foo");
+        }).toThrowWithMessage(TypeError, "foo is not an object");
+        expect(() => {
+            stackGetter.call(42);
+        }).toThrowWithMessage(TypeError, "42 is not an object");
+    });
+
+    test("returns undefined when called with non-Error object this value", () => {
+        expect(stackGetter.call({})).toBeUndefined();
     });
 });
 
