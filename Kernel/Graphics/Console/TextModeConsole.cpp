@@ -87,27 +87,19 @@ enum VGAColor : u8 {
 
 void TextModeConsole::set_cursor(size_t x, size_t y)
 {
-    SpinlockLocker main_lock(GraphicsManagement::the().main_vga_lock());
     SpinlockLocker lock(m_vga_lock);
-    u16 value = y * width() + x;
-    IO::out8(0x3d4, 0x0e);
-    IO::out8(0x3d5, MSB(value));
-    IO::out8(0x3d4, 0x0f);
-    IO::out8(0x3d5, LSB(value));
+    GraphicsManagement::the().set_vga_text_mode_cursor(width(), x, y);
+    m_cursor_x = x;
+    m_cursor_y = y;
 }
 void TextModeConsole::hide_cursor()
 {
-    SpinlockLocker main_lock(GraphicsManagement::the().main_vga_lock());
     SpinlockLocker lock(m_vga_lock);
-    IO::out8(0x3D4, 0xA);
-    IO::out8(0x3D5, 0x20);
+    GraphicsManagement::the().disable_vga_text_mode_console_cursor();
 }
 void TextModeConsole::show_cursor()
 {
-    SpinlockLocker main_lock(GraphicsManagement::the().main_vga_lock());
-    SpinlockLocker lock(m_vga_lock);
-    IO::out8(0x3D4, 0xA);
-    IO::out8(0x3D5, 0x20);
+    set_cursor(m_cursor_x, m_cursor_y);
 }
 
 void TextModeConsole::clear(size_t x, size_t y, size_t length)
@@ -130,9 +122,7 @@ void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color
     // because there's no other responsible object to do that in the print call path
     if (critical && (ch == '\r' || ch == '\n')) {
         // Disable hardware VGA cursor
-        SpinlockLocker main_lock(GraphicsManagement::the().main_vga_lock());
-        IO::out8(0x3D4, 0xA);
-        IO::out8(0x3D5, 0x20);
+        GraphicsManagement::the().disable_vga_text_mode_console_cursor();
 
         m_x = 0;
         m_y += 1;
