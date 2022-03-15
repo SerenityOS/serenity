@@ -12,6 +12,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <LibGPU/DeviceInfo.h>
+#include <LibGPU/Enums.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Matrix4x4.h>
@@ -22,7 +23,6 @@
 #include <LibSoftGPU/Buffer/Typed2DBuffer.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/Config.h>
-#include <LibSoftGPU/Enums.h>
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/ImageFormat.h>
 #include <LibSoftGPU/Light/Light.h>
@@ -34,7 +34,7 @@
 namespace SoftGPU {
 
 struct TexCoordGenerationConfig {
-    TexCoordGenerationMode mode { TexCoordGenerationMode::EyeLinear };
+    GPU::TexCoordGenerationMode mode { GPU::TexCoordGenerationMode::EyeLinear };
     FloatVector4 coefficients {};
 };
 
@@ -44,19 +44,19 @@ struct RasterizerOptions {
     bool enable_depth_test { false };
     bool enable_depth_write { true };
     bool enable_alpha_test { false };
-    AlphaTestFunction alpha_test_func { AlphaTestFunction::Always };
+    GPU::AlphaTestFunction alpha_test_func { GPU::AlphaTestFunction::Always };
     float alpha_test_ref_value { 0 };
     bool enable_blending { false };
-    BlendFactor blend_source_factor { BlendFactor::One };
-    BlendFactor blend_destination_factor { BlendFactor::One };
+    GPU::BlendFactor blend_source_factor { GPU::BlendFactor::One };
+    GPU::BlendFactor blend_destination_factor { GPU::BlendFactor::One };
     u32 color_mask { 0xffffffff };
     float depth_min { 0.f };
     float depth_max { 1.f };
-    DepthTestFunction depth_func { DepthTestFunction::Less };
-    PolygonMode polygon_mode { PolygonMode::Fill };
+    GPU::DepthTestFunction depth_func { GPU::DepthTestFunction::Less };
+    GPU::PolygonMode polygon_mode { GPU::PolygonMode::Fill };
     FloatVector4 fog_color { 0.0f, 0.0f, 0.0f, 0.0f };
     float fog_density { 1.0f };
-    FogMode fog_mode { FogMode::Exp };
+    GPU::FogMode fog_mode { GPU::FogMode::Exp };
     bool fog_enabled { false };
     float fog_start { 0.0f };
     float fog_end { 1.0f };
@@ -68,7 +68,7 @@ struct RasterizerOptions {
     float depth_offset_constant { 0 };
     bool depth_offset_enabled { false };
     bool enable_culling { false };
-    WindingOrder front_face { WindingOrder::CounterClockwise };
+    GPU::WindingOrder front_face { GPU::WindingOrder::CounterClockwise };
     bool cull_back { true };
     bool cull_front { false };
     Array<u8, NUM_SAMPLERS> texcoord_generation_enabled_coordinates {};
@@ -76,14 +76,14 @@ struct RasterizerOptions {
     Gfx::IntRect viewport;
     bool lighting_enabled { false };
     bool color_material_enabled { false };
-    ColorMaterialFace color_material_face { ColorMaterialFace::FrontAndBack };
-    ColorMaterialMode color_material_mode { ColorMaterialMode::AmbientAndDiffuse };
+    GPU::ColorMaterialFace color_material_face { GPU::ColorMaterialFace::FrontAndBack };
+    GPU::ColorMaterialMode color_material_mode { GPU::ColorMaterialMode::AmbientAndDiffuse };
 };
 
 struct LightModelParameters {
     FloatVector4 scene_ambient_color { 0.2f, 0.2f, 0.2f, 1.0f };
     bool viewer_at_infinity { false };
-    ColorControl color_control { ColorControl::SingleColor };
+    GPU::ColorControl color_control { GPU::ColorControl::SingleColor };
     bool two_sided_lighting { false };
 };
 
@@ -99,13 +99,13 @@ struct RasterPosition {
 };
 
 struct StencilConfiguration {
-    StencilTestFunction test_function;
+    GPU::StencilTestFunction test_function;
     StencilType reference_value;
     StencilType test_mask;
 
-    StencilOperation on_stencil_test_fail;
-    StencilOperation on_depth_test_fail;
-    StencilOperation on_pass;
+    GPU::StencilOperation on_stencil_test_fail;
+    GPU::StencilOperation on_depth_test_fail;
+    GPU::StencilOperation on_pass;
     StencilType write_mask;
 };
 
@@ -115,7 +115,7 @@ public:
 
     GPU::DeviceInfo info() const;
 
-    void draw_primitives(PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
+    void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
     void resize(Gfx::IntSize const& min_size);
     void clear_color(FloatVector4 const&);
     void clear_depth(DepthType);
@@ -134,8 +134,8 @@ public:
 
     void set_sampler_config(unsigned, SamplerConfig const&);
     void set_light_state(unsigned, Light const&);
-    void set_material_state(Face, Material const&);
-    void set_stencil_configuration(Face, StencilConfiguration const&);
+    void set_material_state(GPU::Face, Material const&);
+    void set_stencil_configuration(GPU::Face, StencilConfiguration const&);
 
     RasterPosition raster_position() const { return m_raster_position; }
     void set_raster_position(RasterPosition const& raster_position);

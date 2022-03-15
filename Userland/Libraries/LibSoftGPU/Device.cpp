@@ -97,79 +97,79 @@ void Device::setup_blend_factors()
     m_alpha_blend_factors = {};
 
     switch (m_options.blend_source_factor) {
-    case BlendFactor::Zero:
+    case GPU::BlendFactor::Zero:
         break;
-    case BlendFactor::One:
+    case GPU::BlendFactor::One:
         m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         break;
-    case BlendFactor::SrcColor:
+    case GPU::BlendFactor::SrcColor:
         m_alpha_blend_factors.src_factor_src_color = 1;
         break;
-    case BlendFactor::OneMinusSrcColor:
+    case GPU::BlendFactor::OneMinusSrcColor:
         m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         m_alpha_blend_factors.src_factor_src_color = -1;
         break;
-    case BlendFactor::SrcAlpha:
+    case GPU::BlendFactor::SrcAlpha:
         m_alpha_blend_factors.src_factor_src_alpha = 1;
         break;
-    case BlendFactor::OneMinusSrcAlpha:
+    case GPU::BlendFactor::OneMinusSrcAlpha:
         m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         m_alpha_blend_factors.src_factor_src_alpha = -1;
         break;
-    case BlendFactor::DstAlpha:
+    case GPU::BlendFactor::DstAlpha:
         m_alpha_blend_factors.src_factor_dst_alpha = 1;
         break;
-    case BlendFactor::OneMinusDstAlpha:
+    case GPU::BlendFactor::OneMinusDstAlpha:
         m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         m_alpha_blend_factors.src_factor_dst_alpha = -1;
         break;
-    case BlendFactor::DstColor:
+    case GPU::BlendFactor::DstColor:
         m_alpha_blend_factors.src_factor_dst_color = 1;
         break;
-    case BlendFactor::OneMinusDstColor:
+    case GPU::BlendFactor::OneMinusDstColor:
         m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         m_alpha_blend_factors.src_factor_dst_color = -1;
         break;
-    case BlendFactor::SrcAlphaSaturate:
+    case GPU::BlendFactor::SrcAlphaSaturate:
     default:
         VERIFY_NOT_REACHED();
     }
 
     switch (m_options.blend_destination_factor) {
-    case BlendFactor::Zero:
+    case GPU::BlendFactor::Zero:
         break;
-    case BlendFactor::One:
+    case GPU::BlendFactor::One:
         m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         break;
-    case BlendFactor::SrcColor:
+    case GPU::BlendFactor::SrcColor:
         m_alpha_blend_factors.dst_factor_src_color = 1;
         break;
-    case BlendFactor::OneMinusSrcColor:
+    case GPU::BlendFactor::OneMinusSrcColor:
         m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         m_alpha_blend_factors.dst_factor_src_color = -1;
         break;
-    case BlendFactor::SrcAlpha:
+    case GPU::BlendFactor::SrcAlpha:
         m_alpha_blend_factors.dst_factor_src_alpha = 1;
         break;
-    case BlendFactor::OneMinusSrcAlpha:
+    case GPU::BlendFactor::OneMinusSrcAlpha:
         m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         m_alpha_blend_factors.dst_factor_src_alpha = -1;
         break;
-    case BlendFactor::DstAlpha:
+    case GPU::BlendFactor::DstAlpha:
         m_alpha_blend_factors.dst_factor_dst_alpha = 1;
         break;
-    case BlendFactor::OneMinusDstAlpha:
+    case GPU::BlendFactor::OneMinusDstAlpha:
         m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         m_alpha_blend_factors.dst_factor_dst_alpha = -1;
         break;
-    case BlendFactor::DstColor:
+    case GPU::BlendFactor::DstColor:
         m_alpha_blend_factors.dst_factor_dst_color = 1;
         break;
-    case BlendFactor::OneMinusDstColor:
+    case GPU::BlendFactor::OneMinusDstColor:
         m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         m_alpha_blend_factors.dst_factor_dst_color = -1;
         break;
-    case BlendFactor::SrcAlphaSaturate:
+    case GPU::BlendFactor::SrcAlphaSaturate:
     default:
         VERIFY_NOT_REACHED();
     }
@@ -180,7 +180,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
     INCREASE_STATISTICS_COUNTER(g_num_rasterized_triangles, 1);
 
     // Return if alpha testing is a no-op
-    if (m_options.enable_alpha_test && m_options.alpha_test_func == AlphaTestFunction::Never)
+    if (m_options.enable_alpha_test && m_options.alpha_test_func == GPU::AlphaTestFunction::Never)
         return;
 
     // Vertices
@@ -262,33 +262,33 @@ void Device::rasterize_triangle(Triangle const& triangle)
     auto stencil_buffer = m_frame_buffer->stencil_buffer();
 
     // Stencil configuration and writing
-    auto const& stencil_configuration = m_stencil_configuration[Face::Front];
+    auto const& stencil_configuration = m_stencil_configuration[GPU::Face::Front];
     auto const stencil_reference_value = stencil_configuration.reference_value & stencil_configuration.test_mask;
 
-    auto write_to_stencil = [](StencilType* stencil_ptrs[4], i32x4 stencil_value, StencilOperation op, StencilType reference_value, StencilType write_mask, i32x4 pixel_mask) {
-        if (write_mask == 0 || op == StencilOperation::Keep)
+    auto write_to_stencil = [](StencilType* stencil_ptrs[4], i32x4 stencil_value, GPU::StencilOperation op, StencilType reference_value, StencilType write_mask, i32x4 pixel_mask) {
+        if (write_mask == 0 || op == GPU::StencilOperation::Keep)
             return;
 
         switch (op) {
-        case StencilOperation::Decrement:
+        case GPU::StencilOperation::Decrement:
             stencil_value = (stencil_value & ~write_mask) | (max(stencil_value - 1, expand4(0)) & write_mask);
             break;
-        case StencilOperation::DecrementWrap:
+        case GPU::StencilOperation::DecrementWrap:
             stencil_value = (stencil_value & ~write_mask) | (((stencil_value - 1) & 0xFF) & write_mask);
             break;
-        case StencilOperation::Increment:
+        case GPU::StencilOperation::Increment:
             stencil_value = (stencil_value & ~write_mask) | (min(stencil_value + 1, expand4(0xFF)) & write_mask);
             break;
-        case StencilOperation::IncrementWrap:
+        case GPU::StencilOperation::IncrementWrap:
             stencil_value = (stencil_value & ~write_mask) | (((stencil_value + 1) & 0xFF) & write_mask);
             break;
-        case StencilOperation::Invert:
+        case GPU::StencilOperation::Invert:
             stencil_value ^= write_mask;
             break;
-        case StencilOperation::Replace:
+        case GPU::StencilOperation::Replace:
             stencil_value = (stencil_value & ~write_mask) | (reference_value & write_mask);
             break;
-        case StencilOperation::Zero:
+        case GPU::StencilOperation::Zero:
             stencil_value &= ~write_mask;
             break;
         default:
@@ -344,28 +344,28 @@ void Device::rasterize_triangle(Triangle const& triangle)
 
                 i32x4 stencil_test_passed;
                 switch (stencil_configuration.test_function) {
-                case StencilTestFunction::Always:
+                case GPU::StencilTestFunction::Always:
                     stencil_test_passed = expand4(~0);
                     break;
-                case StencilTestFunction::Equal:
+                case GPU::StencilTestFunction::Equal:
                     stencil_test_passed = stencil_value == stencil_reference_value;
                     break;
-                case StencilTestFunction::Greater:
+                case GPU::StencilTestFunction::Greater:
                     stencil_test_passed = stencil_value > stencil_reference_value;
                     break;
-                case StencilTestFunction::GreaterOrEqual:
+                case GPU::StencilTestFunction::GreaterOrEqual:
                     stencil_test_passed = stencil_value >= stencil_reference_value;
                     break;
-                case StencilTestFunction::Less:
+                case GPU::StencilTestFunction::Less:
                     stencil_test_passed = stencil_value < stencil_reference_value;
                     break;
-                case StencilTestFunction::LessOrEqual:
+                case GPU::StencilTestFunction::LessOrEqual:
                     stencil_test_passed = stencil_value <= stencil_reference_value;
                     break;
-                case StencilTestFunction::Never:
+                case GPU::StencilTestFunction::Never:
                     stencil_test_passed = expand4(0);
                     break;
-                case StencilTestFunction::NotEqual:
+                case GPU::StencilTestFunction::NotEqual:
                     stencil_test_passed = stencil_value != stencil_reference_value;
                     break;
                 default:
@@ -407,19 +407,19 @@ void Device::rasterize_triangle(Triangle const& triangle)
 
                 i32x4 depth_test_passed;
                 switch (m_options.depth_func) {
-                case DepthTestFunction::Always:
+                case GPU::DepthTestFunction::Always:
                     depth_test_passed = expand4(~0);
                     break;
-                case DepthTestFunction::Never:
+                case GPU::DepthTestFunction::Never:
                     depth_test_passed = expand4(0);
                     break;
-                case DepthTestFunction::Greater:
+                case GPU::DepthTestFunction::Greater:
                     depth_test_passed = quad.depth > depth;
                     break;
-                case DepthTestFunction::GreaterOrEqual:
+                case GPU::DepthTestFunction::GreaterOrEqual:
                     depth_test_passed = quad.depth >= depth;
                     break;
-                case DepthTestFunction::NotEqual:
+                case GPU::DepthTestFunction::NotEqual:
 #ifdef __SSE__
                     depth_test_passed = quad.depth != depth;
 #else
@@ -431,7 +431,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
                     };
 #endif
                     break;
-                case DepthTestFunction::Equal:
+                case GPU::DepthTestFunction::Equal:
 #ifdef __SSE__
                     depth_test_passed = quad.depth == depth;
 #else
@@ -454,10 +454,10 @@ void Device::rasterize_triangle(Triangle const& triangle)
                     };
 #endif
                     break;
-                case DepthTestFunction::LessOrEqual:
+                case GPU::DepthTestFunction::LessOrEqual:
                     depth_test_passed = quad.depth <= depth;
                     break;
-                case DepthTestFunction::Less:
+                case GPU::DepthTestFunction::Less:
                     depth_test_passed = quad.depth < depth;
                     break;
                 default:
@@ -518,7 +518,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
 
             shade_fragments(quad);
 
-            if (m_options.enable_alpha_test && m_options.alpha_test_func != AlphaTestFunction::Always && !test_alpha(quad))
+            if (m_options.enable_alpha_test && m_options.alpha_test_func != GPU::AlphaTestFunction::Always && !test_alpha(quad))
                 continue;
 
             // Write to depth buffer
@@ -595,15 +595,15 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
         auto mode = options.texcoord_generation_config[texcoord_index][config_index].mode;
 
         switch (mode) {
-        case TexCoordGenerationMode::ObjectLinear: {
+        case GPU::TexCoordGenerationMode::ObjectLinear: {
             auto coefficients = options.texcoord_generation_config[texcoord_index][config_index].coefficients;
             return coefficients.dot(vertex.position);
         }
-        case TexCoordGenerationMode::EyeLinear: {
+        case GPU::TexCoordGenerationMode::EyeLinear: {
             auto coefficients = options.texcoord_generation_config[texcoord_index][config_index].coefficients;
             return coefficients.dot(vertex.eye_coordinates);
         }
-        case TexCoordGenerationMode::SphereMap: {
+        case GPU::TexCoordGenerationMode::SphereMap: {
             auto const eye_unit = vertex.eye_coordinates.normalized();
             FloatVector3 const eye_unit_xyz = eye_unit.xyz();
             auto const normal = vertex.normal;
@@ -612,14 +612,14 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
             auto const reflection_value = reflection[config_index];
             return reflection_value / (2 * reflection.length()) + 0.5f;
         }
-        case TexCoordGenerationMode::ReflectionMap: {
+        case GPU::TexCoordGenerationMode::ReflectionMap: {
             auto const eye_unit = vertex.eye_coordinates.normalized();
             FloatVector3 const eye_unit_xyz = eye_unit.xyz();
             auto const normal = vertex.normal;
             auto reflection = eye_unit_xyz - normal * 2 * normal.dot(eye_unit_xyz);
             return reflection[config_index];
         }
-        case TexCoordGenerationMode::NormalMap: {
+        case GPU::TexCoordGenerationMode::NormalMap: {
             return vertex.normal[config_index];
         }
         default:
@@ -631,15 +631,15 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
         auto& tex_coord = vertex.tex_coords[i];
         auto const enabled_coords = options.texcoord_generation_enabled_coordinates[i];
         tex_coord = {
-            ((enabled_coords & TexCoordGenerationCoordinate::S) > 0) ? generate_coordinate(i, 0) : tex_coord.x(),
-            ((enabled_coords & TexCoordGenerationCoordinate::T) > 0) ? generate_coordinate(i, 1) : tex_coord.y(),
-            ((enabled_coords & TexCoordGenerationCoordinate::R) > 0) ? generate_coordinate(i, 2) : tex_coord.z(),
-            ((enabled_coords & TexCoordGenerationCoordinate::Q) > 0) ? generate_coordinate(i, 3) : tex_coord.w(),
+            ((enabled_coords & GPU::TexCoordGenerationCoordinate::S) > 0) ? generate_coordinate(i, 0) : tex_coord.x(),
+            ((enabled_coords & GPU::TexCoordGenerationCoordinate::T) > 0) ? generate_coordinate(i, 1) : tex_coord.y(),
+            ((enabled_coords & GPU::TexCoordGenerationCoordinate::R) > 0) ? generate_coordinate(i, 2) : tex_coord.z(),
+            ((enabled_coords & GPU::TexCoordGenerationCoordinate::Q) > 0) ? generate_coordinate(i, 3) : tex_coord.w(),
         };
     }
 }
 
-void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform,
+void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform,
     FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
@@ -658,7 +658,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     m_processed_triangles.clear_with_capacity();
 
     // Let's construct some triangles
-    if (primitive_type == PrimitiveType::Triangles) {
+    if (primitive_type == GPU::PrimitiveType::Triangles) {
         Triangle triangle;
         if (vertices.size() < 3)
             return;
@@ -669,7 +669,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
 
             m_triangle_list.append(triangle);
         }
-    } else if (primitive_type == PrimitiveType::Quads) {
+    } else if (primitive_type == GPU::PrimitiveType::Quads) {
         // We need to construct two triangles to form the quad
         Triangle triangle;
         if (vertices.size() < 4)
@@ -687,7 +687,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
             triangle.vertices[2] = vertices.at(i);
             m_triangle_list.append(triangle);
         }
-    } else if (primitive_type == PrimitiveType::TriangleFan) {
+    } else if (primitive_type == GPU::PrimitiveType::TriangleFan) {
         Triangle triangle;
         triangle.vertices[0] = vertices.at(0); // Root vertex is always the vertex defined first
 
@@ -697,7 +697,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
             triangle.vertices[2] = vertices.at(i + 1);
             m_triangle_list.append(triangle);
         }
-    } else if (primitive_type == PrimitiveType::TriangleStrip) {
+    } else if (primitive_type == GPU::PrimitiveType::TriangleStrip) {
         Triangle triangle;
         if (vertices.size() < 3)
             return;
@@ -753,22 +753,22 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                 auto specular = material.specular;
 
                 if (m_options.color_material_enabled
-                    && (m_options.color_material_face == ColorMaterialFace::Front || m_options.color_material_face == ColorMaterialFace::FrontAndBack)) {
+                    && (m_options.color_material_face == GPU::ColorMaterialFace::Front || m_options.color_material_face == GPU::ColorMaterialFace::FrontAndBack)) {
                     switch (m_options.color_material_mode) {
-                    case ColorMaterialMode::Ambient:
+                    case GPU::ColorMaterialMode::Ambient:
                         ambient = vertex.color;
                         break;
-                    case ColorMaterialMode::AmbientAndDiffuse:
+                    case GPU::ColorMaterialMode::AmbientAndDiffuse:
                         ambient = vertex.color;
                         diffuse = vertex.color;
                         break;
-                    case ColorMaterialMode::Diffuse:
+                    case GPU::ColorMaterialMode::Diffuse:
                         diffuse = vertex.color;
                         break;
-                    case ColorMaterialMode::Emissive:
+                    case GPU::ColorMaterialMode::Emissive:
                         emissive = vertex.color;
                         break;
-                    case ColorMaterialMode::Specular:
+                    case GPU::ColorMaterialMode::Specular:
                         specular = vertex.color;
                         break;
                     }
@@ -916,7 +916,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     // Generate texture coordinates if at least one coordinate is enabled
     bool texture_coordinate_generation_enabled = false;
     for (auto const coordinates_enabled : m_options.texcoord_generation_enabled_coordinates) {
-        if (coordinates_enabled != TexCoordGenerationCoordinate::None) {
+        if (coordinates_enabled != GPU::TexCoordGenerationCoordinate::None) {
             texture_coordinate_generation_enabled = true;
             break;
         }
@@ -935,7 +935,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
             continue;
 
         if (m_options.enable_culling) {
-            bool is_front = (m_options.front_face == WindingOrder::CounterClockwise ? area > 0 : area < 0);
+            bool is_front = (m_options.front_face == GPU::WindingOrder::CounterClockwise ? area > 0 : area < 0);
 
             if (!is_front && m_options.cull_back)
                 continue;
@@ -977,13 +977,13 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
 
         // FIXME: Implement more blend modes
         switch (sampler.config().fixed_function_texture_env_mode) {
-        case TextureEnvMode::Modulate:
+        case SoftGPU::TextureEnvMode::Modulate:
             quad.out_color = quad.out_color * texel;
             break;
-        case TextureEnvMode::Replace:
+        case SoftGPU::TextureEnvMode::Replace:
             quad.out_color = texel;
             break;
-        case TextureEnvMode::Decal: {
+        case SoftGPU::TextureEnvMode::Decal: {
             auto dst_alpha = texel.w();
             quad.out_color.set_x(mix(quad.out_color.x(), texel.x(), dst_alpha));
             quad.out_color.set_y(mix(quad.out_color.y(), texel.y(), dst_alpha));
@@ -1002,14 +1002,14 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
     if (m_options.fog_enabled) {
         auto factor = expand4(0.0f);
         switch (m_options.fog_mode) {
-        case FogMode::Linear:
+        case GPU::FogMode::Linear:
             factor = (m_options.fog_end - quad.fog_depth) / (m_options.fog_end - m_options.fog_start);
             break;
-        case FogMode::Exp: {
+        case GPU::FogMode::Exp: {
             auto argument = -m_options.fog_density * quad.fog_depth;
             factor = exp(argument);
         } break;
-        case FogMode::Exp2: {
+        case GPU::FogMode::Exp2: {
             auto argument = m_options.fog_density * quad.fog_depth;
             argument *= -argument;
             factor = exp(argument);
@@ -1032,26 +1032,26 @@ ALWAYS_INLINE bool Device::test_alpha(PixelQuad& quad)
     auto const ref_value = expand4(m_options.alpha_test_ref_value);
 
     switch (m_options.alpha_test_func) {
-    case AlphaTestFunction::Less:
+    case GPU::AlphaTestFunction::Less:
         quad.mask &= alpha < ref_value;
         break;
-    case AlphaTestFunction::Equal:
+    case GPU::AlphaTestFunction::Equal:
         quad.mask &= alpha == ref_value;
         break;
-    case AlphaTestFunction::LessOrEqual:
+    case GPU::AlphaTestFunction::LessOrEqual:
         quad.mask &= alpha <= ref_value;
         break;
-    case AlphaTestFunction::Greater:
+    case GPU::AlphaTestFunction::Greater:
         quad.mask &= alpha > ref_value;
         break;
-    case AlphaTestFunction::NotEqual:
+    case GPU::AlphaTestFunction::NotEqual:
         quad.mask &= alpha != ref_value;
         break;
-    case AlphaTestFunction::GreaterOrEqual:
+    case GPU::AlphaTestFunction::GreaterOrEqual:
         quad.mask &= alpha >= ref_value;
         break;
-    case AlphaTestFunction::Never:
-    case AlphaTestFunction::Always:
+    case GPU::AlphaTestFunction::Never:
+    case GPU::AlphaTestFunction::Always:
     default:
         VERIFY_NOT_REACHED();
     }
@@ -1241,12 +1241,12 @@ void Device::set_light_state(unsigned int light_id, Light const& light)
     m_lights.at(light_id) = light;
 }
 
-void Device::set_material_state(Face face, Material const& material)
+void Device::set_material_state(GPU::Face face, Material const& material)
 {
     m_materials[face] = material;
 }
 
-void Device::set_stencil_configuration(Face face, StencilConfiguration const& stencil_configuration)
+void Device::set_stencil_configuration(GPU::Face face, StencilConfiguration const& stencil_configuration)
 {
     m_stencil_configuration[face] = stencil_configuration;
 }
