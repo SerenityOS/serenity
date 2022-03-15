@@ -60,7 +60,7 @@ void Texture2D::replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffse
     int const physical_width = pixels_per_row > 0 ? pixels_per_row : width;
     size_t const physical_width_bytes = physical_width * pixel_size_bytes;
 
-    SoftGPU::ImageDataLayout layout;
+    GPU::ImageDataLayout layout;
     layout.column_stride = pixel_size_bytes;
     layout.row_stride = physical_width_bytes + (byte_alignment - physical_width_bytes % byte_alignment) % byte_alignment;
     layout.depth_stride = 0;

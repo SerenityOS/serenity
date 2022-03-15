@@ -11,12 +11,12 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <LibGPU/Enums.h>
+#include <LibGPU/ImageDataLayout.h>
 #include <LibGPU/ImageFormat.h>
 #include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Buffer/Typed3DBuffer.h>
 #include <LibSoftGPU/Config.h>
-#include <LibSoftGPU/ImageDataLayout.h>
 
 namespace SoftGPU {
 
@@ -156,8 +156,8 @@ public:
         pack_color(color, texel_pointer(layer, level, x, y, z), GPU::ImageFormat::BGRA8888);
     }
 
-    void write_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void const* data, ImageDataLayout const& layout);
-    void read_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void* data, ImageDataLayout const& layout) const;
+    void write_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void const* data, GPU::ImageDataLayout const& layout);
+    void read_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void* data, GPU::ImageDataLayout const& layout) const;
     void copy_texels(Image const& source, unsigned source_layer, unsigned source_level, Vector3<unsigned> const& source_offset, Vector3<unsigned> const& size, unsigned destination_layer, unsigned destination_level, Vector3<unsigned> const& destination_offset);
 
 private:
