@@ -1219,9 +1219,9 @@ DepthType Device::get_depthbuffer_value(int x, int y)
     return m_frame_buffer->depth_buffer()->scanline(y)[x];
 }
 
-NonnullRefPtr<Image> Device::create_image(ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers)
+NonnullRefPtr<Image> Device::create_image(GPU::ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers)
 {
-    VERIFY(format == ImageFormat::BGRA8888);
+    VERIFY(format == GPU::ImageFormat::BGRA8888);
     VERIFY(width > 0);
     VERIFY(height > 0);
     VERIFY(depth > 0);

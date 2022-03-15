@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <LibSoftGPU/ImageFormat.h>
+#include <LibGPU/ImageFormat.h>
 
 namespace SoftGPU {
 
 struct ImageDataLayout final {
-    ImageFormat format;
+    GPU::ImageFormat format;
     size_t column_stride;
     size_t row_stride;
     size_t depth_stride;
