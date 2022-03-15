@@ -96,7 +96,7 @@ public:
 
     CSS::StyleProperties const* specified_css_values() const { return m_specified_css_values.ptr(); }
     void set_specified_css_values(RefPtr<CSS::StyleProperties> style) { m_specified_css_values = move(style); }
-    NonnullRefPtr<CSS::StyleProperties> computed_style();
+    NonnullRefPtr<CSS::StyleProperties> resolved_css_values();
 
     const CSS::CSSStyleDeclaration* inline_style() const { return m_inline_style; }
 

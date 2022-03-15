@@ -353,10 +353,10 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
         }
 
         String specified_values_json = serialize_json(*element.specified_css_values());
-        String computed_values_json = serialize_json(element.computed_style());
+        String resolved_values_json = serialize_json(element.resolved_css_values());
         String custom_properties_json = serialize_custom_properties_json(element);
         String node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
-        return { true, specified_values_json, computed_values_json, custom_properties_json, node_box_sizing_json };
+        return { true, specified_values_json, resolved_values_json, custom_properties_json, node_box_sizing_json };
     }
 
     return { false, "", "", "", "" };

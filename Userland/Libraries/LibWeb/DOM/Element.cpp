@@ -281,7 +281,7 @@ void Element::recompute_style()
     document().invalidate_layout();
 }
 
-NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
+NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
 {
     auto element_computed_style = CSS::ResolvedCSSStyleDeclaration::create(*this);
     auto properties = CSS::StyleProperties::create();
