@@ -1,7 +1,49 @@
 const stackDescriptor = Object.getOwnPropertyDescriptor(Error.prototype, "stack");
 const stackSetter = stackDescriptor.set;
 
-describe("normal behavior", () => {
+describe("getter - normal behavior", () => {
+    test("basic functionality", () => {
+        const stackFrames = [
+            /^    at .*Error \(.*\/Error\.prototype\.stack\.js:\d+:\d+\)$/,
+            /^    at .+\/Error\/Error\.prototype\.stack\.js:\d+:\d+$/,
+            /^    at test \(.+\/test-common.js:557:21\)$/,
+            /^    at .+\/Error\/Error\.prototype\.stack\.js:5:33$/,
+            /^    at describe \(.+\/test-common\.js:534:21\)$/,
+            /^    at .+\/Error\/Error\.prototype\.stack\.js:4:38$/,
+        ];
+        const values = [
+            {
+                error: new Error(),
+                header: "Error",
+                stackFrames,
+            },
+            {
+                error: new TypeError(),
+                header: "TypeError",
+                stackFrames,
+            },
+            {
+                error: new Error("Something went wrong!"),
+                header: "Error: Something went wrong!",
+                stackFrames,
+            },
+        ];
+
+        for (const { error, header: expectedHeader, stackFrames: expectedStackFrames } of values) {
+            const [header, ...stackFrames] = error.stack.trim().split("\n");
+
+            expect(header).toBe(expectedHeader);
+            expect(stackFrames).toHaveLength(expectedStackFrames.length);
+            for (let i = 0; i < stackFrames.length; ++i) {
+                const stackFrame = stackFrames[i];
+                const expectedStackFrame = expectedStackFrames[i];
+                expect(!!stackFrame.match(expectedStackFrame)).toBeTrue();
+            }
+        }
+    });
+});
+
+describe("setter - normal behavior", () => {
     test("basic functionality", () => {
         "use strict";
         const error = new Error();
@@ -38,7 +80,7 @@ describe("normal behavior", () => {
     });
 });
 
-describe("errors", () => {
+describe("setter - errors", () => {
     test("this is not an object", () => {
         expect(() => {
             stackSetter.call(undefined);
