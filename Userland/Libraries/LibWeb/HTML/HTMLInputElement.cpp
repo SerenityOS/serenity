@@ -39,16 +39,16 @@ HTMLInputElement::~HTMLInputElement()
 
 RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    if (type() == "hidden")
+    if (type_state() == TypeAttributeState::Hidden)
         return nullptr;
 
-    if (type() == "submit" || type() == "button" || type() == "reset")
+    if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton)
         return adopt_ref(*new Layout::ButtonBox(document(), *this, move(style)));
 
-    if (type() == "checkbox")
+    if (type_state() == TypeAttributeState::Checkbox)
         return adopt_ref(*new Layout::CheckBox(document(), *this, move(style)));
 
-    if (type() == "radio")
+    if (type_state() == TypeAttributeState::RadioButton)
         return adopt_ref(*new Layout::RadioButton(document(), *this, move(style)));
 
     auto layout_node = adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
@@ -72,7 +72,7 @@ void HTMLInputElement::set_checked(bool checked, ChangeSource change_source)
 
 void HTMLInputElement::set_checked_binding(bool checked)
 {
-    if (type() == "radio") {
+    if (type_state() == TypeAttributeState::RadioButton) {
         if (checked)
             set_checked_within_group();
         else
@@ -85,7 +85,7 @@ void HTMLInputElement::set_checked_binding(bool checked)
 // https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
 void HTMLInputElement::run_input_activation_behavior()
 {
-    if (type() == "checkbox" || type() == "radio") {
+    if (type_state() == TypeAttributeState::Checkbox || type_state() == TypeAttributeState::RadioButton) {
         // 1. If the element is not connected, then return.
         if (!is_connected())
             return;
@@ -100,7 +100,7 @@ void HTMLInputElement::run_input_activation_behavior()
         auto change_event = DOM::Event::create(HTML::EventNames::change);
         change_event->set_bubbles(true);
         dispatch_event(move(change_event));
-    } else if (type() == "submit") {
+    } else if (type_state() == TypeAttributeState::SubmitButton) {
         RefPtr<HTMLFormElement> form;
         // 1. If the element does not have a form owner, then return.
         if (!(form = this->form()))
