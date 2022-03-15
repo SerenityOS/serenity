@@ -76,6 +76,8 @@ public:
 
     BrowsingContext const& top_level_browsing_context() const { return const_cast<BrowsingContext*>(this)->top_level_browsing_context(); }
 
+    BrowsingContext* choose_a_browsing_context(StringView name, bool noopener);
+
     HTML::BrowsingContextContainer* container() { return m_container; }
     HTML::BrowsingContextContainer const* container() const { return m_container; }
 
