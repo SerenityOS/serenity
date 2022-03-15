@@ -35,7 +35,8 @@ public:
     int menu_id() const { return m_menu_id; }
 
     bool is_open() const;
-
+    bool did_change_position() const { return m_did_change_position; }
+    
     u32 alt_shortcut_character() const { return m_alt_shortcut_character; }
 
     bool is_empty() const { return m_items.is_empty(); }
@@ -157,7 +158,8 @@ private:
     Gfx::IntPoint m_last_position_in_hover;
     int m_theme_index_at_last_paint { -1 };
     int m_hovered_item_index { -1 };
-
+    
+    bool m_did_change_position { false };
     bool m_scrollable { false };
     int m_scroll_offset { 0 };
     int m_max_scroll_offset { 0 };

@@ -332,7 +332,10 @@ void Menu::descend_into_submenu_at_hovered_item()
     auto submenu = hovered_item()->submenu();
     VERIFY(submenu);
     MenuManager::the().open_menu(*submenu, true);
-    submenu->set_hovered_index(0);
+    if (submenu->did_change_position())
+        submenu->set_hovered_index(submenu->item_count()-1);
+    else
+        submenu->set_hovered_index(0);
     VERIFY(submenu->hovered_item()->type() != MenuItem::Separator);
 }
 
@@ -619,6 +622,7 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_subm
     }
     if (adjusted_pos.y() + window.height() > screen.rect().bottom() - margin) {
         adjusted_pos = adjusted_pos.translated(0, -min(window.height(), adjusted_pos.y()));
+        m_did_change_position = true;
         if (as_submenu)
             adjusted_pos = adjusted_pos.translated(0, item_height());
     }
