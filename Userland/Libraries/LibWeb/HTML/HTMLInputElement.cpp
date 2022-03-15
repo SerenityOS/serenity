@@ -70,6 +70,18 @@ void HTMLInputElement::set_checked(bool checked, ChangeSource change_source)
     set_needs_style_update(true);
 }
 
+void HTMLInputElement::set_checked_binding(bool checked)
+{
+    if (type() == "radio") {
+        if (checked)
+            set_checked_within_group();
+        else
+            set_checked(false, ChangeSource::Programmatic);
+    } else {
+        set_checked(checked, ChangeSource::Programmatic);
+    }
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
 void HTMLInputElement::run_input_activation_behavior()
 {

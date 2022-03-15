@@ -21,7 +21,7 @@ interface HTMLInputElement : HTMLElement {
 
     [LegacyNullToEmptyString] attribute DOMString value;
 
-    attribute boolean checked;
+    [ImplementedAs=checked_binding] attribute boolean checked;
 
     [Reflect] attribute boolean disabled;
     [Reflect=checked] attribute boolean defaultChecked;

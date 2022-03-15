@@ -69,6 +69,9 @@ public:
     };
     void set_checked(bool, ChangeSource = ChangeSource::Programmatic);
 
+    bool checked_binding() const { return checked(); }
+    void set_checked_binding(bool);
+
     void did_edit_text_node(Badge<BrowsingContext>);
 
     virtual bool is_focusable() const override;
