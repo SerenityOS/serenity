@@ -28,7 +28,7 @@ public:
 
     static constexpr auto relevant_extension_keys()
     {
-        // 17.3.3 Internal slots, https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat-internal-slots
+        // 17.2.3 Internal slots, https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat-internal-slots
         // The value of the [[RelevantExtensionKeys]] internal slot is « "nu" ».
         return AK::Array { "nu"sv };
     }
@@ -77,7 +77,6 @@ struct PatternPartitionWithUnit : public PatternPartition {
     StringView unit;
 };
 
-ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, Value locales_value, Value options_value);
 ThrowCompletionOr<Unicode::TimeUnit> singular_relative_time_unit(GlobalObject& global_object, StringView unit);
 ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_pattern(GlobalObject& global_object, RelativeTimeFormat& relative_time_format, double value, StringView unit);
 Vector<PatternPartitionWithUnit> make_parts_list(StringView pattern, StringView unit, Vector<PatternPartition> parts);
