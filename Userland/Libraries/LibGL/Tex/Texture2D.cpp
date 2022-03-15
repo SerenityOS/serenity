@@ -66,16 +66,16 @@ void Texture2D::replace_sub_texture_data(GLuint lod, GLint xoffset, GLint yoffse
     layout.depth_stride = 0;
 
     if (type == GL_UNSIGNED_SHORT_5_6_5) {
-        layout.format = SoftGPU::ImageFormat::RGB565;
+        layout.format = GPU::ImageFormat::RGB565;
     } else if (type == GL_UNSIGNED_BYTE) {
         if (format == GL_RGB)
-            layout.format = SoftGPU::ImageFormat::RGB888;
+            layout.format = GPU::ImageFormat::RGB888;
         else if (format == GL_BGR)
-            layout.format = SoftGPU::ImageFormat::BGR888;
+            layout.format = GPU::ImageFormat::BGR888;
         else if (format == GL_RGBA)
-            layout.format = SoftGPU::ImageFormat::RGBA8888;
+            layout.format = GPU::ImageFormat::RGBA8888;
         else if (format == GL_BGRA)
-            layout.format = SoftGPU::ImageFormat::BGRA8888;
+            layout.format = GPU::ImageFormat::BGRA8888;
     }
 
     Vector3<unsigned> offset {

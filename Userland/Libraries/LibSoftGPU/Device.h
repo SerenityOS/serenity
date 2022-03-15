@@ -13,6 +13,7 @@
 #include <AK/Vector.h>
 #include <LibGPU/DeviceInfo.h>
 #include <LibGPU/Enums.h>
+#include <LibGPU/ImageFormat.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Matrix4x4.h>
@@ -24,7 +25,6 @@
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Image.h>
-#include <LibSoftGPU/ImageFormat.h>
 #include <LibSoftGPU/Light/Light.h>
 #include <LibSoftGPU/Light/Material.h>
 #include <LibSoftGPU/Sampler.h>
@@ -130,7 +130,7 @@ public:
     ColorType get_color_buffer_pixel(int x, int y);
     DepthType get_depthbuffer_value(int x, int y);
 
-    NonnullRefPtr<Image> create_image(ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers);
+    NonnullRefPtr<Image> create_image(GPU::ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers);
 
     void set_sampler_config(unsigned, SamplerConfig const&);
     void set_light_state(unsigned, Light const&);

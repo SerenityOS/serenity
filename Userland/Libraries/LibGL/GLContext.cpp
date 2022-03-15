@@ -16,11 +16,11 @@
 #include <AK/Vector.h>
 #include <LibGL/GLContext.h>
 #include <LibGPU/Enums.h>
+#include <LibGPU/ImageFormat.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Device.h>
-#include <LibSoftGPU/ImageFormat.h>
 
 __attribute__((visibility("hidden"))) GL::GLContext* g_gl_context;
 
@@ -927,7 +927,7 @@ void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_forma
         // that constructing GL textures in any but the default mipmap order, going from level 0 upwards will cause mip levels to stay uninitialized.
         // To be spec compliant we should create the device image once the texture has become complete and is used for rendering the first time.
         // All images that were attached before the device image was created need to be stored somewhere to be used to initialize the device image once complete.
-        texture_2d->set_device_image(m_rasterizer.create_image(SoftGPU::ImageFormat::BGRA8888, width, height, 1, 999, 1));
+        texture_2d->set_device_image(m_rasterizer.create_image(GPU::ImageFormat::BGRA8888, width, height, 1, 999, 1));
         m_sampler_config_is_dirty = true;
     }
 
