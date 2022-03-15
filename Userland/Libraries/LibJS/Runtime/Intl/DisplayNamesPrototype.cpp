@@ -13,7 +13,7 @@
 
 namespace JS::Intl {
 
-// 12.4 Properties of the Intl.DisplayNames Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-displaynames-prototype-object
+// 12.3 Properties of the Intl.DisplayNames Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-displaynames-prototype-object
 DisplayNamesPrototype::DisplayNamesPrototype(GlobalObject& global_object)
     : PrototypeObject(*global_object.object_prototype())
 {
@@ -25,7 +25,7 @@ void DisplayNamesPrototype::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 12.4.2 Intl.DisplayNames.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype-@@tostringtag
+    // 12.3.2 Intl.DisplayNames.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.DisplayNames"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -33,7 +33,7 @@ void DisplayNamesPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
-// 12.4.3 Intl.DisplayNames.prototype.of ( code ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype.of
+// 12.3.3 Intl.DisplayNames.prototype.of ( code ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype.of
 JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
 {
     auto code = vm.argument(0);
@@ -121,7 +121,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::of)
     return js_undefined();
 }
 
-// 12.4.4 Intl.DisplayNames.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype.resolvedOptions
+// 12.3.4 Intl.DisplayNames.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype.resolvedOptions
 JS_DEFINE_NATIVE_FUNCTION(DisplayNamesPrototype::resolved_options)
 {
     // 1. Let displayNames be this value.
