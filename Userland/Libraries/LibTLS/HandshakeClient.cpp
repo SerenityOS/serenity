@@ -248,6 +248,13 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
 
 void TLSv12::build_dhe_rsa_pre_master_secret(PacketBuilder& builder)
 {
+    const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
+    if (!certificate_option.has_value()) {
+        dbgln("certificate verification failed :(");
+        alert(AlertLevel::Critical, AlertDescription::BadCertificate);
+        return;
+    }
+
     auto& dh = m_context.server_diffie_hellman_params;
     auto dh_p = Crypto::UnsignedBigInteger::import_data(dh.p.data(), dh.p.size());
     auto dh_g = Crypto::UnsignedBigInteger::import_data(dh.g.data(), dh.g.size());
@@ -295,6 +302,13 @@ void TLSv12::build_dhe_rsa_pre_master_secret(PacketBuilder& builder)
 
 void TLSv12::build_ecdhe_rsa_pre_master_secret(PacketBuilder& builder)
 {
+    const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
+    if (!certificate_option.has_value()) {
+        dbgln("certificate verification failed :(");
+        alert(AlertLevel::Critical, AlertDescription::BadCertificate);
+        return;
+    }
+
     // Create a random private key
     auto private_key_result = m_context.server_key_exchange_curve->generate_private_key();
     if (private_key_result.is_error()) {
