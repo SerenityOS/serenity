@@ -33,7 +33,10 @@ public:
     bool framebuffer_devices_use_bootloader_framebuffer() const;
     bool framebuffer_devices_exist() const;
 
-    Spinlock& main_vga_lock() { return m_main_vga_lock; }
+    void set_vga_text_mode_cursor(size_t console_width, size_t x, size_t y) const;
+    void disable_vga_text_mode_console_cursor() const;
+    void disable_vga_emulation_access_permanently();
+
     RefPtr<Graphics::Console> console() const { return m_console; }
     void set_console(Graphics::Console&);
 
@@ -41,6 +44,8 @@ public:
     void activate_graphical_mode();
 
 private:
+    void enable_vga_text_mode_console_cursor() const;
+
     bool determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
     bool determine_and_initialize_isa_graphics_device();
     NonnullRefPtrVector<GenericGraphicsAdapter> m_graphics_devices;
@@ -50,7 +55,8 @@ private:
     RefPtr<VGACompatibleAdapter> m_vga_adapter;
     unsigned m_current_minor_number { 0 };
 
-    Spinlock m_main_vga_lock;
+    mutable RecursiveSpinlock m_main_vga_lock;
+    bool m_vga_access_is_disabled { false };
 };
 
 }

@@ -51,6 +51,48 @@ bool GraphicsManagement::framebuffer_devices_console_only() const
     return kernel_command_line().are_framebuffer_devices_enabled() == CommandLine::FrameBufferDevices::ConsoleOnly;
 }
 
+void GraphicsManagement::disable_vga_emulation_access_permanently()
+{
+    SpinlockLocker locker(m_main_vga_lock);
+    disable_vga_text_mode_console_cursor();
+    IO::out8(0x3c4, 1);
+    u8 sr1 = IO::in8(0x3c5);
+    IO::out8(0x3c5, sr1 | 1 << 5);
+    IO::delay(1000);
+    m_vga_access_is_disabled = true;
+}
+
+void GraphicsManagement::enable_vga_text_mode_console_cursor() const
+{
+    SpinlockLocker locker(m_main_vga_lock);
+    if (m_vga_access_is_disabled)
+        return;
+    IO::out8(0x3D4, 0xA);
+    IO::out8(0x3D5, 0);
+}
+
+void GraphicsManagement::disable_vga_text_mode_console_cursor() const
+{
+    SpinlockLocker locker(m_main_vga_lock);
+    if (m_vga_access_is_disabled)
+        return;
+    IO::out8(0x3D4, 0xA);
+    IO::out8(0x3D5, 0x20);
+}
+
+void GraphicsManagement::set_vga_text_mode_cursor(size_t console_width, size_t x, size_t y) const
+{
+    SpinlockLocker locker(m_main_vga_lock);
+    if (m_vga_access_is_disabled)
+        return;
+    enable_vga_text_mode_console_cursor();
+    u16 value = y * console_width + x;
+    IO::out8(0x3d4, 0x0e);
+    IO::out8(0x3d5, MSB(value));
+    IO::out8(0x3d4, 0x0f);
+    IO::out8(0x3d5, LSB(value));
+}
+
 void GraphicsManagement::deactivate_graphical_mode()
 {
     for (auto& graphics_device : m_graphics_devices) {
