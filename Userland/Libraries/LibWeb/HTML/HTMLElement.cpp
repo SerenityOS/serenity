@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AK/ReverseIterator.h"
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
@@ -25,6 +24,7 @@
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/FocusEvent.h>
+#include <LibWeb/UIEvents/MouseEvent.h>
 
 namespace Web::HTML {
 
@@ -396,7 +396,7 @@ bool HTMLElement::fire_a_synthetic_pointer_event(FlyString const& type, DOM::Ele
     // 1. Let event be the result of creating an event using PointerEvent.
     // 2. Initialize event's type attribute to e.
     // FIXME: Actually create a PointerEvent!
-    auto event = DOM::Event::create(type);
+    auto event = UIEvents::MouseEvent::create(type, 0.0, 0.0, 0.0, 0.0);
 
     // 3. Initialize event's bubbles and cancelable attributes to true.
     event->set_bubbles(true);
