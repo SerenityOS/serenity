@@ -85,6 +85,7 @@ public:
     [[nodiscard]] bool disable_uhci_controller() const;
     [[nodiscard]] bool disable_usb() const;
     [[nodiscard]] bool disable_virtio() const;
+    [[nodiscard]] bool is_early_boot_console_disabled() const;
     [[nodiscard]] AHCIResetMode ahci_reset_mode() const;
     [[nodiscard]] StringView userspace_init() const;
     [[nodiscard]] NonnullOwnPtrVector<KString> userspace_init_args() const;

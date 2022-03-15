@@ -135,6 +135,16 @@ UNMAP_AFTER_INIT bool CommandLine::is_ioapic_enabled() const
     PANIC("Unknown enable_ioapic setting: {}", value);
 }
 
+UNMAP_AFTER_INIT bool CommandLine::is_early_boot_console_disabled() const
+{
+    auto value = lookup("early_boot_console"sv).value_or("on"sv);
+    if (value == "on"sv)
+        return false;
+    if (value == "off"sv)
+        return true;
+    PANIC("Unknown early_boot_console setting: {}", value);
+}
+
 UNMAP_AFTER_INIT bool CommandLine::is_vmmouse_enabled() const
 {
     return lookup("vmmouse"sv).value_or("on"sv) == "on"sv;
