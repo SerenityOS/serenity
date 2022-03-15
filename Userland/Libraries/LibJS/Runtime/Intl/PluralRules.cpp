@@ -6,6 +6,7 @@
 
 #include <AK/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
 #include <LibJS/Runtime/Intl/PluralRules.h>
 
 namespace JS::Intl {
