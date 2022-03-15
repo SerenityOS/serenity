@@ -95,12 +95,12 @@ InspectorWidget::InspectorWidget()
     auto& computed_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Computed");
     computed_style_table_container.set_layout<GUI::VerticalBoxLayout>();
     computed_style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
-    m_style_table_view = computed_style_table_container.add<GUI::TableView>();
+    m_computed_style_table_view = computed_style_table_container.add<GUI::TableView>();
 
     auto& resolved_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Resolved");
     resolved_style_table_container.set_layout<GUI::VerticalBoxLayout>();
     resolved_style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
-    m_computed_style_table_view = resolved_style_table_container.add<GUI::TableView>();
+    m_resolved_style_table_view = resolved_style_table_container.add<GUI::TableView>();
 
     auto& custom_properties_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Variables");
     custom_properties_table_container.set_layout<GUI::VerticalBoxLayout>();
@@ -161,12 +161,12 @@ void InspectorWidget::set_dom_node_properties_json(Selection selection, String s
 void InspectorWidget::load_style_json(String specified_values_json, String computed_values_json, String custom_properties_json)
 {
     m_selection_specified_values_json = specified_values_json;
-    m_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_specified_values_json.value().view()));
-    m_style_table_view->set_searchable(true);
+    m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_specified_values_json.value().view()));
+    m_computed_style_table_view->set_searchable(true);
 
     m_selection_computed_values_json = computed_values_json;
-    m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_computed_values_json.value().view()));
-    m_computed_style_table_view->set_searchable(true);
+    m_resolved_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_computed_values_json.value().view()));
+    m_resolved_style_table_view->set_searchable(true);
 
     m_selection_custom_properties_json = custom_properties_json;
     m_custom_properties_table_view->set_model(Web::StylePropertiesModel::create(m_selection_custom_properties_json.value().view()));
@@ -206,10 +206,10 @@ void InspectorWidget::update_node_box_model(Optional<String> node_box_sizing_jso
 void InspectorWidget::clear_style_json()
 {
     m_selection_specified_values_json.clear();
-    m_style_table_view->set_model(nullptr);
+    m_computed_style_table_view->set_model(nullptr);
 
     m_selection_computed_values_json.clear();
-    m_computed_style_table_view->set_model(nullptr);
+    m_resolved_style_table_view->set_model(nullptr);
 
     m_selection_custom_properties_json.clear();
     m_custom_properties_table_view->set_model(nullptr);
