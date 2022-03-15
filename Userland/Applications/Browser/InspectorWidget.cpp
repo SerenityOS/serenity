@@ -107,10 +107,10 @@ InspectorWidget::InspectorWidget()
     custom_properties_table_container.layout()->set_margins({ 4, 4, 4, 4 });
     m_custom_properties_table_view = custom_properties_table_container.add<GUI::TableView>();
 
-    auto& element_size = bottom_tab_widget.add_tab<GUI::Widget>("Element");
-    element_size.set_layout<GUI::VerticalBoxLayout>();
-    element_size.layout()->set_margins({ 4, 4, 4, 4 });
-    m_element_size_view = element_size.add<ElementSizePreviewWidget>();
+    auto& box_model_widget = bottom_tab_widget.add_tab<GUI::Widget>("Box Model");
+    box_model_widget.set_layout<GUI::VerticalBoxLayout>();
+    box_model_widget.layout()->set_margins({ 4, 4, 4, 4 });
+    m_element_size_view = box_model_widget.add<ElementSizePreviewWidget>();
     m_element_size_view->set_should_hide_unnecessary_scrollbars(true);
 
     m_dom_tree_view->set_focus(true);
