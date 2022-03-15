@@ -382,8 +382,11 @@ void Element::set_shadow_root(RefPtr<ShadowRoot> shadow_root)
 {
     if (m_shadow_root == shadow_root)
         return;
+    if (m_shadow_root)
+        m_shadow_root->set_host(nullptr);
     m_shadow_root = move(shadow_root);
-    m_shadow_root->set_host(*this);
+    if (m_shadow_root)
+        m_shadow_root->set_host(this);
     invalidate_style();
 }
 

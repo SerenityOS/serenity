@@ -29,7 +29,7 @@ public:
     Element* host() { return m_host; }
     Element const* host() const { return m_host; }
 
-    void set_host(Element& host) { m_host = host; }
+    void set_host(Element* host) { m_host = host; }
 
 private:
     // https://dom.spec.whatwg.org/#concept-documentfragment-host
