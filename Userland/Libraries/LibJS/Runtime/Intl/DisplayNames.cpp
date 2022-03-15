@@ -100,7 +100,7 @@ StringView DisplayNames::language_display_string() const
     }
 }
 
-// 12.1.1 CanonicalCodeForDisplayNames ( type, code ), https://tc39.es/ecma402/#sec-canonicalcodefordisplaynames
+// 12.5.1 CanonicalCodeForDisplayNames ( type, code ), https://tc39.es/ecma402/#sec-canonicalcodefordisplaynames
 ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_object, DisplayNames::Type type, StringView code)
 {
     auto& vm = global_object.vm();
@@ -177,10 +177,10 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
     return js_string(vm, code.to_uppercase_string());
 }
 
-// 12.2 IsValidDateTimeFieldCode ( field ), https://tc39.es/ecma402/#sec-isvaliddatetimefieldcode
+// 12.5.2 IsValidDateTimeFieldCode ( field ), https://tc39.es/ecma402/#sec-isvaliddatetimefieldcode
 bool is_valid_date_time_field_code(StringView field)
 {
-    // 1. If field is listed in the Code column of Table 8, return true.
+    // 1. If field is listed in the Code column of Table 9, return true.
     // 2. Return false.
     return field.is_one_of("era"sv, "year"sv, "quarter"sv, "month"sv, "weekOfYear"sv, "weekday"sv, "day"sv, "dayPeriod"sv, "hour"sv, "minute"sv, "second"sv, "timeZoneName"sv);
 }
