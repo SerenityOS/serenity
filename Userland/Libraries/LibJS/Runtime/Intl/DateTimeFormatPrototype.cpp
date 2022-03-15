@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +13,7 @@
 
 namespace JS::Intl {
 
-// 11.4 Properties of the Intl.DateTimeFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-datetimeformat-prototype-object
+// 11.3 Properties of the Intl.DateTimeFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-datetimeformat-prototype-object
 DateTimeFormatPrototype::DateTimeFormatPrototype(GlobalObject& global_object)
     : PrototypeObject(*global_object.object_prototype())
 {
@@ -25,7 +25,7 @@ void DateTimeFormatPrototype::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 11.4.2 Intl.DateTimeFormat.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype-@@tostringtag
+    // 11.3.2 Intl.DateTimeFormat.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.DateTimeFormat"), Attribute::Configurable);
 
     define_native_accessor(vm.names.format, format, nullptr, Attribute::Configurable);
@@ -37,7 +37,7 @@ void DateTimeFormatPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
-// 11.4.3 get Intl.DateTimeFormat.prototype.format, https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.format
+// 11.3.3 get Intl.DateTimeFormat.prototype.format, https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.format
 JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format)
 {
     // 1. Let dtf be the this value.
@@ -60,7 +60,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format)
     return date_time_format->bound_format();
 }
 
-// 11.4.4 Intl.DateTimeFormat.prototype.formatToParts ( date ), https://tc39.es/ecma402/#sec-Intl.DateTimeFormat.prototype.formatToParts
+// 11.3.4 Intl.DateTimeFormat.prototype.formatToParts ( date ), https://tc39.es/ecma402/#sec-Intl.DateTimeFormat.prototype.formatToParts
 JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
 {
     auto date = vm.argument(0);
@@ -84,7 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
     return TRY(format_date_time_to_parts(global_object, *date_time_format, date));
 }
 
-// 11.4.5 Intl.DateTimeFormat.prototype.formatRange ( startDate, endDate ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.formatRange
+// 11.3.5 Intl.DateTimeFormat.prototype.formatRange ( startDate, endDate ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.formatRange
 JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range)
 {
     auto start_date = vm.argument(0);
@@ -111,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range)
     return js_string(vm, move(formatted));
 }
 
-// 11.4.6 Intl.DateTimeFormat.prototype.formatRangeToParts ( startDate, endDate ), https://tc39.es/ecma402/#sec-Intl.DateTimeFormat.prototype.formatRangeToParts
+// 11.3.6 Intl.DateTimeFormat.prototype.formatRangeToParts ( startDate, endDate ), https://tc39.es/ecma402/#sec-Intl.DateTimeFormat.prototype.formatRangeToParts
 JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range_to_parts)
 {
     auto start_date = vm.argument(0);
@@ -137,7 +137,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_range_to_parts)
     return TRY(format_date_time_range_to_parts(global_object, *date_time_format, start_date, end_date));
 }
 
-// 11.4.7 Intl.DateTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.resolvedoptions
+// 11.3.7 Intl.DateTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
 {
     // 1. Let dtf be the this value.
@@ -149,7 +149,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
     // 4. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(global_object, global_object.object_prototype());
 
-    // 5. For each row of Table 7, except the header row, in table order, do
+    // 5. For each row of Table 5, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.
     //     b. If p is "hour12", then
     //         i. Let hc be dtf.[[HourCycle]].
@@ -158,7 +158,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::resolved_options)
     //         iv. Else, let v be undefined.
     //     c. Else,
     //         i. Let v be the value of dtf's internal slot whose name is the Internal Slot value of the current row.
-    //     d. If the Internal Slot value of the current row is an Internal Slot value in Table 4, then
+    //     d. If the Internal Slot value of the current row is an Internal Slot value in Table 6, then
     //         i. If dtf.[[DateStyle]] is not undefined or dtf.[[TimeStyle]] is not undefined, then
     //             1. Let v be undefined.
     //     e. If v is not undefined, then

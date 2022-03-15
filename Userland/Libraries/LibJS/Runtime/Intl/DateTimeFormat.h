@@ -37,7 +37,7 @@ public:
 
     static constexpr auto relevant_extension_keys()
     {
-        // 11.3.3 Internal slots, https://tc39.es/ecma402/#sec-intl.datetimeformat-internal-slots
+        // 11.2.3 Internal slots, https://tc39.es/ecma402/#sec-intl.datetimeformat-internal-slots
         // The value of the [[RelevantExtensionKeys]] internal slot is « "ca", "hc", "nu" ».
         return AK::Array { "ca"sv, "hc"sv, "nu"sv };
     }
@@ -160,7 +160,7 @@ enum class OptionDefaults {
     Time,
 };
 
-// Table 5: Record returned by ToLocalTime, https://tc39.es/ecma402/#table-datetimeformat-tolocaltime-record
+// Table 7: Record returned by ToLocalTime, https://tc39.es/ecma402/#table-datetimeformat-tolocaltime-record
 // Note: [[InDST]] is not included here - it is handled by LibUnicode / LibTimeZone.
 struct LocalTime {
     AK::Time time_since_epoch() const
@@ -200,7 +200,6 @@ struct PatternPartitionWithSource : public PatternPartition {
     StringView source;
 };
 
-ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& global_object, DateTimeFormat& date_time_format, Value locales_value, Value options_value);
 ThrowCompletionOr<Object*> to_date_time_options(GlobalObject& global_object, Value options_value, OptionRequired, OptionDefaults);
 Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale, DateTimeFormat& date_time_format);
 Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern const& options, Vector<Unicode::CalendarPattern> formats);
@@ -224,7 +223,7 @@ ThrowCompletionOr<void> for_each_calendar_field(GlobalObject& global_object, Uni
     constexpr auto two_digit_numeric_narrow_short_long = AK::Array { "2-digit"sv, "numeric"sv, "narrow"sv, "short"sv, "long"sv };
     constexpr auto time_zone = AK::Array { "short"sv, "long"sv, "shortOffset"sv, "longOffset"sv, "shortGeneric"sv, "longGeneric"sv };
 
-    // Table 4: Components of date and time formats, https://tc39.es/ecma402/#table-datetimeformat-components
+    // Table 6: Components of date and time formats, https://tc39.es/ecma402/#table-datetimeformat-components
     TRY(callback(pattern.weekday, vm.names.weekday, narrow_short_long));
     TRY(callback(pattern.era, vm.names.era, narrow_short_long));
     TRY(callback(pattern.year, vm.names.year, two_digit_numeric));
