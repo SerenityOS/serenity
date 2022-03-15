@@ -8,6 +8,7 @@
 
 #include <AK/URL.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/EventLoop/Task.h>
 
 namespace Web::HTML {
 
@@ -48,15 +49,23 @@ public:
     void set_hash(String);
 
 protected:
-    virtual DOM::Document const& hyperlink_element_utils_document() const = 0;
+    virtual DOM::Document& hyperlink_element_utils_document() = 0;
     virtual String hyperlink_element_utils_href() const = 0;
     virtual void set_hyperlink_element_utils_href(String) = 0;
+    virtual bool hyperlink_element_utils_is_html_anchor_element() const = 0;
+    virtual bool hyperlink_element_utils_is_connected() const = 0;
+    virtual String hyperlink_element_utils_target() const = 0;
+    virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) = 0;
 
     void set_the_url();
+    void follow_the_hyperlink(Optional<String> hyperlink_suffix);
 
 private:
     void reinitialize_url() const;
     void update_href();
+    bool cannot_navigate() const;
+    String get_an_elements_target() const;
+    bool get_an_elements_noopener(StringView target) const;
 
     Optional<AK::URL> m_url;
 };

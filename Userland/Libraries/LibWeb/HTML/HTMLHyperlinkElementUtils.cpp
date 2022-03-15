@@ -7,6 +7,7 @@
 #include <AK/URLParser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHyperlinkElementUtils.h>
+#include <LibWeb/Loader/FrameLoader.h>
 
 namespace Web::HTML {
 
@@ -447,6 +448,127 @@ void HTMLHyperlinkElementUtils::set_href(String href)
 void HTMLHyperlinkElementUtils::update_href()
 {
     // To update href, set the element's href content attribute's value to the element's url, serialized.
+}
+
+bool HTMLHyperlinkElementUtils::cannot_navigate() const
+{
+    // An element element cannot navigate if one of the following is true:
+
+    // 1. element's node document is not fully active
+    auto const& document = const_cast<HTMLHyperlinkElementUtils*>(this)->hyperlink_element_utils_document();
+    if (!document.is_fully_active())
+        return true;
+
+    // 2. element is not an a element and is not connected.
+    if (!hyperlink_element_utils_is_html_anchor_element() && !hyperlink_element_utils_is_connected())
+        return true;
+
+    return false;
+}
+
+// https://html.spec.whatwg.org/multipage/links.html#following-hyperlinks-2
+void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_suffix)
+{
+    // To follow the hyperlink created by an element subject, given an optional hyperlinkSuffix (default null):
+
+    // 1. If subject cannot navigate, then return.
+    if (cannot_navigate())
+        return;
+
+    // FIXME: 2. Let replace be false.
+
+    // 3. Let source be subject's node document's browsing context.
+    auto* source = hyperlink_element_utils_document().browsing_context();
+    if (!source)
+        return;
+
+    // 4. Let targetAttributeValue be the empty string.
+    // 5. If subject is an a or area element, then set targetAttributeValue to
+    // the result of getting an element's target given subject.
+    String target_attribute_value = get_an_elements_target();
+
+    // 6. Let noopener be the result of getting an element's noopener with subject and targetAttributeValue.
+    bool noopener = get_an_elements_noopener(target_attribute_value);
+
+    // 7. Let target be the first return value of applying the rules for
+    // choosing a browsing context given targetAttributeValue, source, and
+    // noopener.
+    auto* target = source->choose_a_browsing_context(target_attribute_value, noopener);
+
+    // 8. If target is null, then return.
+    if (!target)
+        return;
+
+    // 9. Parse a URL given subject's href attribute, relative to subject's node
+    // document.
+    auto url = source->active_document()->parse_url(href());
+
+    // 10. If that is successful, let URL be the resulting URL string.
+    auto url_string = url.to_string();
+
+    // 11. Otherwise, if parsing the URL failed, the user agent may report the
+    // error to the user in a user-agent-specific manner, may queue an element
+    // task on the DOM manipulation task source given subject to navigate the
+    // target browsing context to an error page to report the error, or may
+    // ignore the error and do nothing. In any case, the user agent must then
+    // return.
+
+    // 12. If hyperlinkSuffix is non-null, then append it to URL.
+    if (hyperlink_suffix.has_value()) {
+        StringBuilder url_builder;
+        url_builder.append(url_string);
+        url_builder.append(*hyperlink_suffix);
+
+        url_string = url_builder.to_string();
+    }
+
+    // FIXME: 13. Let request be a new request whose URL is URL and whose
+    // referrer policy is the current state of subject's referrerpolicy content
+    // attribute.
+
+    // FIXME: 14. If subject's link types includes the noreferrer keyword, then
+    // set request's referrer to "no-referrer".
+
+    // 15. Queue an element task on the DOM manipulation task source given
+    // subject to navigate target to request with the source browsing context
+    // set to source.
+    // FIXME: "navigate" means implementing the navigation algorithm here:
+    //        https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
+    hyperlink_element_utils_queue_an_element_task(Task::Source::DOMManipulation, [url_string, target] {
+        target->loader().load(url_string, FrameLoader::Type::Navigation);
+    });
+}
+
+String HTMLHyperlinkElementUtils::get_an_elements_target() const
+{
+    // To get an element's target, given an a, area, or form element element, run these steps:
+
+    // 1. If element has a target attribute, then return that attribute's value.
+    if (auto target = hyperlink_element_utils_target(); !target.is_empty())
+        return target;
+
+    // FIXME: 2. If element's node document contains a base element with a
+    // target attribute, then return the value of the target attribute of the
+    // first such base element.
+
+    // 3. Return the empty string.
+    return "";
+}
+
+bool HTMLHyperlinkElementUtils::get_an_elements_noopener(StringView target) const
+{
+    // To get an element's noopener, given an a, area, or form element element and a string target:
+
+    // FIXME: 1. If element's link types include the noopener or noreferrer
+    // keyword, then return true.
+
+    // FIXME: 2. If element's link types do not include the opener keyword and
+    // target is an ASCII case-insensitive match for "_blank", then return true.
+    if (target.equals_ignoring_case("_blank"sv))
+        return true;
+
+    // 3. Return false.
+    return false;
 }
 
 }

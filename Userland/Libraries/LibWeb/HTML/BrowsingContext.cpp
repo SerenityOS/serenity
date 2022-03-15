@@ -428,4 +428,118 @@ RefPtr<DOM::Node> BrowsingContext::currently_focused_area()
     return candidate;
 }
 
+BrowsingContext* BrowsingContext::choose_a_browsing_context(StringView name, bool)
+{
+    // The rules for choosing a browsing context, given a browsing context name
+    // name, a browsing context current, and a boolean noopener are as follows:
+
+    // 1. Let chosen be null.
+    BrowsingContext* chosen = nullptr;
+
+    // FIXME: 2. Let windowType be "existing or none".
+
+    // FIXME: 3. Let sandboxingFlagSet be current's active document's active
+    // sandboxing flag set.
+
+    // 4. If name is the empty string or an ASCII case-insensitive match for "_self", then set chosen to current.
+    if (name.is_empty() || name.equals_ignoring_case("_self"sv))
+        chosen = this;
+
+    // 5. Otherwise, if name is an ASCII case-insensitive match for "_parent",
+    // set chosen to current's parent browsing context, if any, and current
+    // otherwise.
+    if (name.equals_ignoring_case("_parent"sv)) {
+        if (auto* parent = this->parent())
+            chosen = parent;
+        else
+            chosen = this;
+    }
+
+    // 6. Otherwise, if name is an ASCII case-insensitive match for "_top", set
+    // chosen to current's top-level browsing context, if any, and current
+    // otherwise.
+    if (name.equals_ignoring_case("_top"sv)) {
+        chosen = &top_level_browsing_context();
+    }
+
+    // FIXME: 7. Otherwise, if name is not an ASCII case-insensitive match for
+    // "_blank", there exists a browsing context whose name is the same as name,
+    // current is familiar with that browsing context, and the user agent
+    // determines that the two browsing contexts are related enough that it is
+    // ok if they reach each other, set chosen to that browsing context. If
+    // there are multiple matching browsing contexts, the user agent should set
+    // chosen to one in some arbitrary consistent manner, such as the most
+    // recently opened, most recently focused, or more closely related.
+    if (!name.equals_ignoring_case("_blank"sv)) {
+        chosen = this;
+    } else {
+        // 8. Otherwise, a new browsing context is being requested, and what
+        // happens depends on the user agent's configuration and abilities — it
+        // is determined by the rules given for the first applicable option from
+        // the following list:
+        dbgln("FIXME: Create a new browsing context!");
+
+        // --> If current's active window does not have transient activation and
+        //     the user agent has been configured to not show popups (i.e., the
+        //     user agent has a "popup blocker" enabled)
+        //
+        //     The user agent may inform the user that a popup has been blocked.
+
+        // --> If sandboxingFlagSet has the sandboxed auxiliary navigation
+        //     browsing context flag set
+        //
+        //     The user agent may report to a developer console that a popup has
+        //     been blocked.
+
+        // --> If the user agent has been configured such that in this instance
+        //     it will create a new browsing context
+        //
+        //     1. Set windowType to "new and unrestricted".
+
+        //     2. If current's top-level browsing context's active document's
+        //     cross-origin opener policy's value is "same-origin" or
+        //     "same-origin-plus-COEP", then:
+
+        //         2.1. Let currentDocument be current's active document.
+
+        //         2.2. If currentDocument's origin is not same origin with
+        //         currentDocument's relevant settings object's top-level
+        //         origin, then set noopener to true, name to "_blank", and
+        //         windowType to "new with no opener".
+
+        //     3. If noopener is true, then set chosen to the result of creating
+        //     a new top-level browsing context.
+
+        //     4. Otherwise:
+
+        //         4.1. Set chosen to the result of creating a new auxiliary
+        //         browsing context with current.
+
+        //         4.2. If sandboxingFlagSet's sandboxed navigation browsing
+        //         context flag is set, then current must be set as chosen's one
+        //         permitted sandboxed navigator.
+
+        //     5. If sandboxingFlagSet's sandbox propagates to auxiliary
+        //     browsing contexts flag is set, then all the flags that are set in
+        //     sandboxingFlagSet must be set in chosen's popup sandboxing flag
+        //     set.
+
+        //     6. If name is not an ASCII case-insensitive match for "_blank",
+        //     then set chosen's name to name.
+
+        // --> If the user agent has been configured such that in this instance
+        //     it will reuse current
+        //
+        //     Set chosen to current.
+
+        // --> If the user agent has been configured such that in this instance
+        //     it will not find a browsing context
+        //
+        //     Do nothing.
+    }
+
+    // 9. Return chosen and windowType.
+    return chosen;
+}
+
 }
