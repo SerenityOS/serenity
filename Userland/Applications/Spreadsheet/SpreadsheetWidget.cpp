@@ -425,7 +425,6 @@ void SpreadsheetWidget::load_file(Core::File& file)
         return;
     }
 
-    m_tab_widget->on_change = nullptr;
     m_cell_value_editor->on_change = nullptr;
     m_current_cell_label->set_text("");
     m_should_change_selected_cells = false;
