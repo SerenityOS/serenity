@@ -271,12 +271,12 @@ void Element::recompute_style()
 {
     set_needs_style_update(false);
     VERIFY(parent());
-    auto new_specified_css_values = document().style_computer().compute_style(*this);
+    auto new_computed_css_values = document().style_computer().compute_style(*this);
 
-    if (m_specified_css_values && *m_specified_css_values == *new_specified_css_values)
+    if (m_computed_css_values && *m_computed_css_values == *new_computed_css_values)
         return;
 
-    m_specified_css_values = move(new_specified_css_values);
+    m_computed_css_values = move(new_computed_css_values);
 
     document().invalidate_layout();
 }

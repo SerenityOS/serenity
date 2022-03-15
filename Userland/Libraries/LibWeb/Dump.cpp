@@ -263,13 +263,13 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         }
     }
 
-    if (show_specified_style && layout_node.dom_node() && layout_node.dom_node()->is_element() && verify_cast<DOM::Element>(layout_node.dom_node())->specified_css_values()) {
+    if (show_specified_style && layout_node.dom_node() && layout_node.dom_node()->is_element() && verify_cast<DOM::Element>(layout_node.dom_node())->computed_css_values()) {
         struct NameAndValue {
             String name;
             String value;
         };
         Vector<NameAndValue> properties;
-        verify_cast<DOM::Element>(*layout_node.dom_node()).specified_css_values()->for_each_property([&](auto property_id, auto& value) {
+        verify_cast<DOM::Element>(*layout_node.dom_node()).computed_css_values()->for_each_property([&](auto property_id, auto& value) {
             properties.append({ CSS::string_from_property_id(property_id), value.to_string() });
         });
         quick_sort(properties, [](auto& a, auto& b) { return a.name < b.name; });

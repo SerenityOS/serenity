@@ -654,9 +654,9 @@ static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, 
 {
     auto* parent_element = get_parent_element(element, pseudo_element);
 
-    if (!parent_element || !parent_element->specified_css_values())
+    if (!parent_element || !parent_element->computed_css_values())
         return property_initial_value(property_id);
-    return parent_element->specified_css_values()->property(property_id).release_value();
+    return parent_element->computed_css_values()->property(property_id).release_value();
 };
 
 void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -790,8 +790,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         float root_font_size = 10;
 
         Gfx::FontMetrics font_metrics;
-        if (parent_element && parent_element->specified_css_values())
-            font_metrics = parent_element->specified_css_values()->computed_font().metrics('M');
+        if (parent_element && parent_element->computed_css_values())
+            font_metrics = parent_element->computed_css_values()->computed_font().metrics('M');
         else
             font_metrics = Gfx::FontDatabase::default_font().metrics('M');
 
@@ -800,8 +800,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             // Percentages refer to parent element's font size
             auto percentage = font_size->as_percentage().percentage();
             auto parent_font_size = size;
-            if (parent_element && parent_element->specified_css_values()) {
-                auto value = parent_element->specified_css_values()->property(CSS::PropertyID::FontSize).value();
+            if (parent_element && parent_element->computed_css_values()) {
+                auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize).value();
                 if (value->is_length()) {
                     auto length = static_cast<LengthStyleValue const&>(*value).to_length();
                     if (length.is_absolute() || length.is_relative())
@@ -954,8 +954,8 @@ static BoxTypeTransformation required_box_type_transformation(StyleProperties co
     // FIXME: Containment in a ruby container inlinifies the box’s display type, as described in [CSS-RUBY-1].
 
     // A parent with a grid or flex display value blockifies the box’s display type. [CSS-GRID-1] [CSS-FLEXBOX-1]
-    if (element.parent_element() && element.parent_element()->specified_css_values()) {
-        auto const& parent_display = element.parent_element()->specified_css_values()->display();
+    if (element.parent_element() && element.parent_element()->computed_css_values()) {
+        auto const& parent_display = element.parent_element()->computed_css_values()->display();
         if (parent_display.is_grid_inside() || parent_display.is_flex_inside())
             return BoxTypeTransformation::Blockify;
     }

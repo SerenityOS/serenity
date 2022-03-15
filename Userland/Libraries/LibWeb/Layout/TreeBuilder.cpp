@@ -104,7 +104,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
         style = style_computer.compute_style(element);
         if (style->display().is_none())
             return;
-        element.set_specified_css_values(style);
+        element.set_computed_css_values(style);
         layout_node = element.create_layout_node(*style);
     } else if (is<DOM::Document>(dom_node)) {
         style = style_computer.create_document_style();
