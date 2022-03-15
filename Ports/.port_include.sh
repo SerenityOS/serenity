@@ -119,6 +119,10 @@ run_replace_in_file() {
 
 get_new_config_sub() {
     config_sub="${1:-config.sub}"
+    if [ ! -f "$workdir/$config_sub" ]; then
+        >&2 echo "Error: Downloaded $config_sub does not replace an existing file!"
+        exit 1
+    fi
     if ! run grep -q serenity "$config_sub"; then
         run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub" "${1:-config.sub}" false
     fi
@@ -126,6 +130,10 @@ get_new_config_sub() {
 
 get_new_config_guess() {
     config_guess="${1:-config.guess}"
+    if [ ! -f "$workdir/$config_guess" ]; then
+        >&2 echo "Error: Downloaded $config_guess does not replace an existing file!"
+        exit 1
+    fi
     if ! run grep -q SerenityOS "$config_guess"; then
         run do_download_file "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess" "${1:-config_guess}" false
     fi
