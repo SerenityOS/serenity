@@ -13,7 +13,6 @@
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
 #include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/NumberFormat.h>
@@ -63,313 +62,7 @@ StringView DateTimeFormat::style_to_string(Style style)
     }
 }
 
-// 11.1.1 InitializeDateTimeFormat ( dateTimeFormat, locales, options ), https://tc39.es/ecma402/#sec-initializedatetimeformat
-ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(GlobalObject& global_object, DateTimeFormat& date_time_format, Value locales_value, Value options_value)
-{
-    auto& vm = global_object.vm();
-
-    // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
-    auto requested_locales = TRY(canonicalize_locale_list(global_object, locales_value));
-
-    // 2. Let options be ? ToDateTimeOptions(options, "any", "date").
-    auto* options = TRY(to_date_time_options(global_object, options_value, OptionRequired::Any, OptionDefaults::Date));
-
-    // 3. Let opt be a new Record.
-    LocaleOptions opt {};
-
-    // 4. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
-    auto matcher = TRY(get_option(global_object, *options, vm.names.localeMatcher, Value::Type::String, AK::Array { "lookup"sv, "best fit"sv }, "best fit"sv));
-
-    // 5. Set opt.[[localeMatcher]] to matcher.
-    opt.locale_matcher = matcher;
-
-    // 6. Let calendar be ? GetOption(options, "calendar", "string", undefined, undefined).
-    auto calendar = TRY(get_option(global_object, *options, vm.names.calendar, Value::Type::String, {}, Empty {}));
-
-    // 7. If calendar is not undefined, then
-    if (!calendar.is_undefined()) {
-        // a. If calendar does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-        if (!Unicode::is_type_identifier(calendar.as_string().string()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, calendar, "calendar"sv);
-
-        // 8. Set opt.[[ca]] to calendar.
-        opt.ca = calendar.as_string().string();
-    }
-
-    // 9. Let numberingSystem be ? GetOption(options, "numberingSystem", "string", undefined, undefined).
-    auto numbering_system = TRY(get_option(global_object, *options, vm.names.numberingSystem, Value::Type::String, {}, Empty {}));
-
-    // 10. If numberingSystem is not undefined, then
-    if (!numbering_system.is_undefined()) {
-        // a. If numberingSystem does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-        if (!Unicode::is_type_identifier(numbering_system.as_string().string()))
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
-
-        // 11. Set opt.[[nu]] to numberingSystem.
-        opt.nu = numbering_system.as_string().string();
-    }
-
-    // 12. Let hour12 be ? GetOption(options, "hour12", "boolean", undefined, undefined).
-    auto hour12 = TRY(get_option(global_object, *options, vm.names.hour12, Value::Type::Boolean, {}, Empty {}));
-
-    // 13. Let hourCycle be ? GetOption(options, "hourCycle", "string", « "h11", "h12", "h23", "h24" », undefined).
-    auto hour_cycle = TRY(get_option(global_object, *options, vm.names.hourCycle, Value::Type::String, AK::Array { "h11"sv, "h12"sv, "h23"sv, "h24"sv }, Empty {}));
-
-    // 14. If hour12 is not undefined, then
-    if (!hour12.is_undefined()) {
-        // a. Let hourCycle be null.
-        hour_cycle = js_null();
-    }
-
-    // 15. Set opt.[[hc]] to hourCycle.
-    if (!hour_cycle.is_nullish())
-        opt.hc = hour_cycle.as_string().string();
-
-    // 16. Let localeData be %DateTimeFormat%.[[LocaleData]].
-    // 17. Let r be ResolveLocale(%DateTimeFormat%.[[AvailableLocales]], requestedLocales, opt, %DateTimeFormat%.[[RelevantExtensionKeys]], localeData).
-    auto result = resolve_locale(requested_locales, opt, DateTimeFormat::relevant_extension_keys());
-
-    // 18. Set dateTimeFormat.[[Locale]] to r.[[locale]].
-    date_time_format.set_locale(move(result.locale));
-
-    // 19. Let calendar be r.[[ca]].
-    // 20. Set dateTimeFormat.[[Calendar]] to calendar.
-    if (result.ca.has_value())
-        date_time_format.set_calendar(result.ca.release_value());
-
-    // 21. Set dateTimeFormat.[[HourCycle]] to r.[[hc]].
-    if (result.hc.has_value())
-        date_time_format.set_hour_cycle(result.hc.release_value());
-
-    // 22. Set dateTimeFormat.[[NumberingSystem]] to r.[[nu]].
-    if (result.nu.has_value())
-        date_time_format.set_numbering_system(result.nu.release_value());
-
-    // 23. Let dataLocale be r.[[dataLocale]].
-    auto data_locale = move(result.data_locale);
-
-    // Non-standard, the data locale is needed for LibUnicode lookups while formatting.
-    date_time_format.set_data_locale(data_locale);
-
-    // 24. Let timeZone be ? Get(options, "timeZone").
-    auto time_zone_value = TRY(options->get(vm.names.timeZone));
-    String time_zone;
-
-    // 25. If timeZone is undefined, then
-    if (time_zone_value.is_undefined()) {
-        // a. Let timeZone be DefaultTimeZone().
-        time_zone = Temporal::default_time_zone();
-    }
-    // 26. Else,
-    else {
-        // a. Let timeZone be ? ToString(timeZone).
-        time_zone = TRY(time_zone_value.to_string(global_object));
-
-        // b. If the result of IsValidTimeZoneName(timeZone) is false, then
-        if (!Temporal::is_valid_time_zone_name(time_zone)) {
-            // i. Throw a RangeError exception.
-            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, time_zone, vm.names.timeZone);
-        }
-
-        // c. Let timeZone be CanonicalizeTimeZoneName(timeZone).
-        time_zone = Temporal::canonicalize_time_zone_name(time_zone);
-    }
-
-    // 27. Set dateTimeFormat.[[TimeZone]] to timeZone.
-    date_time_format.set_time_zone(move(time_zone));
-
-    // 28. Let formatOptions be a new Record.
-    Unicode::CalendarPattern format_options {};
-
-    // 29. For each row of Table 4, except the header row, in table order, do
-    TRY(for_each_calendar_field(global_object, format_options, [&](auto& option, auto const& property, auto const& defaults) -> ThrowCompletionOr<void> {
-        using ValueType = typename RemoveReference<decltype(option)>::ValueType;
-
-        // a. Let prop be the name given in the Property column of the row.
-
-        // b. If prop is "fractionalSecondDigits", then
-        if constexpr (IsIntegral<ValueType>) {
-            // i. Let value be ? GetNumberOption(options, "fractionalSecondDigits", 1, 3, undefined).
-            auto value = TRY(get_number_option(global_object, *options, property, 1, 3, {}));
-
-            // d. Set formatOptions.[[<prop>]] to value.
-            if (value.has_value())
-                option = static_cast<ValueType>(value.value());
-        }
-        // c. Else,
-        else {
-            // i. Let value be ? GetOption(options, prop, "string", « the strings given in the Values column of the row », undefined).
-            auto value = TRY(get_option(global_object, *options, property, Value::Type::String, defaults, Empty {}));
-
-            // d. Set formatOptions.[[<prop>]] to value.
-            if (!value.is_undefined())
-                option = Unicode::calendar_pattern_style_from_string(value.as_string().string());
-        }
-
-        return {};
-    }));
-
-    // 30. Let dataLocaleData be localeData.[[<dataLocale>]].
-
-    // 31. Let hcDefault be dataLocaleData.[[hourCycle]].
-    auto default_hour_cycle = Unicode::get_default_regional_hour_cycle(data_locale);
-
-    // Non-standard, default_hour_cycle will be empty if Unicode data generation is disabled.
-    if (!default_hour_cycle.has_value())
-        return &date_time_format;
-
-    // 32. Let hc be dateTimeFormat.[[HourCycle]].
-    // 33. If hc is null, then
-    //     a. Set hc to hcDefault.
-    auto hour_cycle_value = date_time_format.has_hour_cycle() ? date_time_format.hour_cycle() : *default_hour_cycle;
-
-    // 34. If hour12 is true, then
-    if (hour12.is_boolean() && hour12.as_bool()) {
-        // a. If hcDefault is "h11" or "h23", then
-        if ((default_hour_cycle == Unicode::HourCycle::H11) || (default_hour_cycle == Unicode::HourCycle::H23)) {
-            // i. Set hc to "h11".
-            hour_cycle_value = Unicode::HourCycle::H11;
-        }
-        // b. Else,
-        else {
-            // i. Set hc to "h12".
-            hour_cycle_value = Unicode::HourCycle::H12;
-        }
-    }
-    // 35. Else if hour12 is false, then
-    else if (hour12.is_boolean() && !hour12.as_bool()) {
-        // a. If hcDefault is "h11" or "h23", then
-        if ((default_hour_cycle == Unicode::HourCycle::H11) || (default_hour_cycle == Unicode::HourCycle::H23)) {
-            // i. Set hc to "h23".
-            hour_cycle_value = Unicode::HourCycle::H23;
-        }
-        // b. Else,
-        else {
-            // i. Set hc to "h24".
-            hour_cycle_value = Unicode::HourCycle::H24;
-        }
-    }
-    // 36. Else,
-    else {
-        // a. Assert: hour12 is undefined.
-        VERIFY(hour12.is_undefined());
-    }
-
-    // 37. Set dateTimeFormat.[[HourCycle]] to hc.
-    date_time_format.set_hour_cycle(hour_cycle_value);
-
-    // 38. Set formatOptions.[[hourCycle]] to hc.
-    format_options.hour_cycle = hour_cycle_value;
-
-    // 39. Let matcher be ? GetOption(options, "formatMatcher", "string", « "basic", "best fit" », "best fit").
-    matcher = TRY(get_option(global_object, *options, vm.names.formatMatcher, Value::Type::String, AK::Array { "basic"sv, "best fit"sv }, "best fit"sv));
-
-    // 40. Let dateStyle be ? GetOption(options, "dateStyle", "string", « "full", "long", "medium", "short" », undefined).
-    auto date_style = TRY(get_option(global_object, *options, vm.names.dateStyle, Value::Type::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
-
-    // 41. Set dateTimeFormat.[[DateStyle]] to dateStyle.
-    if (!date_style.is_undefined())
-        date_time_format.set_date_style(date_style.as_string().string());
-
-    // 42. Let timeStyle be ? GetOption(options, "timeStyle", "string", « "full", "long", "medium", "short" », undefined).
-    auto time_style = TRY(get_option(global_object, *options, vm.names.timeStyle, Value::Type::String, AK::Array { "full"sv, "long"sv, "medium"sv, "short"sv }, Empty {}));
-
-    // 43. Set dateTimeFormat.[[TimeStyle]] to timeStyle.
-    if (!time_style.is_undefined())
-        date_time_format.set_time_style(time_style.as_string().string());
-
-    Optional<Unicode::CalendarPattern> best_format {};
-
-    // 44. If dateStyle is not undefined or timeStyle is not undefined, then
-    if (date_time_format.has_date_style() || date_time_format.has_time_style()) {
-        // a. For each row in Table 4, except the header row, do
-        TRY(for_each_calendar_field(global_object, format_options, [&](auto const& option, auto const& property, auto const&) -> ThrowCompletionOr<void> {
-            // i. Let prop be the name given in the Property column of the row.
-            // ii. Let p be formatOptions.[[<prop>]].
-            // iii. If p is not undefined, then
-            if (option.has_value()) {
-                // 1. Throw a TypeError exception.
-                return vm.throw_completion<TypeError>(global_object, ErrorType::IntlInvalidDateTimeFormatOption, property, "dateStyle or timeStyle"sv);
-            }
-
-            return {};
-        }));
-
-        // b. Let styles be dataLocaleData.[[styles]].[[<calendar>]].
-        // c. Let bestFormat be DateTimeStyleFormat(dateStyle, timeStyle, styles).
-        best_format = date_time_style_format(data_locale, date_time_format);
-    }
-    // 45. Else,
-    else {
-        // a. Let formats be dataLocaleData.[[formats]].[[<calendar>]].
-        auto formats = Unicode::get_calendar_available_formats(data_locale, date_time_format.calendar());
-
-        // b. If matcher is "basic", then
-        if (matcher.as_string().string() == "basic"sv) {
-            // i. Let bestFormat be BasicFormatMatcher(formatOptions, formats).
-            best_format = basic_format_matcher(format_options, move(formats));
-        }
-        // c. Else,
-        else {
-            // i. Let bestFormat be BestFitFormatMatcher(formatOptions, formats).
-            best_format = best_fit_format_matcher(format_options, move(formats));
-        }
-    }
-
-    // 46. For each row in Table 4, except the header row, in table order, do
-    date_time_format.for_each_calendar_field_zipped_with(*best_format, [&](auto& date_time_format_field, auto const& best_format_field, auto) {
-        // a. Let prop be the name given in the Property column of the row.
-        // b. If bestFormat has a field [[<prop>]], then
-        if (best_format_field.has_value()) {
-            // i. Let p be bestFormat.[[<prop>]].
-            // ii. Set dateTimeFormat's internal slot whose name is the Internal Slot column of the row to p.
-            date_time_format_field = best_format_field;
-        }
-    });
-
-    String pattern;
-    Vector<Unicode::CalendarRangePattern> range_patterns;
-
-    // 47. If dateTimeFormat.[[Hour]] is undefined, then
-    if (!date_time_format.has_hour()) {
-        // a. Set dateTimeFormat.[[HourCycle]] to undefined.
-        date_time_format.clear_hour_cycle();
-    }
-
-    // 48. If dateTimeformat.[[HourCycle]] is "h11" or "h12", then
-    if ((hour_cycle_value == Unicode::HourCycle::H11) || (hour_cycle_value == Unicode::HourCycle::H12)) {
-        // a. Let pattern be bestFormat.[[pattern12]].
-        if (best_format->pattern12.has_value()) {
-            pattern = best_format->pattern12.release_value();
-        } else {
-            // Non-standard, LibUnicode only provides [[pattern12]] when [[pattern]] has a day
-            // period. Other implementations provide [[pattern12]] as a copy of [[pattern]].
-            pattern = move(best_format->pattern);
-        }
-
-        // b. Let rangePatterns be bestFormat.[[rangePatterns12]].
-        range_patterns = Unicode::get_calendar_range12_formats(data_locale, date_time_format.calendar(), best_format->skeleton);
-    }
-    // 49. Else,
-    else {
-        // a. Let pattern be bestFormat.[[pattern]].
-        pattern = move(best_format->pattern);
-
-        // b. Let rangePatterns be bestFormat.[[rangePatterns]].
-        range_patterns = Unicode::get_calendar_range_formats(data_locale, date_time_format.calendar(), best_format->skeleton);
-    }
-
-    // 50. Set dateTimeFormat.[[Pattern]] to pattern.
-    date_time_format.set_pattern(move(pattern));
-
-    // 51. Set dateTimeFormat.[[RangePatterns]] to rangePatterns.
-    date_time_format.set_range_patterns(move(range_patterns));
-
-    // 52. Return dateTimeFormat.
-    return &date_time_format;
-}
-
-// 11.1.2 ToDateTimeOptions ( options, required, defaults ), https://tc39.es/ecma402/#sec-todatetimeoptions
+// 11.5.1 ToDateTimeOptions ( options, required, defaults ), https://tc39.es/ecma402/#sec-todatetimeoptions
 ThrowCompletionOr<Object*> to_date_time_options(GlobalObject& global_object, Value options_value, OptionRequired required, OptionDefaults defaults)
 {
     auto& vm = global_object.vm();
@@ -455,7 +148,7 @@ ThrowCompletionOr<Object*> to_date_time_options(GlobalObject& global_object, Val
     return options;
 }
 
-// 11.1.3 DateTimeStyleFormat ( dateStyle, timeStyle, styles ), https://tc39.es/ecma402/#sec-date-time-style-format
+// 11.5.2 DateTimeStyleFormat ( dateStyle, timeStyle, styles ), https://tc39.es/ecma402/#sec-date-time-style-format
 Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale, DateTimeFormat& date_time_format)
 {
     Unicode::CalendarPattern time_format {};
@@ -560,7 +253,7 @@ Optional<Unicode::CalendarPattern> date_time_style_format(StringView data_locale
     return date_format;
 }
 
-// 11.1.4 BasicFormatMatcher ( options, formats ), https://tc39.es/ecma402/#sec-basicformatmatcher
+// 11.5.3 BasicFormatMatcher ( options, formats ), https://tc39.es/ecma402/#sec-basicformatmatcher
 Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern const& options, Vector<Unicode::CalendarPattern> formats)
 {
     // 1. Let removalPenalty be 120.
@@ -596,7 +289,7 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
         // a. Let score be 0.
         int score = 0;
 
-        // b. For each property name property shown in Table 4, do
+        // b. For each property name property shown in Table 6, do
         format.for_each_calendar_field_zipped_with(options, [&](auto const& format_prop, auto const& options_prop, auto type) {
             using ValueType = typename RemoveReference<decltype(options_prop)>::ValueType;
 
@@ -757,7 +450,7 @@ Optional<Unicode::CalendarPattern> basic_format_matcher(Unicode::CalendarPattern
     return best_format;
 }
 
-// 11.1.5 BestFitFormatMatcher ( options, formats ), https://tc39.es/ecma402/#sec-bestfitformatmatcher
+// 11.5.4 BestFitFormatMatcher ( options, formats ), https://tc39.es/ecma402/#sec-bestfitformatmatcher
 Optional<Unicode::CalendarPattern> best_fit_format_matcher(Unicode::CalendarPattern const& options, Vector<Unicode::CalendarPattern> formats)
 {
     // When the BestFitFormatMatcher abstract operation is called with two arguments options and formats, it performs
@@ -810,7 +503,7 @@ static Optional<StyleAndValue> find_calendar_field(StringView name, Unicode::Cal
     return {};
 }
 
-// 11.1.7 FormatDateTimePattern ( dateTimeFormat, patternParts, x, rangeFormatOptions ), https://tc39.es/ecma402/#sec-formatdatetimepattern
+// 11.5.6 FormatDateTimePattern ( dateTimeFormat, patternParts, x, rangeFormatOptions ), https://tc39.es/ecma402/#sec-formatdatetimepattern
 ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Vector<PatternPartition> pattern_parts, Value time, Unicode::CalendarPattern const* range_format_options)
 {
     auto& vm = global_object.vm();
@@ -938,7 +631,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
             result.append({ "timeZoneName"sv, move(formatted_value) });
         }
 
-        // f. Else if p matches a Property column of the row in Table 4, then
+        // f. Else if p matches a Property column of the row in Table 6, then
         else if (auto style_and_value = find_calendar_field(part, date_time_format, range_format_options, local_time); style_and_value.has_value()) {
             String formatted_value;
 
@@ -1094,7 +787,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(GlobalObjec
     return result;
 }
 
-// 11.1.8 PartitionDateTimePattern ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-partitiondatetimepattern
+// 11.5.7 PartitionDateTimePattern ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-partitiondatetimepattern
 ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Value time)
 {
     // 1. Let patternParts be PartitionPattern(dateTimeFormat.[[Pattern]]).
@@ -1107,7 +800,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(GlobalOb
     return result;
 }
 
-// 11.1.9 FormatDateTime ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-formatdatetime
+// 11.5.8 FormatDateTime ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-formatdatetime
 ThrowCompletionOr<String> format_date_time(GlobalObject& global_object, DateTimeFormat& date_time_format, Value time)
 {
     // 1. Let parts be ? PartitionDateTimePattern(dateTimeFormat, x).
@@ -1126,7 +819,7 @@ ThrowCompletionOr<String> format_date_time(GlobalObject& global_object, DateTime
     return result.build();
 }
 
-// 11.1.10 FormatDateTimeToParts ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-formatdatetimetoparts
+// 11.5.9 FormatDateTimeToParts ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-formatdatetimetoparts
 ThrowCompletionOr<Array*> format_date_time_to_parts(GlobalObject& global_object, DateTimeFormat& date_time_format, Value time)
 {
     auto& vm = global_object.vm();
@@ -1165,7 +858,7 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(GlobalObject& global_object,
 template<typename Callback>
 void for_each_range_pattern_field(LocalTime const& time1, LocalTime const& time2, Callback&& callback)
 {
-    // Table 6: Range pattern fields, https://tc39.es/ecma402/#table-datetimeformat-rangepatternfields
+    // Table 4: Range pattern fields, https://tc39.es/ecma402/#table-datetimeformat-rangepatternfields
     if (callback(static_cast<u8>(time1.era), static_cast<u8>(time2.era), Unicode::CalendarRangePattern::Field::Era) == IterationDecision::Break)
         return;
     if (callback(time1.year, time2.year, Unicode::CalendarRangePattern::Field::Year) == IterationDecision::Break)
@@ -1197,7 +890,7 @@ ThrowCompletionOr<void> for_each_range_pattern_with_source(Unicode::CalendarRang
     return {};
 }
 
-// 11.1.11 PartitionDateTimeRangePattern ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-partitiondatetimerangepattern
+// 11.5.10 PartitionDateTimeRangePattern ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-partitiondatetimerangepattern
 ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_pattern(GlobalObject& global_object, DateTimeFormat& date_time_format, Value start, Value end)
 {
     auto& vm = global_object.vm();
@@ -1238,7 +931,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
     // 11. Let patternContainsLargerDateField be false.
     bool pattern_contains_larger_date_field = false;
 
-    // 12. While dateFieldsPracticallyEqual is true and patternContainsLargerDateField is false, repeat for each row of Table 6 in order, except the header row:
+    // 12. While dateFieldsPracticallyEqual is true and patternContainsLargerDateField is false, repeat for each row of Table 4 in order, except the header row:
     for_each_range_pattern_field(start_local_time, end_local_time, [&](auto start_value, auto end_value, auto field_name) {
         // a. Let fieldName be the name given in the Range Pattern Field column of the row.
 
@@ -1427,7 +1120,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
     return result;
 }
 
-// 11.1.12 FormatDateTimeRange ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-formatdatetimerange
+// 11.5.11 FormatDateTimeRange ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-formatdatetimerange
 ThrowCompletionOr<String> format_date_time_range(GlobalObject& global_object, DateTimeFormat& date_time_format, Value start, Value end)
 {
     // 1. Let parts be ? PartitionDateTimeRangePattern(dateTimeFormat, x, y).
@@ -1446,7 +1139,7 @@ ThrowCompletionOr<String> format_date_time_range(GlobalObject& global_object, Da
     return result.build();
 }
 
-// 11.1.13 FormatDateTimeRangeToParts ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-formatdatetimerangetoparts
+// 11.5.12 FormatDateTimeRangeToParts ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-formatdatetimerangetoparts
 ThrowCompletionOr<Array*> format_date_time_range_to_parts(GlobalObject& global_object, DateTimeFormat& date_time_format, Value start, Value end)
 {
     auto& vm = global_object.vm();
@@ -1485,7 +1178,7 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(GlobalObject& global_o
     return result;
 }
 
-// 11.1.14 ToLocalTime ( t, calendar, timeZone ), https://tc39.es/ecma402/#sec-tolocaltime
+// 11.5.13 ToLocalTime ( t, calendar, timeZone ), https://tc39.es/ecma402/#sec-tolocaltime
 ThrowCompletionOr<LocalTime> to_local_time(GlobalObject& global_object, double time, StringView calendar, StringView time_zone)
 {
     // 1. Assert: Type(t) is Number.
@@ -1500,7 +1193,7 @@ ThrowCompletionOr<LocalTime> to_local_time(GlobalObject& global_object, double t
 
         auto year = year_from_time(zoned_time);
 
-        // c. Return a record with fields calculated from tz according to Table 5.
+        // c. Return a record with fields calculated from tz according to Table 7.
         return LocalTime {
             // WeekDay(tz) specified in es2022's Week Day.
             .weekday = week_day(zoned_time),
@@ -1528,7 +1221,7 @@ ThrowCompletionOr<LocalTime> to_local_time(GlobalObject& global_object, double t
     }
 
     // 3. Else,
-    //     a. Return a record with the fields of Column 1 of Table 5 calculated from t for the given calendar and timeZone. The calculations should use best available information about the specified calendar and timeZone, including current and historical information about time zone offsets from UTC and daylight saving time rules.
+    //     a. Return a record with the fields of Column 1 of Table 7 calculated from t for the given calendar and timeZone. The calculations should use best available information about the specified calendar and timeZone, including current and historical information about time zone offsets from UTC and daylight saving time rules.
     // FIXME: Implement this when non-Gregorian calendars are supported by LibUnicode.
     return global_object.vm().throw_completion<InternalError>(global_object, ErrorType::NotImplemented, "Non-Gregorian calendars"sv);
 }
