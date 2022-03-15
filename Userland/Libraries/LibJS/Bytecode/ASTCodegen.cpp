@@ -979,7 +979,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
                 };
             }
 
-            auto& identifier = alias.get<NonnullRefPtr<Identifier>>()->string();
+            auto& identifier = name.get<NonnullRefPtr<Identifier>>()->string();
             generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(identifier), initialization_mode);
         } else {
             auto& identifier = alias.get<NonnullRefPtr<Identifier>>()->string();
