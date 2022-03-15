@@ -8,7 +8,7 @@
 
 #include <LibGPU/ImageFormat.h>
 
-namespace SoftGPU {
+namespace GPU {
 
 struct ImageDataLayout final {
     GPU::ImageFormat format;

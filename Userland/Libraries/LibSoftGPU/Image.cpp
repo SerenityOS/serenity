@@ -39,7 +39,7 @@ Image::Image(unsigned width, unsigned height, unsigned depth, unsigned max_level
     m_num_levels = level + 1;
 }
 
-void Image::write_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void const* data, ImageDataLayout const& layout)
+void Image::write_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void const* data, GPU::ImageDataLayout const& layout)
 {
     VERIFY(layer < num_layers());
     VERIFY(level < num_levels());
@@ -58,7 +58,7 @@ void Image::write_texels(unsigned layer, unsigned level, Vector3<unsigned> const
     }
 }
 
-void Image::read_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void* data, ImageDataLayout const& layout) const
+void Image::read_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void* data, GPU::ImageDataLayout const& layout) const
 {
     VERIFY(layer < num_layers());
     VERIFY(level < num_levels());
