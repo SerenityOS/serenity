@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,7 +10,7 @@
 
 namespace JS::Intl {
 
-// 15.1.4 Number Format Functions, https://tc39.es/ecma402/#sec-number-format-functions
+// 15.5.2 Number Format Functions, https://tc39.es/ecma402/#sec-number-format-functions
 NumberFormatFunction* NumberFormatFunction::create(GlobalObject& global_object, NumberFormat& number_format)
 {
     return global_object.heap().allocate<NumberFormatFunction>(global_object, number_format, *global_object.function_prototype());

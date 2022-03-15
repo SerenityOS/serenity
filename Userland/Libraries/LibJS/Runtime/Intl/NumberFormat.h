@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -124,7 +124,7 @@ public:
 
     static constexpr auto relevant_extension_keys()
     {
-        // 15.3.3 Internal slots, https://tc39.es/ecma402/#sec-intl.numberformat-internal-slots
+        // 15.2.3 Internal slots, https://tc39.es/ecma402/#sec-intl.numberformat-internal-slots
         // The value of the [[RelevantExtensionKeys]] internal slot is « "nu" ».
         return AK::Array { "nu"sv };
     }
@@ -220,8 +220,6 @@ struct RawFormatResult : public FormatResult {
     int digits { 0 }; // [[IntegerDigitsCount]]
 };
 
-ThrowCompletionOr<void> set_number_format_digit_options(GlobalObject& global_object, NumberFormatBase& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation);
-ThrowCompletionOr<NumberFormat*> initialize_number_format(GlobalObject& global_object, NumberFormat& number_format, Value locales_value, Value options_value);
 int currency_digits(StringView currency);
 FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase& intl_object, Value number);
 Vector<PatternPartition> partition_number_pattern(GlobalObject& global_object, NumberFormat& number_format, Value number);
@@ -230,7 +228,6 @@ String format_numeric(GlobalObject& global_object, NumberFormat& number_format, 
 Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number_format, Value number);
 RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int min_precision, int max_precision);
 RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_fraction, int max_fraction);
-ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_object, NumberFormat& intl_object, Object const& options);
 Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& number_format, Value number, Unicode::NumberFormat& found_pattern);
 Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int exponent);
 int compute_exponent(GlobalObject& global_object, NumberFormat& number_format, Value number);
