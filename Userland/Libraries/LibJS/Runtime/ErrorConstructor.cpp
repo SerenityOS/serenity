@@ -64,7 +64,7 @@ ThrowCompletionOr<Object*> ErrorConstructor::construct(FunctionObject& new_targe
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                                  \
     ConstructorName::ConstructorName(GlobalObject& global_object)                                                                         \
-        : NativeFunction(*static_cast<Object*>(global_object.error_constructor()))                                                        \
+        : NativeFunction(vm().names.ClassName.as_string(), *static_cast<Object*>(global_object.error_constructor()))                      \
     {                                                                                                                                     \
     }                                                                                                                                     \
                                                                                                                                           \
