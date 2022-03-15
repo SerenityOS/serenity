@@ -1627,6 +1627,8 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_bytecode(Bytecod
         generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
         for (auto& statement : switch_case.children()) {
             TRY(statement.generate_bytecode(generator));
+            if (generator.is_current_block_terminated())
+                break;
         }
         if (!generator.is_current_block_terminated()) {
             auto next_block = current_block;
