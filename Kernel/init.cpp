@@ -195,10 +195,12 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     // NOTE: If the bootloader provided a framebuffer, then set up an initial console.
     // If the bootloader didn't provide a framebuffer, then set up an initial text console.
     // We do so we can see the output on the screen as soon as possible.
-    if (!multiboot_framebuffer_addr.is_null()) {
-        g_boot_console = &try_make_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
-    } else {
-        g_boot_console = &Graphics::TextModeConsole::initialize().leak_ref();
+    if (!kernel_command_line().is_early_boot_console_disabled()) {
+        if (!multiboot_framebuffer_addr.is_null()) {
+            g_boot_console = &try_make_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
+        } else {
+            g_boot_console = &Graphics::TextModeConsole::initialize().leak_ref();
+        }
     }
     dmesgln("Starting SerenityOS...");
 
