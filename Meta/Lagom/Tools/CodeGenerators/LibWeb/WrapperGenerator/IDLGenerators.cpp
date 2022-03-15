@@ -3018,13 +3018,12 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
         attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
-        attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
 
         if (attribute.extended_attributes.contains("ImplementedAs")) {
             auto implemented_as = attribute.extended_attributes.get("ImplementedAs").value();
-            attribute_generator.set("attribute.cpp_getter_name", implemented_as);
+            attribute_generator.set("attribute.cpp_name", implemented_as);
         } else {
-            attribute_generator.set("attribute.cpp_getter_name", attribute.name.to_snakecase());
+            attribute_generator.set("attribute.cpp_name", attribute.name.to_snakecase());
         }
 
         if (attribute.extended_attributes.contains("Reflect")) {
@@ -3056,7 +3055,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
             }
         } else {
             attribute_generator.append(R"~~~(
-    auto retval = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl->@attribute.cpp_getter_name@(); }));
+    auto retval = TRY(throw_dom_exception_if_needed(global_object, [&] { return impl->@attribute.cpp_name@(); }));
 )~~~");
         }
 
@@ -3092,7 +3091,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
                 }
             } else {
                 attribute_generator.append(R"~~~(
-    TRY(throw_dom_exception_if_needed(global_object, [&] { return impl->set_@attribute.name:snakecase@(cpp_value); }));
+    TRY(throw_dom_exception_if_needed(global_object, [&] { return impl->set_@attribute.cpp_name@(cpp_value); }));
 )~~~");
             }
 
