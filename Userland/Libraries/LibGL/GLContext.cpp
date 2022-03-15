@@ -15,11 +15,11 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGL/GLContext.h>
+#include <LibGPU/Enums.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Device.h>
-#include <LibSoftGPU/Enums.h>
 #include <LibSoftGPU/ImageFormat.h>
 
 __attribute__((visibility("hidden"))) GL::GLContext* g_gl_context;
@@ -359,21 +359,21 @@ void GLContext::gl_end()
 
     sync_device_config();
 
-    SoftGPU::PrimitiveType primitive_type;
+    GPU::PrimitiveType primitive_type;
     switch (m_current_draw_mode) {
     case GL_TRIANGLES:
-        primitive_type = SoftGPU::PrimitiveType::Triangles;
+        primitive_type = GPU::PrimitiveType::Triangles;
         break;
     case GL_TRIANGLE_STRIP:
     case GL_QUAD_STRIP:
-        primitive_type = SoftGPU::PrimitiveType::TriangleStrip;
+        primitive_type = GPU::PrimitiveType::TriangleStrip;
         break;
     case GL_TRIANGLE_FAN:
     case GL_POLYGON:
-        primitive_type = SoftGPU::PrimitiveType::TriangleFan;
+        primitive_type = GPU::PrimitiveType::TriangleFan;
         break;
     case GL_QUADS:
-        primitive_type = SoftGPU::PrimitiveType::Quads;
+        primitive_type = GPU::PrimitiveType::Quads;
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -1036,7 +1036,7 @@ void GLContext::gl_front_face(GLenum face)
     m_front_face = face;
 
     auto rasterizer_options = m_rasterizer.options();
-    rasterizer_options.front_face = (face == GL_CW) ? SoftGPU::WindingOrder::Clockwise : SoftGPU::WindingOrder::CounterClockwise;
+    rasterizer_options.front_face = (face == GL_CW) ? GPU::WindingOrder::Clockwise : GPU::WindingOrder::CounterClockwise;
     m_rasterizer.set_options(rasterizer_options);
 }
 
@@ -1266,27 +1266,27 @@ void GLContext::gl_blend_func(GLenum src_factor, GLenum dst_factor)
     {
         switch (factor) {
         case GL_ZERO:
-            return SoftGPU::BlendFactor::Zero;
+            return GPU::BlendFactor::Zero;
         case GL_ONE:
-            return SoftGPU::BlendFactor::One;
+            return GPU::BlendFactor::One;
         case GL_SRC_ALPHA:
-            return SoftGPU::BlendFactor::SrcAlpha;
+            return GPU::BlendFactor::SrcAlpha;
         case GL_ONE_MINUS_SRC_ALPHA:
-            return SoftGPU::BlendFactor::OneMinusSrcAlpha;
+            return GPU::BlendFactor::OneMinusSrcAlpha;
         case GL_SRC_COLOR:
-            return SoftGPU::BlendFactor::SrcColor;
+            return GPU::BlendFactor::SrcColor;
         case GL_ONE_MINUS_SRC_COLOR:
-            return SoftGPU::BlendFactor::OneMinusSrcColor;
+            return GPU::BlendFactor::OneMinusSrcColor;
         case GL_DST_ALPHA:
-            return SoftGPU::BlendFactor::DstAlpha;
+            return GPU::BlendFactor::DstAlpha;
         case GL_ONE_MINUS_DST_ALPHA:
-            return SoftGPU::BlendFactor::OneMinusDstAlpha;
+            return GPU::BlendFactor::OneMinusDstAlpha;
         case GL_DST_COLOR:
-            return SoftGPU::BlendFactor::DstColor;
+            return GPU::BlendFactor::DstColor;
         case GL_ONE_MINUS_DST_COLOR:
-            return SoftGPU::BlendFactor::OneMinusDstColor;
+            return GPU::BlendFactor::OneMinusDstColor;
         case GL_SRC_ALPHA_SATURATE:
-            return SoftGPU::BlendFactor::SrcAlphaSaturate;
+            return GPU::BlendFactor::SrcAlphaSaturate;
         default:
             VERIFY_NOT_REACHED();
         }
@@ -1324,28 +1324,28 @@ void GLContext::gl_alpha_func(GLenum func, GLclampf ref)
 
     switch (func) {
     case GL_NEVER:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::Never;
+        options.alpha_test_func = GPU::AlphaTestFunction::Never;
         break;
     case GL_ALWAYS:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::Always;
+        options.alpha_test_func = GPU::AlphaTestFunction::Always;
         break;
     case GL_LESS:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::Less;
+        options.alpha_test_func = GPU::AlphaTestFunction::Less;
         break;
     case GL_LEQUAL:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::LessOrEqual;
+        options.alpha_test_func = GPU::AlphaTestFunction::LessOrEqual;
         break;
     case GL_EQUAL:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::Equal;
+        options.alpha_test_func = GPU::AlphaTestFunction::Equal;
         break;
     case GL_NOTEQUAL:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::NotEqual;
+        options.alpha_test_func = GPU::AlphaTestFunction::NotEqual;
         break;
     case GL_GEQUAL:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::GreaterOrEqual;
+        options.alpha_test_func = GPU::AlphaTestFunction::GreaterOrEqual;
         break;
     case GL_GREATER:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::Greater;
+        options.alpha_test_func = GPU::AlphaTestFunction::Greater;
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -2301,28 +2301,28 @@ void GLContext::gl_depth_func(GLenum func)
 
     switch (func) {
     case GL_NEVER:
-        options.depth_func = SoftGPU::DepthTestFunction::Never;
+        options.depth_func = GPU::DepthTestFunction::Never;
         break;
     case GL_ALWAYS:
-        options.depth_func = SoftGPU::DepthTestFunction::Always;
+        options.depth_func = GPU::DepthTestFunction::Always;
         break;
     case GL_LESS:
-        options.depth_func = SoftGPU::DepthTestFunction::Less;
+        options.depth_func = GPU::DepthTestFunction::Less;
         break;
     case GL_LEQUAL:
-        options.depth_func = SoftGPU::DepthTestFunction::LessOrEqual;
+        options.depth_func = GPU::DepthTestFunction::LessOrEqual;
         break;
     case GL_EQUAL:
-        options.depth_func = SoftGPU::DepthTestFunction::Equal;
+        options.depth_func = GPU::DepthTestFunction::Equal;
         break;
     case GL_NOTEQUAL:
-        options.depth_func = SoftGPU::DepthTestFunction::NotEqual;
+        options.depth_func = GPU::DepthTestFunction::NotEqual;
         break;
     case GL_GEQUAL:
-        options.depth_func = SoftGPU::DepthTestFunction::GreaterOrEqual;
+        options.depth_func = GPU::DepthTestFunction::GreaterOrEqual;
         break;
     case GL_GREATER:
-        options.depth_func = SoftGPU::DepthTestFunction::Greater;
+        options.depth_func = GPU::DepthTestFunction::Greater;
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -2467,14 +2467,14 @@ void GLContext::gl_polygon_mode(GLenum face, GLenum mode)
         return;
     }
 
-    auto map_mode = [](GLenum mode) -> SoftGPU::PolygonMode {
+    auto map_mode = [](GLenum mode) -> GPU::PolygonMode {
         switch (mode) {
         case GL_FILL:
-            return SoftGPU::PolygonMode::Fill;
+            return GPU::PolygonMode::Fill;
         case GL_LINE:
-            return SoftGPU::PolygonMode::Line;
+            return GPU::PolygonMode::Line;
         case GL_POINT:
-            return SoftGPU::PolygonMode::Point;
+            return GPU::PolygonMode::Point;
         default:
             VERIFY_NOT_REACHED();
         }
@@ -2550,13 +2550,13 @@ void GLContext::gl_fogi(GLenum pname, GLint param)
     case GL_FOG_MODE:
         switch (param) {
         case GL_LINEAR:
-            options.fog_mode = SoftGPU::FogMode::Linear;
+            options.fog_mode = GPU::FogMode::Linear;
             break;
         case GL_EXP:
-            options.fog_mode = SoftGPU::FogMode::Exp;
+            options.fog_mode = GPU::FogMode::Exp;
             break;
         case GL_EXP2:
-            options.fog_mode = SoftGPU::FogMode::Exp2;
+            options.fog_mode = GPU::FogMode::Exp2;
             break;
         }
         break;
@@ -2730,7 +2730,7 @@ void GLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GL
     case GL_LIGHT_MODEL_COLOR_CONTROL: {
         GLenum color_control = static_cast<GLenum>(x);
         RETURN_WITH_ERROR_IF(color_control != GL_SINGLE_COLOR && color_control != GL_SEPARATE_SPECULAR_COLOR, GL_INVALID_ENUM);
-        lighting_params.color_control = (color_control == GL_SINGLE_COLOR) ? SoftGPU::ColorControl::SingleColor : SoftGPU::ColorControl::SeparateSpecularColor;
+        lighting_params.color_control = (color_control == GL_SINGLE_COLOR) ? GPU::ColorControl::SingleColor : GPU::ColorControl::SeparateSpecularColor;
         break;
     }
     case GL_LIGHT_MODEL_LOCAL_VIEWER:
@@ -3031,33 +3031,33 @@ void GLContext::sync_light_state()
     options.color_material_enabled = m_color_material_enabled;
     switch (m_color_material_face) {
     case GL_BACK:
-        options.color_material_face = SoftGPU::ColorMaterialFace::Back;
+        options.color_material_face = GPU::ColorMaterialFace::Back;
         break;
     case GL_FRONT:
-        options.color_material_face = SoftGPU::ColorMaterialFace::Front;
+        options.color_material_face = GPU::ColorMaterialFace::Front;
         break;
     case GL_FRONT_AND_BACK:
-        options.color_material_face = SoftGPU::ColorMaterialFace::FrontAndBack;
+        options.color_material_face = GPU::ColorMaterialFace::FrontAndBack;
         break;
     default:
         VERIFY_NOT_REACHED();
     }
     switch (m_color_material_mode) {
     case GL_AMBIENT:
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Ambient;
+        options.color_material_mode = GPU::ColorMaterialMode::Ambient;
         break;
     case GL_AMBIENT_AND_DIFFUSE:
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Ambient;
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Diffuse;
+        options.color_material_mode = GPU::ColorMaterialMode::Ambient;
+        options.color_material_mode = GPU::ColorMaterialMode::Diffuse;
         break;
     case GL_DIFFUSE:
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Diffuse;
+        options.color_material_mode = GPU::ColorMaterialMode::Diffuse;
         break;
     case GL_EMISSION:
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Emissive;
+        options.color_material_mode = GPU::ColorMaterialMode::Emissive;
         break;
     case GL_SPECULAR:
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Specular;
+        options.color_material_mode = GPU::ColorMaterialMode::Specular;
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -3069,8 +3069,8 @@ void GLContext::sync_light_state()
         m_rasterizer.set_light_state(light_id, current_light_state);
     }
 
-    m_rasterizer.set_material_state(SoftGPU::Face::Front, m_material_states[Face::Front]);
-    m_rasterizer.set_material_state(SoftGPU::Face::Back, m_material_states[Face::Back]);
+    m_rasterizer.set_material_state(GPU::Face::Front, m_material_states[Face::Front]);
+    m_rasterizer.set_material_state(GPU::Face::Back, m_material_states[Face::Back]);
 }
 
 void GLContext::sync_device_texcoord_config()
@@ -3083,7 +3083,7 @@ void GLContext::sync_device_texcoord_config()
 
     for (size_t i = 0; i < m_device_info.num_texture_units; ++i) {
 
-        u8 enabled_coordinates = SoftGPU::TexCoordGenerationCoordinate::None;
+        u8 enabled_coordinates = GPU::TexCoordGenerationCoordinate::None;
         for (GLenum capability = GL_TEXTURE_GEN_S; capability <= GL_TEXTURE_GEN_Q; ++capability) {
             auto const context_coordinate_config = texture_coordinate_generation(i, capability);
             if (!context_coordinate_config.enabled)
@@ -3092,19 +3092,19 @@ void GLContext::sync_device_texcoord_config()
             SoftGPU::TexCoordGenerationConfig* texcoord_generation_config;
             switch (capability) {
             case GL_TEXTURE_GEN_S:
-                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::S;
+                enabled_coordinates |= GPU::TexCoordGenerationCoordinate::S;
                 texcoord_generation_config = &options.texcoord_generation_config[i][0];
                 break;
             case GL_TEXTURE_GEN_T:
-                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::T;
+                enabled_coordinates |= GPU::TexCoordGenerationCoordinate::T;
                 texcoord_generation_config = &options.texcoord_generation_config[i][1];
                 break;
             case GL_TEXTURE_GEN_R:
-                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::R;
+                enabled_coordinates |= GPU::TexCoordGenerationCoordinate::R;
                 texcoord_generation_config = &options.texcoord_generation_config[i][2];
                 break;
             case GL_TEXTURE_GEN_Q:
-                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::Q;
+                enabled_coordinates |= GPU::TexCoordGenerationCoordinate::Q;
                 texcoord_generation_config = &options.texcoord_generation_config[i][3];
                 break;
             default:
@@ -3113,21 +3113,21 @@ void GLContext::sync_device_texcoord_config()
 
             switch (context_coordinate_config.generation_mode) {
             case GL_OBJECT_LINEAR:
-                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::ObjectLinear;
+                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::ObjectLinear;
                 texcoord_generation_config->coefficients = context_coordinate_config.object_plane_coefficients;
                 break;
             case GL_EYE_LINEAR:
-                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::EyeLinear;
+                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::EyeLinear;
                 texcoord_generation_config->coefficients = context_coordinate_config.eye_plane_coefficients;
                 break;
             case GL_SPHERE_MAP:
-                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::SphereMap;
+                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::SphereMap;
                 break;
             case GL_REFLECTION_MAP:
-                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::ReflectionMap;
+                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::ReflectionMap;
                 break;
             case GL_NORMAL_MAP:
-                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::NormalMap;
+                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::NormalMap;
                 break;
             }
         }
@@ -3143,28 +3143,28 @@ void GLContext::sync_stencil_configuration()
         return;
     m_stencil_configuration_dirty = false;
 
-    auto set_device_stencil = [&](SoftGPU::Face face, StencilFunctionOptions func, StencilOperationOptions op) {
+    auto set_device_stencil = [&](GPU::Face face, StencilFunctionOptions func, StencilOperationOptions op) {
         SoftGPU::StencilConfiguration device_configuration;
 
         // Stencil test function
-        auto map_func = [](GLenum func) -> SoftGPU::StencilTestFunction {
+        auto map_func = [](GLenum func) -> GPU::StencilTestFunction {
             switch (func) {
             case GL_ALWAYS:
-                return SoftGPU::StencilTestFunction::Always;
+                return GPU::StencilTestFunction::Always;
             case GL_EQUAL:
-                return SoftGPU::StencilTestFunction::Equal;
+                return GPU::StencilTestFunction::Equal;
             case GL_GEQUAL:
-                return SoftGPU::StencilTestFunction::GreaterOrEqual;
+                return GPU::StencilTestFunction::GreaterOrEqual;
             case GL_GREATER:
-                return SoftGPU::StencilTestFunction::Greater;
+                return GPU::StencilTestFunction::Greater;
             case GL_LESS:
-                return SoftGPU::StencilTestFunction::Less;
+                return GPU::StencilTestFunction::Less;
             case GL_LEQUAL:
-                return SoftGPU::StencilTestFunction::LessOrEqual;
+                return GPU::StencilTestFunction::LessOrEqual;
             case GL_NEVER:
-                return SoftGPU::StencilTestFunction::Never;
+                return GPU::StencilTestFunction::Never;
             case GL_NOTEQUAL:
-                return SoftGPU::StencilTestFunction::NotEqual;
+                return GPU::StencilTestFunction::NotEqual;
             }
             VERIFY_NOT_REACHED();
         };
@@ -3173,24 +3173,24 @@ void GLContext::sync_stencil_configuration()
         device_configuration.test_mask = func.mask;
 
         // Stencil operation
-        auto map_operation = [](GLenum operation) -> SoftGPU::StencilOperation {
+        auto map_operation = [](GLenum operation) -> GPU::StencilOperation {
             switch (operation) {
             case GL_DECR:
-                return SoftGPU::StencilOperation::Decrement;
+                return GPU::StencilOperation::Decrement;
             case GL_DECR_WRAP:
-                return SoftGPU::StencilOperation::DecrementWrap;
+                return GPU::StencilOperation::DecrementWrap;
             case GL_INCR:
-                return SoftGPU::StencilOperation::Increment;
+                return GPU::StencilOperation::Increment;
             case GL_INCR_WRAP:
-                return SoftGPU::StencilOperation::IncrementWrap;
+                return GPU::StencilOperation::IncrementWrap;
             case GL_INVERT:
-                return SoftGPU::StencilOperation::Invert;
+                return GPU::StencilOperation::Invert;
             case GL_KEEP:
-                return SoftGPU::StencilOperation::Keep;
+                return GPU::StencilOperation::Keep;
             case GL_REPLACE:
-                return SoftGPU::StencilOperation::Replace;
+                return GPU::StencilOperation::Replace;
             case GL_ZERO:
-                return SoftGPU::StencilOperation::Zero;
+                return GPU::StencilOperation::Zero;
             }
             VERIFY_NOT_REACHED();
         };
@@ -3201,8 +3201,8 @@ void GLContext::sync_stencil_configuration()
 
         m_rasterizer.set_stencil_configuration(face, device_configuration);
     };
-    set_device_stencil(SoftGPU::Face::Front, m_stencil_function[Face::Front], m_stencil_operation[Face::Front]);
-    set_device_stencil(SoftGPU::Face::Back, m_stencil_function[Face::Back], m_stencil_operation[Face::Back]);
+    set_device_stencil(GPU::Face::Front, m_stencil_function[Face::Front], m_stencil_operation[Face::Front]);
+    set_device_stencil(GPU::Face::Back, m_stencil_function[Face::Back], m_stencil_operation[Face::Back]);
 }
 
 void GLContext::build_extension_string()

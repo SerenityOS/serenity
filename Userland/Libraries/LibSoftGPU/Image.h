@@ -10,10 +10,11 @@
 #include <AK/FixedArray.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <LibGPU/Enums.h>
 #include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Buffer/Typed3DBuffer.h>
-#include <LibSoftGPU/Enums.h>
+#include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/ImageDataLayout.h>
 #include <LibSoftGPU/ImageFormat.h>
 

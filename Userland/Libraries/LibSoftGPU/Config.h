@@ -23,4 +23,8 @@ static constexpr int NUM_LIGHTS = 8;
 // FIXME: make this dynamically configurable through ConfigServer
 static constexpr bool CLAMP_DEPRECATED_BEHAVIOR = false;
 
+using ColorType = u32; // BGRA:8888
+using DepthType = float;
+using StencilType = u8;
+
 }
