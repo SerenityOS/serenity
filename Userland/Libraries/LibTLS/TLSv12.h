@@ -261,7 +261,7 @@ struct Options {
 };
 
 struct Context {
-    bool verify_chain() const;
+    bool verify_chain(StringView host) const;
     bool verify_certificate_pair(Certificate& subject, Certificate& issuer) const;
 
     Options options;
@@ -560,8 +560,6 @@ private:
     bool expand_key();
 
     bool compute_master_secret_from_pre_master_secret(size_t length);
-
-    Optional<size_t> verify_chain_and_get_matching_certificate(StringView host) const;
 
     void try_disambiguate_error() const;
 

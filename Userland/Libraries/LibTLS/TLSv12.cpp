@@ -191,7 +191,31 @@ void TLSv12::set_root_certificates(Vector<Certificate> certificates)
     dbgln_if(TLS_DEBUG, "{}: Set {} root certificates", this, m_context.root_certificates.size());
 }
 
-bool Context::verify_chain() const
+static bool wildcard_matches(StringView host, StringView subject)
+{
+    if (host.matches(subject))
+        return true;
+
+    if (subject.starts_with("*."))
+        return wildcard_matches(host, subject.substring_view(2));
+
+    return false;
+}
+
+static bool certificate_subject_matches_host(Certificate& cert, StringView host)
+{
+    if (wildcard_matches(host, cert.subject.subject))
+        return true;
+
+    for (auto& san : cert.SAN) {
+        if (wildcard_matches(host, san))
+            return true;
+    }
+
+    return false;
+}
+
+bool Context::verify_chain(StringView host) const
 {
     if (!options.validate_certificates)
         return true;
@@ -206,6 +230,19 @@ bool Context::verify_chain() const
 
     if (local_chain->is_empty()) {
         dbgln("verify_chain: Attempting to verify an empty chain");
+        return false;
+    }
+
+    if (!host.is_empty()) {
+        auto first_certificate = local_chain->first();
+        auto subject_matches = certificate_subject_matches_host(first_certificate, host);
+        if (!subject_matches) {
+            dbgln("verify_chain: First certificate does not match the hostname");
+            return false;
+        }
+    } else {
+        // FIXME: The host is taken from m_context.extensions.SNI, when is this empty?
+        dbgln("FIXME: verify_chain called without host");
         return false;
     }
 
