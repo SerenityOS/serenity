@@ -159,7 +159,19 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     if (shadow_root())
         return;
 
-    // FIXME: This assumes that we want a text box. Is that always true?
+    // FIXME: This could be better factored. Everything except the below types becomes a text input.
+    switch (type_state()) {
+    case TypeAttributeState::RadioButton:
+    case TypeAttributeState::Checkbox:
+    case TypeAttributeState::Button:
+    case TypeAttributeState::SubmitButton:
+    case TypeAttributeState::ResetButton:
+    case TypeAttributeState::ImageButton:
+        return;
+    default:
+        break;
+    }
+
     auto shadow_root = adopt_ref(*new DOM::ShadowRoot(document(), *this));
     auto initial_value = attribute(HTML::AttributeNames::value);
     if (initial_value.is_null())
