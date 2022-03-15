@@ -181,6 +181,7 @@ void Node::invalidate_style()
         if (node.has_children())
             node.m_child_needs_style_update = true;
         if (auto* shadow_root = node.is_element() ? static_cast<DOM::Element&>(node).shadow_root() : nullptr) {
+            node.m_child_needs_style_update = true;
             shadow_root->m_needs_style_update = true;
             if (shadow_root->has_children())
                 shadow_root->m_child_needs_style_update = true;
