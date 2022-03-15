@@ -782,9 +782,6 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_bytecode(Bytecode::
     generator.end_breakable_scope();
     generator.end_continuable_scope();
 
-    if (has_lexical_environment)
-        generator.end_variable_scope();
-
     if (!generator.is_current_block_terminated()) {
         if (m_update) {
             generator.emit<Bytecode::Op::Jump>().set_targets(
@@ -802,6 +799,9 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_bytecode(Bytecode::
         generator.switch_to_basic_block(end_block);
         generator.emit<Bytecode::Op::Load>(result_reg);
     }
+
+    if (has_lexical_environment)
+        generator.end_variable_scope();
 
     return {};
 }
