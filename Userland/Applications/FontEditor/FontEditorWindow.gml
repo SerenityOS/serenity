@@ -25,7 +25,7 @@
             }
 
             @GUI::Widget {
-                shrink_to_fit: true
+                preferred_height: "fit"
                 layout: @GUI::VerticalBoxLayout {}
 
                 @GUI::SpinBox {
@@ -67,12 +67,13 @@
                     @GUI::Widget {
                         name: "glyph_map_container"
                         layout: @GUI::VerticalBoxLayout {}
+                        preferred_height: "opportunistic_grow"
                     }
 
                     @GUI::GroupBox {
                         name: "font_metadata_groupbox"
                         title: "Metadata"
-                        shrink_to_fit: true
+                        preferred_height: "fit"
                         layout: @GUI::VerticalBoxLayout {
                             margins: [6, 6, 6, 6]
                         }

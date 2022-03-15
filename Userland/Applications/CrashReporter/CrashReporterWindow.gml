@@ -85,12 +85,13 @@
         @GUI::DialogButton {
             name: "debug_button"
             text: "Debug in Hack Studio"
+            preferred_width: 160
         }
 
         @GUI::DialogButton {
             name: "save_backtrace_button"
             text: "Save Backtrace"
-            fixed_width: 150
+            preferred_width: 160
         }
 
         @GUI::Layout::Spacer {}

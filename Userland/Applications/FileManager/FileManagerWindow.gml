@@ -36,6 +36,7 @@
 
             @GUI::Breadcrumbbar {
                 name: "breadcrumbbar"
+                min_width: 80
             }
         }
     }

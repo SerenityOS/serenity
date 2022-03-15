@@ -6,9 +6,11 @@
 
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {}
+        min_height: 80
 
         @GUI::Widget {
             layout: @GUI::VerticalBoxLayout {}
+            min_width: 120
 
             @GUI::Label {
                 text: "Family:"
@@ -58,20 +60,22 @@
 
     @GUI::GroupBox {
         layout: @GUI::VerticalBoxLayout {}
+        margins: [0]
         title: "Sample text"
-        fixed_height: 80
+        preferred_height: 80
 
         @GUI::Label {
             name: "sample_text_label"
             text: "The quick brown fox jumps over the lazy dog."
+            preferred_height: "grow"
         }
     }
 
     @GUI::Widget {
-        fixed_height: 22
         layout: @GUI::HorizontalBoxLayout {}
+        preferred_height: "fit"
 
-        @GUI::Widget {}
+        @GUI::Layout::Spacer {}
 
         @GUI::DialogButton {
             name: "ok_button"

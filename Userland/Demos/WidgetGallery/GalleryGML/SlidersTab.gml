@@ -60,7 +60,6 @@
 
         @GUI::Scrollbar {
             name: "enabled_scrollbar"
-            fixed_height: 16
             min: 0
             max: 100
             value: 50
@@ -74,7 +73,6 @@
 
         @GUI::Scrollbar {
             name: "disabled_scrollbar"
-            fixed_height: 16
         }
 
         @GUI::Layout::Spacer {}

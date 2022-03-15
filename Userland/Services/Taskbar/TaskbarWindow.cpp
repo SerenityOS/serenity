@@ -57,6 +57,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 {
     set_window_type(GUI::WindowType::Taskbar);
     set_title("Taskbar");
+    set_obey_widget_min_size(false);
 
     on_screen_rects_change(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
 
@@ -76,7 +77,10 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 
     m_task_button_container = main_widget.add<GUI::Widget>();
     m_task_button_container->set_layout<GUI::HorizontalBoxLayout>();
+    m_task_button_container->set_preferred_width(GUI::SpecialDimension::Grow);
     m_task_button_container->layout()->set_spacing(3);
+
+    main_widget.layout()->add_spacer();
 
     m_default_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png").release_value_but_fixme_should_propagate_errors();
 
@@ -140,7 +144,9 @@ void TaskbarWindow::update_applet_area()
 NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(WindowIdentifier const& identifier)
 {
     auto& button = m_task_button_container->add<TaskbarButton>(identifier);
+    m_task_button_container->invalidate_layout();
     button.set_min_size(20, 21);
+    button.set_preferred_size(140, 21);
     button.set_max_size(140, 21);
     button.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     button.set_icon(*m_default_icon);

@@ -37,6 +37,8 @@
 
             @GUI::GlyphMapWidget {
                 name: "glyph_map"
+                min_height: 80
+                min_width: 80
             }
 
             @GUI::Widget {

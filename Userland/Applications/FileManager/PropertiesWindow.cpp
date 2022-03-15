@@ -145,6 +145,7 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
     auto& button_widget = main_widget.add<GUI::Widget>();
     button_widget.set_layout<GUI::HorizontalBoxLayout>();
     button_widget.set_fixed_height(22);
+    button_widget.set_preferred_width(GUI::SpecialDimension::Grow);
     button_widget.layout()->set_spacing(5);
 
     button_widget.layout()->add_spacer();

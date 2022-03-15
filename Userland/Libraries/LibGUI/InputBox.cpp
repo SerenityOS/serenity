@@ -73,7 +73,7 @@ void InputBox::build(InputType input_type)
         m_text_editor->set_placeholder(m_placeholder);
 
     auto& button_container_outer = widget.add<Widget>();
-    button_container_outer.set_fixed_height(22);
+    button_container_outer.set_preferred_height(SpecialDimension::Fit);
     button_container_outer.set_layout<VerticalBoxLayout>();
 
     auto& button_container_inner = button_container_outer.add<Widget>();
