@@ -27,6 +27,7 @@ void CharacterData::set_data(String data)
     if (parent())
         parent()->children_changed();
     set_needs_style_update(true);
+    document().set_needs_layout();
 }
 
 }
