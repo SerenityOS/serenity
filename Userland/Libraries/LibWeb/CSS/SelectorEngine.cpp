@@ -26,6 +26,28 @@ static inline bool matches_hover_pseudo_class(DOM::Element const& element)
     return element.is_ancestor_of(*hovered_node);
 }
 
+// https://html.spec.whatwg.org/multipage/semantics-other.html#selector-checked
+static inline bool matches_checked_pseudo_class(DOM::Element const& element)
+{
+    // The :checked pseudo-class must match any element falling into one of the following categories:
+    // - input elements whose type attribute is in the Checkbox state and whose checkedness state is true
+    // - input elements whose type attribute is in the Radio Button state and whose checkedness state is true
+    if (is<HTML::HTMLInputElement>(element)) {
+        auto const& input_element = static_cast<HTML::HTMLInputElement const&>(element);
+        switch (input_element.type_state()) {
+        case HTML::HTMLInputElement::TypeAttributeState::Checkbox:
+        case HTML::HTMLInputElement::TypeAttributeState::RadioButton:
+            return static_cast<HTML::HTMLInputElement const&>(element).checked();
+        default:
+            return false;
+        }
+    }
+
+    // FIXME: - option elements whose selectedness is true
+
+    return false;
+}
+
 static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& attribute, DOM::Element const& element)
 {
     switch (attribute.match_type) {
@@ -131,9 +153,7 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
             return false;
         return true;
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
-        if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
-            return false;
-        return static_cast<HTML::HTMLInputElement const&>(element).checked();
+        return matches_checked_pseudo_class(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Not:
         for (auto& selector : pseudo_class.not_selector) {
             if (matches(selector, element))
