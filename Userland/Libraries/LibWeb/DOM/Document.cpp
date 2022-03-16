@@ -672,6 +672,26 @@ void Document::set_inspected_node(Node* node)
         m_inspected_node->layout_node()->set_needs_display();
 }
 
+static Node* find_common_ancestor(Node* a, Node* b)
+{
+    if (!a || !b)
+        return nullptr;
+
+    if (a == b)
+        return a;
+
+    HashTable<Node*> ancestors;
+    for (auto* node = a; node; node = node->parent_or_shadow_host())
+        ancestors.set(node);
+
+    for (auto* node = b; node; node = node->parent_or_shadow_host()) {
+        if (ancestors.contains(node))
+            return node;
+    }
+
+    return nullptr;
+}
+
 void Document::set_hovered_node(Node* node)
 {
     if (m_hovered_node == node)
@@ -680,7 +700,10 @@ void Document::set_hovered_node(Node* node)
     RefPtr<Node> old_hovered_node = move(m_hovered_node);
     m_hovered_node = node;
 
-    invalidate_style();
+    if (auto* common_ancestor = find_common_ancestor(old_hovered_node, m_hovered_node))
+        common_ancestor->invalidate_style();
+    else
+        invalidate_style();
 }
 
 NonnullRefPtr<HTMLCollection> Document::get_elements_by_name(String const& name)
