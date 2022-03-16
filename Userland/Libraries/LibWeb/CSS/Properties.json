@@ -164,6 +164,7 @@
     ]
   },
   "border-bottom-color": {
+    "affects-layout": false,
     "initial": "currentcolor",
     "inherited": false,
     "valid-types":  [
@@ -174,6 +175,7 @@
     ]
   },
   "border-bottom-left-radius": {
+    "affects-layout": false,
     "initial": "0",
     "inherited": false,
     "max-values": 2,
@@ -183,6 +185,7 @@
     ]
   },
   "border-bottom-right-radius": {
+    "affects-layout": false,
     "initial": "0",
     "inherited": false,
     "max-values": 2,
@@ -192,6 +195,7 @@
     ]
   },
   "border-bottom-style": {
+    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-identifiers": [
@@ -223,6 +227,7 @@
     ]
   },
   "border-color": {
+    "affects-layout": false,
     "initial": "currentcolor",
     "longhands": [
       "border-top-color",
@@ -247,6 +252,7 @@
     ]
   },
   "border-left-color": {
+    "affects-layout": false,
     "initial": "currentcolor",
     "inherited": false,
     "valid-types": [
@@ -257,6 +263,7 @@
     ]
   },
   "border-left-style": {
+    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-identifiers": [
@@ -288,6 +295,7 @@
     ]
   },
   "border-radius": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "0",
     "longhands": [
@@ -298,6 +306,7 @@
     ]
   },
   "border-right-color": {
+    "affects-layout": false,
     "initial": "currentcolor",
     "inherited": false,
     "valid-types": [
@@ -308,6 +317,7 @@
     ]
   },
   "border-right-style": {
+    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-identifiers": [
@@ -346,6 +356,7 @@
     ]
   },
   "border-style": {
+    "affects-layout": false,
     "initial": "none",
     "longhands": [
       "border-top-style",
@@ -368,6 +379,7 @@
     ]
   },
   "border-top-color": {
+    "affects-layout": false,
     "initial": "currentcolor",
     "inherited": false,
     "quirks": [
@@ -375,6 +387,7 @@
     ]
   },
   "border-top-left-radius": {
+    "affects-layout": false,
     "initial": "0",
     "inherited": false,
     "max-values": 2,
@@ -384,6 +397,7 @@
     ]
   },
   "border-top-right-radius": {
+    "affects-layout": false,
     "initial": "0",
     "inherited": false,
     "max-values": 2,
@@ -393,6 +407,7 @@
     ]
   },
   "border-top-style": {
+    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-identifiers": [
