@@ -1228,6 +1228,7 @@
     ]
   },
   "text-decoration": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "none",
     "longhands": [
@@ -1238,6 +1239,7 @@
     ]
   },
   "text-decoration-color": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "currentcolor",
     "valid-types": [
@@ -1258,6 +1260,7 @@
     ]
   },
   "text-decoration-style": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "solid",
     "valid-identifiers": [
@@ -1269,6 +1272,7 @@
     ]
   },
   "text-decoration-thickness": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "auto",
     "valid-types": [
