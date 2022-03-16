@@ -306,3 +306,13 @@ mark {
  * https://html.spec.whatwg.org/multipage/rendering.html#embedded-content-rendering-rules
  */
 iframe { border: 2px inset; }
+
+/* https://www.w3.org/TR/mediaqueries-5/#descdef-media-inverted-colors
+ */
+@media (inverted-colors) {
+    img:not(picture>img),
+    picture,
+    video {
+        filter: invert(100%);
+    }
+}
