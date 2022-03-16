@@ -52,7 +52,8 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box
     }
 
     box.for_each_child([&](auto& child) {
-        if (child.establishes_stacking_context())
+        // If `child` establishes its own stacking context, skip over it.
+        if (is<Layout::Box>(child) && child.paintable() && static_cast<Layout::Box const&>(child).paint_box()->stacking_context())
             return;
         bool child_is_inline_or_replaced = child.is_inline() || is<Layout::ReplacedBox>(child);
         switch (phase) {
