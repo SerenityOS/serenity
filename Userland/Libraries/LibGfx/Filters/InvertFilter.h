@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibGfx/Filters/ColorFilter.h>
 
 namespace Gfx {
@@ -15,7 +16,7 @@ public:
     InvertFilter() = default;
     virtual ~InvertFilter() = default;
 
-    virtual char const* class_name() const override { return "InvertFilter"; }
+    virtual StringView class_name() const override { return "InvertFilter"sv; }
 
 protected:
     Color convert_color(Color original) override { return original.inverted(); };

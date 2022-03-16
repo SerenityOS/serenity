@@ -8,6 +8,7 @@
 
 #include "ColorFilter.h"
 #include <AK/NonnullOwnPtr.h>
+#include <AK/StringView.h>
 
 namespace Gfx {
 class ColorBlindnessFilter : public ColorFilter {
@@ -35,7 +36,7 @@ public:
     }
 
     virtual ~ColorBlindnessFilter() = default;
-    virtual char const* class_name() const override { return "ColorBlindnessFilter"; }
+    virtual StringView class_name() const override { return "ColorBlindnessFilter"sv; }
 
     static NonnullOwnPtr<ColorBlindnessFilter> create_protanopia();
     static NonnullOwnPtr<ColorBlindnessFilter> create_protanomaly();

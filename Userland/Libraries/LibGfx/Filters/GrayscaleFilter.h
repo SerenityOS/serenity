@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibGfx/Filters/ColorFilter.h>
 
 namespace Gfx {
@@ -15,7 +16,7 @@ public:
     GrayscaleFilter() = default;
     virtual ~GrayscaleFilter() = default;
 
-    virtual char const* class_name() const override { return "GrayscaleFilter"; }
+    virtual StringView class_name() const override { return "GrayscaleFilter"sv; }
 
 protected:
     Color convert_color(Color original) override { return original.to_grayscale(); };

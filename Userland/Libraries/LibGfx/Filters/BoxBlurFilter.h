@@ -7,6 +7,7 @@
 #pragma once
 
 #include "GenericConvolutionFilter.h"
+#include <AK/StringView.h>
 
 namespace Gfx {
 
@@ -16,7 +17,7 @@ public:
     BoxBlurFilter() = default;
     virtual ~BoxBlurFilter() = default;
 
-    virtual const char* class_name() const override { return "BoxBlurFilter"; }
+    virtual StringView class_name() const override { return "BoxBlurFilter"sv; }
 };
 
 }
