@@ -55,8 +55,6 @@ public:
 
     float absolute_x() const { return absolute_rect().x(); }
 
-    void paint(PaintContext&, Painting::PaintPhase);
-
     bool ends_in_whitespace() const;
     bool is_justifiable_whitespace() const;
     StringView text() const;

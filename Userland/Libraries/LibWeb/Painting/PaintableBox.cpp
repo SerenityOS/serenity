@@ -242,6 +242,151 @@ void PaintableBox::after_children_paint(PaintContext& context, PaintPhase) const
         context.painter().restore();
 }
 
+static void paint_cursor_if_needed(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment)
+{
+    auto const& browsing_context = text_node.browsing_context();
+
+    if (!browsing_context.is_focused_context())
+        return;
+
+    if (!browsing_context.cursor_blink_state())
+        return;
+
+    if (browsing_context.cursor_position().node() != &text_node.dom_node())
+        return;
+
+    // NOTE: This checks if the cursor is before the start or after the end of the fragment. If it is at the end, after all text, it should still be painted.
+    if (browsing_context.cursor_position().offset() < (unsigned)fragment.start() || browsing_context.cursor_position().offset() > (unsigned)(fragment.start() + fragment.length()))
+        return;
+
+    if (!fragment.layout_node().dom_node() || !fragment.layout_node().dom_node()->is_editable())
+        return;
+
+    auto fragment_rect = fragment.absolute_rect();
+
+    float cursor_x = fragment_rect.x() + text_node.font().width(fragment.text().substring_view(0, text_node.browsing_context().cursor_position().offset() - fragment.start()));
+    float cursor_top = fragment_rect.top();
+    float cursor_height = fragment_rect.height();
+    Gfx::IntRect cursor_rect(cursor_x, cursor_top, 1, cursor_height);
+
+    context.painter().draw_rect(cursor_rect, text_node.computed_values().color());
+}
+
+static void paint_text_decoration(Gfx::Painter& painter, Layout::Node const& text_node, Layout::LineBoxFragment const& fragment)
+{
+    Gfx::IntPoint line_start_point {};
+    Gfx::IntPoint line_end_point {};
+
+    auto& font = fragment.layout_node().font();
+    auto fragment_box = enclosing_int_rect(fragment.absolute_rect());
+    auto glyph_height = font.glyph_height();
+    auto baseline = fragment_box.height() / 2 - (glyph_height + 4) / 2 + glyph_height;
+
+    switch (text_node.computed_values().text_decoration_line()) {
+    case CSS::TextDecorationLine::None:
+        return;
+    case CSS::TextDecorationLine::Underline:
+        line_start_point = fragment_box.top_left().translated(0, baseline + 2);
+        line_end_point = fragment_box.top_right().translated(0, baseline + 2);
+        break;
+    case CSS::TextDecorationLine::Overline:
+        line_start_point = fragment_box.top_left().translated(0, baseline - glyph_height);
+        line_end_point = fragment_box.top_right().translated(0, baseline - glyph_height);
+        break;
+    case CSS::TextDecorationLine::LineThrough: {
+        auto x_height = font.x_height();
+        line_start_point = fragment_box.top_left().translated(0, baseline - x_height / 2);
+        line_end_point = fragment_box.top_right().translated(0, baseline - x_height / 2);
+        break;
+    }
+    case CSS::TextDecorationLine::Blink:
+        // Conforming user agents may simply not blink the text
+        return;
+    }
+
+    auto line_color = text_node.computed_values().text_decoration_color();
+
+    int line_thickness = [&] {
+        CSS::Length computed_thickness = text_node.computed_values().text_decoration_thickness().resolved(text_node, CSS::Length(1, CSS::Length::Type::Em));
+        if (computed_thickness.is_auto())
+            return CSS::InitialValues::text_decoration_thickness().to_px(text_node);
+
+        return computed_thickness.to_px(text_node);
+    }();
+
+    switch (text_node.computed_values().text_decoration_style()) {
+    case CSS::TextDecorationStyle::Solid:
+        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Solid);
+        break;
+    case CSS::TextDecorationStyle::Double:
+        switch (text_node.computed_values().text_decoration_line()) {
+        case CSS::TextDecorationLine::Underline:
+            break;
+        case CSS::TextDecorationLine::Overline:
+            line_start_point.translate_by(0, -line_thickness - 1);
+            line_end_point.translate_by(0, -line_thickness - 1);
+            break;
+        case CSS::TextDecorationLine::LineThrough:
+            line_start_point.translate_by(0, -line_thickness / 2);
+            line_end_point.translate_by(0, -line_thickness / 2);
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness);
+        painter.draw_line(line_start_point.translated(0, line_thickness + 1), line_end_point.translated(0, line_thickness + 1), line_color, line_thickness);
+        break;
+    case CSS::TextDecorationStyle::Dashed:
+        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Dashed);
+        break;
+    case CSS::TextDecorationStyle::Dotted:
+        painter.draw_line(line_start_point, line_end_point, line_color, line_thickness, Gfx::Painter::LineStyle::Dotted);
+        break;
+    case CSS::TextDecorationStyle::Wavy:
+        painter.draw_triangle_wave(line_start_point, line_end_point, line_color, line_thickness + 1, line_thickness);
+        break;
+    }
+}
+
+static void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment, Painting::PaintPhase phase)
+{
+    auto& painter = context.painter();
+
+    if (phase == Painting::PaintPhase::Foreground) {
+        auto fragment_absolute_rect = fragment.absolute_rect();
+
+        painter.set_font(text_node.font());
+
+        if (text_node.document().inspected_node() == &text_node.dom_node())
+            context.painter().draw_rect(enclosing_int_rect(fragment_absolute_rect), Color::Magenta);
+
+        // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.
+        auto text = text_node.text_for_rendering();
+        auto text_transform = text_node.computed_values().text_transform();
+        if (text_transform == CSS::TextTransform::Uppercase)
+            text = text_node.text_for_rendering().to_uppercase();
+        if (text_transform == CSS::TextTransform::Lowercase)
+            text = text_node.text_for_rendering().to_lowercase();
+
+        // FIXME: This is a hack to prevent text clipping when painting a bitmap font into a too-small box.
+        auto draw_rect = enclosing_int_rect(fragment_absolute_rect);
+        draw_rect.set_height(max(draw_rect.height(), text_node.font().glyph_height()));
+        painter.draw_text(draw_rect, text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, text_node.computed_values().color());
+
+        auto selection_rect = fragment.selection_rect(text_node.font());
+        if (!selection_rect.is_empty()) {
+            painter.fill_rect(enclosing_int_rect(selection_rect), context.palette().selection());
+            Gfx::PainterStateSaver saver(painter);
+            painter.add_clip_rect(enclosing_int_rect(selection_rect));
+            painter.draw_text(enclosing_int_rect(fragment_absolute_rect), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, context.palette().selection_text());
+        }
+
+        paint_text_decoration(painter, text_node, fragment);
+        paint_cursor_if_needed(context, text_node, fragment);
+    }
+}
+
 void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
 {
     if (!is_visible())
@@ -266,7 +411,8 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         for (auto& fragment : line_box.fragments()) {
             if (context.should_show_line_box_borders())
                 context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
-            const_cast<Layout::LineBoxFragment&>(fragment).paint(context, phase);
+            if (is<Layout::TextNode>(fragment.layout_node()))
+                paint_text_fragment(context, static_cast<Layout::TextNode const&>(fragment.layout_node()), fragment, phase);
         }
     }
 
