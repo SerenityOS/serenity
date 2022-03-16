@@ -14,9 +14,7 @@ MouseDevice::MouseDevice()
 {
 }
 
-MouseDevice::~MouseDevice()
-{
-}
+MouseDevice::~MouseDevice() = default;
 
 bool MouseDevice::can_read(const OpenFileDescription&, u64) const
 {

@@ -33,8 +33,6 @@ PrivateInodeVMObject::PrivateInodeVMObject(PrivateInodeVMObject const& other, Fi
 {
 }
 
-PrivateInodeVMObject::~PrivateInodeVMObject()
-{
-}
+PrivateInodeVMObject::~PrivateInodeVMObject() = default;
 
 }

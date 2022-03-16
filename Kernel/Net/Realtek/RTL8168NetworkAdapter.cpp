@@ -1125,9 +1125,7 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_tx_descriptors()
     tx_descriptors[number_of_tx_descriptors - 1].flags = tx_descriptors[number_of_tx_descriptors - 1].flags | TXDescriptor::EndOfRing;
 }
 
-UNMAP_AFTER_INIT RTL8168NetworkAdapter::~RTL8168NetworkAdapter()
-{
-}
+UNMAP_AFTER_INIT RTL8168NetworkAdapter::~RTL8168NetworkAdapter() = default;
 
 bool RTL8168NetworkAdapter::handle_irq(const RegisterState&)
 {

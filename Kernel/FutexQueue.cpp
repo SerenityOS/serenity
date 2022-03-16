@@ -10,13 +10,8 @@
 
 namespace Kernel {
 
-FutexQueue::FutexQueue()
-{
-}
-
-FutexQueue::~FutexQueue()
-{
-}
+FutexQueue::FutexQueue() = default;
+FutexQueue::~FutexQueue() = default;
 
 bool FutexQueue::should_add_blocker(Thread::Blocker& b, void*)
 {

@@ -24,9 +24,7 @@ void AsyncBlockDeviceRequest::start()
     m_block_device.start_request(*this);
 }
 
-BlockDevice::~BlockDevice()
-{
-}
+BlockDevice::~BlockDevice() = default;
 
 bool BlockDevice::read_block(u64 index, UserOrKernelBuffer& buffer)
 {

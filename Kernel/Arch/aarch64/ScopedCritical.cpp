@@ -10,13 +10,8 @@
 
 namespace Kernel {
 
-ScopedCritical::ScopedCritical()
-{
-}
-
-ScopedCritical::~ScopedCritical()
-{
-}
+ScopedCritical::ScopedCritical() = default;
+ScopedCritical::~ScopedCritical() = default;
 
 ScopedCritical::ScopedCritical(ScopedCritical&& /*from*/)
 {

@@ -52,9 +52,7 @@ UNMAP_AFTER_INIT SerialDevice::SerialDevice(IOAddress base_addr, unsigned minor)
     initialize();
 }
 
-UNMAP_AFTER_INIT SerialDevice::~SerialDevice()
-{
-}
+UNMAP_AFTER_INIT SerialDevice::~SerialDevice() = default;
 
 bool SerialDevice::can_read(const OpenFileDescription&, u64) const
 {

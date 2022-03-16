@@ -31,9 +31,7 @@ ATAPIDiscDevice::ATAPIDiscDevice(const ATAController& controller, ATADevice::Add
 {
 }
 
-ATAPIDiscDevice::~ATAPIDiscDevice()
-{
-}
+ATAPIDiscDevice::~ATAPIDiscDevice() = default;
 
 StringView ATAPIDiscDevice::class_name() const
 {

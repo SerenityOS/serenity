@@ -42,13 +42,8 @@ ErrorOr<NonnullRefPtr<ProcFS>> ProcFS::try_create()
     return adopt_nonnull_ref_or_enomem(new (nothrow) ProcFS());
 }
 
-ProcFS::ProcFS()
-{
-}
-
-ProcFS::~ProcFS()
-{
-}
+ProcFS::ProcFS() = default;
+ProcFS::~ProcFS() = default;
 
 ErrorOr<void> ProcFS::initialize()
 {
@@ -66,9 +61,7 @@ ProcFSInode::ProcFSInode(const ProcFS& fs, InodeIndex index)
 {
 }
 
-ProcFSInode::~ProcFSInode()
-{
-}
+ProcFSInode::~ProcFSInode() = default;
 
 ErrorOr<void> ProcFSInode::flush_metadata()
 {
@@ -185,9 +178,7 @@ ProcFSDirectoryInode::ProcFSDirectoryInode(const ProcFS& fs, const ProcFSExposed
 {
 }
 
-ProcFSDirectoryInode::~ProcFSDirectoryInode()
-{
-}
+ProcFSDirectoryInode::~ProcFSDirectoryInode() = default;
 InodeMetadata ProcFSDirectoryInode::metadata() const
 {
     MutexLocker locker(m_inode_lock);

@@ -13,8 +13,6 @@ FileBackedFileSystem::FileBackedFileSystem(OpenFileDescription& file_description
 {
 }
 
-FileBackedFileSystem::~FileBackedFileSystem()
-{
-}
+FileBackedFileSystem::~FileBackedFileSystem() = default;
 
 }

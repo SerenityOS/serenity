@@ -27,9 +27,7 @@ static constexpr u32 next_power_of_two(u32 value)
     return value;
 }
 
-PhysicalRegion::~PhysicalRegion()
-{
-}
+PhysicalRegion::~PhysicalRegion() = default;
 
 PhysicalRegion::PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper)
     : m_lower(lower)

@@ -73,13 +73,8 @@ ErrorOr<NonnullRefPtr<SysFS>> SysFS::try_create()
     return adopt_nonnull_ref_or_enomem(new (nothrow) SysFS);
 }
 
-SysFS::SysFS()
-{
-}
-
-SysFS::~SysFS()
-{
-}
+SysFS::SysFS() = default;
+SysFS::~SysFS() = default;
 
 ErrorOr<void> SysFS::initialize()
 {
@@ -202,9 +197,7 @@ SysFSDirectoryInode::SysFSDirectoryInode(SysFS const& fs, SysFSComponent const& 
 {
 }
 
-SysFSDirectoryInode::~SysFSDirectoryInode()
-{
-}
+SysFSDirectoryInode::~SysFSDirectoryInode() = default;
 
 InodeMetadata SysFSDirectoryInode::metadata() const
 {

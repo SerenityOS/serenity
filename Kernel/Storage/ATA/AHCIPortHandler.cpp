@@ -78,9 +78,7 @@ AHCI::HBADefinedCapabilities AHCIPortHandler::hba_capabilities() const
     return m_parent_controller->hba_capabilities();
 }
 
-AHCIPortHandler::~AHCIPortHandler()
-{
-}
+AHCIPortHandler::~AHCIPortHandler() = default;
 
 bool AHCIPortHandler::handle_irq(const RegisterState&)
 {

@@ -19,9 +19,7 @@ NetworkAdapter::NetworkAdapter(NonnullOwnPtr<KString> interface_name)
 {
 }
 
-NetworkAdapter::~NetworkAdapter()
-{
-}
+NetworkAdapter::~NetworkAdapter() = default;
 
 void NetworkAdapter::send_packet(ReadonlyBytes packet)
 {

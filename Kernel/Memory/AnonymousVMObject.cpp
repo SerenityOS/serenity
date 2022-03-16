@@ -166,9 +166,7 @@ AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other, NonnullRefP
 {
 }
 
-AnonymousVMObject::~AnonymousVMObject()
-{
-}
+AnonymousVMObject::~AnonymousVMObject() = default;
 
 size_t AnonymousVMObject::purge()
 {
@@ -370,9 +368,7 @@ AnonymousVMObject::SharedCommittedCowPages::SharedCommittedCowPages(CommittedPhy
 {
 }
 
-AnonymousVMObject::SharedCommittedCowPages::~SharedCommittedCowPages()
-{
-}
+AnonymousVMObject::SharedCommittedCowPages::~SharedCommittedCowPages() = default;
 
 NonnullRefPtr<PhysicalPage> AnonymousVMObject::SharedCommittedCowPages::take_one()
 {

@@ -37,9 +37,7 @@ Socket::Socket(int domain, int type, int protocol)
     set_origin(Process::current());
 }
 
-Socket::~Socket()
-{
-}
+Socket::~Socket() = default;
 
 void Socket::set_setup_state(SetupState new_setup_state)
 {

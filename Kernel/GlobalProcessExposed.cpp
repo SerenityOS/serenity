@@ -1032,8 +1032,6 @@ UNMAP_AFTER_INIT ProcFSRootDirectory::ProcFSRootDirectory()
 {
 }
 
-UNMAP_AFTER_INIT ProcFSRootDirectory::~ProcFSRootDirectory()
-{
-}
+UNMAP_AFTER_INIT ProcFSRootDirectory::~ProcFSRootDirectory() = default;
 
 }

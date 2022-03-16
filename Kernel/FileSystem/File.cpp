@@ -12,13 +12,8 @@
 
 namespace Kernel {
 
-File::File()
-{
-}
-
-File::~File()
-{
-}
+File::File() = default;
+File::~File() = default;
 
 ErrorOr<NonnullRefPtr<OpenFileDescription>> File::open(int options)
 {

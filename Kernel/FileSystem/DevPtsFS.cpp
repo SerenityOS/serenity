@@ -17,13 +17,8 @@ ErrorOr<NonnullRefPtr<DevPtsFS>> DevPtsFS::try_create()
     return adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFS);
 }
 
-DevPtsFS::DevPtsFS()
-{
-}
-
-DevPtsFS::~DevPtsFS()
-{
-}
+DevPtsFS::DevPtsFS() = default;
+DevPtsFS::~DevPtsFS() = default;
 
 ErrorOr<void> DevPtsFS::initialize()
 {
@@ -81,9 +76,7 @@ DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, InodeIndex index, SlavePTY* pty)
         m_pty = *pty;
 }
 
-DevPtsFSInode::~DevPtsFSInode()
-{
-}
+DevPtsFSInode::~DevPtsFSInode() = default;
 
 ErrorOr<size_t> DevPtsFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const
 {

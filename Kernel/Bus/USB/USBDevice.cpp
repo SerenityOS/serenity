@@ -51,9 +51,7 @@ Device::Device(Device const& device, NonnullOwnPtr<Pipe> default_pipe)
 {
 }
 
-Device::~Device()
-{
-}
+Device::~Device() = default;
 
 ErrorOr<void> Device::enumerate_device()
 {

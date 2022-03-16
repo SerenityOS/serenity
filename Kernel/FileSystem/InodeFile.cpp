@@ -22,9 +22,7 @@ InodeFile::InodeFile(NonnullRefPtr<Inode>&& inode)
 {
 }
 
-InodeFile::~InodeFile()
-{
-}
+InodeFile::~InodeFile() = default;
 
 ErrorOr<size_t> InodeFile::read(OpenFileDescription& description, u64 offset, UserOrKernelBuffer& buffer, size_t count)
 {

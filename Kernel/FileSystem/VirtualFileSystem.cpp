@@ -40,9 +40,7 @@ UNMAP_AFTER_INIT VirtualFileSystem::VirtualFileSystem()
 {
 }
 
-UNMAP_AFTER_INIT VirtualFileSystem::~VirtualFileSystem()
-{
-}
+UNMAP_AFTER_INIT VirtualFileSystem::~VirtualFileSystem() = default;
 
 InodeIdentifier VirtualFileSystem::root_inode_id() const
 {

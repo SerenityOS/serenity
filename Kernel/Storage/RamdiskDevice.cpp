@@ -32,9 +32,7 @@ RamdiskDevice::RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Reg
     dmesgln("Ramdisk: Device #{} @ {}, Capacity={}", minor, m_region->vaddr(), max_addressable_block() * 512);
 }
 
-RamdiskDevice::~RamdiskDevice()
-{
-}
+RamdiskDevice::~RamdiskDevice() = default;
 
 StringView RamdiskDevice::class_name() const
 {

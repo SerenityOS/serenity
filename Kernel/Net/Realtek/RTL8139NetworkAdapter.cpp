@@ -162,9 +162,7 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address addre
     enable_irq();
 }
 
-UNMAP_AFTER_INIT RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
-{
-}
+UNMAP_AFTER_INIT RTL8139NetworkAdapter::~RTL8139NetworkAdapter() = default;
 
 bool RTL8139NetworkAdapter::handle_irq(const RegisterState&)
 {

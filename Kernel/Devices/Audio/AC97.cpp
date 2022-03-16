@@ -36,9 +36,7 @@ UNMAP_AFTER_INIT AC97::AC97(PCI::DeviceIdentifier const& pci_device_identifier)
 {
 }
 
-UNMAP_AFTER_INIT AC97::~AC97()
-{
-}
+UNMAP_AFTER_INIT AC97::~AC97() = default;
 
 bool AC97::handle_irq(RegisterState const&)
 {

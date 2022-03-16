@@ -84,9 +84,7 @@ MBRPartitionTable::MBRPartitionTable(const StorageDevice& device)
     m_valid = true;
 }
 
-MBRPartitionTable::~MBRPartitionTable()
-{
-}
+MBRPartitionTable::~MBRPartitionTable() = default;
 
 const MBRPartitionTable::Header& MBRPartitionTable::header() const
 {
