@@ -225,10 +225,6 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
 
             // iii. Set mid to ! AddISODate(y1, m1, d1, years, months, 0, 0, "constrain").
             mid = MUST(add_iso_date(global_object, year1, month1, day1, years, months, 0, 0, "constrain"sv));
-
-            // FIXME: This is not used (spec issue, see https://github.com/tc39/proposal-temporal/issues/1483).
-            // iv. Set midSign to -(! CompareISODate(mid.[[Year]], mid.[[Month]], mid.[[Day]], y2, m2, d2)).
-            mid_sign = -compare_iso_date(mid.year, mid.month, mid.day, year2, month2, day2);
         }
 
         // o. Let days be 0.
