@@ -58,6 +58,37 @@
             "<length>"
         ]
     },
+    "display-mode": {
+        "type": "discrete",
+        "values": [
+            "fullscreen",
+            "standalone",
+            "minimal-ui",
+            "browser"
+        ]
+    },
+    "dynamic-range": {
+        "type": "discrete",
+        "values": [
+            "standard",
+            "high"
+        ]
+    },
+    "environment-blending": {
+        "type": "discrete",
+        "values": [
+            "opaque",
+            "additive",
+            "subtractive"
+        ]
+    },
+    "forced-colors": {
+        "type": "discrete",
+        "values": [
+            "none",
+            "active"
+        ]
+    },
     "grid": {
         "type": "discrete",
         "values": [
@@ -70,6 +101,12 @@
             "<length>"
         ]
     },
+    "horizontal-viewport-segments": {
+        "type": "range",
+        "values": [
+            "<integer>"
+        ]
+    },
     "hover": {
         "type": "discrete",
         "values": [
@@ -77,10 +114,24 @@
             "hover"
         ]
     },
+    "inverted-colors": {
+        "type": "discrete",
+        "values": [
+            "none",
+            "inverted"
+        ]
+    },
     "monochrome": {
         "type": "range",
         "values": [
             "<integer>"
+        ]
+    },
+    "nav-controls": {
+        "type": "discrete",
+        "values": [
+            "none",
+            "back"
         ]
     },
     "orientation": {
@@ -120,6 +171,36 @@
             "dark"
         ]
     },
+    "prefers-contrast": {
+        "type": "discrete",
+        "values": [
+            "no-preference",
+            "less",
+            "more",
+            "custom"
+        ]
+    },
+    "prefers-reduced-data": {
+        "type": "discrete",
+        "values": [
+            "no-preference",
+            "reduce"
+        ]
+    },
+    "prefers-reduced-motion": {
+        "type": "discrete",
+        "values": [
+            "no-preference",
+            "reduce"
+        ]
+    },
+    "prefers-reduced-transparency": {
+        "type": "discrete",
+        "values": [
+            "no-preference",
+            "reduce"
+        ]
+    },
     "resolution": {
         "type": "range",
         "values": [
@@ -134,12 +215,41 @@
             "progressive"
         ]
     },
+    "scripting": {
+        "type": "discrete",
+        "values": [
+            "none",
+            "initial-only",
+            "enabled"
+        ]
+    },
     "update": {
         "type": "discrete",
         "values": [
             "none",
             "slow",
             "fast"
+        ]
+    },
+    "vertical-viewport-segments": {
+        "type": "range",
+        "values": [
+            "<integer>"
+        ]
+    },
+    "video-color-gamut": {
+        "type": "discrete",
+        "values": [
+            "srgb",
+            "p3",
+            "rec2020"
+        ]
+    },
+    "video-dynamic-range": {
+        "type": "discrete",
+        "values": [
+            "standard",
+            "high"
         ]
     },
     "width": {

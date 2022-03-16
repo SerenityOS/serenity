@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -376,7 +376,7 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
 {
     // FIXME: Many of these should be dependent on the hardware
 
-    // MEDIAQUERIES-4 properties - https://www.w3.org/TR/mediaqueries-4/#media-descriptor-table
+    // https://www.w3.org/TR/mediaqueries-5/#media-descriptor-table
     switch (media_feature) {
     case CSS::MediaFeatureID::AnyHover:
         return CSS::MediaFeatureValue(CSS::ValueID::Hover);
@@ -393,14 +393,29 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
     // FIXME: device-aspect-ratio
     // FIXME: device-height
     // FIXME: device-width
+    case CSS::MediaFeatureID::DisplayMode:
+        // FIXME: Detect if window is fullscreen
+        return CSS::MediaFeatureValue(CSS::ValueID::Browser);
+    case CSS::MediaFeatureID::DynamicRange:
+        return CSS::MediaFeatureValue(CSS::ValueID::Standard);
+    case CSS::MediaFeatureID::EnvironmentBlending:
+        return CSS::MediaFeatureValue(CSS::ValueID::Opaque);
+    case CSS::MediaFeatureID::ForcedColors:
+        return CSS::MediaFeatureValue(CSS::ValueID::None);
     case CSS::MediaFeatureID::Grid:
         return CSS::MediaFeatureValue(0);
     case CSS::MediaFeatureID::Height:
         return CSS::MediaFeatureValue(CSS::Length::make_px(inner_height()));
+    case CSS::MediaFeatureID::HorizontalViewportSegments:
+        return CSS::MediaFeatureValue(1);
     case CSS::MediaFeatureID::Hover:
         return CSS::MediaFeatureValue(CSS::ValueID::Hover);
+    case CSS::MediaFeatureID::InvertedColors:
+        return CSS::MediaFeatureValue(CSS::ValueID::None);
     case CSS::MediaFeatureID::Monochrome:
         return CSS::MediaFeatureValue(0);
+    case CSS::MediaFeatureID::NavControls:
+        return CSS::MediaFeatureValue(CSS::ValueID::Back);
     case CSS::MediaFeatureID::Orientation:
         return CSS::MediaFeatureValue(inner_height() >= inner_width() ? CSS::ValueID::Portrait : CSS::ValueID::Landscape);
     case CSS::MediaFeatureID::OverflowBlock:
@@ -409,15 +424,6 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
         return CSS::MediaFeatureValue(CSS::ValueID::Scroll);
     case CSS::MediaFeatureID::Pointer:
         return CSS::MediaFeatureValue(CSS::ValueID::Fine);
-    // FIXME: resolution
-    case CSS::MediaFeatureID::Scan:
-        return CSS::MediaFeatureValue(CSS::ValueID::Progressive);
-    case CSS::MediaFeatureID::Update:
-        return CSS::MediaFeatureValue(CSS::ValueID::Fast);
-    case CSS::MediaFeatureID::Width:
-        return CSS::MediaFeatureValue(CSS::Length::make_px(inner_width()));
-
-    // MEDIAQUERIES-5 properties - https://www.w3.org/TR/mediaqueries-5/#media-descriptor-table
     case CSS::MediaFeatureID::PrefersColorScheme: {
         if (auto* page = this->page()) {
             switch (page->preferred_color_scheme()) {
@@ -432,6 +438,35 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
         }
         return CSS::MediaFeatureValue(CSS::ValueID::Light);
     }
+    case CSS::MediaFeatureID::PrefersContrast:
+        // FIXME: Make this a preference
+        return CSS::MediaFeatureValue(CSS::ValueID::NoPreference);
+    case CSS::MediaFeatureID::PrefersReducedData:
+        // FIXME: Make this a preference
+        return CSS::MediaFeatureValue(CSS::ValueID::NoPreference);
+    case CSS::MediaFeatureID::PrefersReducedMotion:
+        // FIXME: Make this a preference
+        return CSS::MediaFeatureValue(CSS::ValueID::NoPreference);
+    case CSS::MediaFeatureID::PrefersReducedTransparency:
+        // FIXME: Make this a preference
+        return CSS::MediaFeatureValue(CSS::ValueID::NoPreference);
+    // FIXME: resolution
+    case CSS::MediaFeatureID::Scan:
+        return CSS::MediaFeatureValue(CSS::ValueID::Progressive);
+    case CSS::MediaFeatureID::Scripting:
+        if (associated_document().is_scripting_enabled())
+            return CSS::MediaFeatureValue(CSS::ValueID::Enabled);
+        return CSS::MediaFeatureValue(CSS::ValueID::None);
+    case CSS::MediaFeatureID::Update:
+        return CSS::MediaFeatureValue(CSS::ValueID::Fast);
+    case CSS::MediaFeatureID::VerticalViewportSegments:
+        return CSS::MediaFeatureValue(1);
+    case CSS::MediaFeatureID::VideoColorGamut:
+        return CSS::MediaFeatureValue(CSS::ValueID::Srgb);
+    case CSS::MediaFeatureID::VideoDynamicRange:
+        return CSS::MediaFeatureValue(CSS::ValueID::Standard);
+    case CSS::MediaFeatureID::Width:
+        return CSS::MediaFeatureValue(CSS::Length::make_px(inner_width()));
 
     default:
         break;
