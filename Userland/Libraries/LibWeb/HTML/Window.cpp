@@ -613,4 +613,24 @@ DOM::ExceptionOr<void> Window::post_message(JS::Value message, String const&)
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/window-object.html#dom-name
+String Window::name() const
+{
+    // 1. If this's browsing context is null, then return the empty string.
+    if (!browsing_context())
+        return String::empty();
+    // 2. Return this's browsing context's name.
+    return browsing_context()->name();
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#dom-name
+void Window::set_name(String const& name)
+{
+    // 1. If this's browsing context is null, then return.
+    if (!browsing_context())
+        return;
+    // 2. Set this's browsing context's name to the given value.
+    browsing_context()->set_name(name);
+}
+
 }

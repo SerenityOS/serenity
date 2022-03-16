@@ -80,6 +80,19 @@ void BrowsingContext::set_active_document(DOM::Document* document)
     if (m_active_document)
         m_active_document->detach_from_browsing_context({}, *this);
 
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#resetBCName
+    // FIXME: The rest of set_active_document does not follow the spec very closely, this just implements the
+    //   relevant steps for resetting the browsing context name and should be updated closer to the spec once
+    //   the other parts of history handling/navigating are implemented
+    // 3. If newDocument's origin is not same origin with the current entry's document's origin, then:
+    if (!document || !m_active_document || !document->origin().is_same_origin(m_active_document->origin())) {
+        // 3. If the browsing context is a top-level browsing context, but not an auxiliary browsing context
+        //    whose disowned is false, then set the browsing context's name to the empty string.
+        // FIXME: this is not checking the second part of the condition yet
+        if (is_top_level())
+            m_name = String::empty();
+    }
+
     m_active_document = document;
 
     if (m_active_document) {
