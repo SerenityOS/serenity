@@ -28,12 +28,15 @@ private:
     bool m_use_vector { false };
     size_t m_radius_x { 0 };
     size_t m_radius_y { 0 };
+    size_t m_angle { 0 };
 
     bool m_approximate_gauss { false };
 
     RefPtr<GUI::Widget> m_radius_container { nullptr };
     RefPtr<GUI::Widget> m_asymmetric_radius_container { nullptr };
+    RefPtr<GUI::Widget> m_vector_container { nullptr };
     RefPtr<GUI::CheckBox> m_gaussian_checkbox { nullptr };
+    RefPtr<GUI::CheckBox> m_vector_checkbox { nullptr };
     RefPtr<GUI::ValueSlider> m_radius_x_slider { nullptr };
     RefPtr<GUI::ValueSlider> m_radius_y_slider { nullptr };
     RefPtr<GUI::ValueSlider> m_angle_slider { nullptr };
