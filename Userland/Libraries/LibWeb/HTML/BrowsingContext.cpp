@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -101,6 +101,7 @@ void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
         if (auto* document = active_document()) {
             // NOTE: Resizing the viewport changes the reference value for viewport-relative CSS lengths.
             document->invalidate_style();
+            document->invalidate_layout();
         }
         did_change = true;
     }
