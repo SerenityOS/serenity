@@ -239,34 +239,15 @@ void HTMLInputElement::did_remove_attribute(FlyString const& name)
 
 String HTMLInputElement::type() const
 {
-    auto value = attribute(HTML::AttributeNames::type);
-
-#define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, _) \
-    if (value.equals_ignoring_case(#keyword))             \
-        return #keyword;
-    ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
-#undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
-
-    // The missing value default and the invalid value default are the Text state.
-    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:missing-value-default
-    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:invalid-value-default
-    return "text";
-}
-
-HTMLInputElement::TypeAttributeState HTMLInputElement::type_state() const
-{
-    auto value = attribute(HTML::AttributeNames::type);
-
+    switch (m_type) {
 #define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, state) \
-    if (value.equals_ignoring_case(#keyword))                 \
-        return HTMLInputElement::TypeAttributeState::state;
-    ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
+    case TypeAttributeState::state:                           \
+        return #keyword##sv;
+        ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
 #undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
+    }
 
-    // The missing value default and the invalid value default are the Text state.
-    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:missing-value-default
-    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:invalid-value-default
-    return HTMLInputElement::TypeAttributeState::Text;
+    VERIFY_NOT_REACHED();
 }
 
 void HTMLInputElement::set_type(String const& type)
