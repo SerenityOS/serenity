@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 
@@ -21,7 +22,7 @@ public:
     };
     virtual ~Filter() = default;
 
-    virtual const char* class_name() const = 0;
+    virtual StringView class_name() const = 0;
 
     virtual void apply(Bitmap&, IntRect const&, Bitmap const&, IntRect const&, Parameters const&) {};
     virtual void apply(Bitmap&, IntRect const&, Bitmap const&, IntRect const&) {};

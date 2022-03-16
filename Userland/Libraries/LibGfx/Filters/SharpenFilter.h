@@ -7,6 +7,7 @@
 #pragma once
 
 #include "GenericConvolutionFilter.h"
+#include <AK/StringView.h>
 
 namespace Gfx {
 
@@ -15,7 +16,7 @@ public:
     SharpenFilter() = default;
     virtual ~SharpenFilter() = default;
 
-    virtual const char* class_name() const override { return "SharpenFilter"; }
+    virtual StringView class_name() const override { return "SharpenFilter"sv; }
 };
 
 }

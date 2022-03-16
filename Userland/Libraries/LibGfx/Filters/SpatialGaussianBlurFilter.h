@@ -8,6 +8,7 @@
 
 #include "GenericConvolutionFilter.h"
 #include <AK/StdLibExtras.h>
+#include <AK/StringView.h>
 
 namespace Gfx {
 
@@ -17,6 +18,6 @@ public:
     SpatialGaussianBlurFilter() = default;
     virtual ~SpatialGaussianBlurFilter() = default;
 
-    virtual const char* class_name() const override { return "SpatialGaussianBlurFilter"; }
+    virtual StringView class_name() const override { return "SpatialGaussianBlurFilter"sv; }
 };
 }
