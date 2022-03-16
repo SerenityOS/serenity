@@ -23,6 +23,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
 {
     m_image_loader.on_load = [this] {
         set_needs_style_update(true);
+        this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
             dispatch_event(DOM::Event::create(EventNames::load));
         });
@@ -31,6 +32,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
     m_image_loader.on_fail = [this] {
         dbgln("HTMLImageElement: Resource did fail: {}", src());
         set_needs_style_update(true);
+        this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
             dispatch_event(DOM::Event::create(EventNames::error));
         });
