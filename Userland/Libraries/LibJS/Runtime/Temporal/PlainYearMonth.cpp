@@ -192,8 +192,8 @@ ISOYearMonth constrain_iso_year_month(double year, double month)
     // 1. Assert: year and month are integers.
     VERIFY(year == trunc(year) && month == trunc(month));
 
-    // 2. Set month to ! ConstrainToRange(month, 1, 12).
-    month = constrain_to_range(month, 1, 12);
+    // 2. Set month to the result of clamping month between 1 and 12.
+    month = clamp(month, 1, 12);
 
     // 3. Return the Record { [[Year]]: year, [[Month]]: month }.
     // NOTE: `year` is known to be in the i32 range.
