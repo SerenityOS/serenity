@@ -110,6 +110,9 @@ public:
 
     DOM::ExceptionOr<void> post_message(JS::Value, String const& target_origin);
 
+    String name() const;
+    void set_name(String const&);
+
 private:
     explicit Window(DOM::Document&);
 

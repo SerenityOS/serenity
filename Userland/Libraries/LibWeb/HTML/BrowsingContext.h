@@ -107,6 +107,9 @@ public:
 
     RefPtr<DOM::Node> currently_focused_area();
 
+    String const& name() const { return m_name; }
+    void set_name(String const& name) { m_name = name; }
+
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
 
@@ -129,6 +132,7 @@ private:
     HashTable<ViewportClient*> m_viewport_clients;
 
     HashMap<AK::URL, size_t> m_frame_nesting_levels;
+    String m_name;
 };
 
 }

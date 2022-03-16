@@ -80,6 +80,9 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(document_getter);
 
+    JS_DECLARE_NATIVE_FUNCTION(name_getter);
+    JS_DECLARE_NATIVE_FUNCTION(name_setter);
+
     JS_DECLARE_NATIVE_FUNCTION(performance_getter);
     JS_DECLARE_NATIVE_FUNCTION(history_getter);
     JS_DECLARE_NATIVE_FUNCTION(screen_getter);

@@ -68,6 +68,7 @@ void WindowObject::initialize_global_object()
     define_native_accessor("top", top_getter, nullptr, JS::Attribute::Enumerable);
     define_native_accessor("parent", parent_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("document", document_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor("name", name_getter, name_setter, JS::Attribute::Enumerable);
     define_native_accessor("history", history_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("performance", performance_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("crypto", crypto_getter, {}, JS::Attribute::Enumerable);
@@ -655,6 +656,19 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::session_storage_getter)
     auto* impl = TRY(impl_from(vm, global_object));
     // FIXME: sessionStorage may throw. We have to deal with that here.
     return wrap(global_object, *impl->session_storage());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::name_getter)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    return JS::js_string(vm, impl->name());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::name_setter)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    impl->set_name(TRY(vm.argument(0).to_string(global_object)));
+    return JS::js_undefined();
 }
 
 #define __ENUMERATE(attribute, event_name)                                                                                 \
