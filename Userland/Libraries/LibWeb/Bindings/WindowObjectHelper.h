@@ -159,6 +159,8 @@
 #include <LibWeb/Bindings/HTMLOptGroupElementPrototype.h>
 #include <LibWeb/Bindings/HTMLOptionElementConstructor.h>
 #include <LibWeb/Bindings/HTMLOptionElementPrototype.h>
+#include <LibWeb/Bindings/HTMLOptionsCollectionConstructor.h>
+#include <LibWeb/Bindings/HTMLOptionsCollectionPrototype.h>
 #include <LibWeb/Bindings/HTMLOutputElementConstructor.h>
 #include <LibWeb/Bindings/HTMLOutputElementPrototype.h>
 #include <LibWeb/Bindings/HTMLParagraphElementConstructor.h>
@@ -407,6 +409,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(HTMLOListElement)                                                   \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLOptGroupElement)                                                \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLOptionElement)                                                  \
+    ADD_WINDOW_OBJECT_INTERFACE(HTMLOptionsCollection)                                              \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLOutputElement)                                                  \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLParagraphElement)                                               \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLParamElement)                                                   \
