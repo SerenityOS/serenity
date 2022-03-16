@@ -7,6 +7,7 @@
 
 #include "FastBoxBlur.h"
 #include "../FilterParams.h"
+#include <AK/ExtraMathConstants.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ValueSlider.h>
 #include <LibGfx/Filters/FastBoxBlurFilter.h>
@@ -23,6 +24,12 @@ void FastBoxBlur::apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bi
     }
 
     Gfx::FastBoxBlurFilter filter(target_bitmap);
+
+    if (m_use_asymmetric_radii) {
+        filter.apply_single_pass(m_radius_x, m_radius_y);
+        return;
+    }
+
     if (m_approximate_gauss)
         filter.apply_three_passes(m_radius);
     else
@@ -38,22 +45,79 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
         auto& name_label = m_settings_widget->add<GUI::Label>("Fast Box Blur Filter");
         name_label.set_font_weight(Gfx::FontWeight::Bold);
         name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        name_label.set_fixed_height(20);
+        name_label.set_fixed_height(10);
 
-        auto& radius_container = m_settings_widget->add<GUI::Widget>();
-        radius_container.set_fixed_height(20);
-        radius_container.set_layout<GUI::HorizontalBoxLayout>();
-        radius_container.layout()->set_margins({ 4, 0, 4, 0 });
+        auto& asymmetric_checkbox = m_settings_widget->add<GUI::CheckBox>("Use Asymmetric Radii");
+        asymmetric_checkbox.set_checked(false);
+        asymmetric_checkbox.set_fixed_height(15);
+        asymmetric_checkbox.on_checked = [&](bool checked) {
+            m_use_asymmetric_radii = checked;
+            if (m_use_asymmetric_radii) {
+                m_radius_x_slider->set_value(m_radius);
+                m_radius_y_slider->set_value(m_radius);
+                m_asymmetric_radius_container->set_visible(true);
+                m_radius_container->set_visible(false);
+                m_gaussian_checkbox->set_visible(false);
+            } else {
+                m_asymmetric_radius_container->set_visible(false);
+                m_radius_container->set_visible(true);
+                m_gaussian_checkbox->set_visible(true);
+            }
+            update_preview();
+        };
 
-        auto& radius_label = radius_container.add<GUI::Label>("Radius:");
+        m_radius_container = m_settings_widget->add<GUI::Widget>();
+        m_radius_container->set_fixed_height(20);
+        m_radius_container->set_layout<GUI::HorizontalBoxLayout>();
+        m_radius_container->layout()->set_margins({ 4, 0, 4, 0 });
+
+        auto& radius_label = m_radius_container->add<GUI::Label>("Radius:");
         radius_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         radius_label.set_fixed_size(50, 20);
 
-        auto& radius_slider = radius_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        auto& radius_slider = m_radius_container->add<GUI::ValueSlider>(Orientation::Horizontal, "px");
         radius_slider.set_range(0, 25);
         radius_slider.set_value(m_radius);
         radius_slider.on_change = [&](int value) {
             m_radius = value;
+            update_preview();
+        };
+
+        m_asymmetric_radius_container = m_settings_widget->add<GUI::Widget>();
+        m_asymmetric_radius_container->set_visible(false);
+        m_asymmetric_radius_container->set_fixed_height(50);
+        m_asymmetric_radius_container->set_layout<GUI::VerticalBoxLayout>();
+        m_asymmetric_radius_container->layout()->set_margins({ 4, 0, 4, 0 });
+
+        auto& radius_x_container = m_asymmetric_radius_container->add<GUI::Widget>();
+        radius_x_container.set_fixed_height(20);
+        radius_x_container.set_layout<GUI::HorizontalBoxLayout>();
+
+        auto& radius_x_label = radius_x_container.add<GUI::Label>("Radius X:");
+        radius_x_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        radius_x_label.set_fixed_size(50, 20);
+
+        m_radius_x_slider = radius_x_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        m_radius_x_slider->set_range(0, 50);
+        m_radius_x_slider->set_value(m_radius_x);
+        m_radius_x_slider->on_change = [&](int value) {
+            m_radius_x = value;
+            update_preview();
+        };
+
+        auto& radius_y_container = m_asymmetric_radius_container->add<GUI::Widget>();
+        radius_y_container.set_fixed_height(20);
+        radius_y_container.set_layout<GUI::HorizontalBoxLayout>();
+
+        auto& radius_y_label = radius_y_container.add<GUI::Label>("Radius Y:");
+        radius_y_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        radius_y_label.set_fixed_size(50, 20);
+
+        m_radius_y_slider = radius_y_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        m_radius_y_slider->set_range(0, 50);
+        m_radius_y_slider->set_value(m_radius_y);
+        m_radius_y_slider->on_change = [&](int value) {
+            m_radius_y = value;
             update_preview();
         };
 
@@ -62,10 +126,10 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
         gaussian_container.set_layout<GUI::HorizontalBoxLayout>();
         gaussian_container.layout()->set_margins({ 4, 0, 4, 0 });
 
-        auto& gaussian_checkbox = gaussian_container.add<GUI::CheckBox>("Approximate Gaussian Blur");
-        gaussian_checkbox.set_checked(m_approximate_gauss);
-        gaussian_checkbox.set_tooltip("A real gaussian blur can be approximated by running the box blur multiple times with different weights.");
-        gaussian_checkbox.on_checked = [this](bool checked) {
+        m_gaussian_checkbox = gaussian_container.add<GUI::CheckBox>("Approximate Gaussian Blur");
+        m_gaussian_checkbox->set_checked(m_approximate_gauss);
+        m_gaussian_checkbox->set_tooltip("A real gaussian blur can be approximated by running the box blur multiple times with different weights.");
+        m_gaussian_checkbox->on_checked = [this](bool checked) {
             m_approximate_gauss = checked;
             update_preview();
         };
