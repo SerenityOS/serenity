@@ -95,8 +95,14 @@ bool MediaFeature::evaluate(HTML::Window const& window) const
             return !queried_value.ratio().is_degenerate();
         if (queried_value.is_resolution())
             return queried_value.resolution().to_dots_per_pixel() != 0;
-        if (queried_value.is_ident())
-            return queried_value.ident() != ValueID::None;
+        if (queried_value.is_ident()) {
+            // NOTE: It is not technically correct to always treat `no-preference` as false, but every
+            //       media-feature that accepts it as a value treats it as false, so good enough. :^)
+            //       If other features gain this property for other identifiers in the future, we can
+            //       add more robust handling for them then.
+            return queried_value.ident() != ValueID::None
+                && queried_value.ident() != ValueID::NoPreference;
+        }
         return false;
 
     case Type::ExactValue:
