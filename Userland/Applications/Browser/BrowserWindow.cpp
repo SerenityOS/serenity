@@ -114,6 +114,15 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
         m_tab_widget->activate_previous_tab();
     };
 
+    for (int i = 0; i <= 7; ++i) {
+        m_window_actions.on_tabs.append([this, i] {
+            m_tab_widget->set_tab_index(i);
+        });
+    }
+    m_window_actions.on_tabs.append([this] {
+        m_tab_widget->activate_last_tab();
+    });
+
     m_window_actions.on_about = [this] {
         auto app_icon = GUI::Icon::default_icon("app-browser");
         GUI::AboutDialog::show("Browser", app_icon.bitmap_for_size(32), this);
