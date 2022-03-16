@@ -10,6 +10,7 @@
 
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/HTML/HTMLOptionsCollection.h>
 
 namespace Web::HTML {
 
@@ -19,6 +20,8 @@ public:
 
     HTMLSelectElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLSelectElement() override;
+
+    RefPtr<HTMLOptionsCollection> const& options();
 
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed
@@ -36,6 +39,9 @@ public:
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
+
+private:
+    RefPtr<HTMLOptionsCollection> m_options;
 };
 
 }
