@@ -11,6 +11,16 @@
 
 namespace PixelPaint {
 
+Filter::Filter(ImageEditor* editor)
+    : m_editor(editor)
+    , m_update_timer(Core::Timer::create_single_shot(100, [&] {
+        if (on_settings_change)
+            on_settings_change();
+    }))
+{
+    m_update_timer->set_active(false);
+}
+
 RefPtr<GUI::Widget> Filter::get_settings_widget()
 {
     if (!m_settings_widget) {
@@ -39,8 +49,6 @@ void Filter::apply() const
 
 void Filter::update_preview()
 {
-    if (on_settings_change)
-        on_settings_change();
+    m_update_timer->restart();
 }
-
 }
