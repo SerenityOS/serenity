@@ -207,7 +207,23 @@ void HTMLInputElement::parse_attribute(FlyString const& name, String const& valu
         // the user agent must set the checkedness of the element to true
         if (!m_dirty_checkedness)
             set_checked(true, ChangeSource::Programmatic);
+    } else if (name == HTML::AttributeNames::type) {
+        m_type = parse_type_attribute(value);
     }
+}
+
+HTMLInputElement::TypeAttributeState HTMLInputElement::parse_type_attribute(StringView type)
+{
+#define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, state) \
+    if (type.equals_ignoring_case(#keyword))                  \
+        return HTMLInputElement::TypeAttributeState::state;
+    ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
+#undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
+
+    // The missing value default and the invalid value default are the Text state.
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:missing-value-default
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:invalid-value-default
+    return HTMLInputElement::TypeAttributeState::Text;
 }
 
 void HTMLInputElement::did_remove_attribute(FlyString const& name)
