@@ -7,9 +7,9 @@ describe("getter - normal behavior", () => {
         const stackFrames = [
             /^    at .*Error \(.*\/Error\.prototype\.stack\.js:\d+:\d+\)$/,
             /^    at .+\/Error\/Error\.prototype\.stack\.js:\d+:\d+$/,
-            /^    at test \(.+\/test-common.js:557:21\)$/,
+            /^    at test \(.+\/test-common.js:\d+:\d+\)$/,
             /^    at .+\/Error\/Error\.prototype\.stack\.js:6:33$/,
-            /^    at describe \(.+\/test-common\.js:534:21\)$/,
+            /^    at describe \(.+\/test-common\.js:\d+:\d+\)$/,
             /^    at .+\/Error\/Error\.prototype\.stack\.js:5:38$/,
         ];
         const values = [
