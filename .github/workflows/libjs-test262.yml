@@ -119,7 +119,7 @@ jobs:
         working-directory: libjs-test262/Build
         run: |
           _deps/lagom-build/test-wasm --per-file > ../../libjs-website/wasm/data/per-file-master.json
-          jq -nc -f /dev/stdin <<-EOF --slurpfile previous ../../libjs-website/wasm/data/results.json --slurpfile details ../../libjs-website/wasm/data/per-file-master.json > wasm-new-per-file-master.json
+          jq -nc -f /dev/stdin <<-EOF --slurpfile previous ../../libjs-website/wasm/data/results.json --slurpfile details ../../libjs-website/wasm/data/per-file-master.json > wasm-new-results.json
             \$details[0] as \$details | \$previous[0] + [{
               "commit_timestamp": $(git -C ../.. log -1 --format=%ct),
               "run_timestamp": $(date +%s),
@@ -140,7 +140,7 @@ jobs:
               }
             }]
           EOF
-          mv wasm-new-per-file-master.json ../../libjs-website/wasm/data/per-file-master.json
+          mv wasm-new-results.json ../../libjs-website/wasm/data/results.json
 
       - name: Deploy to GitHub pages
         uses: JamesIves/github-pages-deploy-action@4.1.1
