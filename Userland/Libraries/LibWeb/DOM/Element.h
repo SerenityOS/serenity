@@ -87,7 +87,11 @@ public:
     virtual void parse_attribute(const FlyString& name, const String& value);
     virtual void did_remove_attribute(FlyString const&) { }
 
-    void recompute_style();
+    enum class NeedsRelayout {
+        No = 0,
+        Yes = 1,
+    };
+    NeedsRelayout recompute_style();
 
     Layout::NodeWithStyle* layout_node() { return static_cast<Layout::NodeWithStyle*>(Node::layout_node()); }
     const Layout::NodeWithStyle* layout_node() const { return static_cast<const Layout::NodeWithStyle*>(Node::layout_node()); }

@@ -595,17 +595,20 @@ void Document::update_layout()
     m_layout_update_timer->stop();
 }
 
-static void update_style_recursively(DOM::Node& node)
+static bool update_style_recursively(DOM::Node& node)
 {
-    if (is<Element>(node))
-        static_cast<Element&>(node).recompute_style();
+    bool needs_relayout = false;
+
+    if (is<Element>(node)) {
+        needs_relayout |= static_cast<Element&>(node).recompute_style() == Element::NeedsRelayout::Yes;
+    }
     node.set_needs_style_update(false);
 
     if (node.child_needs_style_update()) {
         if (node.is_element()) {
             if (auto* shadow_root = static_cast<DOM::Element&>(node).shadow_root()) {
                 if (shadow_root->needs_style_update() || shadow_root->child_needs_style_update())
-                    update_style_recursively(*shadow_root);
+                    needs_relayout |= update_style_recursively(*shadow_root);
             }
         }
         node.for_each_child([&](auto& child) {
@@ -616,6 +619,7 @@ static void update_style_recursively(DOM::Node& node)
     }
 
     node.set_child_needs_style_update(false);
+    return needs_relayout;
 }
 
 void Document::update_style()
@@ -624,9 +628,9 @@ void Document::update_style()
         return;
     if (!needs_style_update() && !child_needs_style_update())
         return;
-    update_style_recursively(*this);
+    if (update_style_recursively(*this))
+        invalidate_layout();
     m_style_update_timer->stop();
-    set_needs_layout();
 }
 
 void Document::set_link_color(Color color)

@@ -267,18 +267,60 @@ void Element::parse_attribute(const FlyString& name, const String& value)
     }
 }
 
-void Element::recompute_style()
+enum class RequiredInvalidation {
+    None,
+    RepaintOnly,
+    Relayout,
+};
+
+static RequiredInvalidation compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
+{
+    bool requires_repaint = false;
+    for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
+        auto property_id = static_cast<CSS::PropertyID>(i);
+        auto const& old_value = old_style.properties()[i];
+        auto const& new_value = new_style.properties()[i];
+        if (!old_value && !new_value)
+            continue;
+        if (!old_value || !new_value)
+            return RequiredInvalidation::Relayout;
+        if (*old_value == *new_value)
+            continue;
+        if (CSS::property_affects_layout(property_id))
+            return RequiredInvalidation::Relayout;
+        requires_repaint = true;
+    }
+    if (requires_repaint)
+        return RequiredInvalidation::RepaintOnly;
+    return RequiredInvalidation::None;
+}
+
+Element::NeedsRelayout Element::recompute_style()
 {
     set_needs_style_update(false);
     VERIFY(parent());
     auto new_computed_css_values = document().style_computer().compute_style(*this);
 
-    if (m_computed_css_values && *m_computed_css_values == *new_computed_css_values)
-        return;
+    auto required_invalidation = RequiredInvalidation::Relayout;
+
+    if (m_computed_css_values)
+        required_invalidation = compute_required_invalidation(*m_computed_css_values, *new_computed_css_values);
+
+    if (required_invalidation == RequiredInvalidation::None)
+        return NeedsRelayout::No;
 
     m_computed_css_values = move(new_computed_css_values);
 
+    if (required_invalidation == RequiredInvalidation::RepaintOnly && layout_node()) {
+        layout_node()->apply_style(*m_computed_css_values);
+        layout_node()->set_needs_display();
+        return NeedsRelayout::No;
+    }
+
+    // FIXME: Get rid of this layout invalidation and let Document take care of it.
+    //        There seems to be some missing invalidation somewhere else that this is papering over.
     document().invalidate_layout();
+    return NeedsRelayout::Yes;
 }
 
 NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
