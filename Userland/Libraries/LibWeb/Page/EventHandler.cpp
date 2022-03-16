@@ -129,6 +129,9 @@ Painting::PaintableBox const* EventHandler::paint_root() const
 
 bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
 {
+    if (m_browsing_context.active_document())
+        m_browsing_context.active_document()->update_layout();
+
     if (!paint_root())
         return false;
 
@@ -151,6 +154,9 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
 
 bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
+    if (m_browsing_context.active_document())
+        m_browsing_context.active_document()->update_layout();
+
     if (!paint_root())
         return false;
 
@@ -203,6 +209,9 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
 
 bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
 {
+    if (m_browsing_context.active_document())
+        m_browsing_context.active_document()->update_layout();
+
     if (!paint_root())
         return false;
 
@@ -324,6 +333,9 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
 
 bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned buttons, unsigned modifiers)
 {
+    if (m_browsing_context.active_document())
+        m_browsing_context.active_document()->update_layout();
+
     if (!paint_root())
         return false;
 
