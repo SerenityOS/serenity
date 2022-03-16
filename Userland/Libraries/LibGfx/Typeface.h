@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
-#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Font.h>
@@ -24,8 +24,8 @@ public:
     {
     }
 
-    String family() const { return m_family; }
-    String variant() const { return m_variant; }
+    FlyString const& family() const { return m_family; }
+    FlyString const& variant() const { return m_variant; }
     unsigned weight() const;
     u8 slope() const;
 
@@ -39,8 +39,8 @@ public:
     RefPtr<Font> get_font(unsigned size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No) const;
 
 private:
-    String m_family;
-    String m_variant;
+    FlyString m_family;
+    FlyString m_variant;
 
     Vector<RefPtr<BitmapFont>> m_bitmap_fonts;
     RefPtr<TTF::Font> m_ttf_font;

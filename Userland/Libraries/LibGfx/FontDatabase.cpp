@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FlyString.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
@@ -164,7 +165,7 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
     return it->value;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(String const& family, unsigned size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
+RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, unsigned size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->weight() == weight && typeface->slope() == slope)
@@ -173,7 +174,7 @@ RefPtr<Gfx::Font> FontDatabase::get(String const& family, unsigned size, unsigne
     return nullptr;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(String const& family, const String& variant, unsigned size, Font::AllowInexactSizeMatch allow_inexact_size_match)
+RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, FlyString const& variant, unsigned size, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->variant() == variant)
