@@ -43,6 +43,7 @@
     ]
   },
   "background-color": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "transparent",
     "valid-types": [
@@ -501,6 +502,7 @@
     ]
   },
   "color": {
+    "affects-layout": false,
     "inherited": true,
     "initial": "-libweb-palette-base-text",
     "valid-types": [
@@ -1049,6 +1051,7 @@
     ]
   },
   "outline-width": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "medium",
     "valid-types": [
@@ -1243,6 +1246,7 @@
   },
   "text-decoration-line": {
     "__comment": "FIXME: This property is not supposed to be inherited, but we currently rely on inheritance to propagate decorations into line boxes.",
+    "affects-layout": false,
     "inherited": true,
     "initial": "none",
     "valid-identifiers": [
