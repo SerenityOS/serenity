@@ -53,7 +53,7 @@ public:
     };
 
     String type() const;
-    TypeAttributeState type_state() const;
+    TypeAttributeState type_state() const { return m_type; }
     void set_type(String const&);
 
     String default_value() const { return attribute(HTML::AttributeNames::value); }
