@@ -35,8 +35,8 @@ public:
 
 private:
     // FIXME: should this be increased? (maximum allowed here is 1024) - memory usage vs packet loss chance tradeoff
-    static const size_t number_of_rx_descriptors = 64;
-    static const size_t number_of_tx_descriptors = 16;
+    static constexpr size_t number_of_rx_descriptors = 64;
+    static constexpr size_t number_of_tx_descriptors = 16;
 
     RTL8168NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<KString>);
 
