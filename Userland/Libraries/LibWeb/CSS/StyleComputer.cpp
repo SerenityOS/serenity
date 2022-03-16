@@ -20,6 +20,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/FontCache.h>
+#include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <stdio.h>
 
 namespace Web::CSS {
@@ -707,6 +708,28 @@ void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Elemen
     }
 }
 
+static float root_element_font_size(DOM::Document const& document)
+{
+    constexpr float default_root_element_font_size = 10;
+
+    auto const* root_element = document.first_child_of_type<HTML::HTMLHtmlElement>();
+    if (!root_element)
+        return default_root_element_font_size;
+
+    auto const* computed_root_style = root_element->computed_css_values();
+    if (!computed_root_style)
+        return default_root_element_font_size;
+
+    auto maybe_root_value = computed_root_style->property(CSS::PropertyID::FontSize);
+    if (!maybe_root_value.has_value())
+        return default_root_element_font_size;
+
+    VERIFY(document.browsing_context());
+    auto viewport_rect = document.browsing_context()->viewport_rect();
+
+    return maybe_root_value.value()->to_length().to_px(viewport_rect, computed_root_style->computed_font().metrics('M'), default_root_element_font_size, default_root_element_font_size);
+}
+
 void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     // To compute the font, first ensure that we've defaulted the relevant CSS font properties.
@@ -786,8 +809,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             break;
         }
     } else {
-        // FIXME: Get the root element font.
-        float root_font_size = 10;
+        float root_font_size = root_element_font_size(document());
 
         Gfx::FontMetrics font_metrics;
         if (parent_element && parent_element->computed_css_values())
@@ -795,20 +817,22 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         else
             font_metrics = Gfx::FontDatabase::default_font().metrics('M');
 
+        auto parent_font_size = [&]() -> float {
+            if (!parent_element || !parent_element->computed_css_values())
+                return size;
+            auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize).value();
+            if (value->is_length()) {
+                auto length = static_cast<LengthStyleValue const&>(*value).to_length();
+                if (length.is_absolute() || length.is_relative())
+                    return length.to_px(viewport_rect, font_metrics, size, root_font_size);
+            }
+            return size;
+        };
+
         Optional<Length> maybe_length;
         if (font_size->is_percentage()) {
             // Percentages refer to parent element's font size
-            auto percentage = font_size->as_percentage().percentage();
-            auto parent_font_size = size;
-            if (parent_element && parent_element->computed_css_values()) {
-                auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize).value();
-                if (value->is_length()) {
-                    auto length = static_cast<LengthStyleValue const&>(*value).to_length();
-                    if (length.is_absolute() || length.is_relative())
-                        parent_font_size = length.to_px(viewport_rect, font_metrics, size, root_font_size);
-                }
-            }
-            maybe_length = Length::make_px(percentage.as_fraction() * parent_font_size);
+            maybe_length = Length::make_px(font_size->as_percentage().percentage().as_fraction() * parent_font_size());
 
         } else if (font_size->is_length()) {
             maybe_length = font_size->to_length();
@@ -820,7 +844,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             // FIXME: Support font-size: calc(...)
             //        Theoretically we can do this now, but to resolve it we need a layout_node which we might not have. :^(
             if (!maybe_length->is_calculated()) {
-                auto px = maybe_length.value().to_px(viewport_rect, font_metrics, size, root_font_size);
+                auto px = maybe_length.value().to_px(viewport_rect, font_metrics, parent_font_size(), root_font_size);
                 if (px != 0)
                     size = px;
             }
@@ -927,8 +951,7 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
 {
     auto viewport_rect = document().browsing_context()->viewport_rect();
     auto font_metrics = style.computed_font().metrics('M');
-    // FIXME: Get the root element font.
-    float root_font_size = 10;
+    float root_font_size = root_element_font_size(document());
     float font_size = style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(viewport_rect, font_metrics, root_font_size, root_font_size);
 
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
