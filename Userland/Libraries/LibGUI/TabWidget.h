@@ -66,6 +66,7 @@ public:
 
     void activate_next_tab();
     void activate_previous_tab();
+    void activate_last_tab();
 
     void set_text_alignment(Gfx::TextAlignment alignment) { m_text_alignment = alignment; }
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
