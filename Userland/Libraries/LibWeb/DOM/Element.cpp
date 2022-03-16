@@ -317,9 +317,6 @@ Element::NeedsRelayout Element::recompute_style()
         return NeedsRelayout::No;
     }
 
-    // FIXME: Get rid of this layout invalidation and let Document take care of it.
-    //        There seems to be some missing invalidation somewhere else that this is papering over.
-    document().invalidate_layout();
     return NeedsRelayout::Yes;
 }
 

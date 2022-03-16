@@ -595,7 +595,7 @@ void Document::update_layout()
     m_layout_update_timer->stop();
 }
 
-static bool update_style_recursively(DOM::Node& node)
+[[nodiscard]] static bool update_style_recursively(DOM::Node& node)
 {
     bool needs_relayout = false;
 
@@ -613,7 +613,7 @@ static bool update_style_recursively(DOM::Node& node)
         }
         node.for_each_child([&](auto& child) {
             if (child.needs_style_update() || child.child_needs_style_update())
-                update_style_recursively(child);
+                needs_relayout |= update_style_recursively(child);
             return IterationDecision::Continue;
         });
     }
