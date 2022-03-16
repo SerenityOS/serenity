@@ -592,6 +592,14 @@ void TabWidget::activate_previous_tab()
     set_active_widget(m_tabs.at(previous_index).widget);
 }
 
+void TabWidget::activate_last_tab()
+{
+    size_t number_of_tabs = m_tabs.size();
+    if (number_of_tabs == 0)
+        return;
+    set_active_widget(m_tabs.at(number_of_tabs - 1).widget);
+}
+
 void TabWidget::keydown_event(KeyEvent& event)
 {
     if (event.ctrl() && event.key() == Key_Tab) {
