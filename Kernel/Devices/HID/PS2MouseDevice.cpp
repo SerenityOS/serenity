@@ -26,9 +26,7 @@ UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(const I8042Controller& ps2_contr
 {
 }
 
-UNMAP_AFTER_INIT PS2MouseDevice::~PS2MouseDevice()
-{
-}
+UNMAP_AFTER_INIT PS2MouseDevice::~PS2MouseDevice() = default;
 
 bool PS2MouseDevice::handle_irq(const RegisterState&)
 {

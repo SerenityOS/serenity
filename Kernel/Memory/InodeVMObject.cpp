@@ -25,9 +25,7 @@ InodeVMObject::InodeVMObject(InodeVMObject const& other, FixedArray<RefPtr<Physi
         m_dirty_pages.set(i, other.m_dirty_pages.get(i));
 }
 
-InodeVMObject::~InodeVMObject()
-{
-}
+InodeVMObject::~InodeVMObject() = default;
 
 size_t InodeVMObject::amount_clean() const
 {

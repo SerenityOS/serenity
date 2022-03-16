@@ -19,9 +19,7 @@ IRQHandler::IRQHandler(u8 irq)
         disable_irq();
 }
 
-IRQHandler::~IRQHandler()
-{
-}
+IRQHandler::~IRQHandler() = default;
 
 bool IRQHandler::eoi()
 {

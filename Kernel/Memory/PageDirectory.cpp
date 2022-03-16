@@ -123,9 +123,7 @@ ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(Vi
     return directory;
 }
 
-PageDirectory::PageDirectory()
-{
-}
+PageDirectory::PageDirectory() = default;
 
 UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 {

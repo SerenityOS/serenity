@@ -27,9 +27,7 @@ UNMAP_AFTER_INIT DeviceControlDevice::DeviceControlDevice()
 {
 }
 
-UNMAP_AFTER_INIT DeviceControlDevice::~DeviceControlDevice()
-{
-}
+UNMAP_AFTER_INIT DeviceControlDevice::~DeviceControlDevice() = default;
 
 ErrorOr<size_t> DeviceControlDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {

@@ -28,9 +28,7 @@ UNMAP_AFTER_INIT MemoryDevice::MemoryDevice()
 {
 }
 
-UNMAP_AFTER_INIT MemoryDevice::~MemoryDevice()
-{
-}
+UNMAP_AFTER_INIT MemoryDevice::~MemoryDevice() = default;
 
 ErrorOr<size_t> MemoryDevice::read(OpenFileDescription&, u64 offset, UserOrKernelBuffer& buffer, size_t length)
 {

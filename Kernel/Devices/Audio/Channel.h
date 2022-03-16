@@ -21,7 +21,7 @@ class AudioChannel final
 
 public:
     static NonnullRefPtr<AudioChannel> must_create(AudioController const&, size_t channel_index);
-    virtual ~AudioChannel() override { }
+    virtual ~AudioChannel() override = default;
 
     // ^CharacterDevice
     virtual bool can_read(const OpenFileDescription&, u64) const override;

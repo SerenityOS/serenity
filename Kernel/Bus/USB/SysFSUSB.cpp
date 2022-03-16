@@ -20,9 +20,7 @@ SysFSUSBDeviceInformation::SysFSUSBDeviceInformation(NonnullOwnPtr<KString> devi
 {
 }
 
-SysFSUSBDeviceInformation::~SysFSUSBDeviceInformation()
-{
-}
+SysFSUSBDeviceInformation::~SysFSUSBDeviceInformation() = default;
 
 ErrorOr<void> SysFSUSBDeviceInformation::try_generate(KBufferBuilder& builder)
 {

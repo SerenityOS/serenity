@@ -26,9 +26,7 @@ TTY::TTY(MajorNumber major, MinorNumber minor)
     set_default_termios();
 }
 
-TTY::~TTY()
-{
-}
+TTY::~TTY() = default;
 
 void TTY::set_default_termios()
 {

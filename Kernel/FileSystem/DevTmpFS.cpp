@@ -16,9 +16,7 @@ ErrorOr<NonnullRefPtr<DevTmpFS>> DevTmpFS::try_create()
     return adopt_nonnull_ref_or_enomem(new (nothrow) DevTmpFS);
 }
 
-DevTmpFS::DevTmpFS()
-{
-}
+DevTmpFS::DevTmpFS() = default;
 
 size_t DevTmpFS::allocate_inode_index()
 {
@@ -28,9 +26,7 @@ size_t DevTmpFS::allocate_inode_index()
     return 1 + m_next_inode_index.value();
 }
 
-DevTmpFS::~DevTmpFS()
-{
-}
+DevTmpFS::~DevTmpFS() = default;
 
 ErrorOr<void> DevTmpFS::initialize()
 {
@@ -167,9 +163,7 @@ StringView DevTmpFSLinkInode::name() const
     return m_name->view();
 }
 
-DevTmpFSLinkInode::~DevTmpFSLinkInode()
-{
-}
+DevTmpFSLinkInode::~DevTmpFSLinkInode() = default;
 
 DevTmpFSLinkInode::DevTmpFSLinkInode(DevTmpFS& fs, NonnullOwnPtr<KString> name)
     : DevTmpFSInode(fs)
@@ -206,9 +200,7 @@ DevTmpFSDirectoryInode::DevTmpFSDirectoryInode(DevTmpFS& fs, NonnullOwnPtr<KStri
     , m_name(move(name))
 {
 }
-DevTmpFSDirectoryInode::~DevTmpFSDirectoryInode()
-{
-}
+DevTmpFSDirectoryInode::~DevTmpFSDirectoryInode() = default;
 
 ErrorOr<void> DevTmpFSDirectoryInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
@@ -286,9 +278,7 @@ DevTmpFSRootDirectoryInode::DevTmpFSRootDirectoryInode(DevTmpFS& fs)
 {
     m_mode = 0555;
 }
-DevTmpFSRootDirectoryInode::~DevTmpFSRootDirectoryInode()
-{
-}
+DevTmpFSRootDirectoryInode::~DevTmpFSRootDirectoryInode() = default;
 ErrorOr<void> DevTmpFSRootDirectoryInode::chmod(mode_t)
 {
     return EPERM;
@@ -306,9 +296,7 @@ DevTmpFSDeviceInode::DevTmpFSDeviceInode(DevTmpFS& fs, MajorNumber major_number,
 {
 }
 
-DevTmpFSDeviceInode::~DevTmpFSDeviceInode()
-{
-}
+DevTmpFSDeviceInode::~DevTmpFSDeviceInode() = default;
 
 StringView DevTmpFSDeviceInode::name() const
 {

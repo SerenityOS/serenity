@@ -37,9 +37,7 @@ bool Thread::Blocker::add_to_blocker_set(Thread::BlockerSet& blocker_set, void* 
     return false;
 }
 
-Thread::Blocker::~Blocker()
-{
-}
+Thread::Blocker::~Blocker() = default;
 
 void Thread::Blocker::finalize()
 {
@@ -132,9 +130,7 @@ bool Thread::WaitQueueBlocker::setup_blocker()
     return add_to_blocker_set(m_wait_queue);
 }
 
-Thread::WaitQueueBlocker::~WaitQueueBlocker()
-{
-}
+Thread::WaitQueueBlocker::~WaitQueueBlocker() = default;
 
 bool Thread::WaitQueueBlocker::unblock()
 {
@@ -160,9 +156,7 @@ bool Thread::FutexBlocker::setup_blocker()
     return add_to_blocker_set(m_futex_queue);
 }
 
-Thread::FutexBlocker::~FutexBlocker()
-{
-}
+Thread::FutexBlocker::~FutexBlocker() = default;
 
 void Thread::FutexBlocker::finish_requeue(FutexQueue& futex_queue)
 {
@@ -372,9 +366,7 @@ bool Thread::SelectBlocker::setup_blocker()
     return should_block;
 }
 
-Thread::SelectBlocker::~SelectBlocker()
-{
-}
+Thread::SelectBlocker::~SelectBlocker() = default;
 
 void Thread::SelectBlocker::finalize()
 {
@@ -504,9 +496,7 @@ Thread::WaitBlockerSet::ProcessBlockInfo::ProcessBlockInfo(NonnullRefPtr<Process
 {
 }
 
-Thread::WaitBlockerSet::ProcessBlockInfo::~ProcessBlockInfo()
-{
-}
+Thread::WaitBlockerSet::ProcessBlockInfo::~ProcessBlockInfo() = default;
 
 void Thread::WaitBlockerSet::try_unblock(Thread::WaitBlocker& blocker)
 {

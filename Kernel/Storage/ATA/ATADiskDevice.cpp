@@ -31,9 +31,7 @@ ATADiskDevice::ATADiskDevice(const ATAController& controller, ATADevice::Address
 {
 }
 
-ATADiskDevice::~ATADiskDevice()
-{
-}
+ATADiskDevice::~ATADiskDevice() = default;
 
 StringView ATADiskDevice::class_name() const
 {

@@ -24,9 +24,7 @@ UNMAP_AFTER_INIT ZeroDevice::ZeroDevice()
 {
 }
 
-UNMAP_AFTER_INIT ZeroDevice::~ZeroDevice()
-{
-}
+UNMAP_AFTER_INIT ZeroDevice::~ZeroDevice() = default;
 
 bool ZeroDevice::can_read(const OpenFileDescription&, u64) const
 {

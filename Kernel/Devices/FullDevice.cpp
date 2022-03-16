@@ -25,9 +25,7 @@ UNMAP_AFTER_INIT FullDevice::FullDevice()
 {
 }
 
-UNMAP_AFTER_INIT FullDevice::~FullDevice()
-{
-}
+UNMAP_AFTER_INIT FullDevice::~FullDevice() = default;
 
 bool FullDevice::can_read(const OpenFileDescription&, u64) const
 {

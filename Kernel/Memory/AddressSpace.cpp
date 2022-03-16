@@ -29,9 +29,7 @@ AddressSpace::AddressSpace(NonnullRefPtr<PageDirectory> page_directory)
 {
 }
 
-AddressSpace::~AddressSpace()
-{
-}
+AddressSpace::~AddressSpace() = default;
 
 ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 {

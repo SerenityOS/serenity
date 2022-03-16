@@ -55,9 +55,7 @@ RamdiskController::RamdiskController()
     }
 }
 
-RamdiskController::~RamdiskController()
-{
-}
+RamdiskController::~RamdiskController() = default;
 
 RefPtr<StorageDevice> RamdiskController::device(u32 index) const
 {

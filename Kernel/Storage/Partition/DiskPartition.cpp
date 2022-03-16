@@ -26,9 +26,7 @@ DiskPartition::DiskPartition(BlockDevice& device, unsigned minor_number, DiskPar
 {
 }
 
-DiskPartition::~DiskPartition()
-{
-}
+DiskPartition::~DiskPartition() = default;
 
 const DiskPartitionMetadata& DiskPartition::metadata() const
 {

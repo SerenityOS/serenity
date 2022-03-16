@@ -67,9 +67,7 @@ SpuriousInterruptHandler::SpuriousInterruptHandler(u8 irq)
 {
 }
 
-SpuriousInterruptHandler::~SpuriousInterruptHandler()
-{
-}
+SpuriousInterruptHandler::~SpuriousInterruptHandler() = default;
 
 bool SpuriousInterruptHandler::handle_interrupt(const RegisterState& state)
 {

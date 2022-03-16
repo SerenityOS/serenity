@@ -159,9 +159,7 @@ FramebufferDevice::FramebufferDevice(GraphicsAdapter const& adapter, ScanoutID s
     }
 }
 
-FramebufferDevice::~FramebufferDevice()
-{
-}
+FramebufferDevice::~FramebufferDevice() = default;
 
 ErrorOr<void> FramebufferDevice::create_framebuffer()
 {

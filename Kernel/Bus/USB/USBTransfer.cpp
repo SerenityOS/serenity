@@ -24,9 +24,7 @@ Transfer::Transfer(Pipe& pipe, u16 len, NonnullOwnPtr<Memory::Region> data_buffe
 {
 }
 
-Transfer::~Transfer()
-{
-}
+Transfer::~Transfer() = default;
 
 void Transfer::set_setup_packet(const USBRequestData& request)
 {
