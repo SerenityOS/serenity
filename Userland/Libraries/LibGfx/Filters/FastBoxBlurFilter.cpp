@@ -29,10 +29,8 @@ FastBoxBlurFilter::FastBoxBlurFilter(Bitmap& bitmap)
 }
 
 // Based on the super fast blur algorithm by Quasimondo, explored here: https://stackoverflow.com/questions/21418892/understanding-super-fast-blur-algorithm
-void FastBoxBlurFilter::apply_single_pass(int radius)
+void FastBoxBlurFilter::apply_single_pass(size_t radius)
 {
-    VERIFY(radius >= 0);
-
     auto format = m_bitmap.format();
     VERIFY(format == BitmapFormat::BGRA8888 || format == BitmapFormat::BGRx8888);
 
@@ -74,7 +72,7 @@ void FastBoxBlurFilter::apply_single_pass(int radius)
         size_t sum_alpha = 0;
 
         // Setup sliding window
-        for (int i = -radius; i <= radius; ++i) {
+        for (int i = -(int)radius; i <= (int)radius; ++i) {
             auto color_at_px = get_pixel_function(clamp(i, 0, width - 1), y);
             sum_red += red_value(color_at_px);
             sum_green += green_value(color_at_px);
@@ -88,8 +86,8 @@ void FastBoxBlurFilter::apply_single_pass(int radius)
             intermediate_blue[y * width + x] = (sum_blue / div);
             intermediate_alpha[y * width + x] = (sum_alpha / div);
 
-            auto leftmost_x_coord = max(x - radius, 0);
-            auto rightmost_x_coord = min(x + radius + 1, width - 1);
+            auto leftmost_x_coord = max(x - (int)radius, 0);
+            auto rightmost_x_coord = min(x + (int)radius + 1, width - 1);
 
             auto leftmost_x_color = get_pixel_function(leftmost_x_coord, y);
             auto rightmost_x_color = get_pixel_function(rightmost_x_coord, y);
@@ -113,7 +111,7 @@ void FastBoxBlurFilter::apply_single_pass(int radius)
         size_t sum_alpha = 0;
 
         // Setup sliding window
-        for (int i = -radius; i <= radius; ++i) {
+        for (int i = -(int)radius; i <= (int)radius; ++i) {
             int offset = clamp(i, 0, height - 1) * width + x;
             sum_red += intermediate_red[offset];
             sum_green += intermediate_green[offset];
@@ -130,8 +128,8 @@ void FastBoxBlurFilter::apply_single_pass(int radius)
 
             set_pixel_function(x, y, color);
 
-            auto topmost_y_coord = max(y - radius, 0);
-            auto bottommost_y_coord = min(y + radius + 1, height - 1);
+            auto topmost_y_coord = max(y - (int)radius, 0);
+            auto bottommost_y_coord = min(y + (int)radius + 1, height - 1);
 
             sum_red += intermediate_red[x + bottommost_y_coord * width];
             sum_red -= intermediate_red[x + topmost_y_coord * width];
