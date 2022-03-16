@@ -105,6 +105,7 @@ private:
     virtual void legacy_cancelled_activation_behavior() override;
     virtual void legacy_cancelled_activation_behavior_was_not_called() override;
 
+    static TypeAttributeState parse_type_attribute(StringView);
     void create_shadow_tree_if_needed();
     void run_input_activation_behavior();
     void set_checked_within_group();
@@ -121,6 +122,8 @@ private:
     // https://html.spec.whatwg.org/multipage/input.html#the-input-element:legacy-pre-activation-behavior
     bool m_before_legacy_pre_activation_behavior_checked { false };
     RefPtr<HTMLInputElement> m_legacy_pre_activation_behavior_checked_element_in_group;
+
+    TypeAttributeState m_type { TypeAttributeState::Text };
 };
 
 }
