@@ -172,6 +172,7 @@ set(SOURCES
     HTML/HTMLObjectElement.cpp
     HTML/HTMLOptGroupElement.cpp
     HTML/HTMLOptionElement.cpp
+    HTML/HTMLOptionsCollection.cpp
     HTML/HTMLOutputElement.cpp
     HTML/HTMLParagraphElement.cpp
     HTML/HTMLParamElement.cpp
@@ -522,6 +523,7 @@ libweb_js_wrapper(HTML/HTMLObjectElement)
 libweb_js_wrapper(HTML/HTMLOListElement)
 libweb_js_wrapper(HTML/HTMLOptGroupElement)
 libweb_js_wrapper(HTML/HTMLOptionElement)
+libweb_js_wrapper(HTML/HTMLOptionsCollection)
 libweb_js_wrapper(HTML/HTMLOutputElement)
 libweb_js_wrapper(HTML/HTMLParagraphElement)
 libweb_js_wrapper(HTML/HTMLParamElement)
