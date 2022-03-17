@@ -9,6 +9,7 @@
 #pragma once
 
 #include "DebuggerGlobalJSObject.h"
+#include <AK/StringView.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
@@ -24,7 +25,7 @@ public:
     DebuggerVariableJSObject(const Debug::DebugInfo::VariableInfo& variable_info, JS::Object& prototype);
     virtual ~DebuggerVariableJSObject() override = default;
 
-    virtual const char* class_name() const override { return m_variable_info.type_name.characters(); }
+    virtual StringView class_name() const override { return m_variable_info.type_name; }
 
     JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value value, JS::Value receiver) override;
 

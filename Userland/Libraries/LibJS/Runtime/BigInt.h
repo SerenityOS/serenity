@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Heap/Cell.h>
 
@@ -20,7 +21,7 @@ public:
     const String to_string() const { return String::formatted("{}n", m_big_integer.to_base(10)); }
 
 private:
-    virtual const char* class_name() const override { return "BigInt"; }
+    virtual StringView class_name() const override { return "BigInt"sv; }
 
     Crypto::SignedBigInteger m_big_integer;
 };

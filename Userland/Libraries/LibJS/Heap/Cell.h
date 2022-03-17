@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Noncopyable.h>
+#include <AK/StringView.h>
 #include <LibJS/Forward.h>
 
 namespace JS {
@@ -32,7 +33,7 @@ public:
     State state() const { return m_state; }
     void set_state(State state) { m_state = state; }
 
-    virtual const char* class_name() const = 0;
+    virtual StringView class_name() const = 0;
 
     class Visitor {
     public:

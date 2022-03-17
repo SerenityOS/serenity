@@ -8,6 +8,7 @@
 
 #include <AK/IntrusiveList.h>
 #include <AK/Platform.h>
+#include <AK/StringView.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
@@ -98,7 +99,7 @@ private:
     struct FreelistEntry final : public Cell {
         FreelistEntry* next { nullptr };
 
-        virtual const char* class_name() const override { return "FreelistEntry"; }
+        virtual StringView class_name() const override { return "FreelistEntry"sv; }
     };
 
     Cell* cell(size_t index)

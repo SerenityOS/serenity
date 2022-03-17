@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibJS/Runtime/NativeFunction.h>
 
 namespace Web::Bindings {
@@ -21,7 +22,7 @@ public:
 
 private:
     virtual bool has_constructor() const override { return true; }
-    virtual const char* class_name() const override { return "ImageConstructor"; }
+    virtual StringView class_name() const override { return "ImageConstructor"sv; }
 };
 
 }

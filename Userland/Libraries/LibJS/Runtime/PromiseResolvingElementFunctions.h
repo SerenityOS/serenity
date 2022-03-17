@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/PromiseReaction.h>
 
@@ -19,7 +20,7 @@ struct RemainingElements final : public Cell {
     {
     }
 
-    virtual const char* class_name() const override { return "RemainingElements"; }
+    virtual StringView class_name() const override { return "RemainingElements"sv; }
 
     u64 value { 0 };
 };
@@ -34,7 +35,7 @@ public:
     Vector<Value> const& values() const { return m_values; }
 
 private:
-    virtual const char* class_name() const override { return "PromiseValueList"; }
+    virtual StringView class_name() const override { return "PromiseValueList"sv; }
     virtual void visit_edges(Visitor&) override;
 
     Vector<Value> m_values;
