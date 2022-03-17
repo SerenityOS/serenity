@@ -169,7 +169,7 @@ MaybeLoaderError FlacLoaderPlugin::reset()
 MaybeLoaderError FlacLoaderPlugin::seek(const int position)
 {
     if (m_stream->seek(position, Core::Stream::SeekMode::SetPosition).is_error())
-        return LoaderError { LoaderError::IO, m_loaded_samples, String::formatted("Invalid seek position {}", position) };
+        return LoaderError { LoaderError::Category::IO, m_loaded_samples, String::formatted("Invalid seek position {}", position) };
     return {};
 }
 
@@ -232,7 +232,7 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
     u32 frame_sample_rate = TRY(convert_sample_rate_code(LOADER_TRY(bit_stream->read_bits<u8>(4))));
 
     u8 channel_type_num = LOADER_TRY(bit_stream->read_bits<u8>(4));
-    FLAC_VERIFY(channel_type_num < 0b1011, LoaderError::Format, "Channel assignment");
+    FLAC_VERIFY(channel_type_num < 0b1011, LoaderError::Category::Format, "Channel assignment");
     FlacFrameChannelType channel_type = (FlacFrameChannelType)channel_type_num;
 
     PcmSampleFormat bit_depth = TRY(convert_bit_depth_code(LOADER_TRY(bit_stream->read_bits<u8>(3))));
@@ -440,8 +440,8 @@ ErrorOr<PcmSampleFormat, LoaderError> FlacLoaderPlugin::convert_bit_depth_code(u
 
 u8 frame_channel_type_to_channel_count(FlacFrameChannelType channel_type)
 {
-    if (channel_type <= 7)
-        return channel_type + 1;
+    if (channel_type <= FlacFrameChannelType::Surround7p1)
+        return to_underlying(channel_type) + 1;
     return 2;
 }
 
@@ -451,13 +451,13 @@ ErrorOr<FlacSubframeHeader, LoaderError> FlacLoaderPlugin::next_subframe_header(
 
     // For inter-channel correlation, the side channel needs an extra bit for its samples
     switch (m_current_frame->channels) {
-    case LeftSideStereo:
-    case MidSideStereo:
+    case FlacFrameChannelType::LeftSideStereo:
+    case FlacFrameChannelType::MidSideStereo:
         if (channel_index == 1) {
             ++bits_per_sample;
         }
         break;
-    case RightSideStereo:
+    case FlacFrameChannelType::RightSideStereo:
         if (channel_index == 0) {
             ++bits_per_sample;
         }
@@ -675,7 +675,7 @@ ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
 // Decode the residual, the "error" between the function approximation and the actual audio data
 MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
-    u8 residual_mode = LOADER_TRY(bit_input.read_bits<u8>(2));
+    auto residual_mode = static_cast<FlacResidualMode>(LOADER_TRY(bit_input.read_bits<u8>(2)));
     u8 partition_order = LOADER_TRY(bit_input.read_bits<u8>(4));
     size_t partitions = 1 << partition_order;
 
