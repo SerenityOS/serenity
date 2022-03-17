@@ -75,6 +75,7 @@ public:
                 Disabled,
                 Enabled,
                 Checked,
+                Is,
                 Not,
                 Active,
             };
@@ -84,7 +85,7 @@ public:
             // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
             ANPlusBPattern nth_child_pattern;
 
-            SelectorList not_selector {};
+            SelectorList argument_selector_list {};
         };
         PseudoClass pseudo_class {};
         PseudoElement pseudo_element { PseudoElement::None };
@@ -211,6 +212,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "nth-child"sv;
     case Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
         return "nth-last-child"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Is:
+        return "is"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Not:
         return "not"sv;
     case Selector::SimpleSelector::PseudoClass::Type::None:
