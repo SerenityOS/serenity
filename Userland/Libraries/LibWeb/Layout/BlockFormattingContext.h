@@ -38,6 +38,8 @@ public:
 
     void add_absolutely_positioned_box(Box const& box) { m_absolutely_positioned_boxes.append(box); }
 
+    AvailableSpaceForLineInfo available_space_for_line(float y) const;
+
 private:
     virtual bool is_block_formatting_context() const final { return true; }
 

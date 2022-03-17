@@ -27,11 +27,6 @@ public:
 
     void dimension_box_on_line(Box const&, LayoutMode);
 
-    struct AvailableSpaceForLineInfo {
-        float left { 0 };
-        float right { 0 };
-    };
-
     AvailableSpaceForLineInfo available_space_for_line(float y) const;
 
 private:

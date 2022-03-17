@@ -692,4 +692,29 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
         list_item_state.content_height = marker_state.content_height;
 }
 
+BlockFormattingContext::AvailableSpaceForLineInfo BlockFormattingContext::available_space_for_line(float y) const
+{
+    AvailableSpaceForLineInfo info;
+
+    for (auto const& floating_box : m_left_floats.boxes.in_reverse()) {
+        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box, root(), m_state);
+        if (rect.contains_vertically(y)) {
+            info.left = rect.right() + 1;
+            break;
+        }
+    }
+
+    info.right = m_state.get(root()).content_width;
+
+    for (auto const& floating_box : m_right_floats.boxes.in_reverse()) {
+        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box, root(), m_state);
+        if (rect.contains_vertically(y)) {
+            info.right = rect.left();
+            break;
+        }
+    }
+
+    return info;
+}
+
 }

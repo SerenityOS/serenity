@@ -36,37 +36,14 @@ BlockFormattingContext const& InlineFormattingContext::parent() const
     return static_cast<BlockFormattingContext const&>(*FormattingContext::parent());
 }
 
-InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::available_space_for_line(float y) const
+FormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::available_space_for_line(float y) const
 {
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
     auto box_in_root_rect = margin_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
     float y_in_root = box_in_root_rect.y() + y;
-
-    AvailableSpaceForLineInfo info;
-
-    auto const& bfc = parent();
-
-    for (ssize_t i = bfc.left_side_floats().boxes.size() - 1; i >= 0; --i) {
-        auto const& floating_box = bfc.left_side_floats().boxes.at(i);
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box, parent().root(), m_state);
-        if (rect.contains_vertically(y_in_root)) {
-            info.left = rect.right() + 1;
-            break;
-        }
-    }
-
-    info.right = m_state.get(containing_block()).content_width;
-
-    for (ssize_t i = bfc.right_side_floats().boxes.size() - 1; i >= 0; --i) {
-        auto const& floating_box = bfc.right_side_floats().boxes.at(i);
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box, parent().root(), m_state);
-        if (rect.contains_vertically(y_in_root)) {
-            info.right = rect.left();
-            break;
-        }
-    }
-
-    return info;
+    auto space = parent().available_space_for_line(y_in_root);
+    space.right = min(space.right, m_state.get(containing_block()).content_width);
+    return space;
 }
 
 void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)

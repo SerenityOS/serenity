@@ -65,6 +65,11 @@ protected:
     OwnPtr<FormattingContext> layout_inside(Box const&, LayoutMode);
     void compute_position(Box const&);
 
+    struct AvailableSpaceForLineInfo {
+        float left { 0 };
+        float right { 0 };
+    };
+
     struct ShrinkToFitResult {
         float preferred_width { 0 };
         float preferred_minimum_width { 0 };
