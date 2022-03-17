@@ -12,7 +12,7 @@
 namespace Audio {
 
 // Supported PCM sample formats.
-enum PcmSampleFormat : u8 {
+enum class PcmSampleFormat : u8 {
     Uint8,
     Int16,
     Int24,
