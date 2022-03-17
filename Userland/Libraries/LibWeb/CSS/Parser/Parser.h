@@ -148,10 +148,14 @@ private:
     Vector<StyleComponentValueRule> parse_a_list_of_component_values(TokenStream<T>&);
     template<typename T>
     Vector<Vector<StyleComponentValueRule>> parse_a_comma_separated_list_of_component_values(TokenStream<T>&);
+
+    enum class SelectorType {
+        Standalone,
+        Relative
+    };
     template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_selector_list(TokenStream<T>&, SelectorParsingMode = SelectorParsingMode::Standard);
-    template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_relative_selector_list(TokenStream<T>&, SelectorParsingMode = SelectorParsingMode::Standard);
+    Result<SelectorList, ParsingResult> parse_a_selector_list(TokenStream<T>&, SelectorType, SelectorParsingMode = SelectorParsingMode::Standard);
+
     template<typename T>
     NonnullRefPtrVector<MediaQuery> parse_a_media_query_list(TokenStream<T>&);
     template<typename T>
@@ -308,7 +312,7 @@ private:
     OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(TokenStream<StyleComponentValueRule>&);
     OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(Vector<StyleComponentValueRule> const&);
 
-    Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<StyleComponentValueRule>&, bool allow_starting_combinator);
+    Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<StyleComponentValueRule>&, SelectorType);
     Result<Selector::CompoundSelector, ParsingResult> parse_compound_selector(TokenStream<StyleComponentValueRule>&);
     Optional<Selector::Combinator> parse_selector_combinator(TokenStream<StyleComponentValueRule>&);
     Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
