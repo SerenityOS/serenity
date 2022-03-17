@@ -9,6 +9,11 @@
 
 namespace Archive {
 
+OutputStream& operator<<(OutputStream& stream, ZipCompressionMethod method)
+{
+    return stream << to_underlying(method);
+}
+
 bool Zip::find_end_of_central_directory_offset(ReadonlyBytes buffer, size_t& offset)
 {
     for (size_t backwards_offset = 0; backwards_offset <= UINT16_MAX; backwards_offset++) // the file may have a trailing comment of an arbitrary 16 bit length
@@ -90,7 +95,7 @@ bool Zip::for_each_member(Function<IterationDecision(const ZipMember&)> callback
         null_terminated_name[central_directory_record.name_length] = 0;
         member.name = String { null_terminated_name };
         member.compressed_data = { local_file_header.compressed_data, central_directory_record.compressed_size };
-        member.compression_method = static_cast<ZipCompressionMethod>(central_directory_record.compression_method);
+        member.compression_method = central_directory_record.compression_method;
         member.uncompressed_size = central_directory_record.uncompressed_size;
         member.crc32 = central_directory_record.crc32;
         member.is_directory = central_directory_record.external_attributes & zip_directory_external_attribute || member.name.ends_with('/'); // FIXME: better directory detection
