@@ -53,7 +53,8 @@ jobs:
           test -e /opt/wabt-1.0.27 || (
             cd /tmp
             wget https://github.com/WebAssembly/wabt/releases/download/1.0.27/wabt-1.0.27-ubuntu.tar.gz
-            tar xf wabt-1.0.27-ubuntu.tar.gz -C /opt
+            sudo tar xf wabt-1.0.27-ubuntu.tar.gz -C /opt
+            rm wabt-1.0.27-ubuntu.tar.gz
           )
 
       - name: Setup Python
