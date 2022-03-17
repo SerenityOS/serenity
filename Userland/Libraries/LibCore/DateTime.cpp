@@ -5,6 +5,7 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/DateConstants.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <LibCore/DateTime.h>
@@ -85,21 +86,6 @@ void DateTime::set_time(int year, int month, int day, int hour, int minute, int 
 
 String DateTime::to_string(StringView format) const
 {
-    const char wday_short_names[7][4] = {
-        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-    };
-    const char wday_long_names[7][10] = {
-        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-    };
-    const char mon_short_names[12][4] = {
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    };
-    const char mon_long_names[12][10] = {
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    };
-
     struct tm tm;
     localtime_r(&m_timestamp, &tm);
     StringBuilder builder;
@@ -138,16 +124,16 @@ String DateTime::to_string(StringView format) const
 
             switch (format[i]) {
             case 'a':
-                builder.append(wday_short_names[tm.tm_wday]);
+                builder.append(short_day_names[tm.tm_wday]);
                 break;
             case 'A':
-                builder.append(wday_long_names[tm.tm_wday]);
+                builder.append(long_day_names[tm.tm_wday]);
                 break;
             case 'b':
-                builder.append(mon_short_names[tm.tm_mon]);
+                builder.append(short_month_names[tm.tm_mon]);
                 break;
             case 'B':
-                builder.append(mon_long_names[tm.tm_mon]);
+                builder.append(long_month_names[tm.tm_mon]);
                 break;
             case 'C':
                 builder.appendff("{:02}", (tm.tm_year + 1900) / 100);
@@ -162,7 +148,7 @@ String DateTime::to_string(StringView format) const
                 builder.appendff("{:2}", tm.tm_mday);
                 break;
             case 'h':
-                builder.append(mon_short_names[tm.tm_mon]);
+                builder.append(short_month_names[tm.tm_mon]);
                 break;
             case 'H':
                 builder.appendff("{:02}", tm.tm_hour);
@@ -273,21 +259,6 @@ Optional<DateTime> DateTime::parse(StringView format, const String& string)
     unsigned string_pos = 0;
     struct tm tm = {};
 
-    const StringView wday_short_names[7] = {
-        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-    };
-    const StringView wday_long_names[7] = {
-        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-    };
-    const StringView mon_short_names[12] = {
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    };
-    const StringView mon_long_names[12] = {
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    };
-
     auto parsing_failed = false;
 
     auto parse_number = [&] {
@@ -336,7 +307,7 @@ Optional<DateTime> DateTime::parse(StringView format, const String& string)
         switch (format[format_pos]) {
         case 'a': {
             auto wday = 0;
-            for (auto name : wday_short_names) {
+            for (auto name : short_day_names) {
                 if (string.substring_view(string_pos).starts_with(name, AK::CaseSensitivity::CaseInsensitive)) {
                     string_pos += name.length();
                     tm.tm_wday = wday;
@@ -350,7 +321,7 @@ Optional<DateTime> DateTime::parse(StringView format, const String& string)
         }
         case 'A': {
             auto wday = 0;
-            for (auto name : wday_long_names) {
+            for (auto name : long_day_names) {
                 if (string.substring_view(string_pos).starts_with(name, AK::CaseSensitivity::CaseInsensitive)) {
                     string_pos += name.length();
                     tm.tm_wday = wday;
@@ -365,7 +336,7 @@ Optional<DateTime> DateTime::parse(StringView format, const String& string)
         case 'h':
         case 'b': {
             auto mon = 0;
-            for (auto name : mon_short_names) {
+            for (auto name : short_month_names) {
                 if (string.substring_view(string_pos).starts_with(name, AK::CaseSensitivity::CaseInsensitive)) {
                     string_pos += name.length();
                     tm.tm_mon = mon;
@@ -379,7 +350,7 @@ Optional<DateTime> DateTime::parse(StringView format, const String& string)
         }
         case 'B': {
             auto mon = 0;
-            for (auto name : mon_long_names) {
+            for (auto name : long_month_names) {
                 if (string.substring_view(string_pos).starts_with(name, AK::CaseSensitivity::CaseInsensitive)) {
                     string_pos += name.length();
                     tm.tm_mon = mon;
