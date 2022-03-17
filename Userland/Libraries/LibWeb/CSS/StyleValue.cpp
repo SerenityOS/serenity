@@ -1323,8 +1323,38 @@ String TransformationStyleValue::to_string() const
     StringBuilder builder;
 
     switch (m_transform_function) {
+    case TransformFunction::Matrix:
+        builder.append("matrix");
+        break;
+    case TransformFunction::Translate:
+        builder.append("translate");
+        break;
+    case TransformFunction::TranslateX:
+        builder.append("translateX");
+        break;
     case TransformFunction::TranslateY:
         builder.append("translateY");
+        break;
+    case TransformFunction::Scale:
+        builder.append("scale");
+        break;
+    case TransformFunction::ScaleX:
+        builder.append("scaleX");
+        break;
+    case TransformFunction::ScaleY:
+        builder.append("scaleY");
+        break;
+    case TransformFunction::Rotate:
+        builder.append("rotate");
+        break;
+    case TransformFunction::Skew:
+        builder.append("skew");
+        break;
+    case TransformFunction::SkewX:
+        builder.append("skewX");
+        break;
+    case TransformFunction::SkewY:
+        builder.append("skewY");
         break;
     default:
         VERIFY_NOT_REACHED();

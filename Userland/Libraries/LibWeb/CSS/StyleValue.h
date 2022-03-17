@@ -291,7 +291,17 @@ enum class TextTransform {
 };
 
 enum class TransformFunction {
+    Matrix,
+    Translate,
+    TranslateX,
     TranslateY,
+    Scale,
+    ScaleX,
+    ScaleY,
+    Rotate,
+    Skew,
+    SkewX,
+    SkewY,
 };
 
 enum class VerticalAlign {
