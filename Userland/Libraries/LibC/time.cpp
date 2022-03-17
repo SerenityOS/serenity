@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DateConstants.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
@@ -208,21 +209,6 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
 {
     tzset();
 
-    const char wday_short_names[7][4] = {
-        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-    };
-    const char wday_long_names[7][10] = {
-        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-    };
-    const char mon_short_names[12][4] = {
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    };
-    const char mon_long_names[12][10] = {
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    };
-
     StringBuilder builder { max_size };
 
     const int format_len = strlen(format);
@@ -235,16 +221,16 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
 
             switch (format[i]) {
             case 'a':
-                builder.append(wday_short_names[tm->tm_wday]);
+                builder.append(short_day_names[tm->tm_wday]);
                 break;
             case 'A':
-                builder.append(wday_long_names[tm->tm_wday]);
+                builder.append(long_day_names[tm->tm_wday]);
                 break;
             case 'b':
-                builder.append(mon_short_names[tm->tm_mon]);
+                builder.append(short_month_names[tm->tm_mon]);
                 break;
             case 'B':
-                builder.append(mon_long_names[tm->tm_mon]);
+                builder.append(long_month_names[tm->tm_mon]);
                 break;
             case 'C':
                 builder.appendff("{:02}", (tm->tm_year + 1900) / 100);
@@ -259,7 +245,7 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                 builder.appendff("{:2}", tm->tm_mday);
                 break;
             case 'h':
-                builder.append(mon_short_names[tm->tm_mon]);
+                builder.append(short_month_names[tm->tm_mon]);
                 break;
             case 'H':
                 builder.appendff("{:02}", tm->tm_hour);

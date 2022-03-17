@@ -8,6 +8,7 @@
  */
 
 #include <AK/Array.h>
+#include <AK/DateConstants.h>
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/TypeCasts.h>
@@ -28,12 +29,6 @@
 #include <LibUnicode/Locale.h>
 
 namespace JS {
-
-// Table 62: Names of days of the week, https://tc39.es/ecma262/#sec-todatestring-day-names
-static constexpr auto day_names = AK::Array { "Sun"sv, "Mon"sv, "Tue"sv, "Wed"sv, "Thu"sv, "Fri"sv, "Sat"sv };
-
-// Table 63: Names of months of the year, https://tc39.es/ecma262/#sec-todatestring-day-names
-static constexpr auto month_names = AK::Array { "Jan"sv, "Feb"sv, "Mar"sv, "Apr"sv, "May"sv, "Jun"sv, "Jul"sv, "Aug"sv, "Sep"sv, "Oct"sv, "Nov"sv, "Dec"sv };
 
 DatePrototype::DatePrototype(GlobalObject& global_object)
     : PrototypeObject(*global_object.object_prototype())
@@ -1106,10 +1101,10 @@ String time_string(double time)
 String date_string(double time)
 {
     // 1. Let weekday be the Name of the entry in Table 62 with the Number WeekDay(tv).
-    auto weekday = day_names[week_day(time)];
+    auto weekday = short_day_names[week_day(time)];
 
     // 2. Let month be the Name of the entry in Table 63 with the Number MonthFromTime(tv).
-    auto month = month_names[month_from_time(time)];
+    auto month = short_month_names[month_from_time(time)];
 
     // 3. Let day be the String representation of DateFromTime(tv), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
     auto day = date_from_time(time);
@@ -1226,10 +1221,10 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
         return js_string(vm, "Invalid Date"sv);
 
     // 4. Let weekday be the Name of the entry in Table 62 with the Number WeekDay(tv).
-    auto weekday = day_names[week_day(time.as_double())];
+    auto weekday = short_day_names[week_day(time.as_double())];
 
     // 5. Let month be the Name of the entry in Table 63 with the Number MonthFromTime(tv).
-    auto month = month_names[month_from_time(time.as_double())];
+    auto month = short_month_names[month_from_time(time.as_double())];
 
     // 6. Let day be the String representation of DateFromTime(tv), formatted as a two-digit decimal number, padded to the left with the code unit 0x0030 (DIGIT ZERO) if necessary.
     auto day = date_from_time(time.as_double());
