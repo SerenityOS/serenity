@@ -74,7 +74,7 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record)
     // FIXME: 9. Suspend the currently running execution context.
 
     // 10. Push scriptContext onto the execution context stack; scriptContext is now the running execution context.
-    vm.push_execution_context(script_context, global_object);
+    TRY(vm.push_execution_context(script_context, global_object));
 
     // 11. Let scriptBody be scriptRecord.[[ECMAScriptCode]].
     auto& script_body = script_record.parse_node();
