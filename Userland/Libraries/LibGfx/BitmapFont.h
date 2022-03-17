@@ -31,6 +31,9 @@ public:
 
     ~BitmapFont();
 
+    u8* rows() { return m_rows; }
+    u8* widths() { return m_glyph_widths; }
+
     u8 presentation_size() const override { return m_presentation_size; }
     void set_presentation_size(u8 size) { m_presentation_size = size; }
 
