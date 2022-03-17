@@ -5,6 +5,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/NonnullOwnPtr.h>
 #include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/Protocol.h>
 #include <RequestServer/Request.h>
@@ -111,6 +112,40 @@ Messages::RequestServer::SetCertificateResponse ConnectionFromClient::set_certif
     return success;
 }
 
+struct Job {
+    explicit Job(URL url)
+        : m_url(move(url))
+    {
+    }
+
+    static Job& ensure(URL const& url)
+    {
+        if (auto it = s_jobs.find(url); it == s_jobs.end()) {
+            auto job = make<Job>(url);
+            s_jobs.set(url, move(job));
+        }
+        return *s_jobs.find(url)->value;
+    }
+
+    void start(Core::Stream::Socket& socket)
+    {
+        auto is_connected = socket.is_open();
+        VERIFY(is_connected);
+        ConnectionCache::request_did_finish(m_url, &socket);
+        s_jobs.remove(m_url);
+    }
+    void fail(Core::NetworkJob::Error error)
+    {
+        dbgln("Pre-connect to {} failed: {}", m_url, Core::to_string(error));
+        s_jobs.remove(m_url);
+    }
+    URL m_url;
+
+private:
+    static HashMap<URL, NonnullOwnPtr<Job>> s_jobs;
+};
+HashMap<URL, NonnullOwnPtr<Job>> Job::s_jobs {};
+
 void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::CacheLevel const& cache_level)
 {
     if (!url.is_valid()) {
@@ -125,20 +160,7 @@ void ConnectionFromClient::ensure_connection(URL const& url, ::RequestServer::Ca
         });
     }
 
-    struct {
-        URL m_url;
-        void start(Core::Stream::Socket& socket)
-        {
-            auto is_connected = socket.is_open();
-            VERIFY(is_connected);
-            ConnectionCache::request_did_finish(m_url, &socket);
-        }
-        void fail(Core::NetworkJob::Error error)
-        {
-            dbgln("Pre-connect to {} failed: {}", m_url, Core::to_string(error));
-        }
-    } job { url };
-
+    auto& job = Job::ensure(url);
     dbgln("EnsureConnection: Pre-connect to {}", url);
     auto do_preconnect = [&](auto& cache) {
         auto it = cache.find({ url.host(), url.port_or_default() });
