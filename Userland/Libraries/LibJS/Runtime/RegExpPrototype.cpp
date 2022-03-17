@@ -68,7 +68,7 @@ static ThrowCompletionOr<void> increment_last_index(GlobalObject& global_object,
     return {};
 }
 
-// 1.1.2.1 Match Records, https://tc39.es/proposal-regexp-match-indices/#sec-match-records
+// 22.2.5.2.5 Match Records, https://tc39.es/ecma262/#sec-match-records
 struct Match {
     static Match create(regex::Match const& match)
     {
@@ -79,25 +79,22 @@ struct Match {
     size_t end_index { 0 };
 };
 
-// 1.1.4.1.4 GetMatchIndicesArray ( S, match ), https://tc39.es/proposal-regexp-match-indices/#sec-getmatchindicesarray
-static Value get_match_indices_array(GlobalObject& global_object, Utf16View const& string, Match const& match)
+// 22.2.5.2.7 GetMatchIndexPair ( S, match ), https://tc39.es/ecma262/#sec-getmatchindexpair
+static Value get_match_index_par(GlobalObject& global_object, Utf16View const& string, Match const& match)
 {
-    // 1. Assert: Type(S) is String.
-    // 2. Assert: match is a Match Record.
-
-    // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
+    // 1. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
     VERIFY(match.start_index <= string.length_in_code_units());
 
-    // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
+    // 2. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
     VERIFY(match.end_index >= match.start_index);
     VERIFY(match.end_index <= string.length_in_code_units());
 
-    // 5. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
+    // 3. Return CreateArrayFromList(« match.[[StartIndex]], match.[[EndIndex]] »).
     return Array::create_from(global_object, { Value(match.start_index), Value(match.end_index) });
 }
 
-// 1.1.4.1.5 MakeIndicesArray ( S , indices, groupNames, hasGroups ), https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray
-static Value make_indices_array(GlobalObject& global_object, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<FlyString, Match> const& group_names, bool has_groups)
+// 22.2.5.2.8 MakeMatchIndicesIndexPairArray ( S, indices, groupNames, hasGroups ), https://tc39.es/ecma262/#sec-makematchindicesindexpairarray
+static Value make_match_indices_index_pair_array(GlobalObject& global_object, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<FlyString, Match> const& group_names, bool has_groups)
 {
     // Note: This implementation differs from the spec, but has the same behavior.
     //
@@ -115,29 +112,23 @@ static Value make_indices_array(GlobalObject& global_object, Utf16View const& st
 
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(S) is String.
-    // 2. Assert: indices is a List.
-    // 3. Assert: Type(hasGroups) is Boolean.
-
-    // 4. Let n be the number of elements in indices.
-    // 5. Assert: n < 2^32-1.
+    // 1. Let n be the number of elements in indices.
+    // 2. Assert: n < 2^32-1.
     VERIFY(indices.size() < NumericLimits<u32>::max());
 
-    // 6. Assert: groupNames is a List with n - 1 elements.
-    // 7. NOTE: The groupNames List contains elements aligned with the indices List starting at indices[1].
+    // 3. Assert: groupNames is a List with n - 1 elements.
+    // 4. NOTE: The groupNames List contains elements aligned with the indices List starting at indices[1].
 
-    // 8. Set A to ! ArrayCreate(n).
+    // 5. Set A to ! ArrayCreate(n).
     auto* array = MUST(Array::create(global_object, indices.size()));
 
-    // 9. Assert: The value of A's "length" property is n.
-
-    // 10. If hasGroups is true, then
+    // 6. If hasGroups is true, then
     //     a. Let groups be ! ObjectCreate(null).
-    // 11. Else,
+    // 7. Else,
     //     a. Let groups be undefined.
     auto groups = has_groups ? Object::create(global_object, nullptr) : js_undefined();
 
-    // 13. For each integer i such that i ≥ 0 and i < n, do
+    // 9. For each integer i such that i ≥ 0 and i < n, do
     for (size_t i = 0; i < indices.size(); ++i) {
         // a. Let matchIndices be indices[i].
         auto const& match_indices = indices[i];
@@ -148,151 +139,150 @@ static Value make_indices_array(GlobalObject& global_object, Utf16View const& st
         //     i. Let matchIndicesArray be undefined.
         auto match_indices_array = js_undefined();
         if (match_indices.has_value())
-            match_indices_array = get_match_indices_array(global_object, string, *match_indices);
+            match_indices_array = get_match_index_par(global_object, string, *match_indices);
 
         // d. Perform ! CreateDataProperty(A, ! ToString(i), matchIndicesArray).
         MUST(array->create_data_property(i, match_indices_array));
     }
 
     for (auto const& entry : group_names) {
-        auto match_indices_array = get_match_indices_array(global_object, string, entry.value);
+        auto match_indices_array = get_match_index_par(global_object, string, entry.value);
 
         // e. If i > 0 and groupNames[i - 1] is not undefined, then
         //     i. Perform ! CreateDataProperty(groups, groupNames[i - 1], matchIndicesArray).
         MUST(groups.as_object().create_data_property(entry.key, match_indices_array));
     }
 
-    // 12. Perform ! CreateDataProperty(A, "groups", groups).
+    // 8. Perform ! CreateDataProperty(A, "groups", groups).
     // NOTE: This step must be performed after the above loops in order for groups to be populated.
     MUST(array->create_data_property(vm.names.groups, groups));
 
-    // 14. Return A.
+    // 10. Return A.
     return array;
 }
 
-// 1.1.4.1.1 RegExpBuiltinExec ( R, S ), https://tc39.es/proposal-regexp-match-indices/#sec-regexpbuiltinexec
+// 22.2.5.2.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
 static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, Utf16String string)
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: R is an initialized RegExp instance.
-    // 2. Assert: Type(S) is String.
-
-    // 3. Let length be the number of code units in S.
-    // 4. Let lastIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
+    // 1. Let length be the number of code units in S.
+    // 2. Let lastIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
     auto last_index_value = TRY(regexp_object.get(vm.names.lastIndex));
     auto last_index = TRY(last_index_value.to_length(global_object));
 
     auto& regex = regexp_object.regex();
 
-    // 5. Let flags be R.[[OriginalFlags]].
-    // 6. If flags contains "g", let global be true; else let global be false.
+    // 3. Let flags be R.[[OriginalFlags]].
+    // 4. If flags contains "g", let global be true; else let global be false.
     bool global = regex.options().has_flag_set(ECMAScriptFlags::Global);
-    // 7. If flags contains "y", let sticky be true; else let sticky be false.
+    // 5. If flags contains "y", let sticky be true; else let sticky be false.
     bool sticky = regex.options().has_flag_set(ECMAScriptFlags::Sticky);
-    // 8. If flags contains "d", let hasIndices be true, else let hasIndices be false.
+    // 6. If flags contains "d", let hasIndices be true, else let hasIndices be false.
     bool has_indices = regexp_object.flags().find('d').has_value();
 
-    // 9. If global is false and sticky is false, set lastIndex to 0.
+    // 7. If global is false and sticky is false, set lastIndex to 0.
     if (!global && !sticky)
         last_index = 0;
 
-    // 10. Let matcher be R.[[RegExpMatcher]].
+    // 8. Let matcher be R.[[RegExpMatcher]].
 
-    // 11. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
+    // 9. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
     bool full_unicode = regex.options().has_flag_set(ECMAScriptFlags::Unicode);
 
     RegexResult result;
 
     // NOTE: For optimisation purposes, this whole loop is implemented in LibRegex.
-    // 12. Let matchSucceeded be false.
-    // 13. Let Input be a List consisting of all of the characters, in order, of S. If fullUnicode is true, each character is a code unit, otherwise each character is a code point.
-    // 14. Repeat, while matchSucceeded is false
+    // 10. Let matchSucceeded be false.
+    // 11. If fullUnicode is true, let input be StringToCodePoints(S). Otherwise, let input be a List whose elements are the code units that are the elements of S.
+    // 12. NOTE: Each element of input is considered to be a character.
+    // 13. Repeat, while matchSucceeded is false
     //   a. If lastIndex > length, then
     //       i. If global is true or sticky is true, then
     //           1. Perform ? Set(R, "lastIndex", 0, true).
     //       ii. Return null.
-    //   b. Let r be matcher(Input, lastIndex).
-    //   c. If r is failure, then
+    //   b. Let inputIndex be the index into input of the character that was obtained from element lastIndex of S.
+    //   c. Let r be matcher(input, inputIndex).
+    //   d. If r is failure, then
     //       i. If sticky is true, then
     //           1. Perform ? Set(R, "lastIndex", 0, true).
     //           2. Return null.
     //       ii. Set lastIndex to AdvanceStringIndex(S, lastIndex, fullUnicode).
-    //   d. Else,
+    //   e. Else,
     //       i. Assert: r is a State.
     //       ii. Set matchSucceeded to true.
 
-    // 14.b
+    // 13.b and 13.c
     regex.start_offset = full_unicode ? string.view().code_point_offset_of(last_index) : last_index;
     result = regex.match(string.view());
 
-    // 14.c and 14.a
+    // 13.d and 13.a
     if (!result.success) {
-        // 14.c.i, 14.a.i
+        // 13.d.i, 13.a.i
         if (sticky || global)
             TRY(regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes));
 
-        // 14.a.ii, 14.c.i.2
+        // 13.a.ii, 13.d.i.2
         return js_null();
     }
 
     auto& match = result.matches[0];
     auto match_index = match.global_offset;
 
-    // 15. Let e be r's endIndex value.
+    // 14. Let e be r's endIndex value.
     // https://tc39.es/ecma262/#sec-notation: The endIndex is one plus the index of the last input character matched so far by the pattern.
     auto end_index = match_index + match.view.length();
 
-    // 17. If fullUnicode is true, set e to ! GetStringIndex(S, Input, e).
+    // 15. If fullUnicode is true, set e to ! GetStringIndex(S, Input, e).
     if (full_unicode) {
         match_index = string.view().code_unit_offset_of(match.global_offset);
         end_index = string.view().code_unit_offset_of(end_index);
     }
 
-    // 18. If global is true or sticky is true, then
+    // 16. If global is true or sticky is true, then
     if (global || sticky) {
         // a. Perform ? Set(R, "lastIndex", 𝔽(e), true).
         TRY(regexp_object.set(vm.names.lastIndex, Value(end_index), Object::ShouldThrowExceptions::Yes));
     }
 
-    // 19. Let n be the number of elements in r's captures List. (This is the same value as 22.2.2.1's NcapturingParens.)
-    // 20. Assert: n < 2^32 - 1.
+    // 17. Let n be the number of elements in r's captures List. (This is the same value as 22.2.2.1's NcapturingParens.)
+    // 18. Assert: n < 2^32 - 1.
     VERIFY(result.n_named_capture_groups < NumericLimits<u32>::max());
 
-    // 21. Let A be ! ArrayCreate(n + 1).
+    // 19. Let A be ! ArrayCreate(n + 1).
     auto* array = MUST(Array::create(global_object, result.n_named_capture_groups + 1));
 
-    // 22. Assert: The mathematical value of A's "length" property is n + 1.
+    // 20. Assert: The mathematical value of A's "length" property is n + 1.
 
-    // 23. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
+    // 21. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
     MUST(array->create_data_property_or_throw(vm.names.index, Value(match_index)));
 
-    // 25. Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
+    // 23. Let match be the Match { [[StartIndex]]: lastIndex, [[EndIndex]]: e }.
     auto match_indices = Match::create(match);
 
-    // 26. Let indices be a new empty List.
+    // 24. Let indices be a new empty List.
     Vector<Optional<Match>> indices;
 
-    // 27. Let groupNames be a new empty List.
+    // 25. Let groupNames be a new empty List.
     HashMap<FlyString, Match> group_names;
 
-    // 28. Add match as the last element of indices.
+    // 26. Add match as the last element of indices.
     indices.append(move(match_indices));
 
-    // 29. Let matchedValue be ! GetMatchString(S, match).
-    // 30. Perform ! CreateDataPropertyOrThrow(A, "0", matchedValue).
+    // 27. Let matchedValue be ! GetMatchString(S, match).
+    // 28. Perform ! CreateDataPropertyOrThrow(A, "0", matchedValue).
     MUST(array->create_data_property_or_throw(0, js_string(vm, match.view.u16_view())));
 
-    // 31. If R contains any GroupName, then
+    // 29. If R contains any GroupName, then
     //     a. Let groups be ! OrdinaryObjectCreate(null).
     //     b. Let hasGroups be true.
-    // 32. Else,
+    // 30. Else,
     //     a. Let groups be undefined.
     //     b. Let hasGroups be false.
     bool has_groups = result.n_named_capture_groups != 0;
     Object* groups_object = has_groups ? Object::create(global_object, nullptr) : nullptr;
 
-    // 34. For each integer i such that i ≥ 1 and i ≤ n, in ascending order, do
+    // 32. For each integer i such that i ≥ 1 and i ≤ n, in ascending order, do
     for (size_t i = 1; i <= result.n_capture_groups; ++i) {
         // a. Let captureI be ith element of r's captures List.
         auto& capture = result.capture_group_matches[0][i];
@@ -341,24 +331,24 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(GlobalObject& global_object,
         }
     }
 
-    // 33. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
+    // 31. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
     // NOTE: This step must be performed after the above loop in order for groups to be populated.
     Value groups = has_groups ? groups_object : js_undefined();
     MUST(array->create_data_property_or_throw(vm.names.groups, groups));
 
-    // 35. If hasIndices is true, then
+    // 33. If hasIndices is true, then
     if (has_indices) {
-        // a. Let indicesArray be ! MakeIndicesArray(S, indices, groupNames, hasGroups).
-        auto indices_array = make_indices_array(global_object, string.view(), indices, group_names, has_groups);
+        // a. Let indicesArray be MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups).
+        auto indices_array = make_match_indices_index_pair_array(global_object, string.view(), indices, group_names, has_groups);
         // b. Perform ! CreateDataProperty(A, "indices", indicesArray).
         MUST(array->create_data_property(vm.names.indices, indices_array));
     }
 
-    // 24. Perform ! CreateDataPropertyOrThrow(A, "input", S).
+    // 22. Perform ! CreateDataPropertyOrThrow(A, "input", S).
     // NOTE: This step is performed last to allow the string to be moved into the js_string invocation.
     MUST(array->create_data_property_or_throw(vm.names.input, js_string(vm, move(string))));
 
-    // 36. Return A.
+    // 34. Return A.
     return array;
 }
 
@@ -412,13 +402,13 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
     return index + code_point.code_unit_count;
 }
 
-// 1.1.4.3 get RegExp.prototype.hasIndices, https://tc39.es/proposal-regexp-match-indices/#sec-get-regexp.prototype.hasIndices
 // 22.2.5.3 get RegExp.prototype.dotAll, https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll
 // 22.2.5.5 get RegExp.prototype.global, https://tc39.es/ecma262/#sec-get-regexp.prototype.global
-// 22.2.5.6 get RegExp.prototype.ignoreCase, https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase
-// 22.2.5.9 get RegExp.prototype.multiline, https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline
-// 22.2.5.14 get RegExp.prototype.sticky, https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
-// 22.2.5.17 get RegExp.prototype.unicode, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode
+// 22.2.5.6 get RegExp.prototype.hasIndices, https://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices
+// 22.2.5.7 get RegExp.prototype.ignoreCase, https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase
+// 22.2.5.10 get RegExp.prototype.multiline, https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline
+// 22.2.5.15 get RegExp.prototype.sticky, https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
+// 22.2.5.18 get RegExp.prototype.unicode, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                                                    \
     JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flag_name)                                                 \
     {                                                                                                     \
@@ -466,18 +456,20 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
     // 3. Let result be the empty String.
     StringBuilder builder(8);
 
-    // 4. Let global be ! ToBoolean(? Get(R, "global")).
-    // 5. If global is true, append the code unit 0x0067 (LATIN SMALL LETTER G) as the last code unit of result.
-    // 6. Let ignoreCase be ! ToBoolean(? Get(R, "ignoreCase")).
-    // 7. If ignoreCase is true, append the code unit 0x0069 (LATIN SMALL LETTER I) as the last code unit of result.
-    // 8. Let multiline be ! ToBoolean(? Get(R, "multiline")).
-    // 9. If multiline is true, append the code unit 0x006D (LATIN SMALL LETTER M) as the last code unit of result.
-    // 10. Let dotAll be ! ToBoolean(? Get(R, "dotAll")).
-    // 11. If dotAll is true, append the code unit 0x0073 (LATIN SMALL LETTER S) as the last code unit of result.
-    // 12. Let unicode be ! ToBoolean(? Get(R, "unicode")).
-    // 13. If unicode is true, append the code unit 0x0075 (LATIN SMALL LETTER U) as the last code unit of result.
-    // 14. Let sticky be ! ToBoolean(? Get(R, "sticky")).
-    // 15. If sticky is true, append the code unit 0x0079 (LATIN SMALL LETTER Y) as the last code unit of result.
+    // 4. Let hasIndices be ToBoolean(? Get(R, "hasIndices")).
+    // 5. If hasIndices is true, append the code unit 0x0064 (LATIN SMALL LETTER D) as the last code unit of result.
+    // 6. Let global be ! ToBoolean(? Get(R, "global")).
+    // 7. If global is true, append the code unit 0x0067 (LATIN SMALL LETTER G) as the last code unit of result.
+    // 8. Let ignoreCase be ! ToBoolean(? Get(R, "ignoreCase")).
+    // 9. If ignoreCase is true, append the code unit 0x0069 (LATIN SMALL LETTER I) as the last code unit of result.
+    // 10. Let multiline be ! ToBoolean(? Get(R, "multiline")).
+    // 11. If multiline is true, append the code unit 0x006D (LATIN SMALL LETTER M) as the last code unit of result.
+    // 12. Let dotAll be ! ToBoolean(? Get(R, "dotAll")).
+    // 13. If dotAll is true, append the code unit 0x0073 (LATIN SMALL LETTER S) as the last code unit of result.
+    // 14. Let unicode be ! ToBoolean(? Get(R, "unicode")).
+    // 15. If unicode is true, append the code unit 0x0075 (LATIN SMALL LETTER U) as the last code unit of result.
+    // 16. Let sticky be ! ToBoolean(? Get(R, "sticky")).
+    // 17. If sticky is true, append the code unit 0x0079 (LATIN SMALL LETTER Y) as the last code unit of result.
 #define __JS_ENUMERATE(flagName, flag_name, flag_char)                  \
     auto flag_##flag_name = TRY(regexp_object->get(vm.names.flagName)); \
     if (flag_##flag_name.to_boolean())                                  \
@@ -485,11 +477,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
 
-    // 16. Return result.
+    // 18. Return result.
     return js_string(vm, builder.to_string());
 }
 
-// 22.2.5.7 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
+// 22.2.5.8 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
     // 1. Let rx be the this value.
@@ -558,7 +550,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     }
 }
 
-// 22.2.5.8 RegExp.prototype [ @@matchAll ] ( string ), https://tc39.es/ecma262/#sec-regexp-prototype-matchall
+// 22.2.5.9 RegExp.prototype [ @@matchAll ] ( string ), https://tc39.es/ecma262/#sec-regexp-prototype-matchall
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 {
     // 1. Let R be the this value.
@@ -599,7 +591,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     return RegExpStringIterator::create(global_object, *matcher, move(string), global, full_unicode);
 }
 
-// 22.2.5.10 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
+// 22.2.5.11 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 {
     auto string_value = vm.argument(0);
@@ -788,7 +780,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     return js_string(vm, accumulated_result.build());
 }
 
-// 22.2.5.11 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
+// 22.2.5.12 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 {
     // 1. Let rx be the this value.
@@ -827,7 +819,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     return TRY(result.get(global_object, vm.names.index));
 }
 
-// 22.2.5.12 get RegExp.prototype.source, https://tc39.es/ecma262/#sec-get-regexp.prototype.source
+// 22.2.5.13 get RegExp.prototype.source, https://tc39.es/ecma262/#sec-get-regexp.prototype.source
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
 {
     // 1. Let R be the this value.
@@ -851,7 +843,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
     return js_string(vm, static_cast<RegExpObject&>(*regexp_object).escape_regexp_pattern());
 }
 
-// 22.2.5.13 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
+// 22.2.5.14 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 {
     // 1. Let rx be the this value.
@@ -1005,7 +997,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     return array;
 }
 
-// 22.2.5.15 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
+// 22.2.5.16 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 {
     // 1. Let R be the this value.
@@ -1022,7 +1014,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
     return Value(!match.is_null());
 }
 
-// 22.2.5.16 RegExp.prototype.toString ( ), https://tc39.es/ecma262/#sec-regexp.prototype.tostring
+// 22.2.5.17 RegExp.prototype.toString ( ), https://tc39.es/ecma262/#sec-regexp.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 {
     // 1. Let R be the this value.
