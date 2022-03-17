@@ -179,9 +179,18 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_a_stylesheet(TokenStream<T>& tokens)
     return CSSStyleSheet::create(rules);
 }
 
-Optional<SelectorList> Parser::parse_as_selector()
+Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mode)
 {
-    auto selector_list = parse_a_selector(m_token_stream);
+    auto selector_list = parse_a_selector_list(m_token_stream, parsing_mode);
+    if (!selector_list.is_error())
+        return selector_list.release_value();
+
+    return {};
+}
+
+Optional<SelectorList> Parser::parse_as_relative_selector(SelectorParsingMode parsing_mode)
+{
+    auto selector_list = parse_a_relative_selector_list(m_token_stream, parsing_mode);
     if (!selector_list.is_error())
         return selector_list.release_value();
 
@@ -189,28 +198,7 @@ Optional<SelectorList> Parser::parse_as_selector()
 }
 
 template<typename T>
-Result<SelectorList, Parser::ParsingResult> Parser::parse_a_selector(TokenStream<T>& tokens)
-{
-    return parse_a_selector_list(tokens);
-}
-
-Optional<SelectorList> Parser::parse_as_relative_selector()
-{
-    auto selector_list = parse_a_relative_selector(m_token_stream);
-    if (!selector_list.is_error())
-        return selector_list.release_value();
-
-    return {};
-}
-
-template<typename T>
-Result<SelectorList, Parser::ParsingResult> Parser::parse_a_relative_selector(TokenStream<T>& tokens)
-{
-    return parse_a_relative_selector_list(tokens);
-}
-
-template<typename T>
-Result<SelectorList, Parser::ParsingResult> Parser::parse_a_selector_list(TokenStream<T>& tokens)
+Result<SelectorList, Parser::ParsingResult> Parser::parse_a_selector_list(TokenStream<T>& tokens, SelectorParsingMode parsing_mode)
 {
     auto comma_separated_lists = parse_a_comma_separated_list_of_component_values(tokens);
 
@@ -218,19 +206,22 @@ Result<SelectorList, Parser::ParsingResult> Parser::parse_a_selector_list(TokenS
     for (auto& selector_parts : comma_separated_lists) {
         auto stream = TokenStream(selector_parts);
         auto selector = parse_complex_selector(stream, false);
-        if (selector.is_error())
+        if (selector.is_error()) {
+            if (parsing_mode == SelectorParsingMode::Forgiving)
+                continue;
             return selector.error();
+        }
         selectors.append(selector.release_value());
     }
 
-    if (selectors.is_empty())
+    if (selectors.is_empty() && parsing_mode != SelectorParsingMode::Forgiving)
         return ParsingResult::SyntaxError;
 
     return selectors;
 }
 
 template<typename T>
-Result<SelectorList, Parser::ParsingResult> Parser::parse_a_relative_selector_list(TokenStream<T>& tokens)
+Result<SelectorList, Parser::ParsingResult> Parser::parse_a_relative_selector_list(TokenStream<T>& tokens, SelectorParsingMode parsing_mode)
 {
     auto comma_separated_lists = parse_a_comma_separated_list_of_component_values(tokens);
 
@@ -238,12 +229,15 @@ Result<SelectorList, Parser::ParsingResult> Parser::parse_a_relative_selector_li
     for (auto& selector_parts : comma_separated_lists) {
         auto stream = TokenStream(selector_parts);
         auto selector = parse_complex_selector(stream, true);
-        if (selector.is_error())
+        if (selector.is_error()) {
+            if (parsing_mode == SelectorParsingMode::Forgiving)
+                continue;
             return selector.error();
+        }
         selectors.append(selector.release_value());
     }
 
-    if (selectors.is_empty())
+    if (selectors.is_empty() && parsing_mode != SelectorParsingMode::Forgiving)
         return ParsingResult::SyntaxError;
 
     return selectors;
@@ -593,7 +587,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             if (pseudo_function.name().equals_ignoring_case("not")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Not;
                 auto function_token_stream = TokenStream(pseudo_function.values());
-                auto not_selector = parse_a_selector(function_token_stream);
+                auto not_selector = parse_a_selector_list(function_token_stream);
                 if (not_selector.is_error()) {
                     dbgln_if(CSS_PARSER_DEBUG, "Invalid selector in :not() clause");
                     return ParsingResult::SyntaxError;
@@ -2087,7 +2081,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 
     } else {
         auto prelude_stream = TokenStream(rule->m_prelude);
-        auto selectors = parse_a_selector(prelude_stream);
+        auto selectors = parse_a_selector_list(prelude_stream);
 
         if (selectors.is_error()) {
             if (selectors.error() != ParsingResult::IncludesIgnoredVendorPrefix) {

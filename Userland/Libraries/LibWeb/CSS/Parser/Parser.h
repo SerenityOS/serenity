@@ -105,9 +105,16 @@ public:
     Vector<StyleComponentValueRule> parse_as_list_of_component_values();
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
 
+    enum class SelectorParsingMode {
+        Standard,
+        // `<forgiving-selector-list>` and `<forgiving-relative-selector-list>`
+        // are handled with this parameter, not as separate functions.
+        // https://drafts.csswg.org/selectors/#forgiving-selector
+        Forgiving
+    };
     // Contrary to the name, these parse a comma-separated list of selectors, according to the spec.
-    Optional<SelectorList> parse_as_selector();
-    Optional<SelectorList> parse_as_relative_selector();
+    Optional<SelectorList> parse_as_selector(SelectorParsingMode = SelectorParsingMode::Standard);
+    Optional<SelectorList> parse_as_relative_selector(SelectorParsingMode = SelectorParsingMode::Standard);
 
     NonnullRefPtrVector<MediaQuery> parse_as_media_query_list();
     RefPtr<MediaQuery> parse_as_media_query();
@@ -142,13 +149,9 @@ private:
     template<typename T>
     Vector<Vector<StyleComponentValueRule>> parse_a_comma_separated_list_of_component_values(TokenStream<T>&);
     template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_selector(TokenStream<T>&);
+    Result<SelectorList, ParsingResult> parse_a_selector_list(TokenStream<T>&, SelectorParsingMode = SelectorParsingMode::Standard);
     template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_relative_selector(TokenStream<T>&);
-    template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_selector_list(TokenStream<T>&);
-    template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_relative_selector_list(TokenStream<T>&);
+    Result<SelectorList, ParsingResult> parse_a_relative_selector_list(TokenStream<T>&, SelectorParsingMode = SelectorParsingMode::Standard);
     template<typename T>
     NonnullRefPtrVector<MediaQuery> parse_a_media_query_list(TokenStream<T>&);
     template<typename T>
