@@ -158,6 +158,7 @@ String Selector::SimpleSelector::serialize() const
         case Selector::SimpleSelector::PseudoClass::Type::NthChild:
         case Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
         case Selector::SimpleSelector::PseudoClass::Type::Not:
+        case Selector::SimpleSelector::PseudoClass::Type::Is:
             // Otherwise, append ":" (U+003A), followed by the name of the pseudo-class, followed by "(" (U+0028),
             // followed by the value of the pseudo-class argument(s) determined as per below, followed by ")" (U+0029), to s.
             s.append(':');
@@ -167,9 +168,11 @@ String Selector::SimpleSelector::serialize() const
                 || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthLastChild) {
                 // The result of serializing the value using the rules to serialize an <an+b> value.
                 s.append(pseudo_class.nth_child_pattern.serialize());
-            } else if (pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Not) {
+            } else if (pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Not
+                || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Is) {
                 // The result of serializing the value using the rules for serializing a group of selectors.
-                s.append(serialize_a_group_of_selectors(pseudo_class.not_selector));
+                // NOTE: `:is()` isn't in the spec for this yet, but it should be!
+                s.append(serialize_a_group_of_selectors(pseudo_class.argument_selector_list));
             }
             s.append(')');
             break;

@@ -584,7 +584,14 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             };
 
             auto& pseudo_function = pseudo_class_token.function();
-            if (pseudo_function.name().equals_ignoring_case("not")) {
+            if (pseudo_function.name().equals_ignoring_case("is"sv)) {
+                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Is;
+                auto function_token_stream = TokenStream(pseudo_function.values());
+                auto is_selector = parse_a_selector_list(function_token_stream, SelectorParsingMode::Forgiving);
+                // NOTE: Because it's forgiving, even complete garbage will parse OK as an empty selector-list.
+                VERIFY(!is_selector.is_error());
+                simple_selector.pseudo_class.argument_selector_list = is_selector.release_value();
+            } else if (pseudo_function.name().equals_ignoring_case("not"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Not;
                 auto function_token_stream = TokenStream(pseudo_function.values());
                 auto not_selector = parse_a_selector_list(function_token_stream);
@@ -592,20 +599,20 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                     dbgln_if(CSS_PARSER_DEBUG, "Invalid selector in :not() clause");
                     return ParsingResult::SyntaxError;
                 }
-                simple_selector.pseudo_class.not_selector = not_selector.release_value();
-            } else if (pseudo_function.name().equals_ignoring_case("nth-child")) {
+                simple_selector.pseudo_class.argument_selector_list = not_selector.release_value();
+            } else if (pseudo_function.name().equals_ignoring_case("nth-child"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthChild;
                 if (!parse_nth_child_pattern(simple_selector, pseudo_function))
                     return ParsingResult::SyntaxError;
-            } else if (pseudo_function.name().equals_ignoring_case("nth-last-child")) {
+            } else if (pseudo_function.name().equals_ignoring_case("nth-last-child"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthLastChild;
                 if (!parse_nth_child_pattern(simple_selector, pseudo_function))
                     return ParsingResult::SyntaxError;
-            } else if (pseudo_function.name().equals_ignoring_case("nth-of-type")) {
+            } else if (pseudo_function.name().equals_ignoring_case("nth-of-type"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthOfType;
                 if (!parse_nth_child_pattern(simple_selector, pseudo_function))
                     return ParsingResult::SyntaxError;
-            } else if (pseudo_function.name().equals_ignoring_case("nth-last-of-type")) {
+            } else if (pseudo_function.name().equals_ignoring_case("nth-last-of-type"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthLastOfType;
                 if (!parse_nth_child_pattern(simple_selector, pseudo_function))
                     return ParsingResult::SyntaxError;
