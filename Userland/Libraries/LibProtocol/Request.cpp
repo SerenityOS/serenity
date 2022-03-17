@@ -43,7 +43,7 @@ void Request::stream_into_impl(T& stream)
         }
     };
     m_internal_stream_data->read_notifier->on_ready_to_read = [this, &stream] {
-        constexpr size_t buffer_size = 16 * KiB;
+        constexpr size_t buffer_size = 256 * KiB;
         static char buf[buffer_size];
         do {
             auto result = m_internal_stream_data->read_stream->read({ buf, buffer_size });
@@ -58,6 +58,7 @@ void Request::stream_into_impl(T& stream)
                 // FIXME: What do we do here?
                 TODO();
             }
+            break;
         } while (true);
 
         if (m_internal_stream_data->read_stream->is_eof())
