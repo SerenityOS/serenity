@@ -372,9 +372,10 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
             return nullptr;
         }
 
-        // 8. Push settings object's realm execution context onto the JavaScript execution context stack; it is now the running JavaScript execution context.
         auto& global_object = settings_object.global_object();
-        global_object.vm().push_execution_context(settings_object.realm_execution_context(), global_object);
+
+        // 8. Push settings object's realm execution context onto the JavaScript execution context stack; it is now the running JavaScript execution context.
+        global_object.vm().push_execution_context(settings_object.realm_execution_context());
 
         // 9. Let function be the result of calling OrdinaryFunctionCreate, with arguments:
         // functionPrototype
