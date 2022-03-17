@@ -86,10 +86,8 @@ Painting::StackingContext* PaintableBox::enclosing_stacking_context()
         if (!is<Layout::Box>(ancestor))
             continue;
         auto& ancestor_box = static_cast<Layout::Box&>(const_cast<Layout::NodeWithStyle&>(*ancestor));
-        if (!ancestor_box.establishes_stacking_context())
-            continue;
-        VERIFY(ancestor_box.paint_box()->stacking_context());
-        return const_cast<StackingContext*>(ancestor_box.paint_box()->stacking_context());
+        if (auto* ancestor_paint_box = ancestor_box.paint_box(); ancestor_paint_box && ancestor_paint_box->stacking_context())
+            return const_cast<StackingContext*>(ancestor_paint_box->stacking_context());
     }
     // We should always reach the Layout::InitialContainingBlock stacking context.
     VERIFY_NOT_REACHED();
