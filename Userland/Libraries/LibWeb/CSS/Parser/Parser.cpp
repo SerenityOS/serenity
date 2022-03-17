@@ -3880,8 +3880,28 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<StyleComponentValu
 
 static Optional<CSS::TransformFunction> parse_transform_function_name(StringView name)
 {
+    if (name == "matrix")
+        return CSS::TransformFunction::Matrix;
+    if (name == "translate")
+        return CSS::TransformFunction::Translate;
+    if (name == "translateX")
+        return CSS::TransformFunction::TranslateX;
     if (name == "translateY")
         return CSS::TransformFunction::TranslateY;
+    if (name == "scale")
+        return CSS::TransformFunction::Scale;
+    if (name == "scaleX")
+        return CSS::TransformFunction::ScaleX;
+    if (name == "scaleY")
+        return CSS::TransformFunction::ScaleY;
+    if (name == "rotate")
+        return CSS::TransformFunction::Rotate;
+    if (name == "skew")
+        return CSS::TransformFunction::Skew;
+    if (name == "skewX")
+        return CSS::TransformFunction::SkewX;
+    if (name == "skewY")
+        return CSS::TransformFunction::SkewY;
     return {};
 }
 
@@ -3890,6 +3910,8 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
     NonnullRefPtrVector<StyleValue> transformations;
 
     for (auto& part : component_values) {
+        if (part.is(Token::Type::Whitespace))
+            continue;
         if (part.is(Token::Type::Ident) && part.token().ident().equals_ignoring_case("none")) {
             if (!transformations.is_empty())
                 return nullptr;
@@ -3902,13 +3924,32 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
         if (!maybe_function.has_value())
             return nullptr;
 
+        bool expect_comma = false;
         NonnullRefPtrVector<StyleValue> values;
         for (auto& value : part.function().values()) {
-            if (value.is(Token::Type::Dimension)) {
-                auto maybe_length = parse_length(value);
-                if (!maybe_length.has_value())
+            if (value.is(Token::Type::Whitespace))
+                continue;
+
+            if (value.is(Token::Type::Comma)) {
+                if (!expect_comma)
                     return nullptr;
-                values.append(LengthStyleValue::create(maybe_length.release_value()));
+                expect_comma = false;
+                continue;
+            } else if (expect_comma)
+                return nullptr;
+
+            if (value.is(Token::Type::Dimension)) {
+                auto dimension = parse_dimension(value);
+                if (!dimension.has_value())
+                    return nullptr;
+
+                auto dimension_value = dimension.release_value();
+                if (dimension_value.is_length())
+                    values.append(LengthStyleValue::create(dimension_value.length()));
+                else if (dimension_value.is_angle())
+                    values.append(AngleStyleValue::create(dimension_value.angle()));
+                else
+                    return nullptr;
             } else if (value.is(Token::Type::Number)) {
                 auto number = parse_numeric_value(value);
                 values.append(number.release_nonnull());
@@ -3916,6 +3957,8 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
                 dbgln_if(CSS_PARSER_DEBUG, "FIXME: Unsupported value type for transformation!");
                 return nullptr;
             }
+
+            expect_comma = true;
         }
 
         transformations.append(TransformationStyleValue::create(maybe_function.value(), move(values)));
