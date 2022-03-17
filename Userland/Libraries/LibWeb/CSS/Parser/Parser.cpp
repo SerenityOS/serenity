@@ -181,7 +181,7 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_a_stylesheet(TokenStream<T>& tokens)
 
 Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mode)
 {
-    auto selector_list = parse_a_selector_list(m_token_stream, parsing_mode);
+    auto selector_list = parse_a_selector_list(m_token_stream, SelectorType::Standalone, parsing_mode);
     if (!selector_list.is_error())
         return selector_list.release_value();
 
@@ -190,7 +190,7 @@ Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mod
 
 Optional<SelectorList> Parser::parse_as_relative_selector(SelectorParsingMode parsing_mode)
 {
-    auto selector_list = parse_a_relative_selector_list(m_token_stream, parsing_mode);
+    auto selector_list = parse_a_selector_list(m_token_stream, SelectorType::Relative, parsing_mode);
     if (!selector_list.is_error())
         return selector_list.release_value();
 
@@ -198,14 +198,14 @@ Optional<SelectorList> Parser::parse_as_relative_selector(SelectorParsingMode pa
 }
 
 template<typename T>
-Result<SelectorList, Parser::ParsingResult> Parser::parse_a_selector_list(TokenStream<T>& tokens, SelectorParsingMode parsing_mode)
+Result<SelectorList, Parser::ParsingResult> Parser::parse_a_selector_list(TokenStream<T>& tokens, SelectorType mode, SelectorParsingMode parsing_mode)
 {
     auto comma_separated_lists = parse_a_comma_separated_list_of_component_values(tokens);
 
     NonnullRefPtrVector<Selector> selectors;
     for (auto& selector_parts : comma_separated_lists) {
         auto stream = TokenStream(selector_parts);
-        auto selector = parse_complex_selector(stream, false);
+        auto selector = parse_complex_selector(stream, mode);
         if (selector.is_error()) {
             if (parsing_mode == SelectorParsingMode::Forgiving)
                 continue;
@@ -220,37 +220,14 @@ Result<SelectorList, Parser::ParsingResult> Parser::parse_a_selector_list(TokenS
     return selectors;
 }
 
-template<typename T>
-Result<SelectorList, Parser::ParsingResult> Parser::parse_a_relative_selector_list(TokenStream<T>& tokens, SelectorParsingMode parsing_mode)
-{
-    auto comma_separated_lists = parse_a_comma_separated_list_of_component_values(tokens);
-
-    NonnullRefPtrVector<Selector> selectors;
-    for (auto& selector_parts : comma_separated_lists) {
-        auto stream = TokenStream(selector_parts);
-        auto selector = parse_complex_selector(stream, true);
-        if (selector.is_error()) {
-            if (parsing_mode == SelectorParsingMode::Forgiving)
-                continue;
-            return selector.error();
-        }
-        selectors.append(selector.release_value());
-    }
-
-    if (selectors.is_empty() && parsing_mode != SelectorParsingMode::Forgiving)
-        return ParsingResult::SyntaxError;
-
-    return selectors;
-}
-
-Result<NonnullRefPtr<Selector>, Parser::ParsingResult> Parser::parse_complex_selector(TokenStream<StyleComponentValueRule>& tokens, bool allow_starting_combinator)
+Result<NonnullRefPtr<Selector>, Parser::ParsingResult> Parser::parse_complex_selector(TokenStream<StyleComponentValueRule>& tokens, SelectorType mode)
 {
     Vector<Selector::CompoundSelector> compound_selectors;
 
     auto first_selector = parse_compound_selector(tokens);
     if (first_selector.is_error())
         return first_selector.error();
-    if (!allow_starting_combinator) {
+    if (mode == SelectorType::Standalone) {
         if (first_selector.value().combinator != Selector::Combinator::Descendant)
             return ParsingResult::SyntaxError;
         first_selector.value().combinator = Selector::Combinator::None;
@@ -593,7 +570,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                     return false;
 
                 function_values.skip_whitespace();
-                auto selector_list = parse_a_selector_list(function_values);
+                auto selector_list = parse_a_selector_list(function_values, SelectorType::Standalone);
                 if (selector_list.is_error())
                     return false;
 
@@ -613,14 +590,14 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                     ? Selector::SimpleSelector::PseudoClass::Type::Is
                     : Selector::SimpleSelector::PseudoClass::Type::Where;
                 auto function_token_stream = TokenStream(pseudo_function.values());
-                auto argument_selector_list = parse_a_selector_list(function_token_stream, SelectorParsingMode::Forgiving);
+                auto argument_selector_list = parse_a_selector_list(function_token_stream, SelectorType::Standalone, SelectorParsingMode::Forgiving);
                 // NOTE: Because it's forgiving, even complete garbage will parse OK as an empty selector-list.
                 VERIFY(!argument_selector_list.is_error());
                 simple_selector.pseudo_class.argument_selector_list = argument_selector_list.release_value();
             } else if (pseudo_function.name().equals_ignoring_case("not"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Not;
                 auto function_token_stream = TokenStream(pseudo_function.values());
-                auto not_selector = parse_a_selector_list(function_token_stream);
+                auto not_selector = parse_a_selector_list(function_token_stream, SelectorType::Standalone);
                 if (not_selector.is_error()) {
                     dbgln_if(CSS_PARSER_DEBUG, "Invalid selector in :not() clause");
                     return ParsingResult::SyntaxError;
@@ -2114,7 +2091,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 
     } else {
         auto prelude_stream = TokenStream(rule->m_prelude);
-        auto selectors = parse_a_selector_list(prelude_stream);
+        auto selectors = parse_a_selector_list(prelude_stream, SelectorType::Standalone);
 
         if (selectors.is_error()) {
             if (selectors.error() != ParsingResult::IncludesIgnoredVendorPrefix) {
