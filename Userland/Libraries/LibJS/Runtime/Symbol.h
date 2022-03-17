@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <LibJS/Heap/Cell.h>
 
 namespace JS {
@@ -25,7 +26,7 @@ public:
     String to_string() const { return String::formatted("Symbol({})", description()); }
 
 private:
-    virtual const char* class_name() const override { return "Symbol"; }
+    virtual StringView class_name() const override { return "Symbol"sv; }
 
     Optional<String> m_description;
     bool m_is_global;

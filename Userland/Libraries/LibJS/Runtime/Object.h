@@ -10,6 +10,7 @@
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/MarkedVector.h>
@@ -27,7 +28,7 @@ namespace JS {
 #define JS_OBJECT(class_, base_class) \
 public:                               \
     using Base = base_class;          \
-    virtual const char* class_name() const override { return #class_; }
+    virtual StringView class_name() const override { return #class_; }
 
 struct PrivateElement {
     enum class Kind {
@@ -166,7 +167,7 @@ public:
     bool has_parameter_map() const { return m_has_parameter_map; }
     void set_has_parameter_map() { m_has_parameter_map = true; }
 
-    virtual const char* class_name() const override { return "Object"; }
+    virtual StringView class_name() const override { return "Object"sv; }
     virtual void visit_edges(Cell::Visitor&) override;
 
     Value get_direct(size_t index) const { return m_storage[index]; }

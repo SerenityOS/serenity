@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/VM.h>
 
@@ -38,7 +39,7 @@ public:
     }
 
 private:
-    const char* class_name() const override { return "Accessor"; };
+    StringView class_name() const override { return "Accessor"sv; };
 
     FunctionObject* m_getter { nullptr };
     FunctionObject* m_setter { nullptr };

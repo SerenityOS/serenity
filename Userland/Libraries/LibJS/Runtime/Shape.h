@@ -8,6 +8,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
+#include <AK/StringView.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibJS/Forward.h>
@@ -86,7 +87,7 @@ public:
     void reconfigure_property_in_unique_shape(const StringOrSymbol& property_key, PropertyAttributes attributes);
 
 private:
-    virtual const char* class_name() const override { return "Shape"; }
+    virtual StringView class_name() const override { return "Shape"sv; }
     virtual void visit_edges(Visitor&) override;
 
     Shape* get_or_prune_cached_forward_transition(TransitionKey const&);

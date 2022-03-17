@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JobCallback.h>
 #include <LibJS/Runtime/VM.h>
@@ -79,7 +80,7 @@ public:
     const Optional<JobCallback>& handler() const { return m_handler; }
 
 private:
-    virtual const char* class_name() const override { return "PromiseReaction"; }
+    virtual StringView class_name() const override { return "PromiseReaction"sv; }
     virtual void visit_edges(Visitor&) override;
 
     Type m_type;

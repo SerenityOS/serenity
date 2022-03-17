@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -19,7 +20,7 @@ struct Variable {
 #define JS_ENVIRONMENT(class_, base_class) \
 public:                                    \
     using Base = base_class;               \
-    virtual char const* class_name() const override { return #class_; }
+    virtual StringView class_name() const override { return #class_; }
 
 class Environment : public Cell {
 public:
@@ -47,7 +48,7 @@ public:
     template<typename T>
     bool fast_is() const = delete;
 
-    virtual char const* class_name() const override { return "Environment"; }
+    virtual StringView class_name() const override { return "Environment"sv; }
 
     // This flag is set on the entire variable environment chain when direct eval() is performed.
     // It is used to disable non-local variable access caching.
