@@ -47,17 +47,18 @@ public:
         // 1. Let realm be CreateRealm().
         auto* realm = Realm::create(vm);
 
-        // 2. Let newContext be a new execution context. (This was done in the Interpreter constructor)
+        // 2. Let newContext be a new execution context.
+        auto& new_context = interpreter->m_global_execution_context;
 
         // 3. Set the Function of newContext to null. (This is done for us when the execution context is constructed)
 
         // 4. Set the Realm of newContext to realm.
-        interpreter->m_global_execution_context.realm = realm;
+        new_context.realm = realm;
 
         // 5. Set the ScriptOrModule of newContext to null. (This was done during execution context construction)
 
         // 6. Push newContext onto the execution context stack; newContext is now the running execution context.
-        vm.push_execution_context(interpreter->m_global_execution_context);
+        vm.push_execution_context(new_context);
 
         // 7. If the host requires use of an exotic object to serve as realm's global object, let global be such an object created in a host-defined manner.
         //    Otherwise, let global be undefined, indicating that an ordinary object should be created as the global object.
@@ -65,16 +66,16 @@ public:
 
         // 8. If the host requires that the this binding in realm's global scope return an object other than the global object, let thisValue be such an object created
         //    in a host-defined manner. Otherwise, let thisValue be undefined, indicating that realm's global this binding should be the global object.
+        Object* this_value;
         if constexpr (IsSame<GlobalObjectType, GlobalThisObjectType>) {
-            // 9. Perform SetRealmGlobalObject(realm, global, thisValue).
-            realm->set_global_object(*global_object, global_object);
+            this_value = global_object;
         } else {
             // FIXME: Should we pass args in here? Let's er on the side of caution and say yes.
-            auto* global_this_value = static_cast<Object*>(interpreter->heap().allocate_without_global_object<GlobalThisObjectType>(forward<Args>(args)...));
-
-            // 9. Perform SetRealmGlobalObject(realm, global, thisValue).
-            realm->set_global_object(*global_object, global_this_value);
+            this_value = static_cast<Object*>(interpreter->heap().allocate_without_global_object<GlobalThisObjectType>(forward<Args>(args)...));
         }
+
+        // 9. Perform SetRealmGlobalObject(realm, global, thisValue).
+        realm->set_global_object(*global_object, this_value);
 
         // NOTE: These are not in the spec.
         static FlyString global_execution_context_name = "(global execution context)";
