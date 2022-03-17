@@ -677,6 +677,8 @@ void FontEditorWidget::undo()
     m_undo_stack->undo();
     auto glyph = m_undo_selection->previous_active_glyph();
     auto glyph_width = edited_font().raw_glyph_width(glyph);
+    if (glyph < m_range.first || glyph > m_range.last)
+        m_search_textbox->set_text("");
     m_glyph_map_widget->set_active_glyph(glyph);
     m_glyph_map_widget->scroll_to_glyph(glyph);
     if (m_edited_font->is_fixed_width()) {
@@ -697,6 +699,8 @@ void FontEditorWidget::redo()
     m_undo_stack->redo();
     auto glyph = m_undo_selection->previous_active_glyph();
     auto glyph_width = edited_font().raw_glyph_width(glyph);
+    if (glyph < m_range.first || glyph > m_range.last)
+        m_search_textbox->set_text("");
     m_glyph_map_widget->set_active_glyph(glyph);
     m_glyph_map_widget->scroll_to_glyph(glyph);
     if (m_edited_font->is_fixed_width()) {
