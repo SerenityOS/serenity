@@ -155,6 +155,7 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
         return matches_checked_pseudo_class(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Is:
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Where:
         for (auto& selector : pseudo_class.argument_selector_list) {
             if (matches(selector, element))
                 return true;
