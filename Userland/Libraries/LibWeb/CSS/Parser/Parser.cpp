@@ -571,15 +571,37 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
 
         } else if (pseudo_class_token.is_function()) {
 
-            auto parse_nth_child_pattern = [this](auto& simple_selector, auto& pseudo_function) -> bool {
+            auto parse_nth_child_pattern = [this](Selector::SimpleSelector& simple_selector, StyleFunctionRule const& pseudo_function, bool allow_of = false) -> bool {
                 auto function_values = TokenStream<StyleComponentValueRule>(pseudo_function.values());
-                auto nth_child_pattern = parse_a_n_plus_b_pattern(function_values);
+                auto nth_child_pattern = parse_a_n_plus_b_pattern(function_values, allow_of ? AllowTrailingTokens::Yes : AllowTrailingTokens::No);
                 if (nth_child_pattern.has_value()) {
                     simple_selector.pseudo_class.nth_child_pattern = nth_child_pattern.value();
                 } else {
                     dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid format for {}", pseudo_function.name());
                     return false;
                 }
+                if (!allow_of)
+                    return true;
+
+                function_values.skip_whitespace();
+                if (!function_values.has_next_token())
+                    return true;
+
+                // Parse the `of <selector-list>` syntax
+                auto& maybe_of = function_values.next_token();
+                if (!(maybe_of.is(Token::Type::Ident) && maybe_of.token().ident().equals_ignoring_case("of"sv)))
+                    return false;
+
+                function_values.skip_whitespace();
+                auto selector_list = parse_a_selector_list(function_values);
+                if (selector_list.is_error())
+                    return false;
+
+                function_values.skip_whitespace();
+                if (function_values.has_next_token())
+                    return false;
+
+                simple_selector.pseudo_class.argument_selector_list = selector_list.value();
                 return true;
             };
 
@@ -606,11 +628,11 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 simple_selector.pseudo_class.argument_selector_list = not_selector.release_value();
             } else if (pseudo_function.name().equals_ignoring_case("nth-child"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthChild;
-                if (!parse_nth_child_pattern(simple_selector, pseudo_function))
+                if (!parse_nth_child_pattern(simple_selector, pseudo_function, true))
                     return ParsingResult::SyntaxError;
             } else if (pseudo_function.name().equals_ignoring_case("nth-last-child"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthLastChild;
-                if (!parse_nth_child_pattern(simple_selector, pseudo_function))
+                if (!parse_nth_child_pattern(simple_selector, pseudo_function, true))
                     return ParsingResult::SyntaxError;
             } else if (pseudo_function.name().equals_ignoring_case("nth-of-type"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthOfType;
@@ -4129,7 +4151,7 @@ RefPtr<StyleValue> Parser::parse_css_value(StyleComponentValueRule const& compon
     return {};
 }
 
-Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>& values)
+Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>& values, AllowTrailingTokens allow_trailing_tokens)
 {
     int a = 0;
     int b = 0;
@@ -4145,7 +4167,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     auto make_return_value = [&]() -> Optional<Selector::SimpleSelector::ANPlusBPattern> {
         // When we think we are done, but there are more non-whitespace tokens, then it's a parse error.
         values.skip_whitespace();
-        if (values.has_next_token()) {
+        if (values.has_next_token() && allow_trailing_tokens == AllowTrailingTokens::No) {
             if constexpr (CSS_PARSER_DEBUG) {
                 dbgln_if(CSS_PARSER_DEBUG, "Extra tokens at end of An+B value:");
                 values.dump_all_tokens();

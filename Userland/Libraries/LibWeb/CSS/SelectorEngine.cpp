@@ -180,16 +180,35 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         if (!parent)
             return false;
 
+        auto matches_selector_list = [](CSS::SelectorList const& list, DOM::Element const& element) {
+            if (list.is_empty())
+                return true;
+            for (auto const& child_selector : list) {
+                if (matches(child_selector, element)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
         int index = 1;
         switch (pseudo_class.type) {
         case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild: {
-            for (auto* child = parent->first_child_of_type<DOM::Element>(); child && child != &element; child = child->next_element_sibling())
-                ++index;
+            if (!matches_selector_list(pseudo_class.argument_selector_list, element))
+                return false;
+            for (auto* child = parent->first_child_of_type<DOM::Element>(); child && child != &element; child = child->next_element_sibling()) {
+                if (matches_selector_list(pseudo_class.argument_selector_list, *child))
+                    ++index;
+            }
             break;
         }
         case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild: {
-            for (auto* child = parent->last_child_of_type<DOM::Element>(); child && child != &element; child = child->previous_element_sibling())
-                ++index;
+            if (!matches_selector_list(pseudo_class.argument_selector_list, element))
+                return false;
+            for (auto* child = parent->last_child_of_type<DOM::Element>(); child && child != &element; child = child->previous_element_sibling()) {
+                if (matches_selector_list(pseudo_class.argument_selector_list, *child))
+                    ++index;
+            }
             break;
         }
         case CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType: {

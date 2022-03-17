@@ -42,6 +42,21 @@ u32 Selector::specificity() const
     u32 classes = 0;
     u32 tag_names = 0;
 
+    auto count_specificity_of_most_complex_selector = [&](auto& selector_list) {
+        u32 max_selector_list_argument_specificity = 0;
+        for (auto const& complex_selector : selector_list) {
+            max_selector_list_argument_specificity = max(max_selector_list_argument_specificity, complex_selector.specificity());
+        }
+
+        u32 child_ids = (max_selector_list_argument_specificity & ids_mask) >> ids_shift;
+        u32 child_classes = (max_selector_list_argument_specificity & classes_mask) >> classes_shift;
+        u32 child_tag_names = (max_selector_list_argument_specificity & tag_names_mask) >> tag_names_shift;
+
+        ids += child_ids;
+        classes += child_classes;
+        tag_names += child_tag_names;
+    };
+
     for (auto& list : m_compound_selectors) {
         for (auto& simple_selector : list.simple_selectors) {
             switch (simple_selector.type) {
@@ -60,18 +75,16 @@ u32 Selector::specificity() const
                 case SimpleSelector::PseudoClass::Type::Not: {
                     // The specificity of an :is(), :not(), or :has() pseudo-class is replaced by the
                     // specificity of the most specific complex selector in its selector list argument.
-                    u32 max_selector_list_argument_specificity = 0;
-                    for (auto const& complex_selector : simple_selector.pseudo_class.argument_selector_list) {
-                        max_selector_list_argument_specificity = max(max_selector_list_argument_specificity, complex_selector.specificity());
-                    }
-
-                    u32 child_ids = (max_selector_list_argument_specificity & ids_mask) >> ids_shift;
-                    u32 child_classes = (max_selector_list_argument_specificity & classes_mask) >> classes_shift;
-                    u32 child_tag_names = (max_selector_list_argument_specificity & tag_names_mask) >> tag_names_shift;
-
-                    ids += child_ids;
-                    classes += child_classes;
-                    tag_names += child_tag_names;
+                    count_specificity_of_most_complex_selector(simple_selector.pseudo_class.argument_selector_list);
+                    break;
+                }
+                case SimpleSelector::PseudoClass::Type::NthChild:
+                case SimpleSelector::PseudoClass::Type::NthLastChild: {
+                    // Analogously, the specificity of an :nth-child() or :nth-last-child() selector
+                    // is the specificity of the pseudo class itself (counting as one pseudo-class selector)
+                    // plus the specificity of the most specific complex selector in its selector list argument (if any).
+                    ++classes;
+                    count_specificity_of_most_complex_selector(simple_selector.pseudo_class.argument_selector_list);
                     break;
                 }
                 case SimpleSelector::PseudoClass::Type::Where:

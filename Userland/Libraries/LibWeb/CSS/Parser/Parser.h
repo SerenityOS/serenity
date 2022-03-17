@@ -157,7 +157,11 @@ private:
     template<typename T>
     RefPtr<Supports> parse_a_supports(TokenStream<T>&);
 
-    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&);
+    enum class AllowTrailingTokens {
+        No,
+        Yes
+    };
+    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&, AllowTrailingTokens = AllowTrailingTokens::No);
 
     template<typename T>
     [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(TokenStream<T>&, bool top_level);
