@@ -29,7 +29,7 @@ public:
         "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"
     };
 
-    enum Type {
+    enum class Type {
         Clubs,
         Diamonds,
         Spades,
@@ -49,7 +49,7 @@ public:
     bool is_moving() const { return m_moving; }
     bool is_upside_down() const { return m_upside_down; }
     bool is_inverted() const { return m_inverted; }
-    Gfx::Color color() const { return (m_type == Diamonds || m_type == Hearts) ? Color::Red : Color::Black; }
+    Gfx::Color color() const { return (m_type == Type::Diamonds || m_type == Type::Hearts) ? Color::Red : Color::Black; }
 
     void set_position(const Gfx::IntPoint p) { m_rect.set_location(p); }
     void set_moving(bool moving) { m_moving = moving; }

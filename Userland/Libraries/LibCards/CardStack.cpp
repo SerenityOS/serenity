@@ -10,7 +10,7 @@ namespace Cards {
 
 CardStack::CardStack()
     : m_position({ 0, 0 })
-    , m_type(Invalid)
+    , m_type(Type::Invalid)
     , m_base(m_position, { Card::width, Card::height })
 {
 }
@@ -21,7 +21,7 @@ CardStack::CardStack(const Gfx::IntPoint& position, Type type)
     , m_rules(rules_for_type(type))
     , m_base(m_position, { Card::width, Card::height })
 {
-    VERIFY(type != Invalid);
+    VERIFY(type != Type::Invalid);
     calculate_bounding_box();
 }
 
@@ -32,7 +32,7 @@ CardStack::CardStack(const Gfx::IntPoint& position, Type type, NonnullRefPtr<Car
     , m_rules(rules_for_type(type))
     , m_base(m_position, { Card::width, Card::height })
 {
-    VERIFY(type != Invalid);
+    VERIFY(type != Type::Invalid);
     calculate_bounding_box();
 }
 
@@ -59,13 +59,13 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
     };
 
     switch (m_type) {
-    case Stock:
+    case Type::Stock:
         if (draw_background_if_empty()) {
             painter.fill_rect(m_base.shrunken(Card::width / 4, Card::height / 4), background_color.lightened(1.5));
             painter.fill_rect(m_base.shrunken(Card::width / 2, Card::height / 2), background_color);
         }
         break;
-    case Foundation:
+    case Type::Foundation:
         if (draw_background_if_empty()) {
             for (int y = 0; y < (m_base.height() - 4) / 8; ++y) {
                 for (int x = 0; x < (m_base.width() - 4) / 5; ++x) {
@@ -74,11 +74,11 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
             }
         }
         break;
-    case Play:
-    case Normal:
+    case Type::Play:
+    case Type::Normal:
         draw_background_if_empty();
         break;
-    case Waste:
+    case Type::Waste:
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -112,7 +112,7 @@ void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, Nonnu
 {
     VERIFY(grabbed.is_empty());
 
-    if (m_type != Normal) {
+    if (m_type != Type::Normal) {
         auto& top_card = peek();
         if (top_card.rect().contains(click_location)) {
             top_card.set_moving(true);
@@ -159,13 +159,13 @@ void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, Nonnu
         if (i != 0) {
             bool color_match;
             switch (movement_rule) {
-            case Alternating:
+            case MovementRule::Alternating:
                 color_match = card.color() != last_color;
                 break;
-            case Same:
+            case MovementRule::Same:
                 color_match = card.color() == last_color;
                 break;
-            case Any:
+            case MovementRule::Any:
                 color_match = true;
                 break;
             }
@@ -189,18 +189,18 @@ void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, Nonnu
 
 bool CardStack::is_allowed_to_push(const Card& card, size_t stack_size, MovementRule movement_rule) const
 {
-    if (m_type == Stock || m_type == Waste || m_type == Play)
+    if (m_type == Type::Stock || m_type == Type::Waste || m_type == Type::Play)
         return false;
 
-    if (m_type == Normal && is_empty()) {
+    if (m_type == Type::Normal && is_empty()) {
         // FIXME: proper solution for this
-        if (movement_rule == Alternating) {
+        if (movement_rule == MovementRule::Alternating) {
             return card.value() == 12;
         }
         return true;
     }
 
-    if (m_type == Foundation && is_empty())
+    if (m_type == Type::Foundation && is_empty())
         return card.value() == 0;
 
     if (!is_empty()) {
@@ -208,21 +208,21 @@ bool CardStack::is_allowed_to_push(const Card& card, size_t stack_size, Movement
         if (top_card.is_upside_down())
             return false;
 
-        if (m_type == Foundation) {
+        if (m_type == Type::Foundation) {
             // Prevent player from dragging an entire stack of cards to the foundation stack
             if (stack_size > 1)
                 return false;
             return top_card.type() == card.type() && m_stack.size() == card.value();
-        } else if (m_type == Normal) {
+        } else if (m_type == Type::Normal) {
             bool color_match;
             switch (movement_rule) {
-            case Alternating:
+            case MovementRule::Alternating:
                 color_match = card.color() != top_card.color();
                 break;
-            case Same:
+            case MovementRule::Same:
                 color_match = card.color() == top_card.color();
                 break;
-            case Any:
+            case MovementRule::Any:
                 color_match = true;
                 break;
             }
@@ -248,7 +248,7 @@ void CardStack::push(NonnullRefPtr<Card> card)
             top_most_position.translate_by(m_rules.shift_x, m_rules.shift_y);
     }
 
-    if (m_type == Stock)
+    if (m_type == Type::Stock)
         card->set_upside_down(true);
 
     card->set_position(top_most_position);
@@ -263,7 +263,7 @@ NonnullRefPtr<Card> CardStack::pop()
     auto card = m_stack.take_last();
 
     calculate_bounding_box();
-    if (m_type == Stock)
+    if (m_type == Type::Stock)
         card->set_upside_down(false);
 
     m_stack_positions.take_last();

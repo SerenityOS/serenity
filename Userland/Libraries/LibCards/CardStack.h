@@ -15,7 +15,7 @@ namespace Cards {
 
 class CardStack final : public RefCounted<CardStack> {
 public:
-    enum Type {
+    enum class Type {
         Invalid,
         Stock,
         Normal,
@@ -24,7 +24,7 @@ public:
         Foundation
     };
 
-    enum MovementRule {
+    enum class MovementRule {
         Alternating,
         Same,
         Any,
@@ -50,8 +50,8 @@ public:
     void move_to_stack(CardStack&);
     void rebound_cards();
 
-    bool is_allowed_to_push(const Card&, size_t stack_size = 1, MovementRule movement_rule = Alternating) const;
-    void add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = Alternating);
+    bool is_allowed_to_push(const Card&, size_t stack_size = 1, MovementRule movement_rule = MovementRule::Alternating) const;
+    void add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
     void draw(GUI::Painter&, const Gfx::Color& background_color);
     void clear();
 
@@ -66,15 +66,15 @@ private:
     constexpr StackRules rules_for_type(Type stack_type)
     {
         switch (stack_type) {
-        case Foundation:
+        case Type::Foundation:
             return { 2, 1, 4, 1 };
-        case Normal:
+        case Type::Normal:
             return { 0, 20, 1, 3 };
-        case Stock:
+        case Type::Stock:
             return { 2, 1, 8, 1 };
-        case Waste:
+        case Type::Waste:
             return { 0, 0, 1, 0 };
-        case Play:
+        case Type::Play:
             return { 20, 0, 1, 0 };
         default:
             return {};
@@ -88,7 +88,7 @@ private:
     Vector<Gfx::IntPoint> m_stack_positions;
     Gfx::IntPoint m_position;
     Gfx::IntRect m_bounding_box;
-    Type m_type { Invalid };
+    Type m_type { Type::Invalid };
     StackRules m_rules;
     bool m_focused { false };
     Gfx::IntRect m_base;
