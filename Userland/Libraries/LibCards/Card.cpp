@@ -112,14 +112,14 @@ Card::Card(Type type, uint8_t value)
 
     auto const& symbol = [&]() -> Gfx::CharacterBitmap const& {
         switch (m_type) {
-        case Diamonds:
+        case Type::Diamonds:
             return s_diamond;
-        case Clubs:
+        case Type::Clubs:
             return s_club;
             break;
-        case Spades:
+        case Type::Spades:
             return s_spade;
-        case Hearts:
+        case Type::Hearts:
             return s_heart;
         default:
             VERIFY_NOT_REACHED();
