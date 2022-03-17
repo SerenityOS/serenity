@@ -196,7 +196,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     // If the bootloader didn't provide a framebuffer, then set up an initial text console.
     // We do so we can see the output on the screen as soon as possible.
     if (!kernel_command_line().is_early_boot_console_disabled()) {
-        if (!multiboot_framebuffer_addr.is_null()) {
+        if (!multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
             g_boot_console = &try_make_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
         } else {
             g_boot_console = &Graphics::TextModeConsole::initialize().leak_ref();
