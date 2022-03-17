@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "UndoGlyph.h"
+#include "UndoSelection.h"
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/GlyphMapWidget.h>
@@ -77,7 +77,7 @@ private:
 
     RefPtr<GUI::Action> m_undo_action;
     RefPtr<GUI::Action> m_redo_action;
-    RefPtr<UndoGlyph> m_undo_glyph;
+    RefPtr<UndoSelection> m_undo_selection;
     OwnPtr<GUI::UndoStack> m_undo_stack;
 
     RefPtr<GUI::Action> m_go_to_glyph_action;
