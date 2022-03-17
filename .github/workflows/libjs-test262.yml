@@ -49,7 +49,12 @@ jobs:
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
-          sudo apt-get install -y ninja-build unzip gcc-11 g++-11 jq
+          sudo apt-get install -y ninja-build unzip gcc-11 g++-11 jq wget
+          test -e /opt/wabt-1.0.27 || (
+            cd /tmp
+            wget https://github.com/WebAssembly/wabt/releases/download/1.0.27/wabt-1.0.27-ubuntu.tar.gz
+            tar xf wabt-1.0.27-ubuntu.tar.gz -C /opt
+          )
 
       - name: Setup Python
         uses: actions/setup-python@v2
@@ -94,7 +99,8 @@ jobs:
         working-directory: libjs-test262
         run: |
           cd Build
-          cmake -GNinja -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_COMPILER=g++-11 -DINCLUDE_WASM_SPEC_TESTS=ON -DSERENITY_SOURCE_DIR=${{ env.SERENITY_SOURCE_DIR }} ..
+          env PATH="/opt/wabt-1.0.27/bin:$PATH" \
+              cmake -GNinja -DCMAKE_C_COMPILER=gcc-11 -DCMAKE_CXX_COMPILER=g++-11 -DWASM_SPEC_TEST_SKIP_FORMATTING=ON -DINCLUDE_WASM_SPEC_TESTS=ON -DSERENITY_SOURCE_DIR=${{ env.SERENITY_SOURCE_DIR }} ..
           ninja libjs-test262-runner test-js test-wasm
 
       - name: Get previous results
