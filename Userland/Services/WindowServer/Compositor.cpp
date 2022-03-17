@@ -1460,9 +1460,25 @@ void Compositor::unregister_animation(Badge<Animation>, Animation& animation)
 void Compositor::update_animations(Screen& screen, Gfx::DisjointRectSet& flush_rects)
 {
     auto& painter = *screen.compositor_screen_data().m_back_painter;
-    for (RefPtr<Animation> animation : m_animations) {
-        animation->update({}, painter, screen, flush_rects);
-    }
+    // Iterating over the animations using remove_all_matching we can iterate
+    // and immediately remove finished animations without having to keep track
+    // of them in a separate container.
+    m_animations.remove_all_matching([&](auto* animation) {
+        if (!animation->update({}, painter, screen, flush_rects)) {
+            // Mark it as removed so that the Animation::on_stop handler doesn't
+            // trigger the Animation object from being destroyed, causing it to
+            // unregister while we still loop over them.
+            animation->was_removed({});
+
+            // Temporarily bump the ref count so that if the Animation::on_stop
+            // handler clears its own reference, it doesn't immediately destroy
+            // itself while we're still in the Function<> call
+            NonnullRefPtr<Animation> protect_animation(*animation);
+            animation->stop();
+            return true;
+        }
+        return false;
+    });
 }
 
 void Compositor::create_window_stack_switch_overlay(WindowStack& target_stack)
