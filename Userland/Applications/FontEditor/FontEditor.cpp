@@ -820,35 +820,20 @@ void FontEditorWidget::set_scale_and_save(i32 scale)
 
 void FontEditorWidget::copy_selected_glyphs()
 {
-    ByteBuffer buffer;
-
-    int first_glyph = -1;
-    size_t glyph_count = 0;
-    auto append_glyph_to_buffer = [&](int glyph) {
-        if (!edited_font().contains_glyph(glyph))
-            return;
-
-        if (first_glyph == -1 || glyph < first_glyph)
-            first_glyph = glyph;
-        buffer.append({ (char*)&glyph, sizeof(int) });
-
-        auto bitmap = edited_font().raw_glyph(glyph).glyph_bitmap();
-        buffer.append((u8)bitmap.width());
-        buffer.append((u8)bitmap.height());
-        for (int x = 0; x < bitmap.width(); x++) {
-            for (int y = 0; y < bitmap.height(); y++)
-                buffer.append(bitmap.bit_at(x, y));
-        }
-        glyph_count++;
-    };
-
+    size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * edited_font().glyph_height();
     auto selection = m_glyph_map_widget->selection().normalized();
-    for (int i = selection.start(); i < selection.start() + selection.size(); i++)
-        append_glyph_to_buffer(i);
+    auto* rows = m_edited_font->rows() + selection.start() * bytes_per_glyph;
+    auto* widths = m_edited_font->widths() + selection.start();
+
+    ByteBuffer buffer;
+    buffer.append(rows, bytes_per_glyph * selection.size());
+    buffer.append(widths, selection.size());
 
     HashMap<String, String> metadata;
-    metadata.set("first_glyph", String::number(first_glyph));
-    metadata.set("count", String::number(glyph_count));
+    metadata.set("start", String::number(selection.start()));
+    metadata.set("count", String::number(selection.size()));
+    metadata.set("width", String::number(edited_font().max_glyph_width()));
+    metadata.set("height", String::number(edited_font().glyph_height()));
     GUI::Clipboard::the().set_data(buffer.bytes(), "glyph/x-fonteditor", metadata);
 }
 
@@ -863,9 +848,13 @@ void FontEditorWidget::paste_glyphs()
     auto [data, mime_type, metadata] = GUI::Clipboard::the().fetch_data_and_type();
     if (!mime_type.starts_with("glyph/"))
         return;
-    ;
-    auto glyph_count = metadata.get("count").value_or("0").to_uint().value_or(0);
-    if (glyph_count == 0)
+
+    auto glyph_count = metadata.get("count").value().to_uint().value_or(0);
+    if (!glyph_count)
+        return;
+
+    auto height = metadata.get("height").value().to_uint().value_or(0);
+    if (!height)
         return;
 
     // FIXME: This is a hack to avoid regression and still doesn't support
@@ -875,35 +864,21 @@ void FontEditorWidget::paste_glyphs()
             m_glyph_editor_widget->on_undo_event();
     }
 
-    auto first_glyph = metadata.get("first_glyph").value_or("0").to_uint().value_or(0);
+    auto selection = m_glyph_map_widget->selection().normalized();
+    auto range_bound_glyph_count = min(glyph_count, 1 + m_range.last - selection.start());
 
-    InputMemoryStream stream(data.bytes());
-    for (size_t s = 0; s < glyph_count; s++) {
-        int copied_glyph {};
-        char width {};
-        char height {};
-        stream >> Bytes { (char*)&copied_glyph, sizeof(int) } >> width >> height;
-        if (stream.has_any_error()) {
-            dbgln("Failed to read glyph from clipboard, aborting!");
-            return;
-        }
+    size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * edited_font().glyph_height();
+    size_t bytes_per_copied_glyph = Gfx::GlyphBitmap::bytes_per_row() * height;
+    size_t copyable_bytes_per_glyph = min(bytes_per_glyph, bytes_per_copied_glyph);
+    auto* rows = m_edited_font->rows() + selection.start() * bytes_per_glyph;
+    auto* widths = m_edited_font->widths() + selection.start();
 
-        int glyph = m_glyph_map_widget->active_glyph() + (copied_glyph - first_glyph);
-        auto bitmap = edited_font().raw_glyph(glyph).glyph_bitmap();
-        m_edited_font->set_glyph_width(glyph, min(width, edited_font().max_glyph_width()));
-        for (int x = 0; x < min(width, edited_font().max_glyph_width()); x++) {
-            for (int y = 0; y < min(height, edited_font().glyph_height()); y++) {
-                char byte;
-                stream >> byte;
-                if (stream.has_any_error()) {
-                    dbgln("Failed to read glyph from clipboard, aborting!");
-                    return;
-                }
-                bitmap.set_bit_at(x, y, byte);
-            }
-        }
-        if (m_glyph_editor_widget->on_glyph_altered)
-            m_glyph_editor_widget->on_glyph_altered(glyph);
+    for (size_t i = 0; i < range_bound_glyph_count; ++i) {
+        auto copyable_width = edited_font().is_fixed_width()
+            ? edited_font().glyph_fixed_width()
+            : min(edited_font().max_glyph_width(), data[bytes_per_copied_glyph * glyph_count + i]);
+        memcpy(&rows[i * bytes_per_glyph], &data[i * bytes_per_copied_glyph], copyable_bytes_per_glyph);
+        memset(&widths[i], copyable_width, sizeof(u8));
     }
 
     if (m_edited_font->is_fixed_width())
@@ -912,21 +887,12 @@ void FontEditorWidget::paste_glyphs()
         m_glyph_editor_width_spinbox->set_value(m_edited_font->raw_glyph_width(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
 
     m_glyph_editor_widget->update();
+    m_glyph_map_widget->update();
     update_statusbar();
 }
 
 void FontEditorWidget::delete_selected_glyphs()
 {
-    auto delete_glyph = [&](int glyph) {
-        auto bitmap = m_edited_font->raw_glyph(glyph).glyph_bitmap();
-        m_edited_font->set_glyph_width(glyph, 0);
-        for (int x = 0; x < m_edited_font->max_glyph_width(); x++)
-            for (int y = 0; y < m_edited_font->glyph_height(); y++)
-                bitmap.set_bit_at(x, y, false);
-        if (m_glyph_editor_widget->on_glyph_altered)
-            m_glyph_editor_widget->on_glyph_altered(glyph);
-    };
-
     auto selection = m_glyph_map_widget->selection().normalized();
 
     // FIXME: This is a hack to avoid regression and still doesn't support
@@ -936,8 +902,11 @@ void FontEditorWidget::delete_selected_glyphs()
             m_glyph_editor_widget->on_undo_event();
     }
 
-    for (int i = selection.start(); i < selection.start() + selection.size(); i++)
-        delete_glyph(i);
+    size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_edited_font->glyph_height();
+    auto* rows = m_edited_font->rows() + selection.start() * bytes_per_glyph;
+    auto* widths = m_edited_font->widths() + selection.start();
+    memset(rows, 0, bytes_per_glyph * selection.size());
+    memset(widths, 0, selection.size());
 
     if (m_edited_font->is_fixed_width())
         m_glyph_editor_present_checkbox->set_checked(false, GUI::AllowCallback::No);
@@ -945,5 +914,6 @@ void FontEditorWidget::delete_selected_glyphs()
         m_glyph_editor_width_spinbox->set_value(0, GUI::AllowCallback::No);
 
     m_glyph_editor_widget->update();
+    m_glyph_map_widget->update();
     update_statusbar();
 }
