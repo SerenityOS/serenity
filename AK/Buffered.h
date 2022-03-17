@@ -17,11 +17,11 @@ namespace AK {
 
 // FIXME: Implement Buffered<T> for DuplexStream.
 
-template<typename StreamType, size_t Size = 4096, typename = void>
+template<typename StreamType, size_t Size = 4096>
 class Buffered;
 
 template<typename StreamType, size_t Size>
-class Buffered<StreamType, Size, typename EnableIf<IsBaseOf<InputStream, StreamType>>::Type> final : public InputStream {
+requires(IsBaseOf<InputStream, StreamType>) class Buffered<StreamType, Size> final : public InputStream {
     AK_MAKE_NONCOPYABLE(Buffered);
 
 public:
@@ -119,7 +119,7 @@ private:
 };
 
 template<typename StreamType, size_t Size>
-class Buffered<StreamType, Size, typename EnableIf<IsBaseOf<OutputStream, StreamType>>::Type> final : public OutputStream {
+requires(IsBaseOf<OutputStream, StreamType>) class Buffered<StreamType, Size> : public OutputStream {
     AK_MAKE_NONCOPYABLE(Buffered);
 
 public:
@@ -192,7 +192,6 @@ private:
     u8 m_buffer[Size];
     size_t m_buffered { 0 };
 };
-
 }
 
 using AK::Buffered;

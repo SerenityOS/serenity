@@ -307,8 +307,8 @@ struct StandardFormatter {
     void parse(TypeErasedFormatParams&, FormatParser&);
 };
 
-template<typename T>
-struct Formatter<T, typename EnableIf<IsIntegral<T>>::Type> : StandardFormatter {
+template<Integral T>
+struct Formatter<T> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(move(formatter))

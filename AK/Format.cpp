@@ -692,8 +692,8 @@ ErrorOr<void> Formatter<FormatString>::vformat(FormatBuilder& builder, StringVie
     return {};
 }
 
-template<typename T>
-ErrorOr<void> Formatter<T, typename EnableIf<IsIntegral<T>>::Type>::format(FormatBuilder& builder, T value)
+template<Integral T>
+ErrorOr<void> Formatter<T>::format(FormatBuilder& builder, T value)
 {
     if (m_mode == Mode::Character) {
         // FIXME: We just support ASCII for now, in the future maybe unicode?
