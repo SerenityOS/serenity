@@ -90,6 +90,11 @@ public:
         return m_stack_info.size_free() < 32 * KiB;
     }
 
+    void push_execution_context(ExecutionContext& context)
+    {
+        m_execution_context_stack.append(&context);
+    }
+
     ThrowCompletionOr<void> push_execution_context(ExecutionContext& context, GlobalObject& global_object)
     {
         // Ensure we got some stack space left, so the next function call doesn't kill us.

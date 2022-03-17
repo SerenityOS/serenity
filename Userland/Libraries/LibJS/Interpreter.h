@@ -56,13 +56,12 @@ public:
 
         // 5. Set the ScriptOrModule of newContext to null. (This was done during execution context construction)
 
+        // 6. Push newContext onto the execution context stack; newContext is now the running execution context.
+        vm.push_execution_context(interpreter->m_global_execution_context);
+
         // 7. If the host requires use of an exotic object to serve as realm's global object, let global be such an object created in a host-defined manner.
         //    Otherwise, let global be undefined, indicating that an ordinary object should be created as the global object.
         auto* global_object = static_cast<GlobalObject*>(interpreter->heap().allocate_without_global_object<GlobalObjectType>(forward<Args>(args)...));
-
-        // 6. Push newContext onto the execution context stack; newContext is now the running execution context.
-        //    NOTE: This is out of order from the spec, but it shouldn't matter here.
-        vm.push_execution_context(interpreter->m_global_execution_context, *global_object);
 
         // 8. If the host requires that the this binding in realm's global scope return an object other than the global object, let thisValue be such an object created
         //    in a host-defined manner. Otherwise, let thisValue be undefined, indicating that realm's global this binding should be the global object.

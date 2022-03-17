@@ -138,7 +138,7 @@ JS::VM& main_thread_vm()
 
             // 4. If script execution context is not null, then push script execution context onto the JavaScript execution context stack.
             if (callback_host_defined.active_script_context)
-                MUST(vm->push_execution_context(*callback_host_defined.active_script_context, callback.callback.cell()->global_object()));
+                vm->push_execution_context(*callback_host_defined.active_script_context);
 
             // 5. Let result be Call(callback.[[Callback]], V, argumentsList).
             auto result = JS::call(global_object, *callback.callback.cell(), this_value, move(arguments_list));
@@ -228,7 +228,7 @@ JS::VM& main_thread_vm()
                     auto script_record = script_or_module.get<WeakPtr<JS::Script>>();
                     dummy_execution_context = JS::ExecutionContext { vm->heap() };
                     dummy_execution_context->script_or_module = script_or_module;
-                    vm->push_execution_context(dummy_execution_context.value(), script_record->realm().global_object());
+                    vm->push_execution_context(dummy_execution_context.value());
                 }
 
                 // 3. Let result be job().

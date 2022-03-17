@@ -31,7 +31,7 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<J
     // NOTE: We need to push an execution context here for NativeFunction::create() to succeed during global object initialization.
     // It gets removed immediately after creating the interpreter in Document::interpreter().
     auto& eso = verify_cast<Web::HTML::EnvironmentSettingsObject>(*m_interpreter->realm().host_defined());
-    vm.push_execution_context(eso.realm_execution_context(), global_object);
+    vm.push_execution_context(eso.realm_execution_context());
     console_global_object->initialize_global_object();
     vm.pop_execution_context();
 
