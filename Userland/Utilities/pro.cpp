@@ -193,11 +193,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool received_actual_headers = false;
     bool should_save_stream_data = false;
     bool following_url = false;
-    u32 previous_downloaded_size { 0 };
-    u32 previous_midpoint_downloaded_size { 0 };
-    timeval prev_time, prev_midpoint_time, current_time, time_diff;
-    static constexpr auto download_speed_rolling_average_time_in_ms = 4000;
-    gettimeofday(&prev_time, nullptr);
+
+    u32 previous_downloaded_size = 0;
+    u32 const report_time_in_ms = 100;
+    u32 const speed_update_time_in_ms = 4000;
+
+    timeval previous_time, current_time, time_diff;
+    gettimeofday(&previous_time, nullptr);
 
     RefPtr<Protocol::Request> request;
     auto protocol_client = TRY(Protocol::RequestClient::try_create());
@@ -208,10 +210,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             warnln("Failed to start request for '{}'", url_str);
             exit(1);
         }
-        dbgln("Request {}, setup", request->id());
 
         request->on_progress = [&](Optional<u32> maybe_total_size, u32 downloaded_size) {
-            dbgln("Request {}, on progress", request->id());
+            gettimeofday(&current_time, nullptr);
+            timersub(&current_time, &previous_time, &time_diff);
+            auto time_diff_ms = time_diff.tv_sec * 1000 + time_diff.tv_usec / 1000;
+            if (time_diff_ms < report_time_in_ms)
+                return;
+
             warn("\r\033[2K");
             if (maybe_total_size.has_value()) {
                 warn("\033]9;{};{};\033\\", downloaded_size, maybe_total_size.value());
@@ -220,24 +226,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 warn("Download progress: {} / ???", human_readable_size(downloaded_size));
             }
 
-            gettimeofday(&current_time, nullptr);
-            timersub(&current_time, &prev_time, &time_diff);
-
-            auto time_diff_ms = time_diff.tv_sec * 1000 + time_diff.tv_usec / 1000;
             auto size_diff = downloaded_size - previous_downloaded_size;
+            if (time_diff_ms > speed_update_time_in_ms) {
+                previous_time = current_time;
+                previous_downloaded_size = downloaded_size;
+            }
 
             warn(" at {}/s", human_readable_size(((float)size_diff / (float)time_diff_ms) * 1000));
-
-            if (time_diff_ms >= download_speed_rolling_average_time_in_ms) {
-                previous_downloaded_size = previous_midpoint_downloaded_size;
-                prev_time = prev_midpoint_time;
-            } else if (time_diff_ms >= download_speed_rolling_average_time_in_ms / 2) {
-                previous_midpoint_downloaded_size = downloaded_size;
-                prev_midpoint_time = current_time;
-            }
         };
         request->on_headers_received = [&](auto& response_headers, auto status_code) {
-            dbgln("Request {}, on headers", request->id());
             if (received_actual_headers)
                 return;
             dbgln("Received headers! response code = {}", status_code.value_or(0));
@@ -299,7 +296,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         };
         request->on_finish = [&](bool success, auto) {
-            dbgln("Request {}, on finish", request->id());
             if (following_url)
                 return;
 
