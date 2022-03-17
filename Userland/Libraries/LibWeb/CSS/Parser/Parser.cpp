@@ -584,13 +584,17 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
             };
 
             auto& pseudo_function = pseudo_class_token.function();
-            if (pseudo_function.name().equals_ignoring_case("is"sv)) {
-                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Is;
+            if (pseudo_function.name().equals_ignoring_case("is"sv)
+                || pseudo_function.name().equals_ignoring_case("where"sv)) {
+
+                simple_selector.pseudo_class.type = pseudo_function.name().equals_ignoring_case("is"sv)
+                    ? Selector::SimpleSelector::PseudoClass::Type::Is
+                    : Selector::SimpleSelector::PseudoClass::Type::Where;
                 auto function_token_stream = TokenStream(pseudo_function.values());
-                auto is_selector = parse_a_selector_list(function_token_stream, SelectorParsingMode::Forgiving);
+                auto argument_selector_list = parse_a_selector_list(function_token_stream, SelectorParsingMode::Forgiving);
                 // NOTE: Because it's forgiving, even complete garbage will parse OK as an empty selector-list.
-                VERIFY(!is_selector.is_error());
-                simple_selector.pseudo_class.argument_selector_list = is_selector.release_value();
+                VERIFY(!argument_selector_list.is_error());
+                simple_selector.pseudo_class.argument_selector_list = argument_selector_list.release_value();
             } else if (pseudo_function.name().equals_ignoring_case("not"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Not;
                 auto function_token_stream = TokenStream(pseudo_function.values());

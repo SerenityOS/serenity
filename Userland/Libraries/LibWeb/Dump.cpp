@@ -433,11 +433,15 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Is:
                     pseudo_class_description = "Is";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Where:
+                    pseudo_class_description = "Where";
+                    break;
                 }
 
                 builder.appendff(" pseudo_class={}", pseudo_class_description);
                 if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Not
-                    || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Is) {
+                    || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Is
+                    || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Where) {
                     builder.append("([");
                     for (auto& selector : pseudo_class.argument_selector_list)
                         dump_selector(builder, selector);

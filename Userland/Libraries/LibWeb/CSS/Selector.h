@@ -77,6 +77,7 @@ public:
                 Checked,
                 Is,
                 Not,
+                Where,
                 Active,
             };
             Type type { Type::None };
@@ -216,6 +217,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "is"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Not:
         return "not"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Where:
+        return "where"sv;
     case Selector::SimpleSelector::PseudoClass::Type::None:
         break;
     }
