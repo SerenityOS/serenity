@@ -447,8 +447,17 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                         dump_selector(builder, selector);
                     builder.append("])");
                 } else if ((pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild)
-                    || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild)) {
-                    builder.appendff("(step={}, offset={})", pseudo_class.nth_child_pattern.step_size, pseudo_class.nth_child_pattern.offset);
+                    || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild)
+                    || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType)
+                    || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastOfType)) {
+                    builder.appendff("(step={}, offset={}", pseudo_class.nth_child_pattern.step_size, pseudo_class.nth_child_pattern.offset);
+                    if (!pseudo_class.argument_selector_list.is_empty()) {
+                        builder.append(", selectors=[");
+                        for (auto const& child_selector : pseudo_class.argument_selector_list)
+                            dump_selector(builder, child_selector);
+                        builder.append("]");
+                    }
+                    builder.append(")");
                 }
             }
 
