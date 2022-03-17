@@ -70,13 +70,27 @@ struct [[gnu::packed]] EndOfCentralDirectory {
     }
 };
 
+enum class ZipCompressionMethod : u16 {
+    Store = 0,
+    Shrink = 1,
+    Reduce1 = 2,
+    Reduce2 = 3,
+    Reduce3 = 4,
+    Reduce4 = 5,
+    Implode = 6,
+    Reserved = 7,
+    Deflate = 8
+};
+
+OutputStream& operator<<(OutputStream& stream, ZipCompressionMethod method);
+
 struct [[gnu::packed]] CentralDirectoryRecord {
     static constexpr Array<u8, signature_length> signature = { 0x50, 0x4b, 0x01, 0x02 }; // 'PK\x01\x02'
 
     u16 made_by_version;
     u16 minimum_version;
     u16 general_purpose_flags;
-    u16 compression_method;
+    ZipCompressionMethod compression_method;
     u16 modification_time;
     u16 modification_date;
     u32 crc32;
@@ -190,18 +204,6 @@ struct [[gnu::packed]] LocalFileHeader {
         if (compressed_size > 0)
             stream.write_or_error({ compressed_data, compressed_size });
     }
-};
-
-enum ZipCompressionMethod : u16 {
-    Store = 0,
-    Shrink = 1,
-    Reduce1 = 2,
-    Reduce2 = 3,
-    Reduce3 = 4,
-    Reduce4 = 5,
-    Implode = 6,
-    Reserved = 7,
-    Deflate = 8
 };
 
 struct ZipMember {
