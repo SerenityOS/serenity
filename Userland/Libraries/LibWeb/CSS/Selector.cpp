@@ -31,32 +31,76 @@ u32 Selector::specificity() const
     if (m_specificity.has_value())
         return *m_specificity;
 
-    unsigned ids = 0;
-    unsigned tag_names = 0;
-    unsigned classes = 0;
+    constexpr u32 ids_shift = 16;
+    constexpr u32 classes_shift = 8;
+    constexpr u32 tag_names_shift = 0;
+    constexpr u32 ids_mask = 0xff << ids_shift;
+    constexpr u32 classes_mask = 0xff << classes_shift;
+    constexpr u32 tag_names_mask = 0xff << tag_names_shift;
+
+    u32 ids = 0;
+    u32 classes = 0;
+    u32 tag_names = 0;
 
     for (auto& list : m_compound_selectors) {
         for (auto& simple_selector : list.simple_selectors) {
             switch (simple_selector.type) {
             case SimpleSelector::Type::Id:
+                // count the number of ID selectors in the selector (= A)
                 ++ids;
                 break;
             case SimpleSelector::Type::Class:
             case SimpleSelector::Type::Attribute:
-            case SimpleSelector::Type::PseudoClass:
+                // count the number of class selectors, attributes selectors, and pseudo-classes in the selector (= B)
                 ++classes;
+                break;
+            case SimpleSelector::Type::PseudoClass:
+                switch (simple_selector.pseudo_class.type) {
+                case SimpleSelector::PseudoClass::Type::Is:
+                case SimpleSelector::PseudoClass::Type::Not: {
+                    // The specificity of an :is(), :not(), or :has() pseudo-class is replaced by the
+                    // specificity of the most specific complex selector in its selector list argument.
+                    u32 max_selector_list_argument_specificity = 0;
+                    for (auto const& complex_selector : simple_selector.pseudo_class.argument_selector_list) {
+                        max_selector_list_argument_specificity = max(max_selector_list_argument_specificity, complex_selector.specificity());
+                    }
+
+                    u32 child_ids = (max_selector_list_argument_specificity & ids_mask) >> ids_shift;
+                    u32 child_classes = (max_selector_list_argument_specificity & classes_mask) >> classes_shift;
+                    u32 child_tag_names = (max_selector_list_argument_specificity & tag_names_mask) >> tag_names_shift;
+
+                    ids += child_ids;
+                    classes += child_classes;
+                    tag_names += child_tag_names;
+                    break;
+                }
+                case SimpleSelector::PseudoClass::Type::Where:
+                    // The specificity of a :where() pseudo-class is replaced by zero.
+                    break;
+                default:
+                    ++classes;
+                    break;
+                }
                 break;
             case SimpleSelector::Type::TagName:
             case SimpleSelector::Type::PseudoElement:
+                // count the number of type selectors and pseudo-elements in the selector (= C)
                 ++tag_names;
                 break;
-            default:
+            case SimpleSelector::Type::Universal:
+                // ignore the universal selector
+                break;
+            case SimpleSelector::Type::Invalid:
                 break;
             }
         }
     }
 
-    m_specificity = ids * 0x10000 + classes * 0x100 + tag_names;
+    // Due to storage limitations, implementations may have limitations on the size of A, B, or C.
+    // If so, values higher than the limit must be clamped to that limit, and not overflow.
+    m_specificity = (min(ids, 0xff) << ids_shift)
+        + (min(classes, 0xff) << classes_shift)
+        + (min(tag_names, 0xff) << tag_names_shift);
 
     return *m_specificity;
 }
