@@ -702,16 +702,24 @@ public:
     using ConstIterator = SimpleIterator<Vector const, VisibleType const>;
     using Iterator = SimpleIterator<Vector, VisibleType>;
     using ReverseIterator = SimpleReverseIterator<Vector, VisibleType>;
+    using ReverseConstIterator = SimpleReverseIterator<Vector const, VisibleType const>;
 
     ConstIterator begin() const { return ConstIterator::begin(*this); }
     Iterator begin() { return Iterator::begin(*this); }
     ReverseIterator rbegin() { return ReverseIterator::rbegin(*this); }
+    ReverseConstIterator rbegin() const { return ReverseConstIterator::rbegin(*this); }
 
     ConstIterator end() const { return ConstIterator::end(*this); }
     Iterator end() { return Iterator::end(*this); }
     ReverseIterator rend() { return ReverseIterator::rend(*this); }
+    ReverseConstIterator rend() const { return ReverseConstIterator::rend(*this); }
 
     ALWAYS_INLINE constexpr auto in_reverse()
+    {
+        return ReverseWrapper::in_reverse(*this);
+    }
+
+    ALWAYS_INLINE constexpr auto in_reverse() const
     {
         return ReverseWrapper::in_reverse(*this);
     }
