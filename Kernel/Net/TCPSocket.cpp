@@ -207,7 +207,7 @@ ErrorOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_t 
         return set_so_error(EHOSTUNREACH);
     size_t mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
     data_length = min(data_length, mss);
-    TRY(send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, &data, data_length, &routing_decision));
+    TRY(send_tcp_packet(TCPFlags::PSH | TCPFlags::ACK, &data, data_length, &routing_decision));
     return data_length;
 }
 
