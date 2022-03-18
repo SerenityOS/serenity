@@ -180,7 +180,7 @@ void GlyphMapWidget::mouseup_event(GUI::MouseEvent& event)
 {
     if (!m_in_drag_select)
         return;
-    auto constrained = event.position().constrained(rect().shrunken(0, frame_thickness() * 2));
+    auto constrained = event.position().constrained(widget_inner_rect());
     if (auto maybe_glyph = glyph_at_position(constrained); maybe_glyph.has_value()) {
         auto glyph = maybe_glyph.value();
         m_selection.extend_to(glyph);
