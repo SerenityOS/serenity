@@ -163,8 +163,6 @@ int GlyphMapWidget::glyph_at_position_clamped(Gfx::IntPoint position) const
 
 void GlyphMapWidget::mousedown_event(MouseEvent& event)
 {
-    Frame::mousedown_event(event);
-
     if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value()) {
         auto glyph = maybe_glyph.value();
         if (event.shift())
@@ -180,8 +178,6 @@ void GlyphMapWidget::mousedown_event(MouseEvent& event)
 
 void GlyphMapWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    Frame::mouseup_event(event);
-
     if (!m_in_drag_select)
         return;
     auto constrained = event.position().constrained(rect().shrunken(0, frame_thickness() * 2));
@@ -195,8 +191,6 @@ void GlyphMapWidget::mouseup_event(GUI::MouseEvent& event)
 
 void GlyphMapWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    Frame::mousemove_event(event);
-
     if (!m_in_drag_select)
         return;
 
@@ -209,7 +203,6 @@ void GlyphMapWidget::mousemove_event(GUI::MouseEvent& event)
 
 void GlyphMapWidget::doubleclick_event(MouseEvent& event)
 {
-    Widget::doubleclick_event(event);
     if (on_glyph_double_clicked) {
         if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value())
             on_glyph_double_clicked(maybe_glyph.value());
@@ -218,7 +211,7 @@ void GlyphMapWidget::doubleclick_event(MouseEvent& event)
 
 void GlyphMapWidget::keydown_event(KeyEvent& event)
 {
-    Frame::keydown_event(event);
+    Widget::keydown_event(event);
 
     int range_offset = m_active_range.first;
 
