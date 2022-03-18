@@ -529,13 +529,24 @@ void Image::crop(Gfx::IntRect const& cropped_rect)
 
 void Image::resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode)
 {
+    float scale_x = 1.0f;
+    float scale_y = 1.0f;
+
+    if (size().width() != 0.0f) {
+        scale_x = new_size.width() / static_cast<float>(size().width());
+    }
+
+    if (size().height() != 0.0f) {
+        scale_y = new_size.height() / static_cast<float>(size().height());
+    }
+
     for (auto& layer : m_layers) {
-        layer.resize(new_size, scaling_mode);
+        Gfx::IntPoint new_location(scale_x * layer.location().x(), scale_y * layer.location().y());
+        layer.resize(new_size, new_location, scaling_mode);
     }
 
     m_size = { new_size.width(), new_size.height() };
     did_change_rect();
-
 }
 
 Color Image::color_at(Gfx::IntPoint const& point) const

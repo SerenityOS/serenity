@@ -58,6 +58,8 @@ public:
     void rotate(Gfx::RotationDirection direction);
     void crop(Gfx::IntRect const& rect);
     void resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode);
+    void resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode);
+    void resize(Gfx::IntSize const& new_size, Gfx::IntPoint const& new_location, Gfx::Painter::ScalingMode scaling_mode);
 
     ErrorOr<void> try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask);
 
