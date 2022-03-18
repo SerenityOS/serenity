@@ -905,7 +905,7 @@ void FontEditorWidget::paste_glyphs()
 
     for (size_t i = 0; i < range_bound_glyph_count; ++i) {
         auto copyable_width = edited_font().is_fixed_width()
-            ? edited_font().glyph_fixed_width()
+            ? data[bytes_per_copied_glyph * glyph_count + i] ? edited_font().glyph_fixed_width() : 0
             : min(edited_font().max_glyph_width(), data[bytes_per_copied_glyph * glyph_count + i]);
         memcpy(&rows[i * bytes_per_glyph], &data[i * bytes_per_copied_glyph], copyable_bytes_per_glyph);
         memset(&widths[i], copyable_width, sizeof(u8));
