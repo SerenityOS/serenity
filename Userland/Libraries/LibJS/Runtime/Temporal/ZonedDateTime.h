@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -36,7 +35,7 @@ private:
 
 struct NanosecondsToDaysResult {
     double days;
-    Handle<BigInt> nanoseconds;
+    Crypto::SignedBigInteger nanoseconds;
     double day_length;
 };
 
