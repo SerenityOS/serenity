@@ -55,13 +55,13 @@ void Game::setup(Mode mode)
         switch (m_mode) {
         case Mode::SingleSuit:
             for (int j = 0; j < 8; j++) {
-                deck.append(Card::construct(Card::Type::Spades, i));
+                deck.append(Card::construct(Card::Suit::Spades, i));
             }
             break;
         case Mode::TwoSuit:
             for (int j = 0; j < 4; j++) {
-                deck.append(Card::construct(Card::Type::Spades, i));
-                deck.append(Card::construct(Card::Type::Hearts, i));
+                deck.append(Card::construct(Card::Suit::Spades, i));
+                deck.append(Card::construct(Card::Suit::Hearts, i));
             }
             break;
         default:

@@ -203,10 +203,10 @@ void Game::setup(String player_name, int hand_number)
     deck.ensure_capacity(Card::card_count * 4);
 
     for (int i = 0; i < Card::card_count; ++i) {
-        deck.append(Card::construct(Card::Type::Clubs, i));
-        deck.append(Card::construct(Card::Type::Spades, i));
-        deck.append(Card::construct(Card::Type::Hearts, i));
-        deck.append(Card::construct(Card::Type::Diamonds, i));
+        deck.append(Card::construct(Card::Suit::Clubs, i));
+        deck.append(Card::construct(Card::Suit::Spades, i));
+        deck.append(Card::construct(Card::Suit::Hearts, i));
+        deck.append(Card::construct(Card::Suit::Diamonds, i));
     }
 
     for (auto& player : m_players) {
@@ -288,7 +288,7 @@ bool Game::other_player_has_lower_value_card(Player& player, Card& card)
     for (auto& other_player : m_players) {
         if (&player != &other_player) {
             for (auto& other_card : other_player.hand) {
-                if (other_card && card.type() == other_card->type() && hearts_card_value(*other_card) < hearts_card_value(card))
+                if (other_card && card.suit() == other_card->suit() && hearts_card_value(*other_card) < hearts_card_value(card))
                     return true;
             }
         }
@@ -301,7 +301,7 @@ bool Game::other_player_has_higher_value_card(Player& player, Card& card)
     for (auto& other_player : m_players) {
         if (&player != &other_player) {
             for (auto& other_card : other_player.hand) {
-                if (other_card && card.type() == other_card->type() && hearts_card_value(*other_card) > hearts_card_value(card))
+                if (other_card && card.suit() == other_card->suit() && hearts_card_value(*other_card) > hearts_card_value(card))
                     return true;
             }
         }
@@ -314,7 +314,7 @@ bool Game::other_player_has_queen_of_spades(Player& player)
     for (auto& other_player : m_players) {
         if (&player != &other_player) {
             for (auto& other_card : other_player.hand) {
-                if (other_card && other_card->type() == Card::Type::Spades && hearts_card_value(*other_card) == CardValue::Queen)
+                if (other_card && other_card->suit() == Card::Suit::Spades && hearts_card_value(*other_card) == CardValue::Queen)
                     return true;
             }
         }
@@ -335,7 +335,7 @@ size_t Game::pick_card(Player& player)
     bool is_first_trick = m_trick_number == 0;
     if (is_leading_player) {
         if (is_first_trick) {
-            auto clubs_2 = player.pick_specific_card(Card::Type::Clubs, CardValue::Number_2);
+            auto clubs_2 = player.pick_specific_card(Card::Suit::Clubs, CardValue::Number_2);
             VERIFY(clubs_2.has_value());
             return clubs_2.value();
         } else {
@@ -350,15 +350,15 @@ size_t Game::pick_card(Player& player)
     }
     auto* high_card = &m_trick[0];
     for (auto& card : m_trick)
-        if (high_card->type() == card.type() && hearts_card_value(card) > hearts_card_value(*high_card))
+        if (high_card->suit() == card.suit() && hearts_card_value(card) > hearts_card_value(*high_card))
             high_card = &card;
-    if (high_card->type() == Card::Type::Spades && hearts_card_value(*high_card) > CardValue::Queen)
-        RETURN_CARD_IF_VALID(player.pick_specific_card(Card::Type::Spades, CardValue::Queen));
+    if (high_card->suit() == Card::Suit::Spades && hearts_card_value(*high_card) > CardValue::Queen)
+        RETURN_CARD_IF_VALID(player.pick_specific_card(Card::Suit::Spades, CardValue::Queen));
     auto card_has_points = [](Card& card) { return hearts_card_points(card) > 0; };
     auto trick_has_points = m_trick.first_matching(card_has_points).has_value();
     bool is_trailing_player = m_trick.size() == 3;
     if (!trick_has_points && is_trailing_player) {
-        RETURN_CARD_IF_VALID(player.pick_low_points_high_value_card(m_trick[0].type()));
+        RETURN_CARD_IF_VALID(player.pick_low_points_high_value_card(m_trick[0].suit()));
         if (is_first_trick)
             return player.pick_low_points_high_value_card().value();
         else {
@@ -376,8 +376,8 @@ size_t Game::pick_card(Player& player)
     if (is_third_player && !trick_has_points) {
         play_highest_value_card = true;
 
-        if (high_card->type() == Card::Type::Spades && other_player_has_queen_of_spades(player)) {
-            Optional<size_t> chosen_card_index = player.pick_low_points_high_value_card(high_card->type());
+        if (high_card->suit() == Card::Suit::Spades && other_player_has_queen_of_spades(player)) {
+            Optional<size_t> chosen_card_index = player.pick_low_points_high_value_card(high_card->suit());
             if (chosen_card_index.has_value()) {
                 auto& card = player.hand[chosen_card_index.value()];
                 if (hearts_card_value(*card) > CardValue::Queen)
@@ -386,7 +386,7 @@ size_t Game::pick_card(Player& player)
         }
     }
     if (play_highest_value_card)
-        RETURN_CARD_IF_VALID(player.pick_low_points_high_value_card(high_card->type()));
+        RETURN_CARD_IF_VALID(player.pick_low_points_high_value_card(high_card->suit()));
     else
         RETURN_CARD_IF_VALID(player.pick_slightly_higher_value_card(*high_card));
     if (is_first_trick)
@@ -518,7 +518,7 @@ void Game::advance_game()
         // Find whoever has 2 of Clubs, they get to play the first card
         for (auto& player : m_players) {
             auto clubs_2_card = player.hand.first_matching([](auto& card) {
-                return card->type() == Card::Type::Clubs && hearts_card_value(*card) == CardValue::Number_2;
+                return card->suit() == Card::Suit::Clubs && hearts_card_value(*card) == CardValue::Number_2;
             });
             if (clubs_2_card.has_value()) {
                 m_leading_player = &player;
@@ -533,11 +533,11 @@ void Game::advance_game()
         return;
     }
 
-    auto leading_card_type = m_trick[0].type();
+    auto leading_card_suit = m_trick[0].suit();
     size_t taker_index = 0;
     auto taker_value = hearts_card_value(m_trick[0]);
     for (size_t i = 1; i < 4; i++) {
-        if (m_trick[i].type() != leading_card_type)
+        if (m_trick[i].suit() != leading_card_suit)
             continue;
         if (hearts_card_value(m_trick[i]) <= taker_value)
             continue;
@@ -632,7 +632,7 @@ bool Game::is_valid_play(Player& player, Card& card, String* explanation) const
     if (m_trick_number == 0 && m_trick.is_empty()) {
         if (explanation)
             *explanation = "The first card must be Two of Clubs.";
-        return card.type() == Card::Type::Clubs && hearts_card_value(card) == CardValue::Number_2;
+        return card.suit() == Card::Suit::Clubs && hearts_card_value(card) == CardValue::Number_2;
     }
 
     // Can't play hearts or The Queen in the first trick.
@@ -646,7 +646,7 @@ bool Game::is_valid_play(Player& player, Card& card, String* explanation) const
         }
         // ... unless the player only has points cards (e.g. all Hearts or
         // 12 Hearts + Queen of Spades), in which case they're allowed to play Hearts.
-        if (all_points_cards && card.type() == Card::Type::Hearts)
+        if (all_points_cards && card.suit() == Card::Suit::Hearts)
             return true;
         if (explanation)
             *explanation = "You can't play a card worth points in the first trick.";
@@ -656,10 +656,10 @@ bool Game::is_valid_play(Player& player, Card& card, String* explanation) const
     // Leading card can't be hearts until hearts are broken
     // unless the player only has hearts cards.
     if (m_trick.is_empty()) {
-        if (are_hearts_broken() || card.type() != Card::Type::Hearts)
+        if (are_hearts_broken() || card.suit() != Card::Suit::Hearts)
             return true;
         auto non_hearts_card = player.hand.first_matching([](auto const& other_card) {
-            return !other_card.is_null() && other_card->type() != Card::Type::Hearts;
+            return !other_card.is_null() && other_card->suit() != Card::Suit::Hearts;
         });
         auto only_has_hearts = !non_hearts_card.has_value();
         if (!only_has_hearts && explanation)
@@ -668,10 +668,10 @@ bool Game::is_valid_play(Player& player, Card& card, String* explanation) const
     }
 
     // Player must follow suit unless they don't have any matching cards.
-    auto leading_card_type = m_trick[0].type();
-    if (leading_card_type == card.type())
+    auto leading_card_suit = m_trick[0].suit();
+    if (leading_card_suit == card.suit())
         return true;
-    auto has_matching_card = player.has_card_of_type(leading_card_type);
+    auto has_matching_card = player.has_card_of_suit(leading_card_suit);
     if (has_matching_card && explanation)
         *explanation = "You must follow suit.";
     return !has_matching_card;
@@ -681,7 +681,7 @@ bool Game::are_hearts_broken() const
 {
     for (auto& player : m_players)
         for (auto& card : player.cards_taken)
-            if (card->type() == Card::Type::Hearts)
+            if (card->suit() == Card::Suit::Hearts)
                 return true;
     return false;
 }
@@ -750,9 +750,9 @@ int Game::calculate_score(Player& player)
     for (auto& other_player : m_players) {
         int score = 0;
         for (auto& card : other_player.cards_taken)
-            if (card->type() == Card::Type::Spades && card->value() == 11)
+            if (card->suit() == Card::Suit::Spades && card->value() == 11)
                 score += 13;
-            else if (card->type() == Card::Type::Hearts)
+            else if (card->suit() == Card::Suit::Hearts)
                 score++;
         if (!min_score.has_value() || score < min_score.value())
             min_score = score;

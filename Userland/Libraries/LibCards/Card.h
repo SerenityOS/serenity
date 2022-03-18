@@ -29,7 +29,7 @@ public:
         "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"
     };
 
-    enum class Type {
+    enum class Suit {
         Clubs,
         Diamonds,
         Spades,
@@ -43,13 +43,13 @@ public:
     Gfx::IntPoint position() const { return m_rect.location(); }
     const Gfx::IntPoint& old_position() const { return m_old_position; }
     uint8_t value() const { return m_value; };
-    Type type() const { return m_type; }
+    Suit suit() const { return m_suit; }
 
     bool is_old_position_valid() const { return m_old_position_valid; }
     bool is_moving() const { return m_moving; }
     bool is_upside_down() const { return m_upside_down; }
     bool is_inverted() const { return m_inverted; }
-    Gfx::Color color() const { return (m_type == Type::Diamonds || m_type == Type::Hearts) ? Color::Red : Color::Black; }
+    Gfx::Color color() const { return (m_suit == Suit::Diamonds || m_suit == Suit::Hearts) ? Color::Red : Color::Black; }
 
     void set_position(const Gfx::IntPoint p) { m_rect.set_location(p); }
     void set_moving(bool moving) { m_moving = moving; }
@@ -63,7 +63,7 @@ public:
     void clear_and_draw(GUI::Painter&, const Color& background_color);
 
 private:
-    Card(Type type, uint8_t value);
+    Card(Suit suit, uint8_t value);
 
     static NonnullRefPtr<Gfx::Bitmap> invert_bitmap(Gfx::Bitmap&);
 
@@ -71,7 +71,7 @@ private:
     NonnullRefPtr<Gfx::Bitmap> m_front;
     RefPtr<Gfx::Bitmap> m_front_inverted;
     Gfx::IntPoint m_old_position;
-    Type m_type;
+    Suit m_suit;
     uint8_t m_value;
     bool m_old_position_valid { false };
     bool m_moving { false };
@@ -85,25 +85,25 @@ template<>
 struct AK::Formatter<Cards::Card> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Cards::Card const& card)
     {
-        StringView type;
+        StringView suit;
 
-        switch (card.type()) {
-        case Cards::Card::Type::Clubs:
-            type = "C"sv;
+        switch (card.suit()) {
+        case Cards::Card::Suit::Clubs:
+            suit = "C"sv;
             break;
-        case Cards::Card::Type::Diamonds:
-            type = "D"sv;
+        case Cards::Card::Suit::Diamonds:
+            suit = "D"sv;
             break;
-        case Cards::Card::Type::Hearts:
-            type = "H"sv;
+        case Cards::Card::Suit::Hearts:
+            suit = "H"sv;
             break;
-        case Cards::Card::Type::Spades:
-            type = "S"sv;
+        case Cards::Card::Suit::Spades:
+            suit = "S"sv;
             break;
         default:
             VERIFY_NOT_REACHED();
         }
 
-        return Formatter<FormatString>::format(builder, "{:>2}{}", Cards::Card::labels[card.value()], type);
+        return Formatter<FormatString>::format(builder, "{:>2}{}", Cards::Card::labels[card.value()], suit);
     }
 };
