@@ -15,10 +15,23 @@
 namespace Web::Layout {
 
 struct FormattingState {
-    FormattingState() { }
+    FormattingState()
+        : m_root(*this)
+    {
+    }
+
     explicit FormattingState(FormattingState const* parent)
         : m_parent(parent)
+        , m_root(find_root())
     {
+    }
+
+    FormattingState const& find_root() const
+    {
+        FormattingState const* root = this;
+        for (auto* state = m_parent; state; state = state->m_parent)
+            root = state;
+        return *root;
     }
 
     struct NodeState {
@@ -92,6 +105,7 @@ struct FormattingState {
     HashMap<NodeWithStyleAndBoxModelMetrics const*, IntrinsicSizes> mutable intrinsic_sizes;
 
     FormattingState const* m_parent { nullptr };
+    FormattingState const& m_root;
 };
 
 Gfx::FloatRect absolute_content_rect(Box const&, FormattingState const&);
