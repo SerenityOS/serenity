@@ -56,6 +56,6 @@ ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(GlobalObject&,
 ThrowCompletionOr<String> temporal_zoned_date_time_to_string(GlobalObject&, ZonedDateTime& zoned_date_time, Variant<StringView, u8> const& precision, StringView show_calendar, StringView show_time_zone, StringView show_offset, Optional<u64> increment = {}, Optional<StringView> unit = {}, Optional<StringView> rounding_mode = {});
 ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject&, BigInt const& epoch_nanoseconds, Value time_zone, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options = nullptr);
 ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject&, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object* options = nullptr);
-ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject&, BigInt const& nanoseconds, Value relative_to);
+ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject&, Crypto::SignedBigInteger nanoseconds, Value relative_to);
 
 }
