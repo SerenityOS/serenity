@@ -30,7 +30,7 @@ public:
 
     void paint_descendants(PaintContext&, Layout::Node&, StackingContextPaintPhase) const;
     void paint(PaintContext&) const;
-    HitTestResult hit_test(Gfx::IntPoint const&, HitTestType) const;
+    HitTestResult hit_test(Gfx::FloatPoint const&, HitTestType) const;
 
     void dump(int indent = 0) const;
 

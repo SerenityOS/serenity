@@ -526,7 +526,7 @@ void PaintableBox::for_each_child_in_paint_order(Callback callback) const
     });
 }
 
-HitTestResult PaintableBox::hit_test(Gfx::IntPoint const& position, HitTestType type) const
+HitTestResult PaintableBox::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
     if (layout_box().is_initial_containing_block_box())
         return stacking_context()->hit_test(position, type);
@@ -542,7 +542,7 @@ HitTestResult PaintableBox::hit_test(Gfx::IntPoint const& position, HitTestType 
     return result;
 }
 
-HitTestResult PaintableWithLines::hit_test(const Gfx::IntPoint& position, HitTestType type) const
+HitTestResult PaintableWithLines::hit_test(const Gfx::FloatPoint& position, HitTestType type) const
 {
     if (!layout_box().children_are_inline())
         return PaintableBox::hit_test(position, type);
@@ -552,7 +552,7 @@ HitTestResult PaintableWithLines::hit_test(const Gfx::IntPoint& position, HitTes
         for (auto& fragment : line_box.fragments()) {
             if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paint_box()->stacking_context())
                 continue;
-            if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
+            if (fragment.absolute_rect().contains(position)) {
                 if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
                     return fragment.layout_node().paintable()->hit_test(position, type);
                 return { fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };

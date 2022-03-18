@@ -50,7 +50,7 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) const { }
 
-    virtual HitTestResult hit_test(Gfx::IntPoint const&, HitTestType) const;
+    virtual HitTestResult hit_test(Gfx::FloatPoint const&, HitTestType) const;
 
     virtual bool wants_mouse_events() const { return false; }
 
