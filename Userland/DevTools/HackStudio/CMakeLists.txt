@@ -44,6 +44,7 @@ set(SOURCES
     Locator.cpp
     Project.cpp
     ProjectBuilder.cpp
+    ProjectConfig.cpp
     ProjectDeclarations.cpp
     ProjectFile.cpp
     ProjectTemplate.cpp

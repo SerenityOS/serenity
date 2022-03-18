@@ -49,6 +49,7 @@ private:
     static ErrorOr<void> verify_cmake_is_installed();
 
     String m_project_root;
+    Project const& m_project;
     NonnullRefPtr<TerminalWrapper> m_terminal;
     IsSerenityRepo m_is_serenity { IsSerenityRepo::No };
     String m_serenity_component_cmake_file;

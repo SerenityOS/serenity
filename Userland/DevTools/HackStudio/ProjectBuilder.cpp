@@ -16,6 +16,7 @@ namespace HackStudio {
 
 ProjectBuilder::ProjectBuilder(NonnullRefPtr<TerminalWrapper> terminal, Project const& project)
     : m_project_root(project.root_path())
+    , m_project(project)
     , m_terminal(move(terminal))
     , m_is_serenity(project.project_is_serenity() ? IsSerenityRepo::Yes : IsSerenityRepo::No)
 {
@@ -24,6 +25,12 @@ ProjectBuilder::ProjectBuilder(NonnullRefPtr<TerminalWrapper> terminal, Project 
 ErrorOr<void> ProjectBuilder::build(StringView active_file)
 {
     m_terminal->clear_including_history();
+
+    if (auto command = m_project.config()->build_command(); command.has_value()) {
+        TRY(m_terminal->run_command(command.value()));
+        return {};
+    }
+
     if (active_file.is_null())
         return Error::from_string_literal("no active file"sv);
 
@@ -44,6 +51,11 @@ ErrorOr<void> ProjectBuilder::build(StringView active_file)
 
 ErrorOr<void> ProjectBuilder::run(StringView active_file)
 {
+    if (auto command = m_project.config()->run_command(); command.has_value()) {
+        TRY(m_terminal->run_command(command.value()));
+        return {};
+    }
+
     if (active_file.is_null())
         return Error::from_string_literal("no active file"sv);
 

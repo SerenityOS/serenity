@@ -10,7 +10,7 @@
 
 namespace HackStudio {
 
-Project::Project(const String& root_path)
+Project::Project(String const& root_path)
     : m_root_path(root_path)
 {
     m_model = GUI::FileSystemModel::create(root_path, GUI::FileSystemModel::Mode::FilesAndDirectories);
@@ -64,6 +64,15 @@ bool Project::project_is_serenity() const
     // FIXME: Improve this heuristic
     // Running "Meta/serenity.sh copy-src" installs the serenity repository at this path in the home directory
     return m_root_path.ends_with("Source/serenity");
+}
+
+NonnullOwnPtr<ProjectConfig> Project::config() const
+{
+    auto config_or_error = ProjectConfig::try_load_project_config(LexicalPath::absolute_path(m_root_path, config_file_path));
+    if (config_or_error.is_error())
+        return ProjectConfig::create_empty();
+
+    return config_or_error.release_value();
 }
 
 }
