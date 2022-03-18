@@ -62,7 +62,7 @@ void GraphicsManagement::disable_vga_emulation_access_permanently()
     m_vga_access_is_disabled = true;
 }
 
-void GraphicsManagement::enable_vga_text_mode_console_cursor() const
+void GraphicsManagement::enable_vga_text_mode_console_cursor()
 {
     SpinlockLocker locker(m_main_vga_lock);
     if (m_vga_access_is_disabled)
@@ -71,7 +71,7 @@ void GraphicsManagement::enable_vga_text_mode_console_cursor() const
     IO::out8(0x3D5, 0);
 }
 
-void GraphicsManagement::disable_vga_text_mode_console_cursor() const
+void GraphicsManagement::disable_vga_text_mode_console_cursor()
 {
     SpinlockLocker locker(m_main_vga_lock);
     if (m_vga_access_is_disabled)
@@ -80,7 +80,7 @@ void GraphicsManagement::disable_vga_text_mode_console_cursor() const
     IO::out8(0x3D5, 0x20);
 }
 
-void GraphicsManagement::set_vga_text_mode_cursor(size_t console_width, size_t x, size_t y) const
+void GraphicsManagement::set_vga_text_mode_cursor(size_t console_width, size_t x, size_t y)
 {
     SpinlockLocker locker(m_main_vga_lock);
     if (m_vga_access_is_disabled)
