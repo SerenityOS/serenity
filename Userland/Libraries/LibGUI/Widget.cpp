@@ -21,6 +21,7 @@
 #include <LibGUI/Layout.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
@@ -1132,6 +1133,7 @@ bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::O
     }
 
     auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget");
+    bool is_tab_widget = is<TabWidget>(*this);
     object->for_each_child_object_interruptible([&](auto child_data) {
         auto class_name = child_data->name();
 
@@ -1147,9 +1149,17 @@ bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::O
         }
         if (!child)
             return IterationDecision::Break;
+
         add_child(*child);
         // This is possible as we ensure that Widget is a base class above.
         static_ptr_cast<Widget>(child)->load_from_gml_ast(child_data, unregistered_child_handler);
+
+        if (is_tab_widget) {
+            // FIXME: We need to have the child added before loading it so that it can access us. But the TabWidget logic requires the child to not be present yet.
+            remove_child(*child);
+            reinterpret_cast<TabWidget*>(this)->add_widget(*static_ptr_cast<Widget>(child));
+        }
+
         return IterationDecision::Continue;
     });
 
