@@ -444,7 +444,7 @@ ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& globa
     auto result = TRY(nanoseconds_to_days(global_object, *js_bigint(vm, time_remainder_ns), intermediate));
 
     // 13. Let timeDifference be ! BalanceDuration(0, 0, 0, 0, 0, 0, result.[[Nanoseconds]], "hour").
-    auto time_difference = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *result.nanoseconds.cell(), "hour"sv));
+    auto time_difference = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, result.nanoseconds.cell()->big_integer(), "hour"sv));
 
     // 14. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], result.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
     return create_duration_record(date_difference.years, date_difference.months, date_difference.weeks, result.days, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, time_difference.nanoseconds);

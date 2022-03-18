@@ -990,7 +990,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::until)
         auto* difference_ns = difference_instant(global_object, zoned_date_time->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
         // b. Let balanceResult be ! BalanceDuration(0, 0, 0, 0, 0, 0, differenceNs, largestUnit).
-        auto balance_result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *difference_ns, *largest_unit));
+        auto balance_result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, difference_ns->big_integer(), *largest_unit));
 
         // c. Return ? CreateTemporalDuration(0, 0, 0, 0, balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]]).
         return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds));
@@ -1067,7 +1067,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::since)
         auto* difference_ns = difference_instant(global_object, zoned_date_time->nanoseconds(), other->nanoseconds(), rounding_increment, *smallest_unit, rounding_mode);
 
         // b. Let balanceResult be ! BalanceDuration(0, 0, 0, 0, 0, 0, differenceNs, largestUnit).
-        auto balance_result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *difference_ns, *largest_unit));
+        auto balance_result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, difference_ns->big_integer(), *largest_unit));
 
         // c. Return ? CreateTemporalDuration(0, 0, 0, 0, −balanceResult.[[Hours]], −balanceResult.[[Minutes]], −balanceResult.[[Seconds]], −balanceResult.[[Milliseconds]], −balanceResult.[[Microseconds]], −balanceResult.[[Nanoseconds]]).
         return TRY(create_temporal_duration(global_object, 0, 0, 0, 0, -balance_result.hours, -balance_result.minutes, -balance_result.seconds, -balance_result.milliseconds, -balance_result.microseconds, -balance_result.nanoseconds));
