@@ -10,29 +10,9 @@
 #include <AK/StringBuilder.h>
 #include <LibMain/Main.h>
 
-ErrorOr<int> serenity_main(Main::Arguments arguments)
+void generate_code(SourceGenerator generator, JsonObject const& properties)
 {
-    if (arguments.argc != 2) {
-        warnln("usage: {} <path/to/CSS/Properties.json>", arguments.strings[0]);
-        return 1;
-    }
-
-    auto json = TRY(read_entire_file_as_json(arguments.strings[1]));
-    VERIFY(json.is_object());
-
-    auto& properties = json.as_object();
-
-    StringBuilder builder;
-    SourceGenerator generator { builder };
-
     generator.append(R"~~~(
-#include <AK/Assertions.h>
-#include <LibWeb/CSS/Parser/Parser.h>
-#include <LibWeb/CSS/PropertyID.h>
-#include <LibWeb/CSS/StyleValue.h>
-
-namespace Web::CSS {
-
 PropertyID property_id_from_camel_case_string(StringView string)
 {
 )~~~");
@@ -435,10 +415,30 @@ size_t property_maximum_value_count(PropertyID property_id)
         return 1;
     }
 }
-
-} // namespace Web::CSS
-
 )~~~");
+}
+
+ErrorOr<int> serenity_main(Main::Arguments arguments)
+{
+    if (arguments.argc != 2) {
+        warnln("usage: {} <path/to/CSS/Properties.json>", arguments.strings[0]);
+        return 1;
+    }
+
+    auto json = TRY(read_entire_file_as_json(arguments.strings[1]));
+    VERIFY(json.is_object());
+
+    auto& properties = json.as_object();
+
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+
+    generator.append_include("AK/Assertions.h");
+    generator.append_include("LibWeb/CSS/Parser/Parser.h");
+    generator.append_include("LibWeb/CSS/PropertyID.h");
+    generator.append_include("LibWeb/CSS/StyleValue.h");
+
+    generate_code(generator.fork_namespace("Web::CSS"), properties);
 
     outln("{}", generator.as_string_view());
     return 0;
