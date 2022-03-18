@@ -55,19 +55,17 @@ void BlockFormattingContext::parent_context_did_dimension_child_root_box()
 {
     m_was_notified_after_parent_dimensioned_my_root_box = true;
 
-    // Now that we know the width of our root box, we can position floats horizontally.
-    auto root_width = m_state.get(root()).content_width;
-
     // Left-side floats: offset_from_edge is from left edge (0) to left content edge of floating_box.
     for (auto& floating_box : m_left_floats.all_boxes) {
         auto& box_state = m_state.get_mutable(floating_box->box);
         box_state.offset.set_x(floating_box->offset_from_edge);
     }
 
-    // Right-side floats: offset_from_edge is from right edge (root_width) to the left content edge of floating_box.
+    // Right-side floats: offset_from_edge is from right edge (float_containing_block_width) to the left content edge of floating_box.
     for (auto& floating_box : m_right_floats.all_boxes) {
+        auto float_containing_block_width = m_state.get(*floating_box->box.containing_block()).content_width;
         auto& box_state = m_state.get_mutable(floating_box->box);
-        box_state.offset.set_x(root_width - floating_box->offset_from_edge);
+        box_state.offset.set_x(float_containing_block_width - floating_box->offset_from_edge);
     }
 
     // We can also layout absolutely positioned boxes within this BFC.
