@@ -80,6 +80,7 @@ private:
     RefPtr<GUI::Action> m_save_image_as_action;
     RefPtr<GUI::Action> m_close_image_action;
 
+    RefPtr<GUI::Action> m_cut_action;
     RefPtr<GUI::Action> m_copy_action;
     RefPtr<GUI::Action> m_copy_merged_action;
     RefPtr<GUI::Action> m_paste_action;
