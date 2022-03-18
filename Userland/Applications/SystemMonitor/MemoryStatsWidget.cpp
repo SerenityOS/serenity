@@ -17,6 +17,10 @@
 #include <LibGfx/StylePainter.h>
 #include <stdlib.h>
 
+REGISTER_WIDGET(SystemMonitor, MemoryStatsWidget)
+
+namespace SystemMonitor {
+
 static MemoryStatsWidget* s_the;
 
 MemoryStatsWidget* MemoryStatsWidget::the()
@@ -24,7 +28,12 @@ MemoryStatsWidget* MemoryStatsWidget::the()
     return s_the;
 }
 
-MemoryStatsWidget::MemoryStatsWidget(SystemMonitor::GraphWidget& graph)
+MemoryStatsWidget::MemoryStatsWidget()
+    : MemoryStatsWidget(nullptr)
+{
+}
+
+MemoryStatsWidget::MemoryStatsWidget(GraphWidget* graph)
     : m_graph(graph)
 {
     VERIFY(!s_the);
@@ -57,6 +66,11 @@ MemoryStatsWidget::MemoryStatsWidget(SystemMonitor::GraphWidget& graph)
     m_kmalloc_difference_label = build_widgets_for_label("Difference:");
 
     refresh();
+}
+
+void MemoryStatsWidget::set_graph_widget(GraphWidget& graph)
+{
+    m_graph = &graph;
 }
 
 static inline u64 page_count_to_bytes(size_t count)
@@ -101,6 +115,10 @@ void MemoryStatsWidget::refresh()
     m_kfree_count_label->set_text(String::formatted("{}", kfree_call_count));
     m_kmalloc_difference_label->set_text(String::formatted("{:+}", kmalloc_call_count - kfree_call_count));
 
-    m_graph.set_max(page_count_to_bytes(total_userphysical_and_swappable_pages) + kmalloc_bytes_total);
-    m_graph.add_value({ page_count_to_bytes(user_physical_committed), page_count_to_bytes(user_physical_allocated), kmalloc_bytes_total });
+    if (m_graph) {
+        m_graph->set_max(page_count_to_bytes(total_userphysical_and_swappable_pages) + kmalloc_bytes_total);
+        m_graph->add_value({ page_count_to_bytes(user_physical_committed), page_count_to_bytes(user_physical_allocated), kmalloc_bytes_total });
+    }
+}
+
 }
