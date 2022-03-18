@@ -25,12 +25,19 @@ public:
         , m_closing(closing)
     {
     }
-    explicit SourceGenerator(StringBuilder& builder, const MappingType& mapping, char opening = '@', char closing = '@')
+    explicit SourceGenerator(StringBuilder& builder, const MappingType& mapping, char opening = '@', char closing = '@', StringView suffix = nullptr)
         : m_builder(builder)
         , m_mapping(mapping)
         , m_opening(opening)
         , m_closing(closing)
+        , m_suffix(suffix)
     {
+    }
+
+    ~SourceGenerator()
+    {
+        if (m_suffix != nullptr)
+            append(m_suffix);
     }
 
     SourceGenerator fork() { return SourceGenerator { m_builder, m_mapping, m_opening, m_closing }; }
@@ -75,10 +82,23 @@ public:
         }
     }
 
+    void append_include(StringView path)
+    {
+        append(String::formatted("#include <{}>\n", path));
+    }
+
+    SourceGenerator fork_namespace(StringView namespace_)
+    {
+        append(String::formatted("\nnamespace {} {{\n", namespace_));
+        auto suffix = String::formatted("\n}} // namespace {}\n", namespace_);
+        return SourceGenerator { m_builder, m_mapping, m_opening, m_closing, suffix };
+    }
+
 private:
     StringBuilder& m_builder;
     MappingType m_mapping;
     char m_opening, m_closing;
+    String m_suffix;
 };
 
 }
