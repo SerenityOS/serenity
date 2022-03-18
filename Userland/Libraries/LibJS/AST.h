@@ -894,6 +894,7 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
 
@@ -918,6 +919,7 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
 
