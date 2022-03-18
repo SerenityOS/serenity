@@ -255,9 +255,6 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     TRY(m_context_menu->try_add_action(*m_copy_action));
     TRY(m_context_menu->try_add_action(*m_select_all_action));
 
-    TRY(m_tab_widget->try_add_widget("Browse", *m_browse_view));
-    TRY(m_tab_widget->try_add_widget("Search", *m_search_container));
-
     m_manual_model = TRY(ManualModel::create());
     m_browse_view->set_model(*m_manual_model);
     m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_manual_model));

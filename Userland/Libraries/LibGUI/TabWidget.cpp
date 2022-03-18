@@ -41,9 +41,9 @@ TabWidget::TabWidget()
         });
 }
 
-ErrorOr<void> TabWidget::try_add_widget(String title, Widget& widget)
+ErrorOr<void> TabWidget::try_add_widget(Widget& widget)
 {
-    m_tabs.append({ move(title), nullptr, &widget });
+    m_tabs.append({ widget.title(), nullptr, &widget });
     add_child(widget);
     update_focus_policy();
     if (on_tab_count_change)
@@ -51,9 +51,9 @@ ErrorOr<void> TabWidget::try_add_widget(String title, Widget& widget)
     return {};
 }
 
-void TabWidget::add_widget(String title, Widget& widget)
+void TabWidget::add_widget(Widget& widget)
 {
-    MUST(try_add_widget(move(title), widget));
+    MUST(try_add_widget(widget));
 }
 
 void TabWidget::remove_widget(Widget& widget)

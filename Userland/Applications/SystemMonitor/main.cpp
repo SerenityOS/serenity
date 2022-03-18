@@ -168,16 +168,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& process_table_container = tabwidget.add_tab<GUI::Widget>("Processes");
 
     auto performance_widget = build_performance_tab();
-    tabwidget.add_widget("Performance", performance_widget);
+    performance_widget->set_title("Performance");
+    tabwidget.add_widget(performance_widget);
 
     auto storage_widget = build_storage_widget();
-    tabwidget.add_widget("Storage", storage_widget);
+    storage_widget->set_title("Storage");
+    tabwidget.add_widget(storage_widget);
 
     auto network_stats_widget = NetworkStatisticsWidget::construct();
-    tabwidget.add_widget("Network", network_stats_widget);
+    network_stats_widget->set_title("Network");
+    tabwidget.add_widget(network_stats_widget);
 
     auto hardware_widget = build_hardware_tab();
-    tabwidget.add_widget("Hardware", hardware_widget);
+    hardware_widget->set_title("Hardware");
+    tabwidget.add_widget(hardware_widget);
 
     process_table_container.set_layout<GUI::VerticalBoxLayout>();
     process_table_container.layout()->set_margins(4);

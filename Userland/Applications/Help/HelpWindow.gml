@@ -22,10 +22,12 @@
 
             @GUI::TreeView {
                 name: "browse_view"
+                title: "Browse"
             }
 
             @GUI::Widget {
                 name: "search_container"
+                title: "Search"
                 layout: @GUI::VerticalBoxLayout {}
 
                 @GUI::TextBox {
