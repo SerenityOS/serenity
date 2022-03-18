@@ -62,6 +62,8 @@ public:
     AffineTransform& rotate_radians(float);
     AffineTransform& multiply(const AffineTransform&);
 
+    Optional<AffineTransform> inverse() const;
+
 private:
     float m_values[6] { 0 };
 };

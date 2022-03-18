@@ -125,6 +125,21 @@ AffineTransform& AffineTransform::rotate_radians(float radians)
     return *this;
 }
 
+Optional<AffineTransform> AffineTransform::inverse() const
+{
+    auto determinant = a() * d() - b() * c();
+    if (determinant == 0)
+        return {};
+    return AffineTransform {
+        d() / determinant,
+        -b() / determinant,
+        -c() / determinant,
+        a() / determinant,
+        (c() * f() - d() * e()) / determinant,
+        (b() * e() - a() * f()) / determinant,
+    };
+}
+
 void AffineTransform::map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const
 {
     mapped_x = a() * unmapped_x + b() * unmapped_y + m_values[4];
