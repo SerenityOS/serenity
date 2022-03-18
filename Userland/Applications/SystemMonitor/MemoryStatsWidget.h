@@ -10,8 +10,8 @@
 #include <LibGUI/Widget.h>
 
 namespace SystemMonitor {
+
 class GraphWidget;
-}
 
 class MemoryStatsWidget final : public GUI::Widget {
     C_OBJECT(MemoryStatsWidget)
@@ -20,12 +20,15 @@ public:
 
     virtual ~MemoryStatsWidget() override = default;
 
+    void set_graph_widget(GraphWidget& graph);
+
     void refresh();
 
 private:
-    MemoryStatsWidget(SystemMonitor::GraphWidget& graph);
+    MemoryStatsWidget(GraphWidget* graph);
+    MemoryStatsWidget();
 
-    SystemMonitor::GraphWidget& m_graph;
+    GraphWidget* m_graph;
     RefPtr<GUI::Label> m_user_physical_pages_label;
     RefPtr<GUI::Label> m_user_physical_pages_committed_label;
     RefPtr<GUI::Label> m_supervisor_physical_pages_label;
@@ -34,3 +37,5 @@ private:
     RefPtr<GUI::Label> m_kfree_count_label;
     RefPtr<GUI::Label> m_kmalloc_difference_label;
 };
+
+}

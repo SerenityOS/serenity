@@ -212,7 +212,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& refresh_timer = window->add<Core::Timer>(
         frequency * 1000, [&] {
             process_model->update();
-            if (auto* memory_stats_widget = MemoryStatsWidget::the())
+            if (auto* memory_stats_widget = SystemMonitor::MemoryStatsWidget::the())
                 memory_stats_widget->refresh();
         });
 
@@ -746,6 +746,6 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
                                          },
                                      });
 
-    graphs_container->add<MemoryStatsWidget>(memory_graph);
+    graphs_container->add<SystemMonitor::MemoryStatsWidget>(&memory_graph);
     return graphs_container;
 }
