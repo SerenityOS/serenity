@@ -89,6 +89,9 @@ set(KERNEL_SOURCES
     Graphics/VirtIOGPU/Console.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
     Graphics/VirtIOGPU/DisplayConnector.cpp
+    Graphics/VMWare/Console.cpp
+    Graphics/VMWare/GraphicsAdapter.cpp
+    Graphics/VMWare/DisplayConnector.cpp
     Graphics/VGA/GenericAdapter.cpp
     Graphics/VGA/GenericDisplayConnector.cpp
     Graphics/VGA/ISAAdapter.cpp

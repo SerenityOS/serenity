@@ -16,6 +16,7 @@
 #include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
 #include <Kernel/Graphics/VGA/ISAAdapter.h>
 #include <Kernel/Graphics/VGA/PCIGenericAdapter.h>
+#include <Kernel/Graphics/VMWare/GraphicsAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Multiboot.h>
@@ -186,6 +187,10 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
         case PCI::VendorID::VirtIO:
             dmesgln("Graphics: Using VirtIO console");
             adapter = VirtIOGraphicsAdapter::initialize(device_identifier);
+            break;
+        case PCI::VendorID::VMWare:
+            dmesgln("Graphics: Using VirtIO console");
+            adapter = VMWareGraphicsAdapter::try_initialize(device_identifier);
             break;
         default:
             if (!is_vga_compatible_pci_device(device_identifier))

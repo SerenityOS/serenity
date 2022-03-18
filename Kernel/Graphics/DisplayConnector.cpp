@@ -180,6 +180,8 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         return copy_to_user(user_head_vertical_buffer_offset, &head_vertical_buffer_offset);
     }
     case FB_IOCTL_FLUSH_HEAD_BUFFERS: {
+        if (console_mode())
+            return {};
         if (!partial_flush_support())
             return Error::from_errno(ENOTSUP);
         auto user_flush_rects = static_ptr_cast<FBFlushRects const*>(arg);
