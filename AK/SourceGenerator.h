@@ -94,6 +94,13 @@ public:
         return SourceGenerator { m_builder, m_mapping, m_opening, m_closing, suffix };
     }
 
+    SourceGenerator fork_function(StringView return_type, StringView name, StringView arguments)
+    {
+        append(String::formatted("\n{} {}({})\n{{", return_type, name, arguments));
+        auto suffix = String::formatted("}} // function {}\n", name);
+        return SourceGenerator { m_builder, m_mapping, m_opening, m_closing, suffix };
+    }
+
 private:
     StringBuilder& m_builder;
     MappingType m_mapping;
