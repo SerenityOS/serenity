@@ -180,29 +180,40 @@ void Layer::crop(Gfx::IntRect const& rect)
     did_modify_bitmap();
 }
 
-void Layer::resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode)
+void Layer::resize(Gfx::IntSize const& new_size, Gfx::IntPoint const& new_location, Gfx::Painter::ScalingMode scaling_mode)
 {
-    const Gfx::IntRect old_rect(Gfx::IntPoint(0, 0), size());
-    const Gfx::IntRect new_rect(Gfx::IntPoint(0, 0), new_size);
+    auto src_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), size());
+    auto dst_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), new_size);
 
     {
-        auto resized = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
-        Gfx::Painter painter(resized);
+        auto dst = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
+        Gfx::Painter painter(dst);
 
-        painter.draw_scaled_bitmap(new_rect, *m_content_bitmap, old_rect, 1.0f, scaling_mode);
+        painter.draw_scaled_bitmap(dst_rect, *m_content_bitmap, src_rect, 1.0f, scaling_mode);
 
-        m_content_bitmap = move(resized);
+        m_content_bitmap = move(dst);
     }
 
     if (m_mask_bitmap) {
-        auto resized = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
-        Gfx::Painter painter(resized);
+        auto dst = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size).release_value_but_fixme_should_propagate_errors();
+        Gfx::Painter painter(dst);
 
-        painter.draw_scaled_bitmap(new_rect, *m_mask_bitmap, old_rect, 1.0f, scaling_mode);
-        m_mask_bitmap = move(resized);
+        painter.draw_scaled_bitmap(dst_rect, *m_mask_bitmap, src_rect, 1.0f, scaling_mode);
+        m_mask_bitmap = move(dst);
     }
 
+    set_location(new_location);
     did_modify_bitmap();
+}
+
+void Layer::resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode)
+{
+    resize(new_rect.size(), new_rect.location(), scaling_mode);
+}
+
+void Layer::resize(Gfx::IntSize const& new_size, Gfx::Painter::ScalingMode scaling_mode)
+{
+    resize(new_size, location(), scaling_mode);
 }
 
 void Layer::update_cached_bitmap()
