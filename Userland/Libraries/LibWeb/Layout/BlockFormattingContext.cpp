@@ -73,44 +73,6 @@ void BlockFormattingContext::parent_context_did_dimension_child_root_box()
     // We can also layout absolutely positioned boxes within this BFC.
     for (auto& box : m_absolutely_positioned_boxes)
         layout_absolutely_positioned_element(box);
-
-    // FIXME: Transforms should be a painting concept, not a layout concept.
-    apply_transformations_to_children(root());
-}
-
-void BlockFormattingContext::apply_transformations_to_children(Box const& box)
-{
-    box.for_each_child_of_type<Box>([&](auto& child_box) {
-        float transform_y_offset = 0.0f;
-        if (!child_box.computed_values().transformations().is_empty()) {
-            // FIXME: All transformations can be interpreted as successive 3D-matrix operations on the box, we don't do that yet.
-            //        https://drafts.csswg.org/css-transforms/#serialization-of-the-computed-value
-            for (auto transformation : child_box.computed_values().transformations()) {
-                switch (transformation.function) {
-                case CSS::TransformFunction::TranslateY:
-                    if (transformation.values.size() != 1)
-                        continue;
-                    transformation.values.first().visit(
-                        [&](CSS::Length& value) {
-                            transform_y_offset += value.to_px(child_box);
-                        },
-                        [&](float value) {
-                            transform_y_offset += value;
-                        },
-                        [&](auto&) {
-                            dbgln("FIXME: Implement unsupported transformation function value type!");
-                        });
-                    break;
-                default:
-                    dbgln("FIXME: Implement missing transform function!");
-                }
-            }
-        }
-
-        auto& child_box_state = m_state.get_mutable(child_box);
-        auto untransformed_offset = child_box_state.offset;
-        child_box_state.offset = Gfx::FloatPoint { untransformed_offset.x(), untransformed_offset.y() + transform_y_offset };
-    });
 }
 
 void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mode)
