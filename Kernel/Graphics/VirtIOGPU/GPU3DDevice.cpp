@@ -62,8 +62,7 @@ ErrorOr<void> GPU3DDevice::ioctl(OpenFileDescription& description, unsigned requ
         // TODO: Delete the context if it fails to be set in m_context_state_lookup
         auto context_id = m_graphics_adapter.create_context();
         RefPtr<PerContextState> per_context_state = TRY(PerContextState::try_create(context_id));
-        auto ref = RefPtr(description);
-        TRY(m_context_state_lookup.try_set(ref, per_context_state));
+        TRY(m_context_state_lookup.try_set(&description, per_context_state));
         return {};
     }
     case VIRGL_IOCTL_TRANSFER_DATA: {
