@@ -57,7 +57,7 @@ float InlineFormattingContext::available_space_for_line(float y) const
     auto const& containing_block_state = m_state.get(containing_block());
     auto const& root_block_state = m_state.get(parent().root());
 
-    space.left = max(space.left, containing_block_state.offset.x());
+    space.left = max(space.left, containing_block_state.offset.x()) - containing_block_state.offset.x();
     space.right = min(root_block_state.content_width - space.right, containing_block_state.offset.x() + containing_block_state.content_width);
 
     return space.right - space.left;
