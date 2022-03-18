@@ -6,6 +6,7 @@
 
 #include <AK/ByteReader.h>
 #include <AK/Endian.h>
+#include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/UFixedBigInt.h>
@@ -346,6 +347,13 @@ bool SECP256r1::is_point_on_curve(JacobianPoint const& point)
     return temp.is_zero_constant_time();
 }
 
+ErrorOr<ByteBuffer> SECP256r1::generate_private_key()
+{
+    auto buffer = TRY(ByteBuffer::create_uninitialized(32));
+    fill_with_random(buffer.data(), buffer.size());
+    return buffer;
+}
+
 ErrorOr<ByteBuffer> SECP256r1::generate_public_key(ReadonlyBytes a)
 {
     // clang-format off
@@ -424,6 +432,16 @@ ErrorOr<ByteBuffer> SECP256r1::compute_coordinate(ReadonlyBytes scalar_bytes, Re
     export_big_endian(result.x, buf.bytes().slice(1, 32));
     export_big_endian(result.y, buf.bytes().slice(33, 32));
     return buf;
+}
+
+ErrorOr<ByteBuffer> SECP256r1::derive_premaster_key(ReadonlyBytes shared_point)
+{
+    VERIFY(shared_point.size() == 65);
+    VERIFY(shared_point[0] == 0x04);
+
+    ByteBuffer premaster_key = TRY(ByteBuffer::create_uninitialized(32));
+    premaster_key.overwrite(0, shared_point.data() + 1, 32);
+    return premaster_key;
 }
 
 }

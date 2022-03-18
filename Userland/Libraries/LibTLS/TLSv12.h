@@ -245,6 +245,7 @@ struct Options {
         { HashAlgorithm::SHA1, SignatureAlgorithm::RSA });
     OPTION_WITH_DEFAULTS(Vector<NamedCurve>, elliptic_curves,
         NamedCurve::x25519,
+        NamedCurve::secp256r1,
         NamedCurve::x448)
     OPTION_WITH_DEFAULTS(Vector<ECPointFormat>, supported_ec_point_formats, ECPointFormat::Uncompressed)
 

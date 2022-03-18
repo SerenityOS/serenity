@@ -8,6 +8,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/UFixedBigInt.h>
+#include <LibCrypto/Curves/EllipticCurve.h>
 
 namespace Crypto::Curves {
 
@@ -17,10 +18,13 @@ struct JacobianPoint {
     u256 z { 0u };
 };
 
-class SECP256r1 {
+class SECP256r1 : public EllipticCurve {
 public:
-    static ErrorOr<ByteBuffer> generate_public_key(ReadonlyBytes a);
-    static ErrorOr<ByteBuffer> compute_coordinate(ReadonlyBytes scalar_bytes, ReadonlyBytes point_bytes);
+    size_t key_size() override { return 1 + 2 * 32; }
+    ErrorOr<ByteBuffer> generate_private_key() override;
+    ErrorOr<ByteBuffer> generate_public_key(ReadonlyBytes a) override;
+    ErrorOr<ByteBuffer> compute_coordinate(ReadonlyBytes scalar_bytes, ReadonlyBytes point_bytes) override;
+    ErrorOr<ByteBuffer> derive_premaster_key(ReadonlyBytes shared_point) override;
 
 private:
     static u256 modular_reduce(u256 const& value);
