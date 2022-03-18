@@ -306,7 +306,7 @@ void VirtualConsole::flush_dirty_lines()
             auto& cell = cell_at(column, visual_row);
 
             auto foreground_color = terminal_to_standard_color(cell.attribute.effective_foreground_color());
-            if (cell.attribute.flags & VT::Attribute::Flags::Bold)
+            if (has_flag(cell.attribute.flags, VT::Attribute::Flags::Bold))
                 foreground_color = (Graphics::Console::Color)((u8)foreground_color | 0x08);
             GraphicsManagement::the().console()->write(column,
                 visual_row,

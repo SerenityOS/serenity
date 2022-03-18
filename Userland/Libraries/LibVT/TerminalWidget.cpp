@@ -342,7 +342,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             auto underline_style = UnderlineStyle::None;
             auto underline_color = text_color;
 
-            if (attribute.flags & VT::Attribute::Underline) {
+            if (has_flag(attribute.flags, VT::Attribute::Flags::Underline)) {
                 // Content has specified underline
                 underline_style = UnderlineStyle::Solid;
             } else if (!attribute.href.is_empty()) {
@@ -410,7 +410,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             painter.draw_glyph_or_emoji(
                 character_rect.location(),
                 code_point,
-                attribute.flags & VT::Attribute::Bold ? bold_font : font,
+                has_flag(attribute.flags, VT::Attribute::Flags::Bold) ? bold_font : font,
                 text_color);
         }
     }
