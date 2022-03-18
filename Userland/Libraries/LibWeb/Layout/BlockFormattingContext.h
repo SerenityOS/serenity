@@ -60,8 +60,6 @@ private:
 
     void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode);
 
-    void apply_transformations_to_children(Box const&);
-
     void layout_list_item_marker(ListItemBox const&);
 
     enum class FloatSide {

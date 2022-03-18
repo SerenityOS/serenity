@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <LibGfx/Matrix4x4.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/Paintable.h>
 
@@ -41,6 +42,9 @@ private:
     Vector<StackingContext*> m_children;
 
     void paint_internal(PaintContext&) const;
+    Gfx::FloatMatrix4x4 get_transformation_matrix(CSS::Transformation const& transformation) const;
+    Gfx::FloatMatrix4x4 combine_transformations(Vector<CSS::Transformation> const& transformations) const;
+    Gfx::AffineTransform combine_transformations_2d(Vector<CSS::Transformation> const& transformations) const;
 };
 
 }
