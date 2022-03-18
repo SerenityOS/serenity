@@ -86,7 +86,7 @@ String guess_mime_type_based_on_filename(StringView path)
         return "text/html";
     if (path.ends_with(".csv", CaseSensitivity::CaseInsensitive))
         return "text/csv";
-    return "text/plain";
+    return "application/octet-stream";
 }
 
 #define ENUMERATE_HEADER_CONTENTS                                                                                                                \
