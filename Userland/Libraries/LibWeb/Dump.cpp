@@ -166,11 +166,13 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         if (interactive)
             builder.appendff("@{:p} ", &layout_node);
 
-        builder.appendff("at ({},{}) content-size {}x{}",
-            box.paint_box()->absolute_x(),
-            box.paint_box()->absolute_y(),
-            box.paint_box()->content_width(),
-            box.paint_box()->content_height());
+        if (auto const* paint_box = box.paint_box()) {
+            builder.appendff("at ({},{}) content-size {}x{}",
+                paint_box->absolute_x(),
+                paint_box->absolute_y(),
+                paint_box->content_width(),
+                paint_box->content_height());
+        }
 
         if (box.is_positioned())
             builder.appendff(" {}positioned{}", positioned_color_on, color_off);
@@ -205,7 +207,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().margin.left,
                 box.box_model().border.left,
                 box.box_model().padding.left,
-                box.paint_box()->content_width(),
+                box.paint_box() ? box.paint_box()->content_width() : 0,
                 box.box_model().padding.right,
                 box.box_model().border.right,
                 box.box_model().margin.right);
@@ -215,7 +217,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().margin.top,
                 box.box_model().border.top,
                 box.box_model().padding.top,
-                box.paint_box()->content_height(),
+                box.paint_box() ? box.paint_box()->content_height() : 0,
                 box.box_model().padding.bottom,
                 box.box_model().border.bottom,
                 box.box_model().margin.bottom);
@@ -226,7 +228,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 
     if (is<Layout::BlockContainer>(layout_node) && static_cast<Layout::BlockContainer const&>(layout_node).children_are_inline()) {
         auto& block = static_cast<Layout::BlockContainer const&>(layout_node);
-        for (size_t line_box_index = 0; line_box_index < block.paint_box()->line_boxes().size(); ++line_box_index) {
+        for (size_t line_box_index = 0; block.paint_box() && line_box_index < block.paint_box()->line_boxes().size(); ++line_box_index) {
             auto& line_box = block.paint_box()->line_boxes()[line_box_index];
             for (size_t i = 0; i < indent; ++i)
                 builder.append("  ");
