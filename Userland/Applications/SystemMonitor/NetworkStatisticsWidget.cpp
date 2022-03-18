@@ -13,6 +13,10 @@
 #include <LibGUI/TableView.h>
 #include <LibGfx/Painter.h>
 
+REGISTER_WIDGET(SystemMonitor, NetworkStatisticsWidget)
+
+namespace SystemMonitor {
+
 NetworkStatisticsWidget::NetworkStatisticsWidget()
 {
     on_first_show = [this](auto&) {
@@ -117,4 +121,6 @@ void NetworkStatisticsWidget::update_models()
     m_adapter_model->update();
     m_tcp_socket_model->update();
     m_udp_socket_model->update();
+}
+
 }

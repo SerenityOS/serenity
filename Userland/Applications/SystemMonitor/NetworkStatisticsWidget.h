@@ -10,6 +10,8 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/LazyWidget.h>
 
+namespace SystemMonitor {
+
 class NetworkStatisticsWidget final : public GUI::LazyWidget {
     C_OBJECT(NetworkStatisticsWidget)
 public:
@@ -30,3 +32,5 @@ private:
     RefPtr<Gfx::Bitmap> m_network_disconnected_bitmap;
     RefPtr<Gfx::Bitmap> m_network_link_down_bitmap;
 };
+
+}
