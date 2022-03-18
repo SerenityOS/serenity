@@ -70,6 +70,8 @@ Widget::Widget()
     REGISTER_INT_PROPERTY("font_size", m_font->presentation_size, set_font_size);
     REGISTER_FONT_WEIGHT_PROPERTY("font_weight", m_font->weight, set_font_weight);
 
+    REGISTER_STRING_PROPERTY("title", title, set_title);
+
     register_property(
         "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },
         [this](auto& value) {
@@ -974,6 +976,19 @@ void Widget::set_palette(Palette const& palette)
 {
     m_palette = palette.impl();
     update();
+}
+
+void Widget::set_title(String title)
+{
+    m_title = move(title);
+    // For tab widget children, our change in title also affects the parent.
+    if (parent_widget())
+        parent_widget()->update();
+}
+
+String Widget::title() const
+{
+    return m_title;
 }
 
 void Widget::set_background_role(ColorRole role)

@@ -278,6 +278,9 @@ public:
     Gfx::Palette palette() const;
     void set_palette(Gfx::Palette const&);
 
+    String title() const;
+    void set_title(String);
+
     Margins const& grabbable_margins() const { return m_grabbable_margins; }
     void set_grabbable_margins(Margins const&);
 
@@ -390,6 +393,7 @@ private:
     bool m_default_font { true };
 
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
+    String m_title { String::empty() };
 
     WeakPtr<Widget> m_focus_proxy;
     FocusPolicy m_focus_policy { FocusPolicy::NoFocus };
