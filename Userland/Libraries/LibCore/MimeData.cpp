@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/MimeData.h>
 
@@ -86,6 +87,20 @@ String guess_mime_type_based_on_filename(StringView path)
         return "text/html";
     if (path.ends_with(".csv", CaseSensitivity::CaseInsensitive))
         return "text/csv";
+    // FIXME: Share this, TextEditor and HackStudio language detection somehow.
+    auto basename = LexicalPath::basename(path);
+    if (path.ends_with(".cpp", CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".c", CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".hpp", CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".h", CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".gml", CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".ini", CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".ipc", CaseSensitivity::CaseInsensitive)
+        || path.ends_with(".txt", CaseSensitivity::CaseInsensitive)
+        || basename == "CMakeLists.txt"
+        || basename == ".history"
+        || basename == ".shellrc")
+        return "text/plain";
     return "application/octet-stream";
 }
 
