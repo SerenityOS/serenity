@@ -32,6 +32,7 @@ if(NOT COMMAND serenity_option)
     endmacro()
 endif()
 
+include(check_for_dependencies)
 include(lagom_options)
 
 if(ENABLE_ALL_THE_DEBUG_MACROS)
