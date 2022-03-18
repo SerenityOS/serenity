@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "ProjectConfig.h"
 #include "ProjectFile.h"
 #include <AK/LexicalPath.h>
 #include <AK/Noncopyable.h>
@@ -31,6 +32,9 @@ public:
     void for_each_text_file(Function<void(ProjectFile const&)>) const;
     String to_absolute_path(String const&) const;
     bool project_is_serenity() const;
+
+    static constexpr StringView config_file_path = ".hackstudio/config.json";
+    NonnullOwnPtr<ProjectConfig> config() const;
 
 private:
     explicit Project(String const& root_path);
