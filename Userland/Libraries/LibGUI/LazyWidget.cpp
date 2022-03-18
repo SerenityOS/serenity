@@ -7,6 +7,8 @@
 
 #include <LibGUI/LazyWidget.h>
 
+REGISTER_WIDGET(GUI, LazyWidget)
+
 namespace GUI {
 
 void LazyWidget::show_event(ShowEvent&)
