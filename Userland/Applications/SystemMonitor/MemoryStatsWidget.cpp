@@ -24,7 +24,7 @@ MemoryStatsWidget* MemoryStatsWidget::the()
     return s_the;
 }
 
-MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph)
+MemoryStatsWidget::MemoryStatsWidget(SystemMonitor::GraphWidget& graph)
     : m_graph(graph)
 {
     VERIFY(!s_the);

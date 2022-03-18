@@ -11,6 +11,8 @@
 #include <LibGUI/Frame.h>
 #include <LibGfx/SystemTheme.h>
 
+namespace SystemMonitor {
+
 class GraphWidget final : public GUI::Frame {
     C_OBJECT(GraphWidget)
 public:
@@ -46,3 +48,5 @@ private:
 
     Vector<Gfx::IntPoint, 1> m_calculated_points;
 };
+
+}
