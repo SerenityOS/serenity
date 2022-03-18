@@ -15,7 +15,7 @@ namespace Chess::UCI {
 
 class Command : public Core::Event {
 public:
-    enum Type {
+    enum class Type {
         // GUI to engine commands.
         UCI = 12000,
         Debug,
@@ -40,7 +40,7 @@ public:
     };
 
     explicit Command(Type type)
-        : Core::Event(type)
+        : Core::Event(to_underlying(type))
     {
     }
 
