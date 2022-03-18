@@ -43,7 +43,7 @@ bool Paintable::handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint const&, uns
 
 HitTestResult Paintable::hit_test(Gfx::FloatPoint const&, HitTestType) const
 {
-    VERIFY_NOT_REACHED();
+    return {};
 }
 
 }
