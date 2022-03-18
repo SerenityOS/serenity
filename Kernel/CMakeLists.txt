@@ -90,6 +90,9 @@ set(KERNEL_SOURCES
     Graphics/VGA/ISAAdapter.cpp
     Graphics/VGA/PCIAdapter.cpp
     Graphics/VGA/VGACompatibleAdapter.cpp
+    Graphics/VMWare/Console.cpp
+    Graphics/VMWare/GraphicsAdapter.cpp
+    Graphics/VMWare/DisplayConnector.cpp
     Graphics/VirtIOGPU/DisplayConnector.cpp
     Graphics/VirtIOGPU/Console.cpp
     Graphics/VirtIOGPU/GPU3DDevice.cpp
