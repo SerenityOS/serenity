@@ -305,7 +305,8 @@ bool contains(StringView str, StringView needle, CaseSensitivity case_sensitivit
             continue;
         for (size_t ni = 0; si + ni < str.length(); ni++) {
             if (to_ascii_lowercase(str_chars[si + ni]) != to_ascii_lowercase(needle_chars[ni])) {
-                si += ni;
+                if (ni > 0)
+                    si += ni - 1;
                 break;
             }
             if (ni + 1 == needle.length())
