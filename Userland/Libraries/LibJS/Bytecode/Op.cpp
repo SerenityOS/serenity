@@ -18,6 +18,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Iterator.h>
 #include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Value.h>
@@ -574,6 +575,85 @@ ThrowCompletionOr<void> GetIterator::execute_impl(Bytecode::Interpreter& interpr
     return {};
 }
 
+// 14.7.5.9 EnumerateObjectProperties ( O ), https://tc39.es/ecma262/#sec-enumerate-object-properties
+ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    // While the spec does provide an algorithm, it allows us to implement it ourselves so long as we meet the following invariants:
+    //    1- Returned property keys do not include keys that are Symbols
+    //    2- Properties of the target object may be deleted during enumeration. A property that is deleted before it is processed by the iterator's next method is ignored
+    //    3- If new properties are added to the target object during enumeration, the newly added properties are not guaranteed to be processed in the active enumeration
+    //    4- A property name will be returned by the iterator's next method at most once in any enumeration.
+    //    5- Enumerating the properties of the target object includes enumerating properties of its prototype, and the prototype of the prototype, and so on, recursively;
+    //       but a property of a prototype is not processed if it has the same name as a property that has already been processed by the iterator's next method.
+    //    6- The values of [[Enumerable]] attributes are not considered when determining if a property of a prototype object has already been processed.
+    //    7- The enumerable property names of prototype objects must be obtained by invoking EnumerateObjectProperties passing the prototype object as the argument.
+    //    8- EnumerateObjectProperties must obtain the own property keys of the target object by calling its [[OwnPropertyKeys]] internal method.
+    //    9- Property attributes of the target object must be obtained by calling its [[GetOwnProperty]] internal method
+
+    // Invariant 3 effectively allows the implementation to ignore newly added keys, and we do so (similar to other implementations).
+    // Invariants 1 and 6 through 9 are implemented in `enumerable_own_property_names`, which implements the EnumerableOwnPropertyNames AO.
+    auto* object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    // Note: While the spec doesn't explicitly require these to be ordered, it says that the values should be retrieved via OwnPropertyKeys,
+    //       so we just keep the order consistent anyway.
+    OrderedHashTable<PropertyKey> properties;
+    HashTable<Object*> seen_objects;
+    // Collect all keys immediately (invariant no. 5)
+    for (auto* object_to_check = object; object_to_check && !seen_objects.contains(object_to_check); object_to_check = TRY(object_to_check->internal_get_prototype_of())) {
+        seen_objects.set(object_to_check);
+        for (auto& key : TRY(object_to_check->enumerable_own_property_names(Object::PropertyKind::Key))) {
+            properties.set(TRY(PropertyKey::from_value(interpreter.global_object(), key)));
+        }
+    }
+    Iterator iterator {
+        .iterator = object,
+        .next_method = NativeFunction::create(
+            interpreter.global_object(),
+            [seen_items = HashTable<PropertyKey>(), items = move(properties)](VM& vm, GlobalObject& global_object) mutable -> ThrowCompletionOr<Value> {
+                auto iterated_object_value = vm.this_value(global_object);
+                if (!iterated_object_value.is_object())
+                    return vm.throw_completion<InternalError>(global_object, "Invalid state for GetObjectPropertyIterator.next");
+
+                auto& iterated_object = iterated_object_value.as_object();
+                auto* result_object = Object::create(global_object, nullptr);
+                while (true) {
+                    if (items.is_empty()) {
+                        result_object->define_direct_property(vm.names.done, JS::Value(true), default_attributes);
+                        return result_object;
+                    }
+
+                    auto it = items.begin();
+                    auto key = *it;
+                    items.remove(it);
+
+                    // If the key was already seen, skip over it (invariant no. 4)
+                    auto result = seen_items.set(key);
+                    if (result != AK::HashSetResult::InsertedNewEntry)
+                        continue;
+
+                    // If the property is deleted, don't include it (invariant no. 2)
+                    if (!TRY(iterated_object.has_property(key)))
+                        continue;
+
+                    result_object->define_direct_property(vm.names.done, JS::Value(false), default_attributes);
+
+                    if (key.is_number())
+                        result_object->define_direct_property(vm.names.value, JS::Value(key.as_number()), default_attributes);
+                    else if (key.is_string())
+                        result_object->define_direct_property(vm.names.value, js_string(vm.heap(), key.as_string()), default_attributes);
+                    else
+                        VERIFY_NOT_REACHED(); // We should not have non-string/number keys.
+
+                    return result_object;
+                }
+            },
+            1,
+            interpreter.vm().names.next),
+        .done = false,
+    };
+    interpreter.accumulator() = iterator_to_object(interpreter.global_object(), move(iterator));
+    return {};
+}
+
 ThrowCompletionOr<void> IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto* iterator_object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
@@ -869,6 +949,11 @@ String PutByValue::to_string_impl(const Bytecode::Executable&) const
 String GetIterator::to_string_impl(Executable const&) const
 {
     return "GetIterator";
+}
+
+String GetObjectPropertyIterator::to_string_impl(const Bytecode::Executable&) const
+{
+    return "GetObjectPropertyIterator";
 }
 
 String IteratorNext::to_string_impl(Executable const&) const
