@@ -148,18 +148,11 @@ static float greatest_child_width(FormattingState const& state, Box const& box)
 
 FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_widths(Box const& box)
 {
-    // Calculate the preferred width by formatting the content without breaking lines
-    // other than where explicit line breaks occur.
-    (void)layout_inside(box, LayoutMode::OnlyRequiredLineBreaks);
-    float preferred_width = greatest_child_width(m_state, box);
-
-    // Also calculate the preferred minimum width, e.g., by trying all possible line breaks.
-    // CSS 2.2 does not define the exact algorithm.
-
-    (void)layout_inside(box, LayoutMode::AllPossibleLineBreaks);
-    float preferred_minimum_width = greatest_child_width(m_state, box);
-
-    return { preferred_width, preferred_minimum_width };
+    auto [min_content, max_content] = calculate_intrinsic_sizes(box);
+    return {
+        .preferred_width = max_content.width(),
+        .preferred_minimum_width = min_content.width(),
+    };
 }
 
 static Gfx::FloatSize solve_replaced_size_constraint(FormattingState const& state, float w, float h, ReplacedBox const& box)
