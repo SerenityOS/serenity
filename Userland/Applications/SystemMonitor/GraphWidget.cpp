@@ -13,6 +13,10 @@
 #include <LibGfx/Path.h>
 #include <LibGfx/SystemTheme.h>
 
+REGISTER_WIDGET(SystemMonitor, GraphWidget)
+
+namespace SystemMonitor {
+
 void GraphWidget::add_value(Vector<u64, 1>&& value)
 {
     m_values.enqueue(move(value));
@@ -142,4 +146,6 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
             y += text_rect.height() + 4;
         }
     }
+}
+
 }

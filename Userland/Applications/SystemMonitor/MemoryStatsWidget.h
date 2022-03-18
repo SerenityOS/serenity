@@ -9,7 +9,9 @@
 
 #include <LibGUI/Widget.h>
 
+namespace SystemMonitor {
 class GraphWidget;
+}
 
 class MemoryStatsWidget final : public GUI::Widget {
     C_OBJECT(MemoryStatsWidget)
@@ -21,9 +23,9 @@ public:
     void refresh();
 
 private:
-    MemoryStatsWidget(GraphWidget& graph);
+    MemoryStatsWidget(SystemMonitor::GraphWidget& graph);
 
-    GraphWidget& m_graph;
+    SystemMonitor::GraphWidget& m_graph;
     RefPtr<GUI::Label> m_user_physical_pages_label;
     RefPtr<GUI::Label> m_user_physical_pages_committed_label;
     RefPtr<GUI::Label> m_supervisor_physical_pages_label;

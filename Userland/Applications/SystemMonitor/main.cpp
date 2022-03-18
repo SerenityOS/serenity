@@ -687,14 +687,14 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
     auto cpu_graph_rows = ceil_div(ProcessModel::the().cpus().size(), cpu_graphs_per_row);
     cpu_graph_group_box.set_fixed_height(120u * cpu_graph_rows);
 
-    Vector<GraphWidget&> cpu_graphs;
+    Vector<SystemMonitor::GraphWidget&> cpu_graphs;
     for (auto row = 0u; row < cpu_graph_rows; ++row) {
         auto& cpu_graph_row = cpu_graph_group_box.add<GUI::Widget>();
         cpu_graph_row.set_layout<GUI::HorizontalBoxLayout>();
         cpu_graph_row.layout()->set_margins(6);
         cpu_graph_row.set_fixed_height(108);
         for (auto i = 0u; i < cpu_graphs_per_row; ++i) {
-            auto& cpu_graph = cpu_graph_row.add<GraphWidget>();
+            auto& cpu_graph = cpu_graph_row.add<SystemMonitor::GraphWidget>();
             cpu_graph.set_max(100);
             cpu_graph.set_value_format(0, {
                                               .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
@@ -725,7 +725,7 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
     memory_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
     memory_graph_group_box.layout()->set_margins(6);
     memory_graph_group_box.set_fixed_height(120);
-    auto& memory_graph = memory_graph_group_box.add<GraphWidget>();
+    auto& memory_graph = memory_graph_group_box.add<SystemMonitor::GraphWidget>();
     memory_graph.set_stack_values(true);
     memory_graph.set_value_format(0, {
                                          .graph_color_role = ColorRole::SyntaxComment,
