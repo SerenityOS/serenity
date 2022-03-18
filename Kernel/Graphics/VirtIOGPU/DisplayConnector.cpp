@@ -125,9 +125,16 @@ ErrorOr<DisplayConnector::Resolution> VirtIODisplayConnector::get_resolution()
     current_resolution.height = info.rect.height;
     return current_resolution;
 }
-ErrorOr<void> VirtIODisplayConnector::set_y_offset(size_t)
+ErrorOr<void> VirtIODisplayConnector::set_y_offset(size_t y)
 {
-    return Error::from_errno(ENOTIMPL);
+    VERIFY(m_control_lock.is_locked());
+    if (y == 0)
+        m_current_buffer = &m_main_buffer;
+    else if (y == m_display_info.rect.height)
+        m_current_buffer = &m_back_buffer;
+    else
+        return Error::from_errno(EINVAL);
+    return {};
 }
 ErrorOr<void> VirtIODisplayConnector::unblank()
 {
@@ -137,9 +144,16 @@ ErrorOr<void> VirtIODisplayConnector::unblank()
 ErrorOr<size_t> VirtIODisplayConnector::write_to_first_surface(u64 offset, UserOrKernelBuffer const& buffer, size_t length)
 {
     VERIFY(m_control_lock.is_locked());
-    if (offset + length > m_buffer_size)
+    if (offset + length > (m_buffer_size * 2))
         return Error::from_errno(EOVERFLOW);
-    TRY(buffer.read(m_main_buffer.framebuffer_data + offset, 0, length));
+    if (offset < m_buffer_size && (offset + length) > (m_buffer_size))
+        return Error::from_errno(EOVERFLOW);
+    if (offset < m_buffer_size) {
+        TRY(buffer.read(m_main_buffer.framebuffer_data + offset, 0, length));
+    } else {
+        TRY(buffer.read(m_back_buffer.framebuffer_data + offset - m_buffer_size, 0, length));
+    }
+
     return length;
 }
 

@@ -137,7 +137,7 @@ private:
     void initialize_3d_context();
     void initialize_console();
     virtual bool modesetting_capable() const override { return true; }
-    virtual bool double_framebuffering_capable() const override { return false; }
+    virtual bool double_framebuffering_capable() const override { return true; }
     virtual bool partial_flush_support() const override { return true; }
     virtual ErrorOr<ByteBuffer> get_edid() const override;
     virtual ErrorOr<void> set_resolution(Resolution const&) override;
