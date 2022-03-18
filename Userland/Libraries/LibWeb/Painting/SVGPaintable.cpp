@@ -10,7 +10,7 @@
 namespace Web::Painting {
 
 SVGPaintable::SVGPaintable(Layout::SVGBox const& layout_box)
-    : PaintableWithLines(layout_box)
+    : PaintableBox(layout_box)
 {
 }
 

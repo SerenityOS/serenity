@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/Layout/SVGSVGBox.h>
+#include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Painting/SVGSVGPaintable.h>
 
 namespace Web::Layout {
 
 SVGSVGBox::SVGSVGBox(DOM::Document& document, SVG::SVGSVGElement& element, NonnullRefPtr<CSS::StyleProperties> properties)
-    : SVGGraphicsBox(document, element, properties)
+    : ReplacedBox(document, element, move(properties))
 {
 }
 

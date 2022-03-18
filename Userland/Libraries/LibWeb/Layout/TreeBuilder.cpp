@@ -145,6 +145,8 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
 
     if (!dom_node.parent_or_shadow_host()) {
         m_layout_root = layout_node;
+    } else if (layout_node->is_svg_box()) {
+        m_parent_stack.last()->append_child(*layout_node);
     } else {
         insert_node_into_inline_or_block_ancestor(layout_node);
     }
