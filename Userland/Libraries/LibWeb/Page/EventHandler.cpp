@@ -138,7 +138,7 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
 
     // FIXME: Support wheel events in nested browsing contexts.
 
-    auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
+    auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
     if (result.paintable && result.paintable->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y))
         return true;
 
@@ -164,7 +164,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
     } else {
-        auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
+        auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
         paintable = result.paintable;
     }
 
@@ -175,7 +175,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
         // Things may have changed as a consequence of Layout::Node::handle_mouseup(). Hit test again.
         if (!paint_root())
             return true;
-        auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
+        auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
         paintable = result.paintable;
     }
 
@@ -222,7 +222,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         if (m_mouse_event_tracking_layout_node) {
             paintable = m_mouse_event_tracking_layout_node->paintable();
         } else {
-            auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
+            auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
             if (!result.paintable)
                 return false;
             paintable = result.paintable;
@@ -300,7 +300,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         }
     } else {
         if (button == GUI::MouseButton::Primary) {
-            auto result = paint_root()->hit_test(position, Painting::HitTestType::TextCursor);
+            auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor);
             if (result.paintable && result.paintable->layout_node().dom_node()) {
 
                 // See if we want to focus something.
@@ -348,7 +348,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
     } else {
-        auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
+        auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
         paintable = result.paintable;
         start_index = result.index_in_node;
     }
@@ -408,7 +408,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
                 return true;
         }
         if (m_in_mouse_selection) {
-            auto hit = paint_root()->hit_test(position, Painting::HitTestType::TextCursor);
+            auto hit = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor);
             if (start_index.has_value() && hit.paintable && hit.paintable->layout_node().dom_node()) {
                 m_browsing_context.set_cursor_position(DOM::Position(*hit.paintable->layout_node().dom_node(), *start_index));
                 layout_root()->set_selection_end({ hit.paintable->layout_node(), hit.index_in_node });

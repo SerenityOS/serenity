@@ -272,8 +272,13 @@ void StackingContext::paint(PaintContext& context) const
     }
 }
 
-HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestType type) const
+HitTestResult StackingContext::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
+    // FIXME: Use the transform origin specified in CSS or SVG
+    auto transform_origin = m_box.paint_box()->absolute_position();
+    auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
+    auto transformed_position = affine_transform.inverse().value_or({}).map(position - transform_origin) + transform_origin;
+
     // NOTE: Hit testing basically happens in reverse painting order.
     // https://www.w3.org/TR/CSS22/visuren.html#z-index
 
@@ -282,7 +287,7 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
         auto const& child = *m_children[i];
         if (child.m_box.computed_values().z_index().value_or(0) < 0)
             break;
-        auto result = child.hit_test(position, type);
+        auto result = child.hit_test(transformed_position, type);
         if (result.paintable)
             return result;
     }
@@ -291,7 +296,7 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
         if (box.is_positioned() && !box.paint_box()->stacking_context()) {
-            result = box.paint_box()->hit_test(position, type);
+            result = box.paint_box()->hit_test(transformed_position, type);
             if (result.paintable)
                 return IterationDecision::Break;
         }
@@ -302,7 +307,7 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     if (m_box.children_are_inline() && is<Layout::BlockContainer>(m_box)) {
-        auto result = m_box.paint_box()->hit_test(position, type);
+        auto result = m_box.paint_box()->hit_test(transformed_position, type);
         if (result.paintable)
             return result;
     }
@@ -310,7 +315,7 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
     // 4. the non-positioned floats.
     m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
         if (box.is_floating()) {
-            result = box.paint_box()->hit_test(position, type);
+            result = box.paint_box()->hit_test(transformed_position, type);
             if (result.paintable)
                 return IterationDecision::Break;
         }
@@ -321,7 +326,7 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
     if (!m_box.children_are_inline()) {
         m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
             if (!box.is_absolutely_positioned() && !box.is_floating()) {
-                result = box.paint_box()->hit_test(position, type);
+                result = box.paint_box()->hit_test(transformed_position, type);
                 if (result.paintable)
                     return IterationDecision::Break;
             }
@@ -336,13 +341,13 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
         auto const& child = *m_children[i];
         if (child.m_box.computed_values().z_index().value_or(0) < 0)
             break;
-        auto result = child.hit_test(position, type);
+        auto result = child.hit_test(transformed_position, type);
         if (result.paintable)
             return result;
     }
 
     // 1. the background and borders of the element forming the stacking context.
-    if (m_box.paint_box()->absolute_border_box_rect().contains(position.to_type<float>())) {
+    if (m_box.paint_box()->absolute_border_box_rect().contains(transformed_position)) {
         return HitTestResult {
             .paintable = m_box.paintable(),
         };
