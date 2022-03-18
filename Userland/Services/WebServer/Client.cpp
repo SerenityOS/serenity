@@ -164,11 +164,11 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
 
     Core::InputFileStream stream { file };
 
-    TRY(send_response(stream, request, Core::guess_mime_type_based_on_filename(real_path)));
+    TRY(send_response(stream, request, { .type = Core::guess_mime_type_based_on_filename(real_path), .length = TRY(Core::File::size(real_path)) }));
     return true;
 }
 
-ErrorOr<void> Client::send_response(InputStream& response, HTTP::HttpRequest const& request, String const& content_type)
+ErrorOr<void> Client::send_response(InputStream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n");
@@ -176,9 +176,8 @@ ErrorOr<void> Client::send_response(InputStream& response, HTTP::HttpRequest con
     builder.append("X-Frame-Options: SAMEORIGIN\r\n");
     builder.append("X-Content-Type-Options: nosniff\r\n");
     builder.append("Pragma: no-cache\r\n");
-    builder.append("Content-Type: ");
-    builder.append(content_type);
-    builder.append("\r\n");
+    builder.appendff("Content-Type: {}\r\n", content_info.type);
+    builder.appendff("Content-Length: {}\r\n", content_info.length);
     builder.append("\r\n");
 
     auto builder_contents = builder.to_byte_buffer();
@@ -326,31 +325,33 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
 
     auto response = builder.to_string();
     InputMemoryStream stream { response.bytes() };
-    return send_response(stream, request, "text/html");
+    return send_response(stream, request, { .type = "text/html", .length = response.length() });
 }
 
 ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const& request, Vector<String> const& headers)
 {
     auto reason_phrase = HTTP::HttpResponse::reason_phrase_for_code(code);
-    StringBuilder builder;
-    builder.appendff("HTTP/1.0 {} ", code);
-    builder.append(reason_phrase);
-    builder.append("\r\n");
+
+    StringBuilder content_builder;
+    content_builder.append("<!DOCTYPE html><html><body><h1>");
+    content_builder.appendff("{} ", code);
+    content_builder.append(reason_phrase);
+    content_builder.append("</h1></body></html>");
+
+    StringBuilder header_builder;
+    header_builder.appendff("HTTP/1.0 {} ", code);
+    header_builder.append(reason_phrase);
+    header_builder.append("\r\n");
 
     for (auto& header : headers) {
-        builder.append(header);
-        builder.append("\r\n");
+        header_builder.append(header);
+        header_builder.append("\r\n");
     }
-    builder.append("Content-Type: text/html; charset=UTF-8\r\n");
-
-    builder.append("\r\n");
-    builder.append("<!DOCTYPE html><html><body><h1>");
-    builder.appendff("{} ", code);
-    builder.append(reason_phrase);
-    builder.append("</h1></body></html>");
-
-    auto builder_contents = builder.to_byte_buffer();
-    TRY(m_socket->write(builder_contents));
+    header_builder.append("Content-Type: text/html; charset=UTF-8\r\n");
+    header_builder.appendff("Content-Length: {}\r\n", content_builder.length());
+    header_builder.append("\r\n");
+    TRY(m_socket->write(header_builder.to_byte_buffer()));
+    TRY(m_socket->write(content_builder.to_byte_buffer()));
 
     log_response(code, request);
     return {};
