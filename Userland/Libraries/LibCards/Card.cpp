@@ -67,10 +67,10 @@ static constexpr Gfx::CharacterBitmap s_club {
 static RefPtr<Gfx::Bitmap> s_background;
 static RefPtr<Gfx::Bitmap> s_background_inverted;
 
-Card::Card(Type type, uint8_t value)
+Card::Card(Suit suit, uint8_t value)
     : m_rect(Gfx::IntRect({}, { width, height }))
     , m_front(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height }).release_value_but_fixme_should_propagate_errors())
-    , m_type(type)
+    , m_suit(suit)
     , m_value(value)
 {
     VERIFY(value < card_count);
@@ -111,15 +111,15 @@ Card::Card(Type type, uint8_t value)
     painter.draw_text(text_rect, label, font, Gfx::TextAlignment::Center, color());
 
     auto const& symbol = [&]() -> Gfx::CharacterBitmap const& {
-        switch (m_type) {
-        case Type::Diamonds:
+        switch (m_suit) {
+        case Suit::Diamonds:
             return s_diamond;
-        case Type::Clubs:
+        case Suit::Clubs:
             return s_club;
             break;
-        case Type::Spades:
+        case Suit::Spades:
             return s_spade;
-        case Type::Hearts:
+        case Suit::Hearts:
             return s_heart;
         default:
             VERIFY_NOT_REACHED();

@@ -212,7 +212,7 @@ bool CardStack::is_allowed_to_push(const Card& card, size_t stack_size, Movement
             // Prevent player from dragging an entire stack of cards to the foundation stack
             if (stack_size > 1)
                 return false;
-            return top_card.type() == card.type() && m_stack.size() == card.value();
+            return top_card.suit() == card.suit() && m_stack.size() == card.value();
         } else if (m_type == Type::Normal) {
             bool color_match;
             switch (movement_rule) {
