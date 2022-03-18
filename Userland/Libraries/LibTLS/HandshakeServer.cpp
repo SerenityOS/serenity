@@ -12,6 +12,7 @@
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/Curves/EllipticCurve.h>
+#include <LibCrypto/Curves/SECP256r1.h>
 #include <LibCrypto/Curves/X25519.h>
 #include <LibCrypto/Curves/X448.h>
 #include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
@@ -310,6 +311,9 @@ ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
         break;
     case NamedCurve::x448:
         m_context.server_key_exchange_curve = make<Crypto::Curves::X448>();
+        break;
+    case NamedCurve::secp256r1:
+        m_context.server_key_exchange_curve = make<Crypto::Curves::SECP256r1>();
         break;
     default:
         return (i8)Error::NotUnderstood;

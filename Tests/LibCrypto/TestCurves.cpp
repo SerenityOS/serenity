@@ -195,13 +195,15 @@ TEST_CASE(test_secp256r1)
     ReadonlyBytes bob_private_key { bob_private_key_data, 32 };
     ReadonlyBytes bob_public_key { bob_public_key_data, 65 };
 
-    auto generated_alice_public = MUST(Crypto::Curves::SECP256r1::generate_public_key(alice_private_key));
+    Crypto::Curves::SECP256r1 curve;
+
+    auto generated_alice_public = MUST(curve.generate_public_key(alice_private_key));
     EXPECT_EQ(alice_public_key, generated_alice_public);
 
-    auto generated_bob_public = MUST(Crypto::Curves::SECP256r1::generate_public_key(bob_private_key));
+    auto generated_bob_public = MUST(curve.generate_public_key(bob_private_key));
     EXPECT_EQ(bob_public_key, generated_bob_public);
 
-    auto generated_public = MUST(Crypto::Curves::SECP256r1::generate_public_key({ private_key_data, 32 }));
+    auto generated_public = MUST(curve.generate_public_key({ private_key_data, 32 }));
     ReadonlyBytes expected_public_key { expected_public_key_data, 65 };
     EXPECT_EQ(expected_public_key, generated_public);
 }
