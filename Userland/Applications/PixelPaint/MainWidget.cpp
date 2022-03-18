@@ -267,11 +267,12 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         editor->redo();
     });
 
+    m_edit_menu->add_action(*m_undo_action);
+    m_edit_menu->add_action(*m_redo_action);
+    m_edit_menu->add_separator();
     m_edit_menu->add_action(*m_copy_action);
     m_edit_menu->add_action(*m_copy_merged_action);
     m_edit_menu->add_action(*m_paste_action);
-    m_edit_menu->add_action(*m_undo_action);
-    m_edit_menu->add_action(*m_redo_action);
     m_edit_menu->add_separator();
 
     m_edit_menu->add_action(GUI::CommonActions::make_select_all_action([&](auto&) {
