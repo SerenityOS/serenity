@@ -127,7 +127,7 @@ private:
     Kernel::Graphics::VirtIOGPU::GraphicsAdapter& m_graphics_adapter;
     // Context used for kernel operations (e.g. flushing resources to scanout)
     ContextID m_kernel_context_id;
-    HashMap<RefPtr<OpenFileDescription>, RefPtr<PerContextState>> m_context_state_lookup;
+    HashMap<OpenFileDescription*, RefPtr<PerContextState>> m_context_state_lookup;
     // Memory management for backing buffers
     OwnPtr<Memory::Region> m_transfer_buffer_region;
     constexpr static size_t NUM_TRANSFER_REGION_PAGES = 256;
