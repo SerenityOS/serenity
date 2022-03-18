@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
 #include <LibVT/Color.h>
@@ -35,15 +36,12 @@ struct Attribute {
     Color foreground_color { default_foreground_color };
     Color background_color { default_background_color };
 
-    constexpr Color effective_background_color() const { return flags & Negative ? foreground_color : background_color; }
-    constexpr Color effective_foreground_color() const { return flags & Negative ? background_color : foreground_color; }
-
 #ifndef KERNEL
     String href;
     String href_id;
 #endif
 
-    enum Flags : u8 {
+    enum class Flags : u8 {
         NoAttributes = 0x00,
         Bold = 0x01,
         Italic = 0x02,
@@ -52,12 +50,14 @@ struct Attribute {
         Blink = 0x10,
         Touched = 0x20,
     };
+    AK_ENUM_BITWISE_FRIEND_OPERATORS(Flags);
 
-    constexpr bool is_untouched() const { return !(flags & Touched); }
+    constexpr Color effective_background_color() const { return has_flag(flags, Flags::Negative) ? foreground_color : background_color; }
+    constexpr Color effective_foreground_color() const { return has_flag(flags, Flags::Negative) ? background_color : foreground_color; }
 
-    // TODO: it would be really nice if we had a helper for enums that
-    // exposed bit ops for class enums...
-    u8 flags { Flags::NoAttributes };
+    constexpr bool is_untouched() const { return has_flag(flags, Flags::Touched); }
+
+    Flags flags { Flags::NoAttributes };
 
     constexpr bool operator==(const Attribute& other) const
     {
