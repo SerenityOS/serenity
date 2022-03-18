@@ -175,7 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     storage_widget->set_title("Storage");
     tabwidget.add_widget(storage_widget);
 
-    auto network_stats_widget = NetworkStatisticsWidget::construct();
+    auto network_stats_widget = SystemMonitor::NetworkStatisticsWidget::construct();
     network_stats_widget->set_title("Network");
     tabwidget.add_widget(network_stats_widget);
 
