@@ -35,8 +35,18 @@ void LineBuilder::begin_new_line(bool increment_y)
 {
     if (increment_y)
         m_current_y += max(m_max_height_on_current_line, m_context.containing_block().line_height());
-    auto space = m_context.available_space_for_line(m_current_y);
-    m_available_width_for_current_line = space.right - space.left;
+
+    switch (m_layout_mode) {
+    case LayoutMode::Default:
+        m_available_width_for_current_line = m_context.available_space_for_line(m_current_y);
+        break;
+    case LayoutMode::AllPossibleLineBreaks:
+        m_available_width_for_current_line = 0;
+        break;
+    case LayoutMode::OnlyRequiredLineBreaks:
+        m_available_width_for_current_line = INFINITY;
+        break;
+    }
     m_max_height_on_current_line = 0;
 
     m_last_line_needs_update = true;
@@ -108,7 +118,7 @@ void LineBuilder::update_last_line()
     auto& line_box = line_boxes.last();
 
     auto text_align = m_context.containing_block().computed_values().text_align();
-    float x_offset = m_context.available_space_for_line(m_current_y).left;
+    float x_offset = m_context.leftmost_x_offset_at(m_current_y);
     float bottom = m_current_y + m_context.containing_block().line_height();
     float excess_horizontal_space = m_containing_block_state.content_width - line_box.width();
 

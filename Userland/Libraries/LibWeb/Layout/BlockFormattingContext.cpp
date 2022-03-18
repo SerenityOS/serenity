@@ -55,9 +55,26 @@ void BlockFormattingContext::parent_context_did_dimension_child_root_box()
 {
     m_was_notified_after_parent_dimensioned_my_root_box = true;
 
+    // Now that we know the width of our root box, we can position floats horizontally.
+    auto root_width = m_state.get(root()).content_width;
+
+    // Left-side floats: offset_from_edge is from left edge (0) to left content edge of floating_box.
+    for (auto& floating_box : m_left_floats.all_boxes) {
+        auto& box_state = m_state.get_mutable(floating_box->box);
+        box_state.offset.set_x(floating_box->offset_from_edge);
+    }
+
+    // Right-side floats: offset_from_edge is from right edge (root_width) to the left content edge of floating_box.
+    for (auto& floating_box : m_right_floats.all_boxes) {
+        auto& box_state = m_state.get_mutable(floating_box->box);
+        box_state.offset.set_x(root_width - floating_box->offset_from_edge);
+    }
+
+    // We can also layout absolutely positioned boxes within this BFC.
     for (auto& box : m_absolutely_positioned_boxes)
         layout_absolutely_positioned_element(box);
 
+    // FIXME: Transforms should be a painting concept, not a layout concept.
     apply_transformations_to_children(root());
 }
 
@@ -96,7 +113,7 @@ void BlockFormattingContext::apply_transformations_to_children(Box const& box)
     });
 }
 
-void BlockFormattingContext::compute_width(Box const& box)
+void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mode)
 {
     if (box.is_absolutely_positioned()) {
         compute_width_for_absolutely_positioned_element(box);
@@ -113,7 +130,7 @@ void BlockFormattingContext::compute_width(Box const& box)
     }
 
     if (box.is_floating()) {
-        compute_width_for_floating_box(box);
+        compute_width_for_floating_box(box, layout_mode);
         return;
     }
 
@@ -238,12 +255,26 @@ void BlockFormattingContext::compute_width(Box const& box)
     box_state.padding_right = padding_right.to_px(box);
 }
 
-void BlockFormattingContext::compute_width_for_floating_box(Box const& box)
+void BlockFormattingContext::compute_width_for_floating_box(Box const& box, LayoutMode layout_mode)
 {
     // 10.3.5 Floating, non-replaced elements
     auto& computed_values = box.computed_values();
     auto& containing_block = *box.containing_block();
-    float width_of_containing_block = m_state.get(containing_block).content_width;
+
+    float width_of_containing_block = 0;
+
+    switch (layout_mode) {
+    case LayoutMode::Default:
+        width_of_containing_block = m_state.get(containing_block).content_width;
+        break;
+    case LayoutMode::AllPossibleLineBreaks:
+        width_of_containing_block = 0;
+        break;
+    case LayoutMode::OnlyRequiredLineBreaks:
+        width_of_containing_block = INFINITY;
+        break;
+    }
+
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     auto zero_value = CSS::Length::make_px(0);
 
@@ -362,7 +393,6 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     VERIFY(!block_container.children_are_inline());
 
     float content_height = 0;
-    float content_width = 0;
 
     block_container.for_each_child_of_type<Box>([&](Box& child_box) {
         auto& box_state = m_state.get_mutable(child_box);
@@ -377,11 +407,12 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
             return IterationDecision::Continue;
 
         if (child_box.is_floating()) {
-            layout_floating_child(child_box, block_container);
+            layout_floating_box(child_box, block_container, layout_mode);
+            content_height = max(content_height, box_state.offset.y() + box_state.content_height + box_state.margin_box_bottom());
             return IterationDecision::Continue;
         }
 
-        compute_width(child_box);
+        compute_width(child_box, layout_mode);
         if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
             place_block_level_element_in_normal_flow_vertically(child_box, block_container);
 
@@ -410,7 +441,6 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
         }
 
         content_height = max(content_height, box_state.offset.y() + box_state.content_height + box_state.margin_box_bottom());
-        content_width = max(content_width, box_state.border_box_width());
 
         if (independent_formatting_context)
             independent_formatting_context->parent_context_did_dimension_child_root_box();
@@ -422,7 +452,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
         auto& width = block_container.computed_values().width();
         if (!width.has_value() || (width->is_length() && width->length().is_auto())) {
             auto& block_container_state = m_state.get_mutable(block_container);
-            block_container_state.content_width = content_width;
+            block_container_state.content_width = greatest_child_width(block_container);
         }
     }
 }
@@ -487,15 +517,14 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
     }
 
     auto clear_floating_boxes = [&](FloatSideData& float_side) {
-        if (!float_side.boxes.is_empty()) {
+        if (!float_side.current_boxes.is_empty()) {
             float clearance_y = 0;
-            for (auto const& floating_box : float_side.boxes) {
-                auto const& floating_box_state = m_state.get(floating_box);
+            for (auto const& floating_box : float_side.current_boxes) {
+                auto const& floating_box_state = m_state.get(floating_box.box);
                 clearance_y = max(clearance_y, floating_box_state.offset.y() + floating_box_state.border_box_height());
             }
             y = max(y, clearance_y);
-            float_side.boxes.clear();
-            float_side.y_offset = 0;
+            float_side.clear();
         }
     };
 
@@ -514,10 +543,18 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
     auto const& containing_block_state = m_state.get(containing_block);
 
     float x = 0;
+    float available_width_within_containing_block = containing_block_state.content_width;
+
+    if ((!m_left_floats.current_boxes.is_empty() || !m_right_floats.current_boxes.is_empty())
+        && creates_block_formatting_context(child_box)) {
+        available_width_within_containing_block -= m_left_floats.current_width + m_right_floats.current_width;
+        x += m_left_floats.current_width;
+    }
+
     if (containing_block.computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
-        x = (containing_block_state.content_width / 2) - box_state.content_width / 2;
+        x += (available_width_within_containing_block / 2) - box_state.content_width / 2;
     } else {
-        x = box_state.margin_box_left() + box_state.offset_left;
+        x += box_state.margin_box_left() + box_state.offset_left;
     }
 
     box_state.offset = Gfx::FloatPoint { x, box_state.offset.y() };
@@ -554,15 +591,27 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     }
 }
 
-void BlockFormattingContext::layout_floating_child(Box const& box, BlockContainer const& containing_block)
+void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer const& containing_block, LayoutMode layout_mode)
 {
     VERIFY(box.is_floating());
 
     auto& box_state = m_state.get_mutable(box);
-    auto containing_block_content_width = m_state.get(containing_block).content_width;
+    float width_of_containing_block = 0;
 
-    compute_width(box);
-    (void)layout_inside(box, LayoutMode::Default);
+    switch (layout_mode) {
+    case LayoutMode::Default:
+        width_of_containing_block = m_state.get(containing_block).content_width;
+        break;
+    case LayoutMode::AllPossibleLineBreaks:
+        width_of_containing_block = 0;
+        break;
+    case LayoutMode::OnlyRequiredLineBreaks:
+        width_of_containing_block = INFINITY;
+        break;
+    }
+
+    compute_width(box, layout_mode);
+    (void)layout_inside(box, layout_mode);
     compute_height(box, m_state);
 
     // First we place the box normally (to get the right y coordinate.)
@@ -572,85 +621,98 @@ void BlockFormattingContext::layout_floating_child(Box const& box, BlockContaine
     auto float_box = [&](FloatSide side, FloatSideData& side_data) {
         auto first_edge = [&](FormattingState::NodeState const& thing) { return side == FloatSide::Left ? thing.margin_left : thing.margin_right; };
         auto second_edge = [&](FormattingState::NodeState const& thing) { return side == FloatSide::Right ? thing.margin_left : thing.margin_right; };
-        auto edge_of_containing_block = [&] {
-            if (side == FloatSide::Left)
-                return box_state.margin_box_left();
-            return containing_block_content_width - box_state.margin_box_right() - box_state.content_width;
-        };
 
         // Then we float it to the left or right.
 
+        float offset_from_edge = 0;
+        auto float_to_edge = [&] {
+            if (side == FloatSide::Left)
+                offset_from_edge = box_state.margin_box_left();
+            else
+                offset_from_edge = box_state.content_width + box_state.margin_box_right();
+        };
+
         auto box_in_root_rect = margin_box_rect_in_ancestor_coordinate_space(box, root(), m_state);
         float y_in_root = box_in_root_rect.y();
-
-        float x = 0;
         float y = box_state.offset.y();
 
-        if (side_data.boxes.is_empty()) {
+        if (side_data.current_boxes.is_empty()) {
             // This is the first floating box on this side. Go all the way to the edge.
-            x = edge_of_containing_block();
+            float_to_edge();
             side_data.y_offset = 0;
         } else {
-            auto& previous_box = side_data.boxes.last();
-            auto const& previous_box_state = m_state.get(previous_box);
-            auto previous_rect = margin_box_rect_in_ancestor_coordinate_space(previous_box, root(), m_state);
+            auto& previous_box = side_data.current_boxes.last();
+            auto const& previous_box_state = m_state.get(previous_box.box);
 
             auto margin_collapsed_with_previous = max(
                 second_edge(previous_box_state),
                 first_edge(box_state));
 
-            float wanted_x = 0;
+            float wanted_offset_from_edge = 0;
             bool fits_on_line = false;
 
             if (side == FloatSide::Left) {
-                auto previous_right_border_edge = previous_box_state.offset.x()
-                    + previous_box_state.content_width
-                    + previous_box_state.padding_right
-                    + previous_box_state.border_right
+                auto previous_right_edge = side_data.current_width
+                    - previous_box_state.margin_right
                     + margin_collapsed_with_previous;
 
-                wanted_x = previous_right_border_edge + box_state.border_left + box_state.padding_left;
-                fits_on_line = (wanted_x + box_state.content_width + box_state.padding_right + box_state.border_right + box_state.margin_right) <= containing_block_content_width;
+                wanted_offset_from_edge = previous_right_edge + box_state.border_left + box_state.padding_left;
+                fits_on_line = (wanted_offset_from_edge + box_state.content_width + box_state.padding_right + box_state.border_right + box_state.margin_right) <= width_of_containing_block;
             } else {
-                auto previous_left_border_edge = previous_box_state.offset.x()
-                    - previous_box_state.padding_left
-                    - previous_box_state.border_left
-                    - margin_collapsed_with_previous;
+                auto previous_left_edge = side_data.current_width
+                    - previous_box_state.margin_left
+                    + margin_collapsed_with_previous;
 
-                wanted_x = previous_left_border_edge - box_state.border_right - box_state.padding_right - box_state.content_width;
-                fits_on_line = (wanted_x - box_state.padding_left - box_state.border_left - box_state.margin_left) >= 0;
+                wanted_offset_from_edge = previous_left_edge + box_state.border_right + box_state.padding_right + box_state.content_width;
+                fits_on_line = (wanted_offset_from_edge - box_state.padding_left - box_state.border_left - box_state.margin_left) >= 0;
             }
 
             if (fits_on_line) {
+                auto const previous_rect = margin_box_rect_in_ancestor_coordinate_space(previous_box.box, root(), m_state);
                 if (previous_rect.contains_vertically(y_in_root + side_data.y_offset)) {
                     // This box touches another already floating box. Stack after others.
-                    x = wanted_x;
+                    offset_from_edge = wanted_offset_from_edge;
                 } else {
                     // This box does not touch another floating box, go all the way to the edge.
-                    x = edge_of_containing_block();
+                    float_to_edge();
 
                     // Also, forget all previous boxes floated to this side while since they're no longer relevant.
-                    side_data.boxes.clear();
+                    side_data.clear();
                 }
             } else {
                 // We ran out of horizontal space on this "float line", and need to break.
-                x = edge_of_containing_block();
+                float_to_edge();
                 float lowest_border_edge = 0;
-                for (auto const& box : side_data.boxes) {
-                    auto const& box_state = m_state.get(box);
+                for (auto const& box : side_data.current_boxes) {
+                    auto const& box_state = m_state.get(box.box);
                     lowest_border_edge = max(lowest_border_edge, box_state.border_box_height());
                 }
 
                 side_data.y_offset += lowest_border_edge;
 
                 // Also, forget all previous boxes floated to this side while since they're no longer relevant.
-                side_data.boxes.clear();
+                side_data.clear();
             }
         }
         y += side_data.y_offset;
-        side_data.boxes.append(box);
+        side_data.all_boxes.append(adopt_own(*new FloatingBox {
+            .box = box,
+            .offset_from_edge = offset_from_edge,
+            .top_margin_edge = y - box_state.margin_box_top(),
+            .bottom_margin_edge = y + box_state.content_height + box_state.margin_box_bottom(),
+        }));
+        side_data.current_boxes.append(*side_data.all_boxes.last());
 
-        box_state.offset = Gfx::FloatPoint { x, y };
+        if (side == FloatSide::Left) {
+            side_data.current_width = offset_from_edge + box_state.content_width + box_state.margin_box_right();
+        } else {
+            side_data.current_width = offset_from_edge + box_state.margin_box_left();
+        }
+        side_data.max_width = max(side_data.current_width, side_data.max_width);
+
+        // NOTE: We don't set the X position here, that happens later, once we know the root block width.
+        //       See parent_context_did_dimension_child_root_box() for that logic.
+        box_state.offset.set_y(y);
     };
 
     // Next, float to the left and/or right
@@ -692,29 +754,67 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
         list_item_state.content_height = marker_state.content_height;
 }
 
-BlockFormattingContext::AvailableSpaceForLineInfo BlockFormattingContext::available_space_for_line(float y) const
+BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_floats(float y) const
 {
-    AvailableSpaceForLineInfo info;
+    SpaceUsedByFloats space_used_by_floats;
 
-    for (auto const& floating_box : m_left_floats.boxes.in_reverse()) {
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box, root(), m_state);
+    for (auto const& floating_box : m_left_floats.current_boxes.in_reverse()) {
+        auto const& floating_box_state = m_state.get(floating_box.box);
+        // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
+        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
         if (rect.contains_vertically(y)) {
-            info.left = rect.right() + 1;
+            space_used_by_floats.left = floating_box.offset_from_edge
+                + floating_box_state.content_width
+                + floating_box_state.margin_box_right();
             break;
         }
     }
 
-    info.right = m_state.get(root()).content_width;
-
-    for (auto const& floating_box : m_right_floats.boxes.in_reverse()) {
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box, root(), m_state);
+    for (auto const& floating_box : m_right_floats.current_boxes.in_reverse()) {
+        auto const& floating_box_state = m_state.get(floating_box.box);
+        // NOTE: The floating box is *not* in the final horizontal position yet, but the size and vertical position is valid.
+        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box.box, root(), m_state);
         if (rect.contains_vertically(y)) {
-            info.right = rect.left();
+            space_used_by_floats.right = floating_box.offset_from_edge
+                + floating_box_state.margin_box_left();
             break;
         }
     }
 
-    return info;
+    return space_used_by_floats;
+}
+
+float BlockFormattingContext::greatest_child_width(Box const& box)
+{
+    // Similar to FormattingContext::greatest_child_width()
+    // but this one takes floats into account!
+    float max_width = m_left_floats.max_width + m_right_floats.max_width;
+    if (box.children_are_inline()) {
+        for (auto const& line_box : m_state.get(verify_cast<BlockContainer>(box)).line_boxes) {
+            auto width_here = line_box.width();
+            float extra_width_from_left_floats = 0;
+            for (auto& left_float : m_left_floats.all_boxes) {
+                if (line_box.baseline() >= left_float->top_margin_edge || line_box.baseline() <= left_float->bottom_margin_edge) {
+                    auto const& left_float_state = m_state.get(left_float->box);
+                    extra_width_from_left_floats = max(extra_width_from_left_floats, left_float->offset_from_edge + left_float_state.content_width + left_float_state.margin_box_right());
+                }
+            }
+            float extra_width_from_right_floats = 0;
+            for (auto& right_float : m_right_floats.all_boxes) {
+                if (line_box.baseline() >= right_float->top_margin_edge || line_box.baseline() <= right_float->bottom_margin_edge) {
+                    auto const& right_float_state = m_state.get(right_float->box);
+                    extra_width_from_right_floats = max(extra_width_from_right_floats, right_float->offset_from_edge + right_float_state.margin_box_left());
+                }
+            }
+            width_here += extra_width_from_left_floats + extra_width_from_right_floats;
+            max_width = max(max_width, width_here);
+        }
+    } else {
+        box.for_each_child_of_type<Box>([&](auto& child) {
+            max_width = max(max_width, m_state.get(child).border_box_width());
+        });
+    }
+    return max_width;
 }
 
 }

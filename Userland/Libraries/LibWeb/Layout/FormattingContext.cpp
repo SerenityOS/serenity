@@ -131,16 +131,16 @@ OwnPtr<FormattingContext> FormattingContext::layout_inside(Box const& child_box,
     return independent_formatting_context;
 }
 
-static float greatest_child_width(FormattingState const& state, Box const& box)
+float FormattingContext::greatest_child_width(Box const& box)
 {
     float max_width = 0;
     if (box.children_are_inline()) {
-        for (auto& child : state.get(verify_cast<BlockContainer>(box)).line_boxes) {
-            max_width = max(max_width, child.width());
+        for (auto& line_box : m_state.get(verify_cast<BlockContainer>(box)).line_boxes) {
+            max_width = max(max_width, line_box.width());
         }
     } else {
         box.for_each_child_of_type<Box>([&](auto& child) {
-            max_width = max(max_width, state.get(child).border_box_width());
+            max_width = max(max_width, m_state.get(child).border_box_width());
         });
     }
     return max_width;

@@ -27,7 +27,7 @@ public:
     auto const& right_side_floats() const { return m_right_floats; }
 
     static float compute_theoretical_height(FormattingState const&, Box const&);
-    void compute_width(Box const&);
+    void compute_width(Box const&, LayoutMode = LayoutMode::Default);
 
     // https://www.w3.org/TR/css-display/#block-formatting-context-root
     BlockContainer const& root() const { return static_cast<BlockContainer const&>(context_box()); }
@@ -38,12 +38,14 @@ public:
 
     void add_absolutely_positioned_box(Box const& box) { m_absolutely_positioned_boxes.append(box); }
 
-    AvailableSpaceForLineInfo available_space_for_line(float y) const;
+    SpaceUsedByFloats space_used_by_floats(float y) const;
+
+    virtual float greatest_child_width(Box const&) override;
 
 private:
     virtual bool is_block_formatting_context() const final { return true; }
 
-    void compute_width_for_floating_box(Box const&);
+    void compute_width_for_floating_box(Box const&, LayoutMode);
 
     void compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const&);
 
@@ -56,7 +58,7 @@ private:
     void place_block_level_element_in_normal_flow_horizontally(Box const& child_box, BlockContainer const&);
     void place_block_level_element_in_normal_flow_vertically(Box const& child_box, BlockContainer const&);
 
-    void layout_floating_child(Box const& child, BlockContainer const& containing_block);
+    void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode);
 
     void apply_transformations_to_children(Box const&);
 
@@ -67,9 +69,40 @@ private:
         Right,
     };
 
+    struct FloatingBox {
+        Box const& box;
+        // Offset from left/right edge to the left content edge of `box`.
+        float offset_from_edge { 0 };
+
+        // Top margin edge of `box`.
+        float top_margin_edge { 0 };
+
+        // Bottom margin edge of `box`.
+        float bottom_margin_edge { 0 };
+    };
+
     struct FloatSideData {
-        Vector<Box const&> boxes;
+        // Floating boxes currently accumulating on this side.
+        Vector<FloatingBox&> current_boxes;
+
+        // Combined width of boxes currently accumulating on this side.
+        // This is the innermost margin of the innermost floating box.
+        float current_width { 0 };
+
+        // Highest value of `m_current_width` we've seen.
+        float max_width { 0 };
+
+        // All floating boxes encountered thus far within this BFC.
+        Vector<NonnullOwnPtr<FloatingBox>> all_boxes;
+
+        // Current Y offset from BFC root top.
         float y_offset { 0 };
+
+        void clear()
+        {
+            current_boxes.clear();
+            current_width = 0;
+        }
     };
 
     FloatSideData m_left_floats;

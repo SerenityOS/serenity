@@ -27,7 +27,8 @@ public:
 
     void dimension_box_on_line(Box const&, LayoutMode);
 
-    AvailableSpaceForLineInfo available_space_for_line(float y) const;
+    float leftmost_x_offset_at(float y) const;
+    float available_space_for_line(float y) const;
 
 private:
     void generate_line_boxes(LayoutMode);
