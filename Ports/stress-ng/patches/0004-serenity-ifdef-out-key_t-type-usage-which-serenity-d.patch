@@ -1,7 +1,7 @@
-From 871d6d7e7bc3d7f85bdff69cb4b6122e78a82063 Mon Sep 17 00:00:00 2001
+From a6387e37e265be01a76d64d2730bcf390a886104 Mon Sep 17 00:00:00 2001
 From: Brian Gianforcaro <b.gianfo@gmail.com>
 Date: Mon, 27 Dec 2021 20:59:35 -0800
-Subject: [PATCH 04/12] serenity: ifdef out key_t type usage, which serenity
+Subject: [PATCH 04/14] serenity: ifdef out key_t type usage, which serenity
  does not have
 
 ---
@@ -9,10 +9,10 @@ Subject: [PATCH 04/12] serenity: ifdef out key_t type usage, which serenity
  1 file changed, 3 insertions(+)
 
 diff --git a/stress-ng.h b/stress-ng.h
-index 837790b..2388815 100644
+index 5af02e1..dac6113 100644
 --- a/stress-ng.h
 +++ b/stress-ng.h
-@@ -2501,11 +2501,14 @@ typedef struct {
+@@ -990,11 +990,14 @@ typedef struct {
  		uint32_t futex[STRESS_PROCS_MAX];	/* Shared futexes */
  		uint64_t timeout[STRESS_PROCS_MAX];	/* Shared futex timeouts */
  	} futex;
@@ -28,5 +28,5 @@ index 837790b..2388815 100644
  	struct {
  		bool no_perf;				/* true = Perf not available */
 -- 
-2.34.1
+2.32.0
 
