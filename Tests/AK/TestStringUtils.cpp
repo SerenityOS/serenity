@@ -321,6 +321,10 @@ TEST_CASE(contains)
     EXPECT(!AK::StringUtils::contains("", test_string, CaseSensitivity::CaseInsensitive));
     EXPECT(!AK::StringUtils::contains(test_string, "L", CaseSensitivity::CaseSensitive));
     EXPECT(!AK::StringUtils::contains(test_string, "L", CaseSensitivity::CaseInsensitive));
+
+    String command_palette_bug_string = "Go Go Back";
+    EXPECT(AK::StringUtils::contains(command_palette_bug_string, "Go Back", AK::CaseSensitivity::CaseSensitive));
+    EXPECT(AK::StringUtils::contains(command_palette_bug_string, "gO bAcK", AK::CaseSensitivity::CaseInsensitive));
 }
 
 TEST_CASE(is_whitespace)
