@@ -29,7 +29,7 @@ void Endpoint::send_command(Command const& command)
 
 void Endpoint::event(Core::Event& event)
 {
-    switch (event.type()) {
+    switch (static_cast<Command::Type>(event.type())) {
     case Command::Type::UCI:
         return handle_uci();
     case Command::Type::Debug:
