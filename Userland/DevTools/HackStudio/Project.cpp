@@ -66,4 +66,13 @@ bool Project::project_is_serenity() const
     return m_root_path.ends_with("Source/serenity");
 }
 
+NonnullOwnPtr<ProjectConfig> Project::config() const
+{
+    auto config_or_error = ProjectConfig::try_load_project_config(LexicalPath::absolute_path(m_root_path, config_file_path));
+    if (config_or_error.is_error())
+        return ProjectConfig::create_empty();
+
+    return config_or_error.release_value();
+}
+
 }
