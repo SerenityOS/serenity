@@ -133,7 +133,7 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
         } else
             painter.fill_rect(outer_rect, palette().window());
     }
-    painter.draw_focus_rect(get_outer_rect(m_active_glyph), Gfx::Color::Black);
+    painter.draw_focus_rect(get_outer_rect(m_active_glyph), palette().focus_outline());
 }
 
 Optional<int> GlyphMapWidget::glyph_at_position(Gfx::IntPoint position) const
