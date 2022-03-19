@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <LibCore/Timer.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/TextRange.h>
 #include <LibGfx/BitmapFont.h>
@@ -94,6 +95,8 @@ private:
     int m_visible_glyphs { 0 };
     bool m_in_drag_select { false };
     Unicode::CodePointRange m_active_range { 0x0000, 0x10FFFF };
+    RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
+    Gfx::IntPoint m_last_mousemove_position;
 };
 
 }

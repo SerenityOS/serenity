@@ -54,6 +54,19 @@ GlyphMapWidget::GlyphMapWidget()
     horizontal_scrollbar().set_visible(false);
     did_change_font();
     set_active_glyph('A');
+
+    m_automatic_selection_scroll_timer = add<Core::Timer>(20, [this] {
+        if (!m_in_drag_select) {
+            m_automatic_selection_scroll_timer->stop();
+            return;
+        }
+        auto glyph = glyph_at_position_clamped(m_last_mousemove_position);
+        m_selection.extend_to(glyph);
+        set_active_glyph(glyph, ShouldResetSelection::No);
+        scroll_to_glyph(glyph);
+        update();
+    });
+    m_automatic_selection_scroll_timer->stop();
 }
 
 void GlyphMapWidget::resize_event(ResizeEvent& event)
@@ -168,6 +181,7 @@ void GlyphMapWidget::mousedown_event(MouseEvent& event)
         if (event.shift())
             m_selection.extend_to(glyph);
         m_in_drag_select = true;
+        m_automatic_selection_scroll_timer->start();
         set_active_glyph(glyph, event.shift() ? ShouldResetSelection::No : ShouldResetSelection::Yes);
     }
 }
@@ -187,14 +201,7 @@ void GlyphMapWidget::mouseup_event(GUI::MouseEvent& event)
 
 void GlyphMapWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    if (!m_in_drag_select)
-        return;
-
-    auto glyph = glyph_at_position_clamped(event.position());
-    m_selection.extend_to(glyph);
-    set_active_glyph(glyph, ShouldResetSelection::No);
-    scroll_to_glyph(glyph);
-    update();
+    m_last_mousemove_position = event.position();
 }
 
 void GlyphMapWidget::doubleclick_event(MouseEvent& event)
