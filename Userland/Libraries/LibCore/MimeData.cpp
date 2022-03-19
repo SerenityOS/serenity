@@ -75,6 +75,8 @@ String guess_mime_type_based_on_filename(StringView path)
         return "text/markdown";
     if (path.ends_with(".html", CaseSensitivity::CaseInsensitive) || path.ends_with(".htm", CaseSensitivity::CaseInsensitive))
         return "text/html";
+    if (path.ends_with(".css", CaseSensitivity::CaseInsensitive))
+        return "text/css";
     if (path.ends_with(".js", CaseSensitivity::CaseInsensitive))
         return "application/javascript";
     if (path.ends_with(".json", CaseSensitivity::CaseInsensitive))
