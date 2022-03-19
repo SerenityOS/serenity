@@ -60,6 +60,8 @@ private:
     void paste_glyphs();
     void delete_selected_glyphs();
 
+    void reset_selection_and_push_undo();
+
     RefPtr<Gfx::BitmapFont> m_edited_font;
 
     RefPtr<GUI::GlyphMapWidget> m_glyph_map_widget;

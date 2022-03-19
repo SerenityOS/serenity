@@ -348,7 +348,7 @@ FontEditorWidget::FontEditorWidget()
     };
 
     m_glyph_editor_widget->on_undo_event = [this] {
-        m_undo_stack->push(make<SelectionUndoCommand>(*m_undo_selection));
+        reset_selection_and_push_undo();
     };
 
     m_glyph_map_widget->on_active_glyph_changed = [this](int glyph) {
@@ -356,6 +356,7 @@ FontEditorWidget::FontEditorWidget()
             auto selection = m_glyph_map_widget->selection().normalized();
             m_undo_selection->set_start(selection.start());
             m_undo_selection->set_size(selection.size());
+            m_undo_selection->set_active_glyph(glyph);
         }
         m_glyph_editor_widget->set_glyph(glyph);
         auto glyph_width = m_edited_font->raw_glyph_width(glyph);
@@ -389,7 +390,7 @@ FontEditorWidget::FontEditorWidget()
     };
 
     m_glyph_editor_width_spinbox->on_change = [this](int value) {
-        m_undo_stack->push(make<SelectionUndoCommand>(*m_undo_selection));
+        reset_selection_and_push_undo();
         m_edited_font->set_glyph_width(m_glyph_map_widget->active_glyph(), value);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->active_glyph());
@@ -399,7 +400,7 @@ FontEditorWidget::FontEditorWidget()
     };
 
     m_glyph_editor_present_checkbox->on_checked = [this](bool checked) {
-        m_undo_stack->push(make<SelectionUndoCommand>(*m_undo_selection));
+        reset_selection_and_push_undo();
         m_edited_font->set_glyph_width(m_glyph_map_widget->active_glyph(), checked ? m_edited_font->glyph_fixed_width() : 0);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->active_glyph());
@@ -562,7 +563,7 @@ void FontEditorWidget::initialize(String const& path, RefPtr<Gfx::BitmapFont>&& 
     });
 
     m_undo_stack = make<GUI::UndoStack>();
-    m_undo_selection = adopt_ref(*new UndoSelection(m_glyph_map_widget->selection().start(), m_glyph_map_widget->selection().size(), *m_edited_font));
+    m_undo_selection = adopt_ref(*new UndoSelection(m_glyph_map_widget->selection().start(), m_glyph_map_widget->selection().size(), m_glyph_map_widget->active_glyph(), *m_edited_font));
 
     m_undo_stack->on_state_change = [this] {
         m_undo_action->set_enabled(m_undo_stack->can_undo());
@@ -670,17 +671,38 @@ bool FontEditorWidget::open_file(String const& path)
     return true;
 }
 
+void FontEditorWidget::reset_selection_and_push_undo()
+{
+    auto selection = m_glyph_map_widget->selection().normalized();
+    if (selection.size() != 1) {
+        auto start = m_glyph_map_widget->active_glyph();
+        m_undo_selection->set_start(start);
+        m_undo_selection->set_size(1);
+        m_glyph_map_widget->set_selection(start, 1);
+        m_glyph_map_widget->update();
+    }
+    m_undo_stack->push(make<SelectionUndoCommand>(*m_undo_selection));
+}
+
 void FontEditorWidget::undo()
 {
     if (!m_undo_stack->can_undo())
         return;
     m_undo_stack->undo();
-    auto glyph = m_undo_selection->previous_active_glyph();
+
+    auto glyph = m_undo_selection->restored_active_glyph();
     auto glyph_width = edited_font().raw_glyph_width(glyph);
     if (glyph < m_range.first || glyph > m_range.last)
         m_search_textbox->set_text("");
-    m_glyph_map_widget->set_active_glyph(glyph);
-    m_glyph_map_widget->scroll_to_glyph(glyph);
+
+    deferred_invoke([this, glyph] {
+        auto start = m_undo_selection->restored_start();
+        auto size = m_undo_selection->restored_size();
+        m_glyph_map_widget->set_selection(start, size, glyph);
+        m_glyph_map_widget->scroll_to_glyph(glyph);
+        m_glyph_map_widget->set_focus(true);
+    });
+
     if (m_edited_font->is_fixed_width()) {
         m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
     } else {
@@ -697,12 +719,20 @@ void FontEditorWidget::redo()
     if (!m_undo_stack->can_redo())
         return;
     m_undo_stack->redo();
-    auto glyph = m_undo_selection->previous_active_glyph();
+
+    auto glyph = m_undo_selection->restored_active_glyph();
     auto glyph_width = edited_font().raw_glyph_width(glyph);
     if (glyph < m_range.first || glyph > m_range.last)
         m_search_textbox->set_text("");
-    m_glyph_map_widget->set_active_glyph(glyph);
-    m_glyph_map_widget->scroll_to_glyph(glyph);
+
+    deferred_invoke([this, glyph] {
+        auto start = m_undo_selection->restored_start();
+        auto size = m_undo_selection->restored_size();
+        m_glyph_map_widget->set_selection(start, size, glyph);
+        m_glyph_map_widget->scroll_to_glyph(glyph);
+        m_glyph_map_widget->set_focus(true);
+    });
+
     if (m_edited_font->is_fixed_width()) {
         m_glyph_editor_present_checkbox->set_checked(glyph_width > 0, GUI::AllowCallback::No);
     } else {
@@ -865,8 +895,7 @@ void FontEditorWidget::paste_glyphs()
     auto selection = m_glyph_map_widget->selection().normalized();
     auto range_bound_glyph_count = min(glyph_count, 1 + m_range.last - selection.start());
     m_undo_selection->set_size(range_bound_glyph_count);
-    if (m_glyph_editor_widget->on_undo_event)
-        m_glyph_editor_widget->on_undo_event();
+    m_undo_stack->push(make<SelectionUndoCommand>(*m_undo_selection));
 
     size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * edited_font().glyph_height();
     size_t bytes_per_copied_glyph = Gfx::GlyphBitmap::bytes_per_row() * height;
@@ -882,6 +911,8 @@ void FontEditorWidget::paste_glyphs()
         memset(&widths[i], copyable_width, sizeof(u8));
     }
 
+    m_glyph_map_widget->set_selection(selection.start() + range_bound_glyph_count - 1, -range_bound_glyph_count + 1);
+
     if (m_edited_font->is_fixed_width())
         m_glyph_editor_present_checkbox->set_checked(m_edited_font->contains_raw_glyph(m_glyph_map_widget->active_glyph()), GUI::AllowCallback::No);
     else
@@ -894,8 +925,7 @@ void FontEditorWidget::paste_glyphs()
 
 void FontEditorWidget::delete_selected_glyphs()
 {
-    if (m_glyph_editor_widget->on_undo_event)
-        m_glyph_editor_widget->on_undo_event();
+    m_undo_stack->push(make<SelectionUndoCommand>(*m_undo_selection));
 
     auto selection = m_glyph_map_widget->selection().normalized();
     size_t bytes_per_glyph = Gfx::GlyphBitmap::bytes_per_row() * m_edited_font->glyph_height();
