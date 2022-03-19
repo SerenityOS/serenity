@@ -595,6 +595,7 @@ void Document::update_layout()
 
 [[nodiscard]] static bool update_style_recursively(DOM::Node& node)
 {
+    bool const needs_full_style_update = node.document().needs_full_style_update();
     bool needs_relayout = false;
 
     if (is<Element>(node)) {
@@ -602,15 +603,15 @@ void Document::update_layout()
     }
     node.set_needs_style_update(false);
 
-    if (node.child_needs_style_update()) {
+    if (needs_full_style_update || node.child_needs_style_update()) {
         if (node.is_element()) {
             if (auto* shadow_root = static_cast<DOM::Element&>(node).shadow_root()) {
-                if (shadow_root->needs_style_update() || shadow_root->child_needs_style_update())
+                if (needs_full_style_update || shadow_root->needs_style_update() || shadow_root->child_needs_style_update())
                     needs_relayout |= update_style_recursively(*shadow_root);
             }
         }
         node.for_each_child([&](auto& child) {
-            if (child.needs_style_update() || child.child_needs_style_update())
+            if (needs_full_style_update || child.needs_style_update() || child.child_needs_style_update())
                 needs_relayout |= update_style_recursively(child);
             return IterationDecision::Continue;
         });
@@ -624,10 +625,11 @@ void Document::update_style()
 {
     if (!browsing_context())
         return;
-    if (!needs_style_update() && !child_needs_style_update())
+    if (!needs_full_style_update() && !needs_style_update() && !child_needs_style_update())
         return;
     if (update_style_recursively(*this))
         invalidate_layout();
+    m_needs_full_style_update = false;
     m_style_update_timer->stop();
 }
 

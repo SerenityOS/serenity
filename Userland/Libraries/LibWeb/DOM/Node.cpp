@@ -176,6 +176,13 @@ void Node::set_node_value(const String& value)
 
 void Node::invalidate_style()
 {
+    if (is_document()) {
+        auto& document = static_cast<DOM::Document&>(*this);
+        document.set_needs_full_style_update(true);
+        document.schedule_style_update();
+        return;
+    }
+
     for_each_in_inclusive_subtree([&](Node& node) {
         node.m_needs_style_update = true;
         if (node.has_children())
