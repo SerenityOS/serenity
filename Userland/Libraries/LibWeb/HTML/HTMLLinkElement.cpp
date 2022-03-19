@@ -35,6 +35,10 @@ void HTMLLinkElement::inserted()
         //       as it may trigger a synchronous resource_did_load() callback.
         m_document_load_event_delayer.emplace(document());
         set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+
+        // NOTE: If we ended up not loading a resource for whatever reason, don't delay the load event.
+        if (!resource())
+            m_document_load_event_delayer.clear();
     }
 
     if (m_relationship & Relationship::Preload) {
