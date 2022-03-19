@@ -19,17 +19,17 @@ namespace AK::SIMD {
 
 // SIMD Vector Expansion
 
-ALWAYS_INLINE static constexpr f32x4 expand4(float f)
+AK_ALWAYS_INLINE static constexpr f32x4 expand4(float f)
 {
     return f32x4 { f, f, f, f };
 }
 
-ALWAYS_INLINE static constexpr i32x4 expand4(i32 i)
+AK_ALWAYS_INLINE static constexpr i32x4 expand4(i32 i)
 {
     return i32x4 { i, i, i, i };
 }
 
-ALWAYS_INLINE static constexpr u32x4 expand4(u32 u)
+AK_ALWAYS_INLINE static constexpr u32x4 expand4(u32 u)
 {
     return u32x4 { u, u, u, u };
 }
@@ -37,26 +37,26 @@ ALWAYS_INLINE static constexpr u32x4 expand4(u32 u)
 // Casting
 
 template<typename TSrc>
-ALWAYS_INLINE static u32x4 to_u32x4(TSrc v)
+AK_ALWAYS_INLINE static u32x4 to_u32x4(TSrc v)
 {
     return __builtin_convertvector(v, u32x4);
 }
 
 template<typename TSrc>
-ALWAYS_INLINE static i32x4 to_i32x4(TSrc v)
+AK_ALWAYS_INLINE static i32x4 to_i32x4(TSrc v)
 {
     return __builtin_convertvector(v, i32x4);
 }
 
 template<typename TSrc>
-ALWAYS_INLINE static f32x4 to_f32x4(TSrc v)
+AK_ALWAYS_INLINE static f32x4 to_f32x4(TSrc v)
 {
     return __builtin_convertvector(v, f32x4);
 }
 
 // Masking
 
-ALWAYS_INLINE static i32 maskbits(i32x4 mask)
+AK_ALWAYS_INLINE static i32 maskbits(i32x4 mask)
 {
 #if defined(__SSE__)
     return __builtin_ia32_movmskps((f32x4)mask);
@@ -65,22 +65,22 @@ ALWAYS_INLINE static i32 maskbits(i32x4 mask)
 #endif
 }
 
-ALWAYS_INLINE static bool all(i32x4 mask)
+AK_ALWAYS_INLINE static bool all(i32x4 mask)
 {
     return maskbits(mask) == 15;
 }
 
-ALWAYS_INLINE static bool any(i32x4 mask)
+AK_ALWAYS_INLINE static bool any(i32x4 mask)
 {
     return maskbits(mask) != 0;
 }
 
-ALWAYS_INLINE static bool none(i32x4 mask)
+AK_ALWAYS_INLINE static bool none(i32x4 mask)
 {
     return maskbits(mask) == 0;
 }
 
-ALWAYS_INLINE static int maskcount(i32x4 mask)
+AK_ALWAYS_INLINE static int maskcount(i32x4 mask)
 {
     constexpr static int count_lut[16] { 0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 };
     return count_lut[maskbits(mask)];
@@ -88,17 +88,17 @@ ALWAYS_INLINE static int maskcount(i32x4 mask)
 
 // Load / Store
 
-ALWAYS_INLINE static f32x4 load4(float const* a, float const* b, float const* c, float const* d)
+AK_ALWAYS_INLINE static f32x4 load4(float const* a, float const* b, float const* c, float const* d)
 {
     return f32x4 { *a, *b, *c, *d };
 }
 
-ALWAYS_INLINE static u32x4 load4(u32 const* a, u32 const* b, u32 const* c, u32 const* d)
+AK_ALWAYS_INLINE static u32x4 load4(u32 const* a, u32 const* b, u32 const* c, u32 const* d)
 {
     return u32x4 { *a, *b, *c, *d };
 }
 
-ALWAYS_INLINE static f32x4 load4_masked(float const* a, float const* b, float const* c, float const* d, i32x4 mask)
+AK_ALWAYS_INLINE static f32x4 load4_masked(float const* a, float const* b, float const* c, float const* d, i32x4 mask)
 {
     int bits = maskbits(mask);
     return f32x4 {
@@ -109,7 +109,7 @@ ALWAYS_INLINE static f32x4 load4_masked(float const* a, float const* b, float co
     };
 }
 
-ALWAYS_INLINE static i32x4 load4_masked(u8 const* a, u8 const* b, u8 const* c, u8 const* d, i32x4 mask)
+AK_ALWAYS_INLINE static i32x4 load4_masked(u8 const* a, u8 const* b, u8 const* c, u8 const* d, i32x4 mask)
 {
     int bits = maskbits(mask);
     return i32x4 {
@@ -120,7 +120,7 @@ ALWAYS_INLINE static i32x4 load4_masked(u8 const* a, u8 const* b, u8 const* c, u
     };
 }
 
-ALWAYS_INLINE static u32x4 load4_masked(u32 const* a, u32 const* b, u32 const* c, u32 const* d, i32x4 mask)
+AK_ALWAYS_INLINE static u32x4 load4_masked(u32 const* a, u32 const* b, u32 const* c, u32 const* d, i32x4 mask)
 {
     int bits = maskbits(mask);
     return u32x4 {
@@ -132,7 +132,7 @@ ALWAYS_INLINE static u32x4 load4_masked(u32 const* a, u32 const* b, u32 const* c
 }
 
 template<typename VectorType, typename UnderlyingType = decltype(declval<VectorType>()[0])>
-ALWAYS_INLINE static void store4(VectorType v, UnderlyingType* a, UnderlyingType* b, UnderlyingType* c, UnderlyingType* d)
+AK_ALWAYS_INLINE static void store4(VectorType v, UnderlyingType* a, UnderlyingType* b, UnderlyingType* c, UnderlyingType* d)
 {
     *a = v[0];
     *b = v[1];
@@ -141,7 +141,7 @@ ALWAYS_INLINE static void store4(VectorType v, UnderlyingType* a, UnderlyingType
 }
 
 template<typename VectorType, typename UnderlyingType = decltype(declval<VectorType>()[0])>
-ALWAYS_INLINE static void store4_masked(VectorType v, UnderlyingType* a, UnderlyingType* b, UnderlyingType* c, UnderlyingType* d, i32x4 mask)
+AK_ALWAYS_INLINE static void store4_masked(VectorType v, UnderlyingType* a, UnderlyingType* b, UnderlyingType* c, UnderlyingType* d, i32x4 mask)
 {
     int bits = maskbits(mask);
     if (bits & 1)

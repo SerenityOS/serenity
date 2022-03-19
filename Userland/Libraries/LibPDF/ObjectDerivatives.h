@@ -27,8 +27,8 @@ public:
 
     ~StringObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE String const& string() const { return m_string; }
-    [[nodiscard]] ALWAYS_INLINE bool is_binary() const { return m_is_binary; }
+    [[nodiscard]] AK_ALWAYS_INLINE String const& string() const { return m_string; }
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_binary() const { return m_is_binary; }
 
     const char* type_name() const override { return "string"; }
     String to_string(int indent) const override;
@@ -50,7 +50,7 @@ public:
 
     ~NameObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE FlyString const& name() const { return m_name; }
+    [[nodiscard]] AK_ALWAYS_INLINE FlyString const& name() const { return m_name; }
 
     const char* type_name() const override { return "name"; }
     String to_string(int indent) const override;
@@ -71,14 +71,14 @@ public:
 
     ~ArrayObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE size_t size() const { return m_elements.size(); }
-    [[nodiscard]] ALWAYS_INLINE Vector<Value> elements() const { return m_elements; }
+    [[nodiscard]] AK_ALWAYS_INLINE size_t size() const { return m_elements.size(); }
+    [[nodiscard]] AK_ALWAYS_INLINE Vector<Value> elements() const { return m_elements; }
 
-    ALWAYS_INLINE auto begin() const { return m_elements.begin(); }
-    ALWAYS_INLINE auto end() const { return m_elements.end(); }
+    AK_ALWAYS_INLINE auto begin() const { return m_elements.begin(); }
+    AK_ALWAYS_INLINE auto end() const { return m_elements.end(); }
 
-    ALWAYS_INLINE Value const& operator[](size_t index) const { return at(index); }
-    ALWAYS_INLINE Value const& at(size_t index) const { return m_elements[index]; }
+    AK_ALWAYS_INLINE Value const& operator[](size_t index) const { return at(index); }
+    AK_ALWAYS_INLINE Value const& at(size_t index) const { return m_elements[index]; }
 
 #define DEFINE_INDEXER(class_name, snake_name) \
     PDFErrorOr<NonnullRefPtr<class_name>> get_##snake_name##_at(Document*, size_t index) const;
@@ -107,12 +107,12 @@ public:
 
     ~DictObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE HashMap<FlyString, Value> const& map() const { return m_map; }
+    [[nodiscard]] AK_ALWAYS_INLINE HashMap<FlyString, Value> const& map() const { return m_map; }
 
     template<typename... Args>
     bool contains(Args&&... keys) const { return (m_map.contains(keys) && ...); }
 
-    ALWAYS_INLINE Optional<Value> get(FlyString const& key) const { return m_map.get(key); }
+    AK_ALWAYS_INLINE Optional<Value> get(FlyString const& key) const { return m_map.get(key); }
 
     Value get_value(FlyString const& key) const
     {
@@ -150,7 +150,7 @@ public:
 
     virtual ~StreamObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE NonnullRefPtr<DictObject> dict() const { return m_dict; }
+    [[nodiscard]] AK_ALWAYS_INLINE NonnullRefPtr<DictObject> dict() const { return m_dict; }
     [[nodiscard]] virtual ReadonlyBytes bytes() const = 0;
 
     const char* type_name() const override { return "stream"; }
@@ -173,7 +173,7 @@ public:
 
     virtual ~PlainTextStreamObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE virtual ReadonlyBytes bytes() const override { return m_bytes; }
+    [[nodiscard]] AK_ALWAYS_INLINE virtual ReadonlyBytes bytes() const override { return m_bytes; }
 
 private:
     ReadonlyBytes m_bytes;
@@ -189,7 +189,7 @@ public:
 
     virtual ~EncodedStreamObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE virtual ReadonlyBytes bytes() const override { return m_buffer.bytes(); }
+    [[nodiscard]] AK_ALWAYS_INLINE virtual ReadonlyBytes bytes() const override { return m_buffer.bytes(); }
 
 private:
     ByteBuffer m_buffer;
@@ -206,8 +206,8 @@ public:
 
     ~IndirectValue() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE u32 index() const { return m_index; }
-    [[nodiscard]] ALWAYS_INLINE Value const& value() const { return m_value; }
+    [[nodiscard]] AK_ALWAYS_INLINE u32 index() const { return m_index; }
+    [[nodiscard]] AK_ALWAYS_INLINE Value const& value() const { return m_value; }
 
     const char* type_name() const override { return "indirect_object"; }
     String to_string(int indent) const override;

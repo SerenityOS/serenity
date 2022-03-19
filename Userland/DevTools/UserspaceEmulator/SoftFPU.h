@@ -38,15 +38,15 @@ public:
     {
     }
 
-    ALWAYS_INLINE bool c0() const { return m_fpu_c0; }
-    ALWAYS_INLINE bool c1() const { return m_fpu_c1; }
-    ALWAYS_INLINE bool c2() const { return m_fpu_c2; }
-    ALWAYS_INLINE bool c3() const { return m_fpu_c3; }
+    AK_ALWAYS_INLINE bool c0() const { return m_fpu_c0; }
+    AK_ALWAYS_INLINE bool c1() const { return m_fpu_c1; }
+    AK_ALWAYS_INLINE bool c2() const { return m_fpu_c2; }
+    AK_ALWAYS_INLINE bool c3() const { return m_fpu_c3; }
 
-    ALWAYS_INLINE void set_c0(bool val) { m_fpu_c0 = val; }
-    ALWAYS_INLINE void set_c1(bool val) { m_fpu_c1 = val; }
-    ALWAYS_INLINE void set_c2(bool val) { m_fpu_c2 = val; }
-    ALWAYS_INLINE void set_c3(bool val) { m_fpu_c3 = val; }
+    AK_ALWAYS_INLINE void set_c0(bool val) { m_fpu_c0 = val; }
+    AK_ALWAYS_INLINE void set_c1(bool val) { m_fpu_c1 = val; }
+    AK_ALWAYS_INLINE void set_c2(bool val) { m_fpu_c2 = val; }
+    AK_ALWAYS_INLINE void set_c3(bool val) { m_fpu_c3 = val; }
 
     long double fpu_get(u8 index);
 
@@ -143,14 +143,14 @@ private:
     //        be fine this way
     void fpu_set_exception(FPU_Exception ex);
 
-    ALWAYS_INLINE void fpu_set_stack_overflow()
+    AK_ALWAYS_INLINE void fpu_set_stack_overflow()
     {
         reportln("Stack Overflow");
         set_c1(1);
         fpu_set_exception(FPU_Exception::StackFault);
     }
 
-    ALWAYS_INLINE void fpu_set_stack_underflow()
+    AK_ALWAYS_INLINE void fpu_set_stack_underflow()
     {
         reportln("Stack Underflow");
         set_c1(0);
@@ -187,7 +187,7 @@ private:
         return fpu_get_tag_absolute((m_fpu_stack_top + index) % 8);
     }
 
-    ALWAYS_INLINE void fpu_set_tag_absolute(u8 index, FPU_Tag tag)
+    AK_ALWAYS_INLINE void fpu_set_tag_absolute(u8 index, FPU_Tag tag)
     {
         switch (index) {
         case 0:
@@ -219,13 +219,13 @@ private:
         }
     }
 
-    ALWAYS_INLINE void fpu_set_tag(u8 index, FPU_Tag tag)
+    AK_ALWAYS_INLINE void fpu_set_tag(u8 index, FPU_Tag tag)
     {
         VERIFY(index < 8);
         fpu_set_tag_absolute((m_fpu_stack_top + index) % 8, tag);
     }
 
-    ALWAYS_INLINE void set_tag_from_value_absolute(u8 index, long double val)
+    AK_ALWAYS_INLINE void set_tag_from_value_absolute(u8 index, long double val)
     {
         switch (fpclassify(val)) {
         case FP_ZERO:
@@ -244,22 +244,22 @@ private:
         }
     }
 
-    ALWAYS_INLINE void set_tag_from_value(u8 index, long double val)
+    AK_ALWAYS_INLINE void set_tag_from_value(u8 index, long double val)
     {
         set_tag_from_value_absolute((m_fpu_stack_top + index) % 8, val);
     }
 
-    ALWAYS_INLINE bool fpu_isnan(u8 index)
+    AK_ALWAYS_INLINE bool fpu_isnan(u8 index)
     {
         return isnan(fpu_get(index));
     }
 
-    ALWAYS_INLINE bool fpu_is_set(u8 index) const
+    AK_ALWAYS_INLINE bool fpu_is_set(u8 index) const
     {
         return fpu_get_tag_absolute((m_fpu_stack_top + index) % 8) != FPU_Tag::Empty;
     }
 
-    ALWAYS_INLINE RoundingMode fpu_get_round_mode() const
+    AK_ALWAYS_INLINE RoundingMode fpu_get_round_mode() const
     {
         return RoundingMode(m_fpu_round_mode);
     }
@@ -274,7 +274,7 @@ private:
     template<FloatingPoint T>
     T fpu_convert_checked(long double);
 
-    ALWAYS_INLINE void fpu_set_unordered()
+    AK_ALWAYS_INLINE void fpu_set_unordered()
     {
         set_c0(1);
         set_c2(1);

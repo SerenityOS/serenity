@@ -838,7 +838,7 @@ public:
     size_t thread_specific_region_size() const;
     size_t thread_specific_region_alignment() const;
 
-    ALWAYS_INLINE void yield_if_stopped()
+    AK_ALWAYS_INLINE void yield_if_stopped()
     {
         // If some thread stopped us, we need to yield to someone else
         // We check this when entering/exiting a system call. A thread
@@ -1100,12 +1100,12 @@ public:
     void set_crashing() { m_is_crashing = true; }
     [[nodiscard]] bool is_crashing() const { return m_is_crashing; }
 
-    ALWAYS_INLINE u32 enter_profiler()
+    AK_ALWAYS_INLINE u32 enter_profiler()
     {
         return m_nested_profiler_calls.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
     }
 
-    ALWAYS_INLINE u32 leave_profiler()
+    AK_ALWAYS_INLINE u32 leave_profiler()
     {
         return m_nested_profiler_calls.fetch_sub(1, AK::MemoryOrder::memory_order_acquire);
     }

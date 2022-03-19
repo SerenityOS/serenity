@@ -41,7 +41,7 @@
 namespace Gfx {
 
 template<BitmapFormat format = BitmapFormat::Invalid>
-ALWAYS_INLINE Color get_pixel(Gfx::Bitmap const& bitmap, int x, int y)
+AK_ALWAYS_INLINE Color get_pixel(Gfx::Bitmap const& bitmap, int x, int y)
 {
     if constexpr (format == BitmapFormat::Indexed8)
         return bitmap.palette_color(bitmap.scanline_u8(y)[x]);
@@ -1070,7 +1070,7 @@ void Painter::blit(IntPoint const& position, Gfx::Bitmap const& source, IntRect 
 }
 
 template<bool has_alpha_channel, typename GetPixel>
-ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& src_rect, Gfx::Bitmap const& source, int hfactor, int vfactor, GetPixel get_pixel, float opacity)
+AK_ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& src_rect, Gfx::Bitmap const& source, int hfactor, int vfactor, GetPixel get_pixel, float opacity)
 {
     bool has_opacity = opacity != 1.0f;
     for (int y = 0; y < src_rect.height(); ++y) {
@@ -1094,7 +1094,7 @@ ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, Int
 }
 
 template<bool has_alpha_channel, bool do_bilinear_blend, typename GetPixel>
-ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity)
+AK_ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity)
 {
     if constexpr (!do_bilinear_blend) {
         IntRect int_src_rect = enclosing_int_rect(src_rect);
@@ -1155,7 +1155,7 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
 }
 
 template<bool has_alpha_channel, typename GetPixel>
-ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity, Painter::ScalingMode scaling_mode)
+AK_ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity, Painter::ScalingMode scaling_mode)
 {
     switch (scaling_mode) {
     case Painter::ScalingMode::NearestNeighbor:
@@ -1699,7 +1699,7 @@ void Painter::set_pixel(IntPoint const& p, Color color, bool blend)
     }
 }
 
-ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color const& color)
+AK_ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color const& color)
 {
     // This always sets a single physical pixel, independent of scale().
     // This should only be called by routines that already handle scale.
@@ -1717,7 +1717,7 @@ ALWAYS_INLINE void Painter::set_physical_pixel_with_draw_op(u32& pixel, Color co
     }
 }
 
-ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, int width, Color const& color)
+AK_ALWAYS_INLINE void Painter::fill_physical_scanline_with_draw_op(int y, int x, int width, Color const& color)
 {
     // This always draws a single physical scanline, independent of scale().
     // This should only be called by routines that already handle scale.

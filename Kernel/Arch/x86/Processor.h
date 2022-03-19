@@ -158,12 +158,12 @@ public:
         return *g_total_processors.ptr();
     }
 
-    ALWAYS_INLINE static void pause()
+    AK_ALWAYS_INLINE static void pause()
     {
         asm volatile("pause");
     }
 
-    ALWAYS_INLINE static void wait_check()
+    AK_ALWAYS_INLINE static void wait_check()
     {
         Processor::pause();
         if (Processor::is_smp_enabled())
@@ -219,10 +219,10 @@ public:
         return {};
     }
 
-    ALWAYS_INLINE u8 physical_address_bit_width() const { return m_physical_address_bit_width; }
-    ALWAYS_INLINE u8 virtual_address_bit_width() const { return m_virtual_address_bit_width; }
+    AK_ALWAYS_INLINE u8 physical_address_bit_width() const { return m_physical_address_bit_width; }
+    AK_ALWAYS_INLINE u8 virtual_address_bit_width() const { return m_virtual_address_bit_width; }
 
-    ALWAYS_INLINE ProcessorInfo& info() { return *m_info; }
+    AK_ALWAYS_INLINE ProcessorInfo& info() { return *m_info; }
 
     u64 time_spent_idle() const;
 
@@ -239,12 +239,12 @@ public:
     }
 #endif
 
-    ALWAYS_INLINE static Processor& current()
+    AK_ALWAYS_INLINE static Processor& current()
     {
         return *(Processor*)read_gs_ptr(__builtin_offsetof(Processor, m_self));
     }
 
-    ALWAYS_INLINE static bool is_initialized()
+    AK_ALWAYS_INLINE static bool is_initialized()
     {
         return
 #if ARCH(I386)
@@ -264,12 +264,12 @@ public:
         m_processor_specific_data[static_cast<size_t>(specific_id)] = ptr;
     }
 
-    ALWAYS_INLINE void set_idle_thread(Thread& idle_thread)
+    AK_ALWAYS_INLINE void set_idle_thread(Thread& idle_thread)
     {
         m_idle_thread = &idle_thread;
     }
 
-    ALWAYS_INLINE static Thread* current_thread()
+    AK_ALWAYS_INLINE static Thread* current_thread()
     {
         // If we were to use Processor::current here, we'd have to
         // disable interrupts to prevent a race where we may get pre-empted
@@ -280,19 +280,19 @@ public:
         return (Thread*)read_gs_ptr(__builtin_offsetof(Processor, m_current_thread));
     }
 
-    ALWAYS_INLINE static void set_current_thread(Thread& current_thread)
+    AK_ALWAYS_INLINE static void set_current_thread(Thread& current_thread)
     {
         // See comment in Processor::current_thread
         write_gs_ptr(__builtin_offsetof(Processor, m_current_thread), FlatPtr(&current_thread));
     }
 
-    ALWAYS_INLINE static Thread* idle_thread()
+    AK_ALWAYS_INLINE static Thread* idle_thread()
     {
         // See comment in Processor::current_thread
         return (Thread*)read_gs_ptr(__builtin_offsetof(Processor, m_idle_thread));
     }
 
-    ALWAYS_INLINE u32 id() const
+    AK_ALWAYS_INLINE u32 id() const
     {
         // NOTE: This variant should only be used when iterating over all
         // Processor instances, or when it's guaranteed that the thread
@@ -302,44 +302,44 @@ public:
         return m_cpu;
     }
 
-    ALWAYS_INLINE static u32 current_id()
+    AK_ALWAYS_INLINE static u32 current_id()
     {
         // See comment in Processor::current_thread
         return read_gs_ptr(__builtin_offsetof(Processor, m_cpu));
     }
 
-    ALWAYS_INLINE static bool is_bootstrap_processor()
+    AK_ALWAYS_INLINE static bool is_bootstrap_processor()
     {
         return Processor::current_id() == 0;
     }
 
-    ALWAYS_INLINE static FlatPtr current_in_irq()
+    AK_ALWAYS_INLINE static FlatPtr current_in_irq()
     {
         return read_gs_ptr(__builtin_offsetof(Processor, m_in_irq));
     }
 
-    ALWAYS_INLINE static void restore_in_critical(u32 critical)
+    AK_ALWAYS_INLINE static void restore_in_critical(u32 critical)
     {
         write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), critical);
     }
 
-    ALWAYS_INLINE static void enter_critical()
+    AK_ALWAYS_INLINE static void enter_critical()
     {
         write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), in_critical() + 1);
     }
 
-    ALWAYS_INLINE static bool current_in_scheduler()
+    AK_ALWAYS_INLINE static bool current_in_scheduler()
     {
         return read_gs_value<decltype(m_in_scheduler)>(__builtin_offsetof(Processor, m_in_scheduler));
     }
 
-    ALWAYS_INLINE static void set_current_in_scheduler(bool value)
+    AK_ALWAYS_INLINE static void set_current_in_scheduler(bool value)
     {
         write_gs_value<decltype(m_in_scheduler)>(__builtin_offsetof(Processor, m_in_scheduler), value);
     }
 
 private:
-    ALWAYS_INLINE void do_leave_critical()
+    AK_ALWAYS_INLINE void do_leave_critical()
     {
         VERIFY(m_in_critical > 0);
         if (m_in_critical == 1) {
@@ -356,12 +356,12 @@ private:
     }
 
 public:
-    ALWAYS_INLINE static void leave_critical()
+    AK_ALWAYS_INLINE static void leave_critical()
     {
         current().do_leave_critical();
     }
 
-    ALWAYS_INLINE static u32 clear_critical()
+    AK_ALWAYS_INLINE static u32 clear_critical()
     {
         auto prev_critical = in_critical();
         write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), 0);
@@ -371,7 +371,7 @@ public:
         return prev_critical;
     }
 
-    ALWAYS_INLINE static void restore_critical(u32 prev_critical)
+    AK_ALWAYS_INLINE static void restore_critical(u32 prev_critical)
     {
         // NOTE: This doesn't have to be atomic, and it's also fine if we
         // get preempted in between these steps. If we move to another
@@ -380,13 +380,13 @@ public:
         write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), prev_critical);
     }
 
-    ALWAYS_INLINE static u32 in_critical()
+    AK_ALWAYS_INLINE static u32 in_critical()
     {
         // See comment in Processor::current_thread
         return read_gs_ptr(__builtin_offsetof(Processor, m_in_critical));
     }
 
-    ALWAYS_INLINE static FPUState const& clean_fpu_state() { return s_clean_fpu_state; }
+    AK_ALWAYS_INLINE static FPUState const& clean_fpu_state() { return s_clean_fpu_state; }
 
     static void smp_enable();
     bool smp_process_pending_messages();
@@ -397,7 +397,7 @@ public:
 
     static void deferred_call_queue(Function<void()> callback);
 
-    ALWAYS_INLINE bool has_feature(CPUFeature f) const
+    AK_ALWAYS_INLINE bool has_feature(CPUFeature f) const
     {
         return (static_cast<u32>(m_features) & static_cast<u32>(f)) != 0;
     }

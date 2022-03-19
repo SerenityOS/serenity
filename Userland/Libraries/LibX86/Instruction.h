@@ -492,12 +492,12 @@ public:
     static Instruction from_stream(InstructionStreamType&, bool o32, bool a32);
     ~Instruction() = default;
 
-    ALWAYS_INLINE MemoryOrRegisterReference& modrm() const { return m_modrm; }
+    AK_ALWAYS_INLINE MemoryOrRegisterReference& modrm() const { return m_modrm; }
 
-    ALWAYS_INLINE InstructionHandler handler() const { return m_descriptor->handler; }
+    AK_ALWAYS_INLINE InstructionHandler handler() const { return m_descriptor->handler; }
 
     bool has_segment_prefix() const { return m_segment_prefix != 0xff; }
-    ALWAYS_INLINE Optional<SegmentRegister> segment_prefix() const
+    AK_ALWAYS_INLINE Optional<SegmentRegister> segment_prefix() const
     {
         if (has_segment_prefix())
             return static_cast<SegmentRegister>(m_segment_prefix);
@@ -580,7 +580,7 @@ private:
 };
 
 template<typename CPU>
-ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
+AK_ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
 {
     auto default_segment = SegmentRegister::DS;
     u16 offset = 0;
@@ -624,7 +624,7 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu
 }
 
 template<typename CPU>
-ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
+AK_ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
 {
     auto default_segment = SegmentRegister::DS;
     u32 offset = 0;
@@ -653,7 +653,7 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu
 }
 
 template<typename CPU>
-ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, SegmentRegister& default_segment) const
+AK_ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, SegmentRegister& default_segment) const
 {
     u32 scale_shift = m_sib >> 6;
     u32 index = 0;
@@ -697,7 +697,7 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, Segmen
 }
 
 template<typename CPU, typename T>
-ALWAYS_INLINE void MemoryOrRegisterReference::write8(CPU& cpu, const Instruction& insn, T value)
+AK_ALWAYS_INLINE void MemoryOrRegisterReference::write8(CPU& cpu, const Instruction& insn, T value)
 {
     if (is_register()) {
         cpu.gpr8(reg8()) = value;
@@ -709,7 +709,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write8(CPU& cpu, const Instruction
 }
 
 template<typename CPU, typename T>
-ALWAYS_INLINE void MemoryOrRegisterReference::write16(CPU& cpu, const Instruction& insn, T value)
+AK_ALWAYS_INLINE void MemoryOrRegisterReference::write16(CPU& cpu, const Instruction& insn, T value)
 {
     if (is_register()) {
         cpu.gpr16(reg16()) = value;
@@ -721,7 +721,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write16(CPU& cpu, const Instructio
 }
 
 template<typename CPU, typename T>
-ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, const Instruction& insn, T value)
+AK_ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, const Instruction& insn, T value)
 {
     if (is_register()) {
         cpu.gpr32(reg32()) = value;
@@ -733,7 +733,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, const Instructio
 }
 
 template<typename CPU, typename T>
-ALWAYS_INLINE void MemoryOrRegisterReference::write64(CPU& cpu, const Instruction& insn, T value)
+AK_ALWAYS_INLINE void MemoryOrRegisterReference::write64(CPU& cpu, const Instruction& insn, T value)
 {
     VERIFY(!is_register());
     auto address = resolve(cpu, insn);
@@ -741,7 +741,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write64(CPU& cpu, const Instructio
 }
 
 template<typename CPU, typename T>
-ALWAYS_INLINE void MemoryOrRegisterReference::write128(CPU& cpu, const Instruction& insn, T value)
+AK_ALWAYS_INLINE void MemoryOrRegisterReference::write128(CPU& cpu, const Instruction& insn, T value)
 {
     VERIFY(!is_register());
     auto address = resolve(cpu, insn);
@@ -749,7 +749,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write128(CPU& cpu, const Instructi
 }
 
 template<typename CPU, typename T>
-ALWAYS_INLINE void MemoryOrRegisterReference::write256(CPU& cpu, const Instruction& insn, T value)
+AK_ALWAYS_INLINE void MemoryOrRegisterReference::write256(CPU& cpu, const Instruction& insn, T value)
 {
     VERIFY(!is_register());
     auto address = resolve(cpu, insn);
@@ -757,7 +757,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write256(CPU& cpu, const Instructi
 }
 
 template<typename CPU>
-ALWAYS_INLINE typename CPU::ValueWithShadowType8 MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
+AK_ALWAYS_INLINE typename CPU::ValueWithShadowType8 MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
         return cpu.const_gpr8(reg8());
@@ -767,7 +767,7 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType8 MemoryOrRegisterReference::read
 }
 
 template<typename CPU>
-ALWAYS_INLINE typename CPU::ValueWithShadowType16 MemoryOrRegisterReference::read16(CPU& cpu, const Instruction& insn)
+AK_ALWAYS_INLINE typename CPU::ValueWithShadowType16 MemoryOrRegisterReference::read16(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
         return cpu.const_gpr16(reg16());
@@ -777,7 +777,7 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType16 MemoryOrRegisterReference::rea
 }
 
 template<typename CPU>
-ALWAYS_INLINE typename CPU::ValueWithShadowType32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction& insn)
+AK_ALWAYS_INLINE typename CPU::ValueWithShadowType32 MemoryOrRegisterReference::read32(CPU& cpu, const Instruction& insn)
 {
     if (is_register())
         return cpu.const_gpr32(reg32());
@@ -787,7 +787,7 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType32 MemoryOrRegisterReference::rea
 }
 
 template<typename CPU>
-ALWAYS_INLINE typename CPU::ValueWithShadowType64 MemoryOrRegisterReference::read64(CPU& cpu, const Instruction& insn)
+AK_ALWAYS_INLINE typename CPU::ValueWithShadowType64 MemoryOrRegisterReference::read64(CPU& cpu, const Instruction& insn)
 {
     VERIFY(!is_register());
     auto address = resolve(cpu, insn);
@@ -795,7 +795,7 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType64 MemoryOrRegisterReference::rea
 }
 
 template<typename CPU>
-ALWAYS_INLINE typename CPU::ValueWithShadowType128 MemoryOrRegisterReference::read128(CPU& cpu, const Instruction& insn)
+AK_ALWAYS_INLINE typename CPU::ValueWithShadowType128 MemoryOrRegisterReference::read128(CPU& cpu, const Instruction& insn)
 {
     VERIFY(!is_register());
     auto address = resolve(cpu, insn);
@@ -803,7 +803,7 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType128 MemoryOrRegisterReference::re
 }
 
 template<typename CPU>
-ALWAYS_INLINE typename CPU::ValueWithShadowType256 MemoryOrRegisterReference::read256(CPU& cpu, const Instruction& insn)
+AK_ALWAYS_INLINE typename CPU::ValueWithShadowType256 MemoryOrRegisterReference::read256(CPU& cpu, const Instruction& insn)
 {
     VERIFY(!is_register());
     auto address = resolve(cpu, insn);
@@ -811,12 +811,12 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType256 MemoryOrRegisterReference::re
 }
 
 template<typename InstructionStreamType>
-ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStreamType& stream, bool o32, bool a32)
+AK_ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStreamType& stream, bool o32, bool a32)
 {
     return Instruction(stream, o32, a32);
 }
 
-ALWAYS_INLINE unsigned Instruction::length() const
+AK_ALWAYS_INLINE unsigned Instruction::length() const
 {
     unsigned len = 1;
     if (has_sub_op())
@@ -831,7 +831,7 @@ ALWAYS_INLINE unsigned Instruction::length() const
     return len;
 }
 
-ALWAYS_INLINE Optional<SegmentRegister> to_segment_prefix(u8 op)
+AK_ALWAYS_INLINE Optional<SegmentRegister> to_segment_prefix(u8 op)
 {
     switch (op) {
     case 0x26:
@@ -852,7 +852,7 @@ ALWAYS_INLINE Optional<SegmentRegister> to_segment_prefix(u8 op)
 }
 
 template<typename InstructionStreamType>
-ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, bool a32)
+AK_ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, bool a32)
     : m_a32(a32)
     , m_o32(o32)
 {
@@ -984,7 +984,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
 }
 
 template<typename InstructionStreamType>
-ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stream, bool a32)
+AK_ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stream, bool a32)
 {
     m_rm_byte = stream.read8();
 
@@ -1022,7 +1022,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stre
 }
 
 template<typename InstructionStreamType>
-ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStreamType&)
+AK_ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStreamType&)
 {
     switch (mod()) {
     case 0b00:
@@ -1044,7 +1044,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStreamType&)
 }
 
 template<typename InstructionStreamType>
-ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& stream)
+AK_ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& stream)
 {
     switch (mod()) {
     case 0b00:
@@ -1085,7 +1085,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& st
 }
 
 template<typename CPU>
-ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve(const CPU& cpu, const Instruction& insn)
+AK_ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve(const CPU& cpu, const Instruction& insn)
 {
     if (insn.a32())
         return resolve32(cpu, insn.segment_prefix());

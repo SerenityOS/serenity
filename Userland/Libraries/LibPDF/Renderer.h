@@ -99,19 +99,19 @@ private:
     void show_text(String const&, float shift = 0.0f);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space(Value const&);
 
-    ALWAYS_INLINE GraphicsState const& state() const { return m_graphics_state_stack.last(); }
-    ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
-    ALWAYS_INLINE TextState const& text_state() const { return state().text_state; }
-    ALWAYS_INLINE TextState& text_state() { return state().text_state; }
+    AK_ALWAYS_INLINE GraphicsState const& state() const { return m_graphics_state_stack.last(); }
+    AK_ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
+    AK_ALWAYS_INLINE TextState const& text_state() const { return state().text_state; }
+    AK_ALWAYS_INLINE TextState& text_state() { return state().text_state; }
 
     template<typename T>
-    ALWAYS_INLINE Gfx::Point<T> map(T x, T y) const;
+    AK_ALWAYS_INLINE Gfx::Point<T> map(T x, T y) const;
 
     template<typename T>
-    ALWAYS_INLINE Gfx::Size<T> map(Gfx::Size<T>) const;
+    AK_ALWAYS_INLINE Gfx::Size<T> map(Gfx::Size<T>) const;
 
     template<typename T>
-    ALWAYS_INLINE Gfx::Rect<T> map(Gfx::Rect<T>) const;
+    AK_ALWAYS_INLINE Gfx::Rect<T> map(Gfx::Rect<T>) const;
 
     Gfx::AffineTransform const& calculate_text_rendering_matrix();
 

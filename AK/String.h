@@ -166,14 +166,14 @@ public:
     [[nodiscard]] StringView substring_view(size_t start) const;
 
     [[nodiscard]] bool is_null() const { return !m_impl; }
-    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return length() == 0; }
-    [[nodiscard]] ALWAYS_INLINE size_t length() const { return m_impl ? m_impl->length() : 0; }
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_empty() const { return length() == 0; }
+    [[nodiscard]] AK_ALWAYS_INLINE size_t length() const { return m_impl ? m_impl->length() : 0; }
     // Includes NUL-terminator, if non-nullptr.
-    [[nodiscard]] ALWAYS_INLINE const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
+    [[nodiscard]] AK_ALWAYS_INLINE const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
 
     [[nodiscard]] bool copy_characters_to_buffer(char* buffer, size_t buffer_size) const;
 
-    [[nodiscard]] ALWAYS_INLINE ReadonlyBytes bytes() const
+    [[nodiscard]] AK_ALWAYS_INLINE ReadonlyBytes bytes() const
     {
         if (m_impl) {
             return m_impl->bytes();
@@ -181,7 +181,7 @@ public:
         return {};
     }
 
-    [[nodiscard]] ALWAYS_INLINE const char& operator[](size_t i) const
+    [[nodiscard]] AK_ALWAYS_INLINE const char& operator[](size_t i) const
     {
         VERIFY(!is_null());
         return (*m_impl)[i];
@@ -297,7 +297,7 @@ public:
     [[nodiscard]] String reverse() const;
 
     template<typename... Ts>
-    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts&&... strings) const
+    [[nodiscard]] AK_ALWAYS_INLINE constexpr bool is_one_of(Ts&&... strings) const
     {
         return (... || this->operator==(forward<Ts>(strings)));
     }

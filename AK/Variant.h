@@ -46,7 +46,7 @@ struct Variant;
 template<typename IndexType, IndexType InitialIndex, typename F, typename... Ts>
 struct Variant<IndexType, InitialIndex, F, Ts...> {
     static constexpr auto current_index = VariantIndexOf<F, IndexType, InitialIndex, F, Ts...> {}();
-    ALWAYS_INLINE static void delete_(IndexType id, void* data)
+    AK_ALWAYS_INLINE static void delete_(IndexType id, void* data)
     {
         if (id == current_index)
             bit_cast<F*>(data)->~F();
@@ -54,7 +54,7 @@ struct Variant<IndexType, InitialIndex, F, Ts...> {
             Variant<IndexType, InitialIndex + 1, Ts...>::delete_(id, data);
     }
 
-    ALWAYS_INLINE static void move_(IndexType old_id, void* old_data, void* new_data)
+    AK_ALWAYS_INLINE static void move_(IndexType old_id, void* old_data, void* new_data)
     {
         if (old_id == current_index)
             new (new_data) F(move(*bit_cast<F*>(old_data)));
@@ -62,7 +62,7 @@ struct Variant<IndexType, InitialIndex, F, Ts...> {
             Variant<IndexType, InitialIndex + 1, Ts...>::move_(old_id, old_data, new_data);
     }
 
-    ALWAYS_INLINE static void copy_(IndexType old_id, const void* old_data, void* new_data)
+    AK_ALWAYS_INLINE static void copy_(IndexType old_id, const void* old_data, void* new_data)
     {
         if (old_id == current_index)
             new (new_data) F(*bit_cast<F const*>(old_data));
@@ -73,9 +73,9 @@ struct Variant<IndexType, InitialIndex, F, Ts...> {
 
 template<typename IndexType, IndexType InitialIndex>
 struct Variant<IndexType, InitialIndex> {
-    ALWAYS_INLINE static void delete_(IndexType, void*) { }
-    ALWAYS_INLINE static void move_(IndexType, void*, void*) { }
-    ALWAYS_INLINE static void copy_(IndexType, const void*, void*) { }
+    AK_ALWAYS_INLINE static void delete_(IndexType, void*) { }
+    AK_ALWAYS_INLINE static void move_(IndexType, void*, void*) { }
+    AK_ALWAYS_INLINE static void copy_(IndexType, const void*, void*) { }
 };
 
 template<typename IndexType, typename... Ts>
@@ -97,7 +97,7 @@ struct VisitImpl {
     }
 
     template<typename Self, typename Visitor, IndexType CurrentIndex = 0>
-    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
+    AK_ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
     {
         using T = typename TypeList<Ts...>::template Type<CurrentIndex>;
 
@@ -129,22 +129,22 @@ struct VariantConstructTag {
 
 template<typename T, typename Base>
 struct VariantConstructors {
-    ALWAYS_INLINE VariantConstructors(T&& t) requires(requires { T(move(t)); })
+    AK_ALWAYS_INLINE VariantConstructors(T&& t) requires(requires { T(move(t)); })
     {
         internal_cast().clear_without_destruction();
         internal_cast().set(move(t), VariantNoClearTag {});
     }
 
-    ALWAYS_INLINE VariantConstructors(const T& t) requires(requires { T(t); })
+    AK_ALWAYS_INLINE VariantConstructors(const T& t) requires(requires { T(t); })
     {
         internal_cast().clear_without_destruction();
         internal_cast().set(t, VariantNoClearTag {});
     }
 
-    ALWAYS_INLINE VariantConstructors() = default;
+    AK_ALWAYS_INLINE VariantConstructors() = default;
 
 private:
-    [[nodiscard]] ALWAYS_INLINE Base& internal_cast()
+    [[nodiscard]] AK_ALWAYS_INLINE Base& internal_cast()
     {
         // Warning: Internal type shenanigans - VariantsConstrutors<T, Base> <- Base
         //          Not the other way around, so be _really_ careful not to cause issues.
@@ -270,7 +270,7 @@ public:
     Variant& operator=(Variant&&) = default;
 #endif
 
-    ALWAYS_INLINE Variant(const Variant& old)
+    AK_ALWAYS_INLINE Variant(const Variant& old)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!(IsTriviallyCopyConstructible<Ts> && ...))
 #endif
@@ -285,7 +285,7 @@ public:
     //       so if a variant containing an int is moved from, it will still contain that int
     //       and if a variant with a nontrivial move ctor is moved from, it may or may not be valid
     //       but it will still contain the "moved-from" state of the object it previously contained.
-    ALWAYS_INLINE Variant(Variant&& old)
+    AK_ALWAYS_INLINE Variant(Variant&& old)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!(IsTriviallyMoveConstructible<Ts> && ...))
 #endif
@@ -295,7 +295,7 @@ public:
         Helper::move_(old.m_index, old.m_data, m_data);
     }
 
-    ALWAYS_INLINE ~Variant()
+    AK_ALWAYS_INLINE ~Variant()
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!(IsTriviallyDestructible<Ts> && ...))
 #endif
@@ -303,7 +303,7 @@ public:
         Helper::delete_(m_index, m_data);
     }
 
-    ALWAYS_INLINE Variant& operator=(const Variant& other)
+    AK_ALWAYS_INLINE Variant& operator=(const Variant& other)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!(IsTriviallyCopyConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
 #endif
@@ -318,7 +318,7 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE Variant& operator=(Variant&& other)
+    AK_ALWAYS_INLINE Variant& operator=(Variant&& other)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!(IsTriviallyMoveConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
 #endif
@@ -389,14 +389,14 @@ public:
     }
 
     template<typename... Fs>
-    ALWAYS_INLINE decltype(auto) visit(Fs&&... functions)
+    AK_ALWAYS_INLINE decltype(auto) visit(Fs&&... functions)
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
         return VisitHelper::visit(*this, m_index, m_data, move(visitor));
     }
 
     template<typename... Fs>
-    ALWAYS_INLINE decltype(auto) visit(Fs&&... functions) const
+    AK_ALWAYS_INLINE decltype(auto) visit(Fs&&... functions) const
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
         return VisitHelper::visit(*this, m_index, m_data, move(visitor));
@@ -441,7 +441,7 @@ private:
     {
     }
 
-    ALWAYS_INLINE void clear_without_destruction()
+    AK_ALWAYS_INLINE void clear_without_destruction()
     {
         __builtin_memset(m_data, 0, data_size);
         m_index = invalid_index;

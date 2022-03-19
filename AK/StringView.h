@@ -19,26 +19,26 @@ namespace AK {
 
 class StringView {
 public:
-    ALWAYS_INLINE constexpr StringView() = default;
-    ALWAYS_INLINE constexpr StringView(const char* characters, size_t length)
+    AK_ALWAYS_INLINE constexpr StringView() = default;
+    AK_ALWAYS_INLINE constexpr StringView(const char* characters, size_t length)
         : m_characters(characters)
         , m_length(length)
     {
         if (!is_constant_evaluated())
             VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
-    ALWAYS_INLINE StringView(const unsigned char* characters, size_t length)
+    AK_ALWAYS_INLINE StringView(const unsigned char* characters, size_t length)
         : m_characters((const char*)characters)
         , m_length(length)
     {
         VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
-    ALWAYS_INLINE constexpr StringView(const char* cstring)
+    AK_ALWAYS_INLINE constexpr StringView(const char* cstring)
         : m_characters(cstring)
         , m_length(cstring ? __builtin_strlen(cstring) : 0)
     {
     }
-    ALWAYS_INLINE StringView(ReadonlyBytes bytes)
+    AK_ALWAYS_INLINE StringView(ReadonlyBytes bytes)
         : m_characters(reinterpret_cast<const char*>(bytes.data()))
         , m_length(bytes.size())
     {
@@ -274,7 +274,7 @@ public:
     }
 
     template<typename... Ts>
-    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts&&... strings) const
+    [[nodiscard]] AK_ALWAYS_INLINE constexpr bool is_one_of(Ts&&... strings) const
     {
         return (... || this->operator==(forward<Ts>(strings)));
     }
@@ -309,7 +309,7 @@ struct CaseInsensitiveStringViewTraits : public Traits<StringView> {
 #    define AK_STRING_VIEW_LITERAL_CONSTEVAL consteval
 #endif
 
-[[nodiscard]] ALWAYS_INLINE AK_STRING_VIEW_LITERAL_CONSTEVAL AK::StringView operator"" sv(const char* cstring, size_t length)
+[[nodiscard]] AK_ALWAYS_INLINE AK_STRING_VIEW_LITERAL_CONSTEVAL AK::StringView operator"" sv(const char* cstring, size_t length)
 {
     return AK::StringView(cstring, length);
 }

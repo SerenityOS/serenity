@@ -96,7 +96,7 @@ public:
         }
     }
 
-    ALWAYS_INLINE Type type() const { return m_type; }
+    AK_ALWAYS_INLINE Type type() const { return m_type; }
 
     bool is_valid() const { return m_type != Type::Invalid; }
     bool is_number() const

@@ -29,12 +29,12 @@ public:
         return adopt_ref(*new Typed3DBuffer(width, height, depth, move(data)));
     }
 
-    ALWAYS_INLINE T* buffer_pointer(int x, int y, int z)
+    AK_ALWAYS_INLINE T* buffer_pointer(int x, int y, int z)
     {
         return &m_data[z * m_width * m_height + y * m_width + x];
     }
 
-    ALWAYS_INLINE T const* buffer_pointer(int x, int y, int z) const
+    AK_ALWAYS_INLINE T const* buffer_pointer(int x, int y, int z) const
     {
         return &m_data[z * m_width * m_height + y * m_width + x];
     }

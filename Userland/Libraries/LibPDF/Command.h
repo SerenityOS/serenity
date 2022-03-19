@@ -152,8 +152,8 @@ public:
     {
     }
 
-    [[nodiscard]] ALWAYS_INLINE CommandType command_type() const { return m_command_type; }
-    [[nodiscard]] ALWAYS_INLINE Vector<Value> const& arguments() const { return m_arguments; }
+    [[nodiscard]] AK_ALWAYS_INLINE CommandType command_type() const { return m_command_type; }
+    [[nodiscard]] AK_ALWAYS_INLINE Vector<Value> const& arguments() const { return m_arguments; }
 
 private:
     CommandType m_command_type;

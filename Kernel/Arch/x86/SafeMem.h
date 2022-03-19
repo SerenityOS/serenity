@@ -23,7 +23,7 @@ struct RegisterState;
 [[nodiscard]] bool safe_atomic_store_relaxed(volatile u32* var, u32 val) __attribute__((used));
 [[nodiscard]] Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32* var, u32& expected, u32 val) __attribute__((used));
 
-[[nodiscard]] ALWAYS_INLINE Optional<u32> safe_atomic_fetch_and_relaxed(volatile u32* var, u32 val)
+[[nodiscard]] AK_ALWAYS_INLINE Optional<u32> safe_atomic_fetch_and_relaxed(volatile u32* var, u32 val)
 {
     auto expected_value = safe_atomic_load_relaxed(var);
     if (!expected_value.has_value())
@@ -41,7 +41,7 @@ struct RegisterState;
     }
 }
 
-[[nodiscard]] ALWAYS_INLINE Optional<u32> safe_atomic_fetch_and_not_relaxed(volatile u32* var, u32 val)
+[[nodiscard]] AK_ALWAYS_INLINE Optional<u32> safe_atomic_fetch_and_not_relaxed(volatile u32* var, u32 val)
 {
     auto expected_value = safe_atomic_load_relaxed(var);
     if (!expected_value.has_value())
@@ -59,7 +59,7 @@ struct RegisterState;
     }
 }
 
-[[nodiscard]] ALWAYS_INLINE Optional<u32> safe_atomic_fetch_or_relaxed(volatile u32* var, u32 val)
+[[nodiscard]] AK_ALWAYS_INLINE Optional<u32> safe_atomic_fetch_or_relaxed(volatile u32* var, u32 val)
 {
     auto expected_value = safe_atomic_load_relaxed(var);
     if (!expected_value.has_value())
@@ -77,7 +77,7 @@ struct RegisterState;
     }
 }
 
-[[nodiscard]] ALWAYS_INLINE Optional<u32> safe_atomic_fetch_xor_relaxed(volatile u32* var, u32 val)
+[[nodiscard]] AK_ALWAYS_INLINE Optional<u32> safe_atomic_fetch_xor_relaxed(volatile u32* var, u32 val)
 {
     auto expected_value = safe_atomic_load_relaxed(var);
     if (!expected_value.has_value())

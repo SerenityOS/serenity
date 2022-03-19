@@ -61,33 +61,33 @@ public:
     {
     }
 
-    [[nodiscard]] ALWAYS_INLINE T x() const { return location().x(); }
-    [[nodiscard]] ALWAYS_INLINE T y() const { return location().y(); }
-    [[nodiscard]] ALWAYS_INLINE T width() const { return m_size.width(); }
-    [[nodiscard]] ALWAYS_INLINE T height() const { return m_size.height(); }
+    [[nodiscard]] AK_ALWAYS_INLINE T x() const { return location().x(); }
+    [[nodiscard]] AK_ALWAYS_INLINE T y() const { return location().y(); }
+    [[nodiscard]] AK_ALWAYS_INLINE T width() const { return m_size.width(); }
+    [[nodiscard]] AK_ALWAYS_INLINE T height() const { return m_size.height(); }
 
-    ALWAYS_INLINE void set_x(T x) { m_location.set_x(x); }
-    ALWAYS_INLINE void set_y(T y) { m_location.set_y(y); }
-    ALWAYS_INLINE void set_width(T width) { m_size.set_width(width); }
-    ALWAYS_INLINE void set_height(T height) { m_size.set_height(height); }
+    AK_ALWAYS_INLINE void set_x(T x) { m_location.set_x(x); }
+    AK_ALWAYS_INLINE void set_y(T y) { m_location.set_y(y); }
+    AK_ALWAYS_INLINE void set_width(T width) { m_size.set_width(width); }
+    AK_ALWAYS_INLINE void set_height(T height) { m_size.set_height(height); }
 
-    [[nodiscard]] ALWAYS_INLINE Point<T> const& location() const { return m_location; }
-    [[nodiscard]] ALWAYS_INLINE Size<T> const& size() const { return m_size; }
+    [[nodiscard]] AK_ALWAYS_INLINE Point<T> const& location() const { return m_location; }
+    [[nodiscard]] AK_ALWAYS_INLINE Size<T> const& size() const { return m_size; }
 
-    [[nodiscard]] ALWAYS_INLINE bool is_null() const { return width() == 0 && height() == 0; }
-    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return width() <= 0 || height() <= 0; }
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_null() const { return width() == 0 && height() == 0; }
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_empty() const { return width() <= 0 || height() <= 0; }
 
-    ALWAYS_INLINE void translate_by(T dx, T dy) { m_location.translate_by(dx, dy); }
-    ALWAYS_INLINE void translate_by(T dboth) { m_location.translate_by(dboth); }
-    ALWAYS_INLINE void translate_by(Point<T> const& delta) { m_location.translate_by(delta); }
+    AK_ALWAYS_INLINE void translate_by(T dx, T dy) { m_location.translate_by(dx, dy); }
+    AK_ALWAYS_INLINE void translate_by(T dboth) { m_location.translate_by(dboth); }
+    AK_ALWAYS_INLINE void translate_by(Point<T> const& delta) { m_location.translate_by(delta); }
 
-    ALWAYS_INLINE void scale_by(T dx, T dy)
+    AK_ALWAYS_INLINE void scale_by(T dx, T dy)
     {
         m_location.scale_by(dx, dy);
         m_size.scale_by(dx, dy);
     }
-    ALWAYS_INLINE void scale_by(T dboth) { scale_by(dboth, dboth); }
-    ALWAYS_INLINE void scale_by(Point<T> const& delta) { scale_by(delta.x(), delta.y()); }
+    AK_ALWAYS_INLINE void scale_by(T dboth) { scale_by(dboth, dboth); }
+    AK_ALWAYS_INLINE void scale_by(Point<T> const& delta) { scale_by(delta.x(), delta.y()); }
 
     void transform_by(AffineTransform const& transform) { *this = transform.map(*this); }
 
@@ -96,12 +96,12 @@ public:
         return { x() + width() / 2, y() + height() / 2 };
     }
 
-    ALWAYS_INLINE void set_location(Point<T> const& location)
+    AK_ALWAYS_INLINE void set_location(Point<T> const& location)
     {
         m_location = location;
     }
 
-    ALWAYS_INLINE void set_size(Size<T> const& size)
+    AK_ALWAYS_INLINE void set_size(Size<T> const& size)
     {
         m_size = size;
     }
@@ -298,7 +298,7 @@ public:
         return x >= m_location.x() && x <= right() && y >= m_location.y() && y <= bottom();
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool contains(Point<T> const& point) const
+    [[nodiscard]] AK_ALWAYS_INLINE bool contains(Point<T> const& point) const
     {
         return contains(point.x(), point.y());
     }
@@ -323,15 +323,15 @@ public:
         return have_any;
     }
 
-    [[nodiscard]] ALWAYS_INLINE int primary_offset_for_orientation(Orientation orientation) const { return m_location.primary_offset_for_orientation(orientation); }
-    ALWAYS_INLINE void set_primary_offset_for_orientation(Orientation orientation, int value) { m_location.set_primary_offset_for_orientation(orientation, value); }
-    [[nodiscard]] ALWAYS_INLINE int secondary_offset_for_orientation(Orientation orientation) const { return m_location.secondary_offset_for_orientation(orientation); }
-    ALWAYS_INLINE void set_secondary_offset_for_orientation(Orientation orientation, int value) { m_location.set_secondary_offset_for_orientation(orientation, value); }
+    [[nodiscard]] AK_ALWAYS_INLINE int primary_offset_for_orientation(Orientation orientation) const { return m_location.primary_offset_for_orientation(orientation); }
+    AK_ALWAYS_INLINE void set_primary_offset_for_orientation(Orientation orientation, int value) { m_location.set_primary_offset_for_orientation(orientation, value); }
+    [[nodiscard]] AK_ALWAYS_INLINE int secondary_offset_for_orientation(Orientation orientation) const { return m_location.secondary_offset_for_orientation(orientation); }
+    AK_ALWAYS_INLINE void set_secondary_offset_for_orientation(Orientation orientation, int value) { m_location.set_secondary_offset_for_orientation(orientation, value); }
 
-    [[nodiscard]] ALWAYS_INLINE int primary_size_for_orientation(Orientation orientation) const { return m_size.primary_size_for_orientation(orientation); }
-    [[nodiscard]] ALWAYS_INLINE int secondary_size_for_orientation(Orientation orientation) const { return m_size.secondary_size_for_orientation(orientation); }
-    ALWAYS_INLINE void set_primary_size_for_orientation(Orientation orientation, int value) { m_size.set_primary_size_for_orientation(orientation, value); }
-    ALWAYS_INLINE void set_secondary_size_for_orientation(Orientation orientation, int value) { m_size.set_secondary_size_for_orientation(orientation, value); }
+    [[nodiscard]] AK_ALWAYS_INLINE int primary_size_for_orientation(Orientation orientation) const { return m_size.primary_size_for_orientation(orientation); }
+    [[nodiscard]] AK_ALWAYS_INLINE int secondary_size_for_orientation(Orientation orientation) const { return m_size.secondary_size_for_orientation(orientation); }
+    AK_ALWAYS_INLINE void set_primary_size_for_orientation(Orientation orientation, int value) { m_size.set_primary_size_for_orientation(orientation, value); }
+    AK_ALWAYS_INLINE void set_secondary_size_for_orientation(Orientation orientation, int value) { m_size.set_secondary_size_for_orientation(orientation, value); }
 
     [[nodiscard]] T first_edge_for_orientation(Orientation orientation) const
     {
@@ -347,27 +347,27 @@ public:
         return right();
     }
 
-    [[nodiscard]] ALWAYS_INLINE T left() const { return x(); }
-    [[nodiscard]] ALWAYS_INLINE T right() const { return x() + width() - 1; }
-    [[nodiscard]] ALWAYS_INLINE T top() const { return y(); }
-    [[nodiscard]] ALWAYS_INLINE T bottom() const { return y() + height() - 1; }
+    [[nodiscard]] AK_ALWAYS_INLINE T left() const { return x(); }
+    [[nodiscard]] AK_ALWAYS_INLINE T right() const { return x() + width() - 1; }
+    [[nodiscard]] AK_ALWAYS_INLINE T top() const { return y(); }
+    [[nodiscard]] AK_ALWAYS_INLINE T bottom() const { return y() + height() - 1; }
 
-    ALWAYS_INLINE void set_left(T left)
+    AK_ALWAYS_INLINE void set_left(T left)
     {
         set_x(left);
     }
 
-    ALWAYS_INLINE void set_top(T top)
+    AK_ALWAYS_INLINE void set_top(T top)
     {
         set_y(top);
     }
 
-    ALWAYS_INLINE void set_right(T right)
+    AK_ALWAYS_INLINE void set_right(T right)
     {
         set_width(right - x() + 1);
     }
 
-    ALWAYS_INLINE void set_bottom(T bottom)
+    AK_ALWAYS_INLINE void set_bottom(T bottom)
     {
         set_height(bottom - y() + 1);
     }
@@ -470,7 +470,7 @@ public:
         return r;
     }
 
-    [[nodiscard]] ALWAYS_INLINE Rect<T> intersected(Rect<T> const& other) const
+    [[nodiscard]] AK_ALWAYS_INLINE Rect<T> intersected(Rect<T> const& other) const
     {
         return intersection(*this, other);
     }
@@ -691,7 +691,7 @@ public:
     }
 
     template<typename U>
-    [[nodiscard]] ALWAYS_INLINE Rect<U> to_type() const
+    [[nodiscard]] AK_ALWAYS_INLINE Rect<U> to_type() const
     {
         return Rect<U>(*this);
     }
@@ -706,7 +706,7 @@ private:
 using IntRect = Rect<int>;
 using FloatRect = Rect<float>;
 
-[[nodiscard]] ALWAYS_INLINE IntRect enclosing_int_rect(FloatRect const& float_rect)
+[[nodiscard]] AK_ALWAYS_INLINE IntRect enclosing_int_rect(FloatRect const& float_rect)
 {
     int x1 = floorf(float_rect.x());
     int y1 = floorf(float_rect.y());
@@ -715,7 +715,7 @@ using FloatRect = Rect<float>;
     return Gfx::IntRect::from_two_points({ x1, y1 }, { x2, y2 });
 }
 
-[[nodiscard]] ALWAYS_INLINE IntRect rounded_int_rect(FloatRect const& float_rect)
+[[nodiscard]] AK_ALWAYS_INLINE IntRect rounded_int_rect(FloatRect const& float_rect)
 {
     return IntRect { floorf(float_rect.x()), floorf(float_rect.y()), roundf(float_rect.width()), roundf(float_rect.height()) };
 }

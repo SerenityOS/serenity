@@ -20,7 +20,7 @@ struct ResultRow {
 
 class ResultSet : public Vector<ResultRow> {
 public:
-    ALWAYS_INLINE ResultSet(SQLCommand command)
+    AK_ALWAYS_INLINE ResultSet(SQLCommand command)
         : m_command(command)
     {
     }

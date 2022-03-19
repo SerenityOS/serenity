@@ -13,7 +13,7 @@
 
 namespace SoftGPU {
 
-ALWAYS_INLINE static constexpr Vector2<AK::SIMD::f32x4> expand4(Vector2<float> const& v)
+AK_ALWAYS_INLINE static constexpr Vector2<AK::SIMD::f32x4> expand4(Vector2<float> const& v)
 {
     return Vector2<AK::SIMD::f32x4> {
         AK::SIMD::expand4(v.x()),
@@ -21,7 +21,7 @@ ALWAYS_INLINE static constexpr Vector2<AK::SIMD::f32x4> expand4(Vector2<float> c
     };
 }
 
-ALWAYS_INLINE static constexpr Vector3<AK::SIMD::f32x4> expand4(Vector3<float> const& v)
+AK_ALWAYS_INLINE static constexpr Vector3<AK::SIMD::f32x4> expand4(Vector3<float> const& v)
 {
     return Vector3<AK::SIMD::f32x4> {
         AK::SIMD::expand4(v.x()),
@@ -30,7 +30,7 @@ ALWAYS_INLINE static constexpr Vector3<AK::SIMD::f32x4> expand4(Vector3<float> c
     };
 }
 
-ALWAYS_INLINE static constexpr Vector4<AK::SIMD::f32x4> expand4(Vector4<float> const& v)
+AK_ALWAYS_INLINE static constexpr Vector4<AK::SIMD::f32x4> expand4(Vector4<float> const& v)
 {
     return Vector4<AK::SIMD::f32x4> {
         AK::SIMD::expand4(v.x()),
@@ -40,7 +40,7 @@ ALWAYS_INLINE static constexpr Vector4<AK::SIMD::f32x4> expand4(Vector4<float> c
     };
 }
 
-ALWAYS_INLINE static constexpr Vector2<AK::SIMD::i32x4> expand4(Vector2<int> const& v)
+AK_ALWAYS_INLINE static constexpr Vector2<AK::SIMD::i32x4> expand4(Vector2<int> const& v)
 {
     return Vector2<AK::SIMD::i32x4> {
         AK::SIMD::expand4(v.x()),
@@ -48,7 +48,7 @@ ALWAYS_INLINE static constexpr Vector2<AK::SIMD::i32x4> expand4(Vector2<int> con
     };
 }
 
-ALWAYS_INLINE static constexpr Vector3<AK::SIMD::i32x4> expand4(Vector3<int> const& v)
+AK_ALWAYS_INLINE static constexpr Vector3<AK::SIMD::i32x4> expand4(Vector3<int> const& v)
 {
     return Vector3<AK::SIMD::i32x4> {
         AK::SIMD::expand4(v.x()),
@@ -57,7 +57,7 @@ ALWAYS_INLINE static constexpr Vector3<AK::SIMD::i32x4> expand4(Vector3<int> con
     };
 }
 
-ALWAYS_INLINE static constexpr Vector4<AK::SIMD::i32x4> expand4(Vector4<int> const& v)
+AK_ALWAYS_INLINE static constexpr Vector4<AK::SIMD::i32x4> expand4(Vector4<int> const& v)
 {
     return Vector4<AK::SIMD::i32x4> {
         AK::SIMD::expand4(v.x()),
@@ -67,7 +67,7 @@ ALWAYS_INLINE static constexpr Vector4<AK::SIMD::i32x4> expand4(Vector4<int> con
     };
 }
 
-ALWAYS_INLINE static AK::SIMD::f32x4 ddx(AK::SIMD::f32x4 v)
+AK_ALWAYS_INLINE static AK::SIMD::f32x4 ddx(AK::SIMD::f32x4 v)
 {
     return AK::SIMD::f32x4 {
         v[1] - v[0],
@@ -77,7 +77,7 @@ ALWAYS_INLINE static AK::SIMD::f32x4 ddx(AK::SIMD::f32x4 v)
     };
 }
 
-ALWAYS_INLINE static AK::SIMD::f32x4 ddy(AK::SIMD::f32x4 v)
+AK_ALWAYS_INLINE static AK::SIMD::f32x4 ddy(AK::SIMD::f32x4 v)
 {
     return AK::SIMD::f32x4 {
         v[2] - v[0],
@@ -87,7 +87,7 @@ ALWAYS_INLINE static AK::SIMD::f32x4 ddy(AK::SIMD::f32x4 v)
     };
 }
 
-ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> ddx(Vector2<AK::SIMD::f32x4> const& v)
+AK_ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> ddx(Vector2<AK::SIMD::f32x4> const& v)
 {
     return {
         ddx(v.x()),
@@ -95,7 +95,7 @@ ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> ddx(Vector2<AK::SIMD::f32x4> const
     };
 }
 
-ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> ddy(Vector2<AK::SIMD::f32x4> const& v)
+AK_ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> ddy(Vector2<AK::SIMD::f32x4> const& v)
 {
     return {
         ddy(v.x()),
@@ -105,7 +105,7 @@ ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> ddy(Vector2<AK::SIMD::f32x4> const
 
 // Calculates a quadratic approximation of log2, exploiting the fact that IEEE754 floats are represented as mantissa * 2^exponent.
 // See https://stackoverflow.com/questions/9411823/fast-log2float-x-implementation-c
-ALWAYS_INLINE static AK::SIMD::f32x4 log2_approximate(AK::SIMD::f32x4 v)
+AK_ALWAYS_INLINE static AK::SIMD::f32x4 log2_approximate(AK::SIMD::f32x4 v)
 {
     union {
         AK::SIMD::f32x4 float_val;

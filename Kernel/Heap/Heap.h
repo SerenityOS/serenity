@@ -29,11 +29,11 @@ class Heap {
 
     static_assert(CHUNK_SIZE >= sizeof(AllocationHeader));
 
-    ALWAYS_INLINE AllocationHeader* allocation_header(void* ptr)
+    AK_ALWAYS_INLINE AllocationHeader* allocation_header(void* ptr)
     {
         return (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
     }
-    ALWAYS_INLINE const AllocationHeader* allocation_header(const void* ptr) const
+    AK_ALWAYS_INLINE const AllocationHeader* allocation_header(const void* ptr) const
     {
         return (const AllocationHeader*)((((const u8*)ptr) - sizeof(AllocationHeader)));
     }

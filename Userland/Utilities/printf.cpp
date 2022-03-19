@@ -22,12 +22,12 @@
 
 template<typename PutChFunc, typename ArgumentListRefT, template<typename T, typename U = ArgumentListRefT> typename NextArgument, typename CharType>
 requires(IsSame<CharType, char>) struct PrintfImpl : public PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument, CharType> {
-    ALWAYS_INLINE PrintfImpl(PutChFunc& putch, char*& bufptr, const int& nwritten)
+    AK_ALWAYS_INLINE PrintfImpl(PutChFunc& putch, char*& bufptr, const int& nwritten)
         : PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument>(putch, bufptr, nwritten)
     {
     }
 
-    ALWAYS_INLINE int format_q(const PrintfImplementation::ModifierState& state, ArgumentListRefT& ap) const
+    AK_ALWAYS_INLINE int format_q(const PrintfImplementation::ModifierState& state, ArgumentListRefT& ap) const
     {
         auto state_copy = state;
         auto str = NextArgument<const char*>()(ap);
@@ -84,7 +84,7 @@ requires(IsSame<CharType, char>) struct PrintfImpl : public PrintfImplementation
 
 template<typename T, typename V>
 struct ArgvNextArgument {
-    ALWAYS_INLINE T operator()(V) const
+    AK_ALWAYS_INLINE T operator()(V) const
     {
         static_assert(sizeof(V) != sizeof(V), "Base instantiated");
         return declval<T>();
@@ -93,7 +93,7 @@ struct ArgvNextArgument {
 
 template<typename V>
 struct ArgvNextArgument<char*, V> {
-    ALWAYS_INLINE char* operator()(V arg) const
+    AK_ALWAYS_INLINE char* operator()(V arg) const
     {
         if (arg.argc == 0)
             fail("Not enough arguments");
@@ -106,7 +106,7 @@ struct ArgvNextArgument<char*, V> {
 
 template<typename V>
 struct ArgvNextArgument<const char*, V> {
-    ALWAYS_INLINE const char* operator()(V arg) const
+    AK_ALWAYS_INLINE const char* operator()(V arg) const
     {
         if (arg.argc == 0)
             return "";
@@ -119,7 +119,7 @@ struct ArgvNextArgument<const char*, V> {
 
 template<typename V>
 struct ArgvNextArgument<int, V> {
-    ALWAYS_INLINE int operator()(V arg) const
+    AK_ALWAYS_INLINE int operator()(V arg) const
     {
         if (arg.argc == 0)
             return 0;
@@ -132,7 +132,7 @@ struct ArgvNextArgument<int, V> {
 
 template<typename V>
 struct ArgvNextArgument<unsigned, V> {
-    ALWAYS_INLINE unsigned operator()(V arg) const
+    AK_ALWAYS_INLINE unsigned operator()(V arg) const
     {
         if (arg.argc == 0)
             return 0;
@@ -145,7 +145,7 @@ struct ArgvNextArgument<unsigned, V> {
 
 template<typename V>
 struct ArgvNextArgument<i64, V> {
-    ALWAYS_INLINE i64 operator()(V arg) const
+    AK_ALWAYS_INLINE i64 operator()(V arg) const
     {
         if (arg.argc == 0)
             return 0;
@@ -158,7 +158,7 @@ struct ArgvNextArgument<i64, V> {
 
 template<typename V>
 struct ArgvNextArgument<u64, V> {
-    ALWAYS_INLINE u64 operator()(V arg) const
+    AK_ALWAYS_INLINE u64 operator()(V arg) const
     {
         if (arg.argc == 0)
             return 0;
@@ -171,7 +171,7 @@ struct ArgvNextArgument<u64, V> {
 
 template<typename V>
 struct ArgvNextArgument<double, V> {
-    ALWAYS_INLINE double operator()(V arg) const
+    AK_ALWAYS_INLINE double operator()(V arg) const
     {
         if (arg.argc == 0)
             return 0;
@@ -184,7 +184,7 @@ struct ArgvNextArgument<double, V> {
 
 template<typename V>
 struct ArgvNextArgument<int*, V> {
-    ALWAYS_INLINE int* operator()(V) const
+    AK_ALWAYS_INLINE int* operator()(V) const
     {
         VERIFY_NOT_REACHED();
         return nullptr;

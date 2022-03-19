@@ -75,7 +75,7 @@ private:
     void detect_victory();
     void move_focused_cards(CardStack& stack);
 
-    ALWAYS_INLINE CardStack& stack(StackLocation location)
+    AK_ALWAYS_INLINE CardStack& stack(StackLocation location)
     {
         return m_stacks[location];
     }

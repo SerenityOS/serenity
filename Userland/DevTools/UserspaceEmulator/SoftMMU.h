@@ -70,7 +70,7 @@ public:
     void write128(X86::LogicalAddress, ValueWithShadow<u128>);
     void write256(X86::LogicalAddress, ValueWithShadow<u256>);
 
-    ALWAYS_INLINE Region* find_region(X86::LogicalAddress address)
+    AK_ALWAYS_INLINE Region* find_region(X86::LogicalAddress address)
     {
         if (address.selector() == 0x2b)
             return m_tls_region.ptr();

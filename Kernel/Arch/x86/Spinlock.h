@@ -27,12 +27,12 @@ public:
     u32 lock();
     void unlock(u32 prev_flags);
 
-    [[nodiscard]] ALWAYS_INLINE bool is_locked() const
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_locked() const
     {
         return m_lock.load(AK::memory_order_relaxed) != 0;
     }
 
-    ALWAYS_INLINE void initialize()
+    AK_ALWAYS_INLINE void initialize()
     {
         m_lock.store(0, AK::memory_order_relaxed);
     }
@@ -55,17 +55,17 @@ public:
     u32 lock();
     void unlock(u32 prev_flags);
 
-    [[nodiscard]] ALWAYS_INLINE bool is_locked() const
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_locked() const
     {
         return m_lock.load(AK::memory_order_relaxed) != 0;
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool is_locked_by_current_processor() const
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_locked_by_current_processor() const
     {
         return m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current());
     }
 
-    ALWAYS_INLINE void initialize()
+    AK_ALWAYS_INLINE void initialize()
     {
         m_lock.store(0, AK::memory_order_relaxed);
     }

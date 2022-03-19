@@ -28,12 +28,12 @@ public:
         m_combined = (generation_index << 14) | index;
     }
 
-    [[nodiscard]] ALWAYS_INLINE u32 as_ref_index() const
+    [[nodiscard]] AK_ALWAYS_INLINE u32 as_ref_index() const
     {
         return m_combined & 0x3ffff;
     }
 
-    [[nodiscard]] ALWAYS_INLINE u32 as_ref_generation_index() const
+    [[nodiscard]] AK_ALWAYS_INLINE u32 as_ref_generation_index() const
     {
         return m_combined >> 18;
     }

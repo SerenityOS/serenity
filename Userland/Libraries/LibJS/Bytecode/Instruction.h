@@ -130,7 +130,7 @@ public:
 
     Instruction const& operator*() const { return dereference(); }
 
-    ALWAYS_INLINE void operator++()
+    AK_ALWAYS_INLINE void operator++()
     {
         VERIFY(!at_end());
         m_offset += dereference().length();

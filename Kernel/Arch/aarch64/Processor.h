@@ -30,37 +30,37 @@ public:
     template<typename T>
     T* get_specific() { return 0; }
 
-    ALWAYS_INLINE static void pause() { }
-    ALWAYS_INLINE static void wait_check() { }
+    AK_ALWAYS_INLINE static void pause() { }
+    AK_ALWAYS_INLINE static void wait_check() { }
 
-    ALWAYS_INLINE static bool is_initialized()
+    AK_ALWAYS_INLINE static bool is_initialized()
     {
         return false;
     }
 
-    ALWAYS_INLINE static u32 current_id()
+    AK_ALWAYS_INLINE static u32 current_id()
     {
         return 0;
     }
 
-    ALWAYS_INLINE static Thread* current_thread()
+    AK_ALWAYS_INLINE static Thread* current_thread()
     {
         return 0;
     }
 
-    ALWAYS_INLINE static FlatPtr current_in_irq()
+    AK_ALWAYS_INLINE static FlatPtr current_in_irq()
     {
         return 0;
     }
 
-    ALWAYS_INLINE static void enter_critical() { }
-    ALWAYS_INLINE static void leave_critical() { }
-    ALWAYS_INLINE static u32 in_critical()
+    AK_ALWAYS_INLINE static void enter_critical() { }
+    AK_ALWAYS_INLINE static void leave_critical() { }
+    AK_ALWAYS_INLINE static u32 in_critical()
     {
         return 0;
     }
 
-    ALWAYS_INLINE static Processor& current() { VERIFY_NOT_REACHED(); }
+    AK_ALWAYS_INLINE static Processor& current() { VERIFY_NOT_REACHED(); }
 
     static void deferred_call_queue(Function<void()> /* callback */) { }
 

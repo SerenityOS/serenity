@@ -205,7 +205,7 @@ public:
         return cx().value() == 0;
     }
 
-    ALWAYS_INLINE void step_source_index(bool a32, u32 step)
+    AK_ALWAYS_INLINE void step_source_index(bool a32, u32 step)
     {
         if (a32) {
             if (df())
@@ -220,7 +220,7 @@ public:
         }
     }
 
-    ALWAYS_INLINE void step_destination_index(bool a32, u32 step)
+    AK_ALWAYS_INLINE void step_destination_index(bool a32, u32 step)
     {
         if (a32) {
             if (df())
@@ -1262,7 +1262,7 @@ private:
     u8* m_cached_code_base_ptr { nullptr };
 };
 
-ALWAYS_INLINE u8 SoftCPU::read8()
+AK_ALWAYS_INLINE u8 SoftCPU::read8()
 {
     if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
         update_code_cache();
@@ -1272,7 +1272,7 @@ ALWAYS_INLINE u8 SoftCPU::read8()
     return value;
 }
 
-ALWAYS_INLINE u16 SoftCPU::read16()
+AK_ALWAYS_INLINE u16 SoftCPU::read16()
 {
     if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
         update_code_cache();
@@ -1283,7 +1283,7 @@ ALWAYS_INLINE u16 SoftCPU::read16()
     return value;
 }
 
-ALWAYS_INLINE u32 SoftCPU::read32()
+AK_ALWAYS_INLINE u32 SoftCPU::read32()
 {
     if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
         update_code_cache();
@@ -1295,7 +1295,7 @@ ALWAYS_INLINE u32 SoftCPU::read32()
     return value;
 }
 
-ALWAYS_INLINE u64 SoftCPU::read64()
+AK_ALWAYS_INLINE u64 SoftCPU::read64()
 {
     if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
         update_code_cache();

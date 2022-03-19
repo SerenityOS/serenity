@@ -611,7 +611,7 @@ size_t DeflateCompressor::find_back_match(size_t start, u16 hash, size_t previou
     return previous_match_length; // we found matches, but they were at most previous_match_length long
 }
 
-ALWAYS_INLINE u8 DeflateCompressor::distance_to_base(u16 distance)
+AK_ALWAYS_INLINE u8 DeflateCompressor::distance_to_base(u16 distance)
 {
     return (distance <= 256) ? distance_to_base_lo[distance - 1] : distance_to_base_hi[(distance - 1) >> 7];
 }

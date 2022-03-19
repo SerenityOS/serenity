@@ -23,19 +23,19 @@
 
 class PthreadMutexLocker {
 public:
-    ALWAYS_INLINE explicit PthreadMutexLocker(pthread_mutex_t& mutex)
+    AK_ALWAYS_INLINE explicit PthreadMutexLocker(pthread_mutex_t& mutex)
         : m_mutex(mutex)
     {
         lock();
         __heap_is_stable = false;
     }
-    ALWAYS_INLINE ~PthreadMutexLocker()
+    AK_ALWAYS_INLINE ~PthreadMutexLocker()
     {
         __heap_is_stable = true;
         unlock();
     }
-    ALWAYS_INLINE void lock() { pthread_mutex_lock(&m_mutex); }
-    ALWAYS_INLINE void unlock() { pthread_mutex_unlock(&m_mutex); }
+    AK_ALWAYS_INLINE void lock() { pthread_mutex_lock(&m_mutex); }
+    AK_ALWAYS_INLINE void unlock() { pthread_mutex_unlock(&m_mutex); }
 
 private:
     pthread_mutex_t& m_mutex;
@@ -56,37 +56,37 @@ static bool s_scrub_free = true;
 static bool s_profiling = false;
 static bool s_in_userspace_emulator = false;
 
-ALWAYS_INLINE static void ue_notify_malloc(const void* ptr, size_t size)
+AK_ALWAYS_INLINE static void ue_notify_malloc(const void* ptr, size_t size)
 {
     if (s_in_userspace_emulator)
         syscall(SC_emuctl, 1, size, (FlatPtr)ptr);
 }
 
-ALWAYS_INLINE static void ue_notify_free(const void* ptr)
+AK_ALWAYS_INLINE static void ue_notify_free(const void* ptr)
 {
     if (s_in_userspace_emulator)
         syscall(SC_emuctl, 2, (FlatPtr)ptr, 0);
 }
 
-ALWAYS_INLINE static void ue_notify_realloc(const void* ptr, size_t size)
+AK_ALWAYS_INLINE static void ue_notify_realloc(const void* ptr, size_t size)
 {
     if (s_in_userspace_emulator)
         syscall(SC_emuctl, 3, size, (FlatPtr)ptr);
 }
 
-ALWAYS_INLINE static void ue_notify_chunk_size_changed(const void* block, size_t chunk_size)
+AK_ALWAYS_INLINE static void ue_notify_chunk_size_changed(const void* block, size_t chunk_size)
 {
     if (s_in_userspace_emulator)
         syscall(SC_emuctl, 4, chunk_size, (FlatPtr)block);
 }
 
 struct MemoryAuditingSuppressor {
-    ALWAYS_INLINE MemoryAuditingSuppressor()
+    AK_ALWAYS_INLINE MemoryAuditingSuppressor()
     {
         if (s_in_userspace_emulator)
             syscall(SC_emuctl, 7);
     }
-    ALWAYS_INLINE ~MemoryAuditingSuppressor()
+    AK_ALWAYS_INLINE ~MemoryAuditingSuppressor()
     {
         if (s_in_userspace_emulator)
             syscall(SC_emuctl, 8);

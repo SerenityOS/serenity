@@ -112,13 +112,13 @@ public:
         }
     }
 
-    ALWAYS_INLINE Value(Value const& value) = default;
-    ALWAYS_INLINE Value(Value&& value) = default;
-    ALWAYS_INLINE Value& operator=(Value&& value) = default;
-    ALWAYS_INLINE Value& operator=(Value const& value) = default;
+    AK_ALWAYS_INLINE Value(Value const& value) = default;
+    AK_ALWAYS_INLINE Value(Value&& value) = default;
+    AK_ALWAYS_INLINE Value& operator=(Value&& value) = default;
+    AK_ALWAYS_INLINE Value& operator=(Value const& value) = default;
 
     template<typename T>
-    ALWAYS_INLINE Optional<T> to()
+    AK_ALWAYS_INLINE Optional<T> to()
     {
         Optional<T> result;
         m_value.visit(
@@ -504,15 +504,15 @@ public:
     using EntryType = Variant<Value, Label, Frame>;
     Stack() = default;
 
-    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return m_data.is_empty(); }
-    ALWAYS_INLINE void push(EntryType entry) { m_data.append(move(entry)); }
-    ALWAYS_INLINE auto pop() { return m_data.take_last(); }
-    ALWAYS_INLINE auto& peek() const { return m_data.last(); }
-    ALWAYS_INLINE auto& peek() { return m_data.last(); }
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_empty() const { return m_data.is_empty(); }
+    AK_ALWAYS_INLINE void push(EntryType entry) { m_data.append(move(entry)); }
+    AK_ALWAYS_INLINE auto pop() { return m_data.take_last(); }
+    AK_ALWAYS_INLINE auto& peek() const { return m_data.last(); }
+    AK_ALWAYS_INLINE auto& peek() { return m_data.last(); }
 
-    ALWAYS_INLINE auto size() const { return m_data.size(); }
-    ALWAYS_INLINE auto& entries() const { return m_data; }
-    ALWAYS_INLINE auto& entries() { return m_data; }
+    AK_ALWAYS_INLINE auto size() const { return m_data.size(); }
+    AK_ALWAYS_INLINE auto& entries() const { return m_data; }
+    AK_ALWAYS_INLINE auto& entries() { return m_data; }
 
 private:
     Vector<EntryType, 1024> m_data;

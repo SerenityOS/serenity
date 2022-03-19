@@ -31,7 +31,7 @@ public:
     size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }
     bool is_full() const { return !has_lazy_freelist() && !m_freelist; }
 
-    ALWAYS_INLINE Cell* allocate()
+    AK_ALWAYS_INLINE Cell* allocate()
     {
         Cell* allocated_cell = nullptr;
         if (m_freelist) {

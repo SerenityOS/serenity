@@ -40,7 +40,7 @@ extern "C" u8 safe_atomic_compare_exchange_relaxed_faulted[];
 
 namespace Kernel {
 
-ALWAYS_INLINE bool validate_canonical_address(size_t address)
+AK_ALWAYS_INLINE bool validate_canonical_address(size_t address)
 {
 #if ARCH(X86_64)
     auto most_significant_bits = Processor::current().virtual_address_bit_width() - 1;

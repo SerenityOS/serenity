@@ -64,19 +64,19 @@ struct Sample {
     // - Linear:        0.0 to 1.0
     // - Logarithmic:   0.0 to 1.0
 
-    ALWAYS_INLINE double linear_to_log(double const change) const
+    AK_ALWAYS_INLINE double linear_to_log(double const change) const
     {
         // TODO: Add linear slope around 0
         return VOLUME_A * exp(VOLUME_B * change);
     }
 
-    ALWAYS_INLINE double log_to_linear(double const val) const
+    AK_ALWAYS_INLINE double log_to_linear(double const val) const
     {
         // TODO: Add linear slope around 0
         return log(val / VOLUME_A) / VOLUME_B;
     }
 
-    ALWAYS_INLINE Sample& log_multiply(double const change)
+    AK_ALWAYS_INLINE Sample& log_multiply(double const change)
     {
         double factor = linear_to_log(change);
         left *= factor;
@@ -84,7 +84,7 @@ struct Sample {
         return *this;
     }
 
-    ALWAYS_INLINE Sample log_multiplied(double const volume_change) const
+    AK_ALWAYS_INLINE Sample log_multiplied(double const volume_change) const
     {
         Sample new_frame { left, right };
         new_frame.log_multiply(volume_change);
@@ -92,7 +92,7 @@ struct Sample {
     }
 
     // Constant power panning
-    ALWAYS_INLINE Sample& pan(double const position)
+    AK_ALWAYS_INLINE Sample& pan(double const position)
     {
         double const pi_over_2 = AK::Pi<double> * 0.5;
         double const root_over_2 = AK::sqrt(2.0) * 0.5;
@@ -104,7 +104,7 @@ struct Sample {
         return *this;
     }
 
-    ALWAYS_INLINE Sample panned(double const position) const
+    AK_ALWAYS_INLINE Sample panned(double const position) const
     {
         Sample new_sample { left, right };
         new_sample.pan(position);

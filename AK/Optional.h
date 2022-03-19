@@ -30,7 +30,7 @@ class [[nodiscard]] Optional {
 public:
     using ValueType = T;
 
-    ALWAYS_INLINE Optional() = default;
+    AK_ALWAYS_INLINE Optional() = default;
 
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
     Optional(Optional const& other) requires(!IsCopyConstructible<T>) = delete;
@@ -47,7 +47,7 @@ public:
     ~Optional() = default;
 #endif
 
-    ALWAYS_INLINE Optional(Optional const& other)
+    AK_ALWAYS_INLINE Optional(Optional const& other)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!IsTriviallyCopyConstructible<T>)
 #endif
@@ -57,7 +57,7 @@ public:
             new (&m_storage) T(other.value());
     }
 
-    ALWAYS_INLINE Optional(Optional&& other)
+    AK_ALWAYS_INLINE Optional(Optional&& other)
         : m_has_value(other.m_has_value)
     {
         if (other.has_value())
@@ -65,7 +65,7 @@ public:
     }
 
     template<typename U>
-    requires(IsConstructible<T, U const&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) ALWAYS_INLINE explicit Optional(Optional<U> const& other)
+    requires(IsConstructible<T, U const&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) AK_ALWAYS_INLINE explicit Optional(Optional<U> const& other)
         : m_has_value(other.m_has_value)
     {
         if (other.has_value())
@@ -73,7 +73,7 @@ public:
     }
 
     template<typename U>
-    requires(IsConstructible<T, U&&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) ALWAYS_INLINE explicit Optional(Optional<U>&& other)
+    requires(IsConstructible<T, U&&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) AK_ALWAYS_INLINE explicit Optional(Optional<U>&& other)
         : m_has_value(other.m_has_value)
     {
         if (other.has_value())
@@ -81,13 +81,13 @@ public:
     }
 
     template<typename U = T>
-    ALWAYS_INLINE explicit(!IsConvertible<U&&, T>) Optional(U&& value) requires(!IsSame<RemoveCVReference<U>, Optional<T>> && IsConstructible<T, U&&>)
+    AK_ALWAYS_INLINE explicit(!IsConvertible<U&&, T>) Optional(U&& value) requires(!IsSame<RemoveCVReference<U>, Optional<T>> && IsConstructible<T, U&&>)
         : m_has_value(true)
     {
         new (&m_storage) T(forward<U>(value));
     }
 
-    ALWAYS_INLINE Optional& operator=(Optional const& other)
+    AK_ALWAYS_INLINE Optional& operator=(Optional const& other)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!IsTriviallyCopyConstructible<T> || !IsTriviallyDestructible<T>)
 #endif
@@ -102,7 +102,7 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE Optional& operator=(Optional&& other)
+    AK_ALWAYS_INLINE Optional& operator=(Optional&& other)
     {
         if (this != &other) {
             clear();
@@ -115,18 +115,18 @@ public:
     }
 
     template<typename O>
-    ALWAYS_INLINE bool operator==(Optional<O> const& other) const
+    AK_ALWAYS_INLINE bool operator==(Optional<O> const& other) const
     {
         return has_value() == other.has_value() && (!has_value() || value() == other.value());
     }
 
     template<typename O>
-    ALWAYS_INLINE bool operator==(O const& other) const
+    AK_ALWAYS_INLINE bool operator==(O const& other) const
     {
         return has_value() && value() == other;
     }
 
-    ALWAYS_INLINE ~Optional()
+    AK_ALWAYS_INLINE ~Optional()
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!IsTriviallyDestructible<T>)
 #endif
@@ -134,7 +134,7 @@ public:
         clear();
     }
 
-    ALWAYS_INLINE void clear()
+    AK_ALWAYS_INLINE void clear()
     {
         if (m_has_value) {
             value().~T();
@@ -143,33 +143,33 @@ public:
     }
 
     template<typename... Parameters>
-    ALWAYS_INLINE void emplace(Parameters&&... parameters)
+    AK_ALWAYS_INLINE void emplace(Parameters&&... parameters)
     {
         clear();
         m_has_value = true;
         new (&m_storage) T(forward<Parameters>(parameters)...);
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool has_value() const { return m_has_value; }
+    [[nodiscard]] AK_ALWAYS_INLINE bool has_value() const { return m_has_value; }
 
-    [[nodiscard]] ALWAYS_INLINE T& value() &
+    [[nodiscard]] AK_ALWAYS_INLINE T& value() &
     {
         VERIFY(m_has_value);
         return *__builtin_launder(reinterpret_cast<T*>(&m_storage));
     }
 
-    [[nodiscard]] ALWAYS_INLINE T const& value() const&
+    [[nodiscard]] AK_ALWAYS_INLINE T const& value() const&
     {
         VERIFY(m_has_value);
         return *__builtin_launder(reinterpret_cast<T const*>(&m_storage));
     }
 
-    [[nodiscard]] ALWAYS_INLINE T value() &&
+    [[nodiscard]] AK_ALWAYS_INLINE T value() &&
     {
         return release_value();
     }
 
-    [[nodiscard]] ALWAYS_INLINE T release_value()
+    [[nodiscard]] AK_ALWAYS_INLINE T release_value()
     {
         VERIFY(m_has_value);
         T released_value = move(value());
@@ -178,25 +178,25 @@ public:
         return released_value;
     }
 
-    [[nodiscard]] ALWAYS_INLINE T value_or(T const& fallback) const&
+    [[nodiscard]] AK_ALWAYS_INLINE T value_or(T const& fallback) const&
     {
         if (m_has_value)
             return value();
         return fallback;
     }
 
-    [[nodiscard]] ALWAYS_INLINE T value_or(T&& fallback) &&
+    [[nodiscard]] AK_ALWAYS_INLINE T value_or(T&& fallback) &&
     {
         if (m_has_value)
             return move(value());
         return move(fallback);
     }
 
-    ALWAYS_INLINE T const& operator*() const { return value(); }
-    ALWAYS_INLINE T& operator*() { return value(); }
+    AK_ALWAYS_INLINE T const& operator*() const { return value(); }
+    AK_ALWAYS_INLINE T& operator*() { return value(); }
 
-    ALWAYS_INLINE T const* operator->() const { return &value(); }
-    ALWAYS_INLINE T* operator->() { return &value(); }
+    AK_ALWAYS_INLINE T const* operator->() const { return &value(); }
+    AK_ALWAYS_INLINE T* operator->() { return &value(); }
 
 private:
     alignas(T) u8 m_storage[sizeof(T)];

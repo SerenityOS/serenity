@@ -118,7 +118,7 @@ public:
     }
 
     /// Whether we are (accidentally or intentionally) at a byte boundary right now.
-    ALWAYS_INLINE bool is_aligned_to_byte_boundary() const { return m_bit_offset == 0; }
+    AK_ALWAYS_INLINE bool is_aligned_to_byte_boundary() const { return m_bit_offset == 0; }
 
 private:
     BigEndianInputBitStream(Stream& stream)

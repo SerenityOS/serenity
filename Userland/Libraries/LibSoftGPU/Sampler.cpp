@@ -72,7 +72,7 @@ static f32x4 wrap(f32x4 value, TextureWrapMode mode, u32x4 num_texels)
     }
 }
 
-ALWAYS_INLINE static Vector4<f32x4> texel4(Image const& image, u32x4 layer, u32x4 level, u32x4 x, u32x4 y, u32x4 z)
+AK_ALWAYS_INLINE static Vector4<f32x4> texel4(Image const& image, u32x4 layer, u32x4 level, u32x4 x, u32x4 y, u32x4 z)
 {
     auto t0 = image.texel(layer[0], level[0], x[0], y[0], z[0]);
     auto t1 = image.texel(layer[1], level[1], x[1], y[1], z[1]);
@@ -87,7 +87,7 @@ ALWAYS_INLINE static Vector4<f32x4> texel4(Image const& image, u32x4 layer, u32x
     };
 }
 
-ALWAYS_INLINE static Vector4<f32x4> texel4border(Image const& image, u32x4 layer, u32x4 level, u32x4 x, u32x4 y, u32x4 z, FloatVector4 const& border, u32x4 w, u32x4 h)
+AK_ALWAYS_INLINE static Vector4<f32x4> texel4border(Image const& image, u32x4 layer, u32x4 level, u32x4 x, u32x4 y, u32x4 z, FloatVector4 const& border, u32x4 w, u32x4 h)
 {
     auto border_mask = maskbits(x < 0 || x >= w || y < 0 || y >= h);
 

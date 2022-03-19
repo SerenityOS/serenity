@@ -126,7 +126,7 @@ public:
 private:
     // This must be part of the header in order to make the various 'from_*' functions constexpr.
     // However, sane_mod can only deal with a limited range of values for 'denominator', so this can't be made public.
-    ALWAYS_INLINE static constexpr i64 sane_mod(i64& numerator, i64 denominator)
+    AK_ALWAYS_INLINE static constexpr i64 sane_mod(i64& numerator, i64 denominator)
     {
         VERIFY(2 <= denominator && denominator <= 1'000'000'000);
         // '%' in C/C++ does not work in the obvious way:
@@ -142,7 +142,7 @@ private:
         }
         return dividend;
     }
-    ALWAYS_INLINE static constexpr i32 sane_mod(i32& numerator, i32 denominator)
+    AK_ALWAYS_INLINE static constexpr i32 sane_mod(i32& numerator, i32 denominator)
     {
         i64 numerator_64 = numerator;
         i64 dividend = sane_mod(numerator_64, denominator);

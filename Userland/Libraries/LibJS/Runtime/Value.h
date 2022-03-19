@@ -346,7 +346,7 @@ public:
     bool operator==(Value const&) const;
 
     template<typename... Args>
-    [[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> invoke(GlobalObject& global_object, PropertyKey const& property_key, Args... args);
+    [[nodiscard]] AK_ALWAYS_INLINE ThrowCompletionOr<Value> invoke(GlobalObject& global_object, PropertyKey const& property_key, Args... args);
 
 private:
     Type m_type { Type::Empty };

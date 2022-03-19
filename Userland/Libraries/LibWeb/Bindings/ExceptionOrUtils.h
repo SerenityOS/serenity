@@ -58,7 +58,7 @@ struct ExtractExceptionOrValueType<DOM::ExceptionOr<void>> {
     using Type = JS::Value;
 };
 
-ALWAYS_INLINE JS::Completion dom_exception_to_throw_completion(auto&& global_object, auto&& exception)
+AK_ALWAYS_INLINE JS::Completion dom_exception_to_throw_completion(auto&& global_object, auto&& exception)
 {
     auto& vm = global_object.vm();
 

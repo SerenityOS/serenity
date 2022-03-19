@@ -39,7 +39,7 @@ public:
     explicit EscapeSequenceParser(EscapeSequenceExecutor&);
     ~EscapeSequenceParser() = default;
 
-    ALWAYS_INLINE void on_input(u8 byte)
+    AK_ALWAYS_INLINE void on_input(u8 byte)
     {
         dbgln_if(ESCAPE_SEQUENCE_DEBUG, "on_input {:02x}", byte);
         m_state_machine.advance(byte);

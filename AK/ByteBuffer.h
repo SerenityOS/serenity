@@ -150,12 +150,12 @@ public:
         m_size = 0;
     }
 
-    ALWAYS_INLINE void resize(size_t new_size)
+    AK_ALWAYS_INLINE void resize(size_t new_size)
     {
         MUST(try_resize(new_size));
     }
 
-    ALWAYS_INLINE void ensure_capacity(size_t new_capacity)
+    AK_ALWAYS_INLINE void ensure_capacity(size_t new_capacity)
     {
         MUST(try_ensure_capacity(new_capacity));
     }
@@ -250,7 +250,7 @@ public:
     operator Bytes() { return bytes(); }
     operator ReadonlyBytes() const { return bytes(); }
 
-    ALWAYS_INLINE size_t capacity() const { return m_inline ? inline_capacity : m_outline_capacity; }
+    AK_ALWAYS_INLINE size_t capacity() const { return m_inline ? inline_capacity : m_outline_capacity; }
 
 private:
     void move_from(ByteBuffer&& other)

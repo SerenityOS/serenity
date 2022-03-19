@@ -62,7 +62,7 @@ public:
     using Variant<T, ErrorType>::Variant;
 
     template<typename U>
-    ALWAYS_INLINE ErrorOr(U&& value) requires(!IsSame<RemoveCVReference<U>, ErrorOr<T>>)
+    AK_ALWAYS_INLINE ErrorOr(U&& value) requires(!IsSame<RemoveCVReference<U>, ErrorOr<T>>)
         : Variant<T, ErrorType>(forward<U>(value))
     {
     }

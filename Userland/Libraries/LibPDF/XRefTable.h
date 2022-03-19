@@ -66,24 +66,24 @@ public:
             m_entries.append(entry);
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool has_object(size_t index) const
+    [[nodiscard]] AK_ALWAYS_INLINE bool has_object(size_t index) const
     {
         return index < m_entries.size() && m_entries[index].byte_offset != -1;
     }
 
-    [[nodiscard]] ALWAYS_INLINE long byte_offset_for_object(size_t index) const
+    [[nodiscard]] AK_ALWAYS_INLINE long byte_offset_for_object(size_t index) const
     {
         VERIFY(has_object(index));
         return m_entries[index].byte_offset;
     }
 
-    [[nodiscard]] ALWAYS_INLINE u16 generation_number_for_object(size_t index) const
+    [[nodiscard]] AK_ALWAYS_INLINE u16 generation_number_for_object(size_t index) const
     {
         VERIFY(has_object(index));
         return m_entries[index].generation_number;
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool is_object_in_use(size_t index) const
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_object_in_use(size_t index) const
     {
         VERIFY(has_object(index));
         return m_entries[index].in_use;

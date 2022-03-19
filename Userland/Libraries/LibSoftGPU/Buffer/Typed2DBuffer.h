@@ -30,8 +30,8 @@ public:
     }
 
     void fill(T value, Gfx::IntRect const& rect) { m_buffer->fill(value, rect.left(), rect.right(), rect.top(), rect.bottom(), 0, 0); }
-    ALWAYS_INLINE T* scanline(int y) { return m_buffer->buffer_pointer(0, y, 0); }
-    ALWAYS_INLINE T const* scanline(int y) const { return m_buffer->buffer_pointer(0, y, 0); }
+    AK_ALWAYS_INLINE T* scanline(int y) { return m_buffer->buffer_pointer(0, y, 0); }
+    AK_ALWAYS_INLINE T const* scanline(int y) const { return m_buffer->buffer_pointer(0, y, 0); }
 
     void blit_from_bitmap(Gfx::Bitmap const& bitmap, Gfx::IntRect const& target) requires IsSame<T, u32>
     {

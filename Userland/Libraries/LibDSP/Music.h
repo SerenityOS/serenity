@@ -71,7 +71,7 @@ using RollNotes = OrderedHashMap<u8, RollNote>;
 
 struct Signal : public Variant<Sample, RollNotes> {
     using Variant::Variant;
-    ALWAYS_INLINE SignalType type() const
+    AK_ALWAYS_INLINE SignalType type() const
     {
         if (has<Sample>())
             return SignalType::Sample;

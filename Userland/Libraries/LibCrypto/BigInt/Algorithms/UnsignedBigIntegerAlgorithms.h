@@ -34,7 +34,7 @@ private:
     static void almost_montgomery_multiplication_without_allocation(UnsignedBigInteger const& x, UnsignedBigInteger const& y, UnsignedBigInteger const& modulo, UnsignedBigInteger& z, UnsignedBigInteger::Word k, size_t num_words, UnsignedBigInteger& result);
     static void shift_left_by_n_words(UnsignedBigInteger const& number, size_t number_of_words, UnsignedBigInteger& output);
     static void shift_right_by_n_words(UnsignedBigInteger const& number, size_t number_of_words, UnsignedBigInteger& output);
-    ALWAYS_INLINE static UnsignedBigInteger::Word shift_left_get_one_word(UnsignedBigInteger const& number, size_t num_bits, size_t result_word_index);
+    AK_ALWAYS_INLINE static UnsignedBigInteger::Word shift_left_get_one_word(UnsignedBigInteger const& number, size_t num_bits, size_t result_word_index);
 };
 
 }

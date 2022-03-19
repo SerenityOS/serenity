@@ -251,24 +251,24 @@ public:
             Manufacturer
         };
 
-        ALWAYS_INLINE Source source() const { return m_source; }
-        ALWAYS_INLINE unsigned width() const { return m_width; };
-        ALWAYS_INLINE unsigned height() const { return m_height; }
+        AK_ALWAYS_INLINE Source source() const { return m_source; }
+        AK_ALWAYS_INLINE unsigned width() const { return m_width; };
+        AK_ALWAYS_INLINE unsigned height() const { return m_height; }
 
-        ALWAYS_INLINE unsigned refresh_rate() const
+        AK_ALWAYS_INLINE unsigned refresh_rate() const
         {
             if (m_source == Source::Manufacturer)
                 return 0;
             return m_refresh_rate_or_manufacturer_specific;
         }
 
-        ALWAYS_INLINE u8 manufacturer_specific() const
+        AK_ALWAYS_INLINE u8 manufacturer_specific() const
         {
             VERIFY(m_source == Source::Manufacturer);
             return m_refresh_rate_or_manufacturer_specific;
         }
 
-        ALWAYS_INLINE u8 dmt_id() const { return m_dmt_id; }
+        AK_ALWAYS_INLINE u8 dmt_id() const { return m_dmt_id; }
 
     private:
         constexpr EstablishedTiming(Source source, u16 width, u16 height, u8 refresh_rate_or_manufacturer_specific, u8 dmt_id = 0)
@@ -335,10 +335,10 @@ public:
         u16 vertical_addressable_lines() const;
         u16 vertical_blanking_lines() const;
         u16 horizontal_front_porch_pixels() const;
-        ALWAYS_INLINE u16 horizontal_back_porch_pixels() const { return horizontal_blanking_pixels() - horizontal_sync_pulse_width_pixels() - horizontal_front_porch_pixels(); }
+        AK_ALWAYS_INLINE u16 horizontal_back_porch_pixels() const { return horizontal_blanking_pixels() - horizontal_sync_pulse_width_pixels() - horizontal_front_porch_pixels(); }
         u16 horizontal_sync_pulse_width_pixels() const;
         u16 vertical_front_porch_lines() const;
-        ALWAYS_INLINE u16 vertical_back_porch_lines() const { return vertical_blanking_lines() - vertical_sync_pulse_width_lines() - vertical_front_porch_lines(); }
+        AK_ALWAYS_INLINE u16 vertical_back_porch_lines() const { return vertical_blanking_lines() - vertical_sync_pulse_width_lines() - vertical_front_porch_lines(); }
         u16 vertical_sync_pulse_width_lines() const;
         u16 horizontal_image_size_mm() const;
         u16 vertical_image_size_mm() const;
@@ -387,7 +387,7 @@ public:
         AspectRatio aspect_ratio() const;
         u16 preferred_refresh_rate();
 
-        ALWAYS_INLINE DMT::CVT cvt_code() const { return m_cvt; }
+        AK_ALWAYS_INLINE DMT::CVT cvt_code() const { return m_cvt; }
 
     private:
         CoordinatedVideoTiming(DMT::CVT const& cvt)

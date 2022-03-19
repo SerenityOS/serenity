@@ -22,21 +22,21 @@ public:
         (void)rank;
     }
 
-    ALWAYS_INLINE u32 lock()
+    AK_ALWAYS_INLINE u32 lock()
     {
         return 0;
     }
 
-    ALWAYS_INLINE void unlock(u32 /*prev_flags*/)
+    AK_ALWAYS_INLINE void unlock(u32 /*prev_flags*/)
     {
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool is_locked() const
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_locked() const
     {
         return false;
     }
 
-    ALWAYS_INLINE void initialize()
+    AK_ALWAYS_INLINE void initialize()
     {
     }
 };
@@ -51,26 +51,26 @@ public:
         (void)rank;
     }
 
-    ALWAYS_INLINE u32 lock()
+    AK_ALWAYS_INLINE u32 lock()
     {
         return 0;
     }
 
-    ALWAYS_INLINE void unlock(u32 /*prev_flags*/)
+    AK_ALWAYS_INLINE void unlock(u32 /*prev_flags*/)
     {
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool is_locked() const
-    {
-        return false;
-    }
-
-    [[nodiscard]] ALWAYS_INLINE bool is_locked_by_current_processor() const
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_locked() const
     {
         return false;
     }
 
-    ALWAYS_INLINE void initialize()
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_locked_by_current_processor() const
+    {
+        return false;
+    }
+
+    AK_ALWAYS_INLINE void initialize()
     {
     }
 };

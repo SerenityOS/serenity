@@ -22,8 +22,8 @@ public:
     {
     }
 
-    ALWAYS_INLINE ReadonlyBytes bytes() const { return m_bytes; }
-    ALWAYS_INLINE size_t offset() const { return m_offset; }
+    AK_ALWAYS_INLINE ReadonlyBytes bytes() const { return m_bytes; }
+    AK_ALWAYS_INLINE size_t offset() const { return m_offset; }
 
     bool done() const
     {
@@ -115,17 +115,17 @@ public:
             move_by(1);
     }
 
-    ALWAYS_INLINE void move_while(Function<bool(char)> predicate)
+    AK_ALWAYS_INLINE void move_while(Function<bool(char)> predicate)
     {
         move_until([&predicate](char t) { return !predicate(t); });
     }
 
-    ALWAYS_INLINE void set_reading_forwards() { m_forwards = true; }
-    ALWAYS_INLINE void set_reading_backwards() { m_forwards = false; }
+    AK_ALWAYS_INLINE void set_reading_forwards() { m_forwards = true; }
+    AK_ALWAYS_INLINE void set_reading_backwards() { m_forwards = false; }
 
-    ALWAYS_INLINE void save() { m_saved_offsets.append(m_offset); }
-    ALWAYS_INLINE void load() { m_offset = m_saved_offsets.take_last(); }
-    ALWAYS_INLINE void discard() { m_saved_offsets.take_last(); }
+    AK_ALWAYS_INLINE void save() { m_saved_offsets.append(m_offset); }
+    AK_ALWAYS_INLINE void load() { m_offset = m_saved_offsets.take_last(); }
+    AK_ALWAYS_INLINE void discard() { m_saved_offsets.take_last(); }
 
 #ifdef PDF_DEBUG
     void dump_state() const

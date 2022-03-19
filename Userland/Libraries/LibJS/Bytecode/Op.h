@@ -830,7 +830,7 @@ public:
 
 namespace JS::Bytecode {
 
-ALWAYS_INLINE ThrowCompletionOr<void> Instruction::execute(Bytecode::Interpreter& interpreter) const
+AK_ALWAYS_INLINE ThrowCompletionOr<void> Instruction::execute(Bytecode::Interpreter& interpreter) const
 {
 #define __BYTECODE_OP(op)       \
     case Instruction::Type::op: \
@@ -845,7 +845,7 @@ ALWAYS_INLINE ThrowCompletionOr<void> Instruction::execute(Bytecode::Interpreter
 #undef __BYTECODE_OP
 }
 
-ALWAYS_INLINE void Instruction::replace_references(BasicBlock const& from, BasicBlock const& to)
+AK_ALWAYS_INLINE void Instruction::replace_references(BasicBlock const& from, BasicBlock const& to)
 {
 #define __BYTECODE_OP(op)       \
     case Instruction::Type::op: \
@@ -860,7 +860,7 @@ ALWAYS_INLINE void Instruction::replace_references(BasicBlock const& from, Basic
 #undef __BYTECODE_OP
 }
 
-ALWAYS_INLINE size_t Instruction::length() const
+AK_ALWAYS_INLINE size_t Instruction::length() const
 {
     if (type() == Type::Call)
         return static_cast<Op::Call const&>(*this).length_impl();
@@ -881,7 +881,7 @@ ALWAYS_INLINE size_t Instruction::length() const
 #undef __BYTECODE_OP
 }
 
-ALWAYS_INLINE bool Instruction::is_terminator() const
+AK_ALWAYS_INLINE bool Instruction::is_terminator() const
 {
 #define __BYTECODE_OP(op) \
     case Type::op:        \

@@ -176,7 +176,7 @@ void ByteCode::ensure_opcodes_initialized()
     s_opcodes_initialized = true;
 }
 
-ALWAYS_INLINE OpCode& ByteCode::get_opcode_by_id(OpCodeId id) const
+AK_ALWAYS_INLINE OpCode& ByteCode::get_opcode_by_id(OpCodeId id) const
 {
     VERIFY(id >= OpCodeId::First && id <= OpCodeId::Last);
 
@@ -198,7 +198,7 @@ OpCode& ByteCode::get_opcode(MatchState& state) const
     return opcode;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_Exit::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_Exit::execute(MatchInput const& input, MatchState& state) const
 {
     if (state.string_position > input.view.length() || state.instruction_position >= m_bytecode->size())
         return ExecutionResult::Succeeded;
@@ -206,21 +206,21 @@ ALWAYS_INLINE ExecutionResult OpCode_Exit::execute(MatchInput const& input, Matc
     return ExecutionResult::Failed;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_Save::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_Save::execute(MatchInput const& input, MatchState& state) const
 {
     save_string_position(input, state);
     state.forks_since_last_save = 0;
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_Restore::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_Restore::execute(MatchInput const& input, MatchState& state) const
 {
     if (!restore_string_position(input, state))
         return ExecutionResult::Failed;
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_GoBack::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_GoBack::execute(MatchInput const& input, MatchState& state) const
 {
     if (count() > state.string_position)
         return ExecutionResult::Failed_ExecuteLowPrioForks;
@@ -229,26 +229,26 @@ ALWAYS_INLINE ExecutionResult OpCode_GoBack::execute(MatchInput const& input, Ma
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_FailForks::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_FailForks::execute(MatchInput const& input, MatchState& state) const
 {
     input.fail_counter += state.forks_since_last_save;
     return ExecutionResult::Failed_ExecuteLowPrioForks;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_Jump::execute(MatchInput const&, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_Jump::execute(MatchInput const&, MatchState& state) const
 {
     state.instruction_position += offset();
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_ForkJump::execute(MatchInput const&, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_ForkJump::execute(MatchInput const&, MatchState& state) const
 {
     state.fork_at_position = state.instruction_position + size() + offset();
     state.forks_since_last_save++;
     return ExecutionResult::Fork_PrioHigh;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceJump::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceJump::execute(MatchInput const& input, MatchState& state) const
 {
     state.fork_at_position = state.instruction_position + size() + offset();
     input.fork_to_replace = state.instruction_position;
@@ -256,14 +256,14 @@ ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceJump::execute(MatchInput const& 
     return ExecutionResult::Fork_PrioHigh;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_ForkStay::execute(MatchInput const&, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_ForkStay::execute(MatchInput const&, MatchState& state) const
 {
     state.fork_at_position = state.instruction_position + size() + offset();
     state.forks_since_last_save++;
     return ExecutionResult::Fork_PrioLow;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceStay::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceStay::execute(MatchInput const& input, MatchState& state) const
 {
     state.fork_at_position = state.instruction_position + size() + offset();
     input.fork_to_replace = state.instruction_position;
@@ -271,7 +271,7 @@ ALWAYS_INLINE ExecutionResult OpCode_ForkReplaceStay::execute(MatchInput const& 
     return ExecutionResult::Fork_PrioLow;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_CheckBegin::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_CheckBegin::execute(MatchInput const& input, MatchState& state) const
 {
     auto is_at_line_boundary = [&] {
         if (state.string_position == 0)
@@ -295,7 +295,7 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckBegin::execute(MatchInput const& input
     return ExecutionResult::Failed_ExecuteLowPrioForks;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_CheckBoundary::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_CheckBoundary::execute(MatchInput const& input, MatchState& state) const
 {
     auto isword = [](auto ch) { return is_ascii_alphanumeric(ch) || ch == '_'; };
     auto is_word_boundary = [&] {
@@ -324,7 +324,7 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckBoundary::execute(MatchInput const& in
     VERIFY_NOT_REACHED();
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_CheckEnd::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_CheckEnd::execute(MatchInput const& input, MatchState& state) const
 {
     auto is_at_line_boundary = [&] {
         if (state.string_position == input.view.length())
@@ -347,7 +347,7 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckEnd::execute(MatchInput const& input, 
     return ExecutionResult::Failed_ExecuteLowPrioForks;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_ClearCaptureGroup::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_ClearCaptureGroup::execute(MatchInput const& input, MatchState& state) const
 {
     if (input.match_index < state.capture_group_matches.size()) {
         auto& group = state.capture_group_matches[input.match_index];
@@ -360,7 +360,7 @@ ALWAYS_INLINE ExecutionResult OpCode_ClearCaptureGroup::execute(MatchInput const
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_SaveLeftCaptureGroup::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_SaveLeftCaptureGroup::execute(MatchInput const& input, MatchState& state) const
 {
     if (input.match_index >= state.capture_group_matches.size()) {
         state.capture_group_matches.ensure_capacity(input.match_index);
@@ -380,7 +380,7 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveLeftCaptureGroup::execute(MatchInput co
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_SaveRightCaptureGroup::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_SaveRightCaptureGroup::execute(MatchInput const& input, MatchState& state) const
 {
     auto& match = state.capture_group_matches.at(input.match_index).at(id());
     auto start_position = match.left_column;
@@ -405,7 +405,7 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightCaptureGroup::execute(MatchInput c
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(MatchInput const& input, MatchState& state) const
 {
     auto& match = state.capture_group_matches.at(input.match_index).at(id());
     auto start_position = match.left_column;
@@ -430,7 +430,7 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(MatchIn
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, MatchState& state) const
 {
     bool inverse { false };
     bool temporary_inverse { false };
@@ -609,7 +609,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_char(MatchInput const& input, MatchState& state, u32 ch1, bool inverse, bool& inverse_matched)
+AK_ALWAYS_INLINE void OpCode_Compare::compare_char(MatchInput const& input, MatchState& state, u32 ch1, bool inverse, bool& inverse_matched)
 {
     if (state.string_position == input.view.length())
         return;
@@ -629,7 +629,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(MatchInput const& input, MatchSt
     }
 }
 
-ALWAYS_INLINE bool OpCode_Compare::compare_string(MatchInput const& input, MatchState& state, RegexStringView str, bool& had_zero_length_match)
+AK_ALWAYS_INLINE bool OpCode_Compare::compare_string(MatchInput const& input, MatchState& state, RegexStringView str, bool& had_zero_length_match)
 {
     if (state.string_position + str.length() > input.view.length()) {
         if (str.is_empty()) {
@@ -657,7 +657,7 @@ ALWAYS_INLINE bool OpCode_Compare::compare_string(MatchInput const& input, Match
     return equals;
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& input, MatchState& state, CharClass character_class, u32 ch, bool inverse, bool& inverse_matched)
+AK_ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& input, MatchState& state, CharClass character_class, u32 ch, bool inverse, bool& inverse_matched)
 {
     auto is_space_or_line_terminator = [](u32 code_point) {
         static auto space_separator = Unicode::general_category_from_string("Space_Separator"sv);
@@ -775,7 +775,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
     }
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_character_range(MatchInput const& input, MatchState& state, u32 from, u32 to, u32 ch, bool inverse, bool& inverse_matched)
+AK_ALWAYS_INLINE void OpCode_Compare::compare_character_range(MatchInput const& input, MatchState& state, u32 from, u32 to, u32 ch, bool inverse, bool& inverse_matched)
 {
     if (input.regex_options & AllFlags::Insensitive) {
         from = to_ascii_lowercase(from);
@@ -791,7 +791,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_range(MatchInput const& inp
     }
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_property(MatchInput const& input, MatchState& state, Unicode::Property property, bool inverse, bool& inverse_matched)
+AK_ALWAYS_INLINE void OpCode_Compare::compare_property(MatchInput const& input, MatchState& state, Unicode::Property property, bool inverse, bool& inverse_matched)
 {
     if (state.string_position == input.view.length())
         return;
@@ -807,7 +807,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_property(MatchInput const& input, Mat
     }
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_general_category(MatchInput const& input, MatchState& state, Unicode::GeneralCategory general_category, bool inverse, bool& inverse_matched)
+AK_ALWAYS_INLINE void OpCode_Compare::compare_general_category(MatchInput const& input, MatchState& state, Unicode::GeneralCategory general_category, bool inverse, bool& inverse_matched)
 {
     if (state.string_position == input.view.length())
         return;
@@ -823,7 +823,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_general_category(MatchInput const& in
     }
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_script(MatchInput const& input, MatchState& state, Unicode::Script script, bool inverse, bool& inverse_matched)
+AK_ALWAYS_INLINE void OpCode_Compare::compare_script(MatchInput const& input, MatchState& state, Unicode::Script script, bool inverse, bool& inverse_matched)
 {
     if (state.string_position == input.view.length())
         return;
@@ -839,7 +839,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_script(MatchInput const& input, Match
     }
 }
 
-ALWAYS_INLINE void OpCode_Compare::compare_script_extension(MatchInput const& input, MatchState& state, Unicode::Script script, bool inverse, bool& inverse_matched)
+AK_ALWAYS_INLINE void OpCode_Compare::compare_script_extension(MatchInput const& input, MatchState& state, Unicode::Script script, bool inverse, bool& inverse_matched)
 {
     if (state.string_position == input.view.length())
         return;
@@ -989,7 +989,7 @@ Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<MatchInput>
     return result;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_Repeat::execute(MatchInput const&, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_Repeat::execute(MatchInput const&, MatchState& state) const
 {
     VERIFY(count() > 0);
 
@@ -1007,7 +1007,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Repeat::execute(MatchInput const&, MatchSta
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_ResetRepeat::execute(MatchInput const&, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_ResetRepeat::execute(MatchInput const&, MatchState& state) const
 {
     if (id() >= state.repetition_marks.size())
         state.repetition_marks.resize(id() + 1);
@@ -1016,13 +1016,13 @@ ALWAYS_INLINE ExecutionResult OpCode_ResetRepeat::execute(MatchInput const&, Mat
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_Checkpoint::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_Checkpoint::execute(MatchInput const& input, MatchState& state) const
 {
     input.checkpoints.set(state.instruction_position, state.string_position);
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_JumpNonEmpty::execute(MatchInput const& input, MatchState& state) const
+AK_ALWAYS_INLINE ExecutionResult OpCode_JumpNonEmpty::execute(MatchInput const& input, MatchState& state) const
 {
     auto current_position = state.string_position;
     auto checkpoint_ip = state.instruction_position + size() + checkpoint();

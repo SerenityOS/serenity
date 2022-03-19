@@ -21,34 +21,34 @@ namespace AK::SIMD {
 // Functions ending in "_int_range" only accept arguments within range [INT_MIN, INT_MAX].
 // Other inputs will generate unexpected results.
 
-ALWAYS_INLINE static f32x4 truncate_int_range(f32x4 v)
+AK_ALWAYS_INLINE static f32x4 truncate_int_range(f32x4 v)
 {
     return to_f32x4(to_i32x4(v));
 }
 
-ALWAYS_INLINE static f32x4 floor_int_range(f32x4 v)
+AK_ALWAYS_INLINE static f32x4 floor_int_range(f32x4 v)
 {
     auto t = truncate_int_range(v);
     return t > v ? t - 1.0f : t;
 }
 
-ALWAYS_INLINE static f32x4 ceil_int_range(f32x4 v)
+AK_ALWAYS_INLINE static f32x4 ceil_int_range(f32x4 v)
 {
     auto t = truncate_int_range(v);
     return t < v ? t + 1.0f : t;
 }
 
-ALWAYS_INLINE static f32x4 frac_int_range(f32x4 v)
+AK_ALWAYS_INLINE static f32x4 frac_int_range(f32x4 v)
 {
     return v - floor_int_range(v);
 }
 
-ALWAYS_INLINE static f32x4 clamp(f32x4 v, f32x4 min, f32x4 max)
+AK_ALWAYS_INLINE static f32x4 clamp(f32x4 v, f32x4 min, f32x4 max)
 {
     return v < min ? min : (v > max ? max : v);
 }
 
-ALWAYS_INLINE static f32x4 exp(f32x4 v)
+AK_ALWAYS_INLINE static f32x4 exp(f32x4 v)
 {
     // FIXME: This should be replaced with a vectorized algorithm instead of calling the scalar expf 4 times
     return f32x4 {

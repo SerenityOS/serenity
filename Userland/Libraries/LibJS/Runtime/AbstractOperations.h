@@ -61,18 +61,18 @@ ThrowCompletionOr<Value> perform_eval(Value, GlobalObject&, CallerMode, EvalMode
 ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, GlobalObject& global_object, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict);
 
 // 7.3.14 Call ( F, V [ , argumentsList ] ), https://tc39.es/ecma262/#sec-call
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, MarkedVector<Value> arguments_list)
+AK_ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, MarkedVector<Value> arguments_list)
 {
     return call_impl(global_object, function, this_value, move(arguments_list));
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
+AK_ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
 {
     return call_impl(global_object, function, this_value, move(arguments_list));
 }
 
 template<typename... Args>
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Args&&... args)
+AK_ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value function, Value this_value, Args&&... args)
 {
     if constexpr (sizeof...(Args) > 0) {
         MarkedVector<Value> arguments_list { global_object.heap() };
@@ -83,18 +83,18 @@ ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Value f
     return call_impl(global_object, function, this_value);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, MarkedVector<Value> arguments_list)
+AK_ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, MarkedVector<Value> arguments_list)
 {
     return call_impl(global_object, function, this_value, move(arguments_list));
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
+AK_ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, Optional<MarkedVector<Value>> arguments_list)
 {
     return call_impl(global_object, function, this_value, move(arguments_list));
 }
 
 template<typename... Args>
-ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, Args&&... args)
+AK_ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, FunctionObject& function, Value this_value, Args&&... args)
 {
     if constexpr (sizeof...(Args) > 0) {
         MarkedVector<Value> arguments_list { global_object.heap() };
@@ -107,7 +107,7 @@ ALWAYS_INLINE ThrowCompletionOr<Value> call(GlobalObject& global_object, Functio
 
 // 7.3.15 Construct ( F [ , argumentsList [ , newTarget ] ] ), https://tc39.es/ecma262/#sec-construct
 template<typename... Args>
-ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, Args&&... args)
+AK_ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, Args&&... args)
 {
     if constexpr (sizeof...(Args) > 0) {
         MarkedVector<Value> arguments_list { global_object.heap() };
@@ -118,12 +118,12 @@ ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, 
     return construct_impl(global_object, function);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, MarkedVector<Value> arguments_list, FunctionObject* new_target = nullptr)
+AK_ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, MarkedVector<Value> arguments_list, FunctionObject* new_target = nullptr)
 {
     return construct_impl(global_object, function, move(arguments_list), new_target);
 }
 
-ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target = nullptr)
+AK_ALWAYS_INLINE ThrowCompletionOr<Object*> construct(GlobalObject& global_object, FunctionObject& function, Optional<MarkedVector<Value>> arguments_list, FunctionObject* new_target = nullptr)
 {
     return construct_impl(global_object, function, move(arguments_list), new_target);
 }

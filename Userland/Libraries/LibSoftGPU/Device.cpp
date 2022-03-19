@@ -70,7 +70,7 @@ static ColorType to_bgra32(FloatVector4 const& color)
     return a << 24 | r << 16 | g << 8 | b;
 }
 
-ALWAYS_INLINE static u32x4 to_bgra32(Vector4<f32x4> const& v)
+AK_ALWAYS_INLINE static u32x4 to_bgra32(Vector4<f32x4> const& v)
 {
     auto clamped = v.clamped(expand4(0.0f), expand4(1.0f));
     auto r = to_u32x4(clamped.x() * 255);
@@ -965,7 +965,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
     }
 }
 
-ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
+AK_ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
 {
     quad.out_color = quad.vertex_color;
 
@@ -1027,7 +1027,7 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
     }
 }
 
-ALWAYS_INLINE bool Device::test_alpha(PixelQuad& quad)
+AK_ALWAYS_INLINE bool Device::test_alpha(PixelQuad& quad)
 {
     auto const alpha = quad.out_color.w();
     auto const ref_value = expand4(m_options.alpha_test_ref_value);

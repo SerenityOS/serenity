@@ -26,14 +26,14 @@ template<typename T, typename PtrTraits>
 class RefPtr;
 
 template<typename T>
-ALWAYS_INLINE void ref_if_not_null(T* ptr)
+AK_ALWAYS_INLINE void ref_if_not_null(T* ptr)
 {
     if (ptr)
         ptr->ref();
 }
 
 template<typename T>
-ALWAYS_INLINE void unref_if_not_null(T* ptr)
+AK_ALWAYS_INLINE void unref_if_not_null(T* ptr)
 {
     if (ptr)
         ptr->unref();
@@ -53,47 +53,47 @@ public:
 
     enum AdoptTag { Adopt };
 
-    ALWAYS_INLINE NonnullRefPtr(const T& object)
+    AK_ALWAYS_INLINE NonnullRefPtr(const T& object)
         : m_bits((FlatPtr)&object)
     {
         VERIFY(!(m_bits & 1));
         const_cast<T&>(object).ref();
     }
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(const U& object) requires(IsConvertible<U*, T*>)
+    AK_ALWAYS_INLINE NonnullRefPtr(const U& object) requires(IsConvertible<U*, T*>)
         : m_bits((FlatPtr) static_cast<const T*>(&object))
     {
         VERIFY(!(m_bits & 1));
         const_cast<T&>(static_cast<const T&>(object)).ref();
     }
-    ALWAYS_INLINE NonnullRefPtr(AdoptTag, T& object)
+    AK_ALWAYS_INLINE NonnullRefPtr(AdoptTag, T& object)
         : m_bits((FlatPtr)&object)
     {
         VERIFY(!(m_bits & 1));
     }
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr&& other)
+    AK_ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr&& other)
         : m_bits((FlatPtr)&other.leak_ref())
     {
         VERIFY(!(m_bits & 1));
     }
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
+    AK_ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
         : m_bits((FlatPtr)&other.leak_ref())
     {
         VERIFY(!(m_bits & 1));
     }
-    ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr& other)
+    AK_ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr& other)
         : m_bits((FlatPtr)other.add_ref())
     {
         VERIFY(!(m_bits & 1));
     }
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr<U>& other) requires(IsConvertible<U*, T*>)
+    AK_ALWAYS_INLINE NonnullRefPtr(const NonnullRefPtr<U>& other) requires(IsConvertible<U*, T*>)
         : m_bits((FlatPtr)other.add_ref())
     {
         VERIFY(!(m_bits & 1));
     }
-    ALWAYS_INLINE ~NonnullRefPtr()
+    AK_ALWAYS_INLINE ~NonnullRefPtr()
     {
         assign(nullptr);
 #ifdef SANITIZE_PTRS
@@ -127,7 +127,7 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE NonnullRefPtr& operator=(NonnullRefPtr&& other)
+    AK_ALWAYS_INLINE NonnullRefPtr& operator=(NonnullRefPtr&& other)
     {
         if (this != &other)
             assign(&other.leak_ref());
@@ -148,54 +148,54 @@ public:
         return *this;
     }
 
-    [[nodiscard]] ALWAYS_INLINE T& leak_ref()
+    [[nodiscard]] AK_ALWAYS_INLINE T& leak_ref()
     {
         T* ptr = exchange(nullptr);
         VERIFY(ptr);
         return *ptr;
     }
 
-    ALWAYS_INLINE RETURNS_NONNULL T* ptr()
+    AK_ALWAYS_INLINE RETURNS_NONNULL T* ptr()
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL const T* ptr() const
-    {
-        return as_nonnull_ptr();
-    }
-
-    ALWAYS_INLINE RETURNS_NONNULL T* operator->()
-    {
-        return as_nonnull_ptr();
-    }
-    ALWAYS_INLINE RETURNS_NONNULL const T* operator->() const
+    AK_ALWAYS_INLINE RETURNS_NONNULL const T* ptr() const
     {
         return as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE T& operator*()
+    AK_ALWAYS_INLINE RETURNS_NONNULL T* operator->()
+    {
+        return as_nonnull_ptr();
+    }
+    AK_ALWAYS_INLINE RETURNS_NONNULL const T* operator->() const
+    {
+        return as_nonnull_ptr();
+    }
+
+    AK_ALWAYS_INLINE T& operator*()
     {
         return *as_nonnull_ptr();
     }
-    ALWAYS_INLINE const T& operator*() const
+    AK_ALWAYS_INLINE const T& operator*() const
     {
         return *as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE RETURNS_NONNULL operator T*()
+    AK_ALWAYS_INLINE RETURNS_NONNULL operator T*()
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL operator const T*() const
+    AK_ALWAYS_INLINE RETURNS_NONNULL operator const T*() const
     {
         return as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE operator T&()
+    AK_ALWAYS_INLINE operator T&()
     {
         return *as_nonnull_ptr();
     }
-    ALWAYS_INLINE operator const T&() const
+    AK_ALWAYS_INLINE operator const T&() const
     {
         return *as_nonnull_ptr();
     }
@@ -228,12 +228,12 @@ private:
     NonnullRefPtr() = delete;
     // clang-format on
 
-    ALWAYS_INLINE T* as_ptr() const
+    AK_ALWAYS_INLINE T* as_ptr() const
     {
         return (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
     }
 
-    ALWAYS_INLINE RETURNS_NONNULL T* as_nonnull_ptr() const
+    AK_ALWAYS_INLINE RETURNS_NONNULL T* as_nonnull_ptr() const
     {
         T* ptr = (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
         VERIFY(ptr);
@@ -261,13 +261,13 @@ private:
         m_bits.store(bits, AK::MemoryOrder::memory_order_release);
     }
 
-    ALWAYS_INLINE void assign(T* new_ptr)
+    AK_ALWAYS_INLINE void assign(T* new_ptr)
     {
         T* prev_ptr = exchange(new_ptr);
         unref_if_not_null(prev_ptr);
     }
 
-    ALWAYS_INLINE T* exchange(T* new_ptr)
+    AK_ALWAYS_INLINE T* exchange(T* new_ptr)
     {
         VERIFY(!((FlatPtr)new_ptr & 1));
 #ifdef KERNEL

@@ -92,9 +92,9 @@ private:
     void insert_separator(bool escaped = false);
     void insert_indent();
 
-    ALWAYS_INLINE void with_added_indent(int indent, Function<void()>);
-    ALWAYS_INLINE void in_new_block(Function<void()>);
-    ALWAYS_INLINE String in_new_builder(Function<void()>, StringBuilder new_builder = StringBuilder {});
+    AK_ALWAYS_INLINE void with_added_indent(int indent, Function<void()>);
+    AK_ALWAYS_INLINE void in_new_block(Function<void()>);
+    AK_ALWAYS_INLINE String in_new_builder(Function<void()>, StringBuilder new_builder = StringBuilder {});
 
     StringBuilder& current_builder() { return m_builders.last(); }
 

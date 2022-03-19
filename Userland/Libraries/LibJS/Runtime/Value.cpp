@@ -50,12 +50,12 @@ static inline bool same_type_for_equality(const Value& lhs, const Value& rhs)
 
 static const Crypto::SignedBigInteger BIGINT_ZERO { 0 };
 
-ALWAYS_INLINE bool both_number(const Value& lhs, const Value& rhs)
+AK_ALWAYS_INLINE bool both_number(const Value& lhs, const Value& rhs)
 {
     return lhs.is_number() && rhs.is_number();
 }
 
-ALWAYS_INLINE bool both_bigint(const Value& lhs, const Value& rhs)
+AK_ALWAYS_INLINE bool both_bigint(const Value& lhs, const Value& rhs)
 {
     return lhs.is_bigint() && rhs.is_bigint();
 }

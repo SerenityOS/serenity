@@ -26,7 +26,7 @@ public:
     using RefCountType = unsigned int;
     using AllowOwnPtr = FalseType;
 
-    ALWAYS_INLINE void ref() const
+    AK_ALWAYS_INLINE void ref() const
     {
         VERIFY(m_ref_count > 0);
         VERIFY(!Checked<RefCountType>::addition_would_overflow(m_ref_count, 1));
@@ -47,7 +47,7 @@ protected:
     RefCountedBase() = default;
     ~RefCountedBase() { VERIFY(!m_ref_count); }
 
-    ALWAYS_INLINE RefCountType deref_base() const
+    AK_ALWAYS_INLINE RefCountType deref_base() const
     {
         VERIFY(m_ref_count);
         return --m_ref_count;

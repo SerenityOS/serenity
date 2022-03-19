@@ -48,7 +48,7 @@ public:
     virtual StringView controller() const = 0;
 
     virtual bool eoi() = 0;
-    ALWAYS_INLINE void increment_invoking_counter()
+    AK_ALWAYS_INLINE void increment_invoking_counter()
     {
         m_invoking_count++;
     }

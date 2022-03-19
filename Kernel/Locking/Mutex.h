@@ -72,7 +72,7 @@ public:
 private:
     using BlockedThreadList = IntrusiveList<&Thread::m_blocked_threads_list_node>;
 
-    ALWAYS_INLINE BlockedThreadList& thread_list_for_mode(Mode mode)
+    AK_ALWAYS_INLINE BlockedThreadList& thread_list_for_mode(Mode mode)
     {
         VERIFY(mode == Mode::Exclusive || mode == Mode::Shared);
         return mode == Mode::Exclusive ? m_blocked_threads_list_exclusive : m_blocked_threads_list_shared;
@@ -110,25 +110,25 @@ class MutexLocker {
     AK_MAKE_NONCOPYABLE(MutexLocker);
 
 public:
-    ALWAYS_INLINE explicit MutexLocker()
+    AK_ALWAYS_INLINE explicit MutexLocker()
         : m_lock(nullptr)
         , m_locked(false)
     {
     }
 
-    ALWAYS_INLINE explicit MutexLocker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive, LockLocation const& location = LockLocation::current())
+    AK_ALWAYS_INLINE explicit MutexLocker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive, LockLocation const& location = LockLocation::current())
         : m_lock(&l)
     {
         m_lock->lock(mode, location);
     }
 
-    ALWAYS_INLINE ~MutexLocker()
+    AK_ALWAYS_INLINE ~MutexLocker()
     {
         if (m_locked)
             unlock();
     }
 
-    ALWAYS_INLINE void unlock()
+    AK_ALWAYS_INLINE void unlock()
     {
         VERIFY(m_lock);
         VERIFY(m_locked);
@@ -136,7 +136,7 @@ public:
         m_lock->unlock();
     }
 
-    ALWAYS_INLINE void attach_and_lock(Mutex& lock, Mutex::Mode mode = Mutex::Mode::Exclusive, LockLocation const& location = LockLocation::current())
+    AK_ALWAYS_INLINE void attach_and_lock(Mutex& lock, Mutex::Mode mode = Mutex::Mode::Exclusive, LockLocation const& location = LockLocation::current())
     {
         VERIFY(!m_locked);
         m_lock = &lock;
@@ -145,7 +145,7 @@ public:
         m_lock->lock(mode, location);
     }
 
-    ALWAYS_INLINE void lock(Mutex::Mode mode = Mutex::Mode::Exclusive, LockLocation const& location = LockLocation::current())
+    AK_ALWAYS_INLINE void lock(Mutex::Mode mode = Mutex::Mode::Exclusive, LockLocation const& location = LockLocation::current())
     {
         VERIFY(m_lock);
         VERIFY(!m_locked);

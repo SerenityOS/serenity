@@ -42,14 +42,14 @@ public:
     {
     }
 
-    [[nodiscard]] ALWAYS_INLINE T x() const { return m_x; }
-    [[nodiscard]] ALWAYS_INLINE T y() const { return m_y; }
+    [[nodiscard]] AK_ALWAYS_INLINE T x() const { return m_x; }
+    [[nodiscard]] AK_ALWAYS_INLINE T y() const { return m_y; }
 
-    ALWAYS_INLINE void set_x(T x) { m_x = x; }
-    ALWAYS_INLINE void set_y(T y) { m_y = y; }
+    AK_ALWAYS_INLINE void set_x(T x) { m_x = x; }
+    AK_ALWAYS_INLINE void set_y(T y) { m_y = y; }
 
-    [[nodiscard]] ALWAYS_INLINE bool is_null() const { return !m_x && !m_y; }
-    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return m_x <= 0 && m_y <= 0; }
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_null() const { return !m_x && !m_y; }
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_empty() const { return m_x <= 0 && m_y <= 0; }
 
     void translate_by(T dx, T dy)
     {
@@ -57,8 +57,8 @@ public:
         m_y += dy;
     }
 
-    ALWAYS_INLINE void translate_by(T dboth) { translate_by(dboth, dboth); }
-    ALWAYS_INLINE void translate_by(Point<T> const& delta) { translate_by(delta.x(), delta.y()); }
+    AK_ALWAYS_INLINE void translate_by(T dboth) { translate_by(dboth, dboth); }
+    AK_ALWAYS_INLINE void translate_by(Point<T> const& delta) { translate_by(delta.x(), delta.y()); }
 
     void scale_by(T dx, T dy)
     {
@@ -66,8 +66,8 @@ public:
         m_y *= dy;
     }
 
-    ALWAYS_INLINE void scale_by(T dboth) { scale_by(dboth, dboth); }
-    ALWAYS_INLINE void scale_by(Point<T> const& delta) { scale_by(delta.x(), delta.y()); }
+    AK_ALWAYS_INLINE void scale_by(T dboth) { scale_by(dboth, dboth); }
+    AK_ALWAYS_INLINE void scale_by(Point<T> const& delta) { scale_by(delta.x(), delta.y()); }
 
     void transform_by(AffineTransform const& transform) { *this = transform.map(*this); }
 

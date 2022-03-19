@@ -265,7 +265,7 @@ private:
 
     RefPtr<PhysicalPage> find_free_user_physical_page(bool);
 
-    ALWAYS_INLINE u8* quickmap_page(PhysicalPage& page)
+    AK_ALWAYS_INLINE u8* quickmap_page(PhysicalPage& page)
     {
         return quickmap_page(page.paddr());
     }

@@ -41,13 +41,13 @@ public:
 
     virtual StringView class_name() const = 0;
 
-    ALWAYS_INLINE void add_region(Region& region)
+    AK_ALWAYS_INLINE void add_region(Region& region)
     {
         SpinlockLocker locker(m_lock);
         m_regions.append(region);
     }
 
-    ALWAYS_INLINE void remove_region(Region& region)
+    AK_ALWAYS_INLINE void remove_region(Region& region)
     {
         SpinlockLocker locker(m_lock);
         m_regions.remove(region);

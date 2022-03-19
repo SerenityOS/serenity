@@ -79,7 +79,7 @@ public:
 
     float to_px(Layout::Node const&) const;
 
-    ALWAYS_INLINE float to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
+    AK_ALWAYS_INLINE float to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
     {
         if (is_auto())
             return 0;
@@ -90,7 +90,7 @@ public:
         return absolute_length_to_px();
     }
 
-    ALWAYS_INLINE float absolute_length_to_px() const
+    AK_ALWAYS_INLINE float absolute_length_to_px() const
     {
         constexpr float inch_pixels = 96.0f;
         constexpr float centimeter_pixels = (inch_pixels / 2.54f);

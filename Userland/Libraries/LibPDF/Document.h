@@ -78,7 +78,7 @@ class Document final
 public:
     static PDFErrorOr<NonnullRefPtr<Document>> create(ReadonlyBytes bytes);
 
-    ALWAYS_INLINE RefPtr<OutlineDict> const& outline() const { return m_outline; }
+    AK_ALWAYS_INLINE RefPtr<OutlineDict> const& outline() const { return m_outline; }
 
     [[nodiscard]] PDFErrorOr<Value> get_or_load_value(u32 index);
 
@@ -88,7 +88,7 @@ public:
 
     [[nodiscard]] PDFErrorOr<Page> get_page(u32 index);
 
-    ALWAYS_INLINE Value get_value(u32 index) const
+    AK_ALWAYS_INLINE Value get_value(u32 index) const
     {
         return m_values.get(index).value_or({});
     }

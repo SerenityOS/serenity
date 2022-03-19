@@ -134,7 +134,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] ALWAYS_INLINE size_t translate_to_vmobject_page(size_t page_index) const
+    [[nodiscard]] AK_ALWAYS_INLINE size_t translate_to_vmobject_page(size_t page_index) const
     {
         return first_page_index() + page_index;
     }

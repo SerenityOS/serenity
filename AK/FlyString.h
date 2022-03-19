@@ -68,8 +68,8 @@ public:
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
     size_t length() const { return m_impl ? m_impl->length() : 0; }
 
-    ALWAYS_INLINE u32 hash() const { return m_impl ? m_impl->existing_hash() : 0; }
-    ALWAYS_INLINE StringView view() const { return m_impl ? m_impl->view() : StringView {}; }
+    AK_ALWAYS_INLINE u32 hash() const { return m_impl ? m_impl->existing_hash() : 0; }
+    AK_ALWAYS_INLINE StringView view() const { return m_impl ? m_impl->view() : StringView {}; }
 
     FlyString to_lowercase() const;
 
@@ -85,7 +85,7 @@ public:
     static void did_destroy_impl(Badge<StringImpl>, StringImpl&);
 
     template<typename... Ts>
-    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts... strings) const
+    [[nodiscard]] AK_ALWAYS_INLINE constexpr bool is_one_of(Ts... strings) const
     {
         return (... || this->operator==(forward<Ts>(strings)));
     }

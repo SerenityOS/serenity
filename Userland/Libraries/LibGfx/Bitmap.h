@@ -140,12 +140,12 @@ public:
     [[nodiscard]] int physical_height() const { return physical_size().height(); }
     [[nodiscard]] size_t pitch() const { return m_pitch; }
 
-    [[nodiscard]] ALWAYS_INLINE bool is_indexed() const
+    [[nodiscard]] AK_ALWAYS_INLINE bool is_indexed() const
     {
         return is_indexed(m_format);
     }
 
-    [[nodiscard]] ALWAYS_INLINE static bool is_indexed(BitmapFormat format)
+    [[nodiscard]] AK_ALWAYS_INLINE static bool is_indexed(BitmapFormat format)
     {
         return format == BitmapFormat::Indexed8 || format == BitmapFormat::Indexed4
             || format == BitmapFormat::Indexed2 || format == BitmapFormat::Indexed1;

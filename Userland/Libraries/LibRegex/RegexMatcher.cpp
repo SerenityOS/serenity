@@ -335,7 +335,7 @@ class BumpAllocatedLinkedList {
 public:
     BumpAllocatedLinkedList() = default;
 
-    ALWAYS_INLINE void append(T value)
+    AK_ALWAYS_INLINE void append(T value)
     {
         auto node_ptr = m_allocator.allocate(move(value));
         VERIFY(node_ptr);
@@ -351,7 +351,7 @@ public:
         m_last = node_ptr;
     }
 
-    ALWAYS_INLINE T take_last()
+    AK_ALWAYS_INLINE T take_last()
     {
         VERIFY(m_last);
         T value = move(m_last->value);
@@ -365,12 +365,12 @@ public:
         return value;
     }
 
-    ALWAYS_INLINE T& last()
+    AK_ALWAYS_INLINE T& last()
     {
         return m_last->value;
     }
 
-    ALWAYS_INLINE bool is_empty() const
+    AK_ALWAYS_INLINE bool is_empty() const
     {
         return m_first == nullptr;
     }

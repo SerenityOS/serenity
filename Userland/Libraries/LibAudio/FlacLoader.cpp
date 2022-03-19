@@ -698,7 +698,7 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i32>& decoded, FlacSub
 }
 
 // Decode a single Rice partition as part of the residual, every partition can have its own Rice parameter k
-ALWAYS_INLINE ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
+AK_ALWAYS_INLINE ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
     // Rice parameter / Exp-Golomb order
     u8 k = LOADER_TRY(bit_input.read_bits<u8>(partition_type));
@@ -730,7 +730,7 @@ ALWAYS_INLINE ErrorOr<Vector<i32>, LoaderError> FlacLoaderPlugin::decode_rice_pa
 }
 
 // Decode a single number encoded with Rice/Exponential-Golomb encoding (the unsigned variant)
-ALWAYS_INLINE ErrorOr<i32> decode_unsigned_exp_golomb(u8 k, BigEndianInputBitStream& bit_input)
+AK_ALWAYS_INLINE ErrorOr<i32> decode_unsigned_exp_golomb(u8 k, BigEndianInputBitStream& bit_input)
 {
     u8 q = 0;
     while (TRY(bit_input.read_bit()) == 0)

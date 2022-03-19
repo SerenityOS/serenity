@@ -114,7 +114,7 @@ bool KeypadValue::operator==(KeypadValue const& rhs)
 // Unfortunately, not all operators are symmetric, so the last boolean tells the callback whether the left-hand side
 // was the KeypadValue with less decimal places (true), or the one with more decimal places (false).
 template<typename T, typename F>
-ALWAYS_INLINE T KeypadValue::operator_helper(KeypadValue const& lhs, KeypadValue const& rhs, F callback)
+AK_ALWAYS_INLINE T KeypadValue::operator_helper(KeypadValue const& lhs, KeypadValue const& rhs, F callback)
 {
     KeypadValue const& less_decimal_places = (lhs.m_decimal_places < rhs.m_decimal_places) ? lhs : rhs;
     KeypadValue const& more_decimal_places = (lhs.m_decimal_places < rhs.m_decimal_places) ? rhs : lhs;

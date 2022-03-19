@@ -652,8 +652,8 @@ public:
 
     public:
         OpenFileDescriptions() { }
-        ALWAYS_INLINE const OpenFileDescriptionAndFlags& operator[](size_t i) const { return at(i); }
-        ALWAYS_INLINE OpenFileDescriptionAndFlags& operator[](size_t i) { return at(i); }
+        AK_ALWAYS_INLINE const OpenFileDescriptionAndFlags& operator[](size_t i) const { return at(i); }
+        AK_ALWAYS_INLINE OpenFileDescriptionAndFlags& operator[](size_t i) { return at(i); }
 
         ErrorOr<void> try_clone(const Kernel::Process::OpenFileDescriptions& other)
         {

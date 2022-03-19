@@ -39,10 +39,10 @@
 #    define AK_HAS_CONDITIONALLY_TRIVIAL
 #endif
 
-#ifdef ALWAYS_INLINE
-#    undef ALWAYS_INLINE
+#ifdef AK_ALWAYS_INLINE
+#    undef AK_ALWAYS_INLINE
 #endif
-#define ALWAYS_INLINE __attribute__((always_inline)) inline
+#define AK_ALWAYS_INLINE __attribute__((always_inline)) inline
 
 #ifdef NEVER_INLINE
 #    undef NEVER_INLINE

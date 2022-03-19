@@ -298,7 +298,7 @@ private:
     Vector<Array<TextureCoordinateGeneration, 4>> m_texture_coordinate_generation;
     bool m_texcoord_generation_dirty { true };
 
-    ALWAYS_INLINE TextureCoordinateGeneration& texture_coordinate_generation(size_t texture_unit, GLenum capability)
+    AK_ALWAYS_INLINE TextureCoordinateGeneration& texture_coordinate_generation(size_t texture_unit, GLenum capability)
     {
         return m_texture_coordinate_generation[texture_unit][capability - GL_TEXTURE_GEN_S];
     }

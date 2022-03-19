@@ -57,7 +57,7 @@ Heap::~Heap()
     collect_garbage(CollectionType::CollectEverything);
 }
 
-ALWAYS_INLINE CellAllocator& Heap::allocator_for_size(size_t cell_size)
+AK_ALWAYS_INLINE CellAllocator& Heap::allocator_for_size(size_t cell_size)
 {
     for (auto& allocator : m_allocators) {
         if (allocator->cell_size() >= cell_size)

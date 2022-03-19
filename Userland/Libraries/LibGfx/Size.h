@@ -38,15 +38,15 @@ public:
     {
     }
 
-    [[nodiscard]] ALWAYS_INLINE constexpr T width() const { return m_width; }
-    [[nodiscard]] ALWAYS_INLINE constexpr T height() const { return m_height; }
-    [[nodiscard]] ALWAYS_INLINE constexpr T area() const { return width() * height(); }
+    [[nodiscard]] AK_ALWAYS_INLINE constexpr T width() const { return m_width; }
+    [[nodiscard]] AK_ALWAYS_INLINE constexpr T height() const { return m_height; }
+    [[nodiscard]] AK_ALWAYS_INLINE constexpr T area() const { return width() * height(); }
 
-    ALWAYS_INLINE constexpr void set_width(T w) { m_width = w; }
-    ALWAYS_INLINE constexpr void set_height(T h) { m_height = h; }
+    AK_ALWAYS_INLINE constexpr void set_width(T w) { m_width = w; }
+    AK_ALWAYS_INLINE constexpr void set_height(T h) { m_height = h; }
 
-    [[nodiscard]] ALWAYS_INLINE constexpr bool is_null() const { return !m_width && !m_height; }
-    [[nodiscard]] ALWAYS_INLINE constexpr bool is_empty() const { return m_width <= 0 || m_height <= 0; }
+    [[nodiscard]] AK_ALWAYS_INLINE constexpr bool is_null() const { return !m_width && !m_height; }
+    [[nodiscard]] AK_ALWAYS_INLINE constexpr bool is_empty() const { return m_width <= 0 || m_height <= 0; }
 
     constexpr void scale_by(T dx, T dy)
     {
@@ -56,8 +56,8 @@ public:
 
     constexpr void transform_by(AffineTransform const& transform) { *this = transform.map(*this); }
 
-    ALWAYS_INLINE constexpr void scale_by(T dboth) { scale_by(dboth, dboth); }
-    ALWAYS_INLINE constexpr void scale_by(Point<T> const& s) { scale_by(s.x(), s.y()); }
+    AK_ALWAYS_INLINE constexpr void scale_by(T dboth) { scale_by(dboth, dboth); }
+    AK_ALWAYS_INLINE constexpr void scale_by(Point<T> const& s) { scale_by(s.x(), s.y()); }
 
     [[nodiscard]] constexpr Size scaled_by(T dx, T dy) const
     {
@@ -157,7 +157,7 @@ public:
     }
 
     template<typename U>
-    [[nodiscard]] ALWAYS_INLINE constexpr Size<U> to_type() const
+    [[nodiscard]] AK_ALWAYS_INLINE constexpr Size<U> to_type() const
     {
         return Size<U>(*this);
     }

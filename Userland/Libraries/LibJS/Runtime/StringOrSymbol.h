@@ -58,17 +58,17 @@ public:
         m_ptr = exchange(other.m_ptr, nullptr);
     }
 
-    ALWAYS_INLINE bool is_valid() const { return m_ptr != nullptr; }
-    ALWAYS_INLINE bool is_symbol() const { return is_valid() && (bits() & 1ul); }
-    ALWAYS_INLINE bool is_string() const { return is_valid() && !(bits() & 1ul); }
+    AK_ALWAYS_INLINE bool is_valid() const { return m_ptr != nullptr; }
+    AK_ALWAYS_INLINE bool is_symbol() const { return is_valid() && (bits() & 1ul); }
+    AK_ALWAYS_INLINE bool is_string() const { return is_valid() && !(bits() & 1ul); }
 
-    ALWAYS_INLINE FlyString as_string() const
+    AK_ALWAYS_INLINE FlyString as_string() const
     {
         VERIFY(is_string());
         return FlyString::from_fly_impl(as_string_impl());
     }
 
-    ALWAYS_INLINE Symbol const* as_symbol() const
+    AK_ALWAYS_INLINE Symbol const* as_symbol() const
     {
         VERIFY(is_symbol());
         return reinterpret_cast<Symbol const*>(bits() & ~1ul);
@@ -98,7 +98,7 @@ public:
             visitor.visit(const_cast<Symbol*>(as_symbol()));
     }
 
-    ALWAYS_INLINE bool operator==(StringOrSymbol const& other) const
+    AK_ALWAYS_INLINE bool operator==(StringOrSymbol const& other) const
     {
         if (is_string())
             return other.is_string() && &as_string_impl() == &other.as_string_impl();
@@ -132,17 +132,17 @@ public:
     }
 
 private:
-    ALWAYS_INLINE u64 bits() const
+    AK_ALWAYS_INLINE u64 bits() const
     {
         return reinterpret_cast<uintptr_t>(m_ptr);
     }
 
-    ALWAYS_INLINE void set_symbol_flag()
+    AK_ALWAYS_INLINE void set_symbol_flag()
     {
         m_ptr = reinterpret_cast<void const*>(bits() | 1ul);
     }
 
-    ALWAYS_INLINE StringImpl const& as_string_impl() const
+    AK_ALWAYS_INLINE StringImpl const& as_string_impl() const
     {
         VERIFY(is_string());
         return *reinterpret_cast<StringImpl const*>(m_ptr);

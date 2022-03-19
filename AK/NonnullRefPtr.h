@@ -25,14 +25,14 @@ template<typename T, typename PtrTraits>
 class RefPtr;
 
 template<typename T>
-ALWAYS_INLINE void ref_if_not_null(T* ptr)
+AK_ALWAYS_INLINE void ref_if_not_null(T* ptr)
 {
     if (ptr)
         ptr->ref();
 }
 
 template<typename T>
-ALWAYS_INLINE void unref_if_not_null(T* ptr)
+AK_ALWAYS_INLINE void unref_if_not_null(T* ptr)
 {
     if (ptr)
         ptr->unref();
@@ -52,49 +52,49 @@ public:
 
     enum AdoptTag { Adopt };
 
-    ALWAYS_INLINE NonnullRefPtr(T const& object)
+    AK_ALWAYS_INLINE NonnullRefPtr(T const& object)
         : m_ptr(const_cast<T*>(&object))
     {
         m_ptr->ref();
     }
 
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(U const& object) requires(IsConvertible<U*, T*>)
+    AK_ALWAYS_INLINE NonnullRefPtr(U const& object) requires(IsConvertible<U*, T*>)
         : m_ptr(const_cast<T*>(static_cast<T const*>(&object)))
     {
         m_ptr->ref();
     }
 
-    ALWAYS_INLINE NonnullRefPtr(AdoptTag, T& object)
+    AK_ALWAYS_INLINE NonnullRefPtr(AdoptTag, T& object)
         : m_ptr(&object)
     {
     }
 
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr&& other)
+    AK_ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr&& other)
         : m_ptr(&other.leak_ref())
     {
     }
 
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
+    AK_ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U>&& other) requires(IsConvertible<U*, T*>)
         : m_ptr(static_cast<T*>(&other.leak_ref()))
     {
     }
 
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr const& other)
+    AK_ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr const& other)
         : m_ptr(const_cast<T*>(other.ptr()))
     {
         m_ptr->ref();
     }
 
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
+    AK_ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U> const& other) requires(IsConvertible<U*, T*>)
         : m_ptr(const_cast<T*>(static_cast<T const*>(other.ptr())))
     {
         m_ptr->ref();
     }
 
-    ALWAYS_INLINE ~NonnullRefPtr()
+    AK_ALWAYS_INLINE ~NonnullRefPtr()
     {
         unref_if_not_null(m_ptr);
         m_ptr = nullptr;
@@ -130,7 +130,7 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE NonnullRefPtr& operator=(NonnullRefPtr&& other)
+    AK_ALWAYS_INLINE NonnullRefPtr& operator=(NonnullRefPtr&& other)
     {
         NonnullRefPtr tmp { move(other) };
         swap(tmp);
@@ -152,54 +152,54 @@ public:
         return *this;
     }
 
-    [[nodiscard]] ALWAYS_INLINE T& leak_ref()
+    [[nodiscard]] AK_ALWAYS_INLINE T& leak_ref()
     {
         T* ptr = exchange(m_ptr, nullptr);
         VERIFY(ptr);
         return *ptr;
     }
 
-    ALWAYS_INLINE RETURNS_NONNULL T* ptr()
+    AK_ALWAYS_INLINE RETURNS_NONNULL T* ptr()
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL const T* ptr() const
-    {
-        return as_nonnull_ptr();
-    }
-
-    ALWAYS_INLINE RETURNS_NONNULL T* operator->()
-    {
-        return as_nonnull_ptr();
-    }
-    ALWAYS_INLINE RETURNS_NONNULL const T* operator->() const
+    AK_ALWAYS_INLINE RETURNS_NONNULL const T* ptr() const
     {
         return as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE T& operator*()
+    AK_ALWAYS_INLINE RETURNS_NONNULL T* operator->()
+    {
+        return as_nonnull_ptr();
+    }
+    AK_ALWAYS_INLINE RETURNS_NONNULL const T* operator->() const
+    {
+        return as_nonnull_ptr();
+    }
+
+    AK_ALWAYS_INLINE T& operator*()
     {
         return *as_nonnull_ptr();
     }
-    ALWAYS_INLINE const T& operator*() const
+    AK_ALWAYS_INLINE const T& operator*() const
     {
         return *as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE RETURNS_NONNULL operator T*()
+    AK_ALWAYS_INLINE RETURNS_NONNULL operator T*()
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE RETURNS_NONNULL operator const T*() const
+    AK_ALWAYS_INLINE RETURNS_NONNULL operator const T*() const
     {
         return as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE operator T&()
+    AK_ALWAYS_INLINE operator T&()
     {
         return *as_nonnull_ptr();
     }
-    ALWAYS_INLINE operator const T&() const
+    AK_ALWAYS_INLINE operator const T&() const
     {
         return *as_nonnull_ptr();
     }
@@ -223,7 +223,7 @@ private:
     NonnullRefPtr() = delete;
     // clang-format on
 
-    ALWAYS_INLINE RETURNS_NONNULL T* as_nonnull_ptr() const
+    AK_ALWAYS_INLINE RETURNS_NONNULL T* as_nonnull_ptr() const
     {
         VERIFY(m_ptr);
         return m_ptr;

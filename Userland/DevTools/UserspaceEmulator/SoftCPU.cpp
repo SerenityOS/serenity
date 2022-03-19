@@ -46,7 +46,7 @@
 namespace UserspaceEmulator {
 
 template<typename T>
-ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* message)
+AK_ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* message)
 {
     if (value_with_shadow.is_uninitialized()) [[unlikely]] {
         reportln("\033[31;1mWarning! Use of uninitialized value: {}\033[0m\n", message);
@@ -54,7 +54,7 @@ ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* messag
     }
 }
 
-ALWAYS_INLINE void SoftCPU::warn_if_flags_tainted(const char* message) const
+AK_ALWAYS_INLINE void SoftCPU::warn_if_flags_tainted(const char* message) const
 {
     if (m_flags_tainted) [[unlikely]] {
         reportln("\n=={}==  \033[31;1mConditional depends on uninitialized data\033[0m ({})\n", getpid(), message);
@@ -265,7 +265,7 @@ void SoftCPU::do_once_or_repeat(const X86::Instruction& insn, Callback callback)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_inc(SoftCPU& cpu, T data)
+AK_ALWAYS_INLINE static T op_inc(SoftCPU& cpu, T data)
 {
     typename T::ValueType result;
     u32 new_flags = 0;
@@ -295,7 +295,7 @@ ALWAYS_INLINE static T op_inc(SoftCPU& cpu, T data)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_dec(SoftCPU& cpu, T data)
+AK_ALWAYS_INLINE static T op_dec(SoftCPU& cpu, T data)
 {
     typename T::ValueType result;
     u32 new_flags = 0;
@@ -325,7 +325,7 @@ ALWAYS_INLINE static T op_dec(SoftCPU& cpu, T data)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
+AK_ALWAYS_INLINE static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
 {
     typename T::ValueType result;
     u32 new_flags = 0;
@@ -357,7 +357,7 @@ ALWAYS_INLINE static T op_xor(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_or(SoftCPU& cpu, const T& dest, const T& src)
+AK_ALWAYS_INLINE static T op_or(SoftCPU& cpu, const T& dest, const T& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -389,7 +389,7 @@ ALWAYS_INLINE static T op_or(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
+AK_ALWAYS_INLINE static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -421,7 +421,7 @@ ALWAYS_INLINE static T op_sub(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T, bool cf>
-ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
+AK_ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -458,7 +458,7 @@ ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
+AK_ALWAYS_INLINE static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
 {
     cpu.warn_if_flags_tainted("sbb");
     if (cpu.cf())
@@ -467,7 +467,7 @@ ALWAYS_INLINE static T op_sbb(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, const T& src)
+AK_ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, const T& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -499,7 +499,7 @@ ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T, bool cf>
-ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
+AK_ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -536,7 +536,7 @@ ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_adc(SoftCPU& cpu, T& dest, const T& src)
+AK_ALWAYS_INLINE static T op_adc(SoftCPU& cpu, T& dest, const T& src)
 {
     cpu.warn_if_flags_tainted("adc");
     if (cpu.cf())
@@ -545,7 +545,7 @@ ALWAYS_INLINE static T op_adc(SoftCPU& cpu, T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_and(SoftCPU& cpu, const T& dest, const T& src)
+AK_ALWAYS_INLINE static T op_and(SoftCPU& cpu, const T& dest, const T& src)
 {
     typename T::ValueType result = 0;
     u32 new_flags = 0;
@@ -577,7 +577,7 @@ ALWAYS_INLINE static T op_and(SoftCPU& cpu, const T& dest, const T& src)
 }
 
 template<typename T>
-ALWAYS_INLINE static void op_imul(SoftCPU& cpu, const T& dest, const T& src, T& result_high, T& result_low)
+AK_ALWAYS_INLINE static void op_imul(SoftCPU& cpu, const T& dest, const T& src, T& result_high, T& result_low)
 {
     bool did_overflow = false;
     if constexpr (sizeof(T) == 4) {
@@ -607,7 +607,7 @@ ALWAYS_INLINE static void op_imul(SoftCPU& cpu, const T& dest, const T& src, T& 
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_shr(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
+AK_ALWAYS_INLINE static T op_shr(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 {
     if (steps.value() == 0)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
@@ -640,7 +640,7 @@ ALWAYS_INLINE static T op_shr(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_shl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
+AK_ALWAYS_INLINE static T op_shl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 {
     if (steps.value() == 0)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
@@ -673,7 +673,7 @@ ALWAYS_INLINE static T op_shl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_shrd(SoftCPU& cpu, T data, T extra_bits, ValueWithShadow<u8> steps)
+AK_ALWAYS_INLINE static T op_shrd(SoftCPU& cpu, T data, T extra_bits, ValueWithShadow<u8> steps)
 {
     if (steps.value() == 0)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
@@ -702,7 +702,7 @@ ALWAYS_INLINE static T op_shrd(SoftCPU& cpu, T data, T extra_bits, ValueWithShad
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_shld(SoftCPU& cpu, T data, T extra_bits, ValueWithShadow<u8> steps)
+AK_ALWAYS_INLINE static T op_shld(SoftCPU& cpu, T data, T extra_bits, ValueWithShadow<u8> steps)
 {
     if (steps.value() == 0)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
@@ -731,7 +731,7 @@ ALWAYS_INLINE static T op_shld(SoftCPU& cpu, T data, T extra_bits, ValueWithShad
 }
 
 template<bool update_dest, bool is_or, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_AL_imm8(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_AL_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = al();
     auto src = shadow_wrap_as_initialized(insn.imm8());
@@ -743,7 +743,7 @@ ALWAYS_INLINE void SoftCPU::generic_AL_imm8(Op op, const X86::Instruction& insn)
 }
 
 template<bool update_dest, bool is_or, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_AX_imm16(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_AX_imm16(Op op, const X86::Instruction& insn)
 {
     auto dest = ax();
     auto src = shadow_wrap_as_initialized(insn.imm16());
@@ -755,7 +755,7 @@ ALWAYS_INLINE void SoftCPU::generic_AX_imm16(Op op, const X86::Instruction& insn
 }
 
 template<bool update_dest, bool is_or, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_EAX_imm32(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_EAX_imm32(Op op, const X86::Instruction& insn)
 {
     auto dest = eax();
     auto src = shadow_wrap_as_initialized(insn.imm32());
@@ -767,7 +767,7 @@ ALWAYS_INLINE void SoftCPU::generic_EAX_imm32(Op op, const X86::Instruction& ins
 }
 
 template<bool update_dest, bool is_or, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM16_imm16(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM16_imm16(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read16(*this, insn);
     auto src = shadow_wrap_as_initialized(insn.imm16());
@@ -779,7 +779,7 @@ ALWAYS_INLINE void SoftCPU::generic_RM16_imm16(Op op, const X86::Instruction& in
 }
 
 template<bool update_dest, bool is_or, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM16_imm8(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM16_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read16(*this, insn);
     auto src = shadow_wrap_as_initialized<u16>(sign_extended_to<u16>(insn.imm8()));
@@ -791,7 +791,7 @@ ALWAYS_INLINE void SoftCPU::generic_RM16_imm8(Op op, const X86::Instruction& ins
 }
 
 template<bool update_dest, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM16_unsigned_imm8(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM16_unsigned_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read16(*this, insn);
     auto src = shadow_wrap_as_initialized(insn.imm8());
@@ -801,7 +801,7 @@ ALWAYS_INLINE void SoftCPU::generic_RM16_unsigned_imm8(Op op, const X86::Instruc
 }
 
 template<bool update_dest, bool dont_taint_for_same_operand, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM16_reg16(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM16_reg16(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read16(*this, insn);
     auto src = const_gpr16(insn.reg16());
@@ -815,7 +815,7 @@ ALWAYS_INLINE void SoftCPU::generic_RM16_reg16(Op op, const X86::Instruction& in
 }
 
 template<bool update_dest, bool is_or, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM32_imm32(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM32_imm32(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read32(*this, insn);
     auto src = insn.imm32();
@@ -827,7 +827,7 @@ ALWAYS_INLINE void SoftCPU::generic_RM32_imm32(Op op, const X86::Instruction& in
 }
 
 template<bool update_dest, bool is_or, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM32_imm8(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM32_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read32(*this, insn);
     auto src = sign_extended_to<u32>(insn.imm8());
@@ -839,7 +839,7 @@ ALWAYS_INLINE void SoftCPU::generic_RM32_imm8(Op op, const X86::Instruction& ins
 }
 
 template<bool update_dest, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM32_unsigned_imm8(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM32_unsigned_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read32(*this, insn);
     auto src = shadow_wrap_as_initialized(insn.imm8());
@@ -849,7 +849,7 @@ ALWAYS_INLINE void SoftCPU::generic_RM32_unsigned_imm8(Op op, const X86::Instruc
 }
 
 template<bool update_dest, bool dont_taint_for_same_operand, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM32_reg32(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM32_reg32(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read32(*this, insn);
     auto src = const_gpr32(insn.reg32());
@@ -863,7 +863,7 @@ ALWAYS_INLINE void SoftCPU::generic_RM32_reg32(Op op, const X86::Instruction& in
 }
 
 template<bool update_dest, bool is_or, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM8_imm8(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM8_imm8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read8(*this, insn);
     auto src = insn.imm8();
@@ -875,7 +875,7 @@ ALWAYS_INLINE void SoftCPU::generic_RM8_imm8(Op op, const X86::Instruction& insn
 }
 
 template<bool update_dest, bool dont_taint_for_same_operand, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM8_reg8(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM8_reg8(Op op, const X86::Instruction& insn)
 {
     auto dest = insn.modrm().read8(*this, insn);
     auto src = const_gpr8(insn.reg8());
@@ -889,7 +889,7 @@ ALWAYS_INLINE void SoftCPU::generic_RM8_reg8(Op op, const X86::Instruction& insn
 }
 
 template<bool update_dest, bool dont_taint_for_same_operand, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_reg16_RM16(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_reg16_RM16(Op op, const X86::Instruction& insn)
 {
     auto dest = const_gpr16(insn.reg16());
     auto src = insn.modrm().read16(*this, insn);
@@ -903,7 +903,7 @@ ALWAYS_INLINE void SoftCPU::generic_reg16_RM16(Op op, const X86::Instruction& in
 }
 
 template<bool update_dest, bool dont_taint_for_same_operand, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_reg32_RM32(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_reg32_RM32(Op op, const X86::Instruction& insn)
 {
     auto dest = const_gpr32(insn.reg32());
     auto src = insn.modrm().read32(*this, insn);
@@ -917,7 +917,7 @@ ALWAYS_INLINE void SoftCPU::generic_reg32_RM32(Op op, const X86::Instruction& in
 }
 
 template<bool update_dest, bool dont_taint_for_same_operand, typename Op>
-ALWAYS_INLINE void SoftCPU::generic_reg8_RM8(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_reg8_RM8(Op op, const X86::Instruction& insn)
 {
     auto dest = const_gpr8(insn.reg8());
     auto src = insn.modrm().read8(*this, insn);
@@ -931,42 +931,42 @@ ALWAYS_INLINE void SoftCPU::generic_reg8_RM8(Op op, const X86::Instruction& insn
 }
 
 template<typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM8_1(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM8_1(Op op, const X86::Instruction& insn)
 {
     auto data = insn.modrm().read8(*this, insn);
     insn.modrm().write8(*this, insn, op(*this, data, shadow_wrap_as_initialized<u8>(1)));
 }
 
 template<typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM8_CL(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM8_CL(Op op, const X86::Instruction& insn)
 {
     auto data = insn.modrm().read8(*this, insn);
     insn.modrm().write8(*this, insn, op(*this, data, cl()));
 }
 
 template<typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM16_1(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM16_1(Op op, const X86::Instruction& insn)
 {
     auto data = insn.modrm().read16(*this, insn);
     insn.modrm().write16(*this, insn, op(*this, data, shadow_wrap_as_initialized<u8>(1)));
 }
 
 template<typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM16_CL(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM16_CL(Op op, const X86::Instruction& insn)
 {
     auto data = insn.modrm().read16(*this, insn);
     insn.modrm().write16(*this, insn, op(*this, data, cl()));
 }
 
 template<typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM32_1(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM32_1(Op op, const X86::Instruction& insn)
 {
     auto data = insn.modrm().read32(*this, insn);
     insn.modrm().write32(*this, insn, op(*this, data, shadow_wrap_as_initialized<u8>(1)));
 }
 
 template<typename Op>
-ALWAYS_INLINE void SoftCPU::generic_RM32_CL(Op op, const X86::Instruction& insn)
+AK_ALWAYS_INLINE void SoftCPU::generic_RM32_CL(Op op, const X86::Instruction& insn)
 {
     auto data = insn.modrm().read32(*this, insn);
     insn.modrm().write32(*this, insn, op(*this, data, cl()));
@@ -980,13 +980,13 @@ void SoftCPU::ARPL(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::BOUND(const X86::Instruction&) { TODO_INSN(); }
 
 template<typename T>
-ALWAYS_INLINE static T op_bsf(SoftCPU&, T value)
+AK_ALWAYS_INLINE static T op_bsf(SoftCPU&, T value)
 {
     return { (typename T::ValueType)bit_scan_forward(value.value()), value.shadow() };
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_bsr(SoftCPU&, T value)
+AK_ALWAYS_INLINE static T op_bsr(SoftCPU&, T value)
 {
     typename T::ValueType bit_index = 0;
     if constexpr (sizeof(typename T::ValueType) == 4) {
@@ -1047,31 +1047,31 @@ void SoftCPU::BSWAP_reg32(const X86::Instruction& insn)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_bt(T value, T)
+AK_ALWAYS_INLINE static T op_bt(T value, T)
 {
     return value;
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_bts(T value, T bit_mask)
+AK_ALWAYS_INLINE static T op_bts(T value, T bit_mask)
 {
     return value | bit_mask;
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_btr(T value, T bit_mask)
+AK_ALWAYS_INLINE static T op_btr(T value, T bit_mask)
 {
     return value & ~bit_mask;
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_btc(T value, T bit_mask)
+AK_ALWAYS_INLINE static T op_btc(T value, T bit_mask)
 {
     return value ^ bit_mask;
 }
 
 template<bool should_update, typename Op>
-ALWAYS_INLINE void BTx_RM16_reg16(SoftCPU& cpu, const X86::Instruction& insn, Op op)
+AK_ALWAYS_INLINE void BTx_RM16_reg16(SoftCPU& cpu, const X86::Instruction& insn, Op op)
 {
     if (insn.modrm().is_register()) {
         unsigned bit_index = cpu.const_gpr16(insn.reg16()).value() & (X86::TypeTrivia<u16>::bits - 1);
@@ -1099,7 +1099,7 @@ ALWAYS_INLINE void BTx_RM16_reg16(SoftCPU& cpu, const X86::Instruction& insn, Op
 }
 
 template<bool should_update, typename Op>
-ALWAYS_INLINE void BTx_RM32_reg32(SoftCPU& cpu, const X86::Instruction& insn, Op op)
+AK_ALWAYS_INLINE void BTx_RM32_reg32(SoftCPU& cpu, const X86::Instruction& insn, Op op)
 {
     if (insn.modrm().is_register()) {
         unsigned bit_index = cpu.const_gpr32(insn.reg32()).value() & (X86::TypeTrivia<u32>::bits - 1);
@@ -1127,7 +1127,7 @@ ALWAYS_INLINE void BTx_RM32_reg32(SoftCPU& cpu, const X86::Instruction& insn, Op
 }
 
 template<bool should_update, typename Op>
-ALWAYS_INLINE void BTx_RM16_imm8(SoftCPU& cpu, const X86::Instruction& insn, Op op)
+AK_ALWAYS_INLINE void BTx_RM16_imm8(SoftCPU& cpu, const X86::Instruction& insn, Op op)
 {
     unsigned bit_index = insn.imm8() & (X86::TypeTrivia<u16>::mask);
 
@@ -1144,7 +1144,7 @@ ALWAYS_INLINE void BTx_RM16_imm8(SoftCPU& cpu, const X86::Instruction& insn, Op 
 }
 
 template<bool should_update, typename Op>
-ALWAYS_INLINE void BTx_RM32_imm8(SoftCPU& cpu, const X86::Instruction& insn, Op op)
+AK_ALWAYS_INLINE void BTx_RM32_imm8(SoftCPU& cpu, const X86::Instruction& insn, Op op)
 {
     unsigned bit_index = insn.imm8() & (X86::TypeTrivia<u32>::mask);
 
@@ -1248,7 +1248,7 @@ void SoftCPU::CMOVcc_reg32_RM32(const X86::Instruction& insn)
 }
 
 template<typename T>
-ALWAYS_INLINE static void do_cmps(SoftCPU& cpu, const X86::Instruction& insn)
+AK_ALWAYS_INLINE static void do_cmps(SoftCPU& cpu, const X86::Instruction& insn)
 {
     auto src_segment = cpu.segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
     cpu.do_once_or_repeat<true>(insn, [&] {
@@ -1854,7 +1854,7 @@ void SoftCPU::LLDT_RM16(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::LMSW_RM16(const X86::Instruction&) { TODO_INSN(); }
 
 template<typename T>
-ALWAYS_INLINE static void do_lods(SoftCPU& cpu, const X86::Instruction& insn)
+AK_ALWAYS_INLINE static void do_lods(SoftCPU& cpu, const X86::Instruction& insn)
 {
     auto src_segment = cpu.segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
     cpu.do_once_or_repeat<true>(insn, [&] {
@@ -1926,7 +1926,7 @@ void SoftCPU::LSS_reg32_mem32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::LTR_RM16(const X86::Instruction&) { TODO_INSN(); }
 
 template<typename T>
-ALWAYS_INLINE static void do_movs(SoftCPU& cpu, const X86::Instruction& insn)
+AK_ALWAYS_INLINE static void do_movs(SoftCPU& cpu, const X86::Instruction& insn)
 {
     auto src_segment = cpu.segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
     cpu.do_once_or_repeat<false>(insn, [&] {
@@ -2390,7 +2390,7 @@ void SoftCPU::PUSH_reg32(const X86::Instruction& insn)
 FPU_INSTRUCTION(PXOR_mm1_mm2m64);
 
 template<typename T, bool cf>
-ALWAYS_INLINE static T op_rcl_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
+AK_ALWAYS_INLINE static T op_rcl_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 {
     if (steps.value() == 0)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
@@ -2428,7 +2428,7 @@ ALWAYS_INLINE static T op_rcl_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> ste
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_rcl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
+AK_ALWAYS_INLINE static T op_rcl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 {
     cpu.warn_if_flags_tainted("rcl");
     if (cpu.cf())
@@ -2439,7 +2439,7 @@ ALWAYS_INLINE static T op_rcl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(RCL, op_rcl)
 
 template<typename T, bool cf>
-ALWAYS_INLINE static T op_rcr_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
+AK_ALWAYS_INLINE static T op_rcr_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 {
     if (steps.value() == 0)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
@@ -2476,7 +2476,7 @@ ALWAYS_INLINE static T op_rcr_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> ste
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_rcr(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
+AK_ALWAYS_INLINE static T op_rcr(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 {
     cpu.warn_if_flags_tainted("rcr");
     if (cpu.cf())
@@ -2513,7 +2513,7 @@ void SoftCPU::RET_imm16(const X86::Instruction& insn)
 }
 
 template<typename T>
-ALWAYS_INLINE static T op_rol(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
+AK_ALWAYS_INLINE static T op_rol(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 {
     if (steps.value() == 0)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
@@ -2547,7 +2547,7 @@ ALWAYS_INLINE static T op_rol(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(ROL, op_rol)
 
 template<typename T>
-ALWAYS_INLINE static T op_ror(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
+AK_ALWAYS_INLINE static T op_ror(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 {
     if (steps.value() == 0)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
@@ -2627,7 +2627,7 @@ static T op_sar(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(SAR, op_sar)
 
 template<typename T>
-ALWAYS_INLINE static void do_scas(SoftCPU& cpu, const X86::Instruction& insn)
+AK_ALWAYS_INLINE static void do_scas(SoftCPU& cpu, const X86::Instruction& insn)
 {
     cpu.do_once_or_repeat<true>(insn, [&] {
         auto src = cpu.const_gpr<T>(X86::RegisterAL);

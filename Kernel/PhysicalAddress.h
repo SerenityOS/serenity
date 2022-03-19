@@ -15,8 +15,8 @@ typedef u64 PhysicalSize;
 
 class PhysicalAddress {
 public:
-    ALWAYS_INLINE static PhysicalPtr physical_page_base(PhysicalPtr page_address) { return page_address & ~(PhysicalPtr)0xfff; }
-    ALWAYS_INLINE static size_t physical_page_index(PhysicalPtr page_address)
+    AK_ALWAYS_INLINE static PhysicalPtr physical_page_base(PhysicalPtr page_address) { return page_address & ~(PhysicalPtr)0xfff; }
+    AK_ALWAYS_INLINE static size_t physical_page_index(PhysicalPtr page_address)
     {
         auto page_index = page_address >> 12;
         if constexpr (sizeof(size_t) < sizeof(PhysicalPtr))

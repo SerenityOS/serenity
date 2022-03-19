@@ -46,7 +46,7 @@ public:
     }
 
     template<FloatingPoint F>
-    explicit ALWAYS_INLINE operator F() const
+    explicit AK_ALWAYS_INLINE operator F() const
     {
         return (F)m_value * pow<F>(0.5, precision);
     }

@@ -865,7 +865,7 @@ void rewind(FILE* stream)
     clearerr(stream);
 }
 
-ALWAYS_INLINE void stdout_putch(char*&, char ch)
+AK_ALWAYS_INLINE void stdout_putch(char*&, char ch)
 {
     putchar(ch);
 }

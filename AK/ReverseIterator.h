@@ -49,11 +49,11 @@ public:
         return SimpleReverseIterator { m_container, m_index - 1 };
     }
 
-    ALWAYS_INLINE constexpr ValueType const& operator*() const { return m_container[m_index]; }
-    ALWAYS_INLINE constexpr ValueType& operator*() { return m_container[m_index]; }
+    AK_ALWAYS_INLINE constexpr ValueType const& operator*() const { return m_container[m_index]; }
+    AK_ALWAYS_INLINE constexpr ValueType& operator*() { return m_container[m_index]; }
 
-    ALWAYS_INLINE constexpr ValueType const* operator->() const { return &m_container[m_index]; }
-    ALWAYS_INLINE constexpr ValueType* operator->() { return &m_container[m_index]; }
+    AK_ALWAYS_INLINE constexpr ValueType const* operator->() const { return &m_container[m_index]; }
+    AK_ALWAYS_INLINE constexpr ValueType* operator->() { return &m_container[m_index]; }
 
     SimpleReverseIterator& operator=(const SimpleReverseIterator& other)
     {

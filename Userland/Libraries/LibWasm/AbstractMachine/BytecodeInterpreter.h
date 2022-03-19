@@ -58,7 +58,7 @@ protected:
     T read_value(ReadonlyBytes data);
 
     Vector<Value> pop_values(Configuration& configuration, size_t count);
-    ALWAYS_INLINE bool trap_if_not(bool value, StringView reason)
+    AK_ALWAYS_INLINE bool trap_if_not(bool value, StringView reason)
     {
         if (!value)
             m_trap = Trap { reason };

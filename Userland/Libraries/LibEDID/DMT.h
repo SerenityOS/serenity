@@ -47,8 +47,8 @@ public:
         u8 cvt_bytes[3] {};
         ScanType scan_type { ScanType::NonInterlaced };
 
-        ALWAYS_INLINE bool has_std() const { return std_bytes[0] != 0; }
-        ALWAYS_INLINE bool has_cvt() const { return cvt_bytes[0] != 0; }
+        AK_ALWAYS_INLINE bool has_std() const { return std_bytes[0] != 0; }
+        AK_ALWAYS_INLINE bool has_cvt() const { return cvt_bytes[0] != 0; }
 
         FixedPoint<16, u32> horizontal_frequency_khz() const;
         FixedPoint<16, u32> vertical_frequency_hz() const;

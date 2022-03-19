@@ -524,7 +524,7 @@ static bool decode_bmp_core_dib(BMPLoadingContext& context, InputStreamer& strea
     return true;
 }
 
-ALWAYS_INLINE static bool is_supported_compression_format(BMPLoadingContext& context, u32 compression)
+AK_ALWAYS_INLINE static bool is_supported_compression_format(BMPLoadingContext& context, u32 compression)
 {
     return compression == Compression::RGB || compression == Compression::BITFIELDS
         || compression == Compression::ALPHABITFIELDS || compression == Compression::RLE8

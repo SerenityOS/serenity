@@ -46,7 +46,7 @@ public:
         }
     }
 
-    ALWAYS_INLINE void lock()
+    AK_ALWAYS_INLINE void lock()
     {
         VERIFY(m_lock);
         VERIFY(!m_have_lock);
@@ -54,7 +54,7 @@ public:
         m_have_lock = true;
     }
 
-    ALWAYS_INLINE void unlock()
+    AK_ALWAYS_INLINE void unlock()
     {
         VERIFY(m_lock);
         VERIFY(m_have_lock);
@@ -63,7 +63,7 @@ public:
         m_have_lock = false;
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool have_lock() const
+    [[nodiscard]] AK_ALWAYS_INLINE bool have_lock() const
     {
         return m_have_lock;
     }

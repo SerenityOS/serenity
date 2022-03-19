@@ -112,9 +112,9 @@ public:
     Realm& realm();
     Realm const& realm() const;
 
-    ALWAYS_INLINE VM& vm() { return *m_vm; }
-    ALWAYS_INLINE const VM& vm() const { return *m_vm; }
-    ALWAYS_INLINE Heap& heap() { return vm().heap(); }
+    AK_ALWAYS_INLINE VM& vm() { return *m_vm; }
+    AK_ALWAYS_INLINE const VM& vm() const { return *m_vm; }
+    AK_ALWAYS_INLINE Heap& heap() { return vm().heap(); }
 
     Environment* lexical_environment() { return vm().lexical_environment(); }
 

@@ -34,7 +34,7 @@ static constexpr StringView identity_escape_characters(bool unicode, bool browse
     return "^$\\.*+?()[]{}|"sv;
 }
 
-ALWAYS_INLINE bool Parser::set_error(Error error)
+AK_ALWAYS_INLINE bool Parser::set_error(Error error)
 {
     if (m_parser_state.error == Error::NoError) {
         m_parser_state.error = error;
@@ -43,29 +43,29 @@ ALWAYS_INLINE bool Parser::set_error(Error error)
     return false; // always return false, that eases the API usage (return set_error(...)) :^)
 }
 
-ALWAYS_INLINE bool Parser::done() const
+AK_ALWAYS_INLINE bool Parser::done() const
 {
     return match(TokenType::Eof);
 }
 
-ALWAYS_INLINE bool Parser::match(TokenType type) const
+AK_ALWAYS_INLINE bool Parser::match(TokenType type) const
 {
     return m_parser_state.current_token.type() == type;
 }
 
-ALWAYS_INLINE bool Parser::match(char ch) const
+AK_ALWAYS_INLINE bool Parser::match(char ch) const
 {
     return m_parser_state.current_token.type() == TokenType::Char && m_parser_state.current_token.value().length() == 1 && m_parser_state.current_token.value()[0] == ch;
 }
 
-ALWAYS_INLINE Token Parser::consume()
+AK_ALWAYS_INLINE Token Parser::consume()
 {
     auto old_token = m_parser_state.current_token;
     m_parser_state.current_token = m_parser_state.lexer.next();
     return old_token;
 }
 
-ALWAYS_INLINE Token Parser::consume(TokenType type, Error error)
+AK_ALWAYS_INLINE Token Parser::consume(TokenType type, Error error)
 {
     if (m_parser_state.current_token.type() != type) {
         set_error(error);
@@ -74,7 +74,7 @@ ALWAYS_INLINE Token Parser::consume(TokenType type, Error error)
     return consume();
 }
 
-ALWAYS_INLINE bool Parser::consume(String const& str)
+AK_ALWAYS_INLINE bool Parser::consume(String const& str)
 {
     size_t potentially_go_back { 1 };
     for (auto ch : str) {
@@ -95,7 +95,7 @@ ALWAYS_INLINE bool Parser::consume(String const& str)
     return true;
 }
 
-ALWAYS_INLINE Optional<u32> Parser::consume_escaped_code_point(bool unicode)
+AK_ALWAYS_INLINE Optional<u32> Parser::consume_escaped_code_point(bool unicode)
 {
     if (match(TokenType::LeftCurly) && !unicode) {
         // In non-Unicode mode, this should be parsed as a repetition symbol (repeating the 'u').
@@ -118,7 +118,7 @@ ALWAYS_INLINE Optional<u32> Parser::consume_escaped_code_point(bool unicode)
     return {};
 }
 
-ALWAYS_INLINE bool Parser::try_skip(StringView str)
+AK_ALWAYS_INLINE bool Parser::try_skip(StringView str)
 {
     if (str.starts_with(m_parser_state.current_token.value()))
         str = str.substring_view(m_parser_state.current_token.value().length(), str.length() - m_parser_state.current_token.value().length());
@@ -138,12 +138,12 @@ ALWAYS_INLINE bool Parser::try_skip(StringView str)
     return true;
 }
 
-ALWAYS_INLINE bool Parser::lookahead_any(StringView str)
+AK_ALWAYS_INLINE bool Parser::lookahead_any(StringView str)
 {
     return AK::any_of(str, [this](auto ch) { return match(ch); });
 }
 
-ALWAYS_INLINE unsigned char Parser::skip()
+AK_ALWAYS_INLINE unsigned char Parser::skip()
 {
     unsigned char ch;
     if (m_parser_state.current_token.value().length() == 1) {
@@ -157,13 +157,13 @@ ALWAYS_INLINE unsigned char Parser::skip()
     return ch;
 }
 
-ALWAYS_INLINE void Parser::back(size_t count)
+AK_ALWAYS_INLINE void Parser::back(size_t count)
 {
     m_parser_state.lexer.back(count);
     m_parser_state.current_token = m_parser_state.lexer.next();
 }
 
-ALWAYS_INLINE void Parser::reset()
+AK_ALWAYS_INLINE void Parser::reset()
 {
     m_parser_state.bytecode.clear();
     m_parser_state.lexer.reset();
@@ -199,7 +199,7 @@ Parser::Result Parser::parse(Optional<AllOptions> regex_options)
     };
 }
 
-ALWAYS_INLINE bool Parser::match_ordinary_characters()
+AK_ALWAYS_INLINE bool Parser::match_ordinary_characters()
 {
     // NOTE: This method must not be called during bracket and repetition parsing!
     // FIXME: Add assertion for that?
@@ -216,7 +216,7 @@ ALWAYS_INLINE bool Parser::match_ordinary_characters()
 // Abstract Posix Parser
 // =============================
 
-ALWAYS_INLINE bool AbstractPosixParser::parse_bracket_expression(Vector<CompareTypeAndValuePair>& values, size_t& match_length_minimum)
+AK_ALWAYS_INLINE bool AbstractPosixParser::parse_bracket_expression(Vector<CompareTypeAndValuePair>& values, size_t& match_length_minimum)
 {
     for (; !done();) {
         if (match(TokenType::HyphenMinus)) {
@@ -577,7 +577,7 @@ bool PosixExtendedParser::parse_internal(ByteCode& stack, size_t& match_length_m
     return parse_root(stack, match_length_minimum);
 }
 
-ALWAYS_INLINE bool PosixExtendedParser::match_repetition_symbol()
+AK_ALWAYS_INLINE bool PosixExtendedParser::match_repetition_symbol()
 {
     auto type = m_parser_state.current_token.type();
     return (type == TokenType::Asterisk
@@ -586,7 +586,7 @@ ALWAYS_INLINE bool PosixExtendedParser::match_repetition_symbol()
         || type == TokenType::LeftCurly);
 }
 
-ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& bytecode_to_repeat, size_t& match_length_minimum)
+AK_ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& bytecode_to_repeat, size_t& match_length_minimum)
 {
     if (match(TokenType::LeftCurly)) {
         consume();
@@ -678,7 +678,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
     return false;
 }
 
-ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack, size_t& match_length_minimum)
+AK_ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack, size_t& match_length_minimum)
 {
     Vector<CompareTypeAndValuePair> values;
     if (!AbstractPosixParser::parse_bracket_expression(values, match_length_minimum))
@@ -690,7 +690,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack
     return !has_error();
 }
 
-ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, size_t& match_length_minimum)
+AK_ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, size_t& match_length_minimum)
 {
     ByteCode bytecode;
     size_t length = 0;

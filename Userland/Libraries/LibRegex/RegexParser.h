@@ -77,20 +77,20 @@ public:
 protected:
     virtual bool parse_internal(ByteCode&, size_t& match_length_minimum) = 0;
 
-    ALWAYS_INLINE bool match(TokenType type) const;
-    ALWAYS_INLINE bool match(char ch) const;
-    ALWAYS_INLINE bool match_ordinary_characters();
-    ALWAYS_INLINE Token consume();
-    ALWAYS_INLINE Token consume(TokenType type, Error error);
-    ALWAYS_INLINE bool consume(String const&);
-    ALWAYS_INLINE Optional<u32> consume_escaped_code_point(bool unicode);
-    ALWAYS_INLINE bool try_skip(StringView);
-    ALWAYS_INLINE bool lookahead_any(StringView);
-    ALWAYS_INLINE unsigned char skip();
-    ALWAYS_INLINE void back(size_t = 1);
-    ALWAYS_INLINE void reset();
-    ALWAYS_INLINE bool done() const;
-    ALWAYS_INLINE bool set_error(Error error);
+    AK_ALWAYS_INLINE bool match(TokenType type) const;
+    AK_ALWAYS_INLINE bool match(char ch) const;
+    AK_ALWAYS_INLINE bool match_ordinary_characters();
+    AK_ALWAYS_INLINE Token consume();
+    AK_ALWAYS_INLINE Token consume(TokenType type, Error error);
+    AK_ALWAYS_INLINE bool consume(String const&);
+    AK_ALWAYS_INLINE Optional<u32> consume_escaped_code_point(bool unicode);
+    AK_ALWAYS_INLINE bool try_skip(StringView);
+    AK_ALWAYS_INLINE bool lookahead_any(StringView);
+    AK_ALWAYS_INLINE unsigned char skip();
+    AK_ALWAYS_INLINE void back(size_t = 1);
+    AK_ALWAYS_INLINE void reset();
+    AK_ALWAYS_INLINE bool done() const;
+    AK_ALWAYS_INLINE bool set_error(Error error);
 
     struct NamedCaptureGroup {
         size_t group_index { 0 };
@@ -139,7 +139,7 @@ protected:
     {
     }
 
-    ALWAYS_INLINE bool parse_bracket_expression(Vector<CompareTypeAndValuePair>&, size_t&);
+    AK_ALWAYS_INLINE bool parse_bracket_expression(Vector<CompareTypeAndValuePair>&, size_t&);
 };
 
 class PosixBasicParser final : public AbstractPosixParser {
@@ -188,14 +188,14 @@ public:
     ~PosixExtendedParser() = default;
 
 private:
-    ALWAYS_INLINE bool match_repetition_symbol();
+    AK_ALWAYS_INLINE bool match_repetition_symbol();
 
     bool parse_internal(ByteCode&, size_t&) override;
 
     bool parse_root(ByteCode&, size_t&);
-    ALWAYS_INLINE bool parse_sub_expression(ByteCode&, size_t&);
-    ALWAYS_INLINE bool parse_bracket_expression(ByteCode&, size_t&);
-    ALWAYS_INLINE bool parse_repetition_symbol(ByteCode&, size_t&);
+    AK_ALWAYS_INLINE bool parse_sub_expression(ByteCode&, size_t&);
+    AK_ALWAYS_INLINE bool parse_bracket_expression(ByteCode&, size_t&);
+    AK_ALWAYS_INLINE bool parse_repetition_symbol(ByteCode&, size_t&);
 };
 
 class ECMA262Parser final : public Parser {

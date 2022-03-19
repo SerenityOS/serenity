@@ -48,7 +48,7 @@ public:
     };
     ValueAndFrame run_and_return_frame(Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point);
 
-    ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
+    AK_ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
     [[nodiscard]] RegisterWindow snapshot_frame() const { return m_register_windows.last(); }
 

@@ -138,7 +138,7 @@ protected:
     }
 
 private:
-    ALWAYS_INLINE void do_evaluate_block_conditions()
+    AK_ALWAYS_INLINE void do_evaluate_block_conditions()
     {
         VERIFY(!Processor::current_in_irq());
         blocker_set().unblock_all_blockers_whose_conditions_are_met();

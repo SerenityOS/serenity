@@ -37,12 +37,12 @@ public:
     template<typename T>
     Rect<T> map(const Rect<T>&) const;
 
-    [[nodiscard]] ALWAYS_INLINE float a() const { return m_values[0]; }
-    [[nodiscard]] ALWAYS_INLINE float b() const { return m_values[1]; }
-    [[nodiscard]] ALWAYS_INLINE float c() const { return m_values[2]; }
-    [[nodiscard]] ALWAYS_INLINE float d() const { return m_values[3]; }
-    [[nodiscard]] ALWAYS_INLINE float e() const { return m_values[4]; }
-    [[nodiscard]] ALWAYS_INLINE float f() const { return m_values[5]; }
+    [[nodiscard]] AK_ALWAYS_INLINE float a() const { return m_values[0]; }
+    [[nodiscard]] AK_ALWAYS_INLINE float b() const { return m_values[1]; }
+    [[nodiscard]] AK_ALWAYS_INLINE float c() const { return m_values[2]; }
+    [[nodiscard]] AK_ALWAYS_INLINE float d() const { return m_values[3]; }
+    [[nodiscard]] AK_ALWAYS_INLINE float e() const { return m_values[4]; }
+    [[nodiscard]] AK_ALWAYS_INLINE float f() const { return m_values[5]; }
 
     [[nodiscard]] float x_scale() const;
     [[nodiscard]] float y_scale() const;

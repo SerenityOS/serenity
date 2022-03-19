@@ -83,7 +83,7 @@ public:
     void mask(u16 m) { m_address &= m; }
 
     template<typename T>
-    ALWAYS_INLINE T in()
+    AK_ALWAYS_INLINE T in()
     {
         static_assert(sizeof(T) <= 4);
         if constexpr (sizeof(T) == 4)
@@ -96,7 +96,7 @@ public:
     }
 
     template<typename T>
-    ALWAYS_INLINE void out(T value) const
+    AK_ALWAYS_INLINE void out(T value) const
     {
         static_assert(sizeof(T) <= 4);
         if constexpr (sizeof(T) == 4) {

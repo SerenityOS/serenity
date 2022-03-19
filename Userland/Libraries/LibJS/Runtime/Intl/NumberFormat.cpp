@@ -249,7 +249,7 @@ StringView NumberFormat::sign_display_string() const
     }
 }
 
-static ALWAYS_INLINE int log10floor(Value number)
+static AK_ALWAYS_INLINE int log10floor(Value number)
 {
     if (number.is_number())
         return static_cast<int>(floor(log10(number.as_double())));
@@ -277,56 +277,56 @@ static Value divide(GlobalObject& global_object, Value lhs, i64 rhs)
     return js_bigint(global_object.vm(), lhs.as_bigint().big_integer().divided_by(rhs_bigint).quotient);
 }
 
-static ALWAYS_INLINE Value multiply_by_power(GlobalObject& global_object, Value number, i64 exponent)
+static AK_ALWAYS_INLINE Value multiply_by_power(GlobalObject& global_object, Value number, i64 exponent)
 {
     if (exponent < 0)
         return divide(global_object, number, pow(10, -exponent));
     return multiply(global_object, number, pow(10, exponent));
 }
 
-static ALWAYS_INLINE Value divide_by_power(GlobalObject& global_object, Value number, i64 exponent)
+static AK_ALWAYS_INLINE Value divide_by_power(GlobalObject& global_object, Value number, i64 exponent)
 {
     if (exponent < 0)
         return multiply(global_object, number, pow(10, -exponent));
     return divide(global_object, number, pow(10, exponent));
 }
 
-static ALWAYS_INLINE Value rounded(Value number)
+static AK_ALWAYS_INLINE Value rounded(Value number)
 {
     if (number.is_number())
         return Value(round(number.as_double()));
     return number;
 }
 
-static ALWAYS_INLINE bool is_zero(Value number)
+static AK_ALWAYS_INLINE bool is_zero(Value number)
 {
     if (number.is_number())
         return number.as_double() == 0.0;
     return number.as_bigint().big_integer() == Crypto::SignedBigInteger::create_from(0);
 }
 
-static ALWAYS_INLINE bool is_greater_than(Value number, i64 rhs)
+static AK_ALWAYS_INLINE bool is_greater_than(Value number, i64 rhs)
 {
     if (number.is_number())
         return number.as_double() > rhs;
     return number.as_bigint().big_integer() > Crypto::SignedBigInteger::create_from(rhs);
 }
 
-static ALWAYS_INLINE bool is_greater_than_or_equal(Value number, i64 rhs)
+static AK_ALWAYS_INLINE bool is_greater_than_or_equal(Value number, i64 rhs)
 {
     if (number.is_number())
         return number.as_double() >= rhs;
     return number.as_bigint().big_integer() >= Crypto::SignedBigInteger::create_from(rhs);
 }
 
-static ALWAYS_INLINE bool is_less_than(Value number, i64 rhs)
+static AK_ALWAYS_INLINE bool is_less_than(Value number, i64 rhs)
 {
     if (number.is_number())
         return number.as_double() < rhs;
     return number.as_bigint().big_integer() < Crypto::SignedBigInteger::create_from(rhs);
 }
 
-static ALWAYS_INLINE String number_to_string(Value number)
+static AK_ALWAYS_INLINE String number_to_string(Value number)
 {
     if (number.is_number())
         return number.to_string_without_side_effects();

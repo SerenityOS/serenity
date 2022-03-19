@@ -40,8 +40,8 @@ class Object : public RefCounted<Object> {
 public:
     virtual ~Object() = default;
 
-    [[nodiscard]] ALWAYS_INLINE u32 generation_index() const { return m_generation_index; }
-    ALWAYS_INLINE void set_generation_index(u32 generation_index) { m_generation_index = generation_index; }
+    [[nodiscard]] AK_ALWAYS_INLINE u32 generation_index() const { return m_generation_index; }
+    AK_ALWAYS_INLINE void set_generation_index(u32 generation_index) { m_generation_index = generation_index; }
 
     template<IsObject T>
     bool is() const requires(!IsSame<T, Object>)
@@ -57,7 +57,7 @@ public:
     }
 
     template<IsObject T>
-    [[nodiscard]] ALWAYS_INLINE NonnullRefPtr<T> cast(
+    [[nodiscard]] AK_ALWAYS_INLINE NonnullRefPtr<T> cast(
 #ifdef PDF_DEBUG
         SourceLocation loc = SourceLocation::current()
 #endif

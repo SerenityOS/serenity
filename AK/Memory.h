@@ -16,7 +16,7 @@
 #    include <string.h>
 #endif
 
-ALWAYS_INLINE void fast_u32_copy(u32* dest, const u32* src, size_t count)
+AK_ALWAYS_INLINE void fast_u32_copy(u32* dest, const u32* src, size_t count)
 {
 #if ARCH(I386) || ARCH(X86_64)
     asm volatile(
@@ -27,7 +27,7 @@ ALWAYS_INLINE void fast_u32_copy(u32* dest, const u32* src, size_t count)
 #endif
 }
 
-ALWAYS_INLINE void fast_u32_fill(u32* dest, u32 value, size_t count)
+AK_ALWAYS_INLINE void fast_u32_fill(u32* dest, u32 value, size_t count)
 {
 #if ARCH(I386) || ARCH(X86_64)
     asm volatile(

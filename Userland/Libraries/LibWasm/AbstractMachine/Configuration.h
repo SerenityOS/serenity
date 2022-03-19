@@ -32,16 +32,16 @@ public:
         m_stack.push(move(frame));
         m_stack.push(label);
     }
-    ALWAYS_INLINE auto& frame() const { return m_stack.entries()[m_current_frame_index].get<Frame>(); }
-    ALWAYS_INLINE auto& frame() { return m_stack.entries()[m_current_frame_index].get<Frame>(); }
-    ALWAYS_INLINE auto& ip() const { return m_ip; }
-    ALWAYS_INLINE auto& ip() { return m_ip; }
-    ALWAYS_INLINE auto& depth() const { return m_depth; }
-    ALWAYS_INLINE auto& depth() { return m_depth; }
-    ALWAYS_INLINE auto& stack() const { return m_stack; }
-    ALWAYS_INLINE auto& stack() { return m_stack; }
-    ALWAYS_INLINE auto& store() const { return m_store; }
-    ALWAYS_INLINE auto& store() { return m_store; }
+    AK_ALWAYS_INLINE auto& frame() const { return m_stack.entries()[m_current_frame_index].get<Frame>(); }
+    AK_ALWAYS_INLINE auto& frame() { return m_stack.entries()[m_current_frame_index].get<Frame>(); }
+    AK_ALWAYS_INLINE auto& ip() const { return m_ip; }
+    AK_ALWAYS_INLINE auto& ip() { return m_ip; }
+    AK_ALWAYS_INLINE auto& depth() const { return m_depth; }
+    AK_ALWAYS_INLINE auto& depth() { return m_depth; }
+    AK_ALWAYS_INLINE auto& stack() const { return m_stack; }
+    AK_ALWAYS_INLINE auto& stack() { return m_stack; }
+    AK_ALWAYS_INLINE auto& store() const { return m_store; }
+    AK_ALWAYS_INLINE auto& store() { return m_store; }
 
     struct CallFrameHandle {
         explicit CallFrameHandle(Configuration& configuration)

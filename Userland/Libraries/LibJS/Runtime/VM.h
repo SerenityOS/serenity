@@ -289,12 +289,12 @@ private:
     OwnPtr<CustomData> m_custom_data;
 };
 
-ALWAYS_INLINE Heap& Cell::heap() const
+AK_ALWAYS_INLINE Heap& Cell::heap() const
 {
     return HeapBlock::from_cell(this)->heap();
 }
 
-ALWAYS_INLINE VM& Cell::vm() const
+AK_ALWAYS_INLINE VM& Cell::vm() const
 {
     return heap().vm();
 }

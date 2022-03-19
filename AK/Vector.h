@@ -118,24 +118,24 @@ public:
     operator Span<StorageType const>() const { return span(); }
 
     bool is_empty() const { return size() == 0; }
-    ALWAYS_INLINE size_t size() const { return m_size; }
+    AK_ALWAYS_INLINE size_t size() const { return m_size; }
     size_t capacity() const { return m_capacity; }
 
-    ALWAYS_INLINE StorageType* data()
+    AK_ALWAYS_INLINE StorageType* data()
     {
         if constexpr (inline_capacity > 0)
             return m_outline_buffer ? m_outline_buffer : inline_buffer();
         return m_outline_buffer;
     }
 
-    ALWAYS_INLINE StorageType const* data() const
+    AK_ALWAYS_INLINE StorageType const* data() const
     {
         if constexpr (inline_capacity > 0)
             return m_outline_buffer ? m_outline_buffer : inline_buffer();
         return m_outline_buffer;
     }
 
-    ALWAYS_INLINE VisibleType const& at(size_t i) const
+    AK_ALWAYS_INLINE VisibleType const& at(size_t i) const
     {
         VERIFY(i < m_size);
         if constexpr (contains_reference)
@@ -144,7 +144,7 @@ public:
             return data()[i];
     }
 
-    ALWAYS_INLINE VisibleType& at(size_t i)
+    AK_ALWAYS_INLINE VisibleType& at(size_t i)
     {
         VERIFY(i < m_size);
         if constexpr (contains_reference)
@@ -153,8 +153,8 @@ public:
             return data()[i];
     }
 
-    ALWAYS_INLINE VisibleType const& operator[](size_t i) const { return at(i); }
-    ALWAYS_INLINE VisibleType& operator[](size_t i) { return at(i); }
+    AK_ALWAYS_INLINE VisibleType const& operator[](size_t i) const { return at(i); }
+    AK_ALWAYS_INLINE VisibleType& operator[](size_t i) { return at(i); }
 
     VisibleType const& first() const { return at(0); }
     VisibleType& first() { return at(0); }
@@ -238,7 +238,7 @@ public:
 
 #endif
 
-    ALWAYS_INLINE void append(T&& value)
+    AK_ALWAYS_INLINE void append(T&& value)
     {
         if constexpr (contains_reference)
             MUST(try_append(value));
@@ -246,7 +246,7 @@ public:
             MUST(try_append(move(value)));
     }
 
-    ALWAYS_INLINE void append(T const& value) requires(!contains_reference)
+    AK_ALWAYS_INLINE void append(T const& value) requires(!contains_reference)
     {
         MUST(try_append(T(value)));
     }
@@ -259,7 +259,7 @@ public:
 #endif
 
     template<typename U = T>
-    ALWAYS_INLINE void unchecked_append(U&& value) requires(CanBePlacedInsideVector<U>)
+    AK_ALWAYS_INLINE void unchecked_append(U&& value) requires(CanBePlacedInsideVector<U>)
     {
         VERIFY((size() + 1) <= capacity());
         if constexpr (contains_reference)
@@ -269,7 +269,7 @@ public:
         ++m_size;
     }
 
-    ALWAYS_INLINE void unchecked_append(StorageType const* values, size_t count)
+    AK_ALWAYS_INLINE void unchecked_append(StorageType const* values, size_t count)
     {
         if (count == 0)
             return;
@@ -429,7 +429,7 @@ public:
         return something_was_removed;
     }
 
-    ALWAYS_INLINE T take_last()
+    AK_ALWAYS_INLINE T take_last()
     {
         VERIFY(!is_empty());
         auto value = move(raw_last());
@@ -714,12 +714,12 @@ public:
     ReverseIterator rend() { return ReverseIterator::rend(*this); }
     ReverseConstIterator rend() const { return ReverseConstIterator::rend(*this); }
 
-    ALWAYS_INLINE constexpr auto in_reverse()
+    AK_ALWAYS_INLINE constexpr auto in_reverse()
     {
         return ReverseWrapper::in_reverse(*this);
     }
 
-    ALWAYS_INLINE constexpr auto in_reverse() const
+    AK_ALWAYS_INLINE constexpr auto in_reverse() const
     {
         return ReverseWrapper::in_reverse(*this);
     }

@@ -77,14 +77,14 @@ public:
         m_steps_til_pause = 0;
         m_run_til_return = false;
     }
-    ALWAYS_INLINE void return_callback(FlatPtr addr)
+    AK_ALWAYS_INLINE void return_callback(FlatPtr addr)
     {
         if (m_run_til_return) [[unlikely]] {
             if (addr == m_watched_addr)
                 pause();
         }
     }
-    ALWAYS_INLINE void call_callback(FlatPtr addr)
+    AK_ALWAYS_INLINE void call_callback(FlatPtr addr)
     {
         if (m_run_til_call) [[unlikely]] {
             if (addr == m_watched_addr)

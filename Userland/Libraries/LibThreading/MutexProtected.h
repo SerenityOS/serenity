@@ -19,12 +19,12 @@ class MutexProtected {
     using ProtectedType = T;
 
 public:
-    ALWAYS_INLINE MutexProtected() = default;
-    ALWAYS_INLINE MutexProtected(T&& value)
+    AK_ALWAYS_INLINE MutexProtected() = default;
+    AK_ALWAYS_INLINE MutexProtected(T&& value)
         : m_value(move(value))
     {
     }
-    ALWAYS_INLINE explicit MutexProtected(T& value)
+    AK_ALWAYS_INLINE explicit MutexProtected(T& value)
         : m_value(value)
     {
     }
@@ -47,7 +47,7 @@ public:
     }
 
 private:
-    [[nodiscard]] ALWAYS_INLINE MutexLocker lock() { return MutexLocker(m_lock); }
+    [[nodiscard]] AK_ALWAYS_INLINE MutexLocker lock() { return MutexLocker(m_lock); }
 
     T m_value;
     Mutex m_lock {};

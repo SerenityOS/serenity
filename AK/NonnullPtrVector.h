@@ -34,30 +34,30 @@ public:
     using ReverseIterator = SimpleReverseIterator<NonnullPtrVector, T>;
     using ReverseConstIterator = SimpleReverseIterator<NonnullPtrVector, T const>;
 
-    ALWAYS_INLINE constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
-    ALWAYS_INLINE constexpr Iterator begin() { return Iterator::begin(*this); }
-    ALWAYS_INLINE constexpr ReverseIterator rbegin() { return ReverseIterator::rbegin(*this); }
-    ALWAYS_INLINE constexpr ReverseConstIterator rbegin() const { return ReverseConstIterator::rbegin(*this); }
+    AK_ALWAYS_INLINE constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
+    AK_ALWAYS_INLINE constexpr Iterator begin() { return Iterator::begin(*this); }
+    AK_ALWAYS_INLINE constexpr ReverseIterator rbegin() { return ReverseIterator::rbegin(*this); }
+    AK_ALWAYS_INLINE constexpr ReverseConstIterator rbegin() const { return ReverseConstIterator::rbegin(*this); }
 
-    ALWAYS_INLINE constexpr ConstIterator end() const { return ConstIterator::end(*this); }
-    ALWAYS_INLINE constexpr Iterator end() { return Iterator::end(*this); }
-    ALWAYS_INLINE constexpr ReverseIterator rend() { return ReverseIterator::rend(*this); }
-    ALWAYS_INLINE constexpr ReverseConstIterator rend() const { return ReverseConstIterator::rend(*this); }
+    AK_ALWAYS_INLINE constexpr ConstIterator end() const { return ConstIterator::end(*this); }
+    AK_ALWAYS_INLINE constexpr Iterator end() { return Iterator::end(*this); }
+    AK_ALWAYS_INLINE constexpr ReverseIterator rend() { return ReverseIterator::rend(*this); }
+    AK_ALWAYS_INLINE constexpr ReverseConstIterator rend() const { return ReverseConstIterator::rend(*this); }
 
-    ALWAYS_INLINE constexpr auto in_reverse() { return ReverseWrapper::in_reverse(*this); }
-    ALWAYS_INLINE constexpr auto in_reverse() const { return ReverseWrapper::in_reverse(*this); }
+    AK_ALWAYS_INLINE constexpr auto in_reverse() { return ReverseWrapper::in_reverse(*this); }
+    AK_ALWAYS_INLINE constexpr auto in_reverse() const { return ReverseWrapper::in_reverse(*this); }
 
-    ALWAYS_INLINE PtrType& ptr_at(size_t index) { return Base::at(index); }
-    ALWAYS_INLINE const PtrType& ptr_at(size_t index) const { return Base::at(index); }
+    AK_ALWAYS_INLINE PtrType& ptr_at(size_t index) { return Base::at(index); }
+    AK_ALWAYS_INLINE const PtrType& ptr_at(size_t index) const { return Base::at(index); }
 
-    ALWAYS_INLINE T& at(size_t index) { return *Base::at(index); }
-    ALWAYS_INLINE const T& at(size_t index) const { return *Base::at(index); }
-    ALWAYS_INLINE T& operator[](size_t index) { return at(index); }
-    ALWAYS_INLINE const T& operator[](size_t index) const { return at(index); }
-    ALWAYS_INLINE T& first() { return at(0); }
-    ALWAYS_INLINE const T& first() const { return at(0); }
-    ALWAYS_INLINE T& last() { return at(size() - 1); }
-    ALWAYS_INLINE const T& last() const { return at(size() - 1); }
+    AK_ALWAYS_INLINE T& at(size_t index) { return *Base::at(index); }
+    AK_ALWAYS_INLINE const T& at(size_t index) const { return *Base::at(index); }
+    AK_ALWAYS_INLINE T& operator[](size_t index) { return at(index); }
+    AK_ALWAYS_INLINE const T& operator[](size_t index) const { return at(index); }
+    AK_ALWAYS_INLINE T& first() { return at(0); }
+    AK_ALWAYS_INLINE const T& first() const { return at(0); }
+    AK_ALWAYS_INLINE T& last() { return at(size() - 1); }
+    AK_ALWAYS_INLINE const T& last() const { return at(size() - 1); }
 
 private:
     // NOTE: You can't use resize() on a NonnullFooPtrVector since making the vector

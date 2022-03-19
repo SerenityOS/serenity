@@ -24,7 +24,7 @@ struct Position {
     {
     }
 
-    ALWAYS_INLINE u32 hash() const
+    AK_ALWAYS_INLINE u32 hash() const
     {
         if (m_hash == 0)
             return m_hash = int_hash(column * 65537 + row);

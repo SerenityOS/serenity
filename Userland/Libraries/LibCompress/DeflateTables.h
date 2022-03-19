@@ -178,7 +178,7 @@ static consteval Array<u8, UINT8_MAX + 1> generate_reverse8_lookup_table()
 static constexpr auto reverse8_lookup_table = generate_reverse8_lookup_table();
 
 // Lookup-table based bit swap
-ALWAYS_INLINE static u16 fast_reverse16(u16 value, size_t bits)
+AK_ALWAYS_INLINE static u16 fast_reverse16(u16 value, size_t bits)
 {
     VERIFY(bits <= 16);
 

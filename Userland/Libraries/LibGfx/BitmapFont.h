@@ -48,7 +48,7 @@ public:
     bool contains_glyph(u32 code_point) const override;
     bool contains_raw_glyph(u32 code_point) const { return m_glyph_widths[code_point] > 0; }
 
-    ALWAYS_INLINE int glyph_or_emoji_width(u32 code_point) const override
+    AK_ALWAYS_INLINE int glyph_or_emoji_width(u32 code_point) const override
     {
         if (m_fixed_width)
             return m_glyph_width;

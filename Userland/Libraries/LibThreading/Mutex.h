@@ -54,29 +54,29 @@ class MutexLocker {
     AK_MAKE_NONMOVABLE(MutexLocker);
 
 public:
-    ALWAYS_INLINE explicit MutexLocker(Mutex& mutex)
+    AK_ALWAYS_INLINE explicit MutexLocker(Mutex& mutex)
         : m_mutex(mutex)
     {
         lock();
     }
-    ALWAYS_INLINE ~MutexLocker()
+    AK_ALWAYS_INLINE ~MutexLocker()
     {
         unlock();
     }
-    ALWAYS_INLINE void unlock() { m_mutex.unlock(); }
-    ALWAYS_INLINE void lock() { m_mutex.lock(); }
+    AK_ALWAYS_INLINE void unlock() { m_mutex.unlock(); }
+    AK_ALWAYS_INLINE void lock() { m_mutex.lock(); }
 
 private:
     Mutex& m_mutex;
 };
 
-ALWAYS_INLINE void Mutex::lock()
+AK_ALWAYS_INLINE void Mutex::lock()
 {
     pthread_mutex_lock(&m_mutex);
     m_lock_count++;
 }
 
-ALWAYS_INLINE void Mutex::unlock()
+AK_ALWAYS_INLINE void Mutex::unlock()
 {
     VERIFY(m_lock_count > 0);
     // FIXME: We need to protect the lock count with the mutex itself.

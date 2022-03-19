@@ -26,18 +26,18 @@ using Core::Stream::BigEndianInputBitStream;
 // There was no intensive fine-tuning done to determine this value, so improvements may definitely be possible.
 constexpr size_t FLAC_BUFFER_SIZE = 8 * KiB;
 
-ALWAYS_INLINE u8 frame_channel_type_to_channel_count(FlacFrameChannelType channel_type);
+AK_ALWAYS_INLINE u8 frame_channel_type_to_channel_count(FlacFrameChannelType channel_type);
 // Sign-extend an arbitrary-size signed number to 64 bit signed
-ALWAYS_INLINE i64 sign_extend(u32 n, u8 size);
+AK_ALWAYS_INLINE i64 sign_extend(u32 n, u8 size);
 // Decodes the sign representation method used in Rice coding.
 // Numbers alternate between positive and negative: 0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, ...
-ALWAYS_INLINE i32 rice_to_signed(u32 x);
+AK_ALWAYS_INLINE i32 rice_to_signed(u32 x);
 
 // decoders
 // read a UTF-8 encoded number, even if it is not a valid codepoint
-ALWAYS_INLINE ErrorOr<u64> read_utf8_char(BigEndianInputBitStream& input);
+AK_ALWAYS_INLINE ErrorOr<u64> read_utf8_char(BigEndianInputBitStream& input);
 // decode a single number encoded with exponential golomb encoding of the specified order
-ALWAYS_INLINE ErrorOr<i32> decode_unsigned_exp_golomb(u8 order, BigEndianInputBitStream& bit_input);
+AK_ALWAYS_INLINE ErrorOr<i32> decode_unsigned_exp_golomb(u8 order, BigEndianInputBitStream& bit_input);
 
 class FlacLoaderPlugin : public LoaderPlugin {
 public:
@@ -82,12 +82,12 @@ private:
     ErrorOr<Vector<i32>, LoaderError> decode_custom_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     MaybeLoaderError decode_residual(Vector<i32>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
     // decode a single rice partition that has its own rice parameter
-    ALWAYS_INLINE ErrorOr<Vector<i32>, LoaderError> decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
+    AK_ALWAYS_INLINE ErrorOr<Vector<i32>, LoaderError> decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input);
 
     // Converters for special coding used in frame headers
-    ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_count_code(u8 sample_count_code);
-    ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_rate_code(u8 sample_rate_code);
-    ALWAYS_INLINE ErrorOr<PcmSampleFormat, LoaderError> convert_bit_depth_code(u8 bit_depth_code);
+    AK_ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_count_code(u8 sample_count_code);
+    AK_ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_rate_code(u8 sample_rate_code);
+    AK_ALWAYS_INLINE ErrorOr<PcmSampleFormat, LoaderError> convert_bit_depth_code(u8 bit_depth_code);
 
     RefPtr<Core::File> m_file;
     Optional<LoaderError> m_error {};

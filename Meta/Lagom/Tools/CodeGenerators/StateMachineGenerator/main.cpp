@@ -422,7 +422,7 @@ private:
 
     Handler m_handler;
 
-    ALWAYS_INLINE StateTransition lookup_state_transition(u8 byte)
+    AK_ALWAYS_INLINE StateTransition lookup_state_transition(u8 byte)
     {
         VERIFY((u8)m_state < @state_count@);
 )~~~");

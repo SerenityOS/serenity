@@ -319,7 +319,7 @@ int BitmapFont::width(Utf8View const& view) const { return unicode_view_width(vi
 int BitmapFont::width(Utf32View const& view) const { return unicode_view_width(view); }
 
 template<typename T>
-ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const
+AK_ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const
 {
     if (view.is_empty())
         return 0;

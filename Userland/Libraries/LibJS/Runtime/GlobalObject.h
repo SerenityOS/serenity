@@ -170,7 +170,7 @@ template<>
 inline bool Object::fast_is<GlobalObject>() const { return is_global_object(); }
 
 template<typename... Args>
-[[nodiscard]] ALWAYS_INLINE ThrowCompletionOr<Value> Value::invoke(GlobalObject& global_object, PropertyKey const& property_key, Args... args)
+[[nodiscard]] AK_ALWAYS_INLINE ThrowCompletionOr<Value> Value::invoke(GlobalObject& global_object, PropertyKey const& property_key, Args... args)
 {
     if constexpr (sizeof...(Args) > 0) {
         MarkedVector<Value> arglist { global_object.vm().heap() };

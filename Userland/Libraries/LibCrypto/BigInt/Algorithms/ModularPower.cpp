@@ -54,7 +54,7 @@ void UnsignedBigIntegerAlgorithms::destructive_modular_power_without_allocation(
  * This needs an odd input value
  * Algorithm from: Dumas, J.G. "On Newton–Raphson Iteration for Multiplicative Inverses Modulo Prime Powers".
  */
-ALWAYS_INLINE static u32 inverse_wrapped(u32 value)
+AK_ALWAYS_INLINE static u32 inverse_wrapped(u32 value)
 {
     VERIFY(value & 1);
 
@@ -73,7 +73,7 @@ ALWAYS_INLINE static u32 inverse_wrapped(u32 value)
 /**
  * Computes z = x * y + c. z_carry contains the top bits, z contains the bottom bits.
  */
-ALWAYS_INLINE static void linear_multiplication_with_carry(u32 x, u32 y, u32 c, u32& z_carry, u32& z)
+AK_ALWAYS_INLINE static void linear_multiplication_with_carry(u32 x, u32 y, u32 c, u32& z_carry, u32& z)
 {
     u64 result = static_cast<u64>(x) * static_cast<u64>(y) + static_cast<u64>(c);
     z_carry = static_cast<u32>(result >> 32);
@@ -83,7 +83,7 @@ ALWAYS_INLINE static void linear_multiplication_with_carry(u32 x, u32 y, u32 c, 
 /**
  * Computes z = a + b. z_carry contains the top bit (1 or 0), z contains the bottom bits.
  */
-ALWAYS_INLINE static void addition_with_carry(u32 a, u32 b, u32& z_carry, u32& z)
+AK_ALWAYS_INLINE static void addition_with_carry(u32 a, u32 b, u32& z_carry, u32& z)
 {
     u64 result = static_cast<u64>(a) + static_cast<u64>(b);
     z_carry = static_cast<u32>(result >> 32);

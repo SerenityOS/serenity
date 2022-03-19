@@ -19,7 +19,7 @@
 
 static u8 read_buffer[0x100000];
 
-static ALWAYS_INLINE bool mem_chunk(int fd, u64 base, u64 length)
+static AK_ALWAYS_INLINE bool mem_chunk(int fd, u64 base, u64 length)
 {
     u64 mmoffset = base % sysconf(_SC_PAGESIZE);
     void* mmp = mmap(NULL, mmoffset + length, PROT_READ, MAP_SHARED, fd, base - mmoffset);
@@ -36,7 +36,7 @@ enum class ReadResult {
     ReadSuccess,
 };
 
-static ALWAYS_INLINE ReadResult read_chunk(int fd, u64 base, u64 length)
+static AK_ALWAYS_INLINE ReadResult read_chunk(int fd, u64 base, u64 length)
 {
     VERIFY(length <= sizeof(read_buffer));
     auto rs = lseek(fd, base, SEEK_SET);

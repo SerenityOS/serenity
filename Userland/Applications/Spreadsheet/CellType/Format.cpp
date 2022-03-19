@@ -13,7 +13,7 @@ namespace Spreadsheet {
 
 template<typename T, typename V>
 struct SingleEntryListNext {
-    ALWAYS_INLINE T operator()(V value) const
+    AK_ALWAYS_INLINE T operator()(V value) const
     {
         return (T)value;
     }
@@ -21,17 +21,17 @@ struct SingleEntryListNext {
 
 template<typename PutChFunc, typename ArgumentListRefT, template<typename T, typename U = ArgumentListRefT> typename NextArgument, typename CharType>
 struct PrintfImpl : public PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument, CharType> {
-    ALWAYS_INLINE PrintfImpl(PutChFunc& putch, char*& bufptr, const int& nwritten)
+    AK_ALWAYS_INLINE PrintfImpl(PutChFunc& putch, char*& bufptr, const int& nwritten)
         : PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument>(putch, bufptr, nwritten)
     {
     }
 
     // Disallow pointer formats.
-    ALWAYS_INLINE int format_n(const PrintfImplementation::ModifierState&, ArgumentListRefT&) const
+    AK_ALWAYS_INLINE int format_n(const PrintfImplementation::ModifierState&, ArgumentListRefT&) const
     {
         return 0;
     }
-    ALWAYS_INLINE int format_s(const PrintfImplementation::ModifierState&, ArgumentListRefT&) const
+    AK_ALWAYS_INLINE int format_s(const PrintfImplementation::ModifierState&, ArgumentListRefT&) const
     {
         return 0;
     }

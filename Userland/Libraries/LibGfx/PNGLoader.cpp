@@ -165,7 +165,7 @@ private:
 
 static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
-ALWAYS_INLINE static u8 paeth_predictor(int a, int b, int c)
+AK_ALWAYS_INLINE static u8 paeth_predictor(int a, int b, int c)
 {
     int p = a + b - c;
     int pa = abs(p - a);
@@ -191,7 +191,7 @@ union [[gnu::packed]] Pixel {
 static_assert(AssertSize<Pixel, 4>());
 
 template<bool has_alpha, u8 filter_type>
-ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* dummy_scanline_data)
+AK_ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* dummy_scanline_data)
 {
     auto* dummy_scanline = (const Pixel*)dummy_scanline_data;
     if constexpr (filter_type == 0) {
@@ -273,7 +273,7 @@ ALWAYS_INLINE static void unfilter_impl(Gfx::Bitmap& bitmap, int y, const void* 
 }
 
 template<typename T>
-ALWAYS_INLINE static void unpack_grayscale_without_alpha(PNGLoadingContext& context)
+AK_ALWAYS_INLINE static void unpack_grayscale_without_alpha(PNGLoadingContext& context)
 {
     for (int y = 0; y < context.height; ++y) {
         auto* gray_values = reinterpret_cast<const T*>(context.scanlines[y].data.data());
@@ -288,7 +288,7 @@ ALWAYS_INLINE static void unpack_grayscale_without_alpha(PNGLoadingContext& cont
 }
 
 template<typename T>
-ALWAYS_INLINE static void unpack_grayscale_with_alpha(PNGLoadingContext& context)
+AK_ALWAYS_INLINE static void unpack_grayscale_with_alpha(PNGLoadingContext& context)
 {
     for (int y = 0; y < context.height; ++y) {
         auto* tuples = reinterpret_cast<const Tuple<T>*>(context.scanlines[y].data.data());
@@ -303,7 +303,7 @@ ALWAYS_INLINE static void unpack_grayscale_with_alpha(PNGLoadingContext& context
 }
 
 template<typename T>
-ALWAYS_INLINE static void unpack_triplets_without_alpha(PNGLoadingContext& context)
+AK_ALWAYS_INLINE static void unpack_triplets_without_alpha(PNGLoadingContext& context)
 {
     for (int y = 0; y < context.height; ++y) {
         auto* triplets = reinterpret_cast<const Triplet<T>*>(context.scanlines[y].data.data());
@@ -318,7 +318,7 @@ ALWAYS_INLINE static void unpack_triplets_without_alpha(PNGLoadingContext& conte
 }
 
 template<typename T>
-ALWAYS_INLINE static void unpack_triplets_with_transparency_value(PNGLoadingContext& context, Triplet<T> transparency_value)
+AK_ALWAYS_INLINE static void unpack_triplets_with_transparency_value(PNGLoadingContext& context, Triplet<T> transparency_value)
 {
     for (int y = 0; y < context.height; ++y) {
         auto* triplets = reinterpret_cast<const Triplet<T>*>(context.scanlines[y].data.data());

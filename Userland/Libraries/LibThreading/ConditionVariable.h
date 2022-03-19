@@ -26,31 +26,31 @@ public:
         VERIFY(result == 0);
     }
 
-    ALWAYS_INLINE ~ConditionVariable()
+    AK_ALWAYS_INLINE ~ConditionVariable()
     {
         auto result = pthread_cond_destroy(&m_condition);
         VERIFY(result == 0);
     }
 
     // As with pthread APIs, the mutex must be locked or undefined behavior ensues.
-    ALWAYS_INLINE void wait()
+    AK_ALWAYS_INLINE void wait()
     {
         auto result = pthread_cond_wait(&m_condition, &m_to_wait_on.m_mutex);
         VERIFY(result == 0);
     }
-    ALWAYS_INLINE void wait_while(Function<bool()> condition)
+    AK_ALWAYS_INLINE void wait_while(Function<bool()> condition)
     {
         while (condition())
             wait();
     }
     // Release at least one of the threads waiting on this variable.
-    ALWAYS_INLINE void signal()
+    AK_ALWAYS_INLINE void signal()
     {
         auto result = pthread_cond_signal(&m_condition);
         VERIFY(result == 0);
     }
     // Release all of the threads waiting on this variable.
-    ALWAYS_INLINE void broadcast()
+    AK_ALWAYS_INLINE void broadcast()
     {
         auto result = pthread_cond_broadcast(&m_condition);
         VERIFY(result == 0);

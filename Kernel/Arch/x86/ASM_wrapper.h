@@ -13,17 +13,17 @@ VALIDATE_IS_X86()
 
 namespace Kernel {
 
-ALWAYS_INLINE void cli()
+AK_ALWAYS_INLINE void cli()
 {
     asm volatile("cli" ::
                      : "memory");
 }
-ALWAYS_INLINE void sti()
+AK_ALWAYS_INLINE void sti()
 {
     asm volatile("sti" ::
                      : "memory");
 }
-ALWAYS_INLINE FlatPtr cpu_flags()
+AK_ALWAYS_INLINE FlatPtr cpu_flags()
 {
     FlatPtr flags;
     asm volatile(
@@ -34,21 +34,21 @@ ALWAYS_INLINE FlatPtr cpu_flags()
 }
 
 #if ARCH(I386)
-ALWAYS_INLINE void set_fs(u16 segment)
+AK_ALWAYS_INLINE void set_fs(u16 segment)
 {
     asm volatile(
         "mov %%ax, %%fs" ::"a"(segment)
         : "memory");
 }
 
-ALWAYS_INLINE void set_gs(u16 segment)
+AK_ALWAYS_INLINE void set_gs(u16 segment)
 {
     asm volatile(
         "mov %%ax, %%gs" ::"a"(segment)
         : "memory");
 }
 
-ALWAYS_INLINE u16 get_fs()
+AK_ALWAYS_INLINE u16 get_fs()
 {
     u16 fs;
     asm("mov %%fs, %%eax"
@@ -56,7 +56,7 @@ ALWAYS_INLINE u16 get_fs()
     return fs;
 }
 
-ALWAYS_INLINE u16 get_gs()
+AK_ALWAYS_INLINE u16 get_gs()
 {
     u16 gs;
     asm("mov %%gs, %%eax"
@@ -66,7 +66,7 @@ ALWAYS_INLINE u16 get_gs()
 #endif
 
 template<typename T>
-ALWAYS_INLINE T read_gs_value(FlatPtr offset)
+AK_ALWAYS_INLINE T read_gs_value(FlatPtr offset)
 {
     T val;
     asm volatile(
@@ -77,14 +77,14 @@ ALWAYS_INLINE T read_gs_value(FlatPtr offset)
 }
 
 template<typename T>
-ALWAYS_INLINE void write_gs_value(FlatPtr offset, T val)
+AK_ALWAYS_INLINE void write_gs_value(FlatPtr offset, T val)
 {
     asm volatile(
         "mov %[val], %%gs:%a[off]" ::[off] "ir"(offset), [val] "r"(val)
         : "memory");
 }
 
-ALWAYS_INLINE FlatPtr read_gs_ptr(FlatPtr offset)
+AK_ALWAYS_INLINE FlatPtr read_gs_ptr(FlatPtr offset)
 {
     FlatPtr val;
     asm volatile(
@@ -94,14 +94,14 @@ ALWAYS_INLINE FlatPtr read_gs_ptr(FlatPtr offset)
     return val;
 }
 
-ALWAYS_INLINE void write_gs_ptr(u32 offset, FlatPtr val)
+AK_ALWAYS_INLINE void write_gs_ptr(u32 offset, FlatPtr val)
 {
     asm volatile(
         "mov %[val], %%gs:%a[off]" ::[off] "ir"(offset), [val] "r"(val)
         : "memory");
 }
 
-ALWAYS_INLINE bool are_interrupts_enabled()
+AK_ALWAYS_INLINE bool are_interrupts_enabled()
 {
     return (cpu_flags() & 0x200) != 0;
 }
@@ -119,7 +119,7 @@ void write_xcr0(u64);
 
 void flush_idt();
 
-ALWAYS_INLINE void load_task_register(u16 selector)
+AK_ALWAYS_INLINE void load_task_register(u16 selector)
 {
     asm("ltr %0" ::"r"(selector));
 }
@@ -137,7 +137,7 @@ void write_dr6(FlatPtr);
 FlatPtr read_dr7();
 void write_dr7(FlatPtr);
 
-ALWAYS_INLINE static bool is_kernel_mode()
+AK_ALWAYS_INLINE static bool is_kernel_mode()
 {
     u16 cs;
     asm volatile(
@@ -146,13 +146,13 @@ ALWAYS_INLINE static bool is_kernel_mode()
     return (cs & 3) == 0;
 }
 
-ALWAYS_INLINE void read_tsc(u32& lsw, u32& msw)
+AK_ALWAYS_INLINE void read_tsc(u32& lsw, u32& msw)
 {
     asm volatile("rdtsc"
                  : "=d"(msw), "=a"(lsw));
 }
 
-ALWAYS_INLINE u64 read_tsc()
+AK_ALWAYS_INLINE u64 read_tsc()
 {
     u32 lsw;
     u32 msw;
@@ -163,7 +163,7 @@ ALWAYS_INLINE u64 read_tsc()
 void stac();
 void clac();
 
-[[noreturn]] ALWAYS_INLINE void halt_this()
+[[noreturn]] AK_ALWAYS_INLINE void halt_this()
 {
     for (;;) {
         asm volatile("cli; hlt");

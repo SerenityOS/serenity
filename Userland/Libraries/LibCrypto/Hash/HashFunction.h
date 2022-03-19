@@ -19,10 +19,10 @@ struct Digest {
     constexpr static size_t Size = DigestS / 8;
     u8 data[Size];
 
-    [[nodiscard]] ALWAYS_INLINE const u8* immutable_data() const { return data; }
-    [[nodiscard]] ALWAYS_INLINE size_t data_length() const { return Size; }
+    [[nodiscard]] AK_ALWAYS_INLINE const u8* immutable_data() const { return data; }
+    [[nodiscard]] AK_ALWAYS_INLINE size_t data_length() const { return Size; }
 
-    [[nodiscard]] ALWAYS_INLINE ReadonlyBytes bytes() const { return { immutable_data(), data_length() }; }
+    [[nodiscard]] AK_ALWAYS_INLINE ReadonlyBytes bytes() const { return { immutable_data(), data_length() }; }
 };
 
 template<size_t BlockS, size_t DigestS, typename DigestT = Digest<DigestS>>

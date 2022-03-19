@@ -89,7 +89,7 @@ private:
     bool m_auditing_enabled { true };
 };
 
-ALWAYS_INLINE Mallocation* MallocTracer::find_mallocation(const Region& region, FlatPtr address)
+AK_ALWAYS_INLINE Mallocation* MallocTracer::find_mallocation(const Region& region, FlatPtr address)
 {
     if (!is<MmapRegion>(region))
         return nullptr;

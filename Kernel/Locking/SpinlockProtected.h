@@ -28,14 +28,14 @@ private:
         {
         }
 
-        ALWAYS_INLINE U const* operator->() const { return &m_value; }
-        ALWAYS_INLINE U const& operator*() const { return m_value; }
+        AK_ALWAYS_INLINE U const* operator->() const { return &m_value; }
+        AK_ALWAYS_INLINE U const& operator*() const { return m_value; }
 
-        ALWAYS_INLINE U* operator->() { return &m_value; }
-        ALWAYS_INLINE U& operator*() { return m_value; }
+        AK_ALWAYS_INLINE U* operator->() { return &m_value; }
+        AK_ALWAYS_INLINE U& operator*() { return m_value; }
 
-        ALWAYS_INLINE U const& get() const { return m_value; }
-        ALWAYS_INLINE U& get() { return m_value; }
+        AK_ALWAYS_INLINE U const& get() const { return m_value; }
+        AK_ALWAYS_INLINE U& get() { return m_value; }
 
     private:
         U& m_value;

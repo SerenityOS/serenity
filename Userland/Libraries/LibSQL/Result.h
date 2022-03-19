@@ -73,25 +73,25 @@ enum class SQLErrorCode {
 
 class [[nodiscard]] Result {
 public:
-    ALWAYS_INLINE Result(SQLCommand command)
+    AK_ALWAYS_INLINE Result(SQLCommand command)
         : m_command(command)
     {
     }
 
-    ALWAYS_INLINE Result(SQLCommand command, SQLErrorCode error)
+    AK_ALWAYS_INLINE Result(SQLCommand command, SQLErrorCode error)
         : m_command(command)
         , m_error(error)
     {
     }
 
-    ALWAYS_INLINE Result(SQLCommand command, SQLErrorCode error, String error_message)
+    AK_ALWAYS_INLINE Result(SQLCommand command, SQLErrorCode error, String error_message)
         : m_command(command)
         , m_error(error)
         , m_error_message(move(error_message))
     {
     }
 
-    ALWAYS_INLINE Result(Error error)
+    AK_ALWAYS_INLINE Result(Error error)
         : m_error(static_cast<SQLErrorCode>(error.code()))
         , m_error_message(error.string_literal())
     {

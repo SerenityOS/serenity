@@ -13,17 +13,17 @@
 
 __BEGIN_DECLS
 
-ALWAYS_INLINE int fb_get_properties(int fd, FBProperties* info)
+AK_ALWAYS_INLINE int fb_get_properties(int fd, FBProperties* info)
 {
     return ioctl(fd, FB_IOCTL_GET_PROPERTIES, info);
 }
 
-ALWAYS_INLINE int fb_get_head_properties(int fd, FBHeadProperties* info)
+AK_ALWAYS_INLINE int fb_get_head_properties(int fd, FBHeadProperties* info)
 {
     return ioctl(fd, FB_IOCTL_GET_HEAD_PROPERTIES, info);
 }
 
-ALWAYS_INLINE int fb_get_resolution(int fd, FBHeadResolution* info)
+AK_ALWAYS_INLINE int fb_get_resolution(int fd, FBHeadResolution* info)
 {
     FBHeadProperties head_properties;
     head_properties.head_index = info->head_index;
@@ -36,27 +36,27 @@ ALWAYS_INLINE int fb_get_resolution(int fd, FBHeadResolution* info)
     return 0;
 }
 
-ALWAYS_INLINE int fb_set_resolution(int fd, FBHeadResolution* info)
+AK_ALWAYS_INLINE int fb_set_resolution(int fd, FBHeadResolution* info)
 {
     return ioctl(fd, FB_IOCTL_SET_HEAD_RESOLUTION, info);
 }
 
-ALWAYS_INLINE int fb_get_head_edid(int fd, FBHeadEDID* info)
+AK_ALWAYS_INLINE int fb_get_head_edid(int fd, FBHeadEDID* info)
 {
     return ioctl(fd, FB_IOCTL_GET_HEAD_EDID, info);
 }
 
-ALWAYS_INLINE int fb_get_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
+AK_ALWAYS_INLINE int fb_get_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
 {
     return ioctl(fd, FB_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
 }
 
-ALWAYS_INLINE int fb_set_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
+AK_ALWAYS_INLINE int fb_set_head_vertical_offset_buffer(int fd, FBHeadVerticalOffset* vertical_offset)
 {
     return ioctl(fd, FB_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER, vertical_offset);
 }
 
-ALWAYS_INLINE int fb_flush_buffers(int fd, int index, FBRect const* rects, unsigned count)
+AK_ALWAYS_INLINE int fb_flush_buffers(int fd, int index, FBRect const* rects, unsigned count)
 {
     FBFlushRects fb_flush_rects;
     fb_flush_rects.buffer_index = index;

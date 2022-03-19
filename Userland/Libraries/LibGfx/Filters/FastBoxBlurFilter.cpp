@@ -10,15 +10,15 @@
 
 namespace Gfx {
 
-ALWAYS_INLINE static constexpr u8 red_value(Color color)
+AK_ALWAYS_INLINE static constexpr u8 red_value(Color color)
 {
     return (color.alpha() == 0) ? 0xFF : color.red();
 }
-ALWAYS_INLINE static constexpr u8 green_value(Color color)
+AK_ALWAYS_INLINE static constexpr u8 green_value(Color color)
 {
     return (color.alpha() == 0) ? 0xFF : color.green();
 }
-ALWAYS_INLINE static constexpr u8 blue_value(Color color)
+AK_ALWAYS_INLINE static constexpr u8 blue_value(Color color)
 {
     return (color.alpha() == 0) ? 0xFF : color.blue();
 }
