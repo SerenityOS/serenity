@@ -358,6 +358,12 @@ ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& 
     return {};
 }
 
+ThrowCompletionOr<void> GetNewTarget::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.accumulator() = interpreter.vm().get_new_target();
+    return {};
+}
+
 void Jump::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
 {
     if (m_true_target.has_value() && &m_true_target->block() == &from)
@@ -974,6 +980,11 @@ String IteratorResultValue::to_string_impl(Executable const&) const
 String ResolveThisBinding::to_string_impl(Bytecode::Executable const&) const
 {
     return "ResolveThisBinding"sv;
+}
+
+String GetNewTarget::to_string_impl(Bytecode::Executable const&) const
+{
+    return "GetNewTarget"sv;
 }
 
 }
