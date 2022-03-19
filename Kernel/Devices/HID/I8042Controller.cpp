@@ -292,8 +292,8 @@ ErrorOr<u8> I8042Controller::do_write_to_device(HIDDevice::Type device, u8 data)
         IO::out8(I8042Port::Buffer, data);
 
         response = TRY(do_wait_then_read(I8042Port::Buffer));
-    } while (response == I8042Response::Resend && ++attempts < 3);
-    if (attempts >= 3)
+    } while (response == I8042Response::Resend && ++attempts < 250);
+    if (attempts >= 250)
         dbgln("Failed to write byte to device, gave up");
     return response;
 }
@@ -310,7 +310,7 @@ ErrorOr<void> I8042Controller::prepare_for_input(HIDDevice::Type device)
 {
     VERIFY(m_lock.is_locked());
     u8 const second_port_flag = device == HIDDevice::Type::Keyboard ? 0 : I8042StatusFlag::SecondPS2PortOutputBuffer;
-    for (int attempt = 0; attempt < 250; attempt++) {
+    for (int attempt = 0; attempt < 1000; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::OutputBuffer)) {
             IO::delay(1000);
