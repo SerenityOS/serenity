@@ -1,22 +1,26 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/String.h>
+#include <AK/StringView.h>
+#include <LibGL/DeviceInfo.h>
+#include <LibSoftGPU/Config.h>
+#include <LibSoftGPU/Enums.h>
 
 namespace SoftGPU {
 
-struct DeviceInfo final {
-    String vendor_name;
-    String device_name;
-    unsigned num_texture_units;
-    unsigned num_lights;
-    u8 stencil_bits;
-    bool supports_npot_textures;
+static constexpr GL::DeviceInfo device_info {
+    .vendor_name = "SerenityOS"sv,
+    .device_name = "SoftGPU"sv,
+    .num_texture_units = NUM_SAMPLERS,
+    .num_lights = NUM_LIGHTS,
+    .stencil_bits = sizeof(StencilType) * 8,
+    .supports_npot_textures = true,
 };
 
 }

@@ -14,11 +14,13 @@
 #include <AK/TemporaryChange.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
+#include <LibGL/DeviceInfo.h>
 #include <LibGL/GLContext.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Device.h>
+#include <LibSoftGPU/DeviceInfo.h>
 #include <LibSoftGPU/Enums.h>
 #include <LibSoftGPU/ImageFormat.h>
 
@@ -65,7 +67,7 @@ GLContext::GLContext(Gfx::Bitmap& frontbuffer)
     : m_viewport(frontbuffer.rect())
     , m_frontbuffer(frontbuffer)
     , m_rasterizer(frontbuffer.size())
-    , m_device_info(m_rasterizer.info())
+    , m_device_info(SoftGPU::device_info)
 {
     m_texture_units.resize(m_device_info.num_texture_units);
     m_active_texture_unit = &m_texture_units[0];
@@ -446,9 +448,9 @@ GLubyte* GLContext::gl_get_string(GLenum name)
 
     switch (name) {
     case GL_VENDOR:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_device_info.vendor_name.characters()));
+        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_device_info.vendor_name.characters_without_null_termination()));
     case GL_RENDERER:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_device_info.device_name.characters()));
+        return reinterpret_cast<GLubyte*>(const_cast<char*>(m_device_info.device_name.characters_without_null_termination()));
     case GL_VERSION:
         return reinterpret_cast<GLubyte*>(const_cast<char*>("1.5"));
     case GL_EXTENSIONS:

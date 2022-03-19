@@ -14,6 +14,7 @@
 #include <AK/Tuple.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
+#include <LibGL/DeviceInfo.h>
 #include <LibGL/Tex/NameAllocator.h>
 #include <LibGL/Tex/Texture.h>
 #include <LibGL/Tex/TextureUnit.h>
@@ -304,7 +305,7 @@ private:
     }
 
     SoftGPU::Device m_rasterizer;
-    SoftGPU::DeviceInfo const m_device_info;
+    GL::DeviceInfo m_device_info;
     bool m_sampler_config_is_dirty { true };
     bool m_light_state_is_dirty { true };
 

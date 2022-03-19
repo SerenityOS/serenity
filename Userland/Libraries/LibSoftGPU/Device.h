@@ -21,7 +21,6 @@
 #include <LibSoftGPU/Buffer/Typed2DBuffer.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/Config.h>
-#include <LibSoftGPU/DeviceInfo.h>
 #include <LibSoftGPU/Enums.h>
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/ImageFormat.h>
@@ -112,8 +111,6 @@ struct StencilConfiguration {
 class Device final {
 public:
     Device(const Gfx::IntSize& min_size);
-
-    DeviceInfo info() const;
 
     void draw_primitives(PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
     void resize(Gfx::IntSize const& min_size);

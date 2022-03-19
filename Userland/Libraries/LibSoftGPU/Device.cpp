@@ -16,6 +16,7 @@
 #include <LibGfx/Vector3.h>
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Device.h>
+#include <LibSoftGPU/DeviceInfo.h>
 #include <LibSoftGPU/PixelQuad.h>
 #include <LibSoftGPU/SIMD.h>
 #include <math.h>
@@ -512,7 +513,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
             else
                 quad.vertex_color = expand4(vertex0.color);
 
-            for (size_t i = 0; i < NUM_SAMPLERS; ++i)
+            for (size_t i = 0; i < device_info.num_texture_units; ++i)
                 quad.texture_coordinates[i] = interpolate(expand4(vertex0.tex_coords[i]), expand4(vertex1.tex_coords[i]), expand4(vertex2.tex_coords[i]), quad.barycentrics);
 
             if (m_options.fog_enabled)
@@ -577,18 +578,6 @@ Device::Device(Gfx::IntSize const& size)
 {
     m_options.scissor_box = m_frame_buffer->rect();
     m_options.viewport = m_frame_buffer->rect();
-}
-
-DeviceInfo Device::info() const
-{
-    return {
-        .vendor_name = "SerenityOS",
-        .device_name = "SoftGPU",
-        .num_texture_units = NUM_SAMPLERS,
-        .num_lights = NUM_LIGHTS,
-        .stencil_bits = sizeof(StencilType) * 8,
-        .supports_npot_textures = true,
-    };
 }
 
 static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const& options)
@@ -956,7 +945,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         }
 
         // Apply texture transformation
-        for (size_t i = 0; i < NUM_SAMPLERS; ++i) {
+        for (size_t i = 0; i < device_info.num_texture_units; ++i) {
             triangle.vertices[0].tex_coords[i] = texture_transform * triangle.vertices[0].tex_coords[i];
             triangle.vertices[1].tex_coords[i] = texture_transform * triangle.vertices[1].tex_coords[i];
             triangle.vertices[2].tex_coords[i] = texture_transform * triangle.vertices[2].tex_coords[i];
