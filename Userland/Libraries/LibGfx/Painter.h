@@ -145,11 +145,12 @@ public:
 
     IntRect clip_rect() const { return state().clip_rect; }
 
+    int scale() const { return state().scale; }
+
 protected:
     IntPoint translation() const { return state().translation; }
     IntRect to_physical(IntRect const& r) const { return r.translated(translation()) * scale(); }
     IntPoint to_physical(IntPoint const& p) const { return p.translated(translation()) * scale(); }
-    int scale() const { return state().scale; }
     void set_physical_pixel_with_draw_op(u32& pixel, Color const&);
     void fill_physical_scanline_with_draw_op(int y, int x, int width, Color const& color);
     void fill_rect_with_draw_op(IntRect const&, Color);
