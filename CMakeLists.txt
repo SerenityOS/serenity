@@ -269,6 +269,7 @@ serenity_component(
 )
 
 if (HACKSTUDIO_BUILD)
+    include_directories(/usr/include/Userland/Services)
     include(${HACKSTUDIO_BUILD_CMAKE_FILE})
     return()
 endif()
