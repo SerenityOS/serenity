@@ -89,7 +89,7 @@ void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_f
         if (steep) {
             for (int x = xpxl1 + 1; x <= xpxl2 - 1; ++x) {
                 if constexpr (policy == AntiAliasPolicy::OnlyEnds) {
-                    plot(integer_part(intery), x, one_minus_fractional_part(intery));
+                    plot(integer_part(intery), x, 1);
                 } else {
                     plot(integer_part(intery), x, one_minus_fractional_part(intery));
                 }
