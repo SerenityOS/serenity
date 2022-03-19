@@ -89,8 +89,8 @@ void TextModeConsole::set_cursor(size_t x, size_t y)
 {
     SpinlockLocker lock(m_vga_lock);
     GraphicsManagement::the().set_vga_text_mode_cursor(width(), x, y);
-    m_cursor_x = x;
-    m_cursor_y = y;
+    m_x = x;
+    m_y = y;
 }
 void TextModeConsole::hide_cursor()
 {
@@ -99,7 +99,7 @@ void TextModeConsole::hide_cursor()
 }
 void TextModeConsole::show_cursor()
 {
-    set_cursor(m_cursor_x, m_cursor_y);
+    set_cursor(m_x, m_y);
 }
 
 void TextModeConsole::clear(size_t x, size_t y, size_t length)

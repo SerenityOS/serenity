@@ -39,8 +39,6 @@ private:
     TextModeConsole();
 
     mutable Spinlock m_vga_lock;
-    size_t m_cursor_x { 0 };
-    size_t m_cursor_y { 0 };
 
     VirtualAddress m_current_vga_window;
 };
