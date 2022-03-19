@@ -512,7 +512,8 @@ class ExpectationError extends Error {
         __expect(value, details) {
             if (value !== true) {
                 if (details !== undefined) {
-                    throw new ExpectationError(details());
+                    if (details instanceof Function) throw new ExpectationError(details());
+                    else throw new ExpectationError(details);
                 } else {
                     throw new ExpectationError();
                 }
