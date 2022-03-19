@@ -167,12 +167,8 @@ void GlyphMapWidget::mousedown_event(MouseEvent& event)
         auto glyph = maybe_glyph.value();
         if (event.shift())
             m_selection.extend_to(glyph);
-        else {
-            m_selection.set_size(1);
-            m_selection.set_start(glyph);
-        }
         m_in_drag_select = true;
-        set_active_glyph(glyph, ShouldResetSelection::No);
+        set_active_glyph(glyph, event.shift() ? ShouldResetSelection::No : ShouldResetSelection::Yes);
     }
 }
 
