@@ -411,8 +411,12 @@ ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter& inter
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto callee = interpreter.reg(m_callee);
-    if (!callee.is_function())
+
+    if (m_type == CallType::Call && !callee.is_function())
         return interpreter.vm().throw_completion<TypeError>(interpreter.global_object(), ErrorType::IsNotA, callee.to_string_without_side_effects(), "function"sv);
+
+    if (m_type == CallType::Construct && !callee.is_constructor())
+        return interpreter.vm().throw_completion<TypeError>(interpreter.global_object(), ErrorType::IsNotA, callee.to_string_without_side_effects(), "constructor"sv);
 
     auto& function = callee.as_function();
 
