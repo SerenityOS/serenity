@@ -1713,11 +1713,11 @@ void Painter::draw_text(Function<void(IntRect const&, Utf8CodePointIterator&)> d
 
 void Painter::set_pixel(IntPoint const& p, Color color, bool blend)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     auto point = p;
     point.translate_by(state().translation);
-    if (!clip_rect().contains(point))
+    // Use the scale only to avoid clipping pixels set in drawing functions that handle
+    // scaling and call set_pixel() -- do not scale the pixel.
+    if (!clip_rect().contains(point / scale()))
         return;
     auto& dst = m_target->scanline(point.y())[point.x()];
     if (!blend) {
