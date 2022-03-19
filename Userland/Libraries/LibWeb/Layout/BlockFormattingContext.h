@@ -27,7 +27,7 @@ public:
     auto const& right_side_floats() const { return m_right_floats; }
 
     static float compute_theoretical_height(FormattingState const&, Box const&);
-    void compute_width(Box const&, LayoutMode = LayoutMode::Default);
+    void compute_width(Box const&, LayoutMode = LayoutMode::Normal);
 
     // https://www.w3.org/TR/css-display/#block-formatting-context-root
     BlockContainer const& root() const { return static_cast<BlockContainer const&>(context_box()); }

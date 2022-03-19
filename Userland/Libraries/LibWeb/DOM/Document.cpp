@@ -577,7 +577,7 @@ void Document::update_layout()
     icb.set_has_definite_width(true);
     icb.set_has_definite_height(true);
 
-    root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
+    root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Normal);
     formatting_state.commit();
 
     m_layout_root->build_stacking_context_tree();

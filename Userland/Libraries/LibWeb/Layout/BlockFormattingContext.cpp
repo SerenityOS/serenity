@@ -224,13 +224,13 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Layo
     float width_of_containing_block = 0;
 
     switch (layout_mode) {
-    case LayoutMode::Default:
+    case LayoutMode::Normal:
         width_of_containing_block = m_state.get(containing_block).content_width;
         break;
-    case LayoutMode::AllPossibleLineBreaks:
+    case LayoutMode::MinContent:
         width_of_containing_block = 0;
         break;
-    case LayoutMode::OnlyRequiredLineBreaks:
+    case LayoutMode::MaxContent:
         width_of_containing_block = INFINITY;
         break;
     }
@@ -408,7 +408,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
         return IterationDecision::Continue;
     });
 
-    if (layout_mode != LayoutMode::Default) {
+    if (layout_mode != LayoutMode::Normal) {
         auto& width = block_container.computed_values().width();
         if (!width.has_value() || (width->is_length() && width->length().is_auto())) {
             auto& block_container_state = m_state.get_mutable(block_container);
@@ -559,13 +559,13 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     float width_of_containing_block = 0;
 
     switch (layout_mode) {
-    case LayoutMode::Default:
+    case LayoutMode::Normal:
         width_of_containing_block = m_state.get(containing_block).content_width;
         break;
-    case LayoutMode::AllPossibleLineBreaks:
+    case LayoutMode::MinContent:
         width_of_containing_block = 0;
         break;
-    case LayoutMode::OnlyRequiredLineBreaks:
+    case LayoutMode::MaxContent:
         width_of_containing_block = INFINITY;
         break;
     }

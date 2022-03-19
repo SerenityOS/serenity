@@ -84,7 +84,7 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
 
     auto& containing_block_state = m_state.get_mutable(containing_block());
 
-    if (layout_mode != LayoutMode::Default) {
+    if (layout_mode != LayoutMode::Normal) {
         containing_block_state.content_width = max_line_width;
     }
 
