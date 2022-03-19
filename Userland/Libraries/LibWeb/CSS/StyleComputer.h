@@ -86,6 +86,9 @@ private:
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;
 
+    Gfx::IntRect viewport_rect() const;
+    float root_element_font_size() const;
+
     struct MatchingRuleSet {
         Vector<MatchingRule> user_agent_rules;
         Vector<MatchingRule> author_rules;
