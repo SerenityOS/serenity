@@ -2093,6 +2093,11 @@ void HTMLParser::handle_text(HTMLToken& token)
         flush_character_insertions();
 
         NonnullRefPtr<HTMLScriptElement> script = verify_cast<HTMLScriptElement>(current_node());
+
+        // The document's "load" event is delayed until every script becomes ready.
+        // See HTMLScriptElement internals for how readiness is determined.
+        script->begin_delaying_document_load_event({}, *m_document);
+
         (void)m_stack_of_open_elements.pop();
         m_insertion_mode = m_original_insertion_mode;
         // Let the old insertion point have the same value as the current insertion point.
