@@ -305,7 +305,7 @@ ErrorOr<void, ValidationError> Validator::validate(Limits const& limits, size_t 
 {
     auto bound = (1ull << k) - 1;
     auto check_bound = [bound](auto value) {
-        return static_cast<u64>(value) < bound;
+        return static_cast<u64>(value) <= bound;
     };
 
     if (!check_bound(limits.min()))
