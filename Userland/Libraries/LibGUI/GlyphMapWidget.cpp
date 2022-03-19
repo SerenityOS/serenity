@@ -182,8 +182,17 @@ int GlyphMapWidget::glyph_at_position_clamped(Gfx::IntPoint position) const
     return glyph;
 }
 
+void GlyphMapWidget::context_menu_event(GUI::ContextMenuEvent& event)
+{
+    if (on_context_menu_request)
+        on_context_menu_request(event);
+}
+
 void GlyphMapWidget::mousedown_event(MouseEvent& event)
 {
+    if (event.button() == MouseButton::Secondary)
+        return;
+
     if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value()) {
         auto glyph = maybe_glyph.value();
         if (event.shift())
@@ -196,6 +205,9 @@ void GlyphMapWidget::mousedown_event(MouseEvent& event)
 
 void GlyphMapWidget::mouseup_event(GUI::MouseEvent& event)
 {
+    if (event.button() == MouseButton::Secondary)
+        return;
+
     if (!m_in_drag_select)
         return;
     auto constrained = event.position().constrained(widget_inner_rect());
