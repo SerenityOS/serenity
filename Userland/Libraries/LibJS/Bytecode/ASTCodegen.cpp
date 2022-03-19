@@ -2031,4 +2031,25 @@ Bytecode::CodeGenerationErrorOr<void> ForOfStatement::generate_bytecode(Bytecode
     return for_in_of_body_evaluation(generator, *this, m_lhs, body(), head_result, loop_end, loop_update);
 }
 
+// 13.3.12.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-meta-properties-runtime-semantics-evaluation
+Bytecode::CodeGenerationErrorOr<void> MetaProperty::generate_bytecode(Bytecode::Generator& generator) const
+{
+    // NewTarget : new . target
+    if (m_type == MetaProperty::Type::NewTarget) {
+        // 1. Return GetNewTarget().
+        generator.emit<Bytecode::Op::GetNewTarget>();
+        return {};
+    }
+
+    // ImportMeta : import . meta
+    if (m_type == MetaProperty::Type::ImportMeta) {
+        return Bytecode::CodeGenerationError {
+            this,
+            "Unimplemented meta property: import.meta"sv,
+        };
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 }
