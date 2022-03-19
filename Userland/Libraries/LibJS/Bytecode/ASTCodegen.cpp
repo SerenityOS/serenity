@@ -1155,6 +1155,23 @@ static Bytecode::CodeGenerationErrorOr<void> generate_binding_pattern_bytecode(B
     return generate_array_binding_pattern_bytecode(generator, pattern, initialization_mode, value_reg);
 }
 
+static Bytecode::CodeGenerationErrorOr<void> assign_accumulator_to_variable_declarator(Bytecode::Generator& generator, VariableDeclarator const& declarator, VariableDeclaration const& declaration)
+{
+    auto initialization_mode = declaration.is_lexical_declaration() ? Bytecode::Op::SetVariable::InitializationMode::Initialize : Bytecode::Op::SetVariable::InitializationMode::Set;
+    auto environment_mode = declaration.is_lexical_declaration() ? Bytecode::Op::EnvironmentMode::Lexical : Bytecode::Op::EnvironmentMode::Var;
+
+    return declarator.target().visit(
+        [&](NonnullRefPtr<Identifier> const& id) -> Bytecode::CodeGenerationErrorOr<void> {
+            generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()), initialization_mode, environment_mode);
+            return {};
+        },
+        [&](NonnullRefPtr<BindingPattern> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
+            auto value_register = generator.allocate_register();
+            generator.emit<Bytecode::Op::Store>(value_register);
+            return generate_binding_pattern_bytecode(generator, pattern, initialization_mode, value_register);
+        });
+}
+
 Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
     for (auto& declarator : m_declarations) {
@@ -1162,20 +1179,7 @@ Bytecode::CodeGenerationErrorOr<void> VariableDeclaration::generate_bytecode(Byt
             TRY(declarator.init()->generate_bytecode(generator));
         else
             generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-
-        auto initialization_mode = is_lexical_declaration() ? Bytecode::Op::SetVariable::InitializationMode::Initialize : Bytecode::Op::SetVariable::InitializationMode::Set;
-        auto environment_mode = is_lexical_declaration() ? Bytecode::Op::EnvironmentMode::Lexical : Bytecode::Op::EnvironmentMode::Var;
-
-        TRY(declarator.target().visit(
-            [&](NonnullRefPtr<Identifier> const& id) -> Bytecode::CodeGenerationErrorOr<void> {
-                generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()), initialization_mode, environment_mode);
-                return {};
-            },
-            [&](NonnullRefPtr<BindingPattern> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
-                auto value_register = generator.allocate_register();
-                generator.emit<Bytecode::Op::Store>(value_register);
-                return generate_binding_pattern_bytecode(generator, pattern, initialization_mode, value_register);
-            }));
+        TRY(assign_accumulator_to_variable_declarator(generator, declarator, *this));
     }
 
     return {};
@@ -1693,6 +1697,338 @@ Bytecode::CodeGenerationErrorOr<void> WithStatement::generate_bytecode(Bytecode:
         generator.emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
 
     return {};
+}
+
+enum class LHSKind {
+    Assignment,
+    VarBinding,
+    LexicalBinding,
+};
+
+enum class IterationKind {
+    Enumerate,
+    Iterate,
+    AsyncIterate,
+};
+
+// 14.7.5.6 ForIn/OfHeadEvaluation ( uninitializedBoundNames, expr, iterationKind ), https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation
+struct ForInOfHeadEvaluationResult {
+    bool is_destructuring { false };
+    LHSKind lhs_kind { LHSKind::Assignment };
+};
+static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_head_evaluation(Bytecode::Generator& generator, IterationKind iteration_kind, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> const& lhs, NonnullRefPtr<ASTNode> const& rhs)
+{
+    ForInOfHeadEvaluationResult result {};
+
+    if (auto* ast_ptr = lhs.get_pointer<NonnullRefPtr<ASTNode>>(); ast_ptr && is<VariableDeclaration>(**ast_ptr)) {
+        // Runtime Semantics: ForInOfLoopEvaluation, for any of:
+        //  ForInOfStatement : for ( var ForBinding in Expression ) Statement
+        //  ForInOfStatement : for ( ForDeclaration in Expression ) Statement
+        //  ForInOfStatement : for ( var ForBinding of AssignmentExpression ) Statement
+        //  ForInOfStatement : for ( ForDeclaration of AssignmentExpression ) Statement
+
+        auto& variable_declaration = static_cast<VariableDeclaration const&>(**ast_ptr);
+        result.is_destructuring = variable_declaration.declarations().first().target().has<NonnullRefPtr<BindingPattern>>();
+        result.lhs_kind = variable_declaration.is_lexical_declaration() ? LHSKind::LexicalBinding : LHSKind::VarBinding;
+
+        // 1. Let oldEnv be the running execution context's LexicalEnvironment.
+
+        // NOTE: 'uninitializedBoundNames' refers to the lexical bindings (i.e. Const/Let) present in the second and last form.
+        // 2. If uninitializedBoundNames is not an empty List, then
+        bool entered_lexical_scope = false;
+        if (variable_declaration.declaration_kind() != DeclarationKind::Var) {
+            entered_lexical_scope = true;
+            // a. Assert: uninitializedBoundNames has no duplicate entries.
+            // b. Let newEnv be NewDeclarativeEnvironment(oldEnv).
+            generator.begin_variable_scope();
+            // c. For each String name of uninitializedBoundNames, do
+            variable_declaration.for_each_bound_name([&](auto const& name) {
+                // i. Perform ! newEnv.CreateMutableBinding(name, false).
+                auto identifier = generator.intern_identifier(name);
+                generator.register_binding(identifier);
+                generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
+            });
+            // d. Set the running execution context's LexicalEnvironment to newEnv.
+            // NOTE: Done by CreateEnvironment.
+        }
+        // 3. Let exprRef be the result of evaluating expr.
+        TRY(rhs->generate_bytecode(generator));
+
+        // 4. Set the running execution context's LexicalEnvironment to oldEnv.
+        if (entered_lexical_scope)
+            generator.end_variable_scope();
+
+        // 5. Let exprValue be ? GetValue(exprRef).
+        // NOTE: No need to store this anywhere.
+
+        // 6. If iterationKind is enumerate, then
+        if (iteration_kind == IterationKind::Enumerate) {
+            // a. If exprValue is undefined or null, then
+            auto& nullish_block = generator.make_block();
+            auto& continuation_block = generator.make_block();
+            auto& jump = generator.emit<Bytecode::Op::JumpNullish>();
+            jump.set_targets(Bytecode::Label { nullish_block }, Bytecode::Label { continuation_block });
+
+            // i. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
+            generator.switch_to_basic_block(nullish_block);
+            generator.perform_needed_unwinds<Bytecode::Op::Jump>(true);
+            generator.emit<Bytecode::Op::Jump>().set_targets(generator.nearest_breakable_scope(), {});
+
+            generator.switch_to_basic_block(continuation_block);
+            // b. Let obj be ! ToObject(exprValue).
+            // NOTE: GetObjectPropertyIterator does this.
+            // c. Let iterator be EnumerateObjectProperties(obj).
+            // d. Let nextMethod be ! GetV(iterator, "next").
+            // e. Return the Iterator Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
+            generator.emit<Bytecode::Op::GetObjectPropertyIterator>();
+        }
+        // 7. Else,
+        else {
+            // a. Assert: iterationKind is iterate or async-iterate.
+            // b. If iterationKind is async-iterate, let iteratorHint be async.
+            if (iteration_kind == IterationKind::AsyncIterate) {
+                return Bytecode::CodeGenerationError {
+                    rhs.ptr(),
+                    "Unimplemented iteration mode: AsyncIterate"sv,
+                };
+            }
+            // c. Else, let iteratorHint be sync.
+
+            // d. Return ? GetIterator(exprValue, iteratorHint).
+            generator.emit<Bytecode::Op::GetIterator>();
+        }
+    } else {
+        // Runtime Semantics: ForInOfLoopEvaluation, for any of:
+        //  ForInOfStatement : for ( LeftHandSideExpression in Expression ) Statement
+        //  ForInOfStatement : for ( LeftHandSideExpression of AssignmentExpression ) Statement
+
+        // Skip everything except steps 3, 5 and 7 (see above true branch for listing).
+        result.lhs_kind = LHSKind::Assignment;
+
+        // 3. Let exprRef be the result of evaluating expr.
+        TRY(rhs->generate_bytecode(generator));
+
+        // 5. Let exprValue be ? GetValue(exprRef).
+        // NOTE: No need to store this anywhere.
+
+        // a. Assert: iterationKind is iterate or async-iterate.
+        // b. If iterationKind is async-iterate, let iteratorHint be async.
+        if (iteration_kind == IterationKind::AsyncIterate) {
+            return Bytecode::CodeGenerationError {
+                rhs.ptr(),
+                "Unimplemented iteration mode: AsyncIterate"sv,
+            };
+        }
+        // c. Else, let iteratorHint be sync.
+
+        // d. Return ? GetIterator(exprValue, iteratorHint).
+        generator.emit<Bytecode::Op::GetIterator>();
+    }
+
+    return result;
+}
+
+// 14.7.5.7 ForIn/OfBodyEvaluation ( lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet [ , iteratorKind ] ), https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
+static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode::Generator& generator, ASTNode const& node, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> const& lhs, ASTNode const& body, ForInOfHeadEvaluationResult const& head_result, Bytecode::BasicBlock& loop_end, Bytecode::BasicBlock& loop_update)
+{
+    auto iterator_register = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(iterator_register);
+
+    // FIXME: Implement this
+    //        1. If iteratorKind is not present, set iteratorKind to sync.
+
+    // 2. Let oldEnv be the running execution context's LexicalEnvironment.
+    bool has_lexical_binding = false;
+
+    // 3. Let V be undefined.
+    // NOTE: We don't need 'V' as the resulting value will naturally flow through via the accumulator register.
+
+    // 4. Let destructuring be IsDestructuring of lhs.
+    auto destructuring = head_result.is_destructuring;
+
+    // 5. If destructuring is true and if lhsKind is assignment, then
+    if (destructuring) {
+        // a. Assert: lhs is a LeftHandSideExpression.
+        // b. Let assignmentPattern be the AssignmentPattern that is covered by lhs.
+        // FIXME: Implement this.
+        return Bytecode::CodeGenerationError {
+            &node,
+            "Unimplemented: destructuring in for-in/of"sv,
+        };
+    }
+    // 6. Repeat,
+    generator.emit<Bytecode::Op::Jump>(Bytecode::Label { loop_update });
+    generator.switch_to_basic_block(loop_update);
+
+    // a. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
+    generator.emit<Bytecode::Op::Load>(iterator_register);
+    generator.emit<Bytecode::Op::IteratorNext>();
+
+    // FIXME: Implement this:
+    //        b. If iteratorKind is async, set nextResult to ? Await(nextResult).
+
+    // c. If Type(nextResult) is not Object, throw a TypeError exception.
+    // NOTE: IteratorComplete already does this.
+
+    // d. Let done be ? IteratorComplete(nextResult).
+    auto iterator_result_register = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(iterator_result_register);
+
+    generator.emit<Bytecode::Op::IteratorResultDone>();
+    // e. If done is true, return V.
+    auto& loop_continue = generator.make_block();
+    generator.emit<Bytecode::Op::JumpConditional>().set_targets(Bytecode::Label { loop_end }, Bytecode::Label { loop_continue });
+    generator.switch_to_basic_block(loop_continue);
+
+    // f. Let nextValue be ? IteratorValue(nextResult).
+    generator.emit<Bytecode::Op::Load>(iterator_result_register);
+    generator.emit<Bytecode::Op::IteratorResultValue>();
+
+    // g. If lhsKind is either assignment or varBinding, then
+    if (head_result.lhs_kind != LHSKind::LexicalBinding) {
+        // i. If destructuring is false, then
+        if (!destructuring) {
+            // 1. Let lhsRef be the result of evaluating lhs. (It may be evaluated repeatedly.)
+            // NOTE: We're skipping all the completion stuff that the spec does, as the unwinding mechanism will take case of doing that.
+            if (head_result.lhs_kind == LHSKind::VarBinding) {
+                auto& declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode>>());
+                VERIFY(declaration.declarations().size() == 1);
+                TRY(assign_accumulator_to_variable_declarator(generator, declaration.declarations().first(), declaration));
+            } else {
+                TRY(generator.emit_store_to_reference(*lhs.get<NonnullRefPtr<ASTNode>>()));
+            }
+        }
+    }
+    // h. Else,
+    else {
+        // i. Assert: lhsKind is lexicalBinding.
+        // ii. Assert: lhs is a ForDeclaration.
+        // iii. Let iterationEnv be NewDeclarativeEnvironment(oldEnv).
+        // iv. Perform ForDeclarationBindingInstantiation of lhs with argument iterationEnv.
+        // v. Set the running execution context's LexicalEnvironment to iterationEnv.
+        generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical);
+        has_lexical_binding = true;
+
+        // 14.7.5.4 Runtime Semantics: ForDeclarationBindingInstantiation, https://tc39.es/ecma262/#sec-runtime-semantics-fordeclarationbindinginstantiation
+        // 1. Assert: environment is a declarative Environment Record.
+        // NOTE: We just made it.
+        auto& variable_declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode>>());
+        // 2. For each element name of the BoundNames of ForBinding, do
+        variable_declaration.for_each_bound_name([&](auto const& name) {
+            auto identifier = generator.intern_identifier(name);
+            generator.register_binding(identifier, Bytecode::Generator::BindingMode::Lexical);
+            // a. If IsConstantDeclaration of LetOrConst is true, then
+            if (variable_declaration.is_constant_declaration()) {
+                // i. Perform ! environment.CreateImmutableBinding(name, true).
+                generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, true);
+            }
+            // b. Else,
+            else {
+                // i. Perform ! environment.CreateMutableBinding(name, false).
+                generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
+            }
+        });
+        // 3. Return unused.
+        // NOTE: No need to do that as we've inlined this.
+
+        // vi. If destructuring is false, then
+        if (!destructuring) {
+            // 1. Assert: lhs binds a single name.
+            // 2. Let lhsName be the sole element of BoundNames of lhs.
+            auto lhs_name = variable_declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->string();
+            // 3. Let lhsRef be ! ResolveBinding(lhsName).
+            // NOTE: We're skipping all the completion stuff that the spec does, as the unwinding mechanism will take case of doing that.
+            auto identifier = generator.intern_identifier(lhs_name);
+            generator.emit<Bytecode::Op::SetVariable>(identifier, Bytecode::Op::SetVariable::InitializationMode::Initialize, Bytecode::Op::EnvironmentMode::Lexical);
+        }
+    }
+    // i. If destructuring is false, then
+    if (!destructuring) {
+        // i. If lhsRef is an abrupt completion, then
+        //     1. Let status be lhsRef.
+        // ii. Else if lhsKind is lexicalBinding, then
+        //     1. Let status be Completion(InitializeReferencedBinding(lhsRef, nextValue)).
+        // iii. Else,
+        //     1. Let status be Completion(PutValue(lhsRef, nextValue)).
+        // NOTE: This is performed above.
+    }
+    //    j. Else,
+    else {
+        // FIXME: Implement destructuring
+        //  i. If lhsKind is assignment, then
+        //      1. Let status be Completion(DestructuringAssignmentEvaluation of assignmentPattern with argument nextValue).
+        //  ii. Else if lhsKind is varBinding, then
+        //      1. Assert: lhs is a ForBinding.
+        //      2. Let status be Completion(BindingInitialization of lhs with arguments nextValue and undefined).
+        //  iii. Else,
+        //      1. Assert: lhsKind is lexicalBinding.
+        //      2. Assert: lhs is a ForDeclaration.
+        //      3. Let status be Completion(ForDeclarationBindingInitialization of lhs with arguments nextValue and iterationEnv).
+        return Bytecode::CodeGenerationError {
+            &node,
+            "Unimplemented: destructuring in for-in/of"sv,
+        };
+    }
+
+    // FIXME: Implement iteration closure.
+    // k. If status is an abrupt completion, then
+    //     i. Set the running execution context's LexicalEnvironment to oldEnv.
+    //     ii. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
+    //     iii. If iterationKind is enumerate, then
+    //         1. Return ? status.
+    //     iv. Else,
+    //         1. Assert: iterationKind is iterate.
+    //         2. Return ? IteratorClose(iteratorRecord, status).
+
+    // l. Let result be the result of evaluating stmt.
+    TRY(body.generate_bytecode(generator));
+
+    // m. Set the running execution context's LexicalEnvironment to oldEnv.
+    if (has_lexical_binding)
+        generator.end_variable_scope();
+    generator.end_continuable_scope();
+    generator.end_breakable_scope();
+
+    // NOTE: If we're here, then the loop definitely continues.
+    // n. If LoopContinues(result, labelSet) is false, then
+    //     i. If iterationKind is enumerate, then
+    //         1. Return ? UpdateEmpty(result, V).
+    //     ii. Else,
+    //         1. Assert: iterationKind is iterate.
+    //         2. Set status to Completion(UpdateEmpty(result, V)).
+    //         3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
+    //         4. Return ? IteratorClose(iteratorRecord, status).
+    // o. If result.[[Value]] is not empty, set V to result.[[Value]].
+    generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { loop_update }, {});
+    generator.switch_to_basic_block(loop_end);
+    return {};
+}
+
+// 14.7.5.5 Runtime Semantics: ForInOfLoopEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-forinofloopevaluation
+Bytecode::CodeGenerationErrorOr<void> ForInStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto& loop_end = generator.make_block();
+    auto& loop_update = generator.make_block();
+    generator.begin_breakable_scope(Bytecode::Label { loop_end });
+    generator.begin_continuable_scope(Bytecode::Label { loop_update });
+
+    auto head_result = TRY(for_in_of_head_evaluation(generator, IterationKind::Enumerate, m_lhs, m_rhs));
+
+    // Now perform the rest of ForInOfLoopEvaluation, given that the accumulator holds the iterator we're supposed to iterate over.
+    return for_in_of_body_evaluation(generator, *this, m_lhs, body(), head_result, loop_end, loop_update);
+}
+
+Bytecode::CodeGenerationErrorOr<void> ForOfStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto& loop_end = generator.make_block();
+    auto& loop_update = generator.make_block();
+    generator.begin_breakable_scope(Bytecode::Label { loop_end });
+    generator.begin_continuable_scope(Bytecode::Label { loop_update });
+
+    auto head_result = TRY(for_in_of_head_evaluation(generator, IterationKind::Iterate, m_lhs, m_rhs));
+
+    // Now perform the rest of ForInOfLoopEvaluation, given that the accumulator holds the iterator we're supposed to iterate over.
+    return for_in_of_body_evaluation(generator, *this, m_lhs, body(), head_result, loop_end, loop_update);
 }
 
 }

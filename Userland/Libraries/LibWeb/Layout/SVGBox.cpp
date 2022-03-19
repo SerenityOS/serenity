@@ -9,7 +9,7 @@
 namespace Web::Layout {
 
 SVGBox::SVGBox(DOM::Document& document, SVG::SVGElement& element, NonnullRefPtr<CSS::StyleProperties> style)
-    : BlockContainer(document, &element, move(style))
+    : Box(document, &element, move(style))
 {
 }
 

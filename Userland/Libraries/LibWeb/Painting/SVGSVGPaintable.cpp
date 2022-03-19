@@ -15,7 +15,7 @@ NonnullRefPtr<SVGSVGPaintable> SVGSVGPaintable::create(Layout::SVGSVGBox const& 
 }
 
 SVGSVGPaintable::SVGSVGPaintable(Layout::SVGSVGBox const& layout_box)
-    : SVGGraphicsPaintable(layout_box)
+    : PaintableBox(layout_box)
 {
 }
 
@@ -32,12 +32,12 @@ void SVGSVGPaintable::before_children_paint(PaintContext& context, PaintPhase ph
     if (!context.has_svg_context())
         context.set_svg_context(SVGContext(absolute_rect()));
 
-    SVGGraphicsPaintable::before_children_paint(context, phase);
+    PaintableBox::before_children_paint(context, phase);
 }
 
 void SVGSVGPaintable::after_children_paint(PaintContext& context, PaintPhase phase) const
 {
-    SVGGraphicsPaintable::after_children_paint(context, phase);
+    PaintableBox::after_children_paint(context, phase);
     if (phase != PaintPhase::Foreground)
         return;
     context.clear_svg_context();

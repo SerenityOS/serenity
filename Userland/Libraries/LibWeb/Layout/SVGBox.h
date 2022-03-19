@@ -12,7 +12,7 @@
 
 namespace Web::Layout {
 
-class SVGBox : public BlockContainer {
+class SVGBox : public Box {
 public:
     SVGBox(DOM::Document&, SVG::SVGElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~SVGBox() override = default;

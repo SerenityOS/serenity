@@ -29,7 +29,10 @@ HTMLScriptElement::~HTMLScriptElement() = default;
 void HTMLScriptElement::set_parser_document(Badge<HTMLParser>, DOM::Document& document)
 {
     m_parser_document = document;
+}
 
+void HTMLScriptElement::begin_delaying_document_load_event(Badge<HTMLParser>, DOM::Document& document)
+{
     // https://html.spec.whatwg.org/multipage/scripting.html#concept-script-script
     // The user agent must delay the load event of the element's node document until the script is ready.
     m_document_load_event_delayer.emplace(document);
