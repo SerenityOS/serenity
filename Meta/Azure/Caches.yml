@@ -2,6 +2,7 @@ parameters:
   os: 'Linux'
   arch: 'i686'
   toolchain: 'gcc'
+  coverage: 'OFF'
   build_directory: ''
   ccache_version: 1 # Increment this number if CI has trouble with ccache.
   serenity_ccache_path: ''
@@ -45,9 +46,9 @@ steps:
   - ${{ if ne(parameters.serenity_ccache_path, '') }}:
     - task: Cache@2
       inputs:
-        key: '"ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}" | "$(timestamp)"'
+        key: '"ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.coverage }}" | "${{ parameters.ccache_version }}" | "$(timestamp)"'
         restoreKeys: |
-          "ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}"
+          "ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.coverage }}" | "${{ parameters.ccache_version }}"
         path: ${{ parameters.serenity_ccache_path }}
       displayName: 'Serenity Compiler Cache'
 
