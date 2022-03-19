@@ -137,6 +137,8 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
         m_stop_action->set_enabled(false);
     };
 
+    m_open_project_configuration_action = create_open_project_configuration_action();
+
     m_build_action = create_build_action();
     m_run_action = create_run_action();
     m_stop_action = create_stop_action();
@@ -1366,6 +1368,9 @@ void HackStudioWidget::create_edit_menu(GUI::Window& window)
     });
     vim_emulation_setting_action->set_checked(false);
     edit_menu.add_action(vim_emulation_setting_action);
+
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_open_project_configuration_action);
 }
 
 void HackStudioWidget::create_build_menu(GUI::Window& window)
@@ -1646,6 +1651,33 @@ void HackStudioWidget::create_location_history_actions()
         update_history_actions();
     });
     m_locations_history_forward_action->set_enabled(false);
+}
+
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_project_configuration_action()
+{
+    return GUI::Action::create("Project Configuration", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png").release_value(), [&](auto&) {
+        auto parent_directory = LexicalPath::dirname(Project::config_file_path);
+        auto absolute_config_file_path = LexicalPath::absolute_path(m_project->root_path(), Project::config_file_path);
+
+        if (!Core::File::exists(absolute_config_file_path)) {
+            if (Core::File::exists(parent_directory) && !Core::File::is_directory(parent_directory)) {
+                GUI::MessageBox::show_error(window(), String::formatted("Cannot create the '{}' directory because there is already a file with that name", parent_directory));
+                return;
+            }
+
+            mkdir(LexicalPath::absolute_path(m_project->root_path(), parent_directory).characters(), 0755);
+
+            auto file = Core::File::open(absolute_config_file_path, Core::OpenMode::WriteOnly);
+            file.value()->write(
+                "{\n"
+                "    \"build_command\": \"your build command here\",\n"
+                "    \"run_command\": \"your run command here\"\n"
+                "}\n");
+            file.value()->close();
+        }
+
+        open_file(Project::config_file_path);
+    });
 }
 
 HackStudioWidget::ProjectLocation HackStudioWidget::current_project_location() const
