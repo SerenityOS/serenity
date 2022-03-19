@@ -504,6 +504,14 @@ void Job::on_socket_connected()
                 break;
             }
 
+            // Check after reading all the buffered data if we have reached the end of stream
+            // for cases where the server didn't send a content length, chunked encoding but is
+            // directly closing the connection.
+            if (!m_content_length.has_value() && !m_current_chunk_remaining_size.has_value() && m_socket->is_eof()) {
+                finish_up();
+                break;
+            }
+
             if (m_current_chunk_remaining_size.has_value()) {
                 auto size = m_current_chunk_remaining_size.value() - payload.size();
 
