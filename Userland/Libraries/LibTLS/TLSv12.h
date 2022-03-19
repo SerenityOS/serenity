@@ -365,7 +365,7 @@ public:
     /// bytes written into the stream, or an errno in the case of failure.
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
 
-    virtual bool is_eof() const override { return m_context.connection_finished && m_context.application_buffer.is_empty(); }
+    virtual bool is_eof() const override { return m_context.application_buffer.is_empty() && (m_context.connection_finished || underlying_stream().is_eof()); }
 
     virtual bool is_open() const override { return is_established(); }
     virtual void close() override;
