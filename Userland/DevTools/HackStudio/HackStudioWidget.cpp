@@ -185,6 +185,7 @@ HackStudioWidget::HackStudioWidget(String path_to_project)
     }
 
     m_project_builder = make<ProjectBuilder>(*m_terminal_wrapper, *m_project);
+    project().model().set_should_show_dotfiles(Config::read_bool("HackStudio", "Global", "ShowDotfiles", false));
 }
 
 void HackStudioWidget::update_actions()
@@ -1394,7 +1395,9 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
     });
     auto show_dotfiles_action = GUI::Action::create_checkable("S&how Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& checked) {
         project().model().set_should_show_dotfiles(checked.is_checked());
+        Config::write_bool("HackStudio", "Global", "ShowDotfiles", checked.is_checked());
     });
+    show_dotfiles_action->set_checked(Config::read_bool("HackStudio", "Global", "ShowDotfiles", false));
 
     auto& view_menu = window.add_menu("&View");
     view_menu.add_action(hide_action_tabs_action);
