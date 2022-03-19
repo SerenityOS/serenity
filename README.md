@@ -112,48 +112,64 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 
 ## Contributors
 
-* **Robin Burchell** - [rburchell](https://github.com/rburchell)
+* **Ali Mohammad Pur** - [alimpfard](https://github.com/alimpfard)
+* **Andrew Kaster** - [ADKaster](https://github.com/ADKaster)
+
+* **Ben Wiederhake** - [BenWiederhake](https://github.com/BenWiederhake)
+* **Brendan Coles** - [bcoles](https://github.com/bcoles)
+* **Brian Gianforcaro** - [bgianfo](https://github.com/bgianfo)
+
 * **Conrad Pankoff** - [deoxxa](https://github.com/deoxxa)
-* **Sergey Bugaev** - [bugaevc](https://github.com/bugaevc)
+
+* **Daniel Bertalan** - [BertalanD](https://github.com/BertalanD)
+* **David Tuin** - [davidot](https://github.com/davidot)
+
+* **Gegga Thor** - [Xexxa](https://github.com/Xexxa)
+* **Gunnar Beutner** - [gunnarbeutner](https://github.com/gunnarbeutner)
+
+* **Hüseyin ASLITÜRK** - [asliturk](https://github.com/asliturk)
+
+* **Idan Horowitz** - [IdanHo](https://github.com/IdanHo)
+* **Itamar Shenhar** - [itamar8910](https://github.com/itamar8910)
+
+* **Jean-Baptiste Boric** - [boricj](https://github.com/boricj)
+* **Jelle Raaijmakers** - [GMTA](https://github.com/GMTA)
+* **Jesse Buhagiar** - [Quaker762](https://github.com/Quaker762)
+
+* **Karol Kosek** - [krkk](https://github.com/krkk)
+* **Kenneth Myhra** - [kennethmyhra](https://github.com/kennethmyhra)
+* **kleines Filmröllchen** - [kleinesfilmroellchen](https://github.com/kleinesfilmroellchen)
+
+* **Lenny Maiorani** - [ldm5180](https://github.com/ldm5180)
+* **Leon Albrecht** - [Hendiadyoin1](https://github.com/Hendiadyoin1)
 * **Liav A** - [supercomputer7](https://github.com/supercomputer7)
 * **Linus Groh** - [linusg](https://github.com/linusg)
-* **Ali Mohammad Pur** - [alimpfard](https://github.com/alimpfard)
-* **Shannon Booth** - [shannonbooth](https://github.com/shannonbooth)
-* **Hüseyin ASLITÜRK** - [asliturk](https://github.com/asliturk)
-* **Matthew Olsson** - [mattco98](https://github.com/mattco98)
-* **Nico Weber** - [nico](https://github.com/nico)
-* **Brian Gianforcaro** - [bgianfo](https://github.com/bgianfo)
-* **Ben Wiederhake** - [BenWiederhake](https://github.com/BenWiederhake)
-* **Tom** - [tomuta](https://github.com/tomuta)
-* **Paul Scharnofske** - [asynts](https://github.com/asynts)
-* **Itamar Shenhar** - [itamar8910](https://github.com/itamar8910)
 * **Luke Wilde** - [Lubrsi](https://github.com/Lubrsi)
-* **Brendan Coles** - [bcoles](https://github.com/bcoles)
-* **Andrew Kaster** - [ADKaster](https://github.com/ADKaster)
-* **thankyouverycool** - [thankyouverycool](https://github.com/thankyouverycool)
-* **Idan Horowitz** - [IdanHo](https://github.com/IdanHo)
-* **Gunnar Beutner** - [gunnarbeutner](https://github.com/gunnarbeutner)
-* **Tim Flynn** - [trflynn89](https://github.com/trflynn89)
-* **Jean-Baptiste Boric** - [boricj](https://github.com/boricj)
-* **Stephan Unverwerth** - [sunverwerth](https://github.com/sunverwerth)
-* **Max Wipfli** - [MaxWipfli](https://github.com/MaxWipfli)
-* **Daniel Bertalan** - [BertalanD](https://github.com/BertalanD)
-* **Jelle Raaijmakers** - [GMTA](https://github.com/GMTA)
-* **Sam Atkins** - [AtkinsSJ](https://github.com/AtkinsSJ)
-* **Tobias Christiansen** - [TobyAsE](https://github.com/TobyAsE)
-* **Lenny Maiorani** - [ldm5180](https://github.com/ldm5180)
-* **sin-ack** - [sin-ack](https://github.com/sin-ack)
-* **Jesse Buhagiar** - [Quaker762](https://github.com/Quaker762)
-* **Peter Elliott** - [Petelliott](https://github.com/Petelliott)
-* **Karol Kosek** - [krkk](https://github.com/krkk)
-* **Mustafa Quraish** - [mustafaquraish](https://github.com/mustafaquraish)
-* **David Tuin** - [davidot](https://github.com/davidot)
-* **Leon Albrecht** - [Hendiadyoin1](https://github.com/Hendiadyoin1)
-* **Tim Schumacher** - [timschumi](https://github.com/timschumi)
+
 * **Marcus Nilsson** - [metmo](https://github.com/metmo)
-* **Gegga Thor** - [Xexxa](https://github.com/Xexxa)
-* **kleines Filmröllchen** - [kleinesfilmroellchen](https://github.com/kleinesfilmroellchen)
-* **Kenneth Myhra** - [kennethmyhra](https://github.com/kennethmyhra)
+* **Matthew Olsson** - [mattco98](https://github.com/mattco98)
+* **Max Wipfli** - [MaxWipfli](https://github.com/MaxWipfli)
+* **Mustafa Quraish** - [mustafaquraish](https://github.com/mustafaquraish)
+
+* **Nico Weber** - [nico](https://github.com/nico)
+
+* **Paul Scharnofske** - [asynts](https://github.com/asynts)
+* **Peter Elliott** - [Petelliott](https://github.com/Petelliott)
+
+* **Robin Burchell** - [rburchell](https://github.com/rburchell)
+
+* **Sam Atkins** - [AtkinsSJ](https://github.com/AtkinsSJ)
+* **Sergey Bugaev** - [bugaevc](https://github.com/bugaevc)
+* **Shannon Booth** - [shannonbooth](https://github.com/shannonbooth)
+* **sin-ack** - [sin-ack](https://github.com/sin-ack)
+* **Stephan Unverwerth** - [sunverwerth](https://github.com/sunverwerth)
+
+* **thankyouverycool** - [thankyouverycool](https://github.com/thankyouverycool)
+* **Tim Flynn** - [trflynn89](https://github.com/trflynn89)
+* **Tim Schumacher** - [timschumi](https://github.com/timschumi)
+* **Tobias Christiansen** - [TobyAsE](https://github.com/TobyAsE)
+* **Tom** - [tomuta](https://github.com/tomuta)
+
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
