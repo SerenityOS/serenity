@@ -203,6 +203,15 @@ FontEditorWidget::FontEditorWidget()
     m_redo_action = GUI::CommonActions::make_redo_action([&](auto&) {
         redo();
     });
+
+    m_select_all_action = GUI::CommonActions::make_select_all_action([this](auto&) {
+        m_glyph_map_widget->set_selection(m_range.first, m_range.last - m_range.first + 1);
+        m_glyph_map_widget->update();
+        auto selection = m_glyph_map_widget->selection().normalized();
+        m_undo_selection->set_start(selection.start());
+        m_undo_selection->set_size(selection.size());
+    });
+
     m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         if (!m_font_preview_window)
             m_font_preview_window = create_font_preview_window(*this);
@@ -326,11 +335,17 @@ FontEditorWidget::FontEditorWidget()
         m_glyph_editor_widget->flip_vertically();
     });
 
-    m_copy_character_action = GUI::Action::create("Cop&y as Character", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        StringBuilder glyph_builder;
-        glyph_builder.append_code_point(m_glyph_editor_widget->glyph());
-        GUI::Clipboard::the().set_plain_text(glyph_builder.build());
+    m_copy_text_action = GUI::Action::create("Copy as Te&xt", { Mod_Ctrl, Key_T }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        StringBuilder builder;
+        auto selection = m_glyph_map_widget->selection().normalized();
+        for (auto code_point = selection.start(); code_point < selection.start() + selection.size(); ++code_point) {
+            if (!m_glyph_map_widget->font().contains_glyph(code_point))
+                continue;
+            builder.append_code_point(code_point);
+        }
+        GUI::Clipboard::the().set_plain_text(builder.to_string());
     });
+    m_copy_text_action->set_status_tip("Copy to clipboard as text");
 
     glyph_transform_toolbar.add_action(*m_flip_horizontal_action);
     glyph_transform_toolbar.add_action(*m_flip_vertical_action);
@@ -365,6 +380,21 @@ FontEditorWidget::FontEditorWidget()
         else
             m_glyph_editor_width_spinbox->set_value(glyph_width, GUI::AllowCallback::No);
         update_statusbar();
+    };
+
+    m_glyph_map_widget->on_context_menu_request = [this](auto& event) {
+        if (!m_context_menu) {
+            m_context_menu = GUI::Menu::construct();
+            m_context_menu->add_action(*m_cut_action);
+            m_context_menu->add_action(*m_copy_action);
+            m_context_menu->add_action(*m_paste_action);
+            m_context_menu->add_action(*m_delete_action);
+            m_context_menu->add_separator();
+            m_context_menu->add_action(*m_select_all_action);
+            m_context_menu->add_separator();
+            m_context_menu->add_action(*m_copy_text_action);
+        }
+        m_context_menu->popup(event.screen_position());
     };
 
     m_name_textbox->on_change = [&] {
@@ -602,11 +632,14 @@ void FontEditorWidget::initialize_menubar(GUI::Window& window)
     edit_menu.add_action(*m_paste_action);
     edit_menu.add_action(*m_delete_action);
     edit_menu.add_separator();
-    edit_menu.add_action(*m_copy_character_action);
+    edit_menu.add_action(*m_select_all_action);
     edit_menu.add_separator();
-    edit_menu.add_action(*m_previous_glyph_action);
-    edit_menu.add_action(*m_next_glyph_action);
-    edit_menu.add_action(*m_go_to_glyph_action);
+    edit_menu.add_action(*m_copy_text_action);
+
+    auto& go_menu = window.add_menu("&Go");
+    go_menu.add_action(*m_previous_glyph_action);
+    go_menu.add_action(*m_next_glyph_action);
+    go_menu.add_action(*m_go_to_glyph_action);
 
     auto& view_menu = window.add_menu("&View");
     view_menu.add_action(*m_open_preview_action);

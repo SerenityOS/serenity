@@ -68,6 +68,7 @@ public:
 
     Function<void(int)> on_active_glyph_changed;
     Function<void(int)> on_glyph_double_clicked;
+    Function<void(ContextMenuEvent&)> on_context_menu_request;
 
 private:
     GlyphMapWidget();
@@ -79,6 +80,7 @@ private:
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void did_change_font() override;
+    virtual void context_menu_event(ContextMenuEvent&) override;
 
     Gfx::IntRect get_outer_rect(int glyph) const;
     Optional<int> glyph_at_position(Gfx::IntPoint) const;

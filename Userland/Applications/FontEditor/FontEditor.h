@@ -77,6 +77,9 @@ private:
     RefPtr<GUI::Action> m_paste_action;
     RefPtr<GUI::Action> m_delete_action;
 
+    RefPtr<GUI::Action> m_copy_text_action;
+    RefPtr<GUI::Action> m_select_all_action;
+
     RefPtr<GUI::Action> m_undo_action;
     RefPtr<GUI::Action> m_redo_action;
     RefPtr<UndoSelection> m_undo_selection;
@@ -103,7 +106,6 @@ private:
     RefPtr<GUI::Action> m_flip_vertical_action;
     RefPtr<GUI::Action> m_rotate_clockwise_action;
     RefPtr<GUI::Action> m_rotate_counterclockwise_action;
-    RefPtr<GUI::Action> m_copy_character_action;
 
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::Window> m_font_preview_window;
@@ -126,6 +128,7 @@ private:
     RefPtr<GUI::ListView> m_unicode_block_listview;
     RefPtr<GUI::Model> m_unicode_block_model;
     RefPtr<GUI::FilteringProxyModel> m_filter_model;
+    RefPtr<GUI::Menu> m_context_menu;
 
     String m_path;
     Vector<String> m_font_weight_list;
