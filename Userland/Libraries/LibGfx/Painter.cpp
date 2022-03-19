@@ -1925,7 +1925,7 @@ void Painter::draw_triangle_wave(IntPoint const& a_p1, IntPoint const& a_p2, Col
 
 static bool can_approximate_bezier_curve(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& control)
 {
-    constexpr static int tolerance = 15;
+    constexpr float tolerance = 0.0015f;
 
     auto p1x = 3 * control.x() - 2 * p1.x() - p2.x();
     auto p1y = 3 * control.y() - 2 * p1.y() - p2.y();
@@ -1999,7 +1999,7 @@ void Painter::for_each_line_segment_on_cubic_bezier_curve(FloatPoint const& cont
 
 static bool can_approximate_cubic_bezier_curve(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& control_0, FloatPoint const& control_1)
 {
-    constexpr float tolerance = 15; // Arbitrary, seems like 10-30 produces nice results.
+    constexpr float tolerance = 0.0015f;
 
     auto ax = 3 * control_0.x() - 2 * p1.x() - p2.x();
     auto ay = 3 * control_0.y() - 2 * p1.y() - p2.y();
