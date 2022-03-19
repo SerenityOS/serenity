@@ -146,7 +146,6 @@ private:
     Gfx::IntRect get_rasterization_rect_of_size(Gfx::IntSize size);
 
     void rasterize_triangle(const Triangle& triangle);
-    void setup_blend_factors();
     void shade_fragments(PixelQuad&);
     bool test_alpha(PixelQuad&);
 

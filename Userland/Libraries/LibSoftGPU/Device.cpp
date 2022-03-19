@@ -92,87 +92,89 @@ static Vector4<f32x4> to_vec4(u32x4 bgra)
     };
 }
 
-void Device::setup_blend_factors()
+static AlphaBlendFactors setup_blend_factors(BlendFactor blend_source_factor, BlendFactor blend_destination_factor)
 {
-    m_alpha_blend_factors = {};
+    AlphaBlendFactors alpha_blend_factors {};
 
-    switch (m_options.blend_source_factor) {
+    switch (blend_source_factor) {
     case BlendFactor::Zero:
         break;
     case BlendFactor::One:
-        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         break;
     case BlendFactor::SrcColor:
-        m_alpha_blend_factors.src_factor_src_color = 1;
+        alpha_blend_factors.src_factor_src_color = 1;
         break;
     case BlendFactor::OneMinusSrcColor:
-        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.src_factor_src_color = -1;
+        alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alpha_blend_factors.src_factor_src_color = -1;
         break;
     case BlendFactor::SrcAlpha:
-        m_alpha_blend_factors.src_factor_src_alpha = 1;
+        alpha_blend_factors.src_factor_src_alpha = 1;
         break;
     case BlendFactor::OneMinusSrcAlpha:
-        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.src_factor_src_alpha = -1;
+        alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alpha_blend_factors.src_factor_src_alpha = -1;
         break;
     case BlendFactor::DstAlpha:
-        m_alpha_blend_factors.src_factor_dst_alpha = 1;
+        alpha_blend_factors.src_factor_dst_alpha = 1;
         break;
     case BlendFactor::OneMinusDstAlpha:
-        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.src_factor_dst_alpha = -1;
+        alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alpha_blend_factors.src_factor_dst_alpha = -1;
         break;
     case BlendFactor::DstColor:
-        m_alpha_blend_factors.src_factor_dst_color = 1;
+        alpha_blend_factors.src_factor_dst_color = 1;
         break;
     case BlendFactor::OneMinusDstColor:
-        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.src_factor_dst_color = -1;
+        alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alpha_blend_factors.src_factor_dst_color = -1;
         break;
     case BlendFactor::SrcAlphaSaturate:
     default:
         VERIFY_NOT_REACHED();
     }
 
-    switch (m_options.blend_destination_factor) {
+    switch (blend_destination_factor) {
     case BlendFactor::Zero:
         break;
     case BlendFactor::One:
-        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
         break;
     case BlendFactor::SrcColor:
-        m_alpha_blend_factors.dst_factor_src_color = 1;
+        alpha_blend_factors.dst_factor_src_color = 1;
         break;
     case BlendFactor::OneMinusSrcColor:
-        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.dst_factor_src_color = -1;
+        alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alpha_blend_factors.dst_factor_src_color = -1;
         break;
     case BlendFactor::SrcAlpha:
-        m_alpha_blend_factors.dst_factor_src_alpha = 1;
+        alpha_blend_factors.dst_factor_src_alpha = 1;
         break;
     case BlendFactor::OneMinusSrcAlpha:
-        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.dst_factor_src_alpha = -1;
+        alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alpha_blend_factors.dst_factor_src_alpha = -1;
         break;
     case BlendFactor::DstAlpha:
-        m_alpha_blend_factors.dst_factor_dst_alpha = 1;
+        alpha_blend_factors.dst_factor_dst_alpha = 1;
         break;
     case BlendFactor::OneMinusDstAlpha:
-        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.dst_factor_dst_alpha = -1;
+        alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alpha_blend_factors.dst_factor_dst_alpha = -1;
         break;
     case BlendFactor::DstColor:
-        m_alpha_blend_factors.dst_factor_dst_color = 1;
+        alpha_blend_factors.dst_factor_dst_color = 1;
         break;
     case BlendFactor::OneMinusDstColor:
-        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.dst_factor_dst_color = -1;
+        alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        alpha_blend_factors.dst_factor_dst_color = -1;
         break;
     case BlendFactor::SrcAlphaSaturate:
     default:
         VERIFY_NOT_REACHED();
     }
+
+    return alpha_blend_factors;
 }
 
 void Device::rasterize_triangle(const Triangle& triangle)
@@ -1195,7 +1197,7 @@ void Device::set_options(const RasterizerOptions& options)
     m_options = options;
 
     if (m_options.enable_blending)
-        setup_blend_factors();
+        m_alpha_blend_factors = setup_blend_factors(options.blend_source_factor, options.blend_destination_factor);
 }
 
 void Device::set_light_model_params(const LightModelParameters& lighting_model)
