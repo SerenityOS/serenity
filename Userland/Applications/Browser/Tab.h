@@ -94,6 +94,13 @@ private:
     void view_source(const URL& url, const String& source);
     void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
 
+    enum class MayAppendTLD {
+        No,
+        Yes
+    };
+
+    Optional<URL> url_from_location_bar(MayAppendTLD = MayAppendTLD::No);
+
     History m_history;
 
     RefPtr<Web::OutOfProcessWebView> m_web_content_view;

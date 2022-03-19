@@ -151,13 +151,15 @@ Tab::Tab(BrowserWindow& window)
     m_location_box->set_placeholder("Address");
 
     m_location_box->on_return_pressed = [this] {
-        if (m_location_box->text().starts_with('?') && g_search_engine.is_empty()) {
-            GUI::MessageBox::show(&this->window(), "Select a search engine in the Settings menu before searching.", "No search engine selected", GUI::MessageBox::Type::Information);
-            return;
-        }
+        auto url = url_from_location_bar();
+        if (url.has_value())
+            load(url.release_value());
+    };
 
-        auto url = url_from_user_input(m_location_box->text());
-        load(url);
+    m_location_box->on_ctrl_return_pressed = [this] {
+        auto url = url_from_location_bar(MayAppendTLD::Yes);
+        if (url.has_value())
+            load(url.release_value());
     };
 
     m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste && Go", [this](auto&) {
@@ -391,6 +393,29 @@ Tab::Tab(BrowserWindow& window)
     hooks().on_context_menu_request = [&](auto& screen_position) {
         m_page_context_menu->popup(screen_position);
     };
+}
+
+Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
+{
+    if (m_location_box->text().starts_with('?') && g_search_engine.is_empty()) {
+        GUI::MessageBox::show(&this->window(), "Select a search engine in the Settings menu before searching.", "No search engine selected", GUI::MessageBox::Type::Information);
+        return {};
+    }
+
+    String text = m_location_box->text();
+
+    StringBuilder builder;
+    builder.append(text);
+    if (may_append_tld == MayAppendTLD::Yes) {
+        // FIXME: Expand the list of top level domains.
+        if (!(text.ends_with(".com") || text.ends_with(".net") || text.ends_with(".org"))) {
+            builder.append(".com");
+        }
+    }
+    String final_text = builder.to_string();
+
+    auto url = url_from_user_input(final_text);
+    return url;
 }
 
 void Tab::load(const URL& url, LoadType load_type)
