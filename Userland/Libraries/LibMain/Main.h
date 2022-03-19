@@ -19,6 +19,9 @@ struct Arguments {
     Span<StringView> strings;
 };
 
+int return_code_for_errors();
+void set_return_code_for_errors(int);
+
 }
 
 ErrorOr<int> serenity_main(Main::Arguments);
