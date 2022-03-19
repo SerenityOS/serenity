@@ -9,7 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
-#include <Kernel/Storage/RamdiskDevice.h>
+#include <Kernel/Storage/Ramdisk/Device.h>
 #include <Kernel/Storage/StorageController.h>
 #include <Kernel/Storage/StorageDevice.h>
 

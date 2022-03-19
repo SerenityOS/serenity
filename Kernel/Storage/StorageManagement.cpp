@@ -23,7 +23,7 @@
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
-#include <Kernel/Storage/RamdiskController.h>
+#include <Kernel/Storage/Ramdisk/Controller.h>
 #include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {

@@ -7,7 +7,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
-#include <Kernel/Storage/RamdiskController.h>
+#include <Kernel/Storage/Ramdisk/Controller.h>
 
 namespace Kernel {
 

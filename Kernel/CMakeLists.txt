@@ -112,9 +112,9 @@ set(KERNEL_SOURCES
     Storage/NVMe/NVMeInterruptQueue.cpp
     Storage/NVMe/NVMePollQueue.cpp
     Storage/NVMe/NVMeQueue.cpp
+    Storage/Ramdisk/Controller.cpp
+    Storage/Ramdisk/Device.cpp
     Storage/StorageDevice.cpp
-    Storage/RamdiskController.cpp
-    Storage/RamdiskDevice.cpp
     Storage/StorageManagement.cpp
     DoubleBuffer.cpp
     FileSystem/AnonymousFile.cpp
