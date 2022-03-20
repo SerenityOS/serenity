@@ -9,6 +9,7 @@
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <AK/UFixedBigInt.h>
+#include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/Curves/SECP256r1.h>
 
 namespace Crypto::Curves {
@@ -20,6 +21,9 @@ static constexpr u256 PRIME { u128 { 0xffffffffffffffffull, 0x00000000fffffffful
 static constexpr u256 R2_MOD_PRIME { u128 { 0x0000000000000003ull, 0xfffffffbffffffffull }, u128 { 0xfffffffffffffffeull, 0x00000004fffffffdull } };
 static constexpr u256 ONE { 1u };
 static constexpr u256 B_MONTGOMERY { u128 { 0xd89cdf6229c4bddfull, 0xacf005cd78843090ull }, u128 { 0xe5a220abf7212ed6ull, 0xdc30061d04874834ull } };
+static constexpr u256 ORDER { u128 { 0xf3b9cac2fc632551ull, 0xbce6faada7179e84ull }, u128 { 0xffffffffffffffffull, 0xffffffff00000000ull } };
+static constexpr u256 ORDER_INVERSE_MOD_R { u128 { 0xccd1c8aaee00bc4full, 0x48c944087d74d2e4ull }, u128 { 0x50fe77ecc588c6f6ull, 0x60d06633a9d6281cull } };
+static constexpr u256 R2_MOD_ORDER { u128 { 0x83244c95be79eea2ull, 0x4699799c49bd6fa6ull }, u128 { 0x2845b2392b6bec59ull, 0x66e12d94f3d95620ull } };
 
 static u256 import_big_endian(ReadonlyBytes data)
 {
@@ -84,13 +88,13 @@ static u256 modular_add(u256 const& left, u256 const& right, bool carry_in = fal
     bool carry = carry_in;
     u256 output = left.addc(right, carry);
 
-    // If there is left carry, subtract p by adding 2^256 - p
+    // If there is a carry, subtract p by adding 2^256 - p
     u64 t = carry;
     carry = false;
     u256 addend { u128 { t, -(t << 32) }, u128 { -t, (t << 32) - (t << 1) } };
     output = output.addc(addend, carry);
 
-    // If there is still left carry, subtract p by adding 2^256 - p
+    // If there is still a carry, subtract p by adding 2^256 - p
     t = carry;
     addend = { u128 { t, -(t << 32) }, u128 { -t, (t << 32) - (t << 1) } };
     return output + addend;
@@ -101,13 +105,13 @@ static u256 modular_sub(u256 const& left, u256 const& right)
     bool borrow = false;
     u256 output = left.subc(right, borrow);
 
-    // If there is left borrow, add p by subtracting 2^256 - p
+    // If there is a borrow, add p by subtracting 2^256 - p
     u64 t = borrow;
     borrow = false;
     u256 sub { u128 { t, -(t << 32) }, u128 { -t, (t << 32) - (t << 1) } };
     output = output.subc(sub, borrow);
 
-    // If there is still left borrow, add p by subtracting 2^256 - p
+    // If there is still a borrow, add p by subtracting 2^256 - p
     t = borrow;
     sub = { u128 { t, -(t << 32) }, u128 { -t, (t << 32) - (t << 1) } };
     return output - sub;
@@ -194,6 +198,82 @@ static u256 modular_inverse(u256 const& value)
     for (auto i = 0; i < 32; i++) {
         result = modular_multiply(result, base);
         base = modular_square(base);
+    }
+
+    return result;
+}
+
+static u256 modular_add_order(u256 const& left, u256 const& right, bool carry_in = false)
+{
+    bool carry = carry_in;
+    u256 output = left.addc(right, carry);
+
+    // If there is a carry, subtract n by adding 2^256 - n
+    bool did_carry = carry;
+    carry = false;
+    u256 temp_output = output.addc(REDUCE_ORDER, carry);
+    output = select(output, temp_output, did_carry);
+
+    // If there is still a carry, subtract n by adding 2^256 - n
+    did_carry = carry;
+    temp_output = output + REDUCE_ORDER;
+    return select(output, temp_output, did_carry);
+}
+
+static u256 modular_multiply_order(u256 const& left, u256 const& right)
+{
+    // Modular multiplication using the Montgomery method: https://en.wikipedia.org/wiki/Montgomery_modular_multiplication
+    // This requires that the inputs to this function are in Montgomery form.
+
+    // T = left * right
+    u512 mult = multiply(left, right);
+
+    // m = ((T mod R) * curve_n')
+    u512 m = multiply(mult.low(), ORDER_INVERSE_MOD_R);
+
+    // mp = (m mod R) * curve_n
+    u512 mp = multiply(m.low(), ORDER);
+
+    // t = (T + mp)
+    bool carry = false;
+    mult.low().addc(mp.low(), carry);
+
+    // output = t / R
+    return modular_add_order(mult.high(), mp.high(), carry);
+}
+
+static u256 modular_square_order(u256 const& value)
+{
+    return modular_multiply_order(value, value);
+}
+
+static u256 to_montgomery_order(u256 const& value)
+{
+    return modular_multiply_order(value, R2_MOD_ORDER);
+}
+
+static u256 from_montgomery_order(u256 const& value)
+{
+    return modular_multiply_order(value, ONE);
+}
+
+static u256 modular_inverse_order(u256 const& value)
+{
+    // Modular inverse modulo the curve order can be computed using Fermat's little theorem: a^(n-2) mod n = a^-1 mod n.
+    // Calculating a^(n-2) mod n can be done using the square-and-multiply exponentiation method, as n-2 is constant.
+    // n-2 = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc63254f
+
+    u256 base = value;
+    u256 result = to_montgomery_order(1u);
+
+    u256 order_minus_2 = u256 { u128 { 0xf3b9cac2fc63254full, 0xbce6faada7179e84ull }, u128 { 0xffffffffffffffffull, 0xffffffff00000000ull } };
+
+    for (size_t i = 0; i < 256; i++) {
+        if ((order_minus_2 & 1u) == 1u) {
+            result = modular_multiply_order(result, base);
+        }
+        base = modular_square_order(base);
+        order_minus_2 >>= 1u;
     }
 
     return result;
@@ -448,6 +528,91 @@ ErrorOr<ByteBuffer> SECP256r1::derive_premaster_key(ReadonlyBytes shared_point)
     ByteBuffer premaster_key = TRY(ByteBuffer::create_uninitialized(32));
     premaster_key.overwrite(0, shared_point.data() + 1, 32);
     return premaster_key;
+}
+
+ErrorOr<bool> SECP256r1::verify(ReadonlyBytes hash, ReadonlyBytes pubkey, ReadonlyBytes signature)
+{
+    Crypto::ASN1::Decoder asn1_decoder(signature);
+    TRY(asn1_decoder.enter());
+
+    auto r_bigint = TRY(asn1_decoder.read<Crypto::UnsignedBigInteger>(Crypto::ASN1::Class::Universal, Crypto::ASN1::Kind::Integer));
+    auto s_bigint = TRY(asn1_decoder.read<Crypto::UnsignedBigInteger>(Crypto::ASN1::Class::Universal, Crypto::ASN1::Kind::Integer));
+
+    u256 r = 0u;
+    u256 s = 0u;
+    for (size_t i = 0; i < 8; i++) {
+        u256 rr = r_bigint.words()[i];
+        u256 ss = s_bigint.words()[i];
+        r |= (rr << (i * 32));
+        s |= (ss << (i * 32));
+    }
+
+    // z is the hash
+    u256 z = import_big_endian(hash.slice(0, 32));
+
+    u256 r_mo = to_montgomery_order(r);
+    u256 s_mo = to_montgomery_order(s);
+    u256 z_mo = to_montgomery_order(z);
+
+    u256 s_inv = modular_inverse_order(s_mo);
+
+    u256 u1 = modular_multiply_order(z_mo, s_inv);
+    u256 u2 = modular_multiply_order(r_mo, s_inv);
+
+    u1 = from_montgomery_order(u1);
+    u2 = from_montgomery_order(u2);
+
+    auto u1_buf = TRY(ByteBuffer::create_uninitialized(32));
+    export_big_endian(u1, u1_buf.bytes());
+    auto u2_buf = TRY(ByteBuffer::create_uninitialized(32));
+    export_big_endian(u2, u2_buf.bytes());
+
+    auto p1 = TRY(generate_public_key(u1_buf));
+    auto p2 = TRY(compute_coordinate(u2_buf, pubkey));
+
+    JacobianPoint point1 {
+        import_big_endian(TRY(p1.slice(1, 32))),
+        import_big_endian(TRY(p1.slice(33, 32))),
+        1u,
+    };
+
+    // Convert the input point into Montgomery form
+    point1.x = to_montgomery(point1.x);
+    point1.y = to_montgomery(point1.y);
+    point1.z = to_montgomery(point1.z);
+
+    VERIFY(is_point_on_curve(point1));
+
+    JacobianPoint point2 {
+        import_big_endian(TRY(p2.slice(1, 32))),
+        import_big_endian(TRY(p2.slice(33, 32))),
+        1u,
+    };
+
+    // Convert the input point into Montgomery form
+    point2.x = to_montgomery(point2.x);
+    point2.y = to_montgomery(point2.y);
+    point2.z = to_montgomery(point2.z);
+
+    VERIFY(is_point_on_curve(point2));
+
+    JacobianPoint result;
+    point_add(result, point1, point2);
+
+    // Convert from Jacobian coordinates back to Affine coordinates
+    convert_jacobian_to_affine(result);
+
+    // Make sure the resulting point is on the curve
+    VERIFY(is_point_on_curve(result));
+
+    // Convert the result back from Montgomery form
+    result.x = from_montgomery(result.x);
+    result.y = from_montgomery(result.y);
+    // Final modular reduction on the coordinates
+    result.x = modular_reduce(result.x);
+    result.y = modular_reduce(result.y);
+
+    return r.is_equal_to_constant_time(result.x);
 }
 
 }
