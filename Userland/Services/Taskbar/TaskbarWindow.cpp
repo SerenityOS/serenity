@@ -10,6 +10,7 @@
 #include "QuickLaunchWidget.h"
 #include "TaskbarButton.h"
 #include <AK/Debug.h>
+#include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -52,6 +53,30 @@ private:
     }
 };
 
+class TaskbarWindowListWidget final : public GUI::Widget {
+    C_OBJECT(TaskbarWindowListWidget);
+
+public:
+    virtual ~TaskbarWindowListWidget() override { }
+
+private:
+    RefPtr<GUI::Menu> m_context_menu;
+
+    TaskbarWindowListWidget()
+    {
+        m_context_menu = GUI::Menu::construct();
+        auto settings_icon = GUI::Icon::default_icon("settings");
+        m_context_menu->add_action(GUI::Action::create("Taskbar Settings", settings_icon.bitmap_for_size(16), [](auto&) {
+            Core::Process::spawn("/bin/TaskbarSettings");
+        }));
+    }
+
+    virtual void context_menu_event(GUI::ContextMenuEvent& event) override
+    {
+        m_context_menu->popup(event.screen_position());
+    }
+};
+
 TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     : m_start_menu(move(start_menu))
 {
@@ -74,7 +99,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     main_widget.add_child(*m_start_button);
     main_widget.add<Taskbar::QuickLaunchWidget>();
 
-    m_task_button_container = main_widget.add<GUI::Widget>();
+    m_task_button_container = main_widget.add<TaskbarWindowListWidget>();
     m_task_button_container->set_layout<GUI::HorizontalBoxLayout>();
     m_task_button_container->layout()->set_spacing(3);
 
