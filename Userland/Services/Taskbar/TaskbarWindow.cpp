@@ -156,6 +156,10 @@ void TaskbarWindow::add_window_button(::Window& window, const WindowIdentifier& 
             GUI::ConnectionToWindowMangerServer::the().async_set_window_minimized(identifier.client_id(), identifier.window_id(), true);
         }
     };
+
+    button->on_middle_click = [identifier]() {
+        GUI::ConnectionToWindowMangerServer::the().async_request_close_window(identifier.client_id(), identifier.window_id());
+    };
 }
 
 void TaskbarWindow::remove_window_button(::Window& window, bool was_removed)
