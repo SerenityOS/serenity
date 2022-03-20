@@ -98,7 +98,8 @@ enum ClientVerificationStaus {
     C(true, CipherSuite::TLS_RSA_WITH_AES_128_CBC_SHA256, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA256, 16, false)           \
     C(true, CipherSuite::TLS_RSA_WITH_AES_256_CBC_SHA256, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA256, 16, false)           \
     C(true, CipherSuite::TLS_RSA_WITH_AES_128_CBC_SHA, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA1, 16, false)                \
-    C(true, CipherSuite::TLS_RSA_WITH_AES_256_CBC_SHA, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA1, 16, false)
+    C(true, CipherSuite::TLS_RSA_WITH_AES_256_CBC_SHA, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA1, 16, false)                \
+    C(true, CipherSuite::TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, KeyExchangeAlgorithm::ECDHE_ECDSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)
 
 constexpr KeyExchangeAlgorithm get_key_exchange_algorithm(CipherSuite suite)
 {
@@ -161,7 +162,9 @@ struct Options {
         { HashAlgorithm::SHA512, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA384, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA256, SignatureAlgorithm::RSA },
-        { HashAlgorithm::SHA1, SignatureAlgorithm::RSA });
+        { HashAlgorithm::SHA1, SignatureAlgorithm::RSA },
+        { HashAlgorithm::SHA256, SignatureAlgorithm::ECDSA },
+        { HashAlgorithm::INTRINSIC, SignatureAlgorithm::ECDSA });
     OPTION_WITH_DEFAULTS(Vector<SupportedGroup>, elliptic_curves,
         SupportedGroup::X25519,
         SupportedGroup::SECP256R1,
@@ -384,7 +387,9 @@ private:
     ssize_t handle_certificate(ReadonlyBytes);
     ssize_t handle_server_key_exchange(ReadonlyBytes);
     ssize_t handle_dhe_rsa_server_key_exchange(ReadonlyBytes);
+    ssize_t handle_ecdhe_server_key_exchange(ReadonlyBytes, u8& server_public_key_length);
     ssize_t handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes);
+    ssize_t handle_ecdhe_ecdsa_server_key_exchange(ReadonlyBytes);
     ssize_t handle_server_hello_done(ReadonlyBytes);
     ssize_t handle_certificate_verify(ReadonlyBytes);
     ssize_t handle_handshake_payload(ReadonlyBytes);
@@ -393,6 +398,7 @@ private:
     void pseudorandom_function(Bytes output, ReadonlyBytes secret, u8 const* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b);
 
     ssize_t verify_rsa_server_key_exchange(ReadonlyBytes server_key_info_buffer, ReadonlyBytes signature_buffer);
+    ssize_t verify_ecdsa_server_key_exchange(ReadonlyBytes server_key_info_buffer, ReadonlyBytes signature_buffer);
 
     size_t key_length() const
     {

@@ -393,11 +393,11 @@ ByteBuffer TLSv12::build_client_key_exchange()
         TODO();
         break;
     case KeyExchangeAlgorithm::ECDHE_RSA:
+    case KeyExchangeAlgorithm::ECDHE_ECDSA:
         build_ecdhe_rsa_pre_master_secret(builder);
         break;
     case KeyExchangeAlgorithm::ECDH_ECDSA:
     case KeyExchangeAlgorithm::ECDH_RSA:
-    case KeyExchangeAlgorithm::ECDHE_ECDSA:
     case KeyExchangeAlgorithm::ECDH_anon:
         dbgln("Client key exchange for ECDHE algorithms is not implemented");
         TODO();
