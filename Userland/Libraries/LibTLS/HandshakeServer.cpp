@@ -237,9 +237,10 @@ ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes buffer)
         break;
     case KeyExchangeAlgorithm::ECDHE_RSA:
         return handle_ecdhe_rsa_server_key_exchange(buffer);
+    case KeyExchangeAlgorithm::ECDHE_ECDSA:
+        return handle_ecdhe_ecdsa_server_key_exchange(buffer);
     case KeyExchangeAlgorithm::ECDH_ECDSA:
     case KeyExchangeAlgorithm::ECDH_RSA:
-    case KeyExchangeAlgorithm::ECDHE_ECDSA:
     case KeyExchangeAlgorithm::ECDH_anon:
         dbgln("Server key exchange for ECDHE algorithms is not implemented");
         TODO();
@@ -292,7 +293,7 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
     return verify_rsa_server_key_exchange(server_key_info, signature);
 }
 
-ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
+ssize_t TLSv12::handle_ecdhe_server_key_exchange(ReadonlyBytes buffer, u8& server_public_key_length)
 {
     if (buffer.size() < 7)
         return (i8)Error::NeedMoreData;
@@ -319,7 +320,7 @@ ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
         return (i8)Error::NotUnderstood;
     }
 
-    auto server_public_key_length = buffer[6];
+    server_public_key_length = buffer[6];
     if (server_public_key_length != m_context.server_key_exchange_curve->key_size())
         return (i8)Error::NotUnderstood;
 
@@ -336,6 +337,16 @@ ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
 
     if constexpr (TLS_DEBUG) {
         dbgln("ECDHE server public key: {:hex-dump}", server_public_key);
+    }
+
+    return 0;
+}
+
+ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
+{
+    u8 server_public_key_length;
+    if (auto result = handle_ecdhe_server_key_exchange(buffer, server_public_key_length)) {
+        return result;
     }
 
     auto server_key_info = buffer.slice(3, 4 + server_public_key_length);
@@ -411,4 +422,81 @@ ssize_t TLSv12::verify_rsa_server_key_exchange(ReadonlyBytes server_key_info_buf
 
     return 0;
 }
+
+ssize_t TLSv12::handle_ecdhe_ecdsa_server_key_exchange(ReadonlyBytes buffer)
+{
+    u8 server_public_key_length;
+    if (auto result = handle_ecdhe_server_key_exchange(buffer, server_public_key_length)) {
+        return result;
+    }
+
+    auto server_key_info = buffer.slice(3, 4 + server_public_key_length);
+    auto signature = buffer.slice(7 + server_public_key_length);
+    return verify_ecdsa_server_key_exchange(server_key_info, signature);
+}
+
+ssize_t TLSv12::verify_ecdsa_server_key_exchange(ReadonlyBytes server_key_info_buffer, ReadonlyBytes signature_buffer)
+{
+    auto signature_hash = signature_buffer[0];
+    auto signature_algorithm = signature_buffer[1];
+    if (signature_algorithm != (u8)SignatureAlgorithm::ECDSA) {
+        dbgln("verify_ecdsa_server_key_exchange failed: Signature algorithm is not ECDSA, instead {}", signature_algorithm);
+        return (i8)Error::NotUnderstood;
+    }
+
+    auto signature_length = AK::convert_between_host_and_network_endian(ByteReader::load16(signature_buffer.offset_pointer(2)));
+    auto signature = signature_buffer.slice(4, signature_length);
+
+    if (m_context.certificates.is_empty()) {
+        dbgln("verify_ecdsa_server_key_exchange failed: Attempting to verify signature without certificates");
+        return (i8)Error::NotSafe;
+    }
+    ReadonlyBytes server_point = m_context.certificates.first().ec_key;
+
+    auto message_result = ByteBuffer::create_uninitialized(64 + server_key_info_buffer.size());
+    if (message_result.is_error()) {
+        dbgln("verify_ecdsa_server_key_exchange failed: Not enough memory");
+        return (i8)Error::OutOfMemory;
+    }
+    auto message = message_result.release_value();
+    message.overwrite(0, m_context.local_random, 32);
+    message.overwrite(32, m_context.remote_random, 32);
+    message.overwrite(64, server_key_info_buffer.data(), server_key_info_buffer.size());
+
+    Crypto::Hash::HashKind hash_kind;
+    switch ((HashAlgorithm)signature_hash) {
+    case HashAlgorithm::SHA256:
+        hash_kind = Crypto::Hash::HashKind::SHA256;
+        break;
+    case HashAlgorithm::SHA384:
+        hash_kind = Crypto::Hash::HashKind::SHA384;
+        break;
+    case HashAlgorithm::SHA512:
+        hash_kind = Crypto::Hash::HashKind::SHA512;
+        break;
+    default:
+        dbgln("verify_ecdsa_server_key_exchange failed: Hash algorithm is not SHA256/384/512, instead {}", signature_hash);
+        return (i8)Error::NotUnderstood;
+    }
+
+    Crypto::Hash::Manager manager(hash_kind);
+    manager.update(message);
+    auto digest = manager.digest();
+
+    Crypto::Curves::SECP256r1 curve;
+    auto res = curve.check_signature(digest.bytes(), server_point, signature);
+    if (res.is_error()) {
+        dbgln("verify_ecdsa_server_key_exchange failed: {}", res.error());
+        return (i8)Error::NotUnderstood;
+    }
+
+    bool verification_ok = res.release_value();
+    if (!verification_ok) {
+        dbgln("verify_ecdsa_server_key_exchange failed: Verification of signature failed");
+        return (i8)Error::NotSafe;
+    }
+
+    return 0;
+}
+
 }

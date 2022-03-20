@@ -27,6 +27,18 @@ constexpr static Array<int, 7>
     rsa_sha384_encryption_oid { 1, 2, 840, 113549, 1, 1, 12 },
     rsa_sha512_encryption_oid { 1, 2, 840, 113549, 1, 1, 13 };
 
+constexpr static Array<int, 6>
+    ecdsa_encryption_oid { 1, 2, 840, 10045, 2, 1 };
+
+constexpr static Array<int, 7>
+    secp256r1_oid { 1, 2, 840, 10045, 3, 1, 7 },
+    ecdsa_sha256_oid { 1, 2, 840, 10045, 4, 3, 2 },
+    ecdsa_sha384_oid { 1, 2, 840, 10045, 4, 3, 3 },
+    ecdsa_sha512_oid { 1, 2, 840, 10045, 4, 3, 4 };
+
+constexpr static Array<int, 5>
+    secp384r1_oid { 1, 3, 132, 0, 34 };
+
 constexpr static Array<int, 4>
     subject_alternative_name_oid { 2, 5, 29, 17 };
 
@@ -156,8 +168,26 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
             field = CertificateKeyAlgorithm ::RSA_SHA384;
         else if (identifier == rsa_sha512_encryption_oid)
             field = CertificateKeyAlgorithm ::RSA_SHA512;
-        else
+        else if (identifier == ecdsa_encryption_oid) {
+            READ_OBJECT_OR_FAIL(ObjectIdentifier, Vector<int>, parameter, "AlgorithmIdentifier::paramters");
+            if (parameter == secp256r1_oid) {
+                field = CertificateKeyAlgorithm::ECDSA_SECP256R1;
+            } else if (parameter == secp384r1_oid) {
+                field = CertificateKeyAlgorithm::ECDSA_SECP384R1;
+            } else {
+                dbgln("unknown curve: {}", parameter);
+                return {};
+            }
+        } else if (identifier == ecdsa_sha256_oid)
+            field = CertificateKeyAlgorithm::ECDSA_SHA256;
+        else if (identifier == ecdsa_sha384_oid)
+            field = CertificateKeyAlgorithm::ECDSA_SHA384;
+        else if (identifier == ecdsa_sha512_oid)
+            field = CertificateKeyAlgorithm::ECDSA_SHA512;
+        else {
+            dbgln("unknown oid: {}", identifier);
             return {};
+        }
 
         EXIT_SCOPE("AlgorithmIdentifier");
         return true;
@@ -303,12 +333,21 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 
         READ_OBJECT_OR_FAIL(BitString, const BitmapView, value, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info");
         // Note: Once we support other kinds of keys, make sure to check the kind here!
-        auto key = Crypto::PK::RSA::parse_rsa_key({ value.data(), value.size_in_bytes() });
-        if (!key.public_key.length()) {
-            dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info: Invalid key");
-            return {};
+        if (certificate.key_algorithm == CertificateKeyAlgorithm::RSA_RSA) {
+            auto key = Crypto::PK::RSA::parse_rsa_key({ value.data(), value.size_in_bytes() });
+            if (!key.public_key.length()) {
+                dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info: Invalid key");
+                return {};
+            }
+            certificate.public_key = move(key.public_key);
+        } else {
+            auto ec_key_result = ByteBuffer::copy({ value.data(), value.size_in_bytes() });
+            if (ec_key_result.is_error()) {
+                dbgln("Unable to copy ec_key");
+                return {};
+            }
+            certificate.ec_key = ec_key_result.release_value();
         }
-        certificate.public_key = move(key.public_key);
         EXIT_SCOPE("Certificate::TBSCertificate::subject_public_key_info");
     }
 

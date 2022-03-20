@@ -25,6 +25,11 @@ enum class CertificateKeyAlgorithm {
     RSA_SHA256 = 0x0b,
     RSA_SHA384 = 0x0c,
     RSA_SHA512 = 0x0d,
+    ECDSA_SECP256R1 = 0x10,
+    ECDSA_SECP384R1 = 0x11,
+    ECDSA_SHA256 = 0x18,
+    ECDSA_SHA384 = 0x19,
+    ECDSA_SHA512 = 0x1a,
 };
 
 class Certificate {
@@ -36,6 +41,7 @@ public:
     ByteBuffer exponent {};
     Crypto::PK::RSAPublicKey<Crypto::UnsignedBigInteger> public_key {};
     Crypto::PK::RSAPrivateKey<Crypto::UnsignedBigInteger> private_key {};
+    ByteBuffer ec_key {};
     struct Name {
         String country;
         String state;
