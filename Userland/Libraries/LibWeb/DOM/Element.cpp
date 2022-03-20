@@ -265,6 +265,16 @@ void Element::parse_attribute(const FlyString& name, const String& value)
     }
 }
 
+void Element::did_remove_attribute(FlyString const& name)
+{
+    if (name == HTML::AttributeNames::style) {
+        if (m_inline_style) {
+            m_inline_style = nullptr;
+            set_needs_style_update(true);
+        }
+    }
+}
+
 enum class RequiredInvalidation {
     None,
     RepaintOnly,
