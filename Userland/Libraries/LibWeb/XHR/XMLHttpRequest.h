@@ -78,7 +78,7 @@ private:
     void fire_progress_event(const String&, u64, u64);
 
     MimeSniff::MimeType get_response_mime_type() const;
-    Optional<String> get_final_encoding() const;
+    Optional<StringView> get_final_encoding() const;
     MimeSniff::MimeType get_final_mime_type() const;
 
     String get_text_response() const;

@@ -34,7 +34,7 @@ bool prescan_skip_whitespace_and_slashes(const ByteBuffer& input, size_t& positi
 }
 
 // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#algorithm-for-extracting-a-character-encoding-from-a-meta-element
-Optional<String> extract_character_encoding_from_meta_element(String const& string)
+Optional<StringView> extract_character_encoding_from_meta_element(String const& string)
 {
     // Checking for "charset" is case insensitive, as is getting an encoding.
     // Therefore, stick to lowercase from the start for simplicity.
