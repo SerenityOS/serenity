@@ -11,7 +11,7 @@
 #include <LibTest/TestCase.h>
 #include <unistd.h>
 
-constexpr char TESTS_ROOT_DIR[] = "/home/anon/cpp-tests/parser";
+constexpr char TESTS_ROOT_DIR[] = "/home/anon/Tests/cpp-tests/parser";
 
 static String read_all(String const& path)
 {

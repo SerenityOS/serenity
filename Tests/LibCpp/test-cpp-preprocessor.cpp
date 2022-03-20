@@ -10,7 +10,7 @@
 #include <LibCpp/Parser.h>
 #include <LibTest/TestCase.h>
 
-constexpr char TESTS_ROOT_DIR[] = "/home/anon/cpp-tests/preprocessor";
+constexpr char TESTS_ROOT_DIR[] = "/home/anon/Tests/cpp-tests/preprocessor";
 
 static String read_all(String const& path)
 {

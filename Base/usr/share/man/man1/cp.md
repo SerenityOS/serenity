@@ -25,12 +25,12 @@ If a directory is specified in `source`, the `-R` (recursive) flag is required. 
 ## Examples
 
 ```sh
-# Copy cpp-tests file and name it cpp-tests-backup
-$ cp cpp-tests cpp-tests-backup
+# Copy test file and name it test-backup
+$ cp test test-backup
 
-# Copy cpp-tests directory and name it cpp-tests-backup
-$ cp -R cpp-tests cpp-tests-backup
+# Copy tests directory and name it tests-backup
+$ cp -R tests tests-backup
 
-# Copy cpp-tests file into existing root
-$ cp cpp-tests root
+# Copy test file into existing root
+$ cp test root
 ```
