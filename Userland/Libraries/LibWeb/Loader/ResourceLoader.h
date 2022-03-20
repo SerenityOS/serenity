@@ -24,7 +24,7 @@ namespace Web {
 #    define CPU_STRING "x86_64"
 #endif
 
-constexpr auto default_user_agent = "Mozilla/4.0 (SerenityOS; " CPU_STRING ") LibWeb+LibJS (Not KHTML, nor Gecko) LibWeb";
+constexpr auto default_user_agent = "Mozilla/5.0 (SerenityOS; " CPU_STRING ") LibWeb+LibJS/1.0 Browser/1.0";
 
 class ResourceLoader : public Core::Object {
     C_OBJECT_ABSTRACT(ResourceLoader)
