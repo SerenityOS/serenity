@@ -141,7 +141,7 @@ int main(int argc, char** argv)
         test_root = String { specified_test_root };
     } else {
 #ifdef __serenity__
-        test_root = LexicalPath::join("/home/anon", String::formatted("{}-tests", program_name.split_view('-').last())).string();
+        test_root = LexicalPath::join("/home/anon/Tests", String::formatted("{}-tests", program_name.split_view('-').last())).string();
 #else
         char* serenity_source_dir = getenv("SERENITY_SOURCE_DIR");
         if (!serenity_source_dir) {
@@ -159,7 +159,7 @@ int main(int argc, char** argv)
 
     if (common_path.is_empty()) {
 #ifdef __serenity__
-        common_path = "/home/anon/js-tests/test-common.js";
+        common_path = "/home/anon/Tests/js-tests/test-common.js";
 #else
         char* serenity_source_dir = getenv("SERENITY_SOURCE_DIR");
         if (!serenity_source_dir) {
