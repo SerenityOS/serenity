@@ -302,6 +302,18 @@ public:
         return (... || this->operator==(forward<Ts>(strings)));
     }
 
+    template<typename... Ts>
+    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of_ignoring_case(Ts&&... strings) const
+    {
+        return (... ||
+                [this, &strings]() -> bool {
+            if constexpr (requires(Ts a) { a.view()->StringView; })
+                return this->equals_ignoring_case(forward<Ts>(strings.view()));
+            else
+                return this->equals_ignoring_case(forward<Ts>(strings));
+        }());
+    }
+
 private:
     RefPtr<StringImpl> m_impl;
 };
