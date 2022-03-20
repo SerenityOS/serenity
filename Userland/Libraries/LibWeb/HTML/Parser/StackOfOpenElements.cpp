@@ -134,4 +134,32 @@ DOM::Element* StackOfOpenElements::element_immediately_above(DOM::Element const&
     return nullptr;
 }
 
+void StackOfOpenElements::remove(const DOM::Element& element)
+{
+    m_elements.remove_first_matching([&element](DOM::Element const& other) {
+        return &other == &element;
+    });
+}
+
+void StackOfOpenElements::replace(const DOM::Element& to_remove, NonnullRefPtr<DOM::Element> to_add)
+{
+    for (size_t i = 0; i < m_elements.size(); i++) {
+        if (&m_elements[i] == &to_remove) {
+            m_elements.remove(i);
+            m_elements.insert(i, move(to_add));
+            break;
+        }
+    }
+}
+
+void StackOfOpenElements::insert_immediately_below(NonnullRefPtr<DOM::Element> element_to_add, DOM::Element const& target)
+{
+    for (size_t i = 0; i < m_elements.size(); i++) {
+        if (&m_elements[i] == &target) {
+            m_elements.insert(i + 1, move(element_to_add));
+            break;
+        }
+    }
+}
+
 }
