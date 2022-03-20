@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -36,10 +37,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio rpath", nullptr));
 
+    String program_name = AK::LexicalPath::basename(args.strings[0]);
+
     Vector<const char*> files;
 
-    bool recursive { false };
-    bool use_ere { false };
+    bool recursive = (program_name == "rgrep"sv);
+    bool use_ere = (program_name == "egrep"sv);
     Vector<const char*> patterns;
     BinaryFileMode binary_mode { BinaryFileMode::Binary };
     bool case_insensitive = false;
