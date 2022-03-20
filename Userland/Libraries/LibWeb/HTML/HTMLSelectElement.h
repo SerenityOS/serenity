@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -22,6 +22,11 @@ public:
     virtual ~HTMLSelectElement() override;
 
     RefPtr<HTMLOptionsCollection> const& options();
+
+    int selected_index() const;
+    void set_selected_index(int);
+
+    NonnullRefPtrVector<HTMLOptionElement> list_of_options() const;
 
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed
