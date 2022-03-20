@@ -535,9 +535,9 @@ DOM::Element& HTMLParser::node_before_current_node()
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#appropriate-place-for-inserting-a-node
-HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_inserting_node()
+HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_inserting_node(RefPtr<DOM::Element> override_target)
 {
-    auto& target = current_node();
+    auto& target = override_target ? *override_target.ptr() : current_node();
     HTMLParser::AdjustedInsertionLocation adjusted_insertion_location;
 
     // 2. Determine the adjusted insertion location using the first matching steps from the following list:
@@ -1148,50 +1148,188 @@ Create:
         goto Advance;
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#adoption-agency-algorithm
 HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_algorithm(HTMLToken& token)
 {
-    auto subject = token.tag_name();
+    // 1. Let subject be token's tag name.
+    auto& subject = token.tag_name();
 
-    // If the current node is an HTML element whose tag name is subject,
-    // and the current node is not in the list of active formatting elements,
-    // then pop the current node off the stack of open elements, and return.
+    // 2. If the current node is an HTML element whose tag name is subject,
+    //    and the current node is not in the list of active formatting elements,
+    //    then pop the current node off the stack of open elements, and return.
     if (current_node().local_name() == subject && !m_list_of_active_formatting_elements.contains(current_node())) {
         (void)m_stack_of_open_elements.pop();
         return AdoptionAgencyAlgorithmOutcome::DoNothing;
     }
 
-    auto formatting_element = m_list_of_active_formatting_elements.last_element_with_tag_name_before_marker(subject);
-    if (!formatting_element)
-        return AdoptionAgencyAlgorithmOutcome::RunAnyOtherEndTagSteps;
+    // 3. Let outer loop counter be 0.
+    size_t outer_loop_counter = 0;
 
-    if (!m_stack_of_open_elements.contains(*formatting_element)) {
-        log_parse_error();
-        m_list_of_active_formatting_elements.remove(*formatting_element);
-        return AdoptionAgencyAlgorithmOutcome::DoNothing;
-    }
+    // 4. While true:
+    while (true) {
+        // 1. If outer loop counter is greater than or equal to 8, then return.
+        if (outer_loop_counter >= 8)
+            return AdoptionAgencyAlgorithmOutcome::DoNothing;
 
-    if (!m_stack_of_open_elements.has_in_scope(*formatting_element)) {
-        log_parse_error();
-        return AdoptionAgencyAlgorithmOutcome::DoNothing;
-    }
+        // 2. Increment outer loop counter by 1.
+        outer_loop_counter++;
 
-    if (formatting_element != &current_node()) {
-        log_parse_error();
-    }
+        // 3. Let formatting element be the last element in the list of active formatting elements that:
+        //    - is between the end of the list and the last marker in the list, if any, or the start of the list otherwise, and
+        //    - has the tag name subject.
+        auto* formatting_element = m_list_of_active_formatting_elements.last_element_with_tag_name_before_marker(subject);
 
-    RefPtr<DOM::Element> furthest_block = m_stack_of_open_elements.topmost_special_node_below(*formatting_element);
+        // If there is no such element, then return and instead act as described in the "any other end tag" entry above.
+        if (!formatting_element)
+            return AdoptionAgencyAlgorithmOutcome::RunAnyOtherEndTagSteps;
 
-    if (!furthest_block) {
-        while (&current_node() != formatting_element)
+        // 4. If formatting element is not in the stack of open elements,
+        if (!m_stack_of_open_elements.contains(*formatting_element)) {
+            // then this is a parse error;
+            log_parse_error();
+            // remove the element from the list,
+            m_list_of_active_formatting_elements.remove(*formatting_element);
+            // and return.
+            return AdoptionAgencyAlgorithmOutcome::DoNothing;
+        }
+
+        // 5. If formatting element is in the stack of open elements, but the element is not in scope,
+        if (!m_stack_of_open_elements.has_in_scope(*formatting_element)) {
+            // then this is a parse error;
+            log_parse_error();
+            // return.
+            return AdoptionAgencyAlgorithmOutcome::DoNothing;
+        }
+
+        // 6. If formatting element is not the current node,
+        if (formatting_element != &current_node()) {
+            // this is a parse error. (But do not return.)
+            log_parse_error();
+        }
+
+        // 7. Let furthest block be the topmost node in the stack of open elements that is lower in the stack than formatting element,
+        //    and is an element in the special category. There might not be one.
+        RefPtr<DOM::Element> furthest_block = m_stack_of_open_elements.topmost_special_node_below(*formatting_element);
+
+        // 8. If there is no furthest block
+        if (!furthest_block) {
+            // then the UA must first pop all the nodes from the bottom of the stack of open elements,
+            // from the current node up to and including formatting element,
+            while (&current_node() != formatting_element)
+                (void)m_stack_of_open_elements.pop();
             (void)m_stack_of_open_elements.pop();
-        (void)m_stack_of_open_elements.pop();
 
+            // then remove formatting element from the list of active formatting elements,
+            m_list_of_active_formatting_elements.remove(*formatting_element);
+            // and finally return.
+            return AdoptionAgencyAlgorithmOutcome::DoNothing;
+        }
+
+        // 9. Let common ancestor be the element immediately above formatting element in the stack of open elements.
+        auto common_ancestor = m_stack_of_open_elements.element_immediately_above(*formatting_element);
+
+        // 10. Let a bookmark note the position of formatting element in the list of active formatting elements
+        //     relative to the elements on either side of it in the list.
+        auto bookmark = m_list_of_active_formatting_elements.find_index(*formatting_element).value();
+
+        // 11. Let node and last node be furthest block.
+        auto node = furthest_block;
+        auto last_node = furthest_block;
+
+        // Keep track of this for later
+        auto node_above_node = m_stack_of_open_elements.element_immediately_above(*node);
+
+        // 12. Let inner loop counter be 0.
+        size_t inner_loop_counter = 0;
+
+        // 13. While true:
+        while (true) {
+            // 1. Increment inner loop counter by 1.
+            inner_loop_counter++;
+
+            // 2. Let node be the element immediately above node in the stack of open elements,
+            //    or if node is no longer in the stack of open elements (e.g. because it got removed by this algorithm),
+            //    the element that was immediately above node in the stack of open elements before node was removed.
+            node = node_above_node;
+            VERIFY(node);
+
+            // Keep track of this for later
+            node_above_node = m_stack_of_open_elements.element_immediately_above(*node);
+
+            // 3. If node is formatting element, then break.
+            if (node == formatting_element)
+                break;
+
+            // 4. If inner loop counter is greater than 3 and node is in the list of active formatting elements,
+            if (inner_loop_counter > 3 && m_list_of_active_formatting_elements.contains(*node)) {
+                auto node_index = m_list_of_active_formatting_elements.find_index(*node);
+                if (node_index.has_value() && node_index.value() < bookmark)
+                    bookmark--;
+                // then remove node from the list of active formatting elements.
+                m_list_of_active_formatting_elements.remove(*node);
+            }
+
+            // 5. If node is not in the list of active formatting elements
+            if (!m_list_of_active_formatting_elements.contains(*node)) {
+                // then remove node from the stack of open elements and continue.
+                m_stack_of_open_elements.remove(*node);
+                continue;
+            }
+
+            // 6. Create an element for the token for which the element node was created,
+            //    in the HTML namespace, with common ancestor as the intended parent;
+            // FIXME: hold onto the real token
+            auto element = create_element_for(HTMLToken::make_start_tag(node->local_name()), Namespace::HTML, *common_ancestor);
+            // replace the entry for node in the list of active formatting elements with an entry for the new element,
+            m_list_of_active_formatting_elements.replace(*node, *element);
+            // replace the entry for node in the stack of open elements with an entry for the new element,
+            m_stack_of_open_elements.replace(*node, element);
+            // and let node be the new element.
+            node = element;
+
+            // 7. If last node is furthest block,
+            if (last_node == furthest_block) {
+                // then move the aforementioned bookmark to be immediately after the new node in the list of active formatting elements.
+                bookmark = m_list_of_active_formatting_elements.find_index(*node).value() + 1;
+            }
+
+            // 8. Append last node to node.
+            node->append_child(*last_node);
+
+            // 9. Set last node to node.
+            last_node = node;
+        }
+
+        // 14. Insert whatever last node ended up being in the previous step at the appropriate place for inserting a node,
+        //     but using common ancestor as the override target.
+        auto adjusted_insertion_location = find_appropriate_place_for_inserting_node(common_ancestor);
+        adjusted_insertion_location.parent->insert_before(*last_node, adjusted_insertion_location.insert_before_sibling, false);
+
+        // 15. Create an element for the token for which formatting element was created,
+        //     in the HTML namespace, with furthest block as the intended parent.
+        // FIXME: hold onto the real token
+        auto element = create_element_for(HTMLToken::make_start_tag(formatting_element->local_name()), Namespace::HTML, *furthest_block);
+
+        // 16. Take all of the child nodes of furthest block and append them to the element created in the last step.
+        for (auto& child : furthest_block->children_as_vector())
+            element->append_child(furthest_block->remove_child(child).release_value());
+
+        // 17. Append that new element to furthest block.
+        furthest_block->append_child(element);
+
+        // 18. Remove formatting element from the list of active formatting elements,
+        //     and insert the new element into the list of active formatting elements at the position of the aforementioned bookmark.
+        auto formatting_element_index = m_list_of_active_formatting_elements.find_index(*formatting_element);
+        if (formatting_element_index.has_value() && formatting_element_index.value() < bookmark)
+            bookmark--;
         m_list_of_active_formatting_elements.remove(*formatting_element);
-        return AdoptionAgencyAlgorithmOutcome::DoNothing;
-    }
+        m_list_of_active_formatting_elements.insert_at(bookmark, *element);
 
-    // FIXME: Implement the rest of the AAA :^)
-    return AdoptionAgencyAlgorithmOutcome::DoNothing;
+        // 19. Remove formatting element from the stack of open elements, and insert the new element
+        //     into the stack of open elements immediately below the position of furthest block in that stack.
+        m_stack_of_open_elements.remove(*formatting_element);
+        m_stack_of_open_elements.insert_immediately_below(*element, *furthest_block);
+    }
 }
 
 bool HTMLParser::is_special_tag(const FlyString& tag_name, const FlyString& namespace_)

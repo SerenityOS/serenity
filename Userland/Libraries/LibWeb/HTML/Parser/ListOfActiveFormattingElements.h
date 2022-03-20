@@ -28,6 +28,9 @@ public:
 
     void add(DOM::Element& element);
     void add_marker();
+    void insert_at(size_t index, DOM::Element& element);
+
+    void replace(DOM::Element& to_remove, DOM::Element& to_add);
 
     void remove(DOM::Element&);
 
@@ -37,6 +40,8 @@ public:
     DOM::Element* last_element_with_tag_name_before_marker(const FlyString& tag_name);
 
     void clear_up_to_the_last_marker();
+
+    Optional<size_t> find_index(DOM::Element const&) const;
 
 private:
     Vector<Entry> m_entries;
