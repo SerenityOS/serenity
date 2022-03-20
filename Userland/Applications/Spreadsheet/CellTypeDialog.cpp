@@ -350,7 +350,7 @@ CellTypeMetadata CellTypeDialog::metadata() const
             metadata.alignment = Gfx::TextAlignment::TopLeft;
             break;
         case HorizontalAlignment::Center:
-            metadata.alignment = Gfx::TextAlignment::Center; // TopCenter?
+            metadata.alignment = Gfx::TextAlignment::TopCenter;
             break;
         case HorizontalAlignment::Right:
             metadata.alignment = Gfx::TextAlignment::TopRight;
