@@ -207,6 +207,10 @@ int vswprintf(wchar_t* __restrict wcs, size_t max_length, wchar_t const* __restr
         ++length_so_far;
     },
         wcs, fmt, args);
+    if (length_so_far < max_length)
+        wcs[length_so_far] = L'\0';
+    else
+        wcs[max_length - 1] = L'\0';
     return static_cast<int>(length_so_far);
 }
 
