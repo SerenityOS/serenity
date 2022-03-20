@@ -8,6 +8,7 @@
 
 #include "KeyboardMapperWidget.h"
 #include "KeyPositions.h"
+#include <AK/Utf8View.h>
 #include <LibCore/Stream.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>
@@ -71,7 +72,7 @@ void KeyboardMapperWidget::create_frame()
                 if (value.length() == 0)
                     map[index] = '\0'; // Empty string
                 else
-                    map[index] = value[0];
+                    map[index] = *Utf8View(value).begin();
 
                 window()->set_modified(true);
             }
