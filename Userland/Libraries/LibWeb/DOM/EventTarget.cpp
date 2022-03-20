@@ -163,9 +163,16 @@ void EventTarget::remove_event_listener(FlyString const& type, RefPtr<IDLEventLi
 
     // 2. If this’s event listener list contains an event listener whose type is type, callback is callback, and capture is capture,
     //    then remove an event listener with this and that event listener.
+    auto callbacks_match = [&](NonnullRefPtr<DOMEventListener>& entry) {
+        if (entry->callback.is_null() && callback.is_null())
+            return true;
+        if (entry->callback.is_null() || callback.is_null())
+            return false;
+        return entry->callback->callback().callback.cell() == callback->callback().callback.cell();
+    };
     auto it = m_event_listener_list.find_if([&](auto& entry) {
         return entry->type == type
-            && entry->callback->callback().callback.cell() == callback->callback().callback.cell()
+            && callbacks_match(entry)
             && entry->capture == capture;
     });
     if (it != m_event_listener_list.end())
