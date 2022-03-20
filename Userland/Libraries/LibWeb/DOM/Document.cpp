@@ -627,6 +627,7 @@ void Document::update_style()
         return;
     if (!needs_full_style_update() && !needs_style_update() && !child_needs_style_update())
         return;
+    evaluate_media_rules();
     if (update_style_recursively(*this))
         invalidate_layout();
     m_needs_full_style_update = false;
@@ -1375,6 +1376,11 @@ void Document::evaluate_media_queries_and_report_changes()
     }
 
     // Also not in the spec, but this is as good a place as any to evaluate @media rules!
+    evaluate_media_rules();
+}
+
+void Document::evaluate_media_rules()
+{
     bool any_media_queries_changed_match_state = false;
     for (auto& style_sheet : style_sheets().sheets()) {
         if (style_sheet.evaluate_media_queries(window()))

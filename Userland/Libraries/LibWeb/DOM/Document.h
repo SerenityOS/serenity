@@ -345,6 +345,8 @@ private:
 
     void tear_down_layout_tree();
 
+    void evaluate_media_rules();
+
     ExceptionOr<void> run_the_document_write_steps(String);
 
     void increment_referencing_node_count()
