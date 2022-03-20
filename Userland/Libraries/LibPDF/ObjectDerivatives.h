@@ -143,55 +143,24 @@ private:
 
 class StreamObject : public Object {
 public:
-    explicit StreamObject(NonnullRefPtr<DictObject> const& dict)
+    explicit StreamObject(NonnullRefPtr<DictObject> const& dict, ByteBuffer const& bytes)
         : m_dict(dict)
+        , m_buffer(bytes)
     {
     }
 
     virtual ~StreamObject() override = default;
 
     [[nodiscard]] ALWAYS_INLINE NonnullRefPtr<DictObject> dict() const { return m_dict; }
-    [[nodiscard]] virtual ReadonlyBytes bytes() const = 0;
+    [[nodiscard]] ReadonlyBytes bytes() const { return m_buffer.bytes(); };
 
     const char* type_name() const override { return "stream"; }
     String to_string(int indent) const override;
 
-protected:
+private:
     bool is_stream() const override { return true; }
 
-private:
     NonnullRefPtr<DictObject> m_dict;
-};
-
-class PlainTextStreamObject final : public StreamObject {
-public:
-    PlainTextStreamObject(NonnullRefPtr<DictObject> const& dict, ReadonlyBytes bytes)
-        : StreamObject(dict)
-        , m_bytes(bytes)
-    {
-    }
-
-    virtual ~PlainTextStreamObject() override = default;
-
-    [[nodiscard]] ALWAYS_INLINE virtual ReadonlyBytes bytes() const override { return m_bytes; }
-
-private:
-    ReadonlyBytes m_bytes;
-};
-
-class EncodedStreamObject final : public StreamObject {
-public:
-    EncodedStreamObject(NonnullRefPtr<DictObject> const& dict, ByteBuffer&& buffer)
-        : StreamObject(dict)
-        , m_buffer(buffer)
-    {
-    }
-
-    virtual ~EncodedStreamObject() override = default;
-
-    [[nodiscard]] ALWAYS_INLINE virtual ReadonlyBytes bytes() const override { return m_buffer.bytes(); }
-
-private:
     ByteBuffer m_buffer;
 };
 
