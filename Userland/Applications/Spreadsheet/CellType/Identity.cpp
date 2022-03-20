@@ -15,14 +15,28 @@ IdentityCell::IdentityCell()
 {
 }
 
-JS::ThrowCompletionOr<String> IdentityCell::display(Cell& cell, const CellTypeMetadata&) const
+JS::ThrowCompletionOr<String> IdentityCell::display(Cell& cell, const CellTypeMetadata& metadata) const
 {
-    return cell.js_data().to_string(cell.sheet().global_object());
+    auto data = cell.js_data();
+    if (!metadata.format.is_empty())
+        data = TRY(cell.sheet().evaluate(metadata.format, &cell));
+
+    return data.to_string(cell.sheet().global_object());
 }
 
 JS::ThrowCompletionOr<JS::Value> IdentityCell::js_value(Cell& cell, const CellTypeMetadata&) const
 {
     return cell.js_data();
+}
+
+String IdentityCell::metadata_hint(MetadataName metadata) const
+{
+    if (metadata == MetadataName::Length)
+        return "Ignored";
+    if (metadata == MetadataName::Format)
+        return "JavaScript expression, `value' refers to the cell's value";
+
+    return {};
 }
 
 }

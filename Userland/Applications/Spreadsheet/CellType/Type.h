@@ -23,6 +23,13 @@ struct CellTypeMetadata {
     Format static_format;
 };
 
+enum class MetadataName {
+    Length,
+    Format,
+    Alignment,
+    StaticFormat,
+};
+
 class CellType {
 public:
     static const CellType* get_by_name(StringView);
@@ -30,6 +37,7 @@ public:
 
     virtual JS::ThrowCompletionOr<String> display(Cell&, const CellTypeMetadata&) const = 0;
     virtual JS::ThrowCompletionOr<JS::Value> js_value(Cell&, const CellTypeMetadata&) const = 0;
+    virtual String metadata_hint(MetadataName) const { return {}; }
     virtual ~CellType() = default;
 
     const String& name() const { return m_name; }
