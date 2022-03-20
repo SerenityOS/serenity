@@ -1128,15 +1128,23 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
 
             Color src_pixel;
             if constexpr (do_bilinear_blend) {
-                auto scaled_x0 = clamp((desired_x - half_pixel) >> 32, 0, src_rect.width() - 1);
-                auto scaled_x1 = clamp((desired_x + half_pixel) >> 32, 0, src_rect.width() - 1);
-                auto scaled_y0 = clamp((desired_y - half_pixel) >> 32, 0, src_rect.height() - 1);
-                auto scaled_y1 = clamp((desired_y + half_pixel) >> 32, 0, src_rect.height() - 1);
+                auto scaled_x0 = clamp((desired_x - half_pixel) >> 32, src_rect.left(), src_rect.right());
+                auto scaled_x1 = clamp((desired_x + half_pixel) >> 32, src_rect.left(), src_rect.right());
+                auto scaled_y0 = clamp((desired_y - half_pixel) >> 32, src_rect.top(), src_rect.bottom());
+                auto scaled_y1 = clamp((desired_y + half_pixel) >> 32, src_rect.top(), src_rect.bottom());
 
                 float x_ratio = (((desired_x + half_pixel) & fractional_mask) / (float)shift);
                 float y_ratio = (((desired_y + half_pixel) & fractional_mask) / (float)shift);
 
-                src_pixel = get_pixel(source, scaled_x0, scaled_y0).interpolate(get_pixel(source, scaled_x1, scaled_y0), x_ratio).interpolate(get_pixel(source, scaled_x0, scaled_y1).interpolate(get_pixel(source, scaled_x1, scaled_y1), x_ratio), y_ratio);
+                auto top_left = get_pixel(source, scaled_x0, scaled_y0);
+                auto top_right = get_pixel(source, scaled_x1, scaled_y0);
+                auto bottom_left = get_pixel(source, scaled_x0, scaled_y1);
+                auto bottom_right = get_pixel(source, scaled_x1, scaled_y1);
+
+                auto top = top_left.interpolate(top_right, x_ratio);
+                auto bottom = bottom_left.interpolate(bottom_right, x_ratio);
+
+                src_pixel = top.interpolate(bottom, y_ratio);
             } else {
                 auto scaled_x = desired_x >> 32;
                 auto scaled_y = desired_y >> 32;
