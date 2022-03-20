@@ -48,6 +48,7 @@ set(AK_TEST_SOURCES
     TestNonnullRefPtr.cpp
     TestNumberFormat.cpp
     TestOptional.cpp
+    TestPrint.cpp
     TestQueue.cpp
     TestQuickSort.cpp
     TestRedBlackTree.cpp

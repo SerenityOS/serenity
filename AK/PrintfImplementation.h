@@ -11,6 +11,7 @@
 #include <AK/Types.h>
 #include <math.h>
 #include <stdarg.h>
+#include <wchar.h>
 
 #ifdef __serenity__
 extern "C" size_t strlen(const char*);
@@ -277,8 +278,8 @@ ALWAYS_INLINE int print_octal_number(PutChFunc putch, CharType*& bufptr, u64 num
     return field_width;
 }
 
-template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_string(PutChFunc putch, CharType*& bufptr, const char* str, size_t len, bool left_pad, size_t field_width, bool dot, size_t precision, bool has_fraction)
+template<typename PutChFunc, typename T, typename CharType>
+ALWAYS_INLINE int print_string(PutChFunc putch, CharType*& bufptr, T str, size_t len, bool left_pad, size_t field_width, bool dot, size_t precision, bool has_fraction)
 {
     if (has_fraction)
         len = min(len, precision);
@@ -339,6 +340,17 @@ struct PrintfImpl {
 
     ALWAYS_INLINE int format_s(const ModifierState& state, ArgumentListRefT ap) const
     {
+        // FIXME: Narrow characters should be converted to wide characters on the fly and vice versa.
+        // https://pubs.opengroup.org/onlinepubs/9699919799/functions/printf.html
+        // https://pubs.opengroup.org/onlinepubs/9699919799/functions/wprintf.html
+#ifndef KERNEL
+        if (state.long_qualifiers) {
+            const wchar_t* sp = NextArgument<const wchar_t*>()(ap);
+            if (!sp)
+                sp = L"(null)";
+            return print_string(m_putch, m_bufptr, sp, wcslen(sp), state.left_pad, state.field_width, state.dot, state.precision, state.has_precision);
+        }
+#endif
         const char* sp = NextArgument<const char*>()(ap);
         if (!sp)
             sp = "(null)";

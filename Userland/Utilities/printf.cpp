@@ -119,6 +119,17 @@ struct ArgvNextArgument<const char*, V> {
 };
 
 template<typename V>
+struct ArgvNextArgument<const wchar_t*, V> {
+    ALWAYS_INLINE const wchar_t* operator()(V arg) const
+    {
+        if (arg.argc == 0)
+            return L"";
+
+        return L"";
+    }
+};
+
+template<typename V>
 struct ArgvNextArgument<int, V> {
     ALWAYS_INLINE int operator()(V arg) const
     {
