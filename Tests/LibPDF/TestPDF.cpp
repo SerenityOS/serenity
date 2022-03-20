@@ -16,6 +16,7 @@ TEST_CASE(linearized_pdf)
     auto file = Core::MappedFile::map("linearized.pdf").release_value();
     auto document = PDF::Document::create(file->bytes());
     EXPECT(!document.is_error());
+    EXPECT(!document.value()->initialize().is_error());
     EXPECT_EQ(document.value()->get_page_count(), 1U);
 }
 
@@ -24,6 +25,7 @@ TEST_CASE(non_linearized_pdf)
     auto file = Core::MappedFile::map("non-linearized.pdf").release_value();
     auto document = PDF::Document::create(file->bytes());
     EXPECT(!document.is_error());
+    EXPECT(!document.value()->initialize().is_error());
     EXPECT_EQ(document.value()->get_page_count(), 1U);
 }
 
@@ -32,6 +34,7 @@ TEST_CASE(complex_pdf)
     auto file = Core::MappedFile::map("complex.pdf").release_value();
     auto document = PDF::Document::create(file->bytes());
     EXPECT(!document.is_error());
+    EXPECT(!document.value()->initialize().is_error());
     EXPECT_EQ(document.value()->get_page_count(), 3U);
 }
 

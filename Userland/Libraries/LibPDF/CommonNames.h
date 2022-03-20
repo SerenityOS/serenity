@@ -37,6 +37,8 @@
     A(Differences)                \
     A(E)                          \
     A(Encoding)                   \
+    A(Encrypt)                    \
+    A(EncryptMetadata)            \
     A(ExtGState)                  \
     A(F)                          \
     A(FL)                         \
@@ -61,6 +63,7 @@
     A(H)                          \
     A(HT)                         \
     A(HTO)                        \
+    A(ID)                         \
     A(JBIG2Decode)                \
     A(JPXDecode)                  \
     A(Kids)                       \
@@ -87,6 +90,7 @@
     A(Parent)                     \
     A(Pattern)                    \
     A(Prev)                       \
+    A(R)                          \
     A(RI)                         \
     A(Resources)                  \
     A(Root)                       \
@@ -103,6 +107,7 @@
     A(Title)                      \
     A(ToUnicode)                  \
     A(Type)                       \
+    A(U)                          \
     A(UCR)                        \
     A(UseBlackPTComp)             \
     A(UserUnit)                   \

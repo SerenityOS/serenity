@@ -3,6 +3,7 @@ set(SOURCES
     CommonNames.cpp
     Document.cpp
     Encoding.cpp
+    Encryption.cpp
     Filter.cpp
     Fonts.cpp
     ObjectDerivatives.cpp
@@ -12,4 +13,4 @@ set(SOURCES
     )
 
 serenity_lib(LibPDF pdf)
-target_link_libraries(LibPDF LibC LibCore LibIPC LibGfx LibTextCodec)
+target_link_libraries(LibPDF LibC LibCore LibIPC LibGfx LibTextCodec LibCrypto)
