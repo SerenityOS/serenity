@@ -51,6 +51,9 @@ foreach(CMD_SRC ${CMD_SOURCES})
     endif()
 endforeach()
 
+install(CODE "file(CREATE_LINK grep ${CMAKE_INSTALL_PREFIX}/bin/egrep SYMBOLIC)")
+install(CODE "file(CREATE_LINK grep ${CMAKE_INSTALL_PREFIX}/bin/rgrep SYMBOLIC)")
+
 target_link_libraries(abench LibAudio LibMain LibCore)
 target_link_libraries(adjtime LibMain)
 target_link_libraries(allocate LibMain)
