@@ -79,6 +79,7 @@ public:
                 Not,
                 Where,
                 Active,
+                Lang,
             };
             Type type { Type::None };
 
@@ -87,6 +88,9 @@ public:
             ANPlusBPattern nth_child_pattern;
 
             SelectorList argument_selector_list {};
+
+            // Used for :lang(en-gb,dk)
+            Vector<FlyString> languages;
         };
         PseudoClass pseudo_class {};
         PseudoElement pseudo_element { PseudoElement::None };
@@ -219,6 +223,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "not"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Where:
         return "where"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Lang:
+        return "lang"sv;
     case Selector::SimpleSelector::PseudoClass::Type::None:
         break;
     }
