@@ -29,6 +29,7 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE String const& string() const { return m_string; }
     [[nodiscard]] ALWAYS_INLINE bool is_binary() const { return m_is_binary; }
+    void set_string(String string) { m_string = move(string); }
 
     const char* type_name() const override { return "string"; }
     String to_string(int indent) const override;
@@ -153,6 +154,7 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE NonnullRefPtr<DictObject> dict() const { return m_dict; }
     [[nodiscard]] ReadonlyBytes bytes() const { return m_buffer.bytes(); };
+    [[nodiscard]] ByteBuffer& buffer() { return m_buffer; };
 
     const char* type_name() const override { return "stream"; }
     String to_string(int indent) const override;

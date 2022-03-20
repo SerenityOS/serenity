@@ -41,9 +41,18 @@ PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
 
     TRY(parser->initialize());
 
+    document->m_trailer = parser->trailer();
     document->m_catalog = TRY(parser->trailer()->get_dict(document, CommonNames::Root));
-    TRY(document->build_page_tree());
-    TRY(document->build_outline());
+
+    if (document->m_trailer->contains(CommonNames::Encrypt)) {
+        auto encryption_dict = TRY(document->m_trailer->get_dict(document, CommonNames::Encrypt));
+        document->m_security_handler = TRY(SecurityHandler::create(document, encryption_dict));
+
+        // Automatically attempt to unencrypt the document with the empty string. The
+        // result is not important; it is the caller's responsibility to ensure the
+        // document is unencrypted before calling initialize().
+        document->m_security_handler->try_provide_user_password("");
+    }
 
     return document;
 }
@@ -52,6 +61,17 @@ Document::Document(NonnullRefPtr<Parser> const& parser)
     : m_parser(parser)
 {
     m_parser->set_document(this);
+}
+
+PDFErrorOr<void> Document::initialize()
+{
+    if (m_security_handler)
+        VERIFY(m_security_handler->has_user_password());
+
+    TRY(build_page_tree());
+    TRY(build_outline());
+
+    return {};
 }
 
 PDFErrorOr<Value> Document::get_or_load_value(u32 index)

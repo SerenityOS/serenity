@@ -160,6 +160,18 @@ void PDFViewerWidget::open_file(Core::File& file)
 
     auto document = maybe_document.release_value();
 
+    if (auto sh = document->security_handler(); !sh->has_user_password()) {
+        // FIXME: Prompt the user for a password
+        VERIFY_NOT_REACHED();
+    }
+
+    auto result = document->initialize();
+    if (result.is_error()) {
+        auto error = result.release_error();
+        GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't load PDF {}:\n{}", file.filename(), error.message()));
+        return;
+    }
+
     m_viewer->set_document(document);
     m_total_page_label->set_text(String::formatted("of {}", document->get_page_count()));
 
