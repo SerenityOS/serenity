@@ -997,10 +997,10 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
             warnln("Failed to decode filter: {}", maybe_bytes.error().string_literal());
             return error(String::formatted("Failed to decode filter {}", maybe_bytes.error().string_literal()));
         }
-        return make_object<EncodedStreamObject>(dict, move(maybe_bytes.value()));
+        return make_object<StreamObject>(dict, maybe_bytes.value());
     }
 
-    return make_object<PlainTextStreamObject>(dict, bytes);
+    return make_object<StreamObject>(dict, MUST(ByteBuffer::copy(bytes)));
 }
 
 PDFErrorOr<Vector<Command>> Parser::parse_graphics_commands()
