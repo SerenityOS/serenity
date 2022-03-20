@@ -768,8 +768,12 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
 
 Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID property_id) const
 {
-    // FIXME: Only update layout if required to resolve the property we're accessing.
-    const_cast<DOM::Document&>(m_element->document()).update_layout();
+    if (CSS::property_affects_layout(property_id)) {
+        const_cast<DOM::Document&>(m_element->document()).update_layout();
+    } else {
+        // FIXME: If we had a way to update style for a single element, this would be a good place to use it.
+        const_cast<DOM::Document&>(m_element->document()).update_style();
+    }
 
     if (!m_element->layout_node()) {
         auto style = m_element->document().style_computer().compute_style(const_cast<DOM::Element&>(*m_element));
