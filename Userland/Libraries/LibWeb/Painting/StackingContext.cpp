@@ -263,7 +263,8 @@ void StackingContext::paint(PaintContext& context) const
 
         // FIXME: Use the transform origin specified in CSS or SVG
         auto transform_origin = m_box.paint_box()->absolute_position();
-        auto source_rect = m_box.paint_box()->absolute_rect().translated(-transform_origin);
+        auto source_rect = m_box.paint_box()->absolute_border_box_rect().translated(-transform_origin);
+
         auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
         source_rect.translate_by(transform_origin);
         context.painter().draw_scaled_bitmap(Gfx::rounded_int_rect(transformed_destination_rect), *bitmap, source_rect, opacity, Gfx::Painter::ScalingMode::BilinearBlend);
