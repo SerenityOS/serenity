@@ -100,12 +100,17 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     box_state.margin_left = computed_values.margin().left.resolved(box, width_of_containing_block).to_px(box);
     box_state.border_left = computed_values.border_left().width;
     box_state.padding_left = computed_values.padding().left.resolved(box, width_of_containing_block).to_px(box);
+
     box_state.margin_right = computed_values.margin().right.resolved(box, width_of_containing_block).to_px(box);
     box_state.border_right = computed_values.border_right().width;
     box_state.padding_right = computed_values.padding().right.resolved(box, width_of_containing_block).to_px(box);
-    box_state.padding_top = computed_values.padding().top.resolved(box, width_of_containing_block).to_px(box);
-    box_state.padding_bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block).to_px(box);
+
     box_state.margin_top = computed_values.margin().top.resolved(box, width_of_containing_block).to_px(box);
+    box_state.border_top = computed_values.border_top().width;
+    box_state.padding_top = computed_values.padding().top.resolved(box, width_of_containing_block).to_px(box);
+
+    box_state.padding_bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block).to_px(box);
+    box_state.border_bottom = computed_values.border_bottom().width;
     box_state.margin_bottom = computed_values.margin().bottom.resolved(box, width_of_containing_block).to_px(box);
 
     if (is<ReplacedBox>(box)) {
