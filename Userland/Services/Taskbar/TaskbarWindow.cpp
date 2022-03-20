@@ -10,6 +10,7 @@
 #include "QuickLaunchWidget.h"
 #include "TaskbarButton.h"
 #include <AK/Debug.h>
+#include <LibConfig/Client.h>
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
@@ -183,7 +184,9 @@ void TaskbarWindow::add_window_button(::Window& window, const WindowIdentifier& 
     };
 
     button->on_middle_click = [identifier]() {
-        GUI::ConnectionToWindowMangerServer::the().async_request_close_window(identifier.client_id(), identifier.window_id());
+        if (Config::read_bool("Taskbar", "WindowList", "CloseOnMiddleClick")) {
+            GUI::ConnectionToWindowMangerServer::the().async_request_close_window(identifier.client_id(), identifier.window_id());
+        }
     };
 }
 
