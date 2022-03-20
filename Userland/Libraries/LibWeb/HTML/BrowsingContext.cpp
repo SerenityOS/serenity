@@ -137,8 +137,10 @@ void BrowsingContext::set_size(Gfx::IntSize const& size)
         return;
     m_size = size;
 
-    if (auto* document = active_document())
-        document->set_needs_layout();
+    if (auto* document = active_document()) {
+        document->invalidate_style();
+        document->invalidate_layout();
+    }
 
     for (auto* client : m_viewport_clients)
         client->browsing_context_did_set_viewport_rect(viewport_rect());
