@@ -183,4 +183,20 @@ void WMConnectionFromClient::set_window_taskbar_rect(i32 client_id, i32 window_i
     window.set_taskbar_rect(rect);
 }
 
+void WMConnectionFromClient::request_close_window(i32 client_id, i32 window_id)
+{
+    auto* client = WindowServer::ConnectionFromClient::from_client_id(client_id);
+    if (!client) {
+        did_misbehave("WM_RequestCloseWindow: Bad client ID");
+        return;
+    }
+    auto it = client->m_windows.find(window_id);
+    if (it == client->m_windows.end()) {
+        did_misbehave("WM_RequestCloseWindow: Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    window.request_close();
+}
+
 }

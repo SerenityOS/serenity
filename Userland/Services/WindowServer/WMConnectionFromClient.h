@@ -31,6 +31,7 @@ public:
     virtual void set_event_mask(u32) override;
     virtual void set_manager_window(i32) override;
     virtual void set_workspace(u32, u32) override;
+    virtual void request_close_window(i32, i32) override;
 
     unsigned event_mask() const { return m_event_mask; }
     int window_id() const { return m_window_id; }
