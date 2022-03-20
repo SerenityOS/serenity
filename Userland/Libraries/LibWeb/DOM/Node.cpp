@@ -793,6 +793,8 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
         MUST(object.add("data"sv, static_cast<DOM::Comment const&>(*this).data()));
     }
 
+    MUST((object.add("visible"sv, !!layout_node())));
+
     if (has_child_nodes()) {
         auto children = MUST(object.add_array("children"));
         for_each_child([&children](DOM::Node& child) {
