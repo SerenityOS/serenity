@@ -66,13 +66,17 @@ void KeyboardMapperWidget::create_frame()
                 auto index = keys[i].map_index;
                 VERIFY(index > 0);
 
-                tmp_button.set_text(value);
                 u32* map = map_from_name(m_current_map_name);
 
                 if (value.length() == 0)
                     map[index] = '\0'; // Empty string
                 else
                     map[index] = *Utf8View(value).begin();
+
+                StringBuilder sb;
+                sb.append_code_point(map[index]);
+
+                tmp_button.set_text(sb.to_string());
 
                 window()->set_modified(true);
             }
