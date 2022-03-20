@@ -90,6 +90,7 @@
 #include <LibWeb/Bindings/SVGPolylineElementWrapper.h>
 #include <LibWeb/Bindings/SVGRectElementWrapper.h>
 #include <LibWeb/Bindings/SVGSVGElementWrapper.h>
+#include <LibWeb/Bindings/SVGTextContentElementWrapper.h>
 #include <LibWeb/Bindings/TextWrapper.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Node.h>
@@ -335,6 +336,8 @@ NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<SVG::SVGPathElement>(node)));
     if (is<SVG::SVGRectElement>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<SVG::SVGRectElement>(node)));
+    if (is<SVG::SVGTextContentElement>(node))
+        return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<SVG::SVGTextContentElement>(node)));
     if (is<DOM::Element>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<DOM::Element>(node)));
     if (is<DOM::DocumentFragment>(node))

@@ -85,6 +85,7 @@
 #include <LibWeb/SVG/SVGPolylineElement.h>
 #include <LibWeb/SVG/SVGRectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
+#include <LibWeb/SVG/SVGTextContentElement.h>
 #include <LibWeb/SVG/TagNames.h>
 
 namespace Web::DOM {
@@ -275,6 +276,8 @@ NonnullRefPtr<Element> create_element(Document& document, FlyString local_name, 
         return adopt_ref(*new SVG::SVGRectElement(document, move(qualified_name)));
     if (lowercase_tag_name == SVG::TagNames::g)
         return adopt_ref(*new SVG::SVGGElement(document, move(qualified_name)));
+    if (lowercase_tag_name == SVG::TagNames::text)
+        return adopt_ref(*new SVG::SVGTextContentElement(document, move(qualified_name)));
 
     // FIXME: If name is a valid custom element name, then return HTMLElement.
 

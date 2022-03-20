@@ -322,6 +322,7 @@ set(SOURCES
     SVG/SVGPolylineElement.cpp
     SVG/SVGRectElement.cpp
     SVG/SVGSVGElement.cpp
+    SVG/SVGTextContentElement.cpp
     SVG/TagNames.cpp
     SVG/ViewBox.cpp
     Selection/Selection.cpp
@@ -580,6 +581,7 @@ libweb_js_wrapper(SVG/SVGPolygonElement)
 libweb_js_wrapper(SVG/SVGPolylineElement)
 libweb_js_wrapper(SVG/SVGRectElement)
 libweb_js_wrapper(SVG/SVGSVGElement)
+libweb_js_wrapper(SVG/SVGTextContentElement)
 libweb_js_wrapper(Selection/Selection)
 libweb_js_wrapper(UIEvents/FocusEvent)
 libweb_js_wrapper(UIEvents/KeyboardEvent)

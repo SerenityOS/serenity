@@ -520,6 +520,7 @@ class SVGPolygonElementWrapper;
 class SVGPolylineElementWrapper;
 class SVGRectElementWrapper;
 class SVGSVGElementWrapper;
+class SVGTextContentElementWrapper;
 class TextDecoderWrapper;
 class TextEncoderWrapper;
 class TextMetricsWrapper;

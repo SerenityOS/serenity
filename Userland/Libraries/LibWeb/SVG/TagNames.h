@@ -19,7 +19,8 @@ namespace Web::SVG::TagNames {
     __ENUMERATE_SVG_TAG(polygon)    \
     __ENUMERATE_SVG_TAG(polyline)   \
     __ENUMERATE_SVG_TAG(rect)       \
-    __ENUMERATE_SVG_TAG(svg)
+    __ENUMERATE_SVG_TAG(svg)        \
+    __ENUMERATE_SVG_TAG(text)
 
 #define ENUMERATE_SVG_TAGS             \
     ENUMERATE_SVG_GRAPHICS_TAGS        \
