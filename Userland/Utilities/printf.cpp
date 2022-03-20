@@ -9,6 +9,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -253,10 +254,13 @@ static String handle_escapes(const char* string)
     return builder.build();
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (argc < 2)
-        return 1;
+    if (arguments.argc < 2)
+        return Error::from_errno(EINVAL);
+
+    auto argc = arguments.argc;
+    auto argv = arguments.argv;
 
     ++argv;
     String format = handle_escapes(*(argv++));
