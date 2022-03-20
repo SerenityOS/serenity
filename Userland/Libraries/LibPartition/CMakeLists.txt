@@ -7,3 +7,4 @@ set(SOURCES
 )
 
 serenity_lib(LibPartition partition)
+target_link_libraries(LibPartition LibCore)
