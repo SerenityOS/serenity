@@ -60,6 +60,7 @@ public:
                 Visited,
                 Hover,
                 Focus,
+                FocusWithin,
                 FirstChild,
                 LastChild,
                 OnlyChild,
@@ -185,6 +186,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "hover"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Focus:
         return "focus"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::FocusWithin:
+        return "focus-within"sv;
     case Selector::SimpleSelector::PseudoClass::Type::FirstChild:
         return "first-child"sv;
     case Selector::SimpleSelector::PseudoClass::Type::LastChild:

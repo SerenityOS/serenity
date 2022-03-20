@@ -506,6 +506,8 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FirstOfType;
             } else if (pseudo_name.equals_ignoring_case("focus")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Focus;
+            } else if (pseudo_name.equals_ignoring_case("focus-within")) {
+                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FocusWithin;
             } else if (pseudo_name.equals_ignoring_case("hover")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Hover;
             } else if (pseudo_name.equals_ignoring_case("last-child")) {

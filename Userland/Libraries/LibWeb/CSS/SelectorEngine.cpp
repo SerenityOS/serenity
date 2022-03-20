@@ -137,6 +137,10 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         return matches_hover_pseudo_class(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Focus:
         return element.is_focused();
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::FocusWithin: {
+        auto* focused_element = element.document().focused_element();
+        return focused_element && element.is_inclusive_ancestor_of(*focused_element);
+    }
     case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstChild:
         return !element.previous_element_sibling();
     case CSS::Selector::SimpleSelector::PseudoClass::Type::LastChild:
