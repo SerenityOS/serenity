@@ -10,13 +10,13 @@ $ test-js [options...] [path]
 
 ## Description
 
-`test-js` runs the LibJS test suite located in `/home/anon/js-tests`. These
+`test-js` runs the LibJS test suite located in `/home/anon/Test/js-tests`. These
 tests are using a custom JavaScript testing framework inspired by
-[Jest](https://jestjs.io) (see [`test-common.js`](/home/anon/js-tests/test-common.js)).
+[Jest](https://jestjs.io) (see [`test-common.js`](/home/anon/Tests/js-tests/test-common.js)).
 
 It also supports the [test262 parser tests](https://github.com/tc39/test262-parser-tests).
 
-The test root directory is assumed to be `/home/anon/js-tests`, or `$SERENITY_SOURCE_DIR/Userland/Libraries/LibJS/Tests`
+The test root directory is assumed to be `/home/anon/Tests/js-tests`, or `$SERENITY_SOURCE_DIR/Userland/Libraries/LibJS/Tests`
 when using the Lagom build. Optionally you can pass a custom path to `test-js` to override these defaults.
 
 You can disable output from `dbgln()` calls by setting the `DISABLE_DBG_OUTPUT` environment variable.
