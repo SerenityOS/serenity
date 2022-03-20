@@ -26,8 +26,8 @@ static bool contains_only_http_quoted_string_token_code_points(StringView string
 }
 
 MimeType::MimeType(String type, String subtype)
-    : m_type(type)
-    , m_subtype(subtype)
+    : m_type(move(type))
+    , m_subtype(move(subtype))
 {
     // https://mimesniff.spec.whatwg.org/#parameters
     // A MIME type’s parameters is an ordered map whose keys are ASCII strings and values are strings limited to HTTP quoted-string token code points.
