@@ -206,8 +206,10 @@ void InfinitelyScrollableTableView::mousedown_event(GUI::MouseEvent& event)
         AbstractTableView::mousedown_event(adjusted_event);
     } else {
         AbstractTableView::mousedown_event(event);
-        auto index = index_at_event_position(event.position());
-        AbstractTableView::set_cursor(index, SelectionUpdate::Set);
+        if (event.button() == GUI::Primary) {
+            auto index = index_at_event_position(event.position());
+            AbstractTableView::set_cursor(index, SelectionUpdate::Set);
+        }
     }
 }
 
