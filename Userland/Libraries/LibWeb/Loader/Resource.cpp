@@ -8,6 +8,7 @@
 #include <AK/Function.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Loader/Resource.h>
 
@@ -64,6 +65,11 @@ static String mime_type_from_content_type(const String& content_type)
     return content_type;
 }
 
+static bool is_valid_encoding(String const& encoding)
+{
+    return TextCodec::decoder_for(encoding);
+}
+
 void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers, Optional<u32> status_code)
 {
     VERIFY(!m_loaded);
@@ -98,8 +104,8 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
     m_encoding = {};
     if (content_type.has_value()) {
         auto encoding = encoding_from_content_type(content_type.value());
-        if (encoding.has_value()) {
-            dbgln_if(RESOURCE_DEBUG, "Set encoding '{}' from Content-Type", encoding.has_value());
+        if (encoding.has_value() && is_valid_encoding(encoding.value())) {
+            dbgln_if(RESOURCE_DEBUG, "Set encoding '{}' from Content-Type", encoding.value());
             m_encoding = encoding.value();
         }
     }
