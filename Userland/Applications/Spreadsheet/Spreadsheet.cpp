@@ -416,7 +416,10 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
             case Cell::Formula: {
                 auto& interpreter = sheet->interpreter();
                 auto value_or_error = JS::call(interpreter.global_object(), parse_function, json, JS::js_string(interpreter.heap(), obj.get("value").as_string()));
-                VERIFY(!value_or_error.is_error());
+                if (value_or_error.is_error()) {
+                    warnln("Failed to load previous value for cell {}, leaving as undefined", position.to_cell_identifier(sheet));
+                    value_or_error = JS::js_undefined();
+                }
                 cell = make<Cell>(obj.get("source").to_string(), value_or_error.release_value(), position, *sheet);
                 break;
             }
