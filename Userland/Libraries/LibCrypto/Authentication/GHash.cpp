@@ -97,12 +97,12 @@ void galois_multiply(u32 (&z)[4], const u32 (&_x)[4], const u32 (&_y)[4])
     __builtin_memset(z, 0, sizeof(z));
 
     for (ssize_t i = 127; i > -1; --i) {
-        if ((y[3 - (i / 32)] >> (i % 32)) & 1) {
-            z[0] ^= x[0];
-            z[1] ^= x[1];
-            z[2] ^= x[2];
-            z[3] ^= x[3];
-        }
+
+        u32 branchless_condition = (y[3 - (i / 32)] >> (i % 32)) & 1 ? 0xFFFFFFFF : 0x0;
+        z[0] ^= x[0] & branchless_condition;
+        z[1] ^= x[1] & branchless_condition;
+        z[2] ^= x[2] & branchless_condition;
+        z[3] ^= x[3] & branchless_condition;
         auto a0 = x[0] & 1;
         x[0] >>= 1;
         auto a1 = x[1] & 1;
