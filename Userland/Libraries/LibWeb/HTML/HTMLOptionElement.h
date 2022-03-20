@@ -18,7 +18,17 @@ public:
     HTMLOptionElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLOptionElement() override;
 
+    bool selected() const { return m_selected; }
+    void set_selected(bool);
+
 private:
+    friend class HTMLSelectElement;
+
+    void parse_attribute(FlyString const& name, String const& value) override;
+    void did_remove_attribute(FlyString const& name) override;
+
+    void ask_for_a_reset();
+
     // https://html.spec.whatwg.org/multipage/form-elements.html#concept-option-selectedness
     bool m_selected { false };
 
