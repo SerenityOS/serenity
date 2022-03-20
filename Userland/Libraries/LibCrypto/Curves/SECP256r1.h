@@ -25,6 +25,8 @@ public:
     ErrorOr<ByteBuffer> generate_public_key(ReadonlyBytes a) override;
     ErrorOr<ByteBuffer> compute_coordinate(ReadonlyBytes scalar_bytes, ReadonlyBytes point_bytes) override;
     ErrorOr<ByteBuffer> derive_premaster_key(ReadonlyBytes shared_point) override;
+
+    ErrorOr<bool> verify(ReadonlyBytes hash, ReadonlyBytes pubkey, ReadonlyBytes signature);
 };
 
 }
