@@ -196,6 +196,12 @@ void Button::mousedown_event(MouseEvent& event)
         update();
         return;
     }
+
+    if (event.button() == MouseButton::Middle && on_middle_click) {
+        on_middle_click();
+        return;
+    }
+
     AbstractButton::mousedown_event(event);
 }
 

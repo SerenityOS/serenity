@@ -30,6 +30,7 @@ public:
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
 
     Function<void(unsigned modifiers)> on_click;
+    Function<void()> on_middle_click;
     Function<void(ContextMenuEvent&)> on_context_menu_request;
 
     void set_button_style(Gfx::ButtonStyle style) { m_button_style = style; }
