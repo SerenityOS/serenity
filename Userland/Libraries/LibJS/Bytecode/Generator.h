@@ -150,30 +150,51 @@ public:
         }
         return false;
     }
-    void begin_variable_scope(BindingMode mode = BindingMode::Lexical, SurroundingScopeKind kind = SurroundingScopeKind::Block)
+
+    void begin_variable_scope(BindingMode mode = BindingMode::Lexical, SurroundingScopeKind kind = SurroundingScopeKind::Block);
+    void end_variable_scope();
+
+    enum class BlockBoundaryType {
+        Break,
+        Continue,
+        Unwind,
+        LeaveLexicalEnvironment,
+        LeaveVariableEnvironment,
+    };
+    template<typename OpType>
+    void perform_needed_unwinds(bool is_break_node = false) requires(OpType::IsTerminator)
     {
-        m_variable_scopes.append({ kind, mode, {} });
-        if (mode != BindingMode::Global) {
-            emit<Bytecode::Op::CreateEnvironment>(
-                mode == BindingMode::Lexical
-                    ? Bytecode::Op::EnvironmentMode::Lexical
-                    : Bytecode::Op::EnvironmentMode::Var);
+        Optional<BlockBoundaryType> boundary_to_stop_at;
+        if constexpr (IsSame<OpType, Bytecode::Op::Return> || IsSame<OpType, Bytecode::Op::Yield>)
+            VERIFY(!is_break_node);
+        else if constexpr (IsSame<OpType, Bytecode::Op::Throw>)
+            boundary_to_stop_at = BlockBoundaryType::Unwind;
+        else
+            boundary_to_stop_at = is_break_node ? BlockBoundaryType::Break : BlockBoundaryType::Continue;
+
+        for (size_t i = m_boundaries.size(); i > 0; --i) {
+            auto boundary = m_boundaries[i - 1];
+            if (boundary_to_stop_at.has_value() && boundary == *boundary_to_stop_at)
+                break;
+            if (boundary == BlockBoundaryType::Unwind)
+                emit<Bytecode::Op::LeaveUnwindContext>();
+            else if (boundary == BlockBoundaryType::LeaveLexicalEnvironment)
+                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Lexical);
+            else if (boundary == BlockBoundaryType::LeaveVariableEnvironment)
+                emit<Bytecode::Op::LeaveEnvironment>(Bytecode::Op::EnvironmentMode::Var);
         }
     }
-    void end_variable_scope()
+
+    void start_boundary(BlockBoundaryType type) { m_boundaries.append(type); }
+    void end_boundary(BlockBoundaryType type)
     {
-        auto mode = m_variable_scopes.take_last().mode;
-        if (mode != BindingMode::Global && !m_current_basic_block->is_terminated()) {
-            emit<Bytecode::Op::LeaveEnvironment>(
-                mode == BindingMode::Lexical
-                    ? Bytecode::Op::EnvironmentMode::Lexical
-                    : Bytecode::Op::EnvironmentMode::Var);
-        }
+        VERIFY(m_boundaries.last() == type);
+        m_boundaries.take_last();
     }
 
 private:
     Generator();
-    ~Generator();
+    ~Generator() = default;
 
     void grow(size_t);
     void* next_slot();
@@ -189,6 +210,7 @@ private:
     Vector<Label> m_continuable_scopes;
     Vector<Label> m_breakable_scopes;
     Vector<LexicalScope> m_variable_scopes;
+    Vector<BlockBoundaryType> m_boundaries;
 };
 
 }

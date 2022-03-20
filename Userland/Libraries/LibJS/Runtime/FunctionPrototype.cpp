@@ -39,10 +39,6 @@ void FunctionPrototype::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.name, js_string(heap(), ""), Attribute::Configurable);
 }
 
-FunctionPrototype::~FunctionPrototype()
-{
-}
-
 // 20.2.3.1 Function.prototype.apply ( thisArg, argArray ), https://tc39.es/ecma262/#sec-function.prototype.apply
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 {

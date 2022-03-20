@@ -18,10 +18,6 @@ Map::Map(Object& prototype)
 {
 }
 
-Map::~Map()
-{
-}
-
 // 24.1.3.1 Map.prototype.clear ( ), https://tc39.es/ecma262/#sec-map.prototype.clear
 void Map::map_clear()
 {

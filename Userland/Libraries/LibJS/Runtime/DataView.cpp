@@ -21,10 +21,6 @@ DataView::DataView(ArrayBuffer* viewed_buffer, size_t byte_length, size_t byte_o
 {
 }
 
-DataView::~DataView()
-{
-}
-
 void DataView::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);

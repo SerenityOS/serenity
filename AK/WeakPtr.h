@@ -22,27 +22,27 @@ class [[nodiscard]] WeakPtr {
 public:
     WeakPtr() = default;
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr(const WeakPtr<U>& other)
+    template<typename U>
+    WeakPtr(const WeakPtr<U>& other) requires(IsBaseOf<T, U>)
         : m_link(other.m_link)
     {
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr(WeakPtr<U>&& other)
+    template<typename U>
+    WeakPtr(WeakPtr<U>&& other) requires(IsBaseOf<T, U>)
         : m_link(other.take_link())
     {
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr& operator=(WeakPtr<U>&& other)
+    template<typename U>
+    WeakPtr& operator=(WeakPtr<U>&& other) requires(IsBaseOf<T, U>)
     {
         m_link = other.take_link();
         return *this;
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr& operator=(const WeakPtr<U>& other)
+    template<typename U>
+    WeakPtr& operator=(const WeakPtr<U>& other) requires(IsBaseOf<T, U>)
     {
         if ((const void*)this != (const void*)&other)
             m_link = other.m_link;
@@ -55,41 +55,41 @@ public:
         return *this;
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr(const U& object)
+    template<typename U>
+    WeakPtr(const U& object) requires(IsBaseOf<T, U>)
         : m_link(object.template make_weak_ptr<U>().take_link())
     {
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr(const U* object)
+    template<typename U>
+    WeakPtr(const U* object) requires(IsBaseOf<T, U>)
     {
         if (object)
             m_link = object->template make_weak_ptr<U>().take_link();
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr(RefPtr<U> const& object)
+    template<typename U>
+    WeakPtr(RefPtr<U> const& object) requires(IsBaseOf<T, U>)
     {
         if (object)
             m_link = object->template make_weak_ptr<U>().take_link();
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr(NonnullRefPtr<U> const& object)
+    template<typename U>
+    WeakPtr(NonnullRefPtr<U> const& object) requires(IsBaseOf<T, U>)
     {
         m_link = object->template make_weak_ptr<U>().take_link();
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr& operator=(const U& object)
+    template<typename U>
+    WeakPtr& operator=(const U& object) requires(IsBaseOf<T, U>)
     {
         m_link = object.template make_weak_ptr<U>().take_link();
         return *this;
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr& operator=(const U* object)
+    template<typename U>
+    WeakPtr& operator=(const U* object) requires(IsBaseOf<T, U>)
     {
         if (object)
             m_link = object->template make_weak_ptr<U>().take_link();
@@ -98,8 +98,8 @@ public:
         return *this;
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr& operator=(const RefPtr<U>& object)
+    template<typename U>
+    WeakPtr& operator=(const RefPtr<U>& object) requires(IsBaseOf<T, U>)
     {
         if (object)
             m_link = object->template make_weak_ptr<U>().take_link();
@@ -108,8 +108,8 @@ public:
         return *this;
     }
 
-    template<typename U, typename EnableIf<IsBaseOf<T, U>>::Type* = nullptr>
-    WeakPtr& operator=(const NonnullRefPtr<U>& object)
+    template<typename U>
+    WeakPtr& operator=(const NonnullRefPtr<U>& object) requires(IsBaseOf<T, U>)
     {
         m_link = object->template make_weak_ptr<U>().take_link();
         return *this;

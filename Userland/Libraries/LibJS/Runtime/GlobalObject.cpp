@@ -304,9 +304,7 @@ void GlobalObject::initialize_global_object()
     m_json_parse_function = &get_without_side_effects(vm.names.JSON).as_object().get_without_side_effects(vm.names.parse).as_function();
 }
 
-GlobalObject::~GlobalObject()
-{
-}
+GlobalObject::~GlobalObject() = default;
 
 void GlobalObject::visit_edges(Visitor& visitor)
 {

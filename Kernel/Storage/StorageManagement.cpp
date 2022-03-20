@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IterationDecision.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/UUID.h>
@@ -22,7 +23,7 @@
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
-#include <Kernel/Storage/RamdiskController.h>
+#include <Kernel/Storage/Ramdisk/Controller.h>
 #include <Kernel/Storage/StorageManagement.h>
 
 namespace Kernel {
@@ -53,7 +54,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
     using SubclassID = PCI::MassStorage::SubclassID;
     if (!kernel_command_line().disable_physical_storage()) {
 
-        PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
+        MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) -> void {
             if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::MassStorage)) {
                 return;
             }
@@ -62,7 +63,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
                 constexpr PCI::HardwareID vmd_device = { 0x8086, 0x9a0b };
                 if (device_identifier.hardware_id() == vmd_device) {
                     auto controller = PCI::VolumeManagementDevice::must_create(device_identifier);
-                    PCI::Access::the().add_host_controller_and_enumerate_attached_devices(move(controller), [this, nvme_poll](PCI::DeviceIdentifier const& device_identifier) -> void {
+                    MUST(PCI::Access::the().add_host_controller_and_enumerate_attached_devices(move(controller), [this, nvme_poll](PCI::DeviceIdentifier const& device_identifier) -> void {
                         auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());
                         if (subclass_code == SubclassID::NVMeController) {
                             auto controller = NVMeController::try_initialize(device_identifier, nvme_poll);
@@ -72,7 +73,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
                                 m_controllers.append(controller.release_value());
                             }
                         }
-                    });
+                    }));
                 }
             }
 
@@ -93,7 +94,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
                     m_controllers.append(controller.release_value());
                 }
             }
-        });
+        }));
     }
 }
 

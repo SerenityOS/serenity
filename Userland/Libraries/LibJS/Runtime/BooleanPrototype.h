@@ -16,7 +16,7 @@ class BooleanPrototype final : public BooleanObject {
 public:
     explicit BooleanPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~BooleanPrototype() override;
+    virtual ~BooleanPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(to_string);

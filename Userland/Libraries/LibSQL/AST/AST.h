@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,7 +30,7 @@ create_ast_node(Args&&... args)
 
 class ASTNode : public RefCounted<ASTNode> {
 public:
-    virtual ~ASTNode() { }
+    virtual ~ASTNode() = default;
 
 protected:
     ASTNode() = default;

@@ -26,10 +26,6 @@ StringObject::StringObject(PrimitiveString& string, Object& prototype)
 {
 }
 
-StringObject::~StringObject()
-{
-}
-
 void StringObject::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();

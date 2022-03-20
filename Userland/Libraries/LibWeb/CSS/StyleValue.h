@@ -291,7 +291,17 @@ enum class TextTransform {
 };
 
 enum class TransformFunction {
+    Matrix,
+    Translate,
+    TranslateX,
     TranslateY,
+    Scale,
+    ScaleX,
+    ScaleY,
+    Rotate,
+    Skew,
+    SkewX,
+    SkewY,
 };
 
 enum class VerticalAlign {
@@ -321,7 +331,7 @@ enum class PointerEvents {
 
 class StyleValue : public RefCounted<StyleValue> {
 public:
-    virtual ~StyleValue();
+    virtual ~StyleValue() = default;
 
     enum class Type {
         Angle,
@@ -539,7 +549,7 @@ public:
     {
         return adopt_ref(*new BackgroundStyleValue(color, image, position, size, repeat, attachment, origin, clip));
     }
-    virtual ~BackgroundStyleValue() override { }
+    virtual ~BackgroundStyleValue() override = default;
 
     size_t layer_count() const { return m_layer_count; }
 
@@ -583,12 +593,20 @@ public:
     {
         return adopt_ref(*new BackgroundRepeatStyleValue(repeat_x, repeat_y));
     }
-    virtual ~BackgroundRepeatStyleValue() override { }
+    virtual ~BackgroundRepeatStyleValue() override = default;
 
     Repeat repeat_x() const { return m_repeat_x; }
     Repeat repeat_y() const { return m_repeat_y; }
 
     virtual String to_string() const override;
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        auto& other_value = static_cast<BackgroundRepeatStyleValue const&>(other);
+        return m_repeat_x == other_value.m_repeat_x && m_repeat_y == other_value.m_repeat_y;
+    }
 
 private:
     BackgroundRepeatStyleValue(Repeat repeat_x, Repeat repeat_y)
@@ -609,12 +627,20 @@ public:
     {
         return adopt_ref(*new BackgroundSizeStyleValue(size_x, size_y));
     }
-    virtual ~BackgroundSizeStyleValue() override { }
+    virtual ~BackgroundSizeStyleValue() override = default;
 
     LengthPercentage size_x() const { return m_size_x; }
     LengthPercentage size_y() const { return m_size_y; }
 
     virtual String to_string() const override;
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        auto& other_value = static_cast<BackgroundSizeStyleValue const&>(other);
+        return m_size_x == other_value.m_size_x && m_size_y == other_value.m_size_y;
+    }
 
 private:
     BackgroundSizeStyleValue(LengthPercentage size_x, LengthPercentage size_y)
@@ -637,7 +663,7 @@ public:
     {
         return adopt_ref(*new BorderStyleValue(border_width, border_style, border_color));
     }
-    virtual ~BorderStyleValue() override { }
+    virtual ~BorderStyleValue() override = default;
 
     NonnullRefPtr<StyleValue> border_width() const { return m_border_width; }
     NonnullRefPtr<StyleValue> border_style() const { return m_border_style; }
@@ -668,7 +694,7 @@ public:
     {
         return adopt_ref(*new BorderRadiusStyleValue(horizontal_radius, vertical_radius));
     }
-    virtual ~BorderRadiusStyleValue() override { }
+    virtual ~BorderRadiusStyleValue() override = default;
 
     LengthPercentage const& horizontal_radius() const { return m_horizontal_radius; }
     LengthPercentage const& vertical_radius() const { return m_vertical_radius; }
@@ -709,7 +735,7 @@ public:
     {
         return adopt_ref(*new BoxShadowStyleValue(color, offset_x, offset_y, blur_radius, spread_distance, placement));
     }
-    virtual ~BoxShadowStyleValue() override { }
+    virtual ~BoxShadowStyleValue() override = default;
 
     Color const& color() const { return m_color; }
     Length const& offset_x() const { return m_offset_x; }
@@ -719,6 +745,19 @@ public:
     BoxShadowPlacement placement() const { return m_placement; }
 
     virtual String to_string() const override;
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        auto& other_value = static_cast<BoxShadowStyleValue const&>(other);
+        return m_color == other_value.m_color
+            && m_offset_x == other_value.m_offset_x
+            && m_offset_y == other_value.m_offset_y
+            && m_blur_radius == other_value.m_blur_radius
+            && m_spread_distance == other_value.m_spread_distance
+            && m_placement == other_value.m_placement;
+    }
 
 private:
     explicit BoxShadowStyleValue(Color const& color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, BoxShadowPlacement placement)
@@ -937,7 +976,7 @@ private:
 class ColorStyleValue : public StyleValue {
 public:
     static NonnullRefPtr<ColorStyleValue> create(Color color);
-    virtual ~ColorStyleValue() override { }
+    virtual ~ColorStyleValue() override = default;
 
     Color color() const { return m_color; }
     virtual String to_string() const override;
@@ -967,7 +1006,7 @@ public:
     {
         return adopt_ref(*new CombinedBorderRadiusStyleValue(top_left, top_right, bottom_right, bottom_left));
     }
-    virtual ~CombinedBorderRadiusStyleValue() override { }
+    virtual ~CombinedBorderRadiusStyleValue() override = default;
 
     NonnullRefPtr<BorderRadiusStyleValue> top_left() const { return m_top_left; }
     NonnullRefPtr<BorderRadiusStyleValue> top_right() const { return m_top_right; }
@@ -1026,7 +1065,7 @@ public:
     {
         return adopt_ref(*new FlexStyleValue(grow, shrink, basis));
     }
-    virtual ~FlexStyleValue() override { }
+    virtual ~FlexStyleValue() override = default;
 
     NonnullRefPtr<StyleValue> grow() const { return m_grow; }
     NonnullRefPtr<StyleValue> shrink() const { return m_shrink; }
@@ -1057,7 +1096,7 @@ public:
     {
         return adopt_ref(*new FlexFlowStyleValue(flex_direction, flex_wrap));
     }
-    virtual ~FlexFlowStyleValue() override { }
+    virtual ~FlexFlowStyleValue() override = default;
 
     NonnullRefPtr<StyleValue> flex_direction() const { return m_flex_direction; }
     NonnullRefPtr<StyleValue> flex_wrap() const { return m_flex_wrap; }
@@ -1079,7 +1118,7 @@ private:
 class FontStyleValue final : public StyleValue {
 public:
     static NonnullRefPtr<FontStyleValue> create(NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families) { return adopt_ref(*new FontStyleValue(font_style, font_weight, font_size, line_height, font_families)); }
-    virtual ~FontStyleValue() override { }
+    virtual ~FontStyleValue() override = default;
 
     NonnullRefPtr<StyleValue> font_style() const { return m_font_style; }
     NonnullRefPtr<StyleValue> font_weight() const { return m_font_weight; }
@@ -1143,7 +1182,7 @@ public:
     {
         return adopt_ref(*new IdentifierStyleValue(id));
     }
-    virtual ~IdentifierStyleValue() override { }
+    virtual ~IdentifierStyleValue() override = default;
 
     CSS::ValueID id() const { return m_id; }
 
@@ -1176,7 +1215,7 @@ class ImageStyleValue final
     , public ImageResourceClient {
 public:
     static NonnullRefPtr<ImageStyleValue> create(AK::URL const& url) { return adopt_ref(*new ImageStyleValue(url)); }
-    virtual ~ImageStyleValue() override { }
+    virtual ~ImageStyleValue() override = default;
 
     virtual String to_string() const override;
 
@@ -1201,7 +1240,7 @@ public:
         static NonnullRefPtr<InheritStyleValue> instance = adopt_ref(*new InheritStyleValue);
         return instance;
     }
-    virtual ~InheritStyleValue() override { }
+    virtual ~InheritStyleValue() override = default;
 
     String to_string() const override { return "inherit"; }
 
@@ -1219,7 +1258,7 @@ public:
         static NonnullRefPtr<InitialStyleValue> instance = adopt_ref(*new InitialStyleValue);
         return instance;
     }
-    virtual ~InitialStyleValue() override { }
+    virtual ~InitialStyleValue() override = default;
 
     String to_string() const override { return "initial"; }
 
@@ -1233,7 +1272,7 @@ private:
 class LengthStyleValue : public StyleValue {
 public:
     static NonnullRefPtr<LengthStyleValue> create(Length const&);
-    virtual ~LengthStyleValue() override { }
+    virtual ~LengthStyleValue() override = default;
 
     Length const& length() const { return m_length; }
 
@@ -1271,7 +1310,7 @@ public:
     {
         return adopt_ref(*new ListStyleStyleValue(position, image, style_type));
     }
-    virtual ~ListStyleStyleValue() override { }
+    virtual ~ListStyleStyleValue() override = default;
 
     NonnullRefPtr<StyleValue> position() const { return m_position; }
     NonnullRefPtr<StyleValue> image() const { return m_image; }
@@ -1351,7 +1390,7 @@ public:
     {
         return adopt_ref(*new OverflowStyleValue(overflow_x, overflow_y));
     }
-    virtual ~OverflowStyleValue() override { }
+    virtual ~OverflowStyleValue() override = default;
 
     NonnullRefPtr<StyleValue> overflow_x() const { return m_overflow_x; }
     NonnullRefPtr<StyleValue> overflow_y() const { return m_overflow_y; }
@@ -1376,7 +1415,7 @@ public:
     {
         return adopt_ref(*new PercentageStyleValue(move(percentage)));
     }
-    virtual ~PercentageStyleValue() override { }
+    virtual ~PercentageStyleValue() override = default;
 
     Percentage const& percentage() const { return m_percentage; }
     Percentage& percentage() { return m_percentage; }
@@ -1399,7 +1438,7 @@ public:
     {
         return adopt_ref(*new PositionStyleValue(edge_x, offset_x, edge_y, offset_y));
     }
-    virtual ~PositionStyleValue() override { }
+    virtual ~PositionStyleValue() override = default;
 
     PositionEdge edge_x() const { return m_edge_x; }
     LengthPercentage const& offset_x() const { return m_offset_x; }
@@ -1470,7 +1509,7 @@ public:
     {
         return adopt_ref(*new StringStyleValue(string));
     }
-    virtual ~StringStyleValue() override { }
+    virtual ~StringStyleValue() override = default;
 
     String to_string() const override { return m_string; }
 
@@ -1494,7 +1533,7 @@ public:
     {
         return adopt_ref(*new TextDecorationStyleValue(line, thickness, style, color));
     }
-    virtual ~TextDecorationStyleValue() override { }
+    virtual ~TextDecorationStyleValue() override = default;
 
     NonnullRefPtr<StyleValue> line() const { return m_line; }
     NonnullRefPtr<StyleValue> thickness() const { return m_thickness; }
@@ -1558,7 +1597,7 @@ public:
     {
         return adopt_ref(*new TransformationStyleValue(transform_function, move(values)));
     }
-    virtual ~TransformationStyleValue() override { }
+    virtual ~TransformationStyleValue() override = default;
 
     CSS::TransformFunction transform_function() const { return m_transform_function; }
     NonnullRefPtrVector<StyleValue> values() const { return m_values; }
@@ -1583,7 +1622,7 @@ public:
     {
         return adopt_ref(*new UnresolvedStyleValue(move(values), contains_var));
     }
-    virtual ~UnresolvedStyleValue() override { }
+    virtual ~UnresolvedStyleValue() override = default;
 
     virtual String to_string() const override;
 
@@ -1609,7 +1648,7 @@ public:
         static NonnullRefPtr<UnsetStyleValue> instance = adopt_ref(*new UnsetStyleValue);
         return instance;
     }
-    virtual ~UnsetStyleValue() override { }
+    virtual ~UnsetStyleValue() override = default;
 
     String to_string() const override { return "unset"; }
 
@@ -1638,6 +1677,22 @@ public:
     }
 
     virtual String to_string() const override;
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        auto& other_value = static_cast<StyleValueList const&>(other);
+        if (m_separator != other_value.m_separator)
+            return false;
+        if (m_values.size() != other_value.m_values.size())
+            return false;
+        for (size_t i = 0; i < m_values.size(); ++i) {
+            if (!m_values[i].equals(other_value.m_values[i]))
+                return false;
+        }
+        return true;
+    }
 
 private:
     StyleValueList(NonnullRefPtrVector<StyleValue>&& values, Separator separator)

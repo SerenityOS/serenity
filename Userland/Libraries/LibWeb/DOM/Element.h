@@ -85,18 +85,22 @@ public:
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
     virtual void parse_attribute(const FlyString& name, const String& value);
-    virtual void did_remove_attribute(FlyString const&) { }
+    virtual void did_remove_attribute(FlyString const&);
 
-    void recompute_style();
+    enum class NeedsRelayout {
+        No = 0,
+        Yes = 1,
+    };
+    NeedsRelayout recompute_style();
 
     Layout::NodeWithStyle* layout_node() { return static_cast<Layout::NodeWithStyle*>(Node::layout_node()); }
     const Layout::NodeWithStyle* layout_node() const { return static_cast<const Layout::NodeWithStyle*>(Node::layout_node()); }
 
     String name() const { return attribute(HTML::AttributeNames::name); }
 
-    CSS::StyleProperties const* specified_css_values() const { return m_specified_css_values.ptr(); }
-    void set_specified_css_values(RefPtr<CSS::StyleProperties> style) { m_specified_css_values = move(style); }
-    NonnullRefPtr<CSS::StyleProperties> computed_style();
+    CSS::StyleProperties const* computed_css_values() const { return m_computed_css_values.ptr(); }
+    void set_computed_css_values(RefPtr<CSS::StyleProperties> style) { m_computed_css_values = move(style); }
+    NonnullRefPtr<CSS::StyleProperties> resolved_css_values();
 
     const CSS::CSSStyleDeclaration* inline_style() const { return m_inline_style; }
 
@@ -149,7 +153,7 @@ private:
 
     RefPtr<CSS::CSSStyleDeclaration> m_inline_style;
 
-    RefPtr<CSS::StyleProperties> m_specified_css_values;
+    RefPtr<CSS::StyleProperties> m_computed_css_values;
     HashMap<FlyString, CSS::StyleProperty> m_custom_properties;
 
     RefPtr<DOMTokenList> m_class_list;

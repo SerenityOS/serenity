@@ -48,10 +48,6 @@ void ObjectPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.__proto__, proto_getter, proto_setter, Attribute::Configurable);
 }
 
-ObjectPrototype::~ObjectPrototype()
-{
-}
-
 // 10.4.7.1 [[SetPrototypeOf]] ( V ), https://tc39.es/ecma262/#sec-immutable-prototype-exotic-objects-setprototypeof-v
 ThrowCompletionOr<bool> ObjectPrototype::internal_set_prototype_of(Object* prototype)
 {

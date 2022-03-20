@@ -132,12 +132,13 @@ TESTJS_RUN_FILE_FUNCTION(String const& test_file, JS::Interpreter& interpreter, 
     }
 
     auto test_result = test_passed ? Test::Result::Pass : Test::Result::Fail;
-
+    auto test_path = LexicalPath::relative_path(test_file, Test::JS::g_test_root);
+    auto duration_ms = Test::get_time_in_ms() - start_time;
     return Test::JS::JSFileResult {
-        LexicalPath::relative_path(test_file, Test::JS::g_test_root),
+        test_path,
         {},
-        Test::get_time_in_ms() - start_time,
+        duration_ms,
         test_result,
-        { Test::Suite { "Parse file", test_result, { { expectation_string, test_result, message } } } }
+        { Test::Suite { test_path, "Parse file", test_result, { { expectation_string, test_result, message, static_cast<u64>(duration_ms) * 1000u } } } }
     };
 }

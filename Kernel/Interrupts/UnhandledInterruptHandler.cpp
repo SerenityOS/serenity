@@ -23,7 +23,5 @@ bool UnhandledInterruptHandler::handle_interrupt(const RegisterState&)
     PANIC("Interrupt: Unhandled vector {} was invoked for eoi().", interrupt_number());
 }
 
-UnhandledInterruptHandler::~UnhandledInterruptHandler()
-{
-}
+UnhandledInterruptHandler::~UnhandledInterruptHandler() = default;
 }

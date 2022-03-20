@@ -15,7 +15,7 @@ namespace Web::DOM {
 ShadowRoot::ShadowRoot(Document& document, Element& host)
     : DocumentFragment(document)
 {
-    set_host(host);
+    set_host(&host);
 }
 
 // https://dom.spec.whatwg.org/#ref-for-get-the-parent%E2%91%A6

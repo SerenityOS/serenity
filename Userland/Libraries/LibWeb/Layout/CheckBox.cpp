@@ -14,15 +14,13 @@
 namespace Web::Layout {
 
 CheckBox::CheckBox(DOM::Document& document, HTML::HTMLInputElement& element, NonnullRefPtr<CSS::StyleProperties> style)
-    : LabelableNode(document, element, move(style))
+    : FormAssociatedLabelableNode(document, element, move(style))
 {
     set_intrinsic_width(13);
     set_intrinsic_height(13);
 }
 
-CheckBox::~CheckBox()
-{
-}
+CheckBox::~CheckBox() = default;
 
 RefPtr<Painting::Paintable> CheckBox::create_paintable() const
 {

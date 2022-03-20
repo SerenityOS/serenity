@@ -95,6 +95,11 @@ int Menu::content_width() const
     return max(widest_item, rect_in_window_menubar().width()) + horizontal_padding() + frame_thickness() * 2;
 }
 
+int Menu::item_height() const
+{
+    return max(font().preferred_line_height(), s_item_icon_width + 2) + 4;
+}
+
 void Menu::redraw()
 {
     if (!menu_window())

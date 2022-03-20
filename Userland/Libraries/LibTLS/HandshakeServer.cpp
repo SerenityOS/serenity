@@ -11,6 +11,10 @@
 
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
+#include <LibCrypto/Curves/EllipticCurve.h>
+#include <LibCrypto/Curves/SECP256r1.h>
+#include <LibCrypto/Curves/X25519.h>
+#include <LibCrypto/Curves/X448.h>
 #include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
@@ -290,8 +294,7 @@ ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
 
 ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
 {
-    size_t size_required_for_curve_name = 6;
-    if (buffer.size() < size_required_for_curve_name)
+    if (buffer.size() < 7)
         return (i8)Error::NeedMoreData;
 
     auto curve_type = buffer[3];
@@ -302,14 +305,26 @@ ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
     if (!m_context.options.elliptic_curves.contains_slow(curve))
         return (i8)Error::NotUnderstood;
 
-    m_context.server_curve_choice = curve;
-    auto curve_key_size_bytes = named_curve_key_size(curve) / 8;
-    if (buffer.size() < curve_key_size_bytes + 1)
-        return (i8)Error::NeedMoreData;
+    switch ((NamedCurve)curve) {
+    case NamedCurve::x25519:
+        m_context.server_key_exchange_curve = make<Crypto::Curves::X25519>();
+        break;
+    case NamedCurve::x448:
+        m_context.server_key_exchange_curve = make<Crypto::Curves::X448>();
+        break;
+    case NamedCurve::secp256r1:
+        m_context.server_key_exchange_curve = make<Crypto::Curves::SECP256r1>();
+        break;
+    default:
+        return (i8)Error::NotUnderstood;
+    }
 
     auto server_public_key_length = buffer[6];
-    if (server_public_key_length != curve_key_size_bytes)
-        return (i8)Error::FeatureNotSupported;
+    if (server_public_key_length != m_context.server_key_exchange_curve->key_size())
+        return (i8)Error::NotUnderstood;
+
+    if (buffer.size() < 7u + server_public_key_length)
+        return (i8)Error::NeedMoreData;
 
     auto server_public_key = buffer.slice(7, server_public_key_length);
     auto server_public_key_copy_result = ByteBuffer::copy(server_public_key);

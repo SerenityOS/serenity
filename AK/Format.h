@@ -307,8 +307,8 @@ struct StandardFormatter {
     void parse(TypeErasedFormatParams&, FormatParser&);
 };
 
-template<typename T>
-struct Formatter<T, typename EnableIf<IsIntegral<T>>::Type> : StandardFormatter {
+template<Integral T>
+struct Formatter<T> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(move(formatter))
@@ -575,10 +575,10 @@ void warnln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... pa
 
 inline void warnln() { outln(stderr); }
 
-#    define warnln_if(flag, fmt, ...)      \
-        do {                               \
-            if constexpr (flag)            \
-                outln(fmt, ##__VA_ARGS__); \
+#    define warnln_if(flag, fmt, ...)       \
+        do {                                \
+            if constexpr (flag)             \
+                warnln(fmt, ##__VA_ARGS__); \
         } while (0)
 
 #endif

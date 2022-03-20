@@ -15,8 +15,4 @@ ProcessingInstruction::ProcessingInstruction(Document& document, const String& d
 {
 }
 
-ProcessingInstruction::~ProcessingInstruction()
-{
-}
-
 }

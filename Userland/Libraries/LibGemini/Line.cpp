@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,17 +17,9 @@ String Text::render_to_html() const
     return builder.build();
 }
 
-Text::~Text()
-{
-}
-
 String Heading::render_to_html() const
 {
     return String::formatted("<h{}>{}</h{}>", m_level, escape_html_entities(m_text.substring_view(m_level, m_text.length() - m_level)), m_level);
-}
-
-Heading::~Heading()
-{
 }
 
 String UnorderedList::render_to_html() const
@@ -40,9 +32,6 @@ String UnorderedList::render_to_html() const
     builder.append(escape_html_entities(m_text.substring_view(1, m_text.length() - 1)));
     builder.append("</li>");
     return builder.build();
-}
-UnorderedList::~UnorderedList()
-{
 }
 
 String Control::render_to_html() const
@@ -61,9 +50,6 @@ String Control::render_to_html() const
         VERIFY_NOT_REACHED();
         return "";
     }
-}
-Control::~Control()
-{
 }
 
 Link::Link(String text, const Document& document)
@@ -86,9 +72,6 @@ Link::Link(String text, const Document& document)
     if (m_name.is_null())
         m_name = m_url.to_string();
 }
-Link::~Link()
-{
-}
 
 String Link::render_to_html() const
 {
@@ -108,13 +91,6 @@ String Preformatted::render_to_html() const
     builder.append("\n");
 
     return builder.build();
-}
-Preformatted::~Preformatted()
-{
-}
-
-Line::~Line()
-{
 }
 
 }

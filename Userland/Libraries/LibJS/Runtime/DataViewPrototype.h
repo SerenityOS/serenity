@@ -17,7 +17,7 @@ class DataViewPrototype final : public PrototypeObject<DataViewPrototype, DataVi
 public:
     DataViewPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~DataViewPrototype() override;
+    virtual ~DataViewPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(get_big_int_64);

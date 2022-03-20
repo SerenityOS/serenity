@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +13,7 @@
 
 namespace JS::Intl {
 
-// 11.1.6 DateTime Format Functions, https://tc39.es/ecma402/#sec-datetime-format-functions
+// 11.5.5 DateTime Format Functions, https://tc39.es/ecma402/#sec-datetime-format-functions
 DateTimeFormatFunction* DateTimeFormatFunction::create(GlobalObject& global_object, DateTimeFormat& date_time_format)
 {
     return global_object.heap().allocate<DateTimeFormatFunction>(global_object, date_time_format, *global_object.function_prototype());

@@ -31,7 +31,7 @@ protected:
     explicit HostBridge(PCI::Domain const&);
 
 private:
-    virtual void enumerate_attached_devices(Function<void(DeviceIdentifier)> callback) override;
+    virtual void enumerate_attached_devices(Function<IterationDecision(DeviceIdentifier)> callback) override;
 
     Bitmap m_enumerated_buses;
 
@@ -41,9 +41,9 @@ private:
     Optional<u8> get_capabilities_pointer_for_function(BusNumber, DeviceNumber, FunctionNumber);
     Vector<Capability> get_capabilities_for_function(BusNumber, DeviceNumber, FunctionNumber);
 
-    void enumerate_bus(Function<void(DeviceIdentifier)> const& callback, BusNumber, bool recursive);
-    void enumerate_functions(Function<void(DeviceIdentifier)> const& callback, BusNumber, DeviceNumber, FunctionNumber, bool recursive);
-    void enumerate_device(Function<void(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive);
+    void enumerate_bus(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber, bool recursive);
+    void enumerate_functions(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber, DeviceNumber, FunctionNumber, bool recursive);
+    void enumerate_device(Function<IterationDecision(DeviceIdentifier)> const& callback, BusNumber bus, DeviceNumber device, bool recursive);
 };
 
 }

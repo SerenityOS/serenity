@@ -13,8 +13,6 @@ HTMLUnknownElement::HTMLUnknownElement(DOM::Document& document, DOM::QualifiedNa
 {
 }
 
-HTMLUnknownElement::~HTMLUnknownElement()
-{
-}
+HTMLUnknownElement::~HTMLUnknownElement() = default;
 
 }

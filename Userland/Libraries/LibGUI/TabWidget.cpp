@@ -632,15 +632,19 @@ void TabWidget::context_menu_event(ContextMenuEvent& context_menu_event)
     }
 }
 
-void TabWidget::doubleclick_event(MouseEvent&)
+void TabWidget::doubleclick_event(MouseEvent& mouse_event)
 {
-    for (auto& tab : m_tabs) {
-        if (auto* widget = tab.widget) {
+    for (size_t i = 0; i < m_tabs.size(); ++i) {
+        auto button_rect = this->button_rect(i);
+        if (!button_rect.contains(mouse_event.position()))
+            continue;
+        if (auto* widget = m_tabs[i].widget) {
             deferred_invoke([this, widget] {
                 if (on_double_click)
                     on_double_click(*widget);
             });
         }
+        return;
     }
 }
 

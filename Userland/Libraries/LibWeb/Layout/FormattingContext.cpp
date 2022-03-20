@@ -27,9 +27,7 @@ FormattingContext::FormattingContext(Type type, FormattingState& state, Box cons
 {
 }
 
-FormattingContext::~FormattingContext()
-{
-}
+FormattingContext::~FormattingContext() = default;
 
 bool FormattingContext::creates_block_formatting_context(const Box& box)
 {
@@ -133,16 +131,16 @@ OwnPtr<FormattingContext> FormattingContext::layout_inside(Box const& child_box,
     return independent_formatting_context;
 }
 
-static float greatest_child_width(FormattingState const& state, Box const& box)
+float FormattingContext::greatest_child_width(Box const& box)
 {
     float max_width = 0;
     if (box.children_are_inline()) {
-        for (auto& child : state.get(verify_cast<BlockContainer>(box)).line_boxes) {
-            max_width = max(max_width, child.width());
+        for (auto& line_box : m_state.get(verify_cast<BlockContainer>(box)).line_boxes) {
+            max_width = max(max_width, line_box.width());
         }
     } else {
         box.for_each_child_of_type<Box>([&](auto& child) {
-            max_width = max(max_width, state.get(child).border_box_width());
+            max_width = max(max_width, m_state.get(child).border_box_width());
         });
     }
     return max_width;
@@ -150,18 +148,11 @@ static float greatest_child_width(FormattingState const& state, Box const& box)
 
 FormattingContext::ShrinkToFitResult FormattingContext::calculate_shrink_to_fit_widths(Box const& box)
 {
-    // Calculate the preferred width by formatting the content without breaking lines
-    // other than where explicit line breaks occur.
-    (void)layout_inside(box, LayoutMode::OnlyRequiredLineBreaks);
-    float preferred_width = greatest_child_width(m_state, box);
-
-    // Also calculate the preferred minimum width, e.g., by trying all possible line breaks.
-    // CSS 2.2 does not define the exact algorithm.
-
-    (void)layout_inside(box, LayoutMode::AllPossibleLineBreaks);
-    float preferred_minimum_width = greatest_child_width(m_state, box);
-
-    return { preferred_width, preferred_minimum_width };
+    auto [min_content, max_content] = calculate_intrinsic_sizes(box);
+    return {
+        .preferred_width = max_content.width(),
+        .preferred_minimum_width = min_content.width(),
+    };
 }
 
 static Gfx::FloatSize solve_replaced_size_constraint(FormattingState const& state, float w, float h, ReplacedBox const& box)
@@ -701,7 +692,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
     auto specified_width = box.computed_values().width().has_value() ? box.computed_values().width()->resolved(box, width_of_containing_block).resolved(box) : CSS::Length::make_auto();
 
     compute_width_for_absolutely_positioned_element(box);
-    auto independent_formatting_context = layout_inside(box, LayoutMode::Default);
+    auto independent_formatting_context = layout_inside(box, LayoutMode::Normal);
     compute_height_for_absolutely_positioned_element(box);
 
     box_state.margin_left = box.computed_values().margin().left.resolved(box, width_of_containing_block).to_px(box);
@@ -813,36 +804,40 @@ void FormattingContext::compute_position(Box const& box)
 
 FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Layout::Box const& box) const
 {
+    auto& root_state = m_state.m_root;
+
     // If we have cached intrinsic sizes for this box, use them.
-    auto it = m_state.intrinsic_sizes.find(&box);
-    if (it != m_state.intrinsic_sizes.end())
+    auto it = root_state.intrinsic_sizes.find(&box);
+    if (it != root_state.intrinsic_sizes.end())
         return it->value;
 
     // Nothing cached, perform two throwaway layouts to determine the intrinsic sizes.
     // FIXME: This should handle replaced elements with "native" intrinsic size properly!
 
-    auto& cached_box_sizes = m_state.intrinsic_sizes.ensure(&box);
+    FormattingState::IntrinsicSizes cached_box_sizes;
     auto const& containing_block = *box.containing_block();
     {
         FormattingState throwaway_state(&m_state);
-        throwaway_state.get_mutable(containing_block).content_width = INFINITY;
-        throwaway_state.get_mutable(containing_block).content_height = INFINITY;
+        auto& containing_block_state = throwaway_state.get_mutable(containing_block);
+        containing_block_state.content_width = INFINITY;
+        containing_block_state.content_height = INFINITY;
         auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
         VERIFY(independent_formatting_context);
 
-        independent_formatting_context->run(box, LayoutMode::OnlyRequiredLineBreaks);
-        cached_box_sizes.max_content_size.set_width(greatest_child_width(throwaway_state, box));
+        independent_formatting_context->run(box, LayoutMode::MaxContent);
+        cached_box_sizes.max_content_size.set_width(independent_formatting_context->greatest_child_width(box));
         cached_box_sizes.max_content_size.set_height(BlockFormattingContext::compute_theoretical_height(throwaway_state, box));
     }
 
     {
         FormattingState throwaway_state(&m_state);
-        throwaway_state.get_mutable(containing_block).content_width = 0;
-        throwaway_state.get_mutable(containing_block).content_height = 0;
+        auto& containing_block_state = throwaway_state.get_mutable(containing_block);
+        containing_block_state.content_width = 0;
+        containing_block_state.content_height = 0;
         auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
         VERIFY(independent_formatting_context);
-        independent_formatting_context->run(box, LayoutMode::AllPossibleLineBreaks);
-        cached_box_sizes.min_content_size.set_width(greatest_child_width(throwaway_state, box));
+        independent_formatting_context->run(box, LayoutMode::MinContent);
+        cached_box_sizes.min_content_size.set_width(independent_formatting_context->greatest_child_width(box));
         cached_box_sizes.min_content_size.set_height(BlockFormattingContext::compute_theoretical_height(throwaway_state, box));
     }
 
@@ -858,6 +853,7 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
         cached_box_sizes.max_content_size.set_height(tmp);
     }
 
+    root_state.intrinsic_sizes.set(&box, cached_box_sizes);
     return cached_box_sizes;
 }
 

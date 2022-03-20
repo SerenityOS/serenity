@@ -28,9 +28,7 @@ LoopbackAdapter::LoopbackAdapter(NonnullOwnPtr<KString> interface_name)
     set_mac_address({ 19, 85, 2, 9, 0x55, 0xaa });
 }
 
-LoopbackAdapter::~LoopbackAdapter()
-{
-}
+LoopbackAdapter::~LoopbackAdapter() = default;
 
 void LoopbackAdapter::send_raw(ReadonlyBytes payload)
 {

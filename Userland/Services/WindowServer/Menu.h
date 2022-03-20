@@ -86,7 +86,7 @@ public:
 
     int content_width() const;
 
-    static constexpr int item_height() { return 22; }
+    int item_height() const;
     static constexpr int frame_thickness() { return 2; }
     static constexpr int horizontal_padding() { return left_padding() + right_padding(); }
     static constexpr int left_padding() { return 14; }

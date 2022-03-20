@@ -85,9 +85,17 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
         }
         if (data_and_type.mime_type.starts_with("glyph/")) {
             StringBuilder builder;
-            builder.append("[");
-            builder.append(data_and_type.metadata.get("count").value_or("?"));
-            builder.append(" glyph(s)]");
+            auto count = data_and_type.metadata.get("count").value().to_uint().value_or(0);
+            auto start = data_and_type.metadata.get("start").value().to_uint().value_or(0);
+            auto width = data_and_type.metadata.get("width").value().to_uint().value_or(0);
+            auto height = data_and_type.metadata.get("height").value().to_uint().value_or(0);
+            if (count > 1) {
+                builder.appendff("U+{:04X}..U+{:04X} ({} glyphs) [{}x{}]", start, start + count - 1, count, width, height);
+            } else {
+                builder.appendff("U+{:04X} (", start);
+                builder.append_code_point(start);
+                builder.appendff(") [{}x{}]", width, height);
+            }
             return builder.to_string();
         }
         return "<...>";

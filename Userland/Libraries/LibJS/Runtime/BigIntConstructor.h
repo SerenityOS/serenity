@@ -16,7 +16,7 @@ class BigIntConstructor final : public NativeFunction {
 public:
     explicit BigIntConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~BigIntConstructor() override;
+    virtual ~BigIntConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;

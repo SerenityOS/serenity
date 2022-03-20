@@ -16,7 +16,7 @@ class WeakRefConstructor final : public NativeFunction {
 public:
     explicit WeakRefConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~WeakRefConstructor() override;
+    virtual ~WeakRefConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject&) override;

@@ -197,23 +197,6 @@ enum class NamedCurve : u16 {
     x448 = 30,
 };
 
-constexpr size_t named_curve_key_size(NamedCurve group)
-{
-    switch (group) {
-    case NamedCurve::secp256r1:
-    case NamedCurve::secp384r1:
-    case NamedCurve::secp521r1:
-        // FIXME: Add the correct key size for these elliptic curves
-        return 0;
-    case NamedCurve::x25519:
-        return 256;
-    case NamedCurve::x448:
-        return 448;
-    default:
-        return 0;
-    }
-}
-
 enum class ECPointFormat : u8 {
     Uncompressed = 0,
 };

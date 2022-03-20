@@ -20,7 +20,7 @@ class CharacterData
 public:
     using WrapperType = Bindings::CharacterDataWrapper;
 
-    virtual ~CharacterData() override;
+    virtual ~CharacterData() override = default;
 
     const String& data() const { return m_data; }
     void set_data(String);

@@ -18,9 +18,7 @@ HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-HTMLIFrameElement::~HTMLIFrameElement()
-{
-}
+HTMLIFrameElement::~HTMLIFrameElement() = default;
 
 RefPtr<Layout::Node> HTMLIFrameElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {

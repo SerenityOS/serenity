@@ -11,7 +11,7 @@
 
 namespace JS::Intl {
 
-// 16.4 Properties of the Intl.PluralRules Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-pluralrules-prototype-object
+// 16.3 Properties of the Intl.PluralRules Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-pluralrules-prototype-object
 PluralRulesPrototype::PluralRulesPrototype(GlobalObject& global_object)
     : PrototypeObject(*global_object.object_prototype())
 {
@@ -23,14 +23,14 @@ void PluralRulesPrototype::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 16.4.2 Intl.PluralRules.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.pluralrules.prototype-tostringtag
+    // 16.3.2 Intl.PluralRules.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.pluralrules.prototype-tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.PluralRules"sv), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
-// 16.4.4 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.resolvedoptions
+// 16.3.4 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
 {
     // 1. Let pr be the this value.
@@ -40,7 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
     // 3. Let options be ! OrdinaryObjectCreate(%Object.prototype%).
     auto* options = Object::create(global_object, global_object.object_prototype());
 
-    // 4. For each row of Table 14, except the header row, in table order, do
+    // 4. For each row of Table 13, except the header row, in table order, do
     //     a. Let p be the Property value of the current row.
     //     b. Let v be the value of pr's internal slot whose name is the Internal Slot value of the current row.
     //     c. If v is not undefined, then

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Heap/Cell.h>
 
@@ -14,13 +15,13 @@ namespace JS {
 class BigInt final : public Cell {
 public:
     explicit BigInt(Crypto::SignedBigInteger);
-    virtual ~BigInt();
+    virtual ~BigInt() override = default;
 
     const Crypto::SignedBigInteger& big_integer() const { return m_big_integer; }
     const String to_string() const { return String::formatted("{}n", m_big_integer.to_base(10)); }
 
 private:
-    virtual const char* class_name() const override { return "BigInt"; }
+    virtual StringView class_name() const override { return "BigInt"sv; }
 
     Crypto::SignedBigInteger m_big_integer;
 };

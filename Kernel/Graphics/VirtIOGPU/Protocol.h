@@ -328,6 +328,7 @@ struct Resource3DSpecification {
     u32 last_level;
     u32 nr_samples;
     u32 flags;
+    u32 padding;
 };
 
 }

@@ -17,10 +17,6 @@ CSSStyleSheet::CSSStyleSheet(NonnullRefPtrVector<CSSRule> rules)
 {
 }
 
-CSSStyleSheet::~CSSStyleSheet()
-{
-}
-
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-insertrule
 DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned index)
 {
@@ -42,7 +38,7 @@ DOM::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsigned 
 
     if (!result.is_exception()) {
         if (m_style_sheet_list) {
-            m_style_sheet_list->bump_generation();
+            m_style_sheet_list->document().style_computer().invalidate_rule_cache();
             m_style_sheet_list->document().invalidate_style();
         }
     }
@@ -61,7 +57,7 @@ DOM::ExceptionOr<void> CSSStyleSheet::delete_rule(unsigned index)
     auto result = m_rules->remove_a_css_rule(index);
     if (!result.is_exception()) {
         if (m_style_sheet_list) {
-            m_style_sheet_list->bump_generation();
+            m_style_sheet_list->document().style_computer().invalidate_rule_cache();
             m_style_sheet_list->document().invalidate_style();
         }
     }

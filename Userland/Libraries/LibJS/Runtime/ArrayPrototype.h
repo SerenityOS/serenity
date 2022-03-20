@@ -17,7 +17,7 @@ class ArrayPrototype final : public Array {
 public:
     ArrayPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~ArrayPrototype() override;
+    virtual ~ArrayPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(filter);

@@ -17,7 +17,7 @@ public:
         return adopt_ref(*new ResolvedCSSStyleDeclaration(element));
     }
 
-    virtual ~ResolvedCSSStyleDeclaration() override;
+    virtual ~ResolvedCSSStyleDeclaration() override = default;
 
     virtual size_t length() const override;
     virtual String item(size_t index) const override;

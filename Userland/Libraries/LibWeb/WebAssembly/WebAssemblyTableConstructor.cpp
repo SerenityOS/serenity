@@ -19,9 +19,7 @@ WebAssemblyTableConstructor::WebAssemblyTableConstructor(JS::GlobalObject& globa
 {
 }
 
-WebAssemblyTableConstructor::~WebAssemblyTableConstructor()
-{
-}
+WebAssemblyTableConstructor::~WebAssemblyTableConstructor() = default;
 
 JS::ThrowCompletionOr<JS::Value> WebAssemblyTableConstructor::call()
 {

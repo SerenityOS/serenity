@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -96,7 +96,7 @@ public:
             m_has_link = true;
         }
 
-        Hyperlink() { }
+        Hyperlink() = default;
 
         String to_vt_escape(bool starting) const;
 
@@ -119,7 +119,7 @@ public:
         set(style_arg);
         m_is_empty = false;
     }
-    Style() { }
+    Style() = default;
 
     static Style reset_style()
     {

@@ -225,10 +225,6 @@ DateDurationRecord difference_iso_date(GlobalObject& global_object, i32 year1, u
 
             // iii. Set mid to ! AddISODate(y1, m1, d1, years, months, 0, 0, "constrain").
             mid = MUST(add_iso_date(global_object, year1, month1, day1, years, months, 0, 0, "constrain"sv));
-
-            // FIXME: This is not used (spec issue, see https://github.com/tc39/proposal-temporal/issues/1483).
-            // iv. Set midSign to -(! CompareISODate(mid.[[Year]], mid.[[Month]], mid.[[Day]], y2, m2, d2)).
-            mid_sign = -compare_iso_date(mid.year, mid.month, mid.day, year2, month2, day2);
         }
 
         // o. Let days be 0.
@@ -363,12 +359,16 @@ ThrowCompletionOr<ISODate> regulate_iso_date(GlobalObject& global_object, double
 
         auto y = static_cast<i32>(year);
 
-        // a. Set month to ! ConstrainToRange(month, 1, 12).
-        month = constrain_to_range(month, 1, 12);
-        // b. Set day to ! ConstrainToRange(day, 1, ! ISODaysInMonth(year, month)).
-        day = constrain_to_range(day, 1, iso_days_in_month(y, month));
+        // a. Set month to the result of clamping month between 1 and 12.
+        month = clamp(month, 1, 12);
 
-        // c. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
+        // b. Let daysInMonth be ! ISODaysInMonth(year, month).
+        auto days_in_month = iso_days_in_month(y, (u8)month);
+
+        // c. Set day to the result of clamping day between 1 and daysInMonth.
+        day = clamp(day, 1, days_in_month);
+
+        // d. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
         return ISODate { .year = y, .month = static_cast<u8>(month), .day = static_cast<u8>(day) };
     }
     VERIFY_NOT_REACHED();

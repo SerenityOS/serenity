@@ -48,9 +48,9 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     help_button.set_tooltip("Functions Help");
     help_button.set_fixed_size(20, 20);
     help_button.on_click = [&](auto) {
-        if (!m_selected_view) {
+        if (!current_view()) {
             GUI::MessageBox::show_error(window(), "Can only show function documentation/help when a worksheet exists and is open");
-        } else if (auto* sheet_ptr = m_selected_view->sheet_if_available()) {
+        } else if (auto* sheet_ptr = current_worksheet_if_available()) {
             auto docs = sheet_ptr->gather_documentation();
             auto help_window = HelpWindow::the(window());
             help_window->set_docs(move(docs));
@@ -63,7 +63,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     cell_value_editor.set_scrollbars_enabled(false);
 
     cell_value_editor.on_return_pressed = [this]() {
-        m_selected_view->move_cursor(GUI::AbstractView::CursorMovement::Down);
+        current_view()->move_cursor(GUI::AbstractView::CursorMovement::Down);
     };
 
     cell_value_editor.set_syntax_highlighter(make<CellSyntaxHighlighter>());
@@ -242,6 +242,26 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
 
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
+
+    m_tab_widget->on_context_menu_request = [&](auto& widget, auto& event) {
+        m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
+        m_tab_context_menu->popup(event.screen_position());
+    };
+
+    m_tab_widget->on_double_click = [&](auto& widget) {
+        m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
+        VERIFY(m_tab_context_menu_sheet_view);
+
+        auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
+        VERIFY(sheet_ptr); // How did we get here without a sheet?
+        auto& sheet = *sheet_ptr;
+        String new_name;
+        if (GUI::InputBox::show(window(), new_name, String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
+            sheet.set_name(new_name);
+            sheet.update();
+            m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
+        }
+    };
 }
 
 void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
@@ -253,25 +273,14 @@ void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
 
 void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 {
-    RefPtr<GUI::Widget> first_tab_widget;
     for (auto& sheet : new_sheets) {
-        auto& tab = m_tab_widget->add_tab<SpreadsheetView>(sheet.name(), sheet);
-        if (!first_tab_widget)
-            first_tab_widget = &tab;
-    }
-
-    auto change = [&](auto& selected_widget) {
-        if (m_selected_view) {
-            m_selected_view->on_selection_changed = nullptr;
-            m_selected_view->on_selection_dropped = nullptr;
-        }
-        m_selected_view = &static_cast<SpreadsheetView&>(selected_widget);
-        m_selected_view->model()->on_cell_data_change = [&](auto& cell, auto& previous_data) {
+        auto& new_view = m_tab_widget->add_tab<SpreadsheetView>(sheet.name(), sheet);
+        new_view.model()->on_cell_data_change = [&](auto& cell, auto& previous_data) {
             undo_stack().push(make<CellUndoCommand>(cell, previous_data));
             window()->set_modified(true);
         };
-        m_selected_view->on_selection_changed = [&](Vector<Position>&& selection) {
-            auto* sheet_ptr = m_selected_view->sheet_if_available();
+        new_view.on_selection_changed = [&](Vector<Position>&& selection) {
+            auto* sheet_ptr = current_worksheet_if_available();
             // How did this even happen?
             VERIFY(sheet_ptr);
             auto& sheet = *sheet_ptr;
@@ -319,7 +328,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             m_cell_value_editor->on_focusout = [this] { m_should_change_selected_cells = false; };
             m_cell_value_editor->on_change = [cells = move(cells), this]() mutable {
                 if (m_should_change_selected_cells) {
-                    auto* sheet_ptr = m_selected_view->sheet_if_available();
+                    auto* sheet_ptr = current_worksheet_if_available();
                     if (!sheet_ptr)
                         return;
                     auto& sheet = *sheet_ptr;
@@ -335,7 +344,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             };
             static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&first_cell);
         };
-        m_selected_view->on_selection_dropped = [&]() {
+        new_view.on_selection_dropped = [&]() {
             m_current_cell_label->set_enabled(false);
             m_current_cell_label->set_text({});
             m_cell_value_editor->on_change = nullptr;
@@ -349,46 +358,19 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
 
             static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(nullptr);
         };
-    };
-
-    if (first_tab_widget)
-        change(*first_tab_widget);
-
-    m_tab_widget->on_change = [change = move(change)](auto& selected_widget) {
-        change(selected_widget);
-    };
-
-    m_tab_widget->on_context_menu_request = [&](auto& widget, auto& event) {
-        m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
-        m_tab_context_menu->popup(event.screen_position());
-    };
-
-    m_tab_widget->on_double_click = [&](auto& widget) {
-        m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
-        VERIFY(m_tab_context_menu_sheet_view);
-
-        auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
-        VERIFY(sheet_ptr); // How did we get here without a sheet?
-        auto& sheet = *sheet_ptr;
-        String new_name;
-        if (GUI::InputBox::show(window(), new_name, String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
-            sheet.set_name(new_name);
-            sheet.update();
-            m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
-        }
-    };
+    }
 }
 
 void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source, size_t cursor_offset)
 {
-    auto* sheet_ptr = m_selected_view->sheet_if_available();
+    auto* sheet_ptr = current_view()->sheet_if_available();
     if (!sheet_ptr)
         return;
 
     auto& sheet = *sheet_ptr;
 
     m_inline_documentation_window->set_rect(m_cell_value_editor->screen_relative_rect().translated(0, m_cell_value_editor->height() + 7).inflated(6, 6));
-    if (!m_selected_view || !source.starts_with('=')) {
+    if (!current_view() || !source.starts_with('=')) {
         m_inline_documentation_window->hide();
         return;
     }

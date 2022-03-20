@@ -13,12 +13,10 @@ HTMLTemplateElement::HTMLTemplateElement(DOM::Document& document, DOM::Qualified
     : HTMLElement(document, move(qualified_name))
 {
     m_content = adopt_ref(*new DOM::DocumentFragment(appropriate_template_contents_owner_document(document)));
-    m_content->set_host(*this);
+    m_content->set_host(this);
 }
 
-HTMLTemplateElement::~HTMLTemplateElement()
-{
-}
+HTMLTemplateElement::~HTMLTemplateElement() = default;
 
 DOM::Document& HTMLTemplateElement::appropriate_template_contents_owner_document(DOM::Document& document)
 {

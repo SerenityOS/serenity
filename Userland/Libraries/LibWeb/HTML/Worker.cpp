@@ -160,7 +160,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
     m_execution_context.variable_environment = &m_worker_realm->global_environment();
     m_execution_context.realm = m_worker_realm;
 
-    m_worker_vm->push_execution_context(m_execution_context, *m_worker_scope);
+    m_worker_vm->push_execution_context(m_execution_context);
     m_worker_realm->set_global_object(*m_worker_scope, m_worker_scope);
 
     // 8. Let worker global scope be the global object of realm execution context's Realm component.

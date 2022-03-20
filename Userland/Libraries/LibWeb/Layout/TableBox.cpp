@@ -19,8 +19,6 @@ TableBox::TableBox(DOM::Document& document, DOM::Element* element, CSS::Computed
 {
 }
 
-TableBox::~TableBox()
-{
-}
+TableBox::~TableBox() = default;
 
 }

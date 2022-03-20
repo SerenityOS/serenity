@@ -13,8 +13,5 @@ HTMLLegendElement::HTMLLegendElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-HTMLLegendElement::~HTMLLegendElement()
-{
-}
-
+HTMLLegendElement::~HTMLLegendElement() = default;
 }

@@ -185,9 +185,7 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address
     enable_irq();
 }
 
-UNMAP_AFTER_INIT NE2000NetworkAdapter::~NE2000NetworkAdapter()
-{
-}
+UNMAP_AFTER_INIT NE2000NetworkAdapter::~NE2000NetworkAdapter() = default;
 
 bool NE2000NetworkAdapter::handle_irq(const RegisterState&)
 {

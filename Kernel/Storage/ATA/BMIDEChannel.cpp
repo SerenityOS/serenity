@@ -153,7 +153,7 @@ void BMIDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     VERIFY(!m_current_request.is_null());
     VERIFY(m_current_request->block_count() <= 256);
 
-    SpinlockLocker m_lock(m_request_lock);
+    SpinlockLocker locker(m_request_lock);
     dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_write_sectors ({} x {})", m_current_request->block_index(), m_current_request->block_count());
 
     prdt().offset = m_dma_buffer_page->paddr().get();
@@ -201,7 +201,7 @@ void BMIDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     VERIFY(!m_current_request.is_null());
     VERIFY(m_current_request->block_count() <= 256);
 
-    SpinlockLocker m_lock(m_request_lock);
+    SpinlockLocker locker(m_request_lock);
     dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_read_sectors ({} x {})", m_current_request->block_index(), m_current_request->block_count());
 
     // Note: This is a fix for a quirk for an IDE controller on ICH7 machine.

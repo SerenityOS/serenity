@@ -32,8 +32,9 @@ class WeakLink : public RefCounted<WeakLink> {
     friend class WeakPtr;
 
 public:
-    template<typename T, typename PtrTraits = RefPtrTraits<T>, typename EnableIf<IsBaseOf<RefCountedBase, T>>::Type* = nullptr>
+    template<typename T, typename PtrTraits = RefPtrTraits<T>>
     RefPtr<T, PtrTraits> strong_ref() const
+        requires(IsBaseOf<RefCountedBase, T>)
     {
         RefPtr<T, PtrTraits> ref;
 

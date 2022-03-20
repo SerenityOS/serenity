@@ -15,13 +15,8 @@ ErrorOr<NonnullRefPtr<TmpFS>> TmpFS::try_create()
     return adopt_nonnull_ref_or_enomem(new (nothrow) TmpFS);
 }
 
-TmpFS::TmpFS()
-{
-}
-
-TmpFS::~TmpFS()
-{
-}
+TmpFS::TmpFS() = default;
+TmpFS::~TmpFS() = default;
 
 ErrorOr<void> TmpFS::initialize()
 {
@@ -50,9 +45,7 @@ TmpFSInode::TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, WeakPtr<TmpFSIn
     m_metadata.inode = identifier();
 }
 
-TmpFSInode::~TmpFSInode()
-{
-}
+TmpFSInode::~TmpFSInode() = default;
 
 ErrorOr<NonnullRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, WeakPtr<TmpFSInode> parent)
 {

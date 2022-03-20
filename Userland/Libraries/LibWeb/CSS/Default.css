@@ -213,29 +213,28 @@ ol {
     list-style-type: decimal;
 }
 
-/* FIXME: Implement these using :is() :^) */
-/* :is(ul, ol) ul */
-ul ul,
-ol ul {
+:is(ul, ol) ul {
     list-style-type: circle;
 }
 
-/* :is(ul, ol) :is(ul, ol) ul */
-ul ul ul,
-ol ul ul,
-ul ol ul,
-ol ol ul {
+:is(ul, ol) :is(ul, ol) ul {
     list-style-type: square;
 }
 
 /* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
-input {
+input, textarea {
     border: 1px solid black;
     min-width: 80px;
     min-height: 16px;
     width: 120px;
     cursor: text;
     overflow: hidden;
+}
+
+textarea {
+    padding: 2px;
+    display: inline-block;
+    overflow: scroll;
 }
 
 input[type=submit], input[type=button], input[type=reset], input[type=checkbox], input[type=radio] {
@@ -306,3 +305,13 @@ mark {
  * https://html.spec.whatwg.org/multipage/rendering.html#embedded-content-rendering-rules
  */
 iframe { border: 2px inset; }
+
+/* https://www.w3.org/TR/mediaqueries-5/#descdef-media-inverted-colors
+ */
+@media (inverted-colors) {
+    img:not(picture>img),
+    picture,
+    video {
+        filter: invert(100%);
+    }
+}

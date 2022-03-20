@@ -112,13 +112,13 @@ UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_
 bool NetworkingManagement::initialize()
 {
     if (!kernel_command_line().is_physical_networking_disabled() && !PCI::Access::is_disabled()) {
-        PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
+        MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
             // Note: PCI class 2 is the class of Network devices
             if (device_identifier.class_code().value() != 0x02)
                 return;
             if (auto adapter = determine_network_device(device_identifier); !adapter.is_null())
                 m_adapters.with([&](auto& adapters) { adapters.append(adapter.release_nonnull()); });
-        });
+        }));
     }
     auto loopback = LoopbackAdapter::try_create();
     VERIFY(loopback);

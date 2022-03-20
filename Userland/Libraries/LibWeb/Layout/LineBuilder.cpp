@@ -9,10 +9,11 @@
 
 namespace Web::Layout {
 
-LineBuilder::LineBuilder(InlineFormattingContext& context, FormattingState& formatting_state)
+LineBuilder::LineBuilder(InlineFormattingContext& context, FormattingState& formatting_state, LayoutMode layout_mode)
     : m_context(context)
     , m_formatting_state(formatting_state)
     , m_containing_block_state(formatting_state.get_mutable(context.containing_block()))
+    , m_layout_mode(layout_mode)
 {
     begin_new_line(false);
 }
@@ -34,8 +35,18 @@ void LineBuilder::begin_new_line(bool increment_y)
 {
     if (increment_y)
         m_current_y += max(m_max_height_on_current_line, m_context.containing_block().line_height());
-    auto space = m_context.available_space_for_line(m_current_y);
-    m_available_width_for_current_line = space.right - space.left;
+
+    switch (m_layout_mode) {
+    case LayoutMode::Normal:
+        m_available_width_for_current_line = m_context.available_space_for_line(m_current_y);
+        break;
+    case LayoutMode::MinContent:
+        m_available_width_for_current_line = 0;
+        break;
+    case LayoutMode::MaxContent:
+        m_available_width_for_current_line = INFINITY;
+        break;
+    }
     m_max_height_on_current_line = 0;
 
     m_last_line_needs_update = true;
@@ -70,11 +81,11 @@ void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_
 
 bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width, bool should_force_break)
 {
-    if (layout_mode == LayoutMode::AllPossibleLineBreaks)
+    if (layout_mode == LayoutMode::MinContent)
         return true;
     if (should_force_break)
         return true;
-    if (layout_mode == LayoutMode::OnlyRequiredLineBreaks)
+    if (layout_mode == LayoutMode::MaxContent)
         return false;
     auto const& line_boxes = m_containing_block_state.line_boxes;
     if (line_boxes.is_empty() || line_boxes.last().is_empty())
@@ -107,7 +118,7 @@ void LineBuilder::update_last_line()
     auto& line_box = line_boxes.last();
 
     auto text_align = m_context.containing_block().computed_values().text_align();
-    float x_offset = m_context.available_space_for_line(m_current_y).left;
+    float x_offset = m_context.leftmost_x_offset_at(m_current_y);
     float bottom = m_current_y + m_context.containing_block().line_height();
     float excess_horizontal_space = m_containing_block_state.content_width - line_box.width();
 

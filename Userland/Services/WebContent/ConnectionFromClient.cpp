@@ -268,7 +268,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
     if (node->is_element()) {
         auto& element = verify_cast<Web::DOM::Element>(*node);
-        if (!element.specified_css_values())
+        if (!element.computed_css_values())
             return { false, "", "", "", "" };
 
         auto serialize_json = [](Web::CSS::StyleProperties const& properties) -> String {
@@ -345,18 +345,18 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             //        in a format we can use. So, we run the StyleComputer again to get the specified
             //        values, and have to ignore the computed values and custom properties.
             auto pseudo_element_style = page().focused_context().active_document()->style_computer().compute_style(element, pseudo_element);
-            String specified_values_json = serialize_json(pseudo_element_style);
-            String computed_values_json = "{}";
+            String computed_values = serialize_json(pseudo_element_style);
+            String resolved_values = "{}";
             String custom_properties_json = "{}";
             String node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
-            return { true, specified_values_json, computed_values_json, custom_properties_json, node_box_sizing_json };
+            return { true, computed_values, resolved_values, custom_properties_json, node_box_sizing_json };
         }
 
-        String specified_values_json = serialize_json(*element.specified_css_values());
-        String computed_values_json = serialize_json(element.computed_style());
+        String computed_values = serialize_json(*element.computed_css_values());
+        String resolved_values_json = serialize_json(element.resolved_css_values());
         String custom_properties_json = serialize_custom_properties_json(element);
         String node_box_sizing_json = serialize_node_box_sizing_json(element.layout_node());
-        return { true, specified_values_json, computed_values_json, custom_properties_json, node_box_sizing_json };
+        return { true, computed_values, resolved_values_json, custom_properties_json, node_box_sizing_json };
     }
 
     return { false, "", "", "", "" };

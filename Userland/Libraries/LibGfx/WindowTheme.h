@@ -27,7 +27,7 @@ public:
         Moving,
     };
 
-    virtual ~WindowTheme();
+    virtual ~WindowTheme() = default;
 
     static WindowTheme& current();
 
@@ -50,7 +50,7 @@ public:
     virtual float frame_alpha_hit_threshold(WindowState) const = 0;
 
 protected:
-    WindowTheme() { }
+    WindowTheme() = default;
 };
 
 }

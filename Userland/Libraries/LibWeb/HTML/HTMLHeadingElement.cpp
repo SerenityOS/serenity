@@ -13,8 +13,5 @@ HTMLHeadingElement::HTMLHeadingElement(DOM::Document& document, DOM::QualifiedNa
 {
 }
 
-HTMLHeadingElement::~HTMLHeadingElement()
-{
-}
-
+HTMLHeadingElement::~HTMLHeadingElement() = default;
 }

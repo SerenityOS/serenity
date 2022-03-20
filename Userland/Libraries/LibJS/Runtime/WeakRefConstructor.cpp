@@ -28,10 +28,6 @@ void WeakRefConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
-WeakRefConstructor::~WeakRefConstructor()
-{
-}
-
 // 26.1.1.1 WeakRef ( target ), https://tc39.es/ecma262/#sec-weak-ref-target
 ThrowCompletionOr<Value> WeakRefConstructor::call()
 {

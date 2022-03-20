@@ -180,10 +180,6 @@ void DateConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(7), Attribute::Configurable);
 }
 
-DateConstructor::~DateConstructor()
-{
-}
-
 // 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
 ThrowCompletionOr<Value> DateConstructor::call()
 {

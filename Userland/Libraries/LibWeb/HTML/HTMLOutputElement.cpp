@@ -13,8 +13,6 @@ HTMLOutputElement::HTMLOutputElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-HTMLOutputElement::~HTMLOutputElement()
-{
-}
+HTMLOutputElement::~HTMLOutputElement() = default;
 
 }

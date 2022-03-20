@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -45,7 +45,7 @@ StringView ListFormat::type_string() const
     }
 }
 
-// 13.1.1 DeconstructPattern ( pattern, placeables ), https://tc39.es/ecma402/#sec-deconstructpattern
+// 13.5.1 DeconstructPattern ( pattern, placeables ), https://tc39.es/ecma402/#sec-deconstructpattern
 Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables placeables)
 {
     // 1. Let patternParts be PartitionPattern(pattern).
@@ -92,7 +92,7 @@ Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables plac
     return result;
 }
 
-// 13.1.2 CreatePartsFromList ( listFormat, list ), https://tc39.es/ecma402/#sec-createpartsfromlist
+// 13.5.2 CreatePartsFromList ( listFormat, list ), https://tc39.es/ecma402/#sec-createpartsfromlist
 Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, Vector<String> const& list)
 {
     auto list_patterns = Unicode::get_locale_list_patterns(list_format.locale(), list_format.type_string(), list_format.style());
@@ -181,7 +181,7 @@ Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, V
     return parts;
 }
 
-// 13.1.3 FormatList ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlist
+// 13.5.3 FormatList ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlist
 String format_list(ListFormat const& list_format, Vector<String> const& list)
 {
     // 1. Let parts be CreatePartsFromList(listFormat, list).
@@ -200,7 +200,7 @@ String format_list(ListFormat const& list_format, Vector<String> const& list)
     return result.build();
 }
 
-// 13.1.4 FormatListToParts ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlisttoparts
+// 13.5.4 FormatListToParts ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlisttoparts
 Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_format, Vector<String> const& list)
 {
     auto& vm = global_object.vm();
@@ -236,7 +236,7 @@ Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_
     return result;
 }
 
-// 13.1.5 StringListFromIterable ( iterable ), https://tc39.es/ecma402/#sec-createstringlistfromiterable
+// 13.5.5 StringListFromIterable ( iterable ), https://tc39.es/ecma402/#sec-createstringlistfromiterable
 ThrowCompletionOr<Vector<String>> string_list_from_iterable(GlobalObject& global_object, Value iterable)
 {
     auto& vm = global_object.vm();

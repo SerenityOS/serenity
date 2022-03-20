@@ -3,6 +3,7 @@ port=FreeDink
 version=109.6
 useconfigure="true"
 use_fresh_config_sub="true"
+config_sub_path=autotools/config.sub
 depends=("SDL2" "SDL2_image" "SDL2_mixer" "SDL2_ttf" "SDL2_gfx" "gettext" "fontconfig" "glm")
 workdir="freedink-${version}"
 freedink_data="freedink-data-1.08.20190120"

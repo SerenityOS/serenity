@@ -32,7 +32,7 @@ public:
         return ProgressEvent::create(event_name, event_init);
     }
 
-    virtual ~ProgressEvent() override { }
+    virtual ~ProgressEvent() override = default;
 
     bool length_computable() const { return m_length_computable; }
     u32 loaded() const { return m_loaded; }

@@ -14,7 +14,9 @@ class FastBoxBlurFilter {
 public:
     FastBoxBlurFilter(Bitmap&);
 
-    void apply_single_pass(int radius);
+    void apply_single_pass(size_t radius);
+    void apply_single_pass(size_t radius_x, size_t radius_y);
+
     void apply_three_passes(size_t radius);
 
 private:

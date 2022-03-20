@@ -21,10 +21,6 @@ ArrayConstructor::ArrayConstructor(GlobalObject& global_object)
 {
 }
 
-ArrayConstructor::~ArrayConstructor()
-{
-}
-
 void ArrayConstructor::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,9 +29,9 @@ protected:
 
 template<typename T>
 struct TypeTrivia {
-    static const size_t bits = sizeof(T) * 8;
-    static const T sign_bit = 1 << (bits - 1);
-    static const T mask = MakeUnsigned<T>(-1);
+    static constexpr size_t bits = sizeof(T) * 8;
+    static constexpr T sign_bit = 1 << (bits - 1);
+    static constexpr T mask = MakeUnsigned<T>(-1);
 };
 
 template<typename T, typename U>
@@ -188,7 +189,7 @@ enum InstructionFormat {
     OP_NEAR_imm,
 };
 
-static const unsigned CurrentAddressSize = 0xB33FBABE;
+static constexpr unsigned CurrentAddressSize = 0xB33FBABE;
 
 struct InstructionDescriptor {
     InstructionHandler handler { nullptr };
@@ -489,7 +490,7 @@ class Instruction {
 public:
     template<typename InstructionStreamType>
     static Instruction from_stream(InstructionStreamType&, bool o32, bool a32);
-    ~Instruction() { }
+    ~Instruction() = default;
 
     ALWAYS_INLINE MemoryOrRegisterReference& modrm() const { return m_modrm; }
 

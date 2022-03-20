@@ -44,10 +44,6 @@ ArrayBuffer::ArrayBuffer(ByteBuffer* buffer, Object& prototype)
 {
 }
 
-ArrayBuffer::~ArrayBuffer()
-{
-}
-
 // 1.1.5 IsResizableArrayBuffer ( arrayBuffer ), https://tc39.es/proposal-resizablearraybuffer/#sec-isresizablearraybuffer
 bool ArrayBuffer::is_resizable_array_buffer() const
 {

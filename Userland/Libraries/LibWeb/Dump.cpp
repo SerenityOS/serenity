@@ -166,11 +166,13 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         if (interactive)
             builder.appendff("@{:p} ", &layout_node);
 
-        builder.appendff("at ({},{}) content-size {}x{}",
-            box.paint_box()->absolute_x(),
-            box.paint_box()->absolute_y(),
-            box.paint_box()->content_width(),
-            box.paint_box()->content_height());
+        if (auto const* paint_box = box.paint_box()) {
+            builder.appendff("at ({},{}) content-size {}x{}",
+                paint_box->absolute_x(),
+                paint_box->absolute_y(),
+                paint_box->content_width(),
+                paint_box->content_height());
+        }
 
         if (box.is_positioned())
             builder.appendff(" {}positioned{}", positioned_color_on, color_off);
@@ -205,7 +207,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().margin.left,
                 box.box_model().border.left,
                 box.box_model().padding.left,
-                box.paint_box()->content_width(),
+                box.paint_box() ? box.paint_box()->content_width() : 0,
                 box.box_model().padding.right,
                 box.box_model().border.right,
                 box.box_model().margin.right);
@@ -215,7 +217,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().margin.top,
                 box.box_model().border.top,
                 box.box_model().padding.top,
-                box.paint_box()->content_height(),
+                box.paint_box() ? box.paint_box()->content_height() : 0,
                 box.box_model().padding.bottom,
                 box.box_model().border.bottom,
                 box.box_model().margin.bottom);
@@ -226,7 +228,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 
     if (is<Layout::BlockContainer>(layout_node) && static_cast<Layout::BlockContainer const&>(layout_node).children_are_inline()) {
         auto& block = static_cast<Layout::BlockContainer const&>(layout_node);
-        for (size_t line_box_index = 0; line_box_index < block.paint_box()->line_boxes().size(); ++line_box_index) {
+        for (size_t line_box_index = 0; block.paint_box() && line_box_index < block.paint_box()->line_boxes().size(); ++line_box_index) {
             auto& line_box = block.paint_box()->line_boxes()[line_box_index];
             for (size_t i = 0; i < indent; ++i)
                 builder.append("  ");
@@ -263,13 +265,13 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         }
     }
 
-    if (show_specified_style && layout_node.dom_node() && layout_node.dom_node()->is_element() && verify_cast<DOM::Element>(layout_node.dom_node())->specified_css_values()) {
+    if (show_specified_style && layout_node.dom_node() && layout_node.dom_node()->is_element() && verify_cast<DOM::Element>(layout_node.dom_node())->computed_css_values()) {
         struct NameAndValue {
             String name;
             String value;
         };
         Vector<NameAndValue> properties;
-        verify_cast<DOM::Element>(*layout_node.dom_node()).specified_css_values()->for_each_property([&](auto property_id, auto& value) {
+        verify_cast<DOM::Element>(*layout_node.dom_node()).computed_css_values()->for_each_property([&](auto property_id, auto& value) {
             properties.append({ CSS::string_from_property_id(property_id), value.to_string() });
         });
         quick_sort(properties, [](auto& a, auto& b) { return a.name < b.name; });
@@ -403,6 +405,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Focus:
                     pseudo_class_description = "Focus";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::FocusWithin:
+                    pseudo_class_description = "FocusWithin";
+                    break;
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Empty:
                     pseudo_class_description = "Empty";
                     break;
@@ -430,17 +435,41 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Not:
                     pseudo_class_description = "Not";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Is:
+                    pseudo_class_description = "Is";
+                    break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Where:
+                    pseudo_class_description = "Where";
+                    break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Lang:
+                    pseudo_class_description = "Lang";
+                    break;
                 }
 
                 builder.appendff(" pseudo_class={}", pseudo_class_description);
-                if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Not) {
+                if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Lang) {
+                    builder.append('(');
+                    builder.join(',', pseudo_class.languages);
+                    builder.append(')');
+                } else if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Not
+                    || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Is
+                    || pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Where) {
                     builder.append("([");
-                    for (auto& selector : pseudo_class.not_selector)
+                    for (auto& selector : pseudo_class.argument_selector_list)
                         dump_selector(builder, selector);
                     builder.append("])");
                 } else if ((pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild)
-                    || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild)) {
-                    builder.appendff("(step={}, offset={})", pseudo_class.nth_child_pattern.step_size, pseudo_class.nth_child_pattern.offset);
+                    || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild)
+                    || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType)
+                    || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastOfType)) {
+                    builder.appendff("(step={}, offset={}", pseudo_class.nth_child_pattern.step_size, pseudo_class.nth_child_pattern.offset);
+                    if (!pseudo_class.argument_selector_list.is_empty()) {
+                        builder.append(", selectors=[");
+                        for (auto const& child_selector : pseudo_class.argument_selector_list)
+                            dump_selector(builder, child_selector);
+                        builder.append("]");
+                    }
+                    builder.append(")");
                 }
             }
 

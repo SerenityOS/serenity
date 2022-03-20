@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Utf16String.h>
@@ -33,7 +34,7 @@ public:
     Optional<Value> get(GlobalObject&, PropertyKey const&) const;
 
 private:
-    virtual const char* class_name() const override { return "PrimitiveString"; }
+    virtual StringView class_name() const override { return "PrimitiveString"sv; }
 
     mutable String m_utf8_string;
     mutable bool m_has_utf8_string { false };

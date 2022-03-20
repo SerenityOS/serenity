@@ -19,8 +19,6 @@ IdleDeadline::IdleDeadline(double time_remaining, bool did_timeout)
 {
 }
 
-IdleDeadline::~IdleDeadline()
-{
-}
+IdleDeadline::~IdleDeadline() = default;
 
 }

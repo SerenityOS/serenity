@@ -236,9 +236,7 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, 
 {
 }
 
-UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter()
-{
-}
+UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter() = default;
 
 bool E1000NetworkAdapter::handle_irq(const RegisterState&)
 {

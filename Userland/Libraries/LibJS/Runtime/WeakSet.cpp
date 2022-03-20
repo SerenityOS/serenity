@@ -19,10 +19,6 @@ WeakSet::WeakSet(Object& prototype)
 {
 }
 
-WeakSet::~WeakSet()
-{
-}
-
 void WeakSet::remove_dead_cells(Badge<Heap>)
 {
     m_values.remove_all_matching([](Cell* cell) {

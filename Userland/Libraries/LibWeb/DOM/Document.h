@@ -334,6 +334,9 @@ public:
             callback(*node_iterator);
     }
 
+    bool needs_full_style_update() const { return m_needs_full_style_update; }
+    void set_needs_full_style_update(bool b) { m_needs_full_style_update = b; }
+
 private:
     explicit Document(const AK::URL&);
 
@@ -341,6 +344,8 @@ private:
     virtual EventTarget& global_event_handlers_to_event_target() final { return *this; }
 
     void tear_down_layout_tree();
+
+    void evaluate_media_rules();
 
     ExceptionOr<void> run_the_document_write_steps(String);
 
@@ -437,6 +442,8 @@ private:
     Vector<WeakPtr<CSS::MediaQueryList>> m_media_query_lists;
 
     bool m_needs_layout { false };
+
+    bool m_needs_full_style_update { false };
 
     HashTable<NodeIterator*> m_node_iterators;
 };

@@ -65,9 +65,7 @@ UNMAP_AFTER_INIT IDEController::IDEController()
 {
 }
 
-UNMAP_AFTER_INIT IDEController::~IDEController()
-{
-}
+UNMAP_AFTER_INIT IDEController::~IDEController() = default;
 
 RefPtr<StorageDevice> IDEController::device_by_channel_and_position(u32 index) const
 {

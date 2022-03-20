@@ -57,13 +57,22 @@ Serenity doesn't yet support O_SYNC, so just make it compile.
 serenity: Disable lrand48 zlib stress, it is not implemented for Serenity
 
 
-## `0011-serenity-Fix-stress_get_prime64-variable-type-uint-u.patch`
+## `0011-serenity-Add-bogus-O_NDELAY-just-to-allow-the-port-t.patch`
 
-serenity: Fix stress_get_prime64 variable type, uint -> uint64_t
+serenity: Add bogus O_NDELAY just to allow the port to compile
 
-Serenity doesn't have a definition for unit.
 
-## `0012-Makefile-Install-to-usr-local.patch`
+## `0012-serenity-Disable-nice-stress-workload-as-we-do-not-i.patch`
+
+serenity: Disable nice() stress workload as we do not implement it
+
+
+## `0013-serenity-Disable-prctl-stressor-on-serenity.patch`
+
+serenity: Disable prctl stressor on serenity
+
+
+## `0014-Makefile-Install-to-usr-local.patch`
 
 Makefile: Install to /usr/local
 

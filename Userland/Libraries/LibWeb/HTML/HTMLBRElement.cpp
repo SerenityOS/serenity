@@ -15,9 +15,7 @@ HTMLBRElement::HTMLBRElement(DOM::Document& document, DOM::QualifiedName qualifi
 {
 }
 
-HTMLBRElement::~HTMLBRElement()
-{
-}
+HTMLBRElement::~HTMLBRElement() = default;
 
 RefPtr<Layout::Node> HTMLBRElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {

@@ -205,7 +205,7 @@ struct MediaCondition {
     String to_string() const;
 
 private:
-    MediaCondition() { }
+    MediaCondition() = default;
     Type type;
     Optional<MediaFeature> feature;
     NonnullOwnPtrVector<MediaCondition> conditions;

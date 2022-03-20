@@ -100,9 +100,7 @@ void IDEChannel::clear_pending_interrupts() const
     m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
 }
 
-UNMAP_AFTER_INIT IDEChannel::~IDEChannel()
-{
-}
+UNMAP_AFTER_INIT IDEChannel::~IDEChannel() = default;
 
 void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool is_slave, u16 capabilities)
 {

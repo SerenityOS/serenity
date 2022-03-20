@@ -180,9 +180,7 @@ ISO9660FS::ISO9660FS(OpenFileDescription& description)
     m_logical_block_size = logical_sector_size;
 }
 
-ISO9660FS::~ISO9660FS()
-{
-}
+ISO9660FS::~ISO9660FS() = default;
 
 ErrorOr<void> ISO9660FS::initialize()
 {
@@ -553,9 +551,7 @@ ISO9660Inode::ISO9660Inode(ISO9660FS& fs, ISO::DirectoryRecordHeader const& reco
     create_metadata();
 }
 
-ISO9660Inode::~ISO9660Inode()
-{
-}
+ISO9660Inode::~ISO9660Inode() = default;
 
 ErrorOr<NonnullRefPtr<ISO9660Inode>> ISO9660Inode::try_create_from_directory_record(ISO9660FS& fs, ISO::DirectoryRecordHeader const& record, StringView name)
 {

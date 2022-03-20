@@ -23,8 +23,6 @@ public:
 
     const String& text_for_rendering() const { return m_text_for_rendering; }
 
-    virtual void paint_fragment(PaintContext&, const LineBoxFragment&, Painting::PaintPhase) const override;
-
     struct Chunk {
         Utf8View view;
         size_t start { 0 };

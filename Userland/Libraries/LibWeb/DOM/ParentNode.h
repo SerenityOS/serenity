@@ -41,6 +41,9 @@ protected:
     }
 };
 
+template<>
+inline bool Node::fast_is<ParentNode>() const { return is_parent_node(); }
+
 template<typename Callback>
 inline void ParentNode::for_each_child(Callback callback) const
 {

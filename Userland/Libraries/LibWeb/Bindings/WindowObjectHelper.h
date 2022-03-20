@@ -159,6 +159,8 @@
 #include <LibWeb/Bindings/HTMLOptGroupElementPrototype.h>
 #include <LibWeb/Bindings/HTMLOptionElementConstructor.h>
 #include <LibWeb/Bindings/HTMLOptionElementPrototype.h>
+#include <LibWeb/Bindings/HTMLOptionsCollectionConstructor.h>
+#include <LibWeb/Bindings/HTMLOptionsCollectionPrototype.h>
 #include <LibWeb/Bindings/HTMLOutputElementConstructor.h>
 #include <LibWeb/Bindings/HTMLOutputElementPrototype.h>
 #include <LibWeb/Bindings/HTMLParagraphElementConstructor.h>
@@ -276,6 +278,8 @@
 #include <LibWeb/Bindings/SVGRectElementPrototype.h>
 #include <LibWeb/Bindings/SVGSVGElementConstructor.h>
 #include <LibWeb/Bindings/SVGSVGElementPrototype.h>
+#include <LibWeb/Bindings/SVGTextContentElementConstructor.h>
+#include <LibWeb/Bindings/SVGTextContentElementPrototype.h>
 #include <LibWeb/Bindings/ScreenConstructor.h>
 #include <LibWeb/Bindings/ScreenPrototype.h>
 #include <LibWeb/Bindings/SelectionConstructor.h>
@@ -407,6 +411,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(HTMLOListElement)                                                   \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLOptGroupElement)                                                \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLOptionElement)                                                  \
+    ADD_WINDOW_OBJECT_INTERFACE(HTMLOptionsCollection)                                              \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLOutputElement)                                                  \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLParagraphElement)                                               \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLParamElement)                                                   \
@@ -473,6 +478,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGPolylineElement)                                                 \
     ADD_WINDOW_OBJECT_INTERFACE(SVGRectElement)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)                                                      \
+    ADD_WINDOW_OBJECT_INTERFACE(SVGTextContentElement)                                              \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                                                               \
     ADD_WINDOW_OBJECT_INTERFACE(TextDecoder)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(TextEncoder)                                                        \

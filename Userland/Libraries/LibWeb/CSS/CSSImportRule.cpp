@@ -28,10 +28,6 @@ CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
     set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 }
 
-CSSImportRule::~CSSImportRule()
-{
-}
-
 // https://www.w3.org/TR/cssom/#serialize-a-css-rule
 String CSSImportRule::serialized() const
 {
@@ -77,13 +73,16 @@ void CSSImportRule::resource_did_load()
         dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Resource did load, has encoded data. URL: {}", resource()->url());
     }
 
-    auto sheet = parse_css(CSS::ParsingContext(*m_document), resource()->encoded_data());
+    auto sheet = parse_css(CSS::ParsingContext(*m_document, resource()->url()), resource()->encoded_data());
     if (!sheet) {
         dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Failed to parse stylesheet: {}", resource()->url());
         return;
     }
 
     m_style_sheet = move(sheet);
+
+    m_document->style_computer().invalidate_rule_cache();
+    m_document->invalidate_style();
 }
 
 }

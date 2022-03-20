@@ -4,9 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <LibGfx/AffineTransform.h>
+#include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Painter.h>
+#include <LibGfx/Rect.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/ReplacedBox.h>
@@ -26,18 +30,22 @@ StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)
     , m_parent(parent)
 {
     VERIFY(m_parent != this);
-    if (m_parent) {
+    if (m_parent)
         m_parent->m_children.append(this);
+}
 
-        // FIXME: Don't sort on every append..
-        quick_sort(m_parent->m_children, [](auto& a, auto& b) {
-            auto a_z_index = a->m_box.computed_values().z_index().value_or(0);
-            auto b_z_index = b->m_box.computed_values().z_index().value_or(0);
-            if (a_z_index == b_z_index)
-                return a->m_box.is_before(b->m_box);
-            return a_z_index < b_z_index;
-        });
-    }
+void StackingContext::sort()
+{
+    quick_sort(m_children, [](auto& a, auto& b) {
+        auto a_z_index = a->m_box.computed_values().z_index().value_or(0);
+        auto b_z_index = b->m_box.computed_values().z_index().value_or(0);
+        if (a_z_index == b_z_index)
+            return a->m_box.is_before(b->m_box);
+        return a_z_index < b_z_index;
+    });
+
+    for (auto* child : m_children)
+        child->sort();
 }
 
 void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box, StackingContextPaintPhase phase) const
@@ -48,7 +56,8 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node& box
     }
 
     box.for_each_child([&](auto& child) {
-        if (child.establishes_stacking_context())
+        // If `child` establishes its own stacking context, skip over it.
+        if (is<Layout::Box>(child) && child.paintable() && static_cast<Layout::Box const&>(child).paint_box()->stacking_context())
             return;
         bool child_is_inline_or_replaced = child.is_inline() || is<Layout::ReplacedBox>(child);
         switch (phase) {
@@ -132,6 +141,104 @@ void StackingContext::paint_internal(PaintContext& context) const
     paint_descendants(context, m_box, StackingContextPaintPhase::FocusAndOverlay);
 }
 
+Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformation const& transformation) const
+{
+    Vector<float> float_values;
+    for (auto const& value : transformation.values) {
+        value.visit(
+            [&](CSS::Length const& value) {
+                float_values.append(value.to_px(m_box));
+            },
+            [&](float value) {
+                float_values.append(value);
+            });
+    }
+
+    switch (transformation.function) {
+    case CSS::TransformFunction::Matrix:
+        if (float_values.size() == 6)
+            return Gfx::FloatMatrix4x4(float_values[0], float_values[2], 0, float_values[4],
+                float_values[1], float_values[3], 0, float_values[5],
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::Translate:
+        if (float_values.size() == 1)
+            return Gfx::FloatMatrix4x4(1, 0, 0, float_values[0],
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        if (float_values.size() == 2)
+            return Gfx::FloatMatrix4x4(1, 0, 0, float_values[0],
+                0, 1, 0, float_values[1],
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::TranslateX:
+        if (float_values.size() == 1)
+            return Gfx::FloatMatrix4x4(1, 0, 0, float_values[0],
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::TranslateY:
+        if (float_values.size() == 1)
+            return Gfx::FloatMatrix4x4(1, 0, 0, 0,
+                0, 1, 0, float_values[0],
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::Scale:
+        if (float_values.size() == 1)
+            return Gfx::FloatMatrix4x4(float_values[0], 0, 0, 0,
+                0, float_values[0], 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        if (float_values.size() == 2)
+            return Gfx::FloatMatrix4x4(float_values[0], 0, 0, 0,
+                0, float_values[1], 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::ScaleX:
+        if (float_values.size() == 1)
+            return Gfx::FloatMatrix4x4(float_values[0], 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        break;
+    case CSS::TransformFunction::ScaleY:
+        if (float_values.size() == 1)
+            return Gfx::FloatMatrix4x4(1, 0, 0, 0,
+                0, float_values[0], 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1);
+        break;
+    default:
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Unhandled transformation function {}", CSS::TransformationStyleValue::create(transformation.function, {})->to_string());
+    }
+    return Gfx::FloatMatrix4x4::identity();
+}
+
+Gfx::FloatMatrix4x4 StackingContext::combine_transformations(Vector<CSS::Transformation> const& transformations) const
+{
+    auto matrix = Gfx::FloatMatrix4x4::identity();
+
+    for (auto const& transform : transformations)
+        matrix = matrix * get_transformation_matrix(transform);
+
+    return matrix;
+}
+
+// FIXME: This extracts the affine 2D part of the full transformation matrix.
+//  Use the whole matrix when we get better transformation support in LibGfx or use LibGL for drawing the bitmap
+Gfx::AffineTransform StackingContext::combine_transformations_2d(Vector<CSS::Transformation> const& transformations) const
+{
+    auto matrix = combine_transformations(transformations);
+    auto* m = matrix.elements();
+    return Gfx::AffineTransform(m[0][0], m[1][0], m[0][1], m[1][1], m[0][3], m[1][3]);
+}
+
 void StackingContext::paint(PaintContext& context) const
 {
     Gfx::PainterStateSaver saver(context.painter());
@@ -143,7 +250,9 @@ void StackingContext::paint(PaintContext& context) const
     if (opacity == 0.0f)
         return;
 
-    if (opacity < 1.0f) {
+    auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
+
+    if (opacity < 1.0f || !affine_transform.is_identity()) {
         auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, context.painter().target()->size());
         if (bitmap_or_error.is_error())
             return;
@@ -151,14 +260,26 @@ void StackingContext::paint(PaintContext& context) const
         Gfx::Painter painter(bitmap);
         PaintContext paint_context(painter, context.palette(), context.scroll_offset());
         paint_internal(paint_context);
-        context.painter().blit(Gfx::IntPoint(m_box.paint_box()->absolute_position()), bitmap, Gfx::IntRect(m_box.paint_box()->absolute_rect()), opacity);
+
+        // FIXME: Use the transform origin specified in CSS or SVG
+        auto transform_origin = m_box.paint_box()->absolute_position();
+        auto source_rect = m_box.paint_box()->absolute_border_box_rect().translated(-transform_origin);
+
+        auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
+        source_rect.translate_by(transform_origin);
+        context.painter().draw_scaled_bitmap(Gfx::rounded_int_rect(transformed_destination_rect), *bitmap, source_rect, opacity, Gfx::Painter::ScalingMode::BilinearBlend);
     } else {
         paint_internal(context);
     }
 }
 
-HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestType type) const
+HitTestResult StackingContext::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
+    // FIXME: Use the transform origin specified in CSS or SVG
+    auto transform_origin = m_box.paint_box()->absolute_position();
+    auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
+    auto transformed_position = affine_transform.inverse().value_or({}).map(position - transform_origin) + transform_origin;
+
     // NOTE: Hit testing basically happens in reverse painting order.
     // https://www.w3.org/TR/CSS22/visuren.html#z-index
 
@@ -167,7 +288,7 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
         auto const& child = *m_children[i];
         if (child.m_box.computed_values().z_index().value_or(0) < 0)
             break;
-        auto result = child.hit_test(position, type);
+        auto result = child.hit_test(transformed_position, type);
         if (result.paintable)
             return result;
     }
@@ -176,7 +297,7 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
         if (box.is_positioned() && !box.paint_box()->stacking_context()) {
-            result = box.paint_box()->hit_test(position, type);
+            result = box.paint_box()->hit_test(transformed_position, type);
             if (result.paintable)
                 return IterationDecision::Break;
         }
@@ -187,7 +308,7 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     if (m_box.children_are_inline() && is<Layout::BlockContainer>(m_box)) {
-        auto result = m_box.paint_box()->hit_test(position, type);
+        auto result = m_box.paint_box()->hit_test(transformed_position, type);
         if (result.paintable)
             return result;
     }
@@ -195,7 +316,7 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
     // 4. the non-positioned floats.
     m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
         if (box.is_floating()) {
-            result = box.paint_box()->hit_test(position, type);
+            result = box.paint_box()->hit_test(transformed_position, type);
             if (result.paintable)
                 return IterationDecision::Break;
         }
@@ -206,7 +327,7 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
     if (!m_box.children_are_inline()) {
         m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
             if (!box.is_absolutely_positioned() && !box.is_floating()) {
-                result = box.paint_box()->hit_test(position, type);
+                result = box.paint_box()->hit_test(transformed_position, type);
                 if (result.paintable)
                     return IterationDecision::Break;
             }
@@ -221,13 +342,13 @@ HitTestResult StackingContext::hit_test(Gfx::IntPoint const& position, HitTestTy
         auto const& child = *m_children[i];
         if (child.m_box.computed_values().z_index().value_or(0) < 0)
             break;
-        auto result = child.hit_test(position, type);
+        auto result = child.hit_test(transformed_position, type);
         if (result.paintable)
             return result;
     }
 
     // 1. the background and borders of the element forming the stacking context.
-    if (m_box.paint_box()->absolute_border_box_rect().contains(position.to_type<float>())) {
+    if (m_box.paint_box()->absolute_border_box_rect().contains(transformed_position)) {
         return HitTestResult {
             .paintable = m_box.paintable(),
         };
@@ -247,6 +368,11 @@ void StackingContext::dump(int indent) const
     else
         builder.append("auto");
     builder.append(')');
+
+    auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
+    if (!affine_transform.is_identity()) {
+        builder.appendff(", transform: {}", affine_transform);
+    }
     dbgln("{}", builder.string_view());
     for (auto& child : m_children)
         child->dump(indent + 1);

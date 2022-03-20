@@ -17,9 +17,7 @@ HTMLBodyElement::HTMLBodyElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLBodyElement::~HTMLBodyElement()
-{
-}
+HTMLBodyElement::~HTMLBodyElement() = default;
 
 void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {

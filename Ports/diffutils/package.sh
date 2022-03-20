@@ -5,4 +5,5 @@ files="https://ftpmirror.gnu.org/gnu/diffutils/diffutils-${version}.tar.xz diffu
 auth_type=sha256
 useconfigure=true
 use_fresh_config_sub=true
+config_sub_path=build-aux/config.sub
 depends=("libiconv")

@@ -39,9 +39,9 @@ inline CardValue hearts_card_value(Card const& card)
 
 inline uint8_t hearts_card_points(Card const& card)
 {
-    if (card.type() == Card::Type::Hearts)
+    if (card.suit() == Card::Suit::Hearts)
         return 1;
-    else if (card.type() == Card::Type::Spades && hearts_card_value(card) == CardValue::Queen)
+    else if (card.suit() == Card::Suit::Spades && hearts_card_value(card) == CardValue::Queen)
         return 13;
     else
         return 0;
@@ -49,8 +49,8 @@ inline uint8_t hearts_card_points(Card const& card)
 
 inline bool hearts_card_less(RefPtr<Card>& card1, RefPtr<Card>& card2)
 {
-    if (card1->type() != card2->type())
-        return card1->type() < card2->type();
+    if (card1->suit() != card2->suit())
+        return card1->suit() < card2->suit();
     else
         return hearts_card_value(*card1) < hearts_card_value(*card2);
 }

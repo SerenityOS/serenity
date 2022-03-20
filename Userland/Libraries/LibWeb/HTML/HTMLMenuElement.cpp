@@ -13,8 +13,6 @@ HTMLMenuElement::HTMLMenuElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLMenuElement::~HTMLMenuElement()
-{
-}
+HTMLMenuElement::~HTMLMenuElement() = default;
 
 }

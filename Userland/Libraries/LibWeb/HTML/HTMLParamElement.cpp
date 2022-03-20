@@ -13,8 +13,6 @@ HTMLParamElement::HTMLParamElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLParamElement::~HTMLParamElement()
-{
-}
+HTMLParamElement::~HTMLParamElement() = default;
 
 }

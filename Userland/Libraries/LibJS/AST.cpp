@@ -714,7 +714,7 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, GlobalObject&
         interpreter.vm().running_execution_context().lexical_environment = old_environment;
     };
 
-    Vector<FlyString> let_declarations;
+    size_t per_iteration_bindings_size = 0;
 
     if (m_init) {
         if (is<VariableDeclaration>(*m_init) && static_cast<VariableDeclaration const&>(*m_init).declaration_kind() != DeclarationKind::Var) {
@@ -725,7 +725,7 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, GlobalObject&
                     MUST(loop_environment->create_immutable_binding(global_object, name, true));
                 } else {
                     MUST(loop_environment->create_mutable_binding(global_object, name, false));
-                    let_declarations.append(name);
+                    ++per_iteration_bindings_size;
                 }
             });
 
@@ -739,44 +739,34 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, GlobalObject&
     // NOTE: Our implementation of this AO is heavily dependent on DeclarativeEnvironment using a Vector with constant indices.
     //       For performance, we can take advantage of the fact that the declarations of the initialization statement are created
     //       in the same order each time CreatePerIterationEnvironment is invoked.
-    auto create_per_iteration_environment = [&]() -> ThrowCompletionOr<void> {
+    auto create_per_iteration_environment = [&]() {
         // 1. If perIterationBindings has any elements, then
-        if (let_declarations.is_empty())
-            return {};
+        if (per_iteration_bindings_size == 0)
+            return;
 
         // a. Let lastIterationEnv be the running execution context's LexicalEnvironment.
         auto* last_iteration_env = verify_cast<DeclarativeEnvironment>(interpreter.lexical_environment());
 
         // b. Let outer be lastIterationEnv.[[OuterEnv]].
-        auto* outer = last_iteration_env->outer_environment();
-
         // c. Assert: outer is not null.
-        VERIFY(outer);
+        VERIFY(last_iteration_env->outer_environment());
 
         // d. Let thisIterationEnv be NewDeclarativeEnvironment(outer).
-        auto* this_iteration_env = new_declarative_environment(*outer);
-        this_iteration_env->ensure_capacity(let_declarations.size());
+        auto this_iteration_env = DeclarativeEnvironment::create_for_per_iteration_bindings({}, *last_iteration_env, per_iteration_bindings_size);
 
         // e. For each element bn of perIterationBindings, do
-        for (size_t declaration_index = 0; declaration_index < let_declarations.size(); ++declaration_index) {
-            auto const& name = let_declarations[declaration_index];
-
-            // i. Perform ! thisIterationEnv.CreateMutableBinding(bn, false).
-            MUST(this_iteration_env->create_mutable_binding(global_object, name, false));
-
-            // ii. Let lastValue be ? lastIterationEnv.GetBindingValue(bn, true).
-            auto last_value = TRY(last_iteration_env->get_binding_value_direct(global_object, declaration_index, true));
-            VERIFY(!last_value.is_empty());
-
-            // iii. Perform thisIterationEnv.InitializeBinding(bn, lastValue).
-            MUST(this_iteration_env->initialize_binding_direct(global_object, declaration_index, last_value));
-        }
+        //     i. Perform ! thisIterationEnv.CreateMutableBinding(bn, false).
+        //     ii. Let lastValue be ? lastIterationEnv.GetBindingValue(bn, true).
+        //     iii. Perform ! thisIterationEnv.InitializeBinding(bn, lastValue).
+        //
+        // NOTE: This is handled by DeclarativeEnvironment::create_for_per_iteration_bindings. Step e.ii indicates it may throw,
+        //       but that is not possible. The potential for throwing was added to accommodate support for do-expressions in the
+        //       initialization statement, but that idea was dropped: https://github.com/tc39/ecma262/issues/299#issuecomment-172950045
 
         // f. Set the running execution context's LexicalEnvironment to thisIterationEnv.
         interpreter.vm().running_execution_context().lexical_environment = this_iteration_env;
 
         // 2. Return undefined.
-        return {};
     };
 
     // 14.7.4.3 ForBodyEvaluation ( test, increment, stmt, perIterationBindings, labelSet ), https://tc39.es/ecma262/#sec-forbodyevaluation
@@ -785,7 +775,7 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, GlobalObject&
     auto last_value = js_undefined();
 
     // 2. Perform ? CreatePerIterationEnvironment(perIterationBindings).
-    TRY(create_per_iteration_environment());
+    create_per_iteration_environment();
 
     // 3. Repeat,
     while (true) {
@@ -812,7 +802,7 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, GlobalObject&
             last_value = *result.value();
 
         // e. Perform ? CreatePerIterationEnvironment(perIterationBindings).
-        TRY(create_per_iteration_environment());
+        create_per_iteration_environment();
 
         // f. If increment is not [empty], then
         if (m_update) {

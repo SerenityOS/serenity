@@ -23,8 +23,15 @@ String Token::to_string() const
         return String::formatted("{}(", serialize_an_identifier(function()));
     case Type::AtKeyword:
         return String::formatted("@{}", serialize_an_identifier(at_keyword()));
-    case Type::Hash:
-        return String::formatted("#{}", serialize_an_identifier(hash_value()));
+    case Type::Hash: {
+        switch (m_hash_type) {
+        case HashType::Id:
+            return String::formatted("#{}", serialize_an_identifier(hash_value()));
+        case HashType::Unrestricted:
+            return String::formatted("#{}", hash_value());
+        }
+        VERIFY_NOT_REACHED();
+    }
     case Type::String:
         return serialize_a_string(string());
     case Type::BadString:

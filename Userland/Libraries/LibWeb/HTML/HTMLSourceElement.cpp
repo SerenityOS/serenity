@@ -13,8 +13,6 @@ HTMLSourceElement::HTMLSourceElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-HTMLSourceElement::~HTMLSourceElement()
-{
-}
+HTMLSourceElement::~HTMLSourceElement() = default;
 
 }

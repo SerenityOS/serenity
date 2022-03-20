@@ -1,16 +1,18 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringView.h>
 #include <LibRegex/Regex.h>
 #include <LibSQL/AST/AST.h>
 #include <LibSQL/Database.h>
 
 namespace SQL::AST {
 
-static const String s_posix_basic_metacharacters = ".^$*[]+\\";
+static constexpr StringView s_posix_basic_metacharacters = ".^$*[]+\\";
 
 ResultOr<Value> NumericLiteral::evaluate(ExecutionContext&) const
 {

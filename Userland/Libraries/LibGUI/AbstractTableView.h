@@ -55,6 +55,7 @@ public:
     Gfx::IntPoint adjusted_position(const Gfx::IntPoint&) const;
 
     virtual Gfx::IntRect content_rect(const ModelIndex&) const override;
+    Gfx::IntRect content_rect_minus_scrollbars(const ModelIndex&) const;
     Gfx::IntRect content_rect(int row, int column) const;
     Gfx::IntRect row_rect(int item_index) const;
 

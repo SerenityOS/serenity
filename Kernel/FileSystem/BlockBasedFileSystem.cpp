@@ -114,9 +114,7 @@ BlockBasedFileSystem::BlockBasedFileSystem(OpenFileDescription& file_description
     VERIFY(file_description.file().is_seekable());
 }
 
-BlockBasedFileSystem::~BlockBasedFileSystem()
-{
-}
+BlockBasedFileSystem::~BlockBasedFileSystem() = default;
 
 ErrorOr<void> BlockBasedFileSystem::initialize()
 {

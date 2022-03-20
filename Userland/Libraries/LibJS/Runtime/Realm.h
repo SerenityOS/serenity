@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <AK/StringView.h>
 #include <AK/Weakable.h>
 #include <LibJS/Heap/Cell.h>
 
@@ -35,7 +36,7 @@ public:
     void set_host_defined(OwnPtr<HostDefined> host_defined) { m_host_defined = move(host_defined); }
 
 private:
-    virtual char const* class_name() const override { return "Realm"; }
+    virtual StringView class_name() const override { return "Realm"sv; }
     virtual void visit_edges(Visitor&) override;
 
     GlobalObject* m_global_object { nullptr };           // [[GlobalObject]]

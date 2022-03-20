@@ -86,9 +86,9 @@ protected:
 
 private:
     Playlist m_playlist;
-    PlayState m_play_state;
-    LoopMode m_loop_mode;
-    ShuffleMode m_shuffle_mode;
+    PlayState m_play_state { PlayState::NoFileLoaded };
+    LoopMode m_loop_mode { LoopMode::None };
+    ShuffleMode m_shuffle_mode { ShuffleMode::None };
 
     Audio::ConnectionFromClient& m_audio_client_connection;
     PlaybackManager m_playback_manager;

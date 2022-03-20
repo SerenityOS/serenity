@@ -16,9 +16,7 @@ HTMLStyleElement::HTMLStyleElement(DOM::Document& document, DOM::QualifiedName q
 {
 }
 
-HTMLStyleElement::~HTMLStyleElement()
-{
-}
+HTMLStyleElement::~HTMLStyleElement() = default;
 
 void HTMLStyleElement::children_changed()
 {

@@ -14,10 +14,6 @@ MediaList::MediaList(NonnullRefPtrVector<MediaQuery>&& media)
 {
 }
 
-MediaList::~MediaList()
-{
-}
-
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext
 String MediaList::media_text() const
 {

@@ -17,9 +17,7 @@ WebAssemblyMemoryConstructor::WebAssemblyMemoryConstructor(JS::GlobalObject& glo
 {
 }
 
-WebAssemblyMemoryConstructor::~WebAssemblyMemoryConstructor()
-{
-}
+WebAssemblyMemoryConstructor::~WebAssemblyMemoryConstructor() = default;
 
 JS::ThrowCompletionOr<JS::Value> WebAssemblyMemoryConstructor::call()
 {

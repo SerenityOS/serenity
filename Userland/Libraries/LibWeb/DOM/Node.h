@@ -72,6 +72,7 @@ public:
     bool is_parent_node() const { return is_element() || is_document() || is_document_fragment(); }
     bool is_slottable() const { return is_element() || is_text(); }
     bool is_attribute() const { return type() == NodeType::ATTRIBUTE_NODE; }
+    virtual bool is_shadow_root() const { return false; }
 
     virtual bool requires_svg_container() const { return false; }
     virtual bool is_svg_container() const { return false; }

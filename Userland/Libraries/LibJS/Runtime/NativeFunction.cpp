@@ -88,10 +88,6 @@ NativeFunction::NativeFunction(FlyString name, Object& prototype)
 {
 }
 
-NativeFunction::~NativeFunction()
-{
-}
-
 // NOTE: Do not attempt to DRY these, it's not worth it. The difference in return types (Value vs Object*),
 // called functions (call() vs construct(FunctionObject&)), and this value (passed vs uninitialized) make
 // these good candidates for a bit of code duplication :^)

@@ -21,7 +21,7 @@ public:
     static WeakRef* create(GlobalObject&, Object*);
 
     explicit WeakRef(Object*, Object& prototype);
-    virtual ~WeakRef() override;
+    virtual ~WeakRef() override = default;
 
     Object* value() const { return m_value; };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -15,7 +15,7 @@
 
 // U+FFFD REPLACEMENT CHARACTER (�)
 #define REPLACEMENT_CHARACTER 0xFFFD
-static const u32 TOKENIZER_EOF = 0xFFFFFFFF;
+static constexpr u32 TOKENIZER_EOF = 0xFFFFFFFF;
 
 static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
 {
@@ -761,6 +761,7 @@ Token Tokenizer::consume_a_url_token()
             if (is_valid_escape_sequence(start_of_input_stream_twin())) {
                 // consume an escaped code point and append the returned code point to the <url-token>’s value.
                 builder.append_code_point(consume_escaped_code_point());
+                continue;
             } else {
                 // Otherwise, this is a parse error.
                 log_parse_error();
@@ -1037,6 +1038,7 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
             // point and append the returned code point to the <string-token>’s value.
             auto escaped = consume_escaped_code_point();
             builder.append_code_point(escaped);
+            continue;
         }
 
         // anything else

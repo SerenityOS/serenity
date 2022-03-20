@@ -17,7 +17,8 @@ Animation::Animation()
 
 Animation::~Animation()
 {
-    Compositor::the().unregister_animation({}, *this);
+    if (!m_was_removed)
+        Compositor::the().unregister_animation({}, *this);
 }
 
 void Animation::set_duration(int duration_in_ms)
@@ -39,7 +40,12 @@ void Animation::stop()
         on_stop();
 }
 
-void Animation::update(Badge<Compositor>, Gfx::Painter& painter, Screen& screen, Gfx::DisjointRectSet& flush_rects)
+void Animation::was_removed(Badge<Compositor>)
+{
+    m_was_removed = true;
+}
+
+bool Animation::update(Badge<Compositor>, Gfx::Painter& painter, Screen& screen, Gfx::DisjointRectSet& flush_rects)
 {
     int elapsed_ms = m_timer.elapsed();
     float progress = min((float)elapsed_ms / (float)m_duration, 1.0f);
@@ -47,8 +53,7 @@ void Animation::update(Badge<Compositor>, Gfx::Painter& painter, Screen& screen,
     if (on_update)
         on_update(progress, painter, screen, flush_rects);
 
-    if (progress >= 1.0f)
-        stop();
+    return progress < 1.0f;
 }
 
 }

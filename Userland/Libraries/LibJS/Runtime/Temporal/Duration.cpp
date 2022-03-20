@@ -394,14 +394,12 @@ ThrowCompletionOr<double> calculate_offset_shift(GlobalObject& global_object, Va
 }
 
 // 7.5.17 TotalDurationNanoseconds ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, offsetShift ), https://tc39.es/proposal-temporal/#sec-temporal-totaldurationnanoseconds
-BigInt* total_duration_nanoseconds(GlobalObject& global_object, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, double offset_shift)
+Crypto::SignedBigInteger total_duration_nanoseconds(double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, double offset_shift)
 {
-    auto& vm = global_object.vm();
-
     VERIFY(offset_shift == trunc(offset_shift));
 
     // 1. Set nanoseconds to ℝ(nanoseconds).
-    auto result_nanoseconds = nanoseconds.big_integer();
+    auto result_nanoseconds = nanoseconds;
 
     // TODO: Add a way to create SignedBigIntegers from doubles with full precision and remove this restriction
     VERIFY(AK::is_within_range<i64>(days) && AK::is_within_range<i64>(hours) && AK::is_within_range<i64>(minutes) && AK::is_within_range<i64>(seconds) && AK::is_within_range<i64>(milliseconds) && AK::is_within_range<i64>(microseconds));
@@ -422,14 +420,12 @@ BigInt* total_duration_nanoseconds(GlobalObject& global_object, double days, dou
     // 7. Set microseconds to ℝ(microseconds) + milliseconds × 1000.
     auto total_microseconds = Crypto::SignedBigInteger::create_from(microseconds).plus(total_milliseconds.multiplied_by(Crypto::UnsignedBigInteger(1000)));
     // 8. Return nanoseconds + microseconds × 1000.
-    return js_bigint(vm, result_nanoseconds.plus(total_microseconds.multiplied_by(Crypto::UnsignedBigInteger(1000))));
+    return result_nanoseconds.plus(total_microseconds.multiplied_by(Crypto::UnsignedBigInteger(1000)));
 }
 
 // 7.5.18 BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, largestUnit [ , relativeTo ] ), https://tc39.es/proposal-temporal/#sec-temporal-balanceduration
-ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_object, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, BigInt const& nanoseconds, String const& largest_unit, Object* relative_to)
+ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_object, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, Crypto::SignedBigInteger const& nanoseconds, String const& largest_unit, Object* relative_to)
 {
-    auto& vm = global_object.vm();
-
     // 1. If relativeTo is not present, set relativeTo to undefined.
 
     Crypto::SignedBigInteger total_nanoseconds;
@@ -438,27 +434,27 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
         auto& relative_to_zoned_date_time = static_cast<ZonedDateTime&>(*relative_to);
 
         // a. Let endNs be ? AddZonedDateTime(relativeTo.[[Nanoseconds]], relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
-        auto* end_ns = TRY(add_zoned_date_time(global_object, relative_to_zoned_date_time.nanoseconds(), &relative_to_zoned_date_time.time_zone(), relative_to_zoned_date_time.calendar(), 0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds.big_integer().to_double()));
+        auto* end_ns = TRY(add_zoned_date_time(global_object, relative_to_zoned_date_time.nanoseconds(), &relative_to_zoned_date_time.time_zone(), relative_to_zoned_date_time.calendar(), 0, 0, 0, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds.to_double()));
 
-        // b. Set nanoseconds to endNs − relativeTo.[[Nanoseconds]].
+        // b. Set nanoseconds to ℝ(endNs − relativeTo.[[Nanoseconds]]).
         total_nanoseconds = end_ns->big_integer().minus(relative_to_zoned_date_time.nanoseconds().big_integer());
     }
     // 3. Else,
     else {
-        // a. Set nanoseconds to ℤ(! TotalDurationNanoseconds(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 0)).
-        total_nanoseconds = total_duration_nanoseconds(global_object, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 0)->big_integer();
+        // a. Set nanoseconds to ! TotalDurationNanoseconds(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 0).
+        total_nanoseconds = total_duration_nanoseconds(days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 0);
     }
 
     // 4. If largestUnit is one of "year", "month", "week", or "day", then
     if (largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
         // a. Let result be ? NanosecondsToDays(nanoseconds, relativeTo).
-        auto result = TRY(nanoseconds_to_days(global_object, *js_bigint(vm, total_nanoseconds), relative_to ?: js_undefined()));
+        auto result = TRY(nanoseconds_to_days(global_object, total_nanoseconds, relative_to ?: js_undefined()));
 
         // b. Set days to result.[[Days]].
         days = result.days;
 
         // c. Set nanoseconds to result.[[Nanoseconds]].
-        total_nanoseconds = result.nanoseconds->big_integer();
+        total_nanoseconds = move(result.nanoseconds);
     }
     // 5. Else,
     else {
@@ -472,17 +468,14 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
     milliseconds = 0;
     microseconds = 0;
 
-    // 7. Set nanoseconds to ℝ(nanoseconds).
-    double result_nanoseconds = total_nanoseconds.to_double();
-
-    // 8. If nanoseconds < 0, let sign be −1; else, let sign be 1.
+    // 7. If nanoseconds < 0, let sign be −1; else, let sign be 1.
     i8 sign = total_nanoseconds.is_negative() ? -1 : 1;
 
-    // 9. Set nanoseconds to abs(nanoseconds).
+    // 8. Set nanoseconds to abs(nanoseconds).
     total_nanoseconds = Crypto::SignedBigInteger(total_nanoseconds.unsigned_value());
-    result_nanoseconds = fabs(result_nanoseconds);
+    auto result_nanoseconds = total_nanoseconds.to_double();
 
-    // 10. If largestUnit is "year", "month", "week", "day", or "hour", then
+    // 9. If largestUnit is "year", "month", "week", "day", or "hour", then
     if (largest_unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv, "hour"sv)) {
         // a. Set microseconds to floor(nanoseconds / 1000).
         auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
@@ -506,7 +499,7 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
         // j. Set minutes to minutes modulo 60.
         minutes = minutes_division_result.remainder.to_double();
     }
-    // 11. Else if largestUnit is "minute", then
+    // 10. Else if largestUnit is "minute", then
     else if (largest_unit == "minute"sv) {
         // a. Set microseconds to floor(nanoseconds / 1000).
         auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
@@ -526,7 +519,7 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
         // h. Set seconds to seconds modulo 60.
         seconds = seconds_division_result.remainder.to_double();
     }
-    // 12. Else if largestUnit is "second", then
+    // 11. Else if largestUnit is "second", then
     else if (largest_unit == "second"sv) {
         // a. Set microseconds to floor(nanoseconds / 1000).
         auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
@@ -542,7 +535,7 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
         // f. Set milliseconds to milliseconds modulo 1000.
         milliseconds = milliseconds_division_result.remainder.to_double();
     }
-    // 13. Else if largestUnit is "millisecond", then
+    // 12. Else if largestUnit is "millisecond", then
     else if (largest_unit == "millisecond"sv) {
         // a. Set microseconds to floor(nanoseconds / 1000).
         auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
@@ -554,7 +547,7 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
         // d. Set microseconds to microseconds modulo 1000.
         microseconds = microseconds_division_result.remainder.to_double();
     }
-    // 14. Else if largestUnit is "microsecond", then
+    // 13. Else if largestUnit is "microsecond", then
     else if (largest_unit == "microsecond"sv) {
         // a. Set microseconds to floor(nanoseconds / 1000).
         auto nanoseconds_division_result = total_nanoseconds.divided_by(Crypto::UnsignedBigInteger(1000));
@@ -562,12 +555,12 @@ ThrowCompletionOr<TimeDurationRecord> balance_duration(GlobalObject& global_obje
         // b. Set nanoseconds to nanoseconds modulo 1000.
         result_nanoseconds = nanoseconds_division_result.remainder.to_double();
     }
-    // 15. Else,
+    // 14. Else,
     else {
         // a. Assert: largestUnit is "nanosecond".
         VERIFY(largest_unit == "nanosecond"sv);
     }
-    // 16. Return ! CreateTimeDurationRecord(days, hours × sign, minutes × sign, seconds × sign, milliseconds × sign, microseconds × sign, nanoseconds × sign).
+    // 15. Return ! CreateTimeDurationRecord(days, hours × sign, minutes × sign, seconds × sign, milliseconds × sign, microseconds × sign, nanoseconds × sign).
     return create_time_duration_record(days, hours * sign, minutes * sign, seconds * sign, milliseconds * sign, microseconds * sign, result_nanoseconds * sign);
 }
 
@@ -994,8 +987,7 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
 
         // b. Let result be ! BalanceDuration(d1 + d2, h1 + h2, min1 + min2, s1 + s2, ms1 + ms2, mus1 + mus2, ns1 + ns2, largestUnit).
         // FIXME: Narrowing conversion from 'double' to 'i64'
-        auto* added_nanoseconds_bigint = js_bigint(vm, Crypto::SignedBigInteger::create_from(nanoseconds1 + nanoseconds2));
-        auto result = MUST(balance_duration(global_object, days1 + days2, hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, *added_nanoseconds_bigint, largest_unit));
+        auto result = MUST(balance_duration(global_object, days1 + days2, hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, Crypto::SignedBigInteger::create_from(nanoseconds1 + nanoseconds2), largest_unit));
 
         // c. Return ? CreateDurationRecord(0, 0, 0, result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
         return create_duration_record(global_object, 0, 0, 0, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
@@ -1043,8 +1035,7 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
 
         // m. Let result be ! BalanceDuration(dateDifference.[[Days]], h1 + h2, min1 + min2, s1 + s2, ms1 + ms2, mus1 + mus2, ns1 + ns2, largestUnit).
         // FIXME: Narrowing conversion from 'double' to 'i64'
-        auto* added_nanoseconds_bigint = js_bigint(vm, Crypto::SignedBigInteger::create_from(nanoseconds1 + nanoseconds2));
-        auto result = MUST(balance_duration(global_object, date_difference->days(), hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, *added_nanoseconds_bigint, largest_unit));
+        auto result = MUST(balance_duration(global_object, date_difference->days(), hours1 + hours2, minutes1 + minutes2, seconds1 + seconds2, milliseconds1 + milliseconds2, microseconds1 + microseconds2, Crypto::SignedBigInteger::create_from(nanoseconds1 + nanoseconds2), largest_unit));
 
         // n. Return ? CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
         return create_duration_record(global_object, date_difference->years(), date_difference->months(), date_difference->weeks(), result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
@@ -1071,7 +1062,7 @@ ThrowCompletionOr<DurationRecord> add_duration(GlobalObject& global_object, doub
         auto* diff_ns = difference_instant(global_object, relative_to.nanoseconds(), *end_ns, 1, "nanosecond"sv, "halfExpand"sv);
 
         // b. Let result be ! BalanceDuration(0, 0, 0, 0, 0, 0, diffNs, largestUnit).
-        auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *diff_ns, largest_unit));
+        auto result = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, diff_ns->big_integer(), largest_unit));
 
         // c. Return ? CreateDurationRecord(0, 0, 0, 0, result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
         return create_duration_record(global_object, 0, 0, 0, 0, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds);
@@ -1162,10 +1153,8 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
 
     // 7. If unit is one of "year", "month", "week", or "day", then
     if (unit.is_one_of("year"sv, "month"sv, "week"sv, "day"sv)) {
-        auto* nanoseconds_bigint = js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)nanoseconds));
-
         // a. Let nanoseconds be ! TotalDurationNanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 0).
-        nanoseconds_bigint = total_duration_nanoseconds(global_object, 0, hours, minutes, seconds, milliseconds, microseconds, *nanoseconds_bigint, 0);
+        auto nanoseconds_bigint = total_duration_nanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, Crypto::SignedBigInteger::create_from((i64)nanoseconds), 0);
 
         // b. Let intermediate be undefined.
         ZonedDateTime* intermediate = nullptr;
@@ -1177,10 +1166,10 @@ ThrowCompletionOr<RoundedDuration> round_duration(GlobalObject& global_object, d
         }
 
         // d. Let result be ? NanosecondsToDays(nanoseconds, intermediate).
-        auto result = TRY(nanoseconds_to_days(global_object, *nanoseconds_bigint, intermediate));
+        auto result = TRY(nanoseconds_to_days(global_object, nanoseconds_bigint, intermediate));
 
         // e. Set days to days + result.[[Days]] + result.[[Nanoseconds]] / result.[[DayLength]].
-        auto nanoseconds_division_result = result.nanoseconds->big_integer().divided_by(Crypto::UnsignedBigInteger::create_from((u64)result.day_length));
+        auto nanoseconds_division_result = result.nanoseconds.divided_by(Crypto::UnsignedBigInteger::create_from((u64)result.day_length));
         days += result.days + nanoseconds_division_result.quotient.to_double() + nanoseconds_division_result.remainder.to_double() / result.day_length;
 
         // f. Set hours, minutes, seconds, milliseconds, microseconds, and nanoseconds to 0.
@@ -1555,7 +1544,7 @@ ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& glo
     auto& relative_to = static_cast<ZonedDateTime&>(*relative_to_object);
 
     // 2. Let timeRemainderNs be ! TotalDurationNanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, 0).
-    auto time_remainder_ns = total_duration_nanoseconds(global_object, 0, hours, minutes, seconds, milliseconds, microseconds, *js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)nanoseconds)), 0)->big_integer();
+    auto time_remainder_ns = total_duration_nanoseconds(0, hours, minutes, seconds, milliseconds, microseconds, Crypto::SignedBigInteger::create_from((i64)nanoseconds), 0);
 
     i32 direction;
 
@@ -1591,7 +1580,7 @@ ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(GlobalObject& glo
     auto adjusted_date_duration = TRY(add_duration(global_object, years, months, weeks, days, 0, 0, 0, 0, 0, 0, 0, 0, 0, direction, 0, 0, 0, 0, 0, 0, &relative_to));
 
     // 12. Let adjustedTimeDuration be ? BalanceDuration(0, 0, 0, 0, 0, 0, timeRemainderNs, "hour").
-    auto adjusted_time_duration = TRY(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *js_bigint(vm, move(time_remainder_ns)), "hour"sv));
+    auto adjusted_time_duration = TRY(balance_duration(global_object, 0, 0, 0, 0, 0, 0, time_remainder_ns, "hour"sv));
 
     // 13. Return ! CreateDurationRecord(adjustedDateDuration.[[Years]], adjustedDateDuration.[[Months]], adjustedDateDuration.[[Weeks]], adjustedDateDuration.[[Days]], adjustedTimeDuration.[[Hours]], adjustedTimeDuration.[[Minutes]], adjustedTimeDuration.[[Seconds]], adjustedTimeDuration.[[Milliseconds]], adjustedTimeDuration.[[Microseconds]], adjustedTimeDuration.[[Nanoseconds]]).
     return create_duration_record(adjusted_date_duration.years, adjusted_date_duration.months, adjusted_date_duration.weeks, adjusted_date_duration.days, adjusted_time_duration.hours, adjusted_time_duration.minutes, adjusted_time_duration.seconds, adjusted_time_duration.milliseconds, adjusted_time_duration.microseconds, adjusted_time_duration.nanoseconds);

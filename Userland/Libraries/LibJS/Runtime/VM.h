@@ -33,11 +33,11 @@ struct BindingPattern;
 class VM : public RefCounted<VM> {
 public:
     struct CustomData {
-        virtual ~CustomData();
+        virtual ~CustomData() = default;
     };
 
     static NonnullRefPtr<VM> create(OwnPtr<CustomData> = {});
-    ~VM();
+    ~VM() = default;
 
     enum class HostResizeArrayBufferResult {
         Unhandled,
@@ -88,6 +88,11 @@ public:
         // Address sanitizer (ASAN) used to check for more space but
         // currently we can't detect the stack size with it enabled.
         return m_stack_info.size_free() < 32 * KiB;
+    }
+
+    void push_execution_context(ExecutionContext& context)
+    {
+        m_execution_context_stack.append(&context);
     }
 
     ThrowCompletionOr<void> push_execution_context(ExecutionContext& context, GlobalObject& global_object)

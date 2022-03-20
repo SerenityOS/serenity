@@ -1,0 +1,8 @@
+#import <SVG/SVGGraphicsElement.idl>
+
+[Exposed=Window]
+interface SVGTextContentElement : SVGGraphicsElement {
+
+    long getNumberOfChars();
+
+};

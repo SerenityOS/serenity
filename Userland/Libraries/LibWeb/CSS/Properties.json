@@ -11,6 +11,7 @@
     ]
   },
   "background": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "transparent",
     "longhands": [
@@ -25,6 +26,7 @@
     ]
   },
   "background-attachment": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "scroll",
     "valid-identifiers": [
@@ -34,6 +36,7 @@
     ]
   },
   "background-clip": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "border-box",
     "valid-identifiers": [
@@ -43,6 +46,7 @@
     ]
   },
   "background-color": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "transparent",
     "valid-types": [
@@ -53,6 +57,7 @@
     ]
   },
   "background-image": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "none",
     "valid-types": [
@@ -63,6 +68,7 @@
     ]
   },
   "background-origin": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "padding-box",
     "valid-identifiers": [
@@ -72,6 +78,7 @@
     ]
   },
   "background-position": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "0% 0%",
     "max-values": 4,
@@ -91,6 +98,7 @@
     ]
   },
   "background-repeat": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "repeat",
     "max-values": 2,
@@ -104,6 +112,7 @@
     ]
   },
   "background-size": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "auto",
     "max-values": 2,
@@ -163,6 +172,7 @@
     ]
   },
   "border-bottom-color": {
+    "affects-layout": false,
     "initial": "currentcolor",
     "inherited": false,
     "valid-types":  [
@@ -173,6 +183,7 @@
     ]
   },
   "border-bottom-left-radius": {
+    "affects-layout": false,
     "initial": "0",
     "inherited": false,
     "max-values": 2,
@@ -182,6 +193,7 @@
     ]
   },
   "border-bottom-right-radius": {
+    "affects-layout": false,
     "initial": "0",
     "inherited": false,
     "max-values": 2,
@@ -191,6 +203,7 @@
     ]
   },
   "border-bottom-style": {
+    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-identifiers": [
@@ -222,6 +235,7 @@
     ]
   },
   "border-color": {
+    "affects-layout": false,
     "initial": "currentcolor",
     "longhands": [
       "border-top-color",
@@ -246,6 +260,7 @@
     ]
   },
   "border-left-color": {
+    "affects-layout": false,
     "initial": "currentcolor",
     "inherited": false,
     "valid-types": [
@@ -256,6 +271,7 @@
     ]
   },
   "border-left-style": {
+    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-identifiers": [
@@ -287,6 +303,7 @@
     ]
   },
   "border-radius": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "0",
     "longhands": [
@@ -297,6 +314,7 @@
     ]
   },
   "border-right-color": {
+    "affects-layout": false,
     "initial": "currentcolor",
     "inherited": false,
     "valid-types": [
@@ -307,6 +325,7 @@
     ]
   },
   "border-right-style": {
+    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-identifiers": [
@@ -345,6 +364,7 @@
     ]
   },
   "border-style": {
+    "affects-layout": false,
     "initial": "none",
     "longhands": [
       "border-top-style",
@@ -367,6 +387,7 @@
     ]
   },
   "border-top-color": {
+    "affects-layout": false,
     "initial": "currentcolor",
     "inherited": false,
     "quirks": [
@@ -374,6 +395,7 @@
     ]
   },
   "border-top-left-radius": {
+    "affects-layout": false,
     "initial": "0",
     "inherited": false,
     "max-values": 2,
@@ -383,6 +405,7 @@
     ]
   },
   "border-top-right-radius": {
+    "affects-layout": false,
     "initial": "0",
     "inherited": false,
     "max-values": 2,
@@ -392,6 +415,7 @@
     ]
   },
   "border-top-style": {
+    "affects-layout": false,
     "initial": "none",
     "inherited": false,
     "valid-identifiers": [
@@ -458,6 +482,7 @@
     ]
   },
   "box-shadow": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "none",
     "valid-identifiers": [
@@ -501,6 +526,7 @@
     ]
   },
   "color": {
+    "affects-layout": false,
     "inherited": true,
     "initial": "-libweb-palette-base-text",
     "valid-types": [
@@ -523,6 +549,7 @@
     ]
   },
   "cursor": {
+    "affects-layout": false,
     "inherited": true,
     "initial": "auto",
     "valid-types": [
@@ -599,6 +626,7 @@
     ]
   },
   "fill": {
+    "affects-layout": false,
     "inherited": true,
     "initial": "black",
     "valid-types": [
@@ -761,6 +789,7 @@
     ]
   },
   "image-rendering": {
+    "affects-layout": false,
     "inherited": true,
     "initial": "auto",
     "valid-identifiers": [
@@ -1013,6 +1042,7 @@
     ]
   },
   "outline": {
+    "affects-layout": false,
     "inherited": false,
     "__comment": "FIXME: Initial value is really `medium invert none` but we don't yet parse the outline shorthand.",
     "initial": "none",
@@ -1023,6 +1053,7 @@
     ]
   },
   "outline-color": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "invert",
     "valid-types": [
@@ -1033,6 +1064,7 @@
     ]
   },
   "outline-style": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "none",
     "valid-identifiers": [
@@ -1049,6 +1081,7 @@
     ]
   },
   "outline-width": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "medium",
     "valid-types": [
@@ -1161,6 +1194,7 @@
     ]
   },
   "pointer-events": {
+    "affects-layout": false,
     "inherited": true,
     "initial": "auto",
     "valid-identifiers": [
@@ -1195,6 +1229,7 @@
     ]
   },
   "stroke": {
+    "affects-layout": false,
     "inherited": true,
     "initial": "none",
     "valid-types": [
@@ -1205,6 +1240,7 @@
     ]
   },
   "stroke-width": {
+    "affects-layout": false,
     "inherited": true,
     "initial": "1px",
     "valid-types": [
@@ -1225,6 +1261,7 @@
     ]
   },
   "text-decoration": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "none",
     "longhands": [
@@ -1235,6 +1272,7 @@
     ]
   },
   "text-decoration-color": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "currentcolor",
     "valid-types": [
@@ -1243,6 +1281,7 @@
   },
   "text-decoration-line": {
     "__comment": "FIXME: This property is not supposed to be inherited, but we currently rely on inheritance to propagate decorations into line boxes.",
+    "affects-layout": false,
     "inherited": true,
     "initial": "none",
     "valid-identifiers": [
@@ -1254,6 +1293,7 @@
     ]
   },
   "text-decoration-style": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "solid",
     "valid-identifiers": [
@@ -1265,6 +1305,7 @@
     ]
   },
   "text-decoration-thickness": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "auto",
     "valid-types": [
@@ -1329,6 +1370,7 @@
     "initial": "none"
   },
   "user-select": {
+    "affects-layout": false,
     "inherited": false,
     "initial": "auto",
     "valid-identifiers": [

@@ -2,7 +2,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
 set(TZDB_PATH "${CMAKE_BINARY_DIR}/TZDB" CACHE PATH "Download location for TZDB files")
 
-set(TZDB_VERSION 2021e)
+set(TZDB_VERSION 2022a)
 set(TZDB_VERSION_FILE "${TZDB_PATH}/version.txt")
 
 set(TZDB_ZIP_URL "https://data.iana.org/time-zones/releases/tzdata${TZDB_VERSION}.tar.gz")
@@ -41,7 +41,7 @@ set(TZDB_ZONE_1970_PATH "${TZDB_PATH}/${TZDB_ZONE_1970_SOURCE}")
 function(extract_tzdb_file source path)
     if(EXISTS "${TZDB_ZIP_PATH}" AND NOT EXISTS "${path}")
         message(STATUS "Extracting TZDB ${source} from ${TZDB_ZIP_PATH}...")
-        execute_process(COMMAND tar -C "${TZDB_PATH}" -xf "${TZDB_ZIP_PATH}" "${source}" RESULT_VARIABLE tar_result)
+        execute_process(COMMAND "${TAR_TOOL}" -C "${TZDB_PATH}" -xf "${TZDB_ZIP_PATH}" "${source}" RESULT_VARIABLE tar_result)
         if (NOT tar_result EQUAL 0)
             message(FATAL_ERROR "Failed to unzip ${source} from ${TZDB_ZIP_PATH} with status ${tar_result}")
         endif()

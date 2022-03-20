@@ -13,6 +13,7 @@ _serenity() {
         'build'
         'install'
         'image'
+        'copy-src'
         'run'
         'gdb'
         'test'
@@ -29,6 +30,7 @@ _serenity() {
     targets=(
         'i686:Target i686 (default)'
         'x86_64:Target x86_64'
+        'aarch64:Target aarch64'
         'lagom:Target host machine'
     )
 
@@ -46,7 +48,7 @@ _serenity() {
             ;;
         targets)
             case "$command" in
-                install|image|kaddr2line|rebuild-toolchain|rebuild-world)
+                install|image|copy-src|kaddr2line|rebuild-toolchain|rebuild-world)
                     # lagom target is not supported for these, remove from targets
                     targets[$targets[(i)lagom]]=()
                     ;;

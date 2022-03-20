@@ -7,15 +7,16 @@
 #pragma once
 
 #include "GenericConvolutionFilter.h"
+#include <AK/StringView.h>
 
 namespace Gfx {
 
 class SharpenFilter : public GenericConvolutionFilter<3> {
 public:
-    SharpenFilter() { }
-    virtual ~SharpenFilter() { }
+    SharpenFilter() = default;
+    virtual ~SharpenFilter() = default;
 
-    virtual const char* class_name() const override { return "SharpenFilter"; }
+    virtual StringView class_name() const override { return "SharpenFilter"sv; }
 };
 
 }

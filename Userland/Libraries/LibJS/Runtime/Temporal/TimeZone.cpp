@@ -296,7 +296,10 @@ ThrowCompletionOr<double> parse_time_zone_offset_string(GlobalObject& global_obj
     if (fraction_part.has_value()) {
         // a. Set fraction to the string-concatenation of the previous value of fraction and the string "000000000".
         auto fraction = String::formatted("{}000000000", *fraction_part);
-        // b. Let nanoseconds be the String value equal to the substring of fraction consisting of the code units with indices 0 (inclusive) through 9 (exclusive).
+
+        // b. Let nanoseconds be the String value equal to the substring of fraction from 1 to 10.
+        // NOTE: parse_time_zone_numeric_utc_offset_syntax(), which we use to capture TimeZoneUTCOffsetFraction, doesn't include the decimal separator.
+
         // c. Set nanoseconds to ! ToIntegerOrInfinity(nanoseconds).
         nanoseconds = *fraction.substring(0, 9).to_int<i32>();
     }

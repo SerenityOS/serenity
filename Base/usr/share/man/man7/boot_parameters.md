@@ -35,6 +35,12 @@ List of options:
 
 * **`disable_virtio`** - If present on the command line, virtio devices will not be detected, and initialized on boot.
 
+* **`early_boot_console`** - This parameter expects **`on`** or **`off`** and is by default set to **`on`**.
+  When set to **`off`**, the kernel will not initialize any early console to show kernel dmesg output.
+  When set to **`on`**, the kernel will try to initialize either a text mode console (if VGA text mode was detected)
+  or framebuffer console, based on what the Multiboot bootloader specified on the physical address, width, height
+  and bit color depth.
+
 * **`enable_ioapic`** - This parameter expects **`on`** or **`off`** and is by default set to **`on`**.
   When set to **`off`**, the kernel will initialize the two i8259 PICs.
   When set to **`on`**, the kernel will try to initialize the IOAPIC (or IOAPICs if there's more than one),

@@ -8,8 +8,6 @@
 
 namespace Kernel {
 
-CharacterDevice::~CharacterDevice()
-{
-}
+CharacterDevice::~CharacterDevice() = default;
 
 }

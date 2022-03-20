@@ -94,9 +94,7 @@ UNMAP_AFTER_INIT MemoryManager::MemoryManager()
     m_lazy_committed_page = committed_pages.take_one();
 }
 
-UNMAP_AFTER_INIT MemoryManager::~MemoryManager()
-{
-}
+UNMAP_AFTER_INIT MemoryManager::~MemoryManager() = default;
 
 UNMAP_AFTER_INIT void MemoryManager::protect_kernel_image()
 {

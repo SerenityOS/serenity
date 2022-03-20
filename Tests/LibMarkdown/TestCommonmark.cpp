@@ -15,7 +15,7 @@
 
 TEST_SETUP
 {
-    auto file_or_error = Core::Stream::File::open("/home/anon/commonmark.spec.json", Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::Stream::File::open("/home/anon/Tests/commonmark.spec.json", Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
         file_or_error = Core::Stream::File::open("./commonmark.spec.json", Core::Stream::OpenMode::Read);
     VERIFY(!file_or_error.is_error());

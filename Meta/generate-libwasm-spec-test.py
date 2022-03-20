@@ -50,6 +50,11 @@ def parse(sexp):
     return stack.pop()
 
 
+class TestGenerationError(Exception):
+    def __init__(self, message):
+        self.msg = message
+
+
 def parse_typed_value(ast):
     types = {
         'i32.const': 'i32',
@@ -162,6 +167,21 @@ def generate(ast):
                     "module": result['module'],
                 }]
             })
+        elif entry[0] in (('assert_malformed',), ('assert_invalid',)):
+            # (assert_malformed/invalid module message)
+            if len(entry) < 2 or not isinstance(entry[1], list) or entry[1][0] != ('module',):
+                print(f"Invalid argument to assert_malformed: {entry[1]}", file=stderr)
+                continue
+            result = generate_module(entry[1])
+            kind = entry[0][0][len('assert_'):]
+            tests.append({
+                'module': None,
+                'kind': kind,
+                'tests': [{
+                    "kind": kind,
+                    "module": result['module'],
+                }]
+            })
         elif len(entry) in [2, 3] and entry[0][0].startswith('assert_'):
             if entry[1][0] == ('invoke',):
                 arg, name, module = 0, None, None
@@ -171,14 +191,15 @@ def generate(ast):
                     name = entry[1][2]
                     module = named_modules[entry[1][1][0]]
                     arg = 1
+                kind = entry[0][0][len('assert_'):]
                 tests[-1]["tests"].append({
-                    "kind": entry[0][0][len('assert_'):],
+                    "kind": kind,
                     "function": {
                         "module": module,
                         "name": name,
                         "args": list(parse_typed_value(x) for x in entry[1][arg + 2:])
                     },
-                    "result": parse_typed_value(entry[2]) if len(entry) == 3 + arg else None
+                    "result": parse_typed_value(entry[2]) if len(entry) == 3 + arg and kind != 'exhaustion' else None
                 })
             elif entry[1][0] == ('get',):
                 arg, name, module = 0, None, None
@@ -274,6 +295,10 @@ def genarg(spec):
                 return str(struct.unpack('>q', struct.pack('>Q', int(x, 16)))[0]) + 'n'
             if spec['type'] == 'i64':
                 # Make a bigint instead, since `double' cannot fit all i64 values.
+                if x.startswith('0'):
+                    x = x.lstrip('0')
+                if x == '':
+                    x = '0'
                 return x + 'n'
             return x
 
@@ -320,7 +345,7 @@ all_names_in_main = {}
 
 
 def genresult(ident, entry, index):
-    expectation = f'expect().fail("Unknown result structure " + {json.dumps(entry)})'
+    expectation = None
     if "function" in entry:
         tmodule = 'module'
         if entry['function']['module'] is not None:
@@ -335,11 +360,6 @@ def genresult(ident, entry, index):
         return (
                 f'let {ident}_result = {expectation};\n    ' +
                 (f'expect({ident}_result).toBe({genarg(entry["result"])})\n    ' if entry["result"] is not None else '')
-        )
-
-    if entry['kind'] == 'trap':
-        return (
-            f'expect(() => {expectation}).toThrow(TypeError, "Execution trapped");\n    '
         )
 
     if entry['kind'] == 'ignore':
@@ -357,10 +377,21 @@ def genresult(ident, entry, index):
             f'    }}).toThrow(TypeError, "Linking failed");'
         )
 
-    if entry['kind'] == 'testgen_fail':
-        return f'throw Exception("Test Generator Failure: " + {json.dumps(entry["reason"])});\n    '
+    if entry['kind'] in ('exhaustion', 'trap', 'invalid'):
+        return (
+            f'expect(() => {expectation}.toThrow(TypeError, "Execution trapped"));\n    '
+        )
 
-    return f'throw Exception("(Test Generator) Unknown test kind {entry["kind"]}");\n    '
+    if entry['kind'] == 'malformed':
+        return ''
+
+    if entry['kind'] == 'testgen_fail':
+        raise TestGenerationError(entry["reason"])
+
+    if not expectation:
+        raise TestGenerationError(f"Unknown test result structure in {json.dumps(entry)}")
+
+    return expectation
 
 
 raw_test_number = 0
@@ -389,17 +420,22 @@ def gentest(entry, main_name):
         key = "function" if "function" in entry else "get"
         if entry[key]['module'] is not None:
             tmodule = f'namedModules[{json.dumps(named_modules_inverse[entry[key]["module"]][0])}]'
-    source = (
-            f'test({json.dumps(test_name)}, () => {{\n' +
+    test = "_test"
+    try:
+        result = genresult(ident, entry, count)
+    except TestGenerationError as e:
+        test = f"/* {e.msg} */ _test.skip"
+        result = ""
+    return (
+            f'{test}({json.dumps(test_name)}, () => {{\n' +
             (
                 f'let {ident} = {tmodule}.getExport({json.dumps(name)});\n        '
                 f'expect({ident}).not.toBeUndefined();\n        '
                 if not isempty else ''
             ) +
-            f'{genresult(ident, entry, count)}'
+            f'{result}'
             '});\n\n    '
     )
-    return source
 
 
 def gen_parse_module(name, index):
@@ -411,8 +447,11 @@ def gen_parse_module(name, index):
             export_string += f'globalImportObject[{json.dumps(entry[1])}] = module;\n    '
 
     return (
-        f'let content = readBinaryWasmFile("Fixtures/SpecTests/{name}.wasm");\n    '
-        f'const module = parseWebAssemblyModule(content, globalImportObject)\n    '
+        'let content, module;\n    '
+        'try {\n        '
+        f'content = readBinaryWasmFile("Fixtures/SpecTests/{name}.wasm");\n        '
+        f'module = parseWebAssemblyModule(content, globalImportObject)\n        '
+        '} catch(e) { _test("parse", () => expect().fail(e)); _test = test.skip; _test.skip = test.skip; }\n    '
         f'{export_string}\n     '
     )
 
@@ -434,7 +473,7 @@ def compile_wasm_source(mod, outpath):
         with NamedTemporaryFile("w+") as temp:
             temp.write(mod[1])
             temp.flush()
-            rc = call(["wat2wasm", temp.name, "-o", outpath])
+            rc = call(["wat2wasm", "--enable-all", "--no-check", temp.name, "-o", outpath])
             return rc == 0
     return False
 
@@ -452,11 +491,12 @@ def main():
         testname = f'{name}_{index}'
         outpath = path.join(module_output_path, f'{testname}.wasm')
         mod = description["module"]
-        if not compile_wasm_source(mod, outpath):
+        if not compile_wasm_source(mod, outpath) and ('kind' not in description or description["kind"] != "malformed"):
             print("Failed to compile", name, "module index", index, "skipping that test", file=stderr)
             continue
         sep = ""
         print(f'''describe({json.dumps(testname)}, () => {{
+let _test = test;
 {gen_parse_module(testname, index) if mod else ''}
 {sep.join(gentest(x, testname) for x in description["tests"])}
 }});

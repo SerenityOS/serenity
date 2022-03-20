@@ -13,8 +13,6 @@ SmapDisabler::SmapDisabler()
 {
 }
 
-SmapDisabler::~SmapDisabler()
-{
-}
+SmapDisabler::~SmapDisabler() = default;
 
 }

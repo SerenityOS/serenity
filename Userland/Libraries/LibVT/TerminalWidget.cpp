@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -90,6 +91,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     m_auto_scroll_timer = add<Core::Timer>();
 
     m_scrollbar = add<GUI::Scrollbar>(Orientation::Vertical);
+    m_scrollbar->set_scroll_animation(GUI::Scrollbar::Animation::CoarseScroll);
     m_scrollbar->set_relative_rect(0, 0, 16, 0);
     m_scrollbar->on_change = [this](int) {
         update();
@@ -146,10 +148,6 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     update_paste_action();
 
     set_color_scheme(Config::read_string("Terminal", "Window", "ColorScheme", "Default"));
-}
-
-TerminalWidget::~TerminalWidget()
-{
 }
 
 Gfx::IntRect TerminalWidget::glyph_rect(u16 row, u16 column)
@@ -344,7 +342,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             auto underline_style = UnderlineStyle::None;
             auto underline_color = text_color;
 
-            if (attribute.flags & VT::Attribute::Underline) {
+            if (has_flag(attribute.flags, VT::Attribute::Flags::Underline)) {
                 // Content has specified underline
                 underline_style = UnderlineStyle::Solid;
             } else if (!attribute.href.is_empty()) {
@@ -412,7 +410,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             painter.draw_glyph_or_emoji(
                 character_rect.location(),
                 code_point,
-                attribute.flags & VT::Attribute::Bold ? bold_font : font,
+                has_flag(attribute.flags, VT::Attribute::Flags::Bold) ? bold_font : font,
                 text_color);
         }
     }

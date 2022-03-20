@@ -39,8 +39,7 @@ Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_wind
     m_main_execution_context.variable_environment = &m_interpreter->realm().global_environment();
     m_main_execution_context.realm = &m_interpreter->realm();
     m_main_execution_context.is_strict_mode = true;
-    MUST(m_vm->push_execution_context(m_main_execution_context, m_interpreter->global_object()));
-
+    m_vm->push_execution_context(m_main_execution_context);
     m_vm->enable_default_host_import_module_dynamically_hook();
 }
 

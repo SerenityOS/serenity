@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibJS/Runtime/NativeFunction.h>
 
 namespace JS {
@@ -13,7 +14,7 @@ namespace JS {
 struct AlreadyResolved final : public Cell {
     bool value { false };
 
-    virtual const char* class_name() const override { return "AlreadyResolved"; }
+    virtual StringView class_name() const override { return "AlreadyResolved"sv; }
 
 protected:
     // Allocated cells must be >= sizeof(FreelistEntry), which is 24 bytes -

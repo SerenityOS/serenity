@@ -276,9 +276,7 @@ UNMAP_AFTER_INIT KeyboardDevice::KeyboardDevice()
 
 // FIXME: UNMAP_AFTER_INIT is fine for now, but for hot-pluggable devices
 // like USB keyboards, we need to remove this
-UNMAP_AFTER_INIT KeyboardDevice::~KeyboardDevice()
-{
-}
+UNMAP_AFTER_INIT KeyboardDevice::~KeyboardDevice() = default;
 
 bool KeyboardDevice::can_read(const OpenFileDescription&, u64) const
 {

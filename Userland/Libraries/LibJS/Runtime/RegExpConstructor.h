@@ -16,7 +16,7 @@ class RegExpConstructor final : public NativeFunction {
 public:
     explicit RegExpConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~RegExpConstructor() override;
+    virtual ~RegExpConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;

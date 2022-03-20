@@ -16,6 +16,34 @@
 
 namespace Web::SelectorEngine {
 
+// https://drafts.csswg.org/selectors-4/#the-lang-pseudo
+static inline bool matches_lang_pseudo_class(DOM::Element const& element, Vector<FlyString> const& languages)
+{
+    FlyString element_language;
+    for (auto const* e = &element; e; e = e->parent_element()) {
+        auto lang = e->attribute(HTML::AttributeNames::lang);
+        if (!lang.is_null()) {
+            element_language = lang;
+            break;
+        }
+    }
+    if (element_language.is_null())
+        return false;
+
+    // FIXME: This is ad-hoc. Implement a proper language range matching algorithm as recommended by BCP47.
+    for (auto const& language : languages) {
+        if (language.is_empty())
+            return false;
+        if (language == "*"sv)
+            return true;
+        if (!element_language.view().contains('-'))
+            return element_language.equals_ignoring_case(language);
+        auto parts = element_language.view().split_view('-');
+        return parts[0].equals_ignoring_case(language);
+    }
+    return false;
+}
+
 static inline bool matches_hover_pseudo_class(DOM::Element const& element)
 {
     auto* hovered_node = element.document().hovered_node();
@@ -24,6 +52,28 @@ static inline bool matches_hover_pseudo_class(DOM::Element const& element)
     if (&element == hovered_node)
         return true;
     return element.is_ancestor_of(*hovered_node);
+}
+
+// https://html.spec.whatwg.org/multipage/semantics-other.html#selector-checked
+static inline bool matches_checked_pseudo_class(DOM::Element const& element)
+{
+    // The :checked pseudo-class must match any element falling into one of the following categories:
+    // - input elements whose type attribute is in the Checkbox state and whose checkedness state is true
+    // - input elements whose type attribute is in the Radio Button state and whose checkedness state is true
+    if (is<HTML::HTMLInputElement>(element)) {
+        auto const& input_element = static_cast<HTML::HTMLInputElement const&>(element);
+        switch (input_element.type_state()) {
+        case HTML::HTMLInputElement::TypeAttributeState::Checkbox:
+        case HTML::HTMLInputElement::TypeAttributeState::RadioButton:
+            return static_cast<HTML::HTMLInputElement const&>(element).checked();
+        default:
+            return false;
+        }
+    }
+
+    // FIXME: - option elements whose selectedness is true
+
+    return false;
 }
 
 static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& attribute, DOM::Element const& element)
@@ -87,6 +137,10 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         return matches_hover_pseudo_class(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Focus:
         return element.is_focused();
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::FocusWithin: {
+        auto* focused_element = element.document().focused_element();
+        return focused_element && element.is_inclusive_ancestor_of(*focused_element);
+    }
     case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstChild:
         return !element.previous_element_sibling();
     case CSS::Selector::SimpleSelector::PseudoClass::Type::LastChild:
@@ -118,6 +172,8 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         return !next_sibling_with_same_tag_name(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::OnlyOfType:
         return !previous_sibling_with_same_tag_name(element) && !next_sibling_with_same_tag_name(element);
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Lang:
+        return matches_lang_pseudo_class(element, pseudo_class.languages);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Disabled:
         if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
             return false;
@@ -131,11 +187,16 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
             return false;
         return true;
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
-        if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
-            return false;
-        return static_cast<HTML::HTMLInputElement const&>(element).checked();
+        return matches_checked_pseudo_class(element);
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Is:
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Where:
+        for (auto& selector : pseudo_class.argument_selector_list) {
+            if (matches(selector, element))
+                return true;
+        }
+        return false;
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Not:
-        for (auto& selector : pseudo_class.not_selector) {
+        for (auto& selector : pseudo_class.argument_selector_list) {
             if (matches(selector, element))
                 return false;
         }
@@ -153,16 +214,35 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         if (!parent)
             return false;
 
+        auto matches_selector_list = [](CSS::SelectorList const& list, DOM::Element const& element) {
+            if (list.is_empty())
+                return true;
+            for (auto const& child_selector : list) {
+                if (matches(child_selector, element)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
         int index = 1;
         switch (pseudo_class.type) {
         case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild: {
-            for (auto* child = parent->first_child_of_type<DOM::Element>(); child && child != &element; child = child->next_element_sibling())
-                ++index;
+            if (!matches_selector_list(pseudo_class.argument_selector_list, element))
+                return false;
+            for (auto* child = parent->first_child_of_type<DOM::Element>(); child && child != &element; child = child->next_element_sibling()) {
+                if (matches_selector_list(pseudo_class.argument_selector_list, *child))
+                    ++index;
+            }
             break;
         }
         case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild: {
-            for (auto* child = parent->last_child_of_type<DOM::Element>(); child && child != &element; child = child->previous_element_sibling())
-                ++index;
+            if (!matches_selector_list(pseudo_class.argument_selector_list, element))
+                return false;
+            for (auto* child = parent->last_child_of_type<DOM::Element>(); child && child != &element; child = child->previous_element_sibling()) {
+                if (matches_selector_list(pseudo_class.argument_selector_list, *child))
+                    ++index;
+            }
             break;
         }
         case CSS::Selector::SimpleSelector::PseudoClass::Type::NthOfType: {

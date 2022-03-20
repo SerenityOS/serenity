@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -74,10 +75,6 @@ static Optional<ByteBuffer> handle_content_encoding(const ByteBuffer& buf, const
 Job::Job(HttpRequest&& request, Core::Stream::Stream& output_stream)
     : Core::NetworkJob(output_stream)
     , m_request(move(request))
-{
-}
-
-Job::~Job()
 {
 }
 
@@ -503,6 +500,14 @@ void Job::on_socket_connected()
 
             if (read_everything) {
                 VERIFY(m_received_size <= m_content_length.value());
+                finish_up();
+                break;
+            }
+
+            // Check after reading all the buffered data if we have reached the end of stream
+            // for cases where the server didn't send a content length, chunked encoding but is
+            // directly closing the connection.
+            if (!m_content_length.has_value() && !m_current_chunk_remaining_size.has_value() && m_socket->is_eof()) {
                 finish_up();
                 break;
             }

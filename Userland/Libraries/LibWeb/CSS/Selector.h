@@ -60,6 +60,7 @@ public:
                 Visited,
                 Hover,
                 Focus,
+                FocusWithin,
                 FirstChild,
                 LastChild,
                 OnlyChild,
@@ -75,8 +76,11 @@ public:
                 Disabled,
                 Enabled,
                 Checked,
+                Is,
                 Not,
+                Where,
                 Active,
+                Lang,
             };
             Type type { Type::None };
 
@@ -84,7 +88,10 @@ public:
             // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
             ANPlusBPattern nth_child_pattern;
 
-            SelectorList not_selector {};
+            SelectorList argument_selector_list {};
+
+            // Used for :lang(en-gb,dk)
+            Vector<FlyString> languages;
         };
         PseudoClass pseudo_class {};
         PseudoElement pseudo_element { PseudoElement::None };
@@ -132,10 +139,10 @@ public:
         return adopt_ref(*new Selector(move(compound_selectors)));
     }
 
-    ~Selector();
+    ~Selector() = default;
 
     Vector<CompoundSelector> const& compound_selectors() const { return m_compound_selectors; }
-    Optional<PseudoElement> pseudo_element() const;
+    Optional<PseudoElement> pseudo_element() const { return m_pseudo_element; }
     u32 specificity() const;
     String serialize() const;
 
@@ -144,6 +151,7 @@ private:
 
     Vector<CompoundSelector> m_compound_selectors;
     mutable Optional<u32> m_specificity;
+    Optional<Selector::PseudoElement> m_pseudo_element;
 };
 
 constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
@@ -178,6 +186,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "hover"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Focus:
         return "focus"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::FocusWithin:
+        return "focus-within"sv;
     case Selector::SimpleSelector::PseudoClass::Type::FirstChild:
         return "first-child"sv;
     case Selector::SimpleSelector::PseudoClass::Type::LastChild:
@@ -210,8 +220,14 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "nth-child"sv;
     case Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
         return "nth-last-child"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Is:
+        return "is"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Not:
         return "not"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Where:
+        return "where"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Lang:
+        return "lang"sv;
     case Selector::SimpleSelector::PseudoClass::Type::None:
         break;
     }

@@ -27,9 +27,7 @@ HTMLFormElement::HTMLFormElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLFormElement::~HTMLFormElement()
-{
-}
+HTMLFormElement::~HTMLFormElement() = default;
 
 void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submit_binding)
 {

@@ -28,11 +28,12 @@ public:
 
     void start();
     void stop();
+    void was_removed(Badge<Compositor>);
 
     void set_duration(int duration_in_ms);
     int duration() const { return m_duration; }
 
-    void update(Badge<Compositor>, Gfx::Painter&, Screen&, Gfx::DisjointRectSet& flush_rects);
+    bool update(Badge<Compositor>, Gfx::Painter&, Screen&, Gfx::DisjointRectSet& flush_rects);
 
     Function<void(float progress, Gfx::Painter&, Screen&, Gfx::DisjointRectSet& flush_rects)> on_update;
     Function<void()> on_stop;
@@ -43,6 +44,7 @@ private:
     Core::ElapsedTimer m_timer;
     int m_duration { 0 };
     bool m_running { false };
+    bool m_was_removed { false };
 };
 
 }

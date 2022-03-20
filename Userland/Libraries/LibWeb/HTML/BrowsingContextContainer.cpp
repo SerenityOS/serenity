@@ -19,9 +19,7 @@ BrowsingContextContainer::BrowsingContextContainer(DOM::Document& document, DOM:
 {
 }
 
-BrowsingContextContainer::~BrowsingContextContainer()
-{
-}
+BrowsingContextContainer::~BrowsingContextContainer() = default;
 
 void BrowsingContextContainer::inserted()
 {
@@ -56,6 +54,10 @@ const DOM::Document* BrowsingContextContainer::content_document() const
 
     // 3. Let document be context's active document.
     auto const* document = context.active_document();
+
+    //FIXME: This should not be here, as we're expected to have a document at this point.
+    if (!document)
+        return nullptr;
 
     VERIFY(document);
     VERIFY(m_document);

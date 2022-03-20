@@ -17,7 +17,7 @@ class MapIteratorPrototype final : public PrototypeObject<MapIteratorPrototype, 
 public:
     MapIteratorPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~MapIteratorPrototype() override;
+    virtual ~MapIteratorPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(next);

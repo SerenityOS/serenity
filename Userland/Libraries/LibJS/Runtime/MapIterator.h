@@ -19,7 +19,7 @@ public:
     static MapIterator* create(GlobalObject&, Map& map, Object::PropertyKind iteration_kind);
 
     explicit MapIterator(Map& map, Object::PropertyKind iteration_kind, Object& prototype);
-    virtual ~MapIterator() override;
+    virtual ~MapIterator() override = default;
 
     Map& map() const { return m_map; }
     bool done() const { return m_done; }

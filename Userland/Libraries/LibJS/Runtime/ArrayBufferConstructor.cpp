@@ -36,10 +36,6 @@ void ArrayBufferConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
-ArrayBufferConstructor::~ArrayBufferConstructor()
-{
-}
-
 // 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
 ThrowCompletionOr<Value> ArrayBufferConstructor::call()
 {

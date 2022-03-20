@@ -71,9 +71,7 @@ FIFO::FIFO(UserID uid, NonnullOwnPtr<DoubleBuffer> buffer)
     });
 }
 
-FIFO::~FIFO()
-{
-}
+FIFO::~FIFO() = default;
 
 void FIFO::attach(Direction direction)
 {

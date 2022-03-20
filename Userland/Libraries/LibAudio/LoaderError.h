@@ -14,7 +14,7 @@ namespace Audio {
 
 struct LoaderError {
 
-    enum Category : u32 {
+    enum class Category : u32 {
         // The error category is unknown.
         Unknown = 0,
         IO,
@@ -25,7 +25,7 @@ struct LoaderError {
         // The loader encountered something in the format that is not yet implemented.
         Unimplemented,
     };
-    Category category { Unknown };
+    Category category { Category::Unknown };
     // Binary index: where in the file the error occurred.
     size_t index { 0 };
     FlyString description { String::empty() };

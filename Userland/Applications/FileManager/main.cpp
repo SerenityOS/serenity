@@ -176,8 +176,10 @@ void do_paste(String const& target_directory, GUI::Window* window)
         source_paths.append(url.path());
     }
 
-    if (!source_paths.is_empty())
-        run_file_operation(file_operation, source_paths, target_directory, window);
+    if (!source_paths.is_empty()) {
+        if (auto result = run_file_operation(file_operation, source_paths, target_directory, window); result.is_error())
+            dbgln("Failed to paste files: {}", result.error());
+    }
 }
 
 void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* window)

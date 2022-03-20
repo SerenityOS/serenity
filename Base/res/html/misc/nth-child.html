@@ -4,21 +4,55 @@
     <title>:nth-child test</title>
     <style>
         /** We have weird spacing inside parentheses to test parser. */
-        .odd > div:nth-child(odd ),
-        ._2n-plus-1 > div:nth-child(2n+1),
-        .even > div:nth-child( even),
-        ._2n > div:nth-child( 2n ),
-        ._3n > div:nth-child(3n),
-        ._2 > div:nth-child(2 ),
-        ._3n-plus-1 > div:nth-child( 3n + 1 ),
-        ._3n-minus-1 > div:nth-child( 3n -1),
-        ._minus-n-plus-3 > div:nth-child(-n+ 3),
-        .n > div:nth-child(n), /** "n" is special case inside parser. */
-        .plus-n > div:nth-child(+n), /** "+n" is special case inside parser. */
-        .minus-n > div:nth-child(-n), /** "-n" is special case inside parser. */
-        ._0n-plus-1 > div:nth-child(-0n+1),
-        .n-plus-2__minus-n-plus-4 > div:nth-child(+n + 2 ):nth-child( -n+4),
+        .odd > div:nth-child(odd ) {
+            background-color: lightblue;
+        }
+        ._2n-plus-1 > div:nth-child(2n+1) {
+            background-color: lightblue;
+        }
+        .even > div:nth-child( even) {
+            background-color: lightblue;
+        }
+        ._2n > div:nth-child( 2n ) {
+            background-color: lightblue;
+        }
+        ._3n > div:nth-child(3n) {
+            background-color: lightblue;
+        }
+        ._2 > div:nth-child(2 ) {
+            background-color: lightblue;
+        }
+        ._3n-plus-1 > div:nth-child( 3n + 1 ) {
+            background-color: lightblue;
+        }
+        ._3n-minus-1 > div:nth-child( 3n -1) {
+            background-color: lightblue;
+        }
+        ._minus-n-plus-3 > div:nth-child(-n+ 3) {
+            background-color: lightblue;
+        }
+        /** "n" is special case inside parser. */
+        .n > div:nth-child(n) {
+            background-color: lightblue;
+        }
+        /** "+n" is special case inside parser. */
+        .plus-n > div:nth-child(+n) {
+            background-color: lightblue;
+        }
+        /** "-n" is special case inside parser. */
+        .minus-n > div:nth-child(-n) {
+            background-color: lightblue;
+        }
+        ._0n-plus-1 > div:nth-child(-0n+1) {
+            background-color: lightblue;
+        }
+        .n-plus-2__minus-n-plus-4 > div:nth-child(+n + 2 ):nth-child( -n+4) {
+            background-color: lightblue;
+        }
         .acid3 > div:nth-child(-5n+3) {
+            background-color: lightblue;
+        }
+        .test-of > div:nth-child(3n+1 of .special) {
             background-color: lightblue;
         }
     </style>
@@ -142,7 +176,7 @@
 <div class="acid3">
     <div>1</div>
     <div>2</div>
-    <div>3+</div>
+    <div>3 +</div>
     <div>4</div>
     <div>5</div>
     <div>6</div>
@@ -155,6 +189,16 @@
     <div>13</div>
     <div>14</div>
     <div>15</div>
+</div>
+
+<h4>:nth-child(3n+1 of .special)</h4>
+<div class="test-of">
+    <div class="special">1 +</div>
+    <div class="special">2</div>
+    <div>(Ignored)</div>
+    <div class="special">3</div>
+    <div>(Ignored)</div>
+    <div class="special">4 +</div>
 </div>
 </body>
 </html>

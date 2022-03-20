@@ -44,9 +44,7 @@ Queue::Queue(NonnullOwnPtr<Memory::Region> queue_region, u16 queue_size, u16 not
     enable_interrupts();
 }
 
-Queue::~Queue()
-{
-}
+Queue::~Queue() = default;
 
 void Queue::enable_interrupts()
 {

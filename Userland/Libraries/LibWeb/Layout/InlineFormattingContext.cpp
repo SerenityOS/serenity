@@ -14,6 +14,7 @@
 #include <LibWeb/Layout/InlineLevelIterator.h>
 #include <LibWeb/Layout/LineBuilder.h>
 #include <LibWeb/Layout/ReplacedBox.h>
+#include <LibWeb/Layout/SVGSVGBox.h>
 
 namespace Web::Layout {
 
@@ -24,9 +25,7 @@ InlineFormattingContext::InlineFormattingContext(FormattingState& state, BlockCo
 {
 }
 
-InlineFormattingContext::~InlineFormattingContext()
-{
-}
+InlineFormattingContext::~InlineFormattingContext() = default;
 
 BlockFormattingContext& InlineFormattingContext::parent()
 {
@@ -38,37 +37,30 @@ BlockFormattingContext const& InlineFormattingContext::parent() const
     return static_cast<BlockFormattingContext const&>(*FormattingContext::parent());
 }
 
-InlineFormattingContext::AvailableSpaceForLineInfo InlineFormattingContext::available_space_for_line(float y) const
+float InlineFormattingContext::leftmost_x_offset_at(float y) const
 {
     // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
     auto box_in_root_rect = margin_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
     float y_in_root = box_in_root_rect.y() + y;
+    auto space = parent().space_used_by_floats(y_in_root);
+    float containing_block_x = m_state.get(containing_block()).offset.x();
+    return max(space.left, containing_block_x) - containing_block_x;
+}
 
-    AvailableSpaceForLineInfo info;
+float InlineFormattingContext::available_space_for_line(float y) const
+{
+    // NOTE: Floats are relative to the BFC root box, not necessarily the containing block of this IFC.
+    auto box_in_root_rect = margin_box_rect_in_ancestor_coordinate_space(containing_block(), parent().root(), m_state);
+    float y_in_root = box_in_root_rect.y() + y;
+    auto space = parent().space_used_by_floats(y_in_root);
 
-    auto const& bfc = parent();
+    auto const& containing_block_state = m_state.get(containing_block());
+    auto const& root_block_state = m_state.get(parent().root());
 
-    for (ssize_t i = bfc.left_side_floats().boxes.size() - 1; i >= 0; --i) {
-        auto const& floating_box = bfc.left_side_floats().boxes.at(i);
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box, parent().root(), m_state);
-        if (rect.contains_vertically(y_in_root)) {
-            info.left = rect.right() + 1;
-            break;
-        }
-    }
+    space.left = max(space.left, containing_block_state.offset.x()) - containing_block_state.offset.x();
+    space.right = min(root_block_state.content_width - space.right, containing_block_state.offset.x() + containing_block_state.content_width);
 
-    info.right = m_state.get(containing_block()).content_width;
-
-    for (ssize_t i = bfc.right_side_floats().boxes.size() - 1; i >= 0; --i) {
-        auto const& floating_box = bfc.right_side_floats().boxes.at(i);
-        auto rect = margin_box_rect_in_ancestor_coordinate_space(floating_box, parent().root(), m_state);
-        if (rect.contains_vertically(y_in_root)) {
-            info.right = rect.left();
-            break;
-        }
-    }
-
-    return info;
+    return space.right - space.left;
 }
 
 void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
@@ -92,7 +84,7 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
 
     auto& containing_block_state = m_state.get_mutable(containing_block());
 
-    if (layout_mode != LayoutMode::Default) {
+    if (layout_mode != LayoutMode::Normal) {
         containing_block_state.content_width = max_line_width;
     }
 
@@ -108,16 +100,25 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     box_state.margin_left = computed_values.margin().left.resolved(box, width_of_containing_block).to_px(box);
     box_state.border_left = computed_values.border_left().width;
     box_state.padding_left = computed_values.padding().left.resolved(box, width_of_containing_block).to_px(box);
+
     box_state.margin_right = computed_values.margin().right.resolved(box, width_of_containing_block).to_px(box);
     box_state.border_right = computed_values.border_right().width;
     box_state.padding_right = computed_values.padding().right.resolved(box, width_of_containing_block).to_px(box);
-    box_state.padding_top = computed_values.padding().top.resolved(box, width_of_containing_block).to_px(box);
-    box_state.padding_bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block).to_px(box);
+
     box_state.margin_top = computed_values.margin().top.resolved(box, width_of_containing_block).to_px(box);
+    box_state.border_top = computed_values.border_top().width;
+    box_state.padding_top = computed_values.padding().top.resolved(box, width_of_containing_block).to_px(box);
+
+    box_state.padding_bottom = computed_values.padding().bottom.resolved(box, width_of_containing_block).to_px(box);
+    box_state.border_bottom = computed_values.border_bottom().width;
     box_state.margin_bottom = computed_values.margin().bottom.resolved(box, width_of_containing_block).to_px(box);
 
     if (is<ReplacedBox>(box)) {
         auto& replaced = verify_cast<ReplacedBox>(box);
+
+        if (is<SVGSVGBox>(box))
+            (void)layout_inside(replaced, layout_mode);
+
         box_state.content_width = compute_width_for_replaced_element(m_state, replaced);
         box_state.content_height = compute_height_for_replaced_element(m_state, replaced);
         return;
@@ -222,7 +223,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
     line_boxes.clear_with_capacity();
 
     InlineLevelIterator iterator(*this, m_state, containing_block(), layout_mode);
-    LineBuilder line_builder(*this, m_state);
+    LineBuilder line_builder(*this, m_state, layout_mode);
 
     for (;;) {
         auto item_opt = iterator.next(line_builder.available_width_for_current_line());

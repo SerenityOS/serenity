@@ -7,15 +7,16 @@
 #pragma once
 
 #include "GenericConvolutionFilter.h"
+#include <AK/StringView.h>
 
 namespace Gfx {
 
 class LaplacianFilter : public GenericConvolutionFilter<3> {
 public:
-    LaplacianFilter() { }
-    virtual ~LaplacianFilter() { }
+    LaplacianFilter() = default;
+    virtual ~LaplacianFilter() = default;
 
-    virtual const char* class_name() const override { return "LaplacianFilter"; }
+    virtual StringView class_name() const override { return "LaplacianFilter"sv; }
 };
 
 }

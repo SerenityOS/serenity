@@ -35,7 +35,7 @@ static bool s_some_test_failed = false;
         return;                        \
     } while (0)
 
-constexpr char TESTS_ROOT_DIR[] = "/home/anon/cpp-tests/comprehension";
+constexpr char TESTS_ROOT_DIR[] = "/home/anon/Tests/cpp-tests/comprehension";
 
 static void test_complete_local_args();
 static void test_complete_local_vars();

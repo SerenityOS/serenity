@@ -13,8 +13,5 @@ HTMLDetailsElement::HTMLDetailsElement(DOM::Document& document, DOM::QualifiedNa
 {
 }
 
-HTMLDetailsElement::~HTMLDetailsElement()
-{
-}
-
+HTMLDetailsElement::~HTMLDetailsElement() = default;
 }

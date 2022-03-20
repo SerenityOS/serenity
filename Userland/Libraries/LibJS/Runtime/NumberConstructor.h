@@ -16,7 +16,7 @@ class NumberConstructor final : public NativeFunction {
 public:
     explicit NumberConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~NumberConstructor() override;
+    virtual ~NumberConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target) override;

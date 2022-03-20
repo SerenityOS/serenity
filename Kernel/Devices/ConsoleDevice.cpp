@@ -28,9 +28,7 @@ UNMAP_AFTER_INIT ConsoleDevice::ConsoleDevice()
 {
 }
 
-UNMAP_AFTER_INIT ConsoleDevice::~ConsoleDevice()
-{
-}
+UNMAP_AFTER_INIT ConsoleDevice::~ConsoleDevice() = default;
 
 bool ConsoleDevice::can_read(const Kernel::OpenFileDescription&, u64) const
 {

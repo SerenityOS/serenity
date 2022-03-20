@@ -47,9 +47,7 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
     make_html_uppercased_qualified_name();
 }
 
-Element::~Element()
-{
-}
+Element::~Element() = default;
 
 // https://dom.spec.whatwg.org/#dom-element-getattribute
 String Element::get_attribute(const FlyString& name) const
@@ -267,21 +265,70 @@ void Element::parse_attribute(const FlyString& name, const String& value)
     }
 }
 
-void Element::recompute_style()
+void Element::did_remove_attribute(FlyString const& name)
+{
+    if (name == HTML::AttributeNames::style) {
+        if (m_inline_style) {
+            m_inline_style = nullptr;
+            set_needs_style_update(true);
+        }
+    }
+}
+
+enum class RequiredInvalidation {
+    None,
+    RepaintOnly,
+    Relayout,
+};
+
+static RequiredInvalidation compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
+{
+    bool requires_repaint = false;
+    for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
+        auto property_id = static_cast<CSS::PropertyID>(i);
+        auto const& old_value = old_style.properties()[i];
+        auto const& new_value = new_style.properties()[i];
+        if (!old_value && !new_value)
+            continue;
+        if (!old_value || !new_value)
+            return RequiredInvalidation::Relayout;
+        if (*old_value == *new_value)
+            continue;
+        if (CSS::property_affects_layout(property_id))
+            return RequiredInvalidation::Relayout;
+        requires_repaint = true;
+    }
+    if (requires_repaint)
+        return RequiredInvalidation::RepaintOnly;
+    return RequiredInvalidation::None;
+}
+
+Element::NeedsRelayout Element::recompute_style()
 {
     set_needs_style_update(false);
     VERIFY(parent());
-    auto new_specified_css_values = document().style_computer().compute_style(*this);
+    auto new_computed_css_values = document().style_computer().compute_style(*this);
 
-    if (m_specified_css_values && *m_specified_css_values == *new_specified_css_values)
-        return;
+    auto required_invalidation = RequiredInvalidation::Relayout;
 
-    m_specified_css_values = move(new_specified_css_values);
+    if (m_computed_css_values)
+        required_invalidation = compute_required_invalidation(*m_computed_css_values, *new_computed_css_values);
 
-    document().invalidate_layout();
+    if (required_invalidation == RequiredInvalidation::None)
+        return NeedsRelayout::No;
+
+    m_computed_css_values = move(new_computed_css_values);
+
+    if (required_invalidation == RequiredInvalidation::RepaintOnly && layout_node()) {
+        layout_node()->apply_style(*m_computed_css_values);
+        layout_node()->set_needs_display();
+        return NeedsRelayout::No;
+    }
+
+    return NeedsRelayout::Yes;
 }
 
-NonnullRefPtr<CSS::StyleProperties> Element::computed_style()
+NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
 {
     auto element_computed_style = CSS::ResolvedCSSStyleDeclaration::create(*this);
     auto properties = CSS::StyleProperties::create();
@@ -352,6 +399,9 @@ ExceptionOr<void> Element::set_inner_html(String const& markup)
         return result.exception();
 
     set_needs_style_update(true);
+
+    // NOTE: Since the DOM has changed, we have to rebuild the layout tree.
+    document().invalidate_layout();
     return {};
 }
 
@@ -382,7 +432,11 @@ void Element::set_shadow_root(RefPtr<ShadowRoot> shadow_root)
 {
     if (m_shadow_root == shadow_root)
         return;
+    if (m_shadow_root)
+        m_shadow_root->set_host(nullptr);
     m_shadow_root = move(shadow_root);
+    if (m_shadow_root)
+        m_shadow_root->set_host(this);
     invalidate_style();
 }
 

@@ -328,23 +328,23 @@ TemporalTime constrain_time(double hour, double minute, double second, double mi
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond, and nanosecond are integers.
 
-    // 2. Set hour to ! ConstrainToRange(hour, 0, 23).
-    hour = constrain_to_range(hour, 0, 23);
+    // 2. Set hour to the result of clamping hour between 0 and 23.
+    hour = clamp(hour, 0, 23);
 
-    // 3. Set minute to ! ConstrainToRange(minute, 0, 59).
-    minute = constrain_to_range(minute, 0, 59);
+    // 3. Set minute to the result of clamping minute between 0 and 59.
+    minute = clamp(minute, 0, 59);
 
-    // 4. Set second to ! ConstrainToRange(second, 0, 59).
-    second = constrain_to_range(second, 0, 59);
+    // 4. Set second to the result of clamping second between 0 and 59.
+    second = clamp(second, 0, 59);
 
-    // 5. Set millisecond to ! ConstrainToRange(millisecond, 0, 999).
-    millisecond = constrain_to_range(millisecond, 0, 999);
+    // 5. Set millisecond to the result of clamping millisecond between 0 and 999.
+    millisecond = clamp(millisecond, 0, 999);
 
-    // 6. Set microsecond to ! ConstrainToRange(microsecond, 0, 999).
-    microsecond = constrain_to_range(microsecond, 0, 999);
+    // 6. Set microsecond to the result of clamping microsecond between 0 and 999.
+    microsecond = clamp(microsecond, 0, 999);
 
-    // 7. Set nanosecond to ! ConstrainToRange(nanosecond, 0, 999).
-    nanosecond = constrain_to_range(nanosecond, 0, 999);
+    // 7. Set nanosecond to the result of clamping nanosecond between 0 and 999.
+    nanosecond = clamp(nanosecond, 0, 999);
 
     // 8. Return the Record { [[Hour]]: hour, [[Minute]]: minute, [[Second]]: second, [[Millisecond]]: millisecond, [[Microsecond]]: microsecond, [[Nanosecond]]: nanosecond }.
     return TemporalTime { .hour = static_cast<u8>(hour), .minute = static_cast<u8>(minute), .second = static_cast<u8>(second), .millisecond = static_cast<u16>(millisecond), .microsecond = static_cast<u16>(microsecond), .nanosecond = static_cast<u16>(nanosecond) };

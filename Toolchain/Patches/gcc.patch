@@ -63,20 +63,24 @@ index 357b0bed0..8e96b74e5 100644
  *-*-darwin*)
    tmake_file="t-darwin "
    tm_file="${tm_file} darwin.h"
-@@ -1084,6 +1091,19 @@ case ${target} in
+@@ -1084,6 +1091,23 @@ case ${target} in
  esac
  
  case ${target} in
 +i[34567]86-*-serenity*)
-+    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h serenity.h"
++    default_gnu_indirect_function=yes
++    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h serenity.h i386/serenity.h"
 +    ;;
 +x86_64-*-serenity*)
-+    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h i386/x86-64.h serenity.h"
++    default_gnu_indirect_function=yes
++    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h i386/x86-64.h serenity.h i386/serenity.h"
 +    ;;
 +arm-*-serenity*)
++    default_gnu_indirect_function=yes
 +    tm_file="dbxelf.h elfos.h arm/elf.h arm/aout.h glibc-stdint.h arm/serenity-elf.h ${tm_file} serenity.h"
 +    ;;
 +aarch64-*-serenity*)
++    default_gnu_indirect_function=yes
 +    tm_file="${tm_file} dbxelf.h elfos.h aarch64/aarch64-elf.h glibc-stdint.h serenity.h"
 +    tmake_file="${tmake_file} aarch64/t-aarch64"
 +    ;;
@@ -154,6 +158,19 @@ index 000000000..24b29c3da
 +
 +#undef PTRDIFF_TYPE
 +#define PTRDIFF_TYPE "long int"
+diff --git a/gcc/config/i386/serenity.h b/gcc/config/i386/serenity.h
+new file mode 100644
+index 000000000..dc2f5361e
+--- /dev/null
++++ b/gcc/config/i386/serenity.h
+@@ -0,0 +1,7 @@
++/* Ensure that we are using the SIZE_TYPE indicated by SysV */
++#undef SIZE_TYPE
++#define SIZE_TYPE    (TARGET_64BIT ? "long unsigned int" : "unsigned int")
++
++/* Ensure that ptrdiff_t matches the actual pointer size */
++#undef PTRDIFF_TYPE
++#define PTRDIFF_TYPE    (TARGET_64BIT ? "long int" : "int")
 diff --git a/gcc/config/host-darwin.c b/gcc/config/host-darwin.c
 index 14a01fe71..3f8e44288 100644
 --- a/gcc/config/host-darwin.c

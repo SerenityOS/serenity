@@ -23,9 +23,7 @@ StylePropertiesModel::StylePropertiesModel(JsonObject properties)
     quick_sort(m_values, [](auto& a, auto& b) { return a.name < b.name; });
 }
 
-StylePropertiesModel::~StylePropertiesModel()
-{
-}
+StylePropertiesModel::~StylePropertiesModel() = default;
 
 int StylePropertiesModel::row_count(GUI::ModelIndex const&) const
 {
@@ -54,6 +52,23 @@ GUI::Variant StylePropertiesModel::data(GUI::ModelIndex const& index, GUI::Model
             return value.value;
     }
     return {};
+}
+
+Vector<GUI::ModelIndex> StylePropertiesModel::matches(StringView searching, unsigned flags, GUI::ModelIndex const& parent)
+{
+    if (m_values.is_empty())
+        return {};
+    Vector<GUI::ModelIndex> found_indices;
+    for (auto it = m_values.begin(); !it.is_end(); ++it) {
+        GUI::ModelIndex index = this->index(it.index(), Column::PropertyName, parent);
+        if (!string_matches(data(index, GUI::ModelRole::Display).as_string(), searching, flags))
+            continue;
+
+        found_indices.append(index);
+        if (flags & FirstMatchOnly)
+            break;
+    }
+    return found_indices;
 }
 
 }

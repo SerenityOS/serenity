@@ -79,9 +79,7 @@ static size_t s_allocate_global_inode_index()
     return s_next_inode_index.value();
 }
 
-ProcFSExposedComponent::ProcFSExposedComponent()
-{
-}
+ProcFSExposedComponent::ProcFSExposedComponent() = default;
 
 ProcFSExposedComponent::ProcFSExposedComponent(StringView name)
     : m_component_index(s_allocate_global_inode_index())

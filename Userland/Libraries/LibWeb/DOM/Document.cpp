@@ -92,9 +92,7 @@ Document::Document(const AK::URL& url)
     });
 }
 
-Document::~Document()
-{
-}
+Document::~Document() = default;
 
 void Document::removed_last_ref()
 {
@@ -553,6 +551,11 @@ void Document::invalidate_layout()
 
 void Document::update_layout()
 {
+    // NOTE: If our parent document needs a relayout, we must do that *first*.
+    //       This is necessary as the parent layout may cause our viewport to change.
+    if (browsing_context() && browsing_context()->container())
+        browsing_context()->container()->document().update_layout();
+
     update_style();
 
     if (!m_needs_layout && m_layout_root)
@@ -579,7 +582,7 @@ void Document::update_layout()
     icb.set_has_definite_width(true);
     icb.set_has_definite_height(true);
 
-    root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Default);
+    root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Normal);
     formatting_state.commit();
 
     m_layout_root->build_stacking_context_tree();
@@ -595,32 +598,45 @@ void Document::update_layout()
     m_layout_update_timer->stop();
 }
 
-static void update_style_recursively(DOM::Node& node)
+[[nodiscard]] static bool update_style_recursively(DOM::Node& node)
 {
-    if (is<Element>(node))
-        static_cast<Element&>(node).recompute_style();
+    bool const needs_full_style_update = node.document().needs_full_style_update();
+    bool needs_relayout = false;
+
+    if (is<Element>(node)) {
+        needs_relayout |= static_cast<Element&>(node).recompute_style() == Element::NeedsRelayout::Yes;
+    }
     node.set_needs_style_update(false);
 
-    if (node.child_needs_style_update()) {
+    if (needs_full_style_update || node.child_needs_style_update()) {
+        if (node.is_element()) {
+            if (auto* shadow_root = static_cast<DOM::Element&>(node).shadow_root()) {
+                if (needs_full_style_update || shadow_root->needs_style_update() || shadow_root->child_needs_style_update())
+                    needs_relayout |= update_style_recursively(*shadow_root);
+            }
+        }
         node.for_each_child([&](auto& child) {
-            if (child.needs_style_update() || child.child_needs_style_update())
-                update_style_recursively(child);
+            if (needs_full_style_update || child.needs_style_update() || child.child_needs_style_update())
+                needs_relayout |= update_style_recursively(child);
             return IterationDecision::Continue;
         });
     }
 
     node.set_child_needs_style_update(false);
+    return needs_relayout;
 }
 
 void Document::update_style()
 {
     if (!browsing_context())
         return;
-    if (!needs_style_update() && !child_needs_style_update())
+    if (!needs_full_style_update() && !needs_style_update() && !child_needs_style_update())
         return;
-    update_style_recursively(*this);
+    evaluate_media_rules();
+    if (update_style_recursively(*this))
+        invalidate_layout();
+    m_needs_full_style_update = false;
     m_style_update_timer->stop();
-    set_needs_layout();
 }
 
 void Document::set_link_color(Color color)
@@ -662,6 +678,26 @@ void Document::set_inspected_node(Node* node)
         m_inspected_node->layout_node()->set_needs_display();
 }
 
+static Node* find_common_ancestor(Node* a, Node* b)
+{
+    if (!a || !b)
+        return nullptr;
+
+    if (a == b)
+        return a;
+
+    HashTable<Node*> ancestors;
+    for (auto* node = a; node; node = node->parent_or_shadow_host())
+        ancestors.set(node);
+
+    for (auto* node = b; node; node = node->parent_or_shadow_host()) {
+        if (ancestors.contains(node))
+            return node;
+    }
+
+    return nullptr;
+}
+
 void Document::set_hovered_node(Node* node)
 {
     if (m_hovered_node == node)
@@ -670,7 +706,10 @@ void Document::set_hovered_node(Node* node)
     RefPtr<Node> old_hovered_node = move(m_hovered_node);
     m_hovered_node = node;
 
-    invalidate_style();
+    if (auto* common_ancestor = find_common_ancestor(old_hovered_node, m_hovered_node))
+        common_ancestor->invalidate_style();
+    else
+        invalidate_style();
 }
 
 NonnullRefPtr<HTMLCollection> Document::get_elements_by_name(String const& name)
@@ -1342,14 +1381,21 @@ void Document::evaluate_media_queries_and_report_changes()
     }
 
     // Also not in the spec, but this is as good a place as any to evaluate @media rules!
+    evaluate_media_rules();
+}
+
+void Document::evaluate_media_rules()
+{
     bool any_media_queries_changed_match_state = false;
     for (auto& style_sheet : style_sheets().sheets()) {
         if (style_sheet.evaluate_media_queries(window()))
             any_media_queries_changed_match_state = true;
     }
 
-    if (any_media_queries_changed_match_state)
+    if (any_media_queries_changed_match_state) {
         style_computer().invalidate_rule_cache();
+        invalidate_style();
+    }
 }
 
 NonnullRefPtr<DOMImplementation> Document::implementation() const

@@ -33,6 +33,7 @@ Messages::LookupServer::LookupNameResponse ConnectionFromClient::lookup_name(Str
     auto maybe_answers = LookupServer::the().lookup(name, DNSRecordType::A);
     if (maybe_answers.is_error()) {
         dbgln("LookupServer: Failed to lookup PTR record: {}", maybe_answers.error());
+        return { 1, {} };
     }
 
     auto answers = maybe_answers.release_value();
@@ -57,6 +58,7 @@ Messages::LookupServer::LookupAddressResponse ConnectionFromClient::lookup_addre
     auto maybe_answers = LookupServer::the().lookup(name, DNSRecordType::PTR);
     if (maybe_answers.is_error()) {
         dbgln("LookupServer: Failed to lookup PTR record: {}", maybe_answers.error());
+        return { 1, String() };
     }
 
     auto answers = maybe_answers.release_value();

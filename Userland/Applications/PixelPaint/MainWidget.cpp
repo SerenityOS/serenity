@@ -206,6 +206,23 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     m_edit_menu = window.add_menu("&Edit");
 
+    m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
+        auto* editor = current_image_editor();
+        VERIFY(editor);
+
+        if (!editor->active_layer()) {
+            dbgln("Cannot cut with no active layer selected");
+            return;
+        }
+        auto bitmap = editor->active_layer()->try_copy_bitmap(editor->selection());
+        if (!bitmap) {
+            dbgln("try_copy_bitmap() from Layer failed");
+            return;
+        }
+        GUI::Clipboard::the().set_bitmap(*bitmap);
+        editor->active_layer()->erase_selection(editor->selection());
+    });
+
     m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
         auto* editor = current_image_editor();
         VERIFY(editor);
@@ -267,11 +284,13 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         editor->redo();
     });
 
+    m_edit_menu->add_action(*m_undo_action);
+    m_edit_menu->add_action(*m_redo_action);
+    m_edit_menu->add_separator();
+    m_edit_menu->add_action(*m_cut_action);
     m_edit_menu->add_action(*m_copy_action);
     m_edit_menu->add_action(*m_copy_merged_action);
     m_edit_menu->add_action(*m_paste_action);
-    m_edit_menu->add_action(*m_undo_action);
-    m_edit_menu->add_action(*m_redo_action);
     m_edit_menu->add_separator();
 
     m_edit_menu->add_action(GUI::CommonActions::make_select_all_action([&](auto&) {
@@ -659,6 +678,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     toolbar.add_action(*m_open_image_action);
     toolbar.add_action(*m_save_image_action);
     toolbar.add_separator();
+    toolbar.add_action(*m_cut_action);
     toolbar.add_action(*m_copy_action);
     toolbar.add_action(*m_paste_action);
     toolbar.add_action(*m_undo_action);

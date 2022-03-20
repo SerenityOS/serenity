@@ -88,10 +88,6 @@ Shape* Shape::create_prototype_transition(Object* new_prototype)
     return new_shape;
 }
 
-Shape::Shape(ShapeWithoutGlobalObjectTag)
-{
-}
-
 Shape::Shape(Object& global_object)
     : m_global_object(&global_object)
 {
@@ -114,10 +110,6 @@ Shape::Shape(Shape& previous_shape, Object* new_prototype)
     , m_prototype(new_prototype)
     , m_property_count(previous_shape.m_property_count)
     , m_transition_type(TransitionType::Prototype)
-{
-}
-
-Shape::~Shape()
 {
 }
 

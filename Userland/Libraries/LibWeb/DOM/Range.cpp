@@ -43,10 +43,6 @@ Range::Range(Node& start_container, u32 start_offset, Node& end_container, u32 e
 {
 }
 
-Range::~Range()
-{
-}
-
 // https://dom.spec.whatwg.org/#concept-range-root
 Node& Range::root()
 {

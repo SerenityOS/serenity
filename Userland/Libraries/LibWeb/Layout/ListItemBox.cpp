@@ -15,9 +15,7 @@ ListItemBox::ListItemBox(DOM::Document& document, DOM::Element* element, Nonnull
 {
 }
 
-ListItemBox::~ListItemBox()
-{
-}
+ListItemBox::~ListItemBox() = default;
 
 void ListItemBox::set_marker(RefPtr<ListItemMarkerBox> marker)
 {

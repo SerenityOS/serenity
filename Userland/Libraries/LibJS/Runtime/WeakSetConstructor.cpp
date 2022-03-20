@@ -29,10 +29,6 @@ void WeakSetConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
 
-WeakSetConstructor::~WeakSetConstructor()
-{
-}
-
 // 24.4.1.1 WeakSet ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakset-iterable
 ThrowCompletionOr<Value> WeakSetConstructor::call()
 {

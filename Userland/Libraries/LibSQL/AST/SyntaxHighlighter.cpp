@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Dylan Katz <dykatz@uw.edu>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -93,10 +94,6 @@ Vector<SyntaxHighlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_p
 bool SyntaxHighlighter::token_types_equal(u64 token1, u64 token2) const
 {
     return static_cast<TokenType>(token1) == static_cast<TokenType>(token2);
-}
-
-SyntaxHighlighter::~SyntaxHighlighter()
-{
 }
 
 }

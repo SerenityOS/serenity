@@ -23,9 +23,7 @@ HTMLCanvasElement::HTMLCanvasElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-HTMLCanvasElement::~HTMLCanvasElement()
-{
-}
+HTMLCanvasElement::~HTMLCanvasElement() = default;
 
 unsigned HTMLCanvasElement::width() const
 {

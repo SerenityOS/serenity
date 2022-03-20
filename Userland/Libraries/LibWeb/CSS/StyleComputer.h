@@ -48,7 +48,7 @@ private:
 class StyleComputer {
 public:
     explicit StyleComputer(DOM::Document&);
-    ~StyleComputer();
+    ~StyleComputer() = default;
 
     DOM::Document& document() { return m_document; }
     DOM::Document const& document() const { return m_document; }
@@ -80,18 +80,21 @@ private:
 
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID, Optional<CSS::Selector::PseudoElement>) const;
 
-    RefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, PropertyID, UnresolvedStyleValue const&, HashMap<FlyString, StyleProperty> const&) const;
-    bool expand_unresolved_values(DOM::Element&, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index, HashMap<FlyString, StyleProperty> const& custom_properties) const;
+    RefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, PropertyID, UnresolvedStyleValue const&) const;
+    bool expand_unresolved_values(DOM::Element&, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index) const;
 
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;
+
+    Gfx::IntRect viewport_rect() const;
+    float root_element_font_size() const;
 
     struct MatchingRuleSet {
         Vector<MatchingRule> user_agent_rules;
         Vector<MatchingRule> author_rules;
     };
 
-    void cascade_declarations(StyleProperties&, DOM::Element&, Vector<MatchingRule> const&, CascadeOrigin, Important important, HashMap<FlyString, StyleProperty> const&) const;
+    void cascade_declarations(StyleProperties&, DOM::Element&, Vector<MatchingRule> const&, CascadeOrigin, Important important) const;
 
     void build_rule_cache();
     void build_rule_cache_if_needed() const;
@@ -104,7 +107,6 @@ private:
         HashMap<FlyString, Vector<MatchingRule>> rules_by_tag_name;
         HashMap<Selector::PseudoElement, Vector<MatchingRule>> rules_by_pseudo_element;
         Vector<MatchingRule> other_rules;
-        int generation { 0 };
     };
     OwnPtr<RuleCache> m_rule_cache;
 };

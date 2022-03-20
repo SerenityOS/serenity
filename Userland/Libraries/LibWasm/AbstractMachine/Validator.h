@@ -7,12 +7,10 @@
 #pragma once
 
 #include <AK/HashTable.h>
+#include <AK/SourceLocation.h>
+#include <AK/Tuple.h>
 #include <LibWasm/Forward.h>
 #include <LibWasm/Types.h>
-
-#if WASM_VALIDATOR_DEBUG
-#    include <AK/SourceLocation.h>
-#endif
 
 namespace Wasm {
 
@@ -177,6 +175,9 @@ public:
     // This is a wrapper that can model "polymorphic" stacks,
     // by treating unknown stack entries as a potentially infinite number of entries
     class Stack : private Vector<StackEntry> {
+        template<typename, typename>
+        friend struct AK::Formatter;
+
     public:
         // The unknown entry will never be popped off, so we can safely use the original `is_empty`.
         using Vector<StackEntry>::is_empty;
@@ -194,6 +195,28 @@ public:
             if (!entry.is_known)
                 m_did_insert_unknown_entry = true;
             Vector<StackEntry>::append(entry);
+        }
+
+        ErrorOr<void, ValidationError> take(ValueType type, SourceLocation location = SourceLocation::current())
+        {
+            if (is_empty())
+                return Errors::invalid("stack state", type, "<nothing>", location);
+
+            auto type_on_stack = take_last();
+            if (type_on_stack != type)
+                return Errors::invalid("stack state", type, type_on_stack, location);
+
+            return {};
+        }
+
+        template<auto... kinds>
+        ErrorOr<void, ValidationError> take(SourceLocation location = SourceLocation::current())
+        {
+            ErrorOr<void, ValidationError> result;
+            if (((result = take(Wasm::ValueType(kinds), location)).is_error(), ...)) {
+                return result;
+            }
+            return result;
         }
 
         size_t actual_size() const { return Vector<StackEntry>::size(); }
@@ -235,9 +258,12 @@ private:
         static ValidationError invalid(StringView name) { return String::formatted("Invalid {}", name); }
 
         template<typename Expected, typename Given>
-        static ValidationError invalid(StringView name, Expected expected, Given given)
+        static ValidationError invalid(StringView name, Expected expected, Given given, SourceLocation location = SourceLocation::current())
         {
-            return String::formatted("Invalid {}, expected {} but got {}", name, expected, given);
+            if constexpr (WASM_VALIDATOR_DEBUG)
+                return String::formatted("Invalid {} in {}, expected {} but got {}", name, find_instruction_name(location), expected, given);
+            else
+                return String::formatted("Invalid {}, expected {} but got {}", name, expected, given);
         }
 
         template<typename... Args>
@@ -251,11 +277,40 @@ private:
         template<typename T, typename U, typename V>
         static ValidationError out_of_bounds(StringView name, V value, T min, U max) { return String::formatted("Value {} for {} is out of bounds ({},{})", value, name, min, max); }
 
-#if WASM_VALIDATOR_DEBUG
-        static ValidationError invalid_stack_state(SourceLocation location = SourceLocation::current());
-#else
-        static ValidationError invalid_stack_state();
-#endif
+        template<typename... Expected>
+        static ValidationError invalid_stack_state(Stack const& stack, Tuple<Expected...> expected, SourceLocation location = SourceLocation::current())
+        {
+            constexpr size_t count = expected.size();
+            StringBuilder builder;
+            if constexpr (WASM_VALIDATOR_DEBUG)
+                builder.appendff("Invalid stack state in {}: ", find_instruction_name(location));
+            else
+                builder.appendff("Invalid stack state in <unknown>: ");
+
+            builder.append("Expected [ ");
+
+            expected.apply_as_args([&]<typename... Ts>(Ts const&... args) {
+                (builder.appendff("{} ", args), ...);
+            });
+
+            builder.append("], but found [ ");
+
+            auto actual_size = stack.actual_size();
+            for (size_t i = 1; i <= min(count, actual_size); ++i) {
+                auto& entry = stack.at(actual_size - i);
+                if (entry.is_known) {
+                    builder.appendff("{} ", entry.concrete_type);
+                } else {
+                    builder.appendff("<polymorphic stack>");
+                    break;
+                }
+            }
+            builder.append("]");
+            return { builder.to_string() };
+        }
+
+    private:
+        static String find_instruction_name(SourceLocation const&);
     };
 
     enum class ChildScopeKind {
@@ -290,6 +345,14 @@ struct AK::Formatter<Wasm::Validator::StackEntry> : public AK::Formatter<StringV
             return Formatter<StringView>::format(builder, Wasm::ValueType::kind_name(value.concrete_type.kind()));
 
         return Formatter<StringView>::format(builder, "<unknown>"sv);
+    }
+};
+
+template<>
+struct AK::Formatter<Wasm::Validator::Stack> : public AK::Formatter<Vector<Wasm::Validator::StackEntry>> {
+    ErrorOr<void> format(FormatBuilder& builder, Wasm::Validator::Stack const& value)
+    {
+        return Formatter<Vector<Wasm::Validator::StackEntry>>::format(builder, static_cast<Vector<Wasm::Validator::StackEntry> const&>(value));
     }
 };
 

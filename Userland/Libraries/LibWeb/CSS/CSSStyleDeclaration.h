@@ -31,7 +31,7 @@ class CSSStyleDeclaration
 public:
     using WrapperType = Bindings::CSSStyleDeclarationWrapper;
 
-    virtual ~CSSStyleDeclaration();
+    virtual ~CSSStyleDeclaration() = default;
 
     virtual size_t length() const = 0;
     virtual String item(size_t index) const = 0;
@@ -49,7 +49,7 @@ public:
     virtual String serialized() const = 0;
 
 protected:
-    CSSStyleDeclaration() { }
+    CSSStyleDeclaration() = default;
 };
 
 class PropertyOwningCSSStyleDeclaration : public CSSStyleDeclaration {
@@ -61,7 +61,7 @@ public:
         return adopt_ref(*new PropertyOwningCSSStyleDeclaration(move(properties), move(custom_properties)));
     }
 
-    virtual ~PropertyOwningCSSStyleDeclaration() override;
+    virtual ~PropertyOwningCSSStyleDeclaration() override = default;
 
     virtual size_t length() const override;
     virtual String item(size_t index) const override;
@@ -88,7 +88,7 @@ class ElementInlineCSSStyleDeclaration final : public PropertyOwningCSSStyleDecl
 public:
     static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element& element) { return adopt_ref(*new ElementInlineCSSStyleDeclaration(element)); }
     static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create_and_take_properties_from(DOM::Element& element, PropertyOwningCSSStyleDeclaration& declaration) { return adopt_ref(*new ElementInlineCSSStyleDeclaration(element, declaration)); }
-    virtual ~ElementInlineCSSStyleDeclaration() override;
+    virtual ~ElementInlineCSSStyleDeclaration() override = default;
 
     DOM::Element* element() { return m_element.ptr(); }
     const DOM::Element* element() const { return m_element.ptr(); }

@@ -399,9 +399,7 @@ Plan9FS::ReceiveCompletion::ReceiveCompletion(u16 tag)
 {
 }
 
-Plan9FS::ReceiveCompletion::~ReceiveCompletion()
-{
-}
+Plan9FS::ReceiveCompletion::~ReceiveCompletion() = default;
 
 bool Plan9FS::Blocker::unblock(u16 tag)
 {

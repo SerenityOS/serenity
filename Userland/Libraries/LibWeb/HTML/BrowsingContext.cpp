@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,9 +35,7 @@ BrowsingContext::BrowsingContext(Page& page, HTML::BrowsingContextContainer* con
     });
 }
 
-BrowsingContext::~BrowsingContext()
-{
-}
+BrowsingContext::~BrowsingContext() = default;
 
 void BrowsingContext::did_edit(Badge<EditEventHandler>)
 {
@@ -54,7 +52,8 @@ void BrowsingContext::reset_cursor_blink_cycle()
 {
     m_cursor_blink_state = true;
     m_cursor_blink_timer->restart();
-    m_cursor_position.node()->layout_node()->set_needs_display();
+    if (m_cursor_position.is_valid() && m_cursor_position.node()->layout_node())
+        m_cursor_position.node()->layout_node()->set_needs_display();
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#top-level-browsing-context
@@ -79,6 +78,19 @@ void BrowsingContext::set_active_document(DOM::Document* document)
     if (m_active_document)
         m_active_document->detach_from_browsing_context({}, *this);
 
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#resetBCName
+    // FIXME: The rest of set_active_document does not follow the spec very closely, this just implements the
+    //   relevant steps for resetting the browsing context name and should be updated closer to the spec once
+    //   the other parts of history handling/navigating are implemented
+    // 3. If newDocument's origin is not same origin with the current entry's document's origin, then:
+    if (!document || !m_active_document || !document->origin().is_same_origin(m_active_document->origin())) {
+        // 3. If the browsing context is a top-level browsing context, but not an auxiliary browsing context
+        //    whose disowned is false, then set the browsing context's name to the empty string.
+        // FIXME: this is not checking the second part of the condition yet
+        if (is_top_level())
+            m_name = String::empty();
+    }
+
     m_active_document = document;
 
     if (m_active_document) {
@@ -97,8 +109,11 @@ void BrowsingContext::set_viewport_rect(Gfx::IntRect const& rect)
 
     if (m_size != rect.size()) {
         m_size = rect.size();
-        if (auto* document = active_document())
-            document->set_needs_layout();
+        if (auto* document = active_document()) {
+            // NOTE: Resizing the viewport changes the reference value for viewport-relative CSS lengths.
+            document->invalidate_style();
+            document->invalidate_layout();
+        }
         did_change = true;
     }
 
@@ -122,8 +137,10 @@ void BrowsingContext::set_size(Gfx::IntSize const& size)
         return;
     m_size = size;
 
-    if (auto* document = active_document())
-        document->set_needs_layout();
+    if (auto* document = active_document()) {
+        document->invalidate_style();
+        document->invalidate_layout();
+    }
 
     for (auto* client : m_viewport_clients)
         client->browsing_context_did_set_viewport_rect(viewport_rect());

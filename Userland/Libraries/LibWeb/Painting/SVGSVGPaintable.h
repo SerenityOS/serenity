@@ -7,11 +7,11 @@
 #pragma once
 
 #include <LibWeb/Layout/SVGSVGBox.h>
-#include <LibWeb/Painting/SVGGraphicsPaintable.h>
+#include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::Painting {
 
-class SVGSVGPaintable : public SVGGraphicsPaintable {
+class SVGSVGPaintable : public PaintableBox {
 public:
     static NonnullRefPtr<SVGSVGPaintable> create(Layout::SVGSVGBox const&);
 

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "UndoGlyph.h"
+#include "UndoSelection.h"
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/GlyphMapWidget.h>
@@ -60,6 +60,8 @@ private:
     void paste_glyphs();
     void delete_selected_glyphs();
 
+    void reset_selection_and_push_undo();
+
     RefPtr<Gfx::BitmapFont> m_edited_font;
 
     RefPtr<GUI::GlyphMapWidget> m_glyph_map_widget;
@@ -75,9 +77,12 @@ private:
     RefPtr<GUI::Action> m_paste_action;
     RefPtr<GUI::Action> m_delete_action;
 
+    RefPtr<GUI::Action> m_copy_text_action;
+    RefPtr<GUI::Action> m_select_all_action;
+
     RefPtr<GUI::Action> m_undo_action;
     RefPtr<GUI::Action> m_redo_action;
-    RefPtr<UndoGlyph> m_undo_glyph;
+    RefPtr<UndoSelection> m_undo_selection;
     OwnPtr<GUI::UndoStack> m_undo_stack;
 
     RefPtr<GUI::Action> m_go_to_glyph_action;
@@ -101,7 +106,6 @@ private:
     RefPtr<GUI::Action> m_flip_vertical_action;
     RefPtr<GUI::Action> m_rotate_clockwise_action;
     RefPtr<GUI::Action> m_rotate_counterclockwise_action;
-    RefPtr<GUI::Action> m_copy_character_action;
 
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::Window> m_font_preview_window;
@@ -124,6 +128,7 @@ private:
     RefPtr<GUI::ListView> m_unicode_block_listview;
     RefPtr<GUI::Model> m_unicode_block_model;
     RefPtr<GUI::FilteringProxyModel> m_filter_model;
+    RefPtr<GUI::Menu> m_context_menu;
 
     String m_path;
     Vector<String> m_font_weight_list;

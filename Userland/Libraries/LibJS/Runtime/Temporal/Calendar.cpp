@@ -731,13 +731,15 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
 {
     auto& vm = global_object.vm();
 
-    // 1. Let month be ? Get(fields, "month").
-    auto month = TRY(fields.get(vm.names.month));
+    // 1. Assert: fields is an ordinary object with no more and no less than the own data properties listed in Table 13.
 
-    // 2. Let monthCode be ? Get(fields, "monthCode").
-    auto month_code = TRY(fields.get(vm.names.monthCode));
+    // 2. Let month be ! Get(fields, "month").
+    auto month = MUST(fields.get(vm.names.month));
 
-    // 3. If monthCode is undefined, then
+    // 3. Let monthCode be ! Get(fields, "monthCode").
+    auto month_code = MUST(fields.get(vm.names.monthCode));
+
+    // 4. If monthCode is undefined, then
     if (month_code.is_undefined()) {
         // a. If month is undefined, throw a TypeError exception.
         if (month.is_undefined())
@@ -747,40 +749,40 @@ ThrowCompletionOr<double> resolve_iso_month(GlobalObject& global_object, Object 
         return month.as_double();
     }
 
-    // 4. Assert: Type(monthCode) is String.
+    // 5. Assert: Type(monthCode) is String.
     VERIFY(month_code.is_string());
     auto& month_code_string = month_code.as_string().string();
 
-    // 5. Let monthLength be the length of monthCode.
+    // 6. Let monthLength be the length of monthCode.
     auto month_length = month_code_string.length();
 
-    // 6. If monthLength is not 3, throw a RangeError exception.
+    // 7. If monthLength is not 3, throw a RangeError exception.
     if (month_length != 3)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
 
-    // 7. Let numberPart be the substring of monthCode from 1.
+    // 8. Let numberPart be the substring of monthCode from 1.
     auto number_part = month_code_string.substring(1);
 
-    // 8. Set numberPart to ! ToIntegerOrInfinity(numberPart).
+    // 9. Set numberPart to ! ToIntegerOrInfinity(numberPart).
     auto number_part_integer = MUST(Value(js_string(vm, move(number_part))).to_integer_or_infinity(global_object));
 
-    // 9. If numberPart < 1 or numberPart > 12, throw a RangeError exception.
+    // 10. If numberPart < 1 or numberPart > 12, throw a RangeError exception.
     if (number_part_integer < 1 || number_part_integer > 12)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
 
-    // 10. If month is not undefined, and month ≠ numberPart, then
+    // 11. If month is not undefined, and month ≠ numberPart, then
     if (!month.is_undefined() && month.as_double() != number_part_integer) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
     }
 
-    // 11. If SameValueNonNumeric(monthCode, ! BuildISOMonthCode(numberPart)) is false, then
+    // 12. If SameValueNonNumeric(monthCode, ! BuildISOMonthCode(numberPart)) is false, then
     if (month_code_string != build_iso_month_code(number_part_integer)) {
         // a. Throw a RangeError exception.
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
     }
 
-    // 12. Return numberPart.
+    // 13. Return numberPart.
     return number_part_integer;
 }
 
@@ -797,8 +799,8 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
     auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, {}));
 
-    // 4. Let year be ? Get(fields, "year").
-    auto year = TRY(prepared_fields->get(vm.names.year));
+    // 4. Let year be ! Get(fields, "year").
+    auto year = MUST(prepared_fields->get(vm.names.year));
 
     // 5. If year is undefined, throw a TypeError exception.
     if (year.is_undefined())
@@ -807,8 +809,8 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
     // 6. Let month be ? ResolveISOMonth(fields).
     auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
 
-    // 7. Let day be ? Get(fields, "day").
-    auto day = TRY(prepared_fields->get(vm.names.day));
+    // 7. Let day be ! Get(fields, "day").
+    auto day = MUST(prepared_fields->get(vm.names.day));
 
     // 8. If day is undefined, throw a TypeError exception.
     if (day.is_undefined())
@@ -831,8 +833,8 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_
     // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », «»).
     auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {}));
 
-    // 4. Let year be ? Get(fields, "year").
-    auto year = TRY(prepared_fields->get(vm.names.year));
+    // 4. Let year be ! Get(fields, "year").
+    auto year = MUST(prepared_fields->get(vm.names.year));
 
     // 5. If year is undefined, throw a TypeError exception.
     if (year.is_undefined())
@@ -861,14 +863,14 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
     auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, {}));
 
-    // 4. Let month be ? Get(fields, "month").
-    auto month_value = TRY(prepared_fields->get(vm.names.month));
+    // 4. Let month be ! Get(fields, "month").
+    auto month_value = MUST(prepared_fields->get(vm.names.month));
 
-    // 5. Let monthCode be ? Get(fields, "monthCode").
-    auto month_code = TRY(prepared_fields->get(vm.names.monthCode));
+    // 5. Let monthCode be ! Get(fields, "monthCode").
+    auto month_code = MUST(prepared_fields->get(vm.names.monthCode));
 
-    // 6. Let year be ? Get(fields, "year").
-    auto year = TRY(prepared_fields->get(vm.names.year));
+    // 6. Let year be ! Get(fields, "year").
+    auto year = MUST(prepared_fields->get(vm.names.year));
 
     // 7. If month is not undefined, and monthCode and year are both undefined, then
     if (!month_value.is_undefined() && month_code.is_undefined() && year.is_undefined()) {
@@ -879,8 +881,8 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 8. Set month to ? ResolveISOMonth(fields).
     auto month = TRY(resolve_iso_month(global_object, *prepared_fields));
 
-    // 9. Let day be ? Get(fields, "day").
-    auto day = TRY(prepared_fields->get(vm.names.day));
+    // 9. Let day be ! Get(fields, "day").
+    auto day = MUST(prepared_fields->get(vm.names.day));
 
     // 10. If day is undefined, throw a TypeError exception.
     if (day.is_undefined())

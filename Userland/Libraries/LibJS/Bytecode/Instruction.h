@@ -25,11 +25,14 @@
     O(Decrement)                     \
     O(Div)                           \
     O(EnterUnwindContext)            \
+    O(EnterObjectEnvironment)        \
     O(Exp)                           \
     O(FinishUnwind)                  \
     O(GetById)                       \
     O(GetByValue)                    \
     O(GetIterator)                   \
+    O(GetNewTarget)                  \
+    O(GetObjectPropertyIterator)     \
     O(GetVariable)                   \
     O(GreaterThan)                   \
     O(GreaterThanEquals)             \

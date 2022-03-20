@@ -14,7 +14,7 @@
 
 namespace JS::Intl {
 
-// 10.1.1 InitializeCollator ( collator, locales, options ), https://tc39.es/ecma402/#sec-initializecollator
+// 10.1.2 InitializeCollator ( collator, locales, options ), https://tc39.es/ecma402/#sec-initializecollator
 static ThrowCompletionOr<Collator*> initialize_collator(GlobalObject& global_object, Collator& collator, Value locales_value, Value options_value)
 {
     auto& vm = global_object.vm();
@@ -151,14 +151,14 @@ void CollatorConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
 }
 
-// 10.1.2 Intl.Collator ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.collator
+// 10.1.1 Intl.Collator ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.collator
 ThrowCompletionOr<Value> CollatorConstructor::call()
 {
     // 1. If NewTarget is undefined, let newTarget be the active function object, else let newTarget be NewTarget
     return TRY(construct(*this));
 }
 
-// 10.1.2 Intl.Collator ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.collator
+// 10.1.1 Intl.Collator ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.collator
 ThrowCompletionOr<Object*> CollatorConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();

@@ -23,7 +23,7 @@ class StaticRange final : public AbstractRange {
 public:
     using WrapperType = Bindings::StaticRangeWrapper;
 
-    virtual ~StaticRange() override;
+    virtual ~StaticRange() override = default;
 
     static ExceptionOr<NonnullRefPtr<StaticRange>> create_with_global_object(JS::GlobalObject&, StaticRangeInit& init);
 

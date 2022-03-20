@@ -405,8 +405,6 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigI
 // 6.5.6 DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetime
 ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& global_object, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object* options)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: Type(ns1) is BigInt.
     // 2. Assert: Type(ns2) is BigInt.
 
@@ -441,77 +439,72 @@ ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& globa
     auto* intermediate = MUST(create_temporal_zoned_date_time(global_object, *intermediate_ns, time_zone, calendar));
 
     // 12. Let result be ? NanosecondsToDays(timeRemainderNs, intermediate).
-    auto result = TRY(nanoseconds_to_days(global_object, *js_bigint(vm, time_remainder_ns), intermediate));
+    auto result = TRY(nanoseconds_to_days(global_object, time_remainder_ns, intermediate));
 
     // 13. Let timeDifference be ! BalanceDuration(0, 0, 0, 0, 0, 0, result.[[Nanoseconds]], "hour").
-    auto time_difference = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, *result.nanoseconds.cell(), "hour"sv));
+    auto time_difference = MUST(balance_duration(global_object, 0, 0, 0, 0, 0, 0, result.nanoseconds, "hour"sv));
 
     // 14. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], result.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
     return create_duration_record(date_difference.years, date_difference.months, date_difference.weeks, result.days, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, time_difference.nanoseconds);
 }
 
 // 6.5.7 NanosecondsToDays ( nanoseconds, relativeTo ), https://tc39.es/proposal-temporal/#sec-temporal-nanosecondstodays
-ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& global_object, BigInt const& nanoseconds_bigint, Value relative_to_value)
+ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& global_object, Crypto::SignedBigInteger nanoseconds, Value relative_to_value)
 {
     auto& vm = global_object.vm();
 
-    // 1. Assert: Type(nanoseconds) is BigInt.
-
-    // 2. Set nanoseconds to ℝ(nanoseconds).
-    auto nanoseconds = nanoseconds_bigint.big_integer();
-
-    // 3. Let dayLengthNs be 8.64 × 10^13.
+    // 1. Let dayLengthNs be 8.64 × 10^13.
     auto day_length_ns = "86400000000000"_sbigint;
 
-    // 4. If nanoseconds = 0, then
+    // 2. If nanoseconds = 0, then
     if (nanoseconds == "0"_bigint) {
         // a. Return the Record { [[Days]]: 0, [[Nanoseconds]]: 0, [[DayLength]]: dayLengthNs }.
-        return NanosecondsToDaysResult { .days = 0, .nanoseconds = make_handle(js_bigint(vm, { 0 })), .day_length = day_length_ns.to_double() };
+        return NanosecondsToDaysResult { .days = 0, .nanoseconds = "0"_sbigint, .day_length = day_length_ns.to_double() };
     }
 
-    // 5. If nanoseconds < 0, let sign be −1; else, let sign be 1.
+    // 3. If nanoseconds < 0, let sign be −1; else, let sign be 1.
     auto sign = nanoseconds.is_negative() ? -1 : 1;
 
-    // 6. If Type(relativeTo) is not Object or relativeTo does not have an [[InitializedTemporalZonedDateTime]] internal slot, then
+    // 4. If Type(relativeTo) is not Object or relativeTo does not have an [[InitializedTemporalZonedDateTime]] internal slot, then
     if (!relative_to_value.is_object() || !is<ZonedDateTime>(relative_to_value.as_object())) {
         // a. Return the Record { [[Days]]: the integral part of nanoseconds / dayLengthNs, [[Nanoseconds]]: (abs(nanoseconds) modulo dayLengthNs) × sign, [[DayLength]]: dayLengthNs }.
         return NanosecondsToDaysResult {
             .days = nanoseconds.divided_by(day_length_ns).quotient.to_double(),
-            .nanoseconds = make_handle(js_bigint(vm, Crypto::SignedBigInteger { nanoseconds.unsigned_value() }.divided_by(day_length_ns).remainder.multiplied_by(Crypto::SignedBigInteger { (i32)sign }))),
+            .nanoseconds = Crypto::SignedBigInteger { nanoseconds.unsigned_value() }.divided_by(day_length_ns).remainder.multiplied_by(Crypto::SignedBigInteger { (i32)sign }),
             .day_length = day_length_ns.to_double()
         };
     }
 
     auto& relative_to = static_cast<ZonedDateTime&>(relative_to_value.as_object());
 
-    // 7. Let startNs be ℝ(relativeTo.[[Nanoseconds]]).
+    // 5. Let startNs be ℝ(relativeTo.[[Nanoseconds]]).
     auto& start_ns = relative_to.nanoseconds().big_integer();
 
-    // 8. Let startInstant be ! CreateTemporalInstant(ℤ(startNs)).
+    // 6. Let startInstant be ! CreateTemporalInstant(ℤ(startNs)).
     auto* start_instant = MUST(create_temporal_instant(global_object, *js_bigint(vm, start_ns)));
 
-    // 9. Let startDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(relativeTo.[[TimeZone]], startInstant, relativeTo.[[Calendar]]).
+    // 7. Let startDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(relativeTo.[[TimeZone]], startInstant, relativeTo.[[Calendar]]).
     auto* start_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &relative_to.time_zone(), *start_instant, relative_to.calendar()));
 
-    // 10. Let endNs be startNs + nanoseconds.
+    // 8. Let endNs be startNs + nanoseconds.
     auto end_ns = start_ns.plus(nanoseconds);
 
-    // 11. Let endInstant be ! CreateTemporalInstant(ℤ(endNs)).
+    // 9. Let endInstant be ! CreateTemporalInstant(ℤ(endNs)).
     auto* end_instant = MUST(create_temporal_instant(global_object, *js_bigint(vm, end_ns)));
 
-    // 12. Let endDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(relativeTo.[[TimeZone]], endInstant, relativeTo.[[Calendar]]).
+    // 10. Let endDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(relativeTo.[[TimeZone]], endInstant, relativeTo.[[Calendar]]).
     auto* end_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, &relative_to.time_zone(), *end_instant, relative_to.calendar()));
 
-    // 13. Let dateDifference be ? DifferenceISODateTime(startDateTime.[[ISOYear]], startDateTime.[[ISOMonth]], startDateTime.[[ISODay]], startDateTime.[[ISOHour]], startDateTime.[[ISOMinute]], startDateTime.[[ISOSecond]], startDateTime.[[ISOMillisecond]], startDateTime.[[ISOMicrosecond]], startDateTime.[[ISONanosecond]], endDateTime.[[ISOYear]], endDateTime.[[ISOMonth]], endDateTime.[[ISODay]], endDateTime.[[ISOHour]], endDateTime.[[ISOMinute]], endDateTime.[[ISOSecond]], endDateTime.[[ISOMillisecond]], endDateTime.[[ISOMicrosecond]], endDateTime.[[ISONanosecond]], relativeTo.[[Calendar]], "day").
+    // 11. Let dateDifference be ? DifferenceISODateTime(startDateTime.[[ISOYear]], startDateTime.[[ISOMonth]], startDateTime.[[ISODay]], startDateTime.[[ISOHour]], startDateTime.[[ISOMinute]], startDateTime.[[ISOSecond]], startDateTime.[[ISOMillisecond]], startDateTime.[[ISOMicrosecond]], startDateTime.[[ISONanosecond]], endDateTime.[[ISOYear]], endDateTime.[[ISOMonth]], endDateTime.[[ISODay]], endDateTime.[[ISOHour]], endDateTime.[[ISOMinute]], endDateTime.[[ISOSecond]], endDateTime.[[ISOMillisecond]], endDateTime.[[ISOMicrosecond]], endDateTime.[[ISONanosecond]], relativeTo.[[Calendar]], "day").
     auto date_difference = TRY(difference_iso_date_time(global_object, start_date_time->iso_year(), start_date_time->iso_month(), start_date_time->iso_day(), start_date_time->iso_hour(), start_date_time->iso_minute(), start_date_time->iso_second(), start_date_time->iso_millisecond(), start_date_time->iso_microsecond(), start_date_time->iso_nanosecond(), end_date_time->iso_year(), end_date_time->iso_month(), end_date_time->iso_day(), end_date_time->iso_hour(), end_date_time->iso_minute(), end_date_time->iso_second(), end_date_time->iso_millisecond(), end_date_time->iso_microsecond(), end_date_time->iso_nanosecond(), relative_to.calendar(), "day"sv));
 
-    // 14. Let days be dateDifference.[[Days]].
+    // 12. Let days be dateDifference.[[Days]].
     auto days = date_difference.days;
 
-    // 15. Let intermediateNs be ℝ(? AddZonedDateTime(ℤ(startNs), relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, days, 0, 0, 0, 0, 0, 0)).
+    // 13. Let intermediateNs be ℝ(? AddZonedDateTime(ℤ(startNs), relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, days, 0, 0, 0, 0, 0, 0)).
     auto intermediate_ns = TRY(add_zoned_date_time(global_object, *js_bigint(vm, start_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, days, 0, 0, 0, 0, 0, 0))->big_integer();
 
-    // 16. If sign is 1, then
+    // 14. If sign is 1, then
     if (sign == 1) {
         // a. Repeat, while days > 0 and intermediateNs > endNs,
         while (days > 0 && intermediate_ns > end_ns) {
@@ -523,11 +516,11 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
         }
     }
 
-    // 17. Set nanoseconds to endNs − intermediateNs.
+    // 15. Set nanoseconds to endNs − intermediateNs.
     nanoseconds = end_ns.minus(intermediate_ns);
 
-    // 18. Let done be false.
-    // 19. Repeat, while done is false,
+    // 16. Let done be false.
+    // 17. Repeat, while done is false,
     while (true) {
         // a. Let oneDayFartherNs be ℝ(? AddZonedDateTime(ℤ(intermediateNs), relativeTo.[[TimeZone]], relativeTo.[[Calendar]], 0, 0, 0, sign, 0, 0, 0, 0, 0, 0)).
         auto one_day_farther_ns = TRY(add_zoned_date_time(global_object, *js_bigint(vm, intermediate_ns), &relative_to.time_zone(), relative_to.calendar(), 0, 0, 0, sign, 0, 0, 0, 0, 0, 0))->big_integer();
@@ -553,8 +546,8 @@ ThrowCompletionOr<NanosecondsToDaysResult> nanoseconds_to_days(GlobalObject& glo
         }
     }
 
-    // 20. Return the Record { [[Days]]: days, [[Nanoseconds]]: nanoseconds, [[DayLength]]: abs(dayLengthNs) }.
-    return NanosecondsToDaysResult { .days = days, .nanoseconds = make_handle(js_bigint(vm, move(nanoseconds))), .day_length = fabs(day_length_ns.to_double()) };
+    // 18. Return the Record { [[Days]]: days, [[Nanoseconds]]: nanoseconds, [[DayLength]]: abs(dayLengthNs) }.
+    return NanosecondsToDaysResult { .days = days, .nanoseconds = move(nanoseconds), .day_length = fabs(day_length_ns.to_double()) };
 }
 
 }

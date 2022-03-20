@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <LibGfx/Matrix4x4.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/Paintable.h>
 
@@ -29,9 +30,11 @@ public:
 
     void paint_descendants(PaintContext&, Layout::Node&, StackingContextPaintPhase) const;
     void paint(PaintContext&) const;
-    HitTestResult hit_test(Gfx::IntPoint const&, HitTestType) const;
+    HitTestResult hit_test(Gfx::FloatPoint const&, HitTestType) const;
 
     void dump(int indent = 0) const;
+
+    void sort();
 
 private:
     Layout::Box& m_box;
@@ -39,6 +42,9 @@ private:
     Vector<StackingContext*> m_children;
 
     void paint_internal(PaintContext&) const;
+    Gfx::FloatMatrix4x4 get_transformation_matrix(CSS::Transformation const& transformation) const;
+    Gfx::FloatMatrix4x4 combine_transformations(Vector<CSS::Transformation> const& transformations) const;
+    Gfx::AffineTransform combine_transformations_2d(Vector<CSS::Transformation> const& transformations) const;
 };
 
 }

@@ -76,11 +76,17 @@ private:
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
 
-    bool m_should_intercept_drag { false };
-    bool m_has_committed_to_dragging { false };
-    bool m_is_dragging_for_copy { false };
+    bool m_is_hovering_extend_zone { false };
+    bool m_is_hovering_cut_zone { false };
+    bool m_is_dragging_for_select { false };
+    bool m_is_dragging_for_cut { false };
+    bool m_is_dragging_for_extend { false };
+    bool m_has_committed_to_cutting { false };
+    bool m_has_committed_to_extending { false };
     GUI::ModelIndex m_starting_selection_index;
+    GUI::ModelIndex m_target_cell;
     RefPtr<Core::Timer> m_horizontal_scroll_end_timer;
     RefPtr<Core::Timer> m_vertical_scroll_end_timer;
 };

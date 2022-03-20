@@ -15,10 +15,6 @@
 
 namespace Web::CSS {
 
-StyleProperties::StyleProperties()
-{
-}
-
 StyleProperties::StyleProperties(const StyleProperties& other)
     : m_property_values(other.m_property_values)
 {
@@ -339,6 +335,8 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
                 values.append({ transformation_value.to_length() });
             } else if (transformation_value.is_numeric()) {
                 values.append({ transformation_value.to_number() });
+            } else if (transformation_value.is_angle()) {
+                values.append({ transformation_value.as_angle().angle().to_degrees() });
             } else {
                 dbgln("FIXME: Unsupported value in transform!");
             }

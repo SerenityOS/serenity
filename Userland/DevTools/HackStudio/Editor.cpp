@@ -108,7 +108,6 @@ const EditorWrapper& Editor::wrapper() const
 
 void Editor::focusin_event(GUI::FocusEvent& event)
 {
-    wrapper().set_editor_has_focus({}, true);
     if (on_focus)
         on_focus();
     GUI::TextEditor::focusin_event(event);
@@ -116,7 +115,6 @@ void Editor::focusin_event(GUI::FocusEvent& event)
 
 void Editor::focusout_event(GUI::FocusEvent& event)
 {
-    wrapper().set_editor_has_focus({}, false);
     GUI::TextEditor::focusout_event(event);
 }
 
@@ -323,10 +321,10 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
     if (event.button() == GUI::MouseButton::Primary && event.position().x() < ruler_line_rect.width()) {
         if (!breakpoint_lines().contains_slow(text_position.line())) {
             breakpoint_lines().append(text_position.line());
-            Debugger::the().on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Added);
+            Debugger::the().on_breakpoint_change(wrapper().filename_title(), text_position.line(), BreakpointChange::Added);
         } else {
             breakpoint_lines().remove_first_matching([&](size_t line) { return line == text_position.line(); });
-            Debugger::the().on_breakpoint_change(wrapper().filename_label().text(), text_position.line(), BreakpointChange::Removed);
+            Debugger::the().on_breakpoint_change(wrapper().filename_title(), text_position.line(), BreakpointChange::Removed);
         }
     }
 

@@ -31,9 +31,7 @@ UNMAP_AFTER_INIT PTYMultiplexer::PTYMultiplexer()
     });
 }
 
-UNMAP_AFTER_INIT PTYMultiplexer::~PTYMultiplexer()
-{
-}
+UNMAP_AFTER_INIT PTYMultiplexer::~PTYMultiplexer() = default;
 
 UNMAP_AFTER_INIT void PTYMultiplexer::initialize()
 {

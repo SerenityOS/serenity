@@ -39,6 +39,7 @@ class ParsingContext {
 public:
     ParsingContext() = default;
     explicit ParsingContext(DOM::Document const&);
+    explicit ParsingContext(DOM::Document const&, Optional<AK::URL> const);
     explicit ParsingContext(DOM::ParentNode&);
 
     bool in_quirks_mode() const;
@@ -51,13 +52,14 @@ public:
 private:
     DOM::Document const* m_document { nullptr };
     PropertyID m_current_property_id { PropertyID::Invalid };
+    Optional<AK::URL> m_url;
 };
 
 template<typename T>
 class TokenStream {
 public:
     explicit TokenStream(Vector<T> const&);
-    ~TokenStream();
+    ~TokenStream() = default;
 
     TokenStream(TokenStream<T> const&) = delete;
 
@@ -85,7 +87,7 @@ private:
 class Parser {
 public:
     Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
-    ~Parser();
+    ~Parser() = default;
 
     // The normal parser entry point, for parsing stylesheets.
     NonnullRefPtr<CSSStyleSheet> parse_as_stylesheet();
@@ -103,9 +105,16 @@ public:
     Vector<StyleComponentValueRule> parse_as_list_of_component_values();
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
 
+    enum class SelectorParsingMode {
+        Standard,
+        // `<forgiving-selector-list>` and `<forgiving-relative-selector-list>`
+        // are handled with this parameter, not as separate functions.
+        // https://drafts.csswg.org/selectors/#forgiving-selector
+        Forgiving
+    };
     // Contrary to the name, these parse a comma-separated list of selectors, according to the spec.
-    Optional<SelectorList> parse_as_selector();
-    Optional<SelectorList> parse_as_relative_selector();
+    Optional<SelectorList> parse_as_selector(SelectorParsingMode = SelectorParsingMode::Standard);
+    Optional<SelectorList> parse_as_relative_selector(SelectorParsingMode = SelectorParsingMode::Standard);
 
     NonnullRefPtrVector<MediaQuery> parse_as_media_query_list();
     RefPtr<MediaQuery> parse_as_media_query();
@@ -139,20 +148,24 @@ private:
     Vector<StyleComponentValueRule> parse_a_list_of_component_values(TokenStream<T>&);
     template<typename T>
     Vector<Vector<StyleComponentValueRule>> parse_a_comma_separated_list_of_component_values(TokenStream<T>&);
+
+    enum class SelectorType {
+        Standalone,
+        Relative
+    };
     template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_selector(TokenStream<T>&);
-    template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_relative_selector(TokenStream<T>&);
-    template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_selector_list(TokenStream<T>&);
-    template<typename T>
-    Result<SelectorList, ParsingResult> parse_a_relative_selector_list(TokenStream<T>&);
+    Result<SelectorList, ParsingResult> parse_a_selector_list(TokenStream<T>&, SelectorType, SelectorParsingMode = SelectorParsingMode::Standard);
+
     template<typename T>
     NonnullRefPtrVector<MediaQuery> parse_a_media_query_list(TokenStream<T>&);
     template<typename T>
     RefPtr<Supports> parse_a_supports(TokenStream<T>&);
 
-    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&);
+    enum class AllowTrailingTokens {
+        No,
+        Yes
+    };
+    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&, AllowTrailingTokens = AllowTrailingTokens::No);
 
     template<typename T>
     [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(TokenStream<T>&, bool top_level);
@@ -299,7 +312,7 @@ private:
     OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(TokenStream<StyleComponentValueRule>&);
     OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(Vector<StyleComponentValueRule> const&);
 
-    Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<StyleComponentValueRule>&, bool allow_starting_combinator);
+    Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<StyleComponentValueRule>&, SelectorType);
     Result<Selector::CompoundSelector, ParsingResult> parse_compound_selector(TokenStream<StyleComponentValueRule>&);
     Optional<Selector::Combinator> parse_selector_combinator(TokenStream<StyleComponentValueRule>&);
     Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);

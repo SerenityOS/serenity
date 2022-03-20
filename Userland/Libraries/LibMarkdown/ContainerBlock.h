@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +24,7 @@ public:
     {
     }
 
-    virtual ~ContainerBlock() override { }
+    virtual ~ContainerBlock() override = default;
 
     virtual String render_to_html(bool tight = false) const override;
     virtual String render_for_terminal(size_t view_width = 0) const override;

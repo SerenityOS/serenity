@@ -6,17 +6,17 @@
 
 #pragma once
 
-#include <LibWeb/Layout/SVGGraphicsBox.h>
+#include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
 namespace Web::Layout {
 
-class SVGSVGBox final : public SVGGraphicsBox {
+class SVGSVGBox final : public ReplacedBox {
 public:
     SVGSVGBox(DOM::Document&, SVG::SVGSVGElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~SVGSVGBox() override = default;
 
-    SVG::SVGSVGElement& dom_node() { return verify_cast<SVG::SVGSVGElement>(SVGGraphicsBox::dom_node()); }
+    SVG::SVGSVGElement& dom_node() { return verify_cast<SVG::SVGSVGElement>(ReplacedBox::dom_node()); }
 
     virtual bool can_have_children() const override { return true; }
 

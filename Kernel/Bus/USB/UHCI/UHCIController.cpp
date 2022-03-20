@@ -89,9 +89,7 @@ UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::DeviceIdentifier const& pci
 {
 }
 
-UNMAP_AFTER_INIT UHCIController::~UHCIController()
-{
-}
+UNMAP_AFTER_INIT UHCIController::~UHCIController() = default;
 
 ErrorOr<void> UHCIController::reset()
 {

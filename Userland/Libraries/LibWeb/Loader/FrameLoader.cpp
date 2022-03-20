@@ -36,9 +36,7 @@ FrameLoader::FrameLoader(HTML::BrowsingContext& browsing_context)
     }
 }
 
-FrameLoader::~FrameLoader()
-{
-}
+FrameLoader::~FrameLoader() = default;
 
 static bool build_markdown_document(DOM::Document& document, const ByteBuffer& data)
 {

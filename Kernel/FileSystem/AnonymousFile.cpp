@@ -15,9 +15,7 @@ AnonymousFile::AnonymousFile(NonnullRefPtr<Memory::AnonymousVMObject> vmobject)
 {
 }
 
-AnonymousFile::~AnonymousFile()
-{
-}
+AnonymousFile::~AnonymousFile() = default;
 
 ErrorOr<Memory::Region*> AnonymousFile::mmap(Process& process, OpenFileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {

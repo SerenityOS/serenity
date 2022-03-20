@@ -1,17 +1,17 @@
-From 598edcb699a2b45dbd8f413e580145b39e1baa69 Mon Sep 17 00:00:00 2001
+From 13d34247badfb4adcbf725c04dd6ee2af30e6995 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
 Date: Thu, 13 Jan 2022 16:13:02 +0330
-Subject: [PATCH 12/12] Makefile: Install to /usr/local
+Subject: [PATCH 14/14] Makefile: Install to /usr/local
 
 ---
  Makefile | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index 47534a3..6a768d1 100644
+index f8f71c5..1d90cd0 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -66,10 +66,10 @@ LDFLAGS += -static -z muldefs
+@@ -74,10 +74,10 @@ LDFLAGS += -static -z muldefs
  CFLAGS += -DBUILD_STATIC
  endif
  
@@ -27,5 +27,5 @@ index 47534a3..6a768d1 100644
  #
  #  Stressors
 -- 
-2.34.1
+2.32.0
 

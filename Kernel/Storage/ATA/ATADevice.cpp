@@ -21,9 +21,7 @@ ATADevice::ATADevice(const ATAController& controller, ATADevice::Address ata_add
 {
 }
 
-ATADevice::~ATADevice()
-{
-}
+ATADevice::~ATADevice() = default;
 
 void ATADevice::start_request(AsyncBlockDeviceRequest& request)
 {

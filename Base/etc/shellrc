@@ -28,8 +28,6 @@ alias ue=UserspaceEmulator
 alias fe=FontEditor
 alias ss=Spreadsheet
 
-alias rgrep="grep -r"
-alias egrep="grep -E"
 alias ll='ls -l'
 
 if [ "$(id -u)" = "0" ] {

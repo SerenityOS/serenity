@@ -172,7 +172,5 @@ void NVMeQueue::write(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32
     submit_sqe(sub);
 }
 
-UNMAP_AFTER_INIT NVMeQueue::~NVMeQueue()
-{
-}
+UNMAP_AFTER_INIT NVMeQueue::~NVMeQueue() = default;
 }

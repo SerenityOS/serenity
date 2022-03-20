@@ -13,10 +13,6 @@ CSSConditionRule::CSSConditionRule(NonnullRefPtrVector<CSSRule>&& rules)
 {
 }
 
-CSSConditionRule::~CSSConditionRule()
-{
-}
-
 void CSSConditionRule::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
 {
     if (condition_matches())

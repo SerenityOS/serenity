@@ -19,10 +19,6 @@ Generator::Generator()
 {
 }
 
-Generator::~Generator()
-{
-}
-
 CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode const& node, FunctionKind enclosing_function_kind)
 {
     Generator generator;
@@ -76,14 +72,43 @@ Label Generator::nearest_continuable_scope() const
     return m_continuable_scopes.last();
 }
 
+void Generator::begin_variable_scope(BindingMode mode, SurroundingScopeKind kind)
+{
+    m_variable_scopes.append({ kind, mode, {} });
+    if (mode != BindingMode::Global) {
+        start_boundary(mode == BindingMode::Lexical ? BlockBoundaryType::LeaveLexicalEnvironment : BlockBoundaryType::LeaveVariableEnvironment);
+        emit<Bytecode::Op::CreateEnvironment>(
+            mode == BindingMode::Lexical
+                ? Bytecode::Op::EnvironmentMode::Lexical
+                : Bytecode::Op::EnvironmentMode::Var);
+    }
+}
+
+void Generator::end_variable_scope()
+{
+    auto mode = m_variable_scopes.take_last().mode;
+    if (mode != BindingMode::Global) {
+        end_boundary(mode == BindingMode::Lexical ? BlockBoundaryType::LeaveLexicalEnvironment : BlockBoundaryType::LeaveVariableEnvironment);
+
+        if (!m_current_basic_block->is_terminated()) {
+            emit<Bytecode::Op::LeaveEnvironment>(
+                mode == BindingMode::Lexical
+                    ? Bytecode::Op::EnvironmentMode::Lexical
+                    : Bytecode::Op::EnvironmentMode::Var);
+        }
+    }
+}
+
 void Generator::begin_continuable_scope(Label continue_target)
 {
     m_continuable_scopes.append(continue_target);
+    start_boundary(BlockBoundaryType::Continue);
 }
 
 void Generator::end_continuable_scope()
 {
     m_continuable_scopes.take_last();
+    end_boundary(BlockBoundaryType::Continue);
 }
 Label Generator::nearest_breakable_scope() const
 {
@@ -92,11 +117,13 @@ Label Generator::nearest_breakable_scope() const
 void Generator::begin_breakable_scope(Label breakable_target)
 {
     m_breakable_scopes.append(breakable_target);
+    start_boundary(BlockBoundaryType::Break);
 }
 
 void Generator::end_breakable_scope()
 {
     m_breakable_scopes.take_last();
+    end_boundary(BlockBoundaryType::Break);
 }
 
 CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode const& node)
@@ -167,7 +194,10 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
         return {};
     }
 
-    VERIFY_NOT_REACHED();
+    return CodeGenerationError {
+        &node,
+        "Unimplemented/invalid node used a reference"sv
+    };
 }
 
 String CodeGenerationError::to_string()

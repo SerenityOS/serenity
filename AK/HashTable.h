@@ -461,12 +461,11 @@ private:
         auto old_capacity = m_capacity;
         Iterator old_iter = begin();
 
-        auto* new_buckets = kmalloc(size_in_bytes(new_capacity));
+        auto* new_buckets = kcalloc(1, size_in_bytes(new_capacity));
         if (!new_buckets)
             return Error::from_errno(ENOMEM);
 
         m_buckets = (BucketType*)new_buckets;
-        __builtin_memset(m_buckets, 0, size_in_bytes(new_capacity));
 
         m_capacity = new_capacity;
         m_deleted_count = 0;

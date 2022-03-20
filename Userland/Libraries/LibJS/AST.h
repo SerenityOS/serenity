@@ -46,7 +46,7 @@ create_ast_node(SourceRange range, Args&&... args)
 
 class ASTNode : public RefCounted<ASTNode> {
 public:
-    virtual ~ASTNode() { }
+    virtual ~ASTNode() = default;
     virtual Completion execute(Interpreter&, GlobalObject&) const = 0;
     virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const;
     virtual void dump(int indent) const;
@@ -844,6 +844,7 @@ public:
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     NonnullRefPtr<Expression> m_object;
@@ -893,6 +894,7 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
 
@@ -917,6 +919,7 @@ public:
     Statement const& body() const { return *m_body; }
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
     virtual Completion loop_evaluation(Interpreter&, GlobalObject&, Vector<FlyString> const&) const override;
     virtual void dump(int indent) const override;
 
@@ -1863,6 +1866,7 @@ public:
 
     virtual Completion execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual Bytecode::CodeGenerationErrorOr<void> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     Type m_type;

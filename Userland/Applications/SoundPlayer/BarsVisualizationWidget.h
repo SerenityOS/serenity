@@ -8,7 +8,9 @@
 #pragma once
 
 #include "VisualizationWidget.h"
+#include <AK/Array.h>
 #include <AK/Complex.h>
+#include <AK/FixedArray.h>
 #include <LibAudio/Buffer.h>
 #include <LibGUI/Frame.h>
 
@@ -17,22 +19,24 @@ class BarsVisualizationWidget final : public VisualizationWidget {
 
 public:
     ~BarsVisualizationWidget() override = default;
-    void set_buffer(RefPtr<Audio::Buffer> buffer) override;
-    void set_samplerate(int samplerate) override;
 
 private:
     BarsVisualizationWidget();
-    void set_buffer(RefPtr<Audio::Buffer> buffer, int samples_to_use);
 
-    void paint_event(GUI::PaintEvent&) override;
+    void render(GUI::PaintEvent&, FixedArray<double> const&) override;
     void context_menu_event(GUI::ContextMenuEvent& event) override;
 
-    Vector<Complex<double>> m_sample_buffer;
-    Vector<int> m_gfx_falling_bars;
-    int m_last_id;
-    int m_sample_count;
-    int m_samplerate;
+    static constexpr size_t fft_size = 512;
+    static constexpr size_t bar_count = 64;
+    // Things become weird near the Nyquist limit. Just don't use that FFT data.
+    static constexpr size_t cutoff = fft_size - 32;
+
+    Array<Complex<double>, fft_size> m_fft_samples {};
+    Array<double, fft_size> m_fft_window {};
+    Array<double, fft_size / 2> m_previous_samples {};
+    Array<int, bar_count> m_gfx_falling_bars {};
     bool m_is_using_last;
     bool m_adjust_frequencies;
+    bool m_logarithmic_spectrum;
     RefPtr<GUI::Menu> m_context_menu;
 };

@@ -105,10 +105,6 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
 }
 
-ArrayPrototype::~ArrayPrototype()
-{
-}
-
 // 10.4.2.3 ArraySpeciesCreate ( originalArray, length ), https://tc39.es/ecma262/#sec-arrayspeciescreate
 static ThrowCompletionOr<Object*> array_species_create(GlobalObject& global_object, Object& original_array, size_t length)
 {

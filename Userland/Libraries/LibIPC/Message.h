@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,7 +44,7 @@ enum class ErrorCode : u32 {
 
 class Message {
 public:
-    virtual ~Message();
+    virtual ~Message() = default;
 
     virtual u32 endpoint_magic() const = 0;
     virtual int message_id() const = 0;
@@ -52,7 +53,7 @@ public:
     virtual MessageBuffer encode() const = 0;
 
 protected:
-    Message();
+    Message() = default;
 };
 
 }

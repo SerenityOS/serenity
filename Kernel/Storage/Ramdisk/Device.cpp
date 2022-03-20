@@ -8,8 +8,8 @@
 #include <AK/StringView.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/Storage/RamdiskController.h>
-#include <Kernel/Storage/RamdiskDevice.h>
+#include <Kernel/Storage/Ramdisk/Controller.h>
+#include <Kernel/Storage/Ramdisk/Device.h>
 
 namespace Kernel {
 
@@ -32,9 +32,7 @@ RamdiskDevice::RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Reg
     dmesgln("Ramdisk: Device #{} @ {}, Capacity={}", minor, m_region->vaddr(), max_addressable_block() * 512);
 }
 
-RamdiskDevice::~RamdiskDevice()
-{
-}
+RamdiskDevice::~RamdiskDevice() = default;
 
 StringView RamdiskDevice::class_name() const
 {

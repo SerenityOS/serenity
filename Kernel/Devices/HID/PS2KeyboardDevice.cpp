@@ -116,8 +116,6 @@ UNMAP_AFTER_INIT PS2KeyboardDevice::PS2KeyboardDevice(const I8042Controller& ps2
 
 // FIXME: UNMAP_AFTER_INIT might not be correct, because in practice PS/2 devices
 // are hot pluggable.
-UNMAP_AFTER_INIT PS2KeyboardDevice::~PS2KeyboardDevice()
-{
-}
+UNMAP_AFTER_INIT PS2KeyboardDevice::~PS2KeyboardDevice() = default;
 
 }

@@ -172,6 +172,7 @@ set(SOURCES
     HTML/HTMLObjectElement.cpp
     HTML/HTMLOptGroupElement.cpp
     HTML/HTMLOptionElement.cpp
+    HTML/HTMLOptionsCollection.cpp
     HTML/HTMLOutputElement.cpp
     HTML/HTMLParagraphElement.cpp
     HTML/HTMLParamElement.cpp
@@ -321,6 +322,7 @@ set(SOURCES
     SVG/SVGPolylineElement.cpp
     SVG/SVGRectElement.cpp
     SVG/SVGSVGElement.cpp
+    SVG/SVGTextContentElement.cpp
     SVG/TagNames.cpp
     SVG/ViewBox.cpp
     Selection/Selection.cpp
@@ -522,6 +524,7 @@ libweb_js_wrapper(HTML/HTMLObjectElement)
 libweb_js_wrapper(HTML/HTMLOListElement)
 libweb_js_wrapper(HTML/HTMLOptGroupElement)
 libweb_js_wrapper(HTML/HTMLOptionElement)
+libweb_js_wrapper(HTML/HTMLOptionsCollection)
 libweb_js_wrapper(HTML/HTMLOutputElement)
 libweb_js_wrapper(HTML/HTMLParagraphElement)
 libweb_js_wrapper(HTML/HTMLParamElement)
@@ -578,6 +581,7 @@ libweb_js_wrapper(SVG/SVGPolygonElement)
 libweb_js_wrapper(SVG/SVGPolylineElement)
 libweb_js_wrapper(SVG/SVGRectElement)
 libweb_js_wrapper(SVG/SVGSVGElement)
+libweb_js_wrapper(SVG/SVGTextContentElement)
 libweb_js_wrapper(Selection/Selection)
 libweb_js_wrapper(UIEvents/FocusEvent)
 libweb_js_wrapper(UIEvents/KeyboardEvent)

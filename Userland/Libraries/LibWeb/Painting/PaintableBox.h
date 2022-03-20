@@ -115,7 +115,7 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const override;
     virtual void after_children_paint(PaintContext&, PaintPhase) const override;
 
-    virtual HitTestResult hit_test(Gfx::IntPoint const&, HitTestType) const override;
+    virtual HitTestResult hit_test(Gfx::FloatPoint const&, HitTestType) const override;
 
 protected:
     explicit PaintableBox(Layout::Box const&);
@@ -164,7 +164,7 @@ public:
     virtual bool wants_mouse_events() const override { return false; }
     virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
 
-    virtual HitTestResult hit_test(Gfx::IntPoint const&, HitTestType) const override;
+    virtual HitTestResult hit_test(Gfx::FloatPoint const&, HitTestType) const override;
 
 protected:
     PaintableWithLines(Layout::BlockContainer const&);

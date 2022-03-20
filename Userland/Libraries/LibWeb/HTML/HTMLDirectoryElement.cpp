@@ -13,8 +13,5 @@ HTMLDirectoryElement::HTMLDirectoryElement(DOM::Document& document, DOM::Qualifi
 {
 }
 
-HTMLDirectoryElement::~HTMLDirectoryElement()
-{
-}
-
+HTMLDirectoryElement::~HTMLDirectoryElement() = default;
 }

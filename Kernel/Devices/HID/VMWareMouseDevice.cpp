@@ -57,8 +57,6 @@ VMWareMouseDevice::VMWareMouseDevice(const I8042Controller& ps2_controller)
     : PS2MouseDevice(ps2_controller)
 {
 }
-VMWareMouseDevice::~VMWareMouseDevice()
-{
-}
+VMWareMouseDevice::~VMWareMouseDevice() = default;
 
 }

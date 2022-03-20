@@ -21,17 +21,21 @@ HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName
     m_image_loader.on_load = [this] {
         m_should_show_fallback_content = false;
         set_needs_style_update(true);
+        this->document().set_needs_layout();
+        // FIXME: This should be done by the HTML^Wdocument parser.
+        dispatch_event(DOM::Event::create(HTML::EventNames::load));
     };
 
     m_image_loader.on_fail = [this] {
         m_should_show_fallback_content = true;
         set_needs_style_update(true);
+        this->document().set_needs_layout();
+        // FIXME: This should be done by the HTML^Wdocument parser.
+        dispatch_event(DOM::Event::create(HTML::EventNames::load));
     };
 }
 
-HTMLObjectElement::~HTMLObjectElement()
-{
-}
+HTMLObjectElement::~HTMLObjectElement() = default;
 
 void HTMLObjectElement::parse_attribute(const FlyString& name, const String& value)
 {

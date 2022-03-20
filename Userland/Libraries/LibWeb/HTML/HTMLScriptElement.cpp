@@ -24,14 +24,15 @@ HTMLScriptElement::HTMLScriptElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-HTMLScriptElement::~HTMLScriptElement()
-{
-}
+HTMLScriptElement::~HTMLScriptElement() = default;
 
 void HTMLScriptElement::set_parser_document(Badge<HTMLParser>, DOM::Document& document)
 {
     m_parser_document = document;
+}
 
+void HTMLScriptElement::begin_delaying_document_load_event(DOM::Document& document)
+{
     // https://html.spec.whatwg.org/multipage/scripting.html#concept-script-script
     // The user agent must delay the load event of the element's node document until the script is ready.
     m_document_load_event_delayer.emplace(document);
@@ -294,6 +295,9 @@ void HTMLScriptElement::prepare_script()
             //    Fetch a classic script given url, settings object, options, classic script CORS setting, and encoding.
             auto request = LoadRequest::create_for_url_on_page(url, document().page());
 
+            if (parser_document)
+                begin_delaying_document_load_event(*parser_document);
+
             ResourceLoader::the().load(
                 request,
                 [this, url](auto data, auto&, auto) {
@@ -329,7 +333,7 @@ void HTMLScriptElement::prepare_script()
             // 1. Let script be the result of creating a classic script using source text, settings object, base URL, and options.
 
             // FIXME: Pass settings, base URL and options.
-            auto script = ClassicScript::create(m_document->url().to_string(), source_text, document().relevant_settings_object(), AK::URL());
+            auto script = ClassicScript::create(m_document->url().to_string(), source_text, document().relevant_settings_object(), AK::URL(), m_source_line_number);
 
             // 2. Set the script's script to script.
             m_script = script;

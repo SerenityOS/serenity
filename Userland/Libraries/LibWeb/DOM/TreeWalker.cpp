@@ -22,10 +22,6 @@ TreeWalker::TreeWalker(Node& root)
 {
 }
 
-TreeWalker::~TreeWalker()
-{
-}
-
 // https://dom.spec.whatwg.org/#dom-document-createtreewalker
 NonnullRefPtr<TreeWalker> TreeWalker::create(Node& root, unsigned what_to_show, RefPtr<NodeFilter> filter)
 {

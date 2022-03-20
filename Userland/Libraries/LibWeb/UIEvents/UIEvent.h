@@ -31,7 +31,7 @@ public:
         return adopt_ref(*new UIEvent(event_name, event_init));
     }
 
-    virtual ~UIEvent() override { }
+    virtual ~UIEvent() override = default;
 
     HTML::Window const* view() const { return m_view; }
     int detail() const { return m_detail; }

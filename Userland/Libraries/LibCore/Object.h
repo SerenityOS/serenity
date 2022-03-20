@@ -14,6 +14,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <AK/TypeCasts.h>
 #include <AK/Weakable.h>
 #include <LibCore/Forward.h>
@@ -43,7 +44,7 @@ public:
     ObjectClassRegistration(StringView class_name, Function<RefPtr<Object>()> factory, ObjectClassRegistration* parent_class = nullptr);
     ~ObjectClassRegistration() = default;
 
-    String class_name() const { return m_class_name; }
+    StringView class_name() const { return m_class_name; }
     const ObjectClassRegistration* parent_class() const { return m_parent_class; }
     RefPtr<Object> construct() const { return m_factory(); }
     bool is_derived_from(const ObjectClassRegistration& base_class) const;
@@ -66,7 +67,7 @@ enum class TimerShouldFireWhenNotVisible {
 
 #define C_OBJECT(klass)                                                                  \
 public:                                                                                  \
-    virtual const char* class_name() const override { return #klass; }                   \
+    virtual StringView class_name() const override { return #klass; }                    \
     template<typename Klass = klass, class... Args>                                      \
     static NonnullRefPtr<klass> construct(Args&&... args)                                \
     {                                                                                    \
@@ -80,7 +81,7 @@ public:                                                                         
 
 #define C_OBJECT_ABSTRACT(klass) \
 public:                          \
-    virtual const char* class_name() const override { return #klass; }
+    virtual StringView class_name() const override { return #klass; }
 
 class Object
     : public RefCounted<Object>
@@ -95,7 +96,7 @@ class Object
 public:
     virtual ~Object();
 
-    virtual const char* class_name() const = 0;
+    virtual StringView class_name() const = 0;
 
     const String& name() const { return m_name; }
     void set_name(String name) { m_name = move(name); }

@@ -326,6 +326,12 @@ Gfx::IntRect AbstractTableView::content_rect(const ModelIndex& index) const
     return content_rect(index.row(), index.column());
 }
 
+Gfx::IntRect AbstractTableView::content_rect_minus_scrollbars(const ModelIndex& index) const
+{
+    auto naive_content_rect = content_rect(index.row(), index.column());
+    return { naive_content_rect.x() - horizontal_scrollbar().value(), naive_content_rect.y() - vertical_scrollbar().value(), naive_content_rect.width(), naive_content_rect.height() };
+}
+
 Gfx::IntRect AbstractTableView::row_rect(int item_index) const
 {
     return { row_header().is_visible() ? row_header().width() : 0,

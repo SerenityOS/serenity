@@ -8,7 +8,6 @@
 
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -33,7 +32,5 @@ public:
 private:
     Type m_type { Type::Cardinal }; // [[Type]]
 };
-
-ThrowCompletionOr<PluralRules*> initialize_plural_rules(GlobalObject& global_object, PluralRules& plural_rules, Value locales_value, Value options_value);
 
 }

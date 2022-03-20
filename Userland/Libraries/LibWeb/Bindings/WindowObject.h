@@ -32,7 +32,7 @@ class WindowObject
 public:
     explicit WindowObject(HTML::Window&);
     virtual void initialize_global_object() override;
-    virtual ~WindowObject() override;
+    virtual ~WindowObject() override = default;
 
     HTML::Window& impl() { return *m_impl; }
     const HTML::Window& impl() const { return *m_impl; }
@@ -79,6 +79,9 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(top_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(document_getter);
+
+    JS_DECLARE_NATIVE_FUNCTION(name_getter);
+    JS_DECLARE_NATIVE_FUNCTION(name_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(performance_getter);
     JS_DECLARE_NATIVE_FUNCTION(history_getter);

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,8 +17,8 @@
 namespace Gfx {
 
 // Row strides and offsets for each interlace pass.
-static const int INTERLACE_ROW_STRIDES[] = { 8, 8, 4, 2 };
-static const int INTERLACE_ROW_OFFSETS[] = { 0, 4, 2, 1 };
+static constexpr Array<int, 4> INTERLACE_ROW_STRIDES = { 8, 8, 4, 2 };
+static constexpr Array<int, 4> INTERLACE_ROW_OFFSETS = { 0, 4, 2, 1 };
 
 struct GIFImageDescriptor {
     u16 x { 0 };
@@ -605,7 +606,7 @@ GIFImageDecoderPlugin::GIFImageDecoderPlugin(const u8* data, size_t size)
     m_context->data_size = size;
 }
 
-GIFImageDecoderPlugin::~GIFImageDecoderPlugin() { }
+GIFImageDecoderPlugin::~GIFImageDecoderPlugin() = default;
 
 IntSize GIFImageDecoderPlugin::size()
 {

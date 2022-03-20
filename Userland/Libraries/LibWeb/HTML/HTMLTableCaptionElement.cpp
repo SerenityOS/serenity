@@ -13,8 +13,6 @@ HTMLTableCaptionElement::HTMLTableCaptionElement(DOM::Document& document, DOM::Q
 {
 }
 
-HTMLTableCaptionElement::~HTMLTableCaptionElement()
-{
-}
+HTMLTableCaptionElement::~HTMLTableCaptionElement() = default;
 
 }

@@ -31,10 +31,6 @@ void SetConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
 
-SetConstructor::~SetConstructor()
-{
-}
-
 // 24.2.1.1 Set ( [ iterable ] ), https://tc39.es/ecma262/#sec-set-iterable
 ThrowCompletionOr<Value> SetConstructor::call()
 {

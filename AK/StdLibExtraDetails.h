@@ -10,15 +10,6 @@
 
 namespace AK::Detail {
 
-template<bool B, class T = void>
-struct EnableIf {
-};
-
-template<class T>
-struct EnableIf<true, T> {
-    using Type = T;
-};
-
 template<class T, T v>
 struct IntegralConstant {
     static constexpr T value = v;
@@ -591,7 +582,6 @@ using AK::Detail::Conditional;
 using AK::Detail::CopyConst;
 using AK::Detail::declval;
 using AK::Detail::DependentFalse;
-using AK::Detail::EnableIf;
 using AK::Detail::FalseType;
 using AK::Detail::IdentityType;
 using AK::Detail::IndexSequence;

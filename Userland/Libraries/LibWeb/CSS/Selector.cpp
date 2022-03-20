@@ -13,23 +13,16 @@ namespace Web::CSS {
 Selector::Selector(Vector<CompoundSelector>&& compound_selectors)
     : m_compound_selectors(move(compound_selectors))
 {
-}
-
-Selector::~Selector()
-{
-}
-
-Optional<Selector::PseudoElement> Selector::pseudo_element() const
-{
     // Note: This assumes that only one pseudo-element is allowed in a selector, and that it appears at the end.
     //       This is true currently, and there are no current proposals to change this, but you never know!
-    if (compound_selectors().is_empty())
-        return {};
-    for (auto const& simple_selector : compound_selectors().last().simple_selectors) {
-        if (simple_selector.type == SimpleSelector::Type::PseudoElement)
-            return simple_selector.pseudo_element;
+    if (!m_compound_selectors.is_empty()) {
+        for (auto const& simple_selector : m_compound_selectors.last().simple_selectors) {
+            if (simple_selector.type == SimpleSelector::Type::PseudoElement) {
+                m_pseudo_element = simple_selector.pseudo_element;
+                break;
+            }
+        }
     }
-    return {};
 }
 
 // https://www.w3.org/TR/selectors-4/#specificity-rules
@@ -38,32 +31,89 @@ u32 Selector::specificity() const
     if (m_specificity.has_value())
         return *m_specificity;
 
-    unsigned ids = 0;
-    unsigned tag_names = 0;
-    unsigned classes = 0;
+    constexpr u32 ids_shift = 16;
+    constexpr u32 classes_shift = 8;
+    constexpr u32 tag_names_shift = 0;
+    constexpr u32 ids_mask = 0xff << ids_shift;
+    constexpr u32 classes_mask = 0xff << classes_shift;
+    constexpr u32 tag_names_mask = 0xff << tag_names_shift;
+
+    u32 ids = 0;
+    u32 classes = 0;
+    u32 tag_names = 0;
+
+    auto count_specificity_of_most_complex_selector = [&](auto& selector_list) {
+        u32 max_selector_list_argument_specificity = 0;
+        for (auto const& complex_selector : selector_list) {
+            max_selector_list_argument_specificity = max(max_selector_list_argument_specificity, complex_selector.specificity());
+        }
+
+        u32 child_ids = (max_selector_list_argument_specificity & ids_mask) >> ids_shift;
+        u32 child_classes = (max_selector_list_argument_specificity & classes_mask) >> classes_shift;
+        u32 child_tag_names = (max_selector_list_argument_specificity & tag_names_mask) >> tag_names_shift;
+
+        ids += child_ids;
+        classes += child_classes;
+        tag_names += child_tag_names;
+    };
 
     for (auto& list : m_compound_selectors) {
         for (auto& simple_selector : list.simple_selectors) {
             switch (simple_selector.type) {
             case SimpleSelector::Type::Id:
+                // count the number of ID selectors in the selector (= A)
                 ++ids;
                 break;
             case SimpleSelector::Type::Class:
             case SimpleSelector::Type::Attribute:
-            case SimpleSelector::Type::PseudoClass:
+                // count the number of class selectors, attributes selectors, and pseudo-classes in the selector (= B)
                 ++classes;
+                break;
+            case SimpleSelector::Type::PseudoClass:
+                switch (simple_selector.pseudo_class.type) {
+                case SimpleSelector::PseudoClass::Type::Is:
+                case SimpleSelector::PseudoClass::Type::Not: {
+                    // The specificity of an :is(), :not(), or :has() pseudo-class is replaced by the
+                    // specificity of the most specific complex selector in its selector list argument.
+                    count_specificity_of_most_complex_selector(simple_selector.pseudo_class.argument_selector_list);
+                    break;
+                }
+                case SimpleSelector::PseudoClass::Type::NthChild:
+                case SimpleSelector::PseudoClass::Type::NthLastChild: {
+                    // Analogously, the specificity of an :nth-child() or :nth-last-child() selector
+                    // is the specificity of the pseudo class itself (counting as one pseudo-class selector)
+                    // plus the specificity of the most specific complex selector in its selector list argument (if any).
+                    ++classes;
+                    count_specificity_of_most_complex_selector(simple_selector.pseudo_class.argument_selector_list);
+                    break;
+                }
+                case SimpleSelector::PseudoClass::Type::Where:
+                    // The specificity of a :where() pseudo-class is replaced by zero.
+                    break;
+                default:
+                    ++classes;
+                    break;
+                }
                 break;
             case SimpleSelector::Type::TagName:
             case SimpleSelector::Type::PseudoElement:
+                // count the number of type selectors and pseudo-elements in the selector (= C)
                 ++tag_names;
                 break;
-            default:
+            case SimpleSelector::Type::Universal:
+                // ignore the universal selector
+                break;
+            case SimpleSelector::Type::Invalid:
                 break;
             }
         }
     }
 
-    m_specificity = ids * 0x10000 + classes * 0x100 + tag_names;
+    // Due to storage limitations, implementations may have limitations on the size of A, B, or C.
+    // If so, values higher than the limit must be clamped to that limit, and not overflow.
+    m_specificity = (min(ids, 0xff) << ids_shift)
+        + (min(classes, 0xff) << classes_shift)
+        + (min(tag_names, 0xff) << tag_names_shift);
 
     return *m_specificity;
 }
@@ -165,6 +215,8 @@ String Selector::SimpleSelector::serialize() const
         case Selector::SimpleSelector::PseudoClass::Type::NthChild:
         case Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
         case Selector::SimpleSelector::PseudoClass::Type::Not:
+        case Selector::SimpleSelector::PseudoClass::Type::Is:
+        case Selector::SimpleSelector::PseudoClass::Type::Where:
             // Otherwise, append ":" (U+003A), followed by the name of the pseudo-class, followed by "(" (U+0028),
             // followed by the value of the pseudo-class argument(s) determined as per below, followed by ")" (U+0029), to s.
             s.append(':');
@@ -174,9 +226,12 @@ String Selector::SimpleSelector::serialize() const
                 || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthLastChild) {
                 // The result of serializing the value using the rules to serialize an <an+b> value.
                 s.append(pseudo_class.nth_child_pattern.serialize());
-            } else if (pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Not) {
+            } else if (pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Not
+                || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Is
+                || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Where) {
                 // The result of serializing the value using the rules for serializing a group of selectors.
-                s.append(serialize_a_group_of_selectors(pseudo_class.not_selector));
+                // NOTE: `:is()` and `:where()` aren't in the spec for this yet, but it should be!
+                s.append(serialize_a_group_of_selectors(pseudo_class.argument_selector_list));
             }
             s.append(')');
             break;
@@ -205,7 +260,7 @@ String Selector::serialize() const
         // 1. If there is only one simple selector in the compound selectors which is a universal selector, append the result of serializing the universal selector to s.
         if (compound_selector.simple_selectors.size() == 1
             && compound_selector.simple_selectors.first().type == Selector::SimpleSelector::Type::Universal) {
-            s.append(compound_selectors().first().simple_selectors.first().serialize());
+            s.append(compound_selector.simple_selectors.first().serialize());
         }
         // 2. Otherwise, for each simple selector in the compound selectors...
         //    FIXME: ...that is not a universal selector of which the namespace prefix maps to a namespace that is not the default namespace...

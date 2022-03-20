@@ -19,7 +19,7 @@ public:
     static ByteBuffer encode(Gfx::Bitmap const&);
 
 private:
-    PNGWriter() { }
+    PNGWriter() = default;
 
     Vector<u8> m_data;
     void add_chunk(PNGChunk&);

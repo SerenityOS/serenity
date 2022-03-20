@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +22,7 @@ class Line {
 
 public:
     explicit Line(size_t length);
-    ~Line();
+    ~Line() = default;
 
     struct Cell {
         u32 code_point { ' ' };

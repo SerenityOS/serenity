@@ -5,6 +5,7 @@
  */
 
 #include "../LibUnicode/GeneratorUtil.h" // FIXME: Move this somewhere common.
+#include <AK/DateConstants.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/SourceGenerator.h>
@@ -143,9 +144,6 @@ struct AK::Formatter<TimeZone::Location> : Formatter<FormatString> {
 
 static Optional<DateTime> parse_date_time(Span<StringView const> segments)
 {
-    constexpr auto months = Array { "Jan"sv, "Feb"sv, "Mar"sv, "Apr"sv, "May"sv, "Jun"sv, "Jul"sv, "Aug"sv, "Sep"sv, "Oct"sv, "Nov"sv, "Dec"sv };
-    constexpr auto weekdays = Array { "Sun"sv, "Mon"sv, "Tue"sv, "Wed"sv, "Thu"sv, "Fri"sv, "Sat"sv };
-
     auto comment_index = find_index(segments.begin(), segments.end(), "#"sv);
     if (comment_index != segments.size())
         segments = segments.slice(0, comment_index);
@@ -156,21 +154,21 @@ static Optional<DateTime> parse_date_time(Span<StringView const> segments)
     date_time.year = segments[0].to_uint().value();
 
     if (segments.size() > 1)
-        date_time.month = find_index(months.begin(), months.end(), segments[1]) + 1;
+        date_time.month = find_index(short_month_names.begin(), short_month_names.end(), segments[1]) + 1;
 
     if (segments.size() > 2) {
         if (segments[2].starts_with("last"sv)) {
             auto weekday = segments[2].substring_view("last"sv.length());
-            date_time.last_weekday = find_index(weekdays.begin(), weekdays.end(), weekday);
+            date_time.last_weekday = find_index(short_day_names.begin(), short_day_names.end(), weekday);
         } else if (auto index = segments[2].find(">="sv); index.has_value()) {
             auto weekday = segments[2].substring_view(0, *index);
-            date_time.after_weekday = find_index(weekdays.begin(), weekdays.end(), weekday);
+            date_time.after_weekday = find_index(short_day_names.begin(), short_day_names.end(), weekday);
 
             auto day = segments[2].substring_view(*index + ">="sv.length());
             date_time.day = day.to_uint().value();
         } else if (auto index = segments[2].find("<="sv); index.has_value()) {
             auto weekday = segments[2].substring_view(0, *index);
-            date_time.before_weekday = find_index(weekdays.begin(), weekdays.end(), weekday);
+            date_time.before_weekday = find_index(short_day_names.begin(), short_day_names.end(), weekday);
 
             auto day = segments[2].substring_view(*index + "<="sv.length());
             date_time.day = day.to_uint().value();

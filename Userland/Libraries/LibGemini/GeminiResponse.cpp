@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,10 +11,6 @@ namespace Gemini {
 GeminiResponse::GeminiResponse(int status, String meta)
     : m_status(status)
     , m_meta(meta)
-{
-}
-
-GeminiResponse::~GeminiResponse()
 {
 }
 

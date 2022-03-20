@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 
@@ -17,17 +18,17 @@ public:
     public:
         virtual bool is_generic_convolution_filter() const { return false; }
 
-        virtual ~Parameters() { }
+        virtual ~Parameters() = default;
     };
-    virtual ~Filter() { }
+    virtual ~Filter() = default;
 
-    virtual const char* class_name() const = 0;
+    virtual StringView class_name() const = 0;
 
     virtual void apply(Bitmap&, IntRect const&, Bitmap const&, IntRect const&, Parameters const&) {};
     virtual void apply(Bitmap&, IntRect const&, Bitmap const&, IntRect const&) {};
 
 protected:
-    Filter() { }
+    Filter() = default;
 };
 
 }

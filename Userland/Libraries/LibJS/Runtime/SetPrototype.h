@@ -17,7 +17,7 @@ class SetPrototype final : public PrototypeObject<SetPrototype, Set> {
 public:
     SetPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~SetPrototype() override;
+    virtual ~SetPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(add);

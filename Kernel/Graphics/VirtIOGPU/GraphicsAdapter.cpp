@@ -284,7 +284,10 @@ ResourceID GraphicsAdapter::create_3d_resource(Protocol::Resource3DSpecification
     request.resource_id = resource_id.value();
     // TODO: Abstract this out a bit more
     u32* start_of_copied_fields = &request.target;
-    memcpy(start_of_copied_fields, &resource_3d_specification, sizeof(Protocol::Resource3DSpecification));
+
+    // Validate that the sub copy from the resource_3d_specification to the offset of the request fits.
+    static_assert((sizeof(request) - offsetof(Protocol::ResourceCreate3D, target) == sizeof(resource_3d_specification)));
+    memcpy(start_of_copied_fields, &resource_3d_specification, sizeof(resource_3d_specification));
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 

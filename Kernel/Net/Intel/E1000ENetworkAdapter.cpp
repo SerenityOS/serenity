@@ -238,9 +238,7 @@ UNMAP_AFTER_INIT E1000ENetworkAdapter::E1000ENetworkAdapter(PCI::Address address
 {
 }
 
-UNMAP_AFTER_INIT E1000ENetworkAdapter::~E1000ENetworkAdapter()
-{
-}
+UNMAP_AFTER_INIT E1000ENetworkAdapter::~E1000ENetworkAdapter() = default;
 
 UNMAP_AFTER_INIT void E1000ENetworkAdapter::detect_eeprom()
 {

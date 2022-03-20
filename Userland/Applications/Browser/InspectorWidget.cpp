@@ -92,25 +92,25 @@ InspectorWidget::InspectorWidget()
 
     auto& bottom_tab_widget = splitter.add<GUI::TabWidget>();
 
-    auto& style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Styles");
-    style_table_container.set_layout<GUI::VerticalBoxLayout>();
-    style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
-    m_style_table_view = style_table_container.add<GUI::TableView>();
-
     auto& computed_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Computed");
     computed_style_table_container.set_layout<GUI::VerticalBoxLayout>();
     computed_style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
     m_computed_style_table_view = computed_style_table_container.add<GUI::TableView>();
+
+    auto& resolved_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Resolved");
+    resolved_style_table_container.set_layout<GUI::VerticalBoxLayout>();
+    resolved_style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
+    m_resolved_style_table_view = resolved_style_table_container.add<GUI::TableView>();
 
     auto& custom_properties_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Variables");
     custom_properties_table_container.set_layout<GUI::VerticalBoxLayout>();
     custom_properties_table_container.layout()->set_margins({ 4, 4, 4, 4 });
     m_custom_properties_table_view = custom_properties_table_container.add<GUI::TableView>();
 
-    auto& element_size = bottom_tab_widget.add_tab<GUI::Widget>("Element");
-    element_size.set_layout<GUI::VerticalBoxLayout>();
-    element_size.layout()->set_margins({ 4, 4, 4, 4 });
-    m_element_size_view = element_size.add<ElementSizePreviewWidget>();
+    auto& box_model_widget = bottom_tab_widget.add_tab<GUI::Widget>("Box Model");
+    box_model_widget.set_layout<GUI::VerticalBoxLayout>();
+    box_model_widget.layout()->set_margins({ 4, 4, 4, 4 });
+    m_element_size_view = box_model_widget.add<ElementSizePreviewWidget>();
     m_element_size_view->set_should_hide_unnecessary_scrollbars(true);
 
     m_dom_tree_view->set_focus(true);
@@ -161,13 +161,16 @@ void InspectorWidget::set_dom_node_properties_json(Selection selection, String s
 void InspectorWidget::load_style_json(String specified_values_json, String computed_values_json, String custom_properties_json)
 {
     m_selection_specified_values_json = specified_values_json;
-    m_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_specified_values_json.value().view()));
+    m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_specified_values_json.value().view()));
+    m_computed_style_table_view->set_searchable(true);
 
     m_selection_computed_values_json = computed_values_json;
-    m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_computed_values_json.value().view()));
+    m_resolved_style_table_view->set_model(Web::StylePropertiesModel::create(m_selection_computed_values_json.value().view()));
+    m_resolved_style_table_view->set_searchable(true);
 
     m_selection_custom_properties_json = custom_properties_json;
     m_custom_properties_table_view->set_model(Web::StylePropertiesModel::create(m_selection_custom_properties_json.value().view()));
+    m_custom_properties_table_view->set_searchable(true);
 }
 
 void InspectorWidget::update_node_box_model(Optional<String> node_box_sizing_json)
@@ -203,10 +206,10 @@ void InspectorWidget::update_node_box_model(Optional<String> node_box_sizing_jso
 void InspectorWidget::clear_style_json()
 {
     m_selection_specified_values_json.clear();
-    m_style_table_view->set_model(nullptr);
+    m_computed_style_table_view->set_model(nullptr);
 
     m_selection_computed_values_json.clear();
-    m_computed_style_table_view->set_model(nullptr);
+    m_resolved_style_table_view->set_model(nullptr);
 
     m_selection_custom_properties_json.clear();
     m_custom_properties_table_view->set_model(nullptr);

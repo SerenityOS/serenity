@@ -46,7 +46,7 @@ public:
     void set_ideographic_baseline(double baseline) { m_ideographic_baseline = baseline; }
 
 private:
-    explicit TextMetrics() { }
+    explicit TextMetrics() = default;
 
     double m_width { 0 };
     double m_actual_bounding_box_left { 0 };

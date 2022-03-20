@@ -13,8 +13,6 @@ HTMLSpanElement::HTMLSpanElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLSpanElement::~HTMLSpanElement()
-{
-}
+HTMLSpanElement::~HTMLSpanElement() = default;
 
 }

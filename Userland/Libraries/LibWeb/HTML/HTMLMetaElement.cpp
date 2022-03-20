@@ -13,8 +13,6 @@ HTMLMetaElement::HTMLMetaElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLMetaElement::~HTMLMetaElement()
-{
-}
+HTMLMetaElement::~HTMLMetaElement() = default;
 
 }

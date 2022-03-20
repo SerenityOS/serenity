@@ -9,12 +9,6 @@
 #include <LibWeb/DOM/IDLEventListener.h>
 
 namespace Web::DOM {
-
-DOMEventListener::DOMEventListener()
-{
-}
-DOMEventListener::~DOMEventListener()
-{
-}
-
+DOMEventListener::DOMEventListener() = default;
+DOMEventListener::~DOMEventListener() = default;
 }

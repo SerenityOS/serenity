@@ -13,8 +13,5 @@ HTMLDialogElement::HTMLDialogElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-HTMLDialogElement::~HTMLDialogElement()
-{
-}
-
+HTMLDialogElement::~HTMLDialogElement() = default;
 }

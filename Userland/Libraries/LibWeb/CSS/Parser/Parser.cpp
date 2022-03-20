@@ -34,13 +34,21 @@ static void log_parse_error(const SourceLocation& location = SourceLocation::cur
 
 namespace Web::CSS {
 
+ParsingContext::ParsingContext(DOM::Document const& document, Optional<AK::URL> const url)
+    : m_document(&document)
+    , m_url(move(url))
+{
+}
+
 ParsingContext::ParsingContext(DOM::Document const& document)
     : m_document(&document)
+    , m_url(document.url())
 {
 }
 
 ParsingContext::ParsingContext(DOM::ParentNode& parent_node)
     : m_document(&parent_node.document())
+    , m_url(parent_node.document().url())
 {
 }
 
@@ -49,20 +57,16 @@ bool ParsingContext::in_quirks_mode() const
     return m_document ? m_document->in_quirks_mode() : false;
 }
 
+// https://www.w3.org/TR/css-values-4/#relative-urls
 AK::URL ParsingContext::complete_url(String const& addr) const
 {
-    return m_document ? m_document->url().complete_url(addr) : AK::URL::create_with_url_or_path(addr);
+    return m_url.has_value() ? m_url->complete_url(addr) : AK::URL::create_with_url_or_path(addr);
 }
 
 template<typename T>
 TokenStream<T>::TokenStream(Vector<T> const& tokens)
     : m_tokens(tokens)
     , m_eof(make_eof())
-{
-}
-
-template<typename T>
-TokenStream<T>::~TokenStream()
 {
 }
 
@@ -155,10 +159,6 @@ Parser::Parser(ParsingContext const& context, StringView input, String const& en
 {
 }
 
-Parser::~Parser()
-{
-}
-
 NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet()
 {
     return parse_a_stylesheet(m_token_stream);
@@ -179,9 +179,18 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_a_stylesheet(TokenStream<T>& tokens)
     return CSSStyleSheet::create(rules);
 }
 
-Optional<SelectorList> Parser::parse_as_selector()
+Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mode)
 {
-    auto selector_list = parse_a_selector(m_token_stream);
+    auto selector_list = parse_a_selector_list(m_token_stream, SelectorType::Standalone, parsing_mode);
+    if (!selector_list.is_error())
+        return selector_list.release_value();
+
+    return {};
+}
+
+Optional<SelectorList> Parser::parse_as_relative_selector(SelectorParsingMode parsing_mode)
+{
+    auto selector_list = parse_a_selector_list(m_token_stream, SelectorType::Relative, parsing_mode);
     if (!selector_list.is_error())
         return selector_list.release_value();
 
@@ -189,74 +198,36 @@ Optional<SelectorList> Parser::parse_as_selector()
 }
 
 template<typename T>
-Result<SelectorList, Parser::ParsingResult> Parser::parse_a_selector(TokenStream<T>& tokens)
-{
-    return parse_a_selector_list(tokens);
-}
-
-Optional<SelectorList> Parser::parse_as_relative_selector()
-{
-    auto selector_list = parse_a_relative_selector(m_token_stream);
-    if (!selector_list.is_error())
-        return selector_list.release_value();
-
-    return {};
-}
-
-template<typename T>
-Result<SelectorList, Parser::ParsingResult> Parser::parse_a_relative_selector(TokenStream<T>& tokens)
-{
-    return parse_a_relative_selector_list(tokens);
-}
-
-template<typename T>
-Result<SelectorList, Parser::ParsingResult> Parser::parse_a_selector_list(TokenStream<T>& tokens)
+Result<SelectorList, Parser::ParsingResult> Parser::parse_a_selector_list(TokenStream<T>& tokens, SelectorType mode, SelectorParsingMode parsing_mode)
 {
     auto comma_separated_lists = parse_a_comma_separated_list_of_component_values(tokens);
 
     NonnullRefPtrVector<Selector> selectors;
     for (auto& selector_parts : comma_separated_lists) {
         auto stream = TokenStream(selector_parts);
-        auto selector = parse_complex_selector(stream, false);
-        if (selector.is_error())
+        auto selector = parse_complex_selector(stream, mode);
+        if (selector.is_error()) {
+            if (parsing_mode == SelectorParsingMode::Forgiving)
+                continue;
             return selector.error();
+        }
         selectors.append(selector.release_value());
     }
 
-    if (selectors.is_empty())
+    if (selectors.is_empty() && parsing_mode != SelectorParsingMode::Forgiving)
         return ParsingResult::SyntaxError;
 
     return selectors;
 }
 
-template<typename T>
-Result<SelectorList, Parser::ParsingResult> Parser::parse_a_relative_selector_list(TokenStream<T>& tokens)
-{
-    auto comma_separated_lists = parse_a_comma_separated_list_of_component_values(tokens);
-
-    NonnullRefPtrVector<Selector> selectors;
-    for (auto& selector_parts : comma_separated_lists) {
-        auto stream = TokenStream(selector_parts);
-        auto selector = parse_complex_selector(stream, true);
-        if (selector.is_error())
-            return selector.error();
-        selectors.append(selector.release_value());
-    }
-
-    if (selectors.is_empty())
-        return ParsingResult::SyntaxError;
-
-    return selectors;
-}
-
-Result<NonnullRefPtr<Selector>, Parser::ParsingResult> Parser::parse_complex_selector(TokenStream<StyleComponentValueRule>& tokens, bool allow_starting_combinator)
+Result<NonnullRefPtr<Selector>, Parser::ParsingResult> Parser::parse_complex_selector(TokenStream<StyleComponentValueRule>& tokens, SelectorType mode)
 {
     Vector<Selector::CompoundSelector> compound_selectors;
 
     auto first_selector = parse_compound_selector(tokens);
     if (first_selector.is_error())
         return first_selector.error();
-    if (!allow_starting_combinator) {
+    if (mode == SelectorType::Standalone) {
         if (first_selector.value().combinator != Selector::Combinator::Descendant)
             return ParsingResult::SyntaxError;
         first_selector.value().combinator = Selector::Combinator::None;
@@ -535,6 +506,8 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FirstOfType;
             } else if (pseudo_name.equals_ignoring_case("focus")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Focus;
+            } else if (pseudo_name.equals_ignoring_case("focus-within")) {
+                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FocusWithin;
             } else if (pseudo_name.equals_ignoring_case("hover")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Hover;
             } else if (pseudo_name.equals_ignoring_case("last-child")) {
@@ -577,41 +550,82 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
 
         } else if (pseudo_class_token.is_function()) {
 
-            auto parse_nth_child_pattern = [this](auto& simple_selector, auto& pseudo_function) -> bool {
+            auto parse_nth_child_pattern = [this](Selector::SimpleSelector& simple_selector, StyleFunctionRule const& pseudo_function, bool allow_of = false) -> bool {
                 auto function_values = TokenStream<StyleComponentValueRule>(pseudo_function.values());
-                auto nth_child_pattern = parse_a_n_plus_b_pattern(function_values);
+                auto nth_child_pattern = parse_a_n_plus_b_pattern(function_values, allow_of ? AllowTrailingTokens::Yes : AllowTrailingTokens::No);
                 if (nth_child_pattern.has_value()) {
                     simple_selector.pseudo_class.nth_child_pattern = nth_child_pattern.value();
                 } else {
                     dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid format for {}", pseudo_function.name());
                     return false;
                 }
+                if (!allow_of)
+                    return true;
+
+                function_values.skip_whitespace();
+                if (!function_values.has_next_token())
+                    return true;
+
+                // Parse the `of <selector-list>` syntax
+                auto& maybe_of = function_values.next_token();
+                if (!(maybe_of.is(Token::Type::Ident) && maybe_of.token().ident().equals_ignoring_case("of"sv)))
+                    return false;
+
+                function_values.skip_whitespace();
+                auto selector_list = parse_a_selector_list(function_values, SelectorType::Standalone);
+                if (selector_list.is_error())
+                    return false;
+
+                function_values.skip_whitespace();
+                if (function_values.has_next_token())
+                    return false;
+
+                simple_selector.pseudo_class.argument_selector_list = selector_list.value();
                 return true;
             };
 
             auto& pseudo_function = pseudo_class_token.function();
-            if (pseudo_function.name().equals_ignoring_case("not")) {
+            if (pseudo_function.name().equals_ignoring_case("is"sv)
+                || pseudo_function.name().equals_ignoring_case("where"sv)) {
+
+                simple_selector.pseudo_class.type = pseudo_function.name().equals_ignoring_case("is"sv)
+                    ? Selector::SimpleSelector::PseudoClass::Type::Is
+                    : Selector::SimpleSelector::PseudoClass::Type::Where;
+                auto function_token_stream = TokenStream(pseudo_function.values());
+                auto argument_selector_list = parse_a_selector_list(function_token_stream, SelectorType::Standalone, SelectorParsingMode::Forgiving);
+                // NOTE: Because it's forgiving, even complete garbage will parse OK as an empty selector-list.
+                VERIFY(!argument_selector_list.is_error());
+                simple_selector.pseudo_class.argument_selector_list = argument_selector_list.release_value();
+            } else if (pseudo_function.name().equals_ignoring_case("not"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Not;
                 auto function_token_stream = TokenStream(pseudo_function.values());
-                auto not_selector = parse_a_selector(function_token_stream);
+                auto not_selector = parse_a_selector_list(function_token_stream, SelectorType::Standalone);
                 if (not_selector.is_error()) {
                     dbgln_if(CSS_PARSER_DEBUG, "Invalid selector in :not() clause");
                     return ParsingResult::SyntaxError;
                 }
-                simple_selector.pseudo_class.not_selector = not_selector.release_value();
-            } else if (pseudo_function.name().equals_ignoring_case("nth-child")) {
+                simple_selector.pseudo_class.argument_selector_list = not_selector.release_value();
+            } else if (pseudo_function.name().equals_ignoring_case("lang"sv)) {
+                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Lang;
+                if (pseudo_function.values().is_empty()) {
+                    dbgln_if(CSS_PARSER_DEBUG, "Empty :lang() selector");
+                    return ParsingResult::SyntaxError;
+                }
+                // FIXME: Support multiple, comma-separated, language ranges.
+                simple_selector.pseudo_class.languages.append(pseudo_function.values().first().token().to_string());
+            } else if (pseudo_function.name().equals_ignoring_case("nth-child"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthChild;
-                if (!parse_nth_child_pattern(simple_selector, pseudo_function))
+                if (!parse_nth_child_pattern(simple_selector, pseudo_function, true))
                     return ParsingResult::SyntaxError;
-            } else if (pseudo_function.name().equals_ignoring_case("nth-last-child")) {
+            } else if (pseudo_function.name().equals_ignoring_case("nth-last-child"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthLastChild;
-                if (!parse_nth_child_pattern(simple_selector, pseudo_function))
+                if (!parse_nth_child_pattern(simple_selector, pseudo_function, true))
                     return ParsingResult::SyntaxError;
-            } else if (pseudo_function.name().equals_ignoring_case("nth-of-type")) {
+            } else if (pseudo_function.name().equals_ignoring_case("nth-of-type"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthOfType;
                 if (!parse_nth_child_pattern(simple_selector, pseudo_function))
                     return ParsingResult::SyntaxError;
-            } else if (pseudo_function.name().equals_ignoring_case("nth-last-of-type")) {
+            } else if (pseudo_function.name().equals_ignoring_case("nth-last-of-type"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthLastOfType;
                 if (!parse_nth_child_pattern(simple_selector, pseudo_function))
                     return ParsingResult::SyntaxError;
@@ -2087,7 +2101,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 
     } else {
         auto prelude_stream = TokenStream(rule->m_prelude);
-        auto selectors = parse_a_selector(prelude_stream);
+        auto selectors = parse_a_selector_list(prelude_stream, SelectorType::Standalone);
 
         if (selectors.is_error()) {
             if (selectors.error() != ParsingResult::IncludesIgnoredVendorPrefix) {
@@ -3876,8 +3890,28 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<StyleComponentValu
 
 static Optional<CSS::TransformFunction> parse_transform_function_name(StringView name)
 {
+    if (name == "matrix")
+        return CSS::TransformFunction::Matrix;
+    if (name == "translate")
+        return CSS::TransformFunction::Translate;
+    if (name == "translateX")
+        return CSS::TransformFunction::TranslateX;
     if (name == "translateY")
         return CSS::TransformFunction::TranslateY;
+    if (name == "scale")
+        return CSS::TransformFunction::Scale;
+    if (name == "scaleX")
+        return CSS::TransformFunction::ScaleX;
+    if (name == "scaleY")
+        return CSS::TransformFunction::ScaleY;
+    if (name == "rotate")
+        return CSS::TransformFunction::Rotate;
+    if (name == "skew")
+        return CSS::TransformFunction::Skew;
+    if (name == "skewX")
+        return CSS::TransformFunction::SkewX;
+    if (name == "skewY")
+        return CSS::TransformFunction::SkewY;
     return {};
 }
 
@@ -3886,6 +3920,8 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
     NonnullRefPtrVector<StyleValue> transformations;
 
     for (auto& part : component_values) {
+        if (part.is(Token::Type::Whitespace))
+            continue;
         if (part.is(Token::Type::Ident) && part.token().ident().equals_ignoring_case("none")) {
             if (!transformations.is_empty())
                 return nullptr;
@@ -3898,13 +3934,32 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
         if (!maybe_function.has_value())
             return nullptr;
 
+        bool expect_comma = false;
         NonnullRefPtrVector<StyleValue> values;
         for (auto& value : part.function().values()) {
-            if (value.is(Token::Type::Dimension)) {
-                auto maybe_length = parse_length(value);
-                if (!maybe_length.has_value())
+            if (value.is(Token::Type::Whitespace))
+                continue;
+
+            if (value.is(Token::Type::Comma)) {
+                if (!expect_comma)
                     return nullptr;
-                values.append(LengthStyleValue::create(maybe_length.release_value()));
+                expect_comma = false;
+                continue;
+            } else if (expect_comma)
+                return nullptr;
+
+            if (value.is(Token::Type::Dimension)) {
+                auto dimension = parse_dimension(value);
+                if (!dimension.has_value())
+                    return nullptr;
+
+                auto dimension_value = dimension.release_value();
+                if (dimension_value.is_length())
+                    values.append(LengthStyleValue::create(dimension_value.length()));
+                else if (dimension_value.is_angle())
+                    values.append(AngleStyleValue::create(dimension_value.angle()));
+                else
+                    return nullptr;
             } else if (value.is(Token::Type::Number)) {
                 auto number = parse_numeric_value(value);
                 values.append(number.release_nonnull());
@@ -3912,6 +3967,8 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
                 dbgln_if(CSS_PARSER_DEBUG, "FIXME: Unsupported value type for transformation!");
                 return nullptr;
             }
+
+            expect_comma = true;
         }
 
         transformations.append(TransformationStyleValue::create(maybe_function.value(), move(values)));
@@ -4124,7 +4181,7 @@ RefPtr<StyleValue> Parser::parse_css_value(StyleComponentValueRule const& compon
     return {};
 }
 
-Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>& values)
+Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>& values, AllowTrailingTokens allow_trailing_tokens)
 {
     int a = 0;
     int b = 0;
@@ -4140,7 +4197,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     auto make_return_value = [&]() -> Optional<Selector::SimpleSelector::ANPlusBPattern> {
         // When we think we are done, but there are more non-whitespace tokens, then it's a parse error.
         values.skip_whitespace();
-        if (values.has_next_token()) {
+        if (values.has_next_token() && allow_trailing_tokens == AllowTrailingTokens::No) {
             if constexpr (CSS_PARSER_DEBUG) {
                 dbgln_if(CSS_PARSER_DEBUG, "Extra tokens at end of An+B value:");
                 values.dump_all_tokens();

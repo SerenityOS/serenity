@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Noncopyable.h>
+#include <AK/StringView.h>
 #include <LibJS/Forward.h>
 
 namespace JS {
@@ -19,7 +20,7 @@ class Cell {
 
 public:
     virtual void initialize(GlobalObject&) { }
-    virtual ~Cell() { }
+    virtual ~Cell() = default;
 
     bool is_marked() const { return m_mark; }
     void set_marked(bool b) { m_mark = b; }
@@ -32,7 +33,7 @@ public:
     State state() const { return m_state; }
     void set_state(State state) { m_state = state; }
 
-    virtual const char* class_name() const = 0;
+    virtual StringView class_name() const = 0;
 
     class Visitor {
     public:
@@ -55,7 +56,7 @@ public:
     VM& vm() const;
 
 protected:
-    Cell() { }
+    Cell() = default;
 
 private:
     bool m_mark : 1 { false };

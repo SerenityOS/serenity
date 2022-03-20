@@ -13,8 +13,6 @@ HTMLPreElement::HTMLPreElement(DOM::Document& document, DOM::QualifiedName quali
 {
 }
 
-HTMLPreElement::~HTMLPreElement()
-{
-}
+HTMLPreElement::~HTMLPreElement() = default;
 
 }

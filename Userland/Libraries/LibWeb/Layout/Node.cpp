@@ -40,15 +40,8 @@ bool Node::can_contain_boxes_with_position_absolute() const
 
 const BlockContainer* Node::containing_block() const
 {
-    auto nearest_block_ancestor = [this] {
-        auto* ancestor = parent();
-        while (ancestor && !is<BlockContainer>(*ancestor))
-            ancestor = ancestor->parent();
-        return static_cast<const BlockContainer*>(ancestor);
-    };
-
     if (is<TextNode>(*this))
-        return nearest_block_ancestor();
+        return first_ancestor_of_type<BlockContainer>();
 
     auto position = computed_values().position();
 
@@ -64,7 +57,7 @@ const BlockContainer* Node::containing_block() const
     if (position == CSS::Position::Fixed)
         return &root();
 
-    return nearest_block_ancestor();
+    return first_ancestor_of_type<BlockContainer>();
 }
 
 bool Node::establishes_stacking_context() const
@@ -75,6 +68,8 @@ bool Node::establishes_stacking_context() const
         return true;
     auto position = computed_values().position();
     if (position == CSS::Position::Absolute || position == CSS::Position::Relative || position == CSS::Position::Fixed || position == CSS::Position::Sticky)
+        return true;
+    if (!computed_values().transformations().is_empty())
         return true;
     return computed_values().opacity() < 1.0f;
 }

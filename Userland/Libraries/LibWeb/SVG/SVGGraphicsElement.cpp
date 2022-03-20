@@ -30,6 +30,9 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
         } else if (name.equals_ignoring_case("stroke-width")) {
             if (auto stroke_width_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeWidth))
                 style.set_property(CSS::PropertyID::StrokeWidth, stroke_width_value.release_nonnull());
+        } else if (name.equals_ignoring_case("transform")) {
+            if (auto transform = parse_css_value(parsing_context, value, CSS::PropertyID::Transform))
+                style.set_property(CSS::PropertyID::Transform, transform.release_nonnull());
         }
     });
 }

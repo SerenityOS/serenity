@@ -17,8 +17,8 @@ public:
     DisjointRectSet(const DisjointRectSet&) = delete;
     DisjointRectSet& operator=(const DisjointRectSet&) = delete;
 
-    DisjointRectSet() { }
-    ~DisjointRectSet() { }
+    DisjointRectSet() = default;
+    ~DisjointRectSet() = default;
 
     DisjointRectSet(const IntRect& rect)
     {

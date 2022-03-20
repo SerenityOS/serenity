@@ -78,7 +78,7 @@ RunScriptDecision EnvironmentSettingsObject::can_run_script()
 void EnvironmentSettingsObject::prepare_to_run_script()
 {
     // 1. Push settings's realm execution context onto the JavaScript execution context stack; it is now the running JavaScript execution context.
-    global_object().vm().push_execution_context(realm_execution_context(), global_object());
+    global_object().vm().push_execution_context(realm_execution_context());
 
     // FIXME: 2. Add settings to the currently running task's script evaluation environment settings object set.
 }

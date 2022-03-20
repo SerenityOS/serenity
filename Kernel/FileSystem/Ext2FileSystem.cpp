@@ -59,9 +59,7 @@ Ext2FS::Ext2FS(OpenFileDescription& file_description)
 {
 }
 
-Ext2FS::~Ext2FS()
-{
-}
+Ext2FS::~Ext2FS() = default;
 
 ErrorOr<void> Ext2FS::flush_super_block()
 {

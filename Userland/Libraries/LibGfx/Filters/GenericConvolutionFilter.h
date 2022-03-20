@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Filter.h"
+#include <AK/StringView.h>
 #include <LibGfx/Matrix.h>
 #include <LibGfx/Matrix4x4.h>
 
@@ -58,10 +59,10 @@ public:
         RefPtr<Gfx::Bitmap> m_target;
     };
 
-    GenericConvolutionFilter() { }
-    virtual ~GenericConvolutionFilter() { }
+    GenericConvolutionFilter() = default;
+    virtual ~GenericConvolutionFilter() = default;
 
-    virtual const char* class_name() const override { return "GenericConvolutionFilter"; }
+    virtual StringView class_name() const override { return "GenericConvolutionFilter"sv; }
 
     virtual void apply(Bitmap& target_bitmap, const IntRect& target_rect, const Bitmap& source_bitmap, const IntRect& source_rect, const Filter::Parameters& parameters) override
     {

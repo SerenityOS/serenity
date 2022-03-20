@@ -18,7 +18,7 @@ public:
     static SymbolObject* create(GlobalObject&, Symbol&);
 
     SymbolObject(Symbol&, Object& prototype);
-    virtual ~SymbolObject() override;
+    virtual ~SymbolObject() override = default;
 
     Symbol& primitive_symbol() { return m_symbol; }
     const Symbol& primitive_symbol() const { return m_symbol; }

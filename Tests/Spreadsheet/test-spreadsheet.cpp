@@ -27,7 +27,7 @@ TESTJS_RUN_FILE_FUNCTION(String const&, JS::Interpreter& interpreter, JS::Execut
         }
         auto script = result.release_value();
 
-        interpreter.vm().push_execution_context(global_execution_context, interpreter.realm().global_object());
+        interpreter.vm().push_execution_context(global_execution_context);
         MUST(interpreter.run(*script));
         interpreter.vm().pop_execution_context();
     };

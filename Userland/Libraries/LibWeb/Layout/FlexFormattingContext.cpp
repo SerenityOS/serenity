@@ -39,9 +39,7 @@ FlexFormattingContext::FlexFormattingContext(FormattingState& state, Box const& 
 {
 }
 
-FlexFormattingContext::~FlexFormattingContext()
-{
-}
+FlexFormattingContext::~FlexFormattingContext() = default;
 
 void FlexFormattingContext::run(Box const& run_box, LayoutMode)
 {
@@ -114,7 +112,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
     // AD-HOC: Layout the inside of all flex items.
     copy_dimensions_from_flex_items_to_boxes();
     for (auto& flex_item : m_flex_items) {
-        auto independent_formatting_context = layout_inside(flex_item.box, LayoutMode::Default);
+        auto independent_formatting_context = layout_inside(flex_item.box, LayoutMode::Normal);
         independent_formatting_context->parent_context_did_dimension_child_root_box();
     }
 
@@ -156,8 +154,8 @@ void FlexFormattingContext::generate_anonymous_flex_items()
         // Skip anonymous text runs that are only whitespace.
         if (child_box.is_anonymous() && !child_box.first_child_of_type<BlockContainer>()) {
             bool contains_only_white_space = true;
-            child_box.for_each_in_inclusive_subtree_of_type<TextNode>([&contains_only_white_space](auto& text_node) {
-                if (!text_node.dom_node().data().is_whitespace()) {
+            child_box.for_each_in_subtree([&](auto const& node) {
+                if (!is<TextNode>(node) || !static_cast<TextNode const&>(node).dom_node().data().is_whitespace()) {
                     contains_only_white_space = false;
                     return IterationDecision::Break;
                 }
@@ -453,7 +451,7 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
         } else {
             box_state.content_width = resolved_definite_cross_size(item.box);
         }
-        independent_formatting_context->run(item.box, LayoutMode::Default);
+        independent_formatting_context->run(item.box, LayoutMode::Normal);
 
         if (is_row_layout())
             return box_state.content_width;
@@ -479,7 +477,7 @@ float FlexFormattingContext::calculate_indefinite_main_size(FlexItem const& item
     VERIFY(independent_formatting_context);
 
     box_state.content_width = fit_content_cross_size;
-    independent_formatting_context->run(item.box, LayoutMode::Default);
+    independent_formatting_context->run(item.box, LayoutMode::Normal);
 
     return BlockFormattingContext::compute_theoretical_height(throwaway_state, item.box);
 }
@@ -827,7 +825,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
         } else {
             box_state.content_height = resolved_definite_main_size(item.box);
         }
-        independent_formatting_context->run(item.box, LayoutMode::Default);
+        independent_formatting_context->run(item.box, LayoutMode::Normal);
 
         if (is_row_layout())
             item.hypothetical_cross_size = BlockFormattingContext::compute_theoretical_height(throwaway_state, item.box);
@@ -856,7 +854,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
         VERIFY(independent_formatting_context);
 
         box_state.content_width = fit_content_main_size;
-        independent_formatting_context->run(item.box, LayoutMode::Default);
+        independent_formatting_context->run(item.box, LayoutMode::Normal);
 
         item.hypothetical_cross_size = BlockFormattingContext::compute_theoretical_height(throwaway_state, item.box);
     }

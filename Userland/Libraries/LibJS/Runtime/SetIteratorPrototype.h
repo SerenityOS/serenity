@@ -17,7 +17,7 @@ class SetIteratorPrototype final : public PrototypeObject<SetIteratorPrototype, 
 public:
     SetIteratorPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~SetIteratorPrototype() override;
+    virtual ~SetIteratorPrototype() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(next);

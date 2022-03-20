@@ -19,7 +19,7 @@ public:
     ArgumentsObject(GlobalObject&, Environment&);
 
     virtual void initialize(GlobalObject&) override;
-    virtual ~ArgumentsObject() override;
+    virtual ~ArgumentsObject() override = default;
 
     Environment& environment() { return m_environment; }
 

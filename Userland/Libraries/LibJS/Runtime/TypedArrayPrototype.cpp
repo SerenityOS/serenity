@@ -67,10 +67,6 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
 }
 
-TypedArrayPrototype::~TypedArrayPrototype()
-{
-}
-
 static ThrowCompletionOr<TypedArrayBase*> typed_array_from_this(GlobalObject& global_object)
 {
     auto this_value = global_object.vm().this_value(global_object);

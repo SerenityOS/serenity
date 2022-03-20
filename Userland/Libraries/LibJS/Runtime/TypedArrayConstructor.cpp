@@ -38,10 +38,6 @@ void TypedArrayConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
 
-TypedArrayConstructor::~TypedArrayConstructor()
-{
-}
-
 // 23.2.1.1 %TypedArray% ( ), https://tc39.es/ecma262/#sec-%typedarray%
 ThrowCompletionOr<Value> TypedArrayConstructor::call()
 {

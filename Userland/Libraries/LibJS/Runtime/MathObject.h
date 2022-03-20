@@ -16,7 +16,7 @@ class MathObject final : public Object {
 public:
     explicit MathObject(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
-    virtual ~MathObject() override;
+    virtual ~MathObject() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(abs);

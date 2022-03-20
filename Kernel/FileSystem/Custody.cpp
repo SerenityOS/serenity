@@ -47,9 +47,7 @@ Custody::Custody(Custody* parent, NonnullOwnPtr<KString> name, Inode& inode, int
 {
 }
 
-Custody::~Custody()
-{
-}
+Custody::~Custody() = default;
 
 ErrorOr<NonnullOwnPtr<KString>> Custody::try_serialize_absolute_path() const
 {

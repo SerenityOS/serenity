@@ -42,7 +42,7 @@ public:
     String escape_regexp_pattern() const;
 
     virtual void initialize(GlobalObject&) override;
-    virtual ~RegExpObject() override;
+    virtual ~RegExpObject() override = default;
 
     const String& pattern() const { return m_pattern; }
     const String& flags() const { return m_flags; }

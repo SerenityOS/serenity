@@ -48,6 +48,10 @@ public:
     EditorWrapper& current_editor_wrapper();
     EditorWrapper const& current_editor_wrapper() const;
     void set_current_editor_wrapper(RefPtr<EditorWrapper>);
+    void set_current_editor_tab_widget(RefPtr<GUI::TabWidget>);
+
+    GUI::TabWidget& current_editor_tab_widget();
+    GUI::TabWidget const& current_editor_tab_widget() const;
 
     const String& active_file() const { return m_current_editor_wrapper->filename(); }
     void initialize_menubar(GUI::Window&);
@@ -98,13 +102,16 @@ private:
     NonnullRefPtr<GUI::Action> create_open_selected_action();
     NonnullRefPtr<GUI::Action> create_delete_action();
     NonnullRefPtr<GUI::Action> create_new_project_action();
+    NonnullRefPtr<GUI::Action> create_switch_to_next_editor_tab_widget_action();
     NonnullRefPtr<GUI::Action> create_switch_to_next_editor_action();
     NonnullRefPtr<GUI::Action> create_switch_to_previous_editor_action();
+    NonnullRefPtr<GUI::Action> create_remove_current_editor_tab_widget_action();
     NonnullRefPtr<GUI::Action> create_remove_current_editor_action();
     NonnullRefPtr<GUI::Action> create_open_action();
     NonnullRefPtr<GUI::Action> create_save_action();
     NonnullRefPtr<GUI::Action> create_save_as_action();
     NonnullRefPtr<GUI::Action> create_show_in_file_manager_action();
+    NonnullRefPtr<GUI::Action> create_add_editor_tab_widget_action();
     NonnullRefPtr<GUI::Action> create_add_editor_action();
     NonnullRefPtr<GUI::Action> create_add_terminal_action();
     NonnullRefPtr<GUI::Action> create_remove_current_terminal_action();
@@ -115,7 +122,8 @@ private:
     NonnullRefPtr<GUI::Action> create_toggle_syntax_highlighting_mode_action();
     void create_location_history_actions();
 
-    void add_new_editor(GUI::Widget& parent);
+    void add_new_editor_tab_widget(GUI::Widget& parent);
+    void add_new_editor(GUI::TabWidget& parent);
     RefPtr<EditorWrapper> get_editor_of_file(const String& filename);
     String get_project_executable_path() const;
 
@@ -149,6 +157,7 @@ private:
     void update_gml_preview();
     void update_tree_view();
     void update_window_title();
+    void update_current_editor_title();
     void on_cursor_change();
     void file_renamed(String const& old_name, String const& new_name);
 
@@ -163,6 +172,8 @@ private:
 
     NonnullRefPtrVector<EditorWrapper> m_all_editor_wrappers;
     RefPtr<EditorWrapper> m_current_editor_wrapper;
+    NonnullRefPtrVector<GUI::TabWidget> m_all_editor_tab_widgets;
+    RefPtr<GUI::TabWidget> m_current_editor_tab_widget;
 
     HashMap<String, NonnullRefPtr<ProjectFile>> m_open_files;
     RefPtr<Core::FileWatcher> m_file_watcher;
@@ -208,13 +219,16 @@ private:
     RefPtr<GUI::Action> m_delete_action;
     RefPtr<GUI::Action> m_tree_view_rename_action;
     RefPtr<GUI::Action> m_new_project_action;
+    RefPtr<GUI::Action> m_switch_to_next_editor_tab_widget;
     RefPtr<GUI::Action> m_switch_to_next_editor;
     RefPtr<GUI::Action> m_switch_to_previous_editor;
+    RefPtr<GUI::Action> m_remove_current_editor_tab_widget_action;
     RefPtr<GUI::Action> m_remove_current_editor_action;
     RefPtr<GUI::Action> m_open_action;
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
     RefPtr<GUI::Action> m_add_editor_action;
+    RefPtr<GUI::Action> m_add_editor_tab_widget_action;
     RefPtr<GUI::Action> m_add_terminal_action;
     RefPtr<GUI::Action> m_remove_current_terminal_action;
     RefPtr<GUI::Action> m_stop_action;

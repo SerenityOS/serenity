@@ -30,4 +30,11 @@ JS::ThrowCompletionOr<JS::Value> StringCell::js_value(Cell& cell, const CellType
     return JS::js_string(cell.sheet().interpreter().heap(), string);
 }
 
+String StringCell::metadata_hint(MetadataName metadata) const
+{
+    if (metadata == MetadataName::Format)
+        return "Ignored";
+    return {};
+}
+
 }

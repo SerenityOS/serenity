@@ -18,8 +18,13 @@ void ElementSizePreviewWidget::paint_event(GUI::PaintEvent& event)
     int outer_margin = 10;
     int text_width_padding = 4;
     int text_height_padding = 4;
-    int inner_content_width = 100;
-    int inner_content_height = max(15, font().glyph_height() + 2 * text_height_padding);
+    int content_width_padding = 8;
+    int content_height_padding = 8;
+
+    auto content_size_text = String::formatted("{}x{}", m_node_content_width, m_node_content_height);
+
+    int inner_content_width = max(100, font().width(content_size_text) + 2 * content_width_padding);
+    int inner_content_height = max(15, font().glyph_height() + 2 * content_height_padding);
 
     auto format_size_text = [&](float size) {
         return String::formatted("{:.4f}", size);
@@ -98,7 +103,6 @@ void ElementSizePreviewWidget::paint_event(GUI::PaintEvent& event)
     draw_size_texts(padding_rect, Color::Black, m_node_box_sizing.padding);
 
     // paint content box
-    auto content_size_text = String::formatted("{}x{}", m_node_content_width, m_node_content_height);
     painter.fill_rect(content_rect, Color(140, 182, 192));
     draw_borders(content_rect, Color::Black);
     content_rect.shrink(1, 1, 1, 1);

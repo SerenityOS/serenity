@@ -1232,9 +1232,7 @@ JPGImageDecoderPlugin::JPGImageDecoderPlugin(const u8* data, size_t size)
     m_context->huffman_stream.stream.ensure_capacity(50 * KiB);
 }
 
-JPGImageDecoderPlugin::~JPGImageDecoderPlugin()
-{
-}
+JPGImageDecoderPlugin::~JPGImageDecoderPlugin() = default;
 
 IntSize JPGImageDecoderPlugin::size()
 {

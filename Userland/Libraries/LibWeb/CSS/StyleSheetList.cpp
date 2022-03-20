@@ -15,7 +15,7 @@ void StyleSheetList::add_sheet(NonnullRefPtr<CSSStyleSheet> sheet)
     sheet->set_style_sheet_list({}, this);
     m_sheets.append(move(sheet));
 
-    ++m_generation;
+    m_document.style_computer().invalidate_rule_cache();
     m_document.invalidate_style();
 }
 
@@ -24,7 +24,7 @@ void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
     sheet.set_style_sheet_list({}, nullptr);
     m_sheets.remove_first_matching([&](auto& entry) { return &*entry == &sheet; });
 
-    ++m_generation;
+    m_document.style_computer().invalidate_rule_cache();
     m_document.invalidate_style();
 }
 

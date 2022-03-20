@@ -15,9 +15,7 @@ HTMLFontElement::HTMLFontElement(DOM::Document& document, DOM::QualifiedName qua
 {
 }
 
-HTMLFontElement::~HTMLFontElement()
-{
-}
+HTMLFontElement::~HTMLFontElement() = default;
 
 void HTMLFontElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +13,7 @@
 
 namespace JS::Intl {
 
-// 15.4 Properties of the Intl.NumberFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-numberformat-prototype-object
+// 15.3 Properties of the Intl.NumberFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-numberformat-prototype-object
 NumberFormatPrototype::NumberFormatPrototype(GlobalObject& global_object)
     : PrototypeObject(*global_object.object_prototype())
 {
@@ -25,7 +25,7 @@ void NumberFormatPrototype::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 15.4.2 Intl.NumberFormat.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.numberformat.prototype-@@tostringtag
+    // 15.3.2 Intl.NumberFormat.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.numberformat.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Intl.NumberFormat"), Attribute::Configurable);
 
     define_native_accessor(vm.names.format, format, nullptr, Attribute::Configurable);
@@ -35,7 +35,7 @@ void NumberFormatPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.resolvedOptions, resolved_options, 0, attr);
 }
 
-// 15.4.3 get Intl.NumberFormat.prototype.format, https://tc39.es/ecma402/#sec-intl.numberformat.prototype.format
+// 15.3.3 get Intl.NumberFormat.prototype.format, https://tc39.es/ecma402/#sec-intl.numberformat.prototype.format
 JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format)
 {
     // 1. Let nf be the this value.
@@ -58,7 +58,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format)
     return number_format->bound_format();
 }
 
-// 15.4.4 Intl.NumberFormat.prototype.formatToParts ( value ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.formattoparts
+// 15.3.4 Intl.NumberFormat.prototype.formatToParts ( value ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.formattoparts
 JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
 {
     auto value = vm.argument(0);
@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
     return format_numeric_to_parts(global_object, *number_format, value);
 }
 
-// 15.4.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions
+// 15.3.5 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
 {
     // 1. Let nf be the this value.

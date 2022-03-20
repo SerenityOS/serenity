@@ -28,6 +28,7 @@ int sem_unlink(const char*);
 int sem_wait(sem_t*);
 int sem_timedwait(sem_t*, const struct timespec* abstime);
 
+#define SEM_FAILED ((sem_t*)0)
 #define SEM_VALUE_MAX INT_MAX
 
 __END_DECLS

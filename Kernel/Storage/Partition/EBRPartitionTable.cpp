@@ -68,8 +68,6 @@ EBRPartitionTable::EBRPartitionTable(const StorageDevice& device)
     }
 }
 
-EBRPartitionTable::~EBRPartitionTable()
-{
-}
+EBRPartitionTable::~EBRPartitionTable() = default;
 
 }

@@ -21,9 +21,20 @@
 namespace Web::Layout {
 
 enum class LayoutMode {
-    Default,
-    AllPossibleLineBreaks,
-    OnlyRequiredLineBreaks,
+    // Normal layout.
+    // - We use the containing block's used width.
+    // - Content flows into the available space, line breaks inserted where necessary.
+    Normal,
+
+    // MinContent layout is used for discovering the min-content intrinsic size of a box.
+    // - We act as if the containing block has 0 used width.
+    // - Every line-breaking opportunity is taken.
+    MinContent,
+
+    // MaxContent layout is used for discovering the max-content intrinsic size of a box.
+    // - We act as if the containing block has infinite used width.
+    // - Only forced line-breaking opportunities are taken.
+    MaxContent,
 };
 
 class Node : public TreeNode<Node> {
@@ -63,8 +74,6 @@ public:
 
     bool is_inline_block() const;
 
-    virtual void paint_fragment(PaintContext&, const LineBoxFragment&, Painting::PaintPhase) const { }
-
     // These are used to optimize hot is<T> variants for some classes where dynamic_cast is too slow.
     virtual bool is_box() const { return false; }
     virtual bool is_block_container() const { return false; }
@@ -74,6 +83,8 @@ public:
     virtual bool is_svg_box() const { return false; }
     virtual bool is_svg_geometry_box() const { return false; }
     virtual bool is_label() const { return false; }
+    virtual bool is_replaced_box() const { return false; }
+    virtual bool is_list_item_marker_box() const { return false; }
 
     template<typename T>
     bool fast_is() const = delete;
@@ -145,7 +156,7 @@ private:
 
 class NodeWithStyle : public Node {
 public:
-    virtual ~NodeWithStyle() override { }
+    virtual ~NodeWithStyle() override = default;
 
     const CSS::ImmutableComputedValues& computed_values() const { return static_cast<const CSS::ImmutableComputedValues&>(m_computed_values); }
 

@@ -15,9 +15,7 @@ HTMLTableRowElement::HTMLTableRowElement(DOM::Document& document, DOM::Qualified
 {
 }
 
-HTMLTableRowElement::~HTMLTableRowElement()
-{
-}
+HTMLTableRowElement::~HTMLTableRowElement() = default;
 
 // https://html.spec.whatwg.org/multipage/tables.html#dom-tr-cells
 NonnullRefPtr<DOM::HTMLCollection> HTMLTableRowElement::cells() const

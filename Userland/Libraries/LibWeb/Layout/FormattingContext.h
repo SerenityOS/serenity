@@ -56,6 +56,8 @@ public:
     float calculate_fit_content_height(Layout::Box const&, Optional<float> available_height) const;
     float calculate_fit_content_width(Layout::Box const&, Optional<float> available_width) const;
 
+    virtual float greatest_child_width(Box const&);
+
 protected:
     FormattingContext(Type, FormattingState&, Box const&, FormattingContext* parent = nullptr);
 
@@ -64,6 +66,11 @@ protected:
 
     OwnPtr<FormattingContext> layout_inside(Box const&, LayoutMode);
     void compute_position(Box const&);
+
+    struct SpaceUsedByFloats {
+        float left { 0 };
+        float right { 0 };
+    };
 
     struct ShrinkToFitResult {
         float preferred_width { 0 };

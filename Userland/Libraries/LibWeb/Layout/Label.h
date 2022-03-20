@@ -26,11 +26,12 @@ public:
     void handle_mouseup_on_label(Badge<Painting::TextPaintable>, const Gfx::IntPoint&, unsigned button);
     void handle_mousemove_on_label(Badge<Painting::TextPaintable>, const Gfx::IntPoint&, unsigned button);
 
+    LabelableNode* labeled_control();
+
 private:
     virtual bool is_label() const override { return true; }
 
     static Label const* label_for_control_node(LabelableNode const&);
-    LabelableNode* labeled_control();
 
     bool m_tracking_mouse { false };
 };

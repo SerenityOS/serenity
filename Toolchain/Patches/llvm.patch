@@ -33,7 +33,7 @@ diff --git a/clang/lib/Basic/Targets/OSTargets.h b/clang/lib/Basic/Targets/OSTar
 index 3fe39ed64..51e7a6cca 100644
 --- a/clang/lib/Basic/Targets/OSTargets.h
 +++ b/clang/lib/Basic/Targets/OSTargets.h
-@@ -966,6 +966,22 @@ public:
+@@ -966,6 +966,24 @@ public:
    }
  };
  
@@ -50,7 +50,9 @@ index 3fe39ed64..51e7a6cca 100644
 +
 +public:
 +  SerenityTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
-+      : OSTargetInfo<Target>(Triple, Opts) {}
++      : OSTargetInfo<Target>(Triple, Opts) {
++    this->WIntType = TargetInfo::UnsignedInt;
++  }
 +};
 +
  } // namespace targets

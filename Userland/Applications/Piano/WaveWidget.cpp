@@ -18,10 +18,10 @@ WaveWidget::WaveWidget(TrackManager& track_manager)
 
 int WaveWidget::sample_to_y(int sample) const
 {
-    constexpr int nice_scale_factor = 4;
-    sample *= nice_scale_factor;
+    // Sample scaling that looks good, experimentally determined.
+    constexpr double nice_scale_factor = 1.0;
     constexpr double sample_max = NumericLimits<i16>::max();
-    double percentage = sample / sample_max;
+    double percentage = sample / sample_max * nice_scale_factor;
     double portion_of_half_height = percentage * ((frame_inner_rect().height() - 1) / 2.0);
     double y = (frame_inner_rect().height() / 2.0) + portion_of_half_height;
     return y;

@@ -7,7 +7,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
-#include <Kernel/Storage/RamdiskController.h>
+#include <Kernel/Storage/Ramdisk/Controller.h>
 
 namespace Kernel {
 
@@ -55,9 +55,7 @@ RamdiskController::RamdiskController()
     }
 }
 
-RamdiskController::~RamdiskController()
-{
-}
+RamdiskController::~RamdiskController() = default;
 
 RefPtr<StorageDevice> RamdiskController::device(u32 index) const
 {

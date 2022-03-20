@@ -52,10 +52,6 @@ Array::Array(Object& prototype)
 {
 }
 
-Array::~Array()
-{
-}
-
 // 10.4.2.4 ArraySetLength ( A, Desc ), https://tc39.es/ecma262/#sec-arraysetlength
 ThrowCompletionOr<bool> Array::set_length(PropertyDescriptor const& property_descriptor)
 {

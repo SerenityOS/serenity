@@ -16,7 +16,7 @@ class EventListenerWrapper final : public Wrapper {
 
 public:
     EventListenerWrapper(JS::GlobalObject&, DOM::IDLEventListener&);
-    virtual ~EventListenerWrapper() override;
+    virtual ~EventListenerWrapper() override = default;
 
     DOM::IDLEventListener& impl() { return *m_impl; }
     DOM::IDLEventListener const& impl() const { return *m_impl; }

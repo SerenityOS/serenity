@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/StdLibExtras.h>
+#include <AK/StringView.h>
 #include <LibGfx/Filters/ColorFilter.h>
 #include <math.h>
 
@@ -18,9 +19,9 @@ public:
         : m_amount(amount)
     {
     }
-    virtual ~SepiaFilter() { }
+    virtual ~SepiaFilter() = default;
 
-    virtual char const* class_name() const override { return "SepiaFilter"; }
+    virtual StringView class_name() const override { return "SepiaFilter"sv; }
 
 protected:
     Color convert_color(Color original) override { return original.sepia(m_amount); };

@@ -10,13 +10,8 @@
 
 namespace Web::HTML {
 
-DOMParser::DOMParser()
-{
-}
-
-DOMParser::~DOMParser()
-{
-}
+DOMParser::DOMParser() = default;
+DOMParser::~DOMParser() = default;
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-domparser-parsefromstring
 NonnullRefPtr<DOM::Document> DOMParser::parse_from_string(String const& string, Bindings::DOMParserSupportedType type)

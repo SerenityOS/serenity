@@ -250,34 +250,34 @@ void Terminal::SGR(Parameters params)
                 m_current_state.attribute.reset();
                 break;
             case 1:
-                m_current_state.attribute.flags |= Attribute::Bold;
+                m_current_state.attribute.flags |= Attribute::Flags::Bold;
                 break;
             case 3:
-                m_current_state.attribute.flags |= Attribute::Italic;
+                m_current_state.attribute.flags |= Attribute::Flags::Italic;
                 break;
             case 4:
-                m_current_state.attribute.flags |= Attribute::Underline;
+                m_current_state.attribute.flags |= Attribute::Flags::Underline;
                 break;
             case 5:
-                m_current_state.attribute.flags |= Attribute::Blink;
+                m_current_state.attribute.flags |= Attribute::Flags::Blink;
                 break;
             case 7:
-                m_current_state.attribute.flags |= Attribute::Negative;
+                m_current_state.attribute.flags |= Attribute::Flags::Negative;
                 break;
             case 22:
-                m_current_state.attribute.flags &= ~Attribute::Bold;
+                m_current_state.attribute.flags &= ~Attribute::Flags::Bold;
                 break;
             case 23:
-                m_current_state.attribute.flags &= ~Attribute::Italic;
+                m_current_state.attribute.flags &= ~Attribute::Flags::Italic;
                 break;
             case 24:
-                m_current_state.attribute.flags &= ~Attribute::Underline;
+                m_current_state.attribute.flags &= ~Attribute::Flags::Underline;
                 break;
             case 25:
-                m_current_state.attribute.flags &= ~Attribute::Blink;
+                m_current_state.attribute.flags &= ~Attribute::Flags::Blink;
                 break;
             case 27:
-                m_current_state.attribute.flags &= ~Attribute::Negative;
+                m_current_state.attribute.flags &= ~Attribute::Flags::Negative;
                 break;
             case 30:
             case 31:
@@ -872,7 +872,7 @@ void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
     auto& line = active_buffer()[row];
     line.set_code_point(column, code_point);
     line.attribute_at(column) = m_current_state.attribute;
-    line.attribute_at(column).flags |= Attribute::Touched;
+    line.attribute_at(column).flags |= Attribute::Flags::Touched;
     line.set_dirty(true);
 
     m_last_code_point = code_point;

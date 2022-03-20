@@ -1,0 +1,49 @@
+diff --git a/src/luarocks/core/cfg.lua b/src/luarocks/core/cfg.lua
+index 926d4793..7c2914b3 100644
+--- a/src/luarocks/core/cfg.lua
++++ b/src/luarocks/core/cfg.lua
+@@ -42,6 +42,7 @@ local platform_order = {
+    "cygwin",
+    "msys",
+    "haiku",
++   "serenity",
+    -- Windows
+    "windows",
+    "win32",
+@@ -152,6 +153,7 @@ local platform_sets = {
+    netbsd = { unix = true, bsd = true, netbsd = true },
+    haiku = { unix = true, haiku = true },
+    linux = { unix = true, linux = true },
++   serenity = { unix = true, serenity = true },
+    mingw = { windows = true, win32 = true, mingw32 = true, mingw = true },
+    msys = { unix = true, cygwin = true, msys = true },
+    msys2_mingw_w64 = { windows = true, win32 = true, mingw32 = true, mingw = true, msys = true, msys2_mingw_w64 = true },
+@@ -497,6 +499,12 @@ local function make_defaults(lua_version, target_cpu, platforms, home)
+       defaults.variables.MAKE = "gmake"
+    end
+ 
++   if platforms.serenity then
++      defaults.arch = "serenity"..target_cpu
++      defaults.variables.UNZIP = "unzip"
++      defaults.web_browser = "br"
++   end
++
+    -- Expose some more values detected by LuaRocks for use by rockspec authors.
+    defaults.variables.LIB_EXTENSION = defaults.lib_extension
+    defaults.variables.OBJ_EXTENSION = defaults.obj_extension
+diff --git a/src/luarocks/core/sysdetect.lua b/src/luarocks/core/sysdetect.lua
+index 02b8a492..b05f170b 100644
+--- a/src/luarocks/core/sysdetect.lua
++++ b/src/luarocks/core/sysdetect.lua
+@@ -189,6 +189,11 @@ local function detect_elf_system(fd, hdr, sections)
+             return "linux"
+          end
+       end
++
++      local uname_s = io.popen("uname -s"):read("*l")
++      if uname_s == "SerenityOS" then
++         return "serenity"
++      end
+    end
+ 
+    return system

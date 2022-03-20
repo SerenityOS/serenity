@@ -6,6 +6,7 @@ https://ftpmirror.gnu.org/gnu/indent/indent-${version}.tar.gz.sig indent-${versi
 https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
 useconfigure=true
 use_fresh_config_sub=true
+config_sub_path=config/config.sub
 auth_type="sig"
 auth_opts=("--keyring" "./gnu-keyring.gpg" "indent-${version}.tar.gz.sig")
 

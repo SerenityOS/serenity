@@ -8,6 +8,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
+#include <AK/StringView.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibJS/Forward.h>
@@ -37,7 +38,7 @@ class Shape final
     : public Cell
     , public Weakable<Shape> {
 public:
-    virtual ~Shape() override;
+    virtual ~Shape() override = default;
 
     enum class TransitionType {
         Invalid,
@@ -48,7 +49,7 @@ public:
 
     enum class ShapeWithoutGlobalObjectTag { Tag };
 
-    explicit Shape(ShapeWithoutGlobalObjectTag);
+    explicit Shape(ShapeWithoutGlobalObjectTag) {};
     explicit Shape(Object& global_object);
     Shape(Shape& previous_shape, const StringOrSymbol& property_key, PropertyAttributes attributes, TransitionType);
     Shape(Shape& previous_shape, Object* new_prototype);
@@ -86,7 +87,7 @@ public:
     void reconfigure_property_in_unique_shape(const StringOrSymbol& property_key, PropertyAttributes attributes);
 
 private:
-    virtual const char* class_name() const override { return "Shape"; }
+    virtual StringView class_name() const override { return "Shape"sv; }
     virtual void visit_edges(Visitor&) override;
 
     Shape* get_or_prune_cached_forward_transition(TransitionKey const&);

@@ -53,7 +53,7 @@ public:
     };
 
     String type() const;
-    TypeAttributeState type_state() const;
+    TypeAttributeState type_state() const { return m_type; }
     void set_type(String const&);
 
     String default_value() const { return attribute(HTML::AttributeNames::value); }
@@ -67,14 +67,10 @@ public:
         Programmatic,
         User,
     };
-    enum class ShouldRunActivationBehavior {
-        No,
-        Yes,
-    };
-    void set_checked(bool, ChangeSource = ChangeSource::Programmatic, ShouldRunActivationBehavior = ShouldRunActivationBehavior::Yes);
+    void set_checked(bool, ChangeSource = ChangeSource::Programmatic);
 
-    void did_click_button(Badge<Painting::ButtonPaintable>);
-    void did_click_checkbox(Badge<Painting::CheckBoxPaintable>);
+    bool checked_binding() const { return checked(); }
+    void set_checked_binding(bool);
 
     void did_edit_text_node(Badge<BrowsingContext>);
 
@@ -100,13 +96,19 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return type_state() != TypeAttributeState::Hidden; }
 
+    virtual void inserted() override;
+
 private:
     // ^DOM::EventTarget
     virtual void did_receive_focus() override;
-    virtual void run_activation_behavior() override;
+    virtual void legacy_pre_activation_behavior() override;
+    virtual void legacy_cancelled_activation_behavior() override;
+    virtual void legacy_cancelled_activation_behavior_was_not_called() override;
 
+    static TypeAttributeState parse_type_attribute(StringView);
     void create_shadow_tree_if_needed();
     void run_input_activation_behavior();
+    void set_checked_within_group();
 
     // https://html.spec.whatwg.org/multipage/input.html#value-sanitization-algorithm
     String value_sanitization_algorithm(String) const;
@@ -116,6 +118,12 @@ private:
 
     // https://html.spec.whatwg.org/multipage/input.html#concept-input-checked-dirty-flag
     bool m_dirty_checkedness { false };
+
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:legacy-pre-activation-behavior
+    bool m_before_legacy_pre_activation_behavior_checked { false };
+    RefPtr<HTMLInputElement> m_legacy_pre_activation_behavior_checked_element_in_group;
+
+    TypeAttributeState m_type { TypeAttributeState::Text };
 };
 
 }

@@ -23,54 +23,38 @@ namespace Web::HTML {
 HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : FormAssociatedElement(document, move(qualified_name))
 {
+    activation_behavior = [this](auto&) {
+        // The activation behavior for input elements are these steps:
+
+        // FIXME: 1. If this element is not mutable and is not in the Checkbox state and is not in the Radio state, then return.
+
+        // 2. Run this element's input activation behavior, if any, and do nothing otherwise.
+        run_input_activation_behavior();
+    };
 }
 
-HTMLInputElement::~HTMLInputElement()
-{
-}
-
-void HTMLInputElement::did_click_button(Badge<Painting::ButtonPaintable>)
-{
-    // FIXME: This should be a PointerEvent.
-    dispatch_event(DOM::Event::create(EventNames::click));
-
-    if (type() == "submit") {
-        if (auto* form = first_ancestor_of_type<HTMLFormElement>()) {
-            form->submit_form(this);
-        }
-        return;
-    }
-}
-
-void HTMLInputElement::did_click_checkbox(Badge<Painting::CheckBoxPaintable>)
-{
-    // FIXME: This should be a PointerEvent.
-    auto click_event = DOM::Event::create(EventNames::click);
-    click_event->set_bubbles(true);
-    dispatch_event(move(click_event));
-}
+HTMLInputElement::~HTMLInputElement() = default;
 
 RefPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    if (type() == "hidden")
+    if (type_state() == TypeAttributeState::Hidden)
         return nullptr;
 
-    if (type() == "submit" || type() == "button" || type() == "reset")
+    if (type_state() == TypeAttributeState::SubmitButton || type_state() == TypeAttributeState::Button || type_state() == TypeAttributeState::ResetButton)
         return adopt_ref(*new Layout::ButtonBox(document(), *this, move(style)));
 
-    if (type() == "checkbox")
+    if (type_state() == TypeAttributeState::Checkbox)
         return adopt_ref(*new Layout::CheckBox(document(), *this, move(style)));
 
-    if (type() == "radio")
+    if (type_state() == TypeAttributeState::RadioButton)
         return adopt_ref(*new Layout::RadioButton(document(), *this, move(style)));
 
-    create_shadow_tree_if_needed();
     auto layout_node = adopt_ref(*new Layout::BlockContainer(document(), this, move(style)));
     layout_node->set_inline(true);
     return layout_node;
 }
 
-void HTMLInputElement::set_checked(bool checked, ChangeSource change_source, ShouldRunActivationBehavior should_run_activation_behavior)
+void HTMLInputElement::set_checked(bool checked, ChangeSource change_source)
 {
     if (m_checked == checked)
         return;
@@ -82,25 +66,24 @@ void HTMLInputElement::set_checked(bool checked, ChangeSource change_source, Sho
 
     m_checked = checked;
     set_needs_style_update(true);
-
-    if (should_run_activation_behavior == ShouldRunActivationBehavior::Yes)
-        run_activation_behavior();
 }
 
-void HTMLInputElement::run_activation_behavior()
+void HTMLInputElement::set_checked_binding(bool checked)
 {
-    // The activation behavior for input elements are these steps:
-
-    // FIXME: 1. If this element is not mutable and is not in the Checkbox state and is not in the Radio state, then return.
-
-    // 2. Run this element's input activation behavior, if any, and do nothing otherwise.
-    run_input_activation_behavior();
+    if (type_state() == TypeAttributeState::RadioButton) {
+        if (checked)
+            set_checked_within_group();
+        else
+            set_checked(false, ChangeSource::Programmatic);
+    } else {
+        set_checked(checked, ChangeSource::Programmatic);
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
 void HTMLInputElement::run_input_activation_behavior()
 {
-    if (type() == "checkbox") {
+    if (type_state() == TypeAttributeState::Checkbox || type_state() == TypeAttributeState::RadioButton) {
         // 1. If the element is not connected, then return.
         if (!is_connected())
             return;
@@ -115,6 +98,18 @@ void HTMLInputElement::run_input_activation_behavior()
         auto change_event = DOM::Event::create(HTML::EventNames::change);
         change_event->set_bubbles(true);
         dispatch_event(move(change_event));
+    } else if (type_state() == TypeAttributeState::SubmitButton) {
+        RefPtr<HTMLFormElement> form;
+        // 1. If the element does not have a form owner, then return.
+        if (!(form = this->form()))
+            return;
+
+        // 2. If the element's node document is not fully active, then return.
+        if (!document().is_fully_active())
+            return;
+
+        // 3. Submit the form owner from the element.
+        form->submit_form(this);
     } else {
         dispatch_event(DOM::Event::create(EventNames::change));
     }
@@ -160,7 +155,19 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     if (shadow_root())
         return;
 
-    // FIXME: This assumes that we want a text box. Is that always true?
+    // FIXME: This could be better factored. Everything except the below types becomes a text input.
+    switch (type_state()) {
+    case TypeAttributeState::RadioButton:
+    case TypeAttributeState::Checkbox:
+    case TypeAttributeState::Button:
+    case TypeAttributeState::SubmitButton:
+    case TypeAttributeState::ResetButton:
+    case TypeAttributeState::ImageButton:
+        return;
+    default:
+        break;
+    }
+
     auto shadow_root = adopt_ref(*new DOM::ShadowRoot(document(), *this));
     auto initial_value = attribute(HTML::AttributeNames::value);
     if (initial_value.is_null())
@@ -197,8 +204,24 @@ void HTMLInputElement::parse_attribute(FlyString const& name, String const& valu
         // When the checked content attribute is added, if the control does not have dirty checkedness,
         // the user agent must set the checkedness of the element to true
         if (!m_dirty_checkedness)
-            set_checked(true, ChangeSource::Programmatic, ShouldRunActivationBehavior::No);
+            set_checked(true, ChangeSource::Programmatic);
+    } else if (name == HTML::AttributeNames::type) {
+        m_type = parse_type_attribute(value);
     }
+}
+
+HTMLInputElement::TypeAttributeState HTMLInputElement::parse_type_attribute(StringView type)
+{
+#define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, state) \
+    if (type.equals_ignoring_case(#keyword))                  \
+        return HTMLInputElement::TypeAttributeState::state;
+    ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
+#undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
+
+    // The missing value default and the invalid value default are the Text state.
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:missing-value-default
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:invalid-value-default
+    return HTMLInputElement::TypeAttributeState::Text;
 }
 
 void HTMLInputElement::did_remove_attribute(FlyString const& name)
@@ -208,40 +231,21 @@ void HTMLInputElement::did_remove_attribute(FlyString const& name)
         // When the checked content attribute is removed, if the control does not have dirty checkedness,
         // the user agent must set the checkedness of the element to false.
         if (!m_dirty_checkedness)
-            set_checked(false, ChangeSource::Programmatic, ShouldRunActivationBehavior::No);
+            set_checked(false, ChangeSource::Programmatic);
     }
 }
 
 String HTMLInputElement::type() const
 {
-    auto value = attribute(HTML::AttributeNames::type);
-
-#define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, _) \
-    if (value.equals_ignoring_case(#keyword))             \
-        return #keyword;
-    ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
-#undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
-
-    // The missing value default and the invalid value default are the Text state.
-    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:missing-value-default
-    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:invalid-value-default
-    return "text";
-}
-
-HTMLInputElement::TypeAttributeState HTMLInputElement::type_state() const
-{
-    auto value = attribute(HTML::AttributeNames::type);
-
+    switch (m_type) {
 #define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(keyword, state) \
-    if (value.equals_ignoring_case(#keyword))                 \
-        return HTMLInputElement::TypeAttributeState::state;
-    ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
+    case TypeAttributeState::state:                           \
+        return #keyword##sv;
+        ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
 #undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
+    }
 
-    // The missing value default and the invalid value default are the Text state.
-    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:missing-value-default
-    // https://html.spec.whatwg.org/multipage/input.html#the-input-element:invalid-value-default
-    return HTMLInputElement::TypeAttributeState::Text;
+    VERIFY_NOT_REACHED();
 }
 
 void HTMLInputElement::set_type(String const& type)
@@ -282,6 +286,100 @@ String HTMLInputElement::value_sanitization_algorithm(String value) const
 
     // FIXME: Implement remaining value sanitation algorithms
     return value;
+}
+
+void HTMLInputElement::inserted()
+{
+    create_shadow_tree_if_needed();
+}
+
+void HTMLInputElement::set_checked_within_group()
+{
+    if (checked())
+        return;
+
+    set_checked(true, ChangeSource::User);
+    String name = this->name();
+
+    document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
+        if (element.checked() && &element != this && element.name() == name)
+            element.set_checked(false, ChangeSource::User);
+        return IterationDecision::Continue;
+    });
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:legacy-pre-activation-behavior
+void HTMLInputElement::legacy_pre_activation_behavior()
+{
+    m_before_legacy_pre_activation_behavior_checked = checked();
+
+    // 1. If this element's type attribute is in the Checkbox state, then set
+    // this element's checkedness to its opposite value (i.e. true if it is
+    // false, false if it is true) and set this element's indeterminate IDL
+    // attribute to false.
+    // FIXME: Set indeterminate to false when that exists.
+    if (type_state() == TypeAttributeState::Checkbox) {
+        set_checked(!checked(), ChangeSource::User);
+    }
+
+    // 2. If this element's type attribute is in the Radio Button state, then
+    // get a reference to the element in this element's radio button group that
+    // has its checkedness set to true, if any, and then set this element's
+    // checkedness to true.
+    if (type_state() == TypeAttributeState::RadioButton) {
+        String name = this->name();
+
+        document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
+            if (element.checked() && element.name() == name) {
+                m_legacy_pre_activation_behavior_checked_element_in_group = element;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+
+        set_checked_within_group();
+    }
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#the-input-element:legacy-canceled-activation-behavior
+void HTMLInputElement::legacy_cancelled_activation_behavior()
+{
+    // 1. If the element's type attribute is in the Checkbox state, then set the
+    // element's checkedness and the element's indeterminate IDL attribute back
+    // to the values they had before the legacy-pre-activation behavior was run.
+    if (type_state() == TypeAttributeState::Checkbox) {
+        set_checked(m_before_legacy_pre_activation_behavior_checked, ChangeSource::Programmatic);
+    }
+
+    // 2. If this element 's type attribute is in the Radio Button state, then
+    // if the element to which a reference was obtained in the
+    // legacy-pre-activation behavior, if any, is still in what is now this
+    // element' s radio button group, if it still has one, and if so, setting
+    // that element 's checkedness to true; or else, if there was no such
+    // element, or that element is no longer in this element' s radio button
+    // group, or if this element no longer has a radio button group, setting
+    // this element's checkedness to false.
+    if (type_state() == TypeAttributeState::RadioButton) {
+        String name = this->name();
+        bool did_reselect_previous_element = false;
+        if (m_legacy_pre_activation_behavior_checked_element_in_group) {
+            auto& element_in_group = *m_legacy_pre_activation_behavior_checked_element_in_group;
+            if (name == element_in_group.name()) {
+                element_in_group.set_checked_within_group();
+                did_reselect_previous_element = true;
+            }
+
+            m_legacy_pre_activation_behavior_checked_element_in_group = nullptr;
+        }
+
+        if (!did_reselect_previous_element)
+            set_checked(false, ChangeSource::User);
+    }
+}
+
+void HTMLInputElement::legacy_cancelled_activation_behavior_was_not_called()
+{
+    m_legacy_pre_activation_behavior_checked_element_in_group = nullptr;
 }
 
 }

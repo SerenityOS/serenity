@@ -20,7 +20,7 @@ public:
     // and the bottommost node of the stack is the most recently added node in the stack
     // (notwithstanding when the stack is manipulated in a random access fashion as part of the handling for misnested tags).
 
-    StackOfOpenElements() { }
+    StackOfOpenElements() = default;
     ~StackOfOpenElements();
 
     DOM::Element& first() { return m_elements.first(); }
@@ -29,6 +29,9 @@ public:
     bool is_empty() const { return m_elements.is_empty(); }
     void push(NonnullRefPtr<DOM::Element> element) { m_elements.append(move(element)); }
     NonnullRefPtr<DOM::Element> pop() { return m_elements.take_last(); }
+    void remove(DOM::Element const& element);
+    void replace(DOM::Element const& to_remove, NonnullRefPtr<DOM::Element> to_add);
+    void insert_immediately_below(NonnullRefPtr<DOM::Element> element_to_add, DOM::Element const& target);
 
     const DOM::Element& current_node() const { return m_elements.last(); }
     DOM::Element& current_node() { return m_elements.last(); }

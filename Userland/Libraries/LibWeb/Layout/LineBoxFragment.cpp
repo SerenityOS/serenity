@@ -5,25 +5,13 @@
  */
 
 #include <AK/Utf8View.h>
-#include <LibGfx/Painter.h>
 #include <LibWeb/Layout/FormattingState.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Painting/PaintContext.h>
 #include <ctype.h>
 
 namespace Web::Layout {
-
-void LineBoxFragment::paint(PaintContext& context, Painting::PaintPhase phase)
-{
-    for (auto* ancestor = layout_node().parent(); ancestor; ancestor = ancestor->parent()) {
-        if (!ancestor->is_visible())
-            return;
-    }
-
-    layout_node().paint_fragment(context, *this, phase);
-}
 
 bool LineBoxFragment::ends_in_whitespace() const
 {

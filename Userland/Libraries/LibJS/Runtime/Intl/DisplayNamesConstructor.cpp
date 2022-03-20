@@ -15,7 +15,7 @@
 
 namespace JS::Intl {
 
-// 12.2 The Intl.DisplayNames Constructor, https://tc39.es/ecma402/#sec-intl-displaynames-constructor
+// 12.1 The Intl.DisplayNames Constructor, https://tc39.es/ecma402/#sec-intl-displaynames-constructor
 DisplayNamesConstructor::DisplayNamesConstructor(GlobalObject& global_object)
     : NativeFunction(vm().names.DisplayNames.as_string(), *global_object.function_prototype())
 {
@@ -27,7 +27,7 @@ void DisplayNamesConstructor::initialize(GlobalObject& global_object)
 
     auto& vm = this->vm();
 
-    // 12.3.1 Intl.DisplayNames.prototype, https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype
+    // 12.2.1 Intl.DisplayNames.prototype, https://tc39.es/ecma402/#sec-Intl.DisplayNames.prototype
     define_direct_property(vm.names.prototype, global_object.intl_display_names_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -36,14 +36,14 @@ void DisplayNamesConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }
 
-// 12.2.1 Intl.DisplayNames ( locales, options ), https://tc39.es/ecma402/#sec-Intl.DisplayNames
+// 12.1.1 Intl.DisplayNames ( locales, options ), https://tc39.es/ecma402/#sec-Intl.DisplayNames
 ThrowCompletionOr<Value> DisplayNamesConstructor::call()
 {
     // 1. If NewTarget is undefined, throw a TypeError exception.
     return vm().throw_completion<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, "Intl.DisplayNames");
 }
 
-// 12.2.1 Intl.DisplayNames ( locales, options ), https://tc39.es/ecma402/#sec-Intl.DisplayNames
+// 12.1.1 Intl.DisplayNames ( locales, options ), https://tc39.es/ecma402/#sec-Intl.DisplayNames
 ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
@@ -134,7 +134,7 @@ ThrowCompletionOr<Object*> DisplayNamesConstructor::construct(FunctionObject& ne
     return display_names;
 }
 
-// 12.3.2 Intl.DisplayNames.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.supportedLocalesOf
+// 12.2.2 Intl.DisplayNames.supportedLocalesOf ( locales [ , options ] ), https://tc39.es/ecma402/#sec-Intl.DisplayNames.supportedLocalesOf
 JS_DEFINE_NATIVE_FUNCTION(DisplayNamesConstructor::supported_locales_of)
 {
     auto locales = vm.argument(0);

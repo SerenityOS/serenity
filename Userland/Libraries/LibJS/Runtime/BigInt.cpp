@@ -17,10 +17,6 @@ BigInt::BigInt(Crypto::SignedBigInteger big_integer)
     VERIFY(!m_big_integer.is_invalid());
 }
 
-BigInt::~BigInt()
-{
-}
-
 BigInt* js_bigint(Heap& heap, Crypto::SignedBigInteger big_integer)
 {
     return heap.allocate_without_global_object<BigInt>(move(big_integer));

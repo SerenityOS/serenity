@@ -26,6 +26,6 @@ If a directory is specified in `path`, the `-r` (recursive) flag is required. Ot
 # Remove README.md file
 $ rm README.md
 
-# Remove cpp-tests directory
-$ rm -r cpp-tests
+# Remove Tests directory
+$ rm -r Tests
 ```

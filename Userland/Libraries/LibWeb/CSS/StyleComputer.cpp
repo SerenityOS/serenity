@@ -20,16 +20,13 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/FontCache.h>
+#include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <stdio.h>
 
 namespace Web::CSS {
 
 StyleComputer::StyleComputer(DOM::Document& document)
     : m_document(document)
-{
-}
-
-StyleComputer::~StyleComputer()
 {
 }
 
@@ -92,6 +89,7 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
         }
 
         Vector<MatchingRule> matching_rules;
+        matching_rules.ensure_capacity(rules_to_run.size());
         for (auto const& rule_to_run : rules_to_run) {
             auto const& selector = rule_to_run.rule->selectors()[rule_to_run.selector_index];
             if (SelectorEngine::matches(selector, element, pseudo_element))
@@ -441,7 +439,16 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index, HashMap<FlyString, StyleProperty> const& custom_properties) const
+static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, FlyString const& custom_property_name)
+{
+    for (auto const* current_element = &element; current_element; current_element = current_element->parent_element()) {
+        if (auto it = current_element->custom_properties().find(custom_property_name); it != current_element->custom_properties().end())
+            return it->value.value;
+    }
+    return nullptr;
+}
+
+bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index) const
 {
     // FIXME: Do this better!
     // We build a copy of the tree of StyleComponentValueRules, with all var()s replaced with their contents.
@@ -454,13 +461,6 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
         dbgln("Stopped expanding CSS variables: maximum length reached.");
         return false;
     }
-
-    auto get_custom_property = [&custom_properties](auto& name) -> RefPtr<StyleValue> {
-        auto it = custom_properties.find(name);
-        if (it != custom_properties.end())
-            return it->value.value;
-        return nullptr;
-    };
 
     auto get_dependency_node = [&](auto name) -> NonnullRefPtr<PropertyDependencyNode> {
         if (auto existing = dependencies.get(name); existing.has_value())
@@ -496,16 +496,16 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 if (parent->has_cycles())
                     return false;
 
-                if (auto custom_property_value = get_custom_property(custom_property_name)) {
+                if (auto custom_property_value = get_custom_property(element, custom_property_name)) {
                     VERIFY(custom_property_value->is_unresolved());
-                    if (!expand_unresolved_values(element, custom_property_name, dependencies, custom_property_value->as_unresolved().values(), dest, 0, custom_properties))
+                    if (!expand_unresolved_values(element, custom_property_name, dependencies, custom_property_value->as_unresolved().values(), dest, 0))
                         return false;
                     continue;
                 }
 
                 // Use the provided fallback value, if any.
                 if (var_contents.size() > 2 && var_contents[1].is(Token::Type::Comma)) {
-                    if (!expand_unresolved_values(element, property_name, dependencies, var_contents, dest, 2, custom_properties))
+                    if (!expand_unresolved_values(element, property_name, dependencies, var_contents, dest, 2))
                         return false;
                     continue;
                 }
@@ -513,7 +513,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
 
             auto const& source_function = value.function();
             Vector<StyleComponentValueRule> function_values;
-            if (!expand_unresolved_values(element, property_name, dependencies, source_function.values(), function_values, 0, custom_properties))
+            if (!expand_unresolved_values(element, property_name, dependencies, source_function.values(), function_values, 0))
                 return false;
             NonnullRefPtr<StyleFunctionRule> function = adopt_ref(*new StyleFunctionRule(source_function.name(), move(function_values)));
             dest.empend(function);
@@ -522,7 +522,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
         if (value.is_block()) {
             auto const& source_block = value.block();
             Vector<StyleComponentValueRule> block_values;
-            if (!expand_unresolved_values(element, property_name, dependencies, source_block.values(), block_values, 0, custom_properties))
+            if (!expand_unresolved_values(element, property_name, dependencies, source_block.values(), block_values, 0))
                 return false;
             NonnullRefPtr<StyleBlockRule> block = adopt_ref(*new StyleBlockRule(source_block.token(), move(block_values)));
             dest.empend(block);
@@ -534,7 +534,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
     return true;
 }
 
-RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, PropertyID property_id, UnresolvedStyleValue const& unresolved, HashMap<FlyString, StyleProperty> const& custom_properties) const
+RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, PropertyID property_id, UnresolvedStyleValue const& unresolved) const
 {
     // Unresolved always contains a var(), unless it is a custom property's value, in which case we shouldn't be trying
     // to produce a different StyleValue from it.
@@ -542,7 +542,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
 
     Vector<StyleComponentValueRule> expanded_values;
     HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
-    if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values, 0, custom_properties))
+    if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values, 0))
         return {};
 
     if (auto parsed_value = Parser::parse_css_value({}, ParsingContext { document() }, property_id, expanded_values))
@@ -551,7 +551,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     return {};
 }
 
-void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, Important important, HashMap<FlyString, StyleProperty> const& custom_properties) const
+void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, Important important) const
 {
     for (auto const& match : matching_rules) {
         for (auto const& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
@@ -559,7 +559,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
                 continue;
             auto property_value = property.value;
             if (property.value->is_unresolved()) {
-                if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved(), custom_properties))
+                if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved()))
                     property_value = resolved.release_nonnull();
             }
             set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
@@ -577,21 +577,14 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
     }
 }
 
-static HashMap<FlyString, StyleProperty> const& cascade_custom_properties(DOM::Element& element, Vector<MatchingRule> const& matching_rules)
+static void cascade_custom_properties(DOM::Element& element, Vector<MatchingRule> const& matching_rules)
 {
     size_t needed_capacity = 0;
-    if (auto* parent_element = element.parent_element())
-        needed_capacity += parent_element->custom_properties().size();
     for (auto const& matching_rule : matching_rules)
         needed_capacity += verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties().size();
 
     HashMap<FlyString, StyleProperty> custom_properties;
     custom_properties.ensure_capacity(needed_capacity);
-
-    if (auto* parent_element = element.parent_element()) {
-        for (auto const& it : parent_element->custom_properties())
-            custom_properties.set(it.key, it.value);
-    }
 
     for (auto const& matching_rule : matching_rules) {
         for (auto const& it : verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties())
@@ -599,7 +592,6 @@ static HashMap<FlyString, StyleProperty> const& cascade_custom_properties(DOM::E
     }
 
     element.set_custom_properties(move(custom_properties));
-    return element.custom_properties();
 }
 
 // https://www.w3.org/TR/css-cascade/#cascading
@@ -613,12 +605,14 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     sort_matching_rules(matching_rule_set.author_rules);
 
     // Then we resolve all the CSS custom properties ("variables") for this element:
-    auto const& custom_properties = cascade_custom_properties(element, matching_rule_set.author_rules);
+    // FIXME: Look into how custom properties should interact with pseudo elements and support that properly.
+    if (!pseudo_element.has_value())
+        cascade_custom_properties(element, matching_rule_set.author_rules);
 
     // Then we apply the declarations from the matched rules in cascade order:
 
     // Normal user agent declarations
-    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::No, custom_properties);
+    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::No);
 
     // FIXME: Normal user declarations
 
@@ -626,17 +620,17 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
     element.apply_presentational_hints(style);
 
     // Normal author declarations
-    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No, custom_properties);
+    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No);
 
     // FIXME: Animation declarations [css-animations-1]
 
     // Important author declarations
-    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::Yes, custom_properties);
+    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::Yes);
 
     // FIXME: Important user declarations
 
     // Important user agent declarations
-    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::Yes, custom_properties);
+    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::Yes);
 
     // FIXME: Transition declarations [css-transitions-1]
 }
@@ -657,9 +651,9 @@ static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, 
 {
     auto* parent_element = get_parent_element(element, pseudo_element);
 
-    if (!parent_element || !parent_element->specified_css_values())
+    if (!parent_element || !parent_element->computed_css_values())
         return property_initial_value(property_id);
-    return parent_element->specified_css_values()->property(property_id).release_value();
+    return parent_element->computed_css_values()->property(property_id).release_value();
 };
 
 void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM::Element const* element, CSS::PropertyID property_id, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -710,6 +704,25 @@ void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Elemen
     }
 }
 
+float StyleComputer::root_element_font_size() const
+{
+    constexpr float default_root_element_font_size = 10;
+
+    auto const* root_element = m_document.first_child_of_type<HTML::HTMLHtmlElement>();
+    if (!root_element)
+        return default_root_element_font_size;
+
+    auto const* computed_root_style = root_element->computed_css_values();
+    if (!computed_root_style)
+        return default_root_element_font_size;
+
+    auto maybe_root_value = computed_root_style->property(CSS::PropertyID::FontSize);
+    if (!maybe_root_value.has_value())
+        return default_root_element_font_size;
+
+    return maybe_root_value.value()->to_length().to_px(viewport_rect(), computed_root_style->computed_font().metrics('M'), default_root_element_font_size, default_root_element_font_size);
+}
+
 void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     // To compute the font, first ensure that we've defaulted the relevant CSS font properties.
@@ -720,8 +733,6 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontWeight, pseudo_element);
 
     auto* parent_element = get_parent_element(element, pseudo_element);
-
-    auto viewport_rect = document().browsing_context()->viewport_rect();
 
     auto font_size = style.property(CSS::PropertyID::FontSize).value();
     auto font_style = style.property(CSS::PropertyID::FontStyle).value();
@@ -789,29 +800,30 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             break;
         }
     } else {
-        // FIXME: Get the root element font.
-        float root_font_size = 10;
+        float root_font_size = root_element_font_size();
 
         Gfx::FontMetrics font_metrics;
-        if (parent_element && parent_element->specified_css_values())
-            font_metrics = parent_element->specified_css_values()->computed_font().metrics('M');
+        if (parent_element && parent_element->computed_css_values())
+            font_metrics = parent_element->computed_css_values()->computed_font().metrics('M');
         else
             font_metrics = Gfx::FontDatabase::default_font().metrics('M');
+
+        auto parent_font_size = [&]() -> float {
+            if (!parent_element || !parent_element->computed_css_values())
+                return size;
+            auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize).value();
+            if (value->is_length()) {
+                auto length = static_cast<LengthStyleValue const&>(*value).to_length();
+                if (length.is_absolute() || length.is_relative())
+                    return length.to_px(viewport_rect(), font_metrics, size, root_font_size);
+            }
+            return size;
+        };
 
         Optional<Length> maybe_length;
         if (font_size->is_percentage()) {
             // Percentages refer to parent element's font size
-            auto percentage = font_size->as_percentage().percentage();
-            auto parent_font_size = size;
-            if (parent_element && parent_element->layout_node() && parent_element->specified_css_values()) {
-                auto value = parent_element->specified_css_values()->property(CSS::PropertyID::FontSize).value();
-                if (value->is_length()) {
-                    auto length = static_cast<LengthStyleValue const&>(*value).to_length();
-                    if (length.is_absolute() || length.is_relative())
-                        parent_font_size = length.to_px(viewport_rect, font_metrics, size, root_font_size);
-                }
-            }
-            maybe_length = Length::make_px(percentage.as_fraction() * parent_font_size);
+            maybe_length = Length::make_px(font_size->as_percentage().percentage().as_fraction() * parent_font_size());
 
         } else if (font_size->is_length()) {
             maybe_length = font_size->to_length();
@@ -823,7 +835,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             // FIXME: Support font-size: calc(...)
             //        Theoretically we can do this now, but to resolve it we need a layout_node which we might not have. :^(
             if (!maybe_length->is_calculated()) {
-                auto px = maybe_length.value().to_px(viewport_rect, font_metrics, size, root_font_size);
+                auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, parent_font_size(), root_font_size);
                 if (px != 0)
                     size = px;
             }
@@ -928,17 +940,15 @@ Gfx::Font const& StyleComputer::initial_font() const
 
 void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const
 {
-    auto viewport_rect = document().browsing_context()->viewport_rect();
     auto font_metrics = style.computed_font().metrics('M');
-    // FIXME: Get the root element font.
-    float root_font_size = 10;
-    float font_size = style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(viewport_rect, font_metrics, root_font_size, root_font_size);
+    float root_font_size = root_element_font_size();
+    float font_size = style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size);
 
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
         auto& value_slot = style.m_property_values[i];
         if (!value_slot)
             continue;
-        value_slot = value_slot->absolutized(viewport_rect, font_metrics, font_size, root_font_size);
+        value_slot = value_slot->absolutized(viewport_rect(), font_metrics, font_size, root_font_size);
     }
 }
 
@@ -957,8 +967,8 @@ static BoxTypeTransformation required_box_type_transformation(StyleProperties co
     // FIXME: Containment in a ruby container inlinifies the box’s display type, as described in [CSS-RUBY-1].
 
     // A parent with a grid or flex display value blockifies the box’s display type. [CSS-GRID-1] [CSS-FLEXBOX-1]
-    if (element.parent() && element.parent()->layout_node()) {
-        auto const& parent_display = element.parent()->layout_node()->computed_values().display();
+    if (element.parent_element() && element.parent_element()->computed_css_values()) {
+        auto const& parent_display = element.parent_element()->computed_css_values()->display();
         if (parent_display.is_grid_inside() || parent_display.is_flex_inside())
             return BoxTypeTransformation::Blockify;
     }
@@ -1011,11 +1021,8 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     compute_font(style, nullptr, {});
     compute_defaulted_values(style, nullptr, {});
     absolutize_values(style, nullptr, {});
-    if (auto* browsing_context = m_document.browsing_context()) {
-        auto viewport_rect = browsing_context->viewport_rect();
-        style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect.width())));
-        style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect.height())));
-    }
+    style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().width())));
+    style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().height())));
     return style;
 }
 
@@ -1074,7 +1081,7 @@ bool PropertyDependencyNode::has_cycles()
 
 void StyleComputer::build_rule_cache_if_needed() const
 {
-    if (m_rule_cache && m_rule_cache->generation == m_document.style_sheets().generation())
+    if (m_rule_cache)
         return;
     const_cast<StyleComputer&>(*this).build_rule_cache();
 }
@@ -1149,13 +1156,18 @@ void StyleComputer::build_rule_cache()
         dbgln("        Other: {}", m_rule_cache->other_rules.size());
         dbgln("        Total: {}", num_class_rules + num_id_rules + num_tag_name_rules + m_rule_cache->other_rules.size());
     }
-
-    m_rule_cache->generation = m_document.style_sheets().generation();
 }
 
 void StyleComputer::invalidate_rule_cache()
 {
     m_rule_cache = nullptr;
+}
+
+Gfx::IntRect StyleComputer::viewport_rect() const
+{
+    if (auto const* browsing_context = document().browsing_context())
+        return browsing_context->viewport_rect();
+    return {};
 }
 
 }

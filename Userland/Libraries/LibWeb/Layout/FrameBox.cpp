@@ -17,9 +17,7 @@ FrameBox::FrameBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr
 {
 }
 
-FrameBox::~FrameBox()
-{
-}
+FrameBox::~FrameBox() = default;
 
 void FrameBox::prepare_for_replaced_layout()
 {

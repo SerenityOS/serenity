@@ -15,6 +15,7 @@
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/Cipher/AES.h>
+#include <LibCrypto/Curves/EllipticCurve.h>
 #include <LibCrypto/Hash/HashManager.h>
 #include <LibCrypto/PK/RSA.h>
 #include <LibTLS/CipherSuite.h>
@@ -244,6 +245,7 @@ struct Options {
         { HashAlgorithm::SHA1, SignatureAlgorithm::RSA });
     OPTION_WITH_DEFAULTS(Vector<NamedCurve>, elliptic_curves,
         NamedCurve::x25519,
+        NamedCurve::secp256r1,
         NamedCurve::x448)
     OPTION_WITH_DEFAULTS(Vector<ECPointFormat>, supported_ec_point_formats, ECPointFormat::Uncompressed)
 
@@ -334,7 +336,7 @@ struct Context {
         ByteBuffer Ys;
     } server_diffie_hellman_params;
 
-    NamedCurve server_curve_choice;
+    OwnPtr<Crypto::Curves::EllipticCurve> server_key_exchange_curve;
 };
 
 class TLSv12 final : public Core::Stream::Socket {
@@ -363,7 +365,7 @@ public:
     /// bytes written into the stream, or an errno in the case of failure.
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
 
-    virtual bool is_eof() const override { return m_context.connection_finished && m_context.application_buffer.is_empty(); }
+    virtual bool is_eof() const override { return m_context.application_buffer.is_empty() && (m_context.connection_finished || underlying_stream().is_eof()); }
 
     virtual bool is_open() const override { return is_established(); }
     virtual void close() override;
@@ -464,9 +466,6 @@ private:
     void build_rsa_pre_master_secret(PacketBuilder&);
     void build_dhe_rsa_pre_master_secret(PacketBuilder&);
     void build_ecdhe_rsa_pre_master_secret(PacketBuilder&);
-
-    static ErrorOr<ByteBuffer> named_curve_multiply(NamedCurve curve, ReadonlyBytes a, ReadonlyBytes b);
-    static ErrorOr<ByteBuffer> named_curve_generator_point(NamedCurve curve);
 
     ErrorOr<bool> flush();
     void write_into_socket();

@@ -184,9 +184,9 @@ void Device::rasterize_triangle(const Triangle& triangle)
         return;
 
     // Vertices
-    Vertex const vertex0 = triangle.vertices[0];
-    Vertex const vertex1 = triangle.vertices[1];
-    Vertex const vertex2 = triangle.vertices[2];
+    Vertex const& vertex0 = triangle.vertices[0];
+    Vertex const& vertex1 = triangle.vertices[1];
+    Vertex const& vertex2 = triangle.vertices[2];
 
     // Calculate area of the triangle for later tests
     FloatVector2 const v0 = vertex0.window_coordinates.xy();
@@ -262,7 +262,7 @@ void Device::rasterize_triangle(const Triangle& triangle)
     auto stencil_buffer = m_frame_buffer->stencil_buffer();
 
     // Stencil configuration and writing
-    auto const stencil_configuration = m_stencil_configuration[Face::Front];
+    auto const& stencil_configuration = m_stencil_configuration[Face::Front];
     auto const stencil_reference_value = stencil_configuration.reference_value & stencil_configuration.test_mask;
 
     auto write_to_stencil = [](StencilType* stencil_ptrs[4], i32x4 stencil_value, StencilOperation op, StencilType reference_value, StencilType write_mask, i32x4 pixel_mask) {
