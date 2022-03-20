@@ -6,6 +6,7 @@
  */
 
 #include <AK/DateConstants.h>
+#include <AK/Time.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/Calendar.h>
 #include <LibGUI/Painter.h>
@@ -264,38 +265,26 @@ void Calendar::update_tiles(unsigned view_year, unsigned view_month)
 {
     set_view_date(view_year, view_month);
 
-    unsigned months;
-    mode() == Month ? months = 1 : months = 12;
+    auto now = Core::DateTime::now();
+    unsigned months = mode() == Month ? 1 : 12;
     for (unsigned i = 0; i < months; i++) {
         if (mode() == Year)
             view_month = i + 1;
-        for (unsigned j = 0; j < 42; j++) {
-            auto date_time = Core::DateTime::create(view_year, view_month, 1);
-            unsigned start_of_month = date_time.weekday();
-            unsigned year;
-            unsigned month;
-            unsigned day;
 
-            if (start_of_month == 0 && mode() != Year) {
-                month = (view_month - 1 == 0) ? 12 : view_month - 1;
-                year = (month == 12) ? view_year - 1 : view_year;
-                date_time.set_time(year, month, 1);
-                day = (date_time.days_in_month() - 6 + j);
-            } else if (start_of_month > j) {
-                month = (view_month - 1 == 0) ? 12 : view_month - 1;
-                year = (month == 12) ? view_year - 1 : view_year;
-                date_time.set_time(year, month, 1);
-                day = (date_time.days_in_month() - (start_of_month) + j) + 1;
-            } else if ((j - start_of_month) + 1 > date_time.days_in_month()) {
-                month = (view_month + 1) > 12 ? 1 : view_month + 1;
-                year = (month == 1) ? view_year + 1 : view_year;
-                day = ((j - start_of_month) + 1) - date_time.days_in_month();
-            } else {
-                month = view_month;
-                year = view_year;
-                day = (j - start_of_month) + 1;
-            }
-            date_time.set_time(year, month, day);
+        unsigned first_day_of_week_for_month = day_of_week(view_year, view_month, 1);
+        unsigned days_from_previous_month_to_show = first_day_of_week_for_month == 0 ? 7 : first_day_of_week_for_month;
+        auto first_day_of_previous_month = Core::DateTime::create(
+            (view_month - 1 == 0) ? view_year - 1 : view_year,
+            (view_month - 1 == 0) ? 12 : view_month - 1,
+            1);
+
+        for (unsigned j = 0; j < 42; j++) {
+            // Take advantage of DateTime::create internally using mktime, which corrects
+            // out of bound components, creating valid dates.
+            auto date_time = Core::DateTime::create(
+                first_day_of_previous_month.year(),
+                first_day_of_previous_month.month(),
+                first_day_of_previous_month.days_in_month() - days_from_previous_month_to_show + j + 1);
 
             m_tiles[i][j].date_time = date_time;
             m_tiles[i][j].is_outside_selected_month = (date_time.month() != view_month
@@ -304,9 +293,9 @@ void Calendar::update_tiles(unsigned view_year, unsigned view_month)
                 && date_time.month() == m_selected_date.month()
                 && date_time.day() == m_selected_date.day()
                 && (mode() == Year ? !m_tiles[i][j].is_outside_selected_month : true));
-            m_tiles[i][j].is_today = (date_time.day() == Core::DateTime::now().day()
-                && date_time.month() == Core::DateTime::now().month()
-                && date_time.year() == Core::DateTime::now().year());
+            m_tiles[i][j].is_today = (date_time.day() == now.day()
+                && date_time.month() == now.month()
+                && date_time.year() == now.year());
         }
     }
     update();
