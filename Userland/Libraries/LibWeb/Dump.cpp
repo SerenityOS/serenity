@@ -405,6 +405,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Focus:
                     pseudo_class_description = "Focus";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::FocusWithin:
+                    pseudo_class_description = "FocusWithin";
+                    break;
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Empty:
                     pseudo_class_description = "Empty";
                     break;
