@@ -329,10 +329,12 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
         auto& transformation_style_value = it.as_transformation();
         CSS::Transformation transformation;
         transformation.function = transformation_style_value.transform_function();
-        Vector<Variant<CSS::Length, float>> values;
+        Vector<Variant<CSS::LengthPercentage, float>> values;
         for (auto& transformation_value : transformation_style_value.values()) {
             if (transformation_value.is_length()) {
                 values.append({ transformation_value.to_length() });
+            } else if (transformation_value.is_percentage()) {
+                values.append({ transformation_value.as_percentage().percentage() });
             } else if (transformation_value.is_numeric()) {
                 values.append({ transformation_value.to_number() });
             } else if (transformation_value.is_angle()) {

@@ -3976,6 +3976,11 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
             } else if (value.is(Token::Type::Number)) {
                 auto number = parse_numeric_value(value);
                 values.append(number.release_nonnull());
+            } else if (value.is(Token::Type::Percentage)) {
+                auto percentage = parse_dimension_value(value);
+                if (!percentage || !percentage->is_percentage())
+                    return nullptr;
+                values.append(percentage.release_nonnull());
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "FIXME: Unsupported value type for transformation!");
                 return nullptr;

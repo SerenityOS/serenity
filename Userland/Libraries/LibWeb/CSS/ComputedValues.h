@@ -72,7 +72,7 @@ public:
 
 struct Transformation {
     CSS::TransformFunction function;
-    Vector<Variant<CSS::Length, float>> values;
+    Vector<Variant<CSS::LengthPercentage, float>> values;
 };
 
 struct TransformOrigin {
