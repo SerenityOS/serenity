@@ -126,7 +126,7 @@ public:
     StringView dimension_unit() const
     {
         VERIFY(m_type == Type::Dimension);
-        return m_unit.view();
+        return m_value.view();
     }
     float dimension_value() const
     {
@@ -155,7 +155,6 @@ private:
     Type m_type { Type::Invalid };
 
     FlyString m_value;
-    FlyString m_unit;
     Number m_number_value;
     HashType m_hash_type { HashType::Unrestricted };
 
