@@ -671,8 +671,9 @@ ExceptionOr<NonnullRefPtr<DocumentFragment>> Range::extract()
         // 1. Let clone be a clone of original start node.
         auto clone = original_start_node->clone_node();
 
-        // 2. Set the data of clone to the result of substringing data with node original start node, offset original start offset, and count original start node’s length minus original start offset.
-        auto result = static_cast<CharacterData const&>(*original_start_node).substring_data(original_start_offset, original_end_offset - original_start_offset);
+        // 2. Set the data of clone to the result of substringing data with node original start node, offset original start offset,
+        //    and count original start node’s length minus original start offset.
+        auto result = static_cast<CharacterData const&>(*original_start_node).substring_data(original_start_offset, original_start_node->length() - original_start_offset);
         if (result.is_exception())
             return result.exception();
         verify_cast<CharacterData>(*clone).set_data(result.release_value());
