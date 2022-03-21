@@ -45,6 +45,7 @@ private:
     Gfx::FloatMatrix4x4 get_transformation_matrix(CSS::Transformation const& transformation) const;
     Gfx::FloatMatrix4x4 combine_transformations(Vector<CSS::Transformation> const& transformations) const;
     Gfx::AffineTransform combine_transformations_2d(Vector<CSS::Transformation> const& transformations) const;
+    Gfx::FloatPoint transform_origin() const;
 };
 
 }

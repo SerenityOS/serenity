@@ -75,6 +75,11 @@ struct Transformation {
     Vector<Variant<CSS::Length, float>> values;
 };
 
+struct TransformOrigin {
+    CSS::LengthPercentage x { Percentage(50) };
+    CSS::LengthPercentage y { Percentage(50) };
+};
+
 struct FlexBasisData {
     CSS::FlexBasis type { CSS::FlexBasis::Auto };
     Optional<CSS::LengthPercentage> length_percentage;
@@ -169,6 +174,7 @@ public:
     Optional<LengthPercentage> const& stroke_width() const { return m_inherited.stroke_width; }
 
     Vector<CSS::Transformation> transformations() const { return m_noninherited.transformations; }
+    CSS::TransformOrigin transform_origin() const { return m_noninherited.transform_origin; }
 
     float font_size() const { return m_inherited.font_size; }
     int font_weight() const { return m_inherited.font_weight; }
@@ -241,6 +247,7 @@ protected:
         float opacity { InitialValues::opacity() };
         Vector<BoxShadowData> box_shadow {};
         Vector<CSS::Transformation> transformations {};
+        CSS::TransformOrigin transform_origin {};
         CSS::BoxSizing box_sizing { InitialValues::box_sizing() };
         CSS::ContentData content;
         Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align { InitialValues::vertical_align() };
@@ -304,6 +311,7 @@ public:
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
     void set_box_shadow(Vector<BoxShadowData>&& value) { m_noninherited.box_shadow = move(value); }
     void set_transformations(Vector<CSS::Transformation> value) { m_noninherited.transformations = move(value); }
+    void set_transform_origin(CSS::TransformOrigin value) { m_noninherited.transform_origin = value; }
     void set_box_sizing(CSS::BoxSizing value) { m_noninherited.box_sizing = value; }
     void set_vertical_align(Variant<CSS::VerticalAlign, CSS::LengthPercentage> value) { m_noninherited.vertical_align = value; }
     void set_visibility(CSS::Visibility value) { m_inherited.visibility = value; }

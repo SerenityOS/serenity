@@ -261,8 +261,7 @@ void StackingContext::paint(PaintContext& context) const
         PaintContext paint_context(painter, context.palette(), context.scroll_offset());
         paint_internal(paint_context);
 
-        // FIXME: Use the transform origin specified in CSS or SVG
-        auto transform_origin = m_box.paint_box()->absolute_position();
+        auto transform_origin = this->transform_origin();
         auto source_rect = m_box.paint_box()->absolute_border_box_rect().translated(-transform_origin);
 
         auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
@@ -273,10 +272,19 @@ void StackingContext::paint(PaintContext& context) const
     }
 }
 
+Gfx::FloatPoint StackingContext::transform_origin() const
+{
+    auto style_value = m_box.computed_values().transform_origin();
+    // FIXME: respect transform-box property
+    auto reference_box = m_box.paint_box()->absolute_border_box_rect();
+    auto x = reference_box.left() + style_value.x.resolved(m_box, CSS::Length::make_px(reference_box.width())).to_px(m_box);
+    auto y = reference_box.top() + style_value.y.resolved(m_box, CSS::Length::make_px(reference_box.height())).to_px(m_box);
+    return { x, y };
+}
+
 Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
-    // FIXME: Use the transform origin specified in CSS or SVG
-    auto transform_origin = m_box.paint_box()->absolute_position();
+    auto transform_origin = this->transform_origin();
     auto affine_transform = combine_transformations_2d(m_box.computed_values().transformations());
     auto transformed_position = affine_transform.inverse().value_or({}).map(position - transform_origin) + transform_origin;
 
