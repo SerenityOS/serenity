@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,7 +10,7 @@
 #include <AK/FlyString.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
-#include <math.h>
+#include <LibWeb/CSS/Number.h>
 
 namespace Web::CSS {
 
@@ -50,11 +50,6 @@ public:
     enum class HashType {
         Id,
         Unrestricted,
-    };
-
-    enum class NumberType {
-        Integer,
-        Number,
     };
 
     struct Position {
@@ -112,23 +107,21 @@ public:
         return m_value.view();
     }
 
-    bool is(NumberType number_type) const { return is(Token::Type::Number) && m_number_type == number_type; }
-    StringView number_string_value() const
+    Number const& number() const
     {
-        VERIFY(m_type == Type::Number);
-        return m_value.view();
+        VERIFY(m_type == Type::Number || m_type == Type::Dimension || m_type == Type::Percentage);
+        return m_number_value;
     }
     float number_value() const
     {
         VERIFY(m_type == Type::Number);
-        return m_number_value;
+        return m_number_value.value();
     }
     i64 to_integer() const
     {
-        VERIFY(m_type == Type::Number && m_number_type == NumberType::Integer);
-        return to_closest_integer(m_number_value);
+        VERIFY(m_type == Type::Number && m_number_value.is_integer());
+        return m_number_value.integer_value();
     }
-    bool is_integer_value_signed() const { return number_string_value().starts_with('-') || number_string_value().starts_with('+'); }
 
     StringView dimension_unit() const
     {
@@ -138,20 +131,14 @@ public:
     float dimension_value() const
     {
         VERIFY(m_type == Type::Dimension);
-        return m_number_value;
+        return m_number_value.value();
     }
-    i64 dimension_value_int() const { return to_closest_integer(dimension_value()); }
+    i64 dimension_value_int() const { return m_number_value.integer_value(); }
 
     float percentage() const
     {
         VERIFY(m_type == Type::Percentage);
-        return m_number_value;
-    }
-
-    NumberType number_type() const
-    {
-        VERIFY((m_type == Type::Number) || (m_type == Type::Dimension) || (m_type == Type::Percentage));
-        return m_number_type;
+        return m_number_value.value();
     }
 
     Type mirror_variant() const;
@@ -165,21 +152,11 @@ public:
     Position const& end_position() const { return m_end_position; }
 
 private:
-    static i64 to_closest_integer(float value)
-    {
-        // https://www.w3.org/TR/css-values-4/#numeric-types
-        // When a value cannot be explicitly supported due to range/precision limitations, it must be converted
-        // to the closest value supported by the implementation, but how the implementation defines "closest"
-        // is explicitly undefined as well.
-        return llroundf(value);
-    }
-
     Type m_type { Type::Invalid };
 
     FlyString m_value;
     FlyString m_unit;
-    float m_number_value { 0 };
-    NumberType m_number_type { NumberType::Integer };
+    Number m_number_value;
     HashType m_hash_type { HashType::Unrestricted };
 
     Position m_start_position;

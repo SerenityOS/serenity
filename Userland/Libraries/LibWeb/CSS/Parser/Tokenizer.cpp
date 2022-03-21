@@ -465,7 +465,7 @@ Token Tokenizer::consume_an_ident_like_token()
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-number
-CSSNumber Tokenizer::consume_a_number()
+Number Tokenizer::consume_a_number()
 {
     // This section describes how to consume a number from a stream of code points.
     // It returns a numeric value, and a type which is either "integer" or "number".
@@ -478,12 +478,14 @@ CSSNumber Tokenizer::consume_a_number()
 
     // 1. Initially set type to "integer". Let repr be the empty string.
     StringBuilder repr;
-    Token::NumberType type = Token::NumberType::Integer;
+    Number::Type type = Number::Type::Integer;
 
     // 2. If the next input code point is U+002B PLUS SIGN (+) or U+002D HYPHEN-MINUS (-),
     // consume it and append it to repr.
+    bool has_explicit_sign = false;
     auto next_input = peek_code_point();
     if (is_plus_sign(next_input) || is_hyphen_minus(next_input)) {
+        has_explicit_sign = true;
         repr.append_code_point(next_code_point());
     }
 
@@ -505,7 +507,7 @@ CSSNumber Tokenizer::consume_a_number()
         repr.append_code_point(next_code_point());
 
         // 3. Set type to "number".
-        type = Token::NumberType::Number;
+        type = Number::Type::Number;
 
         // 4. While the next input code point is a digit, consume it and append it to repr.
         for (;;) {
@@ -537,7 +539,7 @@ CSSNumber Tokenizer::consume_a_number()
         }
 
         // 3. Set type to "number".
-        type = Token::NumberType::Number;
+        type = Number::Type::Number;
 
         // 4. While the next input code point is a digit, consume it and append it to repr.
         for (;;) {
@@ -553,7 +555,9 @@ CSSNumber Tokenizer::consume_a_number()
     auto value = convert_a_string_to_a_number(repr.string_view());
 
     // 7. Return value and type.
-    return { repr.to_string(), value, type };
+    if (type == Number::Type::Integer && has_explicit_sign)
+        return Number { Number::Type::IntegerWithExplicitSign, value };
+    return Number { type, value };
 }
 
 // https://www.w3.org/TR/css-syntax-3/#convert-string-to-number
@@ -836,9 +840,7 @@ Token Tokenizer::consume_a_numeric_token()
         // 1. Create a <dimension-token> with the same value and type flag as number,
         //    and a unit set initially to the empty string.
         auto token = create_new_token(Token::Type::Dimension);
-        token.m_value = move(number.string);
-        token.m_number_type = number.type;
-        token.m_number_value = number.value;
+        token.m_number_value = number;
 
         // 2. Consume a name. Set the <dimension-token>’s unit to the returned value.
         auto unit = consume_a_name();
@@ -855,17 +857,13 @@ Token Tokenizer::consume_a_numeric_token()
 
         // Create a <percentage-token> with the same value as number, and return it.
         auto token = create_new_token(Token::Type::Percentage);
-        token.m_value = move(number.string);
-        token.m_number_type = number.type;
-        token.m_number_value = number.value;
+        token.m_number_value = number;
         return token;
     }
 
     // Otherwise, create a <number-token> with the same value and type flag as number, and return it.
     auto token = create_new_token(Token::Type::Number);
-    token.m_value = move(number.string);
-    token.m_number_type = number.type;
-    token.m_number_value = number.value;
+    token.m_number_value = number;
     return token;
 }
 

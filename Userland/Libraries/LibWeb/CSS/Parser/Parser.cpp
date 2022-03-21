@@ -1233,14 +1233,14 @@ Optional<MediaFeatureValue> Parser::parse_media_feature_value(MediaFeatureID med
 
     // Boolean (<mq-boolean> in the spec: a 1 or 0)
     if (media_feature_accepts_type(media_feature, MediaFeatureValueType::Boolean)) {
-        if (first.is(Token::Type::Number) && first.token().number_type() == Token::NumberType::Integer
+        if (first.is(Token::Type::Number) && first.token().number().is_integer()
             && (first.token().number_value() == 0 || first.token().number_value() == 1))
             return MediaFeatureValue(first.token().number_value());
     }
 
     // Integer
     if (media_feature_accepts_type(media_feature, MediaFeatureValueType::Integer)) {
-        if (first.is(Token::Type::Number) && first.token().number_type() == Token::NumberType::Integer)
+        if (first.is(Token::Type::Number) && first.token().number().is_integer())
             return MediaFeatureValue(first.token().number_value());
     }
 
@@ -2392,7 +2392,7 @@ RefPtr<StyleValue> Parser::parse_numeric_value(StyleComponentValueRule const& co
 {
     if (component_value.is(Token::Type::Number)) {
         auto number = component_value.token();
-        if (number.number_type() == Token::NumberType::Integer) {
+        if (number.number().is_integer()) {
             return NumericStyleValue::create_integer(number.to_integer());
         } else {
             return NumericStyleValue::create_float(number.number_value());
@@ -2462,9 +2462,9 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
             auto g_val = params[1];
             auto b_val = params[2];
 
-            if (r_val.is(Token::NumberType::Integer)
-                && g_val.is(Token::NumberType::Integer)
-                && b_val.is(Token::NumberType::Integer)) {
+            if (r_val.is(Token::Type::Number) && r_val.number().is_integer()
+                && g_val.is(Token::Type::Number) && g_val.number().is_integer()
+                && b_val.is(Token::Type::Number) && b_val.number().is_integer()) {
 
                 auto r = r_val.to_integer();
                 auto g = g_val.to_integer();
@@ -2490,9 +2490,9 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
             auto b_val = params[2];
             auto a_val = params[3];
 
-            if (r_val.is(Token::NumberType::Integer)
-                && g_val.is(Token::NumberType::Integer)
-                && b_val.is(Token::NumberType::Integer)
+            if (r_val.is(Token::Type::Number) && r_val.number().is_integer()
+                && g_val.is(Token::Type::Number) && g_val.number().is_integer()
+                && b_val.is(Token::Type::Number) && b_val.number().is_integer()
                 && a_val.is(Token::Type::Number)) {
 
                 auto r = r_val.to_integer();
@@ -2571,7 +2571,7 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
         if (cv.is(Token::Type::Number) || cv.is(Token::Type::Dimension)) {
             // 1. If cv’s type flag is not "integer", return an error.
             //    This means that values that happen to use scientific notation, e.g., 5e5e5e, will fail to parse.
-            if (cv.token().number_type() != Token::NumberType::Integer)
+            if (!cv.token().number().is_integer())
                 return {};
 
             // 2. If cv’s value is less than zero, return an error.
@@ -4372,7 +4372,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     auto is_n_dimension = [](StyleComponentValueRule const& value) -> bool {
         if (!value.is(Token::Type::Dimension))
             return false;
-        if (value.token().number_type() != Token::NumberType::Integer)
+        if (!value.token().number().is_integer())
             return false;
         if (!value.token().dimension_unit().equals_ignoring_case("n"sv))
             return false;
@@ -4381,7 +4381,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     auto is_ndash_dimension = [](StyleComponentValueRule const& value) -> bool {
         if (!value.is(Token::Type::Dimension))
             return false;
-        if (value.token().number_type() != Token::NumberType::Integer)
+        if (!value.token().number().is_integer())
             return false;
         if (!value.token().dimension_unit().equals_ignoring_case("n-"sv))
             return false;
@@ -4390,7 +4390,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     auto is_ndashdigit_dimension = [](StyleComponentValueRule const& value) -> bool {
         if (!value.is(Token::Type::Dimension))
             return false;
-        if (value.token().number_type() != Token::NumberType::Integer)
+        if (!value.token().number().is_integer())
             return false;
         auto dimension_unit = value.token().dimension_unit();
         if (!dimension_unit.starts_with("n-"sv, CaseSensitivity::CaseInsensitive))
@@ -4426,13 +4426,13 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         return true;
     };
     auto is_integer = [](StyleComponentValueRule const& value) -> bool {
-        return value.is(Token::Type::Number) && value.token().is(Token::NumberType::Integer);
+        return value.is(Token::Type::Number) && value.token().number().is_integer();
     };
-    auto is_signed_integer = [is_integer](StyleComponentValueRule const& value) -> bool {
-        return is_integer(value) && value.token().is_integer_value_signed();
+    auto is_signed_integer = [](StyleComponentValueRule const& value) -> bool {
+        return value.is(Token::Type::Number) && value.token().number().is_integer_with_explicit_sign();
     };
-    auto is_signless_integer = [is_integer](StyleComponentValueRule const& value) -> bool {
-        return is_integer(value) && !value.token().is_integer_value_signed();
+    auto is_signless_integer = [](StyleComponentValueRule const& value) -> bool {
+        return value.is(Token::Type::Number) && !value.token().number().is_integer_with_explicit_sign();
     };
 
     // https://www.w3.org/TR/css-syntax-3/#the-anb-type

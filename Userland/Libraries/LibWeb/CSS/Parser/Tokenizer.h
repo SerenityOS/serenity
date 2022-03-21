@@ -57,13 +57,6 @@ public:
     u32 third {};
 };
 
-class CSSNumber {
-public:
-    String string;
-    float value { 0 };
-    Token::NumberType type {};
-};
-
 class Tokenizer {
 
 public:
@@ -89,7 +82,7 @@ private:
     [[nodiscard]] Token consume_string_token(u32 ending_code_point);
     [[nodiscard]] Token consume_a_numeric_token();
     [[nodiscard]] Token consume_an_ident_like_token();
-    [[nodiscard]] CSSNumber consume_a_number();
+    [[nodiscard]] Number consume_a_number();
     [[nodiscard]] float convert_a_string_to_a_number(StringView);
     [[nodiscard]] String consume_a_name();
     [[nodiscard]] u32 consume_escaped_code_point();
