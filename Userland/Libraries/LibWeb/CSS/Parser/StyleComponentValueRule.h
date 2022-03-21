@@ -45,6 +45,7 @@ public:
         return *m_function;
     }
 
+    bool is_token() const { return m_type == ComponentType::Token; }
     bool is(Token::Type type) const
     {
         return m_type == ComponentType::Token && m_token.is(type);
