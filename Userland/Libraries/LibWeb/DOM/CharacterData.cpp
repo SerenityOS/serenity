@@ -26,4 +26,23 @@ void CharacterData::set_data(String data)
     document().set_needs_layout();
 }
 
+// https://dom.spec.whatwg.org/#concept-cd-substring
+ExceptionOr<String> CharacterData::substring_data(size_t offset, size_t count) const
+{
+    // 1. Let length be node’s length.
+    auto length = this->length();
+
+    // 2. If offset is greater than length, then throw an "IndexSizeError" DOMException.
+    if (offset > length)
+        return DOM::IndexSizeError::create("Substring offset out of range.");
+
+    // 3. If offset plus count is greater than length, return a string whose value is the code units from the offsetth code unit
+    //    to the end of node’s data, and then return.
+    if (offset + count > length)
+        return m_data.substring(offset);
+
+    // 4. Return a string whose value is the code units from the offsetth code unit to the offset+countth code unit in node’s data.
+    return m_data.substring(offset, count);
+}
+
 }

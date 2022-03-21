@@ -6,6 +6,8 @@ interface CharacterData : Node {
     [LegacyNullToEmptyString] attribute DOMString data;
     readonly attribute unsigned long length;
 
+    DOMString substringData(unsigned long offset, unsigned long count);
+
     readonly attribute Element? nextElementSibling;
     readonly attribute Element? previousElementSibling;
 

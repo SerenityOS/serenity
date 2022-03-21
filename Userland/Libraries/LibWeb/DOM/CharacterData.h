@@ -27,6 +27,8 @@ public:
 
     unsigned length() const { return m_data.length(); }
 
+    ExceptionOr<String> substring_data(size_t offset, size_t count) const;
+
 protected:
     explicit CharacterData(Document&, NodeType, const String&);
 
