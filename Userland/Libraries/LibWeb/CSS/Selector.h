@@ -41,7 +41,6 @@ public:
             PseudoClass,
             PseudoElement,
         };
-        Type type { Type::Invalid };
 
         struct ANPlusBPattern {
             int step_size { 0 }; // "A"
@@ -93,10 +92,6 @@ public:
             // Used for :lang(en-gb,dk)
             Vector<FlyString> languages;
         };
-        PseudoClass pseudo_class {};
-        PseudoElement pseudo_element { PseudoElement::None };
-
-        FlyString value {};
 
         struct Attribute {
             enum class MatchType {
@@ -113,7 +108,18 @@ public:
             FlyString name {};
             String value {};
         };
-        Attribute attribute {};
+
+        Type type { Type::Invalid };
+        Variant<Empty, Attribute, PseudoClass, PseudoElement, FlyString> value {};
+
+        Attribute const& attribute() const { return value.get<Attribute>(); }
+        Attribute& attribute() { return value.get<Attribute>(); }
+        PseudoClass const& pseudo_class() const { return value.get<PseudoClass>(); }
+        PseudoClass& pseudo_class() { return value.get<PseudoClass>(); }
+        PseudoElement const& pseudo_element() const { return value.get<PseudoElement>(); }
+        PseudoElement& pseudo_element() { return value.get<PseudoElement>(); }
+        FlyString const& name() const { return value.get<FlyString>(); }
+        FlyString& name() { return value.get<FlyString>(); }
 
         String serialize() const;
     };

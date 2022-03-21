@@ -359,10 +359,13 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 break;
             }
 
-            builder.appendff("{}:{}", type_description, simple_selector.value);
+            builder.appendff("{}:", type_description);
+            // FIXME: This is goofy
+            if (simple_selector.value.has<FlyString>())
+                builder.append(simple_selector.name());
 
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoClass) {
-                auto const& pseudo_class = simple_selector.pseudo_class;
+                auto const& pseudo_class = simple_selector.pseudo_class();
 
                 char const* pseudo_class_description = "";
                 switch (pseudo_class.type) {
@@ -475,7 +478,7 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
 
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoElement) {
                 char const* pseudo_element_description = "";
-                switch (simple_selector.pseudo_element) {
+                switch (simple_selector.pseudo_element()) {
                 case CSS::Selector::PseudoElement::None:
                     pseudo_element_description = "NONE";
                     break;
@@ -500,9 +503,10 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             }
 
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Attribute) {
+                auto const& attribute = simple_selector.attribute();
                 char const* attribute_match_type_description = "";
 
-                switch (simple_selector.attribute.match_type) {
+                switch (attribute.match_type) {
                 case CSS::Selector::SimpleSelector::Attribute::MatchType::None:
                     attribute_match_type_description = "NONE";
                     break;
@@ -529,7 +533,7 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                     break;
                 }
 
-                builder.appendff(" [{}, name='{}', value='{}']", attribute_match_type_description, simple_selector.attribute.name, simple_selector.attribute.value);
+                builder.appendff(" [{}, name='{}', value='{}']", attribute_match_type_description, attribute.name, attribute.value);
             }
 
             if (i != relative_selector.simple_selectors.size() - 1)
