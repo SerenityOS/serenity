@@ -298,6 +298,7 @@ private:
     RefPtr<StyleValue> parse_overflow_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_text_decoration_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_transform_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_transform_origin_value(Vector<StyleComponentValueRule> const&);
 
     // calc() parsing, according to https://www.w3.org/TR/css-values-3/#calc-syntax
     OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_sum(TokenStream<StyleComponentValueRule>&);

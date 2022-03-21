@@ -1371,6 +1371,23 @@
     "inherited": false,
     "initial": "none"
   },
+  "transform-origin": {
+    "affects-layout": false,
+    "inherited": false,
+    "initial": "50% 50%",
+    "max-values": 3,
+    "valid-types": [
+      "length",
+      "percentage"
+    ],
+    "valid-identifiers": [
+      "bottom",
+      "center",
+      "left",
+      "right",
+      "top"
+    ]
+  },
   "user-select": {
     "affects-layout": false,
     "inherited": false,

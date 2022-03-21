@@ -3989,6 +3989,120 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
     return StyleValueList::create(move(transformations), StyleValueList::Separator::Space);
 }
 
+// https://www.w3.org/TR/css-transforms-1/#propdef-transform-origin
+// FIXME: This only supports a 2D position
+RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<StyleComponentValueRule> const& component_values)
+{
+    enum class Axis {
+        None,
+        X,
+        Y,
+    };
+
+    struct AxisOffset {
+        Axis axis;
+        NonnullRefPtr<StyleValue> offset;
+    };
+
+    auto to_axis_offset = [](RefPtr<StyleValue> value) -> Optional<AxisOffset> {
+        if (value->is_percentage())
+            return AxisOffset { Axis::None, value->as_percentage() };
+        if (value->is_length())
+            return AxisOffset { Axis::None, value->as_length() };
+        if (value->has_length())
+            return AxisOffset { Axis::None, LengthStyleValue::create(value->to_length()) };
+        if (value->is_identifier()) {
+            switch (value->to_identifier()) {
+            case ValueID::Top:
+                return AxisOffset { Axis::Y, PercentageStyleValue::create(Percentage(0)) };
+            case ValueID::Left:
+                return AxisOffset { Axis::X, PercentageStyleValue::create(Percentage(0)) };
+            case ValueID::Center:
+                return AxisOffset { Axis::None, PercentageStyleValue::create(Percentage(50)) };
+            case ValueID::Bottom:
+                return AxisOffset { Axis::Y, PercentageStyleValue::create(Percentage(100)) };
+            case ValueID::Right:
+                return AxisOffset { Axis::X, PercentageStyleValue::create(Percentage(100)) };
+            default:
+                return {};
+            }
+        }
+        return {};
+    };
+
+    auto make_list = [](NonnullRefPtr<StyleValue> x_value, NonnullRefPtr<StyleValue> y_value) -> NonnullRefPtr<StyleValueList> {
+        NonnullRefPtrVector<StyleValue> values;
+        values.append(x_value);
+        values.append(y_value);
+        return StyleValueList::create(move(values), StyleValueList::Separator::Space);
+    };
+
+    switch (component_values.size()) {
+    case 1: {
+        auto single_value = to_axis_offset(parse_css_value(component_values[0]));
+        if (!single_value.has_value())
+            return nullptr;
+        // If only one value is specified, the second value is assumed to be center.
+        // FIXME: If one or two values are specified, the third value is assumed to be 0px.
+        switch (single_value->axis) {
+        case Axis::None:
+        case Axis::X:
+            return make_list(single_value->offset, PercentageStyleValue::create(Percentage(50)));
+        case Axis::Y:
+            return make_list(PercentageStyleValue::create(Percentage(50)), single_value->offset);
+        }
+        VERIFY_NOT_REACHED();
+    }
+    case 2: {
+        auto first_value = to_axis_offset(parse_css_value(component_values[0]));
+        auto second_value = to_axis_offset(parse_css_value(component_values[1]));
+        if (!first_value.has_value() || !second_value.has_value())
+            return nullptr;
+
+        RefPtr<StyleValue> x_value;
+        RefPtr<StyleValue> y_value;
+
+        if (first_value->axis == Axis::X) {
+            x_value = first_value->offset;
+        } else if (first_value->axis == Axis::Y) {
+            y_value = first_value->offset;
+        }
+
+        if (second_value->axis == Axis::X) {
+            if (x_value)
+                return nullptr;
+            x_value = second_value->offset;
+            // Put the other in Y since its axis can't have been X
+            y_value = first_value->offset;
+        } else if (second_value->axis == Axis::Y) {
+            if (y_value)
+                return nullptr;
+            y_value = second_value->offset;
+            // Put the other in X since its axis can't have been Y
+            x_value = first_value->offset;
+        } else {
+            if (x_value) {
+                VERIFY(!y_value);
+                y_value = second_value->offset;
+            } else {
+                VERIFY(!x_value);
+                x_value = second_value->offset;
+            }
+        }
+        // If two or more values are defined and either no value is a keyword, or the only used keyword is center,
+        // then the first value represents the horizontal position (or offset) and the second represents the vertical position (or offset).
+        // FIXME: A third value always represents the Z position (or offset) and must be of type <length>.
+        if (first_value->axis == Axis::None && second_value->axis == Axis::None) {
+            x_value = first_value->offset;
+            y_value = second_value->offset;
+        }
+        return make_list(x_value.release_nonnull(), y_value.release_nonnull());
+    }
+    }
+
+    return nullptr;
+}
+
 RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 {
     auto component_values = parse_as_list_of_component_values();
@@ -4136,6 +4250,10 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
         if (auto parsed_value = parse_transform_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
+    case PropertyID::TransformOrigin:
+        if (auto parse_value = parse_transform_origin_value(component_values))
+            return parse_value.release_nonnull();
+        return ParsingResult ::SyntaxError;
     default:
         break;
     }
