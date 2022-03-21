@@ -12,6 +12,9 @@ function(add_simple_fuzzer name)
       PUBLIC ${ARGN} LagomCore
       PRIVATE $<$<CXX_COMPILER_ID:Clang>:-fsanitize=fuzzer>
       )
+  else()
+    target_sources(${name} PRIVATE "EntryShim.cpp")
+    target_link_libraries(${name} PUBLIC ${ARGN} LagomCore)
   endif()
 endfunction()
 
