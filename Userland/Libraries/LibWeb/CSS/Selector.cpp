@@ -13,12 +13,12 @@ namespace Web::CSS {
 Selector::Selector(Vector<CompoundSelector>&& compound_selectors)
     : m_compound_selectors(move(compound_selectors))
 {
-    // Note: This assumes that only one pseudo-element is allowed in a selector, and that it appears at the end.
-    //       This is true currently, and there are no current proposals to change this, but you never know!
+    // FIXME: This assumes that only one pseudo-element is allowed in a selector, and that it appears at the end.
+    //        This is not true in Selectors-4!
     if (!m_compound_selectors.is_empty()) {
         for (auto const& simple_selector : m_compound_selectors.last().simple_selectors) {
             if (simple_selector.type == SimpleSelector::Type::PseudoElement) {
-                m_pseudo_element = simple_selector.pseudo_element;
+                m_pseudo_element = simple_selector.pseudo_element();
                 break;
             }
         }
@@ -69,13 +69,14 @@ u32 Selector::specificity() const
                 // count the number of class selectors, attributes selectors, and pseudo-classes in the selector (= B)
                 ++classes;
                 break;
-            case SimpleSelector::Type::PseudoClass:
-                switch (simple_selector.pseudo_class.type) {
+            case SimpleSelector::Type::PseudoClass: {
+                auto& pseudo_class = simple_selector.pseudo_class();
+                switch (pseudo_class.type) {
                 case SimpleSelector::PseudoClass::Type::Is:
                 case SimpleSelector::PseudoClass::Type::Not: {
                     // The specificity of an :is(), :not(), or :has() pseudo-class is replaced by the
                     // specificity of the most specific complex selector in its selector list argument.
-                    count_specificity_of_most_complex_selector(simple_selector.pseudo_class.argument_selector_list);
+                    count_specificity_of_most_complex_selector(pseudo_class.argument_selector_list);
                     break;
                 }
                 case SimpleSelector::PseudoClass::Type::NthChild:
@@ -84,7 +85,7 @@ u32 Selector::specificity() const
                     // is the specificity of the pseudo class itself (counting as one pseudo-class selector)
                     // plus the specificity of the most specific complex selector in its selector list argument (if any).
                     ++classes;
-                    count_specificity_of_most_complex_selector(simple_selector.pseudo_class.argument_selector_list);
+                    count_specificity_of_most_complex_selector(pseudo_class.argument_selector_list);
                     break;
                 }
                 case SimpleSelector::PseudoClass::Type::Where:
@@ -95,6 +96,7 @@ u32 Selector::specificity() const
                     break;
                 }
                 break;
+            }
             case SimpleSelector::Type::TagName:
             case SimpleSelector::Type::PseudoElement:
                 // count the number of type selectors and pseudo-elements in the selector (= C)
@@ -129,13 +131,15 @@ String Selector::SimpleSelector::serialize() const
         // FIXME: 2. If the namespace prefix maps to a namespace that is the null namespace (not in a namespace) append "|" (U+007C) to s.
         // 3. If this is a type selector append the serialization of the element name as an identifier to s.
         if (type == Selector::SimpleSelector::Type::TagName) {
-            serialize_an_identifier(s, value);
+            serialize_an_identifier(s, name());
         }
         // 4. If this is a universal selector append "*" (U+002A) to s.
         if (type == Selector::SimpleSelector::Type::Universal)
             s.append('*');
         break;
-    case Selector::SimpleSelector::Type::Attribute:
+    case Selector::SimpleSelector::Type::Attribute: {
+        auto& attribute = this->attribute();
+
         // 1. Append "[" (U+005B) to s.
         s.append('[');
 
@@ -177,20 +181,23 @@ String Selector::SimpleSelector::serialize() const
         // 6. Append "]" (U+005D) to s.
         s.append(']');
         break;
+    }
 
     case Selector::SimpleSelector::Type::Class:
         // Append a "." (U+002E), followed by the serialization of the class name as an identifier to s.
         s.append('.');
-        serialize_an_identifier(s, value);
+        serialize_an_identifier(s, name());
         break;
 
     case Selector::SimpleSelector::Type::Id:
         // Append a "#" (U+0023), followed by the serialization of the ID as an identifier to s.
         s.append('#');
-        serialize_an_identifier(s, value);
+        serialize_an_identifier(s, name());
         break;
 
-    case Selector::SimpleSelector::Type::PseudoClass:
+    case Selector::SimpleSelector::Type::PseudoClass: {
+        auto& pseudo_class = this->pseudo_class();
+
         switch (pseudo_class.type) {
         case Selector::SimpleSelector::PseudoClass::Type::Link:
         case Selector::SimpleSelector::PseudoClass::Type::Visited:
@@ -239,6 +246,7 @@ String Selector::SimpleSelector::serialize() const
             VERIFY_NOT_REACHED();
         }
         break;
+    }
     case Selector::SimpleSelector::Type::PseudoElement:
         // Note: Pseudo-elements are dealt with in Selector::serialize()
         break;
@@ -299,7 +307,7 @@ String Selector::serialize() const
             // append "::" followed by the name of the pseudo-element, to s.
             if (compound_selector.simple_selectors.last().type == Selector::SimpleSelector::Type::PseudoElement) {
                 s.append("::");
-                s.append(pseudo_element_name(compound_selector.simple_selectors.last().pseudo_element));
+                s.append(pseudo_element_name(compound_selector.simple_selectors.last().pseudo_element()));
             }
         }
     }

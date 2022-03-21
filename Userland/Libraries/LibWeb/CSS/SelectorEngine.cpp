@@ -301,15 +301,15 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, DOM::
     case CSS::Selector::SimpleSelector::Type::Universal:
         return true;
     case CSS::Selector::SimpleSelector::Type::Id:
-        return component.value == element.attribute(HTML::AttributeNames::id);
+        return component.name() == element.attribute(HTML::AttributeNames::id);
     case CSS::Selector::SimpleSelector::Type::Class:
-        return element.has_class(component.value);
+        return element.has_class(component.name());
     case CSS::Selector::SimpleSelector::Type::TagName:
-        return component.value == element.local_name();
+        return component.name() == element.local_name();
     case CSS::Selector::SimpleSelector::Type::Attribute:
-        return matches_attribute(component.attribute, element);
+        return matches_attribute(component.attribute(), element);
     case CSS::Selector::SimpleSelector::Type::PseudoClass:
-        return matches_pseudo_class(component.pseudo_class, element);
+        return matches_pseudo_class(component.pseudo_class(), element);
     case CSS::Selector::SimpleSelector::Type::PseudoElement:
         // Pseudo-element matching/not-matching is handled in the top level matches().
         return true;
