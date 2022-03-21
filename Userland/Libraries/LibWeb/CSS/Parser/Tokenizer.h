@@ -60,7 +60,7 @@ public:
 class CSSNumber {
 public:
     String string;
-    double value { 0 };
+    float value { 0 };
     Token::NumberType type {};
 };
 
@@ -90,7 +90,7 @@ private:
     [[nodiscard]] Token consume_a_numeric_token();
     [[nodiscard]] Token consume_an_ident_like_token();
     [[nodiscard]] CSSNumber consume_a_number();
-    [[nodiscard]] double convert_a_string_to_a_number(StringView);
+    [[nodiscard]] float convert_a_string_to_a_number(StringView);
     [[nodiscard]] String consume_a_name();
     [[nodiscard]] u32 consume_escaped_code_point();
     [[nodiscard]] Token consume_a_url_token();

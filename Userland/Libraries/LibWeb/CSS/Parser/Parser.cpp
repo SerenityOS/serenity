@@ -2476,9 +2476,9 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
                 && g_val.is(Token::Type::Percentage)
                 && b_val.is(Token::Type::Percentage)) {
 
-                u8 r = clamp(lroundf(r_val.percentage() * 2.55), 0, 255);
-                u8 g = clamp(lroundf(g_val.percentage() * 2.55), 0, 255);
-                u8 b = clamp(lroundf(b_val.percentage() * 2.55), 0, 255);
+                u8 r = clamp(lroundf(r_val.percentage() * 2.55f), 0, 255);
+                u8 g = clamp(lroundf(g_val.percentage() * 2.55f), 0, 255);
+                u8 b = clamp(lroundf(b_val.percentage() * 2.55f), 0, 255);
                 return Color(r, g, b);
             }
         } else if (function.name().equals_ignoring_case("rgba")) {
@@ -2498,7 +2498,7 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
                 auto r = r_val.to_integer();
                 auto g = g_val.to_integer();
                 auto b = b_val.to_integer();
-                auto a = clamp(lroundf(a_val.number_value() * 255.0), 0, 255);
+                auto a = clamp(lroundf(a_val.number_value() * 255.0f), 0, 255);
                 if (AK::is_within_range<u8>(r) && AK::is_within_range<u8>(g) && AK::is_within_range<u8>(b))
                     return Color(r, g, b, a);
 
@@ -2512,10 +2512,10 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
                 auto b = b_val.percentage();
                 auto a = a_val.number_value();
 
-                u8 r_255 = clamp(lroundf(r * 2.55), 0, 255);
-                u8 g_255 = clamp(lroundf(g * 2.55), 0, 255);
-                u8 b_255 = clamp(lroundf(b * 2.55), 0, 255);
-                u8 a_255 = clamp(lroundf(a * 255.0), 0, 255);
+                u8 r_255 = clamp(lroundf(r * 2.55f), 0, 255);
+                u8 g_255 = clamp(lroundf(g * 2.55f), 0, 255);
+                u8 b_255 = clamp(lroundf(b * 2.55f), 0, 255);
+                u8 a_255 = clamp(lroundf(a * 255.0f), 0, 255);
                 return Color(r_255, g_255, b_255, a_255);
             }
         } else if (function.name().equals_ignoring_case("hsl")) {
@@ -2530,9 +2530,9 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
                 && s_val.is(Token::Type::Percentage)
                 && l_val.is(Token::Type::Percentage)) {
 
-                auto h = static_cast<float>(h_val.number_value());
-                auto s = static_cast<float>(s_val.percentage() / 100.0f);
-                auto l = static_cast<float>(l_val.percentage() / 100.0f);
+                auto h = h_val.number_value();
+                auto s = s_val.percentage() / 100.0f;
+                auto l = l_val.percentage() / 100.0f;
                 return Color::from_hsl(h, s, l);
             }
         } else if (function.name().equals_ignoring_case("hsla")) {
@@ -2549,10 +2549,10 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
                 && l_val.is(Token::Type::Percentage)
                 && a_val.is(Token::Type::Number)) {
 
-                auto h = static_cast<float>(h_val.number_value());
-                auto s = static_cast<float>(s_val.percentage() / 100.0f);
-                auto l = static_cast<float>(l_val.percentage() / 100.0f);
-                auto a = static_cast<float>(a_val.number_value());
+                auto h = h_val.number_value();
+                auto s = s_val.percentage() / 100.0f;
+                auto l = l_val.percentage() / 100.0f;
+                auto a = a_val.number_value();
                 return Color::from_hsla(h, s, l, a);
             }
         }

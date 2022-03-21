@@ -42,7 +42,7 @@ public:
     {
     }
 
-    explicit MediaFeatureValue(double number)
+    explicit MediaFeatureValue(float number)
         : m_value(number)
     {
     }
@@ -51,7 +51,7 @@ public:
 
     bool is_ident() const { return m_value.has<ValueID>(); }
     bool is_length() const { return m_value.has<Length>(); }
-    bool is_number() const { return m_value.has<double>(); }
+    bool is_number() const { return m_value.has<float>(); }
     bool is_ratio() const { return m_value.has<Ratio>(); }
     bool is_resolution() const { return m_value.has<Resolution>(); }
     bool is_same_type(MediaFeatureValue const& other) const;
@@ -80,14 +80,14 @@ public:
         return m_value.get<Resolution>();
     }
 
-    double number() const
+    float number() const
     {
         VERIFY(is_number());
-        return m_value.get<double>();
+        return m_value.get<float>();
     }
 
 private:
-    Variant<ValueID, Length, Ratio, Resolution, double> m_value;
+    Variant<ValueID, Length, Ratio, Resolution, float> m_value;
 };
 
 // https://www.w3.org/TR/mediaqueries-4/#mq-features
