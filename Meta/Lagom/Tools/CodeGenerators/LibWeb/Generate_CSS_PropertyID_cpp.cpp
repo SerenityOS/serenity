@@ -155,6 +155,34 @@ bool property_affects_layout(PropertyID property_id)
     }
 }
 
+bool property_affects_stacking_context(PropertyID property_id)
+{
+    switch (property_id) {
+)~~~");
+
+    properties.for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+
+        bool affects_layout = true;
+        if (value.as_object().has("affects-stacking-context"))
+            affects_layout = value.as_object().get("affects-stacking-context").to_bool();
+
+        if (affects_layout) {
+            auto member_generator = generator.fork();
+            member_generator.set("name:titlecase", title_casify(name));
+            member_generator.append(R"~~~(
+    case PropertyID::@name:titlecase@:
+)~~~");
+        }
+    });
+
+    generator.append(R"~~~(
+        return true;
+    default:
+        return false;
+    }
+}
+
 NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
 {
     static Array<RefPtr<StyleValue>, to_underlying(last_property_id) + 1> initial_values;

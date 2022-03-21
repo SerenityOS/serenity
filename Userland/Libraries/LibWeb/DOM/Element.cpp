@@ -27,6 +27,7 @@
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/BlockContainer.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/TableBox.h>
@@ -278,12 +279,14 @@ void Element::did_remove_attribute(FlyString const& name)
 enum class RequiredInvalidation {
     None,
     RepaintOnly,
+    RebuildStackingContextTree,
     Relayout,
 };
 
 static RequiredInvalidation compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
 {
     bool requires_repaint = false;
+    bool requires_stacking_context_tree_rebuild = false;
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
         auto property_id = static_cast<CSS::PropertyID>(i);
         auto const& old_value = old_style.properties()[i];
@@ -296,8 +299,12 @@ static RequiredInvalidation compute_required_invalidation(CSS::StyleProperties c
             continue;
         if (CSS::property_affects_layout(property_id))
             return RequiredInvalidation::Relayout;
+        if (CSS::property_affects_stacking_context(property_id))
+            requires_stacking_context_tree_rebuild = true;
         requires_repaint = true;
     }
+    if (requires_stacking_context_tree_rebuild)
+        return RequiredInvalidation::RebuildStackingContextTree;
     if (requires_repaint)
         return RequiredInvalidation::RepaintOnly;
     return RequiredInvalidation::None;
@@ -321,6 +328,13 @@ Element::NeedsRelayout Element::recompute_style()
 
     if (required_invalidation == RequiredInvalidation::RepaintOnly && layout_node()) {
         layout_node()->apply_style(*m_computed_css_values);
+        layout_node()->set_needs_display();
+        return NeedsRelayout::No;
+    }
+
+    if (required_invalidation == RequiredInvalidation::RebuildStackingContextTree && layout_node()) {
+        layout_node()->apply_style(*m_computed_css_values);
+        document().invalidate_stacking_context_tree();
         layout_node()->set_needs_display();
         return NeedsRelayout::No;
     }

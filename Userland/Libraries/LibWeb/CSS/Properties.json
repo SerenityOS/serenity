@@ -1034,6 +1034,8 @@
     ]
   },
   "opacity": {
+    "affects-layout": false,
+    "affects-stacking-context": true,
     "inherited": false,
     "initial": "1",
     "valid-types": [
@@ -1459,6 +1461,8 @@
     ]
   },
   "z-index": {
+    "affects-layout": false,
+    "affects-stacking-context": true,
     "inherited": false,
     "initial": "auto",
     "valid-types": [

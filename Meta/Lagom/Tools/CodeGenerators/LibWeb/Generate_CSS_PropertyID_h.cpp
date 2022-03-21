@@ -90,6 +90,7 @@ bool property_accepts_value(PropertyID, StyleValue&);
 size_t property_maximum_value_count(PropertyID);
 
 bool property_affects_layout(PropertyID);
+bool property_affects_stacking_context(PropertyID);
 
 constexpr PropertyID first_property_id = PropertyID::@first_property_id@;
 constexpr PropertyID last_property_id = PropertyID::@last_property_id@;
