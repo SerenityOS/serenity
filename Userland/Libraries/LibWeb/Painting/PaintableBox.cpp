@@ -535,16 +535,9 @@ Optional<HitTestResult> PaintableBox::hit_test(Gfx::FloatPoint const& position, 
         return stacking_context()->hit_test(position, type);
     }
 
-    Optional<HitTestResult> result;
     if (absolute_border_box_rect().contains(position.x(), position.y()))
-        result = HitTestResult { *this };
-    for_each_child_in_paint_order([&](auto& child) {
-        if (child.paintable()) {
-            if (auto child_result = child.paintable()->hit_test(position, type); child_result.has_value())
-                result = move(child_result);
-        }
-    });
-    return result;
+        return HitTestResult { *this };
+    return {};
 }
 
 Optional<HitTestResult> PaintableWithLines::hit_test(const Gfx::FloatPoint& position, HitTestType type) const

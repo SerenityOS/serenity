@@ -297,9 +297,8 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
         if (box.is_positioned() && !box.paint_box()->stacking_context()) {
-            result = box.paint_box()->hit_test(transformed_position, type);
-            if (result.has_value())
-                return IterationDecision::Break;
+            if (auto candidate = box.paint_box()->hit_test(transformed_position, type); candidate.has_value())
+                result = move(candidate);
         }
         return IterationDecision::Continue;
     });
@@ -316,9 +315,8 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     // 4. the non-positioned floats.
     m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
         if (box.is_floating()) {
-            result = box.paint_box()->hit_test(transformed_position, type);
-            if (result.has_value())
-                return IterationDecision::Break;
+            if (auto candidate = box.paint_box()->hit_test(transformed_position, type); candidate.has_value())
+                result = move(candidate);
         }
         return IterationDecision::Continue;
     });
@@ -329,9 +327,8 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     if (!m_box.children_are_inline()) {
         m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
             if (!box.is_absolutely_positioned() && !box.is_floating()) {
-                result = box.paint_box()->hit_test(transformed_position, type);
-                if (result.has_value())
-                    return IterationDecision::Break;
+                if (auto candidate = box.paint_box()->hit_test(transformed_position, type); candidate.has_value())
+                    result = move(candidate);
             }
             return IterationDecision::Continue;
         });
