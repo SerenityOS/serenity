@@ -78,6 +78,9 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (type.name == "double" && !type.nullable)
         return { .name = "double", .sequence_storage_type = SequenceStorageType::Vector };
 
+    if (type.name == "float" && !type.nullable)
+        return { .name = "float", .sequence_storage_type = SequenceStorageType::Vector };
+
     if (type.name == "boolean" && !type.nullable)
         return { .name = "bool", .sequence_storage_type = SequenceStorageType::Vector };
 
@@ -379,19 +382,19 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     }
 )~~~");
         }
-    } else if (parameter.type->name == "double") {
+    } else if (parameter.type->name == "double" || parameter.type->name == "float") {
         if (!optional) {
             scoped_generator.append(R"~~~(
-    double @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(global_object));
+    @parameter.type.name@ @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(global_object));
 )~~~");
         } else {
             if (optional_default_value.has_value()) {
                 scoped_generator.append(R"~~~(
-    double @cpp_name@;
+    @parameter.type.name@ @cpp_name@;
 )~~~");
             } else {
                 scoped_generator.append(R"~~~(
-    Optional<double> @cpp_name@;
+    Optional<@parameter.type.name@> @cpp_name@;
 )~~~");
             }
             scoped_generator.append(R"~~~(
@@ -1247,7 +1250,7 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 
     @result_expression@ new_array@recursion_depth@;
 )~~~");
-    } else if (type.name == "boolean" || type.name == "double") {
+    } else if (type.name == "boolean" || type.name == "double" || type.name == "float") {
         scoped_generator.append(R"~~~(
     @result_expression@ JS::Value(@value@);
 )~~~");
@@ -2996,9 +2999,9 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::
 {
     auto this_value = vm.this_value(global_object);
     JS::Object* this_object = nullptr;
-    if (this_value.is_nullish()) 
+    if (this_value.is_nullish())
         this_object = &vm.current_realm()->global_object();
-    else 
+    else
         this_object = TRY(this_value.to_object(global_object));
 )~~~");
 
