@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/DOM/CharacterData.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/Range.h>
 
 namespace Web::DOM {
 
@@ -66,17 +67,33 @@ ExceptionOr<void> CharacterData::replace_data(size_t offset, size_t count, Strin
     // 7. Starting from delete offset code units, remove count code units from node’s data.
     StringBuilder builder;
     builder.append(this->data().substring_view(0, offset));
-    builder.append(data.characters(), count);
+    builder.append(data);
     builder.append(this->data().substring_view(offset + count));
     set_data(builder.to_string());
 
-    // FIXME: 8. For each live range whose start node is node and start offset is greater than offset but less than or equal to offset plus count, set its start offset to offset.
+    // 8. For each live range whose start node is node and start offset is greater than offset but less than or equal to offset plus count, set its start offset to offset.
+    for (auto& range : Range::live_ranges()) {
+        if (range->start_container() == this && range->start_offset() > offset && range->start_offset() <= (offset + count))
+            range->set_start(*range->start_container(), offset);
+    }
 
-    // FIXME: 9. For each live range whose end node is node and end offset is greater than offset but less than or equal to offset plus count, set its end offset to offset.
+    // 9. For each live range whose end node is node and end offset is greater than offset but less than or equal to offset plus count, set its end offset to offset.
+    for (auto& range : Range::live_ranges()) {
+        if (range->end_container() == this && range->end_offset() > offset && range->end_offset() <= (offset + count))
+            range->set_end(*range->end_container(), range->end_offset());
+    }
 
-    // FIXME: 10. For each live range whose start node is node and start offset is greater than offset plus count, increase its start offset by data’s length and decrease it by count.
+    // 10. For each live range whose start node is node and start offset is greater than offset plus count, increase its start offset by data’s length and decrease it by count.
+    for (auto& range : Range::live_ranges()) {
+        if (range->start_container() == this && range->start_offset() > (offset + count))
+            range->set_start(*range->start_container(), range->start_offset() + data.length() - count);
+    }
 
-    // FIXME: 11. For each live range whose end node is node and end offset is greater than offset plus count, increase its end offset by data’s length and decrease it by count.
+    // 11. For each live range whose end node is node and end offset is greater than offset plus count, increase its end offset by data’s length and decrease it by count.
+    for (auto& range : Range::live_ranges()) {
+        if (range->end_container() == this && range->end_offset() > (offset + count))
+            range->set_end(*range->end_container(), range->end_offset() + data.length() - count);
+    }
 
     // 12. If node’s parent is non-null, then run the children changed steps for node’s parent.
     if (parent())

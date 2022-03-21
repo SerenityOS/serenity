@@ -18,6 +18,12 @@
 
 namespace Web::DOM {
 
+HashTable<Range*>& Range::live_ranges()
+{
+    static HashTable<Range*> ranges;
+    return ranges;
+}
+
 NonnullRefPtr<Range> Range::create(HTML::Window& window)
 {
     return Range::create(window.associated_document());
@@ -46,6 +52,12 @@ Range::Range(Document& document)
 Range::Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
     : AbstractRange(start_container, start_offset, end_container, end_offset)
 {
+    live_ranges().set(this);
+}
+
+Range::~Range()
+{
+    live_ranges().remove(this);
 }
 
 // https://dom.spec.whatwg.org/#concept-range-root

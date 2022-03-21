@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/Window.h>
@@ -58,13 +59,30 @@ ExceptionOr<NonnullRefPtr<Text>> Text::split_text(size_t offset)
         // 1. Insert new node into parent before node’s next sibling.
         parent->insert_before(new_node, next_sibling());
 
-        // FIXME: 2. For each live range whose start node is node and start offset is greater than offset, set its start node to new node and decrease its start offset by offset.
+        // 2. For each live range whose start node is node and start offset is greater than offset, set its start node to new node and decrease its start offset by offset.
+        for (auto& range : Range::live_ranges()) {
+            if (range->start_container() == this && range->start_offset() > offset)
+                range->set_start(new_node, range->start_offset() - offset);
+        }
 
-        // FIXME: 3. For each live range whose end node is node and end offset is greater than offset, set its end node to new node and decrease its end offset by offset.
+        // 3. For each live range whose end node is node and end offset is greater than offset, set its end node to new node and decrease its end offset by offset.
+        for (auto& range : Range::live_ranges()) {
+            if (range->end_container() == this && range->end_offset() > offset)
+                range->set_end(new_node, range->end_offset() - offset);
+        }
 
-        // FIXME: 4. For each live range whose start node is parent and start offset is equal to the index of node plus 1, increase its start offset by 1.
+        // 4. For each live range whose start node is parent and start offset is equal to the index of node plus 1, increase its start offset by 1.
+        for (auto& range : Range::live_ranges()) {
+            if (range->start_container() == this && range->start_offset() == index() + 1)
+                range->set_start(*range->start_container(), range->start_offset() + 1);
+        }
 
-        // FIXME: 5. For each live range whose end node is parent and end offset is equal to the index of node plus 1, increase its end offset by 1.
+        // 5. For each live range whose end node is parent and end offset is equal to the index of node plus 1, increase its end offset by 1.
+        for (auto& range : Range::live_ranges()) {
+            if (range->end_container() == parent && range->end_offset() == index() + 1) {
+                range->set_end(*range->end_container(), range->end_offset() + 1);
+            }
+        }
     }
 
     // 8. Replace data with node node, offset offset, count count, and data the empty string.

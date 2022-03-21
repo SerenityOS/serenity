@@ -15,7 +15,7 @@ class Range final : public AbstractRange {
 public:
     using WrapperType = Bindings::RangeWrapper;
 
-    virtual ~Range() override = default;
+    virtual ~Range() override;
 
     static NonnullRefPtr<Range> create(Document&);
     static NonnullRefPtr<Range> create(HTML::Window&);
@@ -66,6 +66,8 @@ public:
     ExceptionOr<void> insert_node(NonnullRefPtr<Node>);
 
     String to_string() const;
+
+    static HashTable<Range*>& live_ranges();
 
 private:
     explicit Range(Document&);
