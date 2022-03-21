@@ -313,9 +313,19 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
         // FIXME: Queue a tree mutation record for node with « », nodes, null, and null.
     }
 
+    // 5. If child is non-null, then:
     if (child) {
-        // FIXME: For each live range whose start node is parent and start offset is greater than child’s index, increase its start offset by count.
-        // FIXME: For each live range whose end node is parent and end offset is greater than child’s index, increase its end offset by count.
+        // 1. For each live range whose start node is parent and start offset is greater than child’s index, increase its start offset by count.
+        for (auto& range : Range::live_ranges()) {
+            if (range->start_container() == this && range->start_offset() > child->index())
+                range->set_start(*range->start_container(), range->start_offset() + count);
+        }
+
+        // 2. For each live range whose end node is parent and end offset is greater than child’s index, increase its end offset by count.
+        for (auto& range : Range::live_ranges()) {
+            if (range->start_container() == this && range->end_offset() > child->index())
+                range->set_end(*range->end_container(), range->end_offset() + count);
+        }
     }
 
     // FIXME: Let previousSibling be child’s previous sibling or parent’s last child if child is null. (Currently unused so not included)
@@ -399,12 +409,32 @@ void Node::remove(bool suppress_observers)
     auto* parent = TreeNode<Node>::parent();
     VERIFY(parent);
 
-    // FIXME: Let index be node’s index. (Currently unused so not included)
+    // 3. Let index be node’s index.
+    auto index = this->index();
 
-    // FIXME: For each live range whose start node is an inclusive descendant of node, set its start to (parent, index).
-    // FIXME: For each live range whose end node is an inclusive descendant of node, set its end to (parent, index).
-    // FIXME: For each live range whose start node is parent and start offset is greater than index, decrease its start offset by 1.
-    // FIXME: For each live range whose end node is parent and end offset is greater than index, decrease its end offset by 1.
+    // 4. For each live range whose start node is an inclusive descendant of node, set its start to (parent, index).
+    for (auto& range : Range::live_ranges()) {
+        if (range->start_container()->is_inclusive_descendant_of(*this))
+            range->set_start(*parent, index);
+    }
+
+    // 5. For each live range whose end node is an inclusive descendant of node, set its end to (parent, index).
+    for (auto& range : Range::live_ranges()) {
+        if (range->end_container()->is_inclusive_descendant_of(*this))
+            range->set_end(*parent, index);
+    }
+
+    // 6. For each live range whose start node is parent and start offset is greater than index, decrease its start offset by 1.
+    for (auto& range : Range::live_ranges()) {
+        if (range->start_container() == this && range->start_offset() > index)
+            range->set_start(*range->start_container(), range->start_offset() - 1);
+    }
+
+    // 7. For each live range whose end node is parent and end offset is greater than index, decrease its end offset by 1.
+    for (auto& range : Range::live_ranges()) {
+        if (range->end_container() == this && range->end_offset() > index)
+            range->set_end(*range->end_container(), range->end_offset() - 1);
+    }
 
     // For each NodeIterator object iterator whose root’s node document is node’s node document, run the NodeIterator pre-removing steps given node and iterator.
     document().for_each_node_iterator([&](NodeIterator& node_iterator) {
