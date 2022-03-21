@@ -2,4 +2,7 @@
 
 interface Text : CharacterData {
     constructor(optional DOMString data = "");
+
+    [NewObject] Text splitText(unsigned long offset);
+
 };

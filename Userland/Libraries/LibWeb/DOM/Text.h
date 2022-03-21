@@ -30,6 +30,8 @@ public:
     void set_owner_input_element(Badge<HTML::HTMLInputElement>, HTML::HTMLInputElement&);
     HTML::HTMLInputElement* owner_input_element() { return m_owner_input_element; }
 
+    ExceptionOr<NonnullRefPtr<Text>> split_text(size_t offset);
+
 private:
     WeakPtr<HTML::HTMLInputElement> m_owner_input_element;
 

@@ -27,4 +27,52 @@ void Text::set_owner_input_element(Badge<HTML::HTMLInputElement>, HTML::HTMLInpu
     m_owner_input_element = input_element;
 }
 
+// https://dom.spec.whatwg.org/#dom-text-splittext
+// https://dom.spec.whatwg.org/#concept-text-split
+ExceptionOr<NonnullRefPtr<Text>> Text::split_text(size_t offset)
+{
+    // 1. Let length be node’s length.
+    auto length = this->length();
+
+    // 2. If offset is greater than length, then throw an "IndexSizeError" DOMException.
+    if (offset > length)
+        return DOM::IndexSizeError::create("Split offset is greater than length");
+
+    // 3. Let count be length minus offset.
+    auto count = length - offset;
+
+    // 4. Let new data be the result of substringing data with node node, offset offset, and count count.
+    auto new_data_or_error = substring_data(offset, count);
+    if (new_data_or_error.is_exception())
+        return new_data_or_error.exception();
+    auto new_data = new_data_or_error.release_value();
+
+    // 5. Let new node be a new Text node, with the same node document as node. Set new node’s data to new data.
+    auto new_node = adopt_ref(*new Text(document(), new_data));
+
+    // 6. Let parent be node’s parent.
+    RefPtr<Node> parent = this->parent();
+
+    // 7. If parent is not null, then:
+    if (parent) {
+        // 1. Insert new node into parent before node’s next sibling.
+        parent->insert_before(new_node, next_sibling());
+
+        // FIXME: 2. For each live range whose start node is node and start offset is greater than offset, set its start node to new node and decrease its start offset by offset.
+
+        // FIXME: 3. For each live range whose end node is node and end offset is greater than offset, set its end node to new node and decrease its end offset by offset.
+
+        // FIXME: 4. For each live range whose start node is parent and start offset is equal to the index of node plus 1, increase its start offset by 1.
+
+        // FIXME: 5. For each live range whose end node is parent and end offset is equal to the index of node plus 1, increase its end offset by 1.
+    }
+
+    // 8. Replace data with node node, offset offset, count count, and data the empty string.
+    if (auto result = replace_data(offset, count, ""); result.is_exception())
+        return result.exception();
+
+    // 9. Return new node.
+    return new_node;
+}
+
 }
