@@ -301,7 +301,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
     } else {
         if (button == GUI::MouseButton::Primary) {
             auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor);
-            if (result.has_value() && result->paintable->layout_node().dom_node()) {
+            if (result.has_value() && result->dom_node()) {
 
                 // See if we want to focus something.
                 bool did_focus_something = false;
@@ -316,7 +316,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 // If we didn't focus anything, place the document text cursor at the mouse position.
                 // FIXME: This is all rather strange. Find a better solution.
                 if (!did_focus_something) {
-                    m_browsing_context.set_cursor_position(DOM::Position(*result->paintable->layout_node().dom_node(), result->index_in_node));
+                    m_browsing_context.set_cursor_position(DOM::Position(*result->dom_node(), result->index_in_node));
                     layout_root()->set_selection({ { result->paintable->layout_node(), result->index_in_node }, {} });
                     m_in_mouse_selection = true;
                 }
@@ -410,8 +410,8 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         }
         if (m_in_mouse_selection) {
             auto hit = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor);
-            if (start_index.has_value() && hit.has_value() && hit->paintable->layout_node().dom_node()) {
-                m_browsing_context.set_cursor_position(DOM::Position(*hit->paintable->layout_node().dom_node(), *start_index));
+            if (start_index.has_value() && hit.has_value() && hit->dom_node()) {
+                m_browsing_context.set_cursor_position(DOM::Position(*hit->dom_node(), *start_index));
                 layout_root()->set_selection_end({ hit->paintable->layout_node(), hit->index_in_node });
             }
             if (auto* page = m_browsing_context.page())

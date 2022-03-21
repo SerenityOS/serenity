@@ -32,6 +32,9 @@ struct HitTestResult {
         After,
     };
     InternalPosition internal_position { None };
+
+    DOM::Node* dom_node();
+    DOM::Node const* dom_node() const;
 };
 
 enum class HitTestType {
@@ -95,5 +98,15 @@ private:
     Layout::Node const& m_layout_node;
     Optional<Layout::BlockContainer*> mutable m_containing_block;
 };
+
+inline DOM::Node* HitTestResult::dom_node()
+{
+    return paintable->layout_node().dom_node();
+}
+
+inline DOM::Node const* HitTestResult::dom_node() const
+{
+    return paintable->layout_node().dom_node();
+}
 
 }
