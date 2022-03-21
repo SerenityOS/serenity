@@ -22,6 +22,13 @@ public:
 
     virtual Gfx::Path& get_path() override;
 
+    NonnullRefPtr<SVGAnimatedLength> x() const;
+    NonnullRefPtr<SVGAnimatedLength> y() const;
+    NonnullRefPtr<SVGAnimatedLength> width() const;
+    NonnullRefPtr<SVGAnimatedLength> height() const;
+    NonnullRefPtr<SVGAnimatedLength> rx() const;
+    NonnullRefPtr<SVGAnimatedLength> ry() const;
+
 private:
     Gfx::FloatPoint calculate_used_corner_radius_values();
 
