@@ -64,6 +64,7 @@ public:
     ExceptionOr<NonnullRefPtr<DocumentFragment>> extract_contents();
 
     ExceptionOr<void> insert_node(NonnullRefPtr<Node>);
+    ExceptionOr<void> surround_contents(NonnullRefPtr<Node> new_parent);
 
     String to_string() const;
 

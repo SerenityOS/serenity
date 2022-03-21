@@ -864,4 +864,42 @@ ExceptionOr<void> Range::insert(NonnullRefPtr<Node> node)
     return {};
 }
 
+// https://dom.spec.whatwg.org/#dom-range-surroundcontents
+ExceptionOr<void> Range::surround_contents(NonnullRefPtr<Node> new_parent)
+{
+    // 1. If a non-Text node is partially contained in this, then throw an "InvalidStateError" DOMException.
+    Node* start_non_text_node = start_container();
+    if (is<Text>(*start_non_text_node))
+        start_non_text_node = start_non_text_node->parent_node();
+    Node* end_non_text_node = end_container();
+    if (is<Text>(*end_non_text_node))
+        end_non_text_node = end_non_text_node->parent_node();
+    if (start_non_text_node != end_non_text_node)
+        return InvalidStateError::create("Non-Text node is partially contained in range.");
+
+    // 2. If newParent is a Document, DocumentType, or DocumentFragment node, then throw an "InvalidNodeTypeError" DOMException.
+    if (is<Document>(*new_parent) || is<DocumentType>(*new_parent) || is<DocumentFragment>(*new_parent))
+        return InvalidNodeTypeError::create("Invalid parent node type");
+
+    // 3. Let fragment be the result of extracting this.
+    auto fragment_or_error = extract();
+    if (fragment_or_error.is_exception())
+        return fragment_or_error.exception();
+    auto fragment = fragment_or_error.release_value();
+
+    // 4. If newParent has children, then replace all with null within newParent.
+    if (new_parent->has_children())
+        new_parent->replace_all(nullptr);
+
+    // 5. Insert newParent into this.
+    if (auto result = insert(new_parent); result.is_exception())
+        return result.exception();
+
+    // 6. Append fragment to newParent.
+    new_parent->append_child(fragment);
+
+    // 7. Select newParent within this.
+    return select(*new_parent);
+}
+
 }
