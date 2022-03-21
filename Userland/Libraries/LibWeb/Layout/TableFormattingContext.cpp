@@ -85,7 +85,7 @@ void TableFormattingContext::calculate_column_widths(Box const& row, Vector<floa
         } else {
             (void)layout_inside(cell, LayoutMode::Normal);
         }
-        column_widths[column_index] = max(column_widths[column_index], cell_state.content_width);
+        column_widths[column_index] = max(column_widths[column_index], cell_state.border_box_width());
         column_index += cell.colspan();
     });
 }
@@ -115,7 +115,7 @@ void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_wi
         size_t cell_colspan = cell.colspan();
         for (size_t i = 0; i < cell_colspan; ++i)
             content_width += column_widths[column_index++];
-        tallest_cell_height = max(tallest_cell_height, cell_state.content_height);
+        tallest_cell_height = max(tallest_cell_height, cell_state.border_box_height());
     });
 
     if (use_auto_layout) {
