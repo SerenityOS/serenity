@@ -323,7 +323,7 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
 
         // 2. For each live range whose end node is parent and end offset is greater than child’s index, increase its end offset by count.
         for (auto& range : Range::live_ranges()) {
-            if (range->start_container() == this && range->end_offset() > child->index())
+            if (range->end_container() == this && range->end_offset() > child->index())
                 range->set_end(*range->end_container(), range->end_offset() + count);
         }
     }
@@ -426,13 +426,13 @@ void Node::remove(bool suppress_observers)
 
     // 6. For each live range whose start node is parent and start offset is greater than index, decrease its start offset by 1.
     for (auto& range : Range::live_ranges()) {
-        if (range->start_container() == this && range->start_offset() > index)
+        if (range->start_container() == parent && range->start_offset() > index)
             range->set_start(*range->start_container(), range->start_offset() - 1);
     }
 
     // 7. For each live range whose end node is parent and end offset is greater than index, decrease its end offset by 1.
     for (auto& range : Range::live_ranges()) {
-        if (range->end_container() == this && range->end_offset() > index)
+        if (range->end_container() == parent && range->end_offset() > index)
             range->set_end(*range->end_container(), range->end_offset() - 1);
     }
 
