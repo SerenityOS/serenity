@@ -8,4 +8,6 @@ interface HTMLSelectElement : HTMLElement {
     [Reflect] attribute boolean required;
     [SameObject] readonly attribute HTMLOptionsCollection options;
 
+    attribute long selectedIndex;
+
 };

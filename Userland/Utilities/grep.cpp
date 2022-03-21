@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -36,10 +37,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio rpath", nullptr));
 
+    String program_name = AK::LexicalPath::basename(args.strings[0]);
+
     Vector<const char*> files;
 
-    bool recursive { false };
-    bool use_ere { false };
+    bool recursive = (program_name == "rgrep"sv);
+    bool use_ere = (program_name == "egrep"sv);
     Vector<const char*> patterns;
     BinaryFileMode binary_mode { BinaryFileMode::Binary };
     bool case_insensitive = false;
@@ -186,8 +189,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return false;
         };
 
+        bool did_match_something = false;
+
         auto handle_file = [&matches, binary_mode, suppress_errors, count_lines, quiet_mode,
-                               user_specified_multiple_files, &matched_line_count](StringView filename, bool print_filename) -> bool {
+                               user_specified_multiple_files, &matched_line_count, &did_match_something](StringView filename, bool print_filename) -> bool {
             auto file = Core::File::construct(filename);
             if (!file->open(Core::OpenMode::ReadOnly)) {
                 if (!suppress_errors)
@@ -195,11 +200,22 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 return false;
             }
 
+            auto file_size_or_error = Core::File::size(filename);
+            if (file_size_or_error.is_error()) {
+                if (!suppress_errors)
+                    warnln("Failed to retrieve size of {}: {}", filename, strerror(file_size_or_error.error().code()));
+                return false;
+            }
+
+            auto file_size = file_size_or_error.release_value();
+
             for (size_t line_number = 1; file->can_read_line(); ++line_number) {
-                auto line = file->read_line();
+                auto line = file->read_line(file_size);
                 auto is_binary = memchr(line.characters(), 0, line.length()) != nullptr;
 
-                if (matches(line, filename, line_number, print_filename, is_binary) && is_binary && binary_mode == BinaryFileMode::Binary)
+                auto matched = matches(line, filename, line_number, print_filename, is_binary);
+                did_match_something = did_match_something || matched;
+                if (matched && is_binary && binary_mode == BinaryFileMode::Binary)
                     break;
             }
 
@@ -227,7 +243,6 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             }
         };
 
-        bool did_match_something = false;
         if (!files.size() && !recursive) {
             char* line = nullptr;
             size_t line_len = 0;

@@ -692,7 +692,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
     auto specified_width = box.computed_values().width().has_value() ? box.computed_values().width()->resolved(box, width_of_containing_block).resolved(box) : CSS::Length::make_auto();
 
     compute_width_for_absolutely_positioned_element(box);
-    auto independent_formatting_context = layout_inside(box, LayoutMode::Default);
+    auto independent_formatting_context = layout_inside(box, LayoutMode::Normal);
     compute_height_for_absolutely_positioned_element(box);
 
     box_state.margin_left = box.computed_values().margin().left.resolved(box, width_of_containing_block).to_px(box);
@@ -824,7 +824,7 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
         auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
         VERIFY(independent_formatting_context);
 
-        independent_formatting_context->run(box, LayoutMode::OnlyRequiredLineBreaks);
+        independent_formatting_context->run(box, LayoutMode::MaxContent);
         cached_box_sizes.max_content_size.set_width(independent_formatting_context->greatest_child_width(box));
         cached_box_sizes.max_content_size.set_height(BlockFormattingContext::compute_theoretical_height(throwaway_state, box));
     }
@@ -836,7 +836,7 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
         containing_block_state.content_height = 0;
         auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
         VERIFY(independent_formatting_context);
-        independent_formatting_context->run(box, LayoutMode::AllPossibleLineBreaks);
+        independent_formatting_context->run(box, LayoutMode::MinContent);
         cached_box_sizes.min_content_size.set_width(independent_formatting_context->greatest_child_width(box));
         cached_box_sizes.min_content_size.set_height(BlockFormattingContext::compute_theoretical_height(throwaway_state, box));
     }

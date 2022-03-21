@@ -761,6 +761,7 @@ Token Tokenizer::consume_a_url_token()
             if (is_valid_escape_sequence(start_of_input_stream_twin())) {
                 // consume an escaped code point and append the returned code point to the <url-token>’s value.
                 builder.append_code_point(consume_escaped_code_point());
+                continue;
             } else {
                 // Otherwise, this is a parse error.
                 log_parse_error();
@@ -1037,6 +1038,7 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
             // point and append the returned code point to the <string-token>’s value.
             auto escaped = consume_escaped_code_point();
             builder.append_code_point(escaped);
+            continue;
         }
 
         // anything else

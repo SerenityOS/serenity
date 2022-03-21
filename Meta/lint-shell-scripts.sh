@@ -11,7 +11,7 @@ if [ "$#" -eq "0" ]; then
             '*.sh' \
             ':!:Ports' \
             ':!:Userland/Shell/Tests' \
-            ':!:Base/home/anon/tests' \
+            ':!:Base/home/anon/Tests' \
             ':!:Base/root/generate_manpages.sh'
     )
 else

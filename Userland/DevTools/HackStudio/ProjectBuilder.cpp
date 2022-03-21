@@ -185,7 +185,7 @@ HashMap<String, NonnullOwnPtr<ProjectBuilder::LibraryInfo>> ProjectBuilder::get_
 
 void ProjectBuilder::for_each_library_definition(Function<void(String, String)> func)
 {
-    Vector<String> arguments = { "-c", "find Userland/Libraries -name CMakeLists.txt | xargs grep serenity_lib" };
+    Vector<String> arguments = { "-c", "find Userland -name CMakeLists.txt | xargs grep serenity_lib" };
     auto res = Core::command("/bin/sh", arguments, {});
     if (res.is_error()) {
         warnln("{}", res.error());

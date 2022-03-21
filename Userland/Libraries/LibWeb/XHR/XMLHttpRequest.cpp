@@ -207,7 +207,7 @@ MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
 }
 
 // https://xhr.spec.whatwg.org/#final-charset
-Optional<String> XMLHttpRequest::get_final_encoding() const
+Optional<StringView> XMLHttpRequest::get_final_encoding() const
 {
     // 1. Let label be null.
     Optional<String> label;

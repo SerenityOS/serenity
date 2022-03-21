@@ -21,7 +21,7 @@ SCRIPT_DIR="$(dirname "${0}")"
 # Check if SERENITY_KVM_SUPPORT is unset
 if [ -z ${SERENITY_KVM_SUPPORT+x} ]; then
     KVM_SUPPORT="0"
-    [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && [ "$SERENITY_ARCH" != "aarch64" ] && KVM_SUPPORT="1"
+    [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && [ "$SERENITY_ARCH" != "aarch64" ] && [ "$(uname -m)" != "aarch64" ] && KVM_SUPPORT="1"
 else
     KVM_SUPPORT="$SERENITY_KVM_SUPPORT"
 fi

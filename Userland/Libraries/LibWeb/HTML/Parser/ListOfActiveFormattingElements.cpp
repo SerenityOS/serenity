@@ -59,4 +59,26 @@ void ListOfActiveFormattingElements::clear_up_to_the_last_marker()
     }
 }
 
+Optional<size_t> ListOfActiveFormattingElements::find_index(DOM::Element const& element) const
+{
+    for (size_t i = 0; i < m_entries.size(); i++) {
+        if (m_entries[i].element == element)
+            return i;
+    }
+    return {};
+}
+
+void ListOfActiveFormattingElements::replace(DOM::Element& to_remove, DOM::Element& to_add)
+{
+    for (size_t i = 0; i < m_entries.size(); i++) {
+        if (m_entries[i].element == to_remove)
+            m_entries[i].element = to_add;
+    }
+}
+
+void ListOfActiveFormattingElements::insert_at(size_t index, DOM::Element& element)
+{
+    m_entries.insert(index, { element });
+}
+
 }

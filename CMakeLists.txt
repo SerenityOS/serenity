@@ -49,10 +49,7 @@ endif()
 
 if (NOT HACKSTUDIO_BUILD)
 
-    # FIXME: With cmake 3.18, we can change unzip/untar steps to use
-    #        file(  ARCHIVE_EXTRACT) instead
-    find_program(UNZIP unzip REQUIRED)
-    find_program(TAR tar REQUIRED)
+    include(check_for_dependencies)
 
     # Host tools, required to generate files for the build
     find_package(Lagom CONFIG REQUIRED)
@@ -269,6 +266,7 @@ serenity_component(
 )
 
 if (HACKSTUDIO_BUILD)
+    include_directories(/usr/include/Userland/Services)
     include(${HACKSTUDIO_BUILD_CMAKE_FILE})
     return()
 endif()
@@ -308,7 +306,7 @@ endif()
 if(EXISTS ${PCI_IDS_GZ_PATH} AND NOT EXISTS ${PCI_IDS_INSTALL_PATH})
     message(STATUS "Extracting PCI ID database from ${PCI_IDS_GZ_PATH}...")
     file(MAKE_DIRECTORY ${CMAKE_INSTALL_DATAROOTDIR})
-    execute_process(COMMAND gzip -d -c "${PCI_IDS_GZ_PATH}" OUTPUT_FILE "${PCI_IDS_INSTALL_PATH}")
+    execute_process(COMMAND "${GZIP_TOOL}" -d -c "${PCI_IDS_GZ_PATH}" OUTPUT_FILE "${PCI_IDS_INSTALL_PATH}")
 endif()
 
 set(USB_IDS_FILE usb.ids)
@@ -324,5 +322,5 @@ endif()
 if(EXISTS ${USB_IDS_GZ_PATH} AND NOT EXISTS ${USB_IDS_INSTALL_PATH})
     message(STATUS "Extracting USB ID database from ${USB_IDS_GZ_PATH}...")
     file(MAKE_DIRECTORY ${CMAKE_INSTALL_DATAROOTDIR})
-    execute_process(COMMAND gzip -d -c "${USB_IDS_GZ_PATH}" OUTPUT_FILE "${USB_IDS_INSTALL_PATH}")
+    execute_process(COMMAND "${GZIP_TOOL}" -d -c "${USB_IDS_GZ_PATH}" OUTPUT_FILE "${USB_IDS_INSTALL_PATH}")
 endif()

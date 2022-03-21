@@ -41,7 +41,7 @@ static bool is_missing_file_acceptable(String const& filename)
         "/usr/share/man/man2/ptrace.md",
         "/usr/share/man/man5/perfcore.md",
         // These ones are okay:
-        "/home/anon/js-tests/test-common.js",
+        "/home/anon/Tests/js-tests/test-common.js",
         "/man1/index.html",
         "/man2/index.html",
         "/man3/index.html",

@@ -81,9 +81,9 @@ void TableFormattingContext::calculate_column_widths(Box const& row, Vector<floa
         auto& cell_state = m_state.get_mutable(cell);
         compute_width(cell);
         if (use_auto_layout) {
-            (void)layout_inside(cell, LayoutMode::OnlyRequiredLineBreaks);
+            (void)layout_inside(cell, LayoutMode::MaxContent);
         } else {
-            (void)layout_inside(cell, LayoutMode::Default);
+            (void)layout_inside(cell, LayoutMode::Normal);
         }
         column_widths[column_index] = max(column_widths[column_index], cell_state.content_width);
         column_index += cell.colspan();
@@ -105,9 +105,9 @@ void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_wi
 
         // Layout the cell contents a second time, now that we know its final width.
         if (use_auto_layout) {
-            (void)layout_inside(cell, LayoutMode::OnlyRequiredLineBreaks);
+            (void)layout_inside(cell, LayoutMode::MaxContent);
         } else {
-            (void)layout_inside(cell, LayoutMode::Default);
+            (void)layout_inside(cell, LayoutMode::Normal);
         }
 
         BlockFormattingContext::compute_height(cell, m_state);

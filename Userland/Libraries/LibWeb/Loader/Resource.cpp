@@ -6,7 +6,9 @@
 
 #include <AK/Debug.h>
 #include <AK/Function.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/MimeData.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Loader/Resource.h>
 
@@ -63,6 +65,11 @@ static String mime_type_from_content_type(const String& content_type)
     return content_type;
 }
 
+static bool is_valid_encoding(String const& encoding)
+{
+    return TextCodec::decoder_for(encoding);
+}
+
 void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers, Optional<u32> status_code)
 {
     VERIFY(!m_loaded);
@@ -97,8 +104,8 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
     m_encoding = {};
     if (content_type.has_value()) {
         auto encoding = encoding_from_content_type(content_type.value());
-        if (encoding.has_value()) {
-            dbgln_if(RESOURCE_DEBUG, "Set encoding '{}' from Content-Type", encoding.has_value());
+        if (encoding.has_value() && is_valid_encoding(encoding.value())) {
+            dbgln_if(RESOURCE_DEBUG, "Set encoding '{}' from Content-Type", encoding.value());
             m_encoding = encoding.value();
         }
     }
@@ -141,13 +148,23 @@ void ResourceClient::set_resource(Resource* resource)
 
         m_resource->register_client({}, *this);
 
-        // Make sure that reused resources also have their load callback fired.
-        if (resource->is_loaded())
-            resource_did_load();
+        // For resources that are already loaded, we fire their load/fail callbacks via the event loop.
+        // This ensures that these callbacks always happen in a consistent way, instead of being invoked
+        // synchronously in some cases, and asynchronously in others.
+        if (resource->is_loaded() || resource->is_failed()) {
+            Core::deferred_invoke([this, strong_resource = NonnullRefPtr { *m_resource }] {
+                if (m_resource != strong_resource.ptr())
+                    return;
 
-        // Make sure that reused resources also have their fail callback fired.
-        if (resource->is_failed())
-            resource_did_fail();
+                // Make sure that reused resources also have their load callback fired.
+                if (m_resource->is_loaded())
+                    resource_did_load();
+
+                // Make sure that reused resources also have their fail callback fired.
+                if (m_resource->is_failed())
+                    resource_did_fail();
+            });
+        }
     }
 }
 

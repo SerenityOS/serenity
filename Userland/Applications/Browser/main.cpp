@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Browser::g_home_url = Config::read_string("Browser", "Preferences", "Home", "file:///res/html/misc/welcome.html");
     Browser::g_search_engine = Config::read_string("Browser", "Preferences", "SearchEngine", {});
-    Browser::g_content_filters_enabled = Config::read_bool("Browser", "Preferences", "EnableContentFilters");
+    Browser::g_content_filters_enabled = Config::read_bool("Browser", "Preferences", "EnableContentFilters", true);
 
     Browser::g_icon_bag = TRY(Browser::IconBag::try_create());
 

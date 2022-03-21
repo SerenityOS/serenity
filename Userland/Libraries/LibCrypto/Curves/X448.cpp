@@ -6,23 +6,29 @@
 
 #include <AK/ByteReader.h>
 #include <AK/Endian.h>
+#include <AK/Random.h>
 #include <LibCrypto/Curves/X448.h>
 
 namespace Crypto::Curves {
 
-void X448::import_state(u32* state, ReadonlyBytes data)
+static constexpr u16 BITS = 448;
+static constexpr u8 BYTES = 56;
+static constexpr u8 WORDS = 14;
+static constexpr u32 A24 = 39082;
+
+static void import_state(u32* state, ReadonlyBytes data)
 {
-    for (auto i = 0; i < X448::WORDS; i++) {
+    for (auto i = 0; i < WORDS; i++) {
         u32 value = ByteReader::load32(data.offset_pointer(sizeof(u32) * i));
         state[i] = AK::convert_between_host_and_little_endian(value);
     }
 }
 
-ErrorOr<ByteBuffer> X448::export_state(u32* data)
+static ErrorOr<ByteBuffer> export_state(u32* data)
 {
-    auto buffer = TRY(ByteBuffer::create_uninitialized(X448::BYTES));
+    auto buffer = TRY(ByteBuffer::create_uninitialized(BYTES));
 
-    for (auto i = 0; i < X448::WORDS; i++) {
+    for (auto i = 0; i < WORDS; i++) {
         u32 value = AK::convert_between_host_and_little_endian(data[i]);
         ByteReader::store(buffer.offset_pointer(sizeof(u32) * i), value);
     }
@@ -30,50 +36,74 @@ ErrorOr<ByteBuffer> X448::export_state(u32* data)
     return buffer;
 }
 
-void X448::select(u32* state, u32* a, u32* b, u32 condition)
+static void select(u32* state, u32* a, u32* b, u32 condition)
 {
     // If B < (2^448 - 2^224 + 1) then R = B, else R = A
     u32 mask = condition - 1;
 
-    for (auto i = 0; i < X448::WORDS; i++) {
+    for (auto i = 0; i < WORDS; i++) {
         state[i] = (a[i] & mask) | (b[i] & ~mask);
     }
 }
 
-void X448::set(u32* state, u32 value)
+static void set(u32* state, u32 value)
 {
     state[0] = value;
 
-    for (auto i = 1; i < X448::WORDS; i++) {
+    for (auto i = 1; i < WORDS; i++) {
         state[i] = 0;
     }
 }
 
-void X448::copy(u32* state, u32* value)
+static void copy(u32* state, u32* value)
 {
-    for (auto i = 0; i < X448::WORDS; i++) {
+    for (auto i = 0; i < WORDS; i++) {
         state[i] = value[i];
     }
 }
 
-void X448::conditional_swap(u32* first, u32* second, u32 condition)
+static void conditional_swap(u32* first, u32* second, u32 condition)
 {
     u32 mask = ~condition + 1;
-    for (auto i = 0; i < X448::WORDS; i++) {
+    for (auto i = 0; i < WORDS; i++) {
         u32 temp = mask & (first[i] ^ second[i]);
         first[i] ^= temp;
         second[i] ^= temp;
     }
 }
 
-void X448::modular_multiply_single(u32* state, u32* first, u32 second)
+static void modular_reduce(u32* state, u32* data, u32 a_high)
+{
+    u64 temp = 1;
+    u32 other[WORDS];
+
+    // Compute B = A - (2^448 - 2^224 - 1)
+    for (auto i = 0; i < WORDS / 2; i++) {
+        temp += data[i];
+        other[i] = temp & 0xFFFFFFFF;
+        temp >>= 32;
+    }
+
+    temp += 1;
+
+    for (auto i = 7; i < WORDS; i++) {
+        temp += data[i];
+        other[i] = temp & 0xFFFFFFFF;
+        temp >>= 32;
+    }
+
+    auto condition = (a_high + (u32)temp - 1) & 1;
+    select(state, other, data, condition);
+}
+
+static void modular_multiply_single(u32* state, u32* first, u32 second)
 {
     // Compute R = (A * B) mod p
     u64 temp = 0;
     u64 carry = 0;
-    u32 output[X448::WORDS];
+    u32 output[WORDS];
 
-    for (auto i = 0; i < X448::WORDS; i++) {
+    for (auto i = 0; i < WORDS; i++) {
         temp += (u64)first[i] * second;
         output[i] = temp & 0xFFFFFFFF;
         temp >>= 32;
@@ -81,14 +111,14 @@ void X448::modular_multiply_single(u32* state, u32* first, u32 second)
 
     // Fast modular reduction
     carry = temp;
-    for (auto i = 0; i < X448::WORDS / 2; i++) {
+    for (auto i = 0; i < WORDS / 2; i++) {
         temp += output[i];
         output[i] = temp & 0xFFFFFFFF;
         temp >>= 32;
     }
 
     temp += carry;
-    for (auto i = X448::WORDS / 2; i < X448::WORDS; i++) {
+    for (auto i = WORDS / 2; i < WORDS; i++) {
         temp += output[i];
         output[i] = temp & 0xFFFFFFFF;
         temp >>= 32;
@@ -97,22 +127,16 @@ void X448::modular_multiply_single(u32* state, u32* first, u32 second)
     modular_reduce(state, output, (u32)temp);
 }
 
-void X448::modular_square(u32* state, u32* value)
-{
-    // Compute R = (A ^ 2) mod p
-    modular_multiply(state, value, value);
-}
-
-void X448::modular_multiply(u32* state, u32* first, u32* second)
+static void modular_multiply(u32* state, u32* first, u32* second)
 {
     // Compute R = (A * B) mod p
 
     u64 temp = 0;
     u64 carry = 0;
-    u32 output[X448::WORDS * 2];
+    u32 output[WORDS * 2];
 
     // Comba's method
-    for (auto i = 0; i < X448::WORDS * 2; i++) {
+    for (auto i = 0; i < WORDS * 2; i++) {
         if (i < 14) {
             for (auto j = 0; j <= i; j++) {
                 temp += (u64)first[j] * second[i - j];
@@ -120,7 +144,7 @@ void X448::modular_multiply(u32* state, u32* first, u32* second)
                 temp &= 0xFFFFFFFF;
             }
         } else {
-            for (auto j = i - 13; j < X448::WORDS; j++) {
+            for (auto j = i - 13; j < WORDS; j++) {
                 temp += (u64)first[j] * second[i - j];
                 carry += temp >> 32;
                 temp &= 0xFFFFFFFF;
@@ -134,7 +158,7 @@ void X448::modular_multiply(u32* state, u32* first, u32* second)
 
     // Fast modular reduction (first pass)
     temp = 0;
-    for (auto i = 0; i < X448::WORDS / 2; i++) {
+    for (auto i = 0; i < WORDS / 2; i++) {
         temp += output[i];
         temp += output[i + 14];
         temp += output[i + 21];
@@ -142,7 +166,7 @@ void X448::modular_multiply(u32* state, u32* first, u32* second)
         temp >>= 32;
     }
 
-    for (auto i = X448::WORDS / 2; i < X448::WORDS; i++) {
+    for (auto i = WORDS / 2; i < WORDS; i++) {
         temp += output[i];
         temp += output[i + 7];
         temp += output[i + 14];
@@ -153,14 +177,14 @@ void X448::modular_multiply(u32* state, u32* first, u32* second)
 
     // Fast modular reduction (second pass)
     carry = temp;
-    for (auto i = 0; i < X448::WORDS / 2; i++) {
+    for (auto i = 0; i < WORDS / 2; i++) {
         temp += output[i];
         output[i] = temp & 0xFFFFFFFF;
         temp >>= 32;
     }
 
     temp += carry;
-    for (auto i = X448::WORDS / 2; i < X448::WORDS; i++) {
+    for (auto i = WORDS / 2; i < WORDS; i++) {
         temp += output[i];
         output[i] = temp & 0xFFFFFFFF;
         temp >>= 32;
@@ -169,12 +193,18 @@ void X448::modular_multiply(u32* state, u32* first, u32* second)
     modular_reduce(state, output, (u32)temp);
 }
 
-void X448::modular_add(u32* state, u32* first, u32* second)
+static void modular_square(u32* state, u32* value)
+{
+    // Compute R = (A ^ 2) mod p
+    modular_multiply(state, value, value);
+}
+
+static void modular_add(u32* state, u32* first, u32* second)
 {
     u64 temp = 0;
 
     // Compute R = A + B
-    for (auto i = 0; i < X448::WORDS; i++) {
+    for (auto i = 0; i < WORDS; i++) {
         temp += first[i];
         temp += second[i];
         state[i] = temp & 0xFFFFFFFF;
@@ -184,7 +214,7 @@ void X448::modular_add(u32* state, u32* first, u32* second)
     modular_reduce(state, state, (u32)temp);
 }
 
-void X448::modular_subtract(u32* state, u32* first, u32* second)
+static void modular_subtract(u32* state, u32* first, u32* second)
 {
     i64 temp = -1;
 
@@ -210,31 +240,7 @@ void X448::modular_subtract(u32* state, u32* first, u32* second)
     modular_reduce(state, state, (u32)temp);
 }
 
-void X448::modular_reduce(u32* state, u32* data, u32 a_high)
-{
-    u64 temp = 1;
-    u32 other[X448::WORDS];
-
-    // Compute B = A - (2^448 - 2^224 - 1)
-    for (auto i = 0; i < X448::WORDS / 2; i++) {
-        temp += data[i];
-        other[i] = temp & 0xFFFFFFFF;
-        temp >>= 32;
-    }
-
-    temp += 1;
-
-    for (auto i = 7; i < X448::WORDS; i++) {
-        temp += data[i];
-        other[i] = temp & 0xFFFFFFFF;
-        temp >>= 32;
-    }
-
-    auto condition = (a_high + (u32)temp - 1) & 1;
-    select(state, other, data, condition);
-}
-
-void X448::to_power_of_2n(u32* state, u32* value, u8 n)
+static void to_power_of_2n(u32* state, u32* value, u8 n)
 {
     // Compute R = (A ^ (2^n)) mod p
     modular_square(state, value);
@@ -243,11 +249,11 @@ void X448::to_power_of_2n(u32* state, u32* value, u8 n)
     }
 }
 
-void X448::modular_multiply_inverse(u32* state, u32* value)
+static void modular_multiply_inverse(u32* state, u32* value)
 {
     // Compute R = A^-1 mod p
-    u32 u[X448::WORDS];
-    u32 v[X448::WORDS];
+    u32 u[WORDS];
+    u32 v[WORDS];
 
     modular_square(u, value);
     modular_multiply(u, u, value);
@@ -282,17 +288,30 @@ void X448::modular_multiply_inverse(u32* state, u32* value)
     modular_multiply(state, u, value);
 }
 
+ErrorOr<ByteBuffer> X448::generate_private_key()
+{
+    auto buffer = TRY(ByteBuffer::create_uninitialized(BYTES));
+    fill_with_random(buffer.data(), buffer.size());
+    return buffer;
+}
+
+ErrorOr<ByteBuffer> X448::generate_public_key(ReadonlyBytes a)
+{
+    u8 generator[BYTES] { 5 };
+    return compute_coordinate(a, { generator, BYTES });
+}
+
 // https://datatracker.ietf.org/doc/html/rfc7748#section-5
 ErrorOr<ByteBuffer> X448::compute_coordinate(ReadonlyBytes input_k, ReadonlyBytes input_u)
 {
-    u32 k[X448::WORDS] {};
-    u32 u[X448::WORDS] {};
-    u32 x1[X448::WORDS] {};
-    u32 x2[X448::WORDS] {};
-    u32 z1[X448::WORDS] {};
-    u32 z2[X448::WORDS] {};
-    u32 t1[X448::WORDS] {};
-    u32 t2[X448::WORDS] {};
+    u32 k[WORDS] {};
+    u32 u[WORDS] {};
+    u32 x1[WORDS] {};
+    u32 x2[WORDS] {};
+    u32 z1[WORDS] {};
+    u32 z2[WORDS] {};
+    u32 t1[WORDS] {};
+    u32 t2[WORDS] {};
 
     // Copy input to internal state
     import_state(k, input_k);
@@ -315,7 +334,7 @@ ErrorOr<ByteBuffer> X448::compute_coordinate(ReadonlyBytes input_k, ReadonlyByte
 
     // Montgomery ladder
     u32 swap = 0;
-    for (auto i = X448::BITS - 1; i >= 0; i--) {
+    for (auto i = BITS - 1; i >= 0; i--) {
         u32 b = (k[i / 32] >> (i % 32)) & 1;
 
         conditional_swap(x1, x2, swap ^ b);
@@ -353,4 +372,12 @@ ErrorOr<ByteBuffer> X448::compute_coordinate(ReadonlyBytes input_k, ReadonlyByte
     // Encode state for export
     return export_state(u);
 }
+
+ErrorOr<ByteBuffer> X448::derive_premaster_key(ReadonlyBytes shared_point)
+{
+    VERIFY(shared_point.size() == BYTES);
+    ByteBuffer premaster_key = TRY(ByteBuffer::copy(shared_point));
+    return premaster_key;
+}
+
 }

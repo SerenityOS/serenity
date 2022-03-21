@@ -838,6 +838,18 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
+class GetNewTarget final : public Instruction {
+public:
+    explicit GetNewTarget()
+        : Instruction(Type::GetNewTarget)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+};
+
 }
 
 namespace JS::Bytecode {

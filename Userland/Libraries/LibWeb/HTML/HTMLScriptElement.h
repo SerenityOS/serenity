@@ -42,12 +42,11 @@ public:
 
     void set_source_line_number(Badge<HTMLParser>, size_t source_line_number) { m_source_line_number = source_line_number; }
 
-    void begin_delaying_document_load_event(Badge<HTMLParser>, DOM::Document&);
-
 private:
     void prepare_script();
     void script_became_ready();
     void when_the_script_is_ready(Function<void()>);
+    void begin_delaying_document_load_event(DOM::Document&);
 
     WeakPtr<DOM::Document> m_parser_document;
     WeakPtr<DOM::Document> m_preparation_time_document;

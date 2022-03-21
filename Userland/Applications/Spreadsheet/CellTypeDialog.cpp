@@ -153,6 +153,8 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
             }
 
             m_type = CellType::get_by_name(g_types.at(index.row()));
+            if (auto* editor = right_side.find_descendant_of_type_named<GUI::TextEditor>("format_editor"))
+                editor->set_tooltip(m_type->metadata_hint(MetadataName::Format));
         };
 
         {
@@ -179,6 +181,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
             auto& checkbox = right_side.add<GUI::CheckBox>("Override display format");
             auto& editor = right_side.add<GUI::TextEditor>();
             checkbox.set_checked(!m_format.is_empty());
+            editor.set_name("format_editor");
             editor.set_should_hide_unnecessary_scrollbars(true);
             editor.set_enabled(!m_format.is_empty());
             editor.set_text(m_format);
@@ -347,7 +350,7 @@ CellTypeMetadata CellTypeDialog::metadata() const
             metadata.alignment = Gfx::TextAlignment::TopLeft;
             break;
         case HorizontalAlignment::Center:
-            metadata.alignment = Gfx::TextAlignment::Center; // TopCenter?
+            metadata.alignment = Gfx::TextAlignment::TopCenter;
             break;
         case HorizontalAlignment::Right:
             metadata.alignment = Gfx::TextAlignment::TopRight;

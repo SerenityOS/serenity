@@ -141,7 +141,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
             }
         }
 
-        if (m_wrap_lines || m_layout_mode == LayoutMode::AllPossibleLineBreaks) {
+        if (m_wrap_lines || m_layout_mode == LayoutMode::MinContent) {
             bool is_space = is_ascii_space(*m_iterator);
             if (is_space != m_last_was_space) {
                 m_last_was_space = is_space;
@@ -163,7 +163,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
 
 Optional<TextNode::Chunk> TextNode::ChunkIterator::try_commit_chunk(Utf8View::Iterator const& start, Utf8View::Iterator const& end, bool has_breaking_newline, bool must_commit) const
 {
-    if (m_layout_mode == LayoutMode::OnlyRequiredLineBreaks && !must_commit)
+    if (m_layout_mode == LayoutMode::MaxContent && !must_commit)
         return {};
 
     auto byte_offset = m_utf8_view.byte_offset_of(start);

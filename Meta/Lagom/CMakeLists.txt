@@ -32,6 +32,7 @@ if(NOT COMMAND serenity_option)
     endmacro()
 endif()
 
+include(check_for_dependencies)
 include(lagom_options)
 
 if(ENABLE_ALL_THE_DEBUG_MACROS)
@@ -56,6 +57,7 @@ endif()
 
 include(wasm_spec_tests)
 
+add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wno-literal-suffix -Wno-implicit-const-int-float-conversion)
 add_compile_options(-O2)
 add_compile_options(-Wall -Wextra -Werror)

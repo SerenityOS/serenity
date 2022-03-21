@@ -54,6 +54,19 @@ GlyphMapWidget::GlyphMapWidget()
     horizontal_scrollbar().set_visible(false);
     did_change_font();
     set_active_glyph('A');
+
+    m_automatic_selection_scroll_timer = add<Core::Timer>(20, [this] {
+        if (!m_in_drag_select) {
+            m_automatic_selection_scroll_timer->stop();
+            return;
+        }
+        auto glyph = glyph_at_position_clamped(m_last_mousemove_position);
+        m_selection.extend_to(glyph);
+        set_active_glyph(glyph, ShouldResetSelection::No);
+        scroll_to_glyph(glyph);
+        update();
+    });
+    m_automatic_selection_scroll_timer->stop();
 }
 
 void GlyphMapWidget::resize_event(ResizeEvent& event)
@@ -74,6 +87,14 @@ void GlyphMapWidget::set_active_glyph(int glyph, ShouldResetSelection should_res
     if (on_active_glyph_changed)
         on_active_glyph_changed(glyph);
     update();
+}
+
+void GlyphMapWidget::set_selection(int start, int size, Optional<u32> active_glyph)
+{
+    m_selection.set_start(start);
+    m_selection.set_size(size);
+    if (active_glyph.has_value())
+        set_active_glyph(active_glyph.value(), ShouldResetSelection::No);
 }
 
 Gfx::IntRect GlyphMapWidget::get_outer_rect(int glyph) const
@@ -133,7 +154,7 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
         } else
             painter.fill_rect(outer_rect, palette().window());
     }
-    painter.draw_focus_rect(get_outer_rect(m_active_glyph), Gfx::Color::Black);
+    painter.draw_focus_rect(get_outer_rect(m_active_glyph), palette().focus_outline());
 }
 
 Optional<int> GlyphMapWidget::glyph_at_position(Gfx::IntPoint position) const
@@ -161,30 +182,35 @@ int GlyphMapWidget::glyph_at_position_clamped(Gfx::IntPoint position) const
     return glyph;
 }
 
+void GlyphMapWidget::context_menu_event(GUI::ContextMenuEvent& event)
+{
+    if (on_context_menu_request)
+        on_context_menu_request(event);
+}
+
 void GlyphMapWidget::mousedown_event(MouseEvent& event)
 {
-    Frame::mousedown_event(event);
+    if (event.button() == MouseButton::Secondary)
+        return;
 
     if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value()) {
         auto glyph = maybe_glyph.value();
         if (event.shift())
             m_selection.extend_to(glyph);
-        else {
-            m_selection.set_size(1);
-            m_selection.set_start(glyph);
-        }
         m_in_drag_select = true;
-        set_active_glyph(glyph, ShouldResetSelection::No);
+        m_automatic_selection_scroll_timer->start();
+        set_active_glyph(glyph, event.shift() ? ShouldResetSelection::No : ShouldResetSelection::Yes);
     }
 }
 
 void GlyphMapWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    Frame::mouseup_event(event);
+    if (event.button() == MouseButton::Secondary)
+        return;
 
     if (!m_in_drag_select)
         return;
-    auto constrained = event.position().constrained(rect().shrunken(0, frame_thickness() * 2));
+    auto constrained = event.position().constrained(widget_inner_rect());
     if (auto maybe_glyph = glyph_at_position(constrained); maybe_glyph.has_value()) {
         auto glyph = maybe_glyph.value();
         m_selection.extend_to(glyph);
@@ -195,21 +221,11 @@ void GlyphMapWidget::mouseup_event(GUI::MouseEvent& event)
 
 void GlyphMapWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    Frame::mousemove_event(event);
-
-    if (!m_in_drag_select)
-        return;
-
-    auto glyph = glyph_at_position_clamped(event.position());
-    m_selection.extend_to(glyph);
-    set_active_glyph(glyph, ShouldResetSelection::No);
-    scroll_to_glyph(glyph);
-    update();
+    m_last_mousemove_position = event.position();
 }
 
 void GlyphMapWidget::doubleclick_event(MouseEvent& event)
 {
-    Widget::doubleclick_event(event);
     if (on_glyph_double_clicked) {
         if (auto maybe_glyph = glyph_at_position(event.position()); maybe_glyph.has_value())
             on_glyph_double_clicked(maybe_glyph.value());
@@ -218,7 +234,7 @@ void GlyphMapWidget::doubleclick_event(MouseEvent& event)
 
 void GlyphMapWidget::keydown_event(KeyEvent& event)
 {
-    Frame::keydown_event(event);
+    Widget::keydown_event(event);
 
     int range_offset = m_active_range.first;
 

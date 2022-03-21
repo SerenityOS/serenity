@@ -39,8 +39,6 @@ PaintableWithLines::~PaintableWithLines()
 
 void PaintableBox::set_offset(const Gfx::FloatPoint& offset)
 {
-    if (m_offset == offset)
-        return;
     m_offset = offset;
     // FIXME: This const_cast is gross.
     const_cast<Layout::Box&>(layout_box()).did_set_rect();
@@ -48,8 +46,6 @@ void PaintableBox::set_offset(const Gfx::FloatPoint& offset)
 
 void PaintableBox::set_content_size(Gfx::FloatSize const& size)
 {
-    if (m_content_size == size)
-        return;
     m_content_size = size;
     // FIXME: This const_cast is gross.
     const_cast<Layout::Box&>(layout_box()).did_set_rect();

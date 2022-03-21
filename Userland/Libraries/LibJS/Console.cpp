@@ -443,7 +443,7 @@ ThrowCompletionOr<String> Console::value_vector_to_string(Vector<Value>& values)
 ThrowCompletionOr<String> Console::format_time_since(Core::ElapsedTimer timer)
 {
     auto elapsed_ms = timer.elapsed_time().to_milliseconds();
-    auto duration = TRY(Temporal::balance_duration(global_object(), 0, 0, 0, 0, elapsed_ms, 0, *js_bigint(vm(), "0"_sbigint), "year"));
+    auto duration = TRY(Temporal::balance_duration(global_object(), 0, 0, 0, 0, elapsed_ms, 0, "0"_sbigint, "year"));
 
     auto append = [&](StringBuilder& builder, auto format, auto... number) {
         if (!builder.is_empty())

@@ -6,12 +6,21 @@
 
 #include <AK/ByteReader.h>
 #include <AK/Endian.h>
+#include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/UFixedBigInt.h>
 #include <LibCrypto/Curves/SECP256r1.h>
 
 namespace Crypto::Curves {
+
+static constexpr u256 REDUCE_PRIME { u128 { 0x0000000000000001ull, 0xffffffff00000000ull }, u128 { 0xffffffffffffffffull, 0x00000000fffffffe } };
+static constexpr u256 REDUCE_ORDER { u128 { 0x0c46353d039cdaafull, 0x4319055258e8617bull }, u128 { 0x0000000000000000ull, 0x00000000ffffffff } };
+static constexpr u256 PRIME_INVERSE_MOD_R { u128 { 0x0000000000000001ull, 0x0000000100000000ull }, u128 { 0x0000000000000000ull, 0xffffffff00000002ull } };
+static constexpr u256 PRIME { u128 { 0xffffffffffffffffull, 0x00000000ffffffffull }, u128 { 0x0000000000000000ull, 0xffffffff00000001ull } };
+static constexpr u256 R2_MOD_PRIME { u128 { 0x0000000000000003ull, 0xfffffffbffffffffull }, u128 { 0xfffffffffffffffeull, 0x00000004fffffffdull } };
+static constexpr u256 ONE { 1u };
+static constexpr u256 B_MONTGOMERY { u128 { 0xd89cdf6229c4bddfull, 0xacf005cd78843090ull }, u128 { 0xe5a220abf7212ed6ull, 0xdc30061d04874834ull } };
 
 static u256 import_big_endian(ReadonlyBytes data)
 {
@@ -52,7 +61,7 @@ static u512 multiply(u256 const& left, u256 const& right)
     return { result.low, result.high };
 }
 
-u256 SECP256r1::modular_reduce(u256 const& value)
+static u256 modular_reduce(u256 const& value)
 {
     // Add -prime % 2^256 = 2^224-2^192-2^96+1
     bool carry = false;
@@ -62,7 +71,7 @@ u256 SECP256r1::modular_reduce(u256 const& value)
     return select(value, other, carry);
 }
 
-u256 SECP256r1::modular_reduce_order(u256 const& value)
+static u256 modular_reduce_order(u256 const& value)
 {
     // Add -order % 2^256
     bool carry = false;
@@ -72,7 +81,7 @@ u256 SECP256r1::modular_reduce_order(u256 const& value)
     return select(value, other, carry);
 }
 
-u256 SECP256r1::modular_add(u256 const& left, u256 const& right, bool carry_in)
+static u256 modular_add(u256 const& left, u256 const& right, bool carry_in = false)
 {
     bool carry = carry_in;
     u256 output = left.addc(right, carry);
@@ -89,7 +98,7 @@ u256 SECP256r1::modular_add(u256 const& left, u256 const& right, bool carry_in)
     return output + addend;
 }
 
-u256 SECP256r1::modular_sub(u256 const& left, u256 const& right)
+static u256 modular_sub(u256 const& left, u256 const& right)
 {
     bool borrow = false;
     u256 output = left.subc(right, borrow);
@@ -106,7 +115,7 @@ u256 SECP256r1::modular_sub(u256 const& left, u256 const& right)
     return output - sub;
 }
 
-u256 SECP256r1::modular_multiply(u256 const& left, u256 const& right)
+static u256 modular_multiply(u256 const& left, u256 const& right)
 {
     // Modular multiplication using the Montgomery method: https://en.wikipedia.org/wiki/Montgomery_modular_multiplication
     // This requires that the inputs to this function are in Montgomery form.
@@ -128,22 +137,22 @@ u256 SECP256r1::modular_multiply(u256 const& left, u256 const& right)
     return modular_add(mult.high(), mp.high(), carry);
 }
 
-u256 SECP256r1::modular_square(u256 const& value)
+static u256 modular_square(u256 const& value)
 {
     return modular_multiply(value, value);
 }
 
-u256 SECP256r1::to_montgomery(u256 const& value)
+static u256 to_montgomery(u256 const& value)
 {
     return modular_multiply(value, R2_MOD_PRIME);
 }
 
-u256 SECP256r1::from_montgomery(u256 const& value)
+static u256 from_montgomery(u256 const& value)
 {
     return modular_multiply(value, ONE);
 }
 
-u256 SECP256r1::modular_inverse(u256 const& value)
+static u256 modular_inverse(u256 const& value)
 {
     // Modular inverse modulo the curve prime can be computed using Fermat's little theorem: a^(p-2) mod p = a^-1 mod p.
     // Calculating a^(p-2) mod p can be done using the square-and-multiply exponentiation method, as p-2 is constant.
@@ -192,7 +201,7 @@ u256 SECP256r1::modular_inverse(u256 const& value)
     return result;
 }
 
-void SECP256r1::point_double(JacobianPoint& output_point, JacobianPoint const& point)
+static void point_double(JacobianPoint& output_point, JacobianPoint const& point)
 {
     // Based on "Point Doubling" from http://point-at-infinity.org/ecc/Prime_Curve_Jacobian_Coordinates.html
 
@@ -246,7 +255,7 @@ void SECP256r1::point_double(JacobianPoint& output_point, JacobianPoint const& p
     output_point.z = zp;
 }
 
-void SECP256r1::point_add(JacobianPoint& output_point, JacobianPoint const& point_a, JacobianPoint const& point_b)
+static void point_add(JacobianPoint& output_point, JacobianPoint const& point_a, JacobianPoint const& point_b)
 {
     // Based on "Point Addition" from  http://point-at-infinity.org/ecc/Prime_Curve_Jacobian_Coordinates.html
     if (point_a.x.is_zero_constant_time() && point_a.y.is_zero_constant_time() && point_a.z.is_zero_constant_time()) {
@@ -313,7 +322,7 @@ void SECP256r1::point_add(JacobianPoint& output_point, JacobianPoint const& poin
     output_point.z = z3;
 }
 
-void SECP256r1::convert_jacobian_to_affine(JacobianPoint& point)
+static void convert_jacobian_to_affine(JacobianPoint& point)
 {
     u256 temp;
     // X' = X/Z^2
@@ -327,7 +336,7 @@ void SECP256r1::convert_jacobian_to_affine(JacobianPoint& point)
     point.y = modular_multiply(point.y, temp);
 }
 
-bool SECP256r1::is_point_on_curve(JacobianPoint const& point)
+static bool is_point_on_curve(JacobianPoint const& point)
 {
     // This check requires the point to be in Montgomery form, with Z=1
     u256 temp, temp2;
@@ -344,6 +353,13 @@ bool SECP256r1::is_point_on_curve(JacobianPoint const& point)
     temp = modular_reduce(temp);
 
     return temp.is_zero_constant_time();
+}
+
+ErrorOr<ByteBuffer> SECP256r1::generate_private_key()
+{
+    auto buffer = TRY(ByteBuffer::create_uninitialized(32));
+    fill_with_random(buffer.data(), buffer.size());
+    return buffer;
 }
 
 ErrorOr<ByteBuffer> SECP256r1::generate_public_key(ReadonlyBytes a)
@@ -424,6 +440,16 @@ ErrorOr<ByteBuffer> SECP256r1::compute_coordinate(ReadonlyBytes scalar_bytes, Re
     export_big_endian(result.x, buf.bytes().slice(1, 32));
     export_big_endian(result.y, buf.bytes().slice(33, 32));
     return buf;
+}
+
+ErrorOr<ByteBuffer> SECP256r1::derive_premaster_key(ReadonlyBytes shared_point)
+{
+    VERIFY(shared_point.size() == 65);
+    VERIFY(shared_point[0] == 0x04);
+
+    ByteBuffer premaster_key = TRY(ByteBuffer::create_uninitialized(32));
+    premaster_key.overwrite(0, shared_point.data() + 1, 32);
+    return premaster_key;
 }
 
 }

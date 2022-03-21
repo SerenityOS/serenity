@@ -11,6 +11,22 @@
 #include <string.h>
 #include <time.h>
 
+namespace Main {
+
+static int s_return_code_for_errors = 1;
+
+int return_code_for_errors()
+{
+    return s_return_code_for_errors;
+}
+
+void set_return_code_for_errors(int code)
+{
+    s_return_code_for_errors = code;
+}
+
+}
+
 int main(int argc, char** argv)
 {
     tzset();
@@ -31,7 +47,7 @@ int main(int argc, char** argv)
 #ifdef __serenity__
         dbgln("\033[31;1mExiting with runtime error\033[0m: {}", error);
 #endif
-        return 1;
+        return Main::return_code_for_errors();
     }
     return result.value();
 }

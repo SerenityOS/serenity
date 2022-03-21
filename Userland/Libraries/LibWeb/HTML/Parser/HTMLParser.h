@@ -120,7 +120,7 @@ private:
         RefPtr<DOM::Node> insert_before_sibling;
     };
 
-    AdjustedInsertionLocation find_appropriate_place_for_inserting_node();
+    AdjustedInsertionLocation find_appropriate_place_for_inserting_node(RefPtr<DOM::Element> override_target = nullptr);
 
     DOM::Text* find_character_insertion_node();
     void flush_character_insertions();

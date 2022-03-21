@@ -704,11 +704,11 @@ void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Elemen
     }
 }
 
-static float root_element_font_size(DOM::Document const& document)
+float StyleComputer::root_element_font_size() const
 {
     constexpr float default_root_element_font_size = 10;
 
-    auto const* root_element = document.first_child_of_type<HTML::HTMLHtmlElement>();
+    auto const* root_element = m_document.first_child_of_type<HTML::HTMLHtmlElement>();
     if (!root_element)
         return default_root_element_font_size;
 
@@ -720,10 +720,7 @@ static float root_element_font_size(DOM::Document const& document)
     if (!maybe_root_value.has_value())
         return default_root_element_font_size;
 
-    VERIFY(document.browsing_context());
-    auto viewport_rect = document.browsing_context()->viewport_rect();
-
-    return maybe_root_value.value()->to_length().to_px(viewport_rect, computed_root_style->computed_font().metrics('M'), default_root_element_font_size, default_root_element_font_size);
+    return maybe_root_value.value()->to_length().to_px(viewport_rect(), computed_root_style->computed_font().metrics('M'), default_root_element_font_size, default_root_element_font_size);
 }
 
 void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -736,8 +733,6 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontWeight, pseudo_element);
 
     auto* parent_element = get_parent_element(element, pseudo_element);
-
-    auto viewport_rect = document().browsing_context()->viewport_rect();
 
     auto font_size = style.property(CSS::PropertyID::FontSize).value();
     auto font_style = style.property(CSS::PropertyID::FontStyle).value();
@@ -805,7 +800,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             break;
         }
     } else {
-        float root_font_size = root_element_font_size(document());
+        float root_font_size = root_element_font_size();
 
         Gfx::FontMetrics font_metrics;
         if (parent_element && parent_element->computed_css_values())
@@ -820,7 +815,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             if (value->is_length()) {
                 auto length = static_cast<LengthStyleValue const&>(*value).to_length();
                 if (length.is_absolute() || length.is_relative())
-                    return length.to_px(viewport_rect, font_metrics, size, root_font_size);
+                    return length.to_px(viewport_rect(), font_metrics, size, root_font_size);
             }
             return size;
         };
@@ -840,7 +835,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             // FIXME: Support font-size: calc(...)
             //        Theoretically we can do this now, but to resolve it we need a layout_node which we might not have. :^(
             if (!maybe_length->is_calculated()) {
-                auto px = maybe_length.value().to_px(viewport_rect, font_metrics, parent_font_size(), root_font_size);
+                auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, parent_font_size(), root_font_size);
                 if (px != 0)
                     size = px;
             }
@@ -945,16 +940,15 @@ Gfx::Font const& StyleComputer::initial_font() const
 
 void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const
 {
-    auto viewport_rect = document().browsing_context()->viewport_rect();
     auto font_metrics = style.computed_font().metrics('M');
-    float root_font_size = root_element_font_size(document());
-    float font_size = style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(viewport_rect, font_metrics, root_font_size, root_font_size);
+    float root_font_size = root_element_font_size();
+    float font_size = style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size);
 
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
         auto& value_slot = style.m_property_values[i];
         if (!value_slot)
             continue;
-        value_slot = value_slot->absolutized(viewport_rect, font_metrics, font_size, root_font_size);
+        value_slot = value_slot->absolutized(viewport_rect(), font_metrics, font_size, root_font_size);
     }
 }
 
@@ -1027,11 +1021,8 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     compute_font(style, nullptr, {});
     compute_defaulted_values(style, nullptr, {});
     absolutize_values(style, nullptr, {});
-    if (auto* browsing_context = m_document.browsing_context()) {
-        auto viewport_rect = browsing_context->viewport_rect();
-        style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect.width())));
-        style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect.height())));
-    }
+    style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().width())));
+    style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().height())));
     return style;
 }
 
@@ -1170,6 +1161,13 @@ void StyleComputer::build_rule_cache()
 void StyleComputer::invalidate_rule_cache()
 {
     m_rule_cache = nullptr;
+}
+
+Gfx::IntRect StyleComputer::viewport_rect() const
+{
+    if (auto const* browsing_context = document().browsing_context())
+        return browsing_context->viewport_rect();
+    return {};
 }
 
 }

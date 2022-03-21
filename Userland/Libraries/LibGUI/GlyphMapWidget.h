@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <LibCore/Timer.h>
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/TextRange.h>
 #include <LibGfx/BitmapFont.h>
@@ -54,6 +55,7 @@ public:
 
     void set_active_range(Unicode::CodePointRange);
     void set_active_glyph(int, ShouldResetSelection = ShouldResetSelection::Yes);
+    void set_selection(int start, int size, Optional<u32> active_glyph = {});
     void clear_selection() { m_selection.set_size(0); }
     void scroll_to_glyph(int);
     void update_glyph(int);
@@ -66,6 +68,7 @@ public:
 
     Function<void(int)> on_active_glyph_changed;
     Function<void(int)> on_glyph_double_clicked;
+    Function<void(ContextMenuEvent&)> on_context_menu_request;
 
 private:
     GlyphMapWidget();
@@ -77,6 +80,7 @@ private:
     virtual void keydown_event(KeyEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void did_change_font() override;
+    virtual void context_menu_event(ContextMenuEvent&) override;
 
     Gfx::IntRect get_outer_rect(int glyph) const;
     Optional<int> glyph_at_position(Gfx::IntPoint) const;
@@ -94,6 +98,8 @@ private:
     int m_visible_glyphs { 0 };
     bool m_in_drag_select { false };
     Unicode::CodePointRange m_active_range { 0x0000, 0x10FFFF };
+    RefPtr<Core::Timer> m_automatic_selection_scroll_timer;
+    Gfx::IntPoint m_last_mousemove_position;
 };
 
 }

@@ -126,6 +126,8 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             return m_tree_view.palette().syntax_comment();
         if (type == "pseudo-element"sv)
             return m_tree_view.palette().syntax_type();
+        if (!node.get("visible").to_bool(true))
+            return m_tree_view.palette().syntax_comment();
         return {};
     }
 

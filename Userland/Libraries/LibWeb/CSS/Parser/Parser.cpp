@@ -506,6 +506,8 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FirstOfType;
             } else if (pseudo_name.equals_ignoring_case("focus")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Focus;
+            } else if (pseudo_name.equals_ignoring_case("focus-within")) {
+                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::FocusWithin;
             } else if (pseudo_name.equals_ignoring_case("hover")) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Hover;
             } else if (pseudo_name.equals_ignoring_case("last-child")) {
@@ -603,6 +605,14 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_sel
                     return ParsingResult::SyntaxError;
                 }
                 simple_selector.pseudo_class.argument_selector_list = not_selector.release_value();
+            } else if (pseudo_function.name().equals_ignoring_case("lang"sv)) {
+                simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Lang;
+                if (pseudo_function.values().is_empty()) {
+                    dbgln_if(CSS_PARSER_DEBUG, "Empty :lang() selector");
+                    return ParsingResult::SyntaxError;
+                }
+                // FIXME: Support multiple, comma-separated, language ranges.
+                simple_selector.pseudo_class.languages.append(pseudo_function.values().first().token().to_string());
             } else if (pseudo_function.name().equals_ignoring_case("nth-child"sv)) {
                 simple_selector.pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::NthChild;
                 if (!parse_nth_child_pattern(simple_selector, pseudo_function, true))

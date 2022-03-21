@@ -358,6 +358,12 @@ ThrowCompletionOr<void> ResolveThisBinding::execute_impl(Bytecode::Interpreter& 
     return {};
 }
 
+ThrowCompletionOr<void> GetNewTarget::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.accumulator() = interpreter.vm().get_new_target();
+    return {};
+}
+
 void Jump::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
 {
     if (m_true_target.has_value() && &m_true_target->block() == &from)
@@ -405,8 +411,12 @@ ThrowCompletionOr<void> JumpUndefined::execute_impl(Bytecode::Interpreter& inter
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto callee = interpreter.reg(m_callee);
-    if (!callee.is_function())
+
+    if (m_type == CallType::Call && !callee.is_function())
         return interpreter.vm().throw_completion<TypeError>(interpreter.global_object(), ErrorType::IsNotA, callee.to_string_without_side_effects(), "function"sv);
+
+    if (m_type == CallType::Construct && !callee.is_constructor())
+        return interpreter.vm().throw_completion<TypeError>(interpreter.global_object(), ErrorType::IsNotA, callee.to_string_without_side_effects(), "constructor"sv);
 
     auto& function = callee.as_function();
 
@@ -974,6 +984,11 @@ String IteratorResultValue::to_string_impl(Executable const&) const
 String ResolveThisBinding::to_string_impl(Bytecode::Executable const&) const
 {
     return "ResolveThisBinding"sv;
+}
+
+String GetNewTarget::to_string_impl(Bytecode::Executable const&) const
+{
+    return "GetNewTarget"sv;
 }
 
 }

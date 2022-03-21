@@ -22,8 +22,13 @@ public:
 private:
     Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket>, Core::Object* parent);
 
+    struct ContentInfo {
+        String type;
+        size_t length {};
+    };
+
     ErrorOr<bool> handle_request(ReadonlyBytes);
-    ErrorOr<void> send_response(InputStream&, HTTP::HttpRequest const&, String const& content_type);
+    ErrorOr<void> send_response(InputStream&, HTTP::HttpRequest const&, ContentInfo);
     ErrorOr<void> send_redirect(StringView redirect, HTTP::HttpRequest const&);
     ErrorOr<void> send_error_response(unsigned code, HTTP::HttpRequest const&, Vector<String> const& headers = {});
     void die();

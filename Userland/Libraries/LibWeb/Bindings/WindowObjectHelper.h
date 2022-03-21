@@ -278,6 +278,8 @@
 #include <LibWeb/Bindings/SVGRectElementPrototype.h>
 #include <LibWeb/Bindings/SVGSVGElementConstructor.h>
 #include <LibWeb/Bindings/SVGSVGElementPrototype.h>
+#include <LibWeb/Bindings/SVGTextContentElementConstructor.h>
+#include <LibWeb/Bindings/SVGTextContentElementPrototype.h>
 #include <LibWeb/Bindings/ScreenConstructor.h>
 #include <LibWeb/Bindings/ScreenPrototype.h>
 #include <LibWeb/Bindings/SelectionConstructor.h>
@@ -476,6 +478,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGPolylineElement)                                                 \
     ADD_WINDOW_OBJECT_INTERFACE(SVGRectElement)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)                                                      \
+    ADD_WINDOW_OBJECT_INTERFACE(SVGTextContentElement)                                              \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                                                               \
     ADD_WINDOW_OBJECT_INTERFACE(TextDecoder)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(TextEncoder)                                                        \

@@ -10,11 +10,6 @@
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Path.h>
 
-static float fractional_part(float x)
-{
-    return x - floorf(x);
-}
-
 // Base algorithm from https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm,
 // because there seems to be no other known method for drawing AA'd lines (?)
 template<Gfx::AntiAliasingPainter::AntiAliasPolicy policy>
@@ -25,76 +20,96 @@ void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_f
 
     auto corrected_thickness = thickness > 1 ? thickness - 1 : thickness;
     auto size = IntSize(corrected_thickness, corrected_thickness);
-    auto draw_point = [&](FloatPoint const& point, Color color) {
-        auto center = m_transform.map(point).to_type<int>();
-        m_underlying_painter.fill_rect(Gfx::IntRect::centered_on(center, size), color);
+    auto plot = [&](int x, int y, float c) {
+        auto center = m_transform.map(Gfx::IntPoint(x, y)).to_type<int>();
+        m_underlying_painter.fill_rect(IntRect::centered_on(center, size), color.with_alpha(color.alpha() * c));
     };
 
-    auto color_with_alpha = [&color](float new_alpha) {
-        return color.with_alpha(color.alpha() * new_alpha);
-    };
+    auto integer_part = [](float x) { return floorf(x); };
+    auto round = [&](float x) { return integer_part(x + 0.5f); };
+    auto fractional_part = [&](float x) { return x - floorf(x); };
+    auto one_minus_fractional_part = [&](float x) { return 1.0f - fractional_part(x); };
 
-    auto actual_distance = actual_to - actual_from;
-    auto from = actual_from;
-    auto to = actual_to;
-    auto is_steep = fabsf(actual_distance.y()) > fabsf(actual_distance.x());
+    auto draw_line = [&](float x0, float y0, float x1, float y1) {
+        bool steep = fabsf(y1 - y0) > fabsf(x1 - x0);
 
-    if (is_steep) {
-        from = { from.y(), from.x() };
-        to = { to.y(), to.x() };
-    }
-
-    if (from.x() > to.x())
-        swap(from, to);
-
-    auto distance = to - from;
-    auto gradient = fabsf(distance.x()) < 1e-10f ? 1.0f : distance.y() / distance.x();
-
-    auto draw_one_end = [&](auto& point) {
-        auto end_x = roundf(point.x());
-        auto end_point = FloatPoint { end_x, point.y() + gradient * (end_x - point.x()) };
-        auto x_gap = 1 - fractional_part(point.x() + 0.5f);
-        auto current_point = FloatPoint { end_point.x(), floorf(end_point.y()) };
-
-        if (is_steep) {
-            draw_point({ current_point.y(), current_point.x() }, color_with_alpha(x_gap * (1 - fractional_part(end_point.y()))));
-            draw_point({ current_point.y() + 1, current_point.x() }, color_with_alpha(x_gap * fractional_part(end_point.y())));
-        } else {
-            draw_point(current_point, color_with_alpha(x_gap * (1 - fractional_part(end_point.y())) * 255));
-            draw_point({ current_point.x(), current_point.y() + 1 }, color_with_alpha(x_gap * fractional_part(end_point.y())));
+        if (steep) {
+            swap(x0, y0);
+            swap(x1, y1);
         }
-        return end_point;
+
+        if (x0 > x1) {
+            swap(x0, x1);
+            swap(y0, y1);
+        }
+
+        float dx = x1 - x0;
+        float dy = y1 - y0;
+
+        float gradient;
+        if (dx == 0.0f)
+            gradient = 1.0f;
+        else
+            gradient = dy / dx;
+
+        // Handle first endpoint.
+        int x_end = round(x0);
+        int y_end = y0 + gradient * (x_end - x0);
+        float x_gap = one_minus_fractional_part(x0 + 0.5f);
+
+        int xpxl1 = x_end; // This will be used in the main loop.
+        int ypxl1 = integer_part(y_end);
+
+        if (steep) {
+            plot(ypxl1, xpxl1, one_minus_fractional_part(y_end) * x_gap);
+            plot(ypxl1 + 1, xpxl1, fractional_part(y_end) * x_gap);
+        } else {
+            plot(xpxl1, ypxl1, one_minus_fractional_part(y_end) * x_gap);
+            plot(xpxl1, ypxl1 + 1, fractional_part(y_end) * x_gap);
+        }
+
+        float intery = y_end + gradient; // First y-intersection for the main loop.
+
+        // Handle second endpoint.
+        x_end = round(x1);
+        y_end = y1 + gradient * (x_end - x1);
+        x_gap = fractional_part(x1 + 0.5f);
+        int xpxl2 = x_end; // This will be used in the main loop
+        int ypxl2 = integer_part(y_end);
+
+        if (steep) {
+            plot(ypxl2, xpxl2, one_minus_fractional_part(y_end) * x_gap);
+            plot(ypxl2 + 1, xpxl2, fractional_part(y_end) * x_gap);
+        } else {
+            plot(xpxl2, ypxl2, one_minus_fractional_part(y_end) * x_gap);
+            plot(xpxl2, ypxl2 + 1, fractional_part(y_end) * x_gap);
+        }
+
+        // Main loop.
+        if (steep) {
+            for (int x = xpxl1 + 1; x <= xpxl2 - 1; ++x) {
+                if constexpr (policy == AntiAliasPolicy::OnlyEnds) {
+                    plot(integer_part(intery), x, 1);
+                } else {
+                    plot(integer_part(intery), x, one_minus_fractional_part(intery));
+                }
+                plot(integer_part(intery) + 1, x, fractional_part(intery));
+                intery += gradient;
+            }
+        } else {
+            for (int x = xpxl1 + 1; x <= xpxl2 - 1; ++x) {
+                if constexpr (policy == AntiAliasPolicy::OnlyEnds) {
+                    plot(x, integer_part(intery), 1);
+                } else {
+                    plot(x, integer_part(intery), one_minus_fractional_part(intery));
+                }
+                plot(x, integer_part(intery) + 1, fractional_part(intery));
+                intery += gradient;
+            }
+        }
     };
 
-    auto first_end_point = draw_one_end(from);
-    auto last_end_point = draw_one_end(to);
-
-    auto next_intersection = first_end_point.y() + gradient;
-    auto delta_x = 0.7f; // Should be max(fabsf(sin_x), fabsf(cos_x)) with fewer samples needed if the line is axis-aligned.
-                         // but there's no point in doing expensive calculations when the delta range is so small (0.7-1.0)
-                         // so instead, just pick the smallest delta.
-    auto delta_y = gradient * delta_x;
-
-    auto x = first_end_point.x();
-    while (x < last_end_point.x()) {
-        if (is_steep) {
-            if constexpr (policy == AntiAliasPolicy::OnlyEnds) {
-                draw_point({ floorf(next_intersection), x }, color);
-            } else {
-                draw_point({ floorf(next_intersection), x }, color_with_alpha(1 - fractional_part(next_intersection)));
-            }
-            draw_point({ floorf(next_intersection) + 1, x }, color_with_alpha(fractional_part(next_intersection)));
-        } else {
-            if constexpr (policy == AntiAliasPolicy::OnlyEnds) {
-                draw_point({ x, floorf(next_intersection) }, color);
-            } else {
-                draw_point({ x, floorf(next_intersection) }, color_with_alpha(1 - fractional_part(next_intersection)));
-            }
-            draw_point({ x, floorf(next_intersection) + 1 }, color_with_alpha(fractional_part(next_intersection)));
-        }
-        next_intersection += delta_y;
-        x += delta_x;
-    }
+    draw_line(actual_from.x(), actual_from.y(), actual_to.x(), actual_to.y());
 }
 
 void Gfx::AntiAliasingPainter::draw_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color alternate_color)

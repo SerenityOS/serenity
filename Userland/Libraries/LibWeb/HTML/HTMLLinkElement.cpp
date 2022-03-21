@@ -90,6 +90,11 @@ void HTMLLinkElement::resource_did_load()
         dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Resource did load, no encoded data. URL: {}", resource()->url());
     } else {
         dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Resource did load, has encoded data. URL: {}", resource()->url());
+
+        if (resource()->mime_type() != "text/css"sv) {
+            dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Resource did load, but MIME type was {} instead of text/css. URL: {}", resource()->mime_type(), resource()->url());
+            return;
+        }
     }
 
     auto sheet = parse_css(CSS::ParsingContext(document(), resource()->url()), resource()->encoded_data());

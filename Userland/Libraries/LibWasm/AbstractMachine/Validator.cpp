@@ -305,7 +305,7 @@ ErrorOr<void, ValidationError> Validator::validate(Limits const& limits, size_t 
 {
     auto bound = (1ull << k) - 1;
     auto check_bound = [bound](auto value) {
-        return static_cast<u64>(value) < bound;
+        return static_cast<u64>(value) <= bound;
     };
 
     if (!check_bound(limits.min()))
@@ -360,615 +360,483 @@ VALIDATE_INSTRUCTION(f64_const)
 VALIDATE_INSTRUCTION(i32_clz)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_ctz)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_popcnt)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_clz)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I64) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_ctz)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I64) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_popcnt)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I64) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_abs)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_neg)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_sqrt)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_ceil)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_floor)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_trunc)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_nearest)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_abs)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_neg)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F64) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_sqrt)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F64) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_ceil)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F64) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_floor)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F64) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_trunc)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F64) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_nearest)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::F64) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_extend16_s)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_extend8_s)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I32) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_extend32_s)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I64) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_extend16_s)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I64) });
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_extend8_s)
 {
     if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I64) });
     return {};
 }
 
 // https://webassembly.github.io/spec/core/bikeshed/#-tmathsfhrefsyntax-binopmathitbinop
 VALIDATE_INSTRUCTION(i32_add)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_sub)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_mul)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_divs)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_divu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_rems)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_remu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_and)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_or)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_xor)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_shl)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_shrs)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_shru)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_rotl)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_rotr)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_add)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_sub)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_mul)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_divs)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_divu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_rems)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_remu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_and)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_or)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_xor)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_shl)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_shrs)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_shru)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_rotl)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_rotr)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_add)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_sub)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_mul)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_div)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_min)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_max)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_copysign)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_add)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_sub)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_mul)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_div)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_min)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_max)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_copysign)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::F64));
     return {};
 }
@@ -976,18 +844,14 @@ VALIDATE_INSTRUCTION(f64_copysign)
 // https://webassembly.github.io/spec/core/bikeshed/#-tmathsfhrefsyntax-testopmathittestop
 VALIDATE_INSTRUCTION(i32_eqz)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
+    TRY((stack.take<ValueType::I32>()));
+    stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_eqz)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
@@ -995,320 +859,224 @@ VALIDATE_INSTRUCTION(i64_eqz)
 // https://webassembly.github.io/spec/core/bikeshed/#-tmathsfhrefsyntax-relopmathitrelop
 VALIDATE_INSTRUCTION(i32_eq)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_ne)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_lts)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_ltu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_gts)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_gtu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_les)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_leu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_ges)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_geu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_eq)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_ne)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_lts)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_ltu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_gts)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_gtu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_les)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_leu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_ges)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_geu)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I64, ValueType::I64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_eq)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_ne)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_lt)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_le)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_gt)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_ge)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F32, ValueType::F32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_eq)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_ne)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_lt)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_le)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_gt)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_ge)
 {
-    if (stack.size() < 2 || stack.take_last() != stack.last() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::F64, ValueType::F64>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
@@ -1316,330 +1084,231 @@ VALIDATE_INSTRUCTION(f64_ge)
 // https://webassembly.github.io/spec/core/bikeshed/#-t_2mathsfhrefsyntax-cvtopmathitcvtopmathsf_t_1mathsf_hrefsyntax-sxmathitsx
 VALIDATE_INSTRUCTION(i32_wrap_i64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I64>());
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_extend_si32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I32>());
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_extend_ui32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I32>());
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_trunc_sf32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F32>());
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_trunc_uf32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F32>());
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_trunc_sf64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F64>());
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_trunc_uf64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F64>());
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_trunc_sf32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F32>());
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_trunc_uf32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F32>());
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_trunc_sf64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F64>());
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_trunc_uf64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F64>());
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_trunc_sat_f32_s)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F32>());
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_trunc_sat_f32_u)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F32>());
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_trunc_sat_f64_s)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F64>());
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_trunc_sat_f64_u)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F64>());
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_trunc_sat_f32_s)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F32>());
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_trunc_sat_f32_u)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F32>());
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_trunc_sat_f64_s)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F64>());
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_trunc_sat_f64_u)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F64>());
     stack.append(ValueType(ValueType::I64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_convert_si32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I32>());
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_convert_ui32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I32>());
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_convert_si64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I64>());
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_convert_ui64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I64>());
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_convert_si32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I32>());
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_convert_ui32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I32>());
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_convert_si64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I64>());
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_convert_ui64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I64>());
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_demote_f64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F64>());
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_promote_f32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F32>());
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f32_reinterpret_i32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I32>());
     stack.append(ValueType(ValueType::F32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(f64_reinterpret_i64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I64>());
     stack.append(ValueType(ValueType::F64));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i32_reinterpret_f32)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F32>());
     stack.append(ValueType(ValueType::I32));
     return {};
 }
 
 VALIDATE_INSTRUCTION(i64_reinterpret_f64)
 {
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::F64>());
     stack.append(ValueType(ValueType::I64));
     return {};
 }
@@ -1656,7 +1325,7 @@ VALIDATE_INSTRUCTION(ref_null)
 VALIDATE_INSTRUCTION(ref_is_null)
 {
     if (stack.is_empty() || !stack.last().is_reference())
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { "reference" });
 
     stack.take_last();
     stack.append(ValueType(ValueType::I32));
@@ -1680,7 +1349,7 @@ VALIDATE_INSTRUCTION(ref_func)
 VALIDATE_INSTRUCTION(drop)
 {
     if (stack.is_empty())
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { "any" });
     stack.take_last();
     return {};
 }
@@ -1688,7 +1357,7 @@ VALIDATE_INSTRUCTION(drop)
 VALIDATE_INSTRUCTION(select)
 {
     if (stack.size() < 3)
-        return Errors::invalid_stack_state();
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I32), "any", "any" });
 
     auto index_type = stack.take_last();
     auto arg0_type = stack.take_last();
@@ -1704,12 +1373,12 @@ VALIDATE_INSTRUCTION(select)
 
 VALIDATE_INSTRUCTION(select_typed)
 {
-    if (stack.size() < 3)
-        return Errors::invalid_stack_state();
-
     auto& required_types = instruction.arguments().get<Vector<ValueType>>();
     if (required_types.size() != 1)
         return Errors::invalid("select types", "exactly one type", required_types);
+
+    if (stack.size() < 3)
+        return Errors::invalid_stack_state(stack, Tuple { ValueType(ValueType::I32), required_types.first(), required_types.first() });
 
     auto index_type = stack.take_last();
     auto arg0_type = stack.take_last();
@@ -1739,8 +1408,7 @@ VALIDATE_INSTRUCTION(local_set)
     TRY(validate(index));
 
     auto& value_type = m_context.locals[index.value()];
-    if (stack.take_last() != value_type)
-        return Errors::invalid_stack_state();
+    TRY(stack.take(value_type));
 
     return {};
 }
@@ -1751,8 +1419,7 @@ VALIDATE_INSTRUCTION(local_tee)
     TRY(validate(index));
 
     auto& value_type = m_context.locals[index.value()];
-    if (stack.last() != value_type)
-        return Errors::invalid_stack_state();
+    TRY(stack.take(value_type));
 
     return {};
 }
@@ -1779,7 +1446,8 @@ VALIDATE_INSTRUCTION(global_set)
     if (!global.is_mutable())
         return Errors::invalid("global variable for global.set");
 
-    stack.append(global.type());
+    TRY(stack.take(global.type()));
+
     return {};
 }
 
@@ -1790,10 +1458,7 @@ VALIDATE_INSTRUCTION(table_get)
     TRY(validate(index));
 
     auto& table = m_context.tables[index.value()];
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY(stack.take<ValueType::I32>());
     stack.append(table.element_type());
     return {};
 }
@@ -1804,14 +1469,9 @@ VALIDATE_INSTRUCTION(table_set)
     TRY(validate(index));
 
     auto& table = m_context.tables[index.value()];
-    if (stack.is_empty())
-        return Errors::invalid_stack_state();
+    TRY(stack.take(table.element_type()));
 
-    if (stack.take_last() != table.element_type())
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY(stack.take<ValueType::I32>());
 
     return {};
 }
@@ -1831,14 +1491,9 @@ VALIDATE_INSTRUCTION(table_grow)
     TRY(validate(index));
 
     auto& table = m_context.tables[index.value()];
-    if (stack.is_empty())
-        return Errors::invalid_stack_state();
 
-    if (!stack.take_last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || stack.take_last() != table.element_type())
-        return Errors::invalid_stack_state();
+    TRY(stack.take<ValueType::I32>());
+    TRY(stack.take(table.element_type()));
 
     stack.append(ValueType(ValueType::I32));
     return {};
@@ -1850,17 +1505,10 @@ VALIDATE_INSTRUCTION(table_fill)
     TRY(validate(index));
 
     auto& table = m_context.tables[index.value()];
-    if (stack.is_empty())
-        return Errors::invalid_stack_state();
 
-    if (!stack.take_last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || stack.take_last() != table.element_type())
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY(stack.take<ValueType::I32>());
+    TRY(stack.take(table.element_type()));
+    TRY(stack.take<ValueType::I32>());
 
     return {};
 }
@@ -1881,13 +1529,7 @@ VALIDATE_INSTRUCTION(table_copy)
     if (!lhs_table.element_type().is_reference())
         return Errors::invalid("table.copy element type", "a reference type", lhs_table.element_type());
 
-    if (stack.size() < 3)
-        return Errors::invalid_stack_state();
-
-    for (size_t i = 0; i < 3; ++i) {
-        if (!stack.take_last().is_of_kind(ValueType::I32))
-            return Errors::invalid_stack_state();
-    }
+    TRY((stack.take<ValueType::I32, ValueType::I32, ValueType::I32>()));
 
     return {};
 }
@@ -1905,13 +1547,7 @@ VALIDATE_INSTRUCTION(table_init)
     if (table.element_type() != element_type)
         return Errors::non_conforming_types("table.init", table.element_type(), element_type);
 
-    if (stack.size() < 3)
-        return Errors::invalid_stack_state();
-
-    for (size_t i = 0; i < 3; ++i) {
-        if (!stack.take_last().is_of_kind(ValueType::I32))
-            return Errors::invalid_stack_state();
-    }
+    TRY((stack.take<ValueType::I32, ValueType::I32, ValueType::I32>()));
 
     return {};
 }
@@ -1933,9 +1569,8 @@ VALIDATE_INSTRUCTION(i32_load)
     if ((1ull << arg.align) > sizeof(i32))
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(i32));
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
+    TRY((stack.take<ValueType::I32>()));
+    stack.append(ValueType(ValueType::I32));
     return {};
 }
 
@@ -1947,10 +1582,7 @@ VALIDATE_INSTRUCTION(i64_load)
     if ((1ull << arg.align) > sizeof(i64))
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(i64));
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
@@ -1963,10 +1595,7 @@ VALIDATE_INSTRUCTION(f32_load)
     if ((1ull << arg.align) > sizeof(float))
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(float));
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::F32));
     return {};
 }
@@ -1979,10 +1608,7 @@ VALIDATE_INSTRUCTION(f64_load)
     if ((1ull << arg.align) > sizeof(double))
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(double));
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::F64));
     return {};
 }
@@ -1995,10 +1621,7 @@ VALIDATE_INSTRUCTION(i32_load16_s)
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
@@ -2011,10 +1634,7 @@ VALIDATE_INSTRUCTION(i32_load16_u)
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
@@ -2027,10 +1647,7 @@ VALIDATE_INSTRUCTION(i32_load8_s)
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
@@ -2043,10 +1660,7 @@ VALIDATE_INSTRUCTION(i32_load8_u)
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I32));
     return {};
 }
@@ -2059,10 +1673,7 @@ VALIDATE_INSTRUCTION(i64_load32_s)
     if ((1ull << arg.align) > 32 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 32 / 8);
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
@@ -2075,10 +1686,7 @@ VALIDATE_INSTRUCTION(i64_load32_u)
     if ((1ull << arg.align) > 32 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 32 / 8);
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
@@ -2091,10 +1699,7 @@ VALIDATE_INSTRUCTION(i64_load16_s)
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
@@ -2107,10 +1712,7 @@ VALIDATE_INSTRUCTION(i64_load16_u)
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
@@ -2123,10 +1725,7 @@ VALIDATE_INSTRUCTION(i64_load8_s)
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
@@ -2139,10 +1738,7 @@ VALIDATE_INSTRUCTION(i64_load8_u)
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    stack.take_last();
+    TRY((stack.take<ValueType::I32>()));
     stack.append(ValueType(ValueType::I64));
     return {};
 }
@@ -2155,11 +1751,7 @@ VALIDATE_INSTRUCTION(i32_store)
     if ((1ull << arg.align) > sizeof(i32))
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(i32));
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
 
     return {};
 }
@@ -2172,11 +1764,7 @@ VALIDATE_INSTRUCTION(i64_store)
     if ((1ull << arg.align) > sizeof(i64))
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(i64));
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY((stack.take<ValueType::I64, ValueType::I32>()));
 
     return {};
 }
@@ -2189,11 +1777,7 @@ VALIDATE_INSTRUCTION(f32_store)
     if ((1ull << arg.align) > sizeof(float))
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(float));
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::F32))
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY((stack.take<ValueType::F32, ValueType::I32>()));
 
     return {};
 }
@@ -2206,11 +1790,7 @@ VALIDATE_INSTRUCTION(f64_store)
     if ((1ull << arg.align) > sizeof(double))
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, sizeof(double));
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::F64))
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY((stack.take<ValueType::F64, ValueType::I32>()));
 
     return {};
 }
@@ -2223,11 +1803,7 @@ VALIDATE_INSTRUCTION(i32_store16)
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
 
     return {};
 }
@@ -2240,11 +1816,7 @@ VALIDATE_INSTRUCTION(i32_store8)
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY((stack.take<ValueType::I32, ValueType::I32>()));
 
     return {};
 }
@@ -2257,11 +1829,7 @@ VALIDATE_INSTRUCTION(i64_store32)
     if ((1ull << arg.align) > 32 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 32 / 8);
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY((stack.take<ValueType::I64, ValueType::I32>()));
 
     return {};
 }
@@ -2274,11 +1842,7 @@ VALIDATE_INSTRUCTION(i64_store16)
     if ((1ull << arg.align) > 16 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 16 / 8);
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY((stack.take<ValueType::I64, ValueType::I32>()));
 
     return {};
 }
@@ -2291,11 +1855,7 @@ VALIDATE_INSTRUCTION(i64_store8)
     if ((1ull << arg.align) > 8 / 8)
         return Errors::out_of_bounds("memory op alignment", 1ull << arg.align, 0, 8 / 8);
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I64))
-        return Errors::invalid_stack_state();
-
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY((stack.take<ValueType::I64, ValueType::I32>()));
 
     return {};
 }
@@ -2311,9 +1871,8 @@ VALIDATE_INSTRUCTION(memory_size)
 VALIDATE_INSTRUCTION(memory_grow)
 {
     TRY(validate(MemoryIndex { 0 }));
+    TRY((stack.take<ValueType::I32>()));
 
-    if (stack.is_empty() || !stack.last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
     return {};
 }
 
@@ -2321,13 +1880,7 @@ VALIDATE_INSTRUCTION(memory_fill)
 {
     TRY(validate(MemoryIndex { 0 }));
 
-    if (stack.size() < 3)
-        return Errors::invalid_stack_state();
-
-    for (size_t i = 0; i < 3; ++i) {
-        if (!stack.take_last().is_of_kind(ValueType::I32))
-            return Errors::invalid_stack_state();
-    }
+    TRY((stack.take<ValueType::I32, ValueType::I32, ValueType::I32>()));
 
     return {};
 }
@@ -2339,13 +1892,7 @@ VALIDATE_INSTRUCTION(memory_init)
     auto index = instruction.arguments().get<DataIndex>();
     TRY(validate(index));
 
-    if (stack.size() < 3)
-        return Errors::invalid_stack_state();
-
-    for (size_t i = 0; i < 3; ++i) {
-        if (!stack.take_last().is_of_kind(ValueType::I32))
-            return Errors::invalid_stack_state();
-    }
+    TRY((stack.take<ValueType::I32, ValueType::I32, ValueType::I32>()));
 
     return {};
 }
@@ -2393,13 +1940,8 @@ VALIDATE_INSTRUCTION(structured_end)
     }
 
     auto& results = last_block_type.results();
-    if (results.size() > stack.size())
-        return Errors::invalid_stack_state();
-
-    for (size_t i = 1; i <= results.size(); ++i) {
-        if (stack.take_last() != results[results.size() - i])
-            return Errors::invalid_stack_state();
-    }
+    for (size_t i = 1; i <= results.size(); ++i)
+        TRY(stack.take(results[results.size() - i]));
 
     for (auto& result : results)
         stack.append(result);
@@ -2419,13 +1961,8 @@ VALIDATE_INSTRUCTION(structured_else)
     auto& block_type = m_entered_blocks.last();
     auto& results = block_type.results();
 
-    if (results.size() > stack.size())
-        return Errors::invalid_stack_state();
-
-    for (size_t i = 1; i <= results.size(); ++i) {
-        if (stack.take_last() != results[results.size() - i])
-            return Errors::invalid_stack_state();
-    }
+    for (size_t i = 1; i <= results.size(); ++i)
+        TRY(stack.take(results[results.size() - i]));
 
     auto& details = m_block_details.last().details.get<BlockDetails::IfDetails>();
     m_entered_scopes.last() = ChildScopeKind::Else;
@@ -2439,13 +1976,8 @@ VALIDATE_INSTRUCTION(block)
     auto block_type = TRY(validate(args.block_type));
 
     auto& parameters = block_type.parameters();
-    if (stack.size() < parameters.size())
-        return Errors::invalid_stack_state();
-
-    for (size_t i = 1; i <= parameters.size(); ++i) {
-        if (stack.take_last() != parameters[parameters.size() - i])
-            return Errors::invalid_stack_state();
-    }
+    for (size_t i = 1; i <= parameters.size(); ++i)
+        TRY(stack.take(parameters[parameters.size() - i]));
 
     for (auto& parameter : parameters)
         stack.append(parameter);
@@ -2464,13 +1996,8 @@ VALIDATE_INSTRUCTION(loop)
     auto block_type = TRY(validate(args.block_type));
 
     auto& parameters = block_type.parameters();
-    if (stack.size() < parameters.size())
-        return Errors::invalid_stack_state();
-
-    for (size_t i = 0; i < parameters.size(); ++i) {
-        if (stack.take_last() != parameters[parameters.size() - i - 1])
-            return Errors::invalid_stack_state();
-    }
+    for (size_t i = 1; i <= parameters.size(); ++i)
+        TRY(stack.take(parameters[parameters.size() - i]));
 
     for (auto& parameter : parameters)
         stack.append(parameter);
@@ -2479,7 +2006,7 @@ VALIDATE_INSTRUCTION(loop)
     m_block_details.empend(stack.actual_size(), Empty {});
     m_parent_contexts.append(m_context);
     m_entered_blocks.append(block_type);
-    m_context.labels.prepend(ResultType { block_type.results() });
+    m_context.labels.prepend(ResultType { block_type.parameters() });
     return {};
 }
 
@@ -2488,19 +2015,13 @@ VALIDATE_INSTRUCTION(if_)
     auto& args = instruction.arguments().get<Instruction::StructuredInstructionArgs>();
     auto block_type = TRY(validate(args.block_type));
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY(stack.take<ValueType::I32>());
 
     auto stack_snapshot = stack;
 
     auto& parameters = block_type.parameters();
-    if (stack.size() < parameters.size())
-        return Errors::invalid_stack_state();
-
-    for (size_t i = 0; i < parameters.size(); ++i) {
-        if (stack.take_last() != parameters[parameters.size() - i])
-            return Errors::invalid_stack_state();
-    }
+    for (size_t i = 1; i <= parameters.size(); ++i)
+        TRY(stack.take(parameters[parameters.size() - i]));
 
     for (auto& parameter : parameters)
         stack.append(parameter);
@@ -2519,13 +2040,9 @@ VALIDATE_INSTRUCTION(br)
     TRY(validate(label));
 
     auto& type = m_context.labels[label.value()];
-    if (stack.size() < type.types().size())
-        return Errors::invalid_stack_state();
+    for (size_t i = 1; i <= type.types().size(); ++i)
+        TRY(stack.take(type.types()[type.types().size() - i]));
 
-    for (size_t i = 0; i < type.types().size(); ++i) {
-        if (stack.take_last() != type.types()[type.types().size() - i - 1])
-            return Errors::invalid_stack_state();
-    }
     stack.append(StackEntry());
     return {};
 }
@@ -2535,17 +2052,16 @@ VALIDATE_INSTRUCTION(br_if)
     auto label = instruction.arguments().get<LabelIndex>();
     TRY(validate(label));
 
+    TRY(stack.take<ValueType::I32>());
+
     auto& type = m_context.labels[label.value()];
-    if (stack.size() < type.types().size())
-        return Errors::invalid_stack_state();
 
     Vector<StackEntry> entries;
     entries.ensure_capacity(type.types().size());
 
     for (size_t i = 0; i < type.types().size(); ++i) {
-        auto entry = stack.take_last();
-        if (entry != type.types()[type.types().size() - i - 1])
-            return Errors::invalid_stack_state();
+        auto& entry = type.types()[type.types().size() - i - 1];
+        TRY(stack.take(entry));
         entries.append(entry);
     }
 
@@ -2563,28 +2079,26 @@ VALIDATE_INSTRUCTION(br_table)
     for (auto& label : args.labels)
         TRY(validate(label));
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY(stack.take<ValueType::I32>());
 
     auto& default_types = m_context.labels[args.default_.value()].types();
     auto arity = default_types.size();
-    if (stack.size() < arity)
-        return Errors::invalid_stack_state();
 
+    auto stack_snapshot = stack;
+    auto stack_to_check = stack_snapshot;
     for (auto& label : args.labels) {
         auto& label_types = m_context.labels[label.value()].types();
-        if (label_types.size() != arity)
-            return Errors::invalid_stack_state();
-        for (size_t i = 0; i < arity; ++i) {
-            if (stack.at(stack.actual_size() - i - 1) != label_types[label_types.size() - i - 1])
-                return Errors::invalid_stack_state();
-        }
+        for (size_t i = 0; i < arity; ++i)
+            TRY(stack_to_check.take(label_types[label_types.size() - i - 1]));
+        stack_to_check = stack_snapshot;
     }
 
     for (size_t i = 0; i < arity; ++i) {
-        if (stack.take_last() != default_types[default_types.size() - i - 1])
-            return Errors::invalid_stack_state();
+        auto expected = default_types[default_types.size() - i - 1];
+        TRY((stack.take(expected)));
     }
+
+    stack.append(StackEntry());
 
     return {};
 }
@@ -2595,10 +2109,8 @@ VALIDATE_INSTRUCTION(return_)
         return Errors::invalid("use of return outside function");
 
     auto& return_types = m_context.return_->types();
-    for (size_t i = 0; i < return_types.size(); ++i) {
-        if (stack.is_empty() || stack.take_last() != return_types[return_types.size() - i - 1])
-            return Errors::invalid_stack_state();
-    }
+    for (size_t i = 0; i < return_types.size(); ++i)
+        TRY((stack.take(return_types[return_types.size() - i - 1])));
 
     stack.append(StackEntry());
 
@@ -2611,10 +2123,8 @@ VALIDATE_INSTRUCTION(call)
     TRY(validate(index));
 
     auto& function_type = m_context.functions[index.value()];
-    for (size_t i = 0; i < function_type.parameters().size(); ++i) {
-        if (stack.is_empty() || stack.take_last() != function_type.parameters()[function_type.parameters().size() - i - 1])
-            return Errors::invalid_stack_state();
-    }
+    for (size_t i = 0; i < function_type.parameters().size(); ++i)
+        TRY(stack.take(function_type.parameters()[function_type.parameters().size() - i - 1]));
 
     for (auto& type : function_type.results())
         stack.append(type);
@@ -2634,13 +2144,10 @@ VALIDATE_INSTRUCTION(call_indirect)
 
     auto& type = m_context.types[args.type.value()];
 
-    if (stack.is_empty() || !stack.take_last().is_of_kind(ValueType::I32))
-        return Errors::invalid_stack_state();
+    TRY(stack.take<ValueType::I32>());
 
-    for (size_t i = 0; i < type.parameters().size(); ++i) {
-        if (stack.is_empty() || stack.take_last() != type.parameters()[type.parameters().size() - i - 1])
-            return Errors::invalid_stack_state();
-    }
+    for (size_t i = 0; i < type.parameters().size(); ++i)
+        TRY(stack.take(type.parameters()[type.parameters().size() - i - 1]));
 
     for (auto& type : type.results())
         stack.append(type);
@@ -2651,8 +2158,9 @@ VALIDATE_INSTRUCTION(call_indirect)
 ErrorOr<void, ValidationError> Validator::validate(const Instruction& instruction, Stack& stack, bool& is_constant)
 {
     switch (instruction.opcode().value()) {
-#define M(name, integer_value)       \
-    case Instructions::name.value(): \
+#define M(name, integer_value)                                                   \
+    case Instructions::name.value():                                             \
+        dbgln_if(WASM_VALIDATOR_DEBUG, "checking {}, stack = {}", #name, stack); \
         return validate_instruction<integer_value>(instruction, stack, is_constant);
 
         ENUMERATE_WASM_OPCODES(M)
@@ -2677,16 +2185,8 @@ ErrorOr<Validator::ExpressionTypeResult, ValidationError> Validator::validate(Ex
     }
 
     auto expected_result_types = result_types;
-    while (!expected_result_types.is_empty()) {
-        if (stack.is_empty())
-            return Errors::invalid_stack_state();
-
-        auto stack_type = stack.take_last();
-        auto expected_type = expected_result_types.take_last();
-
-        if (stack_type != expected_type)
-            return Errors::invalid_stack_state();
-    }
+    while (!expected_result_types.is_empty())
+        TRY(stack.take(expected_result_types.take_last()));
 
     for (auto& type : result_types)
         stack.append(type);
@@ -2745,25 +2245,17 @@ bool Validator::Stack::operator==(const Stack& other) const
     return true;
 }
 
-#if WASM_VALIDATOR_DEBUG
-ValidationError Validator::Errors::invalid_stack_state(SourceLocation location)
+String Validator::Errors::find_instruction_name(SourceLocation const& location)
 {
     auto index = location.function_name().find('<');
     auto end_index = location.function_name().find('>');
     if (!index.has_value() || !end_index.has_value())
-        return ValidationError { "Invalid stack state"sv };
+        return String::formatted("{}", location);
 
     auto opcode = location.function_name().substring_view(index.value() + 1, end_index.value() - index.value() - 1).to_uint();
     if (!opcode.has_value())
-        return ValidationError { "Invalid stack state"sv };
+        return String::formatted("{}", location);
 
-    auto name = instruction_name(OpCode { *opcode });
-    return String::formatted("Invalid stack state for {}", name);
+    return instruction_name(OpCode { *opcode });
 }
-#else
-ValidationError Validator::Errors::invalid_stack_state()
-{
-    return ValidationError { "Invalid stack state"sv };
-}
-#endif
 }

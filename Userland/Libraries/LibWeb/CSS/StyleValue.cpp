@@ -1121,7 +1121,9 @@ Color IdentifierStyleValue::to_color(Layout::NodeWithStyle const& node) const
     if (id() == CSS::ValueID::LibwebLink)
         return document.link_color();
 
-    VERIFY(document.page());
+    if (!document.page())
+        return {};
+
     auto palette = document.page()->palette();
     switch (id()) {
     case CSS::ValueID::LibwebPaletteDesktopBackground:

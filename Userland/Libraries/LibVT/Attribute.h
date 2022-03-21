@@ -55,7 +55,7 @@ struct Attribute {
     constexpr Color effective_background_color() const { return has_flag(flags, Flags::Negative) ? foreground_color : background_color; }
     constexpr Color effective_foreground_color() const { return has_flag(flags, Flags::Negative) ? background_color : foreground_color; }
 
-    constexpr bool is_untouched() const { return has_flag(flags, Flags::Touched); }
+    constexpr bool is_untouched() const { return !has_flag(flags, Flags::Touched); }
 
     Flags flags { Flags::NoAttributes };
 

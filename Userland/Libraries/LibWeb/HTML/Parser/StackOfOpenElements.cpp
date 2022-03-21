@@ -68,9 +68,30 @@ bool StackOfOpenElements::has_in_list_item_scope(const FlyString& tag_name) cons
     return has_in_scope_impl(tag_name, list);
 }
 
+// https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-select-scope
+// The stack of open elements is said to have a particular element in select scope
+// when it has that element in the specific scope consisting of all element types except the following:
+// - optgroup in the HTML namespace
+// - option in the HTML namespace
+// NOTE: In this case it's "all element types _except_"
 bool StackOfOpenElements::has_in_select_scope(const FlyString& tag_name) const
 {
-    return has_in_scope_impl(tag_name, { "option", "optgroup" });
+    // https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
+    for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
+        // 1. Initialize node to be the current node (the bottommost node of the stack).
+        auto& node = m_elements.at(i);
+        // 2. If node is the target node, terminate in a match state.
+        if (node.local_name() == tag_name)
+            return true;
+        // 3. Otherwise, if node is one of the element types in list, terminate in a failure state.
+        // NOTE: Here "list" refers to all elements except option and optgroup
+        if (node.local_name() != HTML::TagNames::option && node.local_name() != HTML::TagNames::optgroup)
+            return false;
+        // 4. Otherwise, set node to the previous entry in the stack of open elements and return to step 2.
+    }
+    // [4.] (This will never fail, since the loop will always terminate in the previous step if the top of the stack
+    // — an html element — is reached.)
+    VERIFY_NOT_REACHED();
 }
 
 bool StackOfOpenElements::contains(const DOM::Element& element) const
@@ -132,6 +153,34 @@ DOM::Element* StackOfOpenElements::element_immediately_above(DOM::Element const&
             return &element;
     }
     return nullptr;
+}
+
+void StackOfOpenElements::remove(const DOM::Element& element)
+{
+    m_elements.remove_first_matching([&element](DOM::Element const& other) {
+        return &other == &element;
+    });
+}
+
+void StackOfOpenElements::replace(const DOM::Element& to_remove, NonnullRefPtr<DOM::Element> to_add)
+{
+    for (size_t i = 0; i < m_elements.size(); i++) {
+        if (&m_elements[i] == &to_remove) {
+            m_elements.remove(i);
+            m_elements.insert(i, move(to_add));
+            break;
+        }
+    }
+}
+
+void StackOfOpenElements::insert_immediately_below(NonnullRefPtr<DOM::Element> element_to_add, DOM::Element const& target)
+{
+    for (size_t i = 0; i < m_elements.size(); i++) {
+        if (&m_elements[i] == &target) {
+            m_elements.insert(i + 1, move(element_to_add));
+            break;
+        }
+    }
 }
 
 }

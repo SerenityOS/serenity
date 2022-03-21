@@ -48,30 +48,24 @@ TEST_CASE(test_x25519)
         0x76, 0xf0, 0x9b, 0x3c, 0x1e, 0x16, 0x17, 0x42
     };
 
-    u8 coordinate_data[32] {
-        0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    };
-
-    ReadonlyBytes coordinate { coordinate_data, 32 };
     ReadonlyBytes alice_public_key { alice_public_key_data, 32 };
     ReadonlyBytes alice_private_key { alice_private_key_data, 32 };
     ReadonlyBytes bob_public_key { bob_public_key_data, 32 };
     ReadonlyBytes bob_private_key { bob_private_key_data, 32 };
     ReadonlyBytes shared_secret { shared_secret_data, 32 };
 
-    auto generated_alice_public = MUST(Crypto::Curves::X25519::compute_coordinate(alice_private_key, coordinate));
+    Crypto::Curves::X25519 curve;
+
+    auto generated_alice_public = MUST(curve.generate_public_key(alice_private_key));
     EXPECT_EQ(alice_public_key, generated_alice_public);
 
-    auto generated_bob_public = MUST(Crypto::Curves::X25519::compute_coordinate(bob_private_key, coordinate));
+    auto generated_bob_public = MUST(curve.generate_public_key(bob_private_key));
     EXPECT_EQ(bob_public_key, generated_bob_public);
 
-    auto shared_alice = MUST(Crypto::Curves::X25519::compute_coordinate(alice_private_key, bob_public_key));
+    auto shared_alice = MUST(curve.compute_coordinate(alice_private_key, bob_public_key));
     EXPECT_EQ(shared_alice, shared_secret);
 
-    auto shared_bob = MUST(Crypto::Curves::X25519::compute_coordinate(bob_private_key, alice_public_key));
+    auto shared_bob = MUST(curve.compute_coordinate(bob_private_key, alice_public_key));
     EXPECT_EQ(shared_bob, shared_secret);
 
     EXPECT_EQ(shared_alice, shared_bob);
@@ -130,33 +124,24 @@ TEST_CASE(test_x448)
         0x44, 0x9a, 0x50, 0x37, 0x51, 0x4a, 0x87, 0x9d
     };
 
-    u8 coordinate_data[56] {
-        0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    };
-
-    ReadonlyBytes coordinate { coordinate_data, 56 };
     ReadonlyBytes alice_public_key { alice_public_key_data, 56 };
     ReadonlyBytes alice_private_key { alice_private_key_data, 56 };
     ReadonlyBytes bob_public_key { bob_public_key_data, 56 };
     ReadonlyBytes bob_private_key { bob_private_key_data, 56 };
     ReadonlyBytes shared_secret { shared_secret_data, 56 };
 
-    auto generated_alice_public = MUST(Crypto::Curves::X448::compute_coordinate(alice_private_key, coordinate));
+    Crypto::Curves::X448 curve;
+
+    auto generated_alice_public = MUST(curve.generate_public_key(alice_private_key));
     EXPECT_EQ(alice_public_key, generated_alice_public);
 
-    auto generated_bob_public = MUST(Crypto::Curves::X448::compute_coordinate(bob_private_key, coordinate));
+    auto generated_bob_public = MUST(curve.generate_public_key(bob_private_key));
     EXPECT_EQ(bob_public_key, generated_bob_public);
 
-    auto shared_alice = MUST(Crypto::Curves::X448::compute_coordinate(alice_private_key, bob_public_key));
+    auto shared_alice = MUST(curve.compute_coordinate(alice_private_key, bob_public_key));
     EXPECT_EQ(shared_alice, shared_secret);
 
-    auto shared_bob = MUST(Crypto::Curves::X448::compute_coordinate(bob_private_key, alice_public_key));
+    auto shared_bob = MUST(curve.compute_coordinate(bob_private_key, alice_public_key));
     EXPECT_EQ(shared_bob, shared_secret);
 
     EXPECT_EQ(shared_alice, shared_bob);
@@ -191,6 +176,14 @@ TEST_CASE(test_secp256r1)
         0xBA, 0x7D, 0xAD, 0xE6, 0x3C, 0xE9, 0x82, 0x29, 0x9E, 0x04, 0xB7, 0x9D, 0x22, 0x78, 0x73, 0xD1,
     };
 
+    u8 shared_secret_data[65] {
+        0x04,
+        0x7c, 0xf2, 0x7b, 0x18, 0x8d, 0x03, 0x4f, 0x7e, 0x8a, 0x52, 0x38, 0x03, 0x04, 0xb5, 0x1a, 0xc3,
+        0xc0, 0x89, 0x69, 0xe2, 0x77, 0xf2, 0x1b, 0x35, 0xa6, 0x0b, 0x48, 0xfc, 0x47, 0x66, 0x99, 0x78,
+        0x07, 0x77, 0x55, 0x10, 0xdb, 0x8e, 0xd0, 0x40, 0x29, 0x3d, 0x9a, 0xc6, 0x9f, 0x74, 0x30, 0xdb,
+        0xba, 0x7d, 0xad, 0xe6, 0x3c, 0xe9, 0x82, 0x29, 0x9e, 0x04, 0xb7, 0x9d, 0x22, 0x78, 0x73, 0xd1,
+    };
+
     u8 private_key_data[32] {
         0x01, 0xff, 0xf8, 0x1f, 0xc0, 0x00, 0x00, 0x00, 0x00, 0xff, 0x80, 0x1f, 0xff, 0xc0, 0xf8, 0x1f,
         0x01, 0xff, 0xf8, 0x00, 0x1f, 0xc0, 0x05, 0xff, 0xff, 0xff, 0x80, 0x00, 0x00, 0xff, 0xff, 0xfc,
@@ -209,14 +202,25 @@ TEST_CASE(test_secp256r1)
     ReadonlyBytes alice_public_key { alice_public_key_data, 65 };
     ReadonlyBytes bob_private_key { bob_private_key_data, 32 };
     ReadonlyBytes bob_public_key { bob_public_key_data, 65 };
+    ReadonlyBytes shared_secret { shared_secret_data, 65 };
 
-    auto generated_alice_public = MUST(Crypto::Curves::SECP256r1::generate_public_key(alice_private_key));
+    Crypto::Curves::SECP256r1 curve;
+
+    auto generated_alice_public = MUST(curve.generate_public_key(alice_private_key));
     EXPECT_EQ(alice_public_key, generated_alice_public);
 
-    auto generated_bob_public = MUST(Crypto::Curves::SECP256r1::generate_public_key(bob_private_key));
+    auto generated_bob_public = MUST(curve.generate_public_key(bob_private_key));
     EXPECT_EQ(bob_public_key, generated_bob_public);
 
-    auto generated_public = MUST(Crypto::Curves::SECP256r1::generate_public_key({ private_key_data, 32 }));
+    auto shared_alice = MUST(curve.compute_coordinate(alice_private_key, bob_public_key));
+    EXPECT_EQ(shared_alice, shared_secret);
+
+    auto shared_bob = MUST(curve.compute_coordinate(bob_private_key, alice_public_key));
+    EXPECT_EQ(shared_bob, shared_secret);
+
+    EXPECT_EQ(shared_alice, shared_bob);
+
+    auto generated_public = MUST(curve.generate_public_key({ private_key_data, 32 }));
     ReadonlyBytes expected_public_key { expected_public_key_data, 65 };
     EXPECT_EQ(expected_public_key, generated_public);
 }

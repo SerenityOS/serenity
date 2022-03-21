@@ -37,13 +37,13 @@ void LineBuilder::begin_new_line(bool increment_y)
         m_current_y += max(m_max_height_on_current_line, m_context.containing_block().line_height());
 
     switch (m_layout_mode) {
-    case LayoutMode::Default:
+    case LayoutMode::Normal:
         m_available_width_for_current_line = m_context.available_space_for_line(m_current_y);
         break;
-    case LayoutMode::AllPossibleLineBreaks:
+    case LayoutMode::MinContent:
         m_available_width_for_current_line = 0;
         break;
-    case LayoutMode::OnlyRequiredLineBreaks:
+    case LayoutMode::MaxContent:
         m_available_width_for_current_line = INFINITY;
         break;
     }
@@ -81,11 +81,11 @@ void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_
 
 bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width, bool should_force_break)
 {
-    if (layout_mode == LayoutMode::AllPossibleLineBreaks)
+    if (layout_mode == LayoutMode::MinContent)
         return true;
     if (should_force_break)
         return true;
-    if (layout_mode == LayoutMode::OnlyRequiredLineBreaks)
+    if (layout_mode == LayoutMode::MaxContent)
         return false;
     auto const& line_boxes = m_containing_block_state.line_boxes;
     if (line_boxes.is_empty() || line_boxes.last().is_empty())
