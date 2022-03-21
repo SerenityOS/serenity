@@ -59,6 +59,7 @@ class MediaList;
 class MediaQuery;
 class MediaQueryList;
 class MediaQueryListEvent;
+class Number;
 class NumericStyleValue;
 class OverflowStyleValue;
 class Percentage;
