@@ -698,6 +698,23 @@ Optional<CSS::Cursor> StyleProperties::cursor() const
     }
 }
 
+Optional<CSS::Visibility> StyleProperties::visibility() const
+{
+    auto value = property(CSS::PropertyID::Visibility);
+    if (!value.has_value() || !value.value()->is_identifier())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Visible:
+        return CSS::Visibility::Visible;
+    case CSS::ValueID::Hidden:
+        return CSS::Visibility::Hidden;
+    case CSS::ValueID::Collapse:
+        return CSS::Visibility::Collapse;
+    default:
+        return {};
+    }
+}
+
 CSS::Display StyleProperties::display() const
 {
     auto value = property(CSS::PropertyID::Display);

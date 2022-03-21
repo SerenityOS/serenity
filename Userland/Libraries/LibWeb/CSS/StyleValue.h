@@ -315,6 +315,12 @@ enum class VerticalAlign {
     Top,
 };
 
+enum class Visibility {
+    Visible,
+    Hidden,
+    Collapse,
+};
+
 enum class WhiteSpace {
     Normal,
     Pre,

@@ -465,7 +465,11 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 
     computed_values.set_z_index(specified_style.z_index());
     computed_values.set_opacity(specified_style.opacity());
-    if (computed_values.opacity() == 0)
+
+    if (auto maybe_visibility = specified_style.visibility(); maybe_visibility.has_value())
+        computed_values.set_visibility(maybe_visibility.release_value());
+
+    if (computed_values.opacity() == 0 || computed_values.visibility() != CSS::Visibility::Visible)
         m_visible = false;
 
     if (auto maybe_length_percentage = specified_style.length_percentage(CSS::PropertyID::Width); maybe_length_percentage.has_value())
