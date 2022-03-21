@@ -118,7 +118,7 @@ public:
         VERIFY(m_type == Type::Number);
         return m_value.view();
     }
-    double number_value() const
+    float number_value() const
     {
         VERIFY(m_type == Type::Number);
         return m_number_value;
@@ -135,14 +135,14 @@ public:
         VERIFY(m_type == Type::Dimension);
         return m_unit.view();
     }
-    double dimension_value() const
+    float dimension_value() const
     {
         VERIFY(m_type == Type::Dimension);
         return m_number_value;
     }
     i64 dimension_value_int() const { return to_closest_integer(dimension_value()); }
 
-    double percentage() const
+    float percentage() const
     {
         VERIFY(m_type == Type::Percentage);
         return m_number_value;
@@ -165,22 +165,22 @@ public:
     Position const& end_position() const { return m_end_position; }
 
 private:
-    static i64 to_closest_integer(double value)
+    static i64 to_closest_integer(float value)
     {
         // https://www.w3.org/TR/css-values-4/#numeric-types
         // When a value cannot be explicitly supported due to range/precision limitations, it must be converted
         // to the closest value supported by the implementation, but how the implementation defines "closest"
         // is explicitly undefined as well.
-        return llround(value);
+        return llroundf(value);
     }
 
     Type m_type { Type::Invalid };
 
     FlyString m_value;
     FlyString m_unit;
-    HashType m_hash_type { HashType::Unrestricted };
+    float m_number_value { 0 };
     NumberType m_number_type { NumberType::Integer };
-    double m_number_value { 0 };
+    HashType m_hash_type { HashType::Unrestricted };
 
     Position m_start_position;
     Position m_end_position;

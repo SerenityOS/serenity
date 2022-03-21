@@ -27,7 +27,7 @@ String MediaFeatureValue::to_string() const
         [](Length const& length) { return length.to_string(); },
         [](Ratio const& ratio) { return ratio.to_string(); },
         [](Resolution const& resolution) { return resolution.to_string(); },
-        [](double number) { return String::number(number); });
+        [](float number) { return String::number(number); });
 }
 
 bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const
@@ -37,7 +37,7 @@ bool MediaFeatureValue::is_same_type(MediaFeatureValue const& other) const
         [&](Length const&) { return other.is_length(); },
         [&](Ratio const&) { return other.is_ratio(); },
         [&](Resolution const&) { return other.is_resolution(); },
-        [&](double) { return other.is_number(); });
+        [&](float) { return other.is_number(); });
 }
 
 String MediaFeature::to_string() const

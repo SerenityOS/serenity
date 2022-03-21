@@ -557,7 +557,7 @@ CSSNumber Tokenizer::consume_a_number()
 }
 
 // https://www.w3.org/TR/css-syntax-3/#convert-string-to-number
-double Tokenizer::convert_a_string_to_a_number(StringView string)
+float Tokenizer::convert_a_string_to_a_number(StringView string)
 {
     auto code_point_at = [&](size_t index) -> u32 {
         if (index < string.length())
@@ -630,7 +630,7 @@ double Tokenizer::convert_a_string_to_a_number(StringView string)
     VERIFY(position == string.length());
 
     // Return the number s·(i + f·10^-d)·10^te.
-    return sign * (integer_part + fractional_part * pow(10, -fractional_digits)) * pow(10, exponent_sign * exponent);
+    return sign * (integer_part + fractional_part * powf(10, -fractional_digits)) * powf(10, exponent_sign * exponent);
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-name
