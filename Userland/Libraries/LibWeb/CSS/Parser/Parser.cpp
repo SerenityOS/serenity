@@ -420,10 +420,6 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_pseudo_sim
     }
 
     if (is_pseudo) {
-        Selector::SimpleSelector simple_selector {
-            .type = Selector::SimpleSelector::Type::PseudoElement
-        };
-
         auto const& name_token = tokens.next_token();
         if (!name_token.is(Token::Type::Ident)) {
             dbgln_if(CSS_PARSER_DEBUG, "Expected an ident for pseudo-element, got: '{}'", name_token.to_debug_string());
@@ -439,158 +435,171 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_pseudo_sim
             dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-element: '::{}'", pseudo_name);
             return ParsingResult::SyntaxError;
         }
-        simple_selector.value = pseudo_element.value();
 
-        return simple_selector;
+        return Selector::SimpleSelector {
+            .type = Selector::SimpleSelector::Type::PseudoElement,
+            .value = pseudo_element.value()
+        };
     }
 
     if (peek_token_ends_selector())
         return ParsingResult::SyntaxError;
 
     auto const& pseudo_class_token = tokens.next_token();
-    Selector::SimpleSelector simple_selector {
-        .type = Selector::SimpleSelector::Type::PseudoClass,
-        .value = Selector::SimpleSelector::PseudoClass {}
-    };
 
     if (pseudo_class_token.is(Token::Type::Ident)) {
         auto pseudo_name = pseudo_class_token.token().ident();
         if (has_ignored_vendor_prefix(pseudo_name))
             return ParsingResult::IncludesIgnoredVendorPrefix;
 
-        if (pseudo_name.equals_ignoring_case("active")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Active;
-        } else if (pseudo_name.equals_ignoring_case("checked")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Checked;
-        } else if (pseudo_name.equals_ignoring_case("disabled")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Disabled;
-        } else if (pseudo_name.equals_ignoring_case("empty")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Empty;
-        } else if (pseudo_name.equals_ignoring_case("enabled")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Enabled;
-        } else if (pseudo_name.equals_ignoring_case("first-child")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::FirstChild;
-        } else if (pseudo_name.equals_ignoring_case("first-of-type")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::FirstOfType;
-        } else if (pseudo_name.equals_ignoring_case("focus")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Focus;
-        } else if (pseudo_name.equals_ignoring_case("focus-within")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::FocusWithin;
-        } else if (pseudo_name.equals_ignoring_case("hover")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Hover;
-        } else if (pseudo_name.equals_ignoring_case("last-child")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::LastChild;
-        } else if (pseudo_name.equals_ignoring_case("last-of-type")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::LastOfType;
-        } else if (pseudo_name.equals_ignoring_case("link")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Link;
-        } else if (pseudo_name.equals_ignoring_case("only-child")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::OnlyChild;
-        } else if (pseudo_name.equals_ignoring_case("only-of-type")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::OnlyOfType;
-        } else if (pseudo_name.equals_ignoring_case("root")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Root;
-        } else if (pseudo_name.equals_ignoring_case("visited")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Visited;
+        auto make_pseudo_class_selector = [](auto pseudo_class) {
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::PseudoClass,
+                .value = Selector::SimpleSelector::PseudoClass {
+                    .type = pseudo_class }
+            };
+        };
 
-        } else if (pseudo_name.equals_ignoring_case("after")) {
-            // Single-colon syntax allowed for compatibility. https://www.w3.org/TR/selectors/#pseudo-element-syntax
-            simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-            simple_selector.value = Selector::PseudoElement::After;
-        } else if (pseudo_name.equals_ignoring_case("before")) {
-            // See :after
-            simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-            simple_selector.value = Selector::PseudoElement::Before;
-        } else if (pseudo_name.equals_ignoring_case("first-letter")) {
-            // See :after
-            simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-            simple_selector.value = Selector::PseudoElement::FirstLetter;
-        } else if (pseudo_name.equals_ignoring_case("first-line")) {
-            // See :after
-            simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
-            simple_selector.value = Selector::PseudoElement::FirstLine;
-        } else {
-            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class: ':{}'", pseudo_name);
-            return ParsingResult::SyntaxError;
+        if (pseudo_name.equals_ignoring_case("active")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Active);
+        } else if (pseudo_name.equals_ignoring_case("checked")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Checked);
+        } else if (pseudo_name.equals_ignoring_case("disabled")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Disabled);
+        } else if (pseudo_name.equals_ignoring_case("empty")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Empty);
+        } else if (pseudo_name.equals_ignoring_case("enabled")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Enabled);
+        } else if (pseudo_name.equals_ignoring_case("first-child")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FirstChild);
+        } else if (pseudo_name.equals_ignoring_case("first-of-type")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FirstOfType);
+        } else if (pseudo_name.equals_ignoring_case("focus")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Focus);
+        } else if (pseudo_name.equals_ignoring_case("focus-within")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FocusWithin);
+        } else if (pseudo_name.equals_ignoring_case("hover")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Hover);
+        } else if (pseudo_name.equals_ignoring_case("last-child")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::LastChild);
+        } else if (pseudo_name.equals_ignoring_case("last-of-type")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::LastOfType);
+        } else if (pseudo_name.equals_ignoring_case("link")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Link);
+        } else if (pseudo_name.equals_ignoring_case("only-child")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyChild);
+        } else if (pseudo_name.equals_ignoring_case("only-of-type")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyOfType);
+        } else if (pseudo_name.equals_ignoring_case("root")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Root);
+        } else if (pseudo_name.equals_ignoring_case("visited")) {
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Visited);
         }
 
-        return simple_selector;
-    }
-    if (pseudo_class_token.is_function()) {
-        auto parse_nth_child_pattern = [this](Selector::SimpleSelector& simple_selector, StyleFunctionRule const& pseudo_function, bool allow_of = false) -> bool {
-            auto function_values = TokenStream<StyleComponentValueRule>(pseudo_function.values());
-            auto nth_child_pattern = parse_a_n_plus_b_pattern(function_values, allow_of ? AllowTrailingTokens::Yes : AllowTrailingTokens::No);
-            if (nth_child_pattern.has_value()) {
-                simple_selector.pseudo_class().nth_child_pattern = nth_child_pattern.value();
-            } else {
-                dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid format for {}", pseudo_function.name());
-                return false;
+        // Single-colon syntax allowed for ::after, ::before, ::first-letter and ::first-line for compatibility.
+        // https://www.w3.org/TR/selectors/#pseudo-element-syntax
+        if (auto pseudo_element = pseudo_element_from_string(pseudo_name); pseudo_element.has_value()) {
+            switch (pseudo_element.value()) {
+            case Selector::PseudoElement::After:
+            case Selector::PseudoElement::Before:
+            case Selector::PseudoElement::FirstLetter:
+            case Selector::PseudoElement::FirstLine:
+                return Selector::SimpleSelector {
+                    .type = Selector::SimpleSelector::Type::PseudoElement,
+                    .value = pseudo_element.value()
+                };
+            default:
+                break;
             }
-            if (!allow_of)
-                return true;
+        }
 
-            function_values.skip_whitespace();
-            if (!function_values.has_next_token())
-                return true;
+        dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class: ':{}'", pseudo_name);
+        return ParsingResult::SyntaxError;
+    }
+
+    if (pseudo_class_token.is_function()) {
+        auto parse_nth_child_selector = [this](auto pseudo_class, Vector<StyleComponentValueRule> const& function_values, bool allow_of = false) -> Result<Selector::SimpleSelector, Parser::ParsingResult> {
+            auto tokens = TokenStream<StyleComponentValueRule>(function_values);
+            auto nth_child_pattern = parse_a_n_plus_b_pattern(tokens, allow_of ? AllowTrailingTokens::Yes : AllowTrailingTokens::No);
+            if (!nth_child_pattern.has_value()) {
+                dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid An+B format for {}", pseudo_class_name(pseudo_class));
+                return ParsingResult::SyntaxError;
+            }
+
+            tokens.skip_whitespace();
+            if (!allow_of || !tokens.has_next_token()) {
+                return Selector::SimpleSelector {
+                    .type = Selector::SimpleSelector::Type::PseudoClass,
+                    .value = Selector::SimpleSelector::PseudoClass {
+                        .type = pseudo_class,
+                        .nth_child_pattern = nth_child_pattern.release_value() }
+                };
+            }
 
             // Parse the `of <selector-list>` syntax
-            auto const& maybe_of = function_values.next_token();
+            auto const& maybe_of = tokens.next_token();
             if (!(maybe_of.is(Token::Type::Ident) && maybe_of.token().ident().equals_ignoring_case("of"sv)))
-                return false;
+                return ParsingResult::SyntaxError;
 
-            function_values.skip_whitespace();
-            auto selector_list = parse_a_selector_list(function_values, SelectorType::Standalone);
+            tokens.skip_whitespace();
+            auto selector_list = parse_a_selector_list(tokens, SelectorType::Standalone);
             if (selector_list.is_error())
-                return false;
+                return ParsingResult::SyntaxError;
 
-            function_values.skip_whitespace();
-            if (function_values.has_next_token())
-                return false;
+            tokens.skip_whitespace();
+            if (tokens.has_next_token())
+                return ParsingResult::SyntaxError;
 
-            simple_selector.pseudo_class().argument_selector_list = selector_list.value();
-            return true;
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::PseudoClass,
+                .value = Selector::SimpleSelector::PseudoClass {
+                    .type = pseudo_class,
+                    .nth_child_pattern = nth_child_pattern.release_value(),
+                    .argument_selector_list = selector_list.release_value() }
+            };
         };
 
         auto const& pseudo_function = pseudo_class_token.function();
         if (pseudo_function.name().equals_ignoring_case("not")) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Not;
             auto function_token_stream = TokenStream(pseudo_function.values());
             auto not_selector = parse_a_selector_list(function_token_stream, SelectorType::Standalone);
             if (not_selector.is_error()) {
                 dbgln_if(CSS_PARSER_DEBUG, "Invalid selector in :not() clause");
                 return ParsingResult::SyntaxError;
             }
-            simple_selector.pseudo_class().argument_selector_list = not_selector.release_value();
+
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::PseudoClass,
+                .value = Selector::SimpleSelector::PseudoClass {
+                    .type = Selector::SimpleSelector::PseudoClass::Type::Not,
+                    .argument_selector_list = not_selector.release_value() }
+            };
         } else if (pseudo_function.name().equals_ignoring_case("lang"sv)) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::Lang;
             if (pseudo_function.values().is_empty()) {
                 dbgln_if(CSS_PARSER_DEBUG, "Empty :lang() selector");
                 return ParsingResult::SyntaxError;
             }
             // FIXME: Support multiple, comma-separated, language ranges.
-            simple_selector.pseudo_class().languages.append(pseudo_function.values().first().token().to_string());
+            Vector<FlyString> languages;
+            languages.append(pseudo_function.values().first().token().to_string());
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::PseudoClass,
+                .value = Selector::SimpleSelector::PseudoClass {
+                    .type = Selector::SimpleSelector::PseudoClass::Type::Lang,
+                    .languages = move(languages) }
+            };
         } else if (pseudo_function.name().equals_ignoring_case("nth-child"sv)) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::NthChild;
-            if (!parse_nth_child_pattern(simple_selector, pseudo_function, true))
-                return ParsingResult::SyntaxError;
+            return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthChild, pseudo_function.values(), true);
         } else if (pseudo_function.name().equals_ignoring_case("nth-last-child"sv)) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::NthLastChild;
-            if (!parse_nth_child_pattern(simple_selector, pseudo_function, true))
-                return ParsingResult::SyntaxError;
+            return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthLastChild, pseudo_function.values(), true);
         } else if (pseudo_function.name().equals_ignoring_case("nth-of-type"sv)) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::NthOfType;
-            if (!parse_nth_child_pattern(simple_selector, pseudo_function))
-                return ParsingResult::SyntaxError;
+            return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthOfType, pseudo_function.values(), false);
         } else if (pseudo_function.name().equals_ignoring_case("nth-last-of-type"sv)) {
-            simple_selector.pseudo_class().type = Selector::SimpleSelector::PseudoClass::Type::NthLastOfType;
-            if (!parse_nth_child_pattern(simple_selector, pseudo_function))
-                return ParsingResult::SyntaxError;
-        } else {
-            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
-            return ParsingResult::SyntaxError;
+            return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthLastOfType, pseudo_function.values(), false);
         }
 
-        return simple_selector;
+        dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
+        return ParsingResult::SyntaxError;
     }
     dbgln_if(CSS_PARSER_DEBUG, "Unexpected Block in pseudo-class name, expected a function or identifier. '{}'", pseudo_class_token.to_debug_string());
     return ParsingResult::SyntaxError;
