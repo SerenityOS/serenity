@@ -63,6 +63,8 @@ public:
 
     ExceptionOr<NonnullRefPtr<DocumentFragment>> extract_contents();
 
+    ExceptionOr<void> insert_node(NonnullRefPtr<Node>);
+
     String to_string() const;
 
 private:
@@ -82,6 +84,7 @@ private:
     ExceptionOr<void> select(Node& node);
 
     ExceptionOr<NonnullRefPtr<DocumentFragment>> extract();
+    ExceptionOr<void> insert(NonnullRefPtr<Node>);
 
     bool contains_node(Node const&) const;
     bool partially_contains_node(Node const&) const;

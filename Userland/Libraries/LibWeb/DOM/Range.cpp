@@ -6,10 +6,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Node.h>
+#include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/Window.h>
@@ -761,6 +763,85 @@ bool Range::partially_contains_node(Node const& node) const
     if (node.is_inclusive_ancestor_of(m_end_container) && &node != m_start_container.ptr())
         return true;
     return false;
+}
+
+// https://dom.spec.whatwg.org/#dom-range-insertnode
+ExceptionOr<void> Range::insert_node(NonnullRefPtr<Node> node)
+{
+    return insert(node);
+}
+
+// https://dom.spec.whatwg.org/#concept-range-insert
+ExceptionOr<void> Range::insert(NonnullRefPtr<Node> node)
+{
+    // 1. If range’s start node is a ProcessingInstruction or Comment node, is a Text node whose parent is null, or is node, then throw a "HierarchyRequestError" DOMException.
+    if ((is<ProcessingInstruction>(*m_start_container) || is<Comment>(*m_start_container))
+        || (is<Text>(*m_start_container) && !m_start_container->parent_node())
+        || m_start_container == node.ptr()) {
+        return DOM::HierarchyRequestError::create("Range has inappropriate start node for insertion");
+    }
+
+    // 2. Let referenceNode be null.
+    RefPtr<Node> reference_node;
+
+    // 3. If range’s start node is a Text node, set referenceNode to that Text node.
+    if (is<Text>(*m_start_container)) {
+        reference_node = m_start_container;
+    }
+    // 4. Otherwise, set referenceNode to the child of start node whose index is start offset, and null if there is no such child.
+    else {
+        reference_node = m_start_container->child_at_index(m_start_offset);
+    }
+
+    // 5. Let parent be range’s start node if referenceNode is null, and referenceNode’s parent otherwise.
+    RefPtr<Node> parent;
+    if (!reference_node)
+        parent = m_start_container;
+    else
+        parent = reference_node->parent();
+
+    // 6. Ensure pre-insertion validity of node into parent before referenceNode.
+    if (auto result = parent->ensure_pre_insertion_validity(node, reference_node); result.is_exception())
+        return result.exception();
+
+    // 7. If range’s start node is a Text node, set referenceNode to the result of splitting it with offset range’s start offset.
+    if (is<Text>(*m_start_container)) {
+        auto result = static_cast<Text&>(*m_start_container).split_text(m_start_offset);
+        if (result.is_exception())
+            return result.exception();
+        reference_node = result.release_value();
+    }
+
+    // 8. If node is referenceNode, set referenceNode to its next sibling.
+    if (node == reference_node)
+        reference_node = reference_node->next_sibling();
+
+    // 9. If node’s parent is non-null, then remove node.
+    if (node->parent())
+        node->remove();
+
+    // 10. Let newOffset be parent’s length if referenceNode is null, and referenceNode’s index otherwise.
+    size_t new_offset = 0;
+    if (!reference_node)
+        new_offset = parent->length();
+    else
+        new_offset = reference_node->index();
+
+    // 11. Increase newOffset by node’s length if node is a DocumentFragment node, and one otherwise.
+    if (is<DocumentFragment>(*node))
+        new_offset += node->length();
+    else
+        new_offset += 1;
+
+    // 12. Pre-insert node into parent before referenceNode.
+    if (auto result = parent->pre_insert(node, reference_node); result.is_exception())
+        return result.exception();
+
+    // 13. If range is collapsed, then set range’s end to (parent, newOffset).
+    if (collapsed())
+        set_end(*parent, new_offset);
+
+    return {};
 }
 
 }
