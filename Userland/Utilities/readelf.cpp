@@ -10,10 +10,12 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
+#include <LibMain/Main.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -224,12 +226,9 @@ static const char* object_relocation_type_to_string(ElfW(Word) type)
     }
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
 
     const char* path;
     static bool display_all = false;
@@ -261,11 +260,11 @@ int main(int argc, char** argv)
     args_parser.add_option(display_hardening, "Display security hardening info", "checksec", 'c');
     args_parser.add_option(string_dump_section, "Display the contents of a section as strings", "string-dump", 'p', "section-name");
     args_parser.add_positional_argument(path, "ELF path", "path");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    if (argc < 3) {
-        args_parser.print_usage(stderr, argv[0]);
-        return -1;
+    if (arguments.argc < 3) {
+        args_parser.print_usage(stderr, arguments.argv[0]);
+        return Error::from_errno(EINVAL);
     }
 
     if (display_headers) {
@@ -336,12 +335,7 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        int fd = open(path, O_RDONLY);
-        if (fd < 0) {
-            outln("Unable to open file {}", path);
-            return 1;
-        }
-
+        int fd = TRY(Core::System::open(path, O_RDONLY));
         auto result = ELF::DynamicLoader::try_create(fd, path);
         if (result.is_error()) {
             outln("{}", result.error().text);
