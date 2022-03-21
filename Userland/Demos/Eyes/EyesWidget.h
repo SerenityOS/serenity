@@ -9,6 +9,7 @@
 
 #include <LibGUI/MouseTracker.h>
 #include <LibGUI/Widget.h>
+#include <LibGfx/AntiAliasingPainter.h>
 
 class EyesWidget final : public GUI::Widget
     , GUI::MouseTracker {
@@ -29,7 +30,7 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void track_mouse_move(Gfx::IntPoint const&) override;
 
-    void render_eyeball(int row, int column, GUI::Painter&) const;
+    void render_eyeball(int row, int column, Gfx::AntiAliasingPainter& aa_painter) const;
     Gfx::IntPoint pupil_center(Gfx::IntRect& eyeball_bounds) const;
 
     Gfx::IntPoint m_mouse_position;

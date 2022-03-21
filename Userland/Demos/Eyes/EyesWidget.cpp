@@ -20,18 +20,19 @@ void EyesWidget::track_mouse_move(Gfx::IntPoint const& point)
 void EyesWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
+    Gfx::AntiAliasingPainter aa_painter { painter };
 
     painter.clear_rect(event.rect(), Gfx::Color());
 
     for (int i = 0; i < m_full_rows; i++) {
         for (int j = 0; j < m_eyes_in_row; j++)
-            render_eyeball(i, j, painter);
+            render_eyeball(i, j, aa_painter);
     }
     for (int i = 0; i < m_extra_columns; ++i)
-        render_eyeball(m_full_rows, i, painter);
+        render_eyeball(m_full_rows, i, aa_painter);
 }
 
-void EyesWidget::render_eyeball(int row, int column, GUI::Painter& painter) const
+void EyesWidget::render_eyeball(int row, int column, Gfx::AntiAliasingPainter& painter) const
 {
     auto eye_width = width() / m_eyes_in_row;
     auto eye_height = height() / m_num_rows;
@@ -40,9 +41,9 @@ void EyesWidget::render_eyeball(int row, int column, GUI::Painter& painter) cons
     auto height_thickness = max(int(eye_height / 5.5), 1);
 
     bounds.shrink(int(eye_width / 12.5), 0);
-    painter.fill_ellipse(bounds, palette().base_text());
+    painter.draw_ellipse(bounds, palette().base_text());
     bounds.shrink(width_thickness, height_thickness);
-    painter.fill_ellipse(bounds, palette().base());
+    painter.draw_ellipse(bounds, palette().base());
 
     Gfx::IntPoint pupil_center = this->pupil_center(bounds);
     Gfx::IntSize pupil_size {
@@ -56,7 +57,7 @@ void EyesWidget::render_eyeball(int row, int column, GUI::Painter& painter) cons
         pupil_size.height()
     };
 
-    painter.fill_ellipse(pupil, palette().base_text());
+    painter.draw_ellipse(pupil, palette().base_text());
 }
 
 Gfx::IntPoint EyesWidget::pupil_center(Gfx::IntRect& eyeball_bounds) const
