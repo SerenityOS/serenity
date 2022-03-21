@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            display: inline-flex;
+            flex-direction: column;
+            width: 60em;
+        }
+
+        .example {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            margin: 4em 5em;
+            background-color: #ccc;
+        }
+
+        .example > style {
+            display: block;
+            font-family: monospace;
+            margin: 0 3em 0 10em;
+        }
+
+        .box {
+            display: block;
+            width: 3em;
+            height: 3em;
+            border: solid 1px;
+            background-color: palegreen;
+        }
+
+        .original {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 20%;
+        }
+    </style>
+</head>
+<body>
+<p>This is based on the examples for <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/transform-origin">transform-origin</a>
+    on MDN</p>
+<div class="container">
+    <div class="example">
+        <div>
+            <div id="box1" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box1 {
+            transform: none;
+        }</style>
+    </div>
+    <div class="example">
+        <div>
+            <div id="box2" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box2 {
+            transform: scale(1.7);
+        }</style>
+    </div>
+    <div class="example">
+        <div>
+            <div id="box3" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box3 {
+            transform: scale(1.7);
+            transform-origin: 0 0;
+        }</style>
+    </div>
+    <div class="example">
+        <div>
+            <div id="box4" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box4 {
+            transform: scale(1.7);
+            transform-origin: 100% -30%;
+        }</style>
+    </div>
+    <div class="example">
+        <div>
+            <div id="box5" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box5 {
+            transform: translate(20px, 20px);
+        }</style>
+    </div>
+    <div class="example">
+        <div>
+            <div id="box6" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box6 {
+            transform: translate(50%, 10%);
+        }</style>
+    </div>
+    <div class="example">
+        <div>
+            <div id="box7" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box7 {
+            transform: rotate(30deg);
+        }</style>
+    </div>
+    <div class="example">
+        <div>
+            <div id="box8" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box8 {
+            transform: rotate(30deg);
+            transform-origin: 0 0;
+        }</style>
+    </div>
+    <div class="example">
+        <div>
+            <div id="box9" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box9 {
+            transform: rotate(30deg);
+            transform-origin: 100% 100%;
+        }</style>
+    </div>
+    <div class="example">
+        <div>
+            <div id="box10" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box10 {
+            transform: rotate(30deg);
+            transform-origin: -1em -3em;
+        }</style>
+    </div>
+    <div class="example">
+        <div>
+            <div id="box11" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box11 {
+            transform: skewX(50deg);
+            transform-origin: 100% -30%;
+        }</style>
+    </div>
+    <div class="example">
+        <div>
+            <div id="box12" class="box">&nbsp;</div>
+            <div class="box original">&nbsp;</div>
+        </div>
+        <style>#box12 {
+            transform: skewY(50deg);
+            transform-origin: 100% -30%;
+        }</style>
+    </div>
+</div>
+</body>
+</html>
