@@ -2530,9 +2530,9 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
                 && s_val.is(Token::Type::Percentage)
                 && l_val.is(Token::Type::Percentage)) {
 
-                auto h = h_val.number_value();
-                auto s = s_val.percentage() / 100.0;
-                auto l = l_val.percentage() / 100.0;
+                auto h = static_cast<float>(h_val.number_value());
+                auto s = static_cast<float>(s_val.percentage() / 100.0f);
+                auto l = static_cast<float>(l_val.percentage() / 100.0f);
                 return Color::from_hsl(h, s, l);
             }
         } else if (function.name().equals_ignoring_case("hsla")) {
@@ -2549,10 +2549,10 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
                 && l_val.is(Token::Type::Percentage)
                 && a_val.is(Token::Type::Number)) {
 
-                auto h = h_val.number_value();
-                auto s = s_val.percentage() / 100.0;
-                auto l = l_val.percentage() / 100.0;
-                auto a = a_val.number_value();
+                auto h = static_cast<float>(h_val.number_value());
+                auto s = static_cast<float>(s_val.percentage() / 100.0f);
+                auto l = static_cast<float>(l_val.percentage() / 100.0f);
+                auto a = static_cast<float>(a_val.number_value());
                 return Color::from_hsla(h, s, l, a);
             }
         }
