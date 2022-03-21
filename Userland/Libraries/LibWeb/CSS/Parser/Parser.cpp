@@ -4976,9 +4976,22 @@ RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const& context, Str
 
 RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const& document, StringView string)
 {
+    if (string.is_null())
+        return nullptr;
+
     auto integer = string.to_int();
     if (integer.has_value())
         return CSS::LengthStyleValue::create(CSS::Length::make_px(integer.value()));
+
+    {
+        // FIXME: This is both ad-hoc and inefficient (note the String allocation!)
+        String string_copy(string);
+        char const* endptr = nullptr;
+        auto double_value = strtod(string_copy.characters(), const_cast<char**>(&endptr));
+        if (endptr != string_copy.characters())
+            return CSS::LengthStyleValue::create(CSS::Length::make_px(double_value));
+    }
+
     return parse_css_value(CSS::ParsingContext(document), string);
 }
 
