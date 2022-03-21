@@ -2841,6 +2841,7 @@ using namespace Web::NavigationTiming;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
+using namespace Web::SVG;
 using namespace Web::URL;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
