@@ -55,6 +55,10 @@ if (ENABLE_LAGOM_CCACHE)
     endif()
 endif()
 
+if (ENABLE_FUZZERS_LIBFUZZER OR ENABLE_FUZZERS_OSSFUZZ)
+	set(ENABLE_FUZZERS ON)
+endif()
+
 include(wasm_spec_tests)
 
 add_compile_options(-fsigned-char)
@@ -64,7 +68,7 @@ add_compile_options(-Wall -Wextra -Werror)
 add_compile_options(-fPIC -g)
 add_compile_options(-Wno-maybe-uninitialized)
 add_compile_options(-fno-exceptions)
-if (NOT ENABLE_FUZZERS_LIBFUZZER)
+if (NOT ENABLE_FUZZERS)
     add_compile_options(-fno-semantic-interposition)
 endif()
 
@@ -105,12 +109,16 @@ if (ENABLE_UNDEFINED_SANITIZER)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
 endif()
 
+if (ENABLE_FUZZERS)
+    add_compile_options(-fno-omit-frame-pointer)
+endif()
+
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
     add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals -fconstexpr-steps=16777216)
 
     if (ENABLE_FUZZERS_LIBFUZZER)
-        add_compile_options(-fsanitize=fuzzer -fno-omit-frame-pointer)
+        add_compile_options(-fsanitize=fuzzer)
         set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=fuzzer")
     endif()
 
@@ -119,7 +127,8 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (ENABLE_FUZZERS_LIBFUZZER)
         message(FATAL_ERROR
             "Fuzzer Sanitizer (-fsanitize=fuzzer) is only supported for Fuzzer targets with LLVM. "
-            "Reconfigure CMake with -DCMAKE_C_COMPILER and -DCMAKE_CXX_COMPILER pointing to a clang-based toolchain"
+            "Reconfigure CMake with -DCMAKE_C_COMPILER and -DCMAKE_CXX_COMPILER pointing to a clang-based toolchain "
+	    "or build binaries without built-in fuzzing support by setting -DENABLE_FUZZERS instead."
         )
     endif()
 endif()
@@ -173,7 +182,7 @@ function(lagom_lib library fs_name)
 
     # Don't make alias when we're going to import a previous build for Tools
     # FIXME: Is there a better way to write this?
-    if (NOT ENABLE_FUZZERS_OSSFUZZ AND NOT ENABLE_FUZZERS_LIBFUZZER)
+    if (NOT ENABLE_FUZZERS)
         # alias for parity with exports
         add_library(Lagom::${library} ALIAS ${target_name})
     endif()
@@ -272,7 +281,7 @@ install(
 # Code Generators and other host tools
 # We need to make sure not to build code generators for Fuzzer builds, as they already have their own main.cpp
 # Instead, we import them from a previous install of Lagom. This mandates a two-stage build for fuzzers.
-if (ENABLE_FUZZERS_OSSFUZZ OR ENABLE_FUZZERS_LIBFUZZER)
+if (ENABLE_FUZZERS)
     find_package(Lagom REQUIRED)
 else()
     add_subdirectory(Tools)
@@ -483,7 +492,7 @@ if (BUILD_LAGOM)
     lagom_lib(XML xml
         SOURCES ${LIBXML_SOURCES})
 
-    if (NOT ENABLE_FUZZERS_OSSFUZZ AND NOT ENABLE_FUZZERS_LIBFUZZER AND NOT ENABLE_COMPILER_EXPLORER_BUILD)
+    if (NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD)
         # Lagom Examples
         add_executable(TestApp TestApp.cpp)
         target_link_libraries(TestApp LagomCore)
@@ -711,6 +720,6 @@ if (BUILD_LAGOM)
     endif()
 endif()
 
-if (ENABLE_FUZZERS_LIBFUZZER OR ENABLE_FUZZERS_OSSFUZZ)
+if (ENABLE_FUZZERS)
     add_subdirectory(Fuzzers)
 endif()
