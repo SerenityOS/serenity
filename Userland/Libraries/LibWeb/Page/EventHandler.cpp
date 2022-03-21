@@ -182,7 +182,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
     if (paintable) {
         RefPtr<DOM::Node> node = paintable->mouse_event_target();
         if (!node)
-            node = paintable->layout_node().dom_node();
+            node = paintable->dom_node();
 
         if (node) {
             if (is<HTML::HTMLIFrameElement>(*node)) {
@@ -235,7 +235,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
 
         node = paintable->mouse_event_target();
         if (!node)
-            node = paintable->layout_node().dom_node();
+            node = paintable->dom_node();
         document->set_hovered_node(node);
 
         if (paintable->wants_mouse_events()) {
@@ -357,7 +357,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     const HTML::HTMLAnchorElement* hovered_link_element = nullptr;
     if (paintable) {
         if (paintable->wants_mouse_events()) {
-            document.set_hovered_node(paintable->layout_node().dom_node());
+            document.set_hovered_node(paintable->dom_node());
             if (paintable->handle_mousemove({}, position, buttons, modifiers) == Painting::Paintable::DispatchEventOfSameName::No)
                 return false;
 
@@ -368,7 +368,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
 
         RefPtr<DOM::Node> node = paintable->mouse_event_target();
         if (!node)
-            node = paintable->layout_node().dom_node();
+            node = paintable->dom_node();
 
         if (node && is<HTML::HTMLIFrameElement>(*node)) {
             if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
