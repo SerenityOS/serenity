@@ -9,6 +9,7 @@
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Range.h>
+#include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/Window.h>
 
 namespace Web::DOM {
@@ -496,6 +497,35 @@ ExceptionOr<i16> Range::compare_point(Node const& node, u32 offset) const
 
     // 6. Return 0.
     return 0;
+}
+
+// https://dom.spec.whatwg.org/#dom-range-stringifier
+String Range::to_string() const
+{
+    // 1. Let s be the empty string.
+    StringBuilder builder;
+
+    // 2. If this’s start node is this’s end node and it is a Text node,
+    //    then return the substring of that Text node’s data beginning at this’s start offset and ending at this’s end offset.
+    if (start_container() == end_container() && is<Text>(*start_container()))
+        return static_cast<Text const&>(*start_container()).data().substring(start_offset(), end_offset());
+
+    // 3. If this’s start node is a Text node, then append the substring of that node’s data from this’s start offset until the end to s.
+    if (is<Text>(*start_container()))
+        builder.append(static_cast<Text const&>(*start_container()).data().substring_view(start_offset()));
+
+    // 4. Append the concatenation of the data of all Text nodes that are contained in this, in tree order, to s.
+    for (Node const* node = start_container()->next_in_pre_order(); node && node != end_container(); node = node->next_in_pre_order()) {
+        if (is<Text>(*node))
+            builder.append(static_cast<Text const&>(*node).data());
+    }
+
+    // 5. If this’s end node is a Text node, then append the substring of that node’s data from its start until this’s end offset to s.
+    if (is<Text>(*end_container()))
+        builder.append(static_cast<Text const&>(*end_container()).data().substring_view(0, end_offset()));
+
+    // 6. Return s.
+    return builder.to_string();
 }
 
 }

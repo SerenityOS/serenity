@@ -61,6 +61,8 @@ public:
     ExceptionOr<bool> is_point_in_range(Node const&, u32 offset) const;
     ExceptionOr<i16> compare_point(Node const&, u32 offset) const;
 
+    String to_string() const;
+
 private:
     explicit Range(Document&);
 
