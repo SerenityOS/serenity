@@ -37,18 +37,15 @@ StyleBlockRule::StyleBlockRule() = default;
 StyleBlockRule::~StyleBlockRule() = default;
 
 StyleComponentValueRule::StyleComponentValueRule(Token token)
-    : m_type(StyleComponentValueRule::ComponentType::Token)
-    , m_token(token)
+    : m_value(token)
 {
 }
 StyleComponentValueRule::StyleComponentValueRule(NonnullRefPtr<StyleFunctionRule> function)
-    : m_type(StyleComponentValueRule::ComponentType::Function)
-    , m_function(function)
+    : m_value(function)
 {
 }
 StyleComponentValueRule::StyleComponentValueRule(NonnullRefPtr<StyleBlockRule> block)
-    : m_type(StyleComponentValueRule::ComponentType::Block)
-    , m_block(block)
+    : m_value(block)
 {
 }
 StyleComponentValueRule::~StyleComponentValueRule() = default;
@@ -129,38 +126,24 @@ String StyleBlockRule::to_string() const
 
 String StyleComponentValueRule::to_string() const
 {
-    switch (m_type) {
-    case StyleComponentValueRule::ComponentType::Token:
-        return m_token.to_string();
-    case StyleComponentValueRule::ComponentType::Function:
-        return m_function->to_string();
-    case StyleComponentValueRule::ComponentType::Block:
-        return m_block->to_string();
-    default:
-        VERIFY_NOT_REACHED();
-    }
+    return m_value.visit(
+        [](Token const& token) { return token.to_string(); },
+        [](NonnullRefPtr<StyleBlockRule> const& block) { return block->to_string(); },
+        [](NonnullRefPtr<StyleFunctionRule> const& function) { return function->to_string(); });
 }
 
 String StyleComponentValueRule::to_debug_string() const
 {
-    StringBuilder builder;
-
-    switch (m_type) {
-    case ComponentType::Token:
-        builder.append("Token: ");
-        builder.append(m_token.to_debug_string());
-        break;
-    case ComponentType::Function:
-        builder.append("Function: ");
-        builder.append(m_function->to_string());
-        break;
-    case ComponentType::Block:
-        builder.append("Block: ");
-        builder.append(m_block->to_string());
-        break;
-    }
-
-    return builder.to_string();
+    return m_value.visit(
+        [](Token const& token) {
+            return String::formatted("Token: {}", token.to_debug_string());
+        },
+        [](NonnullRefPtr<StyleBlockRule> const& block) {
+            return String::formatted("Function: {}", block->to_string());
+        },
+        [](NonnullRefPtr<StyleFunctionRule> const& function) {
+            return String::formatted("Block: {}", function->to_string());
+        });
 }
 
 String StyleDeclarationRule::to_string() const
