@@ -317,6 +317,7 @@ set(SOURCES
     SVG/SVGPathElement.cpp
     SVG/SVGCircleElement.cpp
     SVG/SVGEllipseElement.cpp
+    SVG/SVGLength.cpp
     SVG/SVGLineElement.cpp
     SVG/SVGPolygonElement.cpp
     SVG/SVGPolylineElement.cpp
@@ -575,6 +576,7 @@ libweb_js_wrapper(SVG/SVGGeometryElement)
 libweb_js_wrapper(SVG/SVGGraphicsElement)
 libweb_js_wrapper(SVG/SVGCircleElement)
 libweb_js_wrapper(SVG/SVGEllipseElement)
+libweb_js_wrapper(SVG/SVGLength)
 libweb_js_wrapper(SVG/SVGLineElement)
 libweb_js_wrapper(SVG/SVGPathElement)
 libweb_js_wrapper(SVG/SVGPolygonElement)
