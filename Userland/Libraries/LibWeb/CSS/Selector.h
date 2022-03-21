@@ -85,12 +85,12 @@ public:
 
             // FIXME: We don't need this field on every single SimpleSelector, but it's also annoying to malloc it somewhere.
             // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
-            ANPlusBPattern nth_child_pattern;
+            ANPlusBPattern nth_child_pattern {};
 
             SelectorList argument_selector_list {};
 
             // Used for :lang(en-gb,dk)
-            Vector<FlyString> languages;
+            Vector<FlyString> languages {};
         };
 
         struct Attribute {
