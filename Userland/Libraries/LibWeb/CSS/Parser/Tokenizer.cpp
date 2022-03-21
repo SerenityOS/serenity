@@ -582,7 +582,7 @@ double Tokenizer::convert_a_string_to_a_number(StringView string)
     // 2. An integer part: zero or more digits.
     //    If there is at least one digit, let i [integer_part] be the number formed by interpreting the digits
     //    as a base-10 integer; otherwise, let i be the number 0.
-    double integer_part = 0;
+    i64 integer_part = 0;
     while (is_ascii_digit(code_point_at(position))) {
         integer_part = (integer_part * 10) + (code_point_at(position) - '0');
         position++;
@@ -595,7 +595,7 @@ double Tokenizer::convert_a_string_to_a_number(StringView string)
     // 4. A fractional part: zero or more digits.
     //    If there is at least one digit, let f [fractional_part] be the number formed by interpreting the digits
     //    as a base-10 integer and d [fractional_digits] be the number of digits; otherwise, let f and d be the number 0.
-    double fractional_part = 0;
+    i64 fractional_part = 0;
     int fractional_digits = 0;
     while (is_ascii_digit(code_point_at(position))) {
         fractional_part = (fractional_part * 10) + (code_point_at(position) - '0');
@@ -619,7 +619,7 @@ double Tokenizer::convert_a_string_to_a_number(StringView string)
     // 7. An exponent: zero or more digits.
     //    If there is at least one digit, let e [exponent] be the number formed by interpreting the digits as a
     //    base-10 integer; otherwise, let e be the number 0.
-    double exponent = 0;
+    i64 exponent = 0;
     while (is_ascii_digit(code_point_at(position))) {
         exponent = (exponent * 10) + (code_point_at(position) - '0');
         position++;
