@@ -127,9 +127,6 @@ protected:
     virtual void paint_box_shadow(PaintContext&) const;
 
 private:
-    template<typename Callback>
-    void for_each_child_in_paint_order(Callback) const;
-
     Painting::BorderRadiusData normalized_border_radius_data() const;
 
     OwnPtr<Painting::StackingContext> m_stacking_context;
