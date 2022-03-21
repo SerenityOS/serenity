@@ -8,6 +8,8 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
@@ -19,12 +21,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio id inet unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio id inet unix"));
 
     const char* host_name;
     int max_hops = 30;
@@ -36,16 +35,14 @@ int main(int argc, char** argv)
     args_parser.add_option(max_hops, "use at most <hops> to the destination", "max-hops", 'h', "hops");
     args_parser.add_option(max_retries, "retry TTL at most <tries> times", "max-retries", 'r', "tries");
     args_parser.add_option(echo_timeout, "wait at most <seconds> for a response", "timeout", 't', "seconds");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (max_hops < 1 || max_hops > 255) {
-        warnln("Invalid maximum hops amount");
-        return 1;
+        return Error::from_string_literal("Invalid maximum hops amount");
     }
 
     if (max_retries < 1) {
-        warnln("Invalid maximum retries amount");
-        return 1;
+        return Error::from_string_literal("Invalid maximum retries amount");
     }
 
     auto* hostent = gethostbyname(host_name);
@@ -54,32 +51,17 @@ int main(int argc, char** argv)
         return 1;
     }
     sockaddr_in host_address {};
-    memset(&host_address, 0, sizeof(host_address));
     host_address.sin_family = AF_INET;
     host_address.sin_port = 44444;
     host_address.sin_addr.s_addr = *(const in_addr_t*)hostent->h_addr_list[0];
 
-    int fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-    if (fd < 0) {
-        perror("socket");
-        return 1;
-    }
+    int fd = TRY(Core::System::socket(AF_INET, SOCK_RAW, IPPROTO_ICMP));
 
-    if (setgid(getgid()) || setuid(getuid())) {
-        warnln("Failed to drop privileges");
-        return 1;
-    }
-
-    if (pledge("stdio inet unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::drop_privileges());
+    TRY(Core::System::pledge("stdio inet unix"));
 
     timeval timeout { echo_timeout, 0 };
-    if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-        perror("setsockopt");
-        return 1;
-    }
+    TRY(Core::System::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
 
     struct icmp_request {
         struct icmphdr header;
@@ -95,34 +77,34 @@ int main(int argc, char** argv)
     // 1: reached target
     // 0: got ttl exhausted response
     // -1: error or no response
-    auto try_reach_host = [&](int ttl) -> int {
+    auto try_reach_host = [&](int ttl) -> ErrorOr<int> {
         Core::ElapsedTimer m_timer { true };
+        auto ttl_number = String::number(ttl);
         for (auto i = 0; i < max_retries; i++) {
             icmp_request request {};
             request.header = { ICMP_ECHO, 0, 0, { { 0, 0 } } };
-            bool fits = String::number(ttl).copy_characters_to_buffer(request.msg, sizeof(request.msg));
+            bool fits = ttl_number.copy_characters_to_buffer(request.msg, sizeof(request.msg));
             VERIFY(fits);
             request.header.checksum = internet_checksum(&request, sizeof(request));
 
             m_timer.start();
-            if (sendto(fd, &request, sizeof(request), 0, (sockaddr*)&host_address, sizeof(host_address)) < 0)
-                return -1;
+            TRY(Core::System::sendto(fd, &request, sizeof(request), 0, (sockaddr*)&host_address, sizeof(host_address)));
 
             icmp_response response {};
             sockaddr_in peer_address {};
-            memset(&peer_address, 0, sizeof(peer_address));
-            size_t peer_address_size = sizeof(peer_address);
-            int result = recvfrom(fd, &response, sizeof(response), 0, (sockaddr*)&peer_address, (socklen_t*)&peer_address_size);
-            if (result < 0) {
-                if (errno == EAGAIN)
-                    return -1;
+            socklen_t peer_address_size = sizeof(peer_address);
+
+            auto result = Core::System::recvfrom(fd, &response, sizeof(response), 0, (sockaddr*)&peer_address, &peer_address_size);
+            if (result.is_error()) {
+                if (result.error().code() == EAGAIN)
+                    return result.release_error();
                 continue;
             }
-            auto response_time = m_timer.elapsed();
 
             if (response.header.type != ICMP_ECHOREPLY && response.header.type != ICMP_TIME_EXCEEDED)
                 continue;
 
+            auto response_time = m_timer.elapsed();
             auto* peer = gethostbyaddr(&peer_address.sin_addr, sizeof(peer_address.sin_addr), AF_INET);
 
             String peer_name;
@@ -143,12 +125,9 @@ int main(int argc, char** argv)
     };
 
     for (auto ttl = 1; ttl <= max_hops; ttl++) {
-        if (setsockopt(fd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0) {
-            perror("setsockopt");
-            return 1;
-        }
+        TRY(Core::System::setsockopt(fd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)));
 
-        int result = try_reach_host(ttl);
+        int result = TRY(try_reach_host(ttl));
         if (result < 0) {
             outln("{:2}:  no reply", ttl);
         } else if (result == 1) {
