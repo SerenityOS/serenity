@@ -550,12 +550,13 @@ Optional<HitTestResult> PaintableWithLines::hit_test(const Gfx::FloatPoint& posi
         for (auto& fragment : line_box.fragments()) {
             if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paint_box()->stacking_context())
                 continue;
-            if (fragment.absolute_rect().contains(position)) {
+            auto fragment_absolute_rect = fragment.absolute_rect();
+            if (fragment_absolute_rect.contains(position)) {
                 if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
                     return fragment.layout_node().paintable()->hit_test(position, type);
                 return HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
             }
-            if (fragment.absolute_rect().top() <= position.y())
+            if (fragment_absolute_rect.top() <= position.y())
                 last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
         }
     }
