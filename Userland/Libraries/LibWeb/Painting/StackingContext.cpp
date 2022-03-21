@@ -143,74 +143,78 @@ void StackingContext::paint_internal(PaintContext& context) const
 
 Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformation const& transformation) const
 {
-    Vector<float> float_values;
-    for (auto const& value : transformation.values) {
-        value.visit(
-            [&](CSS::Length const& value) {
-                float_values.append(value.to_px(m_box));
+    auto count = transformation.values.size();
+    auto value = [this, transformation](size_t index, CSS::Length& reference) -> float {
+        return transformation.values[index].visit(
+            [this, reference](CSS::LengthPercentage const& value) {
+                return value.resolved(m_box, reference).to_px(m_box);
             },
-            [&](float value) {
-                float_values.append(value);
+            [](float value) {
+                return value;
             });
-    }
+    };
+
+    auto reference_box = m_box.paint_box()->absolute_rect();
+    auto width = CSS::Length::make_px(reference_box.width());
+    auto height = CSS::Length::make_px(reference_box.height());
 
     switch (transformation.function) {
     case CSS::TransformFunction::Matrix:
-        if (float_values.size() == 6)
-            return Gfx::FloatMatrix4x4(float_values[0], float_values[2], 0, float_values[4],
-                float_values[1], float_values[3], 0, float_values[5],
+        if (count == 6)
+            return Gfx::FloatMatrix4x4(value(0, width), value(2, width), 0, value(4, width),
+                value(1, height), value(3, height), 0, value(5, height),
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::Translate:
-        if (float_values.size() == 1)
-            return Gfx::FloatMatrix4x4(1, 0, 0, float_values[0],
+        if (count == 1)
+            return Gfx::FloatMatrix4x4(1, 0, 0, value(0, width),
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
-        if (float_values.size() == 2)
-            return Gfx::FloatMatrix4x4(1, 0, 0, float_values[0],
-                0, 1, 0, float_values[1],
+        if (count == 2)
+            return Gfx::FloatMatrix4x4(1, 0, 0, value(0, width),
+                0, 1, 0, value(1, height),
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::TranslateX:
-        if (float_values.size() == 1)
-            return Gfx::FloatMatrix4x4(1, 0, 0, float_values[0],
+        if (count == 1)
+            return Gfx::FloatMatrix4x4(1, 0, 0, value(0, width),
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::TranslateY:
-        if (float_values.size() == 1)
+        if (count == 1)
             return Gfx::FloatMatrix4x4(1, 0, 0, 0,
-                0, 1, 0, float_values[0],
+                0, 1, 0, value(0, height),
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::Scale:
-        if (float_values.size() == 1)
-            return Gfx::FloatMatrix4x4(float_values[0], 0, 0, 0,
-                0, float_values[0], 0, 0,
+        if (count == 1)
+            return Gfx::FloatMatrix4x4(value(0, width), 0, 0, 0,
+                0, value(0, height), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
-        if (float_values.size() == 2)
-            return Gfx::FloatMatrix4x4(float_values[0], 0, 0, 0,
-                0, float_values[1], 0, 0,
+        if (count == 2)
+            return Gfx::FloatMatrix4x4(value(0, width), 0, 0, 0,
+                0, value(0, height), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::ScaleX:
-        if (float_values.size() == 1)
-            return Gfx::FloatMatrix4x4(float_values[0], 0, 0, 0,
+        if (count == 1)
+            return Gfx::FloatMatrix4x4(value(0, width), 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
     case CSS::TransformFunction::ScaleY:
-        if (float_values.size() == 1)
+        if (count == 1)
             return Gfx::FloatMatrix4x4(1, 0, 0, 0,
-                0, float_values[0], 0, 0,
+                0, value(0, height), 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1);
         break;
