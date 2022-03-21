@@ -5,10 +5,11 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibMain/Main.h>
 #include <serenity.h>
 #include <stdio.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     int mode = 0;
 
@@ -18,7 +19,7 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_option(purge_all_volatile, "Mode PURGE_ALL_VOLATILE", nullptr, 'v');
     args_parser.add_option(purge_all_clean_inode, "Mode PURGE_ALL_CLEAN_INODE", nullptr, 'c');
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (!purge_all_volatile && !purge_all_clean_inode)
         purge_all_volatile = purge_all_clean_inode = true;
