@@ -77,31 +77,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         payload_size = 32 - sizeof(struct icmphdr);
     }
 
-    int fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-    if (fd < 0) {
-        perror("socket");
-        return 1;
-    }
+    int fd = TRY(Core::System::socket(AF_INET, SOCK_RAW, IPPROTO_ICMP));
 
-    if (setgid(getgid()) || setuid(getuid())) {
-        warnln("Failed to drop privileges.");
-        return 1;
-    }
-
-    if (pledge("stdio inet unix sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::drop_privileges());
+    TRY(Core::System::pledge("stdio inet unix sigaction"));
 
     struct timeval timeout {
         1, 0
     };
 
-    int rc = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-    if (rc < 0) {
-        perror("setsockopt");
-        return 1;
-    }
+    TRY(Core::System::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
 
     auto* hostent = gethostbyname(host);
     if (!hostent) {
@@ -109,30 +94,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    if (pledge("stdio inet sigaction", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio inet sigaction"));
 
     pid_t pid = getpid();
 
-    sockaddr_in peer_address;
-    memset(&peer_address, 0, sizeof(peer_address));
+    sockaddr_in peer_address {};
     peer_address.sin_family = AF_INET;
     peer_address.sin_port = 0;
-
     peer_address.sin_addr.s_addr = *(const in_addr_t*)hostent->h_addr_list[0];
 
     uint16_t seq = 1;
 
-    sighandler_t ret = signal(SIGINT, [](int) {
+    TRY(Core::System::signal(SIGINT, [](int) {
         closing_statistics();
-    });
-
-    if (ret == SIG_ERR) {
-        perror("failed to install SIGINT handler");
-        return 1;
-    }
+    }));
 
     for (;;) {
         auto ping_packet_result = ByteBuffer::create_zeroed(sizeof(struct icmphdr) + payload_size);
@@ -162,11 +137,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         else
             total_pings++;
 
-        rc = sendto(fd, ping_packet.data(), ping_packet.size(), 0, (const struct sockaddr*)&peer_address, sizeof(sockaddr_in));
-        if (rc < 0) {
-            perror("sendto");
-            return 1;
-        }
+        TRY(Core::System::sendto(fd, ping_packet.data(), ping_packet.size(), 0, (const struct sockaddr*)&peer_address, sizeof(sockaddr_in)));
 
         for (;;) {
             auto pong_packet_result = ByteBuffer::create_uninitialized(
@@ -177,14 +148,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             auto& pong_packet = pong_packet_result.value();
             socklen_t peer_address_size = sizeof(peer_address);
-            rc = recvfrom(fd, pong_packet.data(), pong_packet.size(), 0, (struct sockaddr*)&peer_address, &peer_address_size);
-            if (rc < 0) {
-                if (errno == EAGAIN) {
+            auto result = Core::System::recvfrom(fd, pong_packet.data(), pong_packet.size(), 0, (struct sockaddr*)&peer_address, &peer_address_size);
+            if (result.is_error()) {
+                if (result.error().code() == EAGAIN) {
                     outln("Request (seq={}) timed out.", ntohs(ping_hdr->un.echo.sequence));
                     break;
                 }
-                perror("recvfrom");
-                return 1;
+                return result.release_error();
             }
 
             i8 internet_header_length = *pong_packet.data() & 0x0F;
@@ -229,7 +199,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 ntohs(pong_hdr->un.echo.id),
                 ntohs(pong_hdr->un.echo.sequence),
                 pong_hdr->un.echo.sequence != ping_hdr->un.echo.sequence ? "(!)" : "",
-                ms, rc);
+                ms, result.value());
 
             // If this was a response to an earlier packet, we still need to wait for the current one.
             if (pong_hdr->un.echo.sequence != ping_hdr->un.echo.sequence)
