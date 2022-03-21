@@ -726,6 +726,17 @@ ErrorOr<pid_t> setsid()
     return rc;
 }
 
+ErrorOr<void> drop_privileges()
+{
+    auto gid_result = setgid(getgid());
+    auto uid_result = setuid(getuid());
+
+    if (gid_result.is_error() || uid_result.is_error())
+        return Error::from_string_literal("Failed to drop privileges");
+
+    return {};
+}
+
 ErrorOr<bool> isatty(int fd)
 {
     int rc = ::isatty(fd);
