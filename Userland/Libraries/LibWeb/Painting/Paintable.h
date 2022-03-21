@@ -22,7 +22,7 @@ enum class PaintPhase {
 };
 
 struct HitTestResult {
-    RefPtr<Painting::Paintable> paintable;
+    NonnullRefPtr<Painting::Paintable> paintable;
     int index_in_node { 0 };
 
     enum InternalPosition {
@@ -50,7 +50,7 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) const { }
 
-    virtual HitTestResult hit_test(Gfx::FloatPoint const&, HitTestType) const;
+    virtual Optional<HitTestResult> hit_test(Gfx::FloatPoint const&, HitTestType) const;
 
     virtual bool wants_mouse_events() const { return false; }
 

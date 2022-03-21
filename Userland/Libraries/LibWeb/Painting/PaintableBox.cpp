@@ -528,30 +528,31 @@ void PaintableBox::for_each_child_in_paint_order(Callback callback) const
     });
 }
 
-HitTestResult PaintableBox::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
+Optional<HitTestResult> PaintableBox::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
     if (layout_box().is_initial_containing_block_box()) {
         const_cast<Layout::InitialContainingBlock&>(static_cast<Layout::InitialContainingBlock const&>(layout_box())).build_stacking_context_tree_if_needed();
         return stacking_context()->hit_test(position, type);
     }
 
-    HitTestResult result { absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
+    Optional<HitTestResult> result;
+    if (absolute_border_box_rect().contains(position.x(), position.y()))
+        result = HitTestResult { *this };
     for_each_child_in_paint_order([&](auto& child) {
         if (child.paintable()) {
-            auto child_result = child.paintable()->hit_test(position, type);
-            if (child_result.paintable)
-                result = child_result;
+            if (auto child_result = child.paintable()->hit_test(position, type); child_result.has_value())
+                result = move(child_result);
         }
     });
     return result;
 }
 
-HitTestResult PaintableWithLines::hit_test(const Gfx::FloatPoint& position, HitTestType type) const
+Optional<HitTestResult> PaintableWithLines::hit_test(const Gfx::FloatPoint& position, HitTestType type) const
 {
     if (!layout_box().children_are_inline())
         return PaintableBox::hit_test(position, type);
 
-    HitTestResult last_good_candidate;
+    Optional<HitTestResult> last_good_candidate;
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
             if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paint_box()->stacking_context())
@@ -559,16 +560,18 @@ HitTestResult PaintableWithLines::hit_test(const Gfx::FloatPoint& position, HitT
             if (fragment.absolute_rect().contains(position)) {
                 if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
                     return fragment.layout_node().paintable()->hit_test(position, type);
-                return { fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
+                return HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
             }
             if (fragment.absolute_rect().top() <= position.y())
-                last_good_candidate = { fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
+                last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
         }
     }
 
-    if (type == HitTestType::TextCursor && last_good_candidate.paintable)
+    if (type == HitTestType::TextCursor && last_good_candidate.has_value())
         return last_good_candidate;
-    return { absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
+    if (absolute_border_box_rect().contains(position.x(), position.y()))
+        return HitTestResult { *this };
+    return {};
 }
 
 }
