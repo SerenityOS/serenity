@@ -38,10 +38,17 @@ public:
 public:
     ~MBRPartitionTable();
 
+#ifdef KERNEL
     static ErrorOr<NonnullOwnPtr<MBRPartitionTable>> try_to_initialize(Kernel::StorageDevice const&);
     static OwnPtr<MBRPartitionTable> try_to_initialize(Kernel::StorageDevice const&, u32 start_lba);
     explicit MBRPartitionTable(Kernel::StorageDevice const&);
     MBRPartitionTable(Kernel::StorageDevice const&, u32 start_lba);
+#else
+    static ErrorOr<NonnullOwnPtr<MBRPartitionTable>> try_to_initialize(NonnullRefPtr<Core::File>);
+    static OwnPtr<MBRPartitionTable> try_to_initialize(NonnullRefPtr<Core::File>, u32 start_lba);
+    explicit MBRPartitionTable(NonnullRefPtr<Core::File>);
+    MBRPartitionTable(NonnullRefPtr<Core::File>, u32 start_lba);
+#endif
 
     bool is_protective_mbr() const;
     bool contains_ebr() const;
