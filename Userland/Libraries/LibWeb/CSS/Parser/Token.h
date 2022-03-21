@@ -9,6 +9,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/String.h>
+#include <AK/Utf8View.h>
 #include <math.h>
 
 namespace Web::CSS {
@@ -76,10 +77,10 @@ public:
         return m_value.view();
     }
 
-    StringView delim() const
+    u32 delim() const
     {
         VERIFY(m_type == Type::Delim);
-        return m_value.view();
+        return *Utf8View(m_value.view()).begin();
     }
 
     StringView string() const
@@ -170,7 +171,7 @@ private:
         // When a value cannot be explicitly supported due to range/precision limitations, it must be converted
         // to the closest value supported by the implementation, but how the implementation defines "closest"
         // is explicitly undefined as well.
-        return static_cast<i64>(clamp(round(value), NumericLimits<i64>::min(), NumericLimits<i64>::max()));
+        return llround(value);
     }
 
     Type m_type { Type::Invalid };
