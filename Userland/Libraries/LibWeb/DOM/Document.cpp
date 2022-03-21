@@ -585,8 +585,6 @@ void Document::update_layout()
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Normal);
     formatting_state.commit();
 
-    m_layout_root->build_stacking_context_tree();
-
     browsing_context()->set_needs_display();
 
     if (browsing_context()->is_top_level()) {

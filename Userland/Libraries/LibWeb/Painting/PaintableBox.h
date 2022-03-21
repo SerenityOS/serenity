@@ -117,6 +117,8 @@ public:
 
     virtual HitTestResult hit_test(Gfx::FloatPoint const&, HitTestType) const override;
 
+    void invalidate_stacking_context();
+
 protected:
     explicit PaintableBox(Layout::Box const&);
 

@@ -18,13 +18,19 @@ InitialContainingBlock::InitialContainingBlock(DOM::Document& document, NonnullR
 
 InitialContainingBlock::~InitialContainingBlock() = default;
 
+void InitialContainingBlock::build_stacking_context_tree_if_needed()
+{
+    if (paint_box()->stacking_context())
+        return;
+    build_stacking_context_tree();
+}
+
 void InitialContainingBlock::build_stacking_context_tree()
 {
     const_cast<Painting::PaintableWithLines*>(paint_box())->set_stacking_context(make<Painting::StackingContext>(*this, nullptr));
 
-    for_each_in_inclusive_subtree_of_type<Box>([&](Box& box) {
-        if (&box == this)
-            return IterationDecision::Continue;
+    for_each_in_subtree_of_type<Box>([&](Box& box) {
+        const_cast<Painting::PaintableBox*>(box.paint_box())->invalidate_stacking_context();
         if (!box.establishes_stacking_context()) {
             VERIFY(!box.paint_box()->stacking_context());
             return IterationDecision::Continue;
@@ -40,6 +46,7 @@ void InitialContainingBlock::build_stacking_context_tree()
 
 void InitialContainingBlock::paint_all_phases(PaintContext& context)
 {
+    build_stacking_context_tree_if_needed();
     context.painter().fill_rect(enclosing_int_rect(paint_box()->absolute_rect()), context.palette().base());
     context.painter().translate(-context.viewport_rect().location());
     paint_box()->stacking_context()->paint(context);

@@ -7,6 +7,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/ShadowPainting.h>
@@ -26,6 +27,11 @@ PaintableBox::PaintableBox(Layout::Box const& layout_box)
 
 PaintableBox::~PaintableBox()
 {
+}
+
+void PaintableBox::invalidate_stacking_context()
+{
+    m_stacking_context = nullptr;
 }
 
 PaintableWithLines::PaintableWithLines(Layout::BlockContainer const& layout_box)
@@ -524,8 +530,10 @@ void PaintableBox::for_each_child_in_paint_order(Callback callback) const
 
 HitTestResult PaintableBox::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
-    if (layout_box().is_initial_containing_block_box())
+    if (layout_box().is_initial_containing_block_box()) {
+        const_cast<Layout::InitialContainingBlock&>(static_cast<Layout::InitialContainingBlock const&>(layout_box())).build_stacking_context_tree_if_needed();
         return stacking_context()->hit_test(position, type);
+    }
 
     HitTestResult result { absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
     for_each_child_in_paint_order([&](auto& child) {
