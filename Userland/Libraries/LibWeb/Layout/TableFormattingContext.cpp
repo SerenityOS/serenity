@@ -101,7 +101,9 @@ void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_wi
 
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         auto& cell_state = m_state.get_mutable(cell);
-        cell_state.offset = row_state.offset.translated(content_width, 0);
+
+        BlockFormattingContext::compute_height(cell, m_state);
+        cell_state.offset = row_state.offset.translated(cell_state.border_box_left() + content_width, cell_state.border_box_top());
 
         // Layout the cell contents a second time, now that we know its final width.
         if (use_auto_layout) {
@@ -109,8 +111,6 @@ void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_wi
         } else {
             (void)layout_inside(cell, LayoutMode::Normal);
         }
-
-        BlockFormattingContext::compute_height(cell, m_state);
 
         size_t cell_colspan = cell.colspan();
         for (size_t i = 0; i < cell_colspan; ++i)
