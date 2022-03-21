@@ -324,15 +324,9 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
         [&](Number const& number) {
             auto other_number = other.m_value.get<Number>();
             if (op == SumOperation::Add) {
-                m_value = Number {
-                    .is_integer = number.is_integer && other_number.is_integer,
-                    .value = number.value + other_number.value
-                };
+                m_value = number + other_number;
             } else {
-                m_value = Number {
-                    .is_integer = number.is_integer && other_number.is_integer,
-                    .value = number.value - other_number.value
-                };
+                m_value = number - other_number;
             }
         },
         [&](Angle const& angle) {
@@ -437,11 +431,7 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
     m_value.visit(
         [&](Number const& number) {
             if (other_is_number) {
-                auto other_number = other.m_value.get<Number>();
-                m_value = Number {
-                    .is_integer = number.is_integer && other_number.is_integer,
-                    .value = number.value * other_number.value
-                };
+                m_value = number * other.m_value.get<Number>();
             } else {
                 // Avoid duplicating all the logic by swapping `this` and `other`.
                 CalculationResult new_value = other;
@@ -450,20 +440,20 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
             }
         },
         [&](Angle const& angle) {
-            m_value = Angle::make_degrees(angle.to_degrees() * other.m_value.get<Number>().value);
+            m_value = Angle::make_degrees(angle.to_degrees() * other.m_value.get<Number>().value());
         },
         [&](Frequency const& frequency) {
-            m_value = Frequency::make_hertz(frequency.to_hertz() * other.m_value.get<Number>().value);
+            m_value = Frequency::make_hertz(frequency.to_hertz() * other.m_value.get<Number>().value());
         },
         [&](Length const& length) {
             VERIFY(layout_node);
-            m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<Number>().value);
+            m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<Number>().value());
         },
         [&](Time const& time) {
-            m_value = Time::make_seconds(time.to_seconds() * other.m_value.get<Number>().value);
+            m_value = Time::make_seconds(time.to_seconds() * other.m_value.get<Number>().value());
         },
         [&](Percentage const& percentage) {
-            m_value = Percentage { percentage.value() * other.m_value.get<Number>().value };
+            m_value = Percentage { percentage.value() * other.m_value.get<Number>().value() };
         });
 }
 
@@ -471,15 +461,15 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
 {
     // We know from validation when resolving the type, that `other` must be a <number> or <integer>.
     // Both of these are represented as a Number.
-    auto denominator = other.m_value.get<Number>().value;
+    auto denominator = other.m_value.get<Number>().value();
     // FIXME: Dividing by 0 is invalid, and should be caught during parsing.
     VERIFY(denominator != 0.0f);
 
     m_value.visit(
         [&](Number const& number) {
             m_value = Number {
-                .is_integer = false,
-                .value = number.value / denominator
+                Number::Type::Number,
+                number.value() / denominator
             };
         },
         [&](Angle const& angle) {
@@ -508,14 +498,14 @@ String CalculatedStyleValue::to_string() const
 String CalculatedStyleValue::CalcNumberValue::to_string() const
 {
     return value.visit(
-        [](Number const& number) { return String::number(number.value); },
+        [](Number const& number) { return String::number(number.value()); },
         [](NonnullOwnPtr<CalcNumberSum> const& sum) { return String::formatted("({})", sum->to_string()); });
 }
 
 String CalculatedStyleValue::CalcValue::to_string() const
 {
     return value.visit(
-        [](Number const& number) { return String::number(number.value); },
+        [](Number const& number) { return String::number(number.value()); },
         [](NonnullOwnPtr<CalcSum> const& sum) { return String::formatted("({})", sum->to_string()); },
         [](auto const& v) { return v.to_string(); });
 }
@@ -691,7 +681,7 @@ Optional<float> CalculatedStyleValue::resolve_number()
 {
     auto result = m_expression->resolve(nullptr, {});
     if (result.value().has<Number>())
-        return result.value().get<Number>().value;
+        return result.value().get<Number>().value();
     return {};
 }
 
@@ -699,7 +689,7 @@ Optional<i64> CalculatedStyleValue::resolve_integer()
 {
     auto result = m_expression->resolve(nullptr, {});
     if (result.value().has<Number>())
-        return lroundf(result.value().get<Number>().value);
+        return result.value().get<Number>().integer_value();
     return {};
 }
 
@@ -860,7 +850,7 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::re
 {
     return value.visit(
         [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
-            return { number.is_integer ? ResolvedType::Integer : ResolvedType::Number };
+            return { number.is_integer() ? ResolvedType::Integer : ResolvedType::Number };
         },
         [](Angle const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Angle }; },
         [](Frequency const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Frequency }; },
@@ -874,7 +864,7 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberVal
 {
     return value.visit(
         [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
-            return { number.is_integer ? ResolvedType::Integer : ResolvedType::Number };
+            return { number.is_integer() ? ResolvedType::Integer : ResolvedType::Number };
         },
         [](NonnullOwnPtr<CalcNumberSum> const& sum) { return sum->resolved_type(); });
 }
@@ -952,7 +942,7 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProduct::resol
                 VERIFY(additional_value.op == CalculatedStyleValue::ProductOperation::Divide);
                 auto resolved_calc_number_value = calc_number_value.resolve(layout_node, percentage_basis);
                 // FIXME: Checking for division by 0 should happen during parsing.
-                VERIFY(resolved_calc_number_value.value().get<Number>().value != 0.0f);
+                VERIFY(resolved_calc_number_value.value().get<Number>().value() != 0.0f);
                 value.divide_by(resolved_calc_number_value, layout_node);
             });
     }

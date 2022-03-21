@@ -4647,11 +4647,7 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<S
     }
 
     if (current_token.is(Token::Type::Number))
-        return CalculatedStyleValue::CalcValue {
-            CalculatedStyleValue::Number {
-                .is_integer = current_token.token().number_type() == Token::NumberType::Integer,
-                .value = static_cast<float>(current_token.token().number_value()) }
-        };
+        return CalculatedStyleValue::CalcValue { current_token.token().number() };
 
     if (current_token.is(Token::Type::Dimension) || current_token.is(Token::Type::Percentage)) {
         auto maybe_dimension = parse_dimension(current_token);
@@ -4684,7 +4680,7 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
     // Note: The default value is not used or passed around.
     auto product_with_operator = make<CalculatedStyleValue::CalcProductPartWithOperator>(
         CalculatedStyleValue::ProductOperation::Multiply,
-        CalculatedStyleValue::CalcNumberValue { CalculatedStyleValue::Number { false, 0 } });
+        CalculatedStyleValue::CalcNumberValue { Number {} });
 
     tokens.skip_whitespace();
 
@@ -4723,7 +4719,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
     // Note: The default value is not used or passed around.
     auto number_product_with_operator = make<CalculatedStyleValue::CalcNumberProductPartWithOperator>(
         CalculatedStyleValue::ProductOperation::Multiply,
-        CalculatedStyleValue::CalcNumberValue { CalculatedStyleValue::Number { false, 0 } });
+        CalculatedStyleValue::CalcNumberValue { Number {} });
 
     tokens.skip_whitespace();
 
@@ -4756,7 +4752,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
 OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_product(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto calc_number_product = make<CalculatedStyleValue::CalcNumberProduct>(
-        CalculatedStyleValue::CalcNumberValue { CalculatedStyleValue::Number { false, 0 } },
+        CalculatedStyleValue::CalcNumberValue { Number {} },
         NonnullOwnPtrVector<CalculatedStyleValue::CalcNumberProductPartWithOperator> {});
 
     auto first_calc_number_value_or_error = parse_calc_number_value(tokens);
@@ -4834,17 +4830,13 @@ Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(
         return {};
     tokens.next_token();
 
-    return CalculatedStyleValue::CalcNumberValue {
-        CalculatedStyleValue::Number {
-            .is_integer = first.token().number_type() == Token::NumberType::Integer,
-            .value = static_cast<float>(first.token().number_value()) }
-    };
+    return CalculatedStyleValue::CalcNumberValue { first.token().number() };
 }
 
 OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto calc_product = make<CalculatedStyleValue::CalcProduct>(
-        CalculatedStyleValue::CalcValue { CalculatedStyleValue::Number { false, 0 } },
+        CalculatedStyleValue::CalcValue { Number {} },
         NonnullOwnPtrVector<CalculatedStyleValue::CalcProductPartWithOperator> {});
 
     auto first_calc_value_or_error = parse_calc_value(tokens);
