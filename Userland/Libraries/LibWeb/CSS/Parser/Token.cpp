@@ -43,11 +43,11 @@ String Token::to_string() const
     case Type::Delim:
         return m_value;
     case Type::Number:
-        return String::number(m_number_value);
+        return String::number(m_number_value.value());
     case Type::Percentage:
-        return String::formatted("{}%", m_number_value);
+        return String::formatted("{}%", m_number_value.value());
     case Type::Dimension:
-        return String::formatted("{}{}", m_number_value, m_unit);
+        return String::formatted("{}{}", m_number_value.value(), dimension_unit());
     case Type::Whitespace:
         return " ";
     case Type::CDO:
@@ -122,8 +122,8 @@ String Token::to_debug_string() const
         return builder.to_string();
     case Type::Number:
         builder.append("Number: ");
-        builder.append(m_value);
-        builder.append(m_number_type == NumberType::Integer ? " (int)" : " (float)");
+        builder.append(m_number_value.value());
+        builder.append(m_number_value.is_integer() ? " (int)" : " (float)");
         return builder.to_string();
     case Type::Percentage:
         builder.append("Percentage: ");
@@ -132,8 +132,8 @@ String Token::to_debug_string() const
         return builder.to_string();
     case Type::Dimension:
         builder.append("Dimension: ");
-        builder.append(m_value);
-        builder.append(m_unit);
+        builder.append(dimension_value());
+        builder.append(dimension_unit());
         return builder.to_string();
     case Type::Whitespace:
         builder.append("Whitespace");
@@ -193,7 +193,7 @@ String Token::to_debug_string() const
 
     if (m_type == Token::Type::Number) {
         builder.append("', number_type: '");
-        if (m_number_type == Token::NumberType::Integer) {
+        if (m_number_value.is_integer()) {
             builder.append("Integer");
         } else {
             builder.append("Number");
@@ -202,14 +202,14 @@ String Token::to_debug_string() const
 
     if (m_type == Token::Type::Dimension) {
         builder.append("', number_type: '");
-        if (m_number_type == Token::NumberType::Integer) {
+        if (m_number_value.is_integer()) {
             builder.append("Integer");
         } else {
             builder.append("Number");
         }
 
         builder.append("', unit: '");
-        builder.append(m_unit);
+        builder.append(dimension_unit());
     }
 
     builder.append("' }");
