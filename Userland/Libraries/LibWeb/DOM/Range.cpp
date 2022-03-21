@@ -510,15 +510,15 @@ String Range::to_string() const
     // 2. If this’s start node is this’s end node and it is a Text node,
     //    then return the substring of that Text node’s data beginning at this’s start offset and ending at this’s end offset.
     if (start_container() == end_container() && is<Text>(*start_container()))
-        return static_cast<Text const&>(*start_container()).data().substring(start_offset(), end_offset());
+        return static_cast<Text const&>(*start_container()).data().substring(start_offset(), end_offset() - start_offset());
 
     // 3. If this’s start node is a Text node, then append the substring of that node’s data from this’s start offset until the end to s.
     if (is<Text>(*start_container()))
         builder.append(static_cast<Text const&>(*start_container()).data().substring_view(start_offset()));
 
     // 4. Append the concatenation of the data of all Text nodes that are contained in this, in tree order, to s.
-    for (Node const* node = start_container()->next_in_pre_order(); node && node != end_container(); node = node->next_in_pre_order()) {
-        if (is<Text>(*node))
+    for (Node const* node = start_container(); node != end_container()->next_sibling(); node = node->next_in_pre_order()) {
+        if (is<Text>(*node) && contains_node(*node))
             builder.append(static_cast<Text const&>(*node).data());
     }
 
