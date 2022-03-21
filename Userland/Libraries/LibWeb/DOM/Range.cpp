@@ -129,6 +129,13 @@ static RelativeBoundaryPointPosition position_of_boundary_point_relative_to_othe
 
 ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartOrEnd start_or_end)
 {
+    // FIXME: If the incoming node is part of a document that's in the process of being destroyed,
+    //        we just ignore this. This prevents us from trying to re-ref a document during its
+    //        destruction process. This is a hack and should be replaced with some smarter form
+    //        of lifetime management.
+    if (node.document().in_removed_last_ref())
+        return {};
+
     // To set the start or end of a range to a boundary point (node, offset), run these steps:
 
     // 1. If node is a doctype, then throw an "InvalidNodeTypeError" DOMException.

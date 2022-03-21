@@ -338,6 +338,8 @@ public:
     bool needs_full_style_update() const { return m_needs_full_style_update; }
     void set_needs_full_style_update(bool b) { m_needs_full_style_update = b; }
 
+    bool in_removed_last_ref() const { return m_in_removed_last_ref; }
+
 private:
     explicit Document(const AK::URL&);
 
