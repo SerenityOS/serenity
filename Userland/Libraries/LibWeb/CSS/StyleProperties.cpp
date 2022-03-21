@@ -347,6 +347,29 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
     return transformations;
 }
 
+static Optional<LengthPercentage> length_percentage_for_style_value(StyleValue const& value)
+{
+    if (value.is_length())
+        return value.to_length();
+    if (value.is_percentage())
+        return value.as_percentage().percentage();
+    return {};
+}
+
+CSS::TransformOrigin StyleProperties::transform_origin() const
+{
+    auto value = property(CSS::PropertyID::TransformOrigin);
+    if (!value.has_value() || !value.value()->is_value_list() || value.value()->as_value_list().size() != 2)
+        return {};
+    auto const& list = value.value()->as_value_list();
+    auto x_value = length_percentage_for_style_value(list.values()[0]);
+    auto y_value = length_percentage_for_style_value(list.values()[1]);
+    if (!x_value.has_value() || !y_value.has_value()) {
+        return {};
+    }
+    return { x_value.value(), y_value.value() };
+}
+
 Optional<CSS::AlignItems> StyleProperties::align_items() const
 {
     auto value = property(CSS::PropertyID::AlignItems);

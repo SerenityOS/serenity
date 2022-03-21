@@ -77,6 +77,7 @@ public:
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() const;
 
     Vector<CSS::Transformation> transformations() const;
+    CSS::TransformOrigin transform_origin() const;
 
     Gfx::Font const& computed_font() const
     {
