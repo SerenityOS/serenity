@@ -613,26 +613,34 @@ PDFErrorOr<Value> Parser::parse_possible_indirect_value_or_ref()
 
     if (m_reader.matches("obj")) {
         m_reader.discard();
-        return TRY(parse_indirect_value(first_number.get<int>(), second_number.value().get<int>()));
+        auto index = first_number.get<int>();
+        auto generation = second_number.value().get<int>();
+        VERIFY(index >= 0);
+        VERIFY(generation >= 0);
+        return TRY(parse_indirect_value(index, generation));
     }
 
     m_reader.load();
     return first_number;
 }
 
-PDFErrorOr<NonnullRefPtr<IndirectValue>> Parser::parse_indirect_value(int index, int generation)
+PDFErrorOr<NonnullRefPtr<IndirectValue>> Parser::parse_indirect_value(u32 index, u32 generation)
 {
     if (!m_reader.matches("obj"))
         return error("Expected \"obj\" at beginning of indirect value");
     m_reader.move_by(3);
     if (matches_eol())
         consume_eol();
+
+    push_reference({ index, generation });
     auto value = TRY(parse_value());
     if (!m_reader.matches("endobj"))
         return error("Expected \"endobj\" at end of indirect value");
 
     consume(6);
     consume_whitespace();
+
+    pop_reference();
 
     return make_object<IndirectValue>(index, generation, value);
 }
@@ -641,7 +649,11 @@ PDFErrorOr<NonnullRefPtr<IndirectValue>> Parser::parse_indirect_value()
 {
     auto first_number = TRY(parse_number());
     auto second_number = TRY(parse_number());
-    return parse_indirect_value(first_number.get<int>(), second_number.get<int>());
+    auto index = first_number.get<int>();
+    auto generation = second_number.get<int>();
+    VERIFY(index >= 0);
+    VERIFY(generation >= 0);
+    return parse_indirect_value(index, generation);
 }
 
 PDFErrorOr<Value> Parser::parse_number()
