@@ -1096,6 +1096,10 @@ ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, Int
 template<bool has_alpha_channel, bool do_bilinear_blend, typename GetPixel>
 ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity)
 {
+    auto clipped_src_rect = enclosing_int_rect(src_rect).intersected(source.rect());
+    if (clipped_src_rect.is_empty())
+        return;
+
     if constexpr (!do_bilinear_blend) {
         IntRect int_src_rect = enclosing_int_rect(src_rect);
         if (dst_rect == clipped_rect && int_src_rect == src_rect && !(dst_rect.width() % int_src_rect.width()) && !(dst_rect.height() % int_src_rect.height())) {
@@ -1122,16 +1126,20 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
 
     for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
         auto* scanline = (Color*)target.scanline(y);
+        auto desired_y = ((y - dst_rect.y()) * vscale + src_top);
+        if (desired_y < clipped_src_rect.left() || desired_y > clipped_src_rect.bottom() * shift)
+            continue;
         for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
             auto desired_x = ((x - dst_rect.x()) * hscale + src_left);
-            auto desired_y = ((y - dst_rect.y()) * vscale + src_top);
+            if (desired_x < clipped_src_rect.left() || desired_x > clipped_src_rect.right() * shift)
+                continue;
 
             Color src_pixel;
             if constexpr (do_bilinear_blend) {
-                auto scaled_x0 = clamp((desired_x - half_pixel) >> 32, src_rect.left(), src_rect.right());
-                auto scaled_x1 = clamp((desired_x + half_pixel) >> 32, src_rect.left(), src_rect.right());
-                auto scaled_y0 = clamp((desired_y - half_pixel) >> 32, src_rect.top(), src_rect.bottom());
-                auto scaled_y1 = clamp((desired_y + half_pixel) >> 32, src_rect.top(), src_rect.bottom());
+                auto scaled_x0 = clamp((desired_x - half_pixel) >> 32, clipped_src_rect.left(), clipped_src_rect.right());
+                auto scaled_x1 = clamp((desired_x + half_pixel) >> 32, clipped_src_rect.left(), clipped_src_rect.right());
+                auto scaled_y0 = clamp((desired_y - half_pixel) >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
+                auto scaled_y1 = clamp((desired_y + half_pixel) >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
 
                 float x_ratio = (((desired_x + half_pixel) & fractional_mask) / (float)shift);
                 float y_ratio = (((desired_y + half_pixel) & fractional_mask) / (float)shift);
@@ -1146,8 +1154,8 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
 
                 src_pixel = top.interpolate(bottom, y_ratio);
             } else {
-                auto scaled_x = desired_x >> 32;
-                auto scaled_y = desired_y >> 32;
+                auto scaled_x = clamp(desired_x >> 32, clipped_src_rect.left(), clipped_src_rect.right());
+                auto scaled_y = clamp(desired_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
                 src_pixel = get_pixel(source, scaled_x, scaled_y);
             }
 
