@@ -18,6 +18,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/ValueSlider.h>
 #include <LibGfx/Rect.h>
+#include <LibGfx/AntiAliasingPainter.h>
 
 namespace PixelPaint {
 
@@ -35,9 +36,11 @@ void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntPoint const& start_p
     case FillMode::Outline:
         painter.draw_ellipse_intersecting(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button), thickness);
         break;
-    case FillMode::Fill:
-        painter.fill_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
+    case FillMode::Fill: {
+        Gfx::AntiAliasingPainter aa_painter { painter };
+        aa_painter.draw_ellipse(ellipse_intersecting_rect, m_editor->color_for(m_drawing_button));
         break;
+    }
     default:
         VERIFY_NOT_REACHED();
     }
