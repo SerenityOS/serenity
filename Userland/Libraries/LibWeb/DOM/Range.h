@@ -65,6 +65,8 @@ public:
 
     ExceptionOr<void> insert_node(NonnullRefPtr<Node>);
 
+    ExceptionOr<void> surround_contents(NonnullRefPtr<Node>);
+
     String to_string() const;
 
     static HashTable<Range*>& live_ranges();
@@ -90,6 +92,7 @@ private:
 
     bool contains_node(Node const&) const;
     bool partially_contains_node(Node const&) const;
+    bool partially_contains_non_text_node() const;
 };
 
 }
