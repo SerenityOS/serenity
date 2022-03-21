@@ -286,8 +286,10 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     // 7. the child stacking contexts with positive stack levels (least positive first).
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
+        if (!child.m_box.is_visible())
+            continue;
         if (child.m_box.computed_values().z_index().value_or(0) < 0)
-            break;
+            continue;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value())
             return result;
@@ -340,7 +342,9 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
         if (child.m_box.computed_values().z_index().value_or(0) < 0)
-            break;
+            continue;
+        if (!child.m_box.is_visible())
+            continue;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value())
             return result;

@@ -464,6 +464,9 @@ void PaintableBox::set_stacking_context(NonnullOwnPtr<StackingContext> stacking_
 
 Optional<HitTestResult> PaintableBox::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
+    if (!is_visible())
+        return {};
+
     if (layout_box().is_initial_containing_block_box()) {
         const_cast<Layout::InitialContainingBlock&>(static_cast<Layout::InitialContainingBlock const&>(layout_box())).build_stacking_context_tree_if_needed();
         return stacking_context()->hit_test(position, type);
@@ -497,7 +500,7 @@ Optional<HitTestResult> PaintableWithLines::hit_test(const Gfx::FloatPoint& posi
 
     if (type == HitTestType::TextCursor && last_good_candidate.has_value())
         return last_good_candidate;
-    if (absolute_border_box_rect().contains(position.x(), position.y()))
+    if (is_visible() && absolute_border_box_rect().contains(position.x(), position.y()))
         return HitTestResult { *this };
     return {};
 }
