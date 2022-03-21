@@ -27,6 +27,7 @@
 #include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
+#include <LibWeb/CSS/Number.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Percentage.h>
 #include <LibWeb/CSS/PropertyID.h>
@@ -806,11 +807,6 @@ public:
     enum class ProductOperation {
         Multiply,
         Divide,
-    };
-
-    struct Number {
-        bool is_integer;
-        float value;
     };
 
     using PercentageBasis = Variant<Empty, Angle, Frequency, Length, Time>;
