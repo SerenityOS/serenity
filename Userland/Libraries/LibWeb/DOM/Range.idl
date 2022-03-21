@@ -24,6 +24,8 @@ interface Range : AbstractRange {
     const unsigned short END_TO_START = 3;
     short compareBoundaryPoints(unsigned short how, Range sourceRange);
 
+    [CEReactions, NewObject] DocumentFragment extractContents();
+
     Range cloneRange();
     undefined detach();
 

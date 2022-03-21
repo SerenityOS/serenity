@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Range.h>
@@ -526,6 +528,239 @@ String Range::to_string() const
 
     // 6. Return s.
     return builder.to_string();
+}
+
+// https://dom.spec.whatwg.org/#dom-range-extractcontents
+ExceptionOr<NonnullRefPtr<DocumentFragment>> Range::extract_contents()
+{
+    return extract();
+}
+
+// https://dom.spec.whatwg.org/#concept-range-extract
+ExceptionOr<NonnullRefPtr<DocumentFragment>> Range::extract()
+{
+    // 1. Let fragment be a new DocumentFragment node whose node document is range’s start node’s node document.
+    auto fragment = adopt_ref(*new DocumentFragment(const_cast<Document&>(start_container()->document())));
+
+    // 2. If range is collapsed, then return fragment.
+    if (collapsed())
+        return fragment;
+
+    // 3. Let original start node, original start offset, original end node, and original end offset
+    //    be range’s start node, start offset, end node, and end offset, respectively.
+    NonnullRefPtr<Node> original_start_node = m_start_container;
+    auto original_start_offset = m_start_offset;
+    NonnullRefPtr<Node> original_end_node = m_end_container;
+    auto original_end_offset = m_end_offset;
+
+    // 4. If original start node is original end node and it is a CharacterData node, then:
+    if (original_start_node.ptr() == original_end_node.ptr() && is<CharacterData>(*original_start_node)) {
+        // 1. Let clone be a clone of original start node.
+        auto clone = original_start_node->clone_node();
+
+        // 2. Set the data of clone to the result of substringing data with node original start node,
+        //    offset original start offset, and count original end offset minus original start offset.
+        auto result = static_cast<CharacterData const&>(*original_start_node).substring_data(original_start_offset, original_end_offset - original_start_offset);
+        if (result.is_exception())
+            return result.exception();
+        verify_cast<CharacterData>(*clone).set_data(result.release_value());
+
+        // 3. Append clone to fragment.
+        fragment->append_child(clone);
+
+        // 4. Replace data with node original start node, offset original start offset, count original end offset minus original start offset, and data the empty string.
+        static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_end_offset - original_start_offset, "");
+
+        // 5. Return fragment.
+        return fragment;
+    }
+
+    // 5. Let common ancestor be original start node.
+    NonnullRefPtr<Node> common_ancestor = original_start_node;
+
+    // 6. While common ancestor is not an inclusive ancestor of original end node, set common ancestor to its own parent.
+    while (!common_ancestor->is_inclusive_ancestor_of(original_end_node))
+        common_ancestor = *common_ancestor->parent_node();
+
+    // 7. Let first partially contained child be null.
+    RefPtr<Node> first_partially_contained_child;
+
+    // 8. If original start node is not an inclusive ancestor of original end node,
+    //    set first partially contained child to the first child of common ancestor that is partially contained in range.
+    if (!original_start_node->is_inclusive_ancestor_of(original_end_node)) {
+        for (auto* child = common_ancestor->first_child(); child; child = child->next_sibling()) {
+            if (partially_contains_node(*child)) {
+                first_partially_contained_child = child;
+                break;
+            }
+        }
+    }
+
+    // 9. Let last partially contained child be null.
+    RefPtr<Node> last_partially_contained_child;
+
+    // 10. If original end node is not an inclusive ancestor of original start node,
+    //     set last partially contained child to the last child of common ancestor that is partially contained in range.
+    if (!original_end_node->is_inclusive_ancestor_of(original_start_node)) {
+        for (auto* child = common_ancestor->last_child(); child; child = child->previous_sibling()) {
+            if (partially_contains_node(*child)) {
+                last_partially_contained_child = child;
+                break;
+            }
+        }
+    }
+
+    // 11. Let contained children be a list of all children of common ancestor that are contained in range, in tree order.
+    Vector<NonnullRefPtr<Node>> contained_children;
+    for (Node const* node = common_ancestor->first_child(); node; node = node->next_sibling()) {
+        if (contains_node(*node))
+            contained_children.append(*node);
+    }
+
+    // 12. If any member of contained children is a doctype, then throw a "HierarchyRequestError" DOMException.
+    for (auto const& child : contained_children) {
+        if (is<DocumentType>(*child))
+            return DOM::HierarchyRequestError::create("Contained child is a DocumentType");
+    }
+
+    RefPtr<Node> new_node;
+    size_t new_offset = 0;
+
+    // 13. If original start node is an inclusive ancestor of original end node, set new node to original start node and new offset to original start offset.
+    if (original_start_node->is_inclusive_ancestor_of(original_end_node)) {
+        new_node = original_start_node;
+        new_offset = original_start_offset;
+    }
+    // 14. Otherwise:
+    else {
+        // 1. Let reference node equal original start node.
+        RefPtr<Node> reference_node = original_start_node;
+
+        // 2. While reference node’s parent is not null and is not an inclusive ancestor of original end node, set reference node to its parent.
+        while (reference_node->parent_node() && !reference_node->parent_node()->is_inclusive_ancestor_of(original_end_node))
+            reference_node = reference_node->parent_node();
+
+        // 3. Set new node to the parent of reference node, and new offset to one plus reference node’s index.
+        new_node = reference_node->parent_node();
+        new_offset = 1 + reference_node->index();
+    }
+
+    // 15. If first partially contained child is a CharacterData node, then:
+    if (first_partially_contained_child && is<CharacterData>(*first_partially_contained_child)) {
+        // 1. Let clone be a clone of original start node.
+        auto clone = original_start_node->clone_node();
+
+        // 2. Set the data of clone to the result of substringing data with node original start node, offset original start offset, and count original start node’s length minus original start offset.
+        auto result = static_cast<CharacterData const&>(*original_start_node).substring_data(original_start_offset, original_end_offset - original_start_offset);
+        if (result.is_exception())
+            return result.exception();
+        verify_cast<CharacterData>(*clone).set_data(result.release_value());
+
+        // 3. Append clone to fragment.
+        fragment->append_child(clone);
+
+        // 4. Replace data with node original start node, offset original start offset, count original start node’s length minus original start offset, and data the empty string.
+        static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_start_node->length() - original_start_offset, "");
+    }
+    // 16. Otherwise, if first partially contained child is not null:
+    else if (first_partially_contained_child) {
+        // 1. Let clone be a clone of first partially contained child.
+        auto clone = first_partially_contained_child->clone_node();
+
+        // 2. Append clone to fragment.
+        fragment->append_child(clone);
+
+        // 3. Let subrange be a new live range whose start is (original start node, original start offset) and whose end is (first partially contained child, first partially contained child’s length).
+        auto subrange = Range::create(original_start_node, original_start_offset, *first_partially_contained_child, first_partially_contained_child->length());
+
+        // 4. Let subfragment be the result of extracting subrange.
+        auto result = subrange->extract();
+        if (result.is_exception())
+            return result.exception();
+        auto subfragment = result.release_value();
+
+        // 5. Append subfragment to clone.
+        clone->append_child(subfragment);
+    }
+
+    // 17. For each contained child in contained children, append contained child to fragment.
+    for (auto& contained_child : contained_children) {
+        fragment->append_child(contained_child);
+    }
+
+    // 18. If last partially contained child is a CharacterData node, then:
+    if (last_partially_contained_child && is<CharacterData>(*last_partially_contained_child)) {
+        // 1. Let clone be a clone of original end node.
+        auto clone = original_end_node->clone_node();
+
+        // 2. Set the data of clone to the result of substringing data with node original end node, offset 0, and count original end offset.
+        auto result = static_cast<CharacterData const&>(*original_end_node).substring_data(0, original_end_offset);
+        if (result.is_exception())
+            return result.exception();
+        verify_cast<CharacterData>(*clone).set_data(result.release_value());
+
+        // 3. Append clone to fragment.
+        fragment->append_child(clone);
+
+        // 4. Replace data with node original end node, offset 0, count original end offset, and data the empty string.
+        verify_cast<CharacterData>(*original_end_node).replace_data(0, original_end_offset, "");
+    }
+    // 19. Otherwise, if last partially contained child is not null:
+    else if (last_partially_contained_child) {
+        // 1. Let clone be a clone of last partially contained child.
+        auto clone = last_partially_contained_child->clone_node();
+
+        // 2. Append clone to fragment.
+        fragment->append_child(clone);
+
+        // 3. Let subrange be a new live range whose start is (last partially contained child, 0) and whose end is (original end node, original end offset).
+        auto subrange = Range::create(*last_partially_contained_child, 0, original_end_node, original_end_offset);
+
+        // 4. Let subfragment be the result of extracting subrange.
+        auto result = subrange->extract();
+        if (result.is_exception())
+            return result.exception();
+        auto subfragment = result.release_value();
+
+        // 5. Append subfragment to clone.
+        clone->append_child(subfragment);
+    }
+
+    // 20. Set range’s start and end to (new node, new offset).
+    set_start(*new_node, new_offset);
+    set_end(*new_node, new_offset);
+
+    // 21. Return fragment.
+    return fragment;
+}
+
+// https://dom.spec.whatwg.org/#contained
+bool Range::contains_node(Node const& node) const
+{
+    // A node node is contained in a live range range if node’s root is range’s root,
+    if (&node.root() != &root())
+        return false;
+
+    // and (node, 0) is after range’s start,
+    if (position_of_boundary_point_relative_to_other_boundary_point(node, 0, m_start_container, m_start_offset) != RelativeBoundaryPointPosition::After)
+        return false;
+
+    // and (node, node’s length) is before range’s end.
+    if (position_of_boundary_point_relative_to_other_boundary_point(node, node.length(), m_end_container, m_end_offset) != RelativeBoundaryPointPosition::Before)
+        return false;
+
+    return true;
+}
+
+// https://dom.spec.whatwg.org/#partially-contained
+bool Range::partially_contains_node(Node const& node) const
+{
+    // A node is partially contained in a live range if it’s an inclusive ancestor of the live range’s start node but not its end node, or vice versa.
+    if (node.is_inclusive_ancestor_of(m_start_container) && &node != m_end_container.ptr())
+        return true;
+    if (node.is_inclusive_ancestor_of(m_end_container) && &node != m_start_container.ptr())
+        return true;
+    return false;
 }
 
 }

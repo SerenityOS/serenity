@@ -61,6 +61,8 @@ public:
     ExceptionOr<bool> is_point_in_range(Node const&, u32 offset) const;
     ExceptionOr<i16> compare_point(Node const&, u32 offset) const;
 
+    ExceptionOr<NonnullRefPtr<DocumentFragment>> extract_contents();
+
     String to_string() const;
 
 private:
@@ -78,6 +80,11 @@ private:
 
     ExceptionOr<void> set_start_or_end(Node& node, u32 offset, StartOrEnd start_or_end);
     ExceptionOr<void> select(Node& node);
+
+    ExceptionOr<NonnullRefPtr<DocumentFragment>> extract();
+
+    bool contains_node(Node const&) const;
+    bool partially_contains_node(Node const&) const;
 };
 
 }
