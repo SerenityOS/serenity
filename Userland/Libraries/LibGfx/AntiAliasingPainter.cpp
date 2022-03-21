@@ -11,6 +11,7 @@
 
 #include "FillPathImplementation.h"
 #include <AK/Function.h>
+#include <AK/NumericLimits.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Path.h>
 
@@ -191,44 +192,71 @@ void Gfx::AntiAliasingPainter::draw_cubic_bezier_curve(FloatPoint const& control
     });
 }
 
-void Gfx::AntiAliasingPainter::draw_circle(IntPoint center, int radius, Color color)
+void Gfx::AntiAliasingPainter::draw_circle(IntPoint const& center, int radius, Color color)
+{
+    if (radius <= 0)
+        return;
+    draw_ellipse_part(center, radius, radius, color, false, {});
+}
+
+void Gfx::AntiAliasingPainter::draw_ellipse(IntRect const& a_rect, Color color)
+{
+    auto center = a_rect.center();
+    auto radius_a = a_rect.width() / 2;
+    auto radius_b = a_rect.height() / 2;
+    if (radius_a <= 0 || radius_b <= 0)
+        return;
+    if (radius_a == radius_b)
+        return draw_circle(center, radius_a, color);
+    auto x_paint_range = draw_ellipse_part(center, radius_a, radius_b, color, false, {});
+    // FIXME: This paints some extra fill pixels that are clipped
+    draw_ellipse_part(center, radius_b, radius_a, color, true, x_paint_range);
+}
+
+Gfx::AntiAliasingPainter::Range Gfx::AntiAliasingPainter::draw_ellipse_part(
+    IntPoint center, int radius_a, int radius_b, Color color, bool flip_x_and_y, Optional<Range> x_clip)
 {
     /*
     Algorithm from: https://cs.uwaterloo.ca/research/tr/1984/CS-84-38.pdf
-    Inline comments are from the paper.
+
+    This method can draw a whole circle with a whole circle in one call using
+    8-way symmetry, or an ellipse in two calls using 4-way symmetry.
     */
 
     center *= m_underlying_painter.scale();
-    radius *= m_underlying_painter.scale();
+    radius_a *= m_underlying_painter.scale();
+    radius_b *= m_underlying_painter.scale();
 
-    // TODO: Generalize to ellipses (see paper)
+    // If this is a ellipse everything can be drawn in one pass with 8 way symmetry
+    bool const is_circle = radius_a == radius_b;
 
     // These happen to be the same here, but are treated separately in the paper:
     // intensity is the fill alpha
-    int const intensity = color.alpha();
+    int const intensity = 255;
     // 0 to subpixel_resolution is the range of alpha values for the circle edges
     int const subpixel_resolution = intensity;
 
-    // Note: Variable names below are based off the paper
-
     // Current pixel address
     int i = 0;
-    int q = radius;
+    int q = radius_b;
 
     // 1st and 2nd order differences of y
     int delta_y = 0;
     int delta2_y = 0;
 
-    // Exact and predicted values of f(i) -- the circle equation scaled by subpixel_resolution
-    int y = subpixel_resolution * radius;
+    int const a_squared = radius_a * radius_a;
+    int const b_squared = radius_b * radius_b;
+
+    // Exact and predicted values of f(i) -- the ellipse equation scaled by subpixel_resolution
+    int y = subpixel_resolution * radius_b;
     int y_hat = 0;
 
     // The value of f(i)*f(i)
     int f_squared = y * y;
 
     // 1st and 2nd order differences of f(i)*f(i)
-    int delta_f_squared = subpixel_resolution * subpixel_resolution;
-    int delta2_f_squared = -delta_f_squared - delta_f_squared;
+    int delta_f_squared = -(static_cast<int64_t>(b_squared) * subpixel_resolution * subpixel_resolution) / a_squared;
+    int delta2_f_squared = 2 * delta_f_squared;
 
     // edge_intersection_area/subpixel_resolution = percentage of pixel intersected by circle
     // (aka the alpha for the pixel)
@@ -270,15 +298,32 @@ void Gfx::AntiAliasingPainter::draw_circle(IntPoint center, int radius, Color co
 
     auto correct = [&] {
         int error = y - y_hat;
+
+        if (!is_circle) {
+            // FIXME: For ellipses the alpha values seem too low, which
+            // can make them look overly pointy. This fixes that, though there's
+            // probably a better solution to be found.
+            // (This issue seems to exist in the base algorithm)
+            error /= 4;
+        }
+
         delta2_y += error;
         delta_y += error;
     };
 
+    int min_paint_x = NumericLimits<int>::max();
+    int max_paint_x = NumericLimits<int>::min();
     auto pixel = [&](int x, int y, int alpha) {
         if (alpha <= 0 || alpha > 255)
             return;
+        if (flip_x_and_y)
+            swap(x, y);
+        if (x_clip.has_value() && x_clip->contains_inclusive(x))
+            return;
+        min_paint_x = min(x, min_paint_x);
+        max_paint_x = max(x, max_paint_x);
         auto pixel_colour = color;
-        pixel_colour.set_alpha(alpha);
+        pixel_colour.set_alpha((alpha * color.alpha()) / 255);
         m_underlying_painter.set_pixel(center + IntPoint { x, y }, pixel_colour, true);
     };
 
@@ -289,18 +334,30 @@ void Gfx::AntiAliasingPainter::draw_circle(IntPoint center, int radius, Color co
         }
     };
 
-    auto eight_pixel = [&](int x, int y, int alpha) {
+    auto symmetric_pixel = [&](int x, int y, int alpha) {
         pixel(x, y, alpha);
         pixel(x, -y - 1, alpha);
         pixel(-x - 1, -y - 1, alpha);
         pixel(-x - 1, y, alpha);
-        pixel(y, x, alpha);
-        pixel(y, -x - 1, alpha);
-        pixel(-y - 1, -x - 1, alpha);
-        pixel(-y - 1, x, alpha);
+        if (is_circle) {
+            pixel(y, x, alpha);
+            pixel(y, -x - 1, alpha);
+            pixel(-y - 1, -x - 1, alpha);
+            pixel(-y - 1, x, alpha);
+        }
     };
 
-    while (i < q) {
+    // These are calculated incrementally (as it is possibly a tiny bit faster)
+    int ib_squared = 0;
+    int qa_squared = q * a_squared;
+
+    auto in_symmetric_region = [&] {
+        // Main fix two stop cond here
+        return is_circle ? i < q : ib_squared < qa_squared;
+    };
+
+    // Draws a 8 octants for a circle or 4 quadrants for a (partial) elipse
+    while (in_symmetric_region()) {
         predict();
         minimize();
         correct();
@@ -308,35 +365,40 @@ void Gfx::AntiAliasingPainter::draw_circle(IntPoint center, int radius, Color co
         edge_intersection_area += delta_y;
         if (edge_intersection_area >= 0) {
             // Single pixel on perimeter
-            eight_pixel(i, q, (edge_intersection_area + old_area) / 2);
+            symmetric_pixel(i, q, (edge_intersection_area + old_area) / 2);
             fill(i, q - 1, -q, intensity);
             fill(-i - 1, q - 1, -q, intensity);
         } else {
             // Two pixels on perimeter
             edge_intersection_area += subpixel_resolution;
-            eight_pixel(i, q, old_area / 2);
+            symmetric_pixel(i, q, old_area / 2);
             q -= 1;
+            qa_squared -= a_squared;
             fill(i, q - 1, -q, intensity);
             fill(-i - 1, q - 1, -q, intensity);
-            if (i < q) {
-                // Haven't gone below the diagonal
-                eight_pixel(i, q, (edge_intersection_area + subpixel_resolution) / 2);
-                fill(q, i - 1, -i, intensity);
-                fill(-q - 1, i - 1, -i, intensity);
+            if (!is_circle || in_symmetric_region()) {
+                symmetric_pixel(i, q, (edge_intersection_area + subpixel_resolution) / 2);
+                if (is_circle) {
+                    fill(q, i - 1, -i, intensity);
+                    fill(-q - 1, i - 1, -i, intensity);
+                }
             } else {
-                // Went below the diagonal, fix edge_intersection_area for final pixels
                 edge_intersection_area += subpixel_resolution;
             }
         }
         i += 1;
+        ib_squared += b_squared;
     }
 
-    // Fill in 4 remaning pixels
-    int alpha = edge_intersection_area / 2;
-    pixel(q, q, alpha);
-    pixel(-q - 1, q, alpha);
-    pixel(-q - 1, -q - 1, alpha);
-    pixel(q, -q - 1, alpha);
+    if (is_circle) {
+        int alpha = edge_intersection_area / 2;
+        pixel(q, q, alpha);
+        pixel(-q - 1, q, alpha);
+        pixel(-q - 1, -q - 1, alpha);
+        pixel(q, -q - 1, alpha);
+    }
+
+    return Range { min_paint_x, max_paint_x };
 }
 
 void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, Color color, int radius)
