@@ -837,7 +837,7 @@ ExceptionOr<void> Range::insert(NonnullRefPtr<Node> node)
         new_offset += 1;
 
     // 12. Pre-insert node into parent before referenceNode.
-    TRY(parent->pre_insert(node, reference_node));
+    (void)TRY(parent->pre_insert(node, reference_node));
 
     // 13. If range is collapsed, then set range’s end to (parent, newOffset).
     if (collapsed())
@@ -874,7 +874,7 @@ ExceptionOr<void> Range::surround_contents(NonnullRefPtr<Node> new_parent)
     TRY(insert(new_parent));
 
     // 6. Append fragment to newParent.
-    TRY(new_parent->append_child(fragment));
+    (void)TRY(new_parent->append_child(fragment));
 
     // 7. Select newParent within this.
     return select(*new_parent);
