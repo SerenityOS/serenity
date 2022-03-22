@@ -48,7 +48,7 @@ struct protoent* getprotobynumber(int proto);
 struct protoent* getprotoent(void);
 void setprotoent(int stay_open);
 
-extern int h_errno;
+extern __thread int h_errno;
 
 #define HOST_NOT_FOUND 101
 #define NO_DATA 102

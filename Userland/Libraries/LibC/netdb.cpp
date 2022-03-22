@@ -19,7 +19,7 @@
 
 extern "C" {
 
-int h_errno;
+__thread int h_errno;
 
 static hostent __gethostbyname_buffer;
 static in_addr_t __gethostbyname_address;
