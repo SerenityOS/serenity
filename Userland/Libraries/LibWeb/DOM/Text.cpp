@@ -43,10 +43,7 @@ ExceptionOr<NonnullRefPtr<Text>> Text::split_text(size_t offset)
     auto count = length - offset;
 
     // 4. Let new data be the result of substringing data with node node, offset offset, and count count.
-    auto new_data_or_error = substring_data(offset, count);
-    if (new_data_or_error.is_exception())
-        return new_data_or_error.exception();
-    auto new_data = new_data_or_error.release_value();
+    auto new_data = TRY(substring_data(offset, count));
 
     // 5. Let new node be a new Text node, with the same node document as node. Set new node’s data to new data.
     auto new_node = adopt_ref(*new Text(document(), new_data));
@@ -86,8 +83,7 @@ ExceptionOr<NonnullRefPtr<Text>> Text::split_text(size_t offset)
     }
 
     // 8. Replace data with node node, offset offset, count count, and data the empty string.
-    if (auto result = replace_data(offset, count, ""); result.is_exception())
-        return result.exception();
+    TRY(replace_data(offset, count, ""));
 
     // 9. Return new node.
     return new_node;
