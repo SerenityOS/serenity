@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <getopt.h>
 #include <stdio.h>
@@ -45,7 +46,7 @@ static void exit_with_usage(int rc)
 
 static Optional<Result> benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache);
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     String directory = ".";
     int time_per_benchmark = 10;
@@ -54,7 +55,7 @@ int main(int argc, char** argv)
     bool allow_cache = false;
 
     int opt;
-    while ((opt = getopt(argc, argv, "chd:t:f:b:")) != -1) {
+    while ((opt = getopt(arguments.argc, arguments.argv, "chd:t:f:b:")) != -1) {
         switch (opt) {
         case 'h':
             exit_with_usage(0);
