@@ -581,10 +581,8 @@ ExceptionOr<NonnullRefPtr<DocumentFragment>> Range::extract()
 
         // 2. Set the data of clone to the result of substringing data with node original start node,
         //    offset original start offset, and count original end offset minus original start offset.
-        auto result = static_cast<CharacterData const&>(*original_start_node).substring_data(original_start_offset, original_end_offset - original_start_offset);
-        if (result.is_exception())
-            return result.exception();
-        verify_cast<CharacterData>(*clone).set_data(result.release_value());
+        auto result = TRY(static_cast<CharacterData const&>(*original_start_node).substring_data(original_start_offset, original_end_offset - original_start_offset));
+        verify_cast<CharacterData>(*clone).set_data(move(result));
 
         // 3. Append clone to fragment.
         fragment->append_child(clone);
@@ -673,10 +671,8 @@ ExceptionOr<NonnullRefPtr<DocumentFragment>> Range::extract()
 
         // 2. Set the data of clone to the result of substringing data with node original start node, offset original start offset,
         //    and count original start node’s length minus original start offset.
-        auto result = static_cast<CharacterData const&>(*original_start_node).substring_data(original_start_offset, original_start_node->length() - original_start_offset);
-        if (result.is_exception())
-            return result.exception();
-        verify_cast<CharacterData>(*clone).set_data(result.release_value());
+        auto result = TRY(static_cast<CharacterData const&>(*original_start_node).substring_data(original_start_offset, original_start_node->length() - original_start_offset));
+        verify_cast<CharacterData>(*clone).set_data(move(result));
 
         // 3. Append clone to fragment.
         fragment->append_child(clone);
@@ -696,10 +692,7 @@ ExceptionOr<NonnullRefPtr<DocumentFragment>> Range::extract()
         auto subrange = Range::create(original_start_node, original_start_offset, *first_partially_contained_child, first_partially_contained_child->length());
 
         // 4. Let subfragment be the result of extracting subrange.
-        auto result = subrange->extract();
-        if (result.is_exception())
-            return result.exception();
-        auto subfragment = result.release_value();
+        auto subfragment = TRY(subrange->extract());
 
         // 5. Append subfragment to clone.
         clone->append_child(subfragment);
@@ -716,10 +709,8 @@ ExceptionOr<NonnullRefPtr<DocumentFragment>> Range::extract()
         auto clone = original_end_node->clone_node();
 
         // 2. Set the data of clone to the result of substringing data with node original end node, offset 0, and count original end offset.
-        auto result = static_cast<CharacterData const&>(*original_end_node).substring_data(0, original_end_offset);
-        if (result.is_exception())
-            return result.exception();
-        verify_cast<CharacterData>(*clone).set_data(result.release_value());
+        auto result = TRY(static_cast<CharacterData const&>(*original_end_node).substring_data(0, original_end_offset));
+        verify_cast<CharacterData>(*clone).set_data(move(result));
 
         // 3. Append clone to fragment.
         fragment->append_child(clone);
@@ -739,10 +730,7 @@ ExceptionOr<NonnullRefPtr<DocumentFragment>> Range::extract()
         auto subrange = Range::create(*last_partially_contained_child, 0, original_end_node, original_end_offset);
 
         // 4. Let subfragment be the result of extracting subrange.
-        auto result = subrange->extract();
-        if (result.is_exception())
-            return result.exception();
-        auto subfragment = result.release_value();
+        auto subfragment = TRY(subrange->extract());
 
         // 5. Append subfragment to clone.
         clone->append_child(subfragment);
@@ -821,16 +809,11 @@ ExceptionOr<void> Range::insert(NonnullRefPtr<Node> node)
         parent = reference_node->parent();
 
     // 6. Ensure pre-insertion validity of node into parent before referenceNode.
-    if (auto result = parent->ensure_pre_insertion_validity(node, reference_node); result.is_exception())
-        return result.exception();
+    TRY(parent->ensure_pre_insertion_validity(node, reference_node));
 
     // 7. If range’s start node is a Text node, set referenceNode to the result of splitting it with offset range’s start offset.
-    if (is<Text>(*m_start_container)) {
-        auto result = static_cast<Text&>(*m_start_container).split_text(m_start_offset);
-        if (result.is_exception())
-            return result.exception();
-        reference_node = result.release_value();
-    }
+    if (is<Text>(*m_start_container))
+        reference_node = TRY(static_cast<Text&>(*m_start_container).split_text(m_start_offset));
 
     // 8. If node is referenceNode, set referenceNode to its next sibling.
     if (node == reference_node)
@@ -854,8 +837,7 @@ ExceptionOr<void> Range::insert(NonnullRefPtr<Node> node)
         new_offset += 1;
 
     // 12. Pre-insert node into parent before referenceNode.
-    if (auto result = parent->pre_insert(node, reference_node); result.is_exception())
-        return result.exception();
+    TRY(parent->pre_insert(node, reference_node));
 
     // 13. If range is collapsed, then set range’s end to (parent, newOffset).
     if (collapsed())
@@ -882,21 +864,17 @@ ExceptionOr<void> Range::surround_contents(NonnullRefPtr<Node> new_parent)
         return InvalidNodeTypeError::create("Invalid parent node type");
 
     // 3. Let fragment be the result of extracting this.
-    auto fragment_or_error = extract();
-    if (fragment_or_error.is_exception())
-        return fragment_or_error.exception();
-    auto fragment = fragment_or_error.release_value();
+    auto fragment = TRY(extract());
 
     // 4. If newParent has children, then replace all with null within newParent.
     if (new_parent->has_children())
         new_parent->replace_all(nullptr);
 
     // 5. Insert newParent into this.
-    if (auto result = insert(new_parent); result.is_exception())
-        return result.exception();
+    TRY(insert(new_parent));
 
     // 6. Append fragment to newParent.
-    new_parent->append_child(fragment);
+    TRY(new_parent->append_child(fragment));
 
     // 7. Select newParent within this.
     return select(*new_parent);
