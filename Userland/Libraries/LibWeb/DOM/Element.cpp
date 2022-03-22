@@ -108,8 +108,7 @@ ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString 
         namespace_ = {};
 
     // 2. Validate qualifiedName.
-    if (auto result = Document::validate_qualified_name(qualified_name); result.is_exception())
-        return result.exception();
+    TRY(Document::validate_qualified_name(qualified_name));
 
     // 3. Let prefix be null.
     FlyString prefix = {};
@@ -148,14 +147,12 @@ ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString 
 ExceptionOr<void> Element::set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto result = validate_and_extract(namespace_, qualified_name);
-    if (result.is_exception())
-        return result.exception();
+    auto extracted_qualified_name = TRY(validate_and_extract(namespace_, qualified_name));
 
     // FIXME: 2. Set an attribute value for this using localName, value, and also prefix and namespace.
 
     // FIXME: Don't just call through to setAttribute() here.
-    return set_attribute(result.value().local_name(), value);
+    return set_attribute(extracted_qualified_name.local_name(), value);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-removeattribute
@@ -408,9 +405,7 @@ DOM::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) con
 
 ExceptionOr<void> Element::set_inner_html(String const& markup)
 {
-    auto result = DOMParsing::inner_html_setter(*this, markup);
-    if (result.is_exception())
-        return result.exception();
+    TRY(DOMParsing::inner_html_setter(*this, markup));
 
     set_needs_style_update(true);
 
