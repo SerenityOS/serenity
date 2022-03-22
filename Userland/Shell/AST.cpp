@@ -368,7 +368,7 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
 
             // If the literal isn't an option, treat it as a path.
             if (!(text.starts_with("-") || text == "--" || text == "-"))
-                return set_results_trivia(shell.complete_path("", text, corrected_offset, Shell::ExecutableOnly::No, escape_mode));
+                return set_results_trivia(shell.complete_path("", text, corrected_offset, Shell::ExecutableOnly::No, hit_test_result.closest_command_node.ptr(), hit_test_result.matching_node, escape_mode));
 
             // If the literal is an option, we have to know the program name
             // should we have no way to get that, bail early.
@@ -386,7 +386,7 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
             else
                 program_name = static_cast<StringLiteral*>(program_name_node.ptr())->text();
 
-            return set_results_trivia(shell.complete_option(program_name, text, corrected_offset));
+            return set_results_trivia(shell.complete_option(program_name, text, corrected_offset, hit_test_result.closest_command_node.ptr(), hit_test_result.matching_node));
         }
         return {};
     }
@@ -1589,6 +1589,9 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
     if (shell && shell->has_any_error())
         return;
 
+    if (!shell)
+        return;
+
     auto commands = shell->expand_aliases(move(unexpanded_commands));
 
     if (m_capture_stdout) {
@@ -2464,7 +2467,7 @@ Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shel
     if (corrected_offset > node->text().length())
         return {};
 
-    return shell.complete_path("", node->text(), corrected_offset, Shell::ExecutableOnly::No);
+    return shell.complete_path("", node->text(), corrected_offset, Shell::ExecutableOnly::No, nullptr, nullptr);
 }
 
 PathRedirectionNode::~PathRedirectionNode()
@@ -3042,7 +3045,7 @@ Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& she
     if (corrected_offset > right_value.length())
         return {};
 
-    return shell.complete_path(left_value, right_value, corrected_offset, Shell::ExecutableOnly::No);
+    return shell.complete_path(left_value, right_value, corrected_offset, Shell::ExecutableOnly::No, hit_test_result.closest_command_node.ptr(), hit_test_result.matching_node);
 }
 
 HitTestResult Juxtaposition::hit_test_position(size_t offset) const
@@ -3408,6 +3411,14 @@ VariableDeclarations::~VariableDeclarations()
 Value::~Value()
 {
 }
+
+String Value::resolve_as_string(RefPtr<Shell> shell)
+{
+    if (shell)
+        shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Conversion to string not allowed");
+    return {};
+}
+
 Vector<AST::Command> Value::resolve_as_commands(RefPtr<Shell> shell)
 {
     Command command;
@@ -3482,10 +3493,9 @@ Vector<Command> CommandSequenceValue::resolve_as_commands(RefPtr<Shell>)
     return m_contained_values;
 }
 
-Vector<String> CommandValue::resolve_as_list(RefPtr<Shell> shell)
+Vector<String> CommandValue::resolve_as_list(RefPtr<Shell>)
 {
-    shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Unexpected cast of a command to a list");
-    return {};
+    return m_command.argv;
 }
 
 Vector<Command> CommandValue::resolve_as_commands(RefPtr<Shell>)
@@ -3500,6 +3510,14 @@ JobValue::~JobValue()
 StringValue::~StringValue()
 {
 }
+
+String StringValue::resolve_as_string(RefPtr<Shell> shell)
+{
+    if (m_split.is_null())
+        return m_string;
+    return Value::resolve_as_string(shell);
+}
+
 Vector<String> StringValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (is_list()) {
@@ -3539,6 +3557,19 @@ Vector<String> GlobValue::resolve_as_list(RefPtr<Shell> shell)
 SimpleVariableValue::~SimpleVariableValue()
 {
 }
+
+String SimpleVariableValue::resolve_as_string(RefPtr<Shell> shell)
+{
+    if (!shell)
+        return resolve_slices(shell, String {}, m_slices);
+
+    if (auto value = resolve_without_cast(shell); value != this)
+        return value->resolve_as_string(shell);
+
+    char* env_value = getenv(m_name.characters());
+    return resolve_slices(shell, env_value, m_slices);
+}
+
 Vector<String> SimpleVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (!shell)
@@ -3574,6 +3605,21 @@ SpecialVariableValue::~SpecialVariableValue()
 {
 }
 
+String SpecialVariableValue::resolve_as_string(RefPtr<Shell> shell)
+{
+    if (!shell)
+        return {};
+
+    auto result = resolve_as_list(shell);
+    if (result.size() == 1)
+        return result[0];
+
+    if (result.is_empty())
+        return {};
+
+    return Value::resolve_as_string(shell);
+}
+
 Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (!shell)
@@ -3605,6 +3651,12 @@ Vector<String> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
 TildeValue::~TildeValue()
 {
 }
+
+String TildeValue::resolve_as_string(RefPtr<Shell> shell)
+{
+    return resolve_as_list(shell).first();
+}
+
 Vector<String> TildeValue::resolve_as_list(RefPtr<Shell> shell)
 {
     StringBuilder builder;

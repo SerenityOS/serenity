@@ -408,7 +408,7 @@ RefPtr<AST::Node> Shell::immediate_filter_glob(AST::ImmediateExpression& invokin
         if (value.size() == 1) {
             if (!value.first().matches(glob))
                 return IterationDecision::Continue;
-            result.append(AST::make_ref_counted<AST::StringLiteral>(arguments[1].position(), value.first()));
+            result.append(AST::make_ref_counted<AST::StringLiteral>(arguments[1].position(), value.first(), AST::StringLiteral::EnclosureType::None));
             return IterationDecision::Continue;
         }
 
@@ -416,7 +416,7 @@ RefPtr<AST::Node> Shell::immediate_filter_glob(AST::ImmediateExpression& invokin
             if (entry.matches(glob)) {
                 NonnullRefPtrVector<AST::Node> nodes;
                 for (auto& string : value)
-                    nodes.append(AST::make_ref_counted<AST::StringLiteral>(arguments[1].position(), string));
+                    nodes.append(AST::make_ref_counted<AST::StringLiteral>(arguments[1].position(), string, AST::StringLiteral::EnclosureType::None));
                 result.append(AST::make_ref_counted<AST::ListConcatenate>(arguments[1].position(), move(nodes)));
                 return IterationDecision::Continue;
             }
@@ -450,7 +450,7 @@ RefPtr<AST::Node> Shell::immediate_join(AST::ImmediateExpression& invoking_node,
     StringBuilder builder;
     builder.join(delimiter_str, value->resolve_as_list(*this));
 
-    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), builder.to_string());
+    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), builder.to_string(), AST::StringLiteral::EnclosureType::None);
 }
 
 RefPtr<AST::Node> Shell::run_immediate_function(StringView str, AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>& arguments)

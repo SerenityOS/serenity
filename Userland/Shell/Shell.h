@@ -186,12 +186,14 @@ public:
 
     void highlight(Line::Editor&) const;
     Vector<Line::CompletionSuggestion> complete();
-    Vector<Line::CompletionSuggestion> complete_path(StringView base, StringView, size_t offset, ExecutableOnly executable_only, EscapeMode = EscapeMode::Bareword);
     Vector<Line::CompletionSuggestion> complete_program_name(StringView, size_t offset, EscapeMode = EscapeMode::Bareword);
     Vector<Line::CompletionSuggestion> complete_variable(StringView, size_t offset);
     Vector<Line::CompletionSuggestion> complete_user(StringView, size_t offset);
-    Vector<Line::CompletionSuggestion> complete_option(StringView, StringView, size_t offset);
     Vector<Line::CompletionSuggestion> complete_immediate_function_name(StringView, size_t offset);
+
+    Vector<Line::CompletionSuggestion> complete_path(StringView base, StringView, size_t offset, ExecutableOnly executable_only, AST::Node const* command_node, AST::Node const*, EscapeMode = EscapeMode::Bareword);
+    Vector<Line::CompletionSuggestion> complete_option(StringView, StringView, size_t offset, AST::Node const* command_node, AST::Node const*);
+    ErrorOr<Vector<Line::CompletionSuggestion>> complete_via_program_itself(size_t offset, AST::Node const* command_node, AST::Node const*, EscapeMode escape_mode, StringView known_program_name);
 
     void restore_ios();
 
