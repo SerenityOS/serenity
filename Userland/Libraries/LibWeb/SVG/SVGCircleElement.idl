@@ -1,8 +1,9 @@
+#import <SVG/SVGAnimatedLength.idl>
 #import <SVG/SVGGeometryElement.idl>
 
 [Exposed=Window]
 interface SVGCircleElement : SVGGeometryElement {
-    // [SameObject] readonly attribute SVGAnimatedLength cx;
-    // [SameObject] readonly attribute SVGAnimatedLength cy;
-    // [SameObject] readonly attribute SVGAnimatedLength r;
+    [SameObject] readonly attribute SVGAnimatedLength cx;
+    [SameObject] readonly attribute SVGAnimatedLength cy;
+    [SameObject] readonly attribute SVGAnimatedLength r;
 };
