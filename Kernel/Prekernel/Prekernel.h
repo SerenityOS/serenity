@@ -13,6 +13,7 @@
 #endif
 
 #define MAX_KERNEL_SIZE 0x4000000
+#define KERNEL_PD_SIZE 0x31000000
 
 #ifdef __cplusplus
 namespace Kernel {
@@ -22,7 +23,6 @@ struct [[gnu::packed]] BootInfo {
     u32 end_of_prekernel_image;
     u64 physical_to_virtual_offset;
     u64 kernel_mapping_base;
-    u64 default_kernel_load_base;
     u64 kernel_load_base;
 #    if ARCH(X86_64)
     u32 gdt64ptr;

@@ -36,7 +36,8 @@ UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_
 {
     auto directory = adopt_ref_if_nonnull(new (nothrow) PageDirectory).release_nonnull();
 
-    MUST(directory->m_range_allocator.initialize_with_range(VirtualAddress(default_kernel_load_base), KERNEL_PD_END - default_kernel_load_base));
+    auto kernel_range_start = kernel_mapping_base + 2 * MiB; // The first 2 MiB are used for mapping the pre-kernel
+    MUST(directory->m_range_allocator.initialize_with_range(VirtualAddress(kernel_range_start), KERNEL_PD_END - kernel_range_start));
     // Carve out the whole page directory covering the kernel image to make MemoryManager::initialize_physical_pages() happy
     FlatPtr start_of_range = ((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
     FlatPtr end_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000;
