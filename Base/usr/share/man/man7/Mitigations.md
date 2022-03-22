@@ -41,6 +41,22 @@ Date:   Sun Jan 5 18:00:15 2020 +0100
 Kernel: Start implementing x86 SMAP support
 ```
 
+### UMIP (User Mode Instruction Prevention)
+
+User Mode Instruction Prevention is an x86 CPU security feature which prevents execution of specific privileged
+instructions in user mode (SGDT, SIDT, SLDT, SMSW, STR).
+These instructions let user mode code query the addresses of various kernel structures (the GDT, LDT, IDT, etc),
+meaning that they leak kernel addresses that can be exploited to defeat ASLR.
+
+It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/9c0836ce97ae36165abd8eb5241bb5239af3a756):
+```
+commit 9c0836ce97ae36165abd8eb5241bb5239af3a756
+Author: Andreas Kling <awesomekling@gmail.com>
+Date:   Wed Jan 1 13:02:32 2020 +0100
+
+Kernel: Enable x86 UMIP (User Mode Instruction Prevention) if supported
+```
+
 ### Pledge
 
 [pledge](https://marc.info/?l=openbsd-tech&m=143725996614627&w=2) is a mitigation which originated from OpenBSD.
