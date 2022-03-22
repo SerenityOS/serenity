@@ -35,9 +35,7 @@ ExceptionOr<NonnullRefPtr<Node>> convert_nodes_to_single_node(Vector<Variant<Non
     NonnullRefPtr<Node> document_fragment = adopt_ref(*new DocumentFragment(document));
     for (auto& unconverted_node : nodes) {
         auto node = potentially_convert_string_to_text_node(unconverted_node);
-        auto result = document_fragment->append_child(node);
-        if (result.is_exception())
-            return result.exception();
+        (void)TRY(document_fragment->append_child(node));
     }
 
     return document_fragment;
