@@ -139,12 +139,10 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
         return {};
 
     // 2. Let usability be the result of checking the usability of image.
-    auto usability = check_usability_of_image(image);
-    if (usability.is_exception())
-        return usability.exception();
+    auto usability = TRY(check_usability_of_image(image));
 
     // 3. If usability is bad, then return (without drawing anything).
-    if (usability.value() == CanvasImageSourceUsability::Bad)
+    if (usability == CanvasImageSourceUsability::Bad)
         return {};
 
     auto const* bitmap = image.visit([](auto const& source) { return source->bitmap(); });
@@ -645,7 +643,7 @@ NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_conic_gradient(do
 DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImageSource const& image)
 {
     // 1. Switch on image:
-    auto usability = image.visit(
+    auto usability = TRY(image.visit(
         // HTMLOrSVGImageElement
         [](HTMLImageElement const& image_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
             // FIXME: If image's current request's state is broken, then throw an "InvalidStateError" DOMException.
@@ -670,11 +668,9 @@ DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImag
             if (canvas_element.width() == 0 || canvas_element.height() == 0)
                 return DOM::InvalidStateError::create("Canvas width or height is zero");
             return Optional<CanvasImageSourceUsability> {};
-        });
-    if (usability.is_exception())
-        return usability.exception();
-    if (usability.value().has_value())
-        return *usability.value();
+        }));
+    if (usability.has_value())
+        return usability.release_value();
 
     // 2. Return good.
     return { CanvasImageSourceUsability::Good };
