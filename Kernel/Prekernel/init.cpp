@@ -91,17 +91,15 @@ extern "C" [[noreturn]] void init()
 
     FlatPtr kernel_physical_base = 0x200000;
 #if ARCH(I386)
-    FlatPtr kernel_load_base = 0xc0200000;
+    FlatPtr default_kernel_load_base = 0xc0200000;
 #else
-    FlatPtr kernel_load_base = 0x2000200000;
+    FlatPtr default_kernel_load_base = 0x2000200000;
 #endif
 
-#if ARCH(X86_64)
     // KASLR
     static constexpr auto maximum_offset = 256 * MiB;
-    kernel_load_base = kernel_load_base + (generate_secure_seed() % maximum_offset);
-    kernel_load_base = kernel_load_base & ~(PAGE_SIZE - 1);
-#endif
+    FlatPtr kernel_load_base = default_kernel_load_base + (generate_secure_seed() % maximum_offset);
+    kernel_load_base &= ~(2 * MiB - 1);
 
     FlatPtr kernel_load_end = 0;
     for (size_t i = 0; i < kernel_elf_header.e_phnum; i++) {
