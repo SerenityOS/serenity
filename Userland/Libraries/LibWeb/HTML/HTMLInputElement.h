@@ -119,11 +119,15 @@ private:
     // https://html.spec.whatwg.org/multipage/input.html#concept-input-checked-dirty-flag
     bool m_dirty_checkedness { false };
 
+    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fe-dirty
+    bool m_dirty_value { false };
+
     // https://html.spec.whatwg.org/multipage/input.html#the-input-element:legacy-pre-activation-behavior
     bool m_before_legacy_pre_activation_behavior_checked { false };
     RefPtr<HTMLInputElement> m_legacy_pre_activation_behavior_checked_element_in_group;
 
     TypeAttributeState m_type { TypeAttributeState::Text };
+    String m_value;
 };
 
 }
