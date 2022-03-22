@@ -53,6 +53,8 @@ public:
 protected:
     HTMLCollection(ParentNode& root, Function<bool(Element const&)> filter);
 
+    NonnullRefPtr<ParentNode> root() { return m_root; }
+
 private:
     NonnullRefPtr<ParentNode> m_root;
     Function<bool(Element const&)> m_filter;
