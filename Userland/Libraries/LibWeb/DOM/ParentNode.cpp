@@ -160,16 +160,10 @@ NonnullRefPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(FlyString 
 ExceptionOr<void> ParentNode::prepend(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
 {
     // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
-    auto node_or_exception = convert_nodes_to_single_node(nodes, document());
-    if (node_or_exception.is_exception())
-        return node_or_exception.exception();
-
-    auto node = node_or_exception.release_value();
+    auto node = TRY(convert_nodes_to_single_node(nodes, document()));
 
     // 2. Pre-insert node into this before this’s first child.
-    auto result = pre_insert(node, first_child());
-    if (result.is_exception())
-        return result.exception();
+    (void)TRY(pre_insert(node, first_child()));
 
     return {};
 }
@@ -177,16 +171,10 @@ ExceptionOr<void> ParentNode::prepend(Vector<Variant<NonnullRefPtr<Node>, String
 ExceptionOr<void> ParentNode::append(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
 {
     // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
-    auto node_or_exception = convert_nodes_to_single_node(nodes, document());
-    if (node_or_exception.is_exception())
-        return node_or_exception.exception();
-
-    auto node = node_or_exception.release_value();
+    auto node = TRY(convert_nodes_to_single_node(nodes, document()));
 
     // 2. Append node to this.
-    auto result = append_child(node);
-    if (result.is_exception())
-        return result.exception();
+    (void)TRY(append_child(node));
 
     return {};
 }
@@ -194,16 +182,10 @@ ExceptionOr<void> ParentNode::append(Vector<Variant<NonnullRefPtr<Node>, String>
 ExceptionOr<void> ParentNode::replace_children(Vector<Variant<NonnullRefPtr<Node>, String>> const& nodes)
 {
     // 1. Let node be the result of converting nodes into a node given nodes and this’s node document.
-    auto node_or_exception = convert_nodes_to_single_node(nodes, document());
-    if (node_or_exception.is_exception())
-        return node_or_exception.exception();
-
-    auto node = node_or_exception.release_value();
+    auto node = TRY(convert_nodes_to_single_node(nodes, document()));
 
     // 2. Ensure pre-insertion validity of node into this before null.
-    auto validity_exception = ensure_pre_insertion_validity(node, nullptr);
-    if (validity_exception.is_exception())
-        return validity_exception.exception();
+    TRY(ensure_pre_insertion_validity(node, nullptr));
 
     // 3. Replace all with node within this.
     replace_all(node);
