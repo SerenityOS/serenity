@@ -128,7 +128,7 @@ SHA256::DigestType SHA256::peek()
 
     // SHA uses big-endian and we assume little-endian
     // FIXME: looks like a thing for AK::NetworkOrdered,
-    //        but he doesn't support shifting operations
+    //        but that doesn't support shifting operations
     for (size_t i = 0; i < 4; ++i) {
         digest.data[i + 0] = (m_state[0] >> (24 - i * 8)) & 0x000000ff;
         digest.data[i + 4] = (m_state[1] >> (24 - i * 8)) & 0x000000ff;
@@ -246,7 +246,7 @@ SHA384::DigestType SHA384::peek()
 
     // SHA uses big-endian and we assume little-endian
     // FIXME: looks like a thing for AK::NetworkOrdered,
-    //        but he doesn't support shifting operations
+    //        but that doesn't support shifting operations
     for (size_t i = 0; i < 8; ++i) {
         digest.data[i + 0] = (m_state[0] >> (56 - i * 8)) & 0x000000ff;
         digest.data[i + 8] = (m_state[1] >> (56 - i * 8)) & 0x000000ff;
@@ -361,7 +361,7 @@ SHA512::DigestType SHA512::peek()
 
     // SHA uses big-endian and we assume little-endian
     // FIXME: looks like a thing for AK::NetworkOrdered,
-    //        but he doesn't support shifting operations
+    //        but that doesn't support shifting operations
     for (size_t i = 0; i < 8; ++i) {
         digest.data[i + 0] = (m_state[0] >> (56 - i * 8)) & 0x000000ff;
         digest.data[i + 8] = (m_state[1] >> (56 - i * 8)) & 0x000000ff;
