@@ -326,6 +326,22 @@ Date:   Tue Aug 31 16:08:11 2021 +0200
 Build: Pass "-z separate-code" to linker
 ```
 
+### KASLR (Kernel Address Space Layout Randomization)
+
+The location of the kernel code is randomized at boot time, this ensures that attackers
+can not use a hardcoded kernel addresses when attempting ROP, instead they must first find
+an additional information leak to expose the KASLR offset.
+
+It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/ece5a9a1088012ca9fadfb7e0bc3edd8029d36ad):
+
+```
+commit ece5a9a1088012ca9fadfb7e0bc3edd8029d36ad
+Author Idan Horowitz <idan.horowitz@gmail.com>
+Date:  Mon Mar 21 22:59:48 2022 +0200
+
+Kernel: Add an extremely primitive version of KASLR
+```
+
 ## See also
 
 * [`unveil`(2)](help://man/2/unveil)
