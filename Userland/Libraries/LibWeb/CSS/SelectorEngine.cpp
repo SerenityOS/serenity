@@ -95,9 +95,6 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
         return element.attribute(attribute.name).starts_with(attribute.value);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
         return element.attribute(attribute.name).ends_with(attribute.value);
-    case CSS::Selector::SimpleSelector::Attribute::MatchType::None:
-        VERIFY_NOT_REACHED();
-        break;
     }
 
     return false;
@@ -124,8 +121,6 @@ static inline DOM::Element const* next_sibling_with_same_tag_name(DOM::Element c
 static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass const& pseudo_class, DOM::Element const& element)
 {
     switch (pseudo_class.type) {
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::None:
-        break;
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Link:
         return element.is_link();
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Visited:

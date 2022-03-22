@@ -105,8 +105,6 @@ u32 Selector::specificity() const
             case SimpleSelector::Type::Universal:
                 // ignore the universal selector
                 break;
-            case SimpleSelector::Type::Invalid:
-                break;
             }
         }
     }

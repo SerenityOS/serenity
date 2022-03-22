@@ -21,7 +21,6 @@ using SelectorList = NonnullRefPtrVector<class Selector>;
 class Selector : public RefCounted<Selector> {
 public:
     enum class PseudoElement {
-        None,
         Before,
         After,
         FirstLine,
@@ -32,7 +31,6 @@ public:
 
     struct SimpleSelector {
         enum class Type {
-            Invalid,
             Universal,
             TagName,
             Id,
@@ -54,7 +52,6 @@ public:
 
         struct PseudoClass {
             enum class Type {
-                None,
                 Link,
                 Visited,
                 Hover,
@@ -81,7 +78,7 @@ public:
                 Active,
                 Lang,
             };
-            Type type { Type::None };
+            Type type;
 
             // FIXME: We don't need this field on every single SimpleSelector, but it's also annoying to malloc it somewhere.
             // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
@@ -95,7 +92,6 @@ public:
 
         struct Attribute {
             enum class MatchType {
-                None,
                 HasAttribute,
                 ExactValueMatch,
                 ContainsWord,      // [att~=val]
@@ -104,12 +100,12 @@ public:
                 StartsWithString,  // [att^=val]
                 EndsWithString,    // [att$=val]
             };
-            MatchType match_type { MatchType::None };
+            MatchType match_type;
             FlyString name {};
             String value {};
         };
 
-        Type type { Type::Invalid };
+        Type type;
         Variant<Empty, Attribute, PseudoClass, PseudoElement, FlyString> value {};
 
         Attribute const& attribute() const { return value.get<Attribute>(); }
@@ -173,8 +169,6 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
         return "first-letter"sv;
     case Selector::PseudoElement::Marker:
         return "marker"sv;
-    case Selector::PseudoElement::None:
-        break;
     }
     VERIFY_NOT_REACHED();
 }
@@ -234,8 +228,6 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "where"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Lang:
         return "lang"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::None:
-        break;
     }
     VERIFY_NOT_REACHED();
 }
