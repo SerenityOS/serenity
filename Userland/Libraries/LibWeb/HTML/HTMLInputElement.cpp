@@ -22,6 +22,7 @@ namespace Web::HTML {
 
 HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : FormAssociatedElement(document, move(qualified_name))
+    , m_value(String::empty())
 {
     activation_behavior = [this](auto&) {
         // The activation behavior for input elements are these steps:
@@ -117,6 +118,10 @@ void HTMLInputElement::run_input_activation_behavior()
 
 void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
 {
+    // An input element's dirty value flag must be set to true whenever the user interacts with the control in a way that changes the value.
+    m_value = value_sanitization_algorithm(m_text_node->data());
+    m_dirty_value = true;
+
     // NOTE: This is a bit ad-hoc, but basically implements part of "4.10.5.5 Common event behaviors"
     //       https://html.spec.whatwg.org/multipage/input.html#common-input-element-events
     queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
@@ -132,22 +137,33 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
     });
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
 String HTMLInputElement::value() const
 {
-    if (m_text_node)
-        return m_text_node->data();
-    return default_value();
+    // Return the current value of the element.
+    return m_value;
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-value-value
 void HTMLInputElement::set_value(String value)
 {
-    auto sanitised_value = value_sanitization_algorithm(move(value));
+    // 1. Let oldValue be the element's value.
+    auto old_value = move(m_value);
 
-    if (m_text_node) {
-        m_text_node->set_data(sanitised_value);
-        return;
-    }
-    set_attribute(HTML::AttributeNames::value, sanitised_value);
+    // 2. Set the element's value to the new value.
+    // NOTE: This is done as part of step 4 below.
+
+    // 3. Set the element's dirty value flag to true.
+    m_dirty_value = true;
+
+    // 4. Invoke the value sanitization algorithm, if the element's type attribute's current state defines one.
+    m_value = value_sanitization_algorithm(move(value));
+
+    // 5. If the element's value (after applying the value sanitization algorithm) is different from oldValue,
+    //    and the element has a text entry cursor position, move the text entry cursor position to the end of the
+    //    text control, unselecting any selected text and resetting the selection direction to "none".
+    if (m_text_node && (m_value != old_value))
+        m_text_node->set_data(m_value);
 }
 
 void HTMLInputElement::create_shadow_tree_if_needed()
@@ -169,7 +185,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     }
 
     auto shadow_root = adopt_ref(*new DOM::ShadowRoot(document(), *this));
-    auto initial_value = attribute(HTML::AttributeNames::value);
+    auto initial_value = m_value;
     if (initial_value.is_null())
         initial_value = String::empty();
     auto element = document().create_element(HTML::TagNames::div).release_value();
@@ -207,6 +223,9 @@ void HTMLInputElement::parse_attribute(FlyString const& name, String const& valu
             set_checked(true, ChangeSource::Programmatic);
     } else if (name == HTML::AttributeNames::type) {
         m_type = parse_type_attribute(value);
+    } else if (name == HTML::AttributeNames::value) {
+        if (!m_dirty_value)
+            m_value = value_sanitization_algorithm(value);
     }
 }
 
@@ -232,6 +251,9 @@ void HTMLInputElement::did_remove_attribute(FlyString const& name)
         // the user agent must set the checkedness of the element to false.
         if (!m_dirty_checkedness)
             set_checked(false, ChangeSource::Programmatic);
+    } else if (name == HTML::AttributeNames::value) {
+        if (!m_dirty_value)
+            m_value = String::empty();
     }
 }
 
