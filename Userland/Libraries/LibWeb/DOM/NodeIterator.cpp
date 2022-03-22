@@ -15,7 +15,7 @@ namespace Web::DOM {
 
 NodeIterator::NodeIterator(Node& root)
     : m_root(root)
-    , m_reference(root)
+    , m_reference({ root })
 {
     root.document().register_node_iterator({}, *this);
 }
@@ -30,10 +30,8 @@ NonnullRefPtr<NodeIterator> NodeIterator::create(Node& root, unsigned what_to_sh
 {
     // 1. Let iterator be a new NodeIterator object.
     // 2. Set iterator’s root and iterator’s reference to root.
-    auto iterator = adopt_ref(*new NodeIterator(root));
-
     // 3. Set iterator’s pointer before reference to true.
-    iterator->m_pointer_before_reference = true;
+    auto iterator = adopt_ref(*new NodeIterator(root));
 
     // 4. Set iterator’s whatToShow to whatToShow.
     iterator->m_what_to_show = what_to_show;
@@ -56,10 +54,10 @@ void NodeIterator::detach()
 JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::traverse(Direction direction)
 {
     // 1. Let node be iterator’s reference.
-    auto node = m_reference;
-
     // 2. Let beforeNode be iterator’s pointer before reference.
-    auto before_node = m_pointer_before_reference;
+    m_traversal_pointer = m_reference;
+
+    RefPtr<Node> candidate;
 
     // 3. While true:
     while (true) {
@@ -68,34 +66,40 @@ JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::traverse(Direction direction)
             // next
             // If beforeNode is false, then set node to the first node following node in iterator’s iterator collection.
             // If there is no such node, then return null.
-            if (!before_node) {
-                auto* next_node = node->next_in_pre_order(m_root.ptr());
+            if (!m_traversal_pointer->is_before_node) {
+                auto* next_node = m_traversal_pointer->node->next_in_pre_order(m_root.ptr());
                 if (!next_node)
                     return nullptr;
-                node = *next_node;
+                m_traversal_pointer->node = *next_node;
             } else {
                 // If beforeNode is true, then set it to false.
-                before_node = false;
+                m_traversal_pointer->is_before_node = false;
             }
         } else {
             // previous
             // If beforeNode is true, then set node to the first node preceding node in iterator’s iterator collection.
             // If there is no such node, then return null.
-            if (before_node) {
-                if (node == m_root.ptr())
+            if (m_traversal_pointer->is_before_node) {
+                if (m_traversal_pointer->node == m_root.ptr())
                     return nullptr;
-                auto* previous_node = node->previous_in_pre_order();
+                auto* previous_node = m_traversal_pointer->node->previous_in_pre_order();
                 if (!previous_node)
                     return nullptr;
-                node = *previous_node;
+                m_traversal_pointer->node = *previous_node;
             } else {
                 // If beforeNode is false, then set it to true.
-                before_node = true;
+                m_traversal_pointer->is_before_node = true;
             }
         }
 
+        // NOTE: If the NodeFilter deletes the iterator's current traversal pointer,
+        //       we will automatically retarget it. However, in that case, we're expected
+        //       to return the node passed to the filter, not the adjusted traversal pointer's
+        //       node after the filter returns!
+        candidate = m_traversal_pointer->node;
+
         // 2. Let result be the result of filtering node within iterator.
-        auto result = TRY(filter(*node));
+        auto result = TRY(filter(*m_traversal_pointer->node));
 
         // 3. If result is FILTER_ACCEPT, then break.
         if (result == NodeFilter::FILTER_ACCEPT)
@@ -103,13 +107,11 @@ JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::traverse(Direction direction)
     }
 
     // 4. Set iterator’s reference to node.
-    m_reference = node;
-
     // 5. Set iterator’s pointer before reference to beforeNode.
-    m_pointer_before_reference = before_node;
+    m_reference = m_traversal_pointer.release_value();
 
     // 6. Return node.
-    return node;
+    return candidate;
 }
 
 // https://dom.spec.whatwg.org/#concept-node-filter
@@ -164,44 +166,67 @@ JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::previous_node()
     return traverse(Direction::Previous);
 }
 
+void NodeIterator::run_pre_removing_steps_with_node_pointer(Node& to_be_removed_node, NodePointer& pointer)
+{
+    // NOTE: This function tries to match the behavior of other engines, but not the DOM specification
+    //       as it's a known issue that the spec doesn't match how major browsers behave.
+    //       Spec bug: https://github.com/whatwg/dom/issues/907
+
+    if (!to_be_removed_node.is_descendant_of(root()))
+        return;
+
+    if (!to_be_removed_node.is_inclusive_ancestor_of(pointer.node))
+        return;
+
+    if (pointer.is_before_node) {
+        if (auto* node = to_be_removed_node.next_in_pre_order(root())) {
+            while (node && node->is_descendant_of(to_be_removed_node))
+                node = node->next_in_pre_order(root());
+            if (node)
+                pointer.node = *node;
+            return;
+        }
+        if (auto* node = to_be_removed_node.previous_in_pre_order()) {
+            if (to_be_removed_node.is_ancestor_of(pointer.node)) {
+                while (node && node->is_descendant_of(to_be_removed_node))
+                    node = node->previous_in_pre_order();
+            }
+            if (node) {
+                pointer = {
+                    .node = *node,
+                    .is_before_node = false,
+                };
+            }
+        }
+        return;
+    }
+
+    if (auto* node = to_be_removed_node.previous_in_pre_order()) {
+        if (to_be_removed_node.is_ancestor_of(pointer.node)) {
+            while (node && node->is_descendant_of(to_be_removed_node))
+                node = node->previous_in_pre_order();
+        }
+        if (node)
+            pointer.node = *node;
+        return;
+    }
+    auto* node = to_be_removed_node.next_in_pre_order(root());
+    if (to_be_removed_node.is_ancestor_of(pointer.node)) {
+        while (node && node->is_descendant_of(to_be_removed_node))
+            node = node->previous_in_pre_order();
+    }
+    if (node)
+        pointer.node = *node;
+}
+
 // https://dom.spec.whatwg.org/#nodeiterator-pre-removing-steps
 void NodeIterator::run_pre_removing_steps(Node& to_be_removed_node)
 {
-    // NOTE: This function implements what the DOM specification tells us to do.
-    //       However, it's known to not match other browsers: https://github.com/whatwg/dom/issues/907
+    // NOTE: If we're in the middle of traversal, we have to adjust the traversal pointer in response to node removal.
+    if (m_traversal_pointer.has_value())
+        run_pre_removing_steps_with_node_pointer(to_be_removed_node, *m_traversal_pointer);
 
-    // 1. If toBeRemovedNode is not an inclusive ancestor of nodeIterator’s reference, or toBeRemovedNode is nodeIterator’s root, then return.
-    if (!to_be_removed_node.is_inclusive_ancestor_of(m_reference) || &to_be_removed_node == m_root)
-        return;
-
-    // 2. If nodeIterator’s pointer before reference is true, then:
-    if (m_pointer_before_reference) {
-        // 1. Let next be toBeRemovedNode’s first following node that is an inclusive descendant of nodeIterator’s root and is not an inclusive descendant of toBeRemovedNode, and null if there is no such node.
-        RefPtr<Node> next = to_be_removed_node.next_in_pre_order(m_root);
-        while (next && (!next->is_inclusive_descendant_of(m_root) || next->is_inclusive_descendant_of(to_be_removed_node)))
-            next = next->next_in_pre_order(m_root);
-
-        // 2. If next is non-null, then set nodeIterator’s reference to next and return.
-        if (next) {
-            m_reference = *next;
-            return;
-        }
-
-        // 3. Otherwise, set nodeIterator’s pointer before reference to false.
-        m_pointer_before_reference = false;
-    }
-
-    // 3. Set nodeIterator’s reference to toBeRemovedNode’s parent, if toBeRemovedNode’s previous sibling is null,
-    if (!to_be_removed_node.previous_sibling()) {
-        VERIFY(to_be_removed_node.parent());
-        m_reference = *to_be_removed_node.parent();
-    } else {
-        // ...and to the inclusive descendant of toBeRemovedNode’s previous sibling that appears last in tree order otherwise.
-        auto* node = to_be_removed_node.previous_sibling();
-        while (node->last_child())
-            node = node->last_child();
-        m_reference = *node;
-    }
+    run_pre_removing_steps_with_node_pointer(to_be_removed_node, m_reference);
 }
 
 }
