@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -368,9 +368,7 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
 // https://dom.spec.whatwg.org/#concept-node-pre-insert
 ExceptionOr<NonnullRefPtr<Node>> Node::pre_insert(NonnullRefPtr<Node> node, RefPtr<Node> child)
 {
-    auto validity_result = ensure_pre_insertion_validity(node, child);
-    if (validity_result.is_exception())
-        return validity_result.exception();
+    TRY(ensure_pre_insertion_validity(node, child));
 
     auto reference_child = child;
     if (reference_child == node)
