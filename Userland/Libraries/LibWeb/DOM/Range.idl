@@ -25,6 +25,7 @@ interface Range : AbstractRange {
     short compareBoundaryPoints(unsigned short how, Range sourceRange);
 
     [CEReactions, NewObject] DocumentFragment extractContents();
+    [CEReactions, NewObject] DocumentFragment cloneContents();
     [CEReactions] undefined insertNode(Node node);
     [CEReactions] undefined surroundContents(Node newParent);
 

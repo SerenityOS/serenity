@@ -62,6 +62,7 @@ public:
     ExceptionOr<i16> compare_point(Node const&, u32 offset) const;
 
     ExceptionOr<NonnullRefPtr<DocumentFragment>> extract_contents();
+    ExceptionOr<NonnullRefPtr<DocumentFragment>> clone_contents();
 
     ExceptionOr<void> insert_node(NonnullRefPtr<Node>);
     ExceptionOr<void> surround_contents(NonnullRefPtr<Node> new_parent);
@@ -87,6 +88,7 @@ private:
     ExceptionOr<void> select(Node& node);
 
     ExceptionOr<NonnullRefPtr<DocumentFragment>> extract();
+    ExceptionOr<NonnullRefPtr<DocumentFragment>> clone_the_contents();
     ExceptionOr<void> insert(NonnullRefPtr<Node>);
 
     bool contains_node(Node const&) const;

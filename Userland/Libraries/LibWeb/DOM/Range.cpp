@@ -880,4 +880,166 @@ ExceptionOr<void> Range::surround_contents(NonnullRefPtr<Node> new_parent)
     return select(*new_parent);
 }
 
+// https://dom.spec.whatwg.org/#dom-range-clonecontents
+ExceptionOr<NonnullRefPtr<DocumentFragment>> Range::clone_contents()
+{
+    return clone_the_contents();
+}
+
+// https://dom.spec.whatwg.org/#concept-range-clone
+ExceptionOr<NonnullRefPtr<DocumentFragment>> Range::clone_the_contents()
+{
+    // 1. Let fragment be a new DocumentFragment node whose node document is range’s start node’s node document.
+    auto fragment = adopt_ref(*new DocumentFragment(const_cast<Document&>(start_container()->document())));
+
+    // 2. If range is collapsed, then return fragment.
+    if (collapsed())
+        return fragment;
+
+    // 3. Let original start node, original start offset, original end node, and original end offset
+    //    be range’s start node, start offset, end node, and end offset, respectively.
+    NonnullRefPtr<Node> original_start_node = m_start_container;
+    auto original_start_offset = m_start_offset;
+    NonnullRefPtr<Node> original_end_node = m_end_container;
+    auto original_end_offset = m_end_offset;
+
+    // 4. If original start node is original end node and it is a CharacterData node, then:
+    if (original_start_node.ptr() == original_end_node.ptr() && is<CharacterData>(*original_start_node)) {
+        // 1. Let clone be a clone of original start node.
+        auto clone = original_start_node->clone_node();
+
+        // 2. Set the data of clone to the result of substringing data with node original start node,
+        //    offset original start offset, and count original end offset minus original start offset.
+        auto result = TRY(static_cast<CharacterData const&>(*original_start_node).substring_data(original_start_offset, original_end_offset - original_start_offset));
+        verify_cast<CharacterData>(*clone).set_data(move(result));
+
+        // 3. Append clone to fragment.
+        fragment->append_child(clone);
+
+        // 4. Return fragment.
+        return fragment;
+    }
+
+    // 5. Let common ancestor be original start node.
+    NonnullRefPtr<Node> common_ancestor = original_start_node;
+
+    // 6. While common ancestor is not an inclusive ancestor of original end node, set common ancestor to its own parent.
+    while (!common_ancestor->is_inclusive_ancestor_of(original_end_node))
+        common_ancestor = *common_ancestor->parent_node();
+
+    // 7. Let first partially contained child be null.
+    RefPtr<Node> first_partially_contained_child;
+
+    // 8. If original start node is not an inclusive ancestor of original end node,
+    //    set first partially contained child to the first child of common ancestor that is partially contained in range.
+    if (!original_start_node->is_inclusive_ancestor_of(original_end_node)) {
+        for (auto* child = common_ancestor->first_child(); child; child = child->next_sibling()) {
+            if (partially_contains_node(*child)) {
+                first_partially_contained_child = child;
+                break;
+            }
+        }
+    }
+
+    // 9. Let last partially contained child be null.
+    RefPtr<Node> last_partially_contained_child;
+
+    // 10. If original end node is not an inclusive ancestor of original start node,
+    //     set last partially contained child to the last child of common ancestor that is partially contained in range.
+    if (!original_end_node->is_inclusive_ancestor_of(original_start_node)) {
+        for (auto* child = common_ancestor->last_child(); child; child = child->previous_sibling()) {
+            if (partially_contains_node(*child)) {
+                last_partially_contained_child = child;
+                break;
+            }
+        }
+    }
+
+    // 11. Let contained children be a list of all children of common ancestor that are contained in range, in tree order.
+    Vector<NonnullRefPtr<Node>> contained_children;
+    for (Node const* node = common_ancestor->first_child(); node; node = node->next_sibling()) {
+        if (contains_node(*node))
+            contained_children.append(*node);
+    }
+
+    // 12. If any member of contained children is a doctype, then throw a "HierarchyRequestError" DOMException.
+    for (auto const& child : contained_children) {
+        if (is<DocumentType>(*child))
+            return DOM::HierarchyRequestError::create("Contained child is a DocumentType");
+    }
+
+    // 13. If first partially contained child is a CharacterData node, then:
+    if (first_partially_contained_child && is<CharacterData>(*first_partially_contained_child)) {
+        // 1. Let clone be a clone of original start node.
+        auto clone = original_start_node->clone_node();
+
+        // 2. Set the data of clone to the result of substringing data with node original start node, offset original start offset,
+        //    and count original start node’s length minus original start offset.
+        auto result = TRY(static_cast<CharacterData const&>(*original_start_node).substring_data(original_start_offset, original_start_node->length() - original_start_offset));
+        verify_cast<CharacterData>(*clone).set_data(move(result));
+
+        // 3. Append clone to fragment.
+        fragment->append_child(clone);
+    }
+    // 14. Otherwise, if first partially contained child is not null:
+    else if (first_partially_contained_child) {
+        // 1. Let clone be a clone of first partially contained child.
+        auto clone = first_partially_contained_child->clone_node();
+
+        // 2. Append clone to fragment.
+        fragment->append_child(clone);
+
+        // 3. Let subrange be a new live range whose start is (original start node, original start offset) and whose end is (first partially contained child, first partially contained child’s length).
+        auto subrange = Range::create(original_start_node, original_start_offset, *first_partially_contained_child, first_partially_contained_child->length());
+
+        // 4. Let subfragment be the result of cloning the contents of subrange.
+        auto subfragment = TRY(subrange->clone_the_contents());
+
+        // 5. Append subfragment to clone.
+        clone->append_child(subfragment);
+    }
+
+    // 15. For each contained child in contained children.
+    for (auto& contained_child : contained_children) {
+        // 1. Let clone be a clone of contained child with the clone children flag set.
+        auto clone = contained_child->clone_node(nullptr, true);
+
+        // 2. Append clone to fragment.
+        fragment->append_child(move(clone));
+    }
+
+    // 16. If last partially contained child is a CharacterData node, then:
+    if (last_partially_contained_child && is<CharacterData>(*last_partially_contained_child)) {
+        // 1. Let clone be a clone of original end node.
+        auto clone = original_end_node->clone_node();
+
+        // 2. Set the data of clone to the result of substringing data with node original end node, offset 0, and count original end offset.
+        auto result = TRY(static_cast<CharacterData const&>(*original_end_node).substring_data(0, original_end_offset));
+        verify_cast<CharacterData>(*clone).set_data(move(result));
+
+        // 3. Append clone to fragment.
+        fragment->append_child(clone);
+    }
+    // 17. Otherwise, if last partially contained child is not null:
+    else if (last_partially_contained_child) {
+        // 1. Let clone be a clone of last partially contained child.
+        auto clone = last_partially_contained_child->clone_node();
+
+        // 2. Append clone to fragment.
+        fragment->append_child(clone);
+
+        // 3. Let subrange be a new live range whose start is (last partially contained child, 0) and whose end is (original end node, original end offset).
+        auto subrange = Range::create(*last_partially_contained_child, 0, original_end_node, original_end_offset);
+
+        // 4. Let subfragment be the result of cloning the contents of subrange.
+        auto subfragment = TRY(subrange->clone_the_contents());
+
+        // 5. Append subfragment to clone.
+        clone->append_child(subfragment);
+    }
+
+    // 18. Return fragment.
+    return fragment;
+}
+
 }
