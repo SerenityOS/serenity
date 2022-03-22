@@ -71,7 +71,7 @@ JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::traverse(Direction direction)
             if (!before_node) {
                 auto* next_node = node->next_in_pre_order(m_root.ptr());
                 if (!next_node)
-                    return RefPtr<Node> {};
+                    return nullptr;
                 node = *next_node;
             } else {
                 // If beforeNode is true, then set it to false.
@@ -86,7 +86,7 @@ JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::traverse(Direction direction)
                     return nullptr;
                 auto* previous_node = node->previous_in_pre_order();
                 if (!previous_node)
-                    return RefPtr<Node> {};
+                    return nullptr;
                 node = *previous_node;
             } else {
                 // If beforeNode is false, then set it to true.
@@ -95,12 +95,10 @@ JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::traverse(Direction direction)
         }
 
         // 2. Let result be the result of filtering node within iterator.
-        auto result = filter(*node);
-        if (result.is_throw_completion())
-            return result.release_error();
+        auto result = TRY(filter(*node));
 
         // 3. If result is FILTER_ACCEPT, then break.
-        if (result.value() == NodeFilter::FILTER_ACCEPT)
+        if (result == NodeFilter::FILTER_ACCEPT)
             break;
     }
 
@@ -111,7 +109,7 @@ JS::ThrowCompletionOr<RefPtr<Node>> NodeIterator::traverse(Direction direction)
     m_pointer_before_reference = before_node;
 
     // 6. Return node.
-    return RefPtr<Node> { node };
+    return node;
 }
 
 // https://dom.spec.whatwg.org/#concept-node-filter

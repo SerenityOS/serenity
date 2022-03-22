@@ -65,17 +65,15 @@ JS::ThrowCompletionOr<RefPtr<Node>> TreeWalker::parent_node()
         // 2. If node is non-null and filtering node within this returns FILTER_ACCEPT,
         //    then set this’s current to node and return node.
         if (node) {
-            auto result = filter(*node);
-            if (result.is_throw_completion())
-                return result.release_error();
-            if (result.value() == NodeFilter::FILTER_ACCEPT) {
+            auto result = TRY(filter(*node));
+            if (result == NodeFilter::FILTER_ACCEPT) {
                 m_current = *node;
                 return node;
             }
         }
     }
 
-    return RefPtr<Node> {};
+    return nullptr;
 }
 
 // https://dom.spec.whatwg.org/#dom-treewalker-firstchild
