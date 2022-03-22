@@ -1042,4 +1042,71 @@ ExceptionOr<NonnullRefPtr<DocumentFragment>> Range::clone_the_contents()
     return fragment;
 }
 
+// https://dom.spec.whatwg.org/#dom-range-deletecontents
+ExceptionOr<void> Range::delete_contents()
+{
+    // 1. If this is collapsed, then return.
+    if (collapsed())
+        return {};
+
+    // 2. Let original start node, original start offset, original end node, and original end offset be this’s start node, start offset, end node, and end offset, respectively.
+    NonnullRefPtr<Node> original_start_node = m_start_container;
+    auto original_start_offset = m_start_offset;
+    NonnullRefPtr<Node> original_end_node = m_end_container;
+    auto original_end_offset = m_end_offset;
+
+    // 3. If original start node is original end node and it is a CharacterData node, then replace data with node original start node, offset original start offset,
+    //    count original end offset minus original start offset, and data the empty string, and then return.
+    if (original_start_node.ptr() == original_end_node.ptr() && is<CharacterData>(*original_start_node)) {
+        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_end_offset - original_start_offset, ""));
+        return {};
+    }
+
+    // 4. Let nodes to remove be a list of all the nodes that are contained in this, in tree order, omitting any node whose parent is also contained in this.
+    Vector<NonnullRefPtr<Node>> nodes_to_remove;
+    for (Node const* node = start_container(); node != end_container()->next_in_pre_order(); node = node->next_in_pre_order()) {
+        if (contains_node(*node) && (!node->parent_node() || !contains_node(*node->parent_node())))
+            nodes_to_remove.append(*node);
+    }
+
+    RefPtr<Node> new_node;
+    size_t new_offset = 0;
+
+    // 5. If original start node is an inclusive ancestor of original end node, set new node to original start node and new offset to original start offset.
+    if (original_start_node->is_inclusive_ancestor_of(original_end_node)) {
+        new_node = original_start_node;
+        new_offset = original_start_offset;
+    }
+    // 6. Otherwise
+    else {
+        // 1. Let reference node equal original start node.
+        auto reference_node = original_start_node;
+
+        // 2. While reference node’s parent is not null and is not an inclusive ancestor of original end node, set reference node to its parent.
+        while (reference_node->parent_node() && !reference_node->parent_node()->is_inclusive_ancestor_of(original_end_node))
+            reference_node = *reference_node->parent_node();
+
+        // 3. Set new node to the parent of reference node, and new offset to one plus the index of reference node.
+        new_node = reference_node->parent_node();
+        new_offset = 1 + reference_node->index();
+    }
+
+    // 7. If original start node is a CharacterData node, then replace data with node original start node, offset original start offset, count original start node’s length minus original start offset, data the empty string.
+    if (is<CharacterData>(*original_start_node))
+        TRY(static_cast<CharacterData&>(*original_start_node).replace_data(original_start_offset, original_start_node->length() - original_start_offset, ""));
+
+    // 8. For each node in nodes to remove, in tree order, remove node.
+    for (auto& node : nodes_to_remove)
+        node->remove();
+
+    // 9. If original end node is a CharacterData node, then replace data with node original end node, offset 0, count original end offset and data the empty string.
+    if (is<CharacterData>(*original_end_node))
+        TRY(static_cast<CharacterData&>(*original_end_node).replace_data(0, original_end_offset, ""));
+
+    // 10. Set start and end to (new node, new offset).
+    set_start(*new_node, new_offset);
+    set_end(*new_node, new_offset);
+    return {};
+}
+
 }
