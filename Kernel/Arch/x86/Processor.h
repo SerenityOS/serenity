@@ -399,7 +399,7 @@ public:
 
     ALWAYS_INLINE bool has_feature(CPUFeature f) const
     {
-        return (static_cast<u32>(m_features) & static_cast<u32>(f)) != 0;
+        return has_flag(m_features, f);
     }
 
     void check_invoke_scheduler();
