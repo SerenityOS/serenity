@@ -250,6 +250,11 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
                 parent().add_absolutely_positioned_box(static_cast<Layout::Box const&>(*item.node));
             break;
 
+        case InlineLevelIterator::Item::Type::FloatingElement:
+            if (is<Box>(*item.node))
+                parent().layout_floating_box(static_cast<Layout::Box const&>(*item.node), containing_block(), layout_mode, &line_builder);
+            break;
+
         case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
             line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break);

@@ -69,8 +69,10 @@ void InlineLevelIterator::exit_node_with_box_model_metrics()
 // This is similar to Layout::Node::next_in_pre_order() but will not descend into inline-block nodes.
 Layout::Node const* InlineLevelIterator::next_inline_node_in_pre_order(Layout::Node const& current, Layout::Node const* stay_within)
 {
-    if (current.first_child() && current.first_child()->is_inline() && !current.is_inline_block())
-        return current.first_child();
+    if (current.first_child() && current.first_child()->is_inline() && !current.is_inline_block()) {
+        if (!current.is_box() || !static_cast<Box const&>(current).is_out_of_flow(m_inline_formatting_context))
+            return current.first_child();
+    }
 
     Layout::Node const* node = &current;
     Layout::Node const* next = nullptr;
@@ -101,12 +103,12 @@ void InlineLevelIterator::compute_next()
         return;
     do {
         m_next_node = next_inline_node_in_pre_order(*m_next_node, &m_container);
-    } while (m_next_node && !m_next_node->is_inline());
+    } while (m_next_node && (!m_next_node->is_inline() && !m_next_node->is_out_of_flow(m_inline_formatting_context)));
 }
 
 void InlineLevelIterator::skip_to_next()
 {
-    if (m_next_node && is<Layout::NodeWithStyleAndBoxModelMetrics>(*m_next_node) && !m_next_node->is_inline_block())
+    if (m_next_node && is<Layout::NodeWithStyleAndBoxModelMetrics>(*m_next_node) && !m_next_node->is_inline_block() && !m_next_node->is_out_of_flow(m_inline_formatting_context))
         enter_node_with_box_model_metrics(static_cast<Layout::NodeWithStyleAndBoxModelMetrics const&>(*m_next_node));
 
     m_current_node = m_next_node;
@@ -159,6 +161,15 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
         skip_to_next();
         return Item {
             .type = Item::Type::AbsolutelyPositionedElement,
+            .node = &node,
+        };
+    }
+
+    if (m_current_node->is_floating()) {
+        auto& node = *m_current_node;
+        skip_to_next();
+        return Item {
+            .type = Item::Type::FloatingElement,
             .node = &node,
         };
     }

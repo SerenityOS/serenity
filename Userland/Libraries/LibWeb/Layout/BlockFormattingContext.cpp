@@ -12,6 +12,7 @@
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
+#include <LibWeb/Layout/LineBuilder.h>
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/ReplacedBox.h>
@@ -551,7 +552,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     }
 }
 
-void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer const& containing_block, LayoutMode layout_mode)
+void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer const& containing_block, LayoutMode layout_mode, LineBuilder* line_builder)
 {
     VERIFY(box.is_floating());
 
@@ -575,8 +576,16 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     compute_height(box, m_state);
 
     // First we place the box normally (to get the right y coordinate.)
-    place_block_level_element_in_normal_flow_vertically(box, containing_block);
-    place_block_level_element_in_normal_flow_horizontally(box, containing_block);
+    // If we have a LineBuilder, we're in the middle of inline layout, otherwise this is block layout.
+    if (line_builder) {
+        float y_offset = box_state.margin_box_top() + box_state.offset_top;
+        line_builder->break_if_needed(layout_mode, box_state.border_box_width(), false);
+        box_state.offset.set_y(line_builder->current_y() + y_offset);
+        line_builder->adjust_last_line_after_inserting_floating_box({}, box.computed_values().float_(), box_state.border_box_width());
+    } else {
+        place_block_level_element_in_normal_flow_vertically(box, containing_block);
+        place_block_level_element_in_normal_flow_horizontally(box, containing_block);
+    }
 
     auto float_box = [&](FloatSide side, FloatSideData& side_data) {
         auto first_edge = [&](FormattingState::NodeState const& thing) { return side == FloatSide::Left ? thing.margin_left : thing.margin_right; };

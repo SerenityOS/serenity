@@ -27,6 +27,7 @@ public:
             Element,
             ForcedBreak,
             AbsolutelyPositionedElement,
+            FloatingElement,
         };
         Type type {};
         Layout::Node const* node { nullptr };

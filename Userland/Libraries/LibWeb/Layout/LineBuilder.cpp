@@ -206,4 +206,20 @@ void LineBuilder::remove_last_line_if_empty()
         m_last_line_needs_update = false;
     }
 }
+
+void LineBuilder::adjust_last_line_after_inserting_floating_box(Badge<BlockFormattingContext>, CSS::Float float_, float space_used_by_float)
+{
+    // NOTE: LineBuilder generates lines from left-to-right, so if we've just added a left-side float,
+    //       that means every fragment already on this line has to move towards the right.
+    if (float_ == CSS::Float::Left && !m_containing_block_state.line_boxes.is_empty()) {
+        for (auto& fragment : m_containing_block_state.line_boxes.last().fragments())
+            fragment.set_offset(fragment.offset().translated(space_used_by_float, 0));
+        m_containing_block_state.line_boxes.last().m_width += space_used_by_float;
+    }
+
+    m_available_width_for_current_line -= space_used_by_float;
+    if (m_available_width_for_current_line < 0)
+        m_available_width_for_current_line = 0;
+}
+
 }
