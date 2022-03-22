@@ -333,9 +333,6 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             auto& simple_selector = relative_selector.simple_selectors[i];
             char const* type_description = "Unknown";
             switch (simple_selector.type) {
-            case CSS::Selector::SimpleSelector::Type::Invalid:
-                type_description = "Invalid";
-                break;
             case CSS::Selector::SimpleSelector::Type::Universal:
                 type_description = "Universal";
                 break;
@@ -377,9 +374,6 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                     break;
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Active:
                     pseudo_class_description = "Active";
-                    break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::None:
-                    pseudo_class_description = "None";
                     break;
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
                     pseudo_class_description = "Root";
@@ -479,9 +473,6 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoElement) {
                 char const* pseudo_element_description = "";
                 switch (simple_selector.pseudo_element()) {
-                case CSS::Selector::PseudoElement::None:
-                    pseudo_element_description = "NONE";
-                    break;
                 case CSS::Selector::PseudoElement::Before:
                     pseudo_element_description = "before";
                     break;
@@ -507,9 +498,6 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 char const* attribute_match_type_description = "";
 
                 switch (attribute.match_type) {
-                case CSS::Selector::SimpleSelector::Attribute::MatchType::None:
-                    attribute_match_type_description = "NONE";
-                    break;
                 case CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute:
                     attribute_match_type_description = "HasAttribute";
                     break;
