@@ -184,6 +184,7 @@ extern "C" [[noreturn]] void init()
     info.end_of_prekernel_image = (PhysicalPtr)end_of_prekernel_image;
     info.physical_to_virtual_offset = kernel_load_base - kernel_physical_base;
     info.kernel_mapping_base = kernel_mapping_base;
+    info.default_kernel_load_base = default_kernel_load_base;
     info.kernel_load_base = kernel_load_base;
 #if ARCH(X86_64)
     info.gdt64ptr = (PhysicalPtr)gdt64ptr;

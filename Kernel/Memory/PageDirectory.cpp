@@ -13,6 +13,7 @@
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 
+extern u8 start_of_kernel_image[];
 extern u8 end_of_kernel_image[];
 
 namespace Kernel::Memory {
@@ -35,9 +36,11 @@ UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_
 {
     auto directory = adopt_ref_if_nonnull(new (nothrow) PageDirectory).release_nonnull();
 
-    // make sure this starts in a new page directory to make MemoryManager::initialize_physical_pages() happy
-    FlatPtr start_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000;
-    MUST(directory->m_range_allocator.initialize_with_range(VirtualAddress(start_of_range), KERNEL_PD_END - start_of_range));
+    MUST(directory->m_range_allocator.initialize_with_range(VirtualAddress(default_kernel_load_base), KERNEL_PD_END - default_kernel_load_base));
+    // Carve out the whole page directory covering the kernel image to make MemoryManager::initialize_physical_pages() happy
+    FlatPtr start_of_range = ((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
+    FlatPtr end_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000;
+    MUST(directory->m_range_allocator.try_allocate_specific(VirtualAddress(start_of_range), end_of_range - start_of_range));
 
     return directory;
 }

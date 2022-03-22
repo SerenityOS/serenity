@@ -18,6 +18,7 @@ extern "C" PhysicalAddress start_of_prekernel_image;
 extern "C" PhysicalAddress end_of_prekernel_image;
 extern "C" size_t physical_to_virtual_offset;
 extern "C" FlatPtr kernel_mapping_base;
+extern "C" FlatPtr default_kernel_load_base;
 extern "C" FlatPtr kernel_load_base;
 #if ARCH(X86_64)
 extern "C" u32 gdt64ptr;
