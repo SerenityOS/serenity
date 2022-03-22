@@ -9,6 +9,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <Kernel/Net/IPv4.h>
+#include <LibC/bits/pthread_integration.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
@@ -660,8 +661,15 @@ static bool fill_getproto_buffers(const char* line, ssize_t read)
     return true;
 }
 
+static pthread_mutex_t gai_mutex = __PTHREAD_MUTEX_INITIALIZER;
+
 int getaddrinfo(const char* __restrict node, const char* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res)
 {
+    __pthread_mutex_lock(&gai_mutex);
+    ScopeGuard mutex = [] {
+        __pthread_mutex_unlock(&gai_mutex);
+    };
+
     *res = nullptr;
 
     if (hints && hints->ai_family != AF_INET && hints->ai_family != AF_UNSPEC)
