@@ -33,6 +33,22 @@ Node::~Node()
         m_dom_node->set_layout_node({}, nullptr);
 }
 
+// https://www.w3.org/TR/css-display-3/#out-of-flow
+bool Node::is_out_of_flow(FormattingContext const& formatting_context) const
+{
+    // A layout node is out of flow if either:
+
+    // 1. It is floated (which requires that floating is not inhibited).
+    if (!formatting_context.inhibits_floating() && computed_values().float_() != CSS::Float::None)
+        return true;
+
+    // 2. It is "absolutely positioned".
+    if (is_absolutely_positioned())
+        return true;
+
+    return false;
+}
+
 bool Node::can_contain_boxes_with_position_absolute() const
 {
     return computed_values().position() != CSS::Position::Static || is<InitialContainingBlock>(*this);

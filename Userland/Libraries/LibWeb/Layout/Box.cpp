@@ -29,29 +29,6 @@ Box::~Box()
 {
 }
 
-// https://www.w3.org/TR/css-display-3/#out-of-flow
-bool Box::is_out_of_flow(FormattingContext const& formatting_context) const
-{
-    // A box is out of flow if either:
-
-    // 1. It is floated (which requires that floating is not inhibited).
-    if (!formatting_context.inhibits_floating() && computed_values().float_() != CSS::Float::None)
-        return true;
-
-    // 2. It is "absolutely positioned".
-    switch (computed_values().position()) {
-    case CSS::Position::Absolute:
-    case CSS::Position::Fixed:
-        return true;
-    case CSS::Position::Static:
-    case CSS::Position::Relative:
-    case CSS::Position::Sticky:
-        break;
-    }
-
-    return false;
-}
-
 void Box::set_needs_display()
 {
     if (!is_inline()) {
