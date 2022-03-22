@@ -21,9 +21,7 @@ static DOM::ExceptionOr<NonnullRefPtr<DOM::DocumentFragment>> parse_fragment(Str
 
     for (auto& child : new_children) {
         // I don't know if this can throw here, but let's be safe.
-        auto result = fragment->append_child(child);
-        if (result.is_exception())
-            return result.exception();
+        (void)TRY(fragment->append_child(child));
     }
 
     return fragment;
@@ -37,10 +35,7 @@ DOM::ExceptionOr<void> inner_html_setter(NonnullRefPtr<DOM::Node> context_object
     NonnullRefPtr<DOM::Element> context_element = is<DOM::ShadowRoot>(*context_object) ? *verify_cast<DOM::ShadowRoot>(*context_object).host() : verify_cast<DOM::Element>(*context_object);
 
     // 2. Let fragment be the result of invoking the fragment parsing algorithm with the new value as markup, and with context element.
-    auto fragment_or_exception = parse_fragment(value, context_element);
-    if (fragment_or_exception.is_exception())
-        return fragment_or_exception.exception();
-    auto fragment = fragment_or_exception.release_value();
+    auto fragment = TRY(parse_fragment(value, context_element));
 
     // 3. If the context object is a template element, then let context object be the template's template contents (a DocumentFragment).
     if (is<HTML::HTMLTemplateElement>(*context_object))
