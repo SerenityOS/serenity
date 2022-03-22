@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/SVG/SVGAnimatedLength.h>
 #include <LibWeb/SVG/SVGGeometryElement.h>
 
 namespace Web::SVG {
@@ -20,6 +21,11 @@ public:
     virtual void parse_attribute(FlyString const& name, String const& value) override;
 
     virtual Gfx::Path& get_path() override;
+
+    NonnullRefPtr<SVGAnimatedLength> x1() const;
+    NonnullRefPtr<SVGAnimatedLength> y1() const;
+    NonnullRefPtr<SVGAnimatedLength> x2() const;
+    NonnullRefPtr<SVGAnimatedLength> y2() const;
 
 private:
     Optional<Gfx::Path> m_path;

@@ -1,9 +1,10 @@
+#import <SVG/SVGAnimatedLength.idl>
 #import <SVG/SVGGeometryElement.idl>
 
 [Exposed=Window]
 interface SVGLineElement : SVGGeometryElement {
-    // [SameObject] readonly attribute SVGAnimatedLength x1;
-    // [SameObject] readonly attribute SVGAnimatedLength y1;
-    // [SameObject] readonly attribute SVGAnimatedLength x2;
-    // [SameObject] readonly attribute SVGAnimatedLength y2;
+    [SameObject] readonly attribute SVGAnimatedLength x1;
+    [SameObject] readonly attribute SVGAnimatedLength y1;
+    [SameObject] readonly attribute SVGAnimatedLength x2;
+    [SameObject] readonly attribute SVGAnimatedLength y2;
 };
