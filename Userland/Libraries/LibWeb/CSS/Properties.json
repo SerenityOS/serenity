@@ -829,7 +829,8 @@
     "inherited": true,
     "initial": "normal",
     "valid-types": [
-      "length"
+      "length",
+      "percentage"
     ],
     "valid-identifiers": [
       "normal"
@@ -1459,7 +1460,8 @@
     "inherited": true,
     "initial": "normal",
     "valid-types": [
-      "length"
+      "length",
+      "percentage"
     ],
     "valid-identifiers": [
       "normal"
