@@ -23,6 +23,8 @@ public:
 
     RefPtr<HTMLOptionsCollection> const& options();
 
+    DOM::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});
+
     int selected_index() const;
     void set_selected_index(int);
 
