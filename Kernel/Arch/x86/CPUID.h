@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/Types.h>
 
 #include <AK/Platform.h>
@@ -60,5 +61,6 @@ enum class CPUFeature : u32 {
     HYPERVISOR = (1 << 25),
     PAT = (1 << 26),
 };
+AK_ENUM_BITWISE_OPERATORS(CPUFeature);
 
 }

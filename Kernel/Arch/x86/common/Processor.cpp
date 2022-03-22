@@ -70,76 +70,72 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
     // NOTE: This is called during Processor::early_initialize, we cannot
     //       safely log at this point because we don't have kmalloc
     //       initialized yet!
-    auto set_feature =
-        [&](CPUFeature f) {
-            m_features = static_cast<CPUFeature>(static_cast<u32>(m_features) | static_cast<u32>(f));
-        };
     m_features = static_cast<CPUFeature>(0);
 
     CPUID processor_info(0x1);
     if (processor_info.edx() & (1 << 4))
-        set_feature(CPUFeature::TSC);
+        m_features |= CPUFeature::TSC;
     if (processor_info.edx() & (1 << 6))
-        set_feature(CPUFeature::PAE);
+        m_features |= CPUFeature::PAE;
     if (processor_info.edx() & (1 << 13))
-        set_feature(CPUFeature::PGE);
+        m_features |= CPUFeature::PGE;
     if (processor_info.edx() & (1 << 23))
-        set_feature(CPUFeature::MMX);
+        m_features |= CPUFeature::MMX;
     if (processor_info.edx() & (1 << 24))
-        set_feature(CPUFeature::FXSR);
+        m_features |= CPUFeature::FXSR;
     if (processor_info.edx() & (1 << 25))
-        set_feature(CPUFeature::SSE);
+        m_features |= CPUFeature::SSE;
     if (processor_info.edx() & (1 << 26))
-        set_feature(CPUFeature::SSE2);
+        m_features |= CPUFeature::SSE2;
     if (processor_info.ecx() & (1 << 0))
-        set_feature(CPUFeature::SSE3);
+        m_features |= CPUFeature::SSE3;
     if (processor_info.ecx() & (1 << 9))
-        set_feature(CPUFeature::SSSE3);
+        m_features |= CPUFeature::SSSE3;
     if (processor_info.ecx() & (1 << 19))
-        set_feature(CPUFeature::SSE4_1);
+        m_features |= CPUFeature::SSE4_1;
     if (processor_info.ecx() & (1 << 20))
-        set_feature(CPUFeature::SSE4_2);
+        m_features |= CPUFeature::SSE4_2;
     if (processor_info.ecx() & (1 << 26))
-        set_feature(CPUFeature::XSAVE);
+        m_features |= CPUFeature::XSAVE;
     if (processor_info.ecx() & (1 << 28))
-        set_feature(CPUFeature::AVX);
+        m_features |= CPUFeature::AVX;
     if (processor_info.ecx() & (1 << 30))
-        set_feature(CPUFeature::RDRAND);
+        m_features |= CPUFeature::RDRAND;
     if (processor_info.ecx() & (1u << 31))
-        set_feature(CPUFeature::HYPERVISOR);
+        m_features |= CPUFeature::HYPERVISOR;
     if (processor_info.edx() & (1 << 11)) {
         u32 stepping = processor_info.eax() & 0xf;
         u32 model = (processor_info.eax() >> 4) & 0xf;
         u32 family = (processor_info.eax() >> 8) & 0xf;
         if (!(family == 6 && model < 3 && stepping < 3))
-            set_feature(CPUFeature::SEP);
+            m_features |= CPUFeature::SEP;
         if ((family == 6 && model >= 3) || (family == 0xf && model >= 0xe))
-            set_feature(CPUFeature::CONSTANT_TSC);
+            m_features |= CPUFeature::CONSTANT_TSC;
     }
     if (processor_info.edx() & (1 << 16))
-        set_feature(CPUFeature::PAT);
+        m_features |= CPUFeature::PAT;
 
     u32 max_extended_leaf = CPUID(0x80000000).eax();
 
     if (max_extended_leaf >= 0x80000001) {
         CPUID extended_processor_info(0x80000001);
         if (extended_processor_info.edx() & (1 << 20))
-            set_feature(CPUFeature::NX);
+            m_features |= CPUFeature::NX;
         if (extended_processor_info.edx() & (1 << 27))
-            set_feature(CPUFeature::RDTSCP);
+            m_features |= CPUFeature::RDTSCP;
         if (extended_processor_info.edx() & (1 << 29))
-            set_feature(CPUFeature::LM);
+            m_features |= CPUFeature::LM;
         if (extended_processor_info.edx() & (1 << 11)) {
             // Only available in 64 bit mode
-            set_feature(CPUFeature::SYSCALL);
+            m_features |= CPUFeature::SYSCALL;
         }
     }
 
     if (max_extended_leaf >= 0x80000007) {
         CPUID cpuid(0x80000007);
         if (cpuid.edx() & (1 << 8)) {
-            set_feature(CPUFeature::CONSTANT_TSC);
-            set_feature(CPUFeature::NONSTOP_TSC);
+            m_features |= CPUFeature::CONSTANT_TSC;
+            m_features |= CPUFeature::NONSTOP_TSC;
         }
     }
 
@@ -178,13 +174,13 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
 
     CPUID extended_features(0x7);
     if (extended_features.ebx() & (1 << 20))
-        set_feature(CPUFeature::SMAP);
+        m_features |= CPUFeature::SMAP;
     if (extended_features.ebx() & (1 << 7))
-        set_feature(CPUFeature::SMEP);
+        m_features |= CPUFeature::SMEP;
     if (extended_features.ecx() & (1 << 2))
-        set_feature(CPUFeature::UMIP);
+        m_features |= CPUFeature::UMIP;
     if (extended_features.ebx() & (1 << 18))
-        set_feature(CPUFeature::RDSEED);
+        m_features |= CPUFeature::RDSEED;
 }
 
 UNMAP_AFTER_INIT void Processor::cpu_setup()
@@ -353,7 +349,7 @@ NonnullOwnPtr<KString> Processor::features_string() const
     };
     bool first = true;
     for (u32 flag = 1; flag != 0; flag <<= 1) {
-        if ((static_cast<u32>(m_features) & flag) != 0) {
+        if (has_feature(static_cast<CPUFeature>(flag))) {
             if (first)
                 first = false;
             else
