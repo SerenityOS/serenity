@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
@@ -393,9 +393,7 @@ ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
 
     auto* existing_body = body();
     if (existing_body) {
-        auto replace_result = existing_body->parent()->replace_child(*new_body, *existing_body);
-        if (replace_result.is_exception())
-            return replace_result.exception();
+        (void)TRY(existing_body->parent()->replace_child(*new_body, *existing_body));
         return {};
     }
 
@@ -403,9 +401,7 @@ ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
     if (!document_element)
         return DOM::HierarchyRequestError::create("Missing document element");
 
-    auto append_result = document_element->append_child(*new_body);
-    if (append_result.is_exception())
-        return append_result.exception();
+    (void)TRY(document_element->append_child(*new_body));
     return {};
 }
 
@@ -922,16 +918,13 @@ DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element(String const& 
 DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element_ns(String const& namespace_, String const& qualified_name)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto result = validate_and_extract(namespace_, qualified_name);
-    if (result.is_exception())
-        return result.exception();
-    auto qname = result.release_value();
+    auto extracted_qualified_name = TRY(validate_and_extract(namespace_, qualified_name));
 
     // FIXME: 2. Let is be null.
     // FIXME: 3. If options is a dictionary and options["is"] exists, then set is to it.
 
     // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
-    return DOM::create_element(*this, qname.local_name(), qname.namespace_(), qname.prefix());
+    return DOM::create_element(*this, extracted_qualified_name.local_name(), extracted_qualified_name.namespace_(), extracted_qualified_name.prefix());
 }
 
 NonnullRefPtr<DocumentFragment> Document::create_document_fragment()
