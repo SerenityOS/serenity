@@ -26,8 +26,32 @@ namespace Web::Layout {
 
 TreeBuilder::TreeBuilder() = default;
 
-// The insertion_parent_for_*() functions maintain the invariant that block-level boxes must have either
-// only block-level children or only inline-level children.
+static bool has_inline_or_in_flow_block_children(Layout::Node const& layout_node)
+{
+    for (auto const* child = layout_node.first_child(); child; child = child->next_sibling()) {
+        if (child->is_inline())
+            return true;
+        if (!child->is_floating() && !child->is_absolutely_positioned())
+            return true;
+    }
+    return false;
+}
+
+static bool has_in_flow_block_children(Layout::Node const& layout_node)
+{
+    if (layout_node.children_are_inline())
+        return false;
+    for (auto const* child = layout_node.first_child(); child; child = child->next_sibling()) {
+        if (child->is_inline())
+            continue;
+        if (!child->is_floating() && !child->is_absolutely_positioned())
+            return true;
+    }
+    return false;
+}
+
+// The insertion_parent_for_*() functions maintain the invariant that the in-flow children of
+// block-level boxes must be either all block-level or all inline-level.
 
 static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& layout_parent)
 {
@@ -38,7 +62,7 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
         layout_parent.append_child(layout_parent.create_anonymous_wrapper());
     }
 
-    if (!layout_parent.has_children() || layout_parent.children_are_inline())
+    if (!has_in_flow_block_children(layout_parent) || layout_parent.children_are_inline())
         return layout_parent;
 
     // Parent has block-level children, insert into an anonymous wrapper block (and create it first if needed)
@@ -50,13 +74,18 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
 
 static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent, Layout::Node& layout_node)
 {
-    if (!layout_parent.has_children()) {
+    if (!has_inline_or_in_flow_block_children(layout_parent)) {
         // Parent block has no children, insert this block into parent.
         return layout_parent;
     }
 
     if (!layout_parent.children_are_inline()) {
         // Parent block has block-level children, insert this block into parent.
+        return layout_parent;
+    }
+
+    if (layout_node.is_floating() || layout_node.is_absolutely_positioned()) {
+        // Block is out-of-flow, it can have inline siblings if necessary.
         return layout_parent;
     }
 
