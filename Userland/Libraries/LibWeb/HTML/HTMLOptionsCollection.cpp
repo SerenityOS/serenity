@@ -50,8 +50,7 @@ DOM::ExceptionOr<void> HTMLOptionsCollection::add(HTMLOptionOrOptGroupElement el
     DOM::Node* parent = reference ? reference->parent() : root().ptr();
 
     // 6. Pre-insert element into parent node before reference.
-    if (auto result = parent->pre_insert(resolved_element, reference); result.is_exception())
-        return result.exception();
+    TRY(parent->pre_insert(resolved_element, reference));
 
     return {};
 }
