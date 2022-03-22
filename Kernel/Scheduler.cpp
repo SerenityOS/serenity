@@ -359,7 +359,7 @@ void Scheduler::prepare_after_exec()
 void Scheduler::prepare_for_idle_loop()
 {
     // This is called when the CPU finished setting up the idle loop
-    // and is about to run it. We need to acquire he scheduler lock
+    // and is about to run it. We need to acquire the scheduler lock
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
     g_scheduler_lock.lock();
 
