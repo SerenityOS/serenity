@@ -67,7 +67,11 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitma
     auto decoded_image = maybe_decoded_image.release_value();
     if (decoded_image.frames.is_empty())
         return Error::from_string_literal("Image decode failed (no frames)"sv);
-    return decoded_image.frames[0].bitmap.release_nonnull();
+
+    auto decoded_bitmap = decoded_image.frames.first().bitmap;
+    if (decoded_bitmap.is_null())
+        return Error::from_string_literal("Image decode failed (no bitmap for frame)"sv);
+    return decoded_bitmap.release_nonnull();
 }
 
 ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
