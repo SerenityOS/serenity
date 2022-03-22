@@ -109,8 +109,7 @@ ExceptionOr<void> DOMTokenList::add(Vector<String> const& tokens)
     for (auto const& token : tokens) {
         // a. If token is the empty string, then throw a "SyntaxError" DOMException.
         // b. If token contains any ASCII whitespace, then throw an "InvalidCharacterError" DOMException.
-        if (auto exception = validate_token(token); exception.is_exception())
-            return exception;
+        TRY(validate_token(token));
 
         // 2. For each token in tokens, append token to this’s token set.
         append_to_ordered_set(m_token_set, token);
@@ -128,8 +127,7 @@ ExceptionOr<void> DOMTokenList::remove(Vector<String> const& tokens)
     for (auto const& token : tokens) {
         // a. If token is the empty string, then throw a "SyntaxError" DOMException.
         // b. If token contains any ASCII whitespace, then throw an "InvalidCharacterError" DOMException.
-        if (auto exception = validate_token(token); exception.is_exception())
-            return exception;
+        TRY(validate_token(token));
 
         // 2. For each token in tokens, remove token from this’s token set.
         remove_from_ordered_set(m_token_set, token);
@@ -145,8 +143,7 @@ ExceptionOr<bool> DOMTokenList::toggle(String const& token, Optional<bool> force
 {
     // 1. If token is the empty string, then throw a "SyntaxError" DOMException.
     // 2. If token contains any ASCII whitespace, then throw an "InvalidCharacterError" DOMException.
-    if (auto exception = validate_token(token); exception.is_exception())
-        return exception.exception();
+    TRY(validate_token(token));
 
     // 3. If this’s token set[token] exists, then:
     if (contains(token)) {
@@ -177,10 +174,8 @@ ExceptionOr<bool> DOMTokenList::replace(String const& token, String const& new_t
 {
     // 1. If either token or newToken is the empty string, then throw a "SyntaxError" DOMException.
     // 2. If either token or newToken contains any ASCII whitespace, then throw an "InvalidCharacterError" DOMException.
-    if (auto exception = validate_token(token); exception.is_exception())
-        return exception.exception();
-    if (auto exception = validate_token(new_token); exception.is_exception())
-        return exception.exception();
+    TRY(validate_token(token));
+    TRY(validate_token(new_token));
 
     // 3. If this’s token set does not contain token, then return false.
     if (!contains(token))
