@@ -6,6 +6,7 @@
  */
 
 #include "GraphWidget.h"
+#include <LibCore/Object.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
@@ -16,6 +17,17 @@
 REGISTER_WIDGET(SystemMonitor, GraphWidget)
 
 namespace SystemMonitor {
+
+GraphWidget::GraphWidget()
+{
+    REGISTER_BOOL_PROPERTY("stack_values", stack_values, set_stack_values);
+}
+
+void GraphWidget::set_stack_values(bool stack_values)
+{
+    m_stack_values = stack_values;
+    update();
+}
 
 void GraphWidget::add_value(Vector<u64, 1>&& value)
 {
