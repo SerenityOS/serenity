@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Erlend Høier <Erlend@ReasonablePanic.com>
  * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
+ * Copyright (c) 2022, Cameron Youell <cameronyouell@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
