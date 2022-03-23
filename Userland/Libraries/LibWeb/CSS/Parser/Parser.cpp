@@ -3318,7 +3318,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
     return StyleValueList::create(move(border_radii), StyleValueList::Separator::Space);
 }
 
-RefPtr<StyleValue> Parser::parse_shadow_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_shadow_value(Vector<StyleComponentValueRule> const& component_values, AllowInsetKeyword allow_inset_keyword)
 {
     // "none"
     if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
@@ -3327,12 +3327,12 @@ RefPtr<StyleValue> Parser::parse_shadow_value(Vector<StyleComponentValueRule> co
             return ident;
     }
 
-    return parse_comma_separated_value_list(component_values, [this](auto& tokens) {
-        return parse_single_shadow_value(tokens);
+    return parse_comma_separated_value_list(component_values, [this, allow_inset_keyword](auto& tokens) {
+        return parse_single_shadow_value(tokens, allow_inset_keyword);
     });
 }
 
-RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<StyleComponentValueRule>& tokens)
+RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<StyleComponentValueRule>& tokens, AllowInsetKeyword allow_inset_keyword)
 {
     auto start_position = tokens.position();
     auto error = [&]() {
@@ -3395,7 +3395,8 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<StyleComponentV
             continue;
         }
 
-        if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("inset"sv)) {
+        if (allow_inset_keyword == AllowInsetKeyword::Yes
+            && token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("inset"sv)) {
             if (placement.has_value())
                 return error();
             placement = ShadowPlacement::Inner;
@@ -4248,7 +4249,7 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BoxShadow:
-        if (auto parsed_value = parse_shadow_value(component_values))
+        if (auto parsed_value = parse_shadow_value(component_values, AllowInsetKeyword::Yes))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::Content:
