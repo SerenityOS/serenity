@@ -180,7 +180,7 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
     if (!painter)
         return {};
     auto transformed_destination_rect = m_drawing_state.transform.map(destination_rect);
-    painter->draw_scaled_bitmap(rounded_int_rect(transformed_destination_rect), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+    painter->draw_scaled_bitmap(transformed_destination_rect.to_rounded<int>(), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
 
     // 7. If image is not origin-clean, then set the CanvasRenderingContext2D's origin-clean flag to false.
     if (image_is_not_origin_clean(image))

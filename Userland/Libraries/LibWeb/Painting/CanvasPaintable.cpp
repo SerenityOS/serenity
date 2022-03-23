@@ -36,7 +36,7 @@ void CanvasPaintable::paint(PaintContext& context, PaintPhase phase) const
             return;
 
         if (layout_box().dom_node().bitmap())
-            context.painter().draw_scaled_bitmap(rounded_int_rect(absolute_rect()), *layout_box().dom_node().bitmap(), layout_box().dom_node().bitmap()->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
+            context.painter().draw_scaled_bitmap(absolute_rect().to_rounded<int>(), *layout_box().dom_node().bitmap(), layout_box().dom_node().bitmap()->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
     }
 }
 

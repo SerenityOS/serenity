@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -696,6 +697,17 @@ public:
         return Rect<U>(*this);
     }
 
+    template<typename U>
+    [[nodiscard]] ALWAYS_INLINE Rect<U> to_rounded() const
+    {
+        return {
+            static_cast<U>(llroundd(x())),
+            static_cast<U>(llroundd(y())),
+            static_cast<U>(llroundd(width())),
+            static_cast<U>(llroundd(height())),
+        };
+    }
+
     [[nodiscard]] String to_string() const;
 
 private:
@@ -713,11 +725,6 @@ using FloatRect = Rect<float>;
     int x2 = ceilf(float_rect.x() + float_rect.width());
     int y2 = ceilf(float_rect.y() + float_rect.height());
     return Gfx::IntRect::from_two_points({ x1, y1 }, { x2, y2 });
-}
-
-[[nodiscard]] ALWAYS_INLINE IntRect rounded_int_rect(FloatRect const& float_rect)
-{
-    return IntRect { floorf(float_rect.x()), floorf(float_rect.y()), roundf(float_rect.width()), roundf(float_rect.height()) };
 }
 
 }
