@@ -1,0 +1,4 @@
+[App]
+Name=Digital Clock
+Executable=/bin/DigitalClock
+Category=Utilities
