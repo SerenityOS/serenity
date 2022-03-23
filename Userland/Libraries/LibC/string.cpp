@@ -368,6 +368,24 @@ char* strstr(const char* haystack, const char* needle)
     return const_cast<char*>(haystack);
 }
 
+
+char* strcasestr(const char* haystack, const char* needle)
+{
+    char nch;
+    char hch;
+
+    if ((nch = *needle++) != 0) {
+        size_t len = strlen(needle);
+        do {
+            do {
+                if ((hch = *haystack++) == 0)
+                    return nullptr;
+            } while (hch != nch);
+        } while (strncasecmp(haystack, needle, len) != 0);
+        --haystack;
+    }
+    return const_cast<char*>(haystack);
+}
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strpbrk.html
 char* strpbrk(const char* s, const char* accept)
 {
