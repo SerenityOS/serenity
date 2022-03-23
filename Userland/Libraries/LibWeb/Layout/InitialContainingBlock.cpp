@@ -47,7 +47,7 @@ void InitialContainingBlock::build_stacking_context_tree()
 void InitialContainingBlock::paint_all_phases(PaintContext& context)
 {
     build_stacking_context_tree_if_needed();
-    context.painter().fill_rect(enclosing_int_rect(paint_box()->absolute_rect()), context.palette().base());
+    context.painter().fill_rect(enclosing_int_rect(paint_box()->absolute_rect()), document().background_color(context.palette()));
     context.painter().translate(-context.viewport_rect().location());
     paint_box()->stacking_context()->paint(context);
 }
