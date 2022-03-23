@@ -3318,7 +3318,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
     return StyleValueList::create(move(border_radii), StyleValueList::Separator::Space);
 }
 
-RefPtr<StyleValue> Parser::parse_box_shadow_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_shadow_value(Vector<StyleComponentValueRule> const& component_values)
 {
     // "none"
     if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
@@ -3328,11 +3328,11 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(Vector<StyleComponentValueRule
     }
 
     return parse_comma_separated_value_list(component_values, [this](auto& tokens) {
-        return parse_single_box_shadow_value(tokens);
+        return parse_single_shadow_value(tokens);
     });
 }
 
-RefPtr<StyleValue> Parser::parse_single_box_shadow_value(TokenStream<StyleComponentValueRule>& tokens)
+RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<StyleComponentValueRule>& tokens)
 {
     auto start_position = tokens.position();
     auto error = [&]() {
@@ -3345,7 +3345,7 @@ RefPtr<StyleValue> Parser::parse_single_box_shadow_value(TokenStream<StyleCompon
     Optional<Length> offset_y;
     Optional<Length> blur_radius;
     Optional<Length> spread_distance;
-    Optional<BoxShadowPlacement> placement;
+    Optional<ShadowPlacement> placement;
 
     while (tokens.has_next_token()) {
         auto& token = tokens.peek_token();
@@ -3398,7 +3398,7 @@ RefPtr<StyleValue> Parser::parse_single_box_shadow_value(TokenStream<StyleCompon
         if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("inset"sv)) {
             if (placement.has_value())
                 return error();
-            placement = BoxShadowPlacement::Inner;
+            placement = ShadowPlacement::Inner;
             tokens.next_token();
             continue;
         }
@@ -3425,9 +3425,9 @@ RefPtr<StyleValue> Parser::parse_single_box_shadow_value(TokenStream<StyleCompon
 
     // Placement is outer by default
     if (!placement.has_value())
-        placement = BoxShadowPlacement::Outer;
+        placement = ShadowPlacement::Outer;
 
-    return BoxShadowStyleValue::create(color.release_value(), offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), spread_distance.release_value(), placement.release_value());
+    return ShadowStyleValue::create(color.release_value(), offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), spread_distance.release_value(), placement.release_value());
 }
 
 RefPtr<StyleValue> Parser::parse_content_value(Vector<StyleComponentValueRule> const& component_values)
@@ -4248,7 +4248,7 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::BoxShadow:
-        if (auto parsed_value = parse_box_shadow_value(component_values))
+        if (auto parsed_value = parse_shadow_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
     case PropertyID::Content:

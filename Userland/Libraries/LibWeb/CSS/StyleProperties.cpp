@@ -914,7 +914,7 @@ Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) c
     }
 }
 
-Vector<BoxShadowData> StyleProperties::box_shadow() const
+Vector<ShadowData> StyleProperties::box_shadow() const
 {
     auto value_or_error = property(PropertyID::BoxShadow);
     if (!value_or_error.has_value())
@@ -922,23 +922,23 @@ Vector<BoxShadowData> StyleProperties::box_shadow() const
 
     auto value = value_or_error.value();
 
-    auto make_box_shadow_data = [](BoxShadowStyleValue const& box) {
-        return BoxShadowData { box.color(), box.offset_x(), box.offset_y(), box.blur_radius(), box.spread_distance(), box.placement() };
+    auto make_box_shadow_data = [](ShadowStyleValue const& box) {
+        return ShadowData { box.color(), box.offset_x(), box.offset_y(), box.blur_radius(), box.spread_distance(), box.placement() };
     };
 
     if (value->is_value_list()) {
         auto& value_list = value->as_value_list();
 
-        Vector<BoxShadowData> box_shadow_data;
+        Vector<ShadowData> box_shadow_data;
         box_shadow_data.ensure_capacity(value_list.size());
         for (auto const& layer_value : value_list.values())
-            box_shadow_data.append(make_box_shadow_data(layer_value.as_box_shadow()));
+            box_shadow_data.append(make_box_shadow_data(layer_value.as_shadow()));
 
         return box_shadow_data;
     }
 
-    if (value->is_box_shadow()) {
-        auto& box = value->as_box_shadow();
+    if (value->is_shadow()) {
+        auto& box = value->as_shadow();
         return { make_box_shadow_data(box) };
     }
 

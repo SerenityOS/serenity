@@ -560,8 +560,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         if (box_shadow_layers.is_empty())
             return {};
 
-        auto make_box_shadow_style_value = [](BoxShadowData const& data) {
-            return BoxShadowStyleValue::create(data.color, data.offset_x, data.offset_y, data.blur_radius, data.spread_distance, data.placement);
+        auto make_box_shadow_style_value = [](ShadowData const& data) {
+            return ShadowStyleValue::create(data.color, data.offset_x, data.offset_y, data.blur_radius, data.spread_distance, data.placement);
         };
 
         if (box_shadow_layers.size() == 1)

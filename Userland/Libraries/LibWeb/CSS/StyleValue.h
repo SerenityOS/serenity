@@ -70,7 +70,7 @@ enum class BoxSizing {
     ContentBox,
 };
 
-enum class BoxShadowPlacement {
+enum class ShadowPlacement {
     Outer,
     Inner,
 };
@@ -352,7 +352,6 @@ public:
         BackgroundSize,
         Border,
         BorderRadius,
-        BoxShadow,
         Calculated,
         Color,
         CombinedBorderRadius,
@@ -373,6 +372,7 @@ public:
         Percentage,
         Position,
         Resolution,
+        Shadow,
         String,
         TextDecoration,
         Time,
@@ -390,7 +390,6 @@ public:
     bool is_background_size() const { return type() == Type::BackgroundSize; }
     bool is_border() const { return type() == Type::Border; }
     bool is_border_radius() const { return type() == Type::BorderRadius; }
-    bool is_box_shadow() const { return type() == Type::BoxShadow; }
     bool is_calculated() const { return type() == Type::Calculated; }
     bool is_color() const { return type() == Type::Color; }
     bool is_content() const { return type() == Type::Content; }
@@ -409,6 +408,7 @@ public:
     bool is_percentage() const { return type() == Type::Percentage; }
     bool is_position() const { return type() == Type::Position; }
     bool is_resolution() const { return type() == Type::Resolution; }
+    bool is_shadow() const { return type() == Type::Shadow; }
     bool is_string() const { return type() == Type::String; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
     bool is_time() const { return type() == Type::Time; }
@@ -425,7 +425,6 @@ public:
     BackgroundSizeStyleValue const& as_background_size() const;
     BorderRadiusStyleValue const& as_border_radius() const;
     BorderStyleValue const& as_border() const;
-    BoxShadowStyleValue const& as_box_shadow() const;
     CalculatedStyleValue const& as_calculated() const;
     ColorStyleValue const& as_color() const;
     ContentStyleValue const& as_content() const;
@@ -444,6 +443,7 @@ public:
     PercentageStyleValue const& as_percentage() const;
     PositionStyleValue const& as_position() const;
     ResolutionStyleValue const& as_resolution() const;
+    ShadowStyleValue const& as_shadow() const;
     StringStyleValue const& as_string() const;
     TextDecorationStyleValue const& as_text_decoration() const;
     TimeStyleValue const& as_time() const;
@@ -458,7 +458,6 @@ public:
     BackgroundSizeStyleValue& as_background_size() { return const_cast<BackgroundSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_background_size()); }
     BorderRadiusStyleValue& as_border_radius() { return const_cast<BorderRadiusStyleValue&>(const_cast<StyleValue const&>(*this).as_border_radius()); }
     BorderStyleValue& as_border() { return const_cast<BorderStyleValue&>(const_cast<StyleValue const&>(*this).as_border()); }
-    BoxShadowStyleValue& as_box_shadow() { return const_cast<BoxShadowStyleValue&>(const_cast<StyleValue const&>(*this).as_box_shadow()); }
     CalculatedStyleValue& as_calculated() { return const_cast<CalculatedStyleValue&>(const_cast<StyleValue const&>(*this).as_calculated()); }
     ColorStyleValue& as_color() { return const_cast<ColorStyleValue&>(const_cast<StyleValue const&>(*this).as_color()); }
     ContentStyleValue& as_content() { return const_cast<ContentStyleValue&>(const_cast<StyleValue const&>(*this).as_content()); }
@@ -477,6 +476,7 @@ public:
     PercentageStyleValue& as_percentage() { return const_cast<PercentageStyleValue&>(const_cast<StyleValue const&>(*this).as_percentage()); }
     PositionStyleValue& as_position() { return const_cast<PositionStyleValue&>(const_cast<StyleValue const&>(*this).as_position()); }
     ResolutionStyleValue& as_resolution() { return const_cast<ResolutionStyleValue&>(const_cast<StyleValue const&>(*this).as_resolution()); }
+    ShadowStyleValue& as_shadow() { return const_cast<ShadowStyleValue&>(const_cast<StyleValue const&>(*this).as_shadow()); }
     StringStyleValue& as_string() { return const_cast<StringStyleValue&>(const_cast<StyleValue const&>(*this).as_string()); }
     TextDecorationStyleValue& as_text_decoration() { return const_cast<TextDecorationStyleValue&>(const_cast<StyleValue const&>(*this).as_text_decoration()); }
     TimeStyleValue& as_time() { return const_cast<TimeStyleValue&>(const_cast<StyleValue const&>(*this).as_time()); }
@@ -738,59 +738,6 @@ private:
     bool m_is_elliptical;
     LengthPercentage m_horizontal_radius;
     LengthPercentage m_vertical_radius;
-};
-
-class BoxShadowStyleValue final : public StyleValue {
-public:
-    static NonnullRefPtr<BoxShadowStyleValue>
-    create(Color const& color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, BoxShadowPlacement placement)
-    {
-        return adopt_ref(*new BoxShadowStyleValue(color, offset_x, offset_y, blur_radius, spread_distance, placement));
-    }
-    virtual ~BoxShadowStyleValue() override = default;
-
-    Color const& color() const { return m_color; }
-    Length const& offset_x() const { return m_offset_x; }
-    Length const& offset_y() const { return m_offset_y; }
-    Length const& blur_radius() const { return m_blur_radius; }
-    Length const& spread_distance() const { return m_spread_distance; }
-    BoxShadowPlacement placement() const { return m_placement; }
-
-    virtual String to_string() const override;
-
-    virtual bool equals(StyleValue const& other) const override
-    {
-        if (type() != other.type())
-            return false;
-        auto& other_value = static_cast<BoxShadowStyleValue const&>(other);
-        return m_color == other_value.m_color
-            && m_offset_x == other_value.m_offset_x
-            && m_offset_y == other_value.m_offset_y
-            && m_blur_radius == other_value.m_blur_radius
-            && m_spread_distance == other_value.m_spread_distance
-            && m_placement == other_value.m_placement;
-    }
-
-private:
-    explicit BoxShadowStyleValue(Color const& color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, BoxShadowPlacement placement)
-        : StyleValue(Type::BoxShadow)
-        , m_color(color)
-        , m_offset_x(offset_x)
-        , m_offset_y(offset_y)
-        , m_blur_radius(blur_radius)
-        , m_spread_distance(spread_distance)
-        , m_placement(placement)
-    {
-    }
-
-    virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const override;
-
-    Color m_color;
-    Length m_offset_x;
-    Length m_offset_y;
-    Length m_blur_radius;
-    Length m_spread_distance;
-    BoxShadowPlacement m_placement;
 };
 
 class CalculatedStyleValue : public StyleValue {
@@ -1508,6 +1455,59 @@ private:
     }
 
     Resolution m_resolution;
+};
+
+class ShadowStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<ShadowStyleValue>
+    create(Color const& color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
+    {
+        return adopt_ref(*new ShadowStyleValue(color, offset_x, offset_y, blur_radius, spread_distance, placement));
+    }
+    virtual ~ShadowStyleValue() override = default;
+
+    Color const& color() const { return m_color; }
+    Length const& offset_x() const { return m_offset_x; }
+    Length const& offset_y() const { return m_offset_y; }
+    Length const& blur_radius() const { return m_blur_radius; }
+    Length const& spread_distance() const { return m_spread_distance; }
+    ShadowPlacement placement() const { return m_placement; }
+
+    virtual String to_string() const override;
+
+    virtual bool equals(StyleValue const& other) const override
+    {
+        if (type() != other.type())
+            return false;
+        auto& other_value = static_cast<ShadowStyleValue const&>(other);
+        return m_color == other_value.m_color
+            && m_offset_x == other_value.m_offset_x
+            && m_offset_y == other_value.m_offset_y
+            && m_blur_radius == other_value.m_blur_radius
+            && m_spread_distance == other_value.m_spread_distance
+            && m_placement == other_value.m_placement;
+    }
+
+private:
+    explicit ShadowStyleValue(Color const& color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
+        : StyleValue(Type::Shadow)
+        , m_color(color)
+        , m_offset_x(offset_x)
+        , m_offset_y(offset_y)
+        , m_blur_radius(blur_radius)
+        , m_spread_distance(spread_distance)
+        , m_placement(placement)
+    {
+    }
+
+    virtual NonnullRefPtr<StyleValue> absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const override;
+
+    Color m_color;
+    Length m_offset_x;
+    Length m_offset_y;
+    Length m_blur_radius;
+    Length m_spread_distance;
+    ShadowPlacement m_placement;
 };
 
 class StringStyleValue : public StyleValue {

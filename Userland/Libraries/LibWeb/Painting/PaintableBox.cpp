@@ -203,7 +203,7 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
     if (box_shadow_data.is_empty())
         return;
 
-    Vector<BoxShadowData> resolved_box_shadow_data;
+    Vector<ShadowData> resolved_box_shadow_data;
     resolved_box_shadow_data.ensure_capacity(box_shadow_data.size());
     for (auto const& layer : box_shadow_data) {
         resolved_box_shadow_data.empend(
@@ -212,7 +212,7 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
             static_cast<int>(layer.offset_y.to_px(layout_box())),
             static_cast<int>(layer.blur_radius.to_px(layout_box())),
             static_cast<int>(layer.spread_distance.to_px(layout_box())),
-            layer.placement == CSS::BoxShadowPlacement::Outer ? BoxShadowPlacement::Outer : BoxShadowPlacement::Inner);
+            layer.placement == CSS::ShadowPlacement::Outer ? ShadowPlacement::Outer : ShadowPlacement::Inner);
     }
     Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), resolved_box_shadow_data);
 }

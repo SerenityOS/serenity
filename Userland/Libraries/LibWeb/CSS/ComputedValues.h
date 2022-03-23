@@ -88,13 +88,13 @@ struct FlexBasisData {
     bool is_definite() const { return type == CSS::FlexBasis::LengthPercentage; }
 };
 
-struct BoxShadowData {
+struct ShadowData {
     Color color {};
     CSS::Length offset_x { Length::make_px(0) };
     CSS::Length offset_y { Length::make_px(0) };
     CSS::Length blur_radius { Length::make_px(0) };
     CSS::Length spread_distance { Length::make_px(0) };
-    CSS::BoxShadowPlacement placement { CSS::BoxShadowPlacement::Outer };
+    CSS::ShadowPlacement placement { CSS::ShadowPlacement::Outer };
 };
 
 struct ContentData {
@@ -137,7 +137,7 @@ public:
     CSS::Visibility visibility() const { return m_inherited.visibility; }
     CSS::ImageRendering image_rendering() const { return m_inherited.image_rendering; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
-    Vector<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
+    Vector<ShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
     Optional<CSS::LengthPercentage> const& width() const { return m_noninherited.width; }
     Optional<CSS::LengthPercentage> const& min_width() const { return m_noninherited.min_width; }
@@ -248,7 +248,7 @@ protected:
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
         float opacity { InitialValues::opacity() };
-        Vector<BoxShadowData> box_shadow {};
+        Vector<ShadowData> box_shadow {};
         Vector<CSS::Transformation> transformations {};
         CSS::TransformOrigin transform_origin {};
         CSS::BoxSizing box_sizing { InitialValues::box_sizing() };
@@ -313,7 +313,7 @@ public:
     void set_align_items(CSS::AlignItems value) { m_noninherited.align_items = value; }
     void set_opacity(float value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
-    void set_box_shadow(Vector<BoxShadowData>&& value) { m_noninherited.box_shadow = move(value); }
+    void set_box_shadow(Vector<ShadowData>&& value) { m_noninherited.box_shadow = move(value); }
     void set_transformations(Vector<CSS::Transformation> value) { m_noninherited.transformations = move(value); }
     void set_transform_origin(CSS::TransformOrigin value) { m_noninherited.transform_origin = value; }
     void set_box_sizing(CSS::BoxSizing value) { m_noninherited.box_sizing = value; }

@@ -287,8 +287,6 @@ private:
     RefPtr<StyleValue> parse_border_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_border_radius_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_border_radius_shorthand_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_box_shadow_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_single_box_shadow_value(TokenStream<StyleComponentValueRule>&);
     RefPtr<StyleValue> parse_content_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_flex_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_flex_flow_value(Vector<StyleComponentValueRule> const&);
@@ -296,6 +294,8 @@ private:
     RefPtr<StyleValue> parse_font_family_value(Vector<StyleComponentValueRule> const&, size_t start_index = 0);
     RefPtr<StyleValue> parse_list_style_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_overflow_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_shadow_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_single_shadow_value(TokenStream<StyleComponentValueRule>&);
     RefPtr<StyleValue> parse_text_decoration_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_transform_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_transform_origin_value(Vector<StyleComponentValueRule> const&);
