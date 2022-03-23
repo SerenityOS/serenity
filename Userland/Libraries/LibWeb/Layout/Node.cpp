@@ -231,7 +231,12 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 {
     auto& computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
 
+    // NOTE: We have to be careful that font-related properties get set in the right order.
+    //       m_font is used by Length::to_px() when resolving sizes against this layout node.
+    //       That's why it has to be set before everything else.
     m_font = specified_style.computed_font();
+    computed_values.set_font_size(specified_style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(*this));
+    computed_values.set_font_weight(specified_style.property(CSS::PropertyID::FontWeight).value()->to_integer());
     m_line_height = specified_style.line_height(*this);
 
     computed_values.set_vertical_align(specified_style.vertical_align());
@@ -359,9 +364,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     computed_values.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, *this, CSS::InitialValues::background_color()));
 
     computed_values.set_box_sizing(specified_style.box_sizing());
-
-    computed_values.set_font_size(specified_style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(*this));
-    computed_values.set_font_weight(specified_style.property(CSS::PropertyID::FontWeight).value()->to_integer());
 
     if (auto maybe_font_variant = specified_style.font_variant(); maybe_font_variant.has_value())
         computed_values.set_font_variant(maybe_font_variant.release_value());
