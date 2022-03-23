@@ -232,7 +232,11 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
         return s_directory_icon;
     }
     if (S_ISLNK(mode)) {
-        auto raw_symlink_target = Core::File::read_link(path);
+        auto raw_symlink_target_or_error = Core::File::read_link(path);
+        if (raw_symlink_target_or_error.is_error())
+            return s_symlink_icon;
+
+        auto raw_symlink_target = raw_symlink_target_or_error.release_value();
         if (raw_symlink_target.is_null())
             return s_symlink_icon;
 

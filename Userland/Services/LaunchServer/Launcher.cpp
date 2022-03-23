@@ -271,7 +271,11 @@ void Launcher::for_each_handler_for_path(const String& path, Function<bool(const
         return;
 
     if (S_ISLNK(st.st_mode)) {
-        auto link_target = LexicalPath { Core::File::read_link(path) };
+        auto link_target_or_error = Core::File::read_link(path);
+        if (link_target_or_error.is_error())
+            perror("read_link");
+
+        auto link_target = LexicalPath { link_target_or_error.release_value() };
         LexicalPath absolute_link_target = link_target.is_absolute() ? link_target : LexicalPath::join(LexicalPath::dirname(path), link_target.string());
         auto real_path = Core::File::real_path_for(absolute_link_target.string());
         return for_each_handler_for_path(real_path, [&](const auto& handler) -> bool {
