@@ -13,7 +13,7 @@
 
 namespace Web::Painting {
 
-void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, Vector<BoxShadowData> const& box_shadow_layers)
+void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, Vector<ShadowData> const& box_shadow_layers)
 {
     if (box_shadow_layers.is_empty())
         return;
@@ -24,7 +24,7 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, V
     for (int layer_index = box_shadow_layers.size() - 1; layer_index >= 0; layer_index--) {
         auto& box_shadow_data = box_shadow_layers[layer_index];
         // FIXME: Paint inset shadows.
-        if (box_shadow_data.placement != BoxShadowPlacement::Outer)
+        if (box_shadow_data.placement != ShadowPlacement::Outer)
             continue;
 
         // FIXME: Account for rounded corners.

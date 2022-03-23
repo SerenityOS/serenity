@@ -58,7 +58,7 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
             Painting::paint_background(context, layout_node(), enclosing_int_rect(absolute_fragment_rect), computed_values().background_color(), &computed_values().background_layers(), border_radius_data);
 
             if (auto computed_box_shadow = computed_values().box_shadow(); !computed_box_shadow.is_empty()) {
-                Vector<Painting::BoxShadowData> resolved_box_shadow_data;
+                Vector<Painting::ShadowData> resolved_box_shadow_data;
                 resolved_box_shadow_data.ensure_capacity(computed_box_shadow.size());
                 for (auto const& layer : computed_box_shadow) {
                     resolved_box_shadow_data.empend(
@@ -67,7 +67,7 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
                         static_cast<int>(layer.offset_y.to_px(layout_node())),
                         static_cast<int>(layer.blur_radius.to_px(layout_node())),
                         static_cast<int>(layer.spread_distance.to_px(layout_node())),
-                        layer.placement == CSS::BoxShadowPlacement::Outer ? Painting::BoxShadowPlacement::Outer : Painting::BoxShadowPlacement::Inner);
+                        layer.placement == CSS::ShadowPlacement::Outer ? Painting::ShadowPlacement::Outer : Painting::ShadowPlacement::Inner);
                 }
                 Painting::paint_box_shadow(context, enclosing_int_rect(absolute_fragment_rect), resolved_box_shadow_data);
             }

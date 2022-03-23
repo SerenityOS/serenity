@@ -59,10 +59,10 @@ BorderRadiusStyleValue const& StyleValue::as_border_radius() const
     return static_cast<BorderRadiusStyleValue const&>(*this);
 }
 
-BoxShadowStyleValue const& StyleValue::as_box_shadow() const
+ShadowStyleValue const& StyleValue::as_shadow() const
 {
-    VERIFY(is_box_shadow());
-    return static_cast<BoxShadowStyleValue const&>(*this);
+    VERIFY(is_shadow());
+    return static_cast<ShadowStyleValue const&>(*this);
 }
 
 CalculatedStyleValue const& StyleValue::as_calculated() const
@@ -295,11 +295,11 @@ String BorderRadiusStyleValue::to_string() const
     return String::formatted("{} / {}", m_horizontal_radius.to_string(), m_vertical_radius.to_string());
 }
 
-String BoxShadowStyleValue::to_string() const
+String ShadowStyleValue::to_string() const
 {
     StringBuilder builder;
     builder.appendff("{} {} {} {} {}", m_color.to_string(), m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_spread_distance.to_string());
-    if (m_placement == BoxShadowPlacement::Inner)
+    if (m_placement == ShadowPlacement::Inner)
         builder.append(" inset");
     return builder.to_string();
 }
@@ -1446,13 +1446,13 @@ NonnullRefPtr<StyleValue> LengthStyleValue::absolutized(Gfx::IntRect const& view
     return *this;
 }
 
-NonnullRefPtr<StyleValue> BoxShadowStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
+NonnullRefPtr<StyleValue> ShadowStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
 {
     auto absolutized_offset_x = absolutized_length(m_offset_x, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_offset_x);
     auto absolutized_offset_y = absolutized_length(m_offset_y, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_offset_y);
     auto absolutized_blur_radius = absolutized_length(m_blur_radius, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_blur_radius);
     auto absolutized_spread_distance = absolutized_length(m_spread_distance, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_spread_distance);
-    return BoxShadowStyleValue::create(m_color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_placement);
+    return ShadowStyleValue::create(m_color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_placement);
 }
 
 NonnullRefPtr<StyleValue> BorderRadiusStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
