@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,7 +43,11 @@ void glColor3ubv(GLubyte const* v)
 
 void glColor4b(GLbyte r, GLbyte g, GLbyte b, GLbyte a)
 {
-    g_gl_context->gl_color(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
+    g_gl_context->gl_color(
+        (static_cast<double>(r) + 128) / 127.5 - 1,
+        (static_cast<double>(g) + 128) / 127.5 - 1,
+        (static_cast<double>(b) + 128) / 127.5 - 1,
+        (static_cast<double>(a) + 128) / 127.5 - 1);
 }
 
 void glColor4dv(GLdouble const* v)
