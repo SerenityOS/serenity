@@ -27,6 +27,20 @@ Resource::Resource(Type type, const LoadRequest& request)
 {
 }
 
+Resource::Resource(Type type, Resource& resource)
+    : m_request(resource.m_request)
+    , m_encoded_data(move(resource.m_encoded_data))
+    , m_type(type)
+    , m_loaded(resource.m_loaded)
+    , m_failed(resource.m_failed)
+    , m_error(move(resource.m_error))
+    , m_encoding(move(resource.m_encoding))
+    , m_mime_type(move(resource.m_mime_type))
+    , m_response_headers(move(resource.m_response_headers))
+    , m_status_code(move(resource.m_status_code))
+{
+}
+
 Resource::~Resource() = default;
 
 void Resource::for_each_client(Function<void(ResourceClient&)> callback)

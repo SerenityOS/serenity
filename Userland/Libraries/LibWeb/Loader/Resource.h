@@ -65,6 +65,7 @@ public:
 
 protected:
     explicit Resource(Type, const LoadRequest&);
+    Resource(Type, Resource&);
 
 private:
     LoadRequest m_request;
