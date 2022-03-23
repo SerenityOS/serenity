@@ -50,7 +50,14 @@ ImageEditor::~ImageEditor()
 
 void ImageEditor::did_complete_action()
 {
+    if (on_modified_change)
+        on_modified_change(true);
     m_undo_stack.push(make<ImageUndoCommand>(*m_image));
+}
+
+bool ImageEditor::is_modified()
+{
+    return undo_stack().is_current_modified();
 }
 
 bool ImageEditor::undo()
@@ -580,6 +587,8 @@ void ImageEditor::save_project()
         return;
     }
     undo_stack().set_current_unmodified();
+    if (on_modified_change)
+        on_modified_change(false);
 }
 
 void ImageEditor::save_project_as()
@@ -596,6 +605,8 @@ void ImageEditor::save_project_as()
     set_path(file->filename());
     set_loaded_from_image(false);
     undo_stack().set_current_unmodified();
+    if (on_modified_change)
+        on_modified_change(false);
 }
 
 Result<void, String> ImageEditor::save_project_to_file(Core::File& file) const
