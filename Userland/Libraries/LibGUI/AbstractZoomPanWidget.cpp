@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Mustafa Quraish <mustafa@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,10 +17,10 @@ void AbstractZoomPanWidget::set_scale(float new_scale)
         return;
 
     m_scale = clamp(new_scale, m_min_scale, m_max_scale);
-    Gfx::IntSize new_size;
-    new_size.set_width(m_original_rect.width() * m_scale);
-    new_size.set_height(m_original_rect.height() * m_scale);
-    m_content_rect.set_size(new_size);
+    m_content_rect.set_size({
+        m_original_rect.width() * m_scale,
+        m_original_rect.height() * m_scale,
+    });
 
     if (on_scale_change)
         on_scale_change(m_scale);
@@ -44,7 +45,7 @@ void AbstractZoomPanWidget::scale_centered(float new_scale, Gfx::IntPoint const&
 
     Gfx::FloatPoint focus_point {
         center.x() - width() / 2.0f,
-        center.y() - height() / 2.0f
+        center.y() - height() / 2.0f,
     };
     m_origin = (m_origin + focus_point) * (new_scale / m_scale) - focus_point;
     set_scale(new_scale);
@@ -77,35 +78,39 @@ void AbstractZoomPanWidget::pan_to(Gfx::IntPoint const& position)
 
 Gfx::FloatPoint AbstractZoomPanWidget::frame_to_content_position(Gfx::IntPoint const& frame_position) const
 {
-    Gfx::FloatPoint content_position;
-    content_position.set_x(((float)frame_position.x() - (float)m_content_rect.x()) / m_scale);
-    content_position.set_y(((float)frame_position.y() - (float)m_content_rect.y()) / m_scale);
-    return content_position;
+    return {
+        (static_cast<float>(frame_position.x()) - m_content_rect.x()) / m_scale,
+        (static_cast<float>(frame_position.y()) - m_content_rect.y()) / m_scale,
+    };
 }
 
 Gfx::FloatRect AbstractZoomPanWidget::frame_to_content_rect(Gfx::IntRect const& frame_rect) const
 {
     Gfx::FloatRect content_rect;
     content_rect.set_location(frame_to_content_position(frame_rect.location()));
-    content_rect.set_width((float)frame_rect.width() / m_scale);
-    content_rect.set_height((float)frame_rect.height() / m_scale);
+    content_rect.set_size({
+        frame_rect.width() / m_scale,
+        frame_rect.height() / m_scale,
+    });
     return content_rect;
 }
 
 Gfx::FloatPoint AbstractZoomPanWidget::content_to_frame_position(Gfx::IntPoint const& content_position) const
 {
-    Gfx::FloatPoint frame_position;
-    frame_position.set_x(m_content_rect.x() + ((float)content_position.x() * m_scale));
-    frame_position.set_y(m_content_rect.y() + ((float)content_position.y() * m_scale));
-    return frame_position;
+    return {
+        m_content_rect.x() + content_position.x() * m_scale,
+        m_content_rect.y() + content_position.y() * m_scale,
+    };
 }
 
 Gfx::FloatRect AbstractZoomPanWidget::content_to_frame_rect(Gfx::IntRect const& content_rect) const
 {
     Gfx::FloatRect frame_rect;
     frame_rect.set_location(content_to_frame_position(content_rect.location()));
-    frame_rect.set_width((float)content_rect.width() * m_scale);
-    frame_rect.set_height((float)content_rect.height() * m_scale);
+    frame_rect.set_size({
+        content_rect.width() * m_scale,
+        content_rect.height() * m_scale,
+    });
     return frame_rect;
 }
 
@@ -152,12 +157,10 @@ void AbstractZoomPanWidget::relayout()
     if (m_original_rect.is_null())
         return;
 
-    Gfx::IntSize new_size = m_content_rect.size();
-
-    Gfx::IntPoint new_location;
-    new_location.set_x((width() / 2) - (new_size.width() / 2) - m_origin.x());
-    new_location.set_y((height() / 2) - (new_size.height() / 2) - m_origin.y());
-    m_content_rect.set_location(new_location);
+    m_content_rect.set_location({
+        (width() / 2) - (m_content_rect.width() / 2) - m_origin.x(),
+        (height() / 2) - (m_content_rect.height() / 2) - m_origin.y(),
+    });
 
     handle_relayout(m_content_rect);
 }
@@ -184,8 +187,8 @@ void AbstractZoomPanWidget::fit_content_to_rect(Gfx::IntRect const& viewport_rec
 {
     const float border_ratio = 0.95f;
     auto image_size = m_original_rect.size();
-    auto height_ratio = floorf(border_ratio * viewport_rect.height()) / (float)image_size.height();
-    auto width_ratio = floorf(border_ratio * viewport_rect.width()) / (float)image_size.width();
+    auto height_ratio = floorf(border_ratio * viewport_rect.height()) / image_size.height();
+    auto width_ratio = floorf(border_ratio * viewport_rect.width()) / image_size.width();
 
     float new_scale = 1.0f;
     switch (type) {
@@ -201,7 +204,7 @@ void AbstractZoomPanWidget::fit_content_to_rect(Gfx::IntRect const& viewport_rec
     }
 
     auto const& offset = rect().center() - viewport_rect.center();
-    set_origin(Gfx::FloatPoint(offset.x(), offset.y()));
+    set_origin({ offset.x(), offset.y() });
     set_scale(new_scale);
 }
 
