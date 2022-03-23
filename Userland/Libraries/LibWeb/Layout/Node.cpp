@@ -484,6 +484,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (auto maybe_text_decoration_thickness = specified_style.length_percentage(CSS::PropertyID::TextDecorationThickness); maybe_text_decoration_thickness.has_value())
         computed_values.set_text_decoration_thickness(maybe_text_decoration_thickness.release_value());
 
+    computed_values.set_text_shadow(specified_style.text_shadow());
+
     computed_values.set_z_index(specified_style.z_index());
     computed_values.set_opacity(specified_style.opacity());
 

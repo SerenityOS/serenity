@@ -58,6 +58,7 @@ public:
     Optional<CSS::TextDecorationLine> text_decoration_line() const;
     Optional<CSS::TextDecorationStyle> text_decoration_style() const;
     Optional<CSS::TextTransform> text_transform() const;
+    Vector<CSS::ShadowData> text_shadow() const;
     Optional<CSS::ListStyleType> list_style_type() const;
     Optional<CSS::FlexDirection> flex_direction() const;
     Optional<CSS::FlexWrap> flex_wrap() const;
@@ -106,6 +107,7 @@ private:
 
     Array<RefPtr<StyleValue>, to_underlying(CSS::last_property_id) + 1> m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
+    Vector<CSS::ShadowData> shadow(CSS::PropertyID) const;
 
     mutable RefPtr<Gfx::Font> m_font;
 };

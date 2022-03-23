@@ -1342,6 +1342,14 @@
       "distribute"
     ]
   },
+  "text-shadow": {
+    "affects-layout": false,
+    "inherited": true,
+    "initial": "none",
+    "valid-identifiers": [
+      "none"
+    ]
+  },
   "text-transform": {
     "inherited": true,
     "initial": "none",

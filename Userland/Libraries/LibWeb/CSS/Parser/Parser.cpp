@@ -4284,6 +4284,10 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
         if (auto parsed_value = parse_text_decoration_value(component_values))
             return parsed_value.release_nonnull();
         return ParsingResult::SyntaxError;
+    case PropertyID::TextShadow:
+        if (auto parsed_value = parse_shadow_value(component_values, AllowInsetKeyword::No))
+            return parsed_value.release_nonnull();
+        return ParsingResult::SyntaxError;
     case PropertyID::Transform:
         if (auto parsed_value = parse_transform_value(component_values))
             return parsed_value.release_nonnull();
