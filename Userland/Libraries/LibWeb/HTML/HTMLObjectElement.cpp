@@ -200,6 +200,7 @@ void HTMLObjectElement::run_object_representation_completed_steps()
     // 4.12. Return.
 }
 
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element:the-object-element-23
 void HTMLObjectElement::run_object_representation_fallback_steps()
 {
     // 6. Fallback: The object element represents the element's children, ignoring any leading param element children. This is the element's fallback content. If the element has an instantiated plugin, then unload it. If the element's nested browsing context is non-null, then it must be discarded and then set to null.
@@ -209,7 +210,6 @@ void HTMLObjectElement::run_object_representation_fallback_steps()
     document().set_needs_layout();
 }
 
-// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element:the-object-element-23
 void HTMLObjectElement::convert_resource_to_image()
 {
     // FIXME: This is a bit awkward. We convert the Resource to an ImageResource here because we do not know
