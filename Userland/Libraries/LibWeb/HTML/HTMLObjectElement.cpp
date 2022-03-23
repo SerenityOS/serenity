@@ -74,7 +74,10 @@ void HTMLObjectElement::queue_element_task_to_run_object_representation_steps()
             set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 
             // 6. If the resource is not yet available (e.g. because the resource was not available in the cache, so that loading the resource required making a request over the network), then jump to the step below labeled fallback. The task that is queued by the networking task source once the resource is available must restart this algorithm from this step. Resources can load incrementally; user agents may opt to consider a resource "available" whenever enough data has been obtained to begin processing the resource.
-            // NOTE: The request is always asynchronous, even if the success callback is immediately queued for execution.
+
+            // NOTE: The request is always asynchronous, even if it is cached or succeeded/failed immediately. Allow the callbacks below to invoke
+            //       the fallback steps. This prevents the fallback layout from flashing very briefly between here and the resource loading.
+            return;
         }
 
         // 5. If the data attribute is absent but the type attribute is present, and the user agent can find a plugin suitable according to the value of the type attribute, and plugins aren't being sandboxed, then that plugin should be used. If these conditions cannot be met, or if the plugin reports an error, jump to the step below labeled fallback. Otherwise return; once the plugin is completely loaded, queue an element task on the DOM manipulation task source given the object element to fire an event named load at the element.
@@ -193,9 +196,7 @@ void HTMLObjectElement::run_object_representation_completed_steps()
     });
 
     m_should_show_fallback_content = false;
-
-    set_needs_style_update(true);
-    document().set_needs_layout();
+    update_layout_and_child_objects();
 
     // 4.12. Return.
 }
@@ -205,9 +206,7 @@ void HTMLObjectElement::run_object_representation_fallback_steps()
 {
     // 6. Fallback: The object element represents the element's children, ignoring any leading param element children. This is the element's fallback content. If the element has an instantiated plugin, then unload it. If the element's nested browsing context is non-null, then it must be discarded and then set to null.
     m_should_show_fallback_content = true;
-
-    set_needs_style_update(true);
-    document().set_needs_layout();
+    update_layout_and_child_objects();
 }
 
 void HTMLObjectElement::convert_resource_to_image()
@@ -226,7 +225,17 @@ void HTMLObjectElement::convert_resource_to_image()
     };
 
     m_image_loader->adopt_object_resource({}, *resource());
-    set_resource(nullptr);
+}
+
+void HTMLObjectElement::update_layout_and_child_objects()
+{
+    for_each_child_of_type<HTMLObjectElement>([](auto& object) {
+        object.queue_element_task_to_run_object_representation_steps();
+        return IterationDecision::Continue;
+    });
+
+    set_needs_style_update(true);
+    document().set_needs_layout();
 }
 
 }
