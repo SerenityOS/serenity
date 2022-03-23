@@ -16,6 +16,7 @@ List open files of a processes. This can mean actual files in the file system, s
 
 * `--help`: Display help message and exit
 * `--version`: Print version
+* `--complete`: Perform autocompletion
 * `-p pid`: Select by PID
 * `-d fd`: Select by file descriptor
 * `-u login/UID`: Select by login/UID

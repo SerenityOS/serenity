@@ -12,6 +12,7 @@ $ readelf [--all] [--file-header] [--program-headers] [--section-headers] [--hea
 
 * `--help`: Display help message and exit
 * `--version`: Print version
+* `--complete`: Perform autocompletion
 * `-a`, `--all`: Display all
 * `-h`, `--file-header`: Display ELF header
 * `-l`, `--program-headers`: Display program headers
