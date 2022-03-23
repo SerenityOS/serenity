@@ -146,6 +146,7 @@ private:
     RefPtr<DictObject> m_trailer;
     Optional<LinearizationDictionary> m_linearization_dictionary;
     Vector<Reference> m_current_reference_stack;
+    bool m_disable_encryption { false };
 };
 
 };

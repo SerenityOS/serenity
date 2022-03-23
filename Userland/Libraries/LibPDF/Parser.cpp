@@ -25,6 +25,7 @@ static NonnullRefPtr<T> make_object(Args... args) requires(IsBaseOf<Object, T>)
 PDFErrorOr<Vector<Command>> Parser::parse_graphics_commands(Document* document, ReadonlyBytes bytes)
 {
     auto parser = adopt_ref(*new Parser(document, bytes));
+    parser->m_disable_encryption = true;
     return parser->parse_graphics_commands();
 }
 
@@ -746,16 +747,23 @@ NonnullRefPtr<StringObject> Parser::parse_string()
 
     VERIFY(!string.is_null());
 
-    if (string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
+    auto string_object = make_object<StringObject>(string, is_binary_string);
+
+    if (m_document->security_handler() && !m_disable_encryption)
+        m_document->security_handler()->decrypt(string_object, m_current_reference_stack.last());
+
+    auto unencrypted_string = string_object->string();
+
+    if (unencrypted_string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
         // The string is encoded in UTF16-BE
-        string = TextCodec::decoder_for("utf-16be")->to_utf8(string);
-    } else if (string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 })) {
+        string_object->set_string(TextCodec::decoder_for("utf-16be")->to_utf8(unencrypted_string));
+    } else if (unencrypted_string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 })) {
         // The string is encoded in UTF-8. This is the default anyways, but if these bytes
         // are explicitly included, we have to trim them
-        string = string.substring(3);
+        string_object->set_string(unencrypted_string.substring(3));
     }
 
-    return make_object<StringObject>(string, is_binary_string);
+    return string_object;
 }
 
 String Parser::parse_literal_string()
@@ -1003,17 +1011,22 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
     m_reader.move_by(9);
     consume_whitespace();
 
+    auto stream_object = make_object<StreamObject>(dict, MUST(ByteBuffer::copy(bytes)));
+
+    if (m_document->security_handler() && !m_disable_encryption)
+        m_document->security_handler()->decrypt(stream_object, m_current_reference_stack.last());
+
     if (dict->contains(CommonNames::Filter)) {
         auto filter_type = MUST(dict->get_name(m_document, CommonNames::Filter))->name();
-        auto maybe_bytes = Filter::decode(bytes, filter_type);
+        auto maybe_bytes = Filter::decode(stream_object->bytes(), filter_type);
         if (maybe_bytes.is_error()) {
             warnln("Failed to decode filter: {}", maybe_bytes.error().string_literal());
             return error(String::formatted("Failed to decode filter {}", maybe_bytes.error().string_literal()));
         }
-        return make_object<StreamObject>(dict, maybe_bytes.value());
+        stream_object->buffer() = maybe_bytes.release_value();
     }
 
-    return make_object<StreamObject>(dict, MUST(ByteBuffer::copy(bytes)));
+    return stream_object;
 }
 
 PDFErrorOr<Vector<Command>> Parser::parse_graphics_commands()
