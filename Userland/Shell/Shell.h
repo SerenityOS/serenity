@@ -51,7 +51,8 @@
     __ENUMERATE_SHELL_BUILTIN(wait)    \
     __ENUMERATE_SHELL_BUILTIN(dump)    \
     __ENUMERATE_SHELL_BUILTIN(kill)    \
-    __ENUMERATE_SHELL_BUILTIN(noop)
+    __ENUMERATE_SHELL_BUILTIN(noop)    \
+    __ENUMERATE_SHELL_BUILTIN(argsparser_parse)
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
