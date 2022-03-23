@@ -83,7 +83,7 @@ struct RasterizerOptions {
 struct LightModelParameters {
     FloatVector4 scene_ambient_color { 0.2f, 0.2f, 0.2f, 1.0f };
     bool viewer_at_infinity { false };
-    unsigned int single_color { 0x81F9 }; // This is the value of `GL_SINGLE_COLOR`. Considering we definitely don't leak gl.h stuff into here, we fix it to the gl.h macro value.
+    ColorControl color_control { ColorControl::SingleColor };
     bool two_sided_lighting { false };
 };
 

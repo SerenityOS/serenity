@@ -39,6 +39,11 @@ enum class BlendFactor {
     SrcAlphaSaturate,
 };
 
+enum class ColorControl {
+    SingleColor,
+    SeparateSpecularColor,
+};
+
 enum class ColorMaterialFace {
     Front,
     Back,
