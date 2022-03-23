@@ -88,6 +88,10 @@ MainWidget::MainWidget()
         m_palette_widget->set_image_editor(&image_editor);
         m_layer_list_widget->set_image(&image_editor.image());
         m_layer_properties_widget->set_layer(image_editor.active_layer());
+        window()->set_modified(image_editor.is_modified());
+        image_editor.on_modified_change = [this](bool modified) {
+            window()->set_modified(modified);
+        };
         if (auto* active_tool = m_toolbox->active_tool())
             image_editor.set_active_tool(active_tool);
         m_show_guides_action->set_checked(image_editor.guide_visibility());

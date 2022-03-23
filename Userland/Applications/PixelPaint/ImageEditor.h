@@ -87,6 +87,7 @@ public:
     Function<void(Gfx::IntPoint const&)> on_image_mouse_position_change;
 
     Function<void(void)> on_leave;
+    Function<void(bool modified)> on_modified_change;
 
     bool request_close();
 
@@ -109,6 +110,8 @@ public:
     void set_show_active_layer_boundary(bool);
 
     void set_loaded_from_image(bool);
+
+    bool is_modified();
 
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
