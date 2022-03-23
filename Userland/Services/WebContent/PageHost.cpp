@@ -84,7 +84,7 @@ void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
 
     auto* layout_root = this->layout_root();
     if (!layout_root) {
-        painter.fill_rect(bitmap_rect, Color::White);
+        painter.fill_rect(bitmap_rect, palette().base());
         return;
     }
 
