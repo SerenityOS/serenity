@@ -561,7 +561,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
         for (auto& flex_item : m_flex_items) {
             // FIXME: This needs some serious work.
             float max_content_contribution = calculated_main_size(flex_item.box);
-            float max_content_flex_fraction = max_content_contribution - flex_item.flex_base_size;
+            float max_content_flex_fraction = max_content_contribution - (flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after);
             if (max_content_flex_fraction > 0) {
                 max_content_flex_fraction /= max(flex_item.box.computed_values().flex_grow(), 1.0f);
             } else {
@@ -583,7 +583,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
             } else {
                 product = largest_max_content_flex_fraction * max(flex_item.box.computed_values().flex_shrink(), 1.0f) * flex_item.flex_base_size;
             }
-            result += flex_item.flex_base_size + product;
+            result += flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + product;
         }
         m_available_space->main = clamp(result, main_min_size, main_max_size);
     }
@@ -617,13 +617,14 @@ void FlexFormattingContext::collect_flex_items_into_flex_lines()
     FlexLine line;
     float line_main_size = 0;
     for (auto& flex_item : m_flex_items) {
-        if ((line_main_size + flex_item.hypothetical_main_size) > m_available_space->main.value_or(NumericLimits<float>::max())) {
+        auto outer_hypothetical_main_size = flex_item.hypothetical_main_size + flex_item.margins.main_before + flex_item.margins.main_after;
+        if ((line_main_size + outer_hypothetical_main_size) > m_available_space->main.value_or(NumericLimits<float>::max())) {
             m_flex_lines.append(move(line));
             line = {};
             line_main_size = 0;
         }
         line.items.append(&flex_item);
-        line_main_size += flex_item.hypothetical_main_size;
+        line_main_size += outer_hypothetical_main_size;
     }
     m_flex_lines.append(move(line));
 }
@@ -643,7 +644,7 @@ void FlexFormattingContext::resolve_flexible_lengths()
 
         float sum_of_hypothetical_main_sizes = 0;
         for (auto& flex_item : flex_line.items) {
-            sum_of_hypothetical_main_sizes += flex_item->hypothetical_main_size;
+            sum_of_hypothetical_main_sizes += (flex_item->hypothetical_main_size + flex_item->margins.main_before + flex_item->margins.main_after);
         }
         if (sum_of_hypothetical_main_sizes < m_available_space->main.value_or(NumericLimits<float>::max()))
             used_flex_factor = FlexFactor::FlexGrowFactor;
@@ -683,9 +684,9 @@ void FlexFormattingContext::resolve_flexible_lengths()
             float sum_of_items_on_line = 0;
             for (auto& flex_item : flex_line.items) {
                 if (flex_item->frozen)
-                    sum_of_items_on_line += flex_item->target_main_size;
+                    sum_of_items_on_line += flex_item->target_main_size + flex_item->margins.main_before + flex_item->margins.main_after;
                 else
-                    sum_of_items_on_line += flex_item->flex_base_size;
+                    sum_of_items_on_line += flex_item->flex_base_size + flex_item->margins.main_before + flex_item->margins.main_after;
             }
             return specified_main_size(flex_container()) - sum_of_items_on_line;
         };
@@ -925,8 +926,13 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
             used_main_space += flex_item->main_size;
             if (is_main_axis_margin_first_auto(flex_item->box))
                 ++auto_margins;
+            else
+                used_main_space += flex_item->margins.main_before;
+
             if (is_main_axis_margin_second_auto(flex_item->box))
                 ++auto_margins;
+            else
+                used_main_space += flex_item->margins.main_after;
         }
         float remaining_free_space = m_available_space->main.value_or(NumericLimits<float>::max()) - used_main_space;
         if (remaining_free_space > 0) {
@@ -972,8 +978,8 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         // FIXME: Support reverse
         float main_offset = space_before_first_item;
         for (auto& flex_item : flex_line.items) {
-            flex_item->main_offset = main_offset;
-            main_offset += flex_item->main_size + space_between_items;
+            flex_item->main_offset = main_offset + flex_item->margins.main_before;
+            main_offset += flex_item->margins.main_before + flex_item->main_size + flex_item->margins.main_after + space_between_items;
         }
     }
 }
