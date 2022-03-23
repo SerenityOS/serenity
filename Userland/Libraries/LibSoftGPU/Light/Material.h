@@ -17,8 +17,8 @@ struct Material {
     FloatVector4 emissive { 0.0f, 0.0f, 0.0f, 1.0f };
     float shininess { 0.0f };
     float ambient_color_index { 0.0f };
-    float diffuse_color_index = { 1.0f };
-    float specular_color_index = { 1.0f };
+    float diffuse_color_index { 1.0f };
+    float specular_color_index { 1.0f };
 };
 
 }
