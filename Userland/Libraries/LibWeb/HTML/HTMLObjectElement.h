@@ -42,6 +42,7 @@ private:
     void run_object_representation_fallback_steps();
 
     void convert_resource_to_image();
+    void update_layout_and_child_objects();
 
     // ^ResourceClient
     virtual void resource_did_load() override;
