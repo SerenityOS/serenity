@@ -1097,12 +1097,12 @@ ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, Int
 template<bool has_alpha_channel, bool do_bilinear_blend, typename GetPixel>
 ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity)
 {
-    auto clipped_src_rect = enclosing_int_rect(src_rect).intersected(source.rect());
+    auto int_src_rect = enclosing_int_rect(src_rect);
+    auto clipped_src_rect = int_src_rect.intersected(source.rect());
     if (clipped_src_rect.is_empty())
         return;
 
     if constexpr (!do_bilinear_blend) {
-        IntRect int_src_rect = enclosing_int_rect(src_rect);
         if (dst_rect == clipped_rect && int_src_rect == src_rect && !(dst_rect.width() % int_src_rect.width()) && !(dst_rect.height() % int_src_rect.height())) {
             int hfactor = dst_rect.width() / int_src_rect.width();
             int vfactor = dst_rect.height() / int_src_rect.height();
