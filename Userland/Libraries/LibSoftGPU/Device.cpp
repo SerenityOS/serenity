@@ -730,10 +730,15 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         triangle.vertices[1].eye_coordinates = model_view_transform * triangle.vertices[1].position;
         triangle.vertices[2].eye_coordinates = model_view_transform * triangle.vertices[2].position;
 
-        // Transform the vertex normals into eye-space
-        triangle.vertices[0].normal = transform_direction(model_view_transform, triangle.vertices[0].normal);
-        triangle.vertices[1].normal = transform_direction(model_view_transform, triangle.vertices[1].normal);
-        triangle.vertices[2].normal = transform_direction(model_view_transform, triangle.vertices[2].normal);
+        // Transform normals before use in lighting
+        triangle.vertices[0].normal = normal_transform * triangle.vertices[0].normal;
+        triangle.vertices[1].normal = normal_transform * triangle.vertices[1].normal;
+        triangle.vertices[2].normal = normal_transform * triangle.vertices[2].normal;
+        if (m_options.normalization_enabled) {
+            triangle.vertices[0].normal.normalize();
+            triangle.vertices[1].normal.normalize();
+            triangle.vertices[2].normal.normalize();
+        }
 
         // Calculate per-vertex lighting
         if (m_options.lighting_enabled) {
@@ -823,22 +828,23 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
 
                     // Diffuse
                     auto const normal_dot_vertex_to_light = sgi_dot_operator(vertex.normal, vertex_to_light);
-                    auto const diffuse_component = ((diffuse * light.diffuse_intensity) * normal_dot_vertex_to_light);
+                    auto const diffuse_component = diffuse * light.diffuse_intensity * normal_dot_vertex_to_light;
 
                     // Specular
                     FloatVector4 specular_component = { 0.0f, 0.0f, 0.0f, 0.0f };
                     if (normal_dot_vertex_to_light > 0.0f) {
                         FloatVector3 half_vector_normalized;
                         if (!m_lighting_model.viewer_at_infinity) {
-                            half_vector_normalized = (vertex_to_light + FloatVector3(0.0f, 0.0f, 1.0f)).normalized();
+                            half_vector_normalized = vertex_to_light + FloatVector3(0.0f, 0.0f, 1.0f);
                         } else {
-                            auto const vertex_to_eye_point = sgi_arrow_operator(vertex.eye_coordinates.normalized(), { 0.f, 0.f, 0.f, 1.f }, vertex_to_light_length);
+                            auto const vertex_to_eye_point = sgi_arrow_operator(vertex.eye_coordinates, { 0.f, 0.f, 0.f, 1.f }, vertex_to_light_length);
                             half_vector_normalized = vertex_to_light + vertex_to_eye_point;
                         }
+                        half_vector_normalized.normalize();
 
-                        auto const normal_dot_half_vector = sgi_dot_operator(vertex.normal.normalized(), half_vector_normalized);
+                        auto const normal_dot_half_vector = sgi_dot_operator(vertex.normal, half_vector_normalized);
                         auto const specular_coefficient = AK::pow(normal_dot_half_vector, material.shininess);
-                        specular_component = (specular * light.specular_intensity) * specular_coefficient;
+                        specular_component = specular * light.specular_intensity * specular_coefficient;
                     }
 
                     auto color = ambient_component + diffuse_component + specular_component;
@@ -937,16 +943,6 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
 
         if (area > 0)
             swap(triangle.vertices[0], triangle.vertices[1]);
-
-        // Transform normals
-        triangle.vertices[0].normal = normal_transform * triangle.vertices[0].normal;
-        triangle.vertices[1].normal = normal_transform * triangle.vertices[1].normal;
-        triangle.vertices[2].normal = normal_transform * triangle.vertices[2].normal;
-        if (m_options.normalization_enabled) {
-            triangle.vertices[0].normal.normalize();
-            triangle.vertices[1].normal.normalize();
-            triangle.vertices[2].normal.normalize();
-        }
 
         if (texture_coordinate_generation_enabled) {
             generate_texture_coordinates(triangle.vertices[0], m_options);
