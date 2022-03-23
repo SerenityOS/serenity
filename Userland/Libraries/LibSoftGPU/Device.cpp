@@ -639,9 +639,8 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
     }
 }
 
-void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix3x3 const& normal_transform,
-    FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices,
-    Vector<size_t> const& enabled_texture_units)
+void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform,
+    FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -715,6 +714,10 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
             m_triangle_list.append(triangle);
         }
     }
+
+    // Set up normals transform by taking the upper left 3x3 elements from the model view matrix
+    // See section 2.11.3 of the OpenGL 1.5 spec
+    auto normal_transform = model_view_transform.submatrix_from_topleft<3>().transpose().inverse();
 
     // Now let's transform each triangle and send that to the GPU
     auto const viewport = m_options.viewport;
