@@ -47,7 +47,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
                 alt = image_element.src();
             context.painter().draw_text(enclosing_int_rect(absolute_rect()), alt, Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
         } else if (auto bitmap = layout_box().image_loader().bitmap(layout_box().image_loader().current_frame_index())) {
-            context.painter().draw_scaled_bitmap(rounded_int_rect(absolute_rect()), *bitmap, bitmap->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
+            context.painter().draw_scaled_bitmap(absolute_rect().to_rounded<int>(), *bitmap, bitmap->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
         }
     }
 }

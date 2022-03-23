@@ -270,7 +270,7 @@ void StackingContext::paint(PaintContext& context) const
 
         auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
         source_rect.translate_by(transform_origin);
-        context.painter().draw_scaled_bitmap(Gfx::rounded_int_rect(transformed_destination_rect), *bitmap, source_rect, opacity, Gfx::Painter::ScalingMode::BilinearBlend);
+        context.painter().draw_scaled_bitmap(transformed_destination_rect.to_rounded<int>(), *bitmap, source_rect, opacity, Gfx::Painter::ScalingMode::BilinearBlend);
     } else {
         paint_internal(context);
     }
