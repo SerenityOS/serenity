@@ -1166,6 +1166,422 @@ bool Shell::run_builtin(const AST::Command& command, const NonnullRefPtrVector<A
     return false;
 }
 
+int Shell::builtin_argsparser_parse(int argc, const char** argv)
+{
+    // argsparser_parse
+    //   --add-option variable [--type (bool | string | i32 | u32 | double | size)] --help-string "" --long-name "" --short-name "" [--value-name "" <if not --type bool>] --list
+    //   --add-positional-argument variable [--type (bool | string | i32 | u32 | double | size)] ([--min n] [--max n] | [--required]) --help-string "" --value-name ""
+    //   [--general-help ""]
+    //   [--stop-on-first-non-option]
+    //   --
+    //   $args_to_parse
+    Core::ArgsParser parser;
+
+    Core::ArgsParser user_parser;
+
+    Vector<char const*> arguments;
+    Variant<Core::ArgsParser::Option, Core::ArgsParser::Arg, Empty> current;
+    String current_variable;
+    // if max > 1 or min < 1, or explicit `--list`.
+    bool treat_arg_as_list = false;
+    enum class Type {
+        Bool,
+        String,
+        I32,
+        U32,
+        Double,
+        Size,
+    };
+
+    auto type = Type::String;
+
+    auto try_convert = [](StringView value, Type type) -> Optional<RefPtr<AST::Value>> {
+        switch (type) {
+        case Type::Bool:
+            return AST::make_ref_counted<AST::StringValue>("true");
+        case Type::String:
+            return AST::make_ref_counted<AST::StringValue>(value);
+        case Type::I32:
+            if (auto number = value.to_int(); number.has_value())
+                return AST::make_ref_counted<AST::StringValue>(String::number(*number));
+
+            warnln("Invalid value for type i32: {}", value);
+            return {};
+        case Type::U32:
+        case Type::Size:
+            if (auto number = value.to_uint(); number.has_value())
+                return AST::make_ref_counted<AST::StringValue>(String::number(*number));
+
+            warnln("Invalid value for type u32|size: {}", value);
+            return {};
+        case Type::Double: {
+            String string = value;
+            char* endptr = nullptr;
+            auto number = strtod(string.characters(), &endptr);
+            if (endptr != string.characters() + string.length()) {
+                warnln("Invalid value for type double: {}", value);
+                return {};
+            }
+
+            return AST::make_ref_counted<AST::StringValue>(String::number(number));
+        }
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    auto enlist = [&](auto name, auto value) -> NonnullRefPtr<AST::Value> {
+        auto variable = lookup_local_variable(name);
+        if (variable) {
+            auto list = variable->resolve_as_list(*this);
+            auto new_value = value->resolve_as_string(*this);
+            list.append(move(new_value));
+            return make_ref_counted<AST::ListValue>(move(list));
+        }
+        return *value;
+    };
+    auto commit = [&] {
+        return current.visit(
+            [&](Core::ArgsParser::Option& option) {
+                if (!option.long_name && !option.short_name) {
+                    warnln("Defined option must have at least one of --long-name or --short-name");
+                    return false;
+                }
+                option.accept_value = [&, current_variable, treat_arg_as_list, type](auto value) {
+                    auto result = try_convert(value, type);
+                    if (result.has_value()) {
+                        auto value = result.release_value();
+                        if (treat_arg_as_list)
+                            value = enlist(current_variable, move(value));
+                        this->set_local_variable(current_variable, move(value), true);
+                        return true;
+                    }
+
+                    return false;
+                };
+                user_parser.add_option(move(option));
+                type = Type::String;
+                treat_arg_as_list = false;
+                return true;
+            },
+            [&](Core::ArgsParser::Arg& arg) {
+                if (!arg.name) {
+                    warnln("Defined positional argument must have a name");
+                    return false;
+                }
+                arg.accept_value = [&, current_variable, treat_arg_as_list, type](auto value) {
+                    auto result = try_convert(value, type);
+                    if (result.has_value()) {
+                        auto value = result.release_value();
+                        if (treat_arg_as_list)
+                            value = enlist(current_variable, move(value));
+                        this->set_local_variable(current_variable, move(value), true);
+                        return true;
+                    }
+
+                    return false;
+                };
+                user_parser.add_positional_argument(move(arg));
+                type = Type::String;
+                treat_arg_as_list = false;
+                return true;
+            },
+            [&](Empty) {
+                return true;
+            });
+    };
+
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = false,
+        .help_string = "Stop processing arguments after a non-argument parameter is seen",
+        .long_name = "stop-on-first-non-option",
+        .accept_value = [&](auto) {
+            user_parser.set_stop_on_first_non_option(true);
+            return true;
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Set the general help string for the parser",
+        .long_name = "general-help",
+        .value_name = "string",
+        .accept_value = [&](auto value) {
+            user_parser.set_general_help(value);
+            return true;
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Start describing an option",
+        .long_name = "add-option",
+        .value_name = "variable-name",
+        .accept_value = [&](auto name) {
+            if (!commit())
+                return false;
+
+            current = Core::ArgsParser::Option {};
+            current_variable = name;
+            if (current_variable.is_empty() || !all_of(current_variable, [](auto ch) { return ch == '_' || isalnum(ch); })) {
+                warnln("Option variable name must be a valid identifier");
+                return false;
+            }
+
+            return true;
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = false,
+        .help_string = "Accept multiple of the current option being given",
+        .long_name = "list",
+        .accept_value = [&](auto) {
+            if (!current.has<Core::ArgsParser::Option>()) {
+                warnln("Must be defining an option to use --list");
+                return false;
+            }
+            treat_arg_as_list = true;
+            return true;
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Define the type of the option or argument being described",
+        .long_name = "type",
+        .value_name = "type",
+        .accept_value = [&](auto name) {
+            if (current.has<Empty>()) {
+                warnln("Must be defining an argument or option to use --type");
+                return false;
+            }
+
+            StringView ty = name;
+            if (ty == "bool") {
+                if (auto option = current.get_pointer<Core::ArgsParser::Option>()) {
+                    if (option->value_name != nullptr) {
+                        warnln("Type 'bool' does not apply to options with a value (value name is set to {})", option->value_name);
+                        return false;
+                    }
+                }
+                type = Type::Bool;
+            } else if (ty == "string") {
+                type = Type::String;
+            } else if (ty == "i32") {
+                type = Type::I32;
+            } else if (ty == "u32") {
+                type = Type::U32;
+            } else if (ty == "double") {
+                type = Type::Double;
+            } else if (ty == "size") {
+                type = Type::Size;
+            } else {
+                warnln("Invalid type '{}', expected one of bool | string | i32 | u32 | double | size", ty);
+                return false;
+            }
+
+            if (type == Type::Bool)
+                set_local_variable(current_variable, make_ref_counted<AST::StringValue>("false"), true);
+            return true;
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Set the help string of the option or argument being defined",
+        .long_name = "help-string",
+        .value_name = "string",
+        .accept_value = [&](auto value) {
+            return current.visit(
+                [](Empty) {
+                    warnln("Must be defining an option or argument to use --help-string");
+                    return false;
+                },
+                [&](auto& option) {
+                    option.help_string = value;
+                    return true;
+                });
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Set the long name of the option being defined",
+        .long_name = "long-name",
+        .value_name = "name",
+        .accept_value = [&](auto value) {
+            auto option = current.get_pointer<Core::ArgsParser::Option>();
+            if (!option) {
+                warnln("Must be defining an option to use --long-name");
+                return false;
+            }
+            if (option->long_name) {
+                warnln("Repeated application of --long-name is not allowed, current option has long name set to \"{}\"", option->long_name);
+                return false;
+            }
+            option->long_name = value;
+            return true;
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Set the short name of the option being defined",
+        .long_name = "short-name",
+        .value_name = "char",
+        .accept_value = [&](auto value) {
+            auto option = current.get_pointer<Core::ArgsParser::Option>();
+            if (!option) {
+                warnln("Must be defining an option to use --short-name");
+                return false;
+            }
+            if (strlen(value) != 1) {
+                warnln("Option short name ('{}') must be exactly one character long", value);
+                return false;
+            }
+            if (option->short_name) {
+                warnln("Repeated application of --short-name is not allowed, current option has short name set to '{}'", option->short_name);
+                return false;
+            }
+            option->short_name = value[0];
+            return true;
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Set the value name of the option being defined",
+        .long_name = "value-name",
+        .value_name = "string",
+        .accept_value = [&](auto value) {
+            return current.visit(
+                [](Empty) {
+                    warnln("Must be defining an option or a positional argument to use --value-name");
+                    return false;
+                },
+                [&](Core::ArgsParser::Option& option) {
+                    if (option.value_name) {
+                        warnln("Repeated application of --value-name is not allowed, current option has value name set to \"{}\"", option.value_name);
+                        return false;
+                    }
+                    if (type == Type::Bool) {
+                        warnln("Options of type bool cannot have a value name");
+                        return false;
+                    }
+
+                    option.value_name = value;
+                    return true;
+                },
+                [&](Core::ArgsParser::Arg& arg) {
+                    if (arg.name) {
+                        warnln("Repeated application of --value-name is not allowed, current argument has value name set to \"{}\"", arg.name);
+                        return false;
+                    }
+
+                    arg.name = value;
+                    return true;
+                });
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Start describing a positional argument",
+        .long_name = "add-positional-argument",
+        .value_name = "variable",
+        .accept_value = [&](auto value) {
+            if (!commit())
+                return false;
+
+            current = Core::ArgsParser::Arg {};
+            current_variable = value;
+            if (current_variable.is_empty() || !all_of(current_variable, [](auto ch) { return ch == '_' || isalnum(ch); })) {
+                warnln("Argument variable name must be a valid identifier");
+                return false;
+            }
+
+            return true;
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Set the minimum required number of positional arguments for the argument being described",
+        .long_name = "min",
+        .value_name = "n",
+        .accept_value = [&](auto value) {
+            auto arg = current.get_pointer<Core::ArgsParser::Arg>();
+            if (!arg) {
+                warnln("Must be describing a positional argument to use --min");
+                return false;
+            }
+
+            auto number = StringView(value).to_uint();
+            if (!number.has_value()) {
+                warnln("Invalid value for --min: '{}', expected a non-negative number", value);
+                return false;
+            }
+
+            if (static_cast<unsigned>(arg->max_values) < *number) {
+                warnln("Invalid value for --min: {}, min must not be larger than max ({})", *number, arg->max_values);
+                return false;
+            }
+
+            arg->min_values = *number;
+            treat_arg_as_list = arg->max_values > 1 || arg->min_values < 1;
+            return true;
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Set the maximum required number of positional arguments for the argument being described",
+        .long_name = "max",
+        .value_name = "n",
+        .accept_value = [&](auto value) {
+            auto arg = current.get_pointer<Core::ArgsParser::Arg>();
+            if (!arg) {
+                warnln("Must be describing a positional argument to use --max");
+                return false;
+            }
+
+            auto number = StringView(value).to_uint();
+            if (!number.has_value()) {
+                warnln("Invalid value for --max: '{}', expected a non-negative number", value);
+                return false;
+            }
+
+            if (static_cast<unsigned>(arg->min_values) > *number) {
+                warnln("Invalid value for --max: {}, max must not be smaller than min ({})", *number, arg->min_values);
+                return false;
+            }
+
+            arg->max_values = *number;
+            treat_arg_as_list = arg->max_values > 1 || arg->min_values < 1;
+            return true;
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = false,
+        .help_string = "Mark the positional argument being described as required (shorthand for --min 1)",
+        .long_name = "required",
+        .accept_value = [&](auto) {
+            auto arg = current.get_pointer<Core::ArgsParser::Arg>();
+            if (!arg) {
+                warnln("Must be describing a positional argument to use --required");
+                return false;
+            }
+            arg->min_values = 1;
+            if (arg->max_values < arg->min_values)
+                arg->max_values = 1;
+            treat_arg_as_list = arg->max_values > 1 || arg->min_values < 1;
+            return true;
+        },
+    });
+    parser.add_positional_argument(arguments, "Arguments to parse via the described ArgsParser configuration", "arg", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char* const*>(argv), Core::ArgsParser::FailureBehavior::Ignore))
+        return 2;
+
+    if (!commit())
+        return 2;
+
+    if (!user_parser.parse(static_cast<int>(arguments.size()), const_cast<char* const*>(arguments.data()), Core::ArgsParser::FailureBehavior::Ignore))
+        return 1;
+
+    return 0;
+}
+
 bool Shell::has_builtin(StringView name) const
 {
     if (name == ":"sv)
@@ -1181,5 +1597,4 @@ bool Shell::has_builtin(StringView name) const
 #undef __ENUMERATE_SHELL_BUILTIN
     return false;
 }
-
 }
