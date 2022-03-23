@@ -146,6 +146,11 @@ enum class Float {
     Right,
 };
 
+enum class FontVariant {
+    Normal,
+    SmallCaps,
+};
+
 enum class ImageRendering {
     Auto,
     CrispEdges,

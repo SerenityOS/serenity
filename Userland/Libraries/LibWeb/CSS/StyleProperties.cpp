@@ -999,4 +999,20 @@ Variant<CSS::VerticalAlign, CSS::LengthPercentage> StyleProperties::vertical_ali
     VERIFY_NOT_REACHED();
 }
 
+Optional<CSS::FontVariant> StyleProperties::font_variant() const
+{
+    auto value = property(CSS::PropertyID::FontVariant);
+    if (!value.has_value())
+        return {};
+
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Normal:
+        return CSS::FontVariant::Normal;
+    case CSS::ValueID::SmallCaps:
+        return CSS::FontVariant::SmallCaps;
+    default:
+        return {};
+    }
+}
+
 }

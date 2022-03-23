@@ -363,6 +363,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     computed_values.set_font_size(specified_style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(*this));
     computed_values.set_font_weight(specified_style.property(CSS::PropertyID::FontWeight).value()->to_integer());
 
+    if (auto maybe_font_variant = specified_style.font_variant(); maybe_font_variant.has_value())
+        computed_values.set_font_variant(maybe_font_variant.release_value());
+
     // FIXME: BorderXRadius properties are now BorderRadiusStyleValues, so make use of that.
     auto border_bottom_left_radius = specified_style.property(CSS::PropertyID::BorderBottomLeftRadius);
     if (border_bottom_left_radius.has_value() && border_bottom_left_radius.value()->is_border_radius())

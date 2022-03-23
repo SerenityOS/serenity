@@ -3590,7 +3590,8 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<StyleComponentValueRule> cons
     RefPtr<StyleValue> font_size;
     RefPtr<StyleValue> line_height;
     RefPtr<StyleValue> font_families;
-    // FIXME: Implement font-stretch and font-variant.
+    RefPtr<StyleValue> font_variant;
+    // FIXME: Implement font-stretch.
 
     // FIXME: Handle system fonts. (caption, icon, menu, message-box, small-caption, status-bar)
 
@@ -3618,6 +3619,12 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<StyleComponentValueRule> cons
             if (font_weight)
                 return nullptr;
             font_weight = value.release_nonnull();
+            continue;
+        }
+        if (property_accepts_value(PropertyID::FontVariant, *value)) {
+            if (font_variant)
+                return nullptr;
+            font_variant = value.release_nonnull();
             continue;
         }
         if (property_accepts_value(PropertyID::FontSize, *value)) {

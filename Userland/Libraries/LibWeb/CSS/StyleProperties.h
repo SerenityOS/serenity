@@ -75,6 +75,7 @@ public:
     CSS::BoxSizing box_sizing() const;
     Optional<CSS::PointerEvents> pointer_events() const;
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() const;
+    Optional<CSS::FontVariant> font_variant() const;
 
     Vector<CSS::Transformation> transformations() const;
     CSS::TransformOrigin transform_origin() const;
