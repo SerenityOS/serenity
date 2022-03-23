@@ -275,11 +275,11 @@ static size_t print_name(const struct stat& st, const String& name, const char* 
     }
     if (S_ISLNK(st.st_mode)) {
         if (path_for_link_resolution) {
-            auto link_destination = Core::File::read_link(path_for_link_resolution);
-            if (link_destination.is_null()) {
+            auto link_destination_or_error = Core::File::read_link(path_for_link_resolution);
+            if (link_destination_or_error.is_error()) {
                 perror("readlink");
             } else {
-                nprinted += printf(" -> ") + print_escaped(link_destination.characters());
+                nprinted += printf(" -> ") + print_escaped(link_destination_or_error.value().characters());
             }
         } else {
             if (flag_classify)

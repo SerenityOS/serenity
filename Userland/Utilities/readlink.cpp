@@ -25,11 +25,13 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     for (const char* path : paths) {
-        auto destination = Core::File::read_link(path);
-        if (destination.is_null()) {
+        auto destination_or_error = Core::File::read_link(path);
+        if (destination_or_error.is_error()) {
             perror(path);
             return 1;
         }
+
+        auto destination = destination_or_error.release_value();
         out("{}", destination);
         if (!no_newline)
             outln();
