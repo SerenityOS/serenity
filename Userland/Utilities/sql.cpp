@@ -227,8 +227,10 @@ private:
             bool is_first_token = true;
             bool is_command = false;
             bool last_token_ended_statement = false;
+            bool tokens_found = false;
 
             for (SQL::AST::Token token = lexer.next(); token.type() != SQL::AST::TokenType::Eof; token = lexer.next()) {
+                tokens_found = true;
                 switch (token.type()) {
                 case SQL::AST::TokenType::ParenOpen:
                     ++m_repl_line_level;
@@ -251,7 +253,8 @@ private:
                 is_first_token = false;
             }
 
-            m_repl_line_level = last_token_ended_statement ? 0 : (m_repl_line_level > 0 ? m_repl_line_level : 1);
+            if (tokens_found)
+                m_repl_line_level = last_token_ended_statement ? 0 : (m_repl_line_level > 0 ? m_repl_line_level : 1);
         } while ((m_repl_line_level > 0) || piece.is_empty());
 
         return piece.to_string();
