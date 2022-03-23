@@ -774,7 +774,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     bool bold = weight > Gfx::FontWeight::Regular;
 
-    int size = 10;
+    float font_size_in_px = 10;
 
     if (font_size->is_identifier()) {
         switch (static_cast<const IdentifierStyleValue&>(*font_size).id()) {
@@ -783,14 +783,14 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         case CSS::ValueID::Small:
         case CSS::ValueID::Medium:
             // FIXME: Should be based on "user's default font size"
-            size = 10;
+            font_size_in_px = 10;
             break;
         case CSS::ValueID::Large:
         case CSS::ValueID::XLarge:
         case CSS::ValueID::XxLarge:
         case CSS::ValueID::XxxLarge:
             // FIXME: Should be based on "user's default font size"
-            size = 12;
+            font_size_in_px = 12;
             break;
         case CSS::ValueID::Smaller:
         case CSS::ValueID::Larger:
@@ -810,14 +810,14 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
         auto parent_font_size = [&]() -> float {
             if (!parent_element || !parent_element->computed_css_values())
-                return size;
+                return font_size_in_px;
             auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize).value();
             if (value->is_length()) {
                 auto length = static_cast<LengthStyleValue const&>(*value).to_length();
                 if (length.is_absolute() || length.is_relative())
-                    return length.to_px(viewport_rect(), font_metrics, size, root_font_size);
+                    return length.to_px(viewport_rect(), font_metrics, font_size_in_px, root_font_size);
             }
-            return size;
+            return font_size_in_px;
         };
 
         Optional<Length> maybe_length;
@@ -837,7 +837,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             if (!maybe_length->is_calculated()) {
                 auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, parent_font_size(), root_font_size);
                 if (px != 0)
-                    size = px;
+                    font_size_in_px = px;
             }
         }
     }
@@ -865,12 +865,13 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     bool monospace = false;
 
     auto find_font = [&](String const& family) -> RefPtr<Gfx::Font> {
-        font_selector = { family, size, weight, slope };
+        int font_size_in_pt = roundf(font_size_in_px * 0.75f);
+        font_selector = { family, font_size_in_pt, weight, slope };
 
         if (auto found_font = FontCache::the().get(font_selector))
             return found_font;
 
-        if (auto found_font = Gfx::FontDatabase::the().get(family, size, weight, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
+        if (auto found_font = Gfx::FontDatabase::the().get(family, font_size_in_pt, weight, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
             return found_font;
 
         return {};
@@ -926,7 +927,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     FontCache::the().set(font_selector, *found_font);
 
-    style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(size)));
+    style.set_property(CSS::PropertyID::FontSize, LengthStyleValue::create(CSS::Length::make_px(font_size_in_px)));
     style.set_property(CSS::PropertyID::FontWeight, NumericStyleValue::create_integer(weight));
 
     style.set_computed_font(found_font.release_nonnull());
