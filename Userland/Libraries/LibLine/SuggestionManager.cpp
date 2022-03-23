@@ -9,13 +9,15 @@
 
 namespace Line {
 
-CompletionSuggestion::CompletionSuggestion(StringView completion, StringView trailing_trivia, Style style)
+CompletionSuggestion::CompletionSuggestion(StringView completion, StringView trailing_trivia, StringView display_trivia, Style style)
     : style(style)
     , text_string(completion)
+    , display_trivia_string(display_trivia)
     , is_valid(true)
 {
     Utf8View text_u8 { completion };
     Utf8View trivia_u8 { trailing_trivia };
+    Utf8View display_u8 { display_trivia };
 
     for (auto cp : text_u8)
         text.append(cp);
@@ -23,8 +25,12 @@ CompletionSuggestion::CompletionSuggestion(StringView completion, StringView tra
     for (auto cp : trivia_u8)
         this->trailing_trivia.append(cp);
 
+    for (auto cp : display_u8)
+        this->display_trivia.append(cp);
+
     text_view = Utf32View { text.data(), text.size() };
     trivia_view = Utf32View { this->trailing_trivia.data(), this->trailing_trivia.size() };
+    display_trivia_view = Utf32View { this->display_trivia.data(), this->display_trivia.size() };
 }
 
 void SuggestionManager::set_suggestions(Vector<CompletionSuggestion>&& suggestions)
@@ -36,6 +42,7 @@ void SuggestionManager::set_suggestions(Vector<CompletionSuggestion>&& suggestio
         VERIFY(suggestion.is_valid);
         suggestion.text_view = { suggestion.text.data(), suggestion.text.size() };
         suggestion.trivia_view = { suggestion.trailing_trivia.data(), suggestion.trailing_trivia.size() };
+        suggestion.display_trivia_view = { suggestion.display_trivia.data(), suggestion.display_trivia.size() };
     }
 
     size_t common_suggestion_prefix { 0 };
