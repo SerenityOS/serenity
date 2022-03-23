@@ -22,14 +22,15 @@ static NonnullRefPtr<T> make_object(Args... args) requires(IsBaseOf<Object, T>)
     return adopt_ref(*new T(forward<Args>(args)...));
 }
 
-PDFErrorOr<Vector<Command>> Parser::parse_graphics_commands(ReadonlyBytes bytes)
+PDFErrorOr<Vector<Command>> Parser::parse_graphics_commands(Document* document, ReadonlyBytes bytes)
 {
-    auto parser = adopt_ref(*new Parser(bytes));
+    auto parser = adopt_ref(*new Parser(document, bytes));
     return parser->parse_graphics_commands();
 }
 
-Parser::Parser(Badge<Document>, ReadonlyBytes bytes)
+Parser::Parser(Document* document, ReadonlyBytes bytes)
     : m_reader(bytes)
+    , m_document(document)
 {
 }
 
