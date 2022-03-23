@@ -2,7 +2,7 @@
 
 interface HTMLObjectElement : HTMLElement {
 
-    [Reflect] attribute DOMString data;
+    [CEReactions] attribute DOMString data;
     [Reflect] attribute DOMString type;
     [Reflect] attribute DOMString name;
     [Reflect=usemap] attribute DOMString useMap;

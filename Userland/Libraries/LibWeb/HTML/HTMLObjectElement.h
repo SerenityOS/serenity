@@ -13,7 +13,9 @@
 
 namespace Web::HTML {
 
-class HTMLObjectElement final : public FormAssociatedElement {
+class HTMLObjectElement final
+    : public FormAssociatedElement
+    , public ResourceClient {
 public:
     using WrapperType = Bindings::HTMLObjectElementWrapper;
 
@@ -22,7 +24,9 @@ public:
 
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 
-    String data() const { return attribute(HTML::AttributeNames::data); }
+    String data() const;
+    void set_data(String const& data) { set_attribute(HTML::AttributeNames::data, data); }
+
     String type() const { return attribute(HTML::AttributeNames::type); }
 
     // ^FormAssociatedElement
@@ -32,7 +36,18 @@ public:
 private:
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    ImageLoader m_image_loader;
+    void queue_element_task_to_run_object_representation_steps();
+    void run_object_representation_handler_steps(StringView resource_type);
+    void run_object_representation_completed_steps();
+    void run_object_representation_fallback_steps();
+
+    void convert_resource_to_image();
+
+    // ^ResourceClient
+    virtual void resource_did_load() override;
+    virtual void resource_did_fail() override;
+
+    Optional<ImageLoader> m_image_loader;
     bool m_should_show_fallback_content { false };
 };
 
