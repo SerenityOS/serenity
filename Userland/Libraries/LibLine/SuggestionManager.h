@@ -36,12 +36,12 @@ public:
     {
     }
 
-    CompletionSuggestion(StringView completion, StringView trailing_trivia)
-        : CompletionSuggestion(completion, trailing_trivia, {})
+    CompletionSuggestion(StringView completion, StringView trailing_trivia, StringView display_trivia = "")
+        : CompletionSuggestion(completion, trailing_trivia, display_trivia, {})
     {
     }
 
-    CompletionSuggestion(StringView completion, StringView trailing_trivia, Style style);
+    CompletionSuggestion(StringView completion, StringView trailing_trivia, StringView display_trivia, Style style);
 
     bool operator==(CompletionSuggestion const& suggestion) const
     {
@@ -50,6 +50,7 @@ public:
 
     Vector<u32> text;
     Vector<u32> trailing_trivia;
+    Vector<u32> display_trivia;
     Style style;
     size_t start_index { 0 };
     size_t input_offset { 0 };
@@ -58,7 +59,9 @@ public:
 
     Utf32View text_view;
     Utf32View trivia_view;
+    Utf32View display_trivia_view;
     String text_string;
+    String display_trivia_string;
     bool is_valid { false };
 };
 
