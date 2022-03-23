@@ -1842,7 +1842,11 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
         auto parsed = parsed_result.release_value();
         if (parsed.is_object()) {
             auto& object = parsed.as_object();
-            Line::CompletionSuggestion suggestion { object.get("completion").to_string() };
+            Line::CompletionSuggestion suggestion {
+                object.get("completion").as_string_or(""),
+                object.get("trailing_trivia").as_string_or(""),
+                object.get("display_trivia").as_string_or(""),
+            };
             suggestion.static_offset = object.get("static_offset").to_u64(0);
             suggestion.invariant_offset = object.get("invariant_offset").to_u64(0);
             suggestions.append(move(suggestion));
