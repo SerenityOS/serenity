@@ -16,6 +16,7 @@
 #include "ProcessUnveiledPathsWidget.h"
 #include "ThreadStackWidget.h"
 #include <AK/NumberFormat.h>
+#include <Applications/SystemMonitor/SystemMonitorGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -53,9 +54,9 @@
 #include <unistd.h>
 
 static ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t);
-static NonnullRefPtr<GUI::Widget> build_storage_widget();
-static NonnullRefPtr<GUI::Widget> build_hardware_tab();
-static NonnullRefPtr<GUI::Widget> build_performance_tab();
+static void build_storage_widget(GUI::LazyWidget&);
+static void build_hardware_tab(GUI::LazyWidget&);
+static void build_performance_tab(GUI::Widget&);
 
 static RefPtr<GUI::Statusbar> statusbar;
 
@@ -145,19 +146,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(560, 430);
 
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    main_widget->set_layout<GUI::VerticalBoxLayout>();
-    main_widget->set_fill_with_background_color(true);
+    main_widget->load_from_gml(system_monitor_gml);
+    auto& tabwidget = *main_widget->find_descendant_of_type_named<GUI::TabWidget>("main_tabs");
+    statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
-    // Add a tasteful separating line between the menu and the main UI.
-    auto& top_line = main_widget->add<GUI::SeparatorWidget>(Gfx::Orientation::Horizontal);
-    top_line.set_fixed_height(2);
-
-    auto& tabwidget_container = main_widget->add<GUI::Widget>();
-    tabwidget_container.set_layout<GUI::VerticalBoxLayout>();
-    tabwidget_container.layout()->set_margins({ 0, 4, 4 });
-    auto& tabwidget = tabwidget_container.add<GUI::TabWidget>();
-
-    statusbar = main_widget->add<GUI::Statusbar>(3);
+    auto& process_table_container = *tabwidget.find_descendant_of_type_named<GUI::Widget>("processes");
 
     auto process_model = ProcessModel::create();
     process_model->on_state_update = [&](int process_count, int thread_count) {
@@ -165,30 +158,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         statusbar->set_text(1, String::formatted("Threads: {}", thread_count));
     };
 
-    auto& process_table_container = tabwidget.add_tab<GUI::Widget>("Processes");
+    auto& performance_widget = *tabwidget.find_descendant_of_type_named<GUI::Widget>("performance");
+    build_performance_tab(performance_widget);
 
-    auto performance_widget = build_performance_tab();
-    performance_widget->set_title("Performance");
-    tabwidget.add_widget(performance_widget);
+    auto& storage_widget = *tabwidget.find_descendant_of_type_named<GUI::LazyWidget>("storage");
+    build_storage_widget(storage_widget);
 
-    auto storage_widget = build_storage_widget();
-    storage_widget->set_title("Storage");
-    tabwidget.add_widget(storage_widget);
+    auto& hardware_widget = *tabwidget.find_descendant_of_type_named<GUI::LazyWidget>("hardware");
+    build_hardware_tab(hardware_widget);
 
-    auto network_stats_widget = SystemMonitor::NetworkStatisticsWidget::construct();
-    network_stats_widget->set_title("Network");
-    tabwidget.add_widget(network_stats_widget);
-
-    auto hardware_widget = build_hardware_tab();
-    hardware_widget->set_title("Hardware");
-    tabwidget.add_widget(hardware_widget);
-
-    process_table_container.set_layout<GUI::VerticalBoxLayout>();
-    process_table_container.layout()->set_margins(4);
-    process_table_container.layout()->set_spacing(0);
-
-    auto& process_table_view = process_table_container.add<GUI::TableView>();
-    process_table_view.set_column_headers_visible(true);
+    auto& process_table_view = *process_table_container.find_child_of_type_named<GUI::TableView>("process_table");
     process_table_view.set_model(TRY(GUI::SortingProxyModel::create(process_model)));
     for (auto column = 0; column < ProcessModel::Column::__Count; ++column)
         process_table_view.set_column_visible(column, false);
@@ -379,13 +358,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (args_tab_view == "processes")
         tabwidget.set_active_widget(&process_table_container);
     else if (args_tab_view == "graphs")
-        tabwidget.set_active_widget(performance_widget);
+        tabwidget.set_active_widget(&performance_widget);
     else if (args_tab_view == "fs")
-        tabwidget.set_active_widget(storage_widget);
+        tabwidget.set_active_widget(&storage_widget);
     else if (args_tab_view == "hardware")
-        tabwidget.set_active_widget(hardware_widget);
+        tabwidget.set_active_widget(&hardware_widget);
     else if (args_tab_view == "network")
-        tabwidget.set_active_widget(network_stats_widget);
+        tabwidget.set_active_widget(tabwidget.find_descendant_of_type_named<GUI::Widget>("network"));
 
     return app->exec();
 }
@@ -477,14 +456,10 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
     return window;
 }
 
-NonnullRefPtr<GUI::Widget> build_storage_widget()
+void build_storage_widget(GUI::LazyWidget& widget)
 {
-    auto widget = GUI::LazyWidget::construct();
-
-    widget->on_first_show = [](GUI::LazyWidget& self) {
-        self.set_layout<GUI::VerticalBoxLayout>();
-        self.layout()->set_margins(4);
-        auto& fs_table_view = self.add<GUI::TableView>();
+    widget.on_first_show = [](GUI::LazyWidget& self) {
+        auto& fs_table_view = *self.find_child_of_type_named<GUI::TableView>("storage_table");
 
         Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
         df_fields.empend("mount_point", "Mount point", Gfx::TextAlignment::CenterLeft);
@@ -571,22 +546,12 @@ NonnullRefPtr<GUI::Widget> build_storage_widget()
 
         fs_table_view.model()->invalidate();
     };
-    return widget;
 }
 
-NonnullRefPtr<GUI::Widget> build_hardware_tab()
+void build_hardware_tab(GUI::LazyWidget& widget)
 {
-    auto widget = GUI::LazyWidget::construct();
-
-    widget->on_first_show = [](GUI::LazyWidget& self) {
-        self.set_layout<GUI::VerticalBoxLayout>();
-        self.layout()->set_margins(4);
-
+    widget.on_first_show = [](GUI::LazyWidget& self) {
         {
-            auto& cpu_group_box = self.add<GUI::GroupBox>("CPUs");
-            cpu_group_box.set_layout<GUI::VerticalBoxLayout>();
-            cpu_group_box.layout()->set_margins(6);
-
             Vector<GUI::JsonArrayModel::FieldSpec> processors_field;
             processors_field.empend("processor", "Processor", Gfx::TextAlignment::CenterRight);
             processors_field.empend("cpuid", "CPUID", Gfx::TextAlignment::CenterLeft);
@@ -605,21 +570,13 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
             processors_field.empend("stepping", "Stepping", Gfx::TextAlignment::CenterRight);
             processors_field.empend("type", "Type", Gfx::TextAlignment::CenterRight);
 
-            auto& processors_table_view = cpu_group_box.add<GUI::TableView>();
+            auto& processors_table_view = *self.find_descendant_of_type_named<GUI::TableView>("cpus_table");
             auto json_model = GUI::JsonArrayModel::create("/proc/cpuinfo", move(processors_field));
             processors_table_view.set_model(json_model);
             json_model->invalidate();
-
-            cpu_group_box.set_fixed_height(128);
         }
 
         {
-            auto& pci_group_box = self.add<GUI::GroupBox>("PCI devices");
-            pci_group_box.set_layout<GUI::VerticalBoxLayout>();
-            pci_group_box.layout()->set_margins(6);
-
-            auto& pci_table_view = pci_group_box.add<GUI::TableView>();
-
             auto db = PCIDB::Database::open();
             if (!db)
                 warnln("Couldn't open PCI ID database!");
@@ -663,25 +620,16 @@ NonnullRefPtr<GUI::Widget> build_hardware_tab()
                     return String::formatted("{:02x}", revision_id);
                 });
 
+            auto& pci_table_view = *self.find_descendant_of_type_named<GUI::TableView>("pci_dev_table");
             pci_table_view.set_model(MUST(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/pci", move(pci_fields)))));
             pci_table_view.model()->invalidate();
         }
     };
-
-    return widget;
 }
 
-NonnullRefPtr<GUI::Widget> build_performance_tab()
+void build_performance_tab(GUI::Widget& graphs_container)
 {
-    auto graphs_container = GUI::Widget::construct();
-
-    graphs_container->set_fill_with_background_color(true);
-    graphs_container->set_background_role(ColorRole::Button);
-    graphs_container->set_layout<GUI::VerticalBoxLayout>();
-    graphs_container->layout()->set_margins(4);
-
-    auto& cpu_graph_group_box = graphs_container->add<GUI::GroupBox>("CPU usage");
-    cpu_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
+    auto& cpu_graph_group_box = *graphs_container.find_descendant_of_type_named<GUI::GroupBox>("cpu_graph");
 
     size_t cpu_graphs_per_row = min(4, ProcessModel::the().cpus().size());
     auto cpu_graph_rows = ceil_div(ProcessModel::the().cpus().size(), cpu_graphs_per_row);
@@ -721,12 +669,7 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
         statusbar->set_text(2, String::formatted("CPU usage: {}%", (int)roundf(cpu_usage)));
     };
 
-    auto& memory_graph_group_box = graphs_container->add<GUI::GroupBox>("Memory usage");
-    memory_graph_group_box.set_layout<GUI::VerticalBoxLayout>();
-    memory_graph_group_box.layout()->set_margins(6);
-    memory_graph_group_box.set_fixed_height(120);
-    auto& memory_graph = memory_graph_group_box.add<SystemMonitor::GraphWidget>();
-    memory_graph.set_stack_values(true);
+    auto& memory_graph = *graphs_container.find_descendant_of_type_named<SystemMonitor::GraphWidget>("memory_graph");
     memory_graph.set_value_format(0, {
                                          .graph_color_role = ColorRole::SyntaxComment,
                                          .text_formatter = [](int bytes) {
@@ -745,7 +688,4 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
                                              return String::formatted("Kernel heap: {}", human_readable_size(bytes));
                                          },
                                      });
-
-    graphs_container->add<SystemMonitor::MemoryStatsWidget>(&memory_graph);
-    return graphs_container;
 }
