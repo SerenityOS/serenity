@@ -417,11 +417,12 @@ private:
     struct VertexAttribPointer {
         GLint size { 4 };
         GLenum type { GL_FLOAT };
+        bool normalize { true };
         GLsizei stride { 0 };
         const void* pointer { 0 };
     };
 
-    static void read_from_vertex_attribute_pointer(VertexAttribPointer const&, int index, float* elements, bool normalize);
+    static void read_from_vertex_attribute_pointer(VertexAttribPointer const&, int index, float* elements);
 
     VertexAttribPointer m_client_vertex_pointer;
     VertexAttribPointer m_client_color_pointer;
