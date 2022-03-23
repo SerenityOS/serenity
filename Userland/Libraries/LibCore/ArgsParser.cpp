@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/JsonObject.h"
 #include <AK/Format.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
@@ -30,6 +31,7 @@ ArgsParser::ArgsParser()
 {
     add_option(m_show_help, "Display help message and exit", "help", 0);
     add_option(m_show_version, "Print version", "version", 0);
+    add_option(m_perform_autocomplete, "Perform autocompletion", "complete", 0);
 }
 
 bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_behavior)
@@ -110,7 +112,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
     }
 
     // We're done processing options.
-    // Now let's show version or help if requested.
+    // Now let's show version or help if requested, or perform autocompletion if needed.
 
     if (m_show_version) {
         print_version(stdout);
@@ -118,8 +120,16 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
             exit(0);
         return false;
     }
+
     if (m_show_help) {
         print_usage(stdout, argv[0]);
+        if (failure_behavior == FailureBehavior::Exit || failure_behavior == FailureBehavior::PrintUsageAndExit)
+            exit(0);
+        return false;
+    }
+
+    if (m_perform_autocomplete) {
+        autocomplete(stdout, argv[0], Span<char const* const> { argv + optind, static_cast<size_t>(argc - optind) });
         if (failure_behavior == FailureBehavior::Exit || failure_behavior == FailureBehavior::PrintUsageAndExit)
             exit(0);
         return false;
@@ -626,6 +636,112 @@ void ArgsParser::add_positional_argument(Vector<StringView>& values, char const*
         }
     };
     add_positional_argument(move(arg));
+}
+
+void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char const* const> remaining_arguments)
+{
+    // We expect the full invocation of the program to be available as positional args,
+    // e.g. `foo --bar arg -b` (program invoked as `foo --complete -- foo --bar arg -b`)
+    auto first = true;
+    auto seen_all_options = false;
+    auto skip_next = false;
+
+    StringView argument_to_complete;
+    StringView option_to_complete;
+    auto completing_option = false;
+
+    for (auto& arg : remaining_arguments) {
+        StringView argument { arg };
+
+        completing_option = false;
+        if (skip_next) {
+            argument_to_complete = argument;
+            skip_next = false;
+            continue;
+        }
+
+        // Skip over the program name.
+        if (first && program_name == argument) {
+            first = false;
+            continue;
+        }
+
+        if (seen_all_options) {
+            argument_to_complete = argument;
+            continue;
+        }
+
+        if (argument.starts_with("--")) {
+            option_to_complete = argument;
+            completing_option = true;
+
+            if (argument == "--") {
+                seen_all_options = true;
+                continue;
+            }
+
+            // Look for a long option
+            auto option_pattern = argument.substring_view(2);
+            auto it = m_options.find_if([&](auto& option) { return StringView(option.long_name) == option_pattern; });
+            if (it.is_end())
+                continue;
+
+            if (it->requires_argument)
+                skip_next = true;
+            continue;
+        }
+
+        if (argument.starts_with("-")) {
+            option_to_complete = argument;
+            completing_option = true;
+
+            if (argument == "-") {
+                option_to_complete = argument;
+                continue;
+            }
+
+            // Look for a short option
+            auto option_pattern = argument[argument.length() - 1];
+            auto it = m_options.find_if([&](auto& option) { return option.short_name == option_pattern; });
+            if (it.is_end())
+                continue;
+
+            if (it->requires_argument)
+                skip_next = true;
+            continue;
+        }
+    }
+
+    // We don't know how to complete arguments quite yet.
+    if (!completing_option)
+        return;
+
+    auto write_completion = [&](auto format, auto... args) {
+        JsonObject object;
+        object.set("completion", String::formatted(format, args...));
+        object.set("static_offset", 0);
+        object.set("invariant_offset", option_to_complete.length());
+        outln(file, "{}", object.to_string());
+    };
+
+    if (option_to_complete.starts_with("--")) {
+        // Complete a long option.
+        auto option_pattern = option_to_complete.substring_view(2);
+        for (auto& option : m_options) {
+            StringView option_string = option.long_name;
+            if (option_string.starts_with(option_pattern)) {
+                write_completion("--{}", option_string);
+            }
+        }
+    } else {
+        // Complete a short option, note that we're not going to attempt to 'match' anything here.
+        for (auto& option : m_options) {
+            if (option.short_name == 0)
+                continue;
+
+            write_completion("-{}", option.short_name);
+        }
+    }
 }
 
 }
