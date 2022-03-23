@@ -12,6 +12,7 @@ $ tree [--all] [--only-directories] [--maximum-depth level] [directories...]
 
 * `--help`: Display help message and exit
 * `--version`: Print version
+* `--complete`: Perform autocompletion
 * `-a`, `--all`: Show hidden files
 * `-d`, `--only-directories`: Show only directories
 * `-L level`, `--maximum-depth level`: Maximum depth of the tree
