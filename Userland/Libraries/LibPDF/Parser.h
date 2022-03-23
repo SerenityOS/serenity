@@ -25,9 +25,9 @@ public:
         Linearized,
     };
 
-    static PDFErrorOr<Vector<Command>> parse_graphics_commands(ReadonlyBytes);
+    static PDFErrorOr<Vector<Command>> parse_graphics_commands(Document*, ReadonlyBytes);
 
-    Parser(Badge<Document>, ReadonlyBytes);
+    Parser(Document*, ReadonlyBytes);
 
     [[nodiscard]] ALWAYS_INLINE RefPtr<DictObject> const& trailer() const { return m_trailer; }
     void set_document(WeakPtr<Document> const&);

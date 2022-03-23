@@ -77,7 +77,7 @@ PDFErrorOr<void> Renderer::render()
         byte_buffer.append(bytes.data(), bytes.size());
     }
 
-    auto commands = TRY(Parser::parse_graphics_commands(byte_buffer));
+    auto commands = TRY(Parser::parse_graphics_commands(m_document, byte_buffer));
 
     for (auto& command : commands)
         TRY(handle_command(command));
