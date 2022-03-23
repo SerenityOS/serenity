@@ -119,9 +119,8 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     painter.draw_rect(content_rect().inflated(2, 2), Color::Black);
     m_image->paint_into(painter, content_rect());
 
-    if (m_active_layer && m_show_active_layer_boundary) {
-        painter.draw_rect(enclosing_int_rect(content_to_frame_rect(m_active_layer->relative_rect())).inflated(2, 2), Color::Black);
-    }
+    if (m_active_layer && m_show_active_layer_boundary)
+        painter.draw_rect(content_to_frame_rect(m_active_layer->relative_rect()).to_rounded<int>().inflated(2, 2), Color::Black);
 
     if (m_show_pixel_grid && scale() > m_pixel_grid_threshold) {
         auto event_image_rect = enclosing_int_rect(frame_to_content_rect(event.rect())).inflated(1, 1);
