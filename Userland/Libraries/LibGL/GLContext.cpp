@@ -2724,36 +2724,38 @@ void GLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GL
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_light_model, pname, x, y, z, w);
 
-    RETURN_WITH_ERROR_IF(pname != GL_LIGHT_MODEL_LOCAL_VIEWER
-            && pname != GL_LIGHT_MODEL_TWO_SIDE
-            && pname != GL_LIGHT_MODEL_AMBIENT,
+    RETURN_WITH_ERROR_IF(pname != GL_LIGHT_MODEL_AMBIENT
+            && pname != GL_LIGHT_MODEL_COLOR_CONTROL
+            && pname != GL_LIGHT_MODEL_LOCAL_VIEWER
+            && pname != GL_LIGHT_MODEL_TWO_SIDE,
         GL_INVALID_ENUM);
 
     auto lighting_params = m_rasterizer.light_model();
-    bool update_lighting_model = false;
 
     switch (pname) {
     case GL_LIGHT_MODEL_AMBIENT:
         lighting_params.scene_ambient_color = { x, y, z, w };
-        update_lighting_model = true;
         break;
-    case GL_LIGHT_MODEL_TWO_SIDE:
-        VERIFY(y == 0.0f && z == 0.0f && w == 0.0f);
-        lighting_params.two_sided_lighting = x;
-        update_lighting_model = true;
+    case GL_LIGHT_MODEL_COLOR_CONTROL: {
+        GLenum color_control = static_cast<GLenum>(x);
+        RETURN_WITH_ERROR_IF(color_control != GL_SINGLE_COLOR && color_control != GL_SEPARATE_SPECULAR_COLOR, GL_INVALID_ENUM);
+        lighting_params.color_control = (color_control == GL_SINGLE_COLOR) ? SoftGPU::ColorControl::SingleColor : SoftGPU::ColorControl::SeparateSpecularColor;
         break;
+    }
     case GL_LIGHT_MODEL_LOCAL_VIEWER:
         // 0 means the viewer is at infinity
         // 1 means they're in local (eye) space
         lighting_params.viewer_at_infinity = (x != 1.0f);
-        update_lighting_model = true;
+        break;
+    case GL_LIGHT_MODEL_TWO_SIDE:
+        VERIFY(y == 0.0f && z == 0.0f && w == 0.0f);
+        lighting_params.two_sided_lighting = x;
         break;
     default:
         VERIFY_NOT_REACHED();
     }
 
-    if (update_lighting_model)
-        m_rasterizer.set_light_model_params(lighting_params);
+    m_rasterizer.set_light_model_params(lighting_params);
 }
 
 void GLContext::gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap)

@@ -813,7 +813,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                     }
 
                     // FIXME: The spec allows for splitting the colors calculated here into multiple different colors (primary/secondary color). Investigate what this means.
-                    (void)m_lighting_model.single_color;
+                    (void)m_lighting_model.color_control;
 
                     // FIXME: Two sided lighting should be implemented eventually (I believe this is where the normals are -ve and then lighting is calculated with the BACK material)
                     (void)m_lighting_model.two_sided_lighting;
