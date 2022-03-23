@@ -280,4 +280,10 @@ void ResourceLoader::clear_cache()
     s_resource_cache.clear();
 }
 
+void ResourceLoader::evict_from_cache(LoadRequest const& request)
+{
+    dbgln_if(CACHE_DEBUG, "Removing resource {} from cache", request.url());
+    s_resource_cache.remove(request);
+}
+
 }

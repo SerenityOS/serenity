@@ -50,6 +50,7 @@ public:
     void set_user_agent(const String& user_agent) { m_user_agent = user_agent; }
 
     void clear_cache();
+    void evict_from_cache(LoadRequest const&);
 
 private:
     ResourceLoader(NonnullRefPtr<Protocol::RequestClient> protocol_client);

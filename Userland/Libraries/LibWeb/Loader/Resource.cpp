@@ -11,6 +11,7 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/Loader/Resource.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web {
 
@@ -39,6 +40,7 @@ Resource::Resource(Type type, Resource& resource)
     , m_response_headers(move(resource.m_response_headers))
     , m_status_code(move(resource.m_status_code))
 {
+    ResourceLoader::the().evict_from_cache(m_request);
 }
 
 Resource::~Resource() = default;
