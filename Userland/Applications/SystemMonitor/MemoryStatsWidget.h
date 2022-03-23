@@ -22,6 +22,9 @@ public:
 
     void set_graph_widget(GraphWidget& graph);
 
+    void set_graph_widget_via_name(String name);
+    String graph_widget_name();
+
     void refresh();
 
 private:
@@ -29,6 +32,8 @@ private:
     MemoryStatsWidget();
 
     GraphWidget* m_graph;
+    // Is null if we have a valid graph
+    String m_graph_widget_name {};
     RefPtr<GUI::Label> m_user_physical_pages_label;
     RefPtr<GUI::Label> m_user_physical_pages_committed_label;
     RefPtr<GUI::Label> m_supervisor_physical_pages_label;
