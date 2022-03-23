@@ -21,7 +21,7 @@
 namespace Web::HTML {
 
 HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName qualified_name)
-    : FormAssociatedElement(document, move(qualified_name))
+    : HTMLElement(document, move(qualified_name))
     , m_value(String::empty())
 {
     activation_behavior = [this](auto&) {
@@ -215,7 +215,7 @@ bool HTMLInputElement::is_focusable() const
 
 void HTMLInputElement::parse_attribute(FlyString const& name, String const& value)
 {
-    FormAssociatedElement::parse_attribute(name, value);
+    HTMLElement::parse_attribute(name, value);
     if (name == HTML::AttributeNames::checked) {
         // When the checked content attribute is added, if the control does not have dirty checkedness,
         // the user agent must set the checkedness of the element to true
@@ -245,7 +245,7 @@ HTMLInputElement::TypeAttributeState HTMLInputElement::parse_type_attribute(Stri
 
 void HTMLInputElement::did_remove_attribute(FlyString const& name)
 {
-    FormAssociatedElement::did_remove_attribute(name);
+    HTMLElement::did_remove_attribute(name);
     if (name == HTML::AttributeNames::checked) {
         // When the checked content attribute is removed, if the control does not have dirty checkedness,
         // the user agent must set the checkedness of the element to false.
@@ -310,7 +310,7 @@ String HTMLInputElement::value_sanitization_algorithm(String value) const
     return value;
 }
 
-void HTMLInputElement::inserted()
+void HTMLInputElement::form_associated_element_was_inserted()
 {
     create_shadow_tree_if_needed();
 }

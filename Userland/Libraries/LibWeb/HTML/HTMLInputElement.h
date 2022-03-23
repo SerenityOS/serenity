@@ -37,7 +37,11 @@ namespace Web::HTML {
     __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(reset, ResetButton)                 \
     __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(button, Button)
 
-class HTMLInputElement final : public FormAssociatedElement {
+class HTMLInputElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLInputElement)
+
 public:
     using WrapperType = Bindings::HTMLInputElementWrapper;
 
@@ -92,11 +96,11 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
 
+    virtual void form_associated_element_was_inserted() override;
+
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return type_state() != TypeAttributeState::Hidden; }
-
-    virtual void inserted() override;
 
 private:
     // ^DOM::EventTarget

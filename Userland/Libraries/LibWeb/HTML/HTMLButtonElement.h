@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibWeb/HTML/FormAssociatedElement.h>
+#include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
 
@@ -15,7 +16,11 @@ namespace Web::HTML {
     __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(reset, Reset)   \
     __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(button, Button)
 
-class HTMLButtonElement final : public FormAssociatedElement {
+class HTMLButtonElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLButtonElement)
+
 public:
     using WrapperType = Bindings::HTMLButtonElementWrapper;
 

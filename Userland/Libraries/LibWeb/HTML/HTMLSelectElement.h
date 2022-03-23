@@ -14,7 +14,11 @@
 
 namespace Web::HTML {
 
-class HTMLSelectElement final : public FormAssociatedElement {
+class HTMLSelectElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLSelectElement)
+
 public:
     using WrapperType = Bindings::HTMLSelectElementWrapper;
 

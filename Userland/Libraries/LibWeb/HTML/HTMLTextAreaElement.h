@@ -8,10 +8,15 @@
 #pragma once
 
 #include <LibWeb/HTML/FormAssociatedElement.h>
+#include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
 
-class HTMLTextAreaElement final : public FormAssociatedElement {
+class HTMLTextAreaElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLTextAreaElement)
+
 public:
     using WrapperType = Bindings::HTMLTextAreaElementWrapper;
 

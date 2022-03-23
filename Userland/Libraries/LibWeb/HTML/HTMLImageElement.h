@@ -10,11 +10,16 @@
 #include <AK/OwnPtr.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
+#include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Loader/ImageLoader.h>
 
 namespace Web::HTML {
 
-class HTMLImageElement final : public FormAssociatedElement {
+class HTMLImageElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLImageElement)
+
 public:
     using WrapperType = Bindings::HTMLImageElementWrapper;
 
