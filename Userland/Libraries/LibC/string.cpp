@@ -368,7 +368,6 @@ char* strstr(const char* haystack, const char* needle)
     return const_cast<char*>(haystack);
 }
 
-
 char* strcasestr(const char* haystack, const char* needle)
 {
     char nch;
