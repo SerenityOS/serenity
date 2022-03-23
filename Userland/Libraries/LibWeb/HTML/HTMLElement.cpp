@@ -363,6 +363,7 @@ static void run_focusing_steps(DOM::Node* new_focus_target, DOM::Node* fallback_
     // 7. Let new chain be the focus chain of new focus target.
     auto new_chain = focus_chain(new_focus_target);
 
+    // 8. Run the focus update steps with old chain, new chain, and new focus target respectively.
     run_focus_update_steps(old_chain, new_chain, *new_focus_target);
 }
 
