@@ -379,16 +379,7 @@ void GLContext::gl_end()
         VERIFY_NOT_REACHED();
     }
 
-    // Set up normals transform by taking the upper left 3x3 elements from the model view matrix
-    // See section 2.11.3 of the OpenGL 1.5 spec
-    auto const& mv_elements = m_model_view_matrix.elements();
-    auto const model_view_transposed = FloatMatrix3x3(
-        mv_elements[0][0], mv_elements[1][0], mv_elements[2][0],
-        mv_elements[0][1], mv_elements[1][1], mv_elements[2][1],
-        mv_elements[0][2], mv_elements[1][2], mv_elements[2][2]);
-    auto const& normal_transform = model_view_transposed.inverse();
-
-    m_rasterizer.draw_primitives(primitive_type, m_model_view_matrix, normal_transform, m_projection_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
+    m_rasterizer.draw_primitives(primitive_type, m_model_view_matrix, m_projection_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
 
     m_vertex_list.clear_with_capacity();
 }
