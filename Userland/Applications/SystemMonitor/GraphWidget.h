@@ -34,10 +34,11 @@ public:
             m_value_format.resize(index + 1);
         m_value_format[index] = move(format);
     }
-    void set_stack_values(bool stack_values) { m_stack_values = stack_values; }
+    void set_stack_values(bool stack_values);
+    bool stack_values() const { return m_stack_values; }
 
 private:
-    explicit GraphWidget() = default;
+    explicit GraphWidget();
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
