@@ -716,11 +716,13 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
     if (!completing_option)
         return;
 
-    auto write_completion = [&](auto format, auto... args) {
+    auto write_completion = [&](auto format, auto& option, auto... args) {
         JsonObject object;
         object.set("completion", String::formatted(format, args...));
         object.set("static_offset", 0);
         object.set("invariant_offset", option_to_complete.length());
+        object.set("display_trivia", option.help_string);
+        object.set("trailing_trivia", option.requires_argument ? " " : "");
         outln(file, "{}", object.to_string());
     };
 
@@ -730,7 +732,7 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
         for (auto& option : m_options) {
             StringView option_string = option.long_name;
             if (option_string.starts_with(option_pattern)) {
-                write_completion("--{}", option_string);
+                write_completion("--{}", option, option_string);
             }
         }
     } else {
@@ -739,7 +741,7 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
             if (option.short_name == 0)
                 continue;
 
-            write_completion("-{}", option.short_name);
+            write_completion("-{}", option, option.short_name);
         }
     }
 }
