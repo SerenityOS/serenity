@@ -14,6 +14,8 @@ class ImageResource final : public Resource {
     friend class Resource;
 
 public:
+    static NonnullRefPtr<ImageResource> convert_from_resource(Resource&);
+
     virtual ~ImageResource() override;
 
     struct Frame {
@@ -43,6 +45,7 @@ public:
 
 private:
     explicit ImageResource(const LoadRequest&);
+    explicit ImageResource(Resource&);
 
     void decode_if_needed() const;
 

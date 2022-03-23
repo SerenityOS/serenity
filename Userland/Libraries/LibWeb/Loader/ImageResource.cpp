@@ -10,8 +10,18 @@
 
 namespace Web {
 
+NonnullRefPtr<ImageResource> ImageResource::convert_from_resource(Resource& resource)
+{
+    return adopt_ref(*new ImageResource(resource));
+}
+
 ImageResource::ImageResource(const LoadRequest& request)
     : Resource(Type::Image, request)
+{
+}
+
+ImageResource::ImageResource(Resource& resource)
+    : Resource(Type::Image, resource)
 {
 }
 
