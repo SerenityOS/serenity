@@ -18,7 +18,7 @@
 namespace Web::HTML {
 
 HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName qualified_name)
-    : FormAssociatedElement(document, move(qualified_name))
+    : HTMLElement(document, move(qualified_name))
     , m_image_loader(*this)
 {
     m_image_loader.on_load = [this] {

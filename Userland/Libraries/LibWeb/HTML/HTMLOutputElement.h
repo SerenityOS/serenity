@@ -8,10 +8,15 @@
 #pragma once
 
 #include <LibWeb/HTML/FormAssociatedElement.h>
+#include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
 
-class HTMLOutputElement final : public FormAssociatedElement {
+class HTMLOutputElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLOutputElement)
+
 public:
     using WrapperType = Bindings::HTMLOutputElementWrapper;
 

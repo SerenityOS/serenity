@@ -632,14 +632,17 @@ NonnullRefPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& toke
     //     then associate element with the form element pointed to by the form element pointer and set element's parser inserted flag.
     // FIXME: Check if the element is not a form-associated custom element.
     if (is<FormAssociatedElement>(*element)) {
-        auto& form_associated_element = static_cast<FormAssociatedElement&>(*element);
+        auto* form_associated_element = dynamic_cast<FormAssociatedElement*>(element.ptr());
+        VERIFY(form_associated_element);
+
+        auto& html_element = form_associated_element->form_associated_element_to_html_element();
 
         if (m_form_element
             && !m_stack_of_open_elements.contains(HTML::TagNames::template_)
-            && (!form_associated_element.is_listed() || !form_associated_element.has_attribute(HTML::AttributeNames::form))
+            && (!form_associated_element->is_listed() || !html_element.has_attribute(HTML::AttributeNames::form))
             && &intended_parent.root() == &m_form_element->root()) {
-            form_associated_element.set_form(m_form_element);
-            form_associated_element.set_parser_inserted({});
+            form_associated_element->set_form(m_form_element);
+            form_associated_element->set_parser_inserted({});
         }
     }
 

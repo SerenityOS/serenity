@@ -336,9 +336,11 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
         // 5. If element is not null and element has a form owner, let form owner be that form owner. Otherwise, let form owner be null.
         RefPtr<HTML::HTMLFormElement> form_owner;
         if (is<HTML::FormAssociatedElement>(element.ptr())) {
-            auto& form_associated_element = verify_cast<HTML::FormAssociatedElement>(*element);
-            if (form_associated_element.form())
-                form_owner = form_associated_element.form();
+            auto* form_associated_element = dynamic_cast<HTML::FormAssociatedElement*>(element.ptr());
+            VERIFY(form_associated_element);
+
+            if (form_associated_element->form())
+                form_owner = form_associated_element->form();
         }
 
         // 6. Let settings object be the relevant settings object of document.

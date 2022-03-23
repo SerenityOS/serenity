@@ -13,7 +13,7 @@
 namespace Web::HTML {
 
 HTMLSelectElement::HTMLSelectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
-    : FormAssociatedElement(document, move(qualified_name))
+    : HTMLElement(document, move(qualified_name))
 {
 }
 

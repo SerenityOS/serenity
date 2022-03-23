@@ -9,13 +9,17 @@
 #include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
+#include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Loader/ImageLoader.h>
 
 namespace Web::HTML {
 
 class HTMLObjectElement final
-    : public FormAssociatedElement
+    : public HTMLElement
+    , public FormAssociatedElement
     , public ResourceClient {
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLObjectElement)
+
 public:
     using WrapperType = Bindings::HTMLObjectElementWrapper;
 
