@@ -560,7 +560,22 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_pseudo_sim
         };
 
         auto const& pseudo_function = pseudo_class_token.function();
-        if (pseudo_function.name().equals_ignoring_case("not")) {
+        if (pseudo_function.name().equals_ignoring_case("is"sv)
+            || pseudo_function.name().equals_ignoring_case("where"sv)) {
+            auto function_token_stream = TokenStream(pseudo_function.values());
+            auto argument_selector_list = parse_a_selector_list(function_token_stream, SelectorType::Standalone, SelectorParsingMode::Forgiving);
+            // NOTE: Because it's forgiving, even complete garbage will parse OK as an empty selector-list.
+            VERIFY(!argument_selector_list.is_error());
+
+            return Selector::SimpleSelector {
+                .type = Selector::SimpleSelector::Type::PseudoClass,
+                .value = Selector::SimpleSelector::PseudoClass {
+                    .type = pseudo_function.name().equals_ignoring_case("is"sv)
+                        ? Selector::SimpleSelector::PseudoClass::Type::Is
+                        : Selector::SimpleSelector::PseudoClass::Type::Where,
+                    .argument_selector_list = argument_selector_list.release_value() }
+            };
+        } else if (pseudo_function.name().equals_ignoring_case("not")) {
             auto function_token_stream = TokenStream(pseudo_function.values());
             auto not_selector = parse_a_selector_list(function_token_stream, SelectorType::Standalone);
             if (not_selector.is_error()) {
