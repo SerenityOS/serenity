@@ -37,6 +37,7 @@ public:
         char short_name { 0 };
         char const* value_name { nullptr };
         Function<bool(char const*)> accept_value;
+        bool hide_from_help_and_autocomplete { false };
 
         String name_for_display() const
         {
@@ -69,16 +70,16 @@ public:
     void print_version(FILE*);
 
     void add_option(Option&&);
-    void add_ignored(char const* long_name, char short_name);
-    void add_option(bool& value, char const* help_string, char const* long_name, char short_name);
-    void add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name);
-    void add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name);
-    void add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name);
-    void add_option(int& value, char const* help_string, char const* long_name, char short_name, char const* value_name);
-    void add_option(unsigned& value, char const* help_string, char const* long_name, char short_name, char const* value_name);
-    void add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name);
-    void add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name);
-    void add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name);
+    void add_ignored(char const* long_name, char short_name, bool hidden = false);
+    void add_option(bool& value, char const* help_string, char const* long_name, char short_name, bool hidden = false);
+    void add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden = false);
+    void add_option(String& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden = false);
+    void add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden = false);
+    void add_option(int& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden = false);
+    void add_option(unsigned& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden = false);
+    void add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden = false);
+    void add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden = false);
+    void add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden = false);
 
     void add_positional_argument(Arg&&);
     void add_positional_argument(char const*& value, char const* help_string, char const* name, Required required = Required::Yes);

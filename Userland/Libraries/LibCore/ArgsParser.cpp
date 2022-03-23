@@ -29,9 +29,9 @@ namespace Core {
 
 ArgsParser::ArgsParser()
 {
-    add_option(m_show_help, "Display help message and exit", "help", 0);
-    add_option(m_show_version, "Print version", "version", 0);
-    add_option(m_perform_autocomplete, "Perform autocompletion", "complete", 0);
+    add_option(m_show_help, "Display help message and exit", "help", 0, true);
+    add_option(m_show_version, "Print version", "version", 0, true);
+    add_option(m_perform_autocomplete, "Perform autocompletion", "complete", 0, true);
 }
 
 bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_behavior)
@@ -198,7 +198,7 @@ void ArgsParser::print_usage_terminal(FILE* file, const char* argv0)
     out(file, "Usage:\n\t\033[1m{}\033[0m", argv0);
 
     for (auto& opt : m_options) {
-        if (opt.long_name && !strcmp(opt.long_name, "help"))
+        if (opt.hide_from_help_and_autocomplete)
             continue;
         if (opt.requires_argument)
             out(file, " [{} {}]", opt.name_for_display(), opt.value_name);
@@ -270,7 +270,7 @@ void ArgsParser::print_usage_markdown(FILE* file, const char* argv0)
 
     out(file, "\n## Synopsis\n\n```sh\n$ {}", argv0);
     for (auto& opt : m_options) {
-        if (opt.long_name != nullptr && (!strcmp(opt.long_name, "help") || !strcmp(opt.long_name, "version")))
+        if (opt.hide_from_help_and_autocomplete)
             continue;
         if (opt.requires_argument)
             out(file, " [{} {}]", opt.name_for_display(), opt.value_name);
@@ -347,7 +347,7 @@ void ArgsParser::add_option(Option&& option)
     m_options.append(move(option));
 }
 
-void ArgsParser::add_ignored(const char* long_name, char short_name)
+void ArgsParser::add_ignored(const char* long_name, char short_name, bool hidden)
 {
     Option option {
         false,
@@ -357,12 +357,13 @@ void ArgsParser::add_ignored(const char* long_name, char short_name)
         nullptr,
         [](const char*) {
             return true;
-        }
+        },
+        hidden,
     };
     add_option(move(option));
 }
 
-void ArgsParser::add_option(bool& value, const char* help_string, const char* long_name, char short_name)
+void ArgsParser::add_option(bool& value, const char* help_string, const char* long_name, char short_name, bool hidden)
 {
     Option option {
         false,
@@ -374,12 +375,13 @@ void ArgsParser::add_option(bool& value, const char* help_string, const char* lo
             VERIFY(s == nullptr);
             value = true;
             return true;
-        }
+        },
+        hidden,
     };
     add_option(move(option));
 }
 
-void ArgsParser::add_option(const char*& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(const char*& value, const char* help_string, const char* long_name, char short_name, const char* value_name, bool hidden)
 {
     Option option {
         true,
@@ -390,12 +392,13 @@ void ArgsParser::add_option(const char*& value, const char* help_string, const c
         [&value](const char* s) {
             value = s;
             return true;
-        }
+        },
+        hidden,
     };
     add_option(move(option));
 }
 
-void ArgsParser::add_option(String& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(String& value, const char* help_string, const char* long_name, char short_name, const char* value_name, bool hidden)
 {
     Option option {
         true,
@@ -406,12 +409,13 @@ void ArgsParser::add_option(String& value, const char* help_string, const char* 
         [&value](const char* s) {
             value = s;
             return true;
-        }
+        },
+        hidden,
     };
     add_option(move(option));
 }
 
-void ArgsParser::add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name)
+void ArgsParser::add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden)
 {
     Option option {
         true,
@@ -422,12 +426,13 @@ void ArgsParser::add_option(StringView& value, char const* help_string, char con
         [&value](const char* s) {
             value = s;
             return true;
-        }
+        },
+        hidden,
     };
     add_option(move(option));
 }
 
-void ArgsParser::add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name, bool hidden)
 {
     Option option {
         true,
@@ -439,12 +444,13 @@ void ArgsParser::add_option(int& value, const char* help_string, const char* lon
             auto opt = StringView(s).to_int();
             value = opt.value_or(0);
             return opt.has_value();
-        }
+        },
+        hidden,
     };
     add_option(move(option));
 }
 
-void ArgsParser::add_option(unsigned& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(unsigned& value, const char* help_string, const char* long_name, char short_name, const char* value_name, bool hidden)
 {
     Option option {
         true,
@@ -456,12 +462,13 @@ void ArgsParser::add_option(unsigned& value, const char* help_string, const char
             auto opt = StringView(s).to_uint();
             value = opt.value_or(0);
             return opt.has_value();
-        }
+        },
+        hidden,
     };
     add_option(move(option));
 }
 
-void ArgsParser::add_option(double& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(double& value, const char* help_string, const char* long_name, char short_name, const char* value_name, bool hidden)
 {
     Option option {
         true,
@@ -473,12 +480,13 @@ void ArgsParser::add_option(double& value, const char* help_string, const char* 
             auto opt = convert_to_double(s);
             value = opt.value_or(0.0);
             return opt.has_value();
-        }
+        },
+        hidden,
     };
     add_option(move(option));
 }
 
-void ArgsParser::add_option(Optional<double>& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(Optional<double>& value, const char* help_string, const char* long_name, char short_name, const char* value_name, bool hidden)
 {
     Option option {
         true,
@@ -489,12 +497,13 @@ void ArgsParser::add_option(Optional<double>& value, const char* help_string, co
         [&value](const char* s) {
             value = convert_to_double(s);
             return value.has_value();
-        }
+        },
+        hidden,
     };
     add_option(move(option));
 }
 
-void ArgsParser::add_option(Optional<size_t>& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+void ArgsParser::add_option(Optional<size_t>& value, const char* help_string, const char* long_name, char short_name, const char* value_name, bool hidden)
 {
     Option option {
         true,
@@ -505,7 +514,8 @@ void ArgsParser::add_option(Optional<size_t>& value, const char* help_string, co
         [&value](const char* s) {
             value = AK::StringUtils::convert_to_uint<size_t>(s);
             return value.has_value();
-        }
+        },
+        hidden,
     };
     add_option(move(option));
 }
@@ -682,7 +692,7 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
 
             // Look for a long option
             auto option_pattern = argument.substring_view(2);
-            auto it = m_options.find_if([&](auto& option) { return StringView(option.long_name) == option_pattern; });
+            auto it = m_options.find_if([&](auto& option) { return !option.hide_from_help_and_autocomplete && StringView(option.long_name) == option_pattern; });
             if (it.is_end())
                 continue;
 
@@ -702,7 +712,8 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
 
             // Look for a short option
             auto option_pattern = argument[argument.length() - 1];
-            auto it = m_options.find_if([&](auto& option) { return option.short_name == option_pattern; });
+            auto it = m_options.find_if([&](auto& option) { return !option.hide_from_help_and_autocomplete && option.short_name == option_pattern; });
+
             if (it.is_end())
                 continue;
 
@@ -730,6 +741,8 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
         // Complete a long option.
         auto option_pattern = option_to_complete.substring_view(2);
         for (auto& option : m_options) {
+            if (option.hide_from_help_and_autocomplete)
+                continue;
             StringView option_string = option.long_name;
             if (option_string.starts_with(option_pattern)) {
                 write_completion("--{}", option, option_string);
@@ -738,6 +751,8 @@ void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char con
     } else {
         // Complete a short option, note that we're not going to attempt to 'match' anything here.
         for (auto& option : m_options) {
+            if (option.hide_from_help_and_autocomplete)
+                continue;
             if (option.short_name == 0)
                 continue;
 
