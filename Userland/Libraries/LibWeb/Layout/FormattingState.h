@@ -66,6 +66,9 @@ struct FormattingState {
         float margin_box_top() const { return margin_top + border_top + padding_top; }
         float margin_box_bottom() const { return margin_bottom + border_bottom + padding_bottom; }
 
+        float margin_box_width() const { return margin_box_left() + content_width + margin_box_right(); }
+        float margin_box_height() const { return margin_box_top() + content_height + margin_box_bottom(); }
+
         float border_box_left() const { return border_left + padding_left; }
         float border_box_right() const { return border_right + padding_right; }
         float border_box_top() const { return border_top + padding_top; }
