@@ -159,6 +159,41 @@ public:
     [[nodiscard]] Frame push_frame(String name);
     void pop_frame();
 
+    struct Promise {
+        struct Data {
+            struct Unveil {
+                String path;
+                String access;
+            };
+            String exec_promises;
+            Vector<Unveil> unveils;
+        } data;
+
+        IntrusiveListNode<Promise> node;
+        using List = IntrusiveList<&Promise::node>;
+    };
+
+    struct ScopedPromise {
+        ScopedPromise(Promise::List& promises, Promise&& promise)
+            : promises(promises)
+            , promise(move(promise))
+        {
+            promises.append(this->promise);
+        }
+
+        ~ScopedPromise()
+        {
+            promises.remove(promise);
+        }
+
+        Promise::List& promises;
+        Promise promise;
+    };
+    [[nodiscard]] ScopedPromise promise(Promise::Data data)
+    {
+        return { m_active_promises, { move(data), {} } };
+    }
+
     enum class EscapeMode {
         Bareword,
         SingleQuotedString,
@@ -362,6 +397,7 @@ private:
 
     HashMap<String, ShellFunction> m_functions;
     NonnullOwnPtrVector<LocalFrame> m_local_frames;
+    Promise::List m_active_promises;
     NonnullRefPtrVector<AST::Redirection> m_global_redirections;
 
     HashMap<String, String> m_aliases;
