@@ -10,6 +10,7 @@
 #include <AK/IDAllocator.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/Weakable.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/Wrappable.h>
 #include <LibWeb/CSS/MediaQueryList.h>
@@ -26,6 +27,7 @@ class RequestAnimationFrameCallback;
 
 class Window final
     : public RefCounted<Window>
+    , public Weakable<Window>
     , public DOM::EventTarget
     , public HTML::GlobalEventHandlers {
 public:

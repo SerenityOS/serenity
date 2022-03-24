@@ -200,7 +200,11 @@ i32 Window::run_timer_initialization_steps(Bindings::TimerHandler handler, i32 t
     // 8. Assert: initiating script is not null, since this algorithm is always called from some script.
 
     // 9. Let task be a task that runs the following substeps:
-    auto task = [window = NonnullRefPtr(*this), handler = move(handler), timeout, arguments = move(arguments), repeat, id]() mutable {
+    auto task = [weak_window = make_weak_ptr(), handler = move(handler), timeout, arguments = move(arguments), repeat, id]() mutable {
+        auto window = weak_window.strong_ref();
+        if (!window)
+            return;
+
         // 1. If id does not exist in global's map of active timers, then abort these steps.
         if (!window->m_timers.contains(id))
             return;
@@ -253,10 +257,12 @@ i32 Window::run_timer_initialization_steps(Bindings::TimerHandler handler, i32 t
     // 11. FIXME: Set task's timer nesting level to nesting level.
 
     // 12. Let completionStep be an algorithm step which queues a global task on the timer task source given global to run task.
-    auto completion_step = [window = NonnullRefPtr(*this), task = move(task)]() mutable {
-        HTML::queue_global_task(HTML::Task::Source::TimerTask, *window->wrapper(), [task = move(task)]() mutable {
-            task();
-        });
+    auto completion_step = [weak_window = make_weak_ptr(), task = move(task)]() mutable {
+        auto window = weak_window.strong_ref();
+        if (!window)
+            return;
+
+        HTML::queue_global_task(HTML::Task::Source::TimerTask, *window->wrapper(), move(task));
     };
 
     // 13. Run steps after a timeout given global, "setTimeout/setInterval", timeout, completionStep, and id.
