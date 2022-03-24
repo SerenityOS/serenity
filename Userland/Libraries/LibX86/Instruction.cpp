@@ -242,64 +242,63 @@ static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm,
     build(d.slashes, rm & 7, mnemonic, format, handler, LockPrefixNotAllowed);
 }
 
-static void build_0f(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+template<auto table>
+static void build_base(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_0f_table[to_underlying(OperandSize::Size16)], op, mnemonic, format, impl, lock_prefix_allowed);
-    build(s_0f_table[to_underlying(OperandSize::Size32)], op, mnemonic, format, impl, lock_prefix_allowed);
+    build(table[to_underlying(OperandSize::Size16)], op, mnemonic, format, impl, lock_prefix_allowed);
+    build(table[to_underlying(OperandSize::Size32)], op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
-static void build(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+template<auto table>
+static void build_base(u8 op, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_table[to_underlying(OperandSize::Size16)], op, mnemonic, format, impl, lock_prefix_allowed);
-    build(s_table[to_underlying(OperandSize::Size32)], op, mnemonic, format, impl, lock_prefix_allowed);
+    build(table[to_underlying(OperandSize::Size16)], op, mnemonic, format16, impl16, lock_prefix_allowed);
+    build(table[to_underlying(OperandSize::Size32)], op, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
-static void build(u8 op, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+template<auto table>
+static void build_base(u8 op, char const* mnemonic16, InstructionFormat format16, InstructionHandler impl16, char const* mnemonic32, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_table[to_underlying(OperandSize::Size16)], op, mnemonic, format16, impl16, lock_prefix_allowed);
-    build(s_table[to_underlying(OperandSize::Size32)], op, mnemonic, format32, impl32, lock_prefix_allowed);
+    build(table[to_underlying(OperandSize::Size16)], op, mnemonic16, format16, impl16, lock_prefix_allowed);
+    build(table[to_underlying(OperandSize::Size32)], op, mnemonic32, format32, impl32, lock_prefix_allowed);
 }
 
-static void build_0f(u8 op, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+template<auto table>
+static void build_slash_base(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_0f_table[to_underlying(OperandSize::Size16)], op, mnemonic, format16, impl16, lock_prefix_allowed);
-    build(s_0f_table[to_underlying(OperandSize::Size32)], op, mnemonic, format32, impl32, lock_prefix_allowed);
+    build_slash(table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
+    build_slash(table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
 }
 
-static void build(u8 op, char const* mnemonic16, InstructionFormat format16, InstructionHandler impl16, char const* mnemonic32, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+template<auto table>
+static void build_slash_base(u8 op, u8 slash, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_table[to_underlying(OperandSize::Size16)], op, mnemonic16, format16, impl16, lock_prefix_allowed);
-    build(s_table[to_underlying(OperandSize::Size32)], op, mnemonic32, format32, impl32, lock_prefix_allowed);
+    build_slash(table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format16, impl16, lock_prefix_allowed);
+    build_slash(table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
-static void build_0f(u8 op, char const* mnemonic16, InstructionFormat format16, InstructionHandler impl16, char const* mnemonic32, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+template<typename... Args>
+static void build(Args... args)
 {
-    build(s_0f_table[to_underlying(OperandSize::Size16)], op, mnemonic16, format16, impl16, lock_prefix_allowed);
-    build(s_0f_table[to_underlying(OperandSize::Size32)], op, mnemonic32, format32, impl32, lock_prefix_allowed);
+    build_base<s_table>(args...);
 }
 
-static void build_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+template<typename... Args>
+static void build_0f(Args... args)
 {
-    build_slash(s_table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
-    build_slash(s_table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
+    build_base<s_0f_table>(args...);
 }
 
-static void build_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+template<typename... Args>
+static void build_slash(Args... args)
 {
-    build_slash(s_table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format16, impl16, lock_prefix_allowed);
-    build_slash(s_table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format32, impl32, lock_prefix_allowed);
+    build_slash_base<s_table>(args...);
 }
 
-static void build_0f_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
+template<typename... Args>
+static void build_0f_slash(Args... args)
 {
-    build_slash(s_0f_table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format16, impl16, lock_prefix_allowed);
-    build_slash(s_0f_table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format32, impl32, lock_prefix_allowed);
-}
-
-static void build_0f_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
-{
-    build_slash(s_0f_table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
-    build_slash(s_0f_table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
+    build_slash_base<s_0f_table>(args...);
 }
 
 static void build_slash_rm(u8 op, u8 slash, u8 rm, char const* mnemonic, InstructionFormat format, InstructionHandler impl)
