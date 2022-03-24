@@ -21,10 +21,10 @@ public:
     const DOM::Document* content_document() const;
     DOM::Document const* content_document_without_origin_check() const;
 
-    virtual void inserted() override;
-    virtual void removed_from(Node*) override;
-
 protected:
+    void create_new_nested_browsing_context();
+    void discard_nested_browsing_context();
+
     RefPtr<BrowsingContext> m_nested_browsing_context;
 
 private:
