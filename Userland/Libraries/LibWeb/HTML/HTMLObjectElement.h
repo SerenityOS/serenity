@@ -49,7 +49,7 @@ private:
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     void queue_element_task_to_run_object_representation_steps();
-    void run_object_representation_handler_steps(StringView resource_type);
+    void run_object_representation_handler_steps(Optional<String> resource_type);
     void run_object_representation_completed_steps();
     void run_object_representation_fallback_steps();
 
