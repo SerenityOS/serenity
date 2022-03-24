@@ -63,6 +63,10 @@ public:
 
     Gfx::FloatRect selection_rect(const Gfx::Font&) const;
 
+    float height_of_inline_level_box(FormattingState const&) const;
+    float top_of_inline_level_box(FormattingState const&) const;
+    float bottom_of_inline_level_box(FormattingState const&) const;
+
 private:
     Node const& m_layout_node;
     int m_start { 0 };

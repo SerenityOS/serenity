@@ -119,7 +119,6 @@ void LineBuilder::update_last_line()
 
     auto text_align = m_context.containing_block().computed_values().text_align();
     float x_offset = m_context.leftmost_x_offset_at(m_current_y);
-    float bottom = m_current_y + m_context.containing_block().line_height();
     float excess_horizontal_space = m_containing_block_state.content_width - line_box.width();
 
     switch (text_align) {
@@ -137,24 +136,38 @@ void LineBuilder::update_last_line()
     }
 
     auto fragment_baseline = [&](auto const& fragment) -> float {
-        if (fragment.layout_node().is_text_node())
-            return fragment.layout_node().font().baseline();
-        auto const& box = verify_cast<Layout::Box>(fragment.layout_node());
-        return box_baseline(m_formatting_state, box);
+        float fragment_baseline = 0;
+        if (fragment.layout_node().is_text_node()) {
+            fragment_baseline = fragment.layout_node().font().baseline();
+        } else {
+            auto const& box = verify_cast<Layout::Box>(fragment.layout_node());
+            fragment_baseline = box_baseline(m_formatting_state, box);
+        }
+        return fragment_baseline;
     };
 
     auto line_box_baseline = [&] {
         float line_box_baseline = 0;
         for (auto const& fragment : line_box.fragments()) {
             auto baseline = fragment_baseline(fragment);
+            if (fragment.height() < m_context.containing_block().line_height())
+                baseline += (m_context.containing_block().line_height() - fragment.height()) / 2;
             // NOTE: For fragments with a <length> vertical-align, shift the fragment baseline down by the length.
             //       This ensures that we make enough vertical space on the line for any manually-aligned fragments.
-            if (auto length_percentage = fragment.layout_node().computed_values().vertical_align().get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length())
+            if (auto length_percentage = fragment.layout_node().computed_values().vertical_align().template get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length())
                 baseline += length_percentage->length().to_px(fragment.layout_node());
+
             line_box_baseline = max(line_box_baseline, baseline);
         }
         return line_box_baseline;
     }();
+
+    // Start with the "strut", an imaginary zero-width box at the start of each line box.
+    auto strut_top = m_current_y;
+    auto strut_bottom = m_current_y + m_context.containing_block().line_height();
+
+    float uppermost_box_top = strut_top;
+    float lowermost_box_bottom = strut_bottom;
 
     for (size_t i = 0; i < line_box.fragments().size(); ++i) {
         auto& fragment = line_box.fragments()[i];
@@ -190,10 +203,14 @@ void LineBuilder::update_last_line()
 
         fragment.set_offset({ new_fragment_x, new_fragment_y });
 
-        bottom = max(bottom, new_fragment_y + fragment.height() + fragment.border_box_bottom());
+        uppermost_box_top = min(uppermost_box_top, fragment.top_of_inline_level_box(m_formatting_state));
+        lowermost_box_bottom = max(lowermost_box_bottom, fragment.bottom_of_inline_level_box(m_formatting_state));
     }
 
-    line_box.m_bottom = bottom;
+    // 3. The line box height is the distance between the uppermost box top and the lowermost box bottom.
+    line_box.m_height = max(m_context.containing_block().line_height(), lowermost_box_bottom - uppermost_box_top);
+
+    line_box.m_bottom = m_current_y + line_box.m_height;
     line_box.m_baseline = line_box_baseline;
 }
 

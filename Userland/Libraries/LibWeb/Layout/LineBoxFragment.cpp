@@ -139,4 +139,49 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
     return {};
 }
 
+float LineBoxFragment::height_of_inline_level_box(FormattingState const& state) const
+{
+    auto height = [&] {
+        // From "10.8 Line height calculations: the 'line-height' and 'vertical-align' properties"
+        // https://www.w3.org/TR/CSS22/visudet.html#line-height
+
+        // For replaced elements, inline-block elements, and inline-table elements, this is the height of their margin box.
+        // FIXME: Support inline-table elements.
+        if (layout_node().is_replaced_box() || layout_node().is_inline_block()) {
+            auto const& fragment_box_state = state.get(static_cast<Box const&>(layout_node()));
+            return fragment_box_state.margin_box_height();
+        }
+        // For inline boxes, this is their 'line-height'.
+        return layout_node().line_height();
+    }();
+    if (auto length_percentage = layout_node().computed_values().vertical_align().get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length())
+        height += length_percentage->length().to_px(layout_node());
+    return height;
+}
+
+float LineBoxFragment::top_of_inline_level_box(FormattingState const& state) const
+{
+    // FIXME: Support inline-table elements.
+    if (layout_node().is_replaced_box() || layout_node().is_inline_block()) {
+        auto const& fragment_box_state = state.get(static_cast<Box const&>(layout_node()));
+        return m_offset.y() - fragment_box_state.margin_box_top();
+    }
+    return m_offset.y() - (layout_node().line_height() - layout_node().computed_values().font_size()) / 2;
+}
+
+float LineBoxFragment::bottom_of_inline_level_box(FormattingState const& state) const
+{
+    auto bottom = [&] {
+        // FIXME: Support inline-table elements.
+        if (layout_node().is_replaced_box() || layout_node().is_inline_block()) {
+            auto const& fragment_box_state = state.get(static_cast<Box const&>(layout_node()));
+            return m_offset.y() + fragment_box_state.content_height + fragment_box_state.margin_box_bottom();
+        }
+        return m_offset.y() + (layout_node().line_height() - layout_node().computed_values().font_size()) / 2;
+    }();
+    if (auto length_percentage = layout_node().computed_values().vertical_align().get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length())
+        bottom += length_percentage->length().to_px(layout_node());
+    return bottom;
+}
+
 }
