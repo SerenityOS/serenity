@@ -109,7 +109,7 @@ void HTMLObjectElement::resource_did_load()
     // 4.8. Determine the resource type, as follows:
 
     // 1. Let the resource type be unknown.
-    String resource_type = "unknown"sv;
+    Optional<String> resource_type;
 
     // 2. FIXME: If the user agent is configured to strictly obey Content-Type headers for this resource, and the resource has associated Content-Type metadata, then let the resource type be the type specified in the resource's Content-Type metadata, and jump to the step below labeled handler.
     // 3. FIXME: If there is a type attribute present on the object element, and that attribute's value is not a type that the user agent supports, but it is a type that a plugin supports, then let the resource type be the type specified in that type attribute, and jump to the step below labeled handler.
@@ -135,7 +135,7 @@ void HTMLObjectElement::resource_did_load()
             // 1. If the attribute's value is a type that a plugin supports, or the attribute's value is a type that starts with "image/" that is not also an XML MIME type, then let the resource type be the type specified in that type attribute.
             // FIXME: This only partially implements this step.
             if (type.starts_with("image/"sv))
-                resource_type = type;
+                resource_type = move(type);
 
             // 2. Jump to the step below labeled handler.
         }
@@ -158,11 +158,11 @@ void HTMLObjectElement::resource_did_load()
 
     // 5. FIXME: If applying the URL parser algorithm to the URL of the specified resource (after any redirects) results in a URL record whose path component matches a pattern that a plugin supports, then let resource type be the type that that plugin can handle.
 
-    run_object_representation_handler_steps(resource_type);
+    run_object_representation_handler_steps(move(resource_type));
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element:plugin-11
-void HTMLObjectElement::run_object_representation_handler_steps(StringView resource_type)
+void HTMLObjectElement::run_object_representation_handler_steps(Optional<String> resource_type)
 {
     // 4.9. Handler: Handle the content as given by the first of the following cases that matches:
 
@@ -173,7 +173,7 @@ void HTMLObjectElement::run_object_representation_handler_steps(StringView resou
 
     // * If the resource type is an XML MIME type, or if the resource type does not start with "image/"
     // FIXME: Handle XML MIME types.
-    if (!resource_type.starts_with("image/"sv)) {
+    if (resource_type.has_value() && !resource_type->starts_with("image/"sv)) {
         // If the object element's nested browsing context is null, then create a new nested browsing context for the element.
         if (!m_nested_browsing_context)
             create_new_nested_browsing_context();
@@ -189,7 +189,7 @@ void HTMLObjectElement::run_object_representation_handler_steps(StringView resou
 
     // * If the resource type starts with "image/", and support for images has not been disabled
     // FIXME: Handle disabling image support.
-    else if (resource_type.starts_with("image/"sv)) {
+    else if (resource_type.has_value() && resource_type->starts_with("image/"sv)) {
         // FIXME: If the object element's nested browsing context is non-null, then it must be discarded and then set to null.
 
         // Apply the image sniffing rules to determine the type of the image.
