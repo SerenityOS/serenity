@@ -318,24 +318,24 @@ T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<O
             return true;                                               \
         });
 
-#define REGISTER_SIZE_PROPERTY(property_name, getter, setter)          \
-    register_property(                                                 \
-        property_name,                                                 \
-        [this] {                                                       \
-            auto size = this->getter();                                \
-            JsonObject size_object;                                    \
-            size_object.set("width", size.width());                    \
-            size_object.set("height", size.height());                  \
-            return size_object;                                        \
-        },                                                             \
-        [this](auto& value) {                                          \
-            if (!value.is_object())                                    \
-                return false;                                          \
-            Gfx::IntSize size;                                         \
-            size.set_width(value.as_object().get("width").to_i32());   \
-            size.set_height(value.as_object().get("height").to_i32()); \
-            setter(size);                                              \
-            return true;                                               \
+#define REGISTER_SIZE_PROPERTY(property_name, getter, setter) \
+    register_property(                                        \
+        property_name,                                        \
+        [this] {                                              \
+            auto size = this->getter();                       \
+            JsonArray size_array;                             \
+            size_array.append(size.width());                  \
+            size_array.append(size.height());                 \
+            return size_array;                                \
+        },                                                    \
+        [this](auto& value) {                                 \
+            if (!value.is_array())                            \
+                return false;                                 \
+            Gfx::IntSize size;                                \
+            size.set_width(value.as_array()[0].to_i32());     \
+            size.set_height(value.as_array()[1].to_i32());    \
+            setter(size);                                     \
+            return true;                                      \
         });
 
 #define REGISTER_ENUM_PROPERTY(property_name, getter, setter, EnumType, ...) \
