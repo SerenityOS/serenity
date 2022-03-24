@@ -387,10 +387,8 @@ RENDERER_HANDLER(text_set_rise)
 RENDERER_HANDLER(text_next_line_offset)
 {
     Gfx::AffineTransform transform(1.0f, 0.0f, 0.0f, 1.0f, args[0].to_float(), args[1].to_float());
-    transform.multiply(m_text_line_matrix);
-    m_text_matrix = transform;
-    m_text_line_matrix = transform;
-    m_text_rendering_matrix_is_dirty = true;
+    m_text_line_matrix.multiply(transform);
+    m_text_matrix = m_text_line_matrix;
     return {};
 }
 
@@ -668,7 +666,7 @@ void Renderer::show_text(String const& string, float shift)
     // Update text matrix
     auto delta_x = glyph_position.x() - original_position.x();
     m_text_rendering_matrix_is_dirty = true;
-    m_text_matrix = Gfx::AffineTransform(1, 0, 0, 1, delta_x, 0).multiply(m_text_matrix);
+    m_text_matrix.translate(delta_x / text_rendering_matrix.x_scale(), 0.0f);
 }
 
 PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space(Value const& value)
