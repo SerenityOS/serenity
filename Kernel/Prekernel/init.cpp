@@ -96,10 +96,13 @@ extern "C" [[noreturn]] void init()
     FlatPtr default_kernel_load_base = 0x2000200000;
 #endif
 
-    // KASLR
-    FlatPtr maximum_offset = (FlatPtr)KERNEL_PD_SIZE - MAX_KERNEL_SIZE - 2 * MiB; // The first 2 MiB are used for mapping the pre-kernel
-    FlatPtr kernel_load_base = default_kernel_load_base + (generate_secure_seed() % maximum_offset);
-    kernel_load_base &= ~(2 * MiB - 1);
+    FlatPtr kernel_load_base = default_kernel_load_base;
+
+    if (__builtin_strstr(kernel_cmdline, "disable_kaslr") == nullptr) {
+        FlatPtr maximum_offset = (FlatPtr)KERNEL_PD_SIZE - MAX_KERNEL_SIZE - 2 * MiB; // The first 2 MiB are used for mapping the pre-kernel
+        kernel_load_base += (generate_secure_seed() % maximum_offset);
+        kernel_load_base &= ~(2 * MiB - 1);
+    }
 
     FlatPtr kernel_load_end = 0;
     for (size_t i = 0; i < kernel_elf_header.e_phnum; i++) {
