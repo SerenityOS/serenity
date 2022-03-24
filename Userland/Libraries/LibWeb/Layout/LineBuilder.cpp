@@ -97,6 +97,19 @@ bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width, bo
 static float box_baseline(FormattingState const& state, Box const& box)
 {
     auto const& box_state = state.get(box);
+
+    auto const& vertical_align = box.computed_values().vertical_align();
+    if (vertical_align.has<CSS::VerticalAlign>()) {
+        switch (vertical_align.get<CSS::VerticalAlign>()) {
+        case CSS::VerticalAlign::Top:
+            return box_state.border_box_top();
+        case CSS::VerticalAlign::Bottom:
+            return box_state.content_height + box_state.border_box_bottom();
+        default:
+            break;
+        }
+    }
+
     if (!box_state.line_boxes.is_empty())
         return box_state.border_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
     if (box.has_children() && !box.children_are_inline()) {
@@ -178,13 +191,15 @@ void LineBuilder::update_last_line()
         auto y_value_for_alignment = [&](CSS::VerticalAlign vertical_align) {
             switch (vertical_align) {
             case CSS::VerticalAlign::Baseline:
-            case CSS::VerticalAlign::Bottom:
+                return m_current_y + line_box_baseline - fragment_baseline(fragment) + fragment.border_box_top();
+            case CSS::VerticalAlign::Top:
+                return m_current_y + fragment.border_box_top();
             case CSS::VerticalAlign::Middle:
+            case CSS::VerticalAlign::Bottom:
             case CSS::VerticalAlign::Sub:
             case CSS::VerticalAlign::Super:
             case CSS::VerticalAlign::TextBottom:
             case CSS::VerticalAlign::TextTop:
-            case CSS::VerticalAlign::Top:
                 // FIXME: These are all 'baseline'
                 return m_current_y + line_box_baseline - fragment_baseline(fragment) + fragment.border_box_top();
             }
