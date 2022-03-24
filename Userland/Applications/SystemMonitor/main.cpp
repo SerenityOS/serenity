@@ -48,6 +48,7 @@
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
 #include <LibPCIDB/Database.h>
+#include <LibThreading/BackgroundAction.h>
 #include <serenity.h>
 #include <signal.h>
 #include <spawn.h>
@@ -96,7 +97,17 @@ class HardwareTabWidget final : public GUI::LazyWidget {
 public:
     HardwareTabWidget()
     {
-        this->on_first_show = [](GUI::LazyWidget& self) {
+        auto db_creator = Threading::BackgroundAction<int>::construct([this](auto&) {
+            auto db = PCIDB::Database::open();
+            if (!db)
+                warnln("Couldn't open PCI ID database!");
+            m_db = db;
+            m_loader_complete.store(true);
+            return 0;
+        },
+            nullptr);
+
+        this->on_first_show = [this](GUI::LazyWidget& self) {
             {
                 Vector<GUI::JsonArrayModel::FieldSpec> processors_field;
                 processors_field.empend("processor", "Processor", Gfx::TextAlignment::CenterRight);
@@ -123,10 +134,8 @@ public:
             }
 
             {
-                auto db = PCIDB::Database::open();
-                if (!db)
-                    warnln("Couldn't open PCI ID database!");
-
+                while (!m_loader_complete.load())
+                    ;
                 Vector<GUI::JsonArrayModel::FieldSpec> pci_fields;
                 pci_fields.empend(
                     "Address", Gfx::TextAlignment::CenterLeft,
@@ -139,24 +148,24 @@ public:
                     });
                 pci_fields.empend(
                     "Class", Gfx::TextAlignment::CenterLeft,
-                    [db](const JsonObject& object) {
+                    [this](const JsonObject& object) {
                         auto class_id = object.get("class").to_u32();
-                        String class_name = db ? db->get_class(class_id) : nullptr;
+                        String class_name = m_db ? m_db->get_class(class_id) : nullptr;
                         return class_name.is_empty() ? String::formatted("Unknown class: {:04x}", class_id) : class_name;
                     });
                 pci_fields.empend(
                     "Vendor", Gfx::TextAlignment::CenterLeft,
-                    [db](const JsonObject& object) {
+                    [this](const JsonObject& object) {
                         auto vendor_id = object.get("vendor_id").to_u32();
-                        String vendor_name = db ? db->get_vendor(vendor_id) : nullptr;
+                        String vendor_name = m_db ? m_db->get_vendor(vendor_id) : nullptr;
                         return vendor_name.is_empty() ? String::formatted("Unknown vendor: {:02x}", vendor_id) : vendor_name;
                     });
                 pci_fields.empend(
                     "Device", Gfx::TextAlignment::CenterLeft,
-                    [db](const JsonObject& object) {
+                    [this](const JsonObject& object) {
                         auto vendor_id = object.get("vendor_id").to_u32();
                         auto device_id = object.get("device_id").to_u32();
-                        String device_name = db ? db->get_device(vendor_id, device_id) : nullptr;
+                        String device_name = m_db ? m_db->get_device(vendor_id, device_id) : nullptr;
                         return device_name.is_empty() ? String::formatted("Unknown device: {:02x}", device_id) : device_name;
                     });
                 pci_fields.empend(
@@ -172,6 +181,10 @@ public:
             }
         };
     }
+
+private:
+    RefPtr<PCIDB::Database> m_db;
+    Atomic<bool> m_loader_complete { false };
 };
 
 class StorageTabWidget final : public GUI::LazyWidget {
