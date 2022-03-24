@@ -1,0 +1,10 @@
+--- ../src/funge-space/funge-space.c
++++ ../src/funge-space/funge-space.c
+@@ -47,6 +47,7 @@
+ #include <sys/stat.h>  /* fstat, open */
+ #include <fcntl.h>     /* open, posix_fallocate */
+ 
++#define _POSIX_MAPPED_FILES 1
+ #if !defined(_POSIX_MAPPED_FILES) || (_POSIX_MAPPED_FILES < 1)
+ #  error "cfunge needs a working mmap(), which this system claims it lacks."
+ #endif
