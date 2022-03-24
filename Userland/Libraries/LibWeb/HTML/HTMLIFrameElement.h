@@ -21,6 +21,7 @@ public:
 
 private:
     virtual void inserted() override;
+    virtual void removed_from(Node*) override;
     virtual void parse_attribute(const FlyString& name, const String& value) override;
 
     void load_src(const String&);

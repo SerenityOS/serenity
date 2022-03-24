@@ -32,11 +32,28 @@ void HTMLIFrameElement::parse_attribute(const FlyString& name, const String& val
         load_src(value);
 }
 
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element:the-iframe-element-6
 void HTMLIFrameElement::inserted()
 {
-    BrowsingContextContainer::inserted();
-    if (is_connected())
-        load_src(attribute(HTML::AttributeNames::src));
+    HTMLElement::inserted();
+
+    if (!is_connected())
+        return;
+
+    // 1. Create a new nested browsing context for element.
+    create_new_nested_browsing_context();
+
+    // 2. FIXME: If element has a sandbox attribute, then parse the sandboxing directive given the attribute's value and element's iframe sandboxing flag set.
+
+    // 3. Process the iframe attributes for element, with initialInsertion set to true.
+    load_src(attribute(HTML::AttributeNames::src));
+}
+
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-iframe-element:the-iframe-element-7
+void HTMLIFrameElement::removed_from(DOM::Node* node)
+{
+    HTMLElement::removed_from(node);
+    discard_nested_browsing_context();
 }
 
 void HTMLIFrameElement::load_src(const String& value)
