@@ -844,6 +844,14 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
 
 void Shell::execute_process(Vector<const char*>&& argv)
 {
+#ifdef __serenity__
+    for (auto& promise : m_active_promises) {
+        pledge("exec", promise.data.exec_promises.characters());
+        for (auto& item : promise.data.unveils)
+            unveil(item.path.characters(), item.access.characters());
+    }
+#endif
+
     int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
     if (rc < 0) {
         auto parts = StringView { argv[0] }.split_view('/');
@@ -1833,6 +1841,13 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     });
     timer->start();
 
+    // Restrict the process to effectively readonly access to the FS.
+    auto scoped_promise = promise({
+        .exec_promises = "stdio rpath prot_exec no_error",
+        .unveils = {
+            { "/", "rx" },
+        },
+    });
     execute_node->for_each_entry(*this, [&](NonnullRefPtr<AST::Value> entry) -> IterationDecision {
         auto result = entry->resolve_as_string(*this);
         JsonParser parser(result);
