@@ -89,4 +89,16 @@ private:
     Array<float, 9> m_matrix { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
 };
 
+class ICCBasedColorSpace final : public ColorSpace {
+public:
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, Page const&, Vector<Value>&& parameters);
+
+    ~ICCBasedColorSpace() override = default;
+
+    Color color(Vector<Value> const& arguments) const override;
+
+private:
+    ICCBasedColorSpace() = delete;
+};
+
 }
