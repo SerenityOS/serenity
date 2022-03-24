@@ -31,6 +31,7 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
     , m_bitmap(bitmap)
     , m_page(page)
     , m_painter(*bitmap)
+    , m_anti_aliasing_painter(m_painter)
 {
     auto media_box = m_page.media_box;
 
@@ -207,6 +208,11 @@ RENDERER_HANDLER(path_append_rect)
     auto pos = map(args[0].to_float(), args[1].to_float());
     auto size = map(Gfx::FloatSize { args[2].to_float(), args[3].to_float() });
 
+    // FIXME: Why do we need to flip the y axis of rectangles here? The coordinates
+    //        in the PDF file seem to be correct, with the same flipped-ness as
+    //        everything else in a PDF file.
+    pos.set_y(m_bitmap->height() - pos.y() - size.height());
+
     m_current_path.move_to(pos);
     m_current_path.line_to({ pos.x() + size.width(), pos.y() });
     m_current_path.line_to({ pos.x() + size.width(), pos.y() + size.height() });
@@ -217,7 +223,7 @@ RENDERER_HANDLER(path_append_rect)
 
 RENDERER_HANDLER(path_stroke)
 {
-    m_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
+    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
     m_current_path.clear();
     return {};
 }
@@ -231,7 +237,7 @@ RENDERER_HANDLER(path_close_and_stroke)
 
 RENDERER_HANDLER(path_fill_nonzero)
 {
-    m_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::Nonzero);
+    m_anti_aliasing_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::Nonzero);
     m_current_path.clear();
     return {};
 }
@@ -244,21 +250,21 @@ RENDERER_HANDLER(path_fill_nonzero_deprecated)
 
 RENDERER_HANDLER(path_fill_evenodd)
 {
-    m_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::EvenOdd);
+    m_anti_aliasing_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::EvenOdd);
     m_current_path.clear();
     return {};
 }
 
 RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
-    m_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
+    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
     TRY(handle_path_fill_nonzero(args));
     return {};
 }
 
 RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
-    m_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
+    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
     TRY(handle_path_fill_evenodd(args));
     return {};
 }

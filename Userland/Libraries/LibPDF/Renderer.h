@@ -8,6 +8,7 @@
 
 #include <AK/Format.h>
 #include <LibGfx/AffineTransform.h>
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
@@ -121,6 +122,7 @@ private:
     RefPtr<Gfx::Bitmap> m_bitmap;
     Page const& m_page;
     Gfx::Painter m_painter;
+    Gfx::AntiAliasingPainter m_anti_aliasing_painter;
 
     Gfx::Path m_current_path;
     Vector<GraphicsState> m_graphics_state_stack;
