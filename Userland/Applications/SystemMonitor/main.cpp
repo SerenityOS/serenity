@@ -7,6 +7,7 @@
  */
 
 #include "GraphWidget.h"
+#include "LibCore/Object.h"
 #include "MemoryStatsWidget.h"
 #include "NetworkStatisticsWidget.h"
 #include "ProcessFileDescriptorMapWidget.h"
@@ -54,7 +55,6 @@
 #include <unistd.h>
 
 static ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t);
-static void build_storage_widget(GUI::LazyWidget&);
 static void build_performance_tab(GUI::Widget&);
 
 static RefPtr<GUI::Statusbar> statusbar;
@@ -85,6 +85,8 @@ private:
 
     String m_text;
 };
+
+class ProgressbarPaintingDelegate;
 
 namespace SystemMonitor {
 
@@ -172,9 +174,106 @@ public:
     }
 };
 
+class StorageTabWidget final : public GUI::LazyWidget {
+    C_OBJECT(StorageTabWidget)
+public:
+    StorageTabWidget()
+    {
+        this->on_first_show = [](GUI::LazyWidget& self) {
+            auto& fs_table_view = *self.find_child_of_type_named<GUI::TableView>("storage_table");
+
+            Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
+            df_fields.empend("mount_point", "Mount point", Gfx::TextAlignment::CenterLeft);
+            df_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
+            df_fields.empend("source", "Source", Gfx::TextAlignment::CenterLeft);
+            df_fields.empend(
+                "Size", Gfx::TextAlignment::CenterRight,
+                [](const JsonObject& object) {
+                    StringBuilder size_builder;
+                    size_builder.append(" ");
+                    size_builder.append(human_readable_size(object.get("total_block_count").to_u64() * object.get("block_size").to_u64()));
+                    size_builder.append(" ");
+                    return size_builder.to_string();
+                },
+                [](const JsonObject& object) {
+                    return object.get("total_block_count").to_u64() * object.get("block_size").to_u64();
+                },
+                [](const JsonObject& object) {
+                    auto total_blocks = object.get("total_block_count").to_u64();
+                    if (total_blocks == 0)
+                        return 0;
+                    auto free_blocks = object.get("free_block_count").to_u64();
+                    auto used_blocks = total_blocks - free_blocks;
+                    int percentage = (static_cast<double>(used_blocks) / static_cast<double>(total_blocks) * 100.0);
+                    return percentage;
+                });
+            df_fields.empend(
+                "Used", Gfx::TextAlignment::CenterRight,
+                [](const JsonObject& object) {
+            auto total_blocks = object.get("total_block_count").to_u64();
+            auto free_blocks = object.get("free_block_count").to_u64();
+            auto used_blocks = total_blocks - free_blocks;
+            return human_readable_size(used_blocks * object.get("block_size").to_u64()); },
+                [](const JsonObject& object) {
+                    auto total_blocks = object.get("total_block_count").to_u64();
+                    auto free_blocks = object.get("free_block_count").to_u64();
+                    auto used_blocks = total_blocks - free_blocks;
+                    return used_blocks * object.get("block_size").to_u64();
+                });
+            df_fields.empend(
+                "Available", Gfx::TextAlignment::CenterRight,
+                [](const JsonObject& object) {
+                    return human_readable_size(object.get("free_block_count").to_u64() * object.get("block_size").to_u64());
+                },
+                [](const JsonObject& object) {
+                    return object.get("free_block_count").to_u64() * object.get("block_size").to_u64();
+                });
+            df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
+                bool readonly = object.get("readonly").to_bool();
+                int mount_flags = object.get("mount_flags").to_int();
+                return readonly || (mount_flags & MS_RDONLY) ? "Read-only" : "Read/Write";
+            });
+            df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
+                int mount_flags = object.get("mount_flags").to_int();
+                StringBuilder builder;
+                bool first = true;
+                auto check = [&](int flag, const char* name) {
+                    if (!(mount_flags & flag))
+                        return;
+                    if (!first)
+                        builder.append(',');
+                    builder.append(name);
+                    first = false;
+                };
+                check(MS_NODEV, "nodev");
+                check(MS_NOEXEC, "noexec");
+                check(MS_NOSUID, "nosuid");
+                check(MS_BIND, "bind");
+                check(MS_RDONLY, "ro");
+                check(MS_WXALLOWED, "wxallowed");
+                if (builder.string_view().is_empty())
+                    return String("defaults");
+                return builder.to_string();
+            });
+            df_fields.empend("free_block_count", "Free blocks", Gfx::TextAlignment::CenterRight);
+            df_fields.empend("total_block_count", "Total blocks", Gfx::TextAlignment::CenterRight);
+            df_fields.empend("free_inode_count", "Free inodes", Gfx::TextAlignment::CenterRight);
+            df_fields.empend("total_inode_count", "Total inodes", Gfx::TextAlignment::CenterRight);
+            df_fields.empend("block_size", "Block size", Gfx::TextAlignment::CenterRight);
+
+            fs_table_view.set_model(MUST(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/df", move(df_fields)))));
+
+            fs_table_view.set_column_painting_delegate(3, make<ProgressbarPaintingDelegate>());
+
+            fs_table_view.model()->invalidate();
+        };
+    }
+};
+
 }
 
 REGISTER_WIDGET(SystemMonitor, HardwareTabWidget)
+REGISTER_WIDGET(SystemMonitor, StorageTabWidget)
 
 static bool can_access_pid(pid_t pid)
 {
@@ -249,9 +348,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& performance_widget = *tabwidget.find_descendant_of_type_named<GUI::Widget>("performance");
     build_performance_tab(performance_widget);
-
-    auto& storage_widget = *tabwidget.find_descendant_of_type_named<GUI::LazyWidget>("storage");
-    build_storage_widget(storage_widget);
 
     auto& process_table_view = *process_table_container.find_child_of_type_named<GUI::TableView>("process_table");
     process_table_view.set_model(TRY(GUI::SortingProxyModel::create(process_model)));
@@ -446,7 +542,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     else if (args_tab_view == "graphs")
         tabwidget.set_active_widget(&performance_widget);
     else if (args_tab_view == "fs")
-        tabwidget.set_active_widget(&storage_widget);
+        tabwidget.set_active_widget(tabwidget.find_descendant_of_type_named<SystemMonitor::StorageTabWidget>("storage"));
     else if (args_tab_view == "hardware")
         tabwidget.set_active_widget(tabwidget.find_descendant_of_type_named<SystemMonitor::HardwareTabWidget>("hardware"));
     else if (args_tab_view == "network")
@@ -540,98 +636,6 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
         widget_stack.set_active_widget(&unavailable_process_widget);
 
     return window;
-}
-
-void build_storage_widget(GUI::LazyWidget& widget)
-{
-    widget.on_first_show = [](GUI::LazyWidget& self) {
-        auto& fs_table_view = *self.find_child_of_type_named<GUI::TableView>("storage_table");
-
-        Vector<GUI::JsonArrayModel::FieldSpec> df_fields;
-        df_fields.empend("mount_point", "Mount point", Gfx::TextAlignment::CenterLeft);
-        df_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
-        df_fields.empend("source", "Source", Gfx::TextAlignment::CenterLeft);
-        df_fields.empend(
-            "Size", Gfx::TextAlignment::CenterRight,
-            [](const JsonObject& object) {
-                StringBuilder size_builder;
-                size_builder.append(" ");
-                size_builder.append(human_readable_size(object.get("total_block_count").to_u64() * object.get("block_size").to_u64()));
-                size_builder.append(" ");
-                return size_builder.to_string();
-            },
-            [](const JsonObject& object) {
-                return object.get("total_block_count").to_u64() * object.get("block_size").to_u64();
-            },
-            [](const JsonObject& object) {
-                auto total_blocks = object.get("total_block_count").to_u64();
-                if (total_blocks == 0)
-                    return 0;
-                auto free_blocks = object.get("free_block_count").to_u64();
-                auto used_blocks = total_blocks - free_blocks;
-                int percentage = (static_cast<double>(used_blocks) / static_cast<double>(total_blocks) * 100.0);
-                return percentage;
-            });
-        df_fields.empend(
-            "Used", Gfx::TextAlignment::CenterRight,
-            [](const JsonObject& object) {
-            auto total_blocks = object.get("total_block_count").to_u64();
-            auto free_blocks = object.get("free_block_count").to_u64();
-            auto used_blocks = total_blocks - free_blocks;
-            return human_readable_size(used_blocks * object.get("block_size").to_u64()); },
-            [](const JsonObject& object) {
-                auto total_blocks = object.get("total_block_count").to_u64();
-                auto free_blocks = object.get("free_block_count").to_u64();
-                auto used_blocks = total_blocks - free_blocks;
-                return used_blocks * object.get("block_size").to_u64();
-            });
-        df_fields.empend(
-            "Available", Gfx::TextAlignment::CenterRight,
-            [](const JsonObject& object) {
-                return human_readable_size(object.get("free_block_count").to_u64() * object.get("block_size").to_u64());
-            },
-            [](const JsonObject& object) {
-                return object.get("free_block_count").to_u64() * object.get("block_size").to_u64();
-            });
-        df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
-            bool readonly = object.get("readonly").to_bool();
-            int mount_flags = object.get("mount_flags").to_int();
-            return readonly || (mount_flags & MS_RDONLY) ? "Read-only" : "Read/Write";
-        });
-        df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
-            int mount_flags = object.get("mount_flags").to_int();
-            StringBuilder builder;
-            bool first = true;
-            auto check = [&](int flag, const char* name) {
-                if (!(mount_flags & flag))
-                    return;
-                if (!first)
-                    builder.append(',');
-                builder.append(name);
-                first = false;
-            };
-            check(MS_NODEV, "nodev");
-            check(MS_NOEXEC, "noexec");
-            check(MS_NOSUID, "nosuid");
-            check(MS_BIND, "bind");
-            check(MS_RDONLY, "ro");
-            check(MS_WXALLOWED, "wxallowed");
-            if (builder.string_view().is_empty())
-                return String("defaults");
-            return builder.to_string();
-        });
-        df_fields.empend("free_block_count", "Free blocks", Gfx::TextAlignment::CenterRight);
-        df_fields.empend("total_block_count", "Total blocks", Gfx::TextAlignment::CenterRight);
-        df_fields.empend("free_inode_count", "Free inodes", Gfx::TextAlignment::CenterRight);
-        df_fields.empend("total_inode_count", "Total inodes", Gfx::TextAlignment::CenterRight);
-        df_fields.empend("block_size", "Block size", Gfx::TextAlignment::CenterRight);
-
-        fs_table_view.set_model(MUST(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/df", move(df_fields)))));
-
-        fs_table_view.set_column_painting_delegate(3, make<ProgressbarPaintingDelegate>());
-
-        fs_table_view.model()->invalidate();
-    };
 }
 
 void build_performance_tab(GUI::Widget& graphs_container)
