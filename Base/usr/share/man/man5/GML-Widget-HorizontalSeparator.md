@@ -1,10 +1,10 @@
 ## Name
 
-GML Horizontal Seperator Widget
+GML Horizontal Separator Widget
 
 ## Description
 
-Defines a horizontal seperator widget. Creates a horizontal line separating elements.
+Defines a horizontal separator widget. Creates a horizontal line separating elements.
 
 ## Synopsis
 
