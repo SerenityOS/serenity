@@ -22,7 +22,7 @@ enum class ShouldRandomizeCase {
 
 class DNSPacket {
 public:
-    DNSPacket() { }
+    DNSPacket() = default;
 
     static Optional<DNSPacket> from_raw_packet(const u8*, size_t);
     ByteBuffer to_byte_buffer() const;

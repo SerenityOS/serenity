@@ -26,7 +26,7 @@ public:
     };
     static WindowSwitcher& the();
 
-    virtual ~WindowSwitcher() override;
+    virtual ~WindowSwitcher() override = default;
 
     bool is_visible() const { return m_visible; }
     void set_visible(bool);

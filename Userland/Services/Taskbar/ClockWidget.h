@@ -22,7 +22,7 @@ class ClockWidget final : public GUI::Frame {
     C_OBJECT(ClockWidget);
 
 public:
-    virtual ~ClockWidget() override;
+    virtual ~ClockWidget() override = default;
 
 private:
     ClockWidget();

@@ -41,10 +41,6 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSock
     m_paint_flush_timer = Core::Timer::create_single_shot(0, [this] { flush_pending_paint_requests(); });
 }
 
-ConnectionFromClient::~ConnectionFromClient()
-{
-}
-
 void ConnectionFromClient::die()
 {
     Core::EventLoop::current().quit(0);

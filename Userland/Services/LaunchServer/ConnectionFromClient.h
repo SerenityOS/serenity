@@ -15,7 +15,7 @@ namespace LaunchServer {
 class ConnectionFromClient final : public IPC::ConnectionFromClient<LaunchClientEndpoint, LaunchServerEndpoint> {
     C_OBJECT(ConnectionFromClient)
 public:
-    ~ConnectionFromClient() override;
+    ~ConnectionFromClient() override = default;
 
     virtual void die() override;
 

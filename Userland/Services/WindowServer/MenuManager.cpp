@@ -26,10 +26,6 @@ MenuManager::MenuManager()
     s_the = this;
 }
 
-MenuManager::~MenuManager()
-{
-}
-
 bool MenuManager::is_open(const Menu& menu) const
 {
     for (size_t i = 0; i < m_open_menu_stack.size(); ++i) {

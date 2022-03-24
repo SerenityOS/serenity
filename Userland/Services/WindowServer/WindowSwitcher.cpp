@@ -28,10 +28,6 @@ WindowSwitcher::WindowSwitcher()
     s_the = this;
 }
 
-WindowSwitcher::~WindowSwitcher()
-{
-}
-
 void WindowSwitcher::set_visible(bool visible)
 {
     if (m_visible == visible)

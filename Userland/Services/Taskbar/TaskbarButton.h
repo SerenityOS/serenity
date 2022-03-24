@@ -12,7 +12,7 @@
 class TaskbarButton final : public GUI::Button {
     C_OBJECT(TaskbarButton)
 public:
-    virtual ~TaskbarButton() override;
+    virtual ~TaskbarButton() override = default;
 
     void update_taskbar_rect();
     void clear_taskbar_rect();

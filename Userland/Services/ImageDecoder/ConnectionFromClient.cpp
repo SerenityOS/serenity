@@ -17,10 +17,6 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSock
 {
 }
 
-ConnectionFromClient::~ConnectionFromClient()
-{
-}
-
 void ConnectionFromClient::die()
 {
     Core::EventLoop::current().quit(0);

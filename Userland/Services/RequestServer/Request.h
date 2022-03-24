@@ -18,7 +18,7 @@ namespace RequestServer {
 
 class Request {
 public:
-    virtual ~Request();
+    virtual ~Request() = default;
 
     i32 id() const { return m_id; }
     virtual URL url() const = 0;

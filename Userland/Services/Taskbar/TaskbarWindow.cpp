@@ -30,10 +30,10 @@ class TaskbarWidget final : public GUI::Widget {
     C_OBJECT(TaskbarWidget);
 
 public:
-    virtual ~TaskbarWidget() override { }
+    virtual ~TaskbarWidget() override = default;
 
 private:
-    TaskbarWidget() { }
+    TaskbarWidget() = default;
 
     virtual void paint_event(GUI::PaintEvent& event) override
     {
@@ -97,10 +97,6 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 
     auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, "Assistant.af");
     m_assistant_app_file = Desktop::AppFile::open(af_path);
-}
-
-TaskbarWindow::~TaskbarWindow()
-{
 }
 
 void TaskbarWindow::show_desktop_button_clicked(unsigned)

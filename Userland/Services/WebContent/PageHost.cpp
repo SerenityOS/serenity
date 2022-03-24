@@ -28,10 +28,6 @@ PageHost::PageHost(ConnectionFromClient& client)
     });
 }
 
-PageHost::~PageHost()
-{
-}
-
 void PageHost::set_has_focus(bool has_focus)
 {
     m_has_focus = has_focus;

@@ -40,7 +40,7 @@ class DHCPv4Client final : public Core::Object {
     C_OBJECT(DHCPv4Client)
 
 public:
-    virtual ~DHCPv4Client() override;
+    virtual ~DHCPv4Client() override = default;
 
     void dhcp_discover(const InterfaceDescriptor& ifname);
     void dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Packet& packet);

@@ -44,10 +44,6 @@ Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config)
     m_sound_thread->start();
 }
 
-Mixer::~Mixer()
-{
-}
-
 NonnullRefPtr<ClientAudioStream> Mixer::create_queue(ConnectionFromClient& client)
 {
     auto queue = adopt_ref(*new ClientAudioStream(client));

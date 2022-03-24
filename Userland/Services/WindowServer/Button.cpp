@@ -20,9 +20,7 @@ Button::Button(WindowFrame& frame, Function<void(Button&)>&& on_click_handler)
 {
 }
 
-Button::~Button()
-{
-}
+Button::~Button() = default;
 
 void Button::paint(Screen& screen, Gfx::Painter& painter)
 {

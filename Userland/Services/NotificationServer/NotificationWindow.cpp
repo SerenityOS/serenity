@@ -98,10 +98,6 @@ NotificationWindow::NotificationWindow(i32 client_id, const String& text, const 
     };
 }
 
-NotificationWindow::~NotificationWindow()
-{
-}
-
 RefPtr<NotificationWindow> NotificationWindow::get_window_by_id(i32 id)
 {
     auto window = s_windows.get(id);

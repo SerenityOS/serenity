@@ -14,14 +14,6 @@ Storage& Storage::the()
     return s_the;
 }
 
-Storage::Storage()
-{
-}
-
-Storage::~Storage()
-{
-}
-
 void Storage::set_data(Core::AnonymousBuffer data, const String& mime_type, const HashMap<String, String>& metadata)
 {
     m_buffer = move(data);

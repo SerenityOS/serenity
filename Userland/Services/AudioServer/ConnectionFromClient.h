@@ -23,7 +23,7 @@ class Mixer;
 class ConnectionFromClient final : public IPC::ConnectionFromClient<AudioClientEndpoint, AudioServerEndpoint> {
     C_OBJECT(ConnectionFromClient)
 public:
-    ~ConnectionFromClient() override;
+    ~ConnectionFromClient() override = default;
 
     void did_finish_playing_buffer(Badge<ClientAudioStream>, int buffer_id);
     void did_change_client_volume(Badge<ClientAudioStream>, double volume);

@@ -35,7 +35,7 @@ class ConnectionFromClient;
 class ClientAudioStream : public RefCounted<ClientAudioStream> {
 public:
     explicit ClientAudioStream(ConnectionFromClient&);
-    ~ClientAudioStream() { }
+    ~ClientAudioStream() = default;
 
     bool is_full() const { return m_queue.size() >= 3; }
     void enqueue(NonnullRefPtr<Audio::Buffer>&&);
@@ -112,7 +112,7 @@ private:
 class Mixer : public Core::Object {
     C_OBJECT(Mixer)
 public:
-    virtual ~Mixer() override;
+    virtual ~Mixer() override = default;
 
     NonnullRefPtr<ClientAudioStream> create_queue(ConnectionFromClient&);
 
