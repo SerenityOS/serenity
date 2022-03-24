@@ -97,6 +97,9 @@ float Length::to_px(Layout::Node const& layout_node) const
     if (is_calculated())
         return m_calculated_style->resolve_length(layout_node)->to_px(layout_node);
 
+    if (is_absolute())
+        return absolute_length_to_px();
+
     if (!layout_node.document().browsing_context())
         return 0;
     auto viewport_rect = layout_node.document().browsing_context()->viewport_rect();
