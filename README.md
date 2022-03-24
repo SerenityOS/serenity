@@ -154,6 +154,7 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 * **Gegga Thor** - [Xexxa](https://github.com/Xexxa)
 * **kleines Filmröllchen** - [kleinesfilmroellchen](https://github.com/kleinesfilmroellchen)
 * **Kenneth Myhra** - [kennethmyhra](https://github.com/kennethmyhra)
+* **Maciej** - [sppmacd](https://github.com/sppmacd)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
