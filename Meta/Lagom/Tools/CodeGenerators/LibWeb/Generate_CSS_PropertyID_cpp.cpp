@@ -163,11 +163,11 @@ bool property_affects_stacking_context(PropertyID property_id)
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
 
-        bool affects_layout = true;
+        bool affects_stacking_context = false;
         if (value.as_object().has("affects-stacking-context"))
-            affects_layout = value.as_object().get("affects-stacking-context").to_bool();
+            affects_stacking_context = value.as_object().get("affects-stacking-context").to_bool();
 
-        if (affects_layout) {
+        if (affects_stacking_context) {
             auto member_generator = generator.fork();
             member_generator.set("name:titlecase", title_casify(name));
             member_generator.append(R"~~~(
