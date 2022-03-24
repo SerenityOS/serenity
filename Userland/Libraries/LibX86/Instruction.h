@@ -45,11 +45,13 @@ constexpr T sign_extended_to(U value)
 enum class OperandSize : u8 {
     Size16,
     Size32,
+    Size64,
 };
 
 enum class AddressSize : u8 {
     Size16,
     Size32,
+    Size64,
 };
 
 enum IsLockPrefixAllowed {
@@ -228,6 +230,8 @@ struct InstructionDescriptor {
     {
         if (imm1_bytes == CurrentAddressSize) {
             switch (size) {
+            case AddressSize::Size64:
+                return 8;
             case AddressSize::Size32:
                 return 4;
             case AddressSize::Size16:
@@ -242,6 +246,8 @@ struct InstructionDescriptor {
     {
         if (imm2_bytes == CurrentAddressSize) {
             switch (size) {
+            case AddressSize::Size64:
+                return 8;
             case AddressSize::Size32:
                 return 4;
             case AddressSize::Size16:
@@ -255,8 +261,8 @@ struct InstructionDescriptor {
     IsLockPrefixAllowed lock_prefix_allowed { LockPrefixNotAllowed };
 };
 
-extern InstructionDescriptor s_table[2][256];
-extern InstructionDescriptor s_0f_table[2][256];
+extern InstructionDescriptor s_table[3][256];
+extern InstructionDescriptor s_0f_table[3][256];
 extern InstructionDescriptor s_sse_table_np[256];
 extern InstructionDescriptor s_sse_table_66[256];
 extern InstructionDescriptor s_sse_table_f3[256];
@@ -489,6 +495,7 @@ private:
     String to_string(Instruction const&) const;
     String to_string_a16() const;
     String to_string_a32() const;
+    String to_string_a64() const;
 
     template<typename InstructionStreamType>
     void decode(InstructionStreamType&, AddressSize);
@@ -553,15 +560,20 @@ public:
     u8 imm8() const { return m_imm1; }
     u16 imm16() const { return m_imm1; }
     u32 imm32() const { return m_imm1; }
+    u64 imm64() const { return m_imm1; }
     u8 imm8_1() const { return imm8(); }
     u8 imm8_2() const { return m_imm2; }
     u16 imm16_1() const { return imm16(); }
     u16 imm16_2() const { return m_imm2; }
     u32 imm32_1() const { return imm32(); }
     u32 imm32_2() const { return m_imm2; }
+    u64 imm64_1() const { return imm64(); }
+    u64 imm64_2() const { return m_imm2; }
     u32 imm_address() const
     {
         switch (m_address_size) {
+        case AddressSize::Size64:
+            return imm64();
         case AddressSize::Size32:
             return imm32();
         case AddressSize::Size16:
@@ -603,8 +615,8 @@ private:
 
     InstructionDescriptor* m_descriptor { nullptr };
     mutable MemoryOrRegisterReference m_modrm;
-    u32 m_imm1 { 0 };
-    u32 m_imm2 { 0 };
+    u64 m_imm1 { 0 };
+    u64 m_imm2 { 0 };
     u8 m_segment_prefix { 0xff };
     u8 m_register_index { 0xff };
     u8 m_op { 0 };
@@ -1137,8 +1149,9 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve(const CPU& cpu, 
         return resolve16(cpu, insn.segment_prefix());
     case AddressSize::Size32:
         return resolve32(cpu, insn.segment_prefix());
+    default:
+        VERIFY_NOT_REACHED();
     }
-    VERIFY_NOT_REACHED();
 }
 
 }

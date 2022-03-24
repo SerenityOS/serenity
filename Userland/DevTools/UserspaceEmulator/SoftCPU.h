@@ -106,8 +106,9 @@ public:
             return m_gpr[X86::RegisterEDX].reference_to<&PartAddressableRegister::low_u8>();
         case X86::RegisterDH:
             return m_gpr[X86::RegisterEDX].reference_to<&PartAddressableRegister::high_u8>();
+        default:
+            VERIFY_NOT_REACHED();
         }
-        VERIFY_NOT_REACHED();
     }
 
     ValueWithShadow<u8> const_gpr8(X86::RegisterIndex8 reg) const
@@ -129,8 +130,9 @@ public:
             return m_gpr[X86::RegisterEDX].slice<&PartAddressableRegister::low_u8>();
         case X86::RegisterDH:
             return m_gpr[X86::RegisterEDX].slice<&PartAddressableRegister::high_u8>();
+        default:
+            VERIFY_NOT_REACHED();
         }
-        VERIFY_NOT_REACHED();
     }
 
     ValueWithShadow<u16> const_gpr16(X86::RegisterIndex16 reg) const
@@ -211,8 +213,9 @@ public:
         case X86::AddressSize::Size16:
             set_cx(ValueWithShadow<u16>(cx().value() - 1, cx().shadow()));
             return cx().value() == 0;
+        default:
+            VERIFY_NOT_REACHED();
         }
-        VERIFY_NOT_REACHED();
     }
 
     ALWAYS_INLINE void step_source_index(X86::AddressSize address_size, u32 step)
