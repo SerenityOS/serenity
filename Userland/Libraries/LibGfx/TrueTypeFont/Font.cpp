@@ -10,7 +10,6 @@
 #include <AK/Try.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
-#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/TrueTypeFont/Cmap.h>
 #include <LibGfx/TrueTypeFont/Font.h>
@@ -429,7 +428,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         u32 table_length = be_u32(buffer.offset_pointer(record_offset + (u32)Offsets::TableRecord_Length));
 
         if (Checked<u32>::addition_would_overflow(table_offset, table_length))
-            return Error::from_string_literal("Invalid table offset/length in font."sv);
+            return Error::from_string_literal("Invalid table offset or length in font"sv);
 
         if (buffer.size() < table_offset + table_length)
             return Error::from_string_literal("Font file too small"sv);

@@ -121,13 +121,13 @@ u32 Cmap::Subtable::glyph_id_for_code_point_table_12(u32 code_point) const
     VERIFY(m_slice.size() >= (u32)Table12Sizes::Header + (u32)Table12Sizes::Record * num_groups);
     for (u32 offset = 0; offset < num_groups * (u32)Table12Sizes::Record; offset += (u32)Table12Sizes::Record) {
         u32 start_code_point = be_u32(m_slice.offset_pointer((u32)Table12Offsets::Record_StartCode + offset));
-        if (code_point < start_code_point) {
+        if (code_point < start_code_point)
             break;
-        }
+
         u32 end_code_point = be_u32(m_slice.offset_pointer((u32)Table12Offsets::Record_EndCode + offset));
-        if (code_point > end_code_point) {
+        if (code_point > end_code_point)
             continue;
-        }
+
         u32 glyph_offset = be_u32(m_slice.offset_pointer((u32)Table12Offsets::Record_StartGlyph + offset));
         return code_point - start_code_point + glyph_offset;
     }
@@ -137,18 +137,17 @@ u32 Cmap::Subtable::glyph_id_for_code_point_table_12(u32 code_point) const
 u32 Cmap::glyph_id_for_code_point(u32 code_point) const
 {
     auto opt_subtable = subtable(m_active_index);
-    if (!opt_subtable.has_value()) {
+    if (!opt_subtable.has_value())
         return 0;
-    }
+
     auto subtable = opt_subtable.value();
     return subtable.glyph_id_for_code_point(code_point);
 }
 
 Optional<Cmap> Cmap::from_slice(ReadonlyBytes slice)
 {
-    if (slice.size() < (size_t)Sizes::TableHeader) {
+    if (slice.size() < (size_t)Sizes::TableHeader)
         return {};
-    }
     return Cmap(slice);
 }
 
