@@ -333,7 +333,7 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
             if (getuid() != 0
                 && make_inspectable == MakeInspectable::Yes
                 // FIXME: Deadlock potential; though the main loop and inspector server connection are rarely used in conjunction
-                && s_inspector_server_connection.with_locked([](auto inspector_server_connection) { return inspector_server_connection; })) {
+                && !s_inspector_server_connection.with_locked([](auto inspector_server_connection) { return inspector_server_connection; })) {
                 if (!connect_to_inspector_server())
                     dbgln("Core::EventLoop: Failed to connect to InspectorServer");
             }
