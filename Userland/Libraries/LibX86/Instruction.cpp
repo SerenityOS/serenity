@@ -14,8 +14,8 @@
 
 namespace X86 {
 
-InstructionDescriptor s_table[2][256];
-InstructionDescriptor s_0f_table[2][256];
+InstructionDescriptor s_table[3][256];
+InstructionDescriptor s_0f_table[3][256];
 InstructionDescriptor s_sse_table_np[256];
 InstructionDescriptor s_sse_table_66[256];
 InstructionDescriptor s_sse_table_f3[256];
@@ -1307,6 +1307,8 @@ String MemoryOrRegisterReference::to_string_xmm(Instruction const& insn) const
 String MemoryOrRegisterReference::to_string(Instruction const& insn) const
 {
     switch (insn.address_size()) {
+    case AddressSize::Size64:
+        return to_string_a64();
     case AddressSize::Size32:
         return to_string_a32();
     case AddressSize::Size16:
@@ -1455,6 +1457,65 @@ static String sib_to_string(u8 rm, u8 sib)
     return builder.to_string();
 }
 
+String MemoryOrRegisterReference::to_string_a64() const
+{
+    if (is_register())
+        return register_name(static_cast<RegisterIndex32>(m_register_index));
+
+    bool has_displacement = false;
+    switch (mod()) {
+    case 0b00:
+        has_displacement = rm() == 5;
+        break;
+    case 0b01:
+    case 0b10:
+        has_displacement = true;
+    }
+    if (m_has_sib && (m_sib & 7) == 5)
+        has_displacement = true;
+
+    String base;
+    switch (rm()) {
+    case 0:
+        base = "rax";
+        break;
+    case 1:
+        base = "rcx";
+        break;
+    case 2:
+        base = "rdx";
+        break;
+    case 3:
+        base = "rbx";
+        break;
+    case 6:
+        base = "rsi";
+        break;
+    case 7:
+        base = "rdi";
+        break;
+    case 5:
+        if (mod() == 0)
+            base = String::formatted("{:#08x}", m_displacement32);
+        else
+            base = "rbp";
+        break;
+    case 4:
+        base = sib_to_string(m_rm_byte, m_sib);
+        break;
+    }
+
+    if (!has_displacement)
+        return base;
+
+    String displacement_string;
+    if ((i32)m_displacement32 < 0)
+        displacement_string = String::formatted("-{:#x}", -(i32)m_displacement32);
+    else
+        displacement_string = String::formatted("+{:#x}", m_displacement32);
+    return String::formatted("{}{}", base, displacement_string);
+}
+
 String MemoryOrRegisterReference::to_string_a32() const
 {
     if (is_register())
@@ -1541,6 +1602,9 @@ String Instruction::to_string(u32 origin, SymbolProvider const* symbol_provider,
         case AddressSize::Size32:
             builder.append("a32"sv);
             break;
+        case AddressSize::Size64:
+            builder.append("a64"sv);
+            break;
         }
     }
     if (has_operand_size_override_prefix()) {
@@ -1550,6 +1614,9 @@ String Instruction::to_string(u32 origin, SymbolProvider const* symbol_provider,
             break;
         case OperandSize::Size32:
             builder.append("o32"sv);
+            break;
+        case OperandSize::Size64:
+            builder.append("o64"sv);
             break;
         }
     }
