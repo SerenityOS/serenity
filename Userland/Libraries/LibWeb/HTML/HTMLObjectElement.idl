@@ -9,6 +9,8 @@ interface HTMLObjectElement : HTMLElement {
     [Reflect] attribute DOMString width;
     [Reflect] attribute DOMString height;
 
+    readonly attribute Document? contentDocument;
+
     [Reflect] attribute DOMString align;
     [Reflect] attribute DOMString archive;
     [Reflect] attribute DOMString code;
