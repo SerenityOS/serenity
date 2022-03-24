@@ -19,4 +19,6 @@ interface HTMLIFrameElement : HTMLElement {
 
     [LegacyNullToEmptyString, Reflect=marginheight] attribute DOMString marginHeight;
     [LegacyNullToEmptyString, Reflect=marginwidth] attribute DOMString marginWidth;
+
+    Document? getSVGDocument();
 };
