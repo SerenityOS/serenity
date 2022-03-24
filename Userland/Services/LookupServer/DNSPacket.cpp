@@ -77,7 +77,7 @@ ByteBuffer DNSPacket::to_byte_buffer() const
 
 class [[gnu::packed]] DNSRecordWithoutName {
 public:
-    DNSRecordWithoutName() { }
+    DNSRecordWithoutName() = default;
 
     u16 type() const { return m_type; }
     u16 record_class() const { return m_class; }

@@ -31,10 +31,6 @@ MenuItem::MenuItem(Menu& menu, Type type)
 {
 }
 
-MenuItem::~MenuItem()
-{
-}
-
 void MenuItem::set_enabled(bool enabled)
 {
     if (m_enabled == enabled)

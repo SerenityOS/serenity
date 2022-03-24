@@ -46,7 +46,7 @@ public:
     Gfx::IntSize size() const { return m_rect.size(); }
 
 private:
-    Cursor() { }
+    Cursor() = default;
     Cursor(NonnullRefPtr<Gfx::Bitmap>&&, int, const Gfx::CursorParams&);
 
     bool load(StringView, StringView);

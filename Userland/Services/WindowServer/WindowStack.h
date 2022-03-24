@@ -16,7 +16,7 @@ class Compositor;
 class WindowStack {
 public:
     WindowStack(unsigned row, unsigned column);
-    ~WindowStack();
+    ~WindowStack() = default;
 
     bool is_empty() const { return m_windows.is_empty(); }
     void add(Window&);

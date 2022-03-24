@@ -47,10 +47,6 @@ Menu::Menu(ConnectionFromClient* client, int menu_id, String name)
     m_alt_shortcut_character = find_ampersand_shortcut_character(m_name);
 }
 
-Menu::~Menu()
-{
-}
-
 const Gfx::Font& Menu::font() const
 {
     return Gfx::FontDatabase::default_font();

@@ -26,10 +26,6 @@ KeymapSwitcher::KeymapSwitcher()
     refresh();
 }
 
-KeymapSwitcher::~KeymapSwitcher()
-{
-}
-
 void KeymapSwitcher::refresh()
 {
     m_keymaps.clear();

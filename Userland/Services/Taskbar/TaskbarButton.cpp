@@ -19,10 +19,6 @@ TaskbarButton::TaskbarButton(const WindowIdentifier& identifier)
 {
 }
 
-TaskbarButton::~TaskbarButton()
-{
-}
-
 void TaskbarButton::context_menu_event(GUI::ContextMenuEvent&)
 {
     GUI::ConnectionToWindowMangerServer::the().async_popup_window_menu(

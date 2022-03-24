@@ -17,7 +17,7 @@ public:
 
 private:
     ShutdownDialog();
-    virtual ~ShutdownDialog() override;
+    virtual ~ShutdownDialog() override = default;
 
     int m_selected_option { -1 };
 };

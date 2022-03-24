@@ -19,10 +19,6 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSock
     s_connections.set(1, *this);
 }
 
-ConnectionFromClient::~ConnectionFromClient()
-{
-}
-
 void ConnectionFromClient::die()
 {
     s_connections.remove(client_id());

@@ -33,10 +33,6 @@ InspectableProcess::InspectableProcess(pid_t pid, NonnullOwnPtr<Core::Stream::Lo
     };
 }
 
-InspectableProcess::~InspectableProcess()
-{
-}
-
 String InspectableProcess::wait_for_response()
 {
     if (m_socket->is_eof()) {

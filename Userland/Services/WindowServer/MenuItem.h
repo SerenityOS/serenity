@@ -25,7 +25,7 @@ public:
 
     MenuItem(Menu&, unsigned identifier, const String& text, const String& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false, const Gfx::Bitmap* icon = nullptr);
     MenuItem(Menu&, Type);
-    ~MenuItem();
+    ~MenuItem() = default;
 
     Type type() const { return m_type; }
 

@@ -12,14 +12,14 @@
 class ChessEngine : public Chess::UCI::Endpoint {
     C_OBJECT(ChessEngine)
 public:
-    virtual ~ChessEngine() override { }
+    virtual ~ChessEngine() override = default;
 
     virtual void handle_uci() override;
     virtual void handle_position(const Chess::UCI::PositionCommand&) override;
     virtual void handle_go(const Chess::UCI::GoCommand&) override;
 
 private:
-    ChessEngine() { }
+    ChessEngine() = default;
     ChessEngine(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out)
         : Endpoint(in, out)
     {

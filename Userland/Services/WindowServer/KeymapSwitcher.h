@@ -19,7 +19,7 @@ namespace WindowServer {
 class KeymapSwitcher final : public Core::Object {
     C_OBJECT(KeymapSwitcher)
 public:
-    virtual ~KeymapSwitcher() override;
+    virtual ~KeymapSwitcher() override = default;
 
     void next_keymap();
 

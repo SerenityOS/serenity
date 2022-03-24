@@ -69,7 +69,7 @@ public:
 
     static WindowManager& the();
 
-    virtual ~WindowManager() override;
+    virtual ~WindowManager() override = default;
 
     Palette palette() const { return Palette(*m_palette); }
 

@@ -28,7 +28,7 @@ class Menu final : public Core::Object {
     C_OBJECT(Menu);
 
 public:
-    virtual ~Menu() override;
+    virtual ~Menu() override = default;
 
     ConnectionFromClient* client() { return m_client; }
     const ConnectionFromClient* client() const { return m_client; }

@@ -68,10 +68,6 @@ WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
     Compositor::the().did_construct_window_manager({});
 }
 
-WindowManager::~WindowManager()
-{
-}
-
 void WindowManager::reload_config()
 {
     m_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();

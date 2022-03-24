@@ -25,10 +25,6 @@ AppletManager::AppletManager()
     order_vector = order.split(',');
 }
 
-AppletManager::~AppletManager()
-{
-}
-
 AppletManager& AppletManager::the()
 {
     VERIFY(s_the);

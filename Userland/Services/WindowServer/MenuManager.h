@@ -20,7 +20,7 @@ class MenuManager final : public Core::Object {
 public:
     static MenuManager& the();
 
-    virtual ~MenuManager() override;
+    virtual ~MenuManager() override = default;
 
     bool is_open(const Menu&) const;
     bool has_open_menu() const { return !m_open_menu_stack.is_empty(); }

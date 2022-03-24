@@ -16,7 +16,7 @@ namespace Clipboard {
 class Storage {
 public:
     static Storage& the();
-    ~Storage();
+    ~Storage() = default;
 
     bool has_data() const { return m_buffer.is_valid(); }
 
@@ -44,7 +44,7 @@ public:
     const Core::AnonymousBuffer& buffer() const { return m_buffer; }
 
 private:
-    Storage();
+    Storage() = default;
 
     String m_mime_type;
     Core::AnonymousBuffer m_buffer;

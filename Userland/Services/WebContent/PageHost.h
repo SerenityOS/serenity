@@ -19,7 +19,7 @@ class PageHost final : public Web::PageClient {
 
 public:
     static NonnullOwnPtr<PageHost> create(ConnectionFromClient& client) { return adopt_own(*new PageHost(client)); }
-    virtual ~PageHost();
+    virtual ~PageHost() = default;
 
     Web::Page& page() { return *m_page; }
     const Web::Page& page() const { return *m_page; }

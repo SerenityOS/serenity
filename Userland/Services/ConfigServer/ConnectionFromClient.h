@@ -16,7 +16,7 @@ namespace ConfigServer {
 class ConnectionFromClient final : public IPC::ConnectionFromClient<ConfigClientEndpoint, ConfigServerEndpoint> {
     C_OBJECT(ConnectionFromClient)
 public:
-    ~ConnectionFromClient() override;
+    ~ConnectionFromClient() override = default;
 
     virtual void die() override;
 

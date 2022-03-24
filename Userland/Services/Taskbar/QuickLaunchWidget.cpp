@@ -112,10 +112,6 @@ QuickLaunchWidget::QuickLaunchWidget()
     }
 }
 
-QuickLaunchWidget::~QuickLaunchWidget()
-{
-}
-
 OwnPtr<QuickLaunchEntry> QuickLaunchEntry::create_from_config_value(StringView value)
 {
     if (!value.starts_with("/") && value.ends_with(".af")) {

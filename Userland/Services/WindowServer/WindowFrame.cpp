@@ -112,9 +112,7 @@ void WindowFrame::window_was_constructed(Badge<Window>)
     m_has_alpha_channel = Gfx::WindowTheme::current().frame_uses_alpha(window_state_for_theme(), WindowManager::the().palette());
 }
 
-WindowFrame::~WindowFrame()
-{
-}
+WindowFrame::~WindowFrame() = default;
 
 void WindowFrame::set_button_icons()
 {

@@ -18,7 +18,7 @@ class TaskbarWindow final : public GUI::Window {
     C_OBJECT(TaskbarWindow);
 
 public:
-    virtual ~TaskbarWindow() override;
+    virtual ~TaskbarWindow() override = default;
 
     static int taskbar_height() { return 27; }
     static int taskbar_icon_size() { return 16; }

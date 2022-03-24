@@ -13,7 +13,7 @@ namespace InspectorServer {
 class InspectableProcess {
 public:
     InspectableProcess(pid_t, NonnullOwnPtr<Core::Stream::LocalSocket>);
-    ~InspectableProcess();
+    ~InspectableProcess() = default;
 
     void send_request(JsonObject const& request);
     String wait_for_response();

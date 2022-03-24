@@ -19,10 +19,6 @@ Request::Request(ConnectionFromClient& client, NonnullOwnPtr<Core::Stream::File>
 {
 }
 
-Request::~Request()
-{
-}
-
 void Request::stop()
 {
     m_client.did_finish_request({}, *this, false);

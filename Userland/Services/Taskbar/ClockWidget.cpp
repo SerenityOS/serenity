@@ -159,10 +159,6 @@ ClockWidget::ClockWidget()
     };
 }
 
-ClockWidget::~ClockWidget()
-{
-}
-
 void ClockWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
