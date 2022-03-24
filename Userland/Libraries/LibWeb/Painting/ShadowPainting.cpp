@@ -8,6 +8,7 @@
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Filters/FastBoxBlurFilter.h>
 #include <LibGfx/Painter.h>
+#include <LibWeb/Layout/LineBoxFragment.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/Painting/ShadowPainting.h>
 
@@ -121,6 +122,55 @@ void paint_box_shadow(PaintContext& context, Gfx::IntRect const& content_rect, V
 
         // Everything directly to the right of content_rect
         paint_shadow({ content_rect.right() + 1, content_rect.top(), painter.target()->width(), content_rect.height() });
+    }
+}
+
+void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fragment, Vector<ShadowData> const& shadow_layers)
+{
+    if (shadow_layers.is_empty())
+        return;
+
+    auto& painter = context.painter();
+
+    // Note: Box-shadow layers are ordered front-to-back, so we paint them in reverse
+    for (auto& layer : shadow_layers.in_reverse()) {
+
+        // Space around the painted text to allow it to blur.
+        // FIXME: Include spread in this once we use that.
+        auto margin = layer.blur_radius * 2;
+        Gfx::IntRect text_rect {
+            margin, margin,
+            static_cast<int>(ceilf(fragment.width())),
+            static_cast<int>(ceilf(fragment.height()))
+        };
+        Gfx::IntRect bounding_rect {
+            0, 0,
+            text_rect.width() + margin + margin,
+            text_rect.height() + margin + margin
+        };
+        // FIXME: Figure out the maximum bitmap size for all shadows and then allocate it once and reuse it?
+        auto maybe_shadow_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, bounding_rect.size());
+        if (maybe_shadow_bitmap.is_error()) {
+            dbgln("Unable to allocate temporary bitmap for box-shadow rendering: {}", maybe_shadow_bitmap.error());
+            return;
+        }
+        auto shadow_bitmap = maybe_shadow_bitmap.release_value();
+
+        Gfx::Painter shadow_painter { *shadow_bitmap };
+        shadow_painter.set_font(context.painter().font());
+        // FIXME: "Spread" the shadow somehow.
+        shadow_painter.draw_text(text_rect, fragment.text(), Gfx::TextAlignment::TopLeft, layer.color);
+
+        // Blur
+        Gfx::FastBoxBlurFilter filter(*shadow_bitmap);
+        filter.apply_three_passes(layer.blur_radius);
+
+        auto draw_rect = Gfx::enclosing_int_rect(fragment.absolute_rect());
+        Gfx::IntPoint draw_location {
+            draw_rect.x() + layer.offset_x - margin,
+            draw_rect.y() + layer.offset_y - margin
+        };
+        painter.blit(draw_location, *shadow_bitmap, bounding_rect);
     }
 }
 
