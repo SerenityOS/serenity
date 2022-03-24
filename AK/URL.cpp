@@ -178,6 +178,23 @@ URL URL::create_with_file_scheme(String const& path, String const& fragment, Str
     return url;
 }
 
+URL URL::create_with_help_scheme(String const& path, String const& fragment, String const& hostname)
+{
+    LexicalPath lexical_path(path);
+
+    URL url;
+    url.set_scheme("help");
+    // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
+    //       This is because a file URL always needs a non-null hostname.
+    url.set_host(hostname.is_null() || hostname == "localhost" ? String::empty() : hostname);
+    url.set_paths(lexical_path.parts());
+    // NOTE: To indicate that we want to end the path with a slash, we have to append an empty path segment.
+    if (path.ends_with('/'))
+        url.append_path("");
+    url.set_fragment(fragment);
+    return url;
+}
+
 URL URL::create_with_url_or_path(String const& url_or_path)
 {
     URL url = url_or_path;
