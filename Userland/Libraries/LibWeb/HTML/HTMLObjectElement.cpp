@@ -215,7 +215,11 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<String>
     // * If the resource type starts with "image/", and support for images has not been disabled
     // FIXME: Handle disabling image support.
     else if (resource_type.has_value() && resource_type->starts_with("image/"sv)) {
-        // FIXME: If the object element's nested browsing context is non-null, then it must be discarded and then set to null.
+        // If the object element's nested browsing context is non-null, then it must be discarded and then set to null.
+        if (m_nested_browsing_context) {
+            discard_nested_browsing_context();
+            m_nested_browsing_context = nullptr;
+        }
 
         // Apply the image sniffing rules to determine the type of the image.
         // The object element represents the specified image.
