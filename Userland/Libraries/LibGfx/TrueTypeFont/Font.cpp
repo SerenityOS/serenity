@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -167,6 +168,137 @@ Optional<Name> Name::from_slice(ReadonlyBytes slice)
     return Name(slice);
 }
 
+ErrorOr<Kern> Kern::from_slice(ReadonlyBytes slice)
+{
+    if (slice.size() < sizeof(u32))
+        return Error::from_string_literal("Invalid kern table header"sv);
+
+    // We only support the old (2x u16) version of the header
+    auto version = be_u16(slice.data());
+    auto number_of_subtables = be_u16(slice.offset(sizeof(u16)));
+    if (version != 0)
+        return Error::from_string_literal("Unsupported kern table version"sv);
+    if (number_of_subtables == 0)
+        return Error::from_string_literal("Kern table does not contain any subtables"sv);
+
+    // Read all subtable offsets
+    auto subtable_offsets = TRY(FixedArray<size_t>::try_create(number_of_subtables));
+    size_t offset = 2 * sizeof(u16);
+    for (size_t i = 0; i < number_of_subtables; ++i) {
+        if (slice.size() < offset + Sizes::SubtableHeader)
+            return Error::from_string_literal("Invalid kern subtable header"sv);
+
+        subtable_offsets[i] = offset;
+        auto subtable_size = be_u16(slice.offset(offset + sizeof(u16)));
+        offset += subtable_size;
+    }
+
+    return Kern(slice, move(subtable_offsets));
+}
+
+i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
+{
+    VERIFY(left_glyph_id > 0 && right_glyph_id > 0);
+
+    i16 glyph_kerning = 0;
+    for (auto subtable_offset : m_subtable_offsets) {
+        auto subtable_slice = m_slice.slice(subtable_offset);
+
+        auto version = be_u16(subtable_slice.data());
+        auto length = be_u16(subtable_slice.offset(sizeof(u16)));
+        auto coverage = be_u16(subtable_slice.offset(2 * sizeof(u16)));
+
+        if (version != 0) {
+            dbgln("TTF::Kern: unsupported subtable version {}", version);
+            continue;
+        }
+
+        if (subtable_slice.size() < length) {
+            dbgln("TTF::Kern: subtable has an invalid size {}", length);
+            continue;
+        }
+
+        auto is_horizontal = (coverage & (1 << 0)) > 0;
+        auto is_minimum = (coverage & (1 << 1)) > 0;
+        auto is_cross_stream = (coverage & (1 << 2)) > 0;
+        auto is_override = (coverage & (1 << 3)) > 0;
+        auto reserved_bits = (coverage & 0xF0);
+        auto format = (coverage & 0xFF00) >> 8;
+
+        // FIXME: implement support for these features
+        if (!is_horizontal || is_minimum || is_cross_stream || (reserved_bits > 0)) {
+            dbgln("TTF::Kern: FIXME: implement missing feature support for subtable");
+            continue;
+        }
+
+        // FIXME: implement support for subtable formats other than 0
+        Optional<i16> subtable_kerning;
+        switch (format) {
+        case 0:
+            subtable_kerning = read_glyph_kerning_format0(subtable_slice.slice(Sizes::SubtableHeader), left_glyph_id, right_glyph_id);
+            break;
+        default:
+            dbgln("TTF::Kern: FIXME: subtable format {} is unsupported", format);
+            continue;
+        }
+        if (!subtable_kerning.has_value())
+            continue;
+        auto kerning_value = subtable_kerning.release_value();
+
+        if (is_override)
+            glyph_kerning = kerning_value;
+        else
+            glyph_kerning += kerning_value;
+    }
+    return glyph_kerning;
+}
+
+Optional<i16> Kern::read_glyph_kerning_format0(ReadonlyBytes slice, u16 left_glyph_id, u16 right_glyph_id)
+{
+    if (slice.size() < 4 * sizeof(u16))
+        return {};
+
+    u16 number_of_pairs = be_u16(slice.data());
+    u16 search_range = be_u16(slice.offset_pointer(sizeof(u16)));
+    u16 entry_selector = be_u16(slice.offset_pointer(2 * sizeof(u16)));
+    u16 range_shift = be_u16(slice.offset_pointer(3 * sizeof(u16)));
+
+    // Sanity checks for this table format
+    auto pairs_in_search_range = search_range / Sizes::Format0Entry;
+    if (number_of_pairs == 0)
+        return {};
+    if (pairs_in_search_range > number_of_pairs)
+        return {};
+    if ((1 << entry_selector) * Sizes::Format0Entry != search_range)
+        return {};
+    if ((number_of_pairs - pairs_in_search_range) * Sizes::Format0Entry != range_shift)
+        return {};
+
+    // FIXME: implement a possibly slightly more efficient binary search using the parameters above
+    auto search_slice = slice.slice(4 * sizeof(u16));
+    size_t left_idx = 0;
+    size_t right_idx = number_of_pairs - 1;
+    for (auto i = 0; i < 16; ++i) {
+        size_t pivot_idx = (left_idx + right_idx) / 2;
+
+        u16 pivot_left_glyph_id = be_u16(search_slice.offset(pivot_idx * Sizes::Format0Entry + 0));
+        u16 pivot_right_glyph_id = be_u16(search_slice.offset(pivot_idx * Sizes::Format0Entry + 2));
+
+        // Match
+        if (pivot_left_glyph_id == left_glyph_id && pivot_right_glyph_id == right_glyph_id)
+            return be_i16(search_slice.offset(pivot_idx * Sizes::Format0Entry + 4));
+
+        // Narrow search area
+        if (pivot_left_glyph_id < left_glyph_id || (pivot_left_glyph_id == left_glyph_id && pivot_right_glyph_id < right_glyph_id))
+            left_idx = pivot_idx + 1;
+        else if (pivot_idx == left_idx)
+            break;
+        else
+            right_idx = pivot_idx - 1;
+    }
+    return 0;
+}
+
 String Name::string_for_id(NameId id) const
 {
     auto num_entries = be_u16(m_slice.offset_pointer(2));
@@ -274,6 +406,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<ReadonlyBytes> opt_loca_slice = {};
     Optional<ReadonlyBytes> opt_glyf_slice = {};
     Optional<ReadonlyBytes> opt_os2_slice = {};
+    Optional<ReadonlyBytes> opt_kern_slice = {};
 
     Optional<Head> opt_head = {};
     Optional<Name> opt_name = {};
@@ -283,6 +416,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<Cmap> opt_cmap = {};
     Optional<Loca> opt_loca = {};
     Optional<OS2> opt_os2 = {};
+    Optional<Kern> opt_kern = {};
 
     auto num_tables = be_u16(buffer.offset_pointer(offset + (u32)Offsets::NumTables));
     if (buffer.size() < offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord)
@@ -321,6 +455,8 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
             opt_glyf_slice = buffer_here;
         } else if (tag == tag_from_str("OS/2")) {
             opt_os2_slice = buffer_here;
+        } else if (tag == tag_from_str("kern")) {
+            opt_kern_slice = buffer_here;
         }
     }
 
@@ -360,6 +496,10 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         return Error::from_string_literal("Could not load OS/2"sv);
     auto os2 = OS2(opt_os2_slice.value());
 
+    Optional<Kern> kern {};
+    if (opt_kern_slice.has_value())
+        kern = TRY(Kern::from_slice(opt_kern_slice.value()));
+
     // Select cmap table. FIXME: Do this better. Right now, just looks for platform "Windows"
     // and corresponding encoding "Unicode full repertoire", or failing that, "Unicode BMP"
     for (u32 i = 0; i < cmap.num_subtables(); i++) {
@@ -384,7 +524,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         }
     }
 
-    return adopt_ref(*new Font(move(buffer), move(head), move(name), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf), move(os2)));
+    return adopt_ref(*new Font(move(buffer), move(head), move(name), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf), move(os2), move(kern)));
 }
 
 ScaledFontMetrics Font::metrics(float x_scale, float y_scale) const
@@ -418,6 +558,13 @@ ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y_scal
         .advance_width = (int)roundf(horizontal_metrics.advance_width * x_scale),
         .left_side_bearing = (int)roundf(horizontal_metrics.left_side_bearing * x_scale),
     };
+}
+
+i32 Font::glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const
+{
+    if (!m_kern.has_value())
+        return 0;
+    return m_kern->get_glyph_kerning(left_glyph_id, right_glyph_id) * x_scale;
 }
 
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
@@ -510,15 +657,18 @@ ALWAYS_INLINE int ScaledFont::unicode_view_width(T const& view) const
         return 0;
     int width = 0;
     int longest_width = 0;
+    u32 last_code_point = 0;
     for (auto code_point : view) {
         if (code_point == '\n' || code_point == '\r') {
             longest_width = max(width, longest_width);
             width = 0;
+            last_code_point = code_point;
             continue;
         }
         u32 glyph_id = glyph_id_for_code_point(code_point);
-        auto metrics = glyph_metrics(glyph_id);
-        width += metrics.advance_width;
+        auto kerning = glyphs_horizontal_kerning(last_code_point, code_point);
+        width += kerning + glyph_metrics(glyph_id).advance_width;
+        last_code_point = code_point;
     }
     longest_width = max(width, longest_width);
     return longest_width;
@@ -555,6 +705,19 @@ int ScaledFont::glyph_or_emoji_width(u32 code_point) const
     auto id = glyph_id_for_code_point(code_point);
     auto metrics = glyph_metrics(id);
     return metrics.advance_width;
+}
+
+i32 ScaledFont::glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const
+{
+    if (left_code_point == 0 || right_code_point == 0)
+        return 0;
+
+    auto left_glyph_id = glyph_id_for_code_point(left_code_point);
+    auto right_glyph_id = glyph_id_for_code_point(right_code_point);
+    if (left_glyph_id == 0 || right_glyph_id == 0)
+        return 0;
+
+    return m_font->glyphs_horizontal_kerning(left_glyph_id, right_glyph_id, m_x_scale);
 }
 
 u8 ScaledFont::glyph_fixed_width() const

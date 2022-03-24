@@ -54,6 +54,7 @@ public:
             return m_glyph_width;
         return glyph_or_emoji_width_for_variable_width_font(code_point);
     }
+    i32 glyphs_horizontal_kerning(u32, u32) const override { return 0; }
     u8 glyph_height() const override { return m_glyph_height; }
     int x_height() const override { return m_x_height; }
     int preferred_line_height() const override { return glyph_height() + m_line_gap; }

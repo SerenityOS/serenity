@@ -50,6 +50,7 @@ public:
 
     ScaledFontMetrics metrics(float x_scale, float y_scale) const;
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const;
+    i32 glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const;
     RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id, float x_scale, float y_scale) const;
     u32 glyph_count() const;
     u16 units_per_em() const;
@@ -74,7 +75,7 @@ private:
 
     static ErrorOr<NonnullRefPtr<Font>> try_load_from_offset(ReadonlyBytes, unsigned index = 0);
 
-    Font(ReadonlyBytes bytes, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf, OS2&& os2)
+    Font(ReadonlyBytes bytes, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf, OS2&& os2, Optional<Kern>&& kern)
         : m_buffer(move(bytes))
         , m_head(move(head))
         , m_name(move(name))
@@ -85,6 +86,7 @@ private:
         , m_glyf(move(glyf))
         , m_cmap(move(cmap))
         , m_os2(move(os2))
+        , m_kern(move(kern))
     {
     }
 
@@ -102,6 +104,7 @@ private:
     Glyf m_glyf;
     Cmap m_cmap;
     OS2 m_os2;
+    Optional<Kern> m_kern;
 };
 
 class ScaledFont : public Gfx::Font {
@@ -129,6 +132,7 @@ public:
     virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_code_point(code_point) > 0; }
     virtual u8 glyph_width(u32 code_point) const override;
     virtual int glyph_or_emoji_width(u32 code_point) const override;
+    virtual i32 glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const override;
     virtual int preferred_line_height() const override { return metrics().height() + metrics().line_gap; }
     virtual u8 glyph_height() const override { return m_point_height; }
     virtual int x_height() const override { return m_point_height; }      // FIXME: Read from font
@@ -142,7 +146,7 @@ public:
     virtual int width(Utf32View const&) const override;
     virtual String name() const override { return String::formatted("{} {}", family(), variant()); }
     virtual bool is_fixed_width() const override { return m_font->is_fixed_width(); }
-    virtual u8 glyph_spacing() const override { return m_x_scale; } // FIXME: Read from font
+    virtual u8 glyph_spacing() const override { return 0; }
     virtual size_t glyph_count() const override { return m_font->glyph_count(); }
     virtual String family() const override { return m_font->family(); }
     virtual String variant() const override { return m_font->variant(); }
