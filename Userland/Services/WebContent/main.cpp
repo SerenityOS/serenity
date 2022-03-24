@@ -16,7 +16,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Core::EventLoop event_loop;
     TRY(Core::System::pledge("stdio recvfd sendfd accept unix rpath"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/home", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/tmp/portal/request", "rw"));
     TRY(Core::System::unveil("/tmp/portal/image", "rw"));
