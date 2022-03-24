@@ -250,6 +250,11 @@ void HTMLObjectElement::run_object_representation_completed_steps(Representation
 void HTMLObjectElement::run_object_representation_fallback_steps()
 {
     // 6. Fallback: The object element represents the element's children, ignoring any leading param element children. This is the element's fallback content. If the element has an instantiated plugin, then unload it. If the element's nested browsing context is non-null, then it must be discarded and then set to null.
+    if (m_nested_browsing_context) {
+        discard_nested_browsing_context();
+        m_nested_browsing_context = nullptr;
+    }
+
     update_layout_and_child_objects(Representation::Children);
 }
 
