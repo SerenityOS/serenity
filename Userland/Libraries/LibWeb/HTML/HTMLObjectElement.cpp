@@ -183,8 +183,7 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<String>
             m_nested_browsing_context->loader().load(url, FrameLoader::Type::IFrame);
 
         // The object element represents its nested browsing context.
-        m_representation = Representation::NestedBrowsingContext;
-        run_object_representation_completed_steps();
+        run_object_representation_completed_steps(Representation::NestedBrowsingContext);
     }
 
     // * If the resource type starts with "image/", and support for images has not been disabled
@@ -194,8 +193,6 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<String>
 
         // Apply the image sniffing rules to determine the type of the image.
         // The object element represents the specified image.
-        m_representation = Representation::Image;
-
         // If the image cannot be rendered, e.g. because it is malformed or in an unsupported format, jump to the step below labeled fallback.
         if (!resource()->has_encoded_data())
             return run_object_representation_fallback_steps();
@@ -211,17 +208,17 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<String>
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element:the-object-element-19
-void HTMLObjectElement::run_object_representation_completed_steps()
+void HTMLObjectElement::run_object_representation_completed_steps(Representation representation)
 {
     // 4.10. The element's contents are not part of what the object element represents.
     // 4.11. If the object element does not represent its nested browsing context, then once the resource is completely loaded, queue an element task on the DOM manipulation task source given the object element to fire an event named load at the element.
-    if (m_representation != Representation::NestedBrowsingContext) {
+    if (representation != Representation::NestedBrowsingContext) {
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [&]() {
             dispatch_event(DOM::Event::create(HTML::EventNames::load));
         });
     }
 
-    update_layout_and_child_objects();
+    update_layout_and_child_objects(representation);
 
     // 4.12. Return.
 }
@@ -230,8 +227,7 @@ void HTMLObjectElement::run_object_representation_completed_steps()
 void HTMLObjectElement::run_object_representation_fallback_steps()
 {
     // 6. Fallback: The object element represents the element's children, ignoring any leading param element children. This is the element's fallback content. If the element has an instantiated plugin, then unload it. If the element's nested browsing context is non-null, then it must be discarded and then set to null.
-    m_representation = Representation::Children;
-    update_layout_and_child_objects();
+    update_layout_and_child_objects(Representation::Children);
 }
 
 void HTMLObjectElement::convert_resource_to_image()
@@ -243,7 +239,7 @@ void HTMLObjectElement::convert_resource_to_image()
     m_image_loader.emplace(*this);
 
     m_image_loader->on_load = [this] {
-        run_object_representation_completed_steps();
+        run_object_representation_completed_steps(Representation::Image);
     };
     m_image_loader->on_fail = [this] {
         run_object_representation_fallback_steps();
@@ -252,13 +248,17 @@ void HTMLObjectElement::convert_resource_to_image()
     m_image_loader->adopt_object_resource({}, *resource());
 }
 
-void HTMLObjectElement::update_layout_and_child_objects()
+void HTMLObjectElement::update_layout_and_child_objects(Representation representation)
 {
-    for_each_child_of_type<HTMLObjectElement>([](auto& object) {
-        object.queue_element_task_to_run_object_representation_steps();
-        return IterationDecision::Continue;
-    });
+    if ((m_representation == Representation::Children && representation != Representation::Children)
+        || (m_representation != Representation::Children && representation == Representation::Children)) {
+        for_each_child_of_type<HTMLObjectElement>([](auto& object) {
+            object.queue_element_task_to_run_object_representation_steps();
+            return IterationDecision::Continue;
+        });
+    }
 
+    m_representation = representation;
     set_needs_style_update(true);
     document().set_needs_layout();
 }
