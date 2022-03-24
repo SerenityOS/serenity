@@ -12,6 +12,7 @@
 #include <LibWeb/HTML/HTMLObjectElement.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/MimeSniff/MimeType.h>
 
 namespace Web::HTML {
 
@@ -187,6 +188,19 @@ void HTMLObjectElement::resource_did_load()
     run_object_representation_handler_steps(move(resource_type));
 }
 
+static bool is_xml_mime_type(StringView resource_type)
+{
+    auto mime_type = MimeSniff::MimeType::from_string(resource_type);
+    if (!mime_type.has_value())
+        return false;
+
+    // An XML MIME type is any MIME type whose subtype ends in "+xml" or whose essence is "text/xml" or "application/xml". [RFC7303]
+    if (mime_type->subtype().ends_with("+xml"))
+        return true;
+
+    return mime_type->essence().is_one_of("text/xml"sv, "application/xml"sv);
+}
+
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element:plugin-11
 void HTMLObjectElement::run_object_representation_handler_steps(Optional<String> resource_type)
 {
@@ -198,8 +212,7 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<String>
     //     Otherwise, the user agent should use the plugin that supports resource type and pass the content of the resource to that plugin. If the plugin reports an error, then jump to the step below labeled fallback.
 
     // * If the resource type is an XML MIME type, or if the resource type does not start with "image/"
-    // FIXME: Handle XML MIME types.
-    if (resource_type.has_value() && !resource_type->starts_with("image/"sv)) {
+    if (resource_type.has_value() && (is_xml_mime_type(*resource_type) || !resource_type->starts_with("image/"sv))) {
         // If the object element's nested browsing context is null, then create a new nested browsing context for the element.
         if (!m_nested_browsing_context)
             create_new_nested_browsing_context();
