@@ -4486,12 +4486,14 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     if (is_n_dimension(first_value)) {
         a = first_value.token().dimension_value_int();
 
-        values.skip_whitespace();
-        auto& second_value = values.next_token();
-        if (second_value.is(Token::Type::EndOfFile)) {
+        if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
             // <n-dimension>
             return make_return_value();
-        } else if (is_signed_integer(second_value)) {
+        }
+
+        values.skip_whitespace();
+        auto& second_value = values.next_token();
+        if (is_signed_integer(second_value)) {
             // <n-dimension> <signed-integer>
             b = second_value.token().to_integer();
             return make_return_value();
@@ -4547,12 +4549,14 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // -n ['+' | '-'] <signless-integer>
     if (is_dashn(first_value)) {
         a = -1;
-        values.skip_whitespace();
-        auto& second_value = values.next_token();
-        if (second_value.is(Token::Type::EndOfFile)) {
+        if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
             // -n
             return make_return_value();
-        } else if (is_signed_integer(second_value)) {
+        }
+
+        values.skip_whitespace();
+        auto& second_value = values.next_token();
+        if (is_signed_integer(second_value)) {
             // -n <signed-integer>
             b = second_value.token().to_integer();
             return make_return_value();
@@ -4600,12 +4604,14 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // '+'?† n ['+' | '-'] <signless-integer>
     if (is_n(first_after_plus)) {
         a = 1;
-        values.skip_whitespace();
-        auto& second_value = values.next_token();
-        if (second_value.is(Token::Type::EndOfFile)) {
+        if (!values.has_next_token() || values.peek_token().is(Token::Type::Whitespace)) {
             // '+'?† n
             return make_return_value();
-        } else if (is_signed_integer(second_value)) {
+        }
+
+        values.skip_whitespace();
+        auto& second_value = values.next_token();
+        if (is_signed_integer(second_value)) {
             // '+'?† n <signed-integer>
             b = second_value.token().to_integer();
             return make_return_value();
