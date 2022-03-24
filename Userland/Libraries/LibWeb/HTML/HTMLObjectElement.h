@@ -8,6 +8,7 @@
 
 #include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>
+#include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Loader/ImageLoader.h>
@@ -15,10 +16,17 @@
 namespace Web::HTML {
 
 class HTMLObjectElement final
-    : public HTMLElement
+    : public BrowsingContextContainer
     , public FormAssociatedElement
     , public ResourceClient {
-    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLObjectElement)
+    FORM_ASSOCIATED_ELEMENT(BrowsingContextContainer, HTMLObjectElement)
+
+    enum class Representation {
+        Unknown,
+        Image,
+        NestedBrowsingContext,
+        Children,
+    };
 
 public:
     using WrapperType = Bindings::HTMLObjectElementWrapper;
@@ -52,8 +60,8 @@ private:
     virtual void resource_did_load() override;
     virtual void resource_did_fail() override;
 
+    Representation m_representation { Representation::Unknown };
     Optional<ImageLoader> m_image_loader;
-    bool m_should_show_fallback_content { false };
 };
 
 }

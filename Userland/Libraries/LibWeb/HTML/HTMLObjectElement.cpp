@@ -15,7 +15,7 @@
 namespace Web::HTML {
 
 HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
-    : HTMLElement(document, move(qualified_name))
+    : BrowsingContextContainer(document, move(qualified_name))
 {
 }
 
@@ -23,7 +23,7 @@ HTMLObjectElement::~HTMLObjectElement() = default;
 
 void HTMLObjectElement::parse_attribute(const FlyString& name, const String& value)
 {
-    HTMLElement::parse_attribute(name, value);
+    BrowsingContextContainer::parse_attribute(name, value);
 
     if (name == HTML::AttributeNames::data)
         queue_element_task_to_run_object_representation_steps();
@@ -38,10 +38,20 @@ String HTMLObjectElement::data() const
 
 RefPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
 {
-    if (m_should_show_fallback_content)
-        return HTMLElement::create_layout_node(move(style));
-    if (m_image_loader.has_value() && m_image_loader->has_image())
-        return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), *m_image_loader));
+    switch (m_representation) {
+    case Representation::Children:
+        return BrowsingContextContainer::create_layout_node(move(style));
+    case Representation::NestedBrowsingContext:
+        // FIXME: Actually paint the nested browsing context's document, similar to how iframes are painted with FrameBox and NestedBrowsingContextPaintable.
+        return nullptr;
+    case Representation::Image:
+        if (m_image_loader.has_value() && m_image_loader->has_image())
+            return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), *m_image_loader));
+        break;
+    default:
+        break;
+    }
+
     return nullptr;
 }
 
@@ -161,17 +171,31 @@ void HTMLObjectElement::run_object_representation_handler_steps(StringView resou
     //     If plugins are being sandboxed, then jump to the step below labeled fallback.
     //     Otherwise, the user agent should use the plugin that supports resource type and pass the content of the resource to that plugin. If the plugin reports an error, then jump to the step below labeled fallback.
 
-    // * FIXME: If the resource type is an XML MIME type, or if the resource type does not start with "image/"
-    //     If the object element's nested browsing context is null, then create a new nested browsing context for the element.
-    //     If the URL of the given resource does not match about:blank, then navigate the element's nested browsing context to that resource, with historyHandling set to "replace" and the source browsing context set to the object element's node document's browsing context. (The data attribute of the object element doesn't get updated if the browsing context gets further navigated to other locations.)
-    //     The object element represents its nested browsing context.
+    // * If the resource type is an XML MIME type, or if the resource type does not start with "image/"
+    // FIXME: Handle XML MIME types.
+    if (!resource_type.starts_with("image/"sv)) {
+        // If the object element's nested browsing context is null, then create a new nested browsing context for the element.
+        if (!m_nested_browsing_context)
+            create_new_nested_browsing_context();
+
+        // If the URL of the given resource does not match about:blank, then navigate the element's nested browsing context to that resource, with historyHandling set to "replace" and the source browsing context set to the object element's node document's browsing context. (The data attribute of the object element doesn't get updated if the browsing context gets further navigated to other locations.)
+        if (auto const& url = resource()->url(); url != "about:blank"sv)
+            m_nested_browsing_context->loader().load(url, FrameLoader::Type::IFrame);
+
+        // The object element represents its nested browsing context.
+        m_representation = Representation::NestedBrowsingContext;
+        run_object_representation_completed_steps();
+    }
 
     // * If the resource type starts with "image/", and support for images has not been disabled
-    if (resource_type.starts_with("image/"sv)) {
+    // FIXME: Handle disabling image support.
+    else if (resource_type.starts_with("image/"sv)) {
         // FIXME: If the object element's nested browsing context is non-null, then it must be discarded and then set to null.
 
         // Apply the image sniffing rules to determine the type of the image.
         // The object element represents the specified image.
+        m_representation = Representation::Image;
+
         // If the image cannot be rendered, e.g. because it is malformed or in an unsupported format, jump to the step below labeled fallback.
         if (!resource()->has_encoded_data())
             return run_object_representation_fallback_steps();
@@ -191,11 +215,12 @@ void HTMLObjectElement::run_object_representation_completed_steps()
 {
     // 4.10. The element's contents are not part of what the object element represents.
     // 4.11. If the object element does not represent its nested browsing context, then once the resource is completely loaded, queue an element task on the DOM manipulation task source given the object element to fire an event named load at the element.
-    queue_an_element_task(HTML::Task::Source::DOMManipulation, [&]() {
-        dispatch_event(DOM::Event::create(HTML::EventNames::load));
-    });
+    if (m_representation != Representation::NestedBrowsingContext) {
+        queue_an_element_task(HTML::Task::Source::DOMManipulation, [&]() {
+            dispatch_event(DOM::Event::create(HTML::EventNames::load));
+        });
+    }
 
-    m_should_show_fallback_content = false;
     update_layout_and_child_objects();
 
     // 4.12. Return.
@@ -205,7 +230,7 @@ void HTMLObjectElement::run_object_representation_completed_steps()
 void HTMLObjectElement::run_object_representation_fallback_steps()
 {
     // 6. Fallback: The object element represents the element's children, ignoring any leading param element children. This is the element's fallback content. If the element has an instantiated plugin, then unload it. If the element's nested browsing context is non-null, then it must be discarded and then set to null.
-    m_should_show_fallback_content = true;
+    m_representation = Representation::Children;
     update_layout_and_child_objects();
 }
 
