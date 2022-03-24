@@ -29,7 +29,14 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       let childOutput = spawnSync(executablePath, [tmpFile.name]);
-      if (childOutput.status != 0) {
+      // Return Codes:
+      // 0: Nothing changed
+      // 1: Some lines changed
+      // *: Error
+      if (childOutput.status == 0)
+        return [];
+
+      if (childOutput.status && childOutput.status > 1) {
         vscode.window.showErrorMessage(
             `gml-format failed with exit-code: ${childOutput.status}`,
             childOutput.stderr.toString());
