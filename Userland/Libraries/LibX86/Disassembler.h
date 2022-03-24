@@ -23,7 +23,7 @@ public:
         if (!m_stream.can_read())
             return {};
 #if ARCH(I386)
-        return Instruction::from_stream(m_stream, true, true);
+        return Instruction::from_stream(m_stream, OperandSize::Size32, AddressSize::Size32);
 #else
         dbgln("FIXME: Implement disassembly support for x86_64");
         return {};

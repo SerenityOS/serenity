@@ -14,10 +14,8 @@
 
 namespace X86 {
 
-InstructionDescriptor s_table16[256];
-InstructionDescriptor s_table32[256];
-InstructionDescriptor s_0f_table16[256];
-InstructionDescriptor s_0f_table32[256];
+InstructionDescriptor s_table[2][256];
+InstructionDescriptor s_0f_table[2][256];
 InstructionDescriptor s_sse_table_np[256];
 InstructionDescriptor s_sse_table_66[256];
 InstructionDescriptor s_sse_table_f3[256];
@@ -246,68 +244,68 @@ static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm,
 
 static void build_0f(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_0f_table16, op, mnemonic, format, impl, lock_prefix_allowed);
-    build(s_0f_table32, op, mnemonic, format, impl, lock_prefix_allowed);
+    build(s_0f_table[to_underlying(OperandSize::Size16)], op, mnemonic, format, impl, lock_prefix_allowed);
+    build(s_0f_table[to_underlying(OperandSize::Size32)], op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 static void build(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_table16, op, mnemonic, format, impl, lock_prefix_allowed);
-    build(s_table32, op, mnemonic, format, impl, lock_prefix_allowed);
+    build(s_table[to_underlying(OperandSize::Size16)], op, mnemonic, format, impl, lock_prefix_allowed);
+    build(s_table[to_underlying(OperandSize::Size32)], op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 static void build(u8 op, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_table16, op, mnemonic, format16, impl16, lock_prefix_allowed);
-    build(s_table32, op, mnemonic, format32, impl32, lock_prefix_allowed);
+    build(s_table[to_underlying(OperandSize::Size16)], op, mnemonic, format16, impl16, lock_prefix_allowed);
+    build(s_table[to_underlying(OperandSize::Size32)], op, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
 static void build_0f(u8 op, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_0f_table16, op, mnemonic, format16, impl16, lock_prefix_allowed);
-    build(s_0f_table32, op, mnemonic, format32, impl32, lock_prefix_allowed);
+    build(s_0f_table[to_underlying(OperandSize::Size16)], op, mnemonic, format16, impl16, lock_prefix_allowed);
+    build(s_0f_table[to_underlying(OperandSize::Size32)], op, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
 static void build(u8 op, char const* mnemonic16, InstructionFormat format16, InstructionHandler impl16, char const* mnemonic32, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_table16, op, mnemonic16, format16, impl16, lock_prefix_allowed);
-    build(s_table32, op, mnemonic32, format32, impl32, lock_prefix_allowed);
+    build(s_table[to_underlying(OperandSize::Size16)], op, mnemonic16, format16, impl16, lock_prefix_allowed);
+    build(s_table[to_underlying(OperandSize::Size32)], op, mnemonic32, format32, impl32, lock_prefix_allowed);
 }
 
 static void build_0f(u8 op, char const* mnemonic16, InstructionFormat format16, InstructionHandler impl16, char const* mnemonic32, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(s_0f_table16, op, mnemonic16, format16, impl16, lock_prefix_allowed);
-    build(s_0f_table32, op, mnemonic32, format32, impl32, lock_prefix_allowed);
+    build(s_0f_table[to_underlying(OperandSize::Size16)], op, mnemonic16, format16, impl16, lock_prefix_allowed);
+    build(s_0f_table[to_underlying(OperandSize::Size32)], op, mnemonic32, format32, impl32, lock_prefix_allowed);
 }
 
 static void build_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build_slash(s_table16, op, slash, mnemonic, format, impl, lock_prefix_allowed);
-    build_slash(s_table32, op, slash, mnemonic, format, impl, lock_prefix_allowed);
+    build_slash(s_table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
+    build_slash(s_table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 static void build_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build_slash(s_table16, op, slash, mnemonic, format16, impl16, lock_prefix_allowed);
-    build_slash(s_table32, op, slash, mnemonic, format32, impl32, lock_prefix_allowed);
+    build_slash(s_table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format16, impl16, lock_prefix_allowed);
+    build_slash(s_table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
 static void build_0f_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build_slash(s_0f_table16, op, slash, mnemonic, format16, impl16, lock_prefix_allowed);
-    build_slash(s_0f_table32, op, slash, mnemonic, format32, impl32, lock_prefix_allowed);
+    build_slash(s_0f_table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format16, impl16, lock_prefix_allowed);
+    build_slash(s_0f_table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
 static void build_0f_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build_slash(s_0f_table16, op, slash, mnemonic, format, impl, lock_prefix_allowed);
-    build_slash(s_0f_table32, op, slash, mnemonic, format, impl, lock_prefix_allowed);
+    build_slash(s_0f_table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
+    build_slash(s_0f_table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 static void build_slash_rm(u8 op, u8 slash, u8 rm, char const* mnemonic, InstructionFormat format, InstructionHandler impl)
 {
-    build_slash_rm(s_table16, op, slash, rm, mnemonic, format, impl);
-    build_slash_rm(s_table32, op, slash, rm, mnemonic, format, impl);
+    build_slash_rm(s_table[to_underlying(OperandSize::Size16)], op, slash, rm, mnemonic, format, impl);
+    build_slash_rm(s_table[to_underlying(OperandSize::Size32)], op, slash, rm, mnemonic, format, impl);
 }
 
 static void build_slash_reg(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl)
@@ -318,40 +316,39 @@ static void build_slash_reg(u8 op, u8 slash, char const* mnemonic, InstructionFo
 
 static void build_sse_np(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    if (s_0f_table32[op].format != __SSE)
+    if (s_0f_table[to_underlying(OperandSize::Size32)][op].format == InvalidFormat) {
+        build_0f(op, mnemonic, format, impl, lock_prefix_allowed);
+        build(s_sse_table_np, op, mnemonic, format, impl, lock_prefix_allowed);
+        return;
+    }
+    if (s_0f_table[to_underlying(OperandSize::Size32)][op].format != __SSE)
         build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
 
-    VERIFY(s_0f_table32[op].format == __SSE);
-    VERIFY(s_sse_table_np[op].format == InvalidFormat);
-
+    VERIFY(s_0f_table[to_underlying(OperandSize::Size32)][op].format == __SSE);
     build(s_sse_table_np, op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 static void build_sse_66(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    if (s_0f_table32[op].format != __SSE)
+    if (s_0f_table[to_underlying(OperandSize::Size32)][op].format != __SSE)
         build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
-    VERIFY(s_0f_table32[op].format == __SSE);
-    VERIFY(s_sse_table_66[op].format == InvalidFormat);
-
+    VERIFY(s_0f_table[to_underlying(AddressSize::Size32)][op].format == __SSE);
     build(s_sse_table_66, op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 static void build_sse_f3(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    if (s_0f_table32[op].format != __SSE)
+    if (s_0f_table[to_underlying(OperandSize::Size32)][op].format != __SSE)
         build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
-    VERIFY(s_0f_table32[op].format == __SSE);
-    VERIFY(s_sse_table_f3[op].format == InvalidFormat);
-
+    VERIFY(s_0f_table[to_underlying(OperandSize::Size32)][op].format == __SSE);
     build(s_sse_table_f3, op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 static void build_sse_f2(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    if (s_0f_table32[op].format != __SSE)
+    if (s_0f_table[to_underlying(OperandSize::Size32)][op].format != __SSE)
         build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
-    VERIFY(s_0f_table32[op].format == __SSE);
+    VERIFY(s_0f_table[to_underlying(OperandSize::Size32)][op].format == __SSE);
     VERIFY(s_sse_table_f2[op].format == InvalidFormat);
 
     build(s_sse_table_f2, op, mnemonic, format, impl, lock_prefix_allowed);
@@ -359,18 +356,18 @@ static void build_sse_f2(u8 op, char const* mnemonic, InstructionFormat format, 
 
 static void build_sse_np_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    if (s_0f_table32[op].format != __SSE)
+    if (s_0f_table[to_underlying(OperandSize::Size32)][op].format != __SSE)
         build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
 
-    VERIFY(s_0f_table32[op].format == __SSE);
+    VERIFY(s_0f_table[to_underlying(OperandSize::Size32)][op].format == __SSE);
     build_slash(s_sse_table_np, op, slash, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 static void build_sse_66_slash(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    if (s_0f_table32[op].format != __SSE)
+    if (s_0f_table[to_underlying(OperandSize::Size32)][op].format != __SSE)
         build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
-    VERIFY(s_0f_table32[op].format == __SSE);
+    VERIFY(s_0f_table[to_underlying(OperandSize::Size32)][op].format == __SSE);
     build_slash(s_sse_table_66, op, slash, mnemonic, format, impl, lock_prefix_allowed);
 }
 
@@ -1309,9 +1306,13 @@ String MemoryOrRegisterReference::to_string_xmm(Instruction const& insn) const
 
 String MemoryOrRegisterReference::to_string(Instruction const& insn) const
 {
-    if (insn.a32())
+    switch (insn.address_size()) {
+    case AddressSize::Size32:
         return to_string_a32();
-    return to_string_a16();
+    case AddressSize::Size16:
+        return to_string_a16();
+    }
+    VERIFY_NOT_REACHED();
 }
 
 String MemoryOrRegisterReference::to_string_a16() const
@@ -1532,11 +1533,26 @@ String Instruction::to_string(u32 origin, SymbolProvider const* symbol_provider,
     StringBuilder builder;
     if (has_segment_prefix())
         builder.appendff("{}: ", register_name(segment_prefix().value()));
-    if (has_address_size_override_prefix())
-        builder.append(m_a32 ? "a32 "sv : "a16 "sv);
-    // Note: SSE2 Uses this to change to doubles in SSE instruction or xmm registers in MMX instructions
-    if (has_operand_size_override_prefix() && !(m_descriptor->format > __SSE && m_descriptor->format < __EndFormatsWithRMByte))
-        builder.append(m_o32 ? "o32 "sv : "o16 "sv);
+    if (has_address_size_override_prefix()) {
+        switch (m_address_size) {
+        case AddressSize::Size16:
+            builder.append("a16"sv);
+            break;
+        case AddressSize::Size32:
+            builder.append("a32"sv);
+            break;
+        }
+    }
+    if (has_operand_size_override_prefix()) {
+        switch (m_operand_size) {
+        case OperandSize::Size16:
+            builder.append("o16"sv);
+            break;
+        case OperandSize::Size32:
+            builder.append("o32"sv);
+            break;
+        }
+    }
     if (has_lock_prefix())
         builder.append("lock "sv);
     // Note: SSE instructions use these to toggle between packed and single data
@@ -1597,7 +1613,15 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     auto append_seg = [&] { builder.append(register_name(segment_register())); };
     auto append_creg = [&] { builder.appendff("cr{}", register_index()); };
     auto append_dreg = [&] { builder.appendff("dr{}", register_index()); };
-    auto append_relative_addr = [&] { formatted_address(origin + (m_a32 ? 6 : 4), x32, i32(m_a32 ? imm32() : imm16())); };
+    auto append_relative_addr = [&] {
+        if (m_address_size == AddressSize::Size32) {
+            formatted_address(origin + 6, x32, i32(imm32()));
+        } else if (m_address_size == AddressSize::Size16) {
+            formatted_address(origin + 4, x32, i32(imm16()));
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+    };
     auto append_relative_imm8 = [&] { formatted_address(origin + 2, x32, i8(imm8())); };
     auto append_relative_imm16 = [&] { formatted_address(origin + 3, x32, i16(imm16())); };
     auto append_relative_imm32 = [&] { formatted_address(origin + 5, x32, i32(imm32())); };
@@ -1629,10 +1653,12 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     auto append = [&](auto content) { builder.append(content); };
     auto append_moff = [&] {
         builder.append('[');
-        if (m_a32) {
+        if (m_address_size == AddressSize::Size32) {
             append_imm32();
-        } else {
+        } else if (m_address_size == AddressSize::Size16) {
             append_imm16();
+        } else {
+            VERIFY_NOT_REACHED();
         }
         builder.append(']');
     };
@@ -2143,7 +2169,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         break;
     case OP_reg:
         append_mnemonic_space();
-        if (m_o32)
+        if (m_operand_size == OperandSize::Size32)
             append_reg32();
         else
             append_reg16();

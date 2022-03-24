@@ -175,64 +175,83 @@ public:
             return gpr32((X86::RegisterIndex32)register_index);
     }
 
-    ValueWithShadow<u32> source_index(bool a32) const
+    ValueWithShadow<u32> source_index(X86::AddressSize address_size) const
     {
-        if (a32)
+        if (address_size == X86::AddressSize::Size32)
             return esi();
-        return { si().value(), (u32)si().shadow_as_value() & 0xffff };
+        if (address_size == X86::AddressSize::Size16)
+            return { si().value(), (u32)si().shadow_as_value() & 0xffff };
+        VERIFY_NOT_REACHED();
     }
 
-    ValueWithShadow<u32> destination_index(bool a32) const
+    ValueWithShadow<u32> destination_index(X86::AddressSize address_size) const
     {
-        if (a32)
+        if (address_size == X86::AddressSize::Size32)
             return edi();
-        return { di().value(), (u32)di().shadow_as_value() & 0xffff };
+        if (address_size == X86::AddressSize::Size16)
+            return { di().value(), (u32)di().shadow_as_value() & 0xffff };
+        VERIFY_NOT_REACHED();
     }
 
-    ValueWithShadow<u32> loop_index(bool a32) const
+    ValueWithShadow<u32> loop_index(X86::AddressSize address_size) const
     {
-        if (a32)
+        if (address_size == X86::AddressSize::Size32)
             return ecx();
-        return { cx().value(), (u32)cx().shadow_as_value() & 0xffff };
+        if (address_size == X86::AddressSize::Size16)
+            return { cx().value(), (u32)cx().shadow_as_value() & 0xffff };
+        VERIFY_NOT_REACHED();
     }
 
-    bool decrement_loop_index(bool a32)
+    bool decrement_loop_index(X86::AddressSize address_size)
     {
-        if (a32) {
+        switch (address_size) {
+        case X86::AddressSize::Size32:
             set_ecx({ ecx().value() - 1, ecx().shadow() });
             return ecx().value() == 0;
+        case X86::AddressSize::Size16:
+            set_cx(ValueWithShadow<u16>(cx().value() - 1, cx().shadow()));
+            return cx().value() == 0;
         }
-        set_cx(ValueWithShadow<u16>(cx().value() - 1, cx().shadow()));
-        return cx().value() == 0;
+        VERIFY_NOT_REACHED();
     }
 
-    ALWAYS_INLINE void step_source_index(bool a32, u32 step)
+    ALWAYS_INLINE void step_source_index(X86::AddressSize address_size, u32 step)
     {
-        if (a32) {
+        switch (address_size) {
+        case X86::AddressSize::Size32:
             if (df())
                 set_esi({ esi().value() - step, esi().shadow() });
             else
                 set_esi({ esi().value() + step, esi().shadow() });
-        } else {
+            break;
+        case X86::AddressSize::Size16:
             if (df())
                 set_si(ValueWithShadow<u16>(si().value() - step, si().shadow()));
             else
                 set_si(ValueWithShadow<u16>(si().value() + step, si().shadow()));
+            break;
+        default:
+            VERIFY_NOT_REACHED();
         }
     }
 
-    ALWAYS_INLINE void step_destination_index(bool a32, u32 step)
+    ALWAYS_INLINE void step_destination_index(X86::AddressSize address_size, u32 step)
     {
-        if (a32) {
+        switch (address_size) {
+        case X86::AddressSize::Size32:
             if (df())
                 set_edi({ edi().value() - step, edi().shadow() });
             else
                 set_edi({ edi().value() + step, edi().shadow() });
-        } else {
+            break;
+        case X86::AddressSize::Size16:
             if (df())
                 set_di(ValueWithShadow<u16>(di().value() - step, di().shadow()));
             else
                 set_di(ValueWithShadow<u16>(di().value() + step, di().shadow()));
+            break;
+        default:
+            VERIFY_NOT_REACHED();
         }
     }
 

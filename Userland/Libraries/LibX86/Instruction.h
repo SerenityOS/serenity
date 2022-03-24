@@ -42,6 +42,16 @@ constexpr T sign_extended_to(U value)
     return (TypeTrivia<T>::mask & ~TypeTrivia<U>::mask) | value;
 }
 
+enum class OperandSize : u8 {
+    Size16,
+    Size32,
+};
+
+enum class AddressSize : u8 {
+    Size16,
+    Size32,
+};
+
 enum IsLockPrefixAllowed {
     LockPrefixNotAllowed = 0,
     LockPrefixAllowed
@@ -214,27 +224,39 @@ struct InstructionDescriptor {
     // a non-null slashes member that's indexed by the three R/M bits.
     InstructionDescriptor* slashes { nullptr };
 
-    unsigned imm1_bytes_for_address_size(bool a32) const
+    unsigned imm1_bytes_for_address_size(AddressSize size) const
     {
-        if (imm1_bytes == CurrentAddressSize)
-            return a32 ? 4 : 2;
+        if (imm1_bytes == CurrentAddressSize) {
+            switch (size) {
+            case AddressSize::Size32:
+                return 4;
+            case AddressSize::Size16:
+                return 2;
+            }
+            VERIFY_NOT_REACHED();
+        }
         return imm1_bytes;
     }
 
-    unsigned imm2_bytes_for_address_size(bool a32) const
+    unsigned imm2_bytes_for_address_size(AddressSize size) const
     {
-        if (imm2_bytes == CurrentAddressSize)
-            return a32 ? 4 : 2;
+        if (imm2_bytes == CurrentAddressSize) {
+            switch (size) {
+            case AddressSize::Size32:
+                return 4;
+            case AddressSize::Size16:
+                return 2;
+            }
+            VERIFY_NOT_REACHED();
+        }
         return imm2_bytes;
     }
 
     IsLockPrefixAllowed lock_prefix_allowed { LockPrefixNotAllowed };
 };
 
-extern InstructionDescriptor s_table16[256];
-extern InstructionDescriptor s_table32[256];
-extern InstructionDescriptor s_0f_table16[256];
-extern InstructionDescriptor s_0f_table32[256];
+extern InstructionDescriptor s_table[2][256];
+extern InstructionDescriptor s_0f_table[2][256];
 extern InstructionDescriptor s_sse_table_np[256];
 extern InstructionDescriptor s_sse_table_66[256];
 extern InstructionDescriptor s_sse_table_f3[256];
@@ -469,7 +491,7 @@ private:
     String to_string_a32() const;
 
     template<typename InstructionStreamType>
-    void decode(InstructionStreamType&, bool a32);
+    void decode(InstructionStreamType&, AddressSize);
     template<typename InstructionStreamType>
     void decode16(InstructionStreamType&);
     template<typename InstructionStreamType>
@@ -497,7 +519,7 @@ private:
 class Instruction {
 public:
     template<typename InstructionStreamType>
-    static Instruction from_stream(InstructionStreamType&, bool o32, bool a32);
+    static Instruction from_stream(InstructionStreamType&, OperandSize, AddressSize);
     ~Instruction() = default;
 
     ALWAYS_INLINE MemoryOrRegisterReference& modrm() const { return m_modrm; }
@@ -537,7 +559,16 @@ public:
     u16 imm16_2() const { return m_imm2; }
     u32 imm32_1() const { return imm32(); }
     u32 imm32_2() const { return m_imm2; }
-    u32 imm_address() const { return m_a32 ? imm32() : imm16(); }
+    u32 imm_address() const
+    {
+        switch (m_address_size) {
+        case AddressSize::Size32:
+            return imm32();
+        case AddressSize::Size16:
+            return imm16();
+        }
+        VERIFY_NOT_REACHED();
+    }
 
     LogicalAddress imm_address16_16() const { return LogicalAddress(imm16_1(), imm16_2()); }
     LogicalAddress imm_address16_32() const { return LogicalAddress(imm16_1(), imm32_2()); }
@@ -556,13 +587,13 @@ public:
 
     u8 cc() const { return has_sub_op() ? m_sub_op & 0xf : m_op & 0xf; }
 
-    bool a32() const { return m_a32; }
+    AddressSize address_size() const { return m_address_size; }
 
     String to_string(u32 origin, SymbolProvider const* = nullptr, bool x32 = true) const;
 
 private:
     template<typename InstructionStreamType>
-    Instruction(InstructionStreamType&, bool o32, bool a32);
+    Instruction(InstructionStreamType&, OperandSize, AddressSize);
 
     void to_string_internal(StringBuilder&, u32 origin, SymbolProvider const*, bool x32) const;
 
@@ -580,8 +611,8 @@ private:
     u8 m_sub_op { 0 };
     u8 m_extra_bytes { 0 };
     u8 m_rep_prefix { 0 };
-    bool m_a32 : 1 { false };
-    bool m_o32 : 1 { false };
+    OperandSize m_operand_size { OperandSize::Size16 };
+    AddressSize m_address_size { AddressSize::Size16 };
     bool m_has_lock_prefix : 1 { false };
     bool m_has_operand_size_override_prefix : 1 { false };
     bool m_has_address_size_override_prefix : 1 { false };
@@ -819,9 +850,9 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType256 MemoryOrRegisterReference::re
 }
 
 template<typename InstructionStreamType>
-ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStreamType& stream, bool o32, bool a32)
+ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStreamType& stream, OperandSize operand_size, AddressSize address_size)
 {
-    return Instruction(stream, o32, a32);
+    return Instruction(stream, operand_size, address_size);
 }
 
 ALWAYS_INLINE unsigned Instruction::length() const
@@ -860,20 +891,26 @@ ALWAYS_INLINE Optional<SegmentRegister> to_segment_prefix(u8 op)
 }
 
 template<typename InstructionStreamType>
-ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, bool a32)
-    : m_a32(a32)
-    , m_o32(o32)
+ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, OperandSize operand_size, AddressSize address_size)
+    : m_operand_size(operand_size)
+    , m_address_size(address_size)
 {
     u8 prefix_bytes = 0;
     for (;; ++prefix_bytes) {
         u8 opbyte = stream.read8();
         if (opbyte == Prefix::OperandSizeOverride) {
-            m_o32 = !o32;
+            if (operand_size == OperandSize::Size32)
+                m_operand_size = OperandSize::Size16;
+            else if (operand_size == OperandSize::Size16)
+                m_operand_size = OperandSize::Size32;
             m_has_operand_size_override_prefix = true;
             continue;
         }
         if (opbyte == Prefix::AddressSizeOverride) {
-            m_a32 = !a32;
+            if (address_size == AddressSize::Size32)
+                m_address_size = AddressSize::Size16;
+            else if (address_size == AddressSize::Size16)
+                m_address_size = AddressSize::Size32;
             m_has_address_size_override_prefix = true;
             continue;
         }
@@ -896,9 +933,9 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
 
     if (m_op == 0x0f) {
         m_sub_op = stream.read8();
-        m_descriptor = m_o32 ? &s_0f_table32[m_sub_op] : &s_0f_table16[m_sub_op];
+        m_descriptor = &s_0f_table[to_underlying(m_operand_size)][m_sub_op];
     } else {
-        m_descriptor = m_o32 ? &s_table32[m_op] : &s_table16[m_op];
+        m_descriptor = &s_table[to_underlying(m_operand_size)][m_op];
     }
 
     if (m_descriptor->format == __SSE) {
@@ -906,7 +943,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
             m_descriptor = &s_sse_table_f3[m_sub_op];
         } else if (m_has_operand_size_override_prefix) {
             // This was unset while parsing the prefix initially
-            m_o32 = true;
+            m_operand_size = OperandSize::Size32;
             m_descriptor = &s_sse_table_66[m_sub_op];
         } else {
             m_descriptor = &s_sse_table_np[m_sub_op];
@@ -915,7 +952,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
 
     if (m_descriptor->has_rm) {
         // Consume ModR/M (may include SIB and displacement.)
-        m_modrm.decode(stream, m_a32);
+        m_modrm.decode(stream, m_address_size);
         m_register_index = m_modrm.reg();
     } else {
         if (has_sub_op())
@@ -947,8 +984,8 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
         return;
     }
 
-    auto imm1_bytes = m_descriptor->imm1_bytes_for_address_size(m_a32);
-    auto imm2_bytes = m_descriptor->imm2_bytes_for_address_size(m_a32);
+    auto imm1_bytes = m_descriptor->imm1_bytes_for_address_size(m_address_size);
+    auto imm2_bytes = m_descriptor->imm2_bytes_for_address_size(m_address_size);
 
     // Consume immediates if present.
     switch (imm2_bytes) {
@@ -992,11 +1029,11 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
 }
 
 template<typename InstructionStreamType>
-ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stream, bool a32)
+ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stream, AddressSize address_size)
 {
     m_rm_byte = stream.read8();
 
-    if (a32) {
+    if (address_size == AddressSize::Size32) {
         decode32(stream);
         switch (m_displacement_bytes) {
         case 0:
@@ -1009,9 +1046,8 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stre
             break;
         default:
             VERIFY_NOT_REACHED();
-            break;
         }
-    } else {
+    } else if (address_size == AddressSize::Size16) {
         decode16(stream);
         switch (m_displacement_bytes) {
         case 0:
@@ -1024,8 +1060,9 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stre
             break;
         default:
             VERIFY_NOT_REACHED();
-            break;
         }
+    } else {
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -1095,9 +1132,13 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& st
 template<typename CPU>
 ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve(const CPU& cpu, Instruction const& insn)
 {
-    if (insn.a32())
+    switch (insn.address_size()) {
+    case AddressSize::Size16:
+        return resolve16(cpu, insn.segment_prefix());
+    case AddressSize::Size32:
         return resolve32(cpu, insn.segment_prefix());
-    return resolve16(cpu, insn.segment_prefix());
+    }
+    VERIFY_NOT_REACHED();
 }
 
 }
