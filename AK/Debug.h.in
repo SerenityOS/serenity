@@ -318,8 +318,8 @@
 #cmakedefine01 OCCLUSIONS_DEBUG
 #endif
 
-#ifndef PARSER_DEBUG
-#cmakedefine01 PARSER_DEBUG
+#ifndef HTML_PARSER_DEBUG
+#cmakedefine01 HTML_PARSER_DEBUG
 #endif
 
 #ifndef PATH_DEBUG
