@@ -63,7 +63,7 @@
                 }
             }
 
-            @GUI::LazyWidget {
+            @SystemMonitor::StorageTabWidget {
                 title: "Storage"
                 name: "storage"
                 layout: @GUI::VerticalBoxLayout {
