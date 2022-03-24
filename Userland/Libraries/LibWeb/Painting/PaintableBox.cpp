@@ -66,14 +66,18 @@ Gfx::FloatPoint PaintableBox::effective_offset() const
     return m_offset;
 }
 
+Gfx::FloatRect PaintableBox::compute_absolute_rect() const
+{
+    Gfx::FloatRect rect { effective_offset(), content_size() };
+    for (auto const* block = containing_block(); block && block->paintable(); block = block->paintable()->containing_block())
+        rect.translate_by(block->paint_box()->effective_offset());
+    return rect;
+}
+
 Gfx::FloatRect PaintableBox::absolute_rect() const
 {
-    if (!m_absolute_rect.has_value()) {
-        Gfx::FloatRect rect { effective_offset(), content_size() };
-        for (auto const* block = containing_block(); block && block->paintable(); block = block->paintable()->containing_block())
-            rect.translate_by(block->paint_box()->effective_offset());
-        m_absolute_rect = rect;
-    }
+    if (!m_absolute_rect.has_value())
+        m_absolute_rect = compute_absolute_rect();
     return *m_absolute_rect;
 }
 

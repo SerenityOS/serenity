@@ -126,6 +126,8 @@ protected:
     virtual void paint_background(PaintContext&) const;
     virtual void paint_box_shadow(PaintContext&) const;
 
+    virtual Gfx::FloatRect compute_absolute_rect() const;
+
 private:
     Painting::BorderRadiusData normalized_border_radius_data() const;
 
