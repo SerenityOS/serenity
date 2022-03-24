@@ -52,6 +52,9 @@
         .acid3 > div:nth-child(-5n+3) {
             background-color: lightblue;
         }
+        .test-of-type > div:nth-child(2n of div) {
+            background-color: lightblue;
+        }
         .test-of > div:nth-child(3n+1 of .special) {
             background-color: lightblue;
         }
@@ -189,6 +192,22 @@
     <div>13</div>
     <div>14</div>
     <div>15</div>
+</div>
+
+<h4>:nth-child(2n of div)</h4>
+<div class="test-of-type">
+    <div>1</div>
+    <p>Paragraph</p>
+    <div>2 +</div>
+    <p>Paragraph</p>
+    <div>3</div>
+    <p>Paragraph</p>
+    <div>4 +</div>
+    <p>Paragraph</p>
+    <div>5</div>
+    <p>Paragraph</p>
+    <div>6 +</div>
+    <p>Paragraph</p>
 </div>
 
 <h4>:nth-child(3n+1 of .special)</h4>
