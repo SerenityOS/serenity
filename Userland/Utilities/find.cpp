@@ -90,7 +90,7 @@ struct FileData {
 
 class Command {
 public:
-    virtual ~Command() { }
+    virtual ~Command() = default;
     virtual bool evaluate(FileData& file_data) const = 0;
 };
 
