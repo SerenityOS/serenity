@@ -480,7 +480,16 @@ RENDERER_HANDLER(set_stroking_color)
     return {};
 }
 
-RENDERER_TODO(set_stroking_color_extended)
+RENDERER_HANDLER(set_stroking_color_extended)
+{
+    // FIXME: Handle Pattern color spaces
+    auto last_arg = args.last();
+    if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>())
+        TODO();
+
+    state().stroke_color = state().stroke_color_space->color(args);
+    return {};
+}
 
 RENDERER_HANDLER(set_painting_color)
 {
@@ -488,7 +497,16 @@ RENDERER_HANDLER(set_painting_color)
     return {};
 }
 
-RENDERER_TODO(set_painting_color_extended)
+RENDERER_HANDLER(set_painting_color_extended)
+{
+    // FIXME: Handle Pattern color spaces
+    auto last_arg = args.last();
+    if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>())
+        TODO();
+
+    state().paint_color = state().paint_color_space->color(args);
+    return {};
+}
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_gray)
 {
