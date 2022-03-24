@@ -258,9 +258,9 @@ void SoftCPU::do_once_or_repeat(const X86::Instruction& insn, Callback callback)
     if (!insn.has_rep_prefix())
         return callback();
 
-    while (loop_index(insn.a32()).value()) {
+    while (loop_index(insn.address_size()).value()) {
         callback();
-        decrement_loop_index(insn.a32());
+        decrement_loop_index(insn.address_size());
         if constexpr (check_zf) {
             warn_if_flags_tainted("repz/repnz");
             if (insn.rep_prefix() == X86::Prefix::REPZ && !zf())
@@ -1259,11 +1259,11 @@ ALWAYS_INLINE static void do_cmps(SoftCPU& cpu, const X86::Instruction& insn)
 {
     auto src_segment = cpu.segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
     cpu.do_once_or_repeat<true>(insn, [&] {
-        auto src = cpu.read_memory<T>({ src_segment, cpu.source_index(insn.a32()).value() });
-        auto dest = cpu.read_memory<T>({ cpu.es(), cpu.destination_index(insn.a32()).value() });
+        auto src = cpu.read_memory<T>({ src_segment, cpu.source_index(insn.address_size()).value() });
+        auto dest = cpu.read_memory<T>({ cpu.es(), cpu.destination_index(insn.address_size()).value() });
         op_sub(cpu, dest, src);
-        cpu.step_source_index(insn.a32(), sizeof(T));
-        cpu.step_destination_index(insn.a32(), sizeof(T));
+        cpu.step_source_index(insn.address_size(), sizeof(T));
+        cpu.step_destination_index(insn.address_size(), sizeof(T));
     });
 }
 
@@ -1771,14 +1771,19 @@ void SoftCPU::IRET(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::JCXZ_imm8(const X86::Instruction& insn)
 {
-    if (insn.a32()) {
+    switch (insn.address_size()) {
+    case X86::AddressSize::Size32:
         warn_if_uninitialized(ecx(), "jecxz imm8");
         if (ecx().value() == 0)
             set_eip(eip() + (i8)insn.imm8());
-    } else {
+        break;
+    case X86::AddressSize::Size16:
         warn_if_uninitialized(cx(), "jcxz imm8");
         if (cx().value() == 0)
             set_eip(eip() + (i8)insn.imm8());
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -1865,9 +1870,9 @@ ALWAYS_INLINE static void do_lods(SoftCPU& cpu, const X86::Instruction& insn)
 {
     auto src_segment = cpu.segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
     cpu.do_once_or_repeat<true>(insn, [&] {
-        auto src = cpu.read_memory<T>({ src_segment, cpu.source_index(insn.a32()).value() });
+        auto src = cpu.read_memory<T>({ src_segment, cpu.source_index(insn.address_size()).value() });
         cpu.gpr<T>(X86::RegisterAL) = src;
-        cpu.step_source_index(insn.a32(), sizeof(T));
+        cpu.step_source_index(insn.address_size(), sizeof(T));
     });
 }
 
@@ -1889,40 +1894,55 @@ void SoftCPU::LODSW(const X86::Instruction& insn)
 void SoftCPU::LOOPNZ_imm8(const X86::Instruction& insn)
 {
     warn_if_flags_tainted("loopnz");
-    if (insn.a32()) {
+    switch (insn.address_size()) {
+    case X86::AddressSize::Size32:
         set_ecx({ ecx().value() - 1, ecx().shadow() });
         if (ecx().value() != 0 && !zf())
             set_eip(eip() + (i8)insn.imm8());
-    } else {
+        break;
+    case X86::AddressSize::Size16:
         set_cx({ (u16)(cx().value() - 1), cx().shadow() });
         if (cx().value() != 0 && !zf())
             set_eip(eip() + (i8)insn.imm8());
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 void SoftCPU::LOOPZ_imm8(const X86::Instruction& insn)
 {
     warn_if_flags_tainted("loopz");
-    if (insn.a32()) {
+    switch (insn.address_size()) {
+    case X86::AddressSize::Size32:
         set_ecx({ ecx().value() - 1, ecx().shadow() });
         if (ecx().value() != 0 && zf())
             set_eip(eip() + (i8)insn.imm8());
-    } else {
+        break;
+    case X86::AddressSize::Size16:
         set_cx({ (u16)(cx().value() - 1), cx().shadow() });
         if (cx().value() != 0 && zf())
             set_eip(eip() + (i8)insn.imm8());
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 
 void SoftCPU::LOOP_imm8(const X86::Instruction& insn)
 {
-    if (insn.a32()) {
+    switch (insn.address_size()) {
+    case X86::AddressSize::Size32:
         set_ecx({ ecx().value() - 1, ecx().shadow() });
         if (ecx().value() != 0)
             set_eip(eip() + (i8)insn.imm8());
-    } else {
+        break;
+    case X86::AddressSize::Size16:
         set_cx({ (u16)(cx().value() - 1), cx().shadow() });
         if (cx().value() != 0)
             set_eip(eip() + (i8)insn.imm8());
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -1937,10 +1957,10 @@ ALWAYS_INLINE static void do_movs(SoftCPU& cpu, const X86::Instruction& insn)
 {
     auto src_segment = cpu.segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS));
     cpu.do_once_or_repeat<false>(insn, [&] {
-        auto src = cpu.read_memory<T>({ src_segment, cpu.source_index(insn.a32()).value() });
-        cpu.write_memory<T>({ cpu.es(), cpu.destination_index(insn.a32()).value() }, src);
-        cpu.step_source_index(insn.a32(), sizeof(T));
-        cpu.step_destination_index(insn.a32(), sizeof(T));
+        auto src = cpu.read_memory<T>({ src_segment, cpu.source_index(insn.address_size()).value() });
+        cpu.write_memory<T>({ cpu.es(), cpu.destination_index(insn.address_size()).value() }, src);
+        cpu.step_source_index(insn.address_size(), sizeof(T));
+        cpu.step_destination_index(insn.address_size(), sizeof(T));
     });
 }
 
@@ -2638,9 +2658,9 @@ ALWAYS_INLINE static void do_scas(SoftCPU& cpu, const X86::Instruction& insn)
 {
     cpu.do_once_or_repeat<true>(insn, [&] {
         auto src = cpu.const_gpr<T>(X86::RegisterAL);
-        auto dest = cpu.read_memory<T>({ cpu.es(), cpu.destination_index(insn.a32()).value() });
+        auto dest = cpu.read_memory<T>({ cpu.es(), cpu.destination_index(insn.address_size()).value() });
         op_sub(cpu, dest, src);
-        cpu.step_destination_index(insn.a32(), sizeof(T));
+        cpu.step_destination_index(insn.address_size(), sizeof(T));
     });
 }
 
@@ -2731,23 +2751,28 @@ void SoftCPU::STOSB(const X86::Instruction& insn)
 {
     if (insn.has_rep_prefix() && !df()) {
         // Fast path for 8-bit forward memory fill.
-        if (m_emulator.mmu().fast_fill_memory8({ es(), destination_index(insn.a32()).value() }, ecx().value(), al())) {
-            if (insn.a32()) {
+        if (m_emulator.mmu().fast_fill_memory8({ es(), destination_index(insn.address_size()).value() }, ecx().value(), al())) {
+            switch (insn.address_size()) {
+            case X86::AddressSize::Size32:
                 // FIXME: Should an uninitialized ECX taint EDI here?
                 set_edi({ (u32)(edi().value() + ecx().value()), edi().shadow() });
                 set_ecx(shadow_wrap_as_initialized<u32>(0));
-            } else {
+                break;
+            case X86::AddressSize::Size16:
                 // FIXME: Should an uninitialized CX taint DI here?
                 set_di({ (u16)(di().value() + cx().value()), di().shadow() });
                 set_cx(shadow_wrap_as_initialized<u16>(0));
+                break;
+            default:
+                VERIFY_NOT_REACHED();
             }
             return;
         }
     }
 
     do_once_or_repeat<false>(insn, [&] {
-        write_memory8({ es(), destination_index(insn.a32()).value() }, al());
-        step_destination_index(insn.a32(), 1);
+        write_memory8({ es(), destination_index(insn.address_size()).value() }, al());
+        step_destination_index(insn.address_size(), 1);
     });
 }
 
@@ -2755,31 +2780,36 @@ void SoftCPU::STOSD(const X86::Instruction& insn)
 {
     if (insn.has_rep_prefix() && !df()) {
         // Fast path for 32-bit forward memory fill.
-        if (m_emulator.mmu().fast_fill_memory32({ es(), destination_index(insn.a32()).value() }, ecx().value(), eax())) {
-            if (insn.a32()) {
+        if (m_emulator.mmu().fast_fill_memory32({ es(), destination_index(insn.address_size()).value() }, ecx().value(), eax())) {
+            switch (insn.address_size()) {
+            case X86::AddressSize::Size32:
                 // FIXME: Should an uninitialized ECX taint EDI here?
                 set_edi({ (u32)(edi().value() + (ecx().value() * sizeof(u32))), edi().shadow() });
                 set_ecx(shadow_wrap_as_initialized<u32>(0));
-            } else {
+                break;
+            case X86::AddressSize::Size16:
                 // FIXME: Should an uninitialized CX taint DI here?
                 set_di({ (u16)(di().value() + (cx().value() * sizeof(u32))), di().shadow() });
                 set_cx(shadow_wrap_as_initialized<u16>(0));
+                break;
+            default:
+                VERIFY_NOT_REACHED();
             }
             return;
         }
     }
 
     do_once_or_repeat<false>(insn, [&] {
-        write_memory32({ es(), destination_index(insn.a32()).value() }, eax());
-        step_destination_index(insn.a32(), 4);
+        write_memory32({ es(), destination_index(insn.address_size()).value() }, eax());
+        step_destination_index(insn.address_size(), 4);
     });
 }
 
 void SoftCPU::STOSW(const X86::Instruction& insn)
 {
     do_once_or_repeat<false>(insn, [&] {
-        write_memory16({ es(), destination_index(insn.a32()).value() }, ax());
-        step_destination_index(insn.a32(), 2);
+        write_memory16({ es(), destination_index(insn.address_size()).value() }, ax());
+        step_destination_index(insn.address_size(), 2);
     });
 }
 
@@ -2856,12 +2886,20 @@ void SoftCPU::XCHG_reg8_RM8(const X86::Instruction& insn)
 
 void SoftCPU::XLAT(const X86::Instruction& insn)
 {
-    if (insn.a32())
+    u32 offset;
+    switch (insn.address_size()) {
+    case X86::AddressSize::Size32:
         warn_if_uninitialized(ebx(), "xlat ebx");
-    else
+        offset = ebx().value() + al().value();
+        break;
+    case X86::AddressSize::Size16:
         warn_if_uninitialized(bx(), "xlat bx");
+        offset = bx().value() + al().value();
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
     warn_if_uninitialized(al(), "xlat al");
-    u32 offset = (insn.a32() ? ebx().value() : bx().value()) + al().value();
     set_al(read_memory8({ segment(insn.segment_prefix().value_or(X86::SegmentRegister::DS)), offset }));
 }
 

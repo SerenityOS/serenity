@@ -234,7 +234,7 @@ int Emulator::exec()
     while (!m_shutdown) {
         if (m_steps_til_pause) [[likely]] {
             m_cpu->save_base_eip();
-            auto insn = X86::Instruction::from_stream(*m_cpu, true, true);
+            auto insn = X86::Instruction::from_stream(*m_cpu, X86::OperandSize::Size32, X86::AddressSize::Size32);
             // Exec cycle
             if constexpr (trace) {
                 outln("{:p}  \033[33;1m{}\033[0m", m_cpu->base_eip(), insn.to_string(m_cpu->base_eip(), symbol_provider));
@@ -301,7 +301,7 @@ void Emulator::handle_repl()
     // FIXME: Function names (base, call, jump)
     auto saved_eip = m_cpu->eip();
     m_cpu->save_base_eip();
-    auto insn = X86::Instruction::from_stream(*m_cpu, true, true);
+    auto insn = X86::Instruction::from_stream(*m_cpu, X86::OperandSize::Size32, X86::AddressSize::Size32);
     // FIXME: This does not respect inlining
     //        another way of getting the current function is at need
     if (auto symbol = symbol_at(m_cpu->base_eip()); symbol.has_value()) {
@@ -311,7 +311,7 @@ void Emulator::handle_repl()
     outln("==> {}", create_instruction_line(m_cpu->base_eip(), insn));
     for (int i = 0; i < 7; ++i) {
         m_cpu->save_base_eip();
-        insn = X86::Instruction::from_stream(*m_cpu, true, true);
+        insn = X86::Instruction::from_stream(*m_cpu, X86::OperandSize::Size32, X86::AddressSize::Size32);
         outln("    {}", create_instruction_line(m_cpu->base_eip(), insn));
     }
     // We don't want to increase EIP here, we just want the instructions
