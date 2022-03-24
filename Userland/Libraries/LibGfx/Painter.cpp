@@ -1378,12 +1378,19 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
         space_width = -space_width;          // Draw spaces backwards
     }
 
+    u32 last_code_point { 0 };
     for (auto it = text.begin(); it != text.end(); ++it) {
         auto code_point = *it;
         if (code_point == ' ') {
             point.translate_by(space_width, 0);
+            last_code_point = code_point;
             continue;
         }
+
+        int kerning = font.glyphs_horizontal_kerning(last_code_point, code_point);
+        if (kerning != 0)
+            point.translate_by(direction == TextDirection::LTR ? kerning : -kerning, 0);
+
         IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.glyph_height());
         if (direction == TextDirection::RTL)
             point.translate_by(-glyph_size.width(), 0); // If we are drawing right to left, we have to move backwards before drawing the glyph
@@ -1393,6 +1400,7 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
         // The callback function might have exhausted the iterator.
         if (it == text.end())
             break;
+        last_code_point = code_point;
     }
 }
 
