@@ -10,6 +10,7 @@
 
 #define ENUMERATE_COMMON_NAMES(A) \
     A(AIS)                        \
+    A(Alternate)                  \
     A(ASCII85Decode)              \
     A(ASCIIHexDecode)             \
     A(BG)                         \
@@ -63,6 +64,7 @@
     A(H)                          \
     A(HT)                         \
     A(HTO)                        \
+    A(ICCBased)                   \
     A(ID)                         \
     A(JBIG2Decode)                \
     A(JPXDecode)                  \
