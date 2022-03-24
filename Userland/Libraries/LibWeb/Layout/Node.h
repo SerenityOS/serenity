@@ -108,6 +108,7 @@ public:
 
     const Gfx::Font& font() const;
     const CSS::ImmutableComputedValues& computed_values() const;
+    float line_height() const;
 
     NodeWithStyle* parent();
     const NodeWithStyle* parent() const;
@@ -225,6 +226,13 @@ inline const CSS::ImmutableComputedValues& Node::computed_values() const
     if (m_has_style)
         return static_cast<const NodeWithStyle*>(this)->computed_values();
     return parent()->computed_values();
+}
+
+inline float Node::line_height() const
+{
+    if (m_has_style)
+        return static_cast<NodeWithStyle const*>(this)->line_height();
+    return parent()->line_height();
 }
 
 inline const NodeWithStyle* Node::parent() const
