@@ -165,17 +165,20 @@ void HTMLObjectElement::resource_did_load()
     }
     // * Otherwise, if the resource does not have associated Content-Type metadata
     else {
-        String tentative_type;
+        Optional<String> tentative_type;
 
         // 1. If there is a type attribute present on the object element, then let the tentative type be the type specified in that type attribute.
         //    Otherwise, let tentative type be the computed type of the resource.
         if (auto type = this->type(); !type.is_empty())
             tentative_type = move(type);
-        else
-            tentative_type = resource()->mime_type();
+
+        // FIXME: For now, ignore application/ MIME types as we cannot render yet them anyways. We will need to implement the MIME type sniffing
+        //        algorithm in order to map all unknown MIME types to "application/octet-stream".
+        else if (auto type = resource()->mime_type(); !type.starts_with("application/"))
+            tentative_type = move(type);
 
         // 2. If tentative type is not application/octet-stream, then let resource type be tentative type and jump to the step below labeled handler.
-        if (tentative_type != "application/octet-stream"sv)
+        if (tentative_type.has_value() && tentative_type != "application/octet-stream"sv)
             resource_type = move(tentative_type);
     }
 
