@@ -14,6 +14,10 @@
 #include <LibGUI/TableView.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(SystemMonitor, ProcessMemoryMapWidget)
+
+namespace SystemMonitor {
+
 class PagemapPaintingDelegate final : public GUI::TableCellPaintingDelegate {
 public:
     virtual ~PagemapPaintingDelegate() override = default;
@@ -120,4 +124,6 @@ void ProcessMemoryMapWidget::refresh()
 {
     if (m_pid != -1)
         m_json_model->invalidate();
+}
+
 }

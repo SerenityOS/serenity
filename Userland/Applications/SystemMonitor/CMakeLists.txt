@@ -5,6 +5,7 @@ serenity_component(
 )
 
 compile_gml(SystemMonitor.gml SystemMonitorGML.h system_monitor_gml)
+compile_gml(ProcessWindow.gml ProcessWindowGML.h process_window_gml)
 
 set(SOURCES
     GraphWidget.cpp
@@ -18,6 +19,7 @@ set(SOURCES
     ProcessStateWidget.cpp
     ThreadStackWidget.cpp
     SystemMonitorGML.h
+    ProcessWindowGML.h
 )
 
 serenity_app(SystemMonitor ICON app-system-monitor)

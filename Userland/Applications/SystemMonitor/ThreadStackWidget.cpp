@@ -9,8 +9,13 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/Widget.h>
 #include <LibSymbolication/Symbolication.h>
 #include <LibThreading/BackgroundAction.h>
+
+REGISTER_WIDGET(SystemMonitor, ThreadStackWidget)
+
+namespace SystemMonitor {
 
 class ThreadStackModel final : public GUI::Model {
 
@@ -126,4 +131,6 @@ void ThreadStackWidget::custom_event(Core::CustomEvent& event)
 {
     auto& completion_event = verify_cast<CompletionEvent>(event);
     verify_cast<ThreadStackModel>(m_stack_table->model())->set_symbols(completion_event.symbols());
+}
+
 }

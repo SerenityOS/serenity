@@ -11,6 +11,10 @@
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 
+REGISTER_WIDGET(SystemMonitor, ProcessFileDescriptorMapWidget)
+
+namespace SystemMonitor {
+
 ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget()
 {
     set_layout<GUI::VerticalBoxLayout>();
@@ -48,4 +52,6 @@ void ProcessFileDescriptorMapWidget::set_pid(pid_t pid)
         return;
     m_pid = pid;
     m_model->set_json_path(String::formatted("/proc/{}/fds", m_pid));
+}
+
 }
