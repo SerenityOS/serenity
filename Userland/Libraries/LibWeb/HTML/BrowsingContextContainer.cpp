@@ -90,4 +90,17 @@ DOM::Document const* BrowsingContextContainer::content_document_without_origin_c
     return m_nested_browsing_context->active_document();
 }
 
+// https://html.spec.whatwg.org/multipage/embedded-content-other.html#dom-media-getsvgdocument
+const DOM::Document* BrowsingContextContainer::get_svg_document() const
+{
+    // 1. Let document be this element's content document.
+    auto const* document = content_document();
+
+    // 2. If document is non-null and was created by the page load processing model for XML files section because the computed type of the resource in the navigate algorithm was image/svg+xml, then return document.
+    if (document && document->content_type() == "image/svg+xml"sv)
+        return document;
+    // 3. Return null.
+    return nullptr;
+}
+
 }

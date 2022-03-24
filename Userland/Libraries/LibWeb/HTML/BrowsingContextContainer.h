@@ -21,6 +21,8 @@ public:
     const DOM::Document* content_document() const;
     DOM::Document const* content_document_without_origin_check() const;
 
+    DOM::Document const* get_svg_document() const;
+
 protected:
     void create_new_nested_browsing_context();
     void discard_nested_browsing_context();
