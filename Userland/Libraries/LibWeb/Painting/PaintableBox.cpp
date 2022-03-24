@@ -407,6 +407,35 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         context.painter().translate(-scroll_offset.to_type<int>());
     }
 
+    // Text shadows
+    // This is yet another loop, but done here because all shadows should appear under all text.
+    // So, we paint the shadows before painting any text.
+    // FIXME: Find a smarter way to do this?
+    if (phase == PaintPhase::Foreground) {
+        for (auto& line_box : m_line_boxes) {
+            for (auto& fragment : line_box.fragments()) {
+                if (is<Layout::TextNode>(fragment.layout_node())) {
+                    auto& text_shadow = fragment.layout_node().computed_values().text_shadow();
+                    if (!text_shadow.is_empty()) {
+                        Vector<ShadowData> resolved_shadow_data;
+                        resolved_shadow_data.ensure_capacity(text_shadow.size());
+                        for (auto const& layer : text_shadow) {
+                            resolved_shadow_data.empend(
+                                layer.color,
+                                static_cast<int>(layer.offset_x.to_px(layout_box())),
+                                static_cast<int>(layer.offset_y.to_px(layout_box())),
+                                static_cast<int>(layer.blur_radius.to_px(layout_box())),
+                                static_cast<int>(layer.spread_distance.to_px(layout_box())),
+                                ShadowPlacement::Outer);
+                        }
+                        context.painter().set_font(fragment.layout_node().font());
+                        Painting::paint_text_shadow(context, fragment, resolved_shadow_data);
+                    }
+                }
+            }
+        }
+    }
+
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
             if (context.should_show_line_box_borders())

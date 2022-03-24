@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGfx/Color.h>
+#include <LibWeb/Forward.h>
 #include <LibWeb/Painting/PaintContext.h>
 
 namespace Web::Painting {
@@ -26,5 +27,6 @@ struct ShadowData {
 };
 
 void paint_box_shadow(PaintContext&, Gfx::IntRect const&, Vector<ShadowData> const&);
+void paint_text_shadow(PaintContext&, Layout::LineBoxFragment const&, Vector<ShadowData> const&);
 
 }
