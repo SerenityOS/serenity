@@ -80,7 +80,7 @@
                 name: "network"
             }
 
-            @GUI::LazyWidget {
+            @SystemMonitor::HardwareTabWidget {
                 title: "Hardware"
                 name: "hardware"
                 layout: @GUI::VerticalBoxLayout {
