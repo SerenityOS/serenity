@@ -1,0 +1,16 @@
+[binaries]
+c = 'i686-pc-serenity-gcc'
+cpp = 'i686-pc-serenity-g++'
+ar = 'i686-pc-serenity-ar'
+ranlib = 'i686-pc-serenity-ranlib'
+pkgconfig = 'pkg-config'
+
+[properties]
+sys_root = '../../../../Build/i686/Root'
+needs_exe_wrapper = true
+
+[host_machine]
+system = 'serenity'
+cpu_family = 'x86'
+cpu = 'i686'
+endian = 'little'
