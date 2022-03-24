@@ -67,7 +67,8 @@ Time kgettimeofday();
     __ENUMERATE_PLEDGE_PROMISE(setkeymap) \
     __ENUMERATE_PLEDGE_PROMISE(prot_exec) \
     __ENUMERATE_PLEDGE_PROMISE(map_fixed) \
-    __ENUMERATE_PLEDGE_PROMISE(getkeymap)
+    __ENUMERATE_PLEDGE_PROMISE(getkeymap) \
+    __ENUMERATE_PLEDGE_PROMISE(no_error)
 
 enum class Pledge : u32 {
 #define __ENUMERATE_PLEDGE_PROMISE(x) x,
