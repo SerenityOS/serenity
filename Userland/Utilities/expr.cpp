@@ -58,7 +58,7 @@ public:
     virtual int integer() const = 0;
     virtual String string() const = 0;
     virtual Type type() const = 0;
-    virtual ~Expression() { }
+    virtual ~Expression() = default;
 };
 
 class ValueExpression : public Expression {
@@ -75,7 +75,7 @@ public:
     {
     }
 
-    virtual ~ValueExpression() { }
+    virtual ~ValueExpression() {};
 
 private:
     virtual bool truth() const override

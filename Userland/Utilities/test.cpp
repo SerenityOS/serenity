@@ -30,7 +30,7 @@ bool g_there_was_an_error = false;
 
 class Condition {
 public:
-    virtual ~Condition() { }
+    virtual ~Condition() = default;
     virtual bool check() const = 0;
 };
 
