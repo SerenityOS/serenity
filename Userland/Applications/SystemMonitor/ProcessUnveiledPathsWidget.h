@@ -9,6 +9,8 @@
 
 #include <LibGUI/Widget.h>
 
+namespace SystemMonitor {
+
 class ProcessUnveiledPathsWidget final : public GUI::Widget {
     C_OBJECT(ProcessUnveiledPathsWidget);
 
@@ -24,3 +26,5 @@ private:
     RefPtr<GUI::JsonArrayModel> m_model;
     pid_t m_pid { -1 };
 };
+
+}

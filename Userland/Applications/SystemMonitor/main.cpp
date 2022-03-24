@@ -7,6 +7,7 @@
  */
 
 #include "GraphWidget.h"
+#include "LibCore/EventLoop.h"
 #include "LibCore/Object.h"
 #include "MemoryStatsWidget.h"
 #include "NetworkStatisticsWidget.h"
@@ -17,6 +18,7 @@
 #include "ProcessUnveiledPathsWidget.h"
 #include "ThreadStackWidget.h"
 #include <AK/NumberFormat.h>
+#include <Applications/SystemMonitor/ProcessWindowGML.h>
 #include <Applications/SystemMonitor/SystemMonitorGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
@@ -60,18 +62,42 @@ static void build_performance_tab(GUI::Widget&);
 
 static RefPtr<GUI::Statusbar> statusbar;
 
+namespace SystemMonitor {
+
+class ProgressbarPaintingDelegate final : public GUI::TableCellPaintingDelegate {
+public:
+    virtual ~ProgressbarPaintingDelegate() override = default;
+
+    virtual void paint(GUI::Painter& painter, Gfx::IntRect const& a_rect, Palette const& palette, GUI::ModelIndex const& index) override
+    {
+        auto rect = a_rect.shrunken(2, 2);
+        auto percentage = index.data(GUI::ModelRole::Custom).to_i32();
+
+        auto data = index.data();
+        String text;
+        if (data.is_string())
+            text = data.as_string();
+        Gfx::StylePainter::paint_progressbar(painter, rect, palette, 0, 100, percentage, text);
+        painter.draw_rect(rect, Color::Black);
+    }
+};
+
 class UnavailableProcessWidget final : public GUI::Frame {
     C_OBJECT(UnavailableProcessWidget)
 public:
     virtual ~UnavailableProcessWidget() override = default;
 
     String const& text() const { return m_text; }
-    void set_text(String text) { m_text = move(text); }
+    void set_text(String text)
+    {
+        m_text = move(text);
+        update();
+    }
 
 private:
-    UnavailableProcessWidget(String text)
-        : m_text(move(text))
+    UnavailableProcessWidget()
     {
+        REGISTER_STRING_PROPERTY("text", text, set_text);
     }
 
     virtual void paint_event(GUI::PaintEvent& event) override
@@ -86,10 +112,6 @@ private:
 
     String m_text;
 };
-
-class ProgressbarPaintingDelegate;
-
-namespace SystemMonitor {
 
 class HardwareTabWidget final : public GUI::LazyWidget {
     C_OBJECT(HardwareTabWidget)
@@ -287,6 +309,7 @@ public:
 
 REGISTER_WIDGET(SystemMonitor, HardwareTabWidget)
 REGISTER_WIDGET(SystemMonitor, StorageTabWidget)
+REGISTER_WIDGET(SystemMonitor, UnavailableProcessWidget)
 
 static bool can_access_pid(pid_t pid)
 {
@@ -308,7 +331,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio thread proc recvfd sendfd rpath exec unix"));
 
-    auto app = TRY(GUI::Application::try_create(arguments));
+    auto app = TRY(GUI::Application::try_create(arguments, Core::EventLoop::MakeInspectable::Yes));
 
     Config::pledge_domain("SystemMonitor");
 
@@ -564,24 +587,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return app->exec();
 }
 
-class ProgressbarPaintingDelegate final : public GUI::TableCellPaintingDelegate {
-public:
-    virtual ~ProgressbarPaintingDelegate() override = default;
-
-    virtual void paint(GUI::Painter& painter, Gfx::IntRect const& a_rect, Palette const& palette, const GUI::ModelIndex& index) override
-    {
-        auto rect = a_rect.shrunken(2, 2);
-        auto percentage = index.data(GUI::ModelRole::Custom).to_i32();
-
-        auto data = index.data();
-        String text;
-        if (data.is_string())
-            text = data.as_string();
-        Gfx::StylePainter::paint_progressbar(painter, rect, palette, 0, 100, percentage, text);
-        painter.draw_rect(rect, Color::Black);
-    }
-};
-
 ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
 {
     auto window = GUI::Window::construct();
@@ -592,17 +597,7 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    main_widget->set_fill_with_background_color(true);
-    main_widget->set_layout<GUI::VerticalBoxLayout>();
-
-    auto& hero_container = main_widget->add<GUI::Widget>();
-    hero_container.set_shrink_to_fit(true);
-    hero_container.set_layout<GUI::HorizontalBoxLayout>();
-    hero_container.layout()->set_margins(4);
-    hero_container.layout()->set_spacing(8);
-
-    auto& icon_label = hero_container.add<GUI::Label>();
-    icon_label.set_fixed_size(32, 32);
+    main_widget->load_from_gml(process_window_gml);
 
     GUI::ModelIndex process_index;
     for (int row = 0; row < ProcessModel::the().row_count({}); ++row) {
@@ -615,36 +610,23 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
 
     VERIFY(process_index.is_valid());
     if (auto icon_data = process_index.sibling_at_column(ProcessModel::Column::Icon).data(); icon_data.is_icon()) {
-        icon_label.set_icon(icon_data.as_icon().bitmap_for_size(32));
+        main_widget->find_descendant_of_type_named<GUI::Label>("icon_label")->set_icon(icon_data.as_icon().bitmap_for_size(32));
     }
 
-    auto& process_name_label = hero_container.add<GUI::Label>();
-    process_name_label.set_font(Gfx::FontDatabase::default_font().bold_variant());
-    process_name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    process_name_label.set_text(String::formatted("{} (PID {})",
-        process_index.sibling_at_column(ProcessModel::Column::Name).data().to_string(),
-        pid));
+    main_widget->find_descendant_of_type_named<GUI::Label>("process_name")->set_text(String::formatted("{} (PID {})", process_index.sibling_at_column(ProcessModel::Column::Name).data().to_string(), pid));
 
-    auto& separator = main_widget->add<GUI::HorizontalSeparator>();
-    separator.set_fixed_height(2);
+    main_widget->find_descendant_of_type_named<SystemMonitor::ProcessStateWidget>("process_state")->set_pid(pid);
+    main_widget->find_descendant_of_type_named<SystemMonitor::ProcessFileDescriptorMapWidget>("open_files")->set_pid(pid);
+    main_widget->find_descendant_of_type_named<SystemMonitor::ThreadStackWidget>("thread_stack")->set_ids(pid, pid);
+    main_widget->find_descendant_of_type_named<SystemMonitor::ProcessMemoryMapWidget>("memory_map")->set_pid(pid);
+    main_widget->find_descendant_of_type_named<SystemMonitor::ProcessUnveiledPathsWidget>("unveiled_paths")->set_pid(pid);
 
-    auto& widget_stack = main_widget->add<GUI::StackWidget>();
-    auto& unavailable_process_widget = widget_stack.add<UnavailableProcessWidget>(String::formatted("Unable to access PID {}", pid));
-
-    auto& process_tab_widget = widget_stack.add<GUI::TabWidget>();
-    process_tab_widget.add_tab<ProcessStateWidget>("State", pid);
-    auto& memory_map_widget = process_tab_widget.add_tab<ProcessMemoryMapWidget>("Memory map");
-    auto& open_files_widget = process_tab_widget.add_tab<ProcessFileDescriptorMapWidget>("Open files");
-    auto& unveiled_paths_widget = process_tab_widget.add_tab<ProcessUnveiledPathsWidget>("Unveiled paths");
-    auto& thread_stack_widget = process_tab_widget.add_tab<ThreadStackWidget>("Stack");
-
-    open_files_widget.set_pid(pid);
-    thread_stack_widget.set_ids(pid, pid);
-    memory_map_widget.set_pid(pid);
-    unveiled_paths_widget.set_pid(pid);
+    auto& widget_stack = *main_widget->find_descendant_of_type_named<GUI::StackWidget>("widget_stack");
+    auto& unavailable_process_widget = *widget_stack.find_descendant_of_type_named<SystemMonitor::UnavailableProcessWidget>("unavailable_process");
+    unavailable_process_widget.set_text(String::formatted("Unable to access PID {}", pid));
 
     if (can_access_pid(pid))
-        widget_stack.set_active_widget(&process_tab_widget);
+        widget_stack.set_active_widget(widget_stack.find_descendant_of_type_named<GUI::TabWidget>("available_process"));
     else
         widget_stack.set_active_widget(&unavailable_process_widget);
 

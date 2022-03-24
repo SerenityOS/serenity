@@ -9,6 +9,8 @@
 
 #include <LibGUI/Widget.h>
 
+namespace SystemMonitor {
+
 class ProcessMemoryMapWidget final : public GUI::Widget {
     C_OBJECT(ProcessMemoryMapWidget);
 
@@ -25,3 +27,5 @@ private:
     pid_t m_pid { -1 };
     RefPtr<Core::Timer> m_timer;
 };
+
+}

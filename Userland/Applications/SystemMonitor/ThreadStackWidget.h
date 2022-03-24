@@ -10,6 +10,8 @@
 #include <LibGUI/TableView.h>
 #include <LibGUI/Widget.h>
 
+namespace SystemMonitor {
+
 class ThreadStackWidget final : public GUI::Widget {
     C_OBJECT(ThreadStackWidget)
 public:
@@ -30,3 +32,5 @@ private:
     RefPtr<GUI::TableView> m_stack_table;
     RefPtr<Core::Timer> m_timer;
 };
+
+}
