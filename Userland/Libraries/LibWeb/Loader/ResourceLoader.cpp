@@ -16,6 +16,7 @@
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <serenity.h>
 
 namespace Web {
 
@@ -114,22 +115,34 @@ static String sanitized_url_for_logging(AK::URL const& url)
     return url.to_string();
 }
 
+static void emit_signpost(String const& message, int id)
+{
+    auto string_id = perf_register_string(message.characters(), message.length());
+    perf_event(PERF_EVENT_SIGNPOST, string_id, id);
+}
+
+static size_t resource_id = 0;
+
 void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
 {
     auto& url = request.url();
     request.start_timer();
-    dbgln("ResourceLoader: Starting load of: \"{}\"", sanitized_url_for_logging(url));
 
-    const auto log_success = [](const auto& request) {
-        auto& url = request.url();
+    auto id = resource_id++;
+    auto url_for_logging = sanitized_url_for_logging(url);
+    emit_signpost(String::formatted("Starting load: {}", url_for_logging), id);
+    dbgln("ResourceLoader: Starting load of: \"{}\"", url_for_logging);
+
+    const auto log_success = [url_for_logging, id](const auto& request) {
         auto load_time_ms = request.load_time().to_milliseconds();
-        dbgln("ResourceLoader: Finished load of: \"{}\", Duration: {}ms", sanitized_url_for_logging(url), load_time_ms);
+        emit_signpost(String::formatted("Finished load: {}", url_for_logging), id);
+        dbgln("ResourceLoader: Finished load of: \"{}\", Duration: {}ms", url_for_logging, load_time_ms);
     };
 
-    const auto log_failure = [](const auto& request, const auto error_message) {
-        auto& url = request.url();
+    const auto log_failure = [url_for_logging, id](const auto& request, const auto error_message) {
         auto load_time_ms = request.load_time().to_milliseconds();
-        dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", sanitized_url_for_logging(url), error_message, load_time_ms);
+        emit_signpost(String::formatted("Failed load: {}", url_for_logging), id);
+        dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", url_for_logging, error_message, load_time_ms);
     };
 
     if (is_port_blocked(url.port_or_default())) {
