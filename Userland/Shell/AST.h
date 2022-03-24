@@ -420,7 +420,7 @@ public:
     }
     virtual String class_name() const { return "Node"; }
     Node(Position);
-    virtual ~Node();
+    virtual ~Node() = default;
 
     virtual bool is_bareword() const { return false; }
     virtual bool is_command() const { return false; }
@@ -531,7 +531,7 @@ protected:
 class And final : public Node {
 public:
     And(Position, NonnullRefPtr<Node>, NonnullRefPtr<Node>, Position and_position);
-    virtual ~And();
+    virtual ~And() = default;
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     const NonnullRefPtr<Node>& left() const { return m_left; }
@@ -553,7 +553,7 @@ private:
 class ListConcatenate final : public Node {
 public:
     ListConcatenate(Position, Vector<NonnullRefPtr<Node>>);
-    virtual ~ListConcatenate();
+    virtual ~ListConcatenate() = default;
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
     const Vector<NonnullRefPtr<Node>> list() const { return m_list; }
 
@@ -573,7 +573,7 @@ private:
 class Background final : public Node {
 public:
     Background(Position, NonnullRefPtr<Node>);
-    virtual ~Background();
+    virtual ~Background() = default;
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     const NonnullRefPtr<Node>& command() const { return m_command; }
@@ -591,7 +591,7 @@ private:
 class BarewordLiteral final : public Node {
 public:
     BarewordLiteral(Position, String);
-    virtual ~BarewordLiteral();
+    virtual ~BarewordLiteral() = default;
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     const String& text() const { return m_text; }
@@ -610,7 +610,7 @@ private:
 class BraceExpansion final : public Node {
 public:
     BraceExpansion(Position, NonnullRefPtrVector<Node>);
-    virtual ~BraceExpansion();
+    virtual ~BraceExpansion() = default;
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     const NonnullRefPtrVector<Node>& entries() const { return m_entries; }
@@ -628,7 +628,7 @@ private:
 class CastToCommand final : public Node {
 public:
     CastToCommand(Position, NonnullRefPtr<Node>);
-    virtual ~CastToCommand();
+    virtual ~CastToCommand() = default;
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     const NonnullRefPtr<Node>& inner() const { return m_inner; }
@@ -650,7 +650,7 @@ private:
 class CastToList final : public Node {
 public:
     CastToList(Position, RefPtr<Node>);
-    virtual ~CastToList();
+    virtual ~CastToList() = default;
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     const RefPtr<Node>& inner() const { return m_inner; }
@@ -733,7 +733,7 @@ public:
         , m_kind(kind)
     {
     }
-    virtual ~ContinuationControl() { }
+    virtual ~ContinuationControl() = default;
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     ContinuationKind continuation_kind() const { return m_kind; }

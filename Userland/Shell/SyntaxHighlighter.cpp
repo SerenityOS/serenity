@@ -581,8 +581,4 @@ bool SyntaxHighlighter::token_types_equal(u64 token0, u64 token1) const
     return token0 == token1;
 }
 
-SyntaxHighlighter::~SyntaxHighlighter()
-{
-}
-
 }
