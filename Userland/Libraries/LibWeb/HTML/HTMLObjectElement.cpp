@@ -8,6 +8,7 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/HTMLObjectElement.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -55,12 +56,34 @@ RefPtr<Layout::Node> HTMLObjectElement::create_layout_node(NonnullRefPtr<CSS::St
     return nullptr;
 }
 
+bool HTMLObjectElement::has_ancestor_media_element_or_object_element_not_showing_fallback_content() const
+{
+    for (auto const* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+        if (is<HTMLMediaElement>(*ancestor))
+            return true;
+
+        if (is<HTMLObjectElement>(*ancestor)) {
+            auto& ancestor_object = static_cast<HTMLObjectElement const&>(*ancestor);
+            if (ancestor_object.m_representation != Representation::Children)
+                return true;
+        }
+    }
+
+    return false;
+}
+
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element:queue-an-element-task
 void HTMLObjectElement::queue_element_task_to_run_object_representation_steps()
 {
     queue_an_element_task(HTML::Task::Source::DOMManipulation, [&]() {
         // 1. FIXME: If the user has indicated a preference that this object element's fallback content be shown instead of the element's usual behavior, then jump to the step below labeled fallback.
-        // 2. FIXME: If the element has an ancestor media element, or has an ancestor object element that is not showing its fallback content, or if the element is not in a document whose browsing context is non-null, or if the element's node document is not fully active, or if the element is still in the stack of open elements of an HTML parser or XML parser, or if the element is not being rendered, then jump to the step below labeled fallback.
+
+        // 2. If the element has an ancestor media element, or has an ancestor object element that is not showing its fallback content, or if the element is not in a document whose browsing context is non-null, or if the element's node document is not fully active, or if the element is still in the stack of open elements of an HTML parser or XML parser, or if the element is not being rendered, then jump to the step below labeled fallback.
+        if (!document().browsing_context() || !document().is_fully_active())
+            return run_object_representation_fallback_steps();
+        if (has_ancestor_media_element_or_object_element_not_showing_fallback_content())
+            return run_object_representation_fallback_steps();
+
         // 3. FIXME: If the classid attribute is present, and has a value that isn't the empty string, then: if the user agent can find a plugin suitable according to the value of the classid attribute, and plugins aren't being sandboxed, then that plugin should be used, and the value of the data attribute, if any, should be passed to the plugin. If no suitable plugin can be found, or if the plugin reports an error, jump to the step below labeled fallback.
 
         // 4. If the data attribute is present and its value is not the empty string, then:

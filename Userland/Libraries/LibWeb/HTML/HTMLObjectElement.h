@@ -48,6 +48,8 @@ public:
 private:
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
+    bool has_ancestor_media_element_or_object_element_not_showing_fallback_content() const;
+
     void queue_element_task_to_run_object_representation_steps();
     void run_object_representation_handler_steps(Optional<String> resource_type);
     void run_object_representation_completed_steps(Representation);
