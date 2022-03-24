@@ -72,7 +72,7 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
     return *layout_parent.last_child();
 }
 
-static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent, Layout::Node& layout_node)
+static Layout::Node& insertion_parent_for_block_node(Layout::NodeWithStyle& layout_parent, Layout::Node& layout_node)
 {
     if (!has_inline_or_in_flow_block_children(layout_parent)) {
         // Parent block has no children, insert this block into parent.
@@ -96,7 +96,7 @@ static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent
         layout_parent.remove_child(*child);
         children.append(child.release_nonnull());
     }
-    layout_parent.append_child(adopt_ref(*new BlockContainer(layout_node.document(), nullptr, layout_parent.computed_values().clone_inherited_values())));
+    layout_parent.append_child(layout_parent.create_anonymous_wrapper());
     layout_parent.set_children_are_inline(false);
     for (auto& child : children) {
         layout_parent.last_child()->append_child(child);
@@ -156,7 +156,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
             insertion_point.set_children_are_inline(true);
         } else {
             // Non-inlines can't be inserted into an inline parent, so find the nearest non-inline ancestor.
-            auto& nearest_non_inline_ancestor = [&]() -> Layout::Node& {
+            auto& nearest_non_inline_ancestor = [&]() -> Layout::NodeWithStyle& {
                 for (ssize_t i = m_parent_stack.size() - 1; i >= 0; --i) {
                     if (!m_parent_stack[i]->is_inline() || m_parent_stack[i]->is_inline_block())
                         return *m_parent_stack[i];
