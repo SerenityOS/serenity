@@ -64,6 +64,16 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
     float column_width = this->column_width();
     float frame_height = (float)frame_inner_rect().height() / (float)m_max_value;
 
+    for_each_signpost([&](auto& signpost) {
+        int x = (int)((float)(signpost.timestamp - start_of_trace) * column_width);
+        int y1 = frame_thickness();
+        int y2 = height() - frame_thickness() * 2;
+
+        painter.draw_line({ x, y1 }, { x, y2 }, Color::Magenta);
+
+        return IterationDecision::Continue;
+    });
+
     for (size_t bucket = 0; bucket < m_kernel_histogram->size(); bucket++) {
         auto kernel_value = m_kernel_histogram->at(bucket);
         auto user_value = m_user_histogram->at(bucket);
@@ -93,16 +103,6 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
     int select_hover_x = (int)((float)(normalized_hover_time - start_of_trace) * column_width);
     painter.fill_rect({ select_start_x, frame_thickness(), select_end_x - select_start_x, height() - frame_thickness() * 2 }, Color(0, 0, 0, 60));
     painter.fill_rect({ select_hover_x, frame_thickness(), 1, height() - frame_thickness() * 2 }, Color::NamedColor::Black);
-
-    for_each_signpost([&](auto& signpost) {
-        int x = (int)((float)(signpost.timestamp - start_of_trace) * column_width);
-        int y1 = frame_thickness();
-        int y2 = height() - frame_thickness() * 2;
-
-        painter.draw_line({ x, y1 }, { x, y2 }, Color::Magenta);
-
-        return IterationDecision::Continue;
-    });
 }
 
 template<typename Callback>
