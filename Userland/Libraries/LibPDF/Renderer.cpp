@@ -462,14 +462,14 @@ RENDERER_TODO(type3_font_set_glyph_width_and_bbox)
 
 RENDERER_HANDLER(set_stroking_space)
 {
-    state().stroke_color_space = MUST(get_color_space(args[0]));
+    state().stroke_color_space = TRY(get_color_space(args[0]));
     VERIFY(state().stroke_color_space);
     return {};
 }
 
 RENDERER_HANDLER(set_painting_space)
 {
-    state().paint_color_space = MUST(get_color_space(args[0]));
+    state().paint_color_space = TRY(get_color_space(args[0]));
     VERIFY(state().paint_color_space);
     return {};
 }
@@ -656,35 +656,7 @@ void Renderer::show_text(String const& string, float shift)
 PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space(Value const& value)
 {
     auto name = value.get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
-
-    // Simple color spaces with no parameters, which can be specified directly
-    if (name == CommonNames::DeviceGray)
-        return DeviceGrayColorSpace::the();
-    if (name == CommonNames::DeviceRGB)
-        return DeviceRGBColorSpace::the();
-    if (name == CommonNames::DeviceCMYK)
-        return DeviceCMYKColorSpace::the();
-    if (name == CommonNames::Pattern)
-        TODO();
-
-    // The color space is a complex color space with parameters that resides in
-    // the resource dictionary
-    auto color_space_resource_dict = TRY(m_page.resources->get_dict(m_document, CommonNames::ColorSpace));
-    if (!color_space_resource_dict->contains(name))
-        TODO();
-
-    auto color_space_array = TRY(color_space_resource_dict->get_array(m_document, name));
-    name = TRY(color_space_array->get_name_at(m_document, 0))->name();
-
-    Vector<Value> parameters;
-    parameters.ensure_capacity(color_space_array->size() - 1);
-    for (size_t i = 1; i < color_space_array->size(); i++)
-        parameters.unchecked_append(color_space_array->at(i));
-
-    if (name == CommonNames::CalRGB)
-        return TRY(CalRGBColorSpace::create(m_document, move(parameters)));
-
-    TODO();
+    return TRY(ColorSpace::create(m_document, name, m_page));
 }
 
 Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix()
