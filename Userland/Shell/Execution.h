@@ -17,7 +17,7 @@ namespace Shell {
 
 class FileDescriptionCollector {
 public:
-    FileDescriptionCollector() { }
+    FileDescriptionCollector() = default;
     ~FileDescriptionCollector();
 
     void collect();

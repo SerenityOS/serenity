@@ -408,10 +408,6 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
     return Node::complete_for_editor(shell, offset, { nullptr, nullptr, nullptr });
 }
 
-Node::~Node()
-{
-}
-
 void And::dump(int level) const
 {
     Node::dump(level);
@@ -461,10 +457,6 @@ And::And(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right,
         set_is_syntax_error(m_left->syntax_error_node());
     else if (m_right->is_syntax_error())
         set_is_syntax_error(m_right->syntax_error_node());
-}
-
-And::~And()
-{
 }
 
 void ListConcatenate::dump(int level) const
@@ -580,10 +572,6 @@ ListConcatenate::ListConcatenate(Position position, Vector<NonnullRefPtr<Node>> 
     }
 }
 
-ListConcatenate::~ListConcatenate()
-{
-}
-
 void Background::dump(int level) const
 {
     Node::dump(level);
@@ -615,10 +603,6 @@ Background::Background(Position position, NonnullRefPtr<Node> command)
 {
     if (m_command->is_syntax_error())
         set_is_syntax_error(m_command->syntax_error_node());
-}
-
-Background::~Background()
-{
 }
 
 void BarewordLiteral::dump(int level) const
@@ -670,10 +654,6 @@ void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
 BarewordLiteral::BarewordLiteral(Position position, String text)
     : Node(move(position))
     , m_text(move(text))
-{
-}
-
-BarewordLiteral::~BarewordLiteral()
 {
 }
 
@@ -730,10 +710,6 @@ BraceExpansion::BraceExpansion(Position position, NonnullRefPtrVector<Node> entr
             break;
         }
     }
-}
-
-BraceExpansion::~BraceExpansion()
-{
 }
 
 void CastToCommand::dump(int level) const
@@ -799,10 +775,6 @@ CastToCommand::CastToCommand(Position position, NonnullRefPtr<Node> inner)
         set_is_syntax_error(m_inner->syntax_error_node());
 }
 
-CastToCommand::~CastToCommand()
-{
-}
-
 void CastToList::dump(int level) const
 {
     Node::dump(level);
@@ -863,10 +835,6 @@ CastToList::CastToList(Position position, RefPtr<Node> inner)
 {
     if (m_inner && m_inner->is_syntax_error())
         set_is_syntax_error(m_inner->syntax_error_node());
-}
-
-CastToList::~CastToList()
-{
 }
 
 void CloseFdRedirection::dump(int level) const

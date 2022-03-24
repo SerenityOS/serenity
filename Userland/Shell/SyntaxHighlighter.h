@@ -12,8 +12,8 @@ namespace Shell {
 
 class SyntaxHighlighter : public Syntax::Highlighter {
 public:
-    SyntaxHighlighter() { }
-    virtual ~SyntaxHighlighter() override;
+    SyntaxHighlighter() = default;
+    virtual ~SyntaxHighlighter() override = default;
 
     virtual bool is_identifier(u64) const override;
     virtual bool is_navigatable(u64) const override;
