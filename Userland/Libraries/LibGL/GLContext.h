@@ -159,6 +159,7 @@ public:
     void gl_get_material(GLenum face, GLenum pname, void* params, GLenum type);
     void gl_clip_plane(GLenum plane, GLdouble const* equation);
     void gl_array_element(GLint i);
+    void gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
     void present();
 
 private:
@@ -402,7 +403,8 @@ private:
             decltype(&GLContext::gl_color_material),
             decltype(&GLContext::gl_get_light),
             decltype(&GLContext::gl_clip_plane),
-            decltype(&GLContext::gl_array_element)>;
+            decltype(&GLContext::gl_array_element),
+            decltype(&GLContext::gl_copy_tex_sub_image_2d)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;

@@ -681,6 +681,7 @@ GLAPI void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GL
 GLAPI void glPointSize(GLfloat size);
 GLAPI void glClipPlane(GLenum plane, GLdouble const* equation);
 GLAPI void glArrayElement(GLint i);
+GLAPI void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
 
 #ifdef __cplusplus
 }
