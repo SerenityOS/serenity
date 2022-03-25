@@ -27,14 +27,14 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
     // Make a custom encoding
     auto dict = obj->cast<DictObject>();
 
-    // FIXME: If this entry is absent, the Differences entry shall describe differences
-    //        from an implicit base encoding. For a font program that is embedded in the
-    //        PDF file, the implicit base encoding shall be a font program's built-in
-    //        encoding [...]. Otherwise, for a nonsymbolic font, it shall be
-    //        StandardEncoding, and for a symbolic font, it shall be the font's built-in
-    //        encoding.
-    auto base_encoding_obj = MUST(dict->get_object(document, CommonNames::BaseEncoding));
-    auto base_encoding = TRY(Encoding::from_object(document, base_encoding_obj));
+    RefPtr<Encoding> base_encoding;
+    if (dict->contains(CommonNames::BaseEncoding)) {
+        auto base_encoding_obj = MUST(dict->get_object(document, CommonNames::BaseEncoding));
+        base_encoding = TRY(Encoding::from_object(document, base_encoding_obj));
+    } else {
+        base_encoding = Encoding::standard_encoding();
+    }
+
     auto encoding = adopt_ref(*new Encoding());
 
     // Build a String -> Character mapping for handling the differences map
@@ -62,8 +62,10 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
             auto name = object->cast<NameObject>()->name();
 
             auto character = base_encoding_name_mapping.get(name);
-            VERIFY(character.has_value());
-            encoding->m_descriptors.set(current_code_point, character.value());
+            // FIXME: This should always have a value. This does cause crashes in certain
+            //        documents, so we must be missing something here.
+            if (character.has_value())
+                encoding->m_descriptors.set(current_code_point, character.value());
 
             current_code_point++;
         }
