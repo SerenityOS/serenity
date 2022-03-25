@@ -396,8 +396,9 @@ if (BUILD_LAGOM)
 
     # PDF
     file(GLOB LIBPDF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibPDF/*.cpp")
+    file(GLOB LIBPDF_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibPDF/*/*.cpp")
     lagom_lib(PDF pdf
-       SOURCES ${LIBPDF_SOURCES}
+       SOURCES ${LIBPDF_SOURCES} ${LIBPDF_SUBDIR_SOURCES}
        LIBS LagomGfx LagomIPC LagomTextCodec
     )
 

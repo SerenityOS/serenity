@@ -7,19 +7,9 @@
 #pragma once
 
 #include <LibPDF/Encoding.h>
-#include <LibPDF/ObjectDerivatives.h>
+#include <LibPDF/Fonts/PDFFont.h>
 
 namespace PDF {
-
-class PDFFont : public RefCounted<PDFFont> {
-public:
-    static PDFErrorOr<NonnullRefPtr<PDFFont>> create(Document*, NonnullRefPtr<DictObject>);
-
-    virtual ~PDFFont() = default;
-
-    virtual u32 char_code_to_code_point(u16 char_code) const = 0;
-    virtual float get_char_width(u16 char_code) const = 0;
-};
 
 class Type1Font : public PDFFont {
 public:

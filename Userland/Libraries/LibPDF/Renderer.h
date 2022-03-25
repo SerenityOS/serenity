@@ -19,7 +19,7 @@
 #include <LibGfx/Size.h>
 #include <LibPDF/ColorSpace.h>
 #include <LibPDF/Document.h>
-#include <LibPDF/Fonts.h>
+#include <LibPDF/Fonts/PDFFont.h>
 #include <LibPDF/Object.h>
 
 namespace PDF {
