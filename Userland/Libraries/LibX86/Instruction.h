@@ -872,7 +872,7 @@ ALWAYS_INLINE unsigned Instruction::length() const
     unsigned len = 1;
     if (has_sub_op())
         ++len;
-    if (m_descriptor->has_rm) {
+    if (m_descriptor && m_descriptor->has_rm) {
         ++len;
         if (m_modrm.m_has_sib)
             ++len;
@@ -993,6 +993,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, OperandSiz
                 warnln("Instruction {:02X} not understood", m_op);
         }
         m_descriptor = nullptr;
+        m_extra_bytes = prefix_bytes;
         return;
     }
 
