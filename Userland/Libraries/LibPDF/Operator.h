@@ -12,7 +12,7 @@
 #include <AK/Vector.h>
 #include <LibPDF/Value.h>
 
-#define ENUMERATE_COMMANDS(V)                                                            \
+#define ENUMERATE_OPERATORS(V)                                                           \
     V(SaveState, save_state, q)                                                          \
     V(RestoreState, restore_state, Q)                                                    \
     V(ConcatenateMatrix, concatenate_matrix, cm)                                         \
@@ -87,76 +87,76 @@
 
 namespace PDF {
 
-enum class CommandType {
+enum class OperatorType {
 #define V(name, snake_name, symbol) name,
-    ENUMERATE_COMMANDS(V)
+    ENUMERATE_OPERATORS(V)
 #undef V
         TextNextLineShowString,
     TextNextLineShowStringSetSpacing,
 };
 
-class Command {
+class Operator {
 public:
-    static CommandType command_type_from_symbol(StringView symbol_string)
+    static OperatorType operator_type_from_symbol(StringView symbol_string)
     {
 #define V(name, snake_name, symbol) \
     if (symbol_string == #symbol)   \
-        return CommandType::name;
-        ENUMERATE_COMMANDS(V)
+        return OperatorType::name;
+        ENUMERATE_OPERATORS(V)
 #undef V
 
         if (symbol_string == "'")
-            return CommandType::TextNextLineShowString;
+            return OperatorType::TextNextLineShowString;
         if (symbol_string == "''")
-            return CommandType::TextNextLineShowStringSetSpacing;
+            return OperatorType::TextNextLineShowStringSetSpacing;
 
         dbgln("unsupported graphics symbol {}", symbol_string);
         VERIFY_NOT_REACHED();
     }
 
-    static const char* command_name(CommandType command_name)
+    static const char* operator_name(OperatorType operator_type)
     {
-#define V(name, snake_name, symbol)        \
-    if (command_name == CommandType::name) \
+#define V(name, snake_name, symbol)          \
+    if (operator_type == OperatorType::name) \
         return #name;
-        ENUMERATE_COMMANDS(V)
+        ENUMERATE_OPERATORS(V)
 #undef V
 
-        if (command_name == CommandType::TextNextLineShowString)
+        if (operator_type == OperatorType::TextNextLineShowString)
             return "TextNextLineShowString";
-        if (command_name == CommandType::TextNextLineShowStringSetSpacing)
+        if (operator_type == OperatorType::TextNextLineShowStringSetSpacing)
             return "TextNextLineShowStringSetSpacing";
 
         VERIFY_NOT_REACHED();
     }
 
-    static const char* command_symbol(CommandType command_name)
+    static const char* operator_symbol(OperatorType operator_type)
     {
-#define V(name, snake_name, symbol)        \
-    if (command_name == CommandType::name) \
+#define V(name, snake_name, symbol)          \
+    if (operator_type == OperatorType::name) \
         return #symbol;
-        ENUMERATE_COMMANDS(V)
+        ENUMERATE_OPERATORS(V)
 #undef V
 
-        if (command_name == CommandType::TextNextLineShowString)
+        if (operator_type == OperatorType::TextNextLineShowString)
             return "'";
-        if (command_name == CommandType::TextNextLineShowStringSetSpacing)
+        if (operator_type == OperatorType::TextNextLineShowStringSetSpacing)
             return "''";
 
         VERIFY_NOT_REACHED();
     }
 
-    Command(CommandType command_type, Vector<Value> arguments)
-        : m_command_type(command_type)
+    Operator(OperatorType operator_type, Vector<Value> arguments)
+        : m_operator_type(operator_type)
         , m_arguments(move(arguments))
     {
     }
 
-    [[nodiscard]] ALWAYS_INLINE CommandType command_type() const { return m_command_type; }
+    [[nodiscard]] ALWAYS_INLINE OperatorType type() const { return m_operator_type; }
     [[nodiscard]] ALWAYS_INLINE Vector<Value> const& arguments() const { return m_arguments; }
 
 private:
-    CommandType m_command_type;
+    OperatorType m_operator_type;
     Vector<Value> m_arguments;
 };
 
@@ -165,17 +165,17 @@ private:
 namespace AK {
 
 template<>
-struct Formatter<PDF::Command> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& format_builder, PDF::Command const& command)
+struct Formatter<PDF::Operator> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& format_builder, PDF::Operator const& op)
     {
         StringBuilder builder;
         builder.appendff("{} ({})",
-            PDF::Command::command_name(command.command_type()),
-            PDF::Command::command_symbol(command.command_type()));
+            PDF::Operator::operator_name(op.type()),
+            PDF::Operator::operator_symbol(op.type()));
 
-        if (!command.arguments().is_empty()) {
+        if (!op.arguments().is_empty()) {
             builder.append(" [");
-            for (auto& argument : command.arguments())
+            for (auto& argument : op.arguments())
                 builder.appendff(" {}", argument);
             builder.append(" ]");
         }

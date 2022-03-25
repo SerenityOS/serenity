@@ -78,28 +78,28 @@ PDFErrorOr<void> Renderer::render()
         byte_buffer.append(bytes.data(), bytes.size());
     }
 
-    auto commands = TRY(Parser::parse_graphics_commands(m_document, byte_buffer));
+    auto operators = TRY(Parser::parse_operators(m_document, byte_buffer));
 
-    for (auto& command : commands)
-        TRY(handle_command(command));
+    for (auto& op : operators)
+        TRY(handle_operator(op));
 
     return {};
 }
 
-PDFErrorOr<void> Renderer::handle_command(Command const& command)
+PDFErrorOr<void> Renderer::handle_operator(Operator const& op)
 {
-    switch (command.command_type()) {
-#define V(name, snake_name, symbol)                    \
-    case CommandType::name:                            \
-        TRY(handle_##snake_name(command.arguments())); \
+    switch (op.type()) {
+#define V(name, snake_name, symbol)               \
+    case OperatorType::name:                      \
+        TRY(handle_##snake_name(op.arguments())); \
         break;
-        ENUMERATE_COMMANDS(V)
+        ENUMERATE_OPERATORS(V)
 #undef V
-    case CommandType::TextNextLineShowString:
-        TRY(handle_text_next_line_show_string(command.arguments()));
+    case OperatorType::TextNextLineShowString:
+        TRY(handle_text_next_line_show_string(op.arguments()));
         break;
-    case CommandType::TextNextLineShowStringSetSpacing:
-        TRY(handle_text_next_line_show_string_set_spacing(command.arguments()));
+    case OperatorType::TextNextLineShowStringSetSpacing:
+        TRY(handle_text_next_line_show_string_set_spacing(op.arguments()));
         break;
     }
 

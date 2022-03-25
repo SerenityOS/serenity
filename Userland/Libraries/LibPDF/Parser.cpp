@@ -22,11 +22,11 @@ static NonnullRefPtr<T> make_object(Args... args) requires(IsBaseOf<Object, T>)
     return adopt_ref(*new T(forward<Args>(args)...));
 }
 
-PDFErrorOr<Vector<Command>> Parser::parse_graphics_commands(Document* document, ReadonlyBytes bytes)
+PDFErrorOr<Vector<Operator>> Parser::parse_operators(Document* document, ReadonlyBytes bytes)
 {
     auto parser = adopt_ref(*new Parser(document, bytes));
     parser->m_disable_encryption = true;
-    return parser->parse_graphics_commands();
+    return parser->parse_operators();
 }
 
 Parser::Parser(Document* document, ReadonlyBytes bytes)
@@ -1029,39 +1029,39 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
     return stream_object;
 }
 
-PDFErrorOr<Vector<Command>> Parser::parse_graphics_commands()
+PDFErrorOr<Vector<Operator>> Parser::parse_operators()
 {
-    Vector<Command> commands;
-    Vector<Value> command_args;
+    Vector<Operator> operators;
+    Vector<Value> operator_args;
 
-    constexpr static auto is_command_char = [](char ch) {
+    constexpr static auto is_operator_char = [](char ch) {
         return isalpha(ch) || ch == '*' || ch == '\'';
     };
 
     while (!m_reader.done()) {
         auto ch = m_reader.peek();
-        if (is_command_char(ch)) {
-            auto command_start = m_reader.offset();
-            while (is_command_char(ch)) {
+        if (is_operator_char(ch)) {
+            auto operator_start = m_reader.offset();
+            while (is_operator_char(ch)) {
                 consume();
                 if (m_reader.done())
                     break;
                 ch = m_reader.peek();
             }
 
-            auto command_string = StringView(m_reader.bytes().slice(command_start, m_reader.offset() - command_start));
-            auto command_type = Command::command_type_from_symbol(command_string);
-            commands.append(Command(command_type, move(command_args)));
-            command_args = Vector<Value>();
+            auto operator_string = StringView(m_reader.bytes().slice(operator_start, m_reader.offset() - operator_start));
+            auto operator_type = Operator::operator_type_from_symbol(operator_string);
+            operators.append(Operator(operator_type, move(operator_args)));
+            operator_args = Vector<Value>();
             consume_whitespace();
 
             continue;
         }
 
-        command_args.append(TRY(parse_value()));
+        operator_args.append(TRY(parse_value()));
     }
 
-    return commands;
+    return operators;
 }
 
 bool Parser::matches_eol() const
