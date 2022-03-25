@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,11 +12,10 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
-#include <getopt.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -39,7 +39,7 @@ static Result average_result(const Vector<Result>& results)
     return average;
 }
 
-static Optional<Result> benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache);
+static ErrorOr<Result> benchmark(const String& filename, int file_size, ByteBuffer& buffer, bool allow_cache);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -85,10 +85,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             while (timer.elapsed() < time_per_benchmark * 1000) {
                 out(".");
                 fflush(stdout);
-                auto result = benchmark(filename, file_size, block_size, buffer_result.value(), allow_cache);
-                if (!result.has_value())
-                    return 1;
-                results.append(result.release_value());
+                auto result = TRY(benchmark(filename, file_size, buffer_result.value(), allow_cache));
+                results.append(result);
                 usleep(100);
             }
             auto average = average_result(results);
@@ -101,23 +99,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-Optional<Result> benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache)
+ErrorOr<Result> benchmark(const String& filename, int file_size, ByteBuffer& buffer, bool allow_cache)
 {
     int flags = O_CREAT | O_TRUNC | O_RDWR;
     if (!allow_cache)
         flags |= O_DIRECT;
 
-    int fd = open(filename.characters(), flags, 0644);
-    if (fd == -1) {
-        perror("open");
-        exit(1);
-    }
+    int fd = TRY(Core::System::open(filename.characters(), flags, 0644));
 
     auto fd_cleanup = ScopeGuard([fd, filename] {
-        if (close(fd) < 0)
-            perror("close");
-        if (unlink(filename.characters()) < 0)
-            perror("unlink");
+        auto void_or_error = Core::System::close(fd);
+        if (void_or_error.is_error())
+            warnln("{}", void_or_error.release_error());
+
+        void_or_error = Core::System::unlink(filename);
+        if (void_or_error.is_error())
+            warnln("{}", void_or_error.release_error());
     });
 
     Result result;
@@ -126,29 +123,18 @@ Optional<Result> benchmark(const String& filename, int file_size, int block_size
 
     ssize_t total_written = 0;
     while (total_written < file_size) {
-        auto nwritten = write(fd, buffer.data(), block_size);
-        if (nwritten < 0) {
-            perror("write");
-            return {};
-        }
+        auto nwritten = TRY(Core::System::write(fd, buffer));
         total_written += nwritten;
     }
 
     result.write_bps = (u64)(timer.elapsed() ? (file_size / timer.elapsed()) : file_size) * 1000;
 
-    if (lseek(fd, 0, SEEK_SET) < 0) {
-        perror("lseek");
-        return {};
-    }
+    TRY(Core::System::lseek(fd, 0, SEEK_SET));
 
     timer.start();
     ssize_t total_read = 0;
     while (total_read < file_size) {
-        auto nread = read(fd, buffer.data(), block_size);
-        if (nread < 0) {
-            perror("read");
-            return {};
-        }
+        auto nread = TRY(Core::System::read(fd, buffer));
         total_read += nread;
     }
 
