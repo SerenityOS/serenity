@@ -26,7 +26,7 @@ static bool is_standard_latin_font(FlyString const& font)
         "Courier-BoldOblique");
 }
 
-PDFErrorOr<NonnullRefPtr<Type1Font>> Type1Font::create(Document* document, NonnullRefPtr<DictObject> dict)
+PDFErrorOr<Type1Font::Data> Type1Font::parse_data(Document* document, NonnullRefPtr<DictObject> dict)
 {
     // FIXME: "Required except for the standard 14 fonts"...
     //        "Beginning with PDF 1.5, the special treatment given to the standard 14
@@ -68,33 +68,36 @@ PDFErrorOr<NonnullRefPtr<Type1Font>> Type1Font::create(Document* document, Nonnu
     if (descriptor->contains(CommonNames::MissingWidth))
         missing_width = descriptor->get_value(CommonNames::MissingWidth).get<int>();
 
-    return adopt_ref(*new Type1Font(to_unicode, encoding.release_nonnull(), widths, missing_width));
+    return Type1Font::Data { to_unicode, encoding.release_nonnull(), move(widths), missing_width };
 }
 
-Type1Font::Type1Font(RefPtr<StreamObject> to_unicode, NonnullRefPtr<Encoding> encoding, HashMap<u16, u16> const& widths, u16 missing_width)
-    : m_to_unicode(to_unicode)
-    , m_encoding(encoding)
-    , m_widths(widths)
-    , m_missing_width(missing_width)
+PDFErrorOr<NonnullRefPtr<Type1Font>> Type1Font::create(Document* document, NonnullRefPtr<DictObject> dict)
+{
+    auto data = TRY(Type1Font::parse_data(document, dict));
+    return adopt_ref(*new Type1Font(data));
+}
+
+Type1Font::Type1Font(Data data)
+    : m_data(move(data))
 {
 }
 
 u32 Type1Font::char_code_to_code_point(u16 char_code) const
 {
-    if (m_to_unicode)
+    if (m_data.to_unicode)
         TODO();
 
-    auto descriptor = m_encoding->get_char_code_descriptor(char_code);
+    auto descriptor = m_data.encoding->get_char_code_descriptor(char_code);
     return descriptor.code_point;
 }
 
 float Type1Font::get_char_width(u16 char_code, float) const
 {
     u16 width;
-    if (auto char_code_width = m_widths.get(char_code); char_code_width.has_value()) {
+    if (auto char_code_width = m_data.widths.get(char_code); char_code_width.has_value()) {
         width = char_code_width.value();
     } else {
-        width = m_missing_width;
+        width = m_data.missing_width;
     }
 
     return static_cast<float>(width) / 1000.0f;
