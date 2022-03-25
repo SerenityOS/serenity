@@ -654,7 +654,7 @@ void Renderer::show_text(String const& string, float shift)
 
     for (auto char_code : string.bytes()) {
         auto code_point = text_state().font->char_code_to_code_point(char_code);
-        auto char_width = text_state().font->get_char_width(char_code);
+        auto char_width = text_state().font->get_char_width(char_code, font_size);
 
         if (code_point != 0x20)
             m_painter.draw_glyph(glyph_position.to_type<int>(), code_point, *font, state().paint_color);
