@@ -6,6 +6,8 @@ set(SOURCES
     Encryption.cpp
     Filter.cpp
     Fonts/PDFFont.cpp
+    Fonts/TrueTypeFont.cpp
+    Fonts/Type0Font.cpp
     Fonts/Type1Font.cpp
     ObjectDerivatives.cpp
     Parser.cpp

@@ -12,4 +12,6 @@ namespace PDF {
 ENUMERATE_COMMON_NAMES(ENUMERATE)
 #undef ENUMERATE
 
+FlyString CommonNames::IdentityH = "Identity-H";
+
 }
