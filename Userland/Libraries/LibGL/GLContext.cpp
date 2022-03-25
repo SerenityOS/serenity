@@ -3721,6 +3721,18 @@ void GLContext::get_material_param(Face face, GLenum pname, T* params)
     }
 }
 
+void GLContext::gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_copy_tex_sub_image_2d, target, level, xoffset, yoffset, x, y, width, height);
+    RETURN_WITH_ERROR_IF(!(target == GL_TEXTURE_2D || target == GL_TEXTURE_1D_ARRAY), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(level < 0, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: implement
+    dbgln_if(GL_DEBUG, "GLContext FIXME: implement gl_copy_tex_sub_image_2d({:#x}, {}, {}, {}, {}, {}, {}, {})",
+        target, level, xoffset, yoffset, x, y, width, height);
+}
+
 NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap)
 {
     // FIXME: Make driver selectable. This is currently hardcoded to LibSoftGPU
