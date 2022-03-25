@@ -223,6 +223,8 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                 box.box_model().margin.bottom);
         }
 
+        builder.appendff(" children: {}", box.children_are_inline() ? "inline" : "not-inline");
+
         builder.append("\n");
     }
 
