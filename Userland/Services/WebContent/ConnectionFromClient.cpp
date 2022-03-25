@@ -313,9 +313,9 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             MUST(serializer.add("padding_bottom", box_model.padding.bottom));
             MUST(serializer.add("padding_left", box_model.padding.left));
             MUST(serializer.add("margin_top", box_model.margin.top));
-            MUST(serializer.add("margin_right", box_model.margin.top));
-            MUST(serializer.add("margin_bottom", box_model.margin.top));
-            MUST(serializer.add("margin_left", box_model.margin.top));
+            MUST(serializer.add("margin_right", box_model.margin.right));
+            MUST(serializer.add("margin_bottom", box_model.margin.bottom));
+            MUST(serializer.add("margin_left", box_model.margin.left));
             MUST(serializer.add("border_top", box_model.border.top));
             MUST(serializer.add("border_right", box_model.border.right));
             MUST(serializer.add("border_bottom", box_model.border.bottom));
