@@ -823,7 +823,7 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
     auto attribute = m_terminal.attribute_at(position);
 
     if (attribute.href_id != m_hovered_href_id) {
-        if (m_active_href_id.is_null() || m_active_href_id == attribute.href_id) {
+        if (!attribute.href_id.is_null()) {
             m_hovered_href_id = attribute.href_id;
             m_hovered_href = attribute.href;
 
@@ -839,6 +839,7 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
         } else {
             m_hovered_href_id = {};
             m_hovered_href = {};
+            set_tooltip({});
         }
         show_or_hide_tooltip();
         if (!m_hovered_href.is_empty())
