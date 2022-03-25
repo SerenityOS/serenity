@@ -298,23 +298,25 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(F
 
             return IterationDecision::Continue;
         });
-        // In addition, if the element has any floating descendants
-        // whose bottom margin edge is below the element's bottom content edge,
-        // then the height is increased to include those edges.
-        root.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
-            if (!child_box.is_floating())
-                return IterationDecision::Continue;
-
-            auto const& child_box_state = state.get(child_box);
-            // FIXME: We're ignoring negative margins here, figure out the correct thing to do.
-            float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.border_box_bottom() + max(0, child_box_state.margin_bottom);
-
-            if (!bottom.has_value() || child_box_bottom > bottom.value())
-                bottom = child_box_bottom;
-
-            return IterationDecision::Continue;
-        });
     }
+
+    // In addition, if the element has any floating descendants
+    // whose bottom margin edge is below the element's bottom content edge,
+    // then the height is increased to include those edges.
+    root.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
+        if (!child_box.is_floating())
+            return IterationDecision::Continue;
+
+        auto const& child_box_state = state.get(child_box);
+        // FIXME: We're ignoring negative margins here, figure out the correct thing to do.
+        float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.border_box_bottom() + max(0, child_box_state.margin_bottom);
+
+        if (!bottom.has_value() || child_box_bottom > bottom.value())
+            bottom = child_box_bottom;
+
+        return IterationDecision::Continue;
+    });
+
     return bottom.value_or(0) - top.value_or(0);
 }
 
