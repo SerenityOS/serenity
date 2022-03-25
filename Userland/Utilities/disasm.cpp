@@ -132,14 +132,14 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
         size_t length = insn.value().length();
         StringBuilder builder;
-        builder.appendff("{: 8x}:\t", virtual_offset);
+        builder.appendff("{:p}  ", virtual_offset);
         for (size_t i = 0; i < 7; i++) {
             if (i < length)
                 builder.appendff("{:02x} ", asm_data[offset + i]);
             else
                 builder.append("   "sv);
         }
-        builder.append("\t"sv);
+        builder.append(" "sv);
         builder.append(insn.value().to_string(virtual_offset, symbol_provider));
         outln("{}", builder.string_view());
 
