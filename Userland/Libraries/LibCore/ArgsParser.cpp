@@ -520,6 +520,32 @@ void ArgsParser::add_option(Optional<size_t>& value, const char* help_string, co
     add_option(move(option));
 }
 
+void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator, bool hidden)
+{
+    Option option {
+        true,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        [&values, separator](char const* s) {
+            bool parsed_all_values = true;
+
+            StringView { s }.for_each_split_view(separator, false, [&](auto value) {
+                if (auto maybe_value = AK::StringUtils::convert_to_uint<size_t>(value); maybe_value.has_value())
+                    values.append(*maybe_value);
+                else
+                    parsed_all_values = false;
+            });
+
+            return parsed_all_values;
+        },
+        hidden
+    };
+
+    add_option(move(option));
+}
+
 void ArgsParser::add_positional_argument(Arg&& arg)
 {
     m_positional_args.append(move(arg));

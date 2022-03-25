@@ -80,6 +80,7 @@ public:
     void add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden = false);
     void add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden = false);
     void add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, bool hidden = false);
+    void add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator = ',', bool hidden = false);
 
     void add_positional_argument(Arg&&);
     void add_positional_argument(char const*& value, char const* help_string, char const* name, Required required = Required::Yes);
