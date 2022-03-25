@@ -89,16 +89,16 @@ private:
 
     PDFErrorOr<void> render();
 
-    PDFErrorOr<void> handle_command(Command const&);
+    PDFErrorOr<void> handle_operator(Operator const&);
 #define V(name, snake_name, symbol) \
     PDFErrorOr<void> handle_##snake_name(Vector<Value> const& args);
-    ENUMERATE_COMMANDS(V)
+    ENUMERATE_OPERATORS(V)
 #undef V
     PDFErrorOr<void> handle_text_next_line_show_string(Vector<Value> const& args);
     PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(Vector<Value> const& args);
 
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
-    // shift is the manual advance given in the TJ command array
+    // shift is the manual advance given in the TJ operator array
     void show_text(String const&, float shift = 0.0f);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space(Value const&);
 

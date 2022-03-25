@@ -9,8 +9,8 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
 #include <AK/WeakPtr.h>
-#include <LibPDF/Command.h>
 #include <LibPDF/Object.h>
+#include <LibPDF/Operator.h>
 #include <LibPDF/Reader.h>
 #include <LibPDF/XRefTable.h>
 
@@ -25,7 +25,7 @@ public:
         Linearized,
     };
 
-    static PDFErrorOr<Vector<Command>> parse_graphics_commands(Document*, ReadonlyBytes);
+    static PDFErrorOr<Vector<Operator>> parse_operators(Document*, ReadonlyBytes);
 
     Parser(Document*, ReadonlyBytes);
 
@@ -115,7 +115,7 @@ private:
     PDFErrorOr<NonnullRefPtr<DictObject>> parse_dict();
     PDFErrorOr<NonnullRefPtr<StreamObject>> parse_stream(NonnullRefPtr<DictObject> dict);
 
-    PDFErrorOr<Vector<Command>> parse_graphics_commands();
+    PDFErrorOr<Vector<Operator>> parse_operators();
 
     void push_reference(Reference const& ref) { m_current_reference_stack.append(ref); }
     void pop_reference() { m_current_reference_stack.take_last(); }
