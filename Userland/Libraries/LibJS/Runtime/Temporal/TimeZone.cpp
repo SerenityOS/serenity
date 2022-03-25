@@ -508,7 +508,7 @@ ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(Glob
     // 2. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
     auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(global_object, time_zone, instant));
 
-    // 3. Let result be ! GetISOPartsFromEpoch(instant.[[Nanoseconds]]).
+    // 3. Let result be ! GetISOPartsFromEpoch(ℝ(instant.[[Nanoseconds]])).
     auto result = get_iso_parts_from_epoch(instant.nanoseconds());
 
     // 4. Set result to ! BalanceISODateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]] + offsetNanoseconds).
