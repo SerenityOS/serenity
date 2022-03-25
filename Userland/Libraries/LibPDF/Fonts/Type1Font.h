@@ -19,7 +19,7 @@ public:
     ~Type1Font() override = default;
 
     u32 char_code_to_code_point(u16 char_code) const override;
-    float get_char_width(u16 char_code) const override;
+    float get_char_width(u16 char_code, float font_size) const override;
 
 private:
     RefPtr<StreamObject> m_to_unicode;
