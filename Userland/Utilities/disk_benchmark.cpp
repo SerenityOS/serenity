@@ -9,6 +9,7 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
@@ -38,12 +39,6 @@ static Result average_result(const Vector<Result>& results)
     return average;
 }
 
-static void exit_with_usage(int rc)
-{
-    warnln("Usage: disk_benchmark [-h] [-d directory] [-t time_per_benchmark] [-f file_size1,file_size2,...] [-b block_size1,block_size2,...]");
-    exit(rc);
-}
-
 static Optional<Result> benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -54,31 +49,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<size_t> block_sizes;
     bool allow_cache = false;
 
-    int opt;
-    while ((opt = getopt(arguments.argc, arguments.argv, "chd:t:f:b:")) != -1) {
-        switch (opt) {
-        case 'h':
-            exit_with_usage(0);
-            break;
-        case 'c':
-            allow_cache = true;
-            break;
-        case 'd':
-            directory = optarg;
-            break;
-        case 't':
-            time_per_benchmark = atoi(optarg);
-            break;
-        case 'f':
-            for (const auto& size : String(optarg).split(','))
-                file_sizes.append(atoi(size.characters()));
-            break;
-        case 'b':
-            for (const auto& size : String(optarg).split(','))
-                block_sizes.append(atoi(size.characters()));
-            break;
-        }
-    }
+    Core::ArgsParser args_parser;
+    args_parser.add_option(allow_cache, "Allow using disk cache", "cache", 'c');
+    args_parser.add_option(directory, "Path to a directory where we can store the disk benchmark temp file", "directory", 'd', "directory");
+    args_parser.add_option(time_per_benchmark, "Time elapsed per benchmark", "time-per-benchmark", 't', "time-per-benchmark");
+    args_parser.add_option(file_sizes, "A comma-separated list of file sizes", "file-size", 'f', "file-size");
+    args_parser.add_option(block_sizes, "A comma-separated list of block sizes", "block-size", 'b', "block-size");
+    args_parser.parse(arguments);
 
     if (file_sizes.size() == 0) {
         file_sizes = { 131072, 262144, 524288, 1048576, 5242880 };
