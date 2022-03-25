@@ -176,7 +176,7 @@ private:
     u64 m_bit_length { 0 };
     u64 m_state[8];
 
-    constexpr static auto FinalBlockDataSize = BlockSize - 8;
+    constexpr static auto FinalBlockDataSize = BlockSize - 16;
     constexpr static auto Rounds = 80;
 };
 
@@ -228,7 +228,7 @@ private:
     u64 m_bit_length { 0 };
     u64 m_state[8];
 
-    constexpr static auto FinalBlockDataSize = BlockSize - 8;
+    constexpr static auto FinalBlockDataSize = BlockSize - 16;
     constexpr static auto Rounds = 80;
 };
 
