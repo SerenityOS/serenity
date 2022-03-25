@@ -1,4 +1,4 @@
-From 9f78eb848cce77cfb7c706ceb548b5802cc2d1fb Mon Sep 17 00:00:00 2001
+From be8a31683b1874d62dc514eb214dfa268ed0a4a4 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Fri, 14 Jan 2022 23:35:20 +0330
 Subject: [PATCH 1/4] Enforce UTF-8 as the locale encoding
@@ -23,5 +23,5 @@ index 6ab0ae4..dffd616 100644
     // See _Py_GetLocaleEncoding(), PyUnicode_DecodeLocale()
     // and PyUnicode_EncodeLocale().
 -- 
-2.34.1
+2.35.1
 
