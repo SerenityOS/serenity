@@ -5,7 +5,7 @@
  */
 
 #include <LibPDF/CommonNames.h>
-#include <LibPDF/Fonts.h>
+#include <LibPDF/Fonts/Type1Font.h>
 
 namespace PDF {
 
@@ -24,16 +24,6 @@ static bool is_standard_latin_font(FlyString const& font)
         "Times-BoldItalic",
         "Helvetica-BoldOblique",
         "Courier-BoldOblique");
-}
-
-PDFErrorOr<NonnullRefPtr<PDFFont>> PDFFont::create(Document* document, NonnullRefPtr<DictObject> dict)
-{
-    auto subtype = TRY(dict->get_name(document, CommonNames::Subtype))->name();
-
-    if (subtype == "Type1")
-        return TRY(Type1Font::create(document, dict));
-
-    TODO();
 }
 
 PDFErrorOr<NonnullRefPtr<Type1Font>> Type1Font::create(Document* document, NonnullRefPtr<DictObject> dict)

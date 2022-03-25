@@ -6,7 +6,7 @@
 
 #include <AK/Utf8View.h>
 #include <LibPDF/CommonNames.h>
-#include <LibPDF/Fonts.h>
+#include <LibPDF/Fonts/PDFFont.h>
 #include <LibPDF/Renderer.h>
 
 #define RENDERER_HANDLER(name) \
