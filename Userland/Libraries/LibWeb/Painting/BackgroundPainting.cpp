@@ -6,12 +6,14 @@
  */
 
 #include <LibGfx/Painter.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/PaintContext.h>
 
 namespace Web::Painting {
 
+// https://www.w3.org/TR/css-backgrounds-3/#backgrounds
 void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, Gfx::IntRect const& border_rect, Color background_color, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiusData const& border_radius)
 {
     auto& painter = context.painter();
@@ -57,10 +59,18 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         painter.save();
         painter.add_clip_rect(clip_rect);
 
-        // FIXME: Attachment
+        Gfx::IntRect background_positioning_area;
 
-        // Origin
-        auto background_positioning_area = get_box(layer.origin);
+        // Attachment and Origin
+        switch (layer.attachment) {
+        case CSS::BackgroundAttachment::Fixed:
+            background_positioning_area = layout_node.root().browsing_context().viewport_rect();
+            break;
+        case CSS::BackgroundAttachment::Local:
+        case CSS::BackgroundAttachment::Scroll:
+            background_positioning_area = get_box(layer.origin);
+            break;
+        }
 
         // Size
         Gfx::IntRect image_rect;
