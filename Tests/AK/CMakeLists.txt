@@ -34,6 +34,7 @@ set(AK_TEST_SOURCES
     TestIPv4Address.cpp
     TestIPv6Address.cpp
     TestIndexSequence.cpp
+    TestInsertionSort.cpp
     TestIntegerMath.cpp
     TestIntrusiveList.cpp
     TestIntrusiveRedBlackTree.cpp
