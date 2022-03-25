@@ -20,7 +20,9 @@ PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ConnectionFromClient> conn
     m_connection->on_finish_playing_buffer = [this](auto finished_buffer) {
         auto last_buffer_in_queue = m_enqueued_buffers.dequeue();
         // A fail here would mean that the server skipped one of our buffers, which is BAD.
-        VERIFY(last_buffer_in_queue == finished_buffer);
+        if (last_buffer_in_queue != finished_buffer)
+            dbgln("Never heard back about buffer {}, what happened?", last_buffer_in_queue);
+
         next_buffer();
     };
     m_timer->stop();
