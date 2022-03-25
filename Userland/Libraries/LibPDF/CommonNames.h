@@ -81,6 +81,7 @@
     A(ML)                         \
     A(Matrix)                     \
     A(MediaBox)                   \
+    A(MissingWidth)               \
     A(N)                          \
     A(Next)                       \
     A(O)                          \

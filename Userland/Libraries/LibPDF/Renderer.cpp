@@ -641,8 +641,9 @@ void Renderer::show_text(String const& string, float shift)
 {
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
 
-    auto font_size = static_cast<int>(text_rendering_matrix.x_scale() * text_state().font_size);
-    auto font = Gfx::FontDatabase::the().get(text_state().font_family, text_state().font_variant, font_size);
+    auto font_size = text_rendering_matrix.x_scale() * text_state().font_size;
+    auto font_size_int = static_cast<int>(text_rendering_matrix.x_scale() * text_state().font_size);
+    auto font = Gfx::FontDatabase::the().get(text_state().font_family, text_state().font_variant, font_size_int);
     VERIFY(font);
 
     auto glyph_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
@@ -653,11 +654,12 @@ void Renderer::show_text(String const& string, float shift)
 
     for (auto char_code : string.bytes()) {
         auto code_point = text_state().font->char_code_to_code_point(char_code);
+        auto char_width = text_state().font->get_char_width(char_code);
 
         if (code_point != 0x20)
             m_painter.draw_glyph(glyph_position.to_type<int>(), code_point, *font, state().paint_color);
 
-        auto glyph_width = static_cast<float>(font->glyph_width(code_point));
+        auto glyph_width = char_width * font_size;
         auto tx = (glyph_width - shift / 1000.0f);
         tx += text_state().character_spacing;
 
