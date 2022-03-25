@@ -220,7 +220,9 @@ void SoundPlayerWidgetAdvancedView::sound_buffer_played(RefPtr<Audio::Buffer> bu
 {
     m_visualization->set_buffer(buffer);
     m_visualization->set_samplerate(sample_rate);
-    m_playback_progress_slider->set_value(samples_played);
+    // If the user is currently dragging the slider, don't interfere.
+    if (!m_playback_progress_slider->mouse_is_down())
+        m_playback_progress_slider->set_value(samples_played);
 }
 
 void SoundPlayerWidgetAdvancedView::volume_changed(double volume)
