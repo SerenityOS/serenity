@@ -157,7 +157,7 @@ void NVMeQueue::write(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32
     SpinlockLocker m_lock(m_request_lock);
     m_current_request = request;
 
-    if (auto result = m_current_request->read_from_buffer(m_current_request->buffer(), m_rw_dma_region->vaddr().as_ptr(), 512 * m_current_request->block_count()); result.is_error()) {
+    if (auto result = m_current_request->read_from_buffer(m_current_request->buffer(), m_rw_dma_region->vaddr().as_ptr(), m_current_request->buffer_size()); result.is_error()) {
         complete_current_request(AsyncDeviceRequest::MemoryFault);
         return;
     }

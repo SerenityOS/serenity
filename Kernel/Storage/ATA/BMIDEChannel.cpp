@@ -130,7 +130,7 @@ void BMIDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult re
 
         if (result == AsyncDeviceRequest::Success) {
             if (current_request->request_type() == AsyncBlockDeviceRequest::Read) {
-                if (auto result = current_request->write_to_buffer(current_request->buffer(), m_dma_buffer_region->vaddr().as_ptr(), 512 * current_request->block_count()); result.is_error()) {
+                if (auto result = current_request->write_to_buffer(current_request->buffer(), m_dma_buffer_region->vaddr().as_ptr(), current_request->buffer_size()); result.is_error()) {
                     lock.unlock();
                     current_request->complete(AsyncDeviceRequest::MemoryFault);
                     return;
@@ -157,9 +157,9 @@ void BMIDEChannel::ata_write_sectors(bool slave_request, u16 capabilities)
     dbgln_if(PATA_DEBUG, "BMIDEChannel::ata_write_sectors ({} x {})", m_current_request->block_index(), m_current_request->block_count());
 
     prdt().offset = m_dma_buffer_page->paddr().get();
-    prdt().size = 512 * m_current_request->block_count();
+    prdt().size = m_current_request->buffer_size();
 
-    if (auto result = m_current_request->read_from_buffer(m_current_request->buffer(), m_dma_buffer_region->vaddr().as_ptr(), 512 * m_current_request->block_count()); result.is_error()) {
+    if (auto result = m_current_request->read_from_buffer(m_current_request->buffer(), m_dma_buffer_region->vaddr().as_ptr(), m_current_request->buffer_size()); result.is_error()) {
         complete_current_request(AsyncDeviceRequest::MemoryFault);
         return;
     }
@@ -210,7 +210,7 @@ void BMIDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     IO::delay(10);
 
     prdt().offset = m_dma_buffer_page->paddr().get();
-    prdt().size = 512 * m_current_request->block_count();
+    prdt().size = m_current_request->buffer_size();
 
     VERIFY(prdt().size <= PAGE_SIZE);
 
