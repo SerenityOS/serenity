@@ -36,7 +36,7 @@ public:
     void add_bitmap_font(RefPtr<BitmapFont>);
     void set_ttf_font(RefPtr<TTF::Font>);
 
-    RefPtr<Font> get_font(unsigned size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No) const;
+    RefPtr<Font> get_font(float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No) const;
 
 private:
     FlyString m_family;

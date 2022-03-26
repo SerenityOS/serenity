@@ -48,11 +48,15 @@ void Typeface::set_ttf_font(RefPtr<TTF::Font> font)
     m_ttf_font = move(font);
 }
 
-RefPtr<Font> Typeface::get_font(unsigned size, Font::AllowInexactSizeMatch allow_inexact_size_match) const
+RefPtr<Font> Typeface::get_font(float point_size, Font::AllowInexactSizeMatch allow_inexact_size_match) const
 {
-    VERIFY(size < NumericLimits<int>::max());
+    VERIFY(point_size > 0);
+
+    if (m_ttf_font)
+        return adopt_ref(*new TTF::ScaledFont(*m_ttf_font, point_size, point_size));
 
     RefPtr<BitmapFont> best_match;
+    int size = roundf(point_size);
     int best_delta = NumericLimits<int>::max();
 
     for (auto font : m_bitmap_fonts) {
@@ -69,9 +73,6 @@ RefPtr<Font> Typeface::get_font(unsigned size, Font::AllowInexactSizeMatch allow
 
     if (allow_inexact_size_match == Font::AllowInexactSizeMatch::Yes && best_match)
         return best_match;
-
-    if (m_ttf_font)
-        return adopt_ref(*new TTF::ScaledFont(*m_ttf_font, size, size));
 
     return {};
 }
