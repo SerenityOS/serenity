@@ -229,6 +229,11 @@ constexpr auto is_any_of(StringView values)
     return [values](auto c) { return values.contains(c); };
 }
 
+constexpr auto is_not_any_of(StringView values)
+{
+    return [values](auto c) { return !values.contains(c); };
+}
+
 constexpr auto is_path_separator = is_any_of("/\\");
 constexpr auto is_quote = is_any_of("'\"");
 
