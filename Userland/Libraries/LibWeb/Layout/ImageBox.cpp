@@ -61,7 +61,7 @@ void ImageBox::prepare_for_replaced_layout()
         if (alt.is_empty())
             alt = image_element.src();
         set_intrinsic_width(font.width(alt) + 16);
-        set_intrinsic_height(font.glyph_height() + 16);
+        set_intrinsic_height(font.pixel_size() + 16);
     }
 
     if (!has_intrinsic_width() && !has_intrinsic_height()) {

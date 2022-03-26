@@ -147,7 +147,7 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         size_text_rect.set_y(border_rect.y() + border_rect.height());
         size_text_rect.set_top(size_text_rect.top());
         size_text_rect.set_width((float)context.painter().font().width(size_text) + 4);
-        size_text_rect.set_height(context.painter().font().glyph_height() + 4);
+        size_text_rect.set_height(context.painter().font().pixel_size() + 4);
         context.painter().fill_rect(enclosing_int_rect(size_text_rect), context.palette().color(Gfx::ColorRole::Tooltip));
         context.painter().draw_rect(enclosing_int_rect(size_text_rect), context.palette().threed_shadow1());
         context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text, Gfx::TextAlignment::Center, context.palette().color(Gfx::ColorRole::TooltipText));
@@ -285,7 +285,7 @@ static void paint_text_decoration(Gfx::Painter& painter, Layout::Node const& tex
 
     auto& font = fragment.layout_node().font();
     auto fragment_box = enclosing_int_rect(fragment.absolute_rect());
-    auto glyph_height = font.glyph_height();
+    auto glyph_height = font.pixel_size();
     auto baseline = fragment_box.height() / 2 - (glyph_height + 4) / 2 + glyph_height;
 
     switch (text_node.computed_values().text_decoration_line()) {
@@ -377,7 +377,7 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
 
         // FIXME: This is a hack to prevent text clipping when painting a bitmap font into a too-small box.
         auto draw_rect = enclosing_int_rect(fragment_absolute_rect);
-        draw_rect.set_height(max(draw_rect.height(), text_node.font().glyph_height()));
+        draw_rect.set_height(max(draw_rect.height(), text_node.font().pixel_size()));
         painter.draw_text(draw_rect, text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, text_node.computed_values().color());
 
         auto selection_rect = fragment.selection_rect(text_node.font());

@@ -240,7 +240,7 @@ void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, O
         return;
 
     // FIXME: painter only supports integer rects for text right now, so this effectively chops off any fractional position
-    auto text_rect = Gfx::IntRect(x, y, max_width.has_value() ? max_width.value() : painter->font().width(text), painter->font().glyph_height());
+    auto text_rect = Gfx::IntRect(x, y, max_width.has_value() ? max_width.value() : painter->font().width(text), painter->font().pixel_size());
     auto transformed_rect = m_drawing_state.transform.map(text_rect);
     painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, m_drawing_state.fill_style);
     did_draw(transformed_rect.to_type<float>());
@@ -586,7 +586,7 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(St
     // FIXME: Once we have CanvasTextDrawingStyles, add the CSS attributes.
     auto& font = Gfx::FontDatabase::default_font();
     size_t width = 0;
-    size_t height = font.glyph_height();
+    size_t height = font.pixel_size();
     for (auto c : Utf8View { replaced_text }) {
         width += font.glyph_or_emoji_width(c);
     }
