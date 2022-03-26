@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -150,4 +150,17 @@ TEST_CASE(should_compare)
 
     EXPECT(addr_a != addr_b);
     EXPECT(addr_a == addr_a);
+}
+
+TEST_CASE(netmask_from_cidr)
+{
+    EXPECT(IPv4Address::netmask_from_cidr(24) == IPv4Address(255, 255, 255, 0));
+
+    EXPECT(IPv4Address::netmask_from_cidr(0) == IPv4Address(0, 0, 0, 0));
+    EXPECT(IPv4Address::netmask_from_cidr(32) == IPv4Address(255, 255, 255, 255));
+
+    EXPECT(IPv4Address::netmask_from_cidr(28) == IPv4Address(255, 255, 255, 240));
+    EXPECT(IPv4Address::netmask_from_cidr(22) == IPv4Address(255, 255, 252, 0));
+    EXPECT(IPv4Address::netmask_from_cidr(14) == IPv4Address(255, 252, 0, 0));
+    EXPECT(IPv4Address::netmask_from_cidr(6) == IPv4Address(252, 0, 0, 0));
 }
