@@ -1073,9 +1073,27 @@ void FlexFormattingContext::align_all_flex_lines()
 void FlexFormattingContext::copy_dimensions_from_flex_items_to_boxes()
 {
     for (auto& flex_item : m_flex_items) {
-        set_main_size(flex_item.box, flex_item.main_size);
-        set_cross_size(flex_item.box, flex_item.cross_size);
-        set_offset(flex_item.box, flex_item.main_offset, flex_item.cross_offset);
+        auto const& box = flex_item.box;
+        auto& box_state = m_state.get_mutable(box);
+
+        box_state.padding_left = box.computed_values().padding().left.resolved(box, CSS::Length::make_px(m_flex_container_state.content_width)).to_px(box);
+        box_state.padding_right = box.computed_values().padding().right.resolved(box, CSS::Length::make_px(m_flex_container_state.content_width)).to_px(box);
+        box_state.padding_top = box.computed_values().padding().top.resolved(box, CSS::Length::make_px(m_flex_container_state.content_width)).to_px(box);
+        box_state.padding_bottom = box.computed_values().padding().bottom.resolved(box, CSS::Length::make_px(m_flex_container_state.content_width)).to_px(box);
+
+        box_state.margin_left = box.computed_values().margin().left.resolved(box, CSS::Length::make_px(m_flex_container_state.content_width)).to_px(box);
+        box_state.margin_right = box.computed_values().margin().right.resolved(box, CSS::Length::make_px(m_flex_container_state.content_width)).to_px(box);
+        box_state.margin_top = box.computed_values().margin().top.resolved(box, CSS::Length::make_px(m_flex_container_state.content_width)).to_px(box);
+        box_state.margin_bottom = box.computed_values().margin().bottom.resolved(box, CSS::Length::make_px(m_flex_container_state.content_width)).to_px(box);
+
+        box_state.border_left = box.computed_values().border_left().width;
+        box_state.border_right = box.computed_values().border_right().width;
+        box_state.border_top = box.computed_values().border_top().width;
+        box_state.border_bottom = box.computed_values().border_bottom().width;
+
+        set_main_size(box, flex_item.main_size);
+        set_cross_size(box, flex_item.cross_size);
+        set_offset(box, flex_item.main_offset, flex_item.cross_offset);
     }
 }
 }
