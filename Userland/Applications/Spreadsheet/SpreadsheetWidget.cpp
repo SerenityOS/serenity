@@ -215,6 +215,14 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         redo();
     });
 
+    m_undo_stack.on_state_change = [this] {
+        m_undo_action->set_enabled(m_undo_stack.can_undo());
+        m_redo_action->set_enabled(m_undo_stack.can_redo());
+    };
+
+    m_undo_action->set_enabled(false);
+    m_redo_action->set_enabled(false);
+
     m_functions_help_action = GUI::Action::create(
         "&Functions Help", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             if (auto* worksheet_ptr = current_worksheet_if_available()) {
