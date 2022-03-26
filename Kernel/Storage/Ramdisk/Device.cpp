@@ -45,8 +45,8 @@ void RamdiskDevice::start_request(AsyncBlockDeviceRequest& request)
 
     u8* base = m_region->vaddr().as_ptr();
     size_t size = m_region->size();
-    u8* offset = base + request.block_index() * 512;
-    size_t length = request.block_count() * 512;
+    u8* offset = base + request.block_index() * request.block_size();
+    size_t length = request.buffer_size();
 
     if ((offset + length > base + size) || (offset + length < base)) {
         request.complete(AsyncDeviceRequest::Failure);
