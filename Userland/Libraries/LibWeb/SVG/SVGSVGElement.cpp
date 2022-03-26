@@ -28,14 +28,14 @@ RefPtr<Layout::Node> SVGSVGElement::create_layout_node(NonnullRefPtr<CSS::StyleP
 void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
     // Width defaults to 100%
-    if (auto width_value = parse_html_length(document(), attribute("width"))) {
+    if (auto width_value = parse_dimension_value(attribute(SVG::AttributeNames::width))) {
         style.set_property(CSS::PropertyID::Width, width_value.release_nonnull());
     } else {
         style.set_property(CSS::PropertyID::Width, CSS::PercentageStyleValue::create(CSS::Percentage { 100 }));
     }
 
     // Height defaults to 100%
-    if (auto height_value = parse_html_length(document(), attribute("height"))) {
+    if (auto height_value = parse_dimension_value(attribute(SVG::AttributeNames::width))) {
         style.set_property(CSS::PropertyID::Height, height_value.release_nonnull());
     } else {
         style.set_property(CSS::PropertyID::Height, CSS::PercentageStyleValue::create(CSS::Percentage { 100 }));
