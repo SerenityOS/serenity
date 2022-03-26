@@ -23,6 +23,8 @@ public:
     String target() const { return attribute(HTML::AttributeNames::target); }
     String download() const { return attribute(HTML::AttributeNames::download); }
 
+    // ^EventTarget
+    // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-a-element
     virtual bool is_focusable() const override { return has_attribute(HTML::AttributeNames::href); }
 
     virtual bool is_html_anchor_element() const override { return true; }

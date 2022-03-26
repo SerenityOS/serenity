@@ -34,6 +34,10 @@ public:
 
     NonnullRefPtrVector<HTMLOptionElement> list_of_options() const;
 
+    // ^EventTarget
+    // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-select-element
+    virtual bool is_focusable() const override { return true; }
+
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed
     virtual bool is_listed() const override { return true; }
