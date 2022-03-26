@@ -105,6 +105,7 @@ public:
 private:
     void complete_current_request(AsyncDeviceRequest::RequestResult);
     void initialize();
+    static constexpr size_t m_logical_sector_size = 512;
 
 protected:
     enum class LBAMode : u8 {
