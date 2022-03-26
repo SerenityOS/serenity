@@ -54,8 +54,6 @@ public:
 
 private:
     virtual bool is_text_node() const final { return true; }
-    void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
-    void paint_text_decoration(Gfx::Painter&, LineBoxFragment const&) const;
 
     String m_text_for_rendering;
 };
