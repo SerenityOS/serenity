@@ -36,7 +36,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
     }
 
     // Height defaults to 100%
-    if (auto height_value = HTML::parse_dimension_value(attribute(SVG::AttributeNames::width))) {
+    if (auto height_value = HTML::parse_dimension_value(attribute(SVG::AttributeNames::height))) {
         style.set_property(CSS::PropertyID::Height, height_value.release_nonnull());
     } else {
         style.set_property(CSS::PropertyID::Height, CSS::PercentageStyleValue::create(CSS::Percentage { 100 }));
