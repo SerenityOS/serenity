@@ -5,6 +5,7 @@
  */
 
 #include "ParsedCookie.h"
+#include <AK/DateConstants.h>
 #include <AK/Function.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
@@ -263,10 +264,8 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
     };
 
     auto parse_month = [&](StringView token) {
-        static const char* months[] { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
-
         for (unsigned i = 0; i < 12; ++i) {
-            if (token.equals_ignoring_case(months[i])) {
+            if (token.equals_ignoring_case(short_month_names[i])) {
                 month = i + 1;
                 return true;
             }
