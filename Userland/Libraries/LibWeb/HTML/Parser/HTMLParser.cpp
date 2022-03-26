@@ -3642,4 +3642,115 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
     return builder.to_string();
 }
 
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#current-dimension-value
+static RefPtr<CSS::StyleValue> parse_current_dimension_value(float value, Utf8View input, Utf8View::Iterator position)
+{
+    // 1. If position is past the end of input, then return value as a length.
+    if (position == input.end())
+        return CSS::LengthStyleValue::create(CSS::Length::make_px(value));
+
+    // 2. If the code point at position within input is U+0025 (%), then return value as a percentage.
+    if (*position == '%')
+        return CSS::PercentageStyleValue::create(CSS::Percentage(value));
+
+    // 3. Return value as a length.
+    return CSS::LengthStyleValue::create(CSS::Length::make_px(value));
+}
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-dimension-values
+RefPtr<CSS::StyleValue> parse_dimension_value(StringView string)
+{
+    // 1. Let input be the string being parsed.
+    auto input = Utf8View(string);
+    if (!input.validate())
+        return nullptr;
+
+    // 2. Let position be a position variable for input, initially pointing at the start of input.
+    auto position = input.begin();
+
+    // 3. Skip ASCII whitespace within input given position.
+    while (position != input.end() && is_ascii_space(*position))
+        ++position;
+
+    // 4. If position is past the end of input or the code point at position within input is not an ASCII digit,
+    //    then return failure.
+    if (position == input.end() || !is_ascii_digit(*position))
+        return nullptr;
+
+    // 5. Collect a sequence of code points that are ASCII digits from input given position,
+    //    and interpret the resulting sequence as a base-ten integer. Let value be that number.
+    StringBuilder number_string;
+    while (position != input.end() && is_ascii_digit(*position)) {
+        number_string.append(*position);
+        ++position;
+    }
+    auto integer_value = number_string.string_view().to_int();
+
+    // 6. If position is past the end of input, then return value as a length.
+    if (position == input.end())
+        return CSS::LengthStyleValue::create(CSS::Length::make_px(*integer_value));
+
+    float value = *integer_value;
+
+    // 7. If the code point at position within input is U+002E (.), then:
+    if (*position == '.') {
+        // 1. Advance position by 1.
+        ++position;
+
+        // 2. If position is past the end of input or the code point at position within input is not an ASCII digit,
+        //    then return the current dimension value with value, input, and position.
+        if (position == input.end() || !is_ascii_digit(*position))
+            return parse_current_dimension_value(value, input, position);
+
+        // 3. Let divisor have the value 1.
+        float divisor = 1;
+
+        // 4. While true:
+        while (true) {
+            // 1. Multiply divisor by ten.
+            divisor *= 10;
+
+            // 2. Add the value of the code point at position within input,
+            //    interpreted as a base-ten digit (0..9) and divided by divisor, to value.
+            value += (*position - '0') / divisor;
+
+            // 3. Advance position by 1.
+            ++position;
+
+            // 4. If position is past the end of input, then return value as a length.
+            if (position == input.end())
+                return CSS::LengthStyleValue::create(CSS::Length::make_px(value));
+
+            // 5. If the code point at position within input is not an ASCII digit, then break.
+            if (!is_ascii_digit(*position))
+                break;
+        }
+    }
+
+    // 8. Return the current dimension value with value, input, and position.
+    return parse_current_dimension_value(value, input, position);
+}
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-non-zero-dimension-values
+RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView string)
+{
+    // 1. Let input be the string being parsed.
+    // 2. Let value be the result of parsing input using the rules for parsing dimension values.
+    auto value = parse_dimension_value(string);
+
+    // 3. If value is an error, return an error.
+    if (!value)
+        return nullptr;
+
+    // 4. If value is zero, return an error.
+    if (value->is_length() && value->as_length().length().raw_value() == 0)
+        return nullptr;
+    if (value->is_percentage() && value->as_percentage().percentage().value() == 0)
+        return nullptr;
+
+    // 5. If value is a percentage, return value as a percentage.
+    // 6. Return value as a length.
+    return value;
+}
+
 }

@@ -358,7 +358,4 @@ RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const&, StringView
 NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const&, StringView);
 RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const&, StringView);
 
-RefPtr<CSS::StyleValue> parse_dimension_value(StringView);
-RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView);
-
 }

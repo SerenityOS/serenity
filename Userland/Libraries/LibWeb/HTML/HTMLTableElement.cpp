@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/HTMLTableColElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
 #include <LibWeb/HTML/HTMLTableRowElement.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Namespace.h>
 
 namespace Web::HTML {
