@@ -217,6 +217,7 @@ struct HitTestResult {
 class Value : public RefCounted<Value> {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) = 0;
+    virtual String resolve_as_string(RefPtr<Shell> shell);
     virtual Vector<Command> resolve_as_commands(RefPtr<Shell>);
     virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) { return *this; }
     virtual NonnullRefPtr<Value> clone() const = 0;
@@ -279,6 +280,7 @@ private:
 class JobValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
+    virtual String resolve_as_string(RefPtr<Shell>) override { return String::formatted("%{}", m_job->job_id()); }
     virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
     virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<JobValue>(m_job)->set_slices(m_slices); }
     virtual ~JobValue();
@@ -322,6 +324,7 @@ private:
 class StringValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    virtual String resolve_as_string(RefPtr<Shell> shell) override;
     virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<StringValue>(m_string, m_split, m_keep_empty)->set_slices(m_slices); }
     virtual ~StringValue();
     virtual bool is_string() const override { return m_split.is_null(); }
@@ -360,6 +363,7 @@ private:
 class SimpleVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    virtual String resolve_as_string(RefPtr<Shell>) override;
     virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
     virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<SimpleVariableValue>(m_name)->set_slices(m_slices); }
     virtual ~SimpleVariableValue();
@@ -375,6 +379,7 @@ private:
 class SpecialVariableValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    virtual String resolve_as_string(RefPtr<Shell>) override;
     virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<SpecialVariableValue>(m_name)->set_slices(m_slices); }
     virtual ~SpecialVariableValue();
     SpecialVariableValue(char name)
@@ -389,6 +394,7 @@ private:
 class TildeValue final : public Value {
 public:
     virtual Vector<String> resolve_as_list(RefPtr<Shell>) override;
+    virtual String resolve_as_string(RefPtr<Shell>) override;
     virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<TildeValue>(m_username)->set_slices(m_slices); }
     virtual ~TildeValue();
     virtual bool is_string() const override { return true; }

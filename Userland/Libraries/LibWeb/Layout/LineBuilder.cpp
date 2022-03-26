@@ -79,11 +79,9 @@ void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_
     m_max_height_on_current_line = max(m_max_height_on_current_line, content_height);
 }
 
-bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width, bool should_force_break)
+bool LineBuilder::should_break(LayoutMode layout_mode, float next_item_width)
 {
     if (layout_mode == LayoutMode::MinContent)
-        return true;
-    if (should_force_break)
         return true;
     if (layout_mode == LayoutMode::MaxContent)
         return false;

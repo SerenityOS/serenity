@@ -50,7 +50,7 @@ public:
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    enum TypeAttributeState {
+    enum class TypeAttributeState {
 #define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(_, state) state,
         ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
 #undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
@@ -78,8 +78,11 @@ public:
 
     void did_edit_text_node(Badge<BrowsingContext>);
 
-    virtual bool is_focusable() const override;
+    // ^EventTarget
+    // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-input-element
+    virtual bool is_focusable() const override { return m_type != TypeAttributeState::Hidden; }
 
+    // ^HTMLElement
     virtual void parse_attribute(FlyString const&, String const&) override;
     virtual void did_remove_attribute(FlyString const&) override;
 

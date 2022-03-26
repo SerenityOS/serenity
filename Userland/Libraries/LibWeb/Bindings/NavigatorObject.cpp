@@ -36,6 +36,8 @@ void NavigatorObject::initialize(JS::GlobalObject& global_object)
     define_native_accessor("userAgent", user_agent_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
     define_native_accessor("cookieEnabled", cookie_enabled_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
 
+    define_native_function("javaEnabled", java_enabled, 0, JS::Attribute::Configurable | JS::Attribute::Enumerable);
+
     // FIXME: Reflect actual connectivity status.
     define_direct_property("onLine", JS::Value(true), attr);
 }
@@ -49,6 +51,13 @@ JS_DEFINE_NATIVE_FUNCTION(NavigatorObject::cookie_enabled_getter)
 {
     // No way of disabling cookies right now :^)
     return JS::Value(true);
+}
+
+// https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-javaenabled
+JS_DEFINE_NATIVE_FUNCTION(NavigatorObject::java_enabled)
+{
+    // The NavigatorPlugins mixin's javaEnabled() method steps are to return false.
+    return JS::Value(false);
 }
 
 }

@@ -40,7 +40,6 @@ public:
         float border_end { 0.0f };
         float margin_start { 0.0f };
         float margin_end { 0.0f };
-        bool should_force_break { false };
         bool is_collapsible_whitespace { false };
 
         float border_box_width() const

@@ -16,6 +16,7 @@ Display network connections
 
 * `--help`: Display help message and exit
 * `--version`: Print version
+* `--complete`: Perform autocompletion
 * `-a`, `--all`: Display both listening and non-listening sockets
 * `-l`, `--list`: Display only listening sockets
 * `-t`, `--tcp`: Display only TCP network connections

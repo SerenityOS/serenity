@@ -6,6 +6,7 @@
  */
 
 #include "GeneratorUtil.h"
+#include <AK/Array.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibMain/Main.h>
@@ -302,6 +303,40 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
     case PropertyID::@name:titlecase@: {
 )~~~");
 
+            auto output_numeric_value_check = [](SourceGenerator& generator, StringView type_check_function, StringView value_getter, Span<StringView> resolved_type_names, StringView min_value, StringView max_value) {
+                auto test_generator = generator.fork();
+                test_generator.set("type_check_function", type_check_function);
+                test_generator.set("value_getter", value_getter);
+                test_generator.append(R"~~~(
+        if ((style_value.@type_check_function@())~~~");
+                if (!min_value.is_empty() && min_value != "-∞") {
+                    test_generator.set("minvalue", min_value);
+                    test_generator.append(" && (style_value.@value_getter@ >= @minvalue@)");
+                }
+                if (!max_value.is_empty() && max_value != "∞") {
+                    test_generator.set("maxvalue", max_value);
+                    test_generator.append(" && (style_value.@value_getter@ <= @maxvalue@)");
+                }
+                test_generator.append(")");
+                if (!resolved_type_names.is_empty()) {
+                    test_generator.append(R"~~~(
+        || (style_value.is_calculated() && ()~~~");
+                    bool first = true;
+                    for (auto& type_name : resolved_type_names) {
+                        test_generator.set("resolved_type_name", type_name);
+                        if (!first)
+                            test_generator.append(" || ");
+                        test_generator.append("style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::@resolved_type_name@");
+                        first = false;
+                    }
+                    test_generator.append("))");
+                }
+                test_generator.append(R"~~~() {
+            return true;
+        }
+)~~~");
+            };
+
             if (has_valid_types) {
                 auto valid_types_value = object.get("valid-types");
                 VERIFY(valid_types_value.is_array());
@@ -312,84 +347,46 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                         auto type_parts = type.as_string().split_view(' ');
                         auto type_name = type_parts.first();
                         auto type_args = type_parts.size() > 1 ? type_parts[1] : ""sv;
+                        StringView min_value;
+                        StringView max_value;
+                        if (!type_args.is_empty()) {
+                            VERIFY(type_args.starts_with('[') && type_args.ends_with(']'));
+                            auto comma_index = type_args.find(',').value();
+                            min_value = type_args.substring_view(1, comma_index - 1);
+                            max_value = type_args.substring_view(comma_index + 1, type_args.length() - comma_index - 2);
+                        }
+
                         if (type_name == "angle") {
-                            property_generator.append(R"~~~(
-        if (style_value.is_angle()
-            || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Angle))
-            return true;
-)~~~");
+                            output_numeric_value_check(property_generator, "is_angle", "as_angle().angle().to_degrees()", Array { "Angle"sv }, min_value, max_value);
                         } else if (type_name == "color") {
                             property_generator.append(R"~~~(
         if (style_value.has_color())
             return true;
 )~~~");
                         } else if (type_name == "frequency") {
-                            property_generator.append(R"~~~(
-        if (style_value.is_frequency()
-            || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Frequency))
-            return true;
-)~~~");
+                            output_numeric_value_check(property_generator, "is_frequency", "as_frequency().frequency().to_hertz()", Array { "Frequency"sv }, min_value, max_value);
                         } else if (type_name == "image") {
                             property_generator.append(R"~~~(
         if (style_value.is_image())
             return true;
 )~~~");
+                        } else if (type_name == "integer") {
+                            output_numeric_value_check(property_generator, "has_integer", "to_integer()", Array { "Integer"sv }, min_value, max_value);
                         } else if (type_name == "length") {
-                            property_generator.append(R"~~~(
-        if (style_value.has_length()
-         || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Length))
-            return true;
-)~~~");
-                        } else if (type_name == "number" || type_name == "integer") {
-                            auto test_generator = property_generator.fork();
-                            test_generator.set("numbertype", type_name);
-                            StringView min_value;
-                            StringView max_value;
-                            if (!type_args.is_empty()) {
-                                VERIFY(type_args.starts_with('[') && type_args.ends_with(']'));
-                                auto comma_index = type_args.find(',').value();
-                                min_value = type_args.substring_view(1, comma_index - 1);
-                                max_value = type_args.substring_view(comma_index + 1, type_args.length() - comma_index - 2);
-                            }
-                            test_generator.append(R"~~~(
-        if ((style_value.has_@numbertype@())~~~");
-                            if (!min_value.is_empty()) {
-                                test_generator.set("minvalue", min_value);
-                                test_generator.append(" && (style_value.to_@numbertype@() >= @minvalue@)");
-                            }
-                            if (!max_value.is_empty()) {
-                                test_generator.set("maxvalue", max_value);
-                                test_generator.append(" && (style_value.to_@numbertype@() <= @maxvalue@)");
-                            }
-                            test_generator.append(R"~~~()
-        || (style_value.is_calculated() && (style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Integer)~~~");
-                            if (type_name == "number")
-                                test_generator.append(R"~~~(|| style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Number)~~~");
-                            test_generator.append(R"~~~()))
-            return true;
-)~~~");
+                            output_numeric_value_check(property_generator, "has_length", "to_length().raw_value()", Array { "Length"sv }, min_value, max_value);
+                        } else if (type_name == "number") {
+                            output_numeric_value_check(property_generator, "has_number", "to_number()", Array { "Integer"sv, "Number"sv }, min_value, max_value);
                         } else if (type_name == "percentage") {
-                            property_generator.append(R"~~~(
-        if (style_value.is_percentage()
-        || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Percentage))
-            return true;
-)~~~");
+                            output_numeric_value_check(property_generator, "is_percentage", "as_percentage().percentage().value()", Array { "Percentage"sv }, min_value, max_value);
                         } else if (type_name == "resolution") {
-                            property_generator.append(R"~~~(
-        if (style_value.is_resolution())
-            return true;
-)~~~");
+                            output_numeric_value_check(property_generator, "is_resolution", "as_resolution().resolution().to_dots_per_pixel()", Array<StringView, 0> {}, min_value, max_value);
                         } else if (type_name == "string") {
                             property_generator.append(R"~~~(
         if (style_value.is_string())
             return true;
 )~~~");
                         } else if (type_name == "time") {
-                            property_generator.append(R"~~~(
-        if (style_value.is_time()
-            || (style_value.is_calculated() && style_value.as_calculated().resolved_type() == CalculatedStyleValue::ResolvedType::Time))
-            return true;
-)~~~");
+                            output_numeric_value_check(property_generator, "is_time", "as_time().time().to_seconds()", Array { "Time"sv }, min_value, max_value);
                         } else if (type_name == "url") {
                             // FIXME: Handle urls!
                         } else {

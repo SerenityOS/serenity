@@ -52,7 +52,7 @@ void FormattingState::commit()
         auto& node_state = *it.value;
 
         // Transfer box model metrics.
-        node.box_model().offset = { node_state.offset_top, node_state.offset_right, node_state.offset_bottom, node_state.offset_left };
+        node.box_model().inset = { node_state.inset_top, node_state.inset_right, node_state.inset_bottom, node_state.inset_left };
         node.box_model().padding = { node_state.padding_top, node_state.padding_right, node_state.padding_bottom, node_state.padding_left };
         node.box_model().border = { node_state.border_top, node_state.border_right, node_state.border_bottom, node_state.border_left };
         node.box_model().margin = { node_state.margin_top, node_state.margin_right, node_state.margin_bottom, node_state.margin_left };

@@ -1,0 +1,10 @@
+--- ../src/prng.c
++++ ../src/prng.c
+@@ -29,6 +29,7 @@
+ #  undef HAVE_arc4random_buf
+ #endif
+ 
++#undef HAVE_arc4random_buf
+ #ifdef HAVE_arc4random_buf
+ #  define HAVE_ARC4RANDOM
+ #  ifndef ARC4RANDOM_IN_BSD

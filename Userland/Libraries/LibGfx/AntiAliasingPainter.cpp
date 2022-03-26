@@ -193,6 +193,9 @@ void Gfx::AntiAliasingPainter::draw_circle(IntPoint center, int radius, Color co
     Inline comments are from the paper.
     */
 
+    center *= m_underlying_painter.scale();
+    radius *= m_underlying_painter.scale();
+
     // TODO: Generalize to ellipses (see paper)
 
     // These happen to be the same here, but are treated separately in the paper:
@@ -352,11 +355,11 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
         a_rect.x() + a_rect.width() - top_right_radius,
         a_rect.y() + top_right_radius,
     };
-    IntPoint bottom_right_corner {
+    IntPoint bottom_left_corner {
         a_rect.x() + bottom_left_radius,
         a_rect.y() + a_rect.height() - bottom_right_radius
     };
-    IntPoint bottom_left_corner {
+    IntPoint bottom_right_corner {
         a_rect.x() + a_rect.width() - bottom_left_radius,
         a_rect.y() + a_rect.height() - bottom_left_radius
     };

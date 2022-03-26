@@ -142,13 +142,19 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
 
         auto& chunk = chunk_opt.value();
         float chunk_width = text_node.font().width(chunk.view) + text_node.font().glyph_spacing();
+
+        if (m_text_node_context->do_respect_linebreaks && chunk.has_breaking_newline) {
+            return Item {
+                .type = Item::Type::ForcedBreak,
+            };
+        }
+
         Item item {
             .type = Item::Type::Text,
             .node = &text_node,
             .offset_in_node = chunk.start,
             .length_in_node = chunk.length,
             .width = chunk_width,
-            .should_force_break = m_text_node_context->do_respect_linebreaks && chunk.has_breaking_newline,
             .is_collapsible_whitespace = m_text_node_context->do_collapse && chunk.is_all_whitespace,
         };
 

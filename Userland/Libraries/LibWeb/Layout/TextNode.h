@@ -42,8 +42,6 @@ public:
         const LayoutMode m_layout_mode;
         const bool m_wrap_lines;
         const bool m_respect_linebreaks;
-        bool m_last_was_space { false };
-        bool m_last_was_newline { false };
         Utf8View m_utf8_view;
         Utf8View::Iterator m_iterator;
     };
@@ -54,8 +52,6 @@ public:
 
 private:
     virtual bool is_text_node() const final { return true; }
-    void paint_cursor_if_needed(PaintContext&, const LineBoxFragment&) const;
-    void paint_text_decoration(Gfx::Painter&, LineBoxFragment const&) const;
 
     String m_text_for_rendering;
 };

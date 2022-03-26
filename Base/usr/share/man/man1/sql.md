@@ -16,6 +16,7 @@ This is a client for the SerenitySQL database server.
 
 * `--help`: Display help message and exit
 * `--version`: Print version
+* `--complete`: Perform autocompletion
 * `-d database`, `--database database`: Database to connect to
 * `-r file`, `--read file`: File to read
 * `-s file`, `--source file`: File to source

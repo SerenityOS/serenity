@@ -24,10 +24,14 @@ BorderRadiusData normalized_border_radius_data(Layout::Node const& node, Gfx::Fl
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
     auto f = 1.0f;
-    f = min(f, rect.width() / (float)(top_left_radius_px + top_right_radius_px));
-    f = min(f, rect.height() / (float)(top_right_radius_px + bottom_right_radius_px));
-    f = min(f, rect.width() / (float)(bottom_left_radius_px + bottom_right_radius_px));
-    f = min(f, rect.height() / (float)(top_left_radius_px + bottom_left_radius_px));
+    auto width_reciprocal = 1.0f / rect.width();
+    auto height_reciprocal = 1.0f / rect.height();
+    f = max(f, width_reciprocal * (top_left_radius_px + top_right_radius_px));
+    f = max(f, height_reciprocal * (top_right_radius_px + bottom_right_radius_px));
+    f = max(f, width_reciprocal * (bottom_left_radius_px + bottom_right_radius_px));
+    f = max(f, height_reciprocal * (top_left_radius_px + bottom_left_radius_px));
+
+    f = 1.0f / f;
 
     top_left_radius_px = (int)(top_left_radius_px * f);
     top_right_radius_px = (int)(top_right_radius_px * f);

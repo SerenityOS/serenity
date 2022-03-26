@@ -1,19 +1,20 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <errno.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-static Vector<int> collect_fds(Vector<const char*> paths, bool append, bool* err)
+static ErrorOr<Vector<int>> collect_fds(Vector<StringView> paths, bool append)
 {
     int oflag;
     mode_t mode;
@@ -26,53 +27,40 @@ static Vector<int> collect_fds(Vector<const char*> paths, bool append, bool* err
     }
 
     Vector<int> fds;
-    for (const char* path : paths) {
-        int fd = open(path, oflag, mode);
-        if (fd < 0) {
-            perror("failed to open file for writing");
-            *err = true;
-        } else {
-            fds.append(fd);
-        }
+    TRY(fds.try_ensure_capacity(paths.size() + 1));
+    for (auto path : paths) {
+        int fd = TRY(Core::System::open(path, oflag, mode));
+        fds.unchecked_append(fd);
     }
-    fds.append(STDOUT_FILENO);
+    fds.unchecked_append(STDOUT_FILENO);
     return fds;
 }
 
-static void copy_stdin(Vector<int>& fds, bool* err)
+static ErrorOr<void> copy_stdin(Vector<int>& fds, bool* err)
 {
     for (;;) {
-        char buf[4096];
-        ssize_t nread = read(STDIN_FILENO, buf, sizeof(buf));
+        Array<u8, 4096> buffer;
+        auto buffer_span = buffer.span();
+        auto nread = TRY(Core::System::read(STDIN_FILENO, buffer_span));
+        buffer_span = buffer_span.trim(nread);
         if (nread == 0)
             break;
-        if (nread < 0) {
-            perror("read() error");
-            *err = true;
-            // a failure to read from stdin should lead to an early exit
-            return;
-        }
 
         Vector<int> broken_fds;
         for (size_t i = 0; i < fds.size(); ++i) {
             auto fd = fds.at(i);
-            int twrite = 0;
-            while (twrite != nread) {
-                ssize_t nwrite = write(fd, buf + twrite, nread - twrite);
-                if (nwrite < 0) {
-                    if (errno == EINTR) {
-                        continue;
-                    } else {
-                        perror("write() failed");
-                        *err = true;
-                        broken_fds.append(fd);
-                        // write failures to a successfully opened fd shall
-                        // prevent further writes, but shall not block writes
-                        // to the other open fds
-                        break;
-                    }
+            auto nwrite_or_error = Core::System::write(fd, buffer_span);
+            if (nwrite_or_error.is_error()) {
+                if (nwrite_or_error.error().code() == EINTR) {
+                    continue;
                 } else {
-                    twrite += nwrite;
+                    warnln("{}", nwrite_or_error.release_error());
+                    *err = true;
+                    broken_fds.append(fd);
+                    // write failures to a successfully opened fd shall
+                    // prevent further writes, but shall not block writes
+                    // to the other open fds
+                    break;
                 }
             }
         }
@@ -81,16 +69,16 @@ static void copy_stdin(Vector<int>& fds, bool* err)
         for (auto to_remove : broken_fds)
             fds.remove_first_matching([&](int fd) { return to_remove == fd; });
     }
+
+    return {};
 }
 
-static void close_fds(Vector<int>& fds)
+static ErrorOr<void> close_fds(Vector<int>& fds)
 {
-    for (int fd : fds) {
-        int closed = close(fd);
-        if (closed < 0) {
-            perror("failed to close output file");
-        }
-    }
+    for (int fd : fds)
+        TRY(Core::System::close(fd));
+
+    return {};
 }
 
 static void int_handler(int)
@@ -98,28 +86,25 @@ static void int_handler(int)
     // pass
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool append = false;
     bool ignore_interrupts = false;
-    Vector<const char*> paths;
+    Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(append, "Append, don't overwrite", "append", 'a');
     args_parser.add_option(ignore_interrupts, "Ignore SIGINT", "ignore-interrupts", 'i');
     args_parser.add_positional_argument(paths, "Files to copy stdin to", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    if (ignore_interrupts) {
-        if (signal(SIGINT, int_handler) == SIG_ERR)
-            perror("failed to install SIGINT handler");
-    }
+    if (ignore_interrupts)
+        TRY(Core::System::signal(SIGINT, int_handler));
 
-    bool err_open = false;
+    auto fds = TRY(collect_fds(paths, append));
     bool err_write = false;
-    auto fds = collect_fds(paths, append, &err_open);
-    copy_stdin(fds, &err_write);
-    close_fds(fds);
+    TRY(copy_stdin(fds, &err_write));
+    TRY(close_fds(fds));
 
-    return (err_open || err_write) ? 1 : 0;
+    return err_write ? 1 : 0;
 }

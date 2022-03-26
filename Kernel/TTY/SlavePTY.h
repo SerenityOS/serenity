@@ -27,6 +27,7 @@ public:
 
 private:
     // ^TTY
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_name() const override;
     virtual ErrorOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) override;
     virtual void echo(u8) override;
 
