@@ -139,10 +139,8 @@ void HTMLScriptElement::prepare_script()
     auto source_text = child_text_content();
 
     // 6. If the element has no src attribute, and source text is the empty string, then return. The script is not executed.
-    if (!has_attribute(HTML::AttributeNames::src) && source_text.is_empty()) {
-        dbgln("HTMLScriptElement: Refusing to run empty script.");
+    if (!has_attribute(HTML::AttributeNames::src) && source_text.is_empty())
         return;
-    }
 
     // 7. If the element is not connected, then return. The script is not executed.
     if (!is_connected()) {
