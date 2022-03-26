@@ -42,8 +42,6 @@ public:
         const LayoutMode m_layout_mode;
         const bool m_wrap_lines;
         const bool m_respect_linebreaks;
-        bool m_last_was_space { false };
-        bool m_last_was_newline { false };
         Utf8View m_utf8_view;
         Utf8View::Iterator m_iterator;
     };

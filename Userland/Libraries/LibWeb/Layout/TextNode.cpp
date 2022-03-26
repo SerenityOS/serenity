@@ -99,7 +99,6 @@ TextNode::ChunkIterator::ChunkIterator(StringView text, LayoutMode layout_mode, 
     , m_utf8_view(text)
     , m_iterator(m_utf8_view.begin())
 {
-    m_last_was_space = !text.is_empty() && is_ascii_space(*m_utf8_view.begin());
 }
 
 Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
@@ -108,48 +107,37 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
         return {};
 
     auto start_of_chunk = m_iterator;
+
     while (m_iterator != m_utf8_view.end()) {
-        ++m_iterator;
-
-        if (m_last_was_newline) {
-            // NOTE: This expression looks out for the case where we have
-            //       multiple newlines in a row. Because every output next()
-            //       that's a newline newline must be prepared for in advance by
-            //       the previous next() call, we need to check whether the next
-            //       character is a newline here as well. Otherwise, the newline
-            //       becomes part of the next expression and causes rendering
-            //       issues.
-            m_last_was_newline = m_iterator != m_utf8_view.end() && *m_iterator == '\n';
-            if (auto result = try_commit_chunk(start_of_chunk, m_iterator, true); result.has_value())
-                return result.release_value();
-        }
-
-        // NOTE: The checks after this need to look at the current iterator
-        //       position, which depends on not being at the end.
-        if (m_iterator == m_utf8_view.end())
-            break;
-
-        // NOTE: When we're supposed to stop on linebreaks, we're actually
-        //       supposed to output two chunks: "content" and "\n". Since we
-        //       can't output two chunks at once, we store this information as a
-        //       flag to output the newline immediately at the earliest
-        //       opportunity.
         if (m_respect_linebreaks && *m_iterator == '\n') {
-            m_last_was_newline = true;
-            if (auto result = try_commit_chunk(start_of_chunk, m_iterator, false); result.has_value()) {
+            // Newline encountered, and we're supposed to preserve them.
+            // If we have accumulated some code points in the current chunk, commit them now and continue with the newline next time.
+            if (auto result = try_commit_chunk(start_of_chunk, m_iterator, false); result.has_value())
                 return result.release_value();
-            }
+
+            // Otherwise, commit the newline!
+            ++m_iterator;
+            auto result = try_commit_chunk(start_of_chunk, m_iterator, true);
+            VERIFY(result.has_value());
+            return result.release_value();
         }
 
         if (m_wrap_lines || m_layout_mode == LayoutMode::MinContent) {
-            bool is_space = is_ascii_space(*m_iterator);
-            if (is_space != m_last_was_space) {
-                m_last_was_space = is_space;
-                if (auto result = try_commit_chunk(start_of_chunk, m_iterator, false); result.has_value()) {
+            if (is_ascii_space(*m_iterator)) {
+                // Whitespace encountered, and we're allowed to break on whitespace.
+                // If we have accumulated some code points in the current chunk, commit them now and continue with the whitespace next time.
+                if (auto result = try_commit_chunk(start_of_chunk, m_iterator, false); result.has_value())
                     return result.release_value();
-                }
+
+                // Otherwise, commit the whitespace!
+                ++m_iterator;
+                if (auto result = try_commit_chunk(start_of_chunk, m_iterator, false); result.has_value())
+                    return result.release_value();
+                continue;
             }
         }
+
+        ++m_iterator;
     }
 
     if (start_of_chunk != m_utf8_view.end()) {
