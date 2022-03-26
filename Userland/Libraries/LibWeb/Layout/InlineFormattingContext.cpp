@@ -241,7 +241,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
             break;
         case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
-            line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break);
+            line_builder.break_if_needed(layout_mode, item.border_box_width());
             line_builder.append_box(box, item.border_start + item.padding_start, item.padding_end + item.border_end, item.margin_start, item.margin_end);
             break;
         }
@@ -257,7 +257,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 
         case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
-            if (line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break)) {
+            if (line_builder.break_if_needed(layout_mode, item.border_box_width())) {
                 if (item.is_collapsible_whitespace)
                     break;
             }

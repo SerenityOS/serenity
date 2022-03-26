@@ -593,7 +593,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     // If we have a LineBuilder, we're in the middle of inline layout, otherwise this is block layout.
     if (line_builder) {
         float y_offset = box_state.margin_box_top() + box_state.inset_top;
-        line_builder->break_if_needed(layout_mode, box_state.border_box_width(), false);
+        line_builder->break_if_needed(layout_mode, box_state.border_box_width());
         box_state.offset.set_y(line_builder->current_y() + y_offset);
         line_builder->adjust_last_line_after_inserting_floating_box({}, box.computed_values().float_(), box_state.border_box_width());
     } else {
