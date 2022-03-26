@@ -582,12 +582,19 @@ static void cascade_custom_properties(DOM::Element& element, Vector<MatchingRule
     size_t needed_capacity = 0;
     for (auto const& matching_rule : matching_rules)
         needed_capacity += verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties().size();
+    if (auto const* inline_style = verify_cast<PropertyOwningCSSStyleDeclaration>(element.inline_style()))
+        needed_capacity += inline_style->custom_properties().size();
 
     HashMap<FlyString, StyleProperty> custom_properties;
     custom_properties.ensure_capacity(needed_capacity);
 
     for (auto const& matching_rule : matching_rules) {
         for (auto const& it : verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties())
+            custom_properties.set(it.key, it.value);
+    }
+
+    if (auto const* inline_style = verify_cast<PropertyOwningCSSStyleDeclaration>(element.inline_style())) {
+        for (auto const& it : inline_style->custom_properties())
             custom_properties.set(it.key, it.value);
     }
 
