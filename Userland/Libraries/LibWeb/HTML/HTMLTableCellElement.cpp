@@ -36,8 +36,12 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
             return;
         }
         if (name == HTML::AttributeNames::width) {
-            if (auto parsed_value = parse_html_length(document(), value))
+            if (auto parsed_value = parse_nonzero_dimension_value(value))
                 style.set_property(CSS::PropertyID::Width, parsed_value.release_nonnull());
+            return;
+        } else if (name == HTML::AttributeNames::height) {
+            if (auto parsed_value = parse_nonzero_dimension_value(value))
+                style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
             return;
         }
     });
