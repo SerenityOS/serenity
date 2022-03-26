@@ -1267,8 +1267,8 @@ void Painter::draw_emoji(IntPoint const& point, Gfx::Bitmap const& emoji, Font c
     IntRect dst_rect {
         point.x(),
         point.y(),
-        font.glyph_height() * emoji.width() / emoji.height(),
-        font.glyph_height()
+        font.pixel_size() * emoji.width() / emoji.height(),
+        font.pixel_size()
     };
     draw_scaled_bitmap(dst_rect, emoji, emoji.rect());
 }
@@ -1366,7 +1366,7 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
     }
 
     if (is_vertically_centered_text_alignment(alignment)) {
-        int distance_from_baseline_to_bottom = (font.glyph_height() - 1) - font.baseline();
+        int distance_from_baseline_to_bottom = (font.pixel_size() - 1) - font.baseline();
         rect.translate_by(0, distance_from_baseline_to_bottom / 2);
     }
 
@@ -1391,7 +1391,7 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
         if (kerning != 0)
             point.translate_by(direction == TextDirection::LTR ? kerning : -kerning, 0);
 
-        IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.glyph_height());
+        IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.pixel_size());
         if (direction == TextDirection::RTL)
             point.translate_by(-glyph_size.width(), 0); // If we are drawing right to left, we have to move backwards before drawing the glyph
         draw_glyph({ point, glyph_size }, it);
@@ -1574,7 +1574,7 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
     TextLayout layout(&font, text, rect);
 
     static int const line_spacing = 4;
-    int line_height = font.glyph_height() + line_spacing;
+    int line_height = font.pixel_size() + line_spacing;
 
     auto lines = layout.lines(elision, wrapping, line_spacing);
     auto bounding_rect = layout.bounding_rect(wrapping, line_spacing);
@@ -2294,7 +2294,7 @@ void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::
     Optional<size_t> underline_offset;
     auto name_to_draw = parse_ampersand_string(text, &underline_offset);
 
-    Gfx::IntRect text_rect { 0, 0, font.width(name_to_draw), font.glyph_height() };
+    Gfx::IntRect text_rect { 0, 0, font.width(name_to_draw), font.pixel_size() };
     text_rect.align_within(rect, text_alignment);
 
     draw_text(text_rect, name_to_draw, font, text_alignment, color);
