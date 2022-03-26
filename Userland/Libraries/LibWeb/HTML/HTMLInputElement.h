@@ -78,8 +78,11 @@ public:
 
     void did_edit_text_node(Badge<BrowsingContext>);
 
-    virtual bool is_focusable() const override;
+    // ^EventTarget
+    // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-input-element
+    virtual bool is_focusable() const override { return m_type != TypeAttributeState::Hidden; }
 
+    // ^HTMLElement
     virtual void parse_attribute(FlyString const&, String const&) override;
     virtual void did_remove_attribute(FlyString const&) override;
 

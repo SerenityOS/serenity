@@ -208,11 +208,6 @@ void HTMLInputElement::did_receive_focus()
     browsing_context->set_cursor_position(DOM::Position { *m_text_node, 0 });
 }
 
-bool HTMLInputElement::is_focusable() const
-{
-    return m_text_node;
-}
-
 void HTMLInputElement::parse_attribute(FlyString const& name, String const& value)
 {
     HTMLElement::parse_attribute(name, value);
