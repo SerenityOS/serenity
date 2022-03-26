@@ -571,7 +571,12 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
             for (auto const& property : inline_style->properties()) {
                 if (important != property.important)
                     continue;
-                set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
+                auto property_value = property.value;
+                if (property.value->is_unresolved()) {
+                    if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved()))
+                        property_value = resolved.release_nonnull();
+                }
+                set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
             }
         }
     }
