@@ -478,6 +478,10 @@ if (BUILD_LAGOM)
         )
     endif()
 
+    file(GLOB LIBXML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibXML/*/*.cpp")
+    lagom_lib(XML xml
+        SOURCES ${LIBXML_SOURCES})
+
     if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER AND NOT ENABLE_COMPILER_EXPLORER_BUILD)
         # Lagom Examples
         add_executable(TestApp TestApp.cpp)
@@ -522,6 +526,10 @@ if (BUILD_LAGOM)
         add_executable(wasm_lagom ../../Userland/Utilities/wasm.cpp)
         set_target_properties(wasm_lagom PROPERTIES OUTPUT_NAME wasm)
         target_link_libraries(wasm_lagom LagomCore LagomWasm LagomLine LagomMain)
+
+        add_executable(xml_lagom ../../Userland/Utilities/xml.cpp)
+        set_target_properties(xml_lagom PROPERTIES OUTPUT_NAME xml)
+        target_link_libraries(xml_lagom LagomCore LagomXML LagomMain)
 
         enable_testing()
         # LibTest

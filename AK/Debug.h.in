@@ -493,3 +493,7 @@
 #ifndef WSSCREEN_DEBUG
 #cmakedefine01 WSSCREEN_DEBUG
 #endif
+
+#ifndef XML_PARSER_DEBUG
+#cmakedefine01 XML_PARSER_DEBUG
+#endif
