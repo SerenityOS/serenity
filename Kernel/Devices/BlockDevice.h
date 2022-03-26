@@ -12,45 +12,7 @@
 
 namespace Kernel {
 
-class BlockDevice;
-
-class AsyncBlockDeviceRequest final : public AsyncDeviceRequest {
-public:
-    enum RequestType {
-        Read,
-        Write
-    };
-    AsyncBlockDeviceRequest(Device& block_device, RequestType request_type,
-        u64 block_index, u32 block_count, const UserOrKernelBuffer& buffer, size_t buffer_size);
-
-    RequestType request_type() const { return m_request_type; }
-    u64 block_index() const { return m_block_index; }
-    u32 block_count() const { return m_block_count; }
-    UserOrKernelBuffer& buffer() { return m_buffer; }
-    const UserOrKernelBuffer& buffer() const { return m_buffer; }
-    size_t buffer_size() const { return m_buffer_size; }
-
-    virtual void start() override;
-    virtual StringView name() const override
-    {
-        switch (m_request_type) {
-        case Read:
-            return "BlockDeviceRequest (read)"sv;
-        case Write:
-            return "BlockDeviceRequest (write)"sv;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    }
-
-private:
-    BlockDevice& m_block_device;
-    const RequestType m_request_type;
-    const u64 m_block_index;
-    const u32 m_block_count;
-    UserOrKernelBuffer m_buffer;
-    const size_t m_buffer_size;
-};
+class AsyncBlockDeviceRequest;
 
 class BlockDevice : public Device {
 public:
@@ -81,6 +43,45 @@ private:
 
     size_t m_block_size { 0 };
     u8 m_block_size_log { 0 };
+};
+
+class AsyncBlockDeviceRequest final : public AsyncDeviceRequest {
+public:
+    enum RequestType {
+        Read,
+        Write
+    };
+    AsyncBlockDeviceRequest(Device& block_device, RequestType request_type,
+        u64 block_index, u32 block_count, const UserOrKernelBuffer& buffer, size_t buffer_size);
+
+    RequestType request_type() const { return m_request_type; }
+    u64 block_index() const { return m_block_index; }
+    u32 block_count() const { return m_block_count; }
+    size_t block_size() const { return m_block_device.block_size(); }
+    UserOrKernelBuffer& buffer() { return m_buffer; }
+    const UserOrKernelBuffer& buffer() const { return m_buffer; }
+    size_t buffer_size() const { return m_buffer_size; }
+
+    virtual void start() override;
+    virtual StringView name() const override
+    {
+        switch (m_request_type) {
+        case Read:
+            return "BlockDeviceRequest (read)"sv;
+        case Write:
+            return "BlockDeviceRequest (write)"sv;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+private:
+    BlockDevice& m_block_device;
+    const RequestType m_request_type;
+    const u64 m_block_index;
+    const u32 m_block_count;
+    UserOrKernelBuffer m_buffer;
+    const size_t m_buffer_size;
 };
 
 }
