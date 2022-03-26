@@ -186,4 +186,7 @@ private:
     StringBuilder m_character_insertion_builder;
 };
 
+RefPtr<CSS::StyleValue> parse_dimension_value(StringView);
+RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView);
+
 }

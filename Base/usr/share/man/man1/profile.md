@@ -12,6 +12,7 @@ $ profile [-p PID] [-a] [-e] [-d] [-f] [-w] [-c command] [-t event_type]
 
 * `--help`: Display help message and exit
 * `--version`: Print version
+* `--complete`: Perform autocompletion
 * `-p PID`: Target PID
 * `-a`: Profile all processes (super-user only), result at /proc/profile
 * `-e`: Enable

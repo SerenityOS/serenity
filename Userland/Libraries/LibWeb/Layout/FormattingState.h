@@ -54,10 +54,10 @@ struct FormattingState {
         float padding_top { 0 };
         float padding_bottom { 0 };
 
-        float offset_left { 0 };
-        float offset_right { 0 };
-        float offset_top { 0 };
-        float offset_bottom { 0 };
+        float inset_left { 0 };
+        float inset_right { 0 };
+        float inset_top { 0 };
+        float inset_bottom { 0 };
 
         Vector<LineBox> line_boxes;
 

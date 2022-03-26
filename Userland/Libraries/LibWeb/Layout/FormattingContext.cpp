@@ -298,23 +298,25 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(F
 
             return IterationDecision::Continue;
         });
-        // In addition, if the element has any floating descendants
-        // whose bottom margin edge is below the element's bottom content edge,
-        // then the height is increased to include those edges.
-        root.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
-            if (!child_box.is_floating())
-                return IterationDecision::Continue;
-
-            auto const& child_box_state = state.get(child_box);
-            // FIXME: We're ignoring negative margins here, figure out the correct thing to do.
-            float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.border_box_bottom() + max(0, child_box_state.margin_bottom);
-
-            if (!bottom.has_value() || child_box_bottom > bottom.value())
-                bottom = child_box_bottom;
-
-            return IterationDecision::Continue;
-        });
     }
+
+    // In addition, if the element has any floating descendants
+    // whose bottom margin edge is below the element's bottom content edge,
+    // then the height is increased to include those edges.
+    root.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
+        if (!child_box.is_floating())
+            return IterationDecision::Continue;
+
+        auto const& child_box_state = state.get(child_box);
+        // FIXME: We're ignoring negative margins here, figure out the correct thing to do.
+        float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.border_box_bottom() + max(0, child_box_state.margin_bottom);
+
+        if (!bottom.has_value() || child_box_bottom > bottom.value())
+            bottom = child_box_bottom;
+
+        return IterationDecision::Continue;
+    });
+
     return bottom.value_or(0) - top.value_or(0);
 }
 
@@ -667,7 +669,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
     else if (specified_height.is_auto() && !specified_top.is_auto() && specified_bottom.is_auto()) {
         specified_height = CSS::Length(compute_auto_height_for_block_level_element(m_state, box), CSS::Length::Type::Px);
-        box_state.offset_bottom = containing_block_state.content_height - specified_height.to_px(box) - specified_top.to_px(box) - box_state.margin_top - box_state.padding_top - box_state.border_top - box_state.margin_bottom - box_state.padding_bottom - box_state.border_bottom;
+        box_state.inset_bottom = containing_block_state.content_height - specified_height.to_px(box) - specified_top.to_px(box) - box_state.margin_top - box_state.padding_top - box_state.border_top - box_state.margin_bottom - box_state.padding_bottom - box_state.border_bottom;
     }
 
     else if (specified_height.is_auto() && !specified_top.is_auto() && !specified_bottom.is_auto()) {
@@ -707,10 +709,10 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
     box_state.border_top = box.computed_values().border_top().width;
     box_state.border_bottom = box.computed_values().border_bottom().width;
 
-    box_state.offset_left = box.computed_values().offset().left.resolved(box, width_of_containing_block).to_px(box);
-    box_state.offset_top = box.computed_values().offset().top.resolved(box, height_of_containing_block).to_px(box);
-    box_state.offset_right = box.computed_values().offset().right.resolved(box, width_of_containing_block).to_px(box);
-    box_state.offset_bottom = box.computed_values().offset().bottom.resolved(box, height_of_containing_block).to_px(box);
+    box_state.inset_left = box.computed_values().offset().left.resolved(box, width_of_containing_block).to_px(box);
+    box_state.inset_top = box.computed_values().offset().top.resolved(box, height_of_containing_block).to_px(box);
+    box_state.inset_right = box.computed_values().offset().right.resolved(box, width_of_containing_block).to_px(box);
+    box_state.inset_bottom = box.computed_values().offset().bottom.resolved(box, height_of_containing_block).to_px(box);
 
     auto is_auto = [](auto const& length_percentage) {
         return length_percentage.is_length() && length_percentage.length().is_auto();
@@ -726,12 +728,12 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
     Gfx::FloatPoint used_offset;
 
     if (!is_auto(box.computed_values().offset().left)) {
-        float x_offset = box_state.offset_left
+        float x_offset = box_state.inset_left
             + box_state.border_box_left();
         used_offset.set_x(x_offset + box_state.margin_left);
     } else if (!is_auto(box.computed_values().offset().right)) {
         float x_offset = 0
-            - box_state.offset_right
+            - box_state.inset_right
             - box_state.border_box_right();
         used_offset.set_x(containing_block_state.content_width + x_offset - box_state.content_width - box_state.margin_right);
     } else {
@@ -740,12 +742,12 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
     }
 
     if (!is_auto(box.computed_values().offset().top)) {
-        float y_offset = box_state.offset_top
+        float y_offset = box_state.inset_top
             + box_state.border_box_top();
         used_offset.set_y(y_offset + box_state.margin_top);
     } else if (!is_auto(box.computed_values().offset().bottom)) {
         float y_offset = 0
-            - box_state.offset_bottom
+            - box_state.inset_bottom
             - box_state.border_box_bottom();
         used_offset.set_y(containing_block_state.content_height + y_offset - box_state.content_height - box_state.margin_bottom);
     } else {
@@ -784,23 +786,23 @@ void FormattingContext::compute_position(Box const& box)
 
     if (specified_left.is_auto() && specified_right.is_auto()) {
         // If both 'left' and 'right' are 'auto' (their initial values), the used values are '0' (i.e., the boxes stay in their original position).
-        box_state.offset_left = 0;
-        box_state.offset_right = 0;
+        box_state.inset_left = 0;
+        box_state.inset_right = 0;
     } else if (specified_left.is_auto()) {
         // If 'left' is 'auto', its used value is minus the value of 'right' (i.e., the boxes move to the left by the value of 'right').
-        box_state.offset_right = specified_right.to_px(box);
-        box_state.offset_left = 0 - box_state.offset_right;
+        box_state.inset_right = specified_right.to_px(box);
+        box_state.inset_left = 0 - box_state.inset_right;
     } else if (specified_right.is_auto()) {
         // If 'right' is specified as 'auto', its used value is minus the value of 'left'.
-        box_state.offset_left = specified_left.to_px(box);
-        box_state.offset_right = 0 - box_state.offset_left;
+        box_state.inset_left = specified_left.to_px(box);
+        box_state.inset_right = 0 - box_state.inset_left;
     } else {
         // If neither 'left' nor 'right' is 'auto', the position is over-constrained, and one of them has to be ignored.
         // If the 'direction' property of the containing block is 'ltr', the value of 'left' wins and 'right' becomes -'left'.
         // If 'direction' of the containing block is 'rtl', 'right' wins and 'left' is ignored.
         // FIXME: Check direction (assuming 'ltr' for now).
-        box_state.offset_left = specified_left.to_px(box);
-        box_state.offset_right = 0 - box_state.offset_left;
+        box_state.inset_left = specified_left.to_px(box);
+        box_state.inset_right = 0 - box_state.inset_left;
     }
 }
 

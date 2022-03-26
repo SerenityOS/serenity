@@ -241,6 +241,15 @@ SHA384::DigestType SHA384::peek()
     m_data_buffer[BlockSize - 6] = m_bit_length >> 40;
     m_data_buffer[BlockSize - 7] = m_bit_length >> 48;
     m_data_buffer[BlockSize - 8] = m_bit_length >> 56;
+    // FIXME: Theoretically we should keep track of the number of bits as a u128, now we can only hash up to 2 EiB.
+    m_data_buffer[BlockSize - 9] = 0;
+    m_data_buffer[BlockSize - 10] = 0;
+    m_data_buffer[BlockSize - 11] = 0;
+    m_data_buffer[BlockSize - 12] = 0;
+    m_data_buffer[BlockSize - 13] = 0;
+    m_data_buffer[BlockSize - 14] = 0;
+    m_data_buffer[BlockSize - 15] = 0;
+    m_data_buffer[BlockSize - 16] = 0;
 
     transform(m_data_buffer);
 
@@ -356,6 +365,15 @@ SHA512::DigestType SHA512::peek()
     m_data_buffer[BlockSize - 6] = m_bit_length >> 40;
     m_data_buffer[BlockSize - 7] = m_bit_length >> 48;
     m_data_buffer[BlockSize - 8] = m_bit_length >> 56;
+    // FIXME: Theoretically we should keep track of the number of bits as a u128, now we can only hash up to 2 EiB.
+    m_data_buffer[BlockSize - 9] = 0;
+    m_data_buffer[BlockSize - 10] = 0;
+    m_data_buffer[BlockSize - 11] = 0;
+    m_data_buffer[BlockSize - 12] = 0;
+    m_data_buffer[BlockSize - 13] = 0;
+    m_data_buffer[BlockSize - 14] = 0;
+    m_data_buffer[BlockSize - 15] = 0;
+    m_data_buffer[BlockSize - 16] = 0;
 
     transform(m_data_buffer);
 

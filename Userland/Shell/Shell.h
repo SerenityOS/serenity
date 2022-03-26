@@ -51,7 +51,8 @@
     __ENUMERATE_SHELL_BUILTIN(wait)    \
     __ENUMERATE_SHELL_BUILTIN(dump)    \
     __ENUMERATE_SHELL_BUILTIN(kill)    \
-    __ENUMERATE_SHELL_BUILTIN(noop)
+    __ENUMERATE_SHELL_BUILTIN(noop)    \
+    __ENUMERATE_SHELL_BUILTIN(argsparser_parse)
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
@@ -64,7 +65,9 @@
     __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(remove_suffix) \
     __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(remove_prefix) \
     __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(regex_replace) \
-    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(split)
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(filter_glob)   \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(split)         \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(join)
 
 namespace Shell {
 
@@ -156,6 +159,41 @@ public:
     [[nodiscard]] Frame push_frame(String name);
     void pop_frame();
 
+    struct Promise {
+        struct Data {
+            struct Unveil {
+                String path;
+                String access;
+            };
+            String exec_promises;
+            Vector<Unveil> unveils;
+        } data;
+
+        IntrusiveListNode<Promise> node;
+        using List = IntrusiveList<&Promise::node>;
+    };
+
+    struct ScopedPromise {
+        ScopedPromise(Promise::List& promises, Promise&& promise)
+            : promises(promises)
+            , promise(move(promise))
+        {
+            promises.append(this->promise);
+        }
+
+        ~ScopedPromise()
+        {
+            promises.remove(promise);
+        }
+
+        Promise::List& promises;
+        Promise promise;
+    };
+    [[nodiscard]] ScopedPromise promise(Promise::Data data)
+    {
+        return { m_active_promises, { move(data), {} } };
+    }
+
     enum class EscapeMode {
         Bareword,
         SingleQuotedString,
@@ -184,12 +222,14 @@ public:
 
     void highlight(Line::Editor&) const;
     Vector<Line::CompletionSuggestion> complete();
-    Vector<Line::CompletionSuggestion> complete_path(StringView base, StringView, size_t offset, ExecutableOnly executable_only, EscapeMode = EscapeMode::Bareword);
     Vector<Line::CompletionSuggestion> complete_program_name(StringView, size_t offset, EscapeMode = EscapeMode::Bareword);
     Vector<Line::CompletionSuggestion> complete_variable(StringView, size_t offset);
     Vector<Line::CompletionSuggestion> complete_user(StringView, size_t offset);
-    Vector<Line::CompletionSuggestion> complete_option(StringView, StringView, size_t offset);
     Vector<Line::CompletionSuggestion> complete_immediate_function_name(StringView, size_t offset);
+
+    Vector<Line::CompletionSuggestion> complete_path(StringView base, StringView, size_t offset, ExecutableOnly executable_only, AST::Node const* command_node, AST::Node const*, EscapeMode = EscapeMode::Bareword);
+    Vector<Line::CompletionSuggestion> complete_option(StringView, StringView, size_t offset, AST::Node const* command_node, AST::Node const*);
+    ErrorOr<Vector<Line::CompletionSuggestion>> complete_via_program_itself(size_t offset, AST::Node const* command_node, AST::Node const*, EscapeMode escape_mode, StringView known_program_name);
 
     void restore_ios();
 
@@ -357,6 +397,7 @@ private:
 
     HashMap<String, ShellFunction> m_functions;
     NonnullOwnPtrVector<LocalFrame> m_local_frames;
+    Promise::List m_active_promises;
     NonnullRefPtrVector<AST::Redirection> m_global_redirections;
 
     HashMap<String, String> m_aliases;

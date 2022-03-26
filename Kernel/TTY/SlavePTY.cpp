@@ -54,6 +54,11 @@ SlavePTY::~SlavePTY()
     dbgln_if(SLAVEPTY_DEBUG, "~SlavePTY({})", m_index);
 }
 
+ErrorOr<NonnullOwnPtr<KString>> SlavePTY::pseudo_name() const
+{
+    return KString::formatted("pts:{}", m_index);
+}
+
 void SlavePTY::echo(u8 ch)
 {
     if (should_echo_input()) {

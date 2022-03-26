@@ -495,6 +495,12 @@ private:
             TRY(process_object.add("uid", process.uid().value()));
             TRY(process_object.add("gid", process.gid().value()));
             TRY(process_object.add("ppid", process.ppid().value()));
+            if (process.tty()) {
+                auto tty_pseudo_name = TRY(process.tty()->pseudo_name());
+                TRY(process_object.add("tty", tty_pseudo_name->view()));
+            } else {
+                TRY(process_object.add("tty", ""));
+            }
             TRY(process_object.add("nfds", process.fds().with_shared([](auto& fds) { return fds.open_count(); })));
             TRY(process_object.add("name", process.name()));
             TRY(process_object.add("executable", process.executable() ? TRY(process.executable()->try_serialize_absolute_path())->view() : ""sv));

@@ -102,6 +102,11 @@ void VirtualConsole::set_graphical(bool graphical)
     m_graphical = graphical;
 }
 
+ErrorOr<NonnullOwnPtr<KString>> VirtualConsole::pseudo_name() const
+{
+    return KString::formatted("tty:{}", m_index);
+}
+
 UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
 {
     auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index);

@@ -571,7 +571,12 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
             for (auto const& property : inline_style->properties()) {
                 if (important != property.important)
                     continue;
-                set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
+                auto property_value = property.value;
+                if (property.value->is_unresolved()) {
+                    if (auto resolved = resolve_unresolved_style_value(element, property.property_id, property.value->as_unresolved()))
+                        property_value = resolved.release_nonnull();
+                }
+                set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
             }
         }
     }
@@ -582,12 +587,19 @@ static void cascade_custom_properties(DOM::Element& element, Vector<MatchingRule
     size_t needed_capacity = 0;
     for (auto const& matching_rule : matching_rules)
         needed_capacity += verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties().size();
+    if (auto const* inline_style = verify_cast<PropertyOwningCSSStyleDeclaration>(element.inline_style()))
+        needed_capacity += inline_style->custom_properties().size();
 
     HashMap<FlyString, StyleProperty> custom_properties;
     custom_properties.ensure_capacity(needed_capacity);
 
     for (auto const& matching_rule : matching_rules) {
         for (auto const& it : verify_cast<PropertyOwningCSSStyleDeclaration>(matching_rule.rule->declaration()).custom_properties())
+            custom_properties.set(it.key, it.value);
+    }
+
+    if (auto const* inline_style = verify_cast<PropertyOwningCSSStyleDeclaration>(element.inline_style())) {
+        for (auto const& it : inline_style->custom_properties())
             custom_properties.set(it.key, it.value);
     }
 

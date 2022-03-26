@@ -1,0 +1,10 @@
+--- ../src/fingerprints/REXP/REXP.c
++++ ../src/fingerprints/REXP/REXP.c
+@@ -28,6 +28,7 @@
+ #include <unistd.h>
+ #include <string.h>
+ 
++#define _POSIX_REGEXP 1
+ #if !defined(_POSIX_REGEXP) || (_POSIX_REGEXP < 1)
+ #  error "cfunge needs POSIX regular expressions, which this system claims it doesn't have."
+ #endif

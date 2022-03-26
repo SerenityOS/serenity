@@ -194,7 +194,46 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
             node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mouseup, offset.x(), offset.y(), position.x(), position.y()));
             handled_event = true;
 
-            if (node.ptr() == m_mousedown_target) {
+            bool should_dispatch_event = true;
+
+            // FIXME: This is ad-hoc and incorrect. The reason this exists is
+            //        because we are missing browsing context navigation:
+            //
+            //        https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
+            //
+            //        Additionally, we currently cannot spawn a new top-level
+            //        browsing context for new tab operations, because the new
+            //        top-level browsing context would be in another process. To
+            //        fix this, there needs to be some way to be able to
+            //        communicate with browsing contexts in remote WebContent
+            //        processes, and then step 8 of this algorithm needs to be
+            //        implemented in BrowsingContext::choose_a_browsing_context:
+            //
+            //        https://html.spec.whatwg.org/multipage/browsers.html#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
+            if (RefPtr<HTML::HTMLAnchorElement> link = node->enclosing_link_element()) {
+                NonnullRefPtr document = *m_browsing_context.active_document();
+                auto href = link->href();
+                auto url = document->parse_url(href);
+                dbgln("Web::EventHandler: Clicking on a link to {}", url);
+                if (button == GUI::MouseButton::Primary) {
+                    if (href.starts_with("javascript:")) {
+                        document->run_javascript(href.substring_view(11, href.length() - 11));
+                    } else if (!url.fragment().is_null() && url.equals(document->url(), AK::URL::ExcludeFragment::Yes)) {
+                        m_browsing_context.scroll_to_anchor(url.fragment());
+                    } else if (modifiers != 0) {
+                        if (m_browsing_context.is_top_level()) {
+                            if (auto* page = m_browsing_context.page())
+                                page->client().page_did_click_link(url, link->target(), modifiers);
+                        }
+                    }
+                } else if (button == GUI::MouseButton::Middle) {
+                    if (auto* page = m_browsing_context.page())
+                        page->client().page_did_middle_click_link(url, link->target(), modifiers);
+                    should_dispatch_event = false;
+                }
+            }
+
+            if (node.ptr() == m_mousedown_target && should_dispatch_event) {
                 node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::click, offset.x(), offset.y(), position.x(), position.y()));
             }
         }
@@ -272,37 +311,10 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         return true;
     }
 
-    if (RefPtr<HTML::HTMLAnchorElement> link = node->enclosing_link_element()) {
-        auto href = link->href();
-        auto url = document->parse_url(href);
-        dbgln("Web::EventHandler: Clicking on a link to {}", url);
-        if (button == GUI::MouseButton::Primary) {
-            if (href.starts_with("javascript:")) {
-                document->run_javascript(href.substring_view(11, href.length() - 11));
-            } else if (!url.fragment().is_null() && url.equals(document->url(), AK::URL::ExcludeFragment::Yes)) {
-                m_browsing_context.scroll_to_anchor(url.fragment());
-            } else {
-                document->set_active_element(link);
-                if (m_browsing_context.is_top_level()) {
-                    if (auto* page = m_browsing_context.page())
-                        page->client().page_did_click_link(url, link->target(), modifiers);
-                } else {
-                    // FIXME: Handle different targets!
-                    m_browsing_context.loader().load(url, FrameLoader::Type::Navigation);
-                }
-            }
-        } else if (button == GUI::MouseButton::Secondary) {
-            if (auto* page = m_browsing_context.page())
-                page->client().page_did_request_link_context_menu(m_browsing_context.to_top_level_position(position), url, link->target(), modifiers);
-        } else if (button == GUI::MouseButton::Middle) {
-            if (auto* page = m_browsing_context.page())
-                page->client().page_did_middle_click_link(url, link->target(), modifiers);
-        }
-    } else {
-        if (button == GUI::MouseButton::Primary) {
-            auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor);
-            if (result.has_value() && result->dom_node()) {
-
+    if (button == GUI::MouseButton::Primary) {
+        if (auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor); result.has_value()) {
+            auto paintable = result->paintable;
+            if (paintable->dom_node()) {
                 // See if we want to focus something.
                 bool did_focus_something = false;
                 for (auto candidate = node; candidate; candidate = candidate->parent()) {
@@ -316,15 +328,15 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 // If we didn't focus anything, place the document text cursor at the mouse position.
                 // FIXME: This is all rather strange. Find a better solution.
                 if (!did_focus_something) {
-                    m_browsing_context.set_cursor_position(DOM::Position(*result->dom_node(), result->index_in_node));
-                    layout_root()->set_selection({ { result->paintable->layout_node(), result->index_in_node }, {} });
+                    m_browsing_context.set_cursor_position(DOM::Position(*paintable->dom_node(), result->index_in_node));
+                    layout_root()->set_selection({ { paintable->layout_node(), result->index_in_node }, {} });
                     m_in_mouse_selection = true;
                 }
             }
-        } else if (button == GUI::MouseButton::Secondary) {
-            if (auto* page = m_browsing_context.page())
-                page->client().page_did_request_context_menu(m_browsing_context.to_top_level_position(position));
         }
+    } else if (button == GUI::MouseButton::Secondary) {
+        if (auto* page = m_browsing_context.page())
+            page->client().page_did_request_context_menu(m_browsing_context.to_top_level_position(position));
     }
     return true;
 }

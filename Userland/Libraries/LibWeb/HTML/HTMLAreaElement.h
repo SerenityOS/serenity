@@ -26,9 +26,16 @@ private:
     virtual void parse_attribute(FlyString const& name, String const& value) override;
 
     // ^HTML::HTMLHyperlinkElementUtils
-    virtual DOM::Document const& hyperlink_element_utils_document() const override { return document(); }
+    virtual DOM::Document& hyperlink_element_utils_document() override { return document(); }
     virtual String hyperlink_element_utils_href() const override;
     virtual void set_hyperlink_element_utils_href(String) override;
+    virtual bool hyperlink_element_utils_is_html_anchor_element() const override { return false; }
+    virtual bool hyperlink_element_utils_is_connected() const override { return is_connected(); }
+    virtual String hyperlink_element_utils_target() const override { return ""; }
+    virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) override
+    {
+        queue_an_element_task(source, move(steps));
+    }
 };
 
 }

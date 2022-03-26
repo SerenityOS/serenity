@@ -15,6 +15,7 @@ public:
     Function<void(int)> on_knob_released;
     virtual void set_value(int value, GUI::AllowCallback allow_callback = GUI::AllowCallback::Yes) override
     {
+        m_in_drag_value = value;
         if (!knob_dragging() && !mouse_is_down())
             GUI::Slider::set_value(value, allow_callback);
     }
@@ -36,6 +37,7 @@ private:
     virtual void mouseup_event(GUI::MouseEvent& event) override
     {
         m_mouse_is_down = false;
+        set_value(m_in_drag_value);
         if (on_knob_released && is_enabled())
             on_knob_released(value());
 
@@ -43,4 +45,6 @@ private:
     }
 
     bool m_mouse_is_down { false };
+    // Keeps track of the value while we're dragging
+    int m_in_drag_value { 0 };
 };
