@@ -22,10 +22,14 @@ public:
     void append_box(Box const&, float leading_size, float trailing_size, float leading_margin, float trailing_margin);
     void append_text_chunk(TextNode const&, size_t offset_in_node, size_t length_in_node, float leading_size, float trailing_size, float leading_margin, float trailing_margin, float content_width, float content_height);
 
-    void break_if_needed(LayoutMode layout_mode, float next_item_width, bool should_force_break)
+    // Returns whether a line break occurred.
+    bool break_if_needed(LayoutMode layout_mode, float next_item_width, bool should_force_break)
     {
-        if (should_break(layout_mode, next_item_width, should_force_break))
+        if (should_break(layout_mode, next_item_width, should_force_break)) {
             break_line();
+            return true;
+        }
+        return false;
     }
 
     float available_width_for_current_line() const { return m_available_width_for_current_line; }

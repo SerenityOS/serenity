@@ -257,7 +257,10 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
 
         case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
-            line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break);
+            if (line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break)) {
+                if (item.is_collapsible_whitespace)
+                    break;
+            }
             line_builder.append_text_chunk(
                 text_node,
                 item.offset_in_node,
