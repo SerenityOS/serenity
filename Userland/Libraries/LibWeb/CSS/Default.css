@@ -223,7 +223,7 @@ ol {
 
 /* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
 input, textarea {
-    border: 1px solid black;
+    border: 1px solid -libweb-palette-threed-shadow1;
     min-width: 80px;
     min-height: 16px;
     width: 120px;
