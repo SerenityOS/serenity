@@ -154,7 +154,9 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
     }
 
     if (phase == PaintPhase::FocusOutline && layout_box().dom_node() && layout_box().dom_node()->is_element() && verify_cast<DOM::Element>(*layout_box().dom_node()).is_focused()) {
-        context.painter().draw_rect(enclosing_int_rect(absolute_rect()), context.palette().focus_outline());
+        // FIXME: Implement this as `outline` using :focus-visible in the default UA stylesheet to make it possible to override/disable.
+        auto focus_outline_rect = enclosing_int_rect(absolute_border_box_rect()).inflated(4, 4);
+        context.painter().draw_rect(focus_outline_rect, context.palette().focus_outline());
     }
 }
 
@@ -463,8 +465,11 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
                 auto* parent = node->parent_element();
                 if (!parent)
                     continue;
-                if (parent->is_focused())
-                    context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), context.palette().focus_outline());
+                if (parent->is_focused()) {
+                    // FIXME: Implement this as `outline` using :focus-visible in the default UA stylesheet to make it possible to override/disable.
+                    auto focus_outline_rect = enclosing_int_rect(fragment.absolute_rect()).inflated(4, 4);
+                    context.painter().draw_rect(focus_outline_rect, context.palette().focus_outline());
+                }
             }
         }
     }
