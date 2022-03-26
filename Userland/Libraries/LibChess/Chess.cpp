@@ -165,7 +165,7 @@ Move Move::from_algebraic(StringView algebraic, const Color turn, const Board& b
             }
             return IterationDecision::Continue;
         } else {
-            if (board.get_piece(square).type == move.piece.type && board.is_legal(Move(square, move.to), turn)) {
+            if (board.get_piece(square).type == move.piece.type && board.is_legal(Move(square, move.to, move.promote_to), turn)) {
                 move.from = square;
                 return IterationDecision::Break;
             }
