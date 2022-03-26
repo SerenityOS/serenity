@@ -877,7 +877,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     bool monospace = false;
 
     auto find_font = [&](String const& family) -> RefPtr<Gfx::Font> {
-        int font_size_in_pt = roundf(font_size_in_px * 0.75f);
+        float font_size_in_pt = font_size_in_px * 0.75f;
         font_selector = { family, font_size_in_pt, weight, slope };
 
         if (auto found_font = FontCache::the().get(font_selector))

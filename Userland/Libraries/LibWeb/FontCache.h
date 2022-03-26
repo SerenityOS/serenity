@@ -14,20 +14,20 @@
 
 struct FontSelector {
     FlyString family;
-    int size { 0 };
+    float point_size { 0 };
     int weight { 0 };
     int slope { 0 };
 
     bool operator==(const FontSelector& other) const
     {
-        return family == other.family && size == other.size && weight == other.weight && slope == other.slope;
+        return family == other.family && point_size == other.point_size && weight == other.weight && slope == other.slope;
     }
 };
 
 namespace AK {
 template<>
 struct Traits<FontSelector> : public GenericTraits<FontSelector> {
-    static unsigned hash(const FontSelector& key) { return pair_int_hash(pair_int_hash(key.family.hash(), key.weight), key.size); }
+    static unsigned hash(const FontSelector& key) { return pair_int_hash(pair_int_hash(key.family.hash(), key.weight), key.point_size); }
 };
 }
 
