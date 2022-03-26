@@ -64,7 +64,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     auto app_icon = GUI::Icon::default_icon("app-browser");
     m_bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), true);
 
-    resize(640, 480);
+    resize(730, 560);
     set_icon(app_icon.bitmap_for_size(16));
     set_title("Browser");
 
