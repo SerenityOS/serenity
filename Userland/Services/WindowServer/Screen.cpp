@@ -462,7 +462,7 @@ void ScreenInput::on_receive_mouse_data(const MousePacket& packet)
     }
 
     if (packet.z || packet.w) {
-        auto message = make<MouseEvent>(Event::MouseWheel, m_cursor_location, buttons, MouseButton::None, m_modifiers, packet.w * m_scroll_step_size, packet.z * m_scroll_step_size);
+        auto message = make<MouseEvent>(Event::MouseWheel, m_cursor_location, buttons, MouseButton::None, m_modifiers, packet.w * m_scroll_step_size, packet.z * m_scroll_step_size, packet.w, packet.z);
         Core::EventLoop::current().post_event(WindowManager::the(), move(message));
     }
 

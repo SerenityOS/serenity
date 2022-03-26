@@ -88,7 +88,7 @@ private:
 
 class MouseEvent final : public Event {
 public:
-    MouseEvent(Type type, const Gfx::IntPoint& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta_x = 0, int wheel_delta_y = 0)
+    MouseEvent(Type type, const Gfx::IntPoint& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta_x = 0, int wheel_delta_y = 0, int wheel_raw_delta_x = 0, int wheel_raw_delta_y = 0)
         : Event(type)
         , m_position(position)
         , m_buttons(buttons)
@@ -96,6 +96,8 @@ public:
         , m_modifiers(modifiers)
         , m_wheel_delta_x(wheel_delta_x)
         , m_wheel_delta_y(wheel_delta_y)
+        , m_wheel_raw_delta_x(wheel_raw_delta_x)
+        , m_wheel_raw_delta_y(wheel_raw_delta_y)
     {
     }
 
@@ -107,6 +109,8 @@ public:
     unsigned modifiers() const { return m_modifiers; }
     int wheel_delta_x() const { return m_wheel_delta_x; }
     int wheel_delta_y() const { return m_wheel_delta_y; }
+    int wheel_raw_delta_x() const { return m_wheel_raw_delta_x; }
+    int wheel_raw_delta_y() const { return m_wheel_raw_delta_y; }
     bool is_drag() const { return m_drag; }
 
     Vector<String> mime_types() const
@@ -133,6 +137,8 @@ private:
     unsigned m_modifiers { 0 };
     int m_wheel_delta_x { 0 };
     int m_wheel_delta_y { 0 };
+    int m_wheel_raw_delta_x { 0 };
+    int m_wheel_raw_delta_y { 0 };
     bool m_drag { false };
     RefPtr<const Core::MimeData> m_mime_data;
 };

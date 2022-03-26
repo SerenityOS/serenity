@@ -267,6 +267,8 @@ GUI::MouseEvent ImageEditor::event_with_pan_and_scale_applied(GUI::MouseEvent co
         event.modifiers(),
         event.wheel_delta_x(),
         event.wheel_delta_y(),
+        event.wheel_raw_delta_x(),
+        event.wheel_raw_delta_y(),
     };
 }
 
@@ -282,6 +284,8 @@ GUI::MouseEvent ImageEditor::event_adjusted_for_layer(GUI::MouseEvent const& eve
         event.modifiers(),
         event.wheel_delta_x(),
         event.wheel_delta_y(),
+        event.wheel_raw_delta_x(),
+        event.wheel_raw_delta_y(),
     };
 }
 

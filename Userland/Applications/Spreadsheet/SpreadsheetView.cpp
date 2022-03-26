@@ -202,7 +202,7 @@ void InfinitelyScrollableTableView::mousedown_event(GUI::MouseEvent& event)
         else if (m_is_hovering_extend_zone)
             m_is_dragging_for_extend = true;
         auto rect = content_rect_minus_scrollbars(m_target_cell);
-        GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y() };
+        GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y(), event.wheel_raw_delta_x(), event.wheel_raw_delta_y() };
         AbstractTableView::mousedown_event(adjusted_event);
     } else {
         AbstractTableView::mousedown_event(event);
@@ -239,7 +239,7 @@ void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
     m_has_committed_to_extending = false;
     if (m_is_hovering_cut_zone || m_is_hovering_extend_zone) {
         auto rect = content_rect_minus_scrollbars(m_target_cell);
-        GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y() };
+        GUI::MouseEvent adjusted_event = { (GUI::Event::Type)event.type(), rect.center(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta_x(), event.wheel_delta_y(), event.wheel_raw_delta_x(), event.wheel_raw_delta_y() };
         TableView::mouseup_event(adjusted_event);
     } else {
         TableView::mouseup_event(event);
