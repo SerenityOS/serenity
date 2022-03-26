@@ -286,9 +286,8 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(F
 
             auto const& child_box_state = state.get(child_box);
 
-            // FIXME: We're ignoring negative margins here, figure out the correct thing to do.
-            float child_box_top = child_box_state.offset.y() - child_box_state.border_box_top() - max(0, child_box_state.margin_top);
-            float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.border_box_bottom() + max(0, child_box_state.margin_bottom);
+            float child_box_top = child_box_state.offset.y() - child_box_state.margin_box_top();
+            float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom();
 
             if (!top.has_value() || child_box_top < top.value())
                 top = child_box_top;
@@ -308,8 +307,7 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(F
             return IterationDecision::Continue;
 
         auto const& child_box_state = state.get(child_box);
-        // FIXME: We're ignoring negative margins here, figure out the correct thing to do.
-        float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.border_box_bottom() + max(0, child_box_state.margin_bottom);
+        float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom();
 
         if (!bottom.has_value() || child_box_bottom > bottom.value())
             bottom = child_box_bottom;
@@ -317,7 +315,7 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(F
         return IterationDecision::Continue;
     });
 
-    return bottom.value_or(0) - top.value_or(0);
+    return max(0, bottom.value_or(0) - top.value_or(0));
 }
 
 // 10.3.2 Inline, replaced elements, https://www.w3.org/TR/CSS22/visudet.html#inline-replaced-width
