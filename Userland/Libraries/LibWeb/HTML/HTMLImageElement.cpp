@@ -55,6 +55,16 @@ void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) c
         } else if (name == HTML::AttributeNames::height) {
             if (auto parsed_value = parse_dimension_value(value))
                 style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
+        } else if (name == HTML::AttributeNames::hspace) {
+            if (auto parsed_value = parse_dimension_value(value)) {
+                style.set_property(CSS::PropertyID::MarginLeft, *parsed_value);
+                style.set_property(CSS::PropertyID::MarginRight, *parsed_value);
+            }
+        } else if (name == HTML::AttributeNames::vspace) {
+            if (auto parsed_value = parse_dimension_value(value)) {
+                style.set_property(CSS::PropertyID::MarginTop, *parsed_value);
+                style.set_property(CSS::PropertyID::MarginBottom, *parsed_value);
+            }
         }
     });
 }
