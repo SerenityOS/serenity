@@ -22,7 +22,7 @@ public:
     PixelBox margin;
     PixelBox padding;
     PixelBox border;
-    PixelBox offset;
+    PixelBox inset;
 
     PixelBox margin_box() const;
     PixelBox padding_box() const;

@@ -439,7 +439,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
     compute_vertical_box_model_metrics(child_box, containing_block);
 
     float y = box_state.border_box_top()
-        + box_state.offset_top;
+        + box_state.inset_top;
 
     Vector<float> collapsible_margins;
 
@@ -529,7 +529,7 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
     if (containing_block.computed_values().text_align() == CSS::TextAlign::LibwebCenter) {
         x += (available_width_within_containing_block / 2) - box_state.content_width / 2;
     } else {
-        x += box_state.margin_box_left() + box_state.offset_left;
+        x += box_state.margin_box_left() + box_state.inset_left;
     }
 
     box_state.offset = Gfx::FloatPoint { x, box_state.offset.y() };
@@ -592,7 +592,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
     // First we place the box normally (to get the right y coordinate.)
     // If we have a LineBuilder, we're in the middle of inline layout, otherwise this is block layout.
     if (line_builder) {
-        float y_offset = box_state.margin_box_top() + box_state.offset_top;
+        float y_offset = box_state.margin_box_top() + box_state.inset_top;
         line_builder->break_if_needed(layout_mode, box_state.border_box_width(), false);
         box_state.offset.set_y(line_builder->current_y() + y_offset);
         line_builder->adjust_last_line_after_inserting_floating_box({}, box.computed_values().float_(), box_state.border_box_width());
