@@ -601,12 +601,8 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
         place_block_level_element_in_normal_flow_horizontally(box, containing_block);
     }
 
+    // Then we float it to the left or right.
     auto float_box = [&](FloatSide side, FloatSideData& side_data) {
-        auto first_edge = [&](FormattingState::NodeState const& thing) { return side == FloatSide::Left ? thing.margin_left : thing.margin_right; };
-        auto second_edge = [&](FormattingState::NodeState const& thing) { return side == FloatSide::Right ? thing.margin_left : thing.margin_right; };
-
-        // Then we float it to the left or right.
-
         float offset_from_edge = 0;
         auto float_to_edge = [&] {
             if (side == FloatSide::Left)
@@ -625,29 +621,16 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
             side_data.y_offset = 0;
         } else {
             auto& previous_box = side_data.current_boxes.last();
-            auto const& previous_box_state = m_state.get(previous_box.box);
-
-            auto margin_collapsed_with_previous = max(
-                second_edge(previous_box_state),
-                first_edge(box_state));
 
             float wanted_offset_from_edge = 0;
             bool fits_on_line = false;
 
             if (side == FloatSide::Left) {
-                auto previous_right_edge = side_data.current_width
-                    - previous_box_state.margin_right
-                    + margin_collapsed_with_previous;
-
-                wanted_offset_from_edge = previous_right_edge + box_state.border_left + box_state.padding_left;
-                fits_on_line = (wanted_offset_from_edge + box_state.content_width + box_state.padding_right + box_state.border_right + box_state.margin_right) <= width_of_containing_block;
+                wanted_offset_from_edge = side_data.current_width + box_state.margin_box_left();
+                fits_on_line = (wanted_offset_from_edge + box_state.content_width + box_state.margin_box_right()) <= width_of_containing_block;
             } else {
-                auto previous_left_edge = side_data.current_width
-                    - previous_box_state.margin_left
-                    + margin_collapsed_with_previous;
-
-                wanted_offset_from_edge = previous_left_edge + box_state.border_right + box_state.padding_right + box_state.content_width;
-                fits_on_line = (wanted_offset_from_edge - box_state.padding_left - box_state.border_left - box_state.margin_left) >= 0;
+                wanted_offset_from_edge = side_data.current_width + box_state.margin_box_right() + box_state.content_width;
+                fits_on_line = (wanted_offset_from_edge - box_state.margin_box_left()) >= 0;
             }
 
             if (fits_on_line) {
