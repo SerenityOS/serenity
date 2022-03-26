@@ -50,7 +50,7 @@ public:
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    enum TypeAttributeState {
+    enum class TypeAttributeState {
 #define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(_, state) state,
         ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
 #undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
