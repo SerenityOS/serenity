@@ -9,12 +9,33 @@
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
+#include <sys/sysmacros.h>
 #include <unistd.h>
+
+static ErrorOr<String> determine_tty_pseudo_name()
+{
+    struct stat tty_stat;
+    if (fstat(STDIN_FILENO, &tty_stat) < 0) {
+        int saved_errno = errno;
+        perror("fstat");
+        return Error::from_errno(saved_errno);
+    }
+    int tty_device_major = major(tty_stat.st_rdev);
+    int tty_device_minor = minor(tty_stat.st_rdev);
+    if (tty_device_major == 201) {
+        return String::formatted("pts:{}", tty_device_minor);
+    }
+    if (tty_device_major == 4) {
+        return String::formatted("tty:{}", tty_device_minor);
+    }
+    VERIFY_NOT_REACHED();
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty"));
-    String this_tty = ttyname(STDIN_FILENO);
+
+    auto this_pseudo_tty_name = TRY(determine_tty_pseudo_name());
 
     TRY(Core::System::pledge("stdio rpath"));
     TRY(Core::System::unveil("/proc/all", "r"));
@@ -119,19 +140,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     for (auto const& process : processes) {
         auto tty = process.tty;
-
-        if (!every_process_flag && tty != this_tty)
+        if (!every_process_flag && tty != this_pseudo_tty_name)
             continue;
-
-        if (tty.starts_with("/dev/"))
-            tty = tty.characters() + 5;
-        else
-            tty = "n/a";
 
         auto* state = process.threads.is_empty() ? "Zombie" : process.threads.first().state.characters();
 
         Vector<String> row;
         TRY(row.try_resize(columns.size()));
+
+        if (tty == "")
+            tty = "n/a";
 
         if (uid_column != -1)
             row[uid_column] = process.username;
