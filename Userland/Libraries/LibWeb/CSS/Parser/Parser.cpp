@@ -5242,4 +5242,26 @@ RefPtr<CSS::StyleValue> parse_dimension_value(StringView string)
     return parse_current_dimension_value(value, input, position);
 }
 
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-non-zero-dimension-values
+RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView string)
+{
+    // 1. Let input be the string being parsed.
+    // 2. Let value be the result of parsing input using the rules for parsing dimension values.
+    auto value = parse_dimension_value(string);
+
+    // 3. If value is an error, return an error.
+    if (!value)
+        return nullptr;
+
+    // 4. If value is zero, return an error.
+    if (value->is_length() && value->as_length().length().raw_value() == 0)
+        return nullptr;
+    if (value->is_percentage() && value->as_percentage().percentage().value() == 0)
+        return nullptr;
+
+    // 5. If value is a percentage, return value as a percentage.
+    // 6. Return value as a length.
+    return value;
+}
+
 }
