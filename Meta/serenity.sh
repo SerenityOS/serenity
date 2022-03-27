@@ -410,7 +410,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
                 ADDR2LINE="$TOOLCHAIN_DIR/bin/llvm-addr2line"
             else
-                ADDR2LINE="$TOOLCHAIN_DIR/binutils/binutils/addr2line"
+                ADDR2LINE="$TOOLCHAIN_DIR/bin/$TARGET-pc-serenity-addr2line"
             fi
             "$ADDR2LINE" -e "$BUILD_DIR/Kernel/Kernel" "$@"
             ;;
@@ -425,7 +425,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             elif [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
                 ADDR2LINE="$TOOLCHAIN_DIR/bin/llvm-addr2line"
             else
-                ADDR2LINE="$TOOLCHAIN_DIR/binutils/binutils/addr2line"
+                ADDR2LINE="$TOOLCHAIN_DIR/bin/$TARGET-pc-serenity-addr2line"
             fi
             if [ -x "$BINARY_FILE_PATH" ]; then
                 "$ADDR2LINE" -e "$BINARY_FILE_PATH" "$@"
