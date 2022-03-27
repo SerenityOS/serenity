@@ -148,7 +148,7 @@ public:
     Optional<CSS::LengthPercentage> const& max_height() const { return m_noninherited.max_height; }
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> const& vertical_align() const { return m_noninherited.vertical_align; }
 
-    const CSS::LengthBox& offset() const { return m_noninherited.offset; }
+    CSS::LengthBox const& inset() const { return m_noninherited.inset; }
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
     const CSS::LengthBox& padding() const { return m_noninherited.padding; }
 
@@ -227,7 +227,7 @@ protected:
         Optional<CSS::LengthPercentage> height;
         Optional<CSS::LengthPercentage> min_height;
         Optional<CSS::LengthPercentage> max_height;
-        CSS::LengthBox offset;
+        CSS::LengthBox inset;
         CSS::LengthBox margin;
         CSS::LengthBox padding;
         BorderData border_left;
@@ -293,7 +293,7 @@ public:
     void set_height(CSS::LengthPercentage const& height) { m_noninherited.height = height; }
     void set_min_height(CSS::LengthPercentage const& height) { m_noninherited.min_height = height; }
     void set_max_height(CSS::LengthPercentage const& height) { m_noninherited.max_height = height; }
-    void set_offset(const CSS::LengthBox& offset) { m_noninherited.offset = offset; }
+    void set_inset(CSS::LengthBox const& inset) { m_noninherited.inset = inset; }
     void set_margin(const CSS::LengthBox& margin) { m_noninherited.margin = margin; }
     void set_padding(const CSS::LengthBox& padding) { m_noninherited.padding = padding; }
     void set_overflow_x(CSS::Overflow value) { m_noninherited.overflow_x = value; }

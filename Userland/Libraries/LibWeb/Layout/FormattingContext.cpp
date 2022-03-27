@@ -495,8 +495,8 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
         margin_left = computed_values.margin().left.resolved(box, width_of_containing_block).resolved(box);
         margin_right = computed_values.margin().right.resolved(box, width_of_containing_block).resolved(box);
 
-        auto left = computed_values.offset().left.resolved(box, width_of_containing_block).resolved(box);
-        auto right = computed_values.offset().right.resolved(box, width_of_containing_block).resolved(box);
+        auto left = computed_values.inset().left.resolved(box, width_of_containing_block).resolved(box);
+        auto right = computed_values.inset().right.resolved(box, width_of_containing_block).resolved(box);
         auto width = a_width;
 
         auto solve_for_left = [&] {
@@ -640,8 +640,8 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     auto width_of_containing_block = CSS::Length::make_px(containing_block_state.content_width);
     auto height_of_containing_block = CSS::Length::make_px(containing_block_state.content_height);
 
-    CSS::Length specified_top = computed_values.offset().top.resolved(box, height_of_containing_block).resolved(box);
-    CSS::Length specified_bottom = computed_values.offset().bottom.resolved(box, height_of_containing_block).resolved(box);
+    CSS::Length specified_top = computed_values.inset().top.resolved(box, height_of_containing_block).resolved(box);
+    CSS::Length specified_bottom = computed_values.inset().bottom.resolved(box, height_of_containing_block).resolved(box);
     CSS::Length specified_height = CSS::Length::make_auto();
 
     if (computed_values.height().has_value() && computed_values.height()->is_percentage()
@@ -707,16 +707,16 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
     box_state.border_top = box.computed_values().border_top().width;
     box_state.border_bottom = box.computed_values().border_bottom().width;
 
-    box_state.inset_left = box.computed_values().offset().left.resolved(box, width_of_containing_block).to_px(box);
-    box_state.inset_top = box.computed_values().offset().top.resolved(box, height_of_containing_block).to_px(box);
-    box_state.inset_right = box.computed_values().offset().right.resolved(box, width_of_containing_block).to_px(box);
-    box_state.inset_bottom = box.computed_values().offset().bottom.resolved(box, height_of_containing_block).to_px(box);
+    box_state.inset_left = box.computed_values().inset().left.resolved(box, width_of_containing_block).to_px(box);
+    box_state.inset_top = box.computed_values().inset().top.resolved(box, height_of_containing_block).to_px(box);
+    box_state.inset_right = box.computed_values().inset().right.resolved(box, width_of_containing_block).to_px(box);
+    box_state.inset_bottom = box.computed_values().inset().bottom.resolved(box, height_of_containing_block).to_px(box);
 
     auto is_auto = [](auto const& length_percentage) {
         return length_percentage.is_length() && length_percentage.length().is_auto();
     };
 
-    if (is_auto(box.computed_values().offset().left) && specified_width.is_auto() && is_auto(box.computed_values().offset().right)) {
+    if (is_auto(box.computed_values().inset().left) && specified_width.is_auto() && is_auto(box.computed_values().inset().right)) {
         if (is_auto(box.computed_values().margin().left))
             box_state.margin_left = 0;
         if (is_auto(box.computed_values().margin().right))
@@ -725,11 +725,11 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
 
     Gfx::FloatPoint used_offset;
 
-    if (!is_auto(box.computed_values().offset().left)) {
+    if (!is_auto(box.computed_values().inset().left)) {
         float x_offset = box_state.inset_left
             + box_state.border_box_left();
         used_offset.set_x(x_offset + box_state.margin_left);
-    } else if (!is_auto(box.computed_values().offset().right)) {
+    } else if (!is_auto(box.computed_values().inset().right)) {
         float x_offset = 0
             - box_state.inset_right
             - box_state.border_box_right();
@@ -739,11 +739,11 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box)
         used_offset.set_x(x_offset);
     }
 
-    if (!is_auto(box.computed_values().offset().top)) {
+    if (!is_auto(box.computed_values().inset().top)) {
         float y_offset = box_state.inset_top
             + box_state.border_box_top();
         used_offset.set_y(y_offset + box_state.margin_top);
-    } else if (!is_auto(box.computed_values().offset().bottom)) {
+    } else if (!is_auto(box.computed_values().inset().bottom)) {
         float y_offset = 0
             - box_state.inset_bottom
             - box_state.border_box_bottom();
@@ -779,8 +779,8 @@ void FormattingContext::compute_inset(Box const& box)
     float width_of_containing_block = m_state.get(*box.containing_block()).content_width;
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
-    auto specified_left = computed_values.offset().left.resolved(box, width_of_containing_block_as_length).resolved(box);
-    auto specified_right = computed_values.offset().right.resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto specified_left = computed_values.inset().left.resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto specified_right = computed_values.inset().right.resolved(box, width_of_containing_block_as_length).resolved(box);
 
     if (specified_left.is_auto() && specified_right.is_auto()) {
         // If both 'left' and 'right' are 'auto' (their initial values), the used values are '0' (i.e., the boxes stay in their original position).
