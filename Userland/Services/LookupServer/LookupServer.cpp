@@ -269,14 +269,14 @@ ErrorOr<Vector<DNSAnswer>> LookupServer::lookup(const DNSName& name, const Strin
         return Vector<DNSAnswer> {};
     }
 
-    // Verify the questions in our request and in their response match exactly, including case.
+    // Verify the questions in our request and in their response match, ignoring case.
     for (size_t i = 0; i < request.question_count(); ++i) {
         auto& request_question = request.questions()[i];
         auto& response_question = response.questions()[i];
-        bool exact_match = request_question.class_code() == response_question.class_code()
+        bool match = request_question.class_code() == response_question.class_code()
             && request_question.record_type() == response_question.record_type()
-            && request_question.name().as_string() == response_question.name().as_string();
-        if (!exact_match) {
+            && request_question.name().as_string().equals_ignoring_case(response_question.name().as_string());
+        if (!match) {
             dbgln("Request and response questions do not match");
             dbgln("   Request: name=_{}_, type={}, class={}", request_question.name().as_string(), response_question.record_type(), response_question.class_code());
             dbgln("  Response: name=_{}_, type={}, class={}", response_question.name().as_string(), response_question.record_type(), response_question.class_code());
