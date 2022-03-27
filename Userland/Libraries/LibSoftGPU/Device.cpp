@@ -1198,7 +1198,7 @@ void Device::set_options(RasterizerOptions const& options)
         setup_blend_factors();
 }
 
-void Device::set_light_model_params(LightModelParameters const& lighting_model)
+void Device::set_light_model_params(GPU::LightModelParameters const& lighting_model)
 {
     m_lighting_model = lighting_model;
 }
