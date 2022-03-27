@@ -378,6 +378,22 @@ private:
     Optional<EnvironmentCoordinate> mutable m_cached_environment_coordinate;
 };
 
+class DeleteVariable final : public Instruction {
+public:
+    explicit DeleteVariable(IdentifierTableIndex identifier)
+        : Instruction(Type::DeleteVariable)
+        , m_identifier(identifier)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
+    IdentifierTableIndex m_identifier;
+};
+
 class GetById final : public Instruction {
 public:
     explicit GetById(IdentifierTableIndex property)
@@ -409,6 +425,22 @@ public:
 
 private:
     Register m_base;
+    IdentifierTableIndex m_property;
+};
+
+class DeleteById final : public Instruction {
+public:
+    explicit DeleteById(IdentifierTableIndex property)
+        : Instruction(Type::DeleteById)
+        , m_property(property)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
     IdentifierTableIndex m_property;
 };
 
@@ -444,6 +476,22 @@ public:
 private:
     Register m_base;
     Register m_property;
+};
+
+class DeleteByValue final : public Instruction {
+public:
+    DeleteByValue(Register base)
+        : Instruction(Type::DeleteByValue)
+        , m_base(base)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
+    Register m_base;
 };
 
 class Jump : public Instruction {

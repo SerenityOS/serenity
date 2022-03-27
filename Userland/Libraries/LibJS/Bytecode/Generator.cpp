@@ -200,6 +200,52 @@ CodeGenerationErrorOr<void> Generator::emit_store_to_reference(JS::ASTNode const
     };
 }
 
+CodeGenerationErrorOr<void> Generator::emit_delete_reference(JS::ASTNode const& node)
+{
+    if (is<Identifier>(node)) {
+        auto& identifier = static_cast<Identifier const&>(node);
+        emit<Bytecode::Op::DeleteVariable>(intern_identifier(identifier.string()));
+        return {};
+    }
+
+    if (is<MemberExpression>(node)) {
+        auto& expression = static_cast<MemberExpression const&>(node);
+        TRY(expression.object().generate_bytecode(*this));
+
+        if (expression.is_computed()) {
+            auto object_reg = allocate_register();
+            emit<Bytecode::Op::Store>(object_reg);
+
+            TRY(expression.property().generate_bytecode(*this));
+            emit<Bytecode::Op::DeleteByValue>(object_reg);
+        } else if (expression.property().is_identifier()) {
+            auto identifier_table_ref = intern_identifier(verify_cast<Identifier>(expression.property()).string());
+            emit<Bytecode::Op::DeleteById>(identifier_table_ref);
+        } else {
+            // NOTE: Trying to delete a private field generates a SyntaxError in the parser.
+            return CodeGenerationError {
+                &expression,
+                "Unimplemented non-computed member expression"sv
+            };
+        }
+        return {};
+    }
+
+    // Though this will have no deletion effect, we still have to evaluate the node as it can have side effects.
+    // For example: delete a(); delete ++c.b; etc.
+
+    // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
+    // 1. Let ref be the result of evaluating UnaryExpression.
+    // 2. ReturnIfAbrupt(ref).
+    TRY(node.generate_bytecode(*this));
+
+    // 3. If ref is not a Reference Record, return true.
+    emit<Bytecode::Op::LoadImmediate>(Value(true));
+
+    // NOTE: The rest of the steps are handled by Delete{Variable,ByValue,Id}.
+    return {};
+}
+
 String CodeGenerationError::to_string()
 {
     return String::formatted("CodeGenerationError in {}: {}", failing_node ? failing_node->class_name() : "<unknown node>", reason_literal);

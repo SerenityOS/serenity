@@ -79,6 +79,7 @@ public:
 
     CodeGenerationErrorOr<void> emit_load_from_reference(JS::ASTNode const&);
     CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&);
+    CodeGenerationErrorOr<void> emit_delete_reference(JS::ASTNode const&);
 
     void begin_continuable_scope(Label continue_target);
     void end_continuable_scope();
