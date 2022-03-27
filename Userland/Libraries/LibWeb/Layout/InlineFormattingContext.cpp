@@ -232,7 +232,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         auto& item = item_opt.value();
 
         // Ignore collapsible whitespace chunks at the start of line, and if the last fragment already ends in whitespace.
-        if (item.is_collapsible_whitespace && line_boxes.last().is_empty_or_ends_in_whitespace())
+        if (item.is_collapsible_whitespace && (line_boxes.is_empty() || line_boxes.last().is_empty_or_ends_in_whitespace()))
             continue;
 
         switch (item.type) {
