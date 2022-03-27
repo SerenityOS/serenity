@@ -1365,11 +1365,6 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
         VERIFY_NOT_REACHED();
     }
 
-    if (is_vertically_centered_text_alignment(alignment)) {
-        int distance_from_baseline_to_bottom = (font.pixel_size() - 1) - font.baseline();
-        rect.translate_by(0, distance_from_baseline_to_bottom / 2);
-    }
-
     auto point = rect.location();
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
 
