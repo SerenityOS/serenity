@@ -596,6 +596,13 @@ if (BUILD_LAGOM)
             lagom_test(${source} LIBS LagomSQL)
         endforeach()
 
+        # TextCodec
+        file(GLOB LIBTEXTCODEC_TESTS CONFIGURE_DEPENDS "../../Tests/LibTextCodec/*.cpp")
+        foreach(source ${LIBTEXTCODEC_TESTS})
+            lagom_test(${source} LIBS LagomTextCodec
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTextCodec)
+        endforeach()
+
         # TLS
         file(GLOB LIBTLS_TESTS CONFIGURE_DEPENDS "../../Tests/LibTLS/*.cpp")
         foreach(source ${LIBTLS_TESTS})
