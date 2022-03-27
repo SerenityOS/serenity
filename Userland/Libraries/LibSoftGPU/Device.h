@@ -21,6 +21,7 @@
 #include <LibGPU/SamplerConfig.h>
 #include <LibGPU/StencilConfiguration.h>
 #include <LibGPU/TexCoordGenerationConfig.h>
+#include <LibGPU/Vertex.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Matrix4x4.h>
@@ -34,7 +35,6 @@
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/Sampler.h>
 #include <LibSoftGPU/Triangle.h>
-#include <LibSoftGPU/Vertex.h>
 
 namespace SoftGPU {
 
@@ -71,8 +71,8 @@ struct RasterizerOptions {
     GPU::WindingOrder front_face { GPU::WindingOrder::CounterClockwise };
     bool cull_back { true };
     bool cull_front { false };
-    Array<u8, NUM_SAMPLERS> texcoord_generation_enabled_coordinates {};
-    Array<Array<GPU::TexCoordGenerationConfig, 4>, NUM_SAMPLERS> texcoord_generation_config {};
+    Array<u8, GPU::NUM_SAMPLERS> texcoord_generation_enabled_coordinates {};
+    Array<Array<GPU::TexCoordGenerationConfig, 4>, GPU::NUM_SAMPLERS> texcoord_generation_config {};
     Gfx::IntRect viewport;
     bool lighting_enabled { false };
     bool color_material_enabled { false };
@@ -88,7 +88,7 @@ public:
 
     GPU::DeviceInfo info() const;
 
-    void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
+    void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<GPU::Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
     void resize(Gfx::IntSize const& min_size);
     void clear_color(FloatVector4 const&);
     void clear_depth(GPU::DepthType);
@@ -129,8 +129,8 @@ private:
     Clipper m_clipper;
     Vector<Triangle> m_triangle_list;
     Vector<Triangle> m_processed_triangles;
-    Vector<Vertex> m_clipped_vertices;
-    Array<Sampler, NUM_SAMPLERS> m_samplers;
+    Vector<GPU::Vertex> m_clipped_vertices;
+    Array<Sampler, GPU::NUM_SAMPLERS> m_samplers;
     Vector<size_t> m_enabled_texture_units;
     AlphaBlendFactors m_alpha_blend_factors;
     Array<GPU::Light, NUM_LIGHTS> m_lights;

@@ -8,11 +8,11 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <LibGPU/Config.h>
 #include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>
-#include <LibSoftGPU/Config.h>
 
-namespace SoftGPU {
+namespace GPU {
 
 struct Vertex {
     FloatVector4 position;
@@ -20,7 +20,7 @@ struct Vertex {
     FloatVector4 clip_coordinates;
     FloatVector4 window_coordinates;
     FloatVector4 color;
-    Array<FloatVector4, NUM_SAMPLERS> tex_coords;
+    Array<FloatVector4, GPU::NUM_SAMPLERS> tex_coords;
     FloatVector3 normal;
 };
 

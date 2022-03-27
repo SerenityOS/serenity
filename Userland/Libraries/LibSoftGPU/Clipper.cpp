@@ -7,9 +7,9 @@
  */
 
 #include <AK/Vector.h>
+#include <LibGPU/Vertex.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Clipper.h>
-#include <LibSoftGPU/Vertex.h>
 
 namespace SoftGPU {
 
@@ -33,7 +33,7 @@ static constexpr bool point_within_clip_plane(FloatVector4 const& vertex)
 }
 
 template<Clipper::ClipPlane plane>
-static constexpr Vertex clip_intersection_point(Vertex const& p1, Vertex const& p2)
+static constexpr GPU::Vertex clip_intersection_point(GPU::Vertex const& p1, GPU::Vertex const& p2)
 {
     constexpr FloatVector4 clip_plane_normals[] = {
         { 1, 0, 0, 0 },  // Left Plane
@@ -54,19 +54,19 @@ static constexpr Vertex clip_intersection_point(Vertex const& p1, Vertex const& 
     float const x2 = clip_plane_normal.dot(p2.clip_coordinates);
     float const a = (w1 + x1) / ((w1 + x1) - (w2 + x2));
 
-    Vertex out;
+    GPU::Vertex out;
     out.position = mix(p1.position, p2.position, a);
     out.eye_coordinates = mix(p1.eye_coordinates, p2.eye_coordinates, a);
     out.clip_coordinates = mix(p1.clip_coordinates, p2.clip_coordinates, a);
     out.color = mix(p1.color, p2.color, a);
-    for (size_t i = 0; i < NUM_SAMPLERS; ++i)
+    for (size_t i = 0; i < GPU::NUM_SAMPLERS; ++i)
         out.tex_coords[i] = mix(p1.tex_coords[i], p2.tex_coords[i], a);
     out.normal = mix(p1.normal, p2.normal, a);
     return out;
 }
 
 template<Clipper::ClipPlane plane>
-FLATTEN static constexpr void clip_plane(Vector<Vertex>& read_list, Vector<Vertex>& write_list)
+FLATTEN static constexpr void clip_plane(Vector<GPU::Vertex>& read_list, Vector<GPU::Vertex>& write_list)
 {
     auto read_from = &read_list;
     auto write_to = &write_list;
@@ -89,7 +89,7 @@ FLATTEN static constexpr void clip_plane(Vector<Vertex>& read_list, Vector<Verte
     swap(write_list, read_list);
 }
 
-void Clipper::clip_triangle_against_frustum(Vector<Vertex>& input_verts)
+void Clipper::clip_triangle_against_frustum(Vector<GPU::Vertex>& input_verts)
 {
     list_a = input_verts;
     list_b.clear_with_capacity();

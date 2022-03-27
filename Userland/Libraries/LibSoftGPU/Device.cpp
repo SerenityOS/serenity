@@ -184,9 +184,9 @@ void Device::rasterize_triangle(Triangle const& triangle)
         return;
 
     // Vertices
-    Vertex const& vertex0 = triangle.vertices[0];
-    Vertex const& vertex1 = triangle.vertices[1];
-    Vertex const& vertex2 = triangle.vertices[2];
+    GPU::Vertex const& vertex0 = triangle.vertices[0];
+    GPU::Vertex const& vertex1 = triangle.vertices[1];
+    GPU::Vertex const& vertex2 = triangle.vertices[2];
 
     // Calculate area of the triangle for later tests
     FloatVector2 const v0 = vertex0.window_coordinates.xy();
@@ -510,7 +510,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
             else
                 quad.vertex_color = expand4(vertex0.color);
 
-            for (size_t i = 0; i < NUM_SAMPLERS; ++i)
+            for (size_t i = 0; i < GPU::NUM_SAMPLERS; ++i)
                 quad.texture_coordinates[i] = interpolate(expand4(vertex0.tex_coords[i]), expand4(vertex1.tex_coords[i]), expand4(vertex2.tex_coords[i]), quad.barycentrics);
 
             if (m_options.fog_enabled)
@@ -582,14 +582,14 @@ GPU::DeviceInfo Device::info() const
     return {
         .vendor_name = "SerenityOS",
         .device_name = "SoftGPU",
-        .num_texture_units = NUM_SAMPLERS,
+        .num_texture_units = GPU::NUM_SAMPLERS,
         .num_lights = NUM_LIGHTS,
         .stencil_bits = sizeof(GPU::StencilType) * 8,
         .supports_npot_textures = true,
     };
 }
 
-static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const& options)
+static void generate_texture_coordinates(GPU::Vertex& vertex, RasterizerOptions const& options)
 {
     auto generate_coordinate = [&](size_t texcoord_index, size_t config_index) -> float {
         auto mode = options.texcoord_generation_config[texcoord_index][config_index].mode;
@@ -640,7 +640,7 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
 }
 
 void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform,
-    FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
+    FloatMatrix4x4 const& texture_transform, Vector<GPU::Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -954,7 +954,7 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
         }
 
         // Apply texture transformation
-        for (size_t i = 0; i < NUM_SAMPLERS; ++i) {
+        for (size_t i = 0; i < GPU::NUM_SAMPLERS; ++i) {
             triangle.vertices[0].tex_coords[i] = texture_transform * triangle.vertices[0].tex_coords[i];
             triangle.vertices[1].tex_coords[i] = texture_transform * triangle.vertices[1].tex_coords[i];
             triangle.vertices[2].tex_coords[i] = texture_transform * triangle.vertices[2].tex_coords[i];

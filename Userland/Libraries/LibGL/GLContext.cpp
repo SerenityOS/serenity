@@ -577,7 +577,7 @@ void GLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_vertex, x, y, z, w);
 
-    SoftGPU::Vertex vertex;
+    GPU::Vertex vertex;
 
     vertex.position = { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), static_cast<float>(w) };
     vertex.color = m_current_vertex_color;
