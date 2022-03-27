@@ -725,13 +725,7 @@ String NewArray::to_string_impl(Bytecode::Executable const&) const
     StringBuilder builder;
     builder.append("NewArray");
     if (m_element_count != 0) {
-        builder.append(" [");
-        for (size_t i = 0; i < m_element_count; ++i) {
-            builder.appendff("{}", m_elements[i]);
-            if (i != m_element_count - 1)
-                builder.append(',');
-        }
-        builder.append(']');
+        builder.appendff(" [{}-{}]", m_elements[0], m_elements[1]);
     }
     return builder.to_string();
 }
