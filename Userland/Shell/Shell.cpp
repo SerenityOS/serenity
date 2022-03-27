@@ -846,7 +846,7 @@ void Shell::execute_process(Vector<const char*>&& argv)
 {
 #ifdef __serenity__
     for (auto& promise : m_active_promises) {
-        pledge("exec", promise.data.exec_promises.characters());
+        pledge("stdio rpath exec", promise.data.exec_promises.characters());
         for (auto& item : promise.data.unveils)
             unveil(item.path.characters(), item.access.characters());
     }
