@@ -73,20 +73,19 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
     m_features = static_cast<CPUFeature>(0);
 
     CPUID processor_info(0x1);
-    if (processor_info.edx() & (1 << 4))
-        m_features |= CPUFeature::TSC;
-    if (processor_info.edx() & (1 << 6))
-        m_features |= CPUFeature::PAE;
-    if (processor_info.edx() & (1 << 13))
-        m_features |= CPUFeature::PGE;
-    if (processor_info.edx() & (1 << 23))
-        m_features |= CPUFeature::MMX;
-    if (processor_info.edx() & (1 << 24))
-        m_features |= CPUFeature::FXSR;
-    if (processor_info.edx() & (1 << 25))
-        m_features |= CPUFeature::SSE;
-    if (processor_info.edx() & (1 << 26))
-        m_features |= CPUFeature::SSE2;
+
+    auto handle_edx_bit_11_feature = [&] {
+        u32 stepping = processor_info.eax() & 0xf;
+        u32 model = (processor_info.eax() >> 4) & 0xf;
+        u32 family = (processor_info.eax() >> 8) & 0xf;
+        // FIXME: I have no clue what these mean or where it's from (the Intel manual I've seen just says EDX[11] is SEP).
+        //        If you do, please convert them to constants or add comments!
+        if (!(family == 6 && model < 3 && stepping < 3))
+            m_features |= CPUFeature::SEP;
+        if ((family == 6 && model >= 3) || (family == 0xf && model >= 0xe))
+            m_features |= CPUFeature::CONSTANT_TSC;
+    };
+
     if (processor_info.ecx() & (1 << 0))
         m_features |= CPUFeature::SSE3;
     if (processor_info.ecx() & (1 << 9))
@@ -101,34 +100,50 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         m_features |= CPUFeature::AVX;
     if (processor_info.ecx() & (1 << 30))
         m_features |= CPUFeature::RDRAND;
-    if (processor_info.ecx() & (1u << 31))
+    if (processor_info.ecx() & (1 << 31))
         m_features |= CPUFeature::HYPERVISOR;
-    if (processor_info.edx() & (1 << 11)) {
-        u32 stepping = processor_info.eax() & 0xf;
-        u32 model = (processor_info.eax() >> 4) & 0xf;
-        u32 family = (processor_info.eax() >> 8) & 0xf;
-        if (!(family == 6 && model < 3 && stepping < 3))
-            m_features |= CPUFeature::SEP;
-        if ((family == 6 && model >= 3) || (family == 0xf && model >= 0xe))
-            m_features |= CPUFeature::CONSTANT_TSC;
-    }
+
+    if (processor_info.edx() & (1 << 4))
+        m_features |= CPUFeature::TSC;
+    if (processor_info.edx() & (1 << 6))
+        m_features |= CPUFeature::PAE;
+    if (processor_info.edx() & (1 << 13))
+        m_features |= CPUFeature::PGE;
+    if (processor_info.edx() & (1 << 11))
+        handle_edx_bit_11_feature();
     if (processor_info.edx() & (1 << 16))
         m_features |= CPUFeature::PAT;
+    if (processor_info.edx() & (1 << 23))
+        m_features |= CPUFeature::MMX;
+    if (processor_info.edx() & (1 << 24))
+        m_features |= CPUFeature::FXSR;
+    if (processor_info.edx() & (1 << 25))
+        m_features |= CPUFeature::SSE;
+    if (processor_info.edx() & (1 << 26))
+        m_features |= CPUFeature::SSE2;
+
+    CPUID extended_features(0x7);
+    if (extended_features.ebx() & (1 << 7))
+        m_features |= CPUFeature::SMEP;
+    if (extended_features.ebx() & (1 << 18))
+        m_features |= CPUFeature::RDSEED;
+    if (extended_features.ebx() & (1 << 20))
+        m_features |= CPUFeature::SMAP;
+    if (extended_features.ecx() & (1 << 2))
+        m_features |= CPUFeature::UMIP;
 
     u32 max_extended_leaf = CPUID(0x80000000).eax();
 
     if (max_extended_leaf >= 0x80000001) {
         CPUID extended_processor_info(0x80000001);
+        if (extended_processor_info.edx() & (1 << 11))
+            m_features |= CPUFeature::SYSCALL; // Only available in 64 bit mode
         if (extended_processor_info.edx() & (1 << 20))
             m_features |= CPUFeature::NX;
         if (extended_processor_info.edx() & (1 << 27))
             m_features |= CPUFeature::RDTSCP;
         if (extended_processor_info.edx() & (1 << 29))
             m_features |= CPUFeature::LM;
-        if (extended_processor_info.edx() & (1 << 11)) {
-            // Only available in 64 bit mode
-            m_features |= CPUFeature::SYSCALL;
-        }
     }
 
     if (max_extended_leaf >= 0x80000007) {
@@ -171,16 +186,6 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         }
 #endif
     }
-
-    CPUID extended_features(0x7);
-    if (extended_features.ebx() & (1 << 20))
-        m_features |= CPUFeature::SMAP;
-    if (extended_features.ebx() & (1 << 7))
-        m_features |= CPUFeature::SMEP;
-    if (extended_features.ecx() & (1 << 2))
-        m_features |= CPUFeature::UMIP;
-    if (extended_features.ebx() & (1 << 18))
-        m_features |= CPUFeature::RDSEED;
 }
 
 UNMAP_AFTER_INIT void Processor::cpu_setup()
