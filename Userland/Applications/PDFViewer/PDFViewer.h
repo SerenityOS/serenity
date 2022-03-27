@@ -18,6 +18,11 @@ class PDFViewer : public GUI::AbstractScrollableWidget {
     C_OBJECT(PDFViewer)
 
 public:
+    enum class PageViewMode {
+        Single,
+        Multiple,
+    };
+
     virtual ~PDFViewer() override = default;
 
     ALWAYS_INLINE u32 current_page() const { return m_current_page_index; }
@@ -37,6 +42,7 @@ protected:
     PDFViewer();
 
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
