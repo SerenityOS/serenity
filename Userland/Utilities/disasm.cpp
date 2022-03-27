@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Demangle.h>
 #include <AK/OwnPtr.h>
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
@@ -117,14 +118,14 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             while (current_symbol + 1 < symbols.end() && !(current_symbol + 1)->contains(virtual_offset) && (current_symbol + 1)->address() <= virtual_offset) {
                 ++current_symbol;
                 if (!is_first_symbol)
-                    outln("\n({} ({:p}-{:p}))\n", current_symbol->name, current_symbol->address(), current_symbol->address_end());
+                    outln("\n({} ({:p}-{:p}))\n", demangle(current_symbol->name), current_symbol->address(), current_symbol->address_end());
             }
             while (current_symbol + 1 < symbols.end() && (current_symbol + 1)->contains(virtual_offset)) {
                 if (!is_first_symbol && !current_instruction_is_in_symbol)
                     outln();
                 ++current_symbol;
                 current_instruction_is_in_symbol = true;
-                outln("{:08x} <{}>:", current_symbol->address(), current_symbol->name);
+                outln("{} ({:p}-{:p}):", demangle(current_symbol->name), current_symbol->address(), current_symbol->address_end());
             }
 
             is_first_symbol = false;
