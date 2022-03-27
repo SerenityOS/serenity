@@ -11,6 +11,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
+#include <LibGPU/Device.h>
 #include <LibGPU/DeviceInfo.h>
 #include <LibGPU/Enums.h>
 #include <LibGPU/Image.h>
@@ -41,37 +42,37 @@ namespace SoftGPU {
 
 struct PixelQuad;
 
-class Device final {
+class Device final : public GPU::Device {
 public:
     Device(Gfx::IntSize const& min_size);
 
-    GPU::DeviceInfo info() const;
+    virtual GPU::DeviceInfo info() const override;
 
-    void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<GPU::Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
-    void resize(Gfx::IntSize const& min_size);
-    void clear_color(FloatVector4 const&);
-    void clear_depth(GPU::DepthType);
-    void clear_stencil(GPU::StencilType);
-    void blit_color_buffer_to(Gfx::Bitmap& target);
-    void blit_to_color_buffer_at_raster_position(Gfx::Bitmap const&);
-    void blit_to_depth_buffer_at_raster_position(Vector<GPU::DepthType> const&, int, int);
-    void set_options(GPU::RasterizerOptions const&);
-    void set_light_model_params(GPU::LightModelParameters const&);
-    GPU::RasterizerOptions options() const { return m_options; }
-    GPU::LightModelParameters light_model() const { return m_lighting_model; }
-    GPU::ColorType get_color_buffer_pixel(int x, int y);
-    GPU::DepthType get_depthbuffer_value(int x, int y);
+    virtual void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<GPU::Vertex> const& vertices, Vector<size_t> const& enabled_texture_units) override;
+    virtual void resize(Gfx::IntSize const& min_size) override;
+    virtual void clear_color(FloatVector4 const&) override;
+    virtual void clear_depth(GPU::DepthType) override;
+    virtual void clear_stencil(GPU::StencilType) override;
+    virtual void blit_color_buffer_to(Gfx::Bitmap& target) override;
+    virtual void blit_to_color_buffer_at_raster_position(Gfx::Bitmap const&) override;
+    virtual void blit_to_depth_buffer_at_raster_position(Vector<GPU::DepthType> const&, int, int) override;
+    virtual void set_options(GPU::RasterizerOptions const&) override;
+    virtual void set_light_model_params(GPU::LightModelParameters const&) override;
+    virtual GPU::RasterizerOptions options() const override { return m_options; }
+    virtual GPU::LightModelParameters light_model() const override { return m_lighting_model; }
+    virtual GPU::ColorType get_color_buffer_pixel(int x, int y) override;
+    virtual GPU::DepthType get_depthbuffer_value(int x, int y) override;
 
-    NonnullRefPtr<GPU::Image> create_image(GPU::ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers);
+    virtual NonnullRefPtr<GPU::Image> create_image(GPU::ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers) override;
 
-    void set_sampler_config(unsigned, GPU::SamplerConfig const&);
-    void set_light_state(unsigned, GPU::Light const&);
-    void set_material_state(GPU::Face, GPU::Material const&);
-    void set_stencil_configuration(GPU::Face, GPU::StencilConfiguration const&);
+    virtual void set_sampler_config(unsigned, GPU::SamplerConfig const&) override;
+    virtual void set_light_state(unsigned, GPU::Light const&) override;
+    virtual void set_material_state(GPU::Face, GPU::Material const&) override;
+    virtual void set_stencil_configuration(GPU::Face, GPU::StencilConfiguration const&) override;
 
-    GPU::RasterPosition raster_position() const { return m_raster_position; }
-    void set_raster_position(GPU::RasterPosition const& raster_position);
-    void set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform);
+    virtual GPU::RasterPosition raster_position() const override { return m_raster_position; }
+    virtual void set_raster_position(GPU::RasterPosition const& raster_position) override;
+    virtual void set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform) override;
 
 private:
     void draw_statistics_overlay(Gfx::Bitmap&);
