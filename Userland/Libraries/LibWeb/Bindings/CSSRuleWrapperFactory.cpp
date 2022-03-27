@@ -14,6 +14,9 @@ namespace Web::Bindings {
 
 CSSRuleWrapper* wrap(JS::GlobalObject& global_object, CSS::CSSRule& rule)
 {
+    if (rule.wrapper())
+        return static_cast<CSSRuleWrapper*>(rule.wrapper());
+
     if (is<CSS::CSSStyleRule>(rule))
         return static_cast<CSSRuleWrapper*>(wrap_impl(global_object, verify_cast<CSS::CSSStyleRule>(rule)));
     return static_cast<CSSRuleWrapper*>(wrap_impl(global_object, rule));
