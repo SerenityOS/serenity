@@ -1999,7 +1999,11 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
     //         3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
     //         4. Return ? IteratorClose(iteratorRecord, status).
     // o. If result.[[Value]] is not empty, set V to result.[[Value]].
-    generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { loop_update }, {});
+
+    // The body can contain an unconditional block terminator (e.g. return, throw), so we have to check for that before generating the Jump.
+    if (!generator.is_current_block_terminated())
+        generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { loop_update }, {});
+
     generator.switch_to_basic_block(loop_end);
     return {};
 }
