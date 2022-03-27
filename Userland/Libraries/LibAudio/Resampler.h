@@ -80,8 +80,8 @@ private:
     const u32 m_source;
     const u32 m_target;
     u32 m_current_ratio { 0 };
-    SampleType m_last_sample_l;
-    SampleType m_last_sample_r;
+    SampleType m_last_sample_l {};
+    SampleType m_last_sample_r {};
 };
 
 class Buffer;
