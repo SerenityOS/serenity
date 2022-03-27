@@ -32,8 +32,8 @@ static bool is_all_whitespace(StringView string)
     return true;
 }
 
-// NOTE: This collapes whitespace into a single ASCII space if collapse is true. If previous_is_empty_or_ends_in_whitespace, it also strips leading whitespace.
-void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_or_ends_in_whitespace)
+// NOTE: This collapses whitespace into a single ASCII space if collapse is true.
+void TextNode::compute_text_for_rendering(bool collapse)
 {
     auto& data = dom_node().data();
     if (!collapse || data.is_empty()) {
@@ -44,12 +44,8 @@ void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_
     // NOTE: A couple fast returns to avoid unnecessarily allocating a StringBuilder.
     if (data.length() == 1) {
         if (is_ascii_space(data[0])) {
-            if (previous_is_empty_or_ends_in_whitespace)
-                m_text_for_rendering = String::empty();
-            else {
-                static String s_single_space_string = " ";
-                m_text_for_rendering = s_single_space_string;
-            }
+            static String s_single_space_string = " ";
+            m_text_for_rendering = s_single_space_string;
         } else {
             m_text_for_rendering = data;
         }
@@ -76,8 +72,6 @@ void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_
             ++index;
     };
 
-    if (previous_is_empty_or_ends_in_whitespace)
-        skip_over_whitespace();
     while (index < data.length()) {
         if (is_ascii_space(data[index])) {
             builder.append(' ');

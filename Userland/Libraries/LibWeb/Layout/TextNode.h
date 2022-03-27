@@ -46,7 +46,7 @@ public:
         Utf8View::Iterator m_iterator;
     };
 
-    void compute_text_for_rendering(bool collapse, bool previous_is_empty_or_ends_in_whitespace);
+    void compute_text_for_rendering(bool collapse);
 
     virtual RefPtr<Painting::Paintable> create_paintable() const override;
 

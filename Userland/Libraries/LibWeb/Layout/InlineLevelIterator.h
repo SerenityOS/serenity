@@ -56,7 +56,7 @@ private:
     void skip_to_next();
     void compute_next();
 
-    void enter_text_node(Layout::TextNode const&, bool previous_is_empty_or_ends_in_whitespace);
+    void enter_text_node(Layout::TextNode const&);
 
     void enter_node_with_box_model_metrics(Layout::NodeWithStyleAndBoxModelMetrics const&);
     void exit_node_with_box_model_metrics();
