@@ -19,13 +19,13 @@
 #include <LibGL/Tex/TextureUnit.h>
 #include <LibGPU/DeviceInfo.h>
 #include <LibGPU/Light.h>
+#include <LibGPU/Vertex.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector3.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/Device.h>
-#include <LibSoftGPU/Vertex.h>
 
 namespace GL {
 
@@ -219,7 +219,7 @@ private:
     Vector<FloatVector4> m_current_vertex_tex_coord;
     FloatVector3 m_current_vertex_normal { 0.0f, 0.0f, 1.0f };
 
-    Vector<SoftGPU::Vertex> m_vertex_list;
+    Vector<GPU::Vertex> m_vertex_list;
 
     GLenum m_error = GL_NO_ERROR;
     bool m_in_draw_state = false;

@@ -7,12 +7,12 @@
 
 #pragma once
 
-#include <LibSoftGPU/Vertex.h>
+#include <LibGPU/Vertex.h>
 
 namespace SoftGPU {
 
 struct Triangle {
-    Vertex vertices[3];
+    GPU::Vertex vertices[3];
 };
 
 }
