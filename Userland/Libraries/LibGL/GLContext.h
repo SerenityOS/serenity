@@ -17,6 +17,7 @@
 #include <LibGL/Tex/NameAllocator.h>
 #include <LibGL/Tex/Texture.h>
 #include <LibGL/Tex/TextureUnit.h>
+#include <LibGPU/Device.h>
 #include <LibGPU/DeviceInfo.h>
 #include <LibGPU/Light.h>
 #include <LibGPU/Vertex.h>
@@ -24,8 +25,6 @@
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector3.h>
-#include <LibSoftGPU/Clipper.h>
-#include <LibSoftGPU/Device.h>
 
 namespace GL {
 
@@ -304,7 +303,7 @@ private:
         return m_texture_coordinate_generation[texture_unit][capability - GL_TEXTURE_GEN_S];
     }
 
-    SoftGPU::Device m_rasterizer;
+    NonnullOwnPtr<GPU::Device> m_rasterizer;
     GPU::DeviceInfo const m_device_info;
     bool m_sampler_config_is_dirty { true };
     bool m_light_state_is_dirty { true };
