@@ -129,11 +129,31 @@ void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::Flex
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
     // FIXME: This should also take reverse-ness into account
     if (flex_direction == CSS::FlexDirection::Row || flex_direction == CSS::FlexDirection::RowReverse) {
+        item.borders.main_before = item.box.computed_values().border_left().width;
+        item.borders.main_after = item.box.computed_values().border_right().width;
+        item.borders.cross_before = item.box.computed_values().border_top().width;
+        item.borders.cross_after = item.box.computed_values().border_bottom().width;
+
+        item.padding.main_before = item.box.computed_values().padding().left.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.padding.main_after = item.box.computed_values().padding().right.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.padding.cross_before = item.box.computed_values().padding().top.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.padding.cross_after = item.box.computed_values().padding().bottom.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+
         item.margins.main_before = item.box.computed_values().margin().left.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
         item.margins.main_after = item.box.computed_values().margin().right.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
         item.margins.cross_before = item.box.computed_values().margin().top.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
         item.margins.cross_after = item.box.computed_values().margin().bottom.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
     } else {
+        item.borders.main_before = item.box.computed_values().border_top().width;
+        item.borders.main_after = item.box.computed_values().border_bottom().width;
+        item.borders.cross_before = item.box.computed_values().border_left().width;
+        item.borders.cross_after = item.box.computed_values().border_right().width;
+
+        item.padding.main_before = item.box.computed_values().padding().top.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.padding.main_after = item.box.computed_values().padding().bottom.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.padding.cross_before = item.box.computed_values().padding().left.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+        item.padding.cross_after = item.box.computed_values().padding().right.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
+
         item.margins.main_before = item.box.computed_values().margin().top.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
         item.margins.main_after = item.box.computed_values().margin().bottom.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
         item.margins.cross_before = item.box.computed_values().margin().left.resolved(item.box, width_of_containing_block_as_length).to_px(item.box);
@@ -561,7 +581,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
         for (auto& flex_item : m_flex_items) {
             // FIXME: This needs some serious work.
             float max_content_contribution = calculated_main_size(flex_item.box);
-            float max_content_flex_fraction = max_content_contribution - (flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after);
+            float max_content_flex_fraction = max_content_contribution - (flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + flex_item.borders.main_before + flex_item.borders.main_after + flex_item.padding.main_before + flex_item.padding.main_after);
             if (max_content_flex_fraction > 0) {
                 max_content_flex_fraction /= max(flex_item.box.computed_values().flex_grow(), 1.0f);
             } else {
@@ -583,7 +603,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
             } else {
                 product = largest_max_content_flex_fraction * max(flex_item.box.computed_values().flex_shrink(), 1.0f) * flex_item.flex_base_size;
             }
-            result += flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + product;
+            result += flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + flex_item.borders.main_before + flex_item.borders.main_after + flex_item.padding.main_before + flex_item.padding.main_after + product;
         }
         m_available_space->main = clamp(result, main_min_size, main_max_size);
     }
@@ -617,7 +637,7 @@ void FlexFormattingContext::collect_flex_items_into_flex_lines()
     FlexLine line;
     float line_main_size = 0;
     for (auto& flex_item : m_flex_items) {
-        auto outer_hypothetical_main_size = flex_item.hypothetical_main_size + flex_item.margins.main_before + flex_item.margins.main_after;
+        auto outer_hypothetical_main_size = flex_item.hypothetical_main_size + flex_item.margins.main_before + flex_item.margins.main_after + flex_item.borders.main_before + flex_item.borders.main_after + flex_item.padding.main_before + flex_item.padding.main_after;
         if ((line_main_size + outer_hypothetical_main_size) > m_available_space->main.value_or(NumericLimits<float>::max())) {
             m_flex_lines.append(move(line));
             line = {};
@@ -644,7 +664,7 @@ void FlexFormattingContext::resolve_flexible_lengths()
 
         float sum_of_hypothetical_main_sizes = 0;
         for (auto& flex_item : flex_line.items) {
-            sum_of_hypothetical_main_sizes += (flex_item->hypothetical_main_size + flex_item->margins.main_before + flex_item->margins.main_after);
+            sum_of_hypothetical_main_sizes += (flex_item->hypothetical_main_size + flex_item->margins.main_before + flex_item->margins.main_after + flex_item->borders.main_before + flex_item->borders.main_after + flex_item->padding.main_before + flex_item->padding.main_after);
         }
         if (sum_of_hypothetical_main_sizes < m_available_space->main.value_or(NumericLimits<float>::max()))
             used_flex_factor = FlexFactor::FlexGrowFactor;
@@ -684,9 +704,9 @@ void FlexFormattingContext::resolve_flexible_lengths()
             float sum_of_items_on_line = 0;
             for (auto& flex_item : flex_line.items) {
                 if (flex_item->frozen)
-                    sum_of_items_on_line += flex_item->target_main_size + flex_item->margins.main_before + flex_item->margins.main_after;
+                    sum_of_items_on_line += flex_item->target_main_size + flex_item->margins.main_before + flex_item->margins.main_after + flex_item->borders.main_before + flex_item->borders.main_after + flex_item->padding.main_before + flex_item->padding.main_after;
                 else
-                    sum_of_items_on_line += flex_item->flex_base_size + flex_item->margins.main_before + flex_item->margins.main_after;
+                    sum_of_items_on_line += flex_item->flex_base_size + flex_item->margins.main_before + flex_item->margins.main_after + flex_item->borders.main_before + flex_item->borders.main_after + flex_item->padding.main_before + flex_item->padding.main_after;
             }
             return specified_main_size(flex_container()) - sum_of_items_on_line;
         };
@@ -927,12 +947,12 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
             if (is_main_axis_margin_first_auto(flex_item->box))
                 ++auto_margins;
             else
-                used_main_space += flex_item->margins.main_before;
+                used_main_space += flex_item->margins.main_before + flex_item->borders.main_before + flex_item->padding.main_before;
 
             if (is_main_axis_margin_second_auto(flex_item->box))
                 ++auto_margins;
             else
-                used_main_space += flex_item->margins.main_after;
+                used_main_space += flex_item->margins.main_after + flex_item->borders.main_after + flex_item->padding.main_after;
         }
         float remaining_free_space = m_available_space->main.value_or(NumericLimits<float>::max()) - used_main_space;
         if (remaining_free_space > 0) {
@@ -978,8 +998,8 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         // FIXME: Support reverse
         float main_offset = space_before_first_item;
         for (auto& flex_item : flex_line.items) {
-            flex_item->main_offset = main_offset + flex_item->margins.main_before;
-            main_offset += flex_item->margins.main_before + flex_item->main_size + flex_item->margins.main_after + space_between_items;
+            flex_item->main_offset = main_offset + flex_item->margins.main_before + flex_item->borders.main_before + flex_item->padding.main_before;
+            main_offset += flex_item->margins.main_before + flex_item->borders.main_before + flex_item->padding.main_before + flex_item->main_size + flex_item->margins.main_after + flex_item->borders.main_after + flex_item->padding.main_after + space_between_items;
         }
     }
 }
@@ -1009,7 +1029,7 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
                 //  Fallthrough
             case CSS::AlignItems::FlexStart:
             case CSS::AlignItems::Stretch:
-                flex_item->cross_offset = line_cross_offset + flex_item->margins.cross_before;
+                flex_item->cross_offset = line_cross_offset + flex_item->margins.cross_before + flex_item->borders.cross_before + flex_item->padding.cross_before;
                 break;
             case CSS::AlignItems::FlexEnd:
                 flex_item->cross_offset = line_cross_offset + flex_line.cross_size - flex_item->cross_size;
