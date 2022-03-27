@@ -17,8 +17,8 @@ namespace Core {
 
 struct CommandResult {
     int exit_code { 0 };
-    String stdout;
-    String stderr;
+    String output;
+    String error;
 };
 
 ErrorOr<CommandResult> command(String const& program, Vector<String> const& arguments, Optional<LexicalPath> chdir);
