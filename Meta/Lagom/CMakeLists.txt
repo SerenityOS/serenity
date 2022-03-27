@@ -346,12 +346,19 @@ if (BUILD_LAGOM)
         LIBS m LagomCompress LagomTextCodec LagomIPC
     )
 
+    # GPU
+    file(GLOB LIBGPU_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGPU/*.cpp")
+    lagom_lib(GPU gpu
+        SOURCES ${LIBGPU_SOURCES}
+        LIBS dl
+    )
+
     # GL
     file(GLOB LIBGL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/*.cpp")
     file(GLOB LIBGL_TEX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/Tex/*.cpp")
     lagom_lib(GL gl
         SOURCES ${LIBGL_SOURCES} ${LIBGL_TEX_SOURCES}
-        LIBS m LagomGfx LagomSoftGPU)
+        LIBS m LagomGfx LagomGPU)
 
     # GUI-GML
     file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML/*.cpp")
