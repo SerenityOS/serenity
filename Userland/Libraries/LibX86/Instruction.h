@@ -54,6 +54,11 @@ enum class AddressSize : u8 {
     Size64,
 };
 
+enum class ProcessorMode : u8 {
+    Protected,
+    Long,
+};
+
 enum IsLockPrefixAllowed {
     LockPrefixNotAllowed = 0,
     LockPrefixAllowed
@@ -448,6 +453,7 @@ public:
     String to_string_fpu80(Instruction const&) const;
     String to_string_mm(Instruction const&) const;
     String to_string_xmm(Instruction const&) const;
+    String sib_to_string(ProcessorMode) const;
 
     bool is_register() const { return m_register_index != 0x7f; }
 
@@ -458,9 +464,10 @@ public:
     FpuRegisterIndex reg_fpu() const { return static_cast<FpuRegisterIndex>(register_index()); }
 
     // helpers to get the parts by name as in the spec
-    u8 mod() const { return m_rm_byte >> 6; }
-    u8 reg() const { return m_rm_byte >> 3 & 0b111; }
-    u8 rm() const { return m_rm_byte & 0b111; }
+    u8 mod() const { return m_mod; }
+    u8 reg() const { return m_reg; }
+    u8 rm() const { return m_rm; }
+    u8 modrm_byte() const { return (m_mod << 6) | ((m_reg & 7) << 3) | (m_rm & 7); }
 
     template<typename CPU, typename T>
     void write8(CPU&, Instruction const&, T);
@@ -518,8 +525,12 @@ private:
         u16 m_displacement16;
     };
 
-    u8 m_rm_byte { 0 };
-    u8 m_sib { 0 };
+    u8 m_mod : 2 { 0 };
+    u8 m_reg : 4 { 0 };
+    u8 m_rm : 4 { 0 };
+    u8 m_sib_scale : 2 { 0 };
+    u8 m_sib_index : 4 { 0 };
+    u8 m_sib_base : 4 { 0 };
     u8 m_displacement_bytes { 0 };
     u8 m_register_index : 7 { 0x7f };
     bool m_has_sib : 1 { false };
@@ -556,8 +567,8 @@ public:
     String mnemonic() const;
 
     u8 op() const { return m_op; }
-    u8 modrm_byte() const { return m_modrm.m_rm_byte; }
-    u8 slash() const { return (modrm_byte() >> 3) & 7; }
+    u8 modrm_byte() const { return m_modrm.modrm_byte(); }
+    u8 slash() const { return m_modrm.reg() & 7; }
 
     u8 imm8() const { return m_imm1; }
     u16 imm16() const { return m_imm1; }
@@ -708,12 +719,12 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu
 template<typename CPU>
 ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, SegmentRegister& default_segment) const
 {
-    u32 scale_shift = m_sib >> 6;
+    u32 scale_shift = m_sib_scale;
     u32 index = 0;
-    switch ((m_sib >> 3) & 0x07) {
+    switch (m_sib_index) {
     case 0 ... 3:
     case 5 ... 7:
-        index = cpu.const_gpr32((RegisterIndex32)((m_sib >> 3) & 0x07)).value();
+        index = cpu.const_gpr32((RegisterIndex32)m_sib_index).value();
         break;
     case 4:
         index = 0;
@@ -721,10 +732,10 @@ ALWAYS_INLINE u32 MemoryOrRegisterReference::evaluate_sib(const CPU& cpu, Segmen
     }
 
     u32 base = m_displacement32;
-    switch (m_sib & 0x07) {
+    switch (m_sib_base) {
     case 0 ... 3:
     case 6 ... 7:
-        base += cpu.const_gpr32((RegisterIndex32)(m_sib & 0x07)).value();
+        base += cpu.const_gpr32((RegisterIndex32)m_sib_base).value();
         break;
     case 4:
         default_segment = SegmentRegister::SS;
@@ -1046,7 +1057,10 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, OperandSiz
 template<typename InstructionStreamType>
 ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stream, AddressSize address_size)
 {
-    m_rm_byte = stream.read8();
+    u8 mod_rm_byte = stream.read8();
+    m_mod = mod_rm_byte >> 6;
+    m_reg = (mod_rm_byte >> 3) & 7;
+    m_rm = mod_rm_byte & 7;
 
     if (address_size == AddressSize::Size32) {
         decode32(stream);
@@ -1106,10 +1120,12 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode16(InstructionStreamType&)
 template<typename InstructionStreamType>
 ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& stream)
 {
-    switch (mod()) {
+    switch (m_mod) {
     case 0b00:
-        if (rm() == 5)
+        if (m_rm == 5) {
             m_displacement_bytes = 4;
+            return;
+        }
         break;
     case 0b01:
         m_displacement_bytes = 1;
@@ -1122,10 +1138,13 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& st
         return;
     }
 
-    m_has_sib = rm() == 4;
+    m_has_sib = m_rm == 4;
     if (m_has_sib) {
-        m_sib = stream.read8();
-        if ((m_sib & 0x07) == 5) {
+        u8 sib_byte = stream.read8();
+        m_sib_scale = sib_byte >> 6;
+        m_sib_index = (sib_byte >> 3) & 7;
+        m_sib_base = sib_byte & 7;
+        if (m_sib_base == 5) {
             switch (mod()) {
             case 0b00:
                 m_displacement_bytes = 4;
@@ -1138,7 +1157,6 @@ ALWAYS_INLINE void MemoryOrRegisterReference::decode32(InstructionStreamType& st
                 break;
             default:
                 VERIFY_NOT_REACHED();
-                break;
             }
         }
     }
