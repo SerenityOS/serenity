@@ -18,6 +18,7 @@
 #include <LibGPU/LightModelParameters.h>
 #include <LibGPU/Material.h>
 #include <LibGPU/RasterPosition.h>
+#include <LibGPU/RasterizerOptions.h>
 #include <LibGPU/SamplerConfig.h>
 #include <LibGPU/StencilConfiguration.h>
 #include <LibGPU/TexCoordGenerationConfig.h>
@@ -38,48 +39,6 @@
 
 namespace SoftGPU {
 
-struct RasterizerOptions {
-    bool shade_smooth { true };
-    bool enable_stencil_test { false };
-    bool enable_depth_test { false };
-    bool enable_depth_write { true };
-    bool enable_alpha_test { false };
-    GPU::AlphaTestFunction alpha_test_func { GPU::AlphaTestFunction::Always };
-    float alpha_test_ref_value { 0 };
-    bool enable_blending { false };
-    GPU::BlendFactor blend_source_factor { GPU::BlendFactor::One };
-    GPU::BlendFactor blend_destination_factor { GPU::BlendFactor::One };
-    u32 color_mask { 0xffffffff };
-    float depth_min { 0.f };
-    float depth_max { 1.f };
-    GPU::DepthTestFunction depth_func { GPU::DepthTestFunction::Less };
-    GPU::PolygonMode polygon_mode { GPU::PolygonMode::Fill };
-    FloatVector4 fog_color { 0.0f, 0.0f, 0.0f, 0.0f };
-    float fog_density { 1.0f };
-    GPU::FogMode fog_mode { GPU::FogMode::Exp };
-    bool fog_enabled { false };
-    float fog_start { 0.0f };
-    float fog_end { 1.0f };
-    bool scissor_enabled { false };
-    bool normalization_enabled { false };
-    Gfx::IntRect scissor_box;
-    bool enable_color_write { true };
-    float depth_offset_factor { 0 };
-    float depth_offset_constant { 0 };
-    bool depth_offset_enabled { false };
-    bool enable_culling { false };
-    GPU::WindingOrder front_face { GPU::WindingOrder::CounterClockwise };
-    bool cull_back { true };
-    bool cull_front { false };
-    Array<u8, GPU::NUM_SAMPLERS> texcoord_generation_enabled_coordinates {};
-    Array<Array<GPU::TexCoordGenerationConfig, 4>, GPU::NUM_SAMPLERS> texcoord_generation_config {};
-    Gfx::IntRect viewport;
-    bool lighting_enabled { false };
-    bool color_material_enabled { false };
-    GPU::ColorMaterialFace color_material_face { GPU::ColorMaterialFace::FrontAndBack };
-    GPU::ColorMaterialMode color_material_mode { GPU::ColorMaterialMode::AmbientAndDiffuse };
-};
-
 struct PixelQuad;
 
 class Device final {
@@ -96,9 +55,9 @@ public:
     void blit_color_buffer_to(Gfx::Bitmap& target);
     void blit_to_color_buffer_at_raster_position(Gfx::Bitmap const&);
     void blit_to_depth_buffer_at_raster_position(Vector<GPU::DepthType> const&, int, int);
-    void set_options(RasterizerOptions const&);
+    void set_options(GPU::RasterizerOptions const&);
     void set_light_model_params(GPU::LightModelParameters const&);
-    RasterizerOptions options() const { return m_options; }
+    GPU::RasterizerOptions options() const { return m_options; }
     GPU::LightModelParameters light_model() const { return m_lighting_model; }
     GPU::ColorType get_color_buffer_pixel(int x, int y);
     GPU::DepthType get_depthbuffer_value(int x, int y);
@@ -124,7 +83,7 @@ private:
     bool test_alpha(PixelQuad&);
 
     RefPtr<FrameBuffer<GPU::ColorType, GPU::DepthType, GPU::StencilType>> m_frame_buffer {};
-    RasterizerOptions m_options;
+    GPU::RasterizerOptions m_options;
     GPU::LightModelParameters m_lighting_model;
     Clipper m_clipper;
     Vector<Triangle> m_triangle_list;
