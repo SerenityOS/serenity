@@ -17,15 +17,14 @@ FileArgument::FileArgument(String file_argument)
     m_column = {};
 
     // A file doesn't exist with the full specified name, maybe the user entered line/column coordinates?
-    Regex<PosixExtended> re("^(.+?)(:([0-9]+):?([0-9]+)?)?$");
+    Regex<PosixExtended> re("^(.+?)(?::([0-9]+))?(?::([0-9]+))?$");
     RegexResult result = match(file_argument, re, PosixFlags::Global | PosixFlags::Multiline | PosixFlags::Ungreedy);
     auto& groups = result.capture_group_matches.at(0);
 
     // Match 0 group 0: file name
     // Match 0 group 1: line number
     // Match 0 group 2: column number
-
-    if (groups.size() > 3) {
+    if (groups.size() > 2) {
         // Both a line and column number were specified.
         auto filename = groups.at(0).view.to_string();
         auto initial_line_number = groups.at(1).view.to_string().to_int();
@@ -36,7 +35,7 @@ FileArgument::FileArgument(String file_argument)
             m_line = initial_line_number.value();
         if (initial_column_number.has_value())
             m_column = initial_column_number.value();
-    } else if (groups.size() == 3) {
+    } else if (groups.size() == 2) {
         // Only a line number was specified.
         auto filename = groups.at(0).view.to_string();
         auto initial_line_number = groups.at(1).view.to_string().to_int();
