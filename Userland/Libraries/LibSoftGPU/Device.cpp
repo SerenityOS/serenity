@@ -589,7 +589,7 @@ GPU::DeviceInfo Device::info() const
     };
 }
 
-static void generate_texture_coordinates(GPU::Vertex& vertex, RasterizerOptions const& options)
+static void generate_texture_coordinates(GPU::Vertex& vertex, GPU::RasterizerOptions const& options)
 {
     auto generate_coordinate = [&](size_t texcoord_index, size_t config_index) -> float {
         auto mode = options.texcoord_generation_config[texcoord_index][config_index].mode;
@@ -1190,7 +1190,7 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
     painter.draw_text(target.rect().translated(2, 2), debug_string, font, Gfx::TextAlignment::TopLeft, Gfx::Color::White);
 }
 
-void Device::set_options(RasterizerOptions const& options)
+void Device::set_options(GPU::RasterizerOptions const& options)
 {
     m_options = options;
 
