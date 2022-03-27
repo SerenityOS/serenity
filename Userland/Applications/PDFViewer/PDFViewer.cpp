@@ -101,6 +101,13 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
     painter.blit({ x, y }, *page, page->rect());
 }
 
+void PDFViewer::resize_event(GUI::ResizeEvent&)
+{
+    for (auto& map : m_rendered_page_list)
+        map.clear();
+    update();
+}
+
 void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
 {
     if (!m_document)
