@@ -212,14 +212,169 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         m_features |= CPUFeature::PBE;
 
     CPUID extended_features(0x7);
+
+    if (extended_features.ebx() & (1 << 0))
+        m_features |= CPUFeature::FSGSBASE;
+    if (extended_features.ebx() & (1 << 1))
+        m_features |= CPUFeature::TSC_ADJUST;
+    if (extended_features.ebx() & (1 << 2))
+        m_features |= CPUFeature::SGX;
+    if (extended_features.ebx() & (1 << 3))
+        m_features |= CPUFeature::BMI1;
+    if (extended_features.ebx() & (1 << 4))
+        m_features |= CPUFeature::HLE;
+    if (extended_features.ebx() & (1 << 5))
+        m_features |= CPUFeature::AVX2;
+    if (extended_features.ebx() & (1 << 6))
+        m_features |= CPUFeature::FDP_EXCPTN_ONLY;
     if (extended_features.ebx() & (1 << 7))
         m_features |= CPUFeature::SMEP;
+    if (extended_features.ebx() & (1 << 8))
+        m_features |= CPUFeature::BMI2;
+    if (extended_features.ebx() & (1 << 9))
+        m_features |= CPUFeature::ERMS;
+    if (extended_features.ebx() & (1 << 10))
+        m_features |= CPUFeature::INVPCID;
+    if (extended_features.ebx() & (1 << 11))
+        m_features |= CPUFeature::RTM;
+    if (extended_features.ebx() & (1 << 12))
+        m_features |= CPUFeature::PQM;
+    if (extended_features.ebx() & (1 << 13))
+        m_features |= CPUFeature::ZERO_FCS_FDS;
+    if (extended_features.ebx() & (1 << 14))
+        m_features |= CPUFeature::MPX;
+    if (extended_features.ebx() & (1 << 15))
+        m_features |= CPUFeature::PQE;
+    if (extended_features.ebx() & (1 << 16))
+        m_features |= CPUFeature::AVX512_F;
+    if (extended_features.ebx() & (1 << 17))
+        m_features |= CPUFeature::AVX512_DQ;
     if (extended_features.ebx() & (1 << 18))
         m_features |= CPUFeature::RDSEED;
+    if (extended_features.ebx() & (1 << 19))
+        m_features |= CPUFeature::ADX;
     if (extended_features.ebx() & (1 << 20))
         m_features |= CPUFeature::SMAP;
+    if (extended_features.ebx() & (1 << 21))
+        m_features |= CPUFeature::AVX512_IFMA;
+    if (extended_features.ebx() & (1 << 22))
+        m_features |= CPUFeature::PCOMMIT;
+    if (extended_features.ebx() & (1 << 23))
+        m_features |= CPUFeature::CLFLUSHOPT;
+    if (extended_features.ebx() & (1 << 24))
+        m_features |= CPUFeature::CLWB;
+    if (extended_features.ebx() & (1 << 25))
+        m_features |= CPUFeature::INTEL_PT;
+    if (extended_features.ebx() & (1 << 26))
+        m_features |= CPUFeature::AVX512_PF;
+    if (extended_features.ebx() & (1 << 27))
+        m_features |= CPUFeature::AVX512_ER;
+    if (extended_features.ebx() & (1 << 28))
+        m_features |= CPUFeature::AVX512_CD;
+    if (extended_features.ebx() & (1 << 29))
+        m_features |= CPUFeature::SHA;
+    if (extended_features.ebx() & (1 << 30))
+        m_features |= CPUFeature::AVX512_BW;
+    if (extended_features.ebx() & (1 << 31))
+        m_features |= CPUFeature::AVX512_VL;
+
+    if (extended_features.ecx() & (1 << 0))
+        m_features |= CPUFeature::PREFETCHWT1;
+    if (extended_features.ecx() & (1 << 1))
+        m_features |= CPUFeature::AVX512_VBMI;
     if (extended_features.ecx() & (1 << 2))
         m_features |= CPUFeature::UMIP;
+    if (extended_features.ecx() & (1 << 3))
+        m_features |= CPUFeature::PKU;
+    if (extended_features.ecx() & (1 << 4))
+        m_features |= CPUFeature::OSPKU;
+    if (extended_features.ecx() & (1 << 5))
+        m_features |= CPUFeature::WAITPKG;
+    if (extended_features.ecx() & (1 << 6))
+        m_features |= CPUFeature::AVX512_VBMI2;
+    if (extended_features.ecx() & (1 << 7))
+        m_features |= CPUFeature::CET_SS;
+    if (extended_features.ecx() & (1 << 8))
+        m_features |= CPUFeature::GFNI;
+    if (extended_features.ecx() & (1 << 9))
+        m_features |= CPUFeature::VAES;
+    if (extended_features.ecx() & (1 << 10))
+        m_features |= CPUFeature::VPCLMULQDQ;
+    if (extended_features.ecx() & (1 << 11))
+        m_features |= CPUFeature::AVX512_VNNI;
+    if (extended_features.ecx() & (1 << 12))
+        m_features |= CPUFeature::AVX512_BITALG;
+    if (extended_features.ecx() & (1 << 13))
+        m_features |= CPUFeature::TME_EN;
+    if (extended_features.ecx() & (1 << 14))
+        m_features |= CPUFeature::AVX512_VPOPCNTDQ;
+    if (extended_features.ecx() & (1 << 16))
+        m_features |= CPUFeature::INTEL_5_LEVEL_PAGING;
+    if (extended_features.ecx() & (1 << 22))
+        m_features |= CPUFeature::RDPID;
+    if (extended_features.ecx() & (1 << 23))
+        m_features |= CPUFeature::KL;
+    if (extended_features.ecx() & (1 << 25))
+        m_features |= CPUFeature::CLDEMOTE;
+    if (extended_features.ecx() & (1 << 27))
+        m_features |= CPUFeature::MOVDIRI;
+    if (extended_features.ecx() & (1 << 28))
+        m_features |= CPUFeature::MOVDIR64B;
+    if (extended_features.ecx() & (1 << 29))
+        m_features |= CPUFeature::ENQCMD;
+    if (extended_features.ecx() & (1 << 30))
+        m_features |= CPUFeature::SGX_LC;
+    if (extended_features.ecx() & (1 << 31))
+        m_features |= CPUFeature::PKS;
+
+    if (extended_features.edx() & (1 << 2))
+        m_features |= CPUFeature::AVX512_4VNNIW;
+    if (extended_features.edx() & (1 << 3))
+        m_features |= CPUFeature::AVX512_4FMAPS;
+    if (extended_features.edx() & (1 << 4))
+        m_features |= CPUFeature::FSRM;
+    if (extended_features.edx() & (1 << 8))
+        m_features |= CPUFeature::AVX512_VP2INTERSECT;
+    if (extended_features.edx() & (1 << 9))
+        m_features |= CPUFeature::SRBDS_CTRL;
+    if (extended_features.edx() & (1 << 10))
+        m_features |= CPUFeature::MD_CLEAR;
+    if (extended_features.edx() & (1 << 11))
+        m_features |= CPUFeature::RTM_ALWAYS_ABORT;
+    if (extended_features.edx() & (1 << 13))
+        m_features |= CPUFeature::TSX_FORCE_ABORT;
+    if (extended_features.edx() & (1 << 14))
+        m_features |= CPUFeature::SERIALIZE;
+    if (extended_features.edx() & (1 << 15))
+        m_features |= CPUFeature::HYBRID;
+    if (extended_features.edx() & (1 << 16))
+        m_features |= CPUFeature::TSXLDTRK;
+    if (extended_features.edx() & (1 << 18))
+        m_features |= CPUFeature::PCONFIG;
+    if (extended_features.edx() & (1 << 19))
+        m_features |= CPUFeature::LBR;
+    if (extended_features.edx() & (1 << 20))
+        m_features |= CPUFeature::CET_IBT;
+    if (extended_features.edx() & (1 << 22))
+        m_features |= CPUFeature::AMX_BF16;
+    if (extended_features.edx() & (1 << 23))
+        m_features |= CPUFeature::AVX512_FP16;
+    if (extended_features.edx() & (1 << 24))
+        m_features |= CPUFeature::AMX_TILE;
+    if (extended_features.edx() & (1 << 25))
+        m_features |= CPUFeature::AMX_INT8;
+    if (extended_features.edx() & (1 << 26))
+        m_features |= CPUFeature::SPEC_CTRL;
+    if (extended_features.edx() & (1 << 27))
+        m_features |= CPUFeature::STIBP;
+    if (extended_features.edx() & (1 << 28))
+        m_features |= CPUFeature::L1D_FLUSH;
+    if (extended_features.edx() & (1 << 29))
+        m_features |= CPUFeature::IA32_ARCH_CAPABILITIES;
+    if (extended_features.edx() & (1 << 30))
+        m_features |= CPUFeature::IA32_CORE_CAPABILITIES;
+    if (extended_features.edx() & (1 << 31))
+        m_features |= CPUFeature::SSBD;
 
     u32 max_extended_leaf = CPUID(0x80000000).eax();
 

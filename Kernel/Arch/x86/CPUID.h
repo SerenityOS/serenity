@@ -37,7 +37,7 @@ private:
     u32 m_edx { 0xffffffff };
 };
 
-AK_MAKE_ARBITRARY_SIZED_ENUM(CPUFeature, u128,
+AK_MAKE_ARBITRARY_SIZED_ENUM(CPUFeature, u256,
     /* EAX=1, ECX                                  */ //
     SSE3 = CPUFeature(1u) << 0u,                      // Streaming SIMD Extensions 3
     PCLMULQDQ = CPUFeature(1u) << 1u,                 // PCLMULDQ Instruction
@@ -105,20 +105,105 @@ AK_MAKE_ARBITRARY_SIZED_ENUM(CPUFeature, u128,
     IA64 = CPUFeature(1u) << 62u,                     // IA64 processor emulating x86
     PBE = CPUFeature(1u) << 63u,                      // Pending Break Enable
     /* EAX=7, EBX */                                  //
-    SMEP = CPUFeature(1u) << 64u,                     // Supervisor Mode Execution Protection
-    RDSEED = CPUFeature(1u) << 65u,                   // RDSEED Instruction
-    SMAP = CPUFeature(1u) << 66u,                     // Supervisor Mode Access Prevention
+    FSGSBASE = CPUFeature(1u) << 64u,                 // Access to base of %fs and %gs
+    TSC_ADJUST = CPUFeature(1u) << 65u,               // IA32_TSC_ADJUST MSR
+    SGX = CPUFeature(1u) << 66u,                      // Software Guard Extensions
+    BMI1 = CPUFeature(1u) << 67u,                     // Bit Manipulation Instruction Set 1
+    HLE = CPUFeature(1u) << 68u,                      // TSX Hardware Lock Elision
+    AVX2 = CPUFeature(1u) << 69u,                     // Advanced Vector Extensions 2
+    FDP_EXCPTN_ONLY = CPUFeature(1u) << 70u,          // FDP_EXCPTN_ONLY
+    SMEP = CPUFeature(1u) << 71u,                     // Supervisor Mode Execution Protection
+    BMI2 = CPUFeature(1u) << 72u,                     // Bit Manipulation Instruction Set 2
+    ERMS = CPUFeature(1u) << 73u,                     // Enhanced REP MOVSB/STOSB
+    INVPCID = CPUFeature(1u) << 74u,                  // INVPCID Instruction
+    RTM = CPUFeature(1u) << 75u,                      // TSX Restricted Transactional Memory
+    PQM = CPUFeature(1u) << 76u,                      // Platform Quality of Service Monitoring
+    ZERO_FCS_FDS = CPUFeature(1u) << 77u,             // FPU CS and FPU DS deprecated
+    MPX = CPUFeature(1u) << 78u,                      // Intel MPX (Memory Protection Extensions)
+    PQE = CPUFeature(1u) << 79u,                      // Platform Quality of Service Enforcement
+    AVX512_F = CPUFeature(1u) << 80u,                 // AVX-512 Foundation
+    AVX512_DQ = CPUFeature(1u) << 81u,                // AVX-512 Doubleword and Quadword Instructions
+    RDSEED = CPUFeature(1u) << 82u,                   // RDSEED Instruction
+    ADX = CPUFeature(1u) << 83u,                      // Intel ADX (Multi-Precision Add-Carry Instruction Extensions)
+    SMAP = CPUFeature(1u) << 84u,                     // Supervisor Mode Access Prevention
+    AVX512_IFMA = CPUFeature(1u) << 85u,              // AVX-512 Integer Fused Multiply-Add Instructions
+    PCOMMIT = CPUFeature(1u) << 86u,                  // PCOMMIT Instruction
+    CLFLUSHOPT = CPUFeature(1u) << 87u,               // CLFLUSHOPT Instruction
+    CLWB = CPUFeature(1u) << 88u,                     // CLWB Instruction
+    INTEL_PT = CPUFeature(1u) << 89u,                 // Intel Processor Tracing
+    AVX512_PF = CPUFeature(1u) << 90u,                // AVX-512 Prefetch Instructions
+    AVX512_ER = CPUFeature(1u) << 91u,                // AVX-512 Exponential and Reciprocal Instructions
+    AVX512_CD = CPUFeature(1u) << 92u,                // AVX-512 Conflict Detection Instructions
+    SHA = CPUFeature(1u) << 93u,                      // Intel SHA Extensions
+    AVX512_BW = CPUFeature(1u) << 94u,                // AVX-512 Byte and Word Instructions
+    AVX512_VL = CPUFeature(1u) << 95u,                // AVX-512 Vector Length Extensions
     /* EAX=7, ECX */                                  //
-    UMIP = CPUFeature(1u) << 67u,                     // User-Mode Instruction Prevention
+    PREFETCHWT1 = CPUFeature(1u) << 96u,              // PREFETCHWT1 Instruction
+    AVX512_VBMI = CPUFeature(1u) << 97u,              // AVX-512 Vector Bit Manipulation Instructions
+    UMIP = CPUFeature(1u) << 98u,                     // UMIP
+    PKU = CPUFeature(1u) << 99u,                      // Memory Protection Keys for User-mode pages
+    OSPKU = CPUFeature(1u) << 100u,                   // PKU enabled by OS
+    WAITPKG = CPUFeature(1u) << 101u,                 // Timed pause and user-level monitor/wait
+    AVX512_VBMI2 = CPUFeature(1u) << 102u,            // AVX-512 Vector Bit Manipulation Instructions 2
+    CET_SS = CPUFeature(1u) << 103u,                  // Control Flow Enforcement (CET) Shadow Stack
+    GFNI = CPUFeature(1u) << 104u,                    // Galois Field Instructions
+    VAES = CPUFeature(1u) << 105u,                    // Vector AES instruction set (VEX-256/EVEX)
+    VPCLMULQDQ = CPUFeature(1u) << 106u,              // CLMUL instruction set (VEX-256/EVEX)
+    AVX512_VNNI = CPUFeature(1u) << 107u,             // AVX-512 Vector Neural Network Instructions
+    AVX512_BITALG = CPUFeature(1u) << 108u,           // AVX-512 BITALG Instructions
+    TME_EN = CPUFeature(1u) << 109u,                  // IA32_TME related MSRs are supported
+    AVX512_VPOPCNTDQ = CPUFeature(1u) << 110u,        // AVX-512 Vector Population Count Double and Quad-word
+    /* ECX Bit 15 */                                  // Reserved
+    INTEL_5_LEVEL_PAGING = CPUFeature(1u) << 112u,    // Intel 5-Level Paging
+    RDPID = CPUFeature(1u) << 113u,                   // RDPID Instruction
+    KL = CPUFeature(1u) << 114u,                      // Key Locker
+    /* ECX Bit 24 */                                  // Reserved
+    CLDEMOTE = CPUFeature(1u) << 116u,                // Cache Line Demote
+    /* ECX Bit 26 */                                  // Reserved
+    MOVDIRI = CPUFeature(1u) << 118u,                 // MOVDIRI Instruction
+    MOVDIR64B = CPUFeature(1u) << 119u,               // MOVDIR64B Instruction
+    ENQCMD = CPUFeature(1u) << 120u,                  // ENQCMD Instruction
+    SGX_LC = CPUFeature(1u) << 121u,                  // SGX Launch Configuration
+    PKS = CPUFeature(1u) << 122u,                     // Protection Keys for Supervisor-Mode Pages
+    /* EAX=7, EDX */                                  //
+    /* ECX Bit 0-1 */                                 // Reserved
+    AVX512_4VNNIW = CPUFeature(1u) << 125u,           // AVX-512 4-register Neural Network Instructions
+    AVX512_4FMAPS = CPUFeature(1u) << 126u,           // AVX-512 4-register Multiply Accumulation Single precision
+    FSRM = CPUFeature(1u) << 127u,                    // Fast Short REP MOVSB
+    /* ECX Bit 5-7 */                                 // Reserved
+    AVX512_VP2INTERSECT = CPUFeature(1u) << 131u,     // AVX-512 VP2INTERSECT Doubleword and Quadword Instructions
+    SRBDS_CTRL = CPUFeature(1u) << 132u,              // Special Register Buffer Data Sampling Mitigations
+    MD_CLEAR = CPUFeature(1u) << 133u,                // VERW instruction clears CPU buffers
+    RTM_ALWAYS_ABORT = CPUFeature(1u) << 134u,        // All TSX transactions are aborted
+    /* ECX Bit 12 */                                  // Reserved
+    TSX_FORCE_ABORT = CPUFeature(1u) << 136u,         // TSX_FORCE_ABORT MSR
+    SERIALIZE = CPUFeature(1u) << 137u,               // Serialize instruction execution
+    HYBRID = CPUFeature(1u) << 138u,                  // Mixture of CPU types in processor topology
+    TSXLDTRK = CPUFeature(1u) << 139u,                // TSX suspend load address tracking
+    /* ECX Bit 17 */                                  // Reserved
+    PCONFIG = CPUFeature(1u) << 141u,                 // Platform configuration (Memory Encryption Technologies Instructions)
+    LBR = CPUFeature(1u) << 142u,                     // Architectural Last Branch Records
+    CET_IBT = CPUFeature(1u) << 143u,                 // Control flow enforcement (CET) indirect branch tracking
+    /* ECX Bit 21 */                                  // Reserved
+    AMX_BF16 = CPUFeature(1u) << 145u,                // Tile computation on bfloat16 numbers
+    AVX512_FP16 = CPUFeature(1u) << 146u,             // AVX512-FP16 half-precision floating-point instructions
+    AMX_TILE = CPUFeature(1u) << 147u,                // Tile architecture
+    AMX_INT8 = CPUFeature(1u) << 148u,                // Tile computation on 8-bit integers
+    SPEC_CTRL = CPUFeature(1u) << 149u,               // Speculation Control
+    STIBP = CPUFeature(1u) << 150u,                   // Single Thread Indirect Branch Predictor
+    L1D_FLUSH = CPUFeature(1u) << 151u,               // IA32_FLUSH_CMD MSR
+    IA32_ARCH_CAPABILITIES = CPUFeature(1u) << 152u,  // IA32_ARCH_CAPABILITIES MSR
+    IA32_CORE_CAPABILITIES = CPUFeature(1u) << 153u,  // IA32_CORE_CAPABILITIES MSR
+    SSBD = CPUFeature(1u) << 154u,                    // Speculative Store Bypass Disable
     /* EAX=80000001h, EDX */                          //
-    SYSCALL = CPUFeature(1u) << 68u,                  // SYSCALL/SYSRET Instructions
-    NX = CPUFeature(1u) << 69u,                       // NX bit
-    RDTSCP = CPUFeature(1u) << 70u,                   // RDTSCP Instruction
-    LM = CPUFeature(1u) << 71u,                       // Long Mode
+    SYSCALL = CPUFeature(1u) << 155u,                 // SYSCALL/SYSRET Instructions
+    NX = CPUFeature(1u) << 156u,                      // NX bit
+    RDTSCP = CPUFeature(1u) << 157u,                  // RDTSCP Instruction
+    LM = CPUFeature(1u) << 158u,                      // Long Mode
     /* EAX=80000007h, EDX */                          //
-    CONSTANT_TSC = CPUFeature(1u) << 72u,             // Invariant TSC
-    NONSTOP_TSC = CPUFeature(1u) << 73u,              // Invariant TSC
-    __End = CPUFeature(1u) << 127u);
+    CONSTANT_TSC = CPUFeature(1u) << 159u,            // Invariant TSC
+    NONSTOP_TSC = CPUFeature(1u) << 160u,             // Invariant TSC
+    __End = CPUFeature(1u) << 255u);
 
 StringView cpu_feature_to_string_view(CPUFeature::Type const&);
 
