@@ -90,6 +90,9 @@ static void build(InstructionDescriptor* table, u8 op, char const* mnemonic, Ins
     case OP_relimm32:
         d.imm1_bytes = 4;
         break;
+    case OP_regW_immW:
+        d.imm1_bytes = CurrentOperandSize;
+        break;
     case OP_imm16_imm8:
         d.imm1_bytes = 2;
         d.imm2_bytes = 1;
@@ -1666,13 +1669,20 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     auto append_fpu_rm32 = [&] { builder.append(m_modrm.to_string_fpu32(*this)); };
     auto append_fpu_rm64 = [&] { builder.append(m_modrm.to_string_fpu64(*this)); };
     auto append_fpu_rm80 = [&] { builder.append(m_modrm.to_string_fpu80(*this)); };
-    auto append_imm8 = [&] { builder.appendff("{:#x}", imm8()); };
-    auto append_imm8_2 = [&] { builder.appendff("{:#x}", imm8_2()); };
-    auto append_imm16 = [&] { builder.appendff("{:#x}", imm16()); };
-    auto append_imm16_1 = [&] { builder.appendff("{:#x}", imm16_1()); };
-    auto append_imm16_2 = [&] { builder.appendff("{:#x}", imm16_2()); };
-    auto append_imm32 = [&] { builder.appendff("{:#x}", imm32()); };
-    auto append_imm32_2 = [&] { builder.appendff("{:#x}", imm32_2()); };
+    auto append_imm8 = [&] { builder.appendff("{:#02x}", imm8()); };
+    auto append_imm8_2 = [&] { builder.appendff("{:#02x}", imm8_2()); };
+    auto append_imm16 = [&] { builder.appendff("{:#04x}", imm16()); };
+    auto append_imm16_1 = [&] { builder.appendff("{:#04x}", imm16_1()); };
+    auto append_imm16_2 = [&] { builder.appendff("{:#04x}", imm16_2()); };
+    auto append_imm32 = [&] { builder.appendff("{:#08x}", imm32()); };
+    auto append_imm32_2 = [&] { builder.appendff("{:#08x}", imm32_2()); };
+    auto append_imm64 = [&] { builder.appendff("{:#016x}", imm64()); };
+    auto append_immW = [&] {
+        if (m_operand_size == OperandSize::Size64)
+            append_imm64();
+        else
+            append_imm32();
+    };
     auto append_reg8 = [&] { builder.append(reg8_name()); };
     auto append_reg16 = [&] { builder.append(reg16_name()); };
     auto append_reg32 = [&] { builder.append(reg32_name()); };
@@ -1928,6 +1938,12 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         append_reg32();
         append(',');
         append_imm32();
+        break;
+    case OP_regW_immW:
+        append_mnemonic_space();
+        append_reg32();
+        append(", "sv);
+        append_immW();
         break;
     case OP_RM8_1:
         append_mnemonic_space();

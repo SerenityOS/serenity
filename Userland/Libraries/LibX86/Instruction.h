@@ -160,6 +160,7 @@ enum InstructionFormat {
     __EndFormatsWithRMByte,
 
     OP_reg32_imm32,
+    OP_regW_immW,
     OP_AL_imm8,
     OP_AX_imm16,
     OP_EAX_imm32,
@@ -210,6 +211,7 @@ enum InstructionFormat {
 };
 
 static constexpr unsigned CurrentAddressSize = 0xB33FBABE;
+static constexpr unsigned CurrentOperandSize = 0xB33FB00F;
 
 struct InstructionDescriptor {
     InstructionHandler handler { nullptr };
