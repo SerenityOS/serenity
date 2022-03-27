@@ -60,7 +60,7 @@ constexpr static auto interpolate(const T& v0, const T& v1, const T& v2, Vector3
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
 }
 
-static ColorType to_bgra32(FloatVector4 const& color)
+static GPU::ColorType to_bgra32(FloatVector4 const& color)
 {
     auto clamped = color.clamped(0.0f, 1.0f);
     auto r = static_cast<u8>(clamped.x() * 255);
@@ -265,7 +265,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
     auto const& stencil_configuration = m_stencil_configuration[GPU::Face::Front];
     auto const stencil_reference_value = stencil_configuration.reference_value & stencil_configuration.test_mask;
 
-    auto write_to_stencil = [](StencilType* stencil_ptrs[4], i32x4 stencil_value, GPU::StencilOperation op, StencilType reference_value, StencilType write_mask, i32x4 pixel_mask) {
+    auto write_to_stencil = [](GPU::StencilType* stencil_ptrs[4], i32x4 stencil_value, GPU::StencilOperation op, GPU::StencilType reference_value, GPU::StencilType write_mask, i32x4 pixel_mask) {
         if (write_mask == 0 || op == GPU::StencilOperation::Keep)
             return;
 
@@ -331,7 +331,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
             int coverage_bits = maskbits(quad.mask);
 
             // Stencil testing
-            StencilType* stencil_ptrs[4];
+            GPU::StencilType* stencil_ptrs[4];
             i32x4 stencil_value;
             if (m_options.enable_stencil_test) {
                 stencil_ptrs[0] = coverage_bits & 1 ? &stencil_buffer->scanline(by)[bx] : nullptr;
@@ -391,7 +391,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
             quad.barycentrics = edge_values * one_over_area;
 
             // Depth testing
-            DepthType* depth_ptrs[4] = {
+            GPU::DepthType* depth_ptrs[4] = {
                 coverage_bits & 1 ? &depth_buffer->scanline(by)[bx] : nullptr,
                 coverage_bits & 2 ? &depth_buffer->scanline(by)[bx + 1] : nullptr,
                 coverage_bits & 4 ? &depth_buffer->scanline(by + 1)[bx] : nullptr,
@@ -529,7 +529,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
             if ((m_options.color_mask == 0) || !m_options.enable_color_write)
                 continue;
 
-            ColorType* color_ptrs[4] = {
+            GPU::ColorType* color_ptrs[4] = {
                 coverage_bits & 1 ? &color_buffer->scanline(by)[bx] : nullptr,
                 coverage_bits & 2 ? &color_buffer->scanline(by)[bx + 1] : nullptr,
                 coverage_bits & 4 ? &color_buffer->scanline(by + 1)[bx] : nullptr,
@@ -571,7 +571,7 @@ void Device::rasterize_triangle(Triangle const& triangle)
 }
 
 Device::Device(Gfx::IntSize const& size)
-    : m_frame_buffer(FrameBuffer<ColorType, DepthType, StencilType>::try_create(size).release_value_but_fixme_should_propagate_errors())
+    : m_frame_buffer(FrameBuffer<GPU::ColorType, GPU::DepthType, GPU::StencilType>::try_create(size).release_value_but_fixme_should_propagate_errors())
 {
     m_options.scissor_box = m_frame_buffer->rect();
     m_options.viewport = m_frame_buffer->rect();
@@ -584,7 +584,7 @@ GPU::DeviceInfo Device::info() const
         .device_name = "SoftGPU",
         .num_texture_units = NUM_SAMPLERS,
         .num_lights = NUM_LIGHTS,
-        .stencil_bits = sizeof(StencilType) * 8,
+        .stencil_bits = sizeof(GPU::StencilType) * 8,
         .supports_npot_textures = true,
     };
 }
@@ -1061,7 +1061,7 @@ ALWAYS_INLINE bool Device::test_alpha(PixelQuad& quad)
 
 void Device::resize(Gfx::IntSize const& size)
 {
-    auto frame_buffer_or_error = FrameBuffer<ColorType, DepthType, StencilType>::try_create(size);
+    auto frame_buffer_or_error = FrameBuffer<GPU::ColorType, GPU::DepthType, GPU::StencilType>::try_create(size);
     m_frame_buffer = MUST(frame_buffer_or_error);
 }
 
@@ -1076,7 +1076,7 @@ void Device::clear_color(FloatVector4 const& color)
     m_frame_buffer->color_buffer()->fill(fill_color, clear_rect);
 }
 
-void Device::clear_depth(DepthType depth)
+void Device::clear_depth(GPU::DepthType depth)
 {
     auto clear_rect = m_frame_buffer->rect();
     if (m_options.scissor_enabled)
@@ -1085,7 +1085,7 @@ void Device::clear_depth(DepthType depth)
     m_frame_buffer->depth_buffer()->fill(depth, clear_rect);
 }
 
-void Device::clear_stencil(StencilType value)
+void Device::clear_stencil(GPU::StencilType value)
 {
     auto clear_rect = m_frame_buffer->rect();
     if (m_options.scissor_enabled)
@@ -1106,7 +1106,7 @@ void Device::blit_to_color_buffer_at_raster_position(Gfx::Bitmap const& source)
     m_frame_buffer->color_buffer()->blit_from_bitmap(source, blit_rect);
 }
 
-void Device::blit_to_depth_buffer_at_raster_position(Vector<DepthType> const& depth_values, int width, int height)
+void Device::blit_to_depth_buffer_at_raster_position(Vector<GPU::DepthType> const& depth_values, int width, int height)
 {
     if (!m_raster_position.valid)
         return;
@@ -1203,7 +1203,7 @@ void Device::set_light_model_params(LightModelParameters const& lighting_model)
     m_lighting_model = lighting_model;
 }
 
-ColorType Device::get_color_buffer_pixel(int x, int y)
+GPU::ColorType Device::get_color_buffer_pixel(int x, int y)
 {
     // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
     if (!m_frame_buffer->rect().contains(x, y))
@@ -1211,7 +1211,7 @@ ColorType Device::get_color_buffer_pixel(int x, int y)
     return m_frame_buffer->color_buffer()->scanline(y)[x];
 }
 
-DepthType Device::get_depthbuffer_value(int x, int y)
+GPU::DepthType Device::get_depthbuffer_value(int x, int y)
 {
     // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
     if (!m_frame_buffer->rect().contains(x, y))
@@ -1246,7 +1246,7 @@ void Device::set_material_state(GPU::Face face, GPU::Material const& material)
     m_materials[face] = material;
 }
 
-void Device::set_stencil_configuration(GPU::Face face, StencilConfiguration const& stencil_configuration)
+void Device::set_stencil_configuration(GPU::Face face, GPU::StencilConfiguration const& stencil_configuration)
 {
     m_stencil_configuration[face] = stencil_configuration;
 }

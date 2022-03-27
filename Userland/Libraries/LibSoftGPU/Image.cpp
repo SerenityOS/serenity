@@ -11,7 +11,7 @@ namespace SoftGPU {
 
 Image::Image(unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers)
     : m_num_layers(layers)
-    , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<ColorType>>>::must_create_but_fixme_should_propagate_errors(layers * max_levels))
+    , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<GPU::ColorType>>>::must_create_but_fixme_should_propagate_errors(layers * max_levels))
 {
     VERIFY(width > 0);
     VERIFY(height > 0);
@@ -26,7 +26,7 @@ Image::Image(unsigned width, unsigned height, unsigned depth, unsigned max_level
     unsigned level;
     for (level = 0; level < max_levels; ++level) {
         for (unsigned layer = 0; layer < layers; ++layer)
-            m_mipmap_buffers[layer * layers + level] = MUST(Typed3DBuffer<ColorType>::try_create(width, height, depth));
+            m_mipmap_buffers[layer * layers + level] = MUST(Typed3DBuffer<GPU::ColorType>::try_create(width, height, depth));
 
         if (width <= 1 && height <= 1 && depth <= 1)
             break;

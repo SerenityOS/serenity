@@ -3144,7 +3144,7 @@ void GLContext::sync_stencil_configuration()
     m_stencil_configuration_dirty = false;
 
     auto set_device_stencil = [&](GPU::Face face, StencilFunctionOptions func, StencilOperationOptions op) {
-        SoftGPU::StencilConfiguration device_configuration;
+        GPU::StencilConfiguration device_configuration;
 
         // Stencil test function
         auto map_func = [](GLenum func) -> GPU::StencilTestFunction {

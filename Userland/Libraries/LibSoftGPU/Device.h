@@ -17,6 +17,7 @@
 #include <LibGPU/Light.h>
 #include <LibGPU/Material.h>
 #include <LibGPU/SamplerConfig.h>
+#include <LibGPU/StencilConfiguration.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Matrix4x4.h>
@@ -99,17 +100,6 @@ struct RasterPosition {
     FloatVector4 texture_coordinates { 0.0f, 0.0f, 0.0f, 1.0f };
 };
 
-struct StencilConfiguration {
-    GPU::StencilTestFunction test_function;
-    StencilType reference_value;
-    StencilType test_mask;
-
-    GPU::StencilOperation on_stencil_test_fail;
-    GPU::StencilOperation on_depth_test_fail;
-    GPU::StencilOperation on_pass;
-    StencilType write_mask;
-};
-
 class Device final {
 public:
     Device(Gfx::IntSize const& min_size);
@@ -119,24 +109,24 @@ public:
     void draw_primitives(GPU::PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
     void resize(Gfx::IntSize const& min_size);
     void clear_color(FloatVector4 const&);
-    void clear_depth(DepthType);
-    void clear_stencil(StencilType);
+    void clear_depth(GPU::DepthType);
+    void clear_stencil(GPU::StencilType);
     void blit_color_buffer_to(Gfx::Bitmap& target);
     void blit_to_color_buffer_at_raster_position(Gfx::Bitmap const&);
-    void blit_to_depth_buffer_at_raster_position(Vector<DepthType> const&, int, int);
+    void blit_to_depth_buffer_at_raster_position(Vector<GPU::DepthType> const&, int, int);
     void set_options(RasterizerOptions const&);
     void set_light_model_params(LightModelParameters const&);
     RasterizerOptions options() const { return m_options; }
     LightModelParameters light_model() const { return m_lighting_model; }
-    ColorType get_color_buffer_pixel(int x, int y);
-    DepthType get_depthbuffer_value(int x, int y);
+    GPU::ColorType get_color_buffer_pixel(int x, int y);
+    GPU::DepthType get_depthbuffer_value(int x, int y);
 
     NonnullRefPtr<Image> create_image(GPU::ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers);
 
     void set_sampler_config(unsigned, GPU::SamplerConfig const&);
     void set_light_state(unsigned, GPU::Light const&);
     void set_material_state(GPU::Face, GPU::Material const&);
-    void set_stencil_configuration(GPU::Face, StencilConfiguration const&);
+    void set_stencil_configuration(GPU::Face, GPU::StencilConfiguration const&);
 
     RasterPosition raster_position() const { return m_raster_position; }
     void set_raster_position(RasterPosition const& raster_position);
@@ -151,7 +141,7 @@ private:
     void shade_fragments(PixelQuad&);
     bool test_alpha(PixelQuad&);
 
-    RefPtr<FrameBuffer<ColorType, DepthType, StencilType>> m_frame_buffer {};
+    RefPtr<FrameBuffer<GPU::ColorType, GPU::DepthType, GPU::StencilType>> m_frame_buffer {};
     RasterizerOptions m_options;
     LightModelParameters m_lighting_model;
     Clipper m_clipper;
@@ -164,7 +154,7 @@ private:
     Array<GPU::Light, NUM_LIGHTS> m_lights;
     Array<GPU::Material, 2u> m_materials;
     RasterPosition m_raster_position;
-    Array<StencilConfiguration, 2u> m_stencil_configuration;
+    Array<GPU::StencilConfiguration, 2u> m_stencil_configuration;
 };
 
 }
