@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <LibGPU/Image.h>
 #include <LibGfx/Vector4.h>
-#include <LibSoftGPU/Image.h>
 
 namespace GPU {
 
@@ -37,7 +37,7 @@ enum class TextureEnvMode {
 };
 
 struct SamplerConfig final {
-    RefPtr<SoftGPU::Image> bound_image;
+    RefPtr<Image> bound_image;
     MipMapFilter mipmap_filter { MipMapFilter::Nearest };
     TextureFilter texture_mag_filter { TextureFilter::Linear };
     TextureFilter texture_min_filter { TextureFilter::Linear };
