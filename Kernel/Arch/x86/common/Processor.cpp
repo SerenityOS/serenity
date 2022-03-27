@@ -89,31 +89,109 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
 
     if (processor_info.ecx() & (1 << 0))
         m_features |= CPUFeature::SSE3;
+    if (processor_info.ecx() & (1 << 1))
+        m_features |= CPUFeature::PCLMULQDQ;
+    if (processor_info.ecx() & (1 << 2))
+        m_features |= CPUFeature::DTES64;
+    if (processor_info.ecx() & (1 << 3))
+        m_features |= CPUFeature::MONITOR;
+    if (processor_info.ecx() & (1 << 4))
+        m_features |= CPUFeature::DS_CPL;
+    if (processor_info.ecx() & (1 << 5))
+        m_features |= CPUFeature::VMX;
+    if (processor_info.ecx() & (1 << 6))
+        m_features |= CPUFeature::SMX;
+    if (processor_info.ecx() & (1 << 7))
+        m_features |= CPUFeature::EST;
+    if (processor_info.ecx() & (1 << 8))
+        m_features |= CPUFeature::TM2;
     if (processor_info.ecx() & (1 << 9))
         m_features |= CPUFeature::SSSE3;
+    if (processor_info.ecx() & (1 << 10))
+        m_features |= CPUFeature::CNXT_ID;
+    if (processor_info.ecx() & (1 << 11))
+        m_features |= CPUFeature::SDBG;
+    if (processor_info.ecx() & (1 << 12))
+        m_features |= CPUFeature::FMA;
+    if (processor_info.ecx() & (1 << 13))
+        m_features |= CPUFeature::CX16;
+    if (processor_info.ecx() & (1 << 14))
+        m_features |= CPUFeature::XTPR;
+    if (processor_info.ecx() & (1 << 15))
+        m_features |= CPUFeature::PDCM;
+    if (processor_info.ecx() & (1 << 17))
+        m_features |= CPUFeature::PCID;
+    if (processor_info.ecx() & (1 << 18))
+        m_features |= CPUFeature::DCA;
     if (processor_info.ecx() & (1 << 19))
         m_features |= CPUFeature::SSE4_1;
     if (processor_info.ecx() & (1 << 20))
         m_features |= CPUFeature::SSE4_2;
+    if (processor_info.ecx() & (1 << 21))
+        m_features |= CPUFeature::X2APIC;
+    if (processor_info.ecx() & (1 << 22))
+        m_features |= CPUFeature::MOVBE;
+    if (processor_info.ecx() & (1 << 23))
+        m_features |= CPUFeature::POPCNT;
+    if (processor_info.ecx() & (1 << 24))
+        m_features |= CPUFeature::TSC_DEADLINE;
+    if (processor_info.ecx() & (1 << 25))
+        m_features |= CPUFeature::AES;
     if (processor_info.ecx() & (1 << 26))
         m_features |= CPUFeature::XSAVE;
+    if (processor_info.ecx() & (1 << 27))
+        m_features |= CPUFeature::OSXSAVE;
     if (processor_info.ecx() & (1 << 28))
         m_features |= CPUFeature::AVX;
+    if (processor_info.ecx() & (1 << 29))
+        m_features |= CPUFeature::F16C;
     if (processor_info.ecx() & (1 << 30))
         m_features |= CPUFeature::RDRAND;
     if (processor_info.ecx() & (1 << 31))
         m_features |= CPUFeature::HYPERVISOR;
 
+    if (processor_info.edx() & (1 << 0))
+        m_features |= CPUFeature::FPU;
+    if (processor_info.edx() & (1 << 1))
+        m_features |= CPUFeature::VME;
+    if (processor_info.edx() & (1 << 2))
+        m_features |= CPUFeature::DE;
+    if (processor_info.edx() & (1 << 3))
+        m_features |= CPUFeature::PSE;
     if (processor_info.edx() & (1 << 4))
         m_features |= CPUFeature::TSC;
+    if (processor_info.edx() & (1 << 5))
+        m_features |= CPUFeature::MSR;
     if (processor_info.edx() & (1 << 6))
         m_features |= CPUFeature::PAE;
-    if (processor_info.edx() & (1 << 13))
-        m_features |= CPUFeature::PGE;
+    if (processor_info.edx() & (1 << 7))
+        m_features |= CPUFeature::MCE;
+    if (processor_info.edx() & (1 << 8))
+        m_features |= CPUFeature::CX8;
+    if (processor_info.edx() & (1 << 9))
+        m_features |= CPUFeature::APIC;
     if (processor_info.edx() & (1 << 11))
         handle_edx_bit_11_feature();
+    if (processor_info.edx() & (1 << 12))
+        m_features |= CPUFeature::MTRR;
+    if (processor_info.edx() & (1 << 13))
+        m_features |= CPUFeature::PGE;
+    if (processor_info.edx() & (1 << 14))
+        m_features |= CPUFeature::MCA;
+    if (processor_info.edx() & (1 << 15))
+        m_features |= CPUFeature::CMOV;
     if (processor_info.edx() & (1 << 16))
         m_features |= CPUFeature::PAT;
+    if (processor_info.edx() & (1 << 17))
+        m_features |= CPUFeature::PSE36;
+    if (processor_info.edx() & (1 << 18))
+        m_features |= CPUFeature::PSN;
+    if (processor_info.edx() & (1 << 19))
+        m_features |= CPUFeature::CLFLUSH;
+    if (processor_info.edx() & (1 << 21))
+        m_features |= CPUFeature::DS;
+    if (processor_info.edx() & (1 << 22))
+        m_features |= CPUFeature::ACPI;
     if (processor_info.edx() & (1 << 23))
         m_features |= CPUFeature::MMX;
     if (processor_info.edx() & (1 << 24))
@@ -122,6 +200,16 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         m_features |= CPUFeature::SSE;
     if (processor_info.edx() & (1 << 26))
         m_features |= CPUFeature::SSE2;
+    if (processor_info.edx() & (1 << 27))
+        m_features |= CPUFeature::SS;
+    if (processor_info.edx() & (1 << 28))
+        m_features |= CPUFeature::HTT;
+    if (processor_info.edx() & (1 << 29))
+        m_features |= CPUFeature::TM;
+    if (processor_info.edx() & (1 << 30))
+        m_features |= CPUFeature::IA64;
+    if (processor_info.edx() & (1 << 31))
+        m_features |= CPUFeature::PBE;
 
     CPUID extended_features(0x7);
     if (extended_features.ebx() & (1 << 7))
@@ -290,63 +378,6 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
 NonnullOwnPtr<KString> Processor::features_string() const
 {
     StringBuilder builder;
-    auto feature_to_str = [](CPUFeature::Type const& feature) -> StringView {
-        if (feature == CPUFeature::NX)
-            return "nx"sv;
-        if (feature == CPUFeature::PAE)
-            return "pae"sv;
-        if (feature == CPUFeature::PGE)
-            return "pge"sv;
-        if (feature == CPUFeature::RDRAND)
-            return "rdrand"sv;
-        if (feature == CPUFeature::RDSEED)
-            return "rdseed"sv;
-        if (feature == CPUFeature::SMAP)
-            return "smap"sv;
-        if (feature == CPUFeature::SMEP)
-            return "smep"sv;
-        if (feature == CPUFeature::SSE)
-            return "sse"sv;
-        if (feature == CPUFeature::TSC)
-            return "tsc"sv;
-        if (feature == CPUFeature::RDTSCP)
-            return "rdtscp"sv;
-        if (feature == CPUFeature::CONSTANT_TSC)
-            return "constant_tsc"sv;
-        if (feature == CPUFeature::NONSTOP_TSC)
-            return "nonstop_tsc"sv;
-        if (feature == CPUFeature::UMIP)
-            return "umip"sv;
-        if (feature == CPUFeature::SEP)
-            return "sep"sv;
-        if (feature == CPUFeature::SYSCALL)
-            return "syscall"sv;
-        if (feature == CPUFeature::MMX)
-            return "mmx"sv;
-        if (feature == CPUFeature::FXSR)
-            return "fxsr"sv;
-        if (feature == CPUFeature::SSE2)
-            return "sse2"sv;
-        if (feature == CPUFeature::SSE3)
-            return "sse3"sv;
-        if (feature == CPUFeature::SSSE3)
-            return "ssse3"sv;
-        if (feature == CPUFeature::SSE4_1)
-            return "sse4.1"sv;
-        if (feature == CPUFeature::SSE4_2)
-            return "sse4.2"sv;
-        if (feature == CPUFeature::XSAVE)
-            return "xsave"sv;
-        if (feature == CPUFeature::AVX)
-            return "avx"sv;
-        if (feature == CPUFeature::LM)
-            return "lm"sv;
-        if (feature == CPUFeature::HYPERVISOR)
-            return "hypervisor"sv;
-        if (feature == CPUFeature::PAT)
-            return "pat"sv;
-        VERIFY_NOT_REACHED();
-    };
     bool first = true;
     for (auto feature = CPUFeature::Type(1u); feature != CPUFeature::__End; feature <<= 1u) {
         if (has_feature(feature)) {
@@ -354,8 +385,7 @@ NonnullOwnPtr<KString> Processor::features_string() const
                 first = false;
             else
                 MUST(builder.try_append(' '));
-            auto str = feature_to_str(feature);
-            MUST(builder.try_append(str));
+            MUST(builder.try_append(cpu_feature_to_string_view(feature)));
         }
     }
     return KString::must_create(builder.string_view());

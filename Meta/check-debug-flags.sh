@@ -8,8 +8,8 @@ cd "${script_path}/.."
 MISSING_FLAGS=n
 
 while IFS= read -r FLAG; do
-    # Ignore ELF_DEBUG because it's not a debug flag.
-    if [ "$FLAG" = "ELF_DEBUG" ]; then
+    # Ignore false positives that are not debug flags.
+    if [ "$FLAG" = "ELF_DEBUG" ] || [ "$FLAG" = "IA32_DEBUG_INTERFACE" ]; then
         continue
     fi
 
