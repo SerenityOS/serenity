@@ -438,6 +438,7 @@ static int ttyname_r_for_directory(const char* directory_name, dev_t device_mode
             struct stat st;
             if (lstat(name_path, &st) < 0) {
                 free(name_path);
+                name_path = nullptr;
                 continue;
             }
 
