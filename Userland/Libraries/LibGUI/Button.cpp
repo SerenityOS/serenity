@@ -127,6 +127,14 @@ void Button::click(unsigned modifiers)
         m_action->activate(this);
 }
 
+void Button::middle_click()
+{
+    if (!is_enabled())
+        return;
+    if (on_middle_click)
+        on_middle_click();
+}
+
 void Button::context_menu_event(ContextMenuEvent& context_menu_event)
 {
     if (!is_enabled())

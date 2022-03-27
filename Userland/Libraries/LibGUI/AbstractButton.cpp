@@ -120,13 +120,17 @@ void AbstractButton::mousedown_event(MouseEvent& event)
             m_auto_repeat_timer->start(m_auto_repeat_interval);
         }
         event.accept();
+    } else if (event.button() == MouseButton::Middle) {
+        repaint();
+        middle_click();
+        event.accept();
     }
     Widget::mousedown_event(event);
 }
 
 void AbstractButton::mouseup_event(MouseEvent& event)
 {
-    if (event.button() == MouseButton::Primary && m_being_pressed) {
+    if ((event.button() == MouseButton::Primary || event.button() == MouseButton::Middle) && m_being_pressed) {
         bool was_auto_repeating = m_auto_repeat_timer->is_active();
         m_auto_repeat_timer->stop();
         bool was_being_pressed = m_being_pressed;
