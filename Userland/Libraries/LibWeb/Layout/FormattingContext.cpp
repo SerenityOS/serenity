@@ -766,42 +766,45 @@ void FormattingContext::compute_height_for_absolutely_positioned_replaced_elemen
     m_state.get_mutable(box).content_height = compute_height_for_replaced_element(m_state, box);
 }
 
+// https://www.w3.org/TR/css-position-3/#relpos-insets
 void FormattingContext::compute_inset(Box const& box)
 {
-    // 9.4.3 Relative positioning
-    // Once a box has been laid out according to the normal flow or floated, it may be shifted relative to this position.
-
     if (box.computed_values().position() != CSS::Position::Relative)
         return;
 
+    auto resolve_two_opposing_insets = [&](CSS::LengthPercentage const& computed_start, CSS::LengthPercentage const& computed_end, float& used_start, float& used_end, float reference_for_percentage) {
+        auto resolved_first = computed_start.resolved(box, CSS::Length::make_px(reference_for_percentage)).resolved(box);
+        auto resolved_second = computed_end.resolved(box, CSS::Length::make_px(reference_for_percentage)).resolved(box);
+
+        if (resolved_first.is_auto() && resolved_second.is_auto()) {
+            // If opposing inset properties in an axis both compute to auto (their initial values),
+            // their used values are zero (i.e., the boxes stay in their original position in that axis).
+            used_start = 0;
+            used_end = 0;
+        } else if (resolved_first.is_auto() || resolved_second.is_auto()) {
+            // If only one is auto, its used value becomes the negation of the other, and the box is shifted by the specified amount.
+            if (resolved_first.is_auto()) {
+                used_end = resolved_second.to_px(box);
+                used_start = 0 - used_end;
+            } else {
+                used_start = resolved_first.to_px(box);
+                used_end = 0 - used_start;
+            }
+        } else {
+            // If neither is auto, the position is over-constrained; (with respect to the writing mode of its containing block)
+            // the computed end side value is ignored, and its used value becomes the negation of the start side.
+            used_start = resolved_first.to_px(box);
+            used_end = 0 - used_start;
+        }
+    };
+
     auto& box_state = m_state.get_mutable(box);
     auto const& computed_values = box.computed_values();
-    float width_of_containing_block = m_state.get(*box.containing_block()).content_width;
-    auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
+    auto const& containing_block_state = m_state.get(*box.containing_block());
 
-    auto specified_left = computed_values.inset().left.resolved(box, width_of_containing_block_as_length).resolved(box);
-    auto specified_right = computed_values.inset().right.resolved(box, width_of_containing_block_as_length).resolved(box);
-
-    if (specified_left.is_auto() && specified_right.is_auto()) {
-        // If both 'left' and 'right' are 'auto' (their initial values), the used values are '0' (i.e., the boxes stay in their original position).
-        box_state.inset_left = 0;
-        box_state.inset_right = 0;
-    } else if (specified_left.is_auto()) {
-        // If 'left' is 'auto', its used value is minus the value of 'right' (i.e., the boxes move to the left by the value of 'right').
-        box_state.inset_right = specified_right.to_px(box);
-        box_state.inset_left = 0 - box_state.inset_right;
-    } else if (specified_right.is_auto()) {
-        // If 'right' is specified as 'auto', its used value is minus the value of 'left'.
-        box_state.inset_left = specified_left.to_px(box);
-        box_state.inset_right = 0 - box_state.inset_left;
-    } else {
-        // If neither 'left' nor 'right' is 'auto', the position is over-constrained, and one of them has to be ignored.
-        // If the 'direction' property of the containing block is 'ltr', the value of 'left' wins and 'right' becomes -'left'.
-        // If 'direction' of the containing block is 'rtl', 'right' wins and 'left' is ignored.
-        // FIXME: Check direction (assuming 'ltr' for now).
-        box_state.inset_left = specified_left.to_px(box);
-        box_state.inset_right = 0 - box_state.inset_left;
-    }
+    // FIXME: Respect the containing block's writing-mode.
+    resolve_two_opposing_insets(computed_values.inset().left, computed_values.inset().right, box_state.inset_left, box_state.inset_right, containing_block_state.content_width);
+    resolve_two_opposing_insets(computed_values.inset().top, computed_values.inset().bottom, box_state.inset_top, box_state.inset_bottom, containing_block_state.content_height);
 }
 
 FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Layout::Box const& box) const
