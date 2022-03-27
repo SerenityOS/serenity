@@ -16,6 +16,7 @@
 #include <LibGPU/ImageFormat.h>
 #include <LibGPU/Light.h>
 #include <LibGPU/Material.h>
+#include <LibGPU/RasterPosition.h>
 #include <LibGPU/SamplerConfig.h>
 #include <LibGPU/StencilConfiguration.h>
 #include <LibGfx/Bitmap.h>
@@ -91,15 +92,6 @@ struct LightModelParameters {
 
 struct PixelQuad;
 
-struct RasterPosition {
-    FloatVector4 window_coordinates { 0.0f, 0.0f, 0.0f, 1.0f };
-    float eye_coordinate_distance { 0.0f };
-    bool valid { true };
-    FloatVector4 color_rgba { 1.0f, 1.0f, 1.0f, 1.0f };
-    float color_index { 1.0f };
-    FloatVector4 texture_coordinates { 0.0f, 0.0f, 0.0f, 1.0f };
-};
-
 class Device final {
 public:
     Device(Gfx::IntSize const& min_size);
@@ -128,8 +120,8 @@ public:
     void set_material_state(GPU::Face, GPU::Material const&);
     void set_stencil_configuration(GPU::Face, GPU::StencilConfiguration const&);
 
-    RasterPosition raster_position() const { return m_raster_position; }
-    void set_raster_position(RasterPosition const& raster_position);
+    GPU::RasterPosition raster_position() const { return m_raster_position; }
+    void set_raster_position(GPU::RasterPosition const& raster_position);
     void set_raster_position(FloatVector4 const& position, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform);
 
 private:
@@ -153,7 +145,7 @@ private:
     AlphaBlendFactors m_alpha_blend_factors;
     Array<GPU::Light, NUM_LIGHTS> m_lights;
     Array<GPU::Material, 2u> m_materials;
-    RasterPosition m_raster_position;
+    GPU::RasterPosition m_raster_position;
     Array<GPU::StencilConfiguration, 2u> m_stencil_configuration;
 };
 

@@ -1251,7 +1251,7 @@ void Device::set_stencil_configuration(GPU::Face face, GPU::StencilConfiguration
     m_stencil_configuration[face] = stencil_configuration;
 }
 
-void Device::set_raster_position(RasterPosition const& raster_position)
+void Device::set_raster_position(GPU::RasterPosition const& raster_position)
 {
     m_raster_position = raster_position;
 }
