@@ -1371,79 +1371,35 @@ String MemoryOrRegisterReference::to_string_a16() const
     return String::formatted("{}{}", base, displacement_string);
 }
 
-static String sib_to_string(u8 rm, u8 sib)
+String MemoryOrRegisterReference::sib_to_string(ProcessorMode) const
 {
     String scale;
     String index;
     String base;
-    switch (sib & 0xC0) {
-    case 0x00:;
+    switch (m_sib_scale) {
+    case 0:;
         break;
-    case 0x40:
+    case 1:
         scale = "*2";
         break;
-    case 0x80:
+    case 2:
         scale = "*4";
         break;
-    case 0xC0:
+    case 3:
         scale = "*8";
         break;
     }
-    switch ((sib >> 3) & 0x07) {
-    case 0:
-        index = "eax";
-        break;
-    case 1:
-        index = "ecx";
-        break;
-    case 2:
-        index = "edx";
-        break;
-    case 3:
-        index = "ebx";
-        break;
-    case 4:
-        break;
-    case 5:
-        index = "ebp";
-        break;
-    case 6:
-        index = "esi";
-        break;
-    case 7:
-        index = "edi";
-        break;
-    }
-    switch (sib & 0x07) {
-    case 0:
-        base = "eax";
-        break;
-    case 1:
-        base = "ecx";
-        break;
-    case 2:
-        base = "edx";
-        break;
-    case 3:
-        base = "ebx";
-        break;
-    case 4:
-        base = "esp";
-        break;
-    case 6:
-        base = "esi";
-        break;
-    case 7:
-        base = "edi";
-        break;
-    default: // 5
-        switch ((rm >> 6) & 3) {
+    if (m_sib_index != 4)
+        index = register_name(RegisterIndex32(m_sib_index));
+    if (m_sib_base == 5) {
+        switch (m_reg) {
         case 1:
         case 2:
             base = "ebp";
             break;
         }
-        break;
+    } else {
+        base = register_name(RegisterIndex32(m_sib_base));
     }
     StringBuilder builder;
     if (base.is_empty()) {
@@ -1467,35 +1423,17 @@ String MemoryOrRegisterReference::to_string_a64() const
     bool has_displacement = false;
     switch (mod()) {
     case 0b00:
-        has_displacement = rm() == 5;
+        has_displacement = m_rm == 5;
         break;
     case 0b01:
     case 0b10:
         has_displacement = true;
     }
-    if (m_has_sib && (m_sib & 7) == 5)
+    if (m_has_sib && m_sib_base == 5)
         has_displacement = true;
 
     String base;
-    switch (rm()) {
-    case 0:
-        base = "rax";
-        break;
-    case 1:
-        base = "rcx";
-        break;
-    case 2:
-        base = "rdx";
-        break;
-    case 3:
-        base = "rbx";
-        break;
-    case 6:
-        base = "rsi";
-        break;
-    case 7:
-        base = "rdi";
-        break;
+    switch (m_rm) {
     case 5:
         if (mod() == 0)
             base = String::formatted("{:#08x}", m_displacement32);
@@ -1503,8 +1441,10 @@ String MemoryOrRegisterReference::to_string_a64() const
             base = "rbp";
         break;
     case 4:
-        base = sib_to_string(m_rm_byte, m_sib);
+        base = sib_to_string(ProcessorMode::Long);
         break;
+    default:
+        base = register_name(RegisterIndex32(m_rm));
     }
 
     if (!has_displacement)
@@ -1529,29 +1469,11 @@ String MemoryOrRegisterReference::to_string_a32() const
     case 0b10:
         has_displacement = true;
     }
-    if (m_has_sib && (m_sib & 7) == 5)
+    if (m_has_sib && m_sib_base == 5)
         has_displacement = true;
 
     String base;
-    switch (rm()) {
-    case 0:
-        base = "eax";
-        break;
-    case 1:
-        base = "ecx";
-        break;
-    case 2:
-        base = "edx";
-        break;
-    case 3:
-        base = "ebx";
-        break;
-    case 6:
-        base = "esi";
-        break;
-    case 7:
-        base = "edi";
-        break;
+    switch (m_rm) {
     case 5:
         if (mod() == 0)
             base = String::formatted("{:x}", m_displacement32);
@@ -1559,8 +1481,10 @@ String MemoryOrRegisterReference::to_string_a32() const
             base = "ebp";
         break;
     case 4:
-        base = sib_to_string(m_rm_byte, m_sib);
+        base = sib_to_string(ProcessorMode::Protected);
         break;
+    default:
+        base = register_name(RegisterIndex32(m_rm));
     }
 
     if (!has_displacement)
