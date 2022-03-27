@@ -15,6 +15,7 @@
 #include <LibGPU/Enums.h>
 #include <LibGPU/ImageFormat.h>
 #include <LibGPU/Light.h>
+#include <LibGPU/LightModelParameters.h>
 #include <LibGPU/Material.h>
 #include <LibGPU/RasterPosition.h>
 #include <LibGPU/SamplerConfig.h>
@@ -79,13 +80,6 @@ struct RasterizerOptions {
     GPU::ColorMaterialMode color_material_mode { GPU::ColorMaterialMode::AmbientAndDiffuse };
 };
 
-struct LightModelParameters {
-    FloatVector4 scene_ambient_color { 0.2f, 0.2f, 0.2f, 1.0f };
-    bool viewer_at_infinity { false };
-    GPU::ColorControl color_control { GPU::ColorControl::SingleColor };
-    bool two_sided_lighting { false };
-};
-
 struct PixelQuad;
 
 class Device final {
@@ -103,9 +97,9 @@ public:
     void blit_to_color_buffer_at_raster_position(Gfx::Bitmap const&);
     void blit_to_depth_buffer_at_raster_position(Vector<GPU::DepthType> const&, int, int);
     void set_options(RasterizerOptions const&);
-    void set_light_model_params(LightModelParameters const&);
+    void set_light_model_params(GPU::LightModelParameters const&);
     RasterizerOptions options() const { return m_options; }
-    LightModelParameters light_model() const { return m_lighting_model; }
+    GPU::LightModelParameters light_model() const { return m_lighting_model; }
     GPU::ColorType get_color_buffer_pixel(int x, int y);
     GPU::DepthType get_depthbuffer_value(int x, int y);
 
@@ -131,7 +125,7 @@ private:
 
     RefPtr<FrameBuffer<GPU::ColorType, GPU::DepthType, GPU::StencilType>> m_frame_buffer {};
     RasterizerOptions m_options;
-    LightModelParameters m_lighting_model;
+    GPU::LightModelParameters m_lighting_model;
     Clipper m_clipper;
     Vector<Triangle> m_triangle_list;
     Vector<Triangle> m_processed_triangles;
