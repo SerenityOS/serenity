@@ -60,6 +60,7 @@ public:
     }
 
     constexpr const T& value() const { return m_value; }
+    constexpr T& value() { return m_value; }
 
     // Always implemented: identity.
     constexpr bool operator==(const Self& other) const
