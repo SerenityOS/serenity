@@ -7,6 +7,7 @@
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <LibTextCodec/Decoder.h>
 
 namespace TextCodec {
@@ -215,7 +216,7 @@ String Decoder::to_utf8(StringView input)
 
 void UTF8Decoder::process(StringView input, Function<void(u32)> on_code_point)
 {
-    for (auto c : input) {
+    for (auto c : Utf8View(input)) {
         on_code_point(c);
     }
 }
