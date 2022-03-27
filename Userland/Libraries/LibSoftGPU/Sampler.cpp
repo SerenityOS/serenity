@@ -52,20 +52,20 @@ static f32x4 wrap_mirrored_repeat(f32x4 value, u32x4 num_texels)
     return wrap_clamp_to_edge(is_odd ? 1 - frac : frac, num_texels);
 }
 
-static f32x4 wrap(f32x4 value, TextureWrapMode mode, u32x4 num_texels)
+static f32x4 wrap(f32x4 value, GPU::TextureWrapMode mode, u32x4 num_texels)
 {
     switch (mode) {
-    case TextureWrapMode::Repeat:
+    case GPU::TextureWrapMode::Repeat:
         return wrap_repeat(value);
-    case TextureWrapMode::MirroredRepeat:
+    case GPU::TextureWrapMode::MirroredRepeat:
         return wrap_mirrored_repeat(value, num_texels);
-    case TextureWrapMode::Clamp:
+    case GPU::TextureWrapMode::Clamp:
         if constexpr (CLAMP_DEPRECATED_BEHAVIOR) {
             return wrap_clamp(value);
         }
         return wrap_clamp_to_edge(value, num_texels);
-    case TextureWrapMode::ClampToBorder:
-    case TextureWrapMode::ClampToEdge:
+    case GPU::TextureWrapMode::ClampToBorder:
+    case GPU::TextureWrapMode::ClampToEdge:
         return wrap_clamp_to_edge(value, num_texels);
     default:
         VERIFY_NOT_REACHED();
@@ -132,7 +132,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     if (scale_factor[0] <= 1.f)
         return sample_2d_lod(uv, expand4(base_level), m_config.texture_mag_filter);
 
-    if (m_config.mipmap_filter == MipMapFilter::None)
+    if (m_config.mipmap_filter == GPU::MipMapFilter::None)
         return sample_2d_lod(uv, expand4(base_level), m_config.texture_min_filter);
 
     // FIXME: Instead of clamping to num_levels - 1, actually make the max mipmap level configurable with glTexParameteri(GL_TEXTURE_MAX_LEVEL, max_level)
@@ -142,7 +142,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
 
     auto lower_level_texel = sample_2d_lod(uv, to_u32x4(level), m_config.texture_min_filter);
 
-    if (m_config.mipmap_filter == MipMapFilter::Nearest)
+    if (m_config.mipmap_filter == GPU::MipMapFilter::Nearest)
         return lower_level_texel;
 
     auto higher_level_texel = sample_2d_lod(uv, to_u32x4(min(level + 1.f, max_level)), m_config.texture_min_filter);
@@ -150,7 +150,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     return mix(lower_level_texel, higher_level_texel, frac_int_range(level));
 }
 
-Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& uv, AK::SIMD::u32x4 level, TextureFilter filter) const
+Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& uv, AK::SIMD::u32x4 level, GPU::TextureFilter filter) const
 {
     auto const& image = *m_config.bound_image;
     u32x4 const layer = expand4(0u);
@@ -177,7 +177,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
     f32x4 u = s * to_f32x4(width);
     f32x4 v = t * to_f32x4(height);
 
-    if (filter == TextureFilter::Nearest) {
+    if (filter == GPU::TextureFilter::Nearest) {
         u32x4 i = to_u32x4(u);
         u32x4 j = to_u32x4(v);
         u32x4 k = expand4(0u);
@@ -196,7 +196,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
     u32x4 j0 = to_u32x4(floor_int_range(v));
     u32x4 j1 = j0 + 1;
 
-    if (m_config.texture_wrap_u == TextureWrapMode::Repeat) {
+    if (m_config.texture_wrap_u == GPU::TextureWrapMode::Repeat) {
         if (image.width_is_power_of_two()) {
             i0 = i0 & width_mask;
             i1 = i1 & width_mask;
@@ -206,7 +206,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
         }
     }
 
-    if (m_config.texture_wrap_v == TextureWrapMode::Repeat) {
+    if (m_config.texture_wrap_v == GPU::TextureWrapMode::Repeat) {
         if (image.height_is_power_of_two()) {
             j0 = j0 & height_mask;
             j1 = j1 & height_mask;
@@ -220,7 +220,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
 
     Vector4<f32x4> t0, t1, t2, t3;
 
-    if (m_config.texture_wrap_u == TextureWrapMode::Repeat && m_config.texture_wrap_v == TextureWrapMode::Repeat) {
+    if (m_config.texture_wrap_u == GPU::TextureWrapMode::Repeat && m_config.texture_wrap_v == GPU::TextureWrapMode::Repeat) {
         t0 = texel4(image, layer, level, i0, j0, k);
         t1 = texel4(image, layer, level, i1, j0, k);
         t2 = texel4(image, layer, level, i0, j1, k);

@@ -2909,7 +2909,7 @@ void GLContext::sync_device_sampler_config()
         if (!texture_unit.texture_2d_enabled())
             continue;
 
-        SoftGPU::SamplerConfig config;
+        GPU::SamplerConfig config;
 
         auto texture_2d = texture_unit.texture_2d_target_texture();
         if (texture_2d.is_null()) {
@@ -2924,28 +2924,28 @@ void GLContext::sync_device_sampler_config()
 
         switch (sampler.min_filter()) {
         case GL_NEAREST:
-            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
-            config.mipmap_filter = SoftGPU::MipMapFilter::None;
+            config.texture_min_filter = GPU::TextureFilter::Nearest;
+            config.mipmap_filter = GPU::MipMapFilter::None;
             break;
         case GL_LINEAR:
-            config.texture_min_filter = SoftGPU::TextureFilter::Linear;
-            config.mipmap_filter = SoftGPU::MipMapFilter::None;
+            config.texture_min_filter = GPU::TextureFilter::Linear;
+            config.mipmap_filter = GPU::MipMapFilter::None;
             break;
         case GL_NEAREST_MIPMAP_NEAREST:
-            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
-            config.mipmap_filter = SoftGPU::MipMapFilter::Nearest;
+            config.texture_min_filter = GPU::TextureFilter::Nearest;
+            config.mipmap_filter = GPU::MipMapFilter::Nearest;
             break;
         case GL_LINEAR_MIPMAP_NEAREST:
-            config.texture_min_filter = SoftGPU::TextureFilter::Linear;
-            config.mipmap_filter = SoftGPU::MipMapFilter::Nearest;
+            config.texture_min_filter = GPU::TextureFilter::Linear;
+            config.mipmap_filter = GPU::MipMapFilter::Nearest;
             break;
         case GL_NEAREST_MIPMAP_LINEAR:
-            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
-            config.mipmap_filter = SoftGPU::MipMapFilter::Linear;
+            config.texture_min_filter = GPU::TextureFilter::Nearest;
+            config.mipmap_filter = GPU::MipMapFilter::Linear;
             break;
         case GL_LINEAR_MIPMAP_LINEAR:
-            config.texture_min_filter = SoftGPU::TextureFilter::Linear;
-            config.mipmap_filter = SoftGPU::MipMapFilter::Linear;
+            config.texture_min_filter = GPU::TextureFilter::Linear;
+            config.mipmap_filter = GPU::MipMapFilter::Linear;
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -2953,10 +2953,10 @@ void GLContext::sync_device_sampler_config()
 
         switch (sampler.mag_filter()) {
         case GL_NEAREST:
-            config.texture_mag_filter = SoftGPU::TextureFilter::Nearest;
+            config.texture_mag_filter = GPU::TextureFilter::Nearest;
             break;
         case GL_LINEAR:
-            config.texture_mag_filter = SoftGPU::TextureFilter::Linear;
+            config.texture_mag_filter = GPU::TextureFilter::Linear;
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -2964,19 +2964,19 @@ void GLContext::sync_device_sampler_config()
 
         switch (sampler.wrap_s_mode()) {
         case GL_CLAMP:
-            config.texture_wrap_u = SoftGPU::TextureWrapMode::Clamp;
+            config.texture_wrap_u = GPU::TextureWrapMode::Clamp;
             break;
         case GL_CLAMP_TO_BORDER:
-            config.texture_wrap_u = SoftGPU::TextureWrapMode::ClampToBorder;
+            config.texture_wrap_u = GPU::TextureWrapMode::ClampToBorder;
             break;
         case GL_CLAMP_TO_EDGE:
-            config.texture_wrap_u = SoftGPU::TextureWrapMode::ClampToEdge;
+            config.texture_wrap_u = GPU::TextureWrapMode::ClampToEdge;
             break;
         case GL_REPEAT:
-            config.texture_wrap_u = SoftGPU::TextureWrapMode::Repeat;
+            config.texture_wrap_u = GPU::TextureWrapMode::Repeat;
             break;
         case GL_MIRRORED_REPEAT:
-            config.texture_wrap_u = SoftGPU::TextureWrapMode::MirroredRepeat;
+            config.texture_wrap_u = GPU::TextureWrapMode::MirroredRepeat;
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -2984,19 +2984,19 @@ void GLContext::sync_device_sampler_config()
 
         switch (sampler.wrap_t_mode()) {
         case GL_CLAMP:
-            config.texture_wrap_v = SoftGPU::TextureWrapMode::Clamp;
+            config.texture_wrap_v = GPU::TextureWrapMode::Clamp;
             break;
         case GL_CLAMP_TO_BORDER:
-            config.texture_wrap_v = SoftGPU::TextureWrapMode::ClampToBorder;
+            config.texture_wrap_v = GPU::TextureWrapMode::ClampToBorder;
             break;
         case GL_CLAMP_TO_EDGE:
-            config.texture_wrap_v = SoftGPU::TextureWrapMode::ClampToEdge;
+            config.texture_wrap_v = GPU::TextureWrapMode::ClampToEdge;
             break;
         case GL_REPEAT:
-            config.texture_wrap_v = SoftGPU::TextureWrapMode::Repeat;
+            config.texture_wrap_v = GPU::TextureWrapMode::Repeat;
             break;
         case GL_MIRRORED_REPEAT:
-            config.texture_wrap_v = SoftGPU::TextureWrapMode::MirroredRepeat;
+            config.texture_wrap_v = GPU::TextureWrapMode::MirroredRepeat;
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -3004,13 +3004,13 @@ void GLContext::sync_device_sampler_config()
 
         switch (texture_unit.env_mode()) {
         case GL_MODULATE:
-            config.fixed_function_texture_env_mode = SoftGPU::TextureEnvMode::Modulate;
+            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Modulate;
             break;
         case GL_REPLACE:
-            config.fixed_function_texture_env_mode = SoftGPU::TextureEnvMode::Replace;
+            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Replace;
             break;
         case GL_DECAL:
-            config.fixed_function_texture_env_mode = SoftGPU::TextureEnvMode::Decal;
+            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Decal;
             break;
         default:
             VERIFY_NOT_REACHED();

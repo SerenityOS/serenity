@@ -977,13 +977,13 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
 
         // FIXME: Implement more blend modes
         switch (sampler.config().fixed_function_texture_env_mode) {
-        case SoftGPU::TextureEnvMode::Modulate:
+        case GPU::TextureEnvMode::Modulate:
             quad.out_color = quad.out_color * texel;
             break;
-        case SoftGPU::TextureEnvMode::Replace:
+        case GPU::TextureEnvMode::Replace:
             quad.out_color = texel;
             break;
-        case SoftGPU::TextureEnvMode::Decal: {
+        case GPU::TextureEnvMode::Decal: {
             auto dst_alpha = texel.w();
             quad.out_color.set_x(mix(quad.out_color.x(), texel.x(), dst_alpha));
             quad.out_color.set_y(mix(quad.out_color.y(), texel.y(), dst_alpha));
@@ -1231,7 +1231,7 @@ NonnullRefPtr<Image> Device::create_image(GPU::ImageFormat format, unsigned widt
     return adopt_ref(*new Image(width, height, depth, levels, layers));
 }
 
-void Device::set_sampler_config(unsigned sampler, SamplerConfig const& config)
+void Device::set_sampler_config(unsigned sampler, GPU::SamplerConfig const& config)
 {
     m_samplers[sampler].set_config(config);
 }
