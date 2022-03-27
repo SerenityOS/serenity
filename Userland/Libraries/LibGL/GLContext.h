@@ -19,6 +19,7 @@
 #include <LibGL/Tex/TextureUnit.h>
 #include <LibGPU/Device.h>
 #include <LibGPU/DeviceInfo.h>
+#include <LibGPU/Driver.h>
 #include <LibGPU/Light.h>
 #include <LibGPU/Vertex.h>
 #include <LibGfx/Bitmap.h>
@@ -48,7 +49,7 @@ enum Face {
 
 class GLContext final {
 public:
-    GLContext(Gfx::Bitmap&);
+    GLContext(RefPtr<GPU::Driver> driver, NonnullOwnPtr<GPU::Device>, Gfx::Bitmap&);
     ~GLContext();
 
     void gl_begin(GLenum mode);
@@ -303,6 +304,7 @@ private:
         return m_texture_coordinate_generation[texture_unit][capability - GL_TEXTURE_GEN_S];
     }
 
+    RefPtr<GPU::Driver> m_driver;
     NonnullOwnPtr<GPU::Device> m_rasterizer;
     GPU::DeviceInfo const m_device_info;
     bool m_sampler_config_is_dirty { true };

@@ -15,12 +15,12 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGL/GLContext.h>
+#include <LibGPU/Device.h>
 #include <LibGPU/Enums.h>
 #include <LibGPU/ImageFormat.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
-#include <LibSoftGPU/Device.h>
 
 __attribute__((visibility("hidden"))) GL::GLContext* g_gl_context;
 
@@ -61,10 +61,11 @@ static constexpr size_t TEXTURE_MATRIX_STACK_LIMIT = 8;
         return return_value;                                       \
     }
 
-GLContext::GLContext(Gfx::Bitmap& frontbuffer)
+GLContext::GLContext(RefPtr<GPU::Driver> driver, NonnullOwnPtr<GPU::Device> device, Gfx::Bitmap& frontbuffer)
     : m_viewport { frontbuffer.rect() }
     , m_frontbuffer { frontbuffer }
-    , m_rasterizer { make<SoftGPU::Device>(frontbuffer.size()) }
+    , m_driver { driver }
+    , m_rasterizer { move(device) }
     , m_device_info { m_rasterizer->info() }
 {
     m_texture_units.resize(m_device_info.num_texture_units);
@@ -3064,7 +3065,7 @@ void GLContext::sync_light_state()
     }
     m_rasterizer->set_options(options);
 
-    for (auto light_id = 0u; light_id < SoftGPU::NUM_LIGHTS; light_id++) {
+    for (auto light_id = 0u; light_id < m_device_info.num_lights; light_id++) {
         auto const& current_light_state = m_light_states.at(light_id);
         m_rasterizer->set_light_state(light_id, current_light_state);
     }
@@ -3645,7 +3646,10 @@ void GLContext::get_material_param(Face face, GLenum pname, T* params)
 
 NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap)
 {
-    auto context = make<GLContext>(bitmap);
+    // FIXME: Make driver selectable. This is currently hardcoded to LibSoftGPU
+    auto driver = MUST(GPU::Driver::try_create("softgpu"));
+    auto device = MUST(driver->try_create_device(bitmap.size()));
+    auto context = make<GLContext>(driver, move(device), bitmap);
     dbgln_if(GL_DEBUG, "GL::create_context({}) -> {:p}", bitmap.size(), context.ptr());
 
     if (!g_gl_context)

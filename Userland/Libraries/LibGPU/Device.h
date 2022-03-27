@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/Error.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -28,6 +29,7 @@
 #include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
+#include <LibGfx/Size.h>
 #include <LibGfx/Vector4.h>
 
 namespace GPU {
@@ -66,3 +68,7 @@ public:
 };
 
 }
+
+typedef GPU::Device* (*serenity_gpu_create_device_t)(Gfx::IntSize const& size);
+
+extern "C" GPU::Device* serenity_gpu_create_device(Gfx::IntSize const& size);

@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Error.h>
 #include <AK/Math.h>
 #include <AK/NumericLimits.h>
 #include <AK/SIMDExtras.h>
@@ -1302,4 +1303,12 @@ Gfx::IntRect Device::get_rasterization_rect_of_size(Gfx::IntSize size)
     };
 }
 
+}
+
+extern "C" {
+
+GPU::Device* serenity_gpu_create_device(Gfx::IntSize const& size)
+{
+    return make<SoftGPU::Device>(size).leak_ptr();
+}
 }
