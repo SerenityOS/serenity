@@ -263,6 +263,14 @@ ThrowCompletionOr<void> GetVariable::execute_impl(Bytecode::Interpreter& interpr
     return {};
 }
 
+ThrowCompletionOr<void> DeleteVariable::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto const& string = interpreter.current_executable().get_identifier(m_identifier);
+    auto reference = TRY(interpreter.vm().resolve_binding(string));
+    interpreter.accumulator() = Value(TRY(reference.delete_(interpreter.global_object())));
+    return {};
+}
+
 ThrowCompletionOr<void> CreateEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto make_and_swap_envs = [&](auto*& old_environment) {
@@ -345,6 +353,16 @@ ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter
     TRY(object->set(interpreter.current_executable().get_identifier(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
     return {};
 }
+
+ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto* object = TRY(interpreter.accumulator().to_object(interpreter.global_object()));
+    auto const& identifier = interpreter.current_executable().get_identifier(m_property);
+    bool strict = interpreter.vm().in_strict_mode();
+    auto reference = Reference { object, identifier, {}, strict };
+    interpreter.accumulator() = Value(TRY(reference.delete_(interpreter.global_object())));
+    return {};
+};
 
 ThrowCompletionOr<void> Jump::execute_impl(Bytecode::Interpreter& interpreter) const
 {
@@ -578,6 +596,16 @@ ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpre
     return {};
 }
 
+ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto* object = TRY(interpreter.reg(m_base).to_object(interpreter.global_object()));
+    auto property_key = TRY(interpreter.accumulator().to_property_key(interpreter.global_object()));
+    bool strict = interpreter.vm().in_strict_mode();
+    auto reference = Reference { object, property_key, {}, strict };
+    interpreter.accumulator() = Value(TRY(reference.delete_(interpreter.global_object())));
+    return {};
+}
+
 ThrowCompletionOr<void> GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto iterator = TRY(get_iterator(interpreter.global_object(), interpreter.accumulator()));
@@ -776,6 +804,11 @@ String GetVariable::to_string_impl(Bytecode::Executable const& executable) const
     return String::formatted("GetVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
 }
 
+String DeleteVariable::to_string_impl(Bytecode::Executable const& executable) const
+{
+    return String::formatted("DeleteVariable {} ({})", m_identifier, executable.identifier_table->get(m_identifier));
+}
+
 String CreateEnvironment::to_string_impl(Bytecode::Executable const&) const
 {
     auto mode_string = m_mode == EnvironmentMode::Lexical
@@ -812,6 +845,11 @@ String PutById::to_string_impl(Bytecode::Executable const& executable) const
 String GetById::to_string_impl(Bytecode::Executable const& executable) const
 {
     return String::formatted("GetById {} ({})", m_property, executable.identifier_table->get(m_property));
+}
+
+String DeleteById::to_string_impl(Bytecode::Executable const& executable) const
+{
+    return String::formatted("DeleteById {} ({})", m_property, executable.identifier_table->get(m_property));
 }
 
 String Jump::to_string_impl(Bytecode::Executable const&) const
@@ -948,6 +986,11 @@ String GetByValue::to_string_impl(const Bytecode::Executable&) const
 String PutByValue::to_string_impl(const Bytecode::Executable&) const
 {
     return String::formatted("PutByValue base:{}, property:{}", m_base, m_property);
+}
+
+String DeleteByValue::to_string_impl(Bytecode::Executable const&) const
+{
+    return String::formatted("DeleteByValue base:{}", m_base);
 }
 
 String GetIterator::to_string_impl(Executable const&) const

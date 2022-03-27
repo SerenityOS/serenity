@@ -427,6 +427,9 @@ Bytecode::CodeGenerationErrorOr<void> LogicalExpression::generate_bytecode(Bytec
 
 Bytecode::CodeGenerationErrorOr<void> UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    if (m_op == UnaryOp::Delete)
+        return generator.emit_delete_reference(m_lhs);
+
     TRY(m_lhs->generate_bytecode(generator));
 
     switch (m_op) {
@@ -448,11 +451,9 @@ Bytecode::CodeGenerationErrorOr<void> UnaryExpression::generate_bytecode(Bytecod
     case UnaryOp::Void:
         generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
         break;
+    case UnaryOp::Delete: // Delete is implemented above.
     default:
-        return Bytecode::CodeGenerationError {
-            this,
-            "Unimplemented operation"sv,
-        };
+        VERIFY_NOT_REACHED();
     }
 
     return {};
