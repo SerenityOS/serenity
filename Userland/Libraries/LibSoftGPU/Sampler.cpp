@@ -109,7 +109,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     if (m_config.bound_image.is_null())
         return expand4(FloatVector4 { 1, 0, 0, 1 });
 
-    auto const& image = *m_config.bound_image;
+    auto const& image = *static_ptr_cast<Image>(m_config.bound_image);
 
     // FIXME: Make base level configurable with glTexParameteri(GL_TEXTURE_BASE_LEVEL, base_level)
     constexpr unsigned base_level = 0;
@@ -152,7 +152,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
 
 Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& uv, AK::SIMD::u32x4 level, GPU::TextureFilter filter) const
 {
-    auto const& image = *m_config.bound_image;
+    auto const& image = *static_ptr_cast<Image>(m_config.bound_image);
     u32x4 const layer = expand4(0u);
 
     u32x4 const width = {

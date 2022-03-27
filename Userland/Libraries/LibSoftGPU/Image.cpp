@@ -9,8 +9,9 @@
 
 namespace SoftGPU {
 
-Image::Image(unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers)
-    : m_num_layers(layers)
+Image::Image(void* const ownership_token, unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers)
+    : GPU::Image(ownership_token)
+    , m_num_layers(layers)
     , m_mipmap_buffers(FixedArray<RefPtr<Typed3DBuffer<GPU::ColorType>>>::must_create_but_fixme_should_propagate_errors(layers * max_levels))
 {
     VERIFY(width > 0);
@@ -77,13 +78,17 @@ void Image::read_texels(unsigned layer, unsigned level, Vector3<unsigned> const&
     }
 }
 
-void Image::copy_texels(Image const& source, unsigned source_layer, unsigned source_level, Vector3<unsigned> const& source_offset, Vector3<unsigned> const& size, unsigned destination_layer, unsigned destination_level, Vector3<unsigned> const& destination_offset)
+void Image::copy_texels(GPU::Image const& source, unsigned source_layer, unsigned source_level, Vector3<unsigned> const& source_offset, Vector3<unsigned> const& size, unsigned destination_layer, unsigned destination_level, Vector3<unsigned> const& destination_offset)
 {
-    VERIFY(source_layer < source.num_layers());
-    VERIFY(source_level < source.num_levels());
-    VERIFY(source_offset.x() + size.x() <= source.level_width(source_level));
-    VERIFY(source_offset.y() + size.y() <= source.level_height(source_level));
-    VERIFY(source_offset.z() + size.z() <= source.level_depth(source_level));
+    VERIFY(source.has_same_ownership_token(*this));
+
+    auto const& src_image = static_cast<Image const&>(source);
+
+    VERIFY(source_layer < src_image.num_layers());
+    VERIFY(source_level < src_image.num_levels());
+    VERIFY(source_offset.x() + size.x() <= src_image.level_width(source_level));
+    VERIFY(source_offset.y() + size.y() <= src_image.level_height(source_level));
+    VERIFY(source_offset.z() + size.z() <= src_image.level_depth(source_level));
     VERIFY(destination_layer < num_layers());
     VERIFY(destination_level < num_levels());
     VERIFY(destination_offset.x() + size.x() <= level_width(destination_level));
@@ -93,7 +98,7 @@ void Image::copy_texels(Image const& source, unsigned source_layer, unsigned sou
     for (unsigned z = 0; z < size.z(); ++z) {
         for (unsigned y = 0; y < size.y(); ++y) {
             for (unsigned x = 0; x < size.x(); ++x) {
-                auto color = source.texel(source_layer, source_level, source_offset.x() + x, source_offset.y() + y, source_offset.z() + z);
+                auto color = src_image.texel(source_layer, source_level, source_offset.x() + x, source_offset.y() + y, source_offset.z() + z);
                 set_texel(destination_layer, destination_level, destination_offset.x() + x, destination_offset.y() + y, destination_offset.z() + z, color);
             }
         }

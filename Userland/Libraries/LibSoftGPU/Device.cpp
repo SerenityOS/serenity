@@ -1219,7 +1219,7 @@ GPU::DepthType Device::get_depthbuffer_value(int x, int y)
     return m_frame_buffer->depth_buffer()->scanline(y)[x];
 }
 
-NonnullRefPtr<Image> Device::create_image(GPU::ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers)
+NonnullRefPtr<GPU::Image> Device::create_image(GPU::ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers)
 {
     VERIFY(format == GPU::ImageFormat::BGRA8888);
     VERIFY(width > 0);
@@ -1228,11 +1228,13 @@ NonnullRefPtr<Image> Device::create_image(GPU::ImageFormat format, unsigned widt
     VERIFY(levels > 0);
     VERIFY(layers > 0);
 
-    return adopt_ref(*new Image(width, height, depth, levels, layers));
+    return adopt_ref(*new Image(this, width, height, depth, levels, layers));
 }
 
 void Device::set_sampler_config(unsigned sampler, GPU::SamplerConfig const& config)
 {
+    VERIFY(config.bound_image.is_null() || config.bound_image->ownership_token() == this);
+
     m_samplers[sampler].set_config(config);
 }
 

@@ -11,6 +11,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <LibGPU/Enums.h>
+#include <LibGPU/Image.h>
 #include <LibGPU/ImageDataLayout.h>
 #include <LibGPU/ImageFormat.h>
 #include <LibGfx/Vector3.h>
@@ -133,9 +134,9 @@ inline static void pack_color(FloatVector4 const& color, void* ptr, GPU::ImageFo
     }
 }
 
-class Image final : public RefCounted<Image> {
+class Image final : public GPU::Image {
 public:
-    Image(unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers);
+    Image(void* const ownership_token, unsigned width, unsigned height, unsigned depth, unsigned max_levels, unsigned layers);
 
     unsigned level_width(unsigned level) const { return m_mipmap_buffers[level]->width(); }
     unsigned level_height(unsigned level) const { return m_mipmap_buffers[level]->height(); }
@@ -156,9 +157,9 @@ public:
         pack_color(color, texel_pointer(layer, level, x, y, z), GPU::ImageFormat::BGRA8888);
     }
 
-    void write_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void const* data, GPU::ImageDataLayout const& layout);
-    void read_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void* data, GPU::ImageDataLayout const& layout) const;
-    void copy_texels(Image const& source, unsigned source_layer, unsigned source_level, Vector3<unsigned> const& source_offset, Vector3<unsigned> const& size, unsigned destination_layer, unsigned destination_level, Vector3<unsigned> const& destination_offset);
+    virtual void write_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void const* data, GPU::ImageDataLayout const& layout) override;
+    virtual void read_texels(unsigned layer, unsigned level, Vector3<unsigned> const& offset, Vector3<unsigned> const& size, void* data, GPU::ImageDataLayout const& layout) const override;
+    virtual void copy_texels(GPU::Image const& source, unsigned source_layer, unsigned source_level, Vector3<unsigned> const& source_offset, Vector3<unsigned> const& size, unsigned destination_layer, unsigned destination_level, Vector3<unsigned> const& destination_offset) override;
 
 private:
     void const* texel_pointer(unsigned layer, unsigned level, int x, int y, int z) const
