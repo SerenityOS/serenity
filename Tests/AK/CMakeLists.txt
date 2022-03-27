@@ -2,6 +2,7 @@ set(AK_TEST_SOURCES
     TestFixedPoint.cpp
     TestAllOf.cpp
     TestAnyOf.cpp
+    TestArbitrarySizedEnum.cpp
     TestArray.cpp
     TestAtomic.cpp
     TestBadge.cpp
