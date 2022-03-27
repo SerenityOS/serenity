@@ -15,6 +15,7 @@
 #include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibEDID/DMT.h>
+#include <LibEDID/Definitions.h>
 #include <LibEDID/VIC.h>
 
 #ifdef KERNEL
