@@ -37,7 +37,7 @@ private:
         float flex_base_size { 0 };
         float hypothetical_main_size { 0 };
         float hypothetical_cross_size { 0 };
-        float hypothetical_cross_size_with_margins() { return hypothetical_cross_size + margins.cross_before + margins.cross_after; }
+        float hypothetical_cross_size_with_margins() { return hypothetical_cross_size + margins.cross_before + margins.cross_after + borders.cross_after + borders.cross_before + padding.cross_after + padding.cross_before; }
         float target_main_size { 0 };
         bool frozen { false };
         Optional<float> flex_factor {};
@@ -48,6 +48,8 @@ private:
         float main_offset { 0 };
         float cross_offset { 0 };
         DirectionAgnosticMargins margins {};
+        DirectionAgnosticMargins borders {};
+        DirectionAgnosticMargins padding {};
         bool is_min_violation { false };
         bool is_max_violation { false };
     };
