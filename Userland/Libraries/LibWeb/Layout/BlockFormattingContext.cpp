@@ -391,7 +391,7 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
 
         compute_height(child_box, m_state);
 
-        compute_position(child_box);
+        compute_inset(child_box);
 
         if (is<ReplacedBox>(child_box) || is<BlockContainer>(child_box))
             place_block_level_element_in_normal_flow_horizontally(child_box, block_container);

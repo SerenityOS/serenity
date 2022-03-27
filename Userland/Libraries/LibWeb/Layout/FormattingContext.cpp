@@ -766,7 +766,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_replaced_elemen
     m_state.get_mutable(box).content_height = compute_height_for_replaced_element(m_state, box);
 }
 
-void FormattingContext::compute_position(Box const& box)
+void FormattingContext::compute_inset(Box const& box)
 {
     // 9.4.3 Relative positioning
     // Once a box has been laid out according to the normal flow or floated, it may be shifted relative to this position.

@@ -65,7 +65,7 @@ protected:
     FormattingState::IntrinsicSizes calculate_intrinsic_sizes(Layout::Box const&) const;
 
     OwnPtr<FormattingContext> layout_inside(Box const&, LayoutMode);
-    void compute_position(Box const&);
+    void compute_inset(Box const& box);
 
     struct SpaceUsedByFloats {
         float left { 0 };
