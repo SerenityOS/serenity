@@ -137,10 +137,10 @@ CodeGenerationErrorOr<void> Generator::emit_load_from_reference(JS::ASTNode cons
         auto& expression = static_cast<MemberExpression const&>(node);
         TRY(expression.object().generate_bytecode(*this));
 
-        auto object_reg = allocate_register();
-        emit<Bytecode::Op::Store>(object_reg);
-
         if (expression.is_computed()) {
+            auto object_reg = allocate_register();
+            emit<Bytecode::Op::Store>(object_reg);
+
             TRY(expression.property().generate_bytecode(*this));
             emit<Bytecode::Op::GetByValue>(object_reg);
         } else if (expression.property().is_identifier()) {
