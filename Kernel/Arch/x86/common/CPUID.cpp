@@ -134,14 +134,167 @@ StringView cpu_feature_to_string_view(CPUFeature::Type const& feature)
         return "ia64"sv;
     if (feature == CPUFeature::PBE)
         return "pbe"sv;
+    if (feature == CPUFeature::FSGSBASE)
+        return "fsgsbase"sv;
+    if (feature == CPUFeature::TSC_ADJUST)
+        return "tsc_adjust"sv;
+    if (feature == CPUFeature::SGX)
+        return "sgx"sv;
+    if (feature == CPUFeature::BMI1)
+        return "bmi1"sv;
+    if (feature == CPUFeature::HLE)
+        return "hle"sv;
+    if (feature == CPUFeature::AVX2)
+        return "avx2"sv;
+    if (feature == CPUFeature::FDP_EXCPTN_ONLY)
+        return "fdp_excptn_only"sv;
     if (feature == CPUFeature::SMEP)
         return "smep"sv;
+    if (feature == CPUFeature::BMI2)
+        return "bmi2"sv;
+    if (feature == CPUFeature::ERMS)
+        return "erms"sv;
+    if (feature == CPUFeature::INVPCID)
+        return "invpcid"sv;
+    if (feature == CPUFeature::RTM)
+        return "rtm"sv;
+    if (feature == CPUFeature::PQM)
+        return "pqm"sv;
+    if (feature == CPUFeature::ZERO_FCS_FDS)
+        return "zero_fcs_fds"sv;
+    if (feature == CPUFeature::MPX)
+        return "mpx"sv;
+    if (feature == CPUFeature::PQE)
+        return "pqe"sv;
+    if (feature == CPUFeature::AVX512_F)
+        return "avx512_f"sv;
+    if (feature == CPUFeature::AVX512_DQ)
+        return "avx512_dq"sv;
     if (feature == CPUFeature::RDSEED)
         return "rdseed"sv;
+    if (feature == CPUFeature::ADX)
+        return "adx"sv;
     if (feature == CPUFeature::SMAP)
         return "smap"sv;
+    if (feature == CPUFeature::AVX512_IFMA)
+        return "avx512_ifma"sv;
+    if (feature == CPUFeature::PCOMMIT)
+        return "pcommit"sv;
+    if (feature == CPUFeature::CLFLUSHOPT)
+        return "clflushopt"sv;
+    if (feature == CPUFeature::CLWB)
+        return "clwb"sv;
+    if (feature == CPUFeature::INTEL_PT)
+        return "intel_pt"sv;
+    if (feature == CPUFeature::AVX512_PF)
+        return "avx512_pf"sv;
+    if (feature == CPUFeature::AVX512_ER)
+        return "avx512_er"sv;
+    if (feature == CPUFeature::AVX512_CD)
+        return "avx512_cd"sv;
+    if (feature == CPUFeature::SHA)
+        return "sha"sv;
+    if (feature == CPUFeature::AVX512_BW)
+        return "avx512_bw"sv;
+    if (feature == CPUFeature::AVX512_VL)
+        return "avx512_vl"sv;
+    if (feature == CPUFeature::PREFETCHWT1)
+        return "prefetchwt1"sv;
+    if (feature == CPUFeature::AVX512_VBMI)
+        return "avx512_vbmi"sv;
     if (feature == CPUFeature::UMIP)
         return "umip"sv;
+    if (feature == CPUFeature::PKU)
+        return "pku"sv;
+    if (feature == CPUFeature::OSPKU)
+        return "ospku"sv;
+    if (feature == CPUFeature::WAITPKG)
+        return "waitpkg"sv;
+    if (feature == CPUFeature::AVX512_VBMI2)
+        return "avx512_vbmi2"sv;
+    if (feature == CPUFeature::CET_SS)
+        return "cet_ss"sv;
+    if (feature == CPUFeature::GFNI)
+        return "gfni"sv;
+    if (feature == CPUFeature::VAES)
+        return "vaes"sv;
+    if (feature == CPUFeature::VPCLMULQDQ)
+        return "vpclmulqdq"sv;
+    if (feature == CPUFeature::AVX512_VNNI)
+        return "avx512_vnni"sv;
+    if (feature == CPUFeature::AVX512_BITALG)
+        return "avx512_bitalg"sv;
+    if (feature == CPUFeature::TME_EN)
+        return "tme_en"sv;
+    if (feature == CPUFeature::AVX512_VPOPCNTDQ)
+        return "avx512_vpopcntdq"sv;
+    if (feature == CPUFeature::INTEL_5_LEVEL_PAGING)
+        return "intel_5_level_paging"sv;
+    if (feature == CPUFeature::RDPID)
+        return "rdpid"sv;
+    if (feature == CPUFeature::KL)
+        return "kl"sv;
+    if (feature == CPUFeature::CLDEMOTE)
+        return "cldemote"sv;
+    if (feature == CPUFeature::MOVDIRI)
+        return "movdiri"sv;
+    if (feature == CPUFeature::MOVDIR64B)
+        return "movdir64b"sv;
+    if (feature == CPUFeature::ENQCMD)
+        return "enqcmd"sv;
+    if (feature == CPUFeature::SGX_LC)
+        return "sgx_lc"sv;
+    if (feature == CPUFeature::PKS)
+        return "pks"sv;
+    if (feature == CPUFeature::AVX512_4VNNIW)
+        return "avx512_4vnniw"sv;
+    if (feature == CPUFeature::AVX512_4FMAPS)
+        return "avx512_4fmaps"sv;
+    if (feature == CPUFeature::FSRM)
+        return "fsrm"sv;
+    if (feature == CPUFeature::AVX512_VP2INTERSECT)
+        return "avx512_vp2intersect"sv;
+    if (feature == CPUFeature::SRBDS_CTRL)
+        return "srbds_ctrl"sv;
+    if (feature == CPUFeature::MD_CLEAR)
+        return "md_clear"sv;
+    if (feature == CPUFeature::RTM_ALWAYS_ABORT)
+        return "rtm_always_abort"sv;
+    if (feature == CPUFeature::TSX_FORCE_ABORT)
+        return "tsx_force_abort"sv;
+    if (feature == CPUFeature::SERIALIZE)
+        return "serialize"sv;
+    if (feature == CPUFeature::HYBRID)
+        return "hybrid"sv;
+    if (feature == CPUFeature::TSXLDTRK)
+        return "tsxldtrk"sv;
+    if (feature == CPUFeature::PCONFIG)
+        return "pconfig"sv;
+    if (feature == CPUFeature::LBR)
+        return "lbr"sv;
+    if (feature == CPUFeature::CET_IBT)
+        return "cet_ibt"sv;
+    if (feature == CPUFeature::AMX_BF16)
+        return "amx_bf16"sv;
+    if (feature == CPUFeature::AVX512_FP16)
+        return "avx512_fp16"sv;
+    if (feature == CPUFeature::AMX_TILE)
+        return "amx_tile"sv;
+    if (feature == CPUFeature::AMX_INT8)
+        return "amx_int8"sv;
+    if (feature == CPUFeature::SPEC_CTRL)
+        return "spec_ctrl"sv;
+    if (feature == CPUFeature::STIBP)
+        return "stibp"sv;
+    // NOTE: This is called flush_l1d on Linux, but L1D_FLUSH in the Intel manual.
+    if (feature == CPUFeature::L1D_FLUSH)
+        return "l1d_flush"sv;
+    if (feature == CPUFeature::IA32_ARCH_CAPABILITIES)
+        return "ia32_arch_capabilities"sv;
+    if (feature == CPUFeature::IA32_CORE_CAPABILITIES)
+        return "ia32_code_capabilities"sv;
+    if (feature == CPUFeature::SSBD)
+        return "ssbd"sv;
     if (feature == CPUFeature::SYSCALL)
         return "syscall"sv;
     if (feature == CPUFeature::NX)
