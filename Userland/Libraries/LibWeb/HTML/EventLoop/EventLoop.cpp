@@ -251,6 +251,11 @@ void queue_a_microtask(DOM::Document* document, Function<void()> steps)
     event_loop.microtask_queue().enqueue(move(microtask));
 }
 
+void perform_a_microtask_checkpoint()
+{
+    main_thread_event_loop().perform_a_microtask_checkpoint();
+}
+
 // https://html.spec.whatwg.org/#perform-a-microtask-checkpoint
 void EventLoop::perform_a_microtask_checkpoint()
 {
