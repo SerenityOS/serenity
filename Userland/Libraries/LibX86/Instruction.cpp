@@ -88,6 +88,9 @@ static void build(InstructionDescriptor* table, u8 op, char const* mnemonic, Ins
     case OP_relimm32:
         d.imm1_bytes = 4;
         break;
+    case OP_regW_immW:
+        d.imm1_bytes = CurrentOperandSize;
+        break;
     case OP_imm16_imm8:
         d.imm1_bytes = 2;
         d.imm2_bytes = 1;
@@ -1555,9 +1558,21 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     auto append_imm16_2 = [&] { builder.appendff("{:#04x}", imm16_2()); };
     auto append_imm32 = [&] { builder.appendff("{:#08x}", imm32()); };
     auto append_imm32_2 = [&] { builder.appendff("{:#08x}", imm32_2()); };
+    auto append_imm64 = [&] { builder.appendff("{:#016x}", imm64()); };
+    auto append_immW = [&] {
+        if (m_operand_size == OperandSize::Size64)
+            append_imm64();
+        else
+            append_imm32();
+    };
     auto append_reg8 = [&] { builder.append(reg8_name()); };
     auto append_reg16 = [&] { builder.append(reg16_name()); };
-    auto append_reg32 = [&] { builder.append(reg32_name()); };
+    auto append_reg32 = [&] {
+        if (m_operand_size == OperandSize::Size64)
+            builder.append(reg64_name());
+        else
+            builder.append(reg32_name());
+    };
     auto append_seg = [&] { builder.append(register_name(segment_register())); };
     auto append_creg = [&] { builder.appendff("cr{}", register_index()); };
     auto append_dreg = [&] { builder.appendff("dr{}", register_index()); };
@@ -1794,6 +1809,12 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         append_reg32();
         append(", ");
         append_imm32();
+        break;
+    case OP_regW_immW:
+        append_mnemonic_space();
+        append_reg32();
+        append(", ");
+        append_immW();
         break;
     case OP_RM8_1:
         append_mnemonic_space();
