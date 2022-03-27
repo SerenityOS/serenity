@@ -1432,12 +1432,7 @@ String MemoryOrRegisterReference::to_string_a16() const
     if (!hasDisplacement)
         return base;
 
-    String displacement_string;
-    if ((i16)m_displacement16 < 0)
-        displacement_string = String::formatted("-{:#x}", -(i16)m_displacement16);
-    else
-        displacement_string = String::formatted("+{:#x}", m_displacement16);
-    return String::formatted("{}{}", base, displacement_string);
+    return String::formatted("{}{:+#x}", base, (i16)m_displacement16);
 }
 
 String MemoryOrRegisterReference::sib_to_string(ProcessorMode mode) const
@@ -1519,12 +1514,7 @@ String MemoryOrRegisterReference::to_string_a64() const
     if (!has_displacement)
         return base;
 
-    String displacement_string;
-    if ((i32)m_displacement32 < 0)
-        displacement_string = String::formatted("-{:#x}", -(i32)m_displacement32);
-    else
-        displacement_string = String::formatted("+{:#x}", m_displacement32);
-    return String::formatted("{}{}", base, displacement_string);
+    return String::formatted("{}{:+#x}", base, (i32)m_displacement32);
 }
 
 String MemoryOrRegisterReference::to_string_a32() const
@@ -1559,12 +1549,7 @@ String MemoryOrRegisterReference::to_string_a32() const
     if (!has_displacement)
         return base;
 
-    String displacement_string;
-    if ((i32)m_displacement32 < 0)
-        displacement_string = String::formatted("-{:#x}", -(i32)m_displacement32);
-    else
-        displacement_string = String::formatted("+{:#x}", m_displacement32);
-    return String::formatted("{}{}", base, displacement_string);
+    return String::formatted("{}{:+#x}", base, (i32)m_displacement32);
 }
 
 static String relative_address(u32 origin, bool x32, i8 imm)
