@@ -28,7 +28,7 @@ Messages::LookupServer::LookupNameResponse ConnectionFromClient::lookup_name(Str
 {
     auto maybe_answers = LookupServer::the().lookup(name, DNSRecordType::A);
     if (maybe_answers.is_error()) {
-        dbgln("LookupServer: Failed to lookup PTR record: {}", maybe_answers.error());
+        dbgln("LookupServer: Failed to lookup A record: {}", maybe_answers.error());
         return { 1, {} };
     }
 
