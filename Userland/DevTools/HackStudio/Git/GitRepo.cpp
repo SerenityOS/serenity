@@ -83,7 +83,7 @@ String GitRepo::command_wrapper(Vector<String> const& command_parts, String cons
     auto result = Core::command("git", command_parts, LexicalPath(chdir));
     if (result.is_error() || result.value().exit_code != 0)
         return {};
-    return result.value().stdout;
+    return result.value().output;
 }
 
 bool GitRepo::git_is_installed()
