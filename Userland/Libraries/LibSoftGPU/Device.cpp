@@ -1241,7 +1241,7 @@ void Device::set_light_state(unsigned int light_id, GPU::Light const& light)
     m_lights.at(light_id) = light;
 }
 
-void Device::set_material_state(GPU::Face face, Material const& material)
+void Device::set_material_state(GPU::Face face, GPU::Material const& material)
 {
     m_materials[face] = material;
 }

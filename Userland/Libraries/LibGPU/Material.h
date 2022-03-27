@@ -8,7 +8,7 @@
 
 #include <LibGfx/Vector4.h>
 
-namespace SoftGPU {
+namespace GPU {
 
 struct Material {
     FloatVector4 ambient { 0.2f, 0.2f, 0.2f, 1.0f };

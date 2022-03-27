@@ -3413,7 +3413,7 @@ void GLContext::gl_materialfv(GLenum face, GLenum pname, GLfloat const* params)
     RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_EMISSION || pname == GL_SHININESS || pname == GL_AMBIENT_AND_DIFFUSE), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF((pname == GL_SHININESS && *params > 128.0f), GL_INVALID_VALUE);
 
-    auto update_material = [](SoftGPU::Material& material, GLenum pname, GLfloat const* params) {
+    auto update_material = [](GPU::Material& material, GLenum pname, GLfloat const* params) {
         switch (pname) {
         case GL_AMBIENT:
             material.ambient = { params[0], params[1], params[2], params[3] };
@@ -3460,7 +3460,7 @@ void GLContext::gl_materialiv(GLenum face, GLenum pname, GLint const* params)
     RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_EMISSION || pname == GL_SHININESS || pname == GL_AMBIENT_AND_DIFFUSE), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF((pname == GL_SHININESS && *params > 128), GL_INVALID_VALUE);
 
-    auto update_material = [](SoftGPU::Material& material, GLenum pname, GLint const* params) {
+    auto update_material = [](GPU::Material& material, GLenum pname, GLint const* params) {
         switch (pname) {
         case GL_AMBIENT:
             material.ambient = { static_cast<float>(params[0]), static_cast<float>(params[1]), static_cast<float>(params[2]), static_cast<float>(params[3]) };

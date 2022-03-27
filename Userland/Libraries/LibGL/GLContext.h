@@ -439,7 +439,7 @@ private:
     // Lighting configuration
     bool m_lighting_enabled { false };
     Vector<GPU::Light> m_light_states;
-    Array<SoftGPU::Material, 2u> m_material_states;
+    Array<GPU::Material, 2u> m_material_states;
 
     // Color material
     bool m_color_material_enabled { false };
