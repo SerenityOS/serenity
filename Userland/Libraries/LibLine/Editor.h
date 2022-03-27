@@ -241,6 +241,20 @@ public:
 
     const Utf32View buffer_view() const { return { m_buffer.data(), m_buffer.size() }; }
 
+    auto prohibit_input()
+    {
+        auto previous_value = m_prohibit_input_processing;
+        m_prohibit_input_processing = true;
+        m_have_unprocessed_read_event = false;
+        return ScopeGuard {
+            [this, previous_value] {
+                m_prohibit_input_processing = previous_value;
+                if (!m_prohibit_input_processing && m_have_unprocessed_read_event)
+                    handle_read_event();
+            }
+        };
+    }
+
 private:
     explicit Editor(Configuration configuration = Configuration::from_config());
 
@@ -500,6 +514,8 @@ private:
     Vector<int, 2> m_signal_handlers;
 
     bool m_is_editing { false };
+    bool m_prohibit_input_processing { false };
+    bool m_have_unprocessed_read_event { false };
 
     Configuration m_configuration;
 };

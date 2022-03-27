@@ -791,6 +791,13 @@ void Editor::handle_interrupt_event()
 
 void Editor::handle_read_event()
 {
+    if (m_prohibit_input_processing) {
+        m_have_unprocessed_read_event = true;
+        return;
+    }
+
+    auto prohibit_scope = prohibit_input();
+
     char keybuf[16];
     ssize_t nread = 0;
 
