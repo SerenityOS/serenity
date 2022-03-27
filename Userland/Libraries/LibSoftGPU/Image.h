@@ -175,7 +175,7 @@ private:
     unsigned m_num_levels { 0 };
     unsigned m_num_layers { 0 };
 
-    FixedArray<RefPtr<Typed3DBuffer<ColorType>>> m_mipmap_buffers;
+    FixedArray<RefPtr<Typed3DBuffer<GPU::ColorType>>> m_mipmap_buffers;
 
     bool m_width_is_power_of_two { false };
     bool m_height_is_power_of_two { false };
