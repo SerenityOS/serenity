@@ -100,7 +100,13 @@ READONLY_AFTER_INIT VirtualConsole* tty0;
 
 ProcessID g_init_pid { 0 };
 
-static Processor s_bsp_processor; // global but let's keep it "private"
+ALWAYS_INLINE static Processor& bsp_processor()
+{
+    // This solves a problem where the bsp Processor instance
+    // gets "re"-initialized in init() when we run all global constructors.
+    alignas(Processor) static u8 bsp_processor_storage[sizeof(Processor)];
+    return (Processor&)bsp_processor_storage;
+}
 
 // SerenityOS Kernel C++ entry point :^)
 //
@@ -179,7 +185,9 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     CommandLine::early_initialize(kernel_cmdline);
     memcpy(multiboot_copy_boot_modules_array, multiboot_modules, multiboot_modules_count * sizeof(multiboot_module_entry_t));
     multiboot_copy_boot_modules_count = multiboot_modules_count;
-    s_bsp_processor.early_initialize(0);
+
+    new (&bsp_processor()) Processor();
+    bsp_processor().early_initialize(0);
 
     // Invoke the constructors needed for the kernel heap
     for (ctor_func_t* ctor = start_heap_ctors; ctor < end_heap_ctors; ctor++)
@@ -188,7 +196,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 
     load_kernel_symbol_table();
 
-    s_bsp_processor.initialize(0);
+    bsp_processor().initialize(0);
 
     CommandLine::initialize();
     Memory::MemoryManager::initialize(0);
