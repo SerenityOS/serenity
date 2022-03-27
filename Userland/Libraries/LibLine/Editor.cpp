@@ -827,9 +827,9 @@ void Editor::handle_read_event()
     }
 
     m_incomplete_data.append(keybuf, nread);
-    nread = m_incomplete_data.size();
+    auto available_bytes = m_incomplete_data.size();
 
-    if (nread == 0) {
+    if (available_bytes == 0) {
         m_input_error = Error::Empty;
         finish();
         return;
@@ -839,12 +839,12 @@ void Editor::handle_read_event()
 
     // Discard starting bytes until they make sense as utf-8.
     size_t valid_bytes = 0;
-    while (nread) {
-        Utf8View { StringView { m_incomplete_data.data(), (size_t)nread } }.validate(valid_bytes);
-        if (valid_bytes)
+    while (available_bytes > 0) {
+        Utf8View { StringView { m_incomplete_data.data(), available_bytes } }.validate(valid_bytes);
+        if (valid_bytes != 0)
             break;
         m_incomplete_data.take_first();
-        --nread;
+        --available_bytes;
     }
 
     Utf8View input_view { StringView { m_incomplete_data.data(), valid_bytes } };
