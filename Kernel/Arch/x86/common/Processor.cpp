@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -70,7 +71,7 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
     // NOTE: This is called during Processor::early_initialize, we cannot
     //       safely log at this point because we don't have kmalloc
     //       initialized yet!
-    m_features = static_cast<CPUFeature>(0);
+    m_features = CPUFeature::Type(0u);
 
     CPUID processor_info(0x1);
 
@@ -289,77 +290,71 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
 NonnullOwnPtr<KString> Processor::features_string() const
 {
     StringBuilder builder;
-    auto feature_to_str =
-        [](CPUFeature f) -> StringView {
-        switch (f) {
-        case CPUFeature::NX:
+    auto feature_to_str = [](CPUFeature::Type const& feature) -> StringView {
+        if (feature == CPUFeature::NX)
             return "nx"sv;
-        case CPUFeature::PAE:
+        if (feature == CPUFeature::PAE)
             return "pae"sv;
-        case CPUFeature::PGE:
+        if (feature == CPUFeature::PGE)
             return "pge"sv;
-        case CPUFeature::RDRAND:
+        if (feature == CPUFeature::RDRAND)
             return "rdrand"sv;
-        case CPUFeature::RDSEED:
+        if (feature == CPUFeature::RDSEED)
             return "rdseed"sv;
-        case CPUFeature::SMAP:
+        if (feature == CPUFeature::SMAP)
             return "smap"sv;
-        case CPUFeature::SMEP:
+        if (feature == CPUFeature::SMEP)
             return "smep"sv;
-        case CPUFeature::SSE:
+        if (feature == CPUFeature::SSE)
             return "sse"sv;
-        case CPUFeature::TSC:
+        if (feature == CPUFeature::TSC)
             return "tsc"sv;
-        case CPUFeature::RDTSCP:
+        if (feature == CPUFeature::RDTSCP)
             return "rdtscp"sv;
-        case CPUFeature::CONSTANT_TSC:
+        if (feature == CPUFeature::CONSTANT_TSC)
             return "constant_tsc"sv;
-        case CPUFeature::NONSTOP_TSC:
+        if (feature == CPUFeature::NONSTOP_TSC)
             return "nonstop_tsc"sv;
-        case CPUFeature::UMIP:
+        if (feature == CPUFeature::UMIP)
             return "umip"sv;
-        case CPUFeature::SEP:
+        if (feature == CPUFeature::SEP)
             return "sep"sv;
-        case CPUFeature::SYSCALL:
+        if (feature == CPUFeature::SYSCALL)
             return "syscall"sv;
-        case CPUFeature::MMX:
+        if (feature == CPUFeature::MMX)
             return "mmx"sv;
-        case CPUFeature::FXSR:
+        if (feature == CPUFeature::FXSR)
             return "fxsr"sv;
-        case CPUFeature::SSE2:
+        if (feature == CPUFeature::SSE2)
             return "sse2"sv;
-        case CPUFeature::SSE3:
+        if (feature == CPUFeature::SSE3)
             return "sse3"sv;
-        case CPUFeature::SSSE3:
+        if (feature == CPUFeature::SSSE3)
             return "ssse3"sv;
-        case CPUFeature::SSE4_1:
+        if (feature == CPUFeature::SSE4_1)
             return "sse4.1"sv;
-        case CPUFeature::SSE4_2:
+        if (feature == CPUFeature::SSE4_2)
             return "sse4.2"sv;
-        case CPUFeature::XSAVE:
+        if (feature == CPUFeature::XSAVE)
             return "xsave"sv;
-        case CPUFeature::AVX:
+        if (feature == CPUFeature::AVX)
             return "avx"sv;
-        case CPUFeature::LM:
+        if (feature == CPUFeature::LM)
             return "lm"sv;
-        case CPUFeature::HYPERVISOR:
+        if (feature == CPUFeature::HYPERVISOR)
             return "hypervisor"sv;
-            // no default statement here intentionally so that we get
-            // a warning if a new feature is forgotten to be added here
-        case CPUFeature::PAT:
+        if (feature == CPUFeature::PAT)
             return "pat"sv;
-        }
-        // Shouldn't ever happen
-        return "???"sv;
+        VERIFY_NOT_REACHED();
     };
     bool first = true;
-    for (u32 flag = 1; flag != 0; flag <<= 1) {
-        if (has_feature(static_cast<CPUFeature>(flag))) {
+    for (auto feature = CPUFeature::Type(1u); feature != CPUFeature::__End; feature <<= 1u) {
+        if (has_feature(feature)) {
             if (first)
                 first = false;
             else
                 MUST(builder.try_append(' '));
-            auto str = feature_to_str(static_cast<CPUFeature>(flag));
+            auto str = feature_to_str(feature);
             MUST(builder.try_append(str));
         }
     }

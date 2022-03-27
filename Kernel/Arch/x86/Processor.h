@@ -80,7 +80,7 @@ class Processor {
 
     TSS m_tss;
     static FPUState s_clean_fpu_state;
-    CPUFeature m_features;
+    CPUFeature::Type m_features;
     static Atomic<u32> g_total_processors;
     u8 m_physical_address_bit_width;
     u8 m_virtual_address_bit_width;
@@ -397,9 +397,9 @@ public:
 
     static void deferred_call_queue(Function<void()> callback);
 
-    ALWAYS_INLINE bool has_feature(CPUFeature f) const
+    ALWAYS_INLINE bool has_feature(CPUFeature::Type const& feature) const
     {
-        return has_flag(m_features, f);
+        return m_features.has_flag(feature);
     }
 
     void check_invoke_scheduler();
