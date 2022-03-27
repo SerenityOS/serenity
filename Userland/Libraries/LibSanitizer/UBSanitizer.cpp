@@ -17,7 +17,7 @@ Atomic<bool> AK::UBSanitizer::g_ubsan_is_deadly;
 
 extern "C" {
 
-static void print_location(SourceLocation const& location)
+static void print_location(UBSourceLocation const& location)
 {
     if (!location.filename()) {
         WARNLN_AND_DBGLN("UBSAN: in unknown file");
@@ -76,8 +76,8 @@ void __ubsan_handle_nullability_arg(NonnullArgData& data)
     print_location(location);
 }
 
-void __ubsan_handle_nonnull_return_v1(NonnullReturnData const&, SourceLocation&) __attribute__((used));
-void __ubsan_handle_nonnull_return_v1(NonnullReturnData const&, SourceLocation& location)
+void __ubsan_handle_nonnull_return_v1(NonnullReturnData const&, UBSourceLocation&) __attribute__((used));
+void __ubsan_handle_nonnull_return_v1(NonnullReturnData const&, UBSourceLocation& location)
 {
     auto loc = location.permanently_clear();
     if (!loc.needs_logging())
@@ -86,8 +86,8 @@ void __ubsan_handle_nonnull_return_v1(NonnullReturnData const&, SourceLocation& 
     print_location(loc);
 }
 
-void __ubsan_handle_nullability_return_v1(NonnullReturnData const& data, SourceLocation& location) __attribute__((used));
-void __ubsan_handle_nullability_return_v1(NonnullReturnData const&, SourceLocation& location)
+void __ubsan_handle_nullability_return_v1(NonnullReturnData const& data, UBSourceLocation& location) __attribute__((used));
+void __ubsan_handle_nullability_return_v1(NonnullReturnData const&, UBSourceLocation& location)
 {
     auto loc = location.permanently_clear();
     if (!loc.needs_logging())

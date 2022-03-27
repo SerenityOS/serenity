@@ -17,8 +17,8 @@ extern Atomic<bool> g_ubsan_is_deadly;
 
 typedef void* ValueHandle;
 
-class SourceLocation {
-    AK_MAKE_NONCOPYABLE(SourceLocation);
+class UBSourceLocation {
+    AK_MAKE_NONCOPYABLE(UBSourceLocation);
 
 public:
     char const* filename() const { return m_filename; }
@@ -28,12 +28,12 @@ public:
     // Replace the location information in the .data segment with one that won't be logged in the future
     //   Using this method prevents log spam when sanitizers are not deadly by not logging the exact same
     //   code paths multiple times.
-    SourceLocation permanently_clear() { return move(*this); }
+    UBSourceLocation permanently_clear() { return move(*this); }
 
     bool needs_logging() const { return !(m_filename == nullptr); }
 
-    SourceLocation() = default;
-    SourceLocation(SourceLocation&& other)
+    UBSourceLocation() = default;
+    UBSourceLocation(UBSourceLocation&& other)
         : m_filename(other.m_filename)
         , m_line(other.m_line)
         , m_column(other.m_column)
@@ -41,7 +41,7 @@ public:
         other = {};
     }
 
-    SourceLocation& operator=(SourceLocation&& other)
+    UBSourceLocation& operator=(UBSourceLocation&& other)
     {
         if (this != &other) {
             m_filename = exchange(other.m_filename, nullptr);
@@ -79,77 +79,77 @@ private:
 };
 
 struct InvalidValueData {
-    SourceLocation location;
+    UBSourceLocation location;
     TypeDescriptor const& type;
 };
 
 struct NonnullArgData {
-    SourceLocation location;
-    SourceLocation attribute_location;
+    UBSourceLocation location;
+    UBSourceLocation attribute_location;
     int argument_index;
 };
 
 struct NonnullReturnData {
-    SourceLocation attribute_location;
+    UBSourceLocation attribute_location;
 };
 
 struct OverflowData {
-    SourceLocation location;
+    UBSourceLocation location;
     TypeDescriptor const& type;
 };
 
 struct VLABoundData {
-    SourceLocation location;
+    UBSourceLocation location;
     TypeDescriptor const& type;
 };
 
 struct ShiftOutOfBoundsData {
-    SourceLocation location;
+    UBSourceLocation location;
     TypeDescriptor const& lhs_type;
     TypeDescriptor const& rhs_type;
 };
 
 struct OutOfBoundsData {
-    SourceLocation location;
+    UBSourceLocation location;
     TypeDescriptor const& array_type;
     TypeDescriptor const& index_type;
 };
 
 struct TypeMismatchData {
-    SourceLocation location;
+    UBSourceLocation location;
     TypeDescriptor const& type;
     u8 log_alignment;
     u8 type_check_kind;
 };
 
 struct AlignmentAssumptionData {
-    SourceLocation location;
-    SourceLocation assumption_location;
+    UBSourceLocation location;
+    UBSourceLocation assumption_location;
     TypeDescriptor const& type;
 };
 
 struct UnreachableData {
-    SourceLocation location;
+    UBSourceLocation location;
 };
 
 struct ImplicitConversionData {
-    SourceLocation location;
+    UBSourceLocation location;
     TypeDescriptor const& from_type;
     TypeDescriptor const& to_type;
     /* ImplicitConversionCheckKind */ unsigned char kind;
 };
 
 struct InvalidBuiltinData {
-    SourceLocation location;
+    UBSourceLocation location;
     unsigned char kind;
 };
 
 struct PointerOverflowData {
-    SourceLocation location;
+    UBSourceLocation location;
 };
 
 struct FloatCastOverflowData {
-    SourceLocation location;
+    UBSourceLocation location;
     TypeDescriptor const& from_type;
     TypeDescriptor const& to_type;
 };

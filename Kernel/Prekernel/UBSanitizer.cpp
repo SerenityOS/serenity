@@ -13,7 +13,7 @@ Atomic<bool> AK::UBSanitizer::g_ubsan_is_deadly { true };
 
 extern "C" {
 
-static void print_location(SourceLocation const&)
+static void print_location(UBSourceLocation const&)
 {
 #if ARCH(I386) || ARCH(X86_64)
     asm volatile("cli; hlt");
@@ -40,14 +40,14 @@ void __ubsan_handle_nullability_arg(NonnullArgData const& data)
     print_location(data.location);
 }
 
-void __ubsan_handle_nonnull_return_v1(NonnullReturnData const&, SourceLocation const&) __attribute__((used));
-void __ubsan_handle_nonnull_return_v1(NonnullReturnData const&, SourceLocation const& location)
+void __ubsan_handle_nonnull_return_v1(NonnullReturnData const&, UBSourceLocation const&) __attribute__((used));
+void __ubsan_handle_nonnull_return_v1(NonnullReturnData const&, UBSourceLocation const& location)
 {
     print_location(location);
 }
 
-void __ubsan_handle_nullability_return_v1(NonnullReturnData const& data, SourceLocation const& location) __attribute__((used));
-void __ubsan_handle_nullability_return_v1(NonnullReturnData const&, SourceLocation const& location)
+void __ubsan_handle_nullability_return_v1(NonnullReturnData const& data, UBSourceLocation const& location) __attribute__((used));
+void __ubsan_handle_nullability_return_v1(NonnullReturnData const&, UBSourceLocation const& location)
 {
     print_location(location);
 }
