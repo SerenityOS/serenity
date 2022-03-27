@@ -541,8 +541,10 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     auto& icb = verify_cast<Layout::InitialContainingBlock>(root());
     auto& icb_state = m_state.get_mutable(icb);
 
-    VERIFY(!icb.children_are_inline());
-    layout_block_level_children(root(), layout_mode);
+    if (root().children_are_inline())
+        layout_inline_children(root(), layout_mode);
+    else
+        layout_block_level_children(root(), layout_mode);
 
     // Compute scrollable overflow.
     float bottom_edge = 0;
