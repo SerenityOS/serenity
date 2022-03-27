@@ -677,9 +677,9 @@ struct Formatter<Error> : Formatter<FormatString> {
         if (error.is_syscall())
             return Formatter<FormatString>::format(builder, "{}: {} (errno={})", error.string_literal(), strerror(error.code()), error.code());
         if (error.is_errno())
-            return Formatter<FormatString>::format(builder, "{} (errno={})", strerror(error.code()), error.code());
+            return Formatter<FormatString>::format(builder, "{} (errno={}) {}", strerror(error.code()), error.code(), error.location());
 
-        return Formatter<FormatString>::format(builder, "{}", error.string_literal());
+        return Formatter<FormatString>::format(builder, "{} {}", error.string_literal(), error.location());
 #endif
     }
 };

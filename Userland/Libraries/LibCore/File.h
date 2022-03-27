@@ -61,8 +61,8 @@ public:
     };
 
     struct CopyError : public Error {
-        CopyError(int error_code, bool t)
-            : Error(error_code)
+        CopyError(int error_code, bool t, SourceLocation location = SourceLocation::current())
+            : Error(error_code, location)
             , tried_recursing(t)
         {
         }
@@ -78,8 +78,8 @@ public:
     static ErrorOr<void> link_file(String const& dst_path, String const& src_path);
 
     struct RemoveError : public Error {
-        RemoveError(String f, int error_code)
-            : Error(error_code)
+        RemoveError(String f, int error_code, SourceLocation location = SourceLocation::current())
+            : Error(error_code, location)
             , file(move(f))
         {
         }

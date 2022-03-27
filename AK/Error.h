@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Optional.h>
+#include <AK/SourceLocation.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
 #include <AK/Variant.h>
@@ -22,35 +23,51 @@ namespace AK {
 
 class Error {
 public:
-    static Error from_errno(int code) { return Error(code); }
-    static Error from_syscall(StringView syscall_name, int rc) { return Error(syscall_name, rc); }
-    static Error from_string_literal(StringView string_literal) { return Error(string_literal); }
+    static Error from_errno(int code, SourceLocation location = SourceLocation::current())
+    {
+        return Error(code, location);
+    }
+
+    static Error from_syscall(StringView syscall_name, int rc, SourceLocation location = SourceLocation::current())
+    {
+        return Error(syscall_name, rc, location);
+    }
+
+    static Error from_string_literal(StringView string_literal, SourceLocation location = SourceLocation::current())
+    {
+        return Error(string_literal, location);
+    }
 
     bool is_errno() const { return m_code != 0; }
     bool is_syscall() const { return m_syscall; }
 
+    SourceLocation location() const { return m_location; }
     int code() const { return m_code; }
     StringView string_literal() const { return m_string_literal; }
 
 protected:
-    Error(int code)
-        : m_code(code)
+    Error(int code, SourceLocation location)
+        : m_location(location)
+        , m_code(code)
     {
     }
 
 private:
-    Error(StringView string_literal)
-        : m_string_literal(string_literal)
+    Error(StringView string_literal, SourceLocation location)
+        : m_location(location)
+        , m_string_literal(string_literal)
     {
     }
 
-    Error(StringView syscall_name, int rc)
-        : m_code(-rc)
+    Error(StringView syscall_name, int rc, SourceLocation location)
+        : m_location(location)
+        , m_code(-rc)
         , m_string_literal(syscall_name)
         , m_syscall(true)
     {
     }
 
+    SourceLocation m_location;
     int m_code { 0 };
     StringView m_string_literal;
     bool m_syscall { false };
@@ -68,8 +85,8 @@ public:
     }
 
 #ifdef __serenity__
-    ErrorOr(ErrnoCode code)
-        : Variant<T, ErrorType>(Error::from_errno(code))
+    ErrorOr(ErrnoCode code, SourceLocation location = SourceLocation::current())
+        : Variant<T, ErrorType>(Error::from_errno(code, location))
     {
     }
 #endif
@@ -108,8 +125,8 @@ public:
     }
 
 #ifdef __serenity__
-    ErrorOr(ErrnoCode code)
-        : m_error(Error::from_errno(code))
+    ErrorOr(ErrnoCode code, SourceLocation location = SourceLocation::current())
+        : m_error(Error::from_errno(code, location))
     {
     }
 #endif
