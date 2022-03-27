@@ -15,6 +15,7 @@
 #include <AK/FixedPoint.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
+#include <AK/SourceLocation.h>
 #include <AK/StringView.h>
 
 #ifndef KERNEL
@@ -690,6 +691,14 @@ struct Formatter<ErrorOr<T, ErrorType>> : Formatter<FormatString> {
         if (error_or.is_error())
             return Formatter<FormatString>::format(builder, "{}", error_or.error());
         return Formatter<FormatString>::format(builder, "{{{}}}", error_or.value());
+    }
+};
+
+template<>
+struct Formatter<SourceLocation> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, SourceLocation location)
+    {
+        return Formatter<FormatString>::format(builder, "[\x1b[34m{}\x1b[0m @ {}:{}]", location.function_name(), location.filename(), location.line_number());
     }
 };
 

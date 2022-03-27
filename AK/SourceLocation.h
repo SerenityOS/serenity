@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/Format.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
@@ -40,13 +39,5 @@ private:
 };
 
 }
-
-template<>
-struct AK::Formatter<AK::SourceLocation> : AK::Formatter<FormatString> {
-    ErrorOr<void> format(FormatBuilder& builder, AK::SourceLocation location)
-    {
-        return AK::Formatter<FormatString>::format(builder, "[\x1b[34m{}\x1b[0m @ {}:{}]", location.function_name(), location.filename(), location.line_number());
-    }
-};
 
 using AK::SourceLocation;
