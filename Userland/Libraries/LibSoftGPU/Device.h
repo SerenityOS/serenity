@@ -19,6 +19,7 @@
 #include <LibGPU/RasterPosition.h>
 #include <LibGPU/SamplerConfig.h>
 #include <LibGPU/StencilConfiguration.h>
+#include <LibGPU/TexCoordGenerationConfig.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix3x3.h>
 #include <LibGfx/Matrix4x4.h>
@@ -35,11 +36,6 @@
 #include <LibSoftGPU/Vertex.h>
 
 namespace SoftGPU {
-
-struct TexCoordGenerationConfig {
-    GPU::TexCoordGenerationMode mode { GPU::TexCoordGenerationMode::EyeLinear };
-    FloatVector4 coefficients {};
-};
 
 struct RasterizerOptions {
     bool shade_smooth { true };
@@ -75,7 +71,7 @@ struct RasterizerOptions {
     bool cull_back { true };
     bool cull_front { false };
     Array<u8, NUM_SAMPLERS> texcoord_generation_enabled_coordinates {};
-    Array<Array<TexCoordGenerationConfig, 4>, NUM_SAMPLERS> texcoord_generation_config {};
+    Array<Array<GPU::TexCoordGenerationConfig, 4>, NUM_SAMPLERS> texcoord_generation_config {};
     Gfx::IntRect viewport;
     bool lighting_enabled { false };
     bool color_material_enabled { false };

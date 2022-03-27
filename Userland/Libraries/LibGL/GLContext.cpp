@@ -3089,7 +3089,7 @@ void GLContext::sync_device_texcoord_config()
             if (!context_coordinate_config.enabled)
                 continue;
 
-            SoftGPU::TexCoordGenerationConfig* texcoord_generation_config;
+            GPU::TexCoordGenerationConfig* texcoord_generation_config;
             switch (capability) {
             case GL_TEXTURE_GEN_S:
                 enabled_coordinates |= GPU::TexCoordGenerationCoordinate::S;
