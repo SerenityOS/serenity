@@ -59,11 +59,18 @@ void PaintableBox::set_content_size(Gfx::FloatSize const& size)
 
 Gfx::FloatPoint PaintableBox::effective_offset() const
 {
+    Gfx::FloatPoint offset;
     if (m_containing_line_box_fragment.has_value()) {
         auto const& fragment = containing_block()->paint_box()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
-        return fragment.offset();
+        offset = fragment.offset();
+    } else {
+        offset = m_offset;
     }
-    return m_offset;
+    if (layout_box().computed_values().position() == CSS::Position::Relative) {
+        auto const& inset = layout_box().box_model().inset;
+        offset.translate_by(inset.left, inset.top);
+    }
+    return offset;
 }
 
 Gfx::FloatRect PaintableBox::compute_absolute_rect() const
