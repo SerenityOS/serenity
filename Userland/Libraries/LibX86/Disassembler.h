@@ -26,7 +26,7 @@ public:
         return Instruction::from_stream(m_stream, OperandSize::Size32, AddressSize::Size32);
 #else
 #    if ARCH(X86_64)
-        return Instruction::from_stream(m_stream, OperandSize::Size64, AddressSize::Size64);
+        return Instruction::from_stream(m_stream, OperandSize::Size32, AddressSize::Size64);
 #    else
         dbgln("Unsupported platform");
         return {};

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,7 +32,7 @@ static bool opcode_has_register_index(u8 op)
     return false;
 }
 
-static void build(InstructionDescriptor* table, u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler handler, IsLockPrefixAllowed lock_prefix_allowed)
+static void build_in_table(InstructionDescriptor* table, u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler handler, IsLockPrefixAllowed lock_prefix_allowed)
 {
     InstructionDescriptor& d = table[op];
 
@@ -212,7 +213,7 @@ static void build_slash(InstructionDescriptor* table, u8 op, u8 slash, char cons
     if (!d.slashes)
         d.slashes = new InstructionDescriptor[8];
 
-    build(d.slashes, slash, mnemonic, format, handler, lock_prefix_allowed);
+    build_in_table(d.slashes, slash, mnemonic, format, handler, lock_prefix_allowed);
 }
 
 static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm, char const* mnemonic, InstructionFormat format, InstructionHandler handler)
@@ -233,28 +234,31 @@ static void build_slash_rm(InstructionDescriptor* table, u8 op, u8 slash, u8 rm,
         }
     }
 
-    build(d.slashes, rm & 7, mnemonic, format, handler, LockPrefixNotAllowed);
+    build_in_table(d.slashes, rm & 7, mnemonic, format, handler, LockPrefixNotAllowed);
 }
 
 template<auto table>
 static void build_base(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(table[to_underlying(OperandSize::Size16)], op, mnemonic, format, impl, lock_prefix_allowed);
-    build(table[to_underlying(OperandSize::Size32)], op, mnemonic, format, impl, lock_prefix_allowed);
+    build_in_table(table[to_underlying(OperandSize::Size16)], op, mnemonic, format, impl, lock_prefix_allowed);
+    build_in_table(table[to_underlying(OperandSize::Size32)], op, mnemonic, format, impl, lock_prefix_allowed);
+    build_in_table(table[to_underlying(OperandSize::Size64)], op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 template<auto table>
 static void build_base(u8 op, char const* mnemonic, InstructionFormat format16, InstructionHandler impl16, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(table[to_underlying(OperandSize::Size16)], op, mnemonic, format16, impl16, lock_prefix_allowed);
-    build(table[to_underlying(OperandSize::Size32)], op, mnemonic, format32, impl32, lock_prefix_allowed);
+    build_in_table(table[to_underlying(OperandSize::Size16)], op, mnemonic, format16, impl16, lock_prefix_allowed);
+    build_in_table(table[to_underlying(OperandSize::Size32)], op, mnemonic, format32, impl32, lock_prefix_allowed);
+    build_in_table(table[to_underlying(OperandSize::Size64)], op, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
 template<auto table>
 static void build_base(u8 op, char const* mnemonic16, InstructionFormat format16, InstructionHandler impl16, char const* mnemonic32, InstructionFormat format32, InstructionHandler impl32, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
 {
-    build(table[to_underlying(OperandSize::Size16)], op, mnemonic16, format16, impl16, lock_prefix_allowed);
-    build(table[to_underlying(OperandSize::Size32)], op, mnemonic32, format32, impl32, lock_prefix_allowed);
+    build_in_table(table[to_underlying(OperandSize::Size16)], op, mnemonic16, format16, impl16, lock_prefix_allowed);
+    build_in_table(table[to_underlying(OperandSize::Size32)], op, mnemonic32, format32, impl32, lock_prefix_allowed);
+    build_in_table(table[to_underlying(OperandSize::Size64)], op, mnemonic32, format32, impl32, lock_prefix_allowed);
 }
 
 template<auto table>
@@ -262,6 +266,7 @@ static void build_slash_base(u8 op, u8 slash, char const* mnemonic, InstructionF
 {
     build_slash(table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
     build_slash(table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
+    build_slash(table[to_underlying(OperandSize::Size64)], op, slash, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 template<auto table>
@@ -269,6 +274,7 @@ static void build_slash_base(u8 op, u8 slash, char const* mnemonic, InstructionF
 {
     build_slash(table[to_underlying(OperandSize::Size16)], op, slash, mnemonic, format16, impl16, lock_prefix_allowed);
     build_slash(table[to_underlying(OperandSize::Size32)], op, slash, mnemonic, format32, impl32, lock_prefix_allowed);
+    build_slash(table[to_underlying(OperandSize::Size64)], op, slash, mnemonic, format32, impl32, lock_prefix_allowed);
 }
 
 template<typename... Args>
@@ -299,6 +305,7 @@ static void build_slash_rm(u8 op, u8 slash, u8 rm, char const* mnemonic, Instruc
 {
     build_slash_rm(s_table[to_underlying(OperandSize::Size16)], op, slash, rm, mnemonic, format, impl);
     build_slash_rm(s_table[to_underlying(OperandSize::Size32)], op, slash, rm, mnemonic, format, impl);
+    build_slash_rm(s_table[to_underlying(OperandSize::Size64)], op, slash, rm, mnemonic, format, impl);
 }
 
 static void build_slash_reg(u8 op, u8 slash, char const* mnemonic, InstructionFormat format, InstructionHandler impl)
@@ -311,14 +318,14 @@ static void build_sse_np(u8 op, char const* mnemonic, InstructionFormat format, 
 {
     if (s_0f_table[to_underlying(OperandSize::Size32)][op].format == InvalidFormat) {
         build_0f(op, mnemonic, format, impl, lock_prefix_allowed);
-        build(s_sse_table_np, op, mnemonic, format, impl, lock_prefix_allowed);
+        build_in_table(s_sse_table_np, op, mnemonic, format, impl, lock_prefix_allowed);
         return;
     }
     if (s_0f_table[to_underlying(OperandSize::Size32)][op].format != __SSE)
         build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
 
     VERIFY(s_0f_table[to_underlying(OperandSize::Size32)][op].format == __SSE);
-    build(s_sse_table_np, op, mnemonic, format, impl, lock_prefix_allowed);
+    build_in_table(s_sse_table_np, op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 static void build_sse_66(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
@@ -326,7 +333,7 @@ static void build_sse_66(u8 op, char const* mnemonic, InstructionFormat format, 
     if (s_0f_table[to_underlying(OperandSize::Size32)][op].format != __SSE)
         build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
     VERIFY(s_0f_table[to_underlying(AddressSize::Size32)][op].format == __SSE);
-    build(s_sse_table_66, op, mnemonic, format, impl, lock_prefix_allowed);
+    build_in_table(s_sse_table_66, op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 static void build_sse_f3(u8 op, char const* mnemonic, InstructionFormat format, InstructionHandler impl, IsLockPrefixAllowed lock_prefix_allowed = LockPrefixNotAllowed)
@@ -334,7 +341,7 @@ static void build_sse_f3(u8 op, char const* mnemonic, InstructionFormat format, 
     if (s_0f_table[to_underlying(OperandSize::Size32)][op].format != __SSE)
         build_0f(op, "__SSE_temp", __SSE, nullptr, lock_prefix_allowed);
     VERIFY(s_0f_table[to_underlying(OperandSize::Size32)][op].format == __SSE);
-    build(s_sse_table_f3, op, mnemonic, format, impl, lock_prefix_allowed);
+    build_in_table(s_sse_table_f3, op, mnemonic, format, impl, lock_prefix_allowed);
 }
 
 [[gnu::constructor]] static void build_opcode_tables()
@@ -828,6 +835,8 @@ static void build_sse_f3(u8 op, char const* mnemonic, InstructionFormat format, 
     build_0f_slash(0x18, 2, "PREFETCHT1", OP_RM8, &Interpreter::PREFETCHT1);
     build_0f_slash(0x18, 3, "PREFETCHT2", OP_RM8, &Interpreter::PREFETCHT2);
 
+    build_0f_slash(0x1f, 0, "NOP", OP_RM32, &Interpreter::NOP);
+
     // FIXME: Technically NoPrefix (sse_np_slash?)
     build_0f_slash(0xAE, 2, "LDMXCSR", OP_RM32, &Interpreter::LDMXCSR);
     build_0f_slash(0xAE, 3, "STMXCSR", OP_RM32, &Interpreter::STMXCSR);
@@ -1084,11 +1093,59 @@ static void build_sse_f3(u8 op, char const* mnemonic, InstructionFormat format, 
     build_0f(0xFD, "PADDW", OP_mm1_mm2m64, &Interpreter::PADDW_mm1_mm2m64);
     build_0f(0xFE, "PADDD", OP_mm1_mm2m64, &Interpreter::PADDD_mm1_mm2m64);
     build_0f(0xFF, "UD0", OP, &Interpreter::UD0);
+
+    // Changes between 32-bit and 64-bit. These are marked with i64/d64/f64 in the Intel manual's opcode tables
+    auto* table64 = s_table[to_underlying(OperandSize::Size64)];
+    table64[0x06] = {}; // PUSH ES
+    table64[0x07] = {}; // POP ES
+    table64[0x16] = {}; // PUSH SS
+    table64[0x17] = {}; // POP SS
+    table64[0x27] = {}; // DAA
+    table64[0x37] = {}; // AAA
+    for (u8 rex = 0x40; rex < 0x50; rex++)
+        table64[rex] = {}; // INC/DEC, replaced by REX prefixes
+    for (u8 pushPop = 0x50; pushPop < 0x60; pushPop++)
+        table64[pushPop].long_mode_default_64 = true; // PUSH/POP general register
+    for (u8 i = 0x60; i < 0x68; i++)
+        table64[i] = {}; // PUSHA{D}, POPA{D}, BOUND
+    // ARPL replaced by MOVSXD
+    build_in_table(table64, 0x63, "MOVSXD", OP_RM32_reg32, nullptr, LockPrefixNotAllowed);
+    table64[0x68].long_mode_default_64 = true; // PUSH
+    table64[0x6A].long_mode_default_64 = true; // PUSH
+    for (u8 jmp = 0x70; jmp < 0x80; jmp++)
+        table64[jmp].long_mode_force_64 = true; // Jcc
+    table64[0x9A] = {};                         // far CALL
+    table64[0x9C].long_mode_default_64 = true;  // PUSHF/D/Q
+    table64[0x9D].long_mode_default_64 = true;  // POPF/D/Q
+    build_in_table(table64, 0xB8, "MOV", OP_regW_immW, &Interpreter::MOV_reg32_imm32, LockPrefixNotAllowed);
+    table64[0xC2].long_mode_force_64 = true;   // near RET
+    table64[0xC3].long_mode_force_64 = true;   // near RET
+    table64[0xC4] = {};                        // LES
+    table64[0xC5] = {};                        // LDS
+    table64[0xC9].long_mode_default_64 = true; // LEAVE
+    table64[0xCE].long_mode_default_64 = true; // INTO
+    table64[0xD4] = {};                        // AAM
+    table64[0xD5] = {};                        // AAD
+    for (u8 i = 0; i < 4; i++) {
+        table64[0xE0 | i].long_mode_force_64 = true; // LOOPN[EZ], LOOP[EZ], LOOP, JrCXZ
+        table64[0xE8 | i].long_mode_force_64 = true; // near CALL, {near,far,short} JMP
+    }
+
+    auto* table64_0f = s_0f_table[to_underlying(OperandSize::Size64)];
+    build_in_table(table64_0f, 0x05, "SYSCALL", OP, nullptr, LockPrefixNotAllowed);
+    build_in_table(table64_0f, 0x07, "SYSRET", OP, nullptr, LockPrefixNotAllowed);
+    for (u8 i = 0x80; i < 0x90; i++)
+        table64_0f[i].long_mode_force_64 = true;  // Jcc
+    table64_0f[0xA0].long_mode_default_64 = true; // PUSH FS
+    table64_0f[0xA1].long_mode_default_64 = true; // POP FS
+    table64_0f[0xA8].long_mode_default_64 = true; // PUSH GS
+    table64_0f[0xA9].long_mode_default_64 = true; // POP GS
 }
 
 static char const* register_name(RegisterIndex8);
 static char const* register_name(RegisterIndex16);
 static char const* register_name(RegisterIndex32);
+static char const* register_name(RegisterIndex64);
 static char const* register_name(FpuRegisterIndex);
 static char const* register_name(SegmentRegister);
 static char const* register_name(MMXRegisterIndex);
@@ -1109,6 +1166,11 @@ char const* Instruction::reg32_name() const
     return register_name(static_cast<RegisterIndex32>(register_index()));
 }
 
+char const* Instruction::reg64_name() const
+{
+    return register_name(static_cast<RegisterIndex64>(register_index()));
+}
+
 String MemoryOrRegisterReference::to_string_o8(Instruction const& insn) const
 {
     if (is_register())
@@ -1127,6 +1189,13 @@ String MemoryOrRegisterReference::to_string_o32(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg32());
+    return String::formatted("[{}]", to_string(insn));
+}
+
+String MemoryOrRegisterReference::to_string_o64(const Instruction& insn) const
+{
+    if (is_register())
+        return register_name(reg64());
     return String::formatted("[{}]", to_string(insn));
 }
 
@@ -1193,7 +1262,7 @@ String MemoryOrRegisterReference::to_string(Instruction const& insn) const
     case AddressSize::Size64:
         return to_string_a64();
     case AddressSize::Size32:
-        return to_string_a32();
+        return insn.mode() == ProcessorMode::Long ? to_string_a64() : to_string_a32();
     case AddressSize::Size16:
         return to_string_a16();
     }
@@ -1252,7 +1321,7 @@ String MemoryOrRegisterReference::to_string_a16() const
     return String::formatted("{}{}", base, displacement_string);
 }
 
-String MemoryOrRegisterReference::sib_to_string(ProcessorMode) const
+String MemoryOrRegisterReference::sib_to_string(ProcessorMode mode) const
 {
     String scale;
     String index;
@@ -1271,16 +1340,16 @@ String MemoryOrRegisterReference::sib_to_string(ProcessorMode) const
         break;
     }
     if (m_sib_index != 4)
-        index = register_name(RegisterIndex32(m_sib_index));
+        index = mode == ProcessorMode::Long ? register_name(RegisterIndex64(m_sib_index)) : register_name(RegisterIndex32(m_sib_index));
     if (m_sib_base == 5) {
         switch (m_reg) {
         case 1:
         case 2:
-            base = "ebp";
+            base = mode == ProcessorMode::Long ? "rbp" : "ebp";
             break;
         }
     } else {
-        base = register_name(RegisterIndex32(m_sib_base));
+        base = mode == ProcessorMode::Long ? register_name(RegisterIndex64(m_sib_base)) : register_name(RegisterIndex32(m_sib_base));
     }
     StringBuilder builder;
     if (base.is_empty()) {
@@ -1299,7 +1368,7 @@ String MemoryOrRegisterReference::sib_to_string(ProcessorMode) const
 String MemoryOrRegisterReference::to_string_a64() const
 {
     if (is_register())
-        return register_name(static_cast<RegisterIndex32>(m_register_index));
+        return register_name(static_cast<RegisterIndex64>(m_register_index));
 
     bool has_displacement = false;
     switch (mod()) {
@@ -1317,7 +1386,7 @@ String MemoryOrRegisterReference::to_string_a64() const
     switch (m_rm) {
     case 5:
         if (mod() == 0)
-            base = String::formatted("{:#08x}", m_displacement32);
+            base = "rip";
         else
             base = "rbp";
         break;
@@ -1325,7 +1394,7 @@ String MemoryOrRegisterReference::to_string_a64() const
         base = sib_to_string(ProcessorMode::Long);
         break;
     default:
-        base = register_name(RegisterIndex32(m_rm));
+        base = register_name(RegisterIndex64(m_rm));
     }
 
     if (!has_displacement)
@@ -1465,9 +1534,13 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
 
     auto append_rm8 = [&] { builder.append(m_modrm.to_string_o8(*this)); };
     auto append_rm16 = [&] { builder.append(m_modrm.to_string_o16(*this)); };
-    auto append_rm32 = [&] { builder.append(m_modrm.to_string_o32(*this)); };
-    // FIXME: Registers in long-mode
-    auto append_rm64 = [&] { builder.append(m_modrm.to_string_o32(*this)); };
+    auto append_rm32 = [&] {
+        if (m_operand_size == OperandSize::Size64)
+            builder.append(m_modrm.to_string_o64(*this));
+        else
+            builder.append(m_modrm.to_string_o32(*this));
+    };
+    auto append_rm64 = [&] { builder.append(m_modrm.to_string_o64(*this)); };
     auto append_fpu_reg = [&] { builder.append(m_modrm.to_string_fpu_reg()); };
     auto append_fpu_mem = [&] { builder.append(m_modrm.to_string_fpu_mem(*this)); };
     auto append_fpu_ax16 = [&] { builder.append(m_modrm.to_string_fpu_ax16()); };
@@ -1501,11 +1574,14 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     auto append_creg = [&] { builder.appendff("cr{}", register_index()); };
     auto append_dreg = [&] { builder.appendff("dr{}", register_index()); };
     auto append_relative_addr = [&] {
-        if (m_address_size == AddressSize::Size32) {
-            formatted_address(origin + 6, x32, i32(imm32()));
-        } else if (m_address_size == AddressSize::Size16) {
+        switch (m_address_size) {
+        case AddressSize::Size16:
             formatted_address(origin + 4, x32, i32(imm16()));
-        } else {
+            break;
+        case AddressSize::Size32:
+            formatted_address(origin + 6, x32, i32(imm32()));
+            break;
+        default:
             VERIFY_NOT_REACHED();
         }
     };
@@ -1524,7 +1600,9 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     auto append = [&](auto& content) { builder.append(content); };
     auto append_moff = [&] {
         builder.append('[');
-        if (m_address_size == AddressSize::Size32) {
+        if (m_address_size == AddressSize::Size64) {
+            append_imm64();
+        } else if (m_address_size == AddressSize::Size32) {
             append_imm32();
         } else if (m_address_size == AddressSize::Size16) {
             append_imm16();
@@ -2262,20 +2340,26 @@ char const* register_name(SegmentRegister index)
 
 char const* register_name(RegisterIndex8 register_index)
 {
-    static constexpr char const* names[] = { "al", "cl", "dl", "bl", "ah", "ch", "dh", "bh" };
-    return names[register_index & 7];
+    static constexpr char const* names[] = { "al", "cl", "dl", "bl", "ah", "ch", "dh", "bh", "r8b", "r9b", "r10b", "r11b", "r12b", "r13b", "r14b", "r15b" };
+    return names[register_index & 15];
 }
 
 char const* register_name(RegisterIndex16 register_index)
 {
-    static constexpr char const* names[] = { "ax", "cx", "dx", "bx", "sp", "bp", "si", "di" };
-    return names[register_index & 7];
+    static constexpr char const* names[] = { "ax", "cx", "dx", "bx", "sp", "bp", "si", "di", "r8w", "r9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w" };
+    return names[register_index & 15];
 }
 
 char const* register_name(RegisterIndex32 register_index)
 {
-    static constexpr char const* names[] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi" };
-    return names[register_index & 7];
+    static constexpr char const* names[] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi", "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d" };
+    return names[register_index & 15];
+}
+
+const char* register_name(RegisterIndex64 register_index)
+{
+    static constexpr char const* names[] = { "rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15" };
+    return names[register_index & 15];
 }
 
 char const* register_name(FpuRegisterIndex register_index)
@@ -2292,8 +2376,8 @@ char const* register_name(MMXRegisterIndex register_index)
 
 char const* register_name(XMMRegisterIndex register_index)
 {
-    static constexpr char const* names[] = { "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7" };
-    return names[register_index & 7];
+    static constexpr char const* names[] = { "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7", "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15" };
+    return names[register_index & 15];
 }
 
 }
