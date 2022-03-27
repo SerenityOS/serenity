@@ -295,14 +295,77 @@ StringView cpu_feature_to_string_view(CPUFeature::Type const& feature)
         return "ia32_code_capabilities"sv;
     if (feature == CPUFeature::SSBD)
         return "ssbd"sv;
+    if (feature == CPUFeature::LAHF_LM)
+        return "lahf_lm"sv;
+    if (feature == CPUFeature::CMP_LEGACY)
+        return "cmp_legacy"sv;
+    if (feature == CPUFeature::SVM)
+        return "svm"sv;
+    if (feature == CPUFeature::EXTAPIC)
+        return "extapic"sv;
+    if (feature == CPUFeature::CR8_LEGACY)
+        return "cr8_legacy"sv;
+    if (feature == CPUFeature::ABM)
+        return "abm"sv;
+    if (feature == CPUFeature::SSE4A)
+        return "sse4a"sv;
+    if (feature == CPUFeature::MISALIGNSSE)
+        return "misalignsse"sv;
+    if (feature == CPUFeature::_3DNOWPREFETCH)
+        return "3dnowprefetch"sv;
+    if (feature == CPUFeature::OSVW)
+        return "osvw"sv;
+    if (feature == CPUFeature::IBS)
+        return "ibs"sv;
+    if (feature == CPUFeature::XOP)
+        return "xop"sv;
+    if (feature == CPUFeature::SKINIT)
+        return "skinit"sv;
+    if (feature == CPUFeature::WDT)
+        return "wdt"sv;
+    if (feature == CPUFeature::LWP)
+        return "lwp"sv;
+    if (feature == CPUFeature::FMA4)
+        return "fma4"sv;
+    if (feature == CPUFeature::TCE)
+        return "tce"sv;
+    if (feature == CPUFeature::NODEID_MSR)
+        return "nodeid_msr"sv;
+    if (feature == CPUFeature::TBM)
+        return "tbm"sv;
+    if (feature == CPUFeature::TOPOEXT)
+        return "topoext"sv;
+    if (feature == CPUFeature::PERFCTR_CORE)
+        return "perfctr_core"sv;
+    if (feature == CPUFeature::PERFCTR_NB)
+        return "perfctr_nb"sv;
+    if (feature == CPUFeature::DBX)
+        return "dbx"sv;
+    if (feature == CPUFeature::PERFTSC)
+        return "perftsc"sv;
+    // NOTE: This is called perfctr_l2 on Linux, but PCX_L2I in the AMD manual & other references.
+    if (feature == CPUFeature::PCX_L2I)
+        return "pcx_l2i"sv;
     if (feature == CPUFeature::SYSCALL)
         return "syscall"sv;
+    if (feature == CPUFeature::MP)
+        return "mp"sv;
     if (feature == CPUFeature::NX)
         return "nx"sv;
+    if (feature == CPUFeature::MMXEXT)
+        return "mmxext"sv;
+    if (feature == CPUFeature::FXSR_OPT)
+        return "fxsr_opt"sv;
+    if (feature == CPUFeature::PDPE1GB)
+        return "pdpe1gb"sv;
     if (feature == CPUFeature::RDTSCP)
         return "rdtscp"sv;
     if (feature == CPUFeature::LM)
         return "lm"sv;
+    if (feature == CPUFeature::_3DNOWEXT)
+        return "3dnowext"sv;
+    if (feature == CPUFeature::_3DNOW)
+        return "3dnow"sv;
     if (feature == CPUFeature::CONSTANT_TSC)
         return "constant_tsc"sv;
     if (feature == CPUFeature::NONSTOP_TSC)

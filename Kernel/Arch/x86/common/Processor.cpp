@@ -380,14 +380,80 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
 
     if (max_extended_leaf >= 0x80000001) {
         CPUID extended_processor_info(0x80000001);
+
+        if (extended_processor_info.ecx() & (1 << 0))
+            m_features |= CPUFeature::LAHF_LM;
+        if (extended_processor_info.ecx() & (1 << 1))
+            m_features |= CPUFeature::CMP_LEGACY;
+        if (extended_processor_info.ecx() & (1 << 2))
+            m_features |= CPUFeature::SVM;
+        if (extended_processor_info.ecx() & (1 << 3))
+            m_features |= CPUFeature::EXTAPIC;
+        if (extended_processor_info.ecx() & (1 << 4))
+            m_features |= CPUFeature::CR8_LEGACY;
+        if (extended_processor_info.ecx() & (1 << 5))
+            m_features |= CPUFeature::ABM;
+        if (extended_processor_info.ecx() & (1 << 6))
+            m_features |= CPUFeature::SSE4A;
+        if (extended_processor_info.ecx() & (1 << 7))
+            m_features |= CPUFeature::MISALIGNSSE;
+        if (extended_processor_info.ecx() & (1 << 8))
+            m_features |= CPUFeature::_3DNOWPREFETCH;
+        if (extended_processor_info.ecx() & (1 << 9))
+            m_features |= CPUFeature::OSVW;
+        if (extended_processor_info.ecx() & (1 << 10))
+            m_features |= CPUFeature::IBS;
+        if (extended_processor_info.ecx() & (1 << 11))
+            m_features |= CPUFeature::XOP;
+        if (extended_processor_info.ecx() & (1 << 12))
+            m_features |= CPUFeature::SKINIT;
+        if (extended_processor_info.ecx() & (1 << 13))
+            m_features |= CPUFeature::WDT;
+        if (extended_processor_info.ecx() & (1 << 15))
+            m_features |= CPUFeature::LWP;
+        if (extended_processor_info.ecx() & (1 << 16))
+            m_features |= CPUFeature::FMA4;
+        if (extended_processor_info.ecx() & (1 << 17))
+            m_features |= CPUFeature::TCE;
+        if (extended_processor_info.ecx() & (1 << 19))
+            m_features |= CPUFeature::NODEID_MSR;
+        if (extended_processor_info.ecx() & (1 << 21))
+            m_features |= CPUFeature::TBM;
+        if (extended_processor_info.ecx() & (1 << 22))
+            m_features |= CPUFeature::TOPOEXT;
+        if (extended_processor_info.ecx() & (1 << 23))
+            m_features |= CPUFeature::PERFCTR_CORE;
+        if (extended_processor_info.ecx() & (1 << 24))
+            m_features |= CPUFeature::PERFCTR_NB;
+        if (extended_processor_info.ecx() & (1 << 26))
+            m_features |= CPUFeature::DBX;
+        if (extended_processor_info.ecx() & (1 << 27))
+            m_features |= CPUFeature::PERFTSC;
+        if (extended_processor_info.ecx() & (1 << 28))
+            m_features |= CPUFeature::PCX_L2I;
+
         if (extended_processor_info.edx() & (1 << 11))
             m_features |= CPUFeature::SYSCALL; // Only available in 64 bit mode
+        if (extended_processor_info.edx() & (1 << 19))
+            m_features |= CPUFeature::MP;
         if (extended_processor_info.edx() & (1 << 20))
             m_features |= CPUFeature::NX;
+        if (extended_processor_info.edx() & (1 << 22))
+            m_features |= CPUFeature::MMXEXT;
+        if (extended_processor_info.edx() & (1 << 23))
+            m_features |= CPUFeature::RDTSCP;
+        if (extended_processor_info.edx() & (1 << 25))
+            m_features |= CPUFeature::FXSR_OPT;
+        if (extended_processor_info.edx() & (1 << 26))
+            m_features |= CPUFeature::PDPE1GB;
         if (extended_processor_info.edx() & (1 << 27))
             m_features |= CPUFeature::RDTSCP;
         if (extended_processor_info.edx() & (1 << 29))
             m_features |= CPUFeature::LM;
+        if (extended_processor_info.edx() & (1 << 30))
+            m_features |= CPUFeature::_3DNOWEXT;
+        if (extended_processor_info.edx() & (1 << 31))
+            m_features |= CPUFeature::_3DNOW;
     }
 
     if (max_extended_leaf >= 0x80000007) {
