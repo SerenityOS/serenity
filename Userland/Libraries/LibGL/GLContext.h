@@ -18,13 +18,13 @@
 #include <LibGL/Tex/Texture.h>
 #include <LibGL/Tex/TextureUnit.h>
 #include <LibGPU/DeviceInfo.h>
+#include <LibGPU/Light.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector3.h>
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/Device.h>
-#include <LibSoftGPU/Light/Light.h>
 #include <LibSoftGPU/Vertex.h>
 
 namespace GL {
@@ -438,7 +438,7 @@ private:
 
     // Lighting configuration
     bool m_lighting_enabled { false };
-    Vector<SoftGPU::Light> m_light_states;
+    Vector<GPU::Light> m_light_states;
     Array<SoftGPU::Material, 2u> m_material_states;
 
     // Color material

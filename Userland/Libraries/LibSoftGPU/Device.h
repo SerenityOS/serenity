@@ -14,6 +14,7 @@
 #include <LibGPU/DeviceInfo.h>
 #include <LibGPU/Enums.h>
 #include <LibGPU/ImageFormat.h>
+#include <LibGPU/Light.h>
 #include <LibGPU/SamplerConfig.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix3x3.h>
@@ -26,7 +27,6 @@
 #include <LibSoftGPU/Clipper.h>
 #include <LibSoftGPU/Config.h>
 #include <LibSoftGPU/Image.h>
-#include <LibSoftGPU/Light/Light.h>
 #include <LibSoftGPU/Light/Material.h>
 #include <LibSoftGPU/Sampler.h>
 #include <LibSoftGPU/Triangle.h>
@@ -134,7 +134,7 @@ public:
     NonnullRefPtr<Image> create_image(GPU::ImageFormat format, unsigned width, unsigned height, unsigned depth, unsigned levels, unsigned layers);
 
     void set_sampler_config(unsigned, GPU::SamplerConfig const&);
-    void set_light_state(unsigned, Light const&);
+    void set_light_state(unsigned, GPU::Light const&);
     void set_material_state(GPU::Face, Material const&);
     void set_stencil_configuration(GPU::Face, StencilConfiguration const&);
 
@@ -161,7 +161,7 @@ private:
     Array<Sampler, NUM_SAMPLERS> m_samplers;
     Vector<size_t> m_enabled_texture_units;
     AlphaBlendFactors m_alpha_blend_factors;
-    Array<Light, NUM_LIGHTS> m_lights;
+    Array<GPU::Light, NUM_LIGHTS> m_lights;
     Array<Material, 2u> m_materials;
     RasterPosition m_raster_position;
     Array<StencilConfiguration, 2u> m_stencil_configuration;

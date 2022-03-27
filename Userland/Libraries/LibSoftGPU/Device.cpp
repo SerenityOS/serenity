@@ -1236,7 +1236,7 @@ void Device::set_sampler_config(unsigned sampler, GPU::SamplerConfig const& conf
     m_samplers[sampler].set_config(config);
 }
 
-void Device::set_light_state(unsigned int light_id, Light const& light)
+void Device::set_light_state(unsigned int light_id, GPU::Light const& light)
 {
     m_lights.at(light_id) = light;
 }

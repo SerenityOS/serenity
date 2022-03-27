@@ -9,7 +9,7 @@
 #include <LibGfx/Vector3.h>
 #include <LibGfx/Vector4.h>
 
-namespace SoftGPU {
+namespace GPU {
 
 struct Light {
     bool is_enabled { false };
