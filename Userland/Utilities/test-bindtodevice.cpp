@@ -1,43 +1,43 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
 #include <AK/IPv4Address.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <unistd.h>
 
 static void test_invalid(int);
 static void test_no_route(int);
 static void test_valid(int);
 static void test_send(int);
 
-static void test(Function<void(int)> test_fn)
+static ErrorOr<void> test(Function<void(int)> test_fn)
 {
-    int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (fd < 0) {
-        perror("socket");
-        return;
-    }
-
+    auto fd = TRY(Core::System::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
     test_fn(fd);
 
     // be a responsible boi
-    close(fd);
+    TRY(Core::System::close(fd));
+
+    return {};
 }
 
-auto main() -> int
+ErrorOr<int> serenity_main(Main::Arguments)
 {
-    test(test_invalid);
-    test(test_valid);
-    test(test_no_route);
-    test(test_send);
+    TRY(test(test_invalid));
+    TRY(test(test_valid));
+    TRY(test(test_no_route));
+    TRY(test(test_send));
+
+    return 0;
 }
 
 void test_invalid(int fd)
@@ -47,8 +47,9 @@ void test_invalid(int fd)
     socklen_t buflen = IFNAMSIZ;
     memcpy(buf, "foodev", 7);
 
-    if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen) < 0) {
-        perror("setsockopt(SO_BINDTODEVICE) :: invalid (Should fail with ENODEV)");
+    auto setsockopt_maybe_error = Core::System::setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen);
+    if (setsockopt_maybe_error.is_error()) {
+        warnln("setsockopt(SO_BINDTODEVICE) :: invalid (Should fail with ENODEV).");
         puts("PASS invalid");
     } else {
         puts("FAIL invalid");
@@ -62,8 +63,9 @@ void test_valid(int fd)
     socklen_t buflen = IFNAMSIZ;
     memcpy(buf, "loop", 5);
 
-    if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen) < 0) {
-        perror("setsockopt(SO_BINDTODEVICE) :: valid");
+    auto setsockopt_maybe_error = Core::System::setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen);
+    if (setsockopt_maybe_error.is_error()) {
+        warnln("setsockopt(SO_BINDTODEVICE) :: valid");
         puts("FAIL valid");
     } else {
         puts("PASS valid");
@@ -77,8 +79,9 @@ void test_no_route(int fd)
     socklen_t buflen = IFNAMSIZ;
     memcpy(buf, "loop", 5);
 
-    if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen) < 0) {
-        perror("setsockopt(SO_BINDTODEVICE) :: no_route");
+    auto setsockopt_maybe_error = Core::System::setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen);
+    if (setsockopt_maybe_error.is_error()) {
+        warnln("setsockopt(SO_BINDTODEVICE) :: no_route");
         puts("FAIL no_route");
         return;
     }
@@ -89,14 +92,16 @@ void test_no_route(int fd)
     sin.sin_port = 8080;
     sin.sin_family = AF_INET;
 
-    if (bind(fd, (sockaddr*)&sin, sizeof(sin)) < 0) {
-        perror("bind() :: no_route");
+    auto bind_maybe_error = Core::System::bind(fd, (sockaddr*)&sin, sizeof(sin));
+    if (bind_maybe_error.is_error()) {
+        warnln("bind() :: no_route");
         puts("FAIL no_route");
         return;
     }
 
-    if (sendto(fd, "TEST", 4, 0, (sockaddr*)&sin, sizeof(sin)) < 0) {
-        perror("sendto() :: no_route (Should fail with EHOSTUNREACH)");
+    auto sendto_maybe_error = Core::System::sendto(fd, "TEST", 4, 0, (sockaddr*)&sin, sizeof(sin));
+    if (sendto_maybe_error.is_error()) {
+        warnln("sendto() :: no_route (Should fail with EHOSTUNREACH)");
         puts("PASS no_route");
     } else
         puts("FAIL no_route");
@@ -110,8 +115,9 @@ void test_send(int fd)
     // FIXME: Look up the proper device name instead of hard-coding it
     memcpy(buf, "ep0s7", 6);
 
-    if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen) < 0) {
-        perror("setsockopt(SO_BINDTODEVICE) :: send");
+    auto setsockopt_maybe_error = Core::System::setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen);
+    if (setsockopt_maybe_error.is_error()) {
+        warnln("setsockopt(SO_BINDTODEVICE) :: send");
         puts("FAIL send");
         return;
     }
@@ -122,14 +128,16 @@ void test_send(int fd)
     sin.sin_port = 8080;
     sin.sin_family = AF_INET;
 
-    if (bind(fd, (sockaddr*)&sin, sizeof(sin)) < 0) {
-        perror("bind() :: send");
+    auto bind_maybe_error = Core::System::bind(fd, (sockaddr*)&sin, sizeof(sin));
+    if (bind_maybe_error.is_error()) {
+        warnln("bind() :: send");
         puts("FAIL send");
         return;
     }
 
-    if (sendto(fd, "TEST", 4, 0, (sockaddr*)&sin, sizeof(sin)) < 0) {
-        perror("sendto() :: send");
+    auto sendto_maybe_error = Core::System::sendto(fd, "TEST", 4, 0, (sockaddr*)&sin, sizeof(sin));
+    if (sendto_maybe_error.is_error()) {
+        warnln("sendto() :: send");
         puts("FAIL send");
         return;
     }
