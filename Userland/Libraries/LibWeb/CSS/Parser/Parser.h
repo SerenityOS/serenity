@@ -98,12 +98,14 @@ public:
     // Used in @supports conditions. [CSS3-CONDITIONAL]
     Optional<StyleProperty> parse_as_declaration();
     // For the contents of a style attribute, which parses text into the contents of a single style rule.
-    RefPtr<PropertyOwningCSSStyleDeclaration> parse_as_list_of_declarations();
+    Vector<DeclarationOrAtRule> parse_as_list_of_declarations();
     // For things that need to consume a single value, like the parsing rules for attr().
     Optional<StyleComponentValueRule> parse_as_component_value();
     // For the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
     Vector<StyleComponentValueRule> parse_as_list_of_component_values();
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
+
+    RefPtr<PropertyOwningCSSStyleDeclaration> parse_as_style_attribute();
 
     enum class SelectorParsingMode {
         Standard,
@@ -141,7 +143,7 @@ private:
     template<typename T>
     Optional<StyleProperty> parse_a_declaration(TokenStream<T>&);
     template<typename T>
-    RefPtr<PropertyOwningCSSStyleDeclaration> parse_a_list_of_declarations(TokenStream<T>&);
+    Vector<DeclarationOrAtRule> parse_a_list_of_declarations(TokenStream<T>&);
     template<typename T>
     Optional<StyleComponentValueRule> parse_a_component_value(TokenStream<T>&);
     template<typename T>
@@ -187,7 +189,7 @@ private:
     [[nodiscard]] Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<StyleComponentValueRule>&);
 
     [[nodiscard]] RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
-    [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
+    [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
     [[nodiscard]] Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule const&);
 
     class Dimension {

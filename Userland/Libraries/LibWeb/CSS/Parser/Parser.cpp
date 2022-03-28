@@ -1902,39 +1902,20 @@ Optional<StyleProperty> Parser::parse_a_declaration(TokenStream<T>& tokens)
     return {};
 }
 
-RefPtr<PropertyOwningCSSStyleDeclaration> Parser::parse_as_list_of_declarations()
+Vector<DeclarationOrAtRule> Parser::parse_as_list_of_declarations()
 {
     return parse_a_list_of_declarations(m_token_stream);
 }
 
+// 5.3.8. Parse a list of declarations
+// https://www.w3.org/TR/css-syntax-3/#parse-list-of-declarations
 template<typename T>
-RefPtr<PropertyOwningCSSStyleDeclaration> Parser::parse_a_list_of_declarations(TokenStream<T>& tokens)
+Vector<DeclarationOrAtRule> Parser::parse_a_list_of_declarations(TokenStream<T>& tokens)
 {
-    auto declarations_and_at_rules = consume_a_list_of_declarations(tokens);
-
-    Vector<StyleProperty> properties;
-    HashMap<String, StyleProperty> custom_properties;
-
-    for (auto& declaration_or_at_rule : declarations_and_at_rules) {
-        if (declaration_or_at_rule.is_at_rule()) {
-            dbgln_if(CSS_PARSER_DEBUG, "!!! CSS at-rule is not allowed here!");
-            continue;
-        }
-
-        auto& declaration = declaration_or_at_rule.m_declaration;
-
-        auto maybe_property = convert_to_style_property(declaration);
-        if (maybe_property.has_value()) {
-            auto property = maybe_property.value();
-            if (property.property_id == PropertyID::Custom) {
-                custom_properties.set(property.custom_name, property);
-            } else {
-                properties.append(property);
-            }
-        }
-    }
-
-    return PropertyOwningCSSStyleDeclaration::create(move(properties), move(custom_properties));
+    // To parse a list of declarations from input:
+    // 1. Normalize input, and set input to the result.
+    // 2. Consume a list of declarations from input, and return the result.
+    return consume_a_list_of_declarations(tokens);
 }
 
 Optional<StyleComponentValueRule> Parser::parse_as_component_value()
@@ -2013,6 +1994,12 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_a_comma_separated_list_of_
     }
 
     return lists;
+}
+
+RefPtr<PropertyOwningCSSStyleDeclaration> Parser::parse_as_style_attribute()
+{
+    auto declarations_and_at_rules = parse_a_list_of_declarations(m_token_stream);
+    return convert_to_style_declaration(declarations_and_at_rules);
 }
 
 Optional<AK::URL> Parser::parse_url_function(StyleComponentValueRule const& component_value, AllowedDataUrlType allowed_data_url_type)
@@ -2156,7 +2143,13 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             return {};
         }
 
-        auto declaration = convert_to_declaration(*rule->m_block);
+        if (!rule->block()->is_curly())
+            return {};
+
+        auto stream = TokenStream(rule->block()->values());
+        auto declarations_and_at_rules = parse_a_list_of_declarations(stream);
+
+        auto declaration = convert_to_style_declaration(declarations_and_at_rules);
         if (!declaration) {
             dbgln_if(CSS_PARSER_DEBUG, "CSSParser: style rule declaration invalid; discarding.");
             return {};
@@ -2168,13 +2161,31 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
     return {};
 }
 
-RefPtr<PropertyOwningCSSStyleDeclaration> Parser::convert_to_declaration(NonnullRefPtr<StyleBlockRule> block)
+RefPtr<PropertyOwningCSSStyleDeclaration> Parser::convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations_and_at_rules)
 {
-    if (!block->is_curly())
-        return {};
+    Vector<StyleProperty> properties;
+    HashMap<String, StyleProperty> custom_properties;
 
-    auto stream = TokenStream(block->m_values);
-    return parse_a_list_of_declarations(stream);
+    for (auto& declaration_or_at_rule : declarations_and_at_rules) {
+        if (declaration_or_at_rule.is_at_rule()) {
+            dbgln_if(CSS_PARSER_DEBUG, "!!! CSS at-rule is not allowed here!");
+            continue;
+        }
+
+        auto& declaration = declaration_or_at_rule.m_declaration;
+
+        auto maybe_property = convert_to_style_property(declaration);
+        if (maybe_property.has_value()) {
+            auto property = maybe_property.value();
+            if (property.property_id == PropertyID::Custom) {
+                custom_properties.set(property.custom_name, property);
+            } else {
+                properties.append(property);
+            }
+        }
+    }
+
+    return PropertyOwningCSSStyleDeclaration::create(move(properties), move(custom_properties));
 }
 
 Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule const& declaration)
@@ -5086,10 +5097,11 @@ RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const& context, StringV
 
 RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const& context, StringView css)
 {
+    // FIXME: We could save some effort by creating an ElementInlineCSSStyleDeclaration right here.
     if (css.is_empty())
         return CSS::PropertyOwningCSSStyleDeclaration::create({}, {});
     CSS::Parser parser(context, css);
-    return parser.parse_as_list_of_declarations();
+    return parser.parse_as_style_attribute();
 }
 
 RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
