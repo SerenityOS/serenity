@@ -48,4 +48,14 @@ void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& styl
     });
 }
 
+unsigned int HTMLTableCellElement::col_span() const
+{
+    return attribute(HTML::AttributeNames::colspan).to_uint().value_or(1);
+}
+
+void HTMLTableCellElement::set_col_span(unsigned int value)
+{
+    set_attribute(HTML::AttributeNames::colspan, String::number(value));
+}
+
 }

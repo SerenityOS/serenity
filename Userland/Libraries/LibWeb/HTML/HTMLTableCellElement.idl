@@ -2,6 +2,7 @@
 
 interface HTMLTableCellElement : HTMLElement {
 
+    attribute unsigned long colSpan;
     [Reflect] attribute DOMString headers;
     [Reflect] attribute DOMString abbr;
 
