@@ -22,6 +22,7 @@ set(SOURCES
     CSS/CSSConditionRule.cpp
     CSS/CSSGroupingRule.cpp
     CSS/CSSImportRule.cpp
+    CSS/CSSFontFaceRule.cpp
     CSS/CSSMediaRule.cpp
     CSS/CSSRule.cpp
     CSS/CSSRuleList.cpp
@@ -31,6 +32,7 @@ set(SOURCES
     CSS/CSSSupportsRule.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Display.cpp
+    CSS/FontFace.cpp
     CSS/Frequency.cpp
     CSS/Length.cpp
     CSS/MediaFeatureID.cpp
@@ -433,6 +435,7 @@ endfunction()
 
 libweb_js_wrapper(Crypto/Crypto)
 libweb_js_wrapper(Crypto/SubtleCrypto)
+libweb_js_wrapper(CSS/CSSFontFaceRule)
 libweb_js_wrapper(CSS/CSSRule)
 libweb_js_wrapper(CSS/CSSRuleList)
 libweb_js_wrapper(CSS/CSSStyleDeclaration)

@@ -8,6 +8,7 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
+#include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSRule.h>
@@ -547,8 +548,8 @@ void dump_rule(StringBuilder& builder, CSS::CSSRule const& rule, int indent_leve
     builder.appendff("{}:\n", rule.class_name());
 
     switch (rule.type()) {
-    case CSS::CSSRule::Type::Style:
-        dump_style_rule(builder, verify_cast<CSS::CSSStyleRule const>(rule), indent_levels);
+    case CSS::CSSRule::Type::FontFace:
+        dump_font_face_rule(builder, verify_cast<CSS::CSSFontFaceRule const>(rule), indent_levels);
         break;
     case CSS::CSSRule::Type::Import:
         dump_import_rule(builder, verify_cast<CSS::CSSImportRule const>(rule), indent_levels);
@@ -556,11 +557,28 @@ void dump_rule(StringBuilder& builder, CSS::CSSRule const& rule, int indent_leve
     case CSS::CSSRule::Type::Media:
         dump_media_rule(builder, verify_cast<CSS::CSSMediaRule const>(rule), indent_levels);
         break;
+    case CSS::CSSRule::Type::Style:
+        dump_style_rule(builder, verify_cast<CSS::CSSStyleRule const>(rule), indent_levels);
+        break;
     case CSS::CSSRule::Type::Supports:
         dump_supports_rule(builder, verify_cast<CSS::CSSSupportsRule const>(rule), indent_levels);
         break;
     case CSS::CSSRule::Type::__Count:
         VERIFY_NOT_REACHED();
+    }
+}
+
+void dump_font_face_rule(StringBuilder& builder, CSS::CSSFontFaceRule const& rule, int indent_levels)
+{
+    auto& font_face = rule.font_face();
+    indent(builder, indent_levels + 1);
+    builder.appendff("font-family: {}\n", font_face.font_family());
+
+    indent(builder, indent_levels + 1);
+    builder.append("sources:\n");
+    for (auto const& source : font_face.sources()) {
+        indent(builder, indent_levels + 2);
+        builder.appendff("{}\n", source.url);
     }
 }
 

@@ -29,6 +29,7 @@ public:
         Import,
         Media,
         Supports,
+        FontFace,
         __Count,
     };
 
