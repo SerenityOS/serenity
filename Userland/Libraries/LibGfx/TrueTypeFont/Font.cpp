@@ -526,17 +526,16 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     return adopt_ref(*new Font(move(buffer), move(head), move(name), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf), move(os2), move(kern)));
 }
 
-ScaledFontMetrics Font::metrics(float x_scale, float y_scale) const
+ScaledFontMetrics Font::metrics([[maybe_unused]] float x_scale, float y_scale) const
 {
     auto ascender = m_hhea.ascender() * y_scale;
     auto descender = m_hhea.descender() * y_scale;
     auto line_gap = m_hhea.line_gap() * y_scale;
-    auto advance_width_max = m_hhea.advance_width_max() * x_scale;
+
     return ScaledFontMetrics {
-        .ascender = (int)roundf(ascender),
-        .descender = (int)roundf(descender),
-        .line_gap = (int)roundf(line_gap),
-        .advance_width_max = (int)roundf(advance_width_max),
+        .ascender = ascender,
+        .descender = descender,
+        .line_gap = line_gap,
     };
 }
 
@@ -726,11 +725,16 @@ u8 ScaledFont::glyph_fixed_width() const
 
 Gfx::FontPixelMetrics ScaledFont::pixel_metrics() const
 {
+    auto metrics = m_font->metrics(m_x_scale, m_y_scale);
+
     return Gfx::FontPixelMetrics {
         .size = (float)pixel_size(),
         .x_height = (float)x_height(),
         .advance_of_ascii_zero = (float)glyph_width('0'),
         .glyph_spacing = (float)glyph_spacing(),
+        .ascent = metrics.ascender,
+        .descent = -metrics.descender,
+        .line_gap = metrics.line_gap,
     };
 }
 

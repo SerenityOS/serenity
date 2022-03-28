@@ -23,10 +23,9 @@
 namespace TTF {
 
 struct ScaledFontMetrics {
-    int ascender;
-    int descender;
-    int line_gap;
-    int advance_width_max;
+    float ascender { 0 };
+    float descender { 0 };
+    float line_gap { 0 };
 
     int height() const
     {

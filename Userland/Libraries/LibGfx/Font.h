@@ -91,6 +91,17 @@ struct FontPixelMetrics {
     float x_height { 0 };
     float advance_of_ascii_zero { 0 };
     float glyph_spacing { 0 };
+
+    // Number of pixels the font extends above the baseline.
+    float ascent { 0 };
+
+    // Number of pixels the font descends below the baseline.
+    float descent { 0 };
+
+    // Line gap specified by font.
+    float line_gap { 0 };
+
+    float line_spacing() const { return roundf(ascent) + roundf(descent) + roundf(line_gap); }
 };
 
 class Font : public RefCounted<Font> {

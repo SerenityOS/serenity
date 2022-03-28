@@ -379,6 +379,9 @@ FontPixelMetrics BitmapFont::pixel_metrics() const
         .x_height = (float)x_height(),
         .advance_of_ascii_zero = (float)glyph_width('0'),
         .glyph_spacing = (float)glyph_spacing(),
+        .ascent = (float)m_baseline,
+        .descent = (float)(m_glyph_height - m_baseline),
+        .line_gap = (float)pixel_size() * 0.4f, // FIXME: Do something nicer here.
     };
 }
 
