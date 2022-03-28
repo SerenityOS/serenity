@@ -24,10 +24,18 @@ public:
     bool is_ready_to_be_parser_executed() const { return m_ready_to_be_parser_executed; }
     bool failed_to_load() const { return m_failed_to_load; }
 
-    void set_parser_document(Badge<HTMLParser>, DOM::Document&);
-    void set_non_blocking(Badge<HTMLParser>, bool);
-    void set_already_started(Badge<HTMLParser>, bool b) { m_already_started = b; }
-    void prepare_script(Badge<HTMLParser>) { prepare_script(); }
+    template<OneOf<XMLDocumentBuilder, HTMLParser> T>
+    void set_parser_document(Badge<T>, DOM::Document& document) { m_parser_document = document; }
+
+    template<OneOf<XMLDocumentBuilder, HTMLParser> T>
+    void set_non_blocking(Badge<T>, bool b) { m_non_blocking = b; }
+
+    template<OneOf<XMLDocumentBuilder, HTMLParser> T>
+    void set_already_started(Badge<T>, bool b) { m_already_started = b; }
+
+    template<OneOf<XMLDocumentBuilder, HTMLParser> T>
+    void prepare_script(Badge<T>) { prepare_script(); }
+
     void execute_script();
 
     bool is_parser_inserted() const { return !!m_parser_document; }
