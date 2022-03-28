@@ -1155,6 +1155,45 @@ ThrowCompletionOr<Object*> Object::define_properties(Value properties)
     return this;
 }
 
+// 14.7.5.9 EnumerateObjectProperties ( O ), https://tc39.es/ecma262/#sec-enumerate-object-properties
+Optional<Completion> Object::enumerate_object_properties(Function<Optional<Completion>(Value)> callback) const
+{
+    // 1. Return an Iterator object (27.1.1.2) whose next method iterates over all the String-valued keys of enumerable properties of O. The iterator object is never directly accessible to ECMAScript code. The mechanics and order of enumerating the properties is not specified but must conform to the rules specified below.
+    //    * Returned property keys do not include keys that are Symbols.
+    //    * Properties of the target object may be deleted during enumeration.
+    //    * A property that is deleted before it is processed is ignored.
+    //    * If new properties are added to the target object during enumeration, the newly added properties are not guaranteed to be processed in the active enumeration.
+    //    * A property name will be returned at most once in any enumeration.
+    //    * Enumerating the properties of the target object includes enumerating properties of its prototype, and the prototype of the prototype, and so on, recursively.
+    //    * A property of a prototype is not processed if it has the same name as a property that has already been processed.
+
+    HashTable<FlyString> visited;
+
+    auto const* target = this;
+    while (target) {
+        auto own_keys = TRY(target->internal_own_property_keys());
+        for (auto& key : own_keys) {
+            if (!key.is_string())
+                continue;
+            FlyString property_key = key.as_string().string();
+            if (visited.contains(property_key))
+                continue;
+            auto descriptor = TRY(target->internal_get_own_property(property_key));
+            if (!descriptor.has_value())
+                continue;
+            visited.set(property_key);
+            if (!*descriptor->enumerable)
+                continue;
+            if (auto completion = callback(key); completion.has_value())
+                return completion.release_value();
+        }
+
+        target = TRY(target->internal_get_prototype_of());
+    };
+
+    return {};
+}
+
 void Object::visit_edges(Cell::Visitor& visitor)
 {
     Cell::visit_edges(visitor);
