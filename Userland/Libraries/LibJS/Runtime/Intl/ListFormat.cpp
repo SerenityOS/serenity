@@ -48,7 +48,7 @@ StringView ListFormat::type_string() const
 // 13.5.1 DeconstructPattern ( pattern, placeables ), https://tc39.es/ecma402/#sec-deconstructpattern
 Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables placeables)
 {
-    // 1. Let patternParts be PartitionPattern(pattern).
+    // 1. Let patternParts be ! PartitionPattern(pattern).
     auto pattern_parts = partition_pattern(pattern);
 
     // 2. Let result be a new empty List.
@@ -125,7 +125,7 @@ Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, V
         placeables.set("0"sv, move(first));
         placeables.set("1"sv, move(second));
 
-        // f. Return DeconstructPattern(pattern, placeables).
+        // f. Return ! DeconstructPattern(pattern, placeables).
         return deconstruct_pattern(pattern, move(placeables));
     }
 
@@ -171,7 +171,7 @@ Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, V
         placeables.set("0"sv, move(head));
         placeables.set("1"sv, move(parts));
 
-        // g. Set parts to DeconstructPattern(pattern, placeables).
+        // g. Set parts to ! DeconstructPattern(pattern, placeables).
         parts = deconstruct_pattern(pattern, move(placeables));
 
         // h. Decrement i by 1.
@@ -184,7 +184,7 @@ Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, V
 // 13.5.3 FormatList ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlist
 String format_list(ListFormat const& list_format, Vector<String> const& list)
 {
-    // 1. Let parts be CreatePartsFromList(listFormat, list).
+    // 1. Let parts be ! CreatePartsFromList(listFormat, list).
     auto parts = create_parts_from_list(list_format, list);
 
     // 2. Let result be an empty String.
@@ -205,10 +205,10 @@ Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_
 {
     auto& vm = global_object.vm();
 
-    // 1. Let parts be CreatePartsFromList(listFormat, list).
+    // 1. Let parts be ! CreatePartsFromList(listFormat, list).
     auto parts = create_parts_from_list(list_format, list);
 
-    // 2. Let result be ArrayCreate(0).
+    // 2. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(global_object, 0));
 
     // 3. Let n be 0.
@@ -216,7 +216,7 @@ Array* format_list_to_parts(GlobalObject& global_object, ListFormat const& list_
 
     // 4. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
-        // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
+        // a. Let O be ! OrdinaryObjectCreate(%Object.prototype%).
         auto* object = Object::create(global_object, global_object.object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).

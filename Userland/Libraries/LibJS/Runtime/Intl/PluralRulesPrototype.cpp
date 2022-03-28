@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
     // FIXME: Implement this when the data is available in LibUnicode.
     MarkedVector<Value> plural_categories { vm.heap() };
 
-    // 6. Perform ! CreateDataProperty(options, "pluralCategories", CreateArrayFromList(pluralCategories)).
+    // 6. Perform ! CreateDataProperty(options, "pluralCategories", ! CreateArrayFromList(pluralCategories)).
     MUST(options->create_data_property_or_throw(vm.names.pluralCategories, Array::create_from(global_object, plural_categories)));
 
     // 7. Return options.

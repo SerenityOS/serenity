@@ -48,7 +48,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(GlobalObject& global_objec
     // 1. Assert: Type(tag) is String.
     // 2. Assert: Type(options) is Object.
 
-    // 3. If IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
+    // 3. If ! IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
     auto locale_id = is_structurally_valid_language_tag(tag);
     if (!locale_id.has_value())
         return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidLanguageTag, tag);
@@ -68,7 +68,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(GlobalObject& global_objec
     //     a. If region does not match the unicode_region_subtag production, throw a RangeError exception.
     auto region = TRY(get_string_option(global_object, options, vm.names.region, Unicode::is_unicode_region_subtag));
 
-    // 10. Set tag to CanonicalizeUnicodeLocaleId(tag).
+    // 10. Set tag to ! CanonicalizeUnicodeLocaleId(tag).
     auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
 
     // 11. Assert: tag matches the unicode_locale_id production.
@@ -103,7 +103,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(GlobalObject& global_objec
     }
 
     // 16. Set tag to tag with the substring corresponding to the unicode_language_id production replaced by the string languageId.
-    // 17. Return CanonicalizeUnicodeLocaleId(tag).
+    // 17. Return ! CanonicalizeUnicodeLocaleId(tag).
     return JS::Intl::canonicalize_unicode_locale_id(*locale_id);
 }
 
