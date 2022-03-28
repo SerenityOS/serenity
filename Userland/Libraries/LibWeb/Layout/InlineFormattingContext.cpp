@@ -69,17 +69,12 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
 
     generate_line_boxes(layout_mode);
 
-    float min_line_height = containing_block().line_height();
     float max_line_width = 0;
     float content_height = 0;
 
     for (auto& line_box : m_state.get(containing_block()).line_boxes) {
-        float max_height = min_line_height;
-        for (auto& fragment : line_box.fragments()) {
-            max_height = max(max_height, fragment.border_box_height());
-        }
         max_line_width = max(max_line_width, line_box.width());
-        content_height += max_height;
+        content_height += line_box.height();
     }
 
     auto& containing_block_state = m_state.get_mutable(containing_block());
