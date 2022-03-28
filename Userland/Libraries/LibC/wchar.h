@@ -7,6 +7,7 @@
 #pragma once
 
 #include <bits/FILE.h>
+#include <bits/wchar_size.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <sys/cdefs.h>
@@ -15,16 +16,6 @@ __BEGIN_DECLS
 
 #ifndef WEOF
 #    define WEOF (0xffffffffu)
-#endif
-
-#undef WCHAR_MAX
-#undef WCHAR_MIN
-#define WCHAR_MAX __WCHAR_MAX__
-#ifdef __WCHAR_MIN__
-#    define WCHAR_MIN __WCHAR_MIN__
-#else
-// Note: This assumes that wchar_t is a signed type.
-#    define WCHAR_MIN (-WCHAR_MAX - 1)
 #endif
 
 typedef __WINT_TYPE__ wint_t;
