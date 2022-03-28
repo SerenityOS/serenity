@@ -350,7 +350,7 @@ private:
 namespace Web {
 
 RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const&, StringView);
-RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const&, StringView);
+RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const&, StringView);
 RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView);
 RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const&, StringView);

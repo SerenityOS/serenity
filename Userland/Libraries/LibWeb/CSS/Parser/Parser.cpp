@@ -5084,7 +5084,7 @@ RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const& context, StringV
     return parser.parse_as_stylesheet();
 }
 
-RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const& context, StringView css)
+RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const& context, StringView css)
 {
     if (css.is_empty())
         return CSS::PropertyOwningCSSStyleDeclaration::create({}, {});
