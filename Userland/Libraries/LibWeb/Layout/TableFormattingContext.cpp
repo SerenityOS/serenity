@@ -118,14 +118,19 @@ void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_wi
         tallest_cell_height = max(tallest_cell_height, cell_state.border_box_height());
     });
 
+    row_state.content_height = tallest_cell_height;
+
+    row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
+        auto& cell_state = m_state.get_mutable(cell);
+        cell_state.content_height = tallest_cell_height - cell_state.border_box_top() - cell_state.border_box_bottom();
+    });
+
     if (use_auto_layout) {
         row_state.content_width = content_width;
     } else {
         auto& table_state = m_state.get_mutable(*table);
         row_state.content_width = table_state.content_width;
     }
-
-    row_state.content_height = tallest_cell_height;
 }
 
 }
