@@ -176,6 +176,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(rev)                        \
     __ENUMERATE_HTML_ATTRIBUTE(reversed)                   \
     __ENUMERATE_HTML_ATTRIBUTE(rows)                       \
+    __ENUMERATE_HTML_ATTRIBUTE(rowspan)                    \
     __ENUMERATE_HTML_ATTRIBUTE(rules)                      \
     __ENUMERATE_HTML_ATTRIBUTE(scheme)                     \
     __ENUMERATE_HTML_ATTRIBUTE(scrolling)                  \
