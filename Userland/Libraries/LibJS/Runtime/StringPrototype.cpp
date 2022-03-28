@@ -1038,7 +1038,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sup)
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::locale_compare)
 {
     // FIXME: This can throw (spec issue)
-    // 1. Let O be RequireObjectCoercible(this value).
+    // 1. Let O be ? RequireObjectCoercible(this value).
     auto object = TRY(require_object_coercible(global_object, vm.this_value(global_object)));
 
     // 2. Let S be ? ToString(O).
