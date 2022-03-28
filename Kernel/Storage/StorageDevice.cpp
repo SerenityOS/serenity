@@ -30,6 +30,7 @@ StringView StorageDevice::class_name() const
 ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKernelBuffer& outbuf, size_t len)
 {
     u64 index = offset >> block_size_log();
+    off_t offset_within_block = 0;
     size_t whole_blocks = len >> block_size_log();
     size_t remaining = len - (whole_blocks << block_size_log());
 
@@ -39,6 +40,9 @@ ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKern
         whole_blocks = m_blocks_per_page;
         remaining = 0;
     }
+
+    if (len < block_size())
+        offset_within_block = offset - (index << block_size_log());
 
     dbgln_if(STORAGE_DEVICE_DEBUG, "StorageDevice::read() index={}, whole_blocks={}, remaining={}", index, whole_blocks, remaining);
 
@@ -78,7 +82,7 @@ ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKern
         default:
             break;
         }
-        TRY(outbuf.write(data.data(), pos, remaining));
+        TRY(outbuf.write(data.offset_pointer(offset_within_block), pos, remaining));
     }
 
     return pos + remaining;
@@ -92,6 +96,7 @@ bool StorageDevice::can_read(const OpenFileDescription&, u64 offset) const
 ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
 {
     u64 index = offset >> block_size_log();
+    off_t offset_within_block = 0;
     size_t whole_blocks = len >> block_size_log();
     size_t remaining = len - (whole_blocks << block_size_log());
 
@@ -101,6 +106,9 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const Use
         whole_blocks = m_blocks_per_page;
         remaining = 0;
     }
+
+    if (len < block_size())
+        offset_within_block = offset - (index << block_size_log());
 
     // We try to allocate the temporary block buffer for partial writes *before* we start any full block writes,
     // to try and prevent partial writes
@@ -151,7 +159,7 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const Use
             }
         }
 
-        TRY(inbuf.read(partial_write_block->data(), pos, remaining));
+        TRY(inbuf.read(partial_write_block->offset_pointer(offset_within_block), pos, remaining));
 
         {
             auto write_request = TRY(try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Write, index + whole_blocks, 1, data_buffer, block_size()));
