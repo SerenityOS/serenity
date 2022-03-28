@@ -96,7 +96,19 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
     }
 
     auto const& computed_values = box.computed_values();
-    float width_of_containing_block = m_state.get(*box.containing_block()).content_width;
+    float width_of_containing_block;
+    switch (layout_mode) {
+    case LayoutMode::Normal:
+        width_of_containing_block = m_state.get(*box.containing_block()).content_width;
+        break;
+    case LayoutMode::MinContent:
+        width_of_containing_block = 0;
+        break;
+    case LayoutMode::MaxContent:
+        width_of_containing_block = INFINITY;
+        break;
+    }
+
     auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
     auto zero_value = CSS::Length::make_px(0);
