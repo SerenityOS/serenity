@@ -136,6 +136,10 @@ public:
 
     ThrowCompletionOr<Object*> define_properties(Value properties);
 
+    // 14.7.5 The for-in, for-of, and for-await-of Statements
+
+    Optional<Completion> enumerate_object_properties(Function<Optional<Completion>(Value)>) const;
+
     // Implementation-specific storage abstractions
 
     Optional<ValueAndAttributes> storage_get(PropertyKey const&) const;
