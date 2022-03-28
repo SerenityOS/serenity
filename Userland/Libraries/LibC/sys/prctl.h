@@ -12,6 +12,6 @@
 
 __BEGIN_DECLS
 
-int prctl(int option, uintptr_t arg1, uintptr_t arg2);
+int prctl(int option, ...);
 
 __END_DECLS
