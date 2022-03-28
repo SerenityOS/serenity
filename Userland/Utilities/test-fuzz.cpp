@@ -7,7 +7,7 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <stdio.h>
+#include <LibMain/Main.h>
 #include <unistd.h>
 
 #define ENUMERATE_TARGETS(T) \
@@ -112,9 +112,9 @@ ENUMERATE_TARGETS(__ENUMERATE_TARGET)
 #include <Meta/Lagom/Fuzzers/FuzzURL.cpp>
 #undef LLVMFuzzerTestOneInput
 
-static auto parse_target_name(const String& name)
+static auto parse_target_name(StringView name)
 {
-    if (name == "list") {
+    if (name == "list"sv) {
         outln("The following targets are included:");
 #undef __ENUMERATE_TARGET
 #define __ENUMERATE_TARGET(x) outln(#x);
@@ -134,25 +134,20 @@ static auto parse_target_name(const String& name)
     exit(1);
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    const char* type;
-    const char* filename;
+    StringView type;
+    StringView filename;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(type, "Type of fuzzing target to run (use \"list\" to list all existing)", "target-kind");
     args_parser.add_positional_argument(filename, "Input file", "filename");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     auto fn = parse_target_name(type);
 
-    auto file = Core::File::open(filename, Core::OpenMode::ReadOnly);
-    if (file.is_error()) {
-        warnln("Cannot read from file: {}", file.error());
-        exit(1);
-    }
-
-    auto input = file.value()->read_all();
+    auto file = TRY(Core::File::open(filename, Core::OpenMode::ReadOnly));
+    auto input = file->read_all();
 
     return fn(input.data(), input.size());
 }
