@@ -91,8 +91,25 @@ void TableFormattingContext::calculate_column_widths(Box const& row, Vector<floa
         } else {
             (void)layout_inside(cell, LayoutMode::Normal);
         }
-        column_widths[column_index] = max(column_widths[column_index], cell_state.border_box_width());
+        if (cell.colspan() == 1)
+            column_widths[column_index] = max(column_widths[column_index], cell_state.border_box_width());
         column_index += cell.colspan();
+    });
+    column_index = 0;
+    row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
+        auto& cell_state = m_state.get_mutable(cell);
+        size_t colspan = cell.colspan();
+        if (colspan != 1) {
+            float missing = cell_state.border_box_width();
+            for (size_t i = 0; i < colspan; ++i)
+                missing -= column_widths[column_index + i];
+            if (missing > 0) {
+                float extra = missing / (float)colspan;
+                for (size_t i = 0; i < colspan; ++i)
+                    column_widths[column_index + i] += extra;
+            }
+        }
+        column_index += colspan;
     });
 }
 
