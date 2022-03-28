@@ -36,6 +36,9 @@ concept Enum = IsEnum<T>;
 template<typename T, typename U>
 concept SameAs = IsSame<T, U>;
 
+template<typename U, typename... Ts>
+concept OneOf = IsOneOf<U, Ts...>;
+
 template<typename T, template<typename...> typename S>
 concept SpecializationOf = IsSpecializationOf<T, S>;
 
@@ -117,6 +120,7 @@ using AK::Concepts::Integral;
 using AK::Concepts::IterableContainer;
 using AK::Concepts::IteratorFunction;
 using AK::Concepts::IteratorPairWith;
+using AK::Concepts::OneOf;
 using AK::Concepts::SameAs;
 using AK::Concepts::Signed;
 using AK::Concepts::SpecializationOf;

@@ -572,6 +572,9 @@ inline constexpr bool IsHashCompatible = false;
 template<typename T>
 inline constexpr bool IsHashCompatible<T, T> = true;
 
+template<typename T, typename... Ts>
+inline constexpr bool IsOneOf = (IsSame<T, Ts> || ...);
+
 }
 using AK::Detail::AddConst;
 using AK::Detail::AddLvalueReference;
@@ -607,6 +610,7 @@ using AK::Detail::IsLvalueReference;
 using AK::Detail::IsMoveAssignable;
 using AK::Detail::IsMoveConstructible;
 using AK::Detail::IsNullPointer;
+using AK::Detail::IsOneOf;
 using AK::Detail::IsPOD;
 using AK::Detail::IsPointer;
 using AK::Detail::IsRvalueReference;
