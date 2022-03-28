@@ -377,7 +377,7 @@ FontMetrics Font::metrics() const
     return FontMetrics {
         .size = (float)presentation_size(),
         .x_height = (float)x_height(),
-        .glyph_width = (float)glyph_width('M'),
+        .advance_of_ascii_zero = (float)glyph_width('0'),
         .glyph_spacing = (float)glyph_spacing(),
     };
 }

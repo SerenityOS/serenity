@@ -89,7 +89,7 @@ private:
 struct FontMetrics {
     float size { 0 };
     float x_height { 0 };
-    float glyph_width { 0 };
+    float advance_of_ascii_zero { 0 };
     float glyph_spacing { 0 };
 };
 
