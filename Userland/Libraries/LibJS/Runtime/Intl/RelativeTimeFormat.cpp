@@ -249,7 +249,7 @@ ThrowCompletionOr<Array*> format_relative_time_to_parts(GlobalObject& global_obj
     // 1. Let parts be ? PartitionRelativeTimePattern(relativeTimeFormat, value, unit).
     auto parts = TRY(partition_relative_time_pattern(global_object, relative_time_format, value, unit));
 
-    // 2. Let result be ArrayCreate(0).
+    // 2. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(global_object, 0));
 
     // 3. Let n be 0.
@@ -257,7 +257,7 @@ ThrowCompletionOr<Array*> format_relative_time_to_parts(GlobalObject& global_obj
 
     // 4. For each Record { [[Type]], [[Value]], [[Unit]] } part in parts, do
     for (auto& part : parts) {
-        // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
+        // a. Let O be ! OrdinaryObjectCreate(%Object.prototype%).
         auto* object = Object::create(global_object, global_object.object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).

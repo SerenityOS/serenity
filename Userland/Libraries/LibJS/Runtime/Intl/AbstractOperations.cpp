@@ -201,7 +201,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
     Object* object = nullptr;
     // 3. If Type(locales) is String or Type(locales) is Object and locales has an [[InitializedLocale]] internal slot, then
     if (locales.is_string() || (locales.is_object() && is<Locale>(locales.as_object()))) {
-        // a. Let O be CreateArrayFromList(« locales »).
+        // a. Let O be ! CreateArrayFromList(« locales »).
         object = Array::create_from(global_object, { locales });
     }
     // 4. Else,
@@ -245,12 +245,12 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
                 tag = TRY(key_value.to_string(global_object));
             }
 
-            // v. If IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
+            // v. If ! IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
             auto locale_id = is_structurally_valid_language_tag(tag);
             if (!locale_id.has_value())
                 return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidLanguageTag, tag);
 
-            // vi. Let canonicalizedTag be CanonicalizeUnicodeLocaleId(tag).
+            // vi. Let canonicalizedTag be ! CanonicalizeUnicodeLocaleId(tag).
             auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
 
             // vii. If canonicalizedTag is not an element of seen, append canonicalizedTag as the last element of seen.
@@ -310,7 +310,7 @@ static MatcherResult lookup_matcher(Vector<String> const& requested_locales)
         auto extensions = locale_id->remove_extension_type<Unicode::LocaleExtension>();
         auto no_extensions_locale = locale_id->to_string();
 
-        // b. Let availableLocale be BestAvailableLocale(availableLocales, noExtensionsLocale).
+        // b. Let availableLocale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
 
         // c. If availableLocale is not undefined, then
@@ -330,7 +330,7 @@ static MatcherResult lookup_matcher(Vector<String> const& requested_locales)
         }
     }
 
-    // 3. Let defLocale be DefaultLocale().
+    // 3. Let defLocale be ! DefaultLocale().
     // 4. Set result.[[locale]] to defLocale.
     result.locale = Unicode::default_locale();
 
@@ -386,12 +386,12 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
 
     // 2. If matcher is "lookup", then
     if (matcher.is_string() && (matcher.as_string().string() == "lookup"sv)) {
-        // a. Let r be LookupMatcher(availableLocales, requestedLocales).
+        // a. Let r be ! LookupMatcher(availableLocales, requestedLocales).
         matcher_result = lookup_matcher(requested_locales);
     }
     // 3. Else,
     else {
-        // a. Let r be BestFitMatcher(availableLocales, requestedLocales).
+        // a. Let r be ! BestFitMatcher(availableLocales, requestedLocales).
         matcher_result = best_fit_matcher(requested_locales);
     }
 
@@ -540,7 +540,7 @@ Vector<String> lookup_supported_locales(Vector<String> const& requested_locales)
         locale_id->remove_extension_type<Unicode::LocaleExtension>();
         auto no_extensions_locale = locale_id->to_string();
 
-        // b. Let availableLocale be BestAvailableLocale(availableLocales, noExtensionsLocale).
+        // b. Let availableLocale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
 
         // c. If availableLocale is not undefined, append locale to the end of subset.
@@ -588,7 +588,7 @@ ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<
         supported_locales = lookup_supported_locales(requested_locales);
     }
 
-    // 5. Return CreateArrayFromList(supportedLocales).
+    // 5. Return ! CreateArrayFromList(supportedLocales).
     return Array::create_from<String>(global_object, supported_locales, [&vm](auto& locale) { return js_string(vm, locale); });
 }
 

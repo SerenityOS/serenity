@@ -46,7 +46,7 @@ ThrowCompletionOr<Value> DateTimeFormatFunction::call()
 
     // 3. If date is not provided or is undefined, then
     if (date.is_undefined()) {
-        // a. Let x be Call(%Date.now%, undefined).
+        // a. Let x be ! Call(%Date.now%, undefined).
         date = MUST(JS::call(global_object, global_object.date_constructor_now_function(), js_undefined()));
     }
     // 4. Else,
