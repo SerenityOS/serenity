@@ -150,8 +150,12 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
         if (!Unicode::is_type_identifier(code))
             return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "calendar"sv);
 
-        // b. Let code be the result of mapping code to lower case as described in 6.1.
-        // c. Return code.
+        // b. If code uses any of the backwards compatibility syntax described in Unicode Technical Standard #35 LDML § 3.3 BCP 47 Conformance, throw a RangeError exception.
+        if (code.contains('_'))
+            return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "calendar"sv);
+
+        // c. Let code be the result of mapping code to lower case as described in 6.1.
+        // d. Return code.
         return js_string(vm, code.to_lowercase_string());
     }
 
