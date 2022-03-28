@@ -255,7 +255,7 @@ void Element::parse_attribute(const FlyString& name, const String& value)
         if (m_class_list)
             m_class_list->associated_attribute_changed(value);
     } else if (name == HTML::AttributeNames::style) {
-        auto parsed_style = parse_css_declaration(CSS::ParsingContext(document()), value);
+        auto parsed_style = parse_css_style_attribute(CSS::ParsingContext(document()), value);
         if (!parsed_style.is_null()) {
             m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create_and_take_properties_from(*this, parsed_style.release_nonnull());
             set_needs_style_update(true);
