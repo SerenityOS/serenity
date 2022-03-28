@@ -141,7 +141,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
     // 7. Else if key is "unit", then
     else if (key == "unit"sv) {
         // a. Let list be ! AvailableUnits( ).
-        static auto units = sanctioned_simple_unit_identifiers();
+        static auto units = sanctioned_single_unit_identifiers();
         list = units.span();
     }
     // 8. Else,
