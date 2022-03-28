@@ -317,58 +317,91 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
     return index.has_value() ? Value(*index) : Value(-1);
 }
 
-static ThrowCompletionOr<String> resolve_best_locale(GlobalObject& global_object, Value locales)
-{
-    // For details on these steps, see https://tc39.es/ecma402/#sup-string.prototype.tolocalelowercase
+enum class TargetCase {
+    Lower,
+    Upper,
+};
 
-    // 3. Let requestedLocales be ? CanonicalizeLocaleList(locales).
+// 19.1.2.1 TransformCase ( S, locales, targetCase ), https://tc39.es/ecma402/#sec-transform-case
+static ThrowCompletionOr<String> transform_case(GlobalObject& global_object, StringView string, Value locales, TargetCase target_case)
+{
+    // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(Intl::canonicalize_locale_list(global_object, locales));
 
     Optional<Unicode::LocaleID> requested_locale;
 
-    // 4. If requestedLocales is not an empty List, then
+    // 2. If requestedLocales is not an empty List, then
     if (!requested_locales.is_empty()) {
         // a. Let requestedLocale be requestedLocales[0].
         requested_locale = Unicode::parse_unicode_locale_id(requested_locales[0]);
     }
-    // 5. Else,
+    // 3. Else,
     else {
-        // a. Let requestedLocale be DefaultLocale().
+        // a. Let requestedLocale be ! DefaultLocale().
         requested_locale = Unicode::parse_unicode_locale_id(Unicode::default_locale());
     }
     VERIFY(requested_locale.has_value());
 
-    // 6. Let noExtensionsLocale be the String value that is requestedLocale with any Unicode locale extension sequences (6.2.1) removed.
+    // 4. Let noExtensionsLocale be the String value that is requestedLocale with any Unicode locale extension sequences (6.2.1) removed.
     requested_locale->remove_extension_type<Unicode::LocaleExtension>();
     auto no_extensions_locale = requested_locale->to_string();
 
-    // 7. Let availableLocales be a List with language tags that includes the languages for which the Unicode Character Database contains language sensitive case mappings. Implementations may add additional language tags if they support case mapping for additional locales.
-    // 8. Let locale be BestAvailableLocale(availableLocales, noExtensionsLocale).
+    // 5. Let availableLocales be a List with language tags that includes the languages for which the Unicode Character Database contains language sensitive case mappings. Implementations may add additional language tags if they support case mapping for additional locales.
+    // 6. Let locale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
     auto locale = Intl::best_available_locale(no_extensions_locale);
 
-    // 9. If locale is undefined, let locale be "und".
+    // 7. If locale is undefined, set locale to "und".
     if (!locale.has_value())
         locale = "und"sv;
 
-    return locale;
+    // 8. Let codePoints be ! StringToCodePoints(S).
+
+    String new_code_points;
+
+    switch (target_case) {
+    // 9. If targetCase is lower, then
+    case TargetCase::Lower:
+        // a. Let newCodePoints be a List whose elements are the result of a lowercase transformation of codePoints according to an implementation-derived algorithm using locale or the Unicode Default Case Conversion algorithm.
+        new_code_points = Unicode::to_unicode_lowercase_full(string, *locale);
+        break;
+    // 10. Else,
+    case TargetCase::Upper:
+        // a. Assert: targetCase is upper.
+        // b. Let newCodePoints be a List whose elements are the result of an uppercase transformation of codePoints according to an implementation-derived algorithm using locale or the Unicode Default Case Conversion algorithm.
+        new_code_points = Unicode::to_unicode_uppercase_full(string, *locale);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    // 11. Return ! CodePointsToString(newCodePoints).
+    return new_code_points;
 }
 
 // 19.1.2 String.prototype.toLocaleLowerCase ( [ locales ] ), https://tc39.es/ecma402/#sup-string.prototype.tolocalelowercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_lowercase)
 {
+    auto locales = vm.argument(0);
+
+    // 1. Let O be ? RequireObjectCoercible(this value).
+    // 2. Let S be ? ToString(O).
     auto string = TRY(ak_string_from(vm, global_object));
-    auto locale = TRY(resolve_best_locale(global_object, vm.argument(0)));
-    auto lowercase = Unicode::to_unicode_lowercase_full(string, locale);
-    return js_string(vm, move(lowercase));
+
+    // 3. Return ? TransformCase(S, locales, lower).
+    return js_string(vm, TRY(transform_case(global_object, string, locales, TargetCase::Lower)));
 }
 
 // 19.1.3 String.prototype.toLocaleUpperCase ( [ locales ] ), https://tc39.es/ecma402/#sup-string.prototype.tolocaleuppercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_uppercase)
 {
+    auto locales = vm.argument(0);
+
+    // 1. Let O be ? RequireObjectCoercible(this value).
+    // 2. Let S be ? ToString(O).
     auto string = TRY(ak_string_from(vm, global_object));
-    auto locale = TRY(resolve_best_locale(global_object, vm.argument(0)));
-    auto uppercase = Unicode::to_unicode_uppercase_full(string, locale);
-    return js_string(vm, move(uppercase));
+
+    // 3. Return ? TransformCase(S, locales, upper).
+    return js_string(vm, TRY(transform_case(global_object, string, locales, TargetCase::Upper)));
 }
 
 // 22.1.3.27 String.prototype.toLowerCase ( ), https://tc39.es/ecma262/#sec-string.prototype.tolowercase
