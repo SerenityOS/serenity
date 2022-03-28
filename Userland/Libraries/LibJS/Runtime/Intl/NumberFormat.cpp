@@ -346,7 +346,7 @@ int currency_digits(StringView currency)
 // 15.5.3 FormatNumericToString ( intlObject, x ), https://tc39.es/ecma402/#sec-formatnumberstring
 FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase& intl_object, Value number)
 {
-    // 1. If x < 0 or x is -0𝔽, let isNegative be true; else let isNegative be false.
+    // 1. If ℝ(x) < 0 or x is -0𝔽, let isNegative be true; else let isNegative be false.
     bool is_negative = is_less_than(number, 0) || number.is_negative_zero();
 
     // 2. If isNegative, then
@@ -1160,12 +1160,12 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
     // 15. Else,
     case NumberFormat::SignDisplay::ExceptZero:
         // a. Assert: signDisplay is "exceptZero".
-        // b. If x is 0 or x is -0 or x is NaN, then
+        // b. If x is NaN, or if x is finite and ℝ(x) is 0, then
         if (is_positive_zero || is_negative_zero || is_nan) {
             // i. Let pattern be patterns.[[zeroPattern]].
             pattern = patterns->zero_format;
         }
-        // c. Else if x > 0, then
+        // c. Else if ℝ(x) > 0, then
         else if (is_greater_than(number, 0)) {
             // i. Let pattern be patterns.[[positivePattern]].
             pattern = patterns->positive_format;
