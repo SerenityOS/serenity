@@ -210,21 +210,12 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
     // The element's height is the distance from its top content edge to the first applicable of the following:
 
     // 1. the bottom edge of the last line box, if the box establishes a inline formatting context with one or more lines
-    if (box.children_are_inline() && !box_state.line_boxes.is_empty()) {
-        // Find the top content edge (if negative).
-        float top_content_edge = 0;
-        for (auto const& fragment : box_state.line_boxes.first().fragments()) {
-            float fragment_top_content_edge = fragment.offset().y() - fragment.border_box_top();
-            if (fragment_top_content_edge < top_content_edge)
-                top_content_edge = fragment_top_content_edge;
-        }
-        return box_state.line_boxes.last().bottom() - top_content_edge;
-    }
+    if (box.children_are_inline() && !box_state.line_boxes.is_empty())
+        return box_state.line_boxes.last().bottom();
 
     // 2. the bottom edge of the bottom (possibly collapsed) margin of its last in-flow child, if the child's bottom margin does not collapse with the element's bottom margin
     // FIXME: 3. the bottom border edge of the last in-flow child whose top margin doesn't collapse with the element's bottom margin
     if (!box.children_are_inline()) {
-        Optional<float> top;
         Optional<float> bottom;
         box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
             if (child_box.is_absolutely_positioned() || child_box.is_floating())
@@ -232,15 +223,12 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
 
             // FIXME: Handle margin collapsing.
             auto const& child_box_state = state.get(child_box);
-            float child_box_top = child_box_state.offset.y() - child_box_state.border_box_top();
             float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom();
 
-            if (!top.has_value() || child_box_top < top.value())
-                top = child_box_top;
             if (!bottom.has_value() || child_box_bottom > bottom.value())
                 bottom = child_box_bottom;
         });
-        return bottom.value_or(0) - top.value_or(0);
+        return bottom.value_or(0);
     }
 
     // 4. zero, otherwise
@@ -259,16 +247,8 @@ float FormattingContext::compute_auto_height_for_block_formatting_context_root(F
         // the top content edge and the bottom of the bottommost line box.
         auto const& line_boxes = state.get(root).line_boxes;
         top = 0;
-        if (!line_boxes.is_empty()) {
-            // Find the top edge (if negative).
-            for (auto const& fragment : line_boxes.first().fragments()) {
-                float fragment_top_content_edge = fragment.offset().y();
-                if (!top.has_value() || fragment_top_content_edge < *top)
-                    top = fragment_top_content_edge;
-            }
-            // Find the bottom edge.
+        if (!line_boxes.is_empty())
             bottom = line_boxes.last().bottom();
-        }
     } else {
         // If it has block-level children, the height is the distance between
         // the top margin-edge of the topmost block-level child box
