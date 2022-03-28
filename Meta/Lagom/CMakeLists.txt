@@ -513,7 +513,7 @@ if (BUILD_LAGOM)
 
         add_executable(markdown-check_lagom ../../Userland/Utilities/markdown-check.cpp)
         set_target_properties(markdown-check_lagom PROPERTIES OUTPUT_NAME markdown-check)
-        target_link_libraries(markdown-check_lagom LagomMarkdown)
+        target_link_libraries(markdown-check_lagom LagomMarkdown LagomMain)
 
         add_executable(ntpquery_lagom ../../Userland/Utilities/ntpquery.cpp)
         set_target_properties(ntpquery_lagom PROPERTIES OUTPUT_NAME ntpquery)

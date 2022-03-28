@@ -15,12 +15,11 @@
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
-#include <AK/OwnPtr.h>
 #include <AK/RecursionDecision.h>
-#include <AK/StdLibExtras.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
+#include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/Visitor.h>
 #include <stdlib.h>
@@ -223,25 +222,25 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
     return RecursionDecision::Recurse;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (argc < 2) {
+    if (arguments.strings.size() < 2) {
         // Technically it is valid to call this program with zero markdown files: When there are
         // no files, there are no dead links. However, any such usage is probably erroneous.
-        warnln("Usage: {} Foo.md Bar.md ...", argv[0]);
+        warnln("Usage: {} Foo.md Bar.md ...", arguments.strings[0]);
         // E.g.: find AK/ Base/ Documentation/ Kernel/ Meta/ Ports/ Tests/ Userland/ -name '*.md' -print0 | xargs -0 ./MarkdownCheck
         return 1;
     }
 
     outln("Reading and parsing Markdown files ...");
     HashMap<String, MarkdownLinkage> files;
-    for (int i = 1; i < argc; ++i) {
-        auto path = argv[i];
+    for (size_t i = 1; i < arguments.strings.size(); ++i) {
+        auto path = arguments.strings[i];
         auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error()) {
             warnln("Failed to read {}: {}", path, file_or_error.error());
             // Since this should never happen anyway, fail early.
-            return 1;
+            return file_or_error.release_error();
         }
         auto file = file_or_error.release_value();
         auto content_buffer = file->read_all();
