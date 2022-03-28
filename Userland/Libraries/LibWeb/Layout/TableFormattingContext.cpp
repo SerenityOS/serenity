@@ -29,6 +29,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
 
     compute_width(box);
     auto table_width = CSS::Length::make_px(box_state.content_width);
+    auto table_width_is_auto = box.computed_values().width().has_value() && box.computed_values().width()->is_length() && box.computed_values().width()->length().is_auto();
 
     float total_content_width = 0;
     float total_content_height = 0;
@@ -38,18 +39,48 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
 
         compute_width(row_group_box);
         auto column_count = row_group_box.column_count();
-        Vector<float> column_widths;
+        Vector<ColumnWidth> column_widths;
         column_widths.resize(column_count);
 
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
             calculate_column_widths(row, table_width, column_widths);
         });
 
-        float missing_width = box_state.content_width;
-        for (auto column_width : column_widths)
-            missing_width -= column_width;
-        if (missing_width > 0)
-            column_widths[column_widths.size() - 1] += missing_width;
+        float remaining_for_max = box_state.content_width;
+        float remaining_for_min = box_state.content_width;
+        for (auto& column_width : column_widths) {
+            remaining_for_max -= column_width.max;
+            remaining_for_min -= column_width.min;
+        }
+
+        bool max_fits = remaining_for_max >= 0;
+        bool min_fits = remaining_for_min >= 0;
+
+        if (max_fits) {
+            for (auto& column_width : column_widths)
+                column_width.used = column_width.max;
+        } else {
+            for (auto& column_width : column_widths)
+                column_width.used = column_width.min;
+        }
+
+        if (!table_width_is_auto || (min_fits && !max_fits)) {
+            float missing_width = max_fits ? remaining_for_max : remaining_for_min;
+            if (missing_width > 0) {
+                size_t num_auto_columns = 0;
+                for (auto& column_width : column_widths) {
+                    if (column_width.is_auto)
+                        num_auto_columns++;
+                }
+                if (num_auto_columns) {
+                    float extra = missing_width / (float)num_auto_columns;
+                    for (auto& column_width : column_widths) {
+                        if (column_width.is_auto)
+                            column_width.used += extra;
+                    }
+                }
+            }
+        }
 
         float content_width = 0;
         float content_height = 0;
@@ -71,51 +102,63 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
         total_content_width = max(total_content_width, row_group_box_state.content_width);
     });
 
-    if (box.computed_values().width().has_value() && box.computed_values().width()->is_length() && box.computed_values().width()->length().is_auto())
+    if (table_width_is_auto)
         box_state.content_width = total_content_width;
 
     // FIXME: This is a total hack, we should respect the 'height' property.
     box_state.content_height = total_content_height;
 }
 
-void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<float>& column_widths)
+void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<ColumnWidth>& column_widths)
 {
     m_state.get_mutable(row);
     size_t column_index = 0;
-    bool use_auto_layout = table_width.is_auto();
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         auto& cell_state = m_state.get_mutable(cell);
         auto const& computed_values = cell.computed_values();
         auto specified_width = computed_values.width().has_value() ? computed_values.width()->resolved(cell, table_width).resolved(cell) : CSS::Length::make_auto();
+
         compute_width(cell, specified_width.is_auto() ? LayoutMode::MinContent : LayoutMode::Normal);
-        if (use_auto_layout) {
-            (void)layout_inside(cell, LayoutMode::MaxContent);
-        } else {
-            (void)layout_inside(cell, LayoutMode::Normal);
+        (void)layout_inside(cell, LayoutMode::Normal);
+
+        if (cell.colspan() == 1) {
+            auto [min_width, max_width] = calculate_min_and_max_content_width(cell);
+            min_width = max(min_width, cell_state.border_box_width());
+            max_width = max(max_width, cell_state.border_box_width());
+            column_widths[column_index].min = max(column_widths[column_index].min, min_width);
+            column_widths[column_index].max = max(column_widths[column_index].max, max_width);
+            column_widths[column_index].is_auto &= specified_width.is_auto();
         }
-        if (cell.colspan() == 1)
-            column_widths[column_index] = max(column_widths[column_index], cell_state.border_box_width());
         column_index += cell.colspan();
     });
     column_index = 0;
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
-        auto& cell_state = m_state.get_mutable(cell);
         size_t colspan = cell.colspan();
-        if (colspan != 1) {
-            float missing = cell_state.border_box_width();
-            for (size_t i = 0; i < colspan; ++i)
-                missing -= column_widths[column_index + i];
-            if (missing > 0) {
-                float extra = missing / (float)colspan;
+        if (colspan > 1) {
+            auto& cell_state = m_state.get_mutable(cell);
+            auto [min_width, max_width] = calculate_min_and_max_content_width(cell);
+            float missing_min = max(min_width, cell_state.border_box_width());
+            float missing_max = max(max_width, cell_state.border_box_width());
+            for (size_t i = 0; i < colspan; ++i) {
+                missing_min -= column_widths[column_index + i].min;
+                missing_max -= column_widths[column_index + i].max;
+            }
+            if (missing_min > 0) {
+                float extra = missing_min / (float)colspan;
                 for (size_t i = 0; i < colspan; ++i)
-                    column_widths[column_index + i] += extra;
+                    column_widths[column_index + i].min += extra;
+            }
+            if (missing_max > 0) {
+                float extra = missing_max / (float)colspan;
+                for (size_t i = 0; i < colspan; ++i)
+                    column_widths[column_index + i].max += extra;
             }
         }
         column_index += colspan;
     });
 }
 
-void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_widths)
+void TableFormattingContext::layout_row(Box const& row, Vector<ColumnWidth>& column_widths)
 {
     auto& row_state = m_state.get_mutable(row);
     size_t column_index = 0;
@@ -129,18 +172,14 @@ void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_wi
 
         float span_width = 0;
         for (size_t i = 0; i < cell.colspan(); ++i)
-            span_width += column_widths[column_index++];
+            span_width += column_widths[column_index++].used;
         cell_state.content_width = span_width - cell_state.border_box_left() - cell_state.border_box_right();
 
         BlockFormattingContext::compute_height(cell, m_state);
         cell_state.offset = row_state.offset.translated(cell_state.border_box_left() + content_width, cell_state.border_box_top());
 
         // Layout the cell contents a second time, now that we know its final width.
-        if (use_auto_layout) {
-            (void)layout_inside(cell, LayoutMode::MaxContent);
-        } else {
-            (void)layout_inside(cell, LayoutMode::Normal);
-        }
+        (void)layout_inside(cell, LayoutMode::Normal);
 
         content_width += span_width;
         tallest_cell_height = max(tallest_cell_height, cell_state.border_box_height());
