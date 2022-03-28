@@ -121,15 +121,15 @@ String canonicalize_unicode_locale_id(Unicode::LocaleID& locale)
     return locale_id.release_value();
 }
 
-// 6.3.1 IsWellFormedCurrencyCode ( currency ), https://tc39.es/ecma402/#sec-canonicalcodefordisplaynames
+// 6.3.1 IsWellFormedCurrencyCode ( currency ), https://tc39.es/ecma402/#sec-iswellformedcurrencycode
 bool is_well_formed_currency_code(StringView currency)
 {
-    // 1. Let normalized be the result of mapping currency to upper case as described in 6.1.
-    // 2. If the number of elements in normalized is not 3, return false.
+    // 1. If the length of currency is not 3, return false.
     if (currency.length() != 3)
         return false;
 
-    // 3. If normalized contains any character that is not in the range "A" to "Z" (U+0041 to U+005A), return false.
+    // 2. Let normalized be the ASCII-uppercase of currency.
+    // 3. If normalized contains any code unit outside of 0x0041 through 0x005A (corresponding to Unicode characters LATIN CAPITAL LETTER A through LATIN CAPITAL LETTER Z), return false.
     if (!all_of(currency, is_ascii_alpha))
         return false;
 

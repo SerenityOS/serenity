@@ -116,8 +116,7 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
         if (!locale_id.has_value())
             return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidLanguageTag, code);
 
-        // c. Set code to CanonicalizeUnicodeLocaleId(code).
-        // d. Return code.
+        // c. Return ! CanonicalizeUnicodeLocaleId(code).
         auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
         return js_string(vm, move(canonicalized_tag));
     }
@@ -128,8 +127,7 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
         if (!Unicode::is_unicode_region_subtag(code))
             return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "region"sv);
 
-        // b. Let code be the result of mapping code to upper case as described in 6.1.
-        // c. Return code.
+        // b. Return the ASCII-uppercase of code.
         return js_string(vm, code.to_uppercase_string());
     }
 
@@ -139,8 +137,13 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
         if (!Unicode::is_unicode_script_subtag(code))
             return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "script"sv);
 
-        // b. Let code be the result of mapping the first character in code to upper case, and mapping the second, third, and fourth character in code to lower case, as described in 6.1.
-        // c. Return code.
+        // Assert: The length of code is 4, and every code unit of code represents an ASCII letter (0x0041 through 0x005A and 0x0061 through 0x007A, both inclusive).
+        VERIFY(code.length() == 4);
+        VERIFY(all_of(code, is_ascii_alpha));
+
+        // c. Let first be the ASCII-uppercase of the substring of code from 0 to 1.
+        // d. Let rest be the ASCII-lowercase of the substring of code from 1.
+        // e. Return the string-concatenation of first and rest.
         return js_string(vm, code.to_titlecase_string());
     }
 
@@ -154,8 +157,7 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
         if (code.contains('_'))
             return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "calendar"sv);
 
-        // c. Let code be the result of mapping code to lower case as described in 6.1.
-        // d. Return code.
+        // c. Return the ASCII-lowercase of code.
         return js_string(vm, code.to_lowercase_string());
     }
 
@@ -176,8 +178,7 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(GlobalObject& global_o
     if (!is_well_formed_currency_code(code))
         return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, code, "currency"sv);
 
-    // 8. Let code be the result of mapping code to upper case as described in 6.1.
-    // 9. Return code.
+    // 8. Return the ASCII-uppercase of code.
     return js_string(vm, code.to_uppercase_string());
 }
 

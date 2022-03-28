@@ -941,7 +941,7 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
     // 7. Else,
     else {
         // a. Assert: e < 0.
-        // b. Let m be the string-concatenation of the String value "0.", –(e+1) occurrences of the character "0", and m.
+        // b. Let m be the string-concatenation of "0.", –(e+1) occurrences of the character "0", and m.
         result.formatted_string = String::formatted(
             "0.{}{}",
             String::repeated('0', -1 * (exponent + 1)),
@@ -981,7 +981,7 @@ RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_
     // 4. Let xFinal be n / 10^f.
     result.rounded_number = divide_by_power(global_object, n, fraction);
 
-    // 5. If n = 0, let m be the String "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
+    // 5. If n = 0, let m be "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
     result.formatted_string = is_zero(n) ? String("0"sv) : number_to_string(n);
 
     // 6. If f ≠ 0, then
