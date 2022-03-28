@@ -372,12 +372,12 @@ Font const& Font::bold_variant() const
     return *m_bold_variant;
 }
 
-FontMetrics Font::metrics(u32 code_point) const
+FontMetrics Font::metrics() const
 {
     return FontMetrics {
         .size = (float)presentation_size(),
         .x_height = (float)x_height(),
-        .glyph_width = (float)glyph_width(code_point),
+        .glyph_width = (float)glyph_width('M'),
         .glyph_spacing = (float)glyph_spacing(),
     };
 }

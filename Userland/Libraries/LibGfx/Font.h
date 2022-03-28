@@ -103,7 +103,7 @@ public:
     virtual NonnullRefPtr<Font> clone() const = 0;
     virtual ~Font() {};
 
-    FontMetrics metrics(u32 code_point) const;
+    FontMetrics metrics() const;
 
     virtual u8 presentation_size() const = 0;
     virtual int pixel_size() const = 0;

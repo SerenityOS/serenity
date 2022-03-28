@@ -106,7 +106,7 @@ float Length::to_px(Layout::Node const& layout_node) const
     auto* root_element = layout_node.document().document_element();
     if (!root_element || !root_element->layout_node())
         return 0;
-    return to_px(viewport_rect, layout_node.font().metrics('M'), layout_node.computed_values().font_size(), root_element->layout_node()->computed_values().font_size());
+    return to_px(viewport_rect, layout_node.font().metrics(), layout_node.computed_values().font_size(), root_element->layout_node()->computed_values().font_size());
 }
 
 String Length::to_string() const
