@@ -28,6 +28,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
     auto& box_state = m_state.get_mutable(box);
 
     compute_width(box);
+    auto table_width = CSS::Length::make_px(box_state.content_width);
 
     float total_content_width = 0;
     float total_content_height = 0;
@@ -41,7 +42,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
         column_widths.resize(column_count);
 
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
-            calculate_column_widths(row, column_widths);
+            calculate_column_widths(row, table_width, column_widths);
         });
 
         float missing_width = box_state.content_width;
@@ -77,15 +78,16 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
     box_state.content_height = total_content_height;
 }
 
-void TableFormattingContext::calculate_column_widths(Box const& row, Vector<float>& column_widths)
+void TableFormattingContext::calculate_column_widths(Box const& row, CSS::Length const& table_width, Vector<float>& column_widths)
 {
     m_state.get_mutable(row);
     size_t column_index = 0;
-    auto* table = row.first_ancestor_of_type<TableBox>();
-    bool use_auto_layout = !table || (!table->computed_values().width().has_value() || (table->computed_values().width()->is_length() && table->computed_values().width()->length().is_auto()));
+    bool use_auto_layout = table_width.is_auto();
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         auto& cell_state = m_state.get_mutable(cell);
-        compute_width(cell, LayoutMode::MinContent);
+        auto const& computed_values = cell.computed_values();
+        auto specified_width = computed_values.width().has_value() ? computed_values.width()->resolved(cell, table_width).resolved(cell) : CSS::Length::make_auto();
+        compute_width(cell, specified_width.is_auto() ? LayoutMode::MinContent : LayoutMode::Normal);
         if (use_auto_layout) {
             (void)layout_inside(cell, LayoutMode::MaxContent);
         } else {
