@@ -19,72 +19,31 @@ You can watch videos of the system being developed on YouTube:
 * [Andreas Kling's channel](https://youtube.com/andreaskling)
 * [Linus Groh's channel](https://youtube.com/linusgroh)
 
+**FAQ**: [Frequently Asked Questions](https://github.com/SerenityOS/serenity/blob/master/Documentation/FAQ.md)
+
 ## Screenshot
 
 ![Screenshot as of b36968c.png](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-b36968c.png)
 
-## Kernel features
+## Features
 
-* x86 (32-bit) and x86_64 (64-bit) kernel with pre-emptive multi-threading
-* Hardware protections (SMEP, SMAP, UMIP, NX, WP, TSD, ...)
-* IPv4 stack with ARP, TCP, UDP and ICMP protocols
-* ext2 filesystem
-* POSIX signals
-* Purgeable memory
-* /proc filesystem
-* Pseudoterminals (with /dev/pts filesystem)
-* Filesystem notifications
-* CPU and memory profiling
-* VMWare/QEMU mouse integration
+* Modern x86 32-bit and 64-bit kernel with pre-emptive multi-threading
+* [Browser](Userland/Applications/Browser/) with JavaScript, WebAssembly, and more (check the spec compliance for [JS](https://libjs.dev/test262/), [CSS](https://css.tobyase.de/), and [WASM](https://libjs.dev/wasm/))
+* Security features (hardware protections, limited userland capabilities, W^X memory, `pledge` & `unveil`, (K)ASLR, OOM-resistance, web-content isolation, state-of-the-art TLS algorithms, ...)
+* [System services](Userland/Services/) (WindowServer, LoginServer, AudioServer, WebServer, RequestServer, CrashServer, ...) and modern IPC
+* Good POSIX compatibility ([LibC](Userland/Libraries/LibC/), Shell, syscalls, signals, pseudoterminals, filesystem notifications, standard Unix [utilities](Userland/Utilities/), ...)
+* POSIX-like virtual file systems (/proc, /dev, /sys, /tmp, ...) and ext2 file system
+* Network stack and applications with support for IPv4, TCP, UDP; DNS, HTTP, Gemini, IMAP, NTP
+* Profiling, debugging and other development tools (Kernel-supported profiling, detailed program analysis with software emulation in UserspaceEmulator, CrashReporter, interactive GUI playground, HexEditor, HackStudio IDE for C++ and more)
+* [Libraries](Userland/Libraries/) for everything from cryptography to OpenGL, audio, JavaScript, GUI, playing chess, ...
+* Support for many common and uncommon file formats (PNG, JPEG, GIF, MP3, WAV, FLAC, ZIP, TAR, PDF, QOI, Gemini, ...)
+* Unified style and design philosophy, flexible theming system, [custom (bitmap and vector) fonts](https://fonts.serenityos.net/font-family)
+* [Games](Userland/Games/) (Solitaire, Minesweeper, 2048, chess, Conway's Game of Life, ...) and [demos](Userland/Demos/) (CatDog, Starfield, Eyes, mandelbrot set, WidgetGallery, ...)
+* Every-day GUI programs and utilities (Spreadsheet with JavaScript, TextEditor, Terminal, PixelPaint, various multimedia viewers and players, Mail, Assistant, Calculator, ...)
 
-## System services
+... and all of the above are right in this repository, no extra dependencies, built from-scratch by us :^)
 
-* Launch/session daemon (SystemServer)
-* Compositing window server (WindowServer)
-* Text console manager (TTYServer)
-* DNS client (LookupServer)
-* Network protocols server (RequestServer and WebSocket)
-* Software-mixing sound daemon (AudioServer)
-* Desktop notifications (NotificationServer)
-* HTTP server (WebServer)
-* Telnet server (TelnetServer)
-* DHCP client (DHCPClient)
-
-## Libraries
-
-* C++ templates and containers (AK)
-* Event loop and utilities (LibCore)
-* 2D graphics library (LibGfx)
-* OpenGL 1.x compatible library (LibGL)
-* GUI toolkit (LibGUI)
-* Cross-process communication library (LibIPC)
-* HTML/CSS engine (LibWeb)
-* JavaScript engine (LibJS)
-* Markdown (LibMarkdown)
-* Audio (LibAudio)
-* Digital Signal Processing/Synthesizer Chains (LibDSP)
-* PCI database (LibPCIDB)
-* Terminal emulation (LibVT)
-* Out-of-process network protocol I/O (LibProtocol)
-* Mathematical functions (LibM)
-* ELF file handling (LibELF)
-* POSIX threading (LibPthread)
-* Higher-level threading (LibThreading)
-* Transport Layer Security (LibTLS)
-* HTTP and HTTPS (LibHTTP)
-* IMAP (LibIMAP)
-
-## Userland features
-
-* Unix-like libc and userland
-* Shell with pipes and I/O redirection
-* On-line help system (both terminal and GUI variants)
-* Web browser (Browser)
-* C++ IDE (HackStudio)
-* Desktop synthesizer (Piano)
-* E-mail client (Mail)
-* Various desktop apps & games
-* Color themes
+Additionally, there are [over two hundred ports of popular open-source software](Ports/AvailablePorts.md), including games, compilers, Unix tools, multimedia apps and more.
 
 ## How do I read the documentation?
 
@@ -92,26 +51,23 @@ Man pages are available online at [man.serenityos.org](https://man.serenityos.or
 
 When running SerenityOS you can use `man` for the terminal interface, or `help` for the GUI.
 
+Code-related documentation can be found in the [documentation](Documentation/) folder.
+
 ## How do I build and run this?
 
-See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md)
+See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md). Serenity runs on Linux, macOS (aarch64 might be a challenge), Windows (with WSL2) and many other *Nixes with hardware or software virtualization.
 
-## Before opening an issue
-
-Please see the [issue policy](https://github.com/SerenityOS/serenity/blob/master/CONTRIBUTING.md#issue-policy).
-
-FAQ: [Frequently Asked Questions](https://github.com/SerenityOS/serenity/blob/master/Documentation/FAQ.md)
-
-## Get in touch
+## Get in touch and participate!
 
 Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 
-## Author
+Before opening an issue, please see the [issue policy](https://github.com/SerenityOS/serenity/blob/master/CONTRIBUTING.md#issue-policy).
+
+A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Authors
 
 * **Andreas Kling** - [awesomekling](https://twitter.com/awesomekling)
-
-## Contributors
-
 * **Robin Burchell** - [rburchell](https://github.com/rburchell)
 * **Conrad Pankoff** - [deoxxa](https://github.com/deoxxa)
 * **Sergey Bugaev** - [bugaevc](https://github.com/bugaevc)
@@ -156,7 +112,7 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 * **Kenneth Myhra** - [kennethmyhra](https://github.com/kennethmyhra)
 * **Maciej** - [sppmacd](https://github.com/sppmacd)
 
-(And many more!) The people listed above have landed more than 100 commits in the project. :^)
+And many more! [See here](https://github.com/SerenityOS/serenity/graphs/contributors) for a full contributor list. The people listed above have landed more than 100 commits in the project. :^)
 
 ## License
 
