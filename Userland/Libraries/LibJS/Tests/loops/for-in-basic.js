@@ -99,3 +99,24 @@ describe("special left hand sides", () => {
         }).toThrowWithMessage(ReferenceError, "Invalid left-hand side in assignment");
     });
 });
+
+test("remove properties while iterating", () => {
+    const from = [1, 2, 3];
+    const to = [];
+    for (const prop in from) {
+        to.push(prop);
+        from.pop();
+    }
+    expect(to).toEqual(["0", "1"]);
+});
+
+test("duplicated properties in prototype", () => {
+    const object = { a: 1 };
+    const proto = { a: 2 };
+    Object.setPrototypeOf(object, proto);
+    const a = [];
+    for (const prop in object) {
+        a.push(prop);
+    }
+    expect(a).toEqual(["a"]);
+});

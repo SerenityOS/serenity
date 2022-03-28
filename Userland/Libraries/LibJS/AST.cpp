@@ -1021,30 +1021,29 @@ Completion ForInStatement::loop_evaluation(Interpreter& interpreter, GlobalObjec
     // 3. Let V be undefined.
     auto last_value = js_undefined();
 
-    while (object) {
-        auto property_names = TRY(object->enumerable_own_property_names(Object::PropertyKind::Key));
-        for (auto& value : property_names) {
-            TRY(for_in_head_state.execute_head(interpreter, global_object, value));
+    auto result = object->enumerate_object_properties([&](auto value) -> Optional<Completion> {
+        TRY(for_in_head_state.execute_head(interpreter, global_object, value));
 
-            // l. Let result be the result of evaluating stmt.
-            auto result = m_body->execute(interpreter, global_object);
+        // l. Let result be the result of evaluating stmt.
+        auto result = m_body->execute(interpreter, global_object);
 
-            // m. Set the running execution context's LexicalEnvironment to oldEnv.
-            interpreter.vm().running_execution_context().lexical_environment = old_environment;
+        // m. Set the running execution context's LexicalEnvironment to oldEnv.
+        interpreter.vm().running_execution_context().lexical_environment = old_environment;
 
-            // n. If LoopContinues(result, labelSet) is false, then
-            if (!loop_continues(result, label_set)) {
-                // 1. Return Completion(UpdateEmpty(result, V)).
-                return result.update_empty(last_value);
-            }
-
-            // o. If result.[[Value]] is not empty, set V to result.[[Value]].
-            if (result.value().has_value())
-                last_value = *result.value();
+        // n. If LoopContinues(result, labelSet) is false, then
+        if (!loop_continues(result, label_set)) {
+            // 1. Return Completion(UpdateEmpty(result, V)).
+            return result.update_empty(last_value);
         }
-        object = TRY(object->internal_get_prototype_of());
-    }
-    return last_value;
+
+        // o. If result.[[Value]] is not empty, set V to result.[[Value]].
+        if (result.value().has_value())
+            last_value = *result.value();
+
+        return {};
+    });
+
+    return result.value_or(last_value);
 }
 
 // 14.1.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation
