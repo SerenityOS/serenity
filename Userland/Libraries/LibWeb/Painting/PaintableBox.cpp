@@ -369,8 +369,6 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
     if (phase == Painting::PaintPhase::Foreground) {
         auto fragment_absolute_rect = fragment.absolute_rect();
 
-        painter.set_font(text_node.font());
-
         if (text_node.document().inspected_node() == &text_node.dom_node())
             context.painter().draw_rect(enclosing_int_rect(fragment_absolute_rect), Color::Magenta);
 
@@ -382,17 +380,17 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         if (text_transform == CSS::TextTransform::Lowercase)
             text = text_node.text_for_rendering().to_lowercase();
 
-        // FIXME: This is a hack to prevent text clipping when painting a bitmap font into a too-small box.
-        auto draw_rect = enclosing_int_rect(fragment_absolute_rect);
-        draw_rect.set_height(max(draw_rect.height(), text_node.font().pixel_size()));
-        painter.draw_text(draw_rect, text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, text_node.computed_values().color());
+        Gfx::FloatPoint baseline_start { fragment_absolute_rect.x(), fragment_absolute_rect.y() + fragment.baseline() };
+        Utf8View view { text.substring_view(fragment.start(), fragment.length()) };
+
+        painter.draw_text_run(baseline_start, view, fragment.layout_node().font(), text_node.computed_values().color());
 
         auto selection_rect = fragment.selection_rect(text_node.font());
         if (!selection_rect.is_empty()) {
             painter.fill_rect(enclosing_int_rect(selection_rect), context.palette().selection());
             Gfx::PainterStateSaver saver(painter);
             painter.add_clip_rect(enclosing_int_rect(selection_rect));
-            painter.draw_text(enclosing_int_rect(fragment_absolute_rect), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, context.palette().selection_text());
+            painter.draw_text_run(baseline_start, view, fragment.layout_node().font(), context.palette().selection_text());
         }
 
         paint_text_decoration(painter, text_node, fragment);

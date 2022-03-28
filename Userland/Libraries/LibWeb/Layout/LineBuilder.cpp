@@ -159,7 +159,7 @@ void LineBuilder::update_last_line()
 
     auto line_box_baseline = [&] {
         float line_box_baseline = 0;
-        for (auto const& fragment : line_box.fragments()) {
+        for (auto& fragment : line_box.fragments()) {
             auto baseline = fragment_baseline(fragment);
             if (fragment.height() < m_context.containing_block().line_height())
                 baseline += (m_context.containing_block().line_height() - fragment.height()) / 2;
@@ -167,6 +167,9 @@ void LineBuilder::update_last_line()
             //       This ensures that we make enough vertical space on the line for any manually-aligned fragments.
             if (auto length_percentage = fragment.layout_node().computed_values().vertical_align().template get_pointer<CSS::LengthPercentage>(); length_percentage && length_percentage->is_length())
                 baseline += length_percentage->length().to_px(fragment.layout_node());
+
+            // Store the baseline on the fragment. This is used when painting.
+            fragment.set_baseline(baseline);
 
             line_box_baseline = max(line_box_baseline, baseline);
         }
