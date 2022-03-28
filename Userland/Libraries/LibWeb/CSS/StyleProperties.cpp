@@ -117,13 +117,11 @@ NonnullRefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bol
 
 float StyleProperties::line_height(Layout::Node const& layout_node) const
 {
-    constexpr float font_height_to_line_height_multiplier = 1.4f;
-
     if (auto maybe_line_height = property(CSS::PropertyID::LineHeight); maybe_line_height.has_value()) {
         auto line_height = maybe_line_height.release_value();
 
         if (line_height->is_identifier() && line_height->to_identifier() == ValueID::Normal)
-            return Length(1, Length::Type::Em).to_px(layout_node) * font_height_to_line_height_multiplier;
+            return layout_node.font().pixel_metrics().line_spacing();
 
         if (line_height->is_length()) {
             auto line_height_length = line_height->to_length();
@@ -141,7 +139,7 @@ float StyleProperties::line_height(Layout::Node const& layout_node) const
         }
     }
 
-    return Length(font_height_to_line_height_multiplier, Length::Type::Em).to_px(layout_node);
+    return layout_node.font().pixel_metrics().line_spacing();
 }
 
 Optional<int> StyleProperties::z_index() const
