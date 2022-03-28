@@ -188,6 +188,8 @@ private:
 
     [[nodiscard]] Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<StyleComponentValueRule>&);
 
+    RefPtr<CSSRule> parse_font_face_rule(TokenStream<StyleComponentValueRule>&);
+
     [[nodiscard]] RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
     [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
     [[nodiscard]] Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule const&);
@@ -339,6 +341,7 @@ private:
     Optional<Supports::Feature> parse_supports_feature(TokenStream<StyleComponentValueRule>&);
 
     static bool has_ignored_vendor_prefix(StringView);
+    static bool is_builtin(StringView);
 
     ParsingContext m_context;
 

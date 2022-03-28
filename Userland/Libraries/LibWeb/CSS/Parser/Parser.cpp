@@ -11,6 +11,7 @@
 #include <AK/Debug.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
+#include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/CSSMediaRule.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
@@ -2054,23 +2055,13 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
     if (rule->m_type == StyleRule::Type::At) {
         if (has_ignored_vendor_prefix(rule->m_name)) {
             return {};
-        } else if (rule->m_name.equals_ignoring_case("media"sv)) {
-
-            auto media_query_tokens = TokenStream { rule->prelude() };
-            auto media_query_list = parse_a_media_query_list(media_query_tokens);
-            if (media_query_list.is_empty() || !rule->block())
+        } else if (rule->m_name.equals_ignoring_case("font-face"sv)) {
+            if (rule->prelude().is_empty() || !rule->block()->is_curly()) {
+                dbgln_if(CSS_PARSER_DEBUG, "@font-face rule is malformed.");
                 return {};
-
-            auto child_tokens = TokenStream { rule->block()->values() };
-            auto parser_rules = consume_a_list_of_rules(child_tokens, false);
-            NonnullRefPtrVector<CSSRule> child_rules;
-            for (auto& raw_rule : parser_rules) {
-                if (auto child_rule = convert_to_rule(raw_rule))
-                    child_rules.append(*child_rule);
             }
-
-            return CSSMediaRule::create(MediaList::create(move(media_query_list)), move(child_rules));
-
+            TokenStream tokens { rule->block()->values() };
+            return parse_font_face_rule(tokens);
         } else if (rule->m_name.equals_ignoring_case("import"sv) && !rule->prelude().is_empty()) {
 
             Optional<AK::URL> url;
@@ -2093,6 +2084,23 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
                 return CSSImportRule::create(url.value(), const_cast<DOM::Document&>(*m_context.document()));
             else
                 dbgln_if(CSS_PARSER_DEBUG, "Unable to parse url from @import rule");
+
+        } else if (rule->m_name.equals_ignoring_case("media"sv)) {
+
+            auto media_query_tokens = TokenStream { rule->prelude() };
+            auto media_query_list = parse_a_media_query_list(media_query_tokens);
+            if (media_query_list.is_empty() || !rule->block())
+                return {};
+
+            auto child_tokens = TokenStream { rule->block()->values() };
+            auto parser_rules = consume_a_list_of_rules(child_tokens, false);
+            NonnullRefPtrVector<CSSRule> child_rules;
+            for (auto& raw_rule : parser_rules) {
+                if (auto child_rule = convert_to_rule(raw_rule))
+                    child_rules.append(*child_rule);
+            }
+
+            return CSSMediaRule::create(MediaList::create(move(media_query_list)), move(child_rules));
 
         } else if (rule->m_name.equals_ignoring_case("supports"sv)) {
 
@@ -3610,6 +3618,24 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<StyleComponentValueRule>
     return FlexFlowStyleValue::create(flex_direction.release_nonnull(), flex_wrap.release_nonnull());
 }
 
+static bool is_generic_font_family(ValueID identifier)
+{
+    switch (identifier) {
+    case ValueID::Cursive:
+    case ValueID::Fantasy:
+    case ValueID::Monospace:
+    case ValueID::Serif:
+    case ValueID::SansSerif:
+    case ValueID::UiMonospace:
+    case ValueID::UiRounded:
+    case ValueID::UiSerif:
+    case ValueID::UiSansSerif:
+        return true;
+    default:
+        return false;
+    }
+}
+
 RefPtr<StyleValue> Parser::parse_font_value(Vector<StyleComponentValueRule> const& component_values)
 {
     RefPtr<StyleValue> font_style;
@@ -3703,23 +3729,6 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<StyleComponentValueRule> cons
 
 RefPtr<StyleValue> Parser::parse_font_family_value(Vector<StyleComponentValueRule> const& component_values, size_t start_index)
 {
-    auto is_generic_font_family = [](ValueID identifier) -> bool {
-        switch (identifier) {
-        case ValueID::Cursive:
-        case ValueID::Fantasy:
-        case ValueID::Monospace:
-        case ValueID::Serif:
-        case ValueID::SansSerif:
-        case ValueID::UiMonospace:
-        case ValueID::UiRounded:
-        case ValueID::UiSerif:
-        case ValueID::UiSansSerif:
-            return true;
-        default:
-            return false;
-        }
-    };
-
     auto is_comma_or_eof = [&](size_t i) -> bool {
         if (i < component_values.size()) {
             auto& maybe_comma = component_values[i];
@@ -3789,6 +3798,101 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<StyleComponentValueRul
     if (font_families.is_empty())
         return nullptr;
     return StyleValueList::create(move(font_families), StyleValueList::Separator::Comma);
+}
+
+RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<StyleComponentValueRule>& tokens)
+{
+    auto declarations_and_at_rules = parse_a_list_of_declarations(tokens);
+
+    Optional<FlyString> font_family;
+    Vector<FontFace::Source> src;
+
+    for (auto& declaration_or_at_rule : declarations_and_at_rules) {
+        if (declaration_or_at_rule.is_at_rule()) {
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: CSS at-rules are not allowed in @font-family; discarding.");
+            continue;
+        }
+
+        auto& declaration = declaration_or_at_rule.declaration();
+        if (declaration.m_name.equals_ignoring_case("font-family"sv)) {
+            // FIXME: This is very similar to, but different from, the logic in parse_font_family_value().
+            //        Ideally they could share code.
+            Vector<String> font_family_parts;
+            bool had_syntax_error = false;
+            for (size_t i = 0; i < declaration.m_values.size(); ++i) {
+                auto& part = declaration.m_values[i];
+                if (part.is(Token::Type::Whitespace))
+                    continue;
+                if (part.is(Token::Type::String)) {
+                    if (!font_family_parts.is_empty()) {
+                        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face font-family format invalid; discarding.");
+                        had_syntax_error = true;
+                        break;
+                    }
+                    font_family_parts.append(part.token().string());
+                    continue;
+                }
+                if (part.is(Token::Type::Ident)) {
+                    auto value_id = value_id_from_string(part.token().ident());
+                    if (is_generic_font_family(value_id)) {
+                        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face font-family format invalid; discarding.");
+                        had_syntax_error = true;
+                        break;
+                    }
+                    font_family_parts.append(part.token().ident());
+                    continue;
+                }
+
+                dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face font-family format invalid; discarding.");
+                had_syntax_error = true;
+                break;
+            }
+            if (had_syntax_error || font_family_parts.is_empty())
+                continue;
+
+            font_family = String::join(' ', font_family_parts);
+            continue;
+        }
+        if (declaration.m_name.equals_ignoring_case("src"sv)) {
+            Vector<FontFace::Source> supported_sources;
+            // FIXME: Implement `local()`.
+            // FIXME: Implement `format()`.
+            TokenStream token_stream { declaration.m_values };
+            auto list_of_source_token_lists = parse_a_comma_separated_list_of_component_values(token_stream);
+            for (auto const& source_token_list : list_of_source_token_lists) {
+                Optional<AK::URL> url;
+                bool had_syntax_error = false;
+                for (auto const& source_token : source_token_list) {
+                    // FIXME: Allow data urls for fonts.
+                    if (auto maybe_url = parse_url_function(source_token); maybe_url.has_value()) {
+                        if (url.has_value()) {
+                            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face src format invalid; discarding.");
+                            had_syntax_error = true;
+                            break;
+                        }
+                        url = maybe_url.release_value();
+                    }
+                }
+                if (had_syntax_error)
+                    continue;
+                if (!url.has_value())
+                    continue;
+                supported_sources.empend(url.release_value());
+            }
+            if (supported_sources.is_empty())
+                continue;
+            src = move(supported_sources);
+        }
+
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Unrecognized descriptor '{}' in @font-family; discarding.", declaration.m_name);
+    }
+
+    if (!font_family.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Failed to parse @font-face: no font-family!");
+        return {};
+    }
+
+    return CSSFontFaceRule::create(FontFace { font_family.release_value(), move(src) });
 }
 
 RefPtr<StyleValue> Parser::parse_list_style_value(Vector<StyleComponentValueRule> const& component_values)
@@ -4953,6 +5057,13 @@ bool Parser::has_ignored_vendor_prefix(StringView string)
     if (string.starts_with("-libweb-"))
         return false;
     return true;
+}
+
+bool Parser::is_builtin(StringView name)
+{
+    return name.equals_ignoring_case("inherit"sv)
+        || name.equals_ignoring_case("initial"sv)
+        || name.equals_ignoring_case("unset"sv);
 }
 
 RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext const& context, PropertyID property_id, Vector<StyleComponentValueRule> const& tokens)
