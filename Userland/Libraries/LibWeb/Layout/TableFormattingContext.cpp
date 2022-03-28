@@ -85,7 +85,7 @@ void TableFormattingContext::calculate_column_widths(Box const& row, Vector<floa
     bool use_auto_layout = !table || (!table->computed_values().width().has_value() || (table->computed_values().width()->is_length() && table->computed_values().width()->length().is_auto()));
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         auto& cell_state = m_state.get_mutable(cell);
-        compute_width(cell);
+        compute_width(cell, LayoutMode::MinContent);
         if (use_auto_layout) {
             (void)layout_inside(cell, LayoutMode::MaxContent);
         } else {
