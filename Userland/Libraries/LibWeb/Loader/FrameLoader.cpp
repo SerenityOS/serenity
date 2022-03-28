@@ -22,6 +22,7 @@
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/XML/XMLDocumentBuilder.h>
 
 namespace Web {
 
@@ -119,6 +120,15 @@ static bool build_gemini_document(DOM::Document& document, const ByteBuffer& dat
     return true;
 }
 
+static bool build_xml_document(DOM::Document& document, const ByteBuffer& data)
+{
+
+    XML::Parser parser(data, { .resolve_external_resource = resolve_xml_resource });
+    XMLDocumentBuilder builder { document };
+    auto result = parser.parse_with_listener(builder);
+    return !result.is_error() && !builder.has_error();
+}
+
 bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data)
 {
     auto& mime_type = document.content_type();
@@ -127,6 +137,8 @@ bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data
         parser->run(document.url());
         return true;
     }
+    if (mime_type.ends_with("+xml") || mime_type.is_one_of("text/xml", "application/xml"))
+        return build_xml_document(document, data);
     if (mime_type.starts_with("image/"))
         return build_image_document(document, data);
     if (mime_type == "text/plain" || mime_type == "application/json")

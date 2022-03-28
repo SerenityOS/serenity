@@ -791,12 +791,12 @@ void HTMLParser::handle_in_head(HTMLToken& token)
         auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
         auto element = create_element_for(token, Namespace::HTML, *adjusted_insertion_location.parent);
         auto& script_element = verify_cast<HTMLScriptElement>(*element);
-        script_element.set_parser_document({}, document());
-        script_element.set_non_blocking({}, false);
+        script_element.set_parser_document(Badge<HTMLParser> {}, document());
+        script_element.set_non_blocking(Badge<HTMLParser> {}, false);
         script_element.set_source_line_number({}, token.start_position().line + 1); // FIXME: This +1 is incorrect for script tags whose script does not start on a new line
 
         if (m_parsing_fragment) {
-            script_element.set_already_started({}, true);
+            script_element.set_already_started(Badge<HTMLParser> {}, true);
         }
 
         if (m_invoked_via_document_write) {
@@ -2223,7 +2223,7 @@ void HTMLParser::handle_text(HTMLToken& token)
     if (token.is_end_of_file()) {
         log_parse_error();
         if (current_node().local_name() == HTML::TagNames::script)
-            verify_cast<HTMLScriptElement>(current_node()).set_already_started({}, true);
+            verify_cast<HTMLScriptElement>(current_node()).set_already_started(Badge<HTMLParser> {}, true);
         (void)m_stack_of_open_elements.pop();
         m_insertion_mode = m_original_insertion_mode;
         process_using_the_rules_for(m_insertion_mode, token);
@@ -2243,7 +2243,7 @@ void HTMLParser::handle_text(HTMLToken& token)
         m_tokenizer.update_insertion_point();
         increment_script_nesting_level();
         // FIXME: Check if active speculative HTML parser is null.
-        script->prepare_script({});
+        script->prepare_script(Badge<HTMLParser> {});
         decrement_script_nesting_level();
         if (script_nesting_level() == 0)
             m_parser_pause_flag = false;

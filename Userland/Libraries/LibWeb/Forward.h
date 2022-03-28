@@ -7,6 +7,10 @@
 
 #pragma once
 
+namespace Web {
+class XMLDocumentBuilder;
+}
+
 namespace Web::Cookie {
 struct Cookie;
 struct ParsedCookie;
