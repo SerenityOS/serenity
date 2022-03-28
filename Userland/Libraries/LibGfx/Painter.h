@@ -87,6 +87,9 @@ public:
     void draw_glyph_or_emoji(IntPoint const&, Utf8CodePointIterator&, Font const&, Color);
     void draw_circle_arc_intersecting(IntRect const&, IntPoint const&, int radius, Color, int thickness);
 
+    // Streamlined text drawing routine that does no wrapping/elision/alignment.
+    void draw_text_run(FloatPoint const& baseline_start, Utf8View const&, Font const&, Color);
+
     enum class CornerOrientation {
         TopLeft,
         TopRight,

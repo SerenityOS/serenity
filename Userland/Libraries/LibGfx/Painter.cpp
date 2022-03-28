@@ -2314,4 +2314,23 @@ void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::
         }
     }
 }
+
+void Painter::draw_text_run(FloatPoint const& baseline_start, Utf8View const& string, Font const& font, Color color)
+{
+    auto pixel_metrics = font.pixel_metrics();
+    float x = baseline_start.x();
+    int y = baseline_start.y() - pixel_metrics.ascent;
+    float space_width = font.glyph_or_emoji_width(' ');
+
+    for (auto code_point : string) {
+        if (code_point == ' ') {
+            x += space_width;
+            continue;
+        }
+        float advance = font.glyph_or_emoji_width(code_point) + font.glyph_spacing();
+        draw_glyph_or_emoji({ (int)roundf(x), y }, code_point, font, color);
+        x += advance;
+    }
+}
+
 }
