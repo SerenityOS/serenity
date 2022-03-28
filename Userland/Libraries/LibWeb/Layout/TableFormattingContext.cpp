@@ -44,6 +44,12 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
             calculate_column_widths(row, column_widths);
         });
 
+        float missing_width = box_state.content_width;
+        for (auto column_width : column_widths)
+            missing_width -= column_width;
+        if (missing_width > 0)
+            column_widths[column_widths.size() - 1] += missing_width;
+
         float content_width = 0;
         float content_height = 0;
 
