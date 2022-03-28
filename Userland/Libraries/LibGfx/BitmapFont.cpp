@@ -372,10 +372,10 @@ Font const& Font::bold_variant() const
     return *m_bold_variant;
 }
 
-FontPixelMetrics Font::pixel_metrics() const
+FontPixelMetrics BitmapFont::pixel_metrics() const
 {
     return FontPixelMetrics {
-        .size = (float)presentation_size(),
+        .size = (float)pixel_size(),
         .x_height = (float)x_height(),
         .advance_of_ascii_zero = (float)glyph_width('0'),
         .glyph_spacing = (float)glyph_spacing(),

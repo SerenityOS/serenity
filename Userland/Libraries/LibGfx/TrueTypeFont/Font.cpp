@@ -724,6 +724,16 @@ u8 ScaledFont::glyph_fixed_width() const
     return glyph_metrics(glyph_id_for_code_point(' ')).advance_width;
 }
 
+Gfx::FontPixelMetrics ScaledFont::pixel_metrics() const
+{
+    return Gfx::FontPixelMetrics {
+        .size = (float)pixel_size(),
+        .x_height = (float)x_height(),
+        .advance_of_ascii_zero = (float)glyph_width('0'),
+        .glyph_spacing = (float)glyph_spacing(),
+    };
+}
+
 u16 OS2::weight_class() const
 {
     return be_u16(m_slice.offset_pointer((u32)Offsets::WeightClass));

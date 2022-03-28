@@ -23,6 +23,8 @@ public:
     NonnullRefPtr<Font> clone() const override;
     static NonnullRefPtr<BitmapFont> create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count);
 
+    virtual FontPixelMetrics pixel_metrics() const override;
+
     NonnullRefPtr<BitmapFont> masked_character_set() const;
     NonnullRefPtr<BitmapFont> unmasked_character_set() const;
 
