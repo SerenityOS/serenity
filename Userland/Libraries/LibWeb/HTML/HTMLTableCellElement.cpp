@@ -58,4 +58,14 @@ void HTMLTableCellElement::set_col_span(unsigned int value)
     set_attribute(HTML::AttributeNames::colspan, String::number(value));
 }
 
+unsigned int HTMLTableCellElement::row_span() const
+{
+    return attribute(HTML::AttributeNames::rowspan).to_uint().value_or(1);
+}
+
+void HTMLTableCellElement::set_row_span(unsigned int value)
+{
+    set_attribute(HTML::AttributeNames::rowspan, String::number(value));
+}
+
 }
