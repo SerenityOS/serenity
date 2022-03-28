@@ -8,7 +8,9 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
+#include <LibCore/System.h>
 #include <LibCoredump/Backtrace.h>
+#include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
 #include <LibTest/TestRunner.h>
 #include <signal.h>
@@ -289,18 +291,18 @@ FileResult TestRunner::run_test_file(const String& test_path)
     return FileResult { move(path_for_test), get_time_in_ms() - start_time, test_result, child_out_err_file, child_pid };
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
 
-    auto program_name = LexicalPath::basename(argv[0]);
+    auto program_name = LexicalPath::basename(arguments.strings[0]);
 
 #ifdef SIGINFO
-    signal(SIGINFO, [](int) {
+    TRY(Core::System::signal(SIGINFO, [](int) {
         static char buffer[4096];
         auto& counts = ::Test::TestRunner::the()->counts();
         int len = snprintf(buffer, sizeof(buffer), "Pass: %d, Fail: %d, Skip: %d\nCurrent test: %s\n", counts.tests_passed, counts.tests_failed, counts.tests_skipped, g_currently_running_test.characters());
         write(STDOUT_FILENO, buffer, len);
-    });
+    }));
 #endif
 
     bool print_progress =
@@ -342,7 +344,7 @@ int main(int argc, char** argv)
     args_parser.add_option(exclude_pattern, "Regular expression to use to exclude paths from being considered tests", "exclude-pattern", 'e', "pattern");
     args_parser.add_option(config_file, "Configuration file to use", "config-file", 'c', "filename");
     args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     test_glob = String::formatted("*{}*", test_glob);
 
@@ -351,10 +353,10 @@ int main(int argc, char** argv)
     }
 
     // Make UBSAN deadly for all tests we run by default.
-    setenv("UBSAN_OPTIONS", "halt_on_error=1", true);
+    TRY(Core::System::setenv("UBSAN_OPTIONS", "halt_on_error=1", true));
 
     if (!run_benchmarks)
-        setenv("TESTS_ONLY", "1", true);
+        TRY(Core::System::setenv("TESTS_ONLY", "1", true));
 
     String test_root;
 
@@ -370,16 +372,16 @@ int main(int argc, char** argv)
 
     test_root = Core::File::real_path_for(test_root);
 
-    if (chdir(test_root.characters()) < 0) {
-        auto saved_errno = errno;
-        warnln("chdir failed: {}", strerror(saved_errno));
-        return 1;
+    auto void_or_error = Core::System::chdir(test_root);
+    if (void_or_error.is_error()) {
+        warnln("chdir failed: {}", void_or_error.error());
+        return void_or_error.release_error();
     }
 
     auto config_or_error = config_file.is_empty() ? Core::ConfigFile::open_for_app("Tests") : Core::ConfigFile::open(config_file);
     if (config_or_error.is_error()) {
         warnln("Failed to open configuration file ({}): {}", config_file.is_empty() ? "User config for Tests" : config_file.characters(), config_or_error.error());
-        return 1;
+        return config_or_error.release_error();
     }
     auto config = config_or_error.release_value();
 
