@@ -17,6 +17,9 @@ public:
     HTMLTableCellElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTableCellElement() override;
 
+    unsigned col_span() const;
+    void set_col_span(unsigned);
+
 private:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 };
