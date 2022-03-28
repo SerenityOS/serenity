@@ -15,6 +15,8 @@
 #include <LibWeb/Bindings/AbstractRangeConstructor.h>
 #include <LibWeb/Bindings/AbstractRangePrototype.h>
 #include <LibWeb/Bindings/AudioConstructor.h>
+#include <LibWeb/Bindings/CSSFontFaceRuleConstructor.h>
+#include <LibWeb/Bindings/CSSFontFaceRulePrototype.h>
 #include <LibWeb/Bindings/CSSRuleConstructor.h>
 #include <LibWeb/Bindings/CSSRuleListConstructor.h>
 #include <LibWeb/Bindings/CSSRuleListPrototype.h>
@@ -340,6 +342,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(AbortSignal)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(AbstractRange)                                                      \
     ADD_WINDOW_OBJECT_INTERFACE(Crypto)                                                             \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSFontFaceRule)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRule)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRuleList)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleDeclaration)                                                \
