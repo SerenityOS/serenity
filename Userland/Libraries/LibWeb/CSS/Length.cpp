@@ -67,7 +67,7 @@ Length Length::resolved(Layout::Node const& layout_node) const
     return *this;
 }
 
-float Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
+float Length::relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const
 {
     switch (m_type) {
     case Type::Ex:
@@ -106,7 +106,7 @@ float Length::to_px(Layout::Node const& layout_node) const
     auto* root_element = layout_node.document().document_element();
     if (!root_element || !root_element->layout_node())
         return 0;
-    return to_px(viewport_rect, layout_node.font().metrics(), layout_node.computed_values().font_size(), root_element->layout_node()->computed_values().font_size());
+    return to_px(viewport_rect, layout_node.font().pixel_metrics(), layout_node.computed_values().font_size(), root_element->layout_node()->computed_values().font_size());
 }
 
 String Length::to_string() const

@@ -79,7 +79,7 @@ public:
 
     float to_px(Layout::Node const&) const;
 
-    ALWAYS_INLINE float to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
+    ALWAYS_INLINE float to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const
     {
         if (is_auto())
             return 0;
@@ -128,7 +128,7 @@ public:
         return !(*this == other);
     }
 
-    float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const;
+    float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const;
 
 private:
     const char* unit_name() const;

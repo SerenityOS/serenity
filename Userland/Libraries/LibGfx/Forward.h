@@ -16,7 +16,7 @@ class Emoji;
 class Font;
 class GlyphBitmap;
 class ImageDecoder;
-struct FontMetrics;
+struct FontPixelMetrics;
 
 template<typename T>
 class Line;

@@ -776,7 +776,7 @@ float StyleComputer::root_element_font_size() const
     if (!maybe_root_value.has_value())
         return default_root_element_font_size;
 
-    return maybe_root_value.value()->to_length().to_px(viewport_rect(), computed_root_style->computed_font().metrics(), default_root_element_font_size, default_root_element_font_size);
+    return maybe_root_value.value()->to_length().to_px(viewport_rect(), computed_root_style->computed_font().pixel_metrics(), default_root_element_font_size, default_root_element_font_size);
 }
 
 void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -858,11 +858,11 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     } else {
         float root_font_size = root_element_font_size();
 
-        Gfx::FontMetrics font_metrics;
+        Gfx::FontPixelMetrics font_metrics;
         if (parent_element && parent_element->computed_css_values())
-            font_metrics = parent_element->computed_css_values()->computed_font().metrics();
+            font_metrics = parent_element->computed_css_values()->computed_font().pixel_metrics();
         else
-            font_metrics = Gfx::FontDatabase::default_font().metrics();
+            font_metrics = Gfx::FontDatabase::default_font().pixel_metrics();
 
         auto parent_font_size = [&]() -> float {
             if (!parent_element || !parent_element->computed_css_values())
@@ -1003,7 +1003,7 @@ Gfx::Font const& StyleComputer::initial_font() const
 
 void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const
 {
-    auto font_metrics = style.computed_font().metrics();
+    auto font_metrics = style.computed_font().pixel_metrics();
     float root_font_size = root_element_font_size();
     float font_size = style.property(CSS::PropertyID::FontSize).value()->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size);
 

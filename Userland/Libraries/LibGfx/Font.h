@@ -86,7 +86,7 @@ private:
     int m_ascent;
 };
 
-struct FontMetrics {
+struct FontPixelMetrics {
     float size { 0 };
     float x_height { 0 };
     float advance_of_ascii_zero { 0 };
@@ -103,7 +103,7 @@ public:
     virtual NonnullRefPtr<Font> clone() const = 0;
     virtual ~Font() {};
 
-    FontMetrics metrics() const;
+    FontPixelMetrics pixel_metrics() const;
 
     virtual u8 presentation_size() const = 0;
     virtual int pixel_size() const = 0;
