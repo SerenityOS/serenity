@@ -125,6 +125,11 @@ void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_wi
     row.for_each_child_of_type<TableCellBox>([&](auto& cell) {
         auto& cell_state = m_state.get_mutable(cell);
 
+        float span_width = 0;
+        for (size_t i = 0; i < cell.colspan(); ++i)
+            span_width += column_widths[column_index++];
+        cell_state.content_width = span_width - cell_state.border_box_left() - cell_state.border_box_right();
+
         BlockFormattingContext::compute_height(cell, m_state);
         cell_state.offset = row_state.offset.translated(cell_state.border_box_left() + content_width, cell_state.border_box_top());
 
@@ -135,9 +140,7 @@ void TableFormattingContext::layout_row(Box const& row, Vector<float>& column_wi
             (void)layout_inside(cell, LayoutMode::Normal);
         }
 
-        size_t cell_colspan = cell.colspan();
-        for (size_t i = 0; i < cell_colspan; ++i)
-            content_width += column_widths[column_index++];
+        content_width += span_width;
         tallest_cell_height = max(tallest_cell_height, cell_state.border_box_height());
     });
 
