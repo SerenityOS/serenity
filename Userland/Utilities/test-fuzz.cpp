@@ -141,8 +141,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(type, "Type of fuzzing target to run (use \"list\" to list all existing)", "target-kind");
-    args_parser.add_positional_argument(filename, "Input file", "filename");
+    args_parser.add_positional_argument(filename, "Input file", "filename", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    if (arguments.strings.size() <= 2 && arguments.strings[1] != "list"sv) {
+        args_parser.print_usage_terminal(stderr, arguments.argv[0]);
+        return 0;
+    }
 
     auto fn = parse_target_name(type);
 
