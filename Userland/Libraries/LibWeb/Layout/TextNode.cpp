@@ -111,7 +111,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
 
             // Otherwise, commit the newline!
             ++m_iterator;
-            auto result = try_commit_chunk(start_of_chunk, m_iterator, true);
+            auto result = try_commit_chunk(start_of_chunk, m_iterator, true, true);
             VERIFY(result.has_value());
             return result.release_value();
         }
