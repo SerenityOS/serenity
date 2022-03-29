@@ -1,0 +1,13 @@
+diff --git a/sdl12main.c b/sdl12main.c
+index db6d76d..3e2eb29 100644
+--- a/sdl12main.c
++++ b/sdl12main.c
+@@ -89,7 +89,7 @@ static char* GetDataPath(char* path, int n, const char* fname) {
+ #else
+ 	char pathsep = '/';
+ #endif //_WIN32
+-	snprintf(path, n, "data%c%s", pathsep, fname);
++	snprintf(path, n, "/opt/ccleste/data%c%s", pathsep, fname);
+ #endif //_3DS
+
+ 	return path;
