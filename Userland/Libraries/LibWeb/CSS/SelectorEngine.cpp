@@ -78,17 +78,41 @@ static inline bool matches_checked_pseudo_class(DOM::Element const& element)
 
 static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& attribute, DOM::Element const& element)
 {
-    switch (attribute.match_type) {
-    case CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute:
+    if (attribute.match_type == CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute) {
+        // Early way out in case of an attribute existence selector.
         return element.has_attribute(attribute.name);
+    }
+
+    auto const case_insensitive_match = (attribute.case_type == CSS::Selector::SimpleSelector::Attribute::CaseType::CaseInsensitiveMatch);
+    auto const case_sensitivity = case_insensitive_match
+        ? CaseSensitivity::CaseInsensitive
+        : CaseSensitivity::CaseSensitive;
+
+    switch (attribute.match_type) {
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
-        return element.attribute(attribute.name) == attribute.value;
-    case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord:
-        return !attribute.value.is_empty()
-            && element.attribute(attribute.name).split_view(' ').contains_slow(attribute.value);
+        return case_insensitive_match
+            ? element.attribute(attribute.name).equals_ignoring_case(attribute.value)
+            : element.attribute(attribute.name) == attribute.value;
+    case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord: {
+        if (attribute.value.is_empty()) {
+            // This selector is always false is match value is empty.
+            return false;
+        }
+        auto const view = element.attribute(attribute.name).split_view(' ');
+        auto const size = view.size();
+        for (size_t i = 0; i < size; ++i) {
+            auto const value = view.at(i);
+            if (case_insensitive_match
+                    ? value.equals_ignoring_case(attribute.value)
+                    : value == attribute.value) {
+                return true;
+            }
+        }
+        return false;
+    }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute.name).contains(attribute.value);
+            && element.attribute(attribute.name).contains(attribute.value, case_sensitivity);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment: {
         const auto element_attr_value = element.attribute(attribute.name);
         if (element_attr_value.is_empty()) {
@@ -100,14 +124,18 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
             return false;
         }
         auto segments = element_attr_value.split_view('-');
-        return segments.first() == attribute.value;
+        return case_insensitive_match
+            ? segments.first().equals_ignoring_case(attribute.value)
+            : segments.first() == attribute.value;
     }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute.name).starts_with(attribute.value);
+            && element.attribute(attribute.name).starts_with(attribute.value, case_sensitivity);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
         return !attribute.value.is_empty()
-            && element.attribute(attribute.name).ends_with(attribute.value);
+            && element.attribute(attribute.name).ends_with(attribute.value, case_sensitivity);
+    default:
+        break;
     }
 
     return false;

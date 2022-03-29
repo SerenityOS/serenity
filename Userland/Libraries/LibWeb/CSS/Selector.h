@@ -100,9 +100,15 @@ public:
                 StartsWithString,  // [att^=val]
                 EndsWithString,    // [att$=val]
             };
+            enum class CaseType {
+                DefaultMatch,
+                CaseSensitiveMatch,
+                CaseInsensitiveMatch,
+            };
             MatchType match_type;
             FlyString name {};
             String value {};
+            CaseType case_type;
         };
 
         Type type;

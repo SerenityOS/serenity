@@ -336,6 +336,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_attribute_
             // correct with XML later, we'll need to keep the original case and then do
             // a case-insensitive compare later.
             .name = attribute_part.token().ident().to_lowercase_string(),
+            .case_type = Selector::SimpleSelector::Attribute::CaseType::DefaultMatch,
         }
     };
 
@@ -397,8 +398,30 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_attribute_
     simple_selector.attribute().value = value_part.token().is(Token::Type::Ident) ? value_part.token().ident() : value_part.token().string();
 
     attribute_tokens.skip_whitespace();
+    // Handle case-sensitivity suffixes. https://www.w3.org/TR/selectors-4/#attribute-case
+    if (attribute_tokens.has_next_token()) {
+        auto const& case_sensitivity_part = attribute_tokens.next_token();
+        if (case_sensitivity_part.is(Token::Type::Ident)) {
+            auto case_sensitivity = case_sensitivity_part.token().ident();
+            if (case_sensitivity.equals_ignoring_case("i")) {
+                simple_selector.attribute().case_type = Selector::SimpleSelector::Attribute::CaseType::CaseInsensitiveMatch;
+            } else if (case_sensitivity.equals_ignoring_case("s")) {
+                simple_selector.attribute().case_type = Selector::SimpleSelector::Attribute::CaseType::CaseSensitiveMatch;
+            } else {
+                dbgln_if(CSS_PARSER_DEBUG, "Expected a \"i\" or \"s\" attribute selector case sensitivity identifier, got: '{}'", case_sensitivity_part.to_debug_string());
+                return ParsingResult::SyntaxError;
+            }
+        } else {
+            dbgln_if(CSS_PARSER_DEBUG, "Expected an attribute selector case sensitivity identifier, got: '{}'", case_sensitivity_part.to_debug_string());
+            return ParsingResult::SyntaxError;
+        }
+    }
 
-    // FIXME: Handle case-sensitivity suffixes. https://www.w3.org/TR/selectors-4/#attribute-case
+    if (attribute_tokens.has_next_token()) {
+        dbgln_if(CSS_PARSER_DEBUG, "Was not expecting anything else inside attribute selector.");
+        return ParsingResult::SyntaxError;
+    }
+
     return simple_selector;
 }
 
