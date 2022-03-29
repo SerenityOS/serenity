@@ -38,6 +38,9 @@ public:
     void reset_zoom();
     void rotate(int degrees);
 
+    PageViewMode page_view_mode() const { return m_page_view_mode; }
+    void set_page_view_mode(PageViewMode);
+
 protected:
     PDFViewer();
 
@@ -63,6 +66,7 @@ private:
     Vector<HashMap<u32, RenderedPage>> m_rendered_page_list;
 
     u8 m_zoom_level { initial_zoom_level };
+    PageViewMode m_page_view_mode;
 
     Gfx::IntPoint m_pan_starting_position;
     int m_rotations { 0 };
