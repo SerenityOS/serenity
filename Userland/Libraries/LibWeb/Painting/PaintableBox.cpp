@@ -451,8 +451,13 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
 
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
-            if (context.should_show_line_box_borders())
-                context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
+            if (context.should_show_line_box_borders()) {
+                auto fragment_absolute_rect = fragment.absolute_rect();
+                context.painter().draw_rect(enclosing_int_rect(fragment_absolute_rect), Color::Green);
+                context.painter().draw_line(
+                    fragment_absolute_rect.top_left().translated(0, fragment.baseline()).to_rounded<int>(),
+                    fragment_absolute_rect.top_right().translated(0, fragment.baseline()).to_rounded<int>(), Color::Red);
+            }
             if (is<Layout::TextNode>(fragment.layout_node()))
                 paint_text_fragment(context, static_cast<Layout::TextNode const&>(fragment.layout_node()), fragment, phase);
         }

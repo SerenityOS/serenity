@@ -274,7 +274,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
                 item.margin_start,
                 item.margin_end,
                 item.width,
-                text_node.computed_values().font_size());
+                text_node.line_height());
             break;
         }
         }
