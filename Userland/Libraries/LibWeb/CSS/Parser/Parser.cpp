@@ -180,7 +180,7 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_a_stylesheet(TokenStream<T>& tokens, 
     // NOTE: We create the stylesheet at the end.
 
     // 4. Consume a list of rules from input, with the top-level flag set, and set the stylesheet’s value to the result.
-    auto parser_rules = consume_a_list_of_rules(tokens, true);
+    auto parser_rules = consume_a_list_of_rules(tokens, TopLevel::Yes);
     NonnullRefPtrVector<CSSRule> rules;
 
     for (auto& raw_rule : parser_rules) {
@@ -1510,7 +1510,7 @@ Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<StyleCompon
 }
 
 template<typename T>
-NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& tokens, bool top_level)
+NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& tokens, TopLevel top_level)
 {
     NonnullRefPtrVector<StyleRule> rules;
 
@@ -1526,7 +1526,7 @@ NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& t
         }
 
         if (token.is(Token::Type::CDO) || token.is(Token::Type::CDC)) {
-            if (top_level) {
+            if (top_level == TopLevel::Yes) {
                 continue;
             }
 
@@ -1904,7 +1904,7 @@ NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules()
 template<typename T>
 NonnullRefPtrVector<CSSRule> Parser::parse_a_list_of_rules(TokenStream<T>& tokens)
 {
-    auto parsed_rules = consume_a_list_of_rules(tokens, false);
+    auto parsed_rules = consume_a_list_of_rules(tokens, TopLevel::No);
     NonnullRefPtrVector<CSSRule> rules;
 
     for (auto& rule : parsed_rules) {
@@ -2130,7 +2130,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
                 return {};
 
             auto child_tokens = TokenStream { rule->block()->values() };
-            auto parser_rules = consume_a_list_of_rules(child_tokens, false);
+            auto parser_rules = consume_a_list_of_rules(child_tokens, TopLevel::No);
             NonnullRefPtrVector<CSSRule> child_rules;
             for (auto& raw_rule : parser_rules) {
                 if (auto child_rule = convert_to_rule(raw_rule))
@@ -2154,7 +2154,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             if (!rule->block())
                 return {};
             auto child_tokens = TokenStream { rule->block()->values() };
-            auto parser_rules = consume_a_list_of_rules(child_tokens, false);
+            auto parser_rules = consume_a_list_of_rules(child_tokens, TopLevel::No);
             NonnullRefPtrVector<CSSRule> child_rules;
             for (auto& raw_rule : parser_rules) {
                 if (auto child_rule = convert_to_rule(raw_rule))
