@@ -6,6 +6,7 @@
  */
 
 #include "PDFViewerWidget.h"
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -25,7 +26,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = GUI::Icon::default_icon("app-pdf-viewer");
 
-    auto window = GUI::Window::construct();
+    Config::pledge_domain("PDFViewer");
+
+    auto window = TRY(GUI::Window::try_create());
     window->set_title("PDF Viewer");
     window->resize(640, 400);
 

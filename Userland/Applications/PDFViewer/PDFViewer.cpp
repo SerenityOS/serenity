@@ -7,6 +7,7 @@
 
 #include "PDFViewer.h"
 #include <AK/Array.h>
+#include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -41,6 +42,8 @@ PDFViewer::PDFViewer()
     set_scrollbars_enabled(true);
 
     start_timer(30'000);
+
+    m_page_view_mode = static_cast<PageViewMode>(Config::read_i32("PDFViewer", "Display", "PageMode", 0));
 }
 
 void PDFViewer::set_document(RefPtr<PDF::Document> document)
@@ -208,6 +211,13 @@ void PDFViewer::reset_zoom()
 void PDFViewer::rotate(int degrees)
 {
     m_rotations = (m_rotations + degrees + 360) % 360;
+    update();
+}
+
+void PDFViewer::set_page_view_mode(PageViewMode mode)
+{
+    m_page_view_mode = mode;
+    Config::write_i32("PDFViewer", "Display", "PageMode", static_cast<i32>(mode));
     update();
 }
 
