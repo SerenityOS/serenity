@@ -169,8 +169,12 @@ private:
     };
     Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&, AllowTrailingTokens = AllowTrailingTokens::No);
 
+    enum class TopLevel {
+        No,
+        Yes
+    };
     template<typename T>
-    [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(TokenStream<T>&, bool top_level);
+    [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(TokenStream<T>&, TopLevel);
     template<typename T>
     [[nodiscard]] NonnullRefPtr<StyleRule> consume_an_at_rule(TokenStream<T>&);
     template<typename T>
