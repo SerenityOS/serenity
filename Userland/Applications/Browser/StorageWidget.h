@@ -8,6 +8,7 @@
 
 #include "CookiesModel.h"
 #include "Tab.h"
+#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Widget.h>
 #include <LibWeb/Cookie/Cookie.h>
 
@@ -26,6 +27,7 @@ private:
 
     RefPtr<GUI::TableView> m_cookies_table_view;
     RefPtr<CookiesModel> m_cookies_model;
+    RefPtr<GUI::SortingProxyModel> m_sorting_model;
 };
 
 }

@@ -26,7 +26,10 @@ StorageWidget::StorageWidget()
     m_cookies_table_view = cookies_tab->find_descendant_of_type_named<GUI::TableView>("cookies_tableview");
     m_cookies_model = adopt_ref(*new CookiesModel());
 
-    m_cookies_table_view->set_model(*m_cookies_model);
+    m_sorting_model = MUST(GUI::SortingProxyModel::create(*m_cookies_model));
+    m_sorting_model->set_sort_role(GUI::ModelRole::Display);
+
+    m_cookies_table_view->set_model(m_sorting_model);
     m_cookies_table_view->set_column_headers_visible(true);
     m_cookies_table_view->set_alternating_row_colors(true);
 }
