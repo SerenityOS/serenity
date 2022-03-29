@@ -53,7 +53,7 @@ jobs:
           cmake -GNinja -B Build \
             -DBUILD_LAGOM=ON \
             -DENABLE_LAGOM_CCACHE=ON \
-            -DENABLE_FUZZER_SANITIZER=ON \
+            -DENABLE_FUZZERS_LIBFUZZER=ON \
             -DENABLE_ADDRESS_SANITIZER=ON \
             -DCMAKE_C_COMPILER=clang \
             -DCMAKE_CXX_COMPILER=clang++ \
