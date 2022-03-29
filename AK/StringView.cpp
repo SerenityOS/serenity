@@ -182,6 +182,18 @@ StringView StringView::substring_view_starting_after_substring(StringView substr
     return { remaining_characters, remaining_length };
 }
 
+bool StringView::copy_characters_to_buffer(char* buffer, size_t buffer_size) const
+{
+    // We must fit at least the NUL-terminator.
+    VERIFY(buffer_size > 0);
+
+    size_t characters_to_copy = min(m_length, buffer_size - 1);
+    __builtin_memcpy(buffer, m_characters, characters_to_copy);
+    buffer[characters_to_copy] = 0;
+
+    return characters_to_copy == m_length;
+}
+
 template<typename T>
 Optional<T> StringView::to_int() const
 {

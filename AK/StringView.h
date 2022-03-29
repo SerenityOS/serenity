@@ -192,6 +192,8 @@ public:
     [[nodiscard]] StringView substring_view_starting_from_substring(StringView substring) const;
     [[nodiscard]] StringView substring_view_starting_after_substring(StringView substring) const;
 
+    [[nodiscard]] bool copy_characters_to_buffer(char* buffer, size_t buffer_size) const;
+
     constexpr bool operator==(char const* cstring) const
     {
         if (is_null())
