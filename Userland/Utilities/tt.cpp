@@ -5,11 +5,11 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibMain/Main.h>
 #include <errno.h>
 #include <pthread.h>
 #include <signal_numbers.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -22,7 +22,7 @@ static int staying_alive_test();
 static int set_stack_test();
 static int kill_test();
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     const char* test_name = "n";
 
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
         "Exercise error-handling and edge-case paths of the execution environment "
         "(i.e., Kernel or UE) by doing unusual thread-related things.");
     args_parser.add_positional_argument(test_name, "Test to run (m = mutex, d = detached, p = priority, s = stack size, t = simple thread test, x = set stack, k = kill, nothing = join race)", "test-name", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (*test_name == 'm')
         return mutex_test();
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     if (*test_name == 'k')
         return kill_test();
     if (*test_name != 'n') {
-        args_parser.print_usage(stdout, argv[0]);
+        args_parser.print_usage(stdout, arguments.argv[0]);
         return 1;
     }
 
