@@ -119,13 +119,13 @@ void Scrollbar::set_scroll_animation(Animation scroll_animation)
     m_scroll_animation = scroll_animation;
 }
 
-void Scrollbar::set_value(int value, AllowCallback allow_callback)
+void Scrollbar::set_value(int value, AllowCallback allow_callback, DoClamp do_clamp)
 {
     m_target_value = value;
     if (!(m_animated_scrolling_timer.is_null()))
         m_animated_scrolling_timer->stop();
 
-    AbstractSlider::set_value(value, allow_callback);
+    AbstractSlider::set_value(value, allow_callback, do_clamp);
 }
 
 void Scrollbar::set_target_value(int new_target_value)

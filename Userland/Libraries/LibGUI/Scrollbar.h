@@ -30,7 +30,7 @@ public:
 
     void set_scroll_animation(Animation scroll_animation);
 
-    virtual void set_value(int, AllowCallback = AllowCallback::Yes) override;
+    virtual void set_value(int, AllowCallback = AllowCallback::Yes, DoClamp = DoClamp::Yes) override;
     void set_target_value(int);
 
     virtual void increase_slider_by(int delta) override { set_target_value(m_target_value + delta); }

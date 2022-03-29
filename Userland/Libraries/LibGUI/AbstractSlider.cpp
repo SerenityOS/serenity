@@ -50,9 +50,10 @@ void AbstractSlider::set_range(int min, int max)
     update();
 }
 
-void AbstractSlider::set_value(int value, AllowCallback allow_callback)
+void AbstractSlider::set_value(int value, AllowCallback allow_callback, DoClamp do_clamp)
 {
-    value = clamp(value, m_min, m_max);
+    if (do_clamp == DoClamp::Yes)
+        value = clamp(value, m_min, m_max);
     if (m_value == value)
         return;
     m_value = value;
