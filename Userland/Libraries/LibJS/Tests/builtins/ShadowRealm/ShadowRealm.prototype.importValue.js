@@ -70,4 +70,11 @@ describe("errors", () => {
             ShadowRealm.prototype.importValue.call("foo");
         }).toThrowWithMessage(TypeError, "Not an object of type ShadowRealm");
     });
+
+    test("export name must be string", () => {
+        const shadowRealm = new ShadowRealm();
+        expect(() => {
+            shadowRealm.importValue("./whatever.mjs", 123);
+        }).toThrowWithMessage(TypeError, "123 is not a string");
+    });
 });
