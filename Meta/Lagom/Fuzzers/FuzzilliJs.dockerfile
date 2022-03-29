@@ -39,7 +39,7 @@ RUN sed -i 's/-Wmissing-declarations //' ../CMakeLists.txt
 RUN CXXFLAGS="-Wno-defaulted-function-deleted" \
     cmake -GNinja \
           -DBUILD_LAGOM=ON \
-          -DENABLE_FUZZER_SANITIZER=ON \
+          -DENABLE_FUZZERS_LIBFUZZER=ON \
           -DCMAKE_C_COMPILER=clang \
           -DCMAKE_CXX_COMPILER=clang++ \
           ..
