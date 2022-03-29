@@ -56,7 +56,8 @@
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
-    __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")
+    __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")                  \
+    __ENUMERATE_SHELL_OPTION(invoke_program_for_autocomplete, false, "Attempt to use the program being completed itself for autocompletion via --complete")
 
 #define ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS()           \
     __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(concat_lists)  \
