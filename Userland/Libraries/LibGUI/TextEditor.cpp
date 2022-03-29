@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -2103,6 +2104,64 @@ void TextEditor::set_text_is_secret(bool text_is_secret)
     m_text_is_secret = text_is_secret;
     document_did_update_undo_stack();
     did_update_selection();
+}
+
+TextRange TextEditor::find_text(StringView needle, SearchDirection direction, GUI::TextDocument::SearchShouldWrap should_wrap, bool use_regex, bool match_case)
+{
+    GUI::TextRange range {};
+    if (direction == SearchDirection::Forward) {
+        range = document().find_next(needle,
+            m_search_result_index.has_value() ? m_search_results[*m_search_result_index].end() : GUI::TextPosition {},
+            should_wrap, use_regex, match_case);
+    } else {
+        range = document().find_previous(needle,
+            m_search_result_index.has_value() ? m_search_results[*m_search_result_index].start() : GUI::TextPosition {},
+            should_wrap, use_regex, match_case);
+    }
+
+    if (!range.is_valid()) {
+        reset_search_results();
+        return {};
+    }
+
+    auto all_results = document().find_all(needle, use_regex, match_case);
+    on_search_results(range, all_results);
+    return range;
+}
+
+void TextEditor::reset_search_results()
+{
+    m_search_result_index.clear();
+    m_search_results.clear();
+    document().set_spans(search_results_span_collection_index, {});
+    update();
+}
+
+void TextEditor::on_search_results(GUI::TextRange current, Vector<GUI::TextRange> all_results)
+{
+    m_search_result_index.clear();
+    m_search_results.clear();
+
+    set_cursor(current.start());
+    if (auto it = all_results.find(current); it->is_valid())
+        m_search_result_index = it.index();
+    m_search_results = move(all_results);
+
+    Vector<GUI::TextDocumentSpan> spans;
+    for (size_t i = 0; i < m_search_results.size(); ++i) {
+        auto& result = m_search_results[i];
+        GUI::TextDocumentSpan span;
+        span.range = result;
+        span.attributes.background_color = palette().hover_highlight();
+        span.attributes.color = Color::from_argb(0xff000000); // So text without spans from a highlighter will have color
+        if (i == m_search_result_index) {
+            span.attributes.bold = true;
+            span.attributes.underline = true;
+        }
+        spans.append(move(span));
+    }
+    document().set_spans(search_results_span_collection_index, move(spans));
+    update();
 }
 
 }
