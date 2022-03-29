@@ -412,45 +412,101 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             }
         }
     } else if (parameter.type->name == "boolean") {
-        if (!optional) {
+        if (!optional || optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
-    bool @cpp_name@ = @js_name@@js_suffix@.to_boolean();
-)~~~");
-        } else {
-            if (optional_default_value.has_value()) {
-                scoped_generator.append(R"~~~(
     bool @cpp_name@;
 )~~~");
-            } else {
-                scoped_generator.append(R"~~~(
+        } else {
+            scoped_generator.append(R"~~~(
     Optional<bool> @cpp_name@;
 )~~~");
-            }
+        }
+        if (optional) {
             scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_undefined())
-        @cpp_name@ = @js_name@@js_suffix@.to_boolean();)~~~");
-            if (optional_default_value.has_value()) {
-                scoped_generator.append(R"~~~(
+)~~~");
+        }
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = @js_name@@js_suffix@.to_boolean();
+)~~~");
+        if (optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
     else
         @cpp_name@ = @parameter.optional_default_value@;
 )~~~");
-            } else {
-                scoped_generator.append(R"~~~(
-)~~~");
-            }
         }
     } else if (parameter.type->name == "unsigned long") {
-        scoped_generator.append(R"~~~(
-    auto @cpp_name@ = TRY(@js_name@@js_suffix@.to_u32(global_object));
+        if (!optional || optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    u32 @cpp_name@;
 )~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    Optional<u32> @cpp_name@;
+)~~~");
+        }
+        if (optional) {
+            scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined())
+)~~~");
+        }
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = TRY(@js_name@@js_suffix@.to_u32(global_object));
+)~~~");
+        if (optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = @parameter.optional_default_value@UL;
+)~~~");
+        }
     } else if (parameter.type->name == "unsigned short") {
-        scoped_generator.append(R"~~~(
-    auto @cpp_name@ = TRY(@js_name@@js_suffix@.to_u16(global_object));
+        if (!optional || optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    u16 @cpp_name@;
 )~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    Optional<u16> @cpp_name@;
+)~~~");
+        }
+        if (optional) {
+            scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined())
+)~~~");
+        }
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = TRY(@js_name@@js_suffix@.to_u16(global_object));
+)~~~");
+        if (optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = @parameter.optional_default_value@;
+)~~~");
+        }
     } else if (parameter.type->name == "long") {
-        scoped_generator.append(R"~~~(
-    auto @cpp_name@ = TRY(@js_name@@js_suffix@.to_i32(global_object));
+        if (!optional || optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    i32 @cpp_name@;
 )~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    Optional<i32> @cpp_name@;
+)~~~");
+        }
+        if (optional) {
+            scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined())
+)~~~");
+        }
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = TRY(@js_name@@js_suffix@.to_i32(global_object));
+)~~~");
+        if (optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = @parameter.optional_default_value@L;
+)~~~");
+        }
     } else if (parameter.type->name == "EventHandler") {
         // x.onfoo = function() { ... }, x.onfoo = () => { ... }, x.onfoo = {}
         // NOTE: Anything else than an object will be treated as null. This is because EventHandler has the [LegacyTreatNonObjectAsNull] extended attribute.
