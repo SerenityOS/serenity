@@ -168,7 +168,10 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
                 insertion_point.prepend_child(*node);
             else
                 insertion_point.append_child(*node);
-            insertion_point.set_children_are_inline(false);
+
+            // After inserting an in-flow block-level box into a parent, mark the parent as having non-inline children.
+            if (!node->is_floating() && !node->is_absolutely_positioned())
+                insertion_point.set_children_are_inline(false);
         }
     };
 
