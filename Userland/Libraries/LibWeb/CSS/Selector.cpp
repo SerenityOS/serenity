@@ -174,7 +174,20 @@ String Selector::SimpleSelector::serialize() const
 
             serialize_a_string(s, attribute.value);
         }
-        // FIXME: 5. If the attribute selector has the case-sensitivity flag present, append " i" (U+0020 U+0069) to s.
+
+        // 5. If the attribute selector has the case-insensitivity flag present, append " i" (U+0020 U+0069) to s.
+        //    If the attribute selector has the case-insensitivity flag present, append " s" (U+0020 U+0073) to s.
+        //    (the line just above is an addition to CSS OM to match Selectors Level 4 last draft)
+        switch (attribute.case_type) {
+        case Selector::SimpleSelector::Attribute::CaseType::CaseInsensitiveMatch:
+            s.append(" i");
+            break;
+        case Selector::SimpleSelector::Attribute::CaseType::CaseSensitiveMatch:
+            s.append(" s");
+            break;
+        default:
+            break;
+        }
 
         // 6. Append "]" (U+005D) to s.
         s.append(']');
