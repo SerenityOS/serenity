@@ -16,6 +16,10 @@
 
 namespace Compress {
 
+static constexpr u8 deflate_special_code_length_copy = 16;
+static constexpr u8 deflate_special_code_length_zeros = 17;
+static constexpr u8 deflate_special_code_length_long_zeros = 18;
+
 CanonicalCode const& CanonicalCode::fixed_literal_codes()
 {
     static CanonicalCode code;
@@ -441,21 +445,21 @@ void DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Optional<Can
             return;
         }
 
-        if (symbol < DeflateSpecialCodeLengths::COPY) {
+        if (symbol < deflate_special_code_length_copy) {
             code_lengths.append(static_cast<u8>(symbol));
             continue;
-        } else if (symbol == DeflateSpecialCodeLengths::ZEROS) {
+        } else if (symbol == deflate_special_code_length_zeros) {
             auto nrepeat = 3 + m_input_stream.read_bits(3);
             for (size_t j = 0; j < nrepeat; ++j)
                 code_lengths.append(0);
             continue;
-        } else if (symbol == DeflateSpecialCodeLengths::LONG_ZEROS) {
+        } else if (symbol == deflate_special_code_length_long_zeros) {
             auto nrepeat = 11 + m_input_stream.read_bits(7);
             for (size_t j = 0; j < nrepeat; ++j)
                 code_lengths.append(0);
             continue;
         } else {
-            VERIFY(symbol == DeflateSpecialCodeLengths::COPY);
+            VERIFY(symbol == deflate_special_code_length_copy);
 
             if (code_lengths.is_empty()) {
                 set_fatal_error();
@@ -819,11 +823,11 @@ size_t DeflateCompressor::dynamic_block_length(Array<u8, max_huffman_literals> c
         auto frequency = code_lengths_frequencies[i];
         length += code_lengths_bit_lengths[i] * frequency;
 
-        if (i == DeflateSpecialCodeLengths::COPY) {
+        if (i == deflate_special_code_length_copy) {
             length += 2 * frequency;
-        } else if (i == DeflateSpecialCodeLengths::ZEROS) {
+        } else if (i == deflate_special_code_length_zeros) {
             length += 3 * frequency;
-        } else if (i == DeflateSpecialCodeLengths::LONG_ZEROS) {
+        } else if (i == deflate_special_code_length_long_zeros) {
             length += 7 * frequency;
         }
     }
@@ -869,10 +873,10 @@ size_t DeflateCompressor::encode_huffman_lengths(Array<u8, max_huffman_literals 
             }
 
             if (zero_count <= 10) {
-                encoded_lengths[encoded_count].symbol = DeflateSpecialCodeLengths::ZEROS;
+                encoded_lengths[encoded_count].symbol = deflate_special_code_length_zeros;
                 encoded_lengths[encoded_count++].count = zero_count;
             } else {
-                encoded_lengths[encoded_count].symbol = DeflateSpecialCodeLengths::LONG_ZEROS;
+                encoded_lengths[encoded_count].symbol = deflate_special_code_length_long_zeros;
                 encoded_lengths[encoded_count++].count = zero_count;
             }
             i += zero_count;
@@ -886,7 +890,7 @@ size_t DeflateCompressor::encode_huffman_lengths(Array<u8, max_huffman_literals 
             copy_count++;
 
         if (copy_count >= 3) {
-            encoded_lengths[encoded_count].symbol = DeflateSpecialCodeLengths::COPY;
+            encoded_lengths[encoded_count].symbol = deflate_special_code_length_copy;
             encoded_lengths[encoded_count++].count = copy_count;
             i += copy_count;
             continue;
@@ -935,11 +939,11 @@ void DeflateCompressor::write_dynamic_huffman(CanonicalCode const& literal_code,
     for (size_t i = 0; i < encoded_lengths_count; i++) {
         auto encoded_length = encoded_lengths[i];
         code_lengths_code->write_symbol(m_output_stream, encoded_length.symbol);
-        if (encoded_length.symbol == DeflateSpecialCodeLengths::COPY) {
+        if (encoded_length.symbol == deflate_special_code_length_copy) {
             m_output_stream.write_bits(encoded_length.count - 3, 2);
-        } else if (encoded_length.symbol == DeflateSpecialCodeLengths::ZEROS) {
+        } else if (encoded_length.symbol == deflate_special_code_length_zeros) {
             m_output_stream.write_bits(encoded_length.count - 3, 3);
-        } else if (encoded_length.symbol == DeflateSpecialCodeLengths::LONG_ZEROS) {
+        } else if (encoded_length.symbol == deflate_special_code_length_long_zeros) {
             m_output_stream.write_bits(encoded_length.count - 11, 7);
         }
     }

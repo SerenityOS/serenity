@@ -103,12 +103,6 @@ private:
     CircularDuplexStream<32 * KiB> m_output_stream;
 };
 
-enum DeflateSpecialCodeLengths : u32 {
-    COPY = 16,
-    ZEROS = 17,
-    LONG_ZEROS = 18
-};
-
 class DeflateCompressor final : public OutputStream {
 public:
     static constexpr size_t block_size = 32 * KiB - 1; // TODO: this can theoretically be increased to 64 KiB - 2
