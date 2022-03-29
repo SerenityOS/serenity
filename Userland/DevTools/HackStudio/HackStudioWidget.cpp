@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020-2022, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -1445,6 +1445,11 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
     create_location_history_actions();
     view_menu.add_action(*m_locations_history_back_action);
     view_menu.add_action(*m_locations_history_forward_action);
+
+    auto search_action = GUI::Action::create("&Search", { Mod_Ctrl, Key_F }, [this](auto&) {
+        current_editor_wrapper().search_action();
+    });
+    view_menu.add_action(search_action);
 }
 
 void HackStudioWidget::create_help_menu(GUI::Window& window)

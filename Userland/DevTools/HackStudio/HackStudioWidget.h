@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020-2022, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2020-2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
