@@ -80,7 +80,7 @@ static StyleSheet& default_stylesheet()
     if (!sheet) {
         extern char const default_stylesheet_source[];
         String css = default_stylesheet_source;
-        sheet = parse_css(CSS::ParsingContext(), css).leak_ref();
+        sheet = parse_css_stylesheet(CSS::ParsingContext(), css).leak_ref();
     }
     return *sheet;
 }
@@ -91,7 +91,7 @@ static StyleSheet& quirks_mode_stylesheet()
     if (!sheet) {
         extern char const quirks_mode_stylesheet_source[];
         String css = quirks_mode_stylesheet_source;
-        sheet = parse_css(CSS::ParsingContext(), css).leak_ref();
+        sheet = parse_css_stylesheet(CSS::ParsingContext(), css).leak_ref();
     }
     return *sheet;
 }

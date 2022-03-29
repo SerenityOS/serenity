@@ -5224,7 +5224,7 @@ TimePercentage Parser::Dimension::time_percentage() const
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const& context, StringView css)
+RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::ParsingContext const& context, StringView css)
 {
     if (css.is_empty())
         return CSS::CSSStyleSheet::create({});
