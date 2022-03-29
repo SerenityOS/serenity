@@ -30,6 +30,8 @@ public:
     bool operator==(const TextPosition& other) const { return m_line == other.m_line && m_column == other.m_column; }
     bool operator!=(const TextPosition& other) const { return m_line != other.m_line || m_column != other.m_column; }
     bool operator<(const TextPosition& other) const { return m_line < other.m_line || (m_line == other.m_line && m_column < other.m_column); }
+    bool operator>(const TextPosition& other) const { return *this != other && !(*this < other); }
+    bool operator>=(const TextPosition& other) const { return *this > other || (*this == other); }
 
 private:
     size_t m_line { 0xffffffff };
