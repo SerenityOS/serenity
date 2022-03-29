@@ -1903,24 +1903,21 @@ RefPtr<CSSRule> Parser::parse_a_rule(TokenStream<T>& tokens)
     return {};
 }
 
-NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules()
-{
-    return parse_a_list_of_rules(m_token_stream);
-}
-
+// 5.3.4. Parse a list of rules
+// https://www.w3.org/TR/css-syntax-3/#parse-list-of-rules
 template<typename T>
-NonnullRefPtrVector<CSSRule> Parser::parse_a_list_of_rules(TokenStream<T>& tokens)
+NonnullRefPtrVector<StyleRule> Parser::parse_a_list_of_rules(TokenStream<T>& tokens)
 {
-    auto parsed_rules = consume_a_list_of_rules(tokens, TopLevel::No);
-    NonnullRefPtrVector<CSSRule> rules;
+    // To parse a list of rules from input:
 
-    for (auto& rule : parsed_rules) {
-        auto converted_rule = convert_to_rule(rule);
-        if (converted_rule)
-            rules.append(*converted_rule);
-    }
+    // 1. Normalize input, and set input to the result.
+    // Note: This is done when initializing the Parser.
 
-    return rules;
+    // 2. Consume a list of rules from the input, with the top-level flag unset.
+    auto list_of_rules = consume_a_list_of_rules(tokens, TopLevel::No);
+
+    // 3. Return the returned list.
+    return list_of_rules;
 }
 
 Optional<StyleProperty> Parser::parse_as_declaration()
