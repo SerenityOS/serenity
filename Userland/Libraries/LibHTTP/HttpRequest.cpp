@@ -41,6 +41,8 @@ ByteBuffer HttpRequest::to_raw_request() const
     }
     builder.append(" HTTP/1.1\r\nHost: ");
     builder.append(m_url.host());
+    if (m_url.port().has_value())
+        builder.appendff(":{}", *m_url.port());
     builder.append("\r\n");
     for (auto& header : m_headers) {
         builder.append(header.name);
