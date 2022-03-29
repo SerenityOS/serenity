@@ -160,14 +160,26 @@ Parser::Parser(ParsingContext const& context, StringView input, String const& en
 {
 }
 
-NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet()
+NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet(Optional<AK::URL> location)
 {
-    return parse_a_stylesheet(m_token_stream);
+    return parse_a_stylesheet(m_token_stream, location);
 }
 
+// 5.3.3. Parse a stylesheet
+// https://www.w3.org/TR/css-syntax-3/#parse-stylesheet
 template<typename T>
-NonnullRefPtr<CSSStyleSheet> Parser::parse_a_stylesheet(TokenStream<T>& tokens)
+NonnullRefPtr<CSSStyleSheet> Parser::parse_a_stylesheet(TokenStream<T>& tokens, Optional<AK::URL> location)
 {
+    // To parse a stylesheet from an input given an optional url location:
+
+    // 1. If input is a byte stream for stylesheet, decode bytes from input, and set input to the result.
+    // 2. Normalize input, and set input to the result.
+    // NOTE: These are done automatically when creating the Parser.
+
+    // 3. Create a new stylesheet, with its location set to location (or null, if location was not passed).
+    // NOTE: We create the stylesheet at the end.
+
+    // 4. Consume a list of rules from input, with the top-level flag set, and set the stylesheet’s value to the result.
     auto parser_rules = consume_a_list_of_rules(tokens, true);
     NonnullRefPtrVector<CSSRule> rules;
 
@@ -177,7 +189,8 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_a_stylesheet(TokenStream<T>& tokens)
             rules.append(*rule);
     }
 
-    return CSSStyleSheet::create(rules);
+    // 5. Return the stylesheet.
+    return CSSStyleSheet::create(move(rules), move(location));
 }
 
 Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mode)
@@ -5224,12 +5237,12 @@ TimePercentage Parser::Dimension::time_percentage() const
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::ParsingContext const& context, StringView css)
+RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::ParsingContext const& context, StringView css, Optional<AK::URL> location)
 {
     if (css.is_empty())
-        return CSS::CSSStyleSheet::create({});
+        return CSS::CSSStyleSheet::create({}, location);
     CSS::Parser parser(context, css);
-    return parser.parse_as_stylesheet();
+    return parser.parse_as_stylesheet(location);
 }
 
 RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const& context, StringView css, DOM::Element& element)

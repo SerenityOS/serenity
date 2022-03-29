@@ -12,9 +12,11 @@
 
 namespace Web::CSS {
 
-CSSStyleSheet::CSSStyleSheet(NonnullRefPtrVector<CSSRule> rules)
+CSSStyleSheet::CSSStyleSheet(NonnullRefPtrVector<CSSRule> rules, Optional<AK::URL> location)
     : m_rules(CSSRuleList::create(move(rules)))
 {
+    if (location.has_value())
+        set_location(location->to_string());
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylesheet-insertrule

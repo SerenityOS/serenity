@@ -24,9 +24,9 @@ class CSSStyleSheet final
 public:
     using WrapperType = Bindings::CSSStyleSheetWrapper;
 
-    static NonnullRefPtr<CSSStyleSheet> create(NonnullRefPtrVector<CSSRule> rules)
+    static NonnullRefPtr<CSSStyleSheet> create(NonnullRefPtrVector<CSSRule> rules, Optional<AK::URL> location)
     {
-        return adopt_ref(*new CSSStyleSheet(move(rules)));
+        return adopt_ref(*new CSSStyleSheet(move(rules), move(location)));
     }
 
     virtual ~CSSStyleSheet() override = default;
@@ -53,7 +53,7 @@ public:
     void set_style_sheet_list(Badge<StyleSheetList>, StyleSheetList*);
 
 private:
-    explicit CSSStyleSheet(NonnullRefPtrVector<CSSRule>);
+    explicit CSSStyleSheet(NonnullRefPtrVector<CSSRule>, Optional<AK::URL> location);
 
     NonnullRefPtr<CSSRuleList> m_rules;
 

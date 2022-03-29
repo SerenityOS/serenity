@@ -90,7 +90,7 @@ public:
     ~Parser() = default;
 
     // The normal parser entry point, for parsing stylesheets.
-    NonnullRefPtr<CSSStyleSheet> parse_as_stylesheet();
+    NonnullRefPtr<CSSStyleSheet> parse_as_stylesheet(Optional<AK::URL> location);
     // For the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
     NonnullRefPtrVector<CSSRule> parse_as_list_of_rules();
     // For use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
@@ -135,7 +135,7 @@ private:
     };
 
     template<typename T>
-    NonnullRefPtr<CSSStyleSheet> parse_a_stylesheet(TokenStream<T>&);
+    NonnullRefPtr<CSSStyleSheet> parse_a_stylesheet(TokenStream<T>&, Optional<AK::URL> location);
     template<typename T>
     NonnullRefPtrVector<CSSRule> parse_a_list_of_rules(TokenStream<T>&);
     template<typename T>
@@ -361,7 +361,7 @@ private:
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::ParsingContext const&, StringView);
+RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::ParsingContext const&, StringView, Optional<AK::URL> location = {});
 RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const&, StringView, DOM::Element&);
 RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView);
