@@ -97,7 +97,7 @@ void HTMLLinkElement::resource_did_load()
         }
     }
 
-    auto sheet = parse_css(CSS::ParsingContext(document(), resource()->url()), resource()->encoded_data());
+    auto sheet = parse_css_stylesheet(CSS::ParsingContext(document(), resource()->url()), resource()->encoded_data());
     if (!sheet) {
         dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());
         return;
