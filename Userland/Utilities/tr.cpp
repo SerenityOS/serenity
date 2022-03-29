@@ -8,6 +8,7 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
+#include <LibMain/Main.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -88,7 +89,7 @@ static String build_set(StringView specification)
     return out.to_string();
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool complement_flag = false;
     bool delete_flag = false;
@@ -102,25 +103,25 @@ int main(int argc, char** argv)
     args_parser.add_option(squeeze_flag, "Omit repeated characters listed in the last given set from the output", "squeeze-repeats", 's');
     args_parser.add_positional_argument(from_chars, "Set of characters to translate from", "from");
     args_parser.add_positional_argument(to_chars, "Set of characters to translate to", "to", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     bool transform_flag = to_chars && !delete_flag;
 
     if (!transform_flag && !delete_flag && !squeeze_flag) {
         warnln("tr: Missing operand");
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
     if (delete_flag && squeeze_flag && !to_chars) {
         warnln("tr: Combined delete and squeeze operations need two sets of characters");
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
     if (delete_flag && !squeeze_flag && to_chars) {
         warnln("tr: Only one set of characters may be given when deleting without squeezing");
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
