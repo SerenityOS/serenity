@@ -89,8 +89,6 @@ public:
     Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
     ~Parser() = default;
 
-    // For the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
-    NonnullRefPtrVector<CSSRule> parse_as_list_of_rules();
     // For use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
     RefPtr<CSSRule> parse_as_rule();
     // Used in @supports conditions. [CSS3-CONDITIONAL]
@@ -141,8 +139,9 @@ private:
     template<typename T>
     ParsedStyleSheet parse_a_stylesheet(TokenStream<T>&, Optional<AK::URL> location);
 
+    // For the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
     template<typename T>
-    NonnullRefPtrVector<CSSRule> parse_a_list_of_rules(TokenStream<T>&);
+    NonnullRefPtrVector<StyleRule> parse_a_list_of_rules(TokenStream<T>&);
     template<typename T>
     RefPtr<CSSRule> parse_a_rule(TokenStream<T>&);
     template<typename T>
