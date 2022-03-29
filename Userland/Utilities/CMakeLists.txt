@@ -201,6 +201,7 @@ target_link_libraries(test-fuzz LibCore LibGemini LibGfx LibHTTP LibIPC LibJS Li
 target_link_libraries(test-imap LibIMAP LibMain)
 target_link_libraries(test-pthread LibThreading LibMain)
 target_link_libraries(test-unveil LibMain)
+target_link_libraries(test_env LibMain)
 target_link_libraries(timezone LibMain)
 target_link_libraries(top LibMain)
 target_link_libraries(touch LibMain)
