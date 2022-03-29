@@ -242,6 +242,8 @@ protected:
     int ruler_width() const;
     int gutter_width() const;
 
+    virtual void highlighter_did_set_spans(Vector<TextDocumentSpan> spans) final { document().set_spans(Syntax::HighlighterClient::span_collection_index, move(spans)); }
+
 private:
     friend class TextDocumentLine;
 

@@ -1951,7 +1951,7 @@ void TextEditor::set_syntax_highlighter(OwnPtr<Syntax::Highlighter> highlighter)
         m_highlighter->attach(*this);
         m_needs_rehighlight = true;
     } else
-        document().set_spans({});
+        document().set_spans(Syntax::HighlighterClient::span_collection_index, {});
     if (on_highlighter_change)
         on_highlighter_change();
 }
