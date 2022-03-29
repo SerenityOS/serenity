@@ -142,22 +142,29 @@ String WebSocket::protocol() const
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-close
-DOM::ExceptionOr<void> WebSocket::close(u16 code, const String& reason)
+DOM::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<String> reason)
 {
-    // HACK : we should have an Optional<u16>
-    if (code == 0)
-        code = 1000;
-    if (code != 1000 && (code < 3000 || code > 4099))
+    // 1. If code is present, but is neither an integer equal to 1000 nor an integer in the range 3000 to 4999, inclusive, throw an "InvalidAccessError" DOMException.
+    if (code.has_value() && *code != 1000 && (*code < 3000 || *code > 4099))
         return DOM::InvalidAccessError::create("The close error code is invalid");
-    if (!reason.is_empty() && reason.bytes().size() > 123)
-        return DOM::SyntaxError::create("The close reason is longer than 123 bytes");
+    // 2. If reason is present, then run these substeps:
+    if (reason.has_value()) {
+        // 1. Let reasonBytes be the result of encoding reason.
+        // 2. If reasonBytes is longer than 123 bytes, then throw a "SyntaxError" DOMException.
+        if (reason->bytes().size() > 123)
+            return DOM::SyntaxError::create("The close reason is longer than 123 bytes");
+    }
+    // 3. Run the first matching steps from the following list:
     auto state = ready_state();
+    // -> If this's ready state is CLOSING (2) or CLOSED (3)
     if (state == WebSocket::ReadyState::Closing || state == WebSocket::ReadyState::Closed)
         return {};
-    // Note : Both of these are handled by the WebSocket Protocol when calling close()
-    // 3b. If the WebSocket connection is not yet established [WSP]
-    // 3c. If the WebSocket closing handshake has not yet been started [WSP]
-    m_websocket->close(code, reason);
+    // -> If the WebSocket connection is not yet established [WSP]
+    // -> If the WebSocket closing handshake has not yet been started [WSP]
+    // -> Otherwise
+    // NOTE: All of these are handled by the WebSocket Protocol when calling close()
+    // FIXME: LibProtocol does not yet support sending empty Close messages, so we use default values for now
+    m_websocket->close(code.value_or(1000), reason.value_or(String::empty()));
     return {};
 }
 

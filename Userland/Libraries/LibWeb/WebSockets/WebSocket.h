@@ -87,7 +87,7 @@ public:
     const String& binary_type() { return m_binary_type; };
     void set_binary_type(const String& type) { m_binary_type = type; };
 
-    DOM::ExceptionOr<void> close(u16 code, const String& reason);
+    DOM::ExceptionOr<void> close(Optional<u16> code, Optional<String> reason);
     DOM::ExceptionOr<void> send(const String& data);
 
 private:
