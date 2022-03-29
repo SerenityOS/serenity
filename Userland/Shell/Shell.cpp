@@ -1668,6 +1668,8 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     auto completion_utility_name = String::formatted("_complete_{}", completion_command.argv[0]);
     if (binary_search(cached_path, completion_utility_name))
         completion_command.argv[0] = completion_utility_name;
+    else if (!options.invoke_program_for_autocomplete)
+        return Error::from_string_literal("Refusing to use the program itself as completion source");
 
     completion_command.argv.extend({ "--complete", "--" });
 
