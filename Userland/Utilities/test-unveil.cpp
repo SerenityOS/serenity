@@ -1,20 +1,19 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ArgsParser.h>
-#include <errno.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <limits.h>
-#include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Vector<StringView> paths_to_test;
-    const char* permissions = "r";
+    StringView permissions = "r"sv;
     bool should_sleep = false;
 
     Core::ArgsParser parser;
@@ -30,8 +29,9 @@ int main(int argc, char** argv)
             StringView path { s };
             if (path.is_empty())
                 return false;
-            if (unveil(s, permissions) < 0) {
-                perror("unveil");
+            auto maybe_error = Core::System::unveil(path, permissions);
+            if (maybe_error.is_error()) {
+                warnln("{}", maybe_error.error());
                 return false;
             }
             return true;
@@ -42,8 +42,9 @@ int main(int argc, char** argv)
         .long_name = "lock",
         .short_name = 'l',
         .accept_value = [&](auto*) {
-            if (unveil(nullptr, nullptr) < 0) {
-                perror("unveil(nullptr, nullptr)");
+            auto maybe_error = Core::System::unveil(nullptr, nullptr);
+            if (maybe_error.is_error()) {
+                warnln("unveil(nullptr, nullptr): {}", maybe_error.error());
                 return false;
             }
             return true;
@@ -54,14 +55,15 @@ int main(int argc, char** argv)
         .min_values = 0,
         .max_values = INT_MAX,
         .accept_value = [&](auto* s) {
-            if (access(s, X_OK) == 0)
-                warnln("'{}' - ok", s);
+            auto maybe_error = Core::System::access(s, X_OK);
+            if (maybe_error.is_error())
+                warnln("'{}' - fail: {}", s, maybe_error.error());
             else
-                warnln("'{}' - fail: {}", s, strerror(errno));
+                warnln("'{}' - ok", s);
             return true;
         } });
 
-    parser.parse(argc, argv);
+    parser.parse(arguments);
     if (should_sleep)
         sleep(INT_MAX);
     return 0;
