@@ -89,7 +89,7 @@ public:
     String text() const;
     String text_in_range(const TextRange&) const;
 
-    Vector<TextRange> find_all(StringView needle, bool regmatch = false);
+    Vector<TextRange> find_all(StringView needle, bool regmatch = false, bool match_case = true);
 
     void update_regex_matches(StringView);
     TextRange find_next(StringView, const TextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes, bool regmatch = false, bool match_case = true);

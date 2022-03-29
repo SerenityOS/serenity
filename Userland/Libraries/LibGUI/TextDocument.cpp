@@ -580,13 +580,13 @@ TextRange TextDocument::find_previous(StringView needle, const TextPosition& sta
     return {};
 }
 
-Vector<TextRange> TextDocument::find_all(StringView needle, bool regmatch)
+Vector<TextRange> TextDocument::find_all(StringView needle, bool regmatch, bool match_case)
 {
     Vector<TextRange> ranges;
 
     TextPosition position;
     for (;;) {
-        auto range = find_next(needle, position, SearchShouldWrap::No, regmatch);
+        auto range = find_next(needle, position, SearchShouldWrap::No, regmatch, match_case);
         if (!range.is_valid())
             break;
         ranges.append(range);
