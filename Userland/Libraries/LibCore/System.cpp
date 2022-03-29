@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@gmail.com>
+ * Copyright (c) 2021-2022, Kenneth Myhra <kennethmyhra@gmail.com>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Matthias Zimmerman <matthias291999@gmail.com>
  *
@@ -1117,6 +1117,22 @@ ErrorOr<void> unlockpt(int fildes)
     if (rc < 0)
         return Error::from_syscall("unlockpt", -errno);
     return {};
+}
+
+ErrorOr<void> access(StringView pathname, int mode)
+{
+    if (pathname.is_null())
+        return Error::from_syscall("access"sv, -EFAULT);
+
+#ifdef __serenity__
+    int rc = ::syscall(Syscall::SC_access, pathname.characters_without_null_termination(), pathname.length(), mode);
+    HANDLE_SYSCALL_RETURN_VALUE("access"sv, rc, {});
+#else
+    String path_string = pathname;
+    if (::access(path_string.characters(), mode) < 0)
+        return Error::from_syscall("access"sv, -errno);
+    return {};
+#endif
 }
 
 }

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Kenneth Myhra <kennethmyhra@gmail.com>
+ * Copyright (c) 2021-2022, Kenneth Myhra <kennethmyhra@gmail.com>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -150,5 +150,6 @@ ErrorOr<void> setenv(StringView, StringView, bool);
 ErrorOr<int> posix_openpt(int flags);
 ErrorOr<void> grantpt(int fildes);
 ErrorOr<void> unlockpt(int fildes);
+ErrorOr<void> access(StringView pathname, int mode);
 
 }
