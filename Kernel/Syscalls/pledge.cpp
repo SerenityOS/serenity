@@ -47,9 +47,10 @@ ErrorOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*>
         if (!parse_pledge(promises->view(), new_promises))
             return EINVAL;
 
-        if (!(m_protected_values.promises & (1u << (u32)Pledge::no_error))) {
-            if (m_protected_values.has_promises && (new_promises & ~m_protected_values.promises))
+        if (m_protected_values.has_promises && (new_promises & ~m_protected_values.promises)) {
+            if (!(m_protected_values.promises & (1u << (u32)Pledge::no_error)))
                 return EPERM;
+            new_promises &= m_protected_values.promises;
         }
     }
 
@@ -57,9 +58,10 @@ ErrorOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*>
     if (execpromises) {
         if (!parse_pledge(execpromises->view(), new_execpromises))
             return EINVAL;
-        if (!(m_protected_values.promises & (1u << (u32)Pledge::no_error))) {
-            if (m_protected_values.has_execpromises && (new_execpromises & ~m_protected_values.execpromises))
+        if (m_protected_values.has_execpromises && (new_execpromises & ~m_protected_values.execpromises)) {
+            if (!(m_protected_values.promises & (1u << (u32)Pledge::no_error)))
                 return EPERM;
+            new_execpromises &= m_protected_values.execpromises;
         }
     }
 
