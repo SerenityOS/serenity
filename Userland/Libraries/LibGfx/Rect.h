@@ -700,12 +700,21 @@ public:
     template<typename U>
     [[nodiscard]] ALWAYS_INLINE Rect<U> to_rounded() const
     {
-        return {
-            static_cast<U>(llroundd(x())),
-            static_cast<U>(llroundd(y())),
-            static_cast<U>(llroundd(width())),
-            static_cast<U>(llroundd(height())),
-        };
+        if constexpr (IsSame<T, float>) {
+            return {
+                static_cast<U>(llroundf(x())),
+                static_cast<U>(llroundf(y())),
+                static_cast<U>(llroundf(width())),
+                static_cast<U>(llroundf(height())),
+            };
+        } else {
+            return {
+                static_cast<U>(llroundd(x())),
+                static_cast<U>(llroundd(y())),
+                static_cast<U>(llroundd(width())),
+                static_cast<U>(llroundd(height())),
+            };
+        }
     }
 
     [[nodiscard]] String to_string() const;
