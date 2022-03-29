@@ -105,7 +105,6 @@ PORTS_MISSING_DESCRIPTIONS = {
     'patch',
     'pcre2',
     'pfetch',
-    'php',
     'pkgconf',
     'pt2-clone',
     'qt6-qtbase',
