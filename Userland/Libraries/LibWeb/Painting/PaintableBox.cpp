@@ -143,6 +143,8 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         paint_inspector_rect(border_rect, Color::Green);
         paint_inspector_rect(content_rect, Color::Magenta);
 
+        auto& font = Gfx::FontDatabase::default_font();
+
         StringBuilder builder;
         if (layout_box().dom_node())
             builder.append(layout_box().dom_node()->debug_description());
@@ -153,11 +155,11 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         auto size_text_rect = border_rect;
         size_text_rect.set_y(border_rect.y() + border_rect.height());
         size_text_rect.set_top(size_text_rect.top());
-        size_text_rect.set_width((float)context.painter().font().width(size_text) + 4);
-        size_text_rect.set_height(context.painter().font().pixel_size() + 4);
+        size_text_rect.set_width((float)font.width(size_text) + 4);
+        size_text_rect.set_height(font.pixel_size() + 4);
         context.painter().fill_rect(enclosing_int_rect(size_text_rect), context.palette().color(Gfx::ColorRole::Tooltip));
         context.painter().draw_rect(enclosing_int_rect(size_text_rect), context.palette().threed_shadow1());
-        context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text, Gfx::TextAlignment::Center, context.palette().color(Gfx::ColorRole::TooltipText));
+        context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text, font, Gfx::TextAlignment::Center, context.palette().color(Gfx::ColorRole::TooltipText));
     }
 
     if (phase == PaintPhase::FocusOutline && layout_box().dom_node() && layout_box().dom_node()->is_element() && verify_cast<DOM::Element>(*layout_box().dom_node()).is_focused()) {
