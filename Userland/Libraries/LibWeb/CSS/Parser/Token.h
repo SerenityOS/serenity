@@ -151,6 +151,14 @@ public:
     Position const& start_position() const { return m_start_position; }
     Position const& end_position() const { return m_end_position; }
 
+    static Token of_string(FlyString str)
+    {
+        Token token;
+        token.m_type = Type::String;
+        token.m_value = move(str);
+        return token;
+    }
+
 private:
     Type m_type { Type::Invalid };
 
