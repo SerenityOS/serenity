@@ -495,7 +495,7 @@ static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, FlySt
 bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index) const
 {
     // FIXME: Do this better!
-    // We build a copy of the tree of StyleComponentValueRules, with all var()s replaced with their contents.
+    // We build a copy of the tree of StyleComponentValueRules, with all var()s and attr()s replaced with their contents.
     // This is a very naive solution, and we could do better if the CSS Parser could accept tokens one at a time.
 
     // Arbitrary large value chosen to avoid the billion-laughs attack.
@@ -553,6 +553,35 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                         return false;
                     continue;
                 }
+            } else if (value.function().name().equals_ignoring_case("attr"sv)) {
+                // https://drafts.csswg.org/css-values-5/#attr-substitution
+                auto const& attr_contents = value.function().values();
+                if (attr_contents.is_empty())
+                    return false;
+
+                auto const& attr_name_token = attr_contents.first();
+                if (!attr_name_token.is(Token::Type::Ident))
+                    return false;
+                auto attr_name = attr_name_token.token().ident();
+
+                auto attr_value = element.get_attribute(attr_name);
+                // 1. If the attr() function has a substitution value, replace the attr() function by the substitution value.
+                if (!attr_value.is_null()) {
+                    // FIXME: attr() should also accept an optional type argument, not just strings.
+                    dest.empend(Token::of_string(attr_value));
+                    continue;
+                }
+
+                // 2. Otherwise, if the attr() function has a fallback value as its last argument, replace the attr() function by the fallback value.
+                //    If there are any var() or attr() references in the fallback, substitute them as well.
+                if (attr_contents.size() > 2 && attr_contents[1].is(Token::Type::Comma)) {
+                    if (!expand_unresolved_values(element, property_name, dependencies, attr_contents, dest, 2))
+                        return false;
+                    continue;
+                }
+
+                // 3. Otherwise, the property containing the attr() function is invalid at computed-value time.
+                return false;
             }
 
             auto const& source_function = value.function();
@@ -580,9 +609,9 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
 
 RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& element, PropertyID property_id, UnresolvedStyleValue const& unresolved) const
 {
-    // Unresolved always contains a var(), unless it is a custom property's value, in which case we shouldn't be trying
+    // Unresolved always contains a var() or attr(), unless it is a custom property's value, in which case we shouldn't be trying
     // to produce a different StyleValue from it.
-    VERIFY(unresolved.contains_var());
+    VERIFY(unresolved.contains_var_or_attr());
 
     Vector<StyleComponentValueRule> expanded_values;
     HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;

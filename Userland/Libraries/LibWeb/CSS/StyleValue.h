@@ -1625,27 +1625,27 @@ private:
 
 class UnresolvedStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<UnresolvedStyleValue> create(Vector<StyleComponentValueRule>&& values, bool contains_var)
+    static NonnullRefPtr<UnresolvedStyleValue> create(Vector<StyleComponentValueRule>&& values, bool contains_var_or_attr)
     {
-        return adopt_ref(*new UnresolvedStyleValue(move(values), contains_var));
+        return adopt_ref(*new UnresolvedStyleValue(move(values), contains_var_or_attr));
     }
     virtual ~UnresolvedStyleValue() override = default;
 
     virtual String to_string() const override;
 
     Vector<StyleComponentValueRule> const& values() const { return m_values; }
-    bool contains_var() const { return m_contains_var; }
+    bool contains_var_or_attr() const { return m_contains_var_or_attr; }
 
 private:
-    UnresolvedStyleValue(Vector<StyleComponentValueRule>&& values, bool contains_var)
+    UnresolvedStyleValue(Vector<StyleComponentValueRule>&& values, bool contains_var_or_attr)
         : StyleValue(Type::Unresolved)
         , m_values(move(values))
-        , m_contains_var(contains_var)
+        , m_contains_var_or_attr(contains_var_or_attr)
     {
     }
 
     Vector<StyleComponentValueRule> m_values;
-    bool m_contains_var { false };
+    bool m_contains_var_or_attr { false };
 };
 
 class UnsetStyleValue final : public StyleValue {
