@@ -62,7 +62,7 @@ public:
     const TextDocumentLine& line(size_t line_index) const { return m_lines[line_index]; }
     TextDocumentLine& line(size_t line_index) { return m_lines[line_index]; }
 
-    void set_spans(Vector<TextDocumentSpan> spans) { m_spans = move(spans); }
+    void set_spans(u32 span_collection_index, Vector<TextDocumentSpan> spans);
 
     bool set_text(StringView, AllowCallback = AllowCallback::Yes);
 
@@ -136,7 +136,10 @@ protected:
     explicit TextDocument(Client* client);
 
 private:
+    void merge_span_collections();
+
     NonnullOwnPtrVector<TextDocumentLine> m_lines;
+    HashMap<u32, Vector<TextDocumentSpan>> m_span_collections;
     Vector<TextDocumentSpan> m_spans;
 
     HashTable<Client*> m_clients;

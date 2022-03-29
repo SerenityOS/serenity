@@ -33,6 +33,8 @@ public:
     String get_text() const { return highlighter_did_request_text(); }
     GUI::TextDocument& get_document() { return highlighter_did_request_document(); }
     GUI::TextPosition get_cursor() const { return highlighter_did_request_cursor(); }
+
+    static constexpr auto span_collection_index = 0;
 };
 
 }

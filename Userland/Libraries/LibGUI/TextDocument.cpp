@@ -7,7 +7,9 @@
 
 #include <AK/Badge.h>
 #include <AK/CharacterTypes.h>
+#include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
+#include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibCore/Timer.h>
@@ -980,6 +982,102 @@ const TextDocumentSpan* TextDocument::span_at(const TextPosition& position) cons
 void TextDocument::set_unmodified()
 {
     m_undo_stack.set_current_unmodified();
+}
+
+void TextDocument::set_spans(u32 span_collection_index, Vector<TextDocumentSpan> spans)
+{
+    m_span_collections.set(span_collection_index, move(spans));
+    merge_span_collections();
+}
+
+struct SpanAndCollectionIndex {
+    TextDocumentSpan span;
+    u32 collection_index { 0 };
+};
+
+void TextDocument::merge_span_collections()
+{
+    Vector<SpanAndCollectionIndex> sorted_spans;
+    auto collection_indices = m_span_collections.keys();
+    quick_sort(collection_indices);
+
+    for (auto collection_index : collection_indices) {
+        auto spans = m_span_collections.get(collection_index).value();
+        for (auto span : spans) {
+            sorted_spans.append({ move(span), collection_index });
+        }
+    }
+
+    quick_sort(sorted_spans, [](SpanAndCollectionIndex const& a, SpanAndCollectionIndex const& b) {
+        if (a.span.range.start() == b.span.range.start()) {
+            return a.collection_index < b.collection_index;
+        }
+        return a.span.range.start() < b.span.range.start();
+    });
+
+    // The end of the TextRanges of spans are non-inclusive, i.e span range = [X,y).
+    // This transforms the span's range to be inclusive, i.e [X,Y].
+    auto adjust_end = [](GUI::TextDocumentSpan span) -> GUI::TextDocumentSpan {
+        span.range.set_end({ span.range.end().line(), span.range.end().column() == 0 ? 0 : span.range.end().column() - 1 });
+        return span;
+    };
+
+    Vector<SpanAndCollectionIndex> merged_spans;
+    for (auto& span_and_collection_index : sorted_spans) {
+        if (merged_spans.is_empty()) {
+            merged_spans.append(span_and_collection_index);
+            continue;
+        }
+
+        auto const& span = span_and_collection_index.span;
+        auto last_span_and_collection_index = merged_spans.last();
+        auto const& last_span = last_span_and_collection_index.span;
+
+        if (adjust_end(span).range.start() > adjust_end(last_span).range.end()) {
+            // Current span does not intersect with previous one, can simply append to merged list.
+            merged_spans.append(span_and_collection_index);
+            continue;
+        }
+        merged_spans.take_last();
+
+        if (span.range.start() > last_span.range.start()) {
+            SpanAndCollectionIndex first_part = last_span_and_collection_index;
+            first_part.span.range.set_end(span.range.start());
+            merged_spans.append(move(first_part));
+        }
+
+        SpanAndCollectionIndex merged_span;
+        merged_span.collection_index = span_and_collection_index.collection_index;
+        merged_span.span.range = { span.range.start(), min(span.range.end(), last_span.range.end()) };
+        merged_span.span.is_skippable = span.is_skippable | last_span.is_skippable;
+        merged_span.span.data = span.data ? span.data : last_span.data;
+        merged_span.span.attributes.color = span_and_collection_index.collection_index > last_span_and_collection_index.collection_index ? span.attributes.color : last_span.attributes.color;
+        merged_span.span.attributes.bold = span.attributes.bold | last_span.attributes.bold;
+        merged_span.span.attributes.background_color = span.attributes.background_color.has_value() ? span.attributes.background_color.value() : last_span.attributes.background_color;
+        merged_span.span.attributes.underline = span.attributes.underline | last_span.attributes.underline;
+        merged_span.span.attributes.underline_color = span.attributes.underline_color.has_value() ? span.attributes.underline_color.value() : last_span.attributes.underline_color;
+        merged_span.span.attributes.underline_style = span.attributes.underline_style;
+        merged_spans.append(move(merged_span));
+
+        if (span.range.end() == last_span.range.end())
+            continue;
+
+        if (span.range.end() > last_span.range.end()) {
+            SpanAndCollectionIndex last_part = span_and_collection_index;
+            last_part.span.range.set_start(last_span.range.end());
+            merged_spans.append(move(last_part));
+            continue;
+        }
+
+        SpanAndCollectionIndex last_part = last_span_and_collection_index;
+        last_part.span.range.set_start(span.range.end());
+        merged_spans.append(move(last_part));
+    }
+
+    m_spans.clear();
+    for (auto span : merged_spans) {
+        m_spans.append(move(span.span));
+    }
 }
 
 }
