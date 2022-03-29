@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
 #include <sys/select.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
@@ -979,5 +980,13 @@ int chroot(const char* path)
 {
     dbgln("FIXME: chroot(\"{}\")", path);
     return -1;
+}
+
+// https://pubs.opengroup.org/onlinepubs/7908799/xsh/getdtablesize.html
+int getdtablesize()
+{
+    rlimit dtablesize;
+    int rc = getrlimit(RLIMIT_NOFILE, &dtablesize);
+    __RETURN_WITH_ERRNO(rc, dtablesize.rlim_cur, rc);
 }
 }

@@ -118,6 +118,7 @@ int unveil(const char* path, const char* permissions);
 char* getpass(const char* prompt);
 int pause(void);
 int chroot(const char*);
+int getdtablesize(void);
 
 enum {
     _PC_NAME_MAX,
