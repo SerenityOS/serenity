@@ -51,8 +51,6 @@ private:
 
     DOM::Document& m_document;
     NonnullRefPtrVector<CSSStyleSheet> m_sheets;
-
-    int m_generation { 0 };
 };
 
 }
