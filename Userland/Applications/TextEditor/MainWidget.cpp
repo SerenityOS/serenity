@@ -99,46 +99,12 @@ MainWidget::MainWidget()
     };
     m_wrap_around_checkbox->set_checked(true);
 
-    m_find_next_action = GUI::Action::create("Find &Next", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        auto needle = m_find_textbox->text();
-        if (needle.is_empty())
-            return;
-        if (m_use_regex)
-            m_editor->document().update_regex_matches(needle);
-
-        auto found_range = m_editor->document().find_next(needle, m_editor->normalized_selection().end(), m_should_wrap ? GUI::TextDocument::SearchShouldWrap::Yes : GUI::TextDocument::SearchShouldWrap::No, m_use_regex, m_match_case);
-        dbgln("find_next('{}') returned {}", needle, found_range);
-        if (found_range.is_valid()) {
-            m_editor->set_selection(found_range);
-        } else {
-            GUI::MessageBox::show(window(),
-                String::formatted("Not found: \"{}\"", needle),
-                "Not found",
-                GUI::MessageBox::Type::Information);
-        }
+    m_find_next_action = GUI::Action::create("Find &Next", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        find_text(GUI::TextEditor::SearchDirection::Forward, ShowMessageIfNoResutls::Yes);
     });
 
-    m_find_previous_action = GUI::Action::create("Find Pr&evious", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-previous.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        auto needle = m_find_textbox->text();
-        if (needle.is_empty())
-            return;
-        if (m_use_regex)
-            m_editor->document().update_regex_matches(needle);
-
-        auto selection_start = m_editor->normalized_selection().start();
-        if (!selection_start.is_valid())
-            selection_start = m_editor->normalized_selection().end();
-
-        auto found_range = m_editor->document().find_previous(needle, selection_start, m_should_wrap ? GUI::TextDocument::SearchShouldWrap::Yes : GUI::TextDocument::SearchShouldWrap::No, m_use_regex, m_match_case);
-        dbgln("find_prev(\"{}\") returned {}", needle, found_range);
-        if (found_range.is_valid()) {
-            m_editor->set_selection(found_range);
-        } else {
-            GUI::MessageBox::show(window(),
-                String::formatted("Not found: \"{}\"", needle),
-                "Not found",
-                GUI::MessageBox::Type::Information);
-        }
+    m_find_previous_action = GUI::Action::create("Find Pr&evious", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-previous.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        find_text(GUI::TextEditor::SearchDirection::Backward, ShowMessageIfNoResutls::Yes);
     });
 
     m_replace_action = GUI::Action::create("Rep&lace", { Mod_Ctrl, Key_F1 }, [&](auto&) {
@@ -194,6 +160,12 @@ MainWidget::MainWidget()
     m_find_textbox->on_escape_pressed = [this] {
         m_find_replace_widget->set_visible(false);
         m_editor->set_focus(true);
+        m_editor->reset_search_results();
+    };
+
+    m_find_textbox->on_change = [this] {
+        m_editor->reset_search_results();
+        find_text(GUI::TextEditor::SearchDirection::Forward, ShowMessageIfNoResutls::No);
     };
 
     m_replace_button = *find_descendant_of_type_named<GUI::Button>("replace_button");
@@ -865,6 +837,26 @@ void MainWidget::update_statusbar()
         m_statusbar->set_text(1, m_editor->syntax_highlighter()->language_string(language));
     }
     m_statusbar->set_text(2, String::formatted("Ln {}, Col {}", m_editor->cursor().line() + 1, m_editor->cursor().column()));
+}
+
+void MainWidget::find_text(GUI::TextEditor::SearchDirection direction, ShowMessageIfNoResutls show_message)
+{
+    auto needle = m_find_textbox->text();
+    if (needle.is_empty())
+        return;
+    if (m_use_regex)
+        m_editor->document().update_regex_matches(needle);
+
+    auto result = m_editor->find_text(needle, direction,
+        m_should_wrap ? GUI::TextDocument::SearchShouldWrap::Yes : GUI::TextDocument::SearchShouldWrap::No,
+        m_use_regex, m_match_case);
+
+    if (!result.is_valid() && show_message == ShowMessageIfNoResutls::Yes) {
+        GUI::MessageBox::show(window(),
+            String::formatted("Not found: \"{}\"", needle),
+            "Not found",
+            GUI::MessageBox::Type::Information);
+    }
 }
 
 }

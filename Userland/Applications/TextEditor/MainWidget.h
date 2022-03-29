@@ -56,6 +56,12 @@ private:
 
     virtual void drop_event(GUI::DropEvent&) override;
 
+    enum class ShowMessageIfNoResutls {
+        Yes = 1,
+        No = 0
+    };
+    void find_text(GUI::TextEditor::SearchDirection, ShowMessageIfNoResutls);
+
     RefPtr<GUI::TextEditor> m_editor;
     String m_path;
     String m_name;
