@@ -37,14 +37,14 @@ public:
 public:
     static ErrorOr<NonnullOwnPtr<GMBusConnector>> create_with_physical_address(PhysicalAddress gmbus_start_address);
 
-    void write(unsigned address, u32 data);
+    ErrorOr<void> write(unsigned address, u32 data);
     ErrorOr<void> read(unsigned address, u8* buf, size_t length);
     void set_default_rate();
 
 private:
     void set_pin_pair(PinPair pin_pair);
 
-    bool wait_for(GMBusStatus desired_status, Optional<size_t> milliseconds_timeout);
+    bool wait_for(GMBusStatus desired_status, size_t milliseconds_timeout);
 
     explicit GMBusConnector(Memory::TypedMapping<GMBusRegisters volatile>);
     Spinlock<LockRank::None> m_access_lock;

@@ -174,7 +174,7 @@ ErrorOr<void> IntelDisplayConnectorGroup::initialize_connectors()
     Array<u8, 128> crt_edid_bytes {};
     {
         SpinlockLocker control_lock(m_control_lock);
-        m_gmbus_connector->write(DDC2_I2C_ADDRESS, 0);
+        MUST(m_gmbus_connector->write(DDC2_I2C_ADDRESS, 0));
         MUST(m_gmbus_connector->read(DDC2_I2C_ADDRESS, crt_edid_bytes.data(), sizeof(crt_edid_bytes)));
 
         // FIXME: It seems like the returned EDID is almost correct,

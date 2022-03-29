@@ -33,12 +33,12 @@ GMBusConnector::GMBusConnector(Memory::TypedMapping<GMBusRegisters volatile> reg
     set_pin_pair(PinPair::DedicatedAnalog);
 }
 
-bool GMBusConnector::wait_for(GMBusStatus desired_status, Optional<size_t> milliseconds_timeout)
+bool GMBusConnector::wait_for(GMBusStatus desired_status, size_t milliseconds_timeout)
 {
     VERIFY(m_access_lock.is_locked());
     size_t milliseconds_passed = 0;
     while (1) {
-        if (milliseconds_timeout.has_value() && milliseconds_timeout.value() < milliseconds_passed)
+        if (milliseconds_timeout < milliseconds_passed)
             return false;
         full_memory_barrier();
         u32 status = m_gmbus_registers->status;
@@ -61,7 +61,7 @@ bool GMBusConnector::wait_for(GMBusStatus desired_status, Optional<size_t> milli
     }
 }
 
-void GMBusConnector::write(unsigned address, u32 data)
+ErrorOr<void> GMBusConnector::write(unsigned address, u32 data)
 {
     VERIFY(address < 256);
     SpinlockLocker locker(m_access_lock);
@@ -70,7 +70,9 @@ void GMBusConnector::write(unsigned address, u32 data)
     full_memory_barrier();
     m_gmbus_registers->command = ((address << 1) | (1 << 16) | (GMBusCycle::Wait << 25) | (1 << 30));
     full_memory_barrier();
-    wait_for(GMBusStatus::TransactionCompletion, {});
+    if (!wait_for(GMBusStatus::TransactionCompletion, 250))
+        return Error::from_errno(EBUSY);
+    return {};
 }
 
 void GMBusConnector::set_default_rate()
@@ -109,10 +111,12 @@ ErrorOr<void> GMBusConnector::read(unsigned address, u8* buf, size_t length)
     m_gmbus_registers->command = (1 | (address << 1) | (length << 16) | (GMBusCycle::Wait << 25) | (1 << 30));
     full_memory_barrier();
     while (nread < length) {
-        wait_for(GMBusStatus::HardwareReady, {});
+        if (!wait_for(GMBusStatus::HardwareReady, 250))
+            return Error::from_errno(EBUSY);
         read_set();
     }
-    wait_for(GMBusStatus::TransactionCompletion, {});
+    if (!wait_for(GMBusStatus::TransactionCompletion, 250))
+        return Error::from_errno(EBUSY);
     return {};
 }
 
