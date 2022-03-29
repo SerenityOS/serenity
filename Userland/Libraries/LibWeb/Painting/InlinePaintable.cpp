@@ -55,7 +55,7 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
             }
 
             auto border_radius_data = Painting::normalized_border_radius_data(layout_node(), absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
-            Painting::paint_background(context, layout_node(), enclosing_int_rect(absolute_fragment_rect), computed_values().background_color(), &computed_values().background_layers(), border_radius_data);
+            Painting::paint_background(context, layout_node(), absolute_fragment_rect, computed_values().background_color(), &computed_values().background_layers(), border_radius_data);
 
             if (auto computed_box_shadow = computed_values().box_shadow(); !computed_box_shadow.is_empty()) {
                 Vector<Painting::ShadowData> resolved_box_shadow_data;

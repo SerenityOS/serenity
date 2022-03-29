@@ -43,9 +43,7 @@ BorderRadiusData normalized_border_radius_data(Layout::Node const& node, Gfx::Fl
 
 void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& a_rect, BorderRadiusData const& border_radius_data, BordersData const& borders_data)
 {
-    // FIXME: This is a hack that snaps the incoming rect to integer pixel values before painting each side.
-    //        This needs a more general solution.
-    auto rect = enclosing_int_rect(a_rect).to_type<float>();
+    auto rect = a_rect.to_rounded<float>();
 
     const auto& border_data = [&] {
         switch (edge) {
