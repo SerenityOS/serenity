@@ -25,7 +25,7 @@
 
 namespace PDF {
 
-class Page;
+struct Page;
 
 class ColorSpace : public RefCounted<ColorSpace> {
 public:
