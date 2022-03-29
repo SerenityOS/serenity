@@ -299,13 +299,12 @@ bool GLContextWidget::load_file(Core::File& file)
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     } else {
         auto response = FileSystemAccessClient::Client::the().try_request_file(window(), builder.string_view(), Core::OpenMode::ReadOnly);
-        if (response.is_error())
-            return false;
-
-        auto texture_file = response.value();
-        auto bitmap_or_error = Gfx::Bitmap::try_load_from_fd_and_close(texture_file->leak_fd(), texture_file->filename());
-        if (!bitmap_or_error.is_error())
-            texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+        if (!response.is_error()) {
+            auto texture_file = response.value();
+            auto bitmap_or_error = Gfx::Bitmap::try_load_from_fd_and_close(texture_file->leak_fd(), texture_file->filename());
+            if (!bitmap_or_error.is_error())
+                texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+        }
     }
 
     GLuint tex;
@@ -331,8 +330,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix"));
 
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
-    TRY(Core::System::unveil("/home/anon/Documents/3D Models/teapot.obj", "r"));
-    TRY(Core::System::unveil("/home/anon/Documents/3D Models/teapot.bmp", "r"));
+    TRY(Core::System::unveil("/home/anon/Documents/3D Models", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
