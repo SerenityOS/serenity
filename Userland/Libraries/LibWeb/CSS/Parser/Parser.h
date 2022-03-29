@@ -89,8 +89,6 @@ public:
     Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
     ~Parser() = default;
 
-    // The normal parser entry point, for parsing stylesheets.
-    NonnullRefPtr<CSSStyleSheet> parse_as_stylesheet(Optional<AK::URL> location);
     // For the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
     NonnullRefPtrVector<CSSRule> parse_as_list_of_rules();
     // For use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
@@ -105,6 +103,7 @@ public:
     Vector<StyleComponentValueRule> parse_as_list_of_component_values();
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
 
+    NonnullRefPtr<CSSStyleSheet> parse_as_css_stylesheet(Optional<AK::URL> location);
     RefPtr<ElementInlineCSSStyleDeclaration> parse_as_style_attribute(DOM::Element&);
 
     enum class SelectorParsingMode {
@@ -134,8 +133,14 @@ private:
         SyntaxError,
     };
 
+    // "Parse a stylesheet" is intended to be the normal parser entry point, for parsing stylesheets.
+    struct ParsedStyleSheet {
+        Optional<AK::URL> location;
+        NonnullRefPtrVector<StyleRule> rules;
+    };
     template<typename T>
-    NonnullRefPtr<CSSStyleSheet> parse_a_stylesheet(TokenStream<T>&, Optional<AK::URL> location);
+    ParsedStyleSheet parse_a_stylesheet(TokenStream<T>&, Optional<AK::URL> location);
+
     template<typename T>
     NonnullRefPtrVector<CSSRule> parse_a_list_of_rules(TokenStream<T>&);
     template<typename T>
