@@ -216,19 +216,14 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
     // 2. the bottom edge of the bottom (possibly collapsed) margin of its last in-flow child, if the child's bottom margin does not collapse with the element's bottom margin
     // FIXME: 3. the bottom border edge of the last in-flow child whose top margin doesn't collapse with the element's bottom margin
     if (!box.children_are_inline()) {
-        Optional<float> bottom;
-        box.for_each_child_of_type<Box>([&](Layout::Box& child_box) {
-            if (child_box.is_absolutely_positioned() || child_box.is_floating())
-                return;
+        for (auto* child_box = box.last_child_of_type<Box>(); child_box; child_box = child_box->previous_sibling_of_type<Box>()) {
+            if (child_box->is_absolutely_positioned() || child_box->is_floating())
+                continue;
 
             // FIXME: Handle margin collapsing.
-            auto const& child_box_state = state.get(child_box);
-            float child_box_bottom = child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom();
-
-            if (!bottom.has_value() || child_box_bottom > bottom.value())
-                bottom = child_box_bottom;
-        });
-        return bottom.value_or(0);
+            auto const& child_box_state = state.get(*child_box);
+            return max(0, child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom());
+        }
     }
 
     // 4. zero, otherwise
