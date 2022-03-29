@@ -1997,10 +1997,11 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_a_comma_separated_list_of_
     return lists;
 }
 
-RefPtr<PropertyOwningCSSStyleDeclaration> Parser::parse_as_style_attribute()
+RefPtr<ElementInlineCSSStyleDeclaration> Parser::parse_as_style_attribute(DOM::Element& element)
 {
     auto declarations_and_at_rules = parse_a_list_of_declarations(m_token_stream);
-    return convert_to_style_declaration(declarations_and_at_rules);
+    auto [properties, custom_properties] = extract_properties(declarations_and_at_rules);
+    return ElementInlineCSSStyleDeclaration::create(element, move(properties), move(custom_properties));
 }
 
 Optional<AK::URL> Parser::parse_url_function(StyleComponentValueRule const& component_value, AllowedDataUrlType allowed_data_url_type)
@@ -2169,30 +2170,32 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
     return {};
 }
 
-RefPtr<PropertyOwningCSSStyleDeclaration> Parser::convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations_and_at_rules)
+auto Parser::extract_properties(Vector<DeclarationOrAtRule> const& declarations_and_at_rules) -> PropertiesAndCustomProperties
 {
-    Vector<StyleProperty> properties;
-    HashMap<String, StyleProperty> custom_properties;
-
+    PropertiesAndCustomProperties result;
     for (auto& declaration_or_at_rule : declarations_and_at_rules) {
         if (declaration_or_at_rule.is_at_rule()) {
             dbgln_if(CSS_PARSER_DEBUG, "!!! CSS at-rule is not allowed here!");
             continue;
         }
 
-        auto& declaration = declaration_or_at_rule.m_declaration;
+        auto const& declaration = declaration_or_at_rule.declaration();
 
-        auto maybe_property = convert_to_style_property(declaration);
-        if (maybe_property.has_value()) {
-            auto property = maybe_property.value();
+        if (auto maybe_property = convert_to_style_property(declaration); maybe_property.has_value()) {
+            auto property = maybe_property.release_value();
             if (property.property_id == PropertyID::Custom) {
-                custom_properties.set(property.custom_name, property);
+                result.custom_properties.set(property.custom_name, property);
             } else {
-                properties.append(property);
+                result.properties.append(move(property));
             }
         }
     }
+    return result;
+}
 
+RefPtr<PropertyOwningCSSStyleDeclaration> Parser::convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations_and_at_rules)
+{
+    auto [properties, custom_properties] = extract_properties(declarations_and_at_rules);
     return PropertyOwningCSSStyleDeclaration::create(move(properties), move(custom_properties));
 }
 
@@ -5206,13 +5209,12 @@ RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const& context, StringV
     return parser.parse_as_stylesheet();
 }
 
-RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const& context, StringView css)
+RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const& context, StringView css, DOM::Element& element)
 {
-    // FIXME: We could save some effort by creating an ElementInlineCSSStyleDeclaration right here.
     if (css.is_empty())
-        return CSS::PropertyOwningCSSStyleDeclaration::create({}, {});
+        return CSS::ElementInlineCSSStyleDeclaration::create(element, {}, {});
     CSS::Parser parser(context, css);
-    return parser.parse_as_style_attribute();
+    return parser.parse_as_style_attribute(element);
 }
 
 RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const& context, StringView string, CSS::PropertyID property_id)

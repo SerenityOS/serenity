@@ -105,7 +105,7 @@ public:
     Vector<StyleComponentValueRule> parse_as_list_of_component_values();
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
 
-    RefPtr<PropertyOwningCSSStyleDeclaration> parse_as_style_attribute();
+    RefPtr<ElementInlineCSSStyleDeclaration> parse_as_style_attribute(DOM::Element&);
 
     enum class SelectorParsingMode {
         Standard,
@@ -343,6 +343,13 @@ private:
     static bool has_ignored_vendor_prefix(StringView);
     static bool is_builtin(StringView);
 
+    struct PropertiesAndCustomProperties {
+        Vector<StyleProperty> properties;
+        HashMap<String, StyleProperty> custom_properties;
+    };
+
+    PropertiesAndCustomProperties extract_properties(Vector<DeclarationOrAtRule> const&);
+
     ParsingContext m_context;
 
     Tokenizer m_tokenizer;
@@ -355,7 +362,7 @@ private:
 namespace Web {
 
 RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const&, StringView);
-RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const&, StringView);
+RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const&, StringView, DOM::Element&);
 RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView);
 RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const&, StringView);

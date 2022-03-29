@@ -86,16 +86,14 @@ private:
 
 class ElementInlineCSSStyleDeclaration final : public PropertyOwningCSSStyleDeclaration {
 public:
-    static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element& element) { return adopt_ref(*new ElementInlineCSSStyleDeclaration(element)); }
-    static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create_and_take_properties_from(DOM::Element& element, PropertyOwningCSSStyleDeclaration& declaration) { return adopt_ref(*new ElementInlineCSSStyleDeclaration(element, declaration)); }
+    static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element& element, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties) { return adopt_ref(*new ElementInlineCSSStyleDeclaration(element, move(properties), move(custom_properties))); }
     virtual ~ElementInlineCSSStyleDeclaration() override = default;
 
     DOM::Element* element() { return m_element.ptr(); }
     const DOM::Element* element() const { return m_element.ptr(); }
 
 private:
-    explicit ElementInlineCSSStyleDeclaration(DOM::Element&);
-    explicit ElementInlineCSSStyleDeclaration(DOM::Element&, PropertyOwningCSSStyleDeclaration&);
+    explicit ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
 
     WeakPtr<DOM::Element> m_element;
 };
