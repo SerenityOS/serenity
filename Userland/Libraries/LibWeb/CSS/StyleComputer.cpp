@@ -12,6 +12,8 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/FontStyleMapping.h>
+#include <LibGfx/TrueTypeFont/Font.h>
+#include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
@@ -21,6 +23,7 @@
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/FontCache.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
+#include <LibWeb/Loader/ResourceLoader.h>
 #include <stdio.h>
 
 namespace Web::CSS {
@@ -29,6 +32,47 @@ StyleComputer::StyleComputer(DOM::Document& document)
     : m_document(document)
 {
 }
+
+StyleComputer::~StyleComputer() = default;
+
+class StyleComputer::FontLoader : public ResourceClient {
+public:
+    explicit FontLoader(StyleComputer& style_computer, FlyString family_name, AK::URL url)
+        : m_style_computer(style_computer)
+        , m_family_name(move(family_name))
+    {
+        LoadRequest request;
+        request.set_url(move(url));
+        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+    }
+
+    virtual ~FontLoader() override { }
+
+    virtual void resource_did_load() override
+    {
+        auto result = TTF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+        if (result.is_error())
+            return;
+        m_ttf_font = result.release_value();
+        m_style_computer.did_load_font(m_family_name);
+    }
+
+    virtual void resource_did_fail() override
+    {
+    }
+
+    RefPtr<Gfx::Font> font_with_point_size(float point_size) const
+    {
+        if (!m_ttf_font)
+            return nullptr;
+        return adopt_ref(*new TTF::ScaledFont(*m_ttf_font, point_size, point_size));
+    }
+
+private:
+    StyleComputer& m_style_computer;
+    FlyString m_family_name;
+    RefPtr<TTF::Font> m_ttf_font;
+};
 
 static StyleSheet& default_stylesheet()
 {
@@ -880,6 +924,12 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         float font_size_in_pt = font_size_in_px * 0.75f;
         font_selector = { family, font_size_in_pt, weight, slope };
 
+        if (auto it = m_loaded_fonts.find(family); it != m_loaded_fonts.end()) {
+            auto& loader = *it->value;
+            if (auto found_font = loader.font_with_point_size(font_size_in_pt))
+                return found_font;
+        }
+
         if (auto found_font = FontCache::the().get(font_selector))
             return found_font;
 
@@ -1041,6 +1091,7 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
 
 NonnullRefPtr<StyleProperties> StyleComputer::compute_style(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
+    load_fonts_if_needed();
     build_rule_cache_if_needed();
 
     auto style = StyleProperties::create();
@@ -1183,4 +1234,28 @@ Gfx::IntRect StyleComputer::viewport_rect() const
     return {};
 }
 
+void StyleComputer::did_load_font([[maybe_unused]] FlyString const& family_name)
+{
+    document().invalidate_style();
+}
+
+void StyleComputer::load_fonts_if_needed() const
+{
+    for_each_stylesheet(CascadeOrigin::Author, [&](StyleSheet const& sheet) {
+        for (auto const& rule : static_cast<CSSStyleSheet const&>(sheet).rules()) {
+            if (!is<CSSFontFaceRule>(rule))
+                continue;
+            auto const& font_face = static_cast<CSSFontFaceRule const&>(rule).font_face();
+            if (font_face.sources().is_empty())
+                continue;
+            if (m_loaded_fonts.contains(font_face.font_family()))
+                continue;
+
+            LoadRequest request;
+            auto url = m_document.parse_url(font_face.sources().first().url.to_string());
+            auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(url));
+            const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_face.font_family(), move(loader));
+        }
+    });
+}
 }
