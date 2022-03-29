@@ -226,8 +226,13 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
             if (child_box->is_list_item_marker_box())
                 continue;
 
-            // FIXME: Handle margin collapsing.
             auto const& child_box_state = state.get(*child_box);
+
+            // Ignore anonymous block containers with no lines. These don't count as in-flow block boxes.
+            if (child_box->is_anonymous() && child_box->is_block_container() && child_box_state.line_boxes.is_empty())
+                continue;
+
+            // FIXME: Handle margin collapsing.
             return max(0, child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom());
         }
     }
