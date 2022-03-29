@@ -253,7 +253,16 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
             if (line_builder.break_if_needed(layout_mode, item.border_box_width())) {
+                // If whitespace caused us to break, we swallow the whitespace instead of
+                // putting it on the next line.
+
+                // If we're in a whitespace-collapsing context, we can simply check the flag.
                 if (item.is_collapsible_whitespace)
+                    break;
+
+                // In whitespace-preserving contexts (white-space: pre*), we have to check manually.
+                auto view = text_node.text_for_rendering().substring_view(item.offset_in_node, item.length_in_node);
+                if (view.is_whitespace())
                     break;
             }
             line_builder.append_text_chunk(
