@@ -23,4 +23,7 @@ public:
     static NonnullRefPtr<Comment> create_with_global_object(Bindings::WindowObject& window, String const& data);
 };
 
+template<>
+inline bool Node::fast_is<Comment>() const { return is_comment(); }
+
 }

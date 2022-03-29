@@ -38,4 +38,7 @@ private:
     bool m_always_editable { false };
 };
 
+template<>
+inline bool Node::fast_is<Text>() const { return is_text(); }
+
 }

@@ -43,4 +43,7 @@ private:
     String m_system_id;
 };
 
+template<>
+inline bool Node::fast_is<DocumentType>() const { return is_document_type(); }
+
 }
