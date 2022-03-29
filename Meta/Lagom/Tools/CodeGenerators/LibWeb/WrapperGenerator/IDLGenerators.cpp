@@ -1310,9 +1310,13 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         scoped_generator.append(R"~~~(
     @result_expression@ JS::Value(@value@);
 )~~~");
-    } else if (type.name == "short" || type.name == "unsigned short" || type.name == "long" || type.name == "unsigned long") {
+    } else if (type.name == "short" || type.name == "long" || type.name == "unsigned short") {
         scoped_generator.append(R"~~~(
     @result_expression@ JS::Value((i32)@value@);
+)~~~");
+    } else if (type.name == "unsigned long") {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::Value((u32)@value@);
 )~~~");
     } else if (type.name == "Location" || type.name == "Promise" || type.name == "Uint8Array" || type.name == "Uint8ClampedArray" || type.name == "any") {
         scoped_generator.append(R"~~~(
