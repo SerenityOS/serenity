@@ -1694,6 +1694,9 @@ namespace Web::Bindings {
 void @wrapper_class@::initialize(JS::GlobalObject& global_object)
 {
     @wrapper_base_class@::initialize(global_object);
+
+    auto& vm = global_object.vm();
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), JS::js_string(vm, "@name@"), JS::Attribute::Configurable);
 }
 
 @wrapper_class@::~@wrapper_class@()
