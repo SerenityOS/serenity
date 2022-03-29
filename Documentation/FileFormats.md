@@ -67,10 +67,10 @@ Most prominently, the first four bytes contain the filemagic: `!Fnt`.
 
 ## GUI Markup Language (`*.gml` files)
 
-These files are human-readable, have no easily detectable filemagic, and define GUI interfaces.
+These files are human-readable, have no easily detectable filemagic, and define GUI designs and layouts.
 The format is strongly influenced by QML, the Qt Modeling Language.
 
-See also [Playground(1)](../Userland/DevTools/Playground/) and `Widget::load_from_gml` in [`Userland/Libraries/LibGUI/Widget.cpp`](../Userland/Libraries/LibGUI/Widget.cpp).
+See the [GML manpage(s)](../Base/usr/share/man/man5/GML.md), [Playground(1)](../Userland/DevTools/Playground/), and the [GML support in LibGUI](../Userland/Libraries/LibGUI/GML/).
 
 ## Inter Process Communication (`*.ipc` files)
 
