@@ -25,7 +25,7 @@ public:
     void set_suffix(String suffix) { m_suffix = move(suffix); }
     void set_knob_style(KnobStyle knobstyle) { m_knob_style = knobstyle; }
 
-    virtual void set_value(int value, AllowCallback = AllowCallback::Yes) override;
+    virtual void set_value(int value, AllowCallback = AllowCallback::Yes, DoClamp = DoClamp::Yes) override;
 
 protected:
     virtual void paint_event(PaintEvent&) override;
