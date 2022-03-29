@@ -5,10 +5,11 @@
  */
 
 #include <AK/Format.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <unistd.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
     char* tty = ttyname(0);
     if (!tty) {
