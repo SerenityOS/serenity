@@ -84,17 +84,30 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
         return element.attribute(attribute.name) == attribute.value;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord:
-        return element.attribute(attribute.name).split_view(' ').contains_slow(attribute.value);
+        return !attribute.value.is_empty()
+            && element.attribute(attribute.name).split_view(' ').contains_slow(attribute.value);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
-        return element.attribute(attribute.name).contains(attribute.value);
+        return !attribute.value.is_empty()
+            && element.attribute(attribute.name).contains(attribute.value);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment: {
-        auto segments = element.attribute(attribute.name).split_view('-');
-        return !segments.is_empty() && segments.first() == attribute.value;
+        const auto element_attr_value = element.attribute(attribute.name);
+        if (element_attr_value.is_empty()) {
+            // If the attribute value on element is empty, the selector is true
+            // if the match value is also empty and false otherwise.
+            return attribute.value.is_empty();
+        }
+        if (attribute.value.is_empty()) {
+            return false;
+        }
+        auto segments = element_attr_value.split_view('-');
+        return segments.first() == attribute.value;
     }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
-        return element.attribute(attribute.name).starts_with(attribute.value);
+        return !attribute.value.is_empty()
+            && element.attribute(attribute.name).starts_with(attribute.value);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
-        return element.attribute(attribute.name).ends_with(attribute.value);
+        return !attribute.value.is_empty()
+            && element.attribute(attribute.name).ends_with(attribute.value);
     }
 
     return false;
