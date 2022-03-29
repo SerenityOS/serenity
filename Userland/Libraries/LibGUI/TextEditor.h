@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -213,6 +214,15 @@ public:
     void set_text_is_secret(bool text_is_secret);
     void force_rehighlight();
 
+    enum class SearchDirection {
+        Forward,
+        Backward,
+    };
+    TextRange find_text(StringView needle, SearchDirection, GUI::TextDocument::SearchShouldWrap, bool use_regex, bool match_case);
+    void reset_search_results();
+    Optional<size_t> search_result_index() const { return m_search_result_index; }
+    Vector<TextRange> const& search_results() const { return m_search_results; }
+
 protected:
     explicit TextEditor(Type = Type::MultiLine);
 
@@ -260,7 +270,6 @@ private:
     // ^Syntax::HighlighterClient
     virtual Vector<TextDocumentSpan>& spans() final { return document().spans(); }
     virtual Vector<TextDocumentSpan> const& spans() const final { return document().spans(); }
-    virtual void highlighter_did_set_spans(Vector<TextDocumentSpan> spans) final { document().set_spans(move(spans)); }
     virtual void set_span_at_index(size_t index, TextDocumentSpan span) final { document().set_span_at_index(index, move(span)); }
     virtual void highlighter_did_request_update() final { update(); }
     virtual String highlighter_did_request_text() const final { return text(); }
@@ -337,6 +346,9 @@ private:
     }
 
     virtual void will_execute(TextDocumentUndoCommand const&) { }
+    void on_search_results(GUI::TextRange current, Vector<GUI::TextRange> all_results);
+
+    static constexpr auto search_results_span_collection_index = 1;
 
     Type m_type { MultiLine };
     Mode m_mode { Editable };
@@ -408,6 +420,9 @@ private:
     RefPtr<Gfx::Bitmap> m_icon;
 
     bool m_text_is_secret { false };
+
+    Optional<size_t> m_search_result_index;
+    Vector<GUI::TextRange> m_search_results;
 };
 
 }
