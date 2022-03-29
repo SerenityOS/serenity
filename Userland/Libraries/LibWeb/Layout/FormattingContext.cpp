@@ -220,6 +220,12 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
             if (child_box->is_absolutely_positioned() || child_box->is_floating())
                 continue;
 
+            // FIXME: This is hack. If the last child is a list-item marker box, we ignore it for purposes of height calculation.
+            //        Perhaps markers should not be considered in-flow(?) Perhaps they should always be the first child of the list-item
+            //        box instead of the last child.
+            if (child_box->is_list_item_marker_box())
+                continue;
+
             // FIXME: Handle margin collapsing.
             auto const& child_box_state = state.get(*child_box);
             return max(0, child_box_state.offset.y() + child_box_state.content_height + child_box_state.margin_box_bottom());
