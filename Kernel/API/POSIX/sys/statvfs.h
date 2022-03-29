@@ -15,6 +15,8 @@ extern "C" {
 #define ST_RDONLY 0x1
 #define ST_NOSUID 0x2
 
+#define FSTYPSZ 16
+
 struct statvfs {
     unsigned long f_bsize;
     unsigned long f_frsize;
@@ -29,6 +31,8 @@ struct statvfs {
     unsigned long f_fsid;
     unsigned long f_flag;
     unsigned long f_namemax;
+
+    char f_basetype[FSTYPSZ];
 };
 
 #ifdef __cplusplus

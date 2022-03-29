@@ -30,6 +30,8 @@ ErrorOr<FlatPtr> Process::do_statvfs(FileSystem const& fs, Custody const* custod
 
     kernelbuf.f_namemax = 255;
 
+    (void)fs.class_name().copy_characters_to_buffer(kernelbuf.f_basetype, FSTYPSZ);
+
     if (custody)
         kernelbuf.f_flag = custody->mount_flags();
 
