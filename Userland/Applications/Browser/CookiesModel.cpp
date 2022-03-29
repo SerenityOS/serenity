@@ -29,14 +29,14 @@ void CookiesModel::clear_items()
 String CookiesModel::column_name(int column) const
 {
     switch (column) {
-    case Column::Name:
-        return "Name";
-    case Column::Value:
-        return "Value";
     case Column::Domain:
         return "Domain";
     case Column::Path:
         return "Path";
+    case Column::Name:
+        return "Name";
+    case Column::Value:
+        return "Value";
     case Column::ExpiryTime:
         return "Expiry time";
     case Column::__Count:
@@ -61,14 +61,14 @@ GUI::Variant CookiesModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
     const auto& cookie = m_cookies[index.row()];
 
     switch (index.column()) {
-    case Column::Name:
-        return cookie.name;
-    case Column::Value:
-        return cookie.value;
     case Column::Domain:
         return cookie.domain;
     case Column::Path:
         return cookie.path;
+    case Column::Name:
+        return cookie.name;
+    case Column::Value:
+        return cookie.value;
     case Column::ExpiryTime:
         return cookie.expiry_time.to_string();
     }
