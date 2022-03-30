@@ -98,9 +98,9 @@ String StyleRule::to_string() const
 {
     StringBuilder builder;
 
-    if (m_type == Type::At) {
+    if (is_at_rule()) {
         builder.append("@");
-        serialize_an_identifier(builder, m_name);
+        serialize_an_identifier(builder, m_at_rule_name);
     }
 
     append_with_to_string(builder, " ", m_prelude);
