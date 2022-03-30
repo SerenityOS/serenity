@@ -1979,31 +1979,32 @@ Vector<DeclarationOrAtRule> Parser::parse_a_list_of_declarations(TokenStream<T>&
     return consume_a_list_of_declarations(tokens);
 }
 
-Optional<StyleComponentValueRule> Parser::parse_as_component_value()
-{
-    return parse_a_component_value(m_token_stream);
-}
-
+// 5.3.9. Parse a component value
+// https://www.w3.org/TR/css-syntax-3/#parse-component-value
 template<typename T>
 Optional<StyleComponentValueRule> Parser::parse_a_component_value(TokenStream<T>& tokens)
 {
+    // To parse a component value from input:
+
+    // 1. Normalize input, and set input to the result.
+    // Note: This is done when initializing the Parser.
+
+    // 2. While the next input token from input is a <whitespace-token>, consume the next input token from input.
     tokens.skip_whitespace();
 
-    auto& token = tokens.peek_token();
-
-    if (token.is(Token::Type::EndOfFile)) {
+    // 3. If the next input token from input is an <EOF-token>, return a syntax error.
+    if (tokens.peek_token().is(Token::Type::EndOfFile))
         return {};
-    }
 
+    // 4. Consume a component value from input and let value be the return value.
     auto value = consume_a_component_value(tokens);
 
+    // 5. While the next input token from input is a <whitespace-token>, consume the next input token.
     tokens.skip_whitespace();
 
-    auto& maybe_eof = tokens.peek_token();
-    if (maybe_eof.is(Token::Type::EndOfFile)) {
+    // 6. If the next input token from input is an <EOF-token>, return value. Otherwise, return a syntax error.
+    if (tokens.peek_token().is(Token::Type::EndOfFile))
         return value;
-    }
-
     return {};
 }
 
