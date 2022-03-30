@@ -89,8 +89,6 @@ public:
     Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
     ~Parser() = default;
 
-    // For the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
-    Vector<StyleComponentValueRule> parse_as_list_of_component_values();
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
 
     NonnullRefPtr<CSSStyleSheet> parse_as_css_stylesheet(Optional<AK::URL> location);
@@ -152,8 +150,11 @@ private:
     // "Parse a component value" is for things that need to consume a single value, like the parsing rules for attr().
     template<typename T>
     Optional<StyleComponentValueRule> parse_a_component_value(TokenStream<T>&);
+
+    // "Parse a list of component values" is for the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
     template<typename T>
     Vector<StyleComponentValueRule> parse_a_list_of_component_values(TokenStream<T>&);
+
     template<typename T>
     Vector<Vector<StyleComponentValueRule>> parse_a_comma_separated_list_of_component_values(TokenStream<T>&);
 
