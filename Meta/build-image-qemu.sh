@@ -32,6 +32,14 @@ if [ "$(uname -s)" = "Darwin" ]; then
     export PATH="/usr/local/opt/e2fsprogs/sbin:$PATH"
     export PATH="/opt/homebrew/opt/e2fsprogs/bin:$PATH"
     export PATH="/opt/homebrew/opt/e2fsprogs/sbin:$PATH"
+
+    E2FSCK="e2fsck"
+else
+    E2FSCK="/usr/sbin/e2fsck"
+
+    if [ ! -f "$E2FSCK" ]; then
+        E2FSCK=/sbin/e2fsck
+    fi
 fi
 
 SCRIPT_DIR="$(dirname "${0}")"
@@ -73,12 +81,6 @@ DISK_SIZE_BYTES=$((($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Roo
 #   * Plenty of extra free space and free inodes.
 DISK_SIZE_BYTES=$(((DISK_SIZE_BYTES + (INODE_COUNT * INODE_SIZE * 2)) * 3))
 INODE_COUNT=$((INODE_COUNT * 7))
-
-E2FSCK="/usr/sbin/e2fsck"
-
-if [ ! -f "$E2FSCK" ]; then
-    E2FSCK=/sbin/e2fsck
-fi
 
 USE_EXISTING=0
 
