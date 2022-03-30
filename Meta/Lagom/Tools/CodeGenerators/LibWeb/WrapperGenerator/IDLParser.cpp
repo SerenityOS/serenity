@@ -725,6 +725,9 @@ void Parser::parse_interface_mixin(Interface& interface)
 void Parser::parse_non_interface_entities(bool allow_interface, Interface& interface)
 {
     while (!lexer.is_eof()) {
+        HashMap<String, String> extended_attributes;
+        if (lexer.consume_specific('['))
+            extended_attributes = parse_extended_attributes();
         if (lexer.next_is("dictionary")) {
             parse_dictionary(interface);
         } else if (lexer.next_is("enum")) {
@@ -748,6 +751,7 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
                 report_parsing_error("expected 'enum' or 'dictionary'", filename, input, current_offset);
             }
         } else {
+            interface.extended_attributes = move(extended_attributes);
             break;
         }
     }
@@ -810,9 +814,6 @@ NonnullOwnPtr<Interface> Parser::parse()
     }
     interface->all_imported_paths = s_all_imported_paths;
     interface->required_imported_paths = required_imported_paths;
-
-    if (lexer.consume_specific('['))
-        interface->extended_attributes = parse_extended_attributes();
 
     parse_non_interface_entities(true, *interface);
 
