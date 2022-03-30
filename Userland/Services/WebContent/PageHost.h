@@ -33,6 +33,7 @@ public:
 
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
     void set_has_focus(bool);
+    void set_is_scripting_enabled(bool);
 
 private:
     // ^PageClient

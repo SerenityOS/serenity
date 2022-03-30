@@ -62,6 +62,11 @@ void PageHost::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_s
         document->invalidate_style();
 }
 
+void PageHost::set_is_scripting_enabled(bool is_scripting_enabled)
+{
+    page().set_is_scripting_enabled(is_scripting_enabled);
+}
+
 Web::Layout::InitialContainingBlock* PageHost::layout_root()
 {
     auto* document = page().top_level_browsing_context().active_document();
