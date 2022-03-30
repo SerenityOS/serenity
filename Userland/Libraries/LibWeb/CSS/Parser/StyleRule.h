@@ -26,14 +26,18 @@ public:
     StyleRule(Type);
     ~StyleRule();
 
+    bool is_qualified_rule() const { return m_type == Type::Qualified; }
+    bool is_at_rule() const { return m_type == Type::At; }
+
     Vector<StyleComponentValueRule> const& prelude() const { return m_prelude; }
     RefPtr<StyleBlockRule const> block() const { return m_block; }
+    String const& at_rule_name() const { return m_at_rule_name; }
 
     String to_string() const;
 
 private:
     Type const m_type;
-    String m_name; // At-rules only
+    String m_at_rule_name;
     Vector<StyleComponentValueRule> m_prelude;
     RefPtr<StyleBlockRule> m_block;
 };

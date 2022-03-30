@@ -1597,7 +1597,7 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 
     // Create a new at-rule with its name set to the value of the current input token, its prelude initially set to an empty list, and its value initially set to nothing.
     auto rule = make_ref_counted<StyleRule>(StyleRule::Type::At);
-    rule->m_name = ((Token)name_ident).at_keyword();
+    rule->m_at_rule_name = ((Token)name_ident).at_keyword();
 
     // Repeatedly consume the next input token:
     for (;;) {
@@ -2260,17 +2260,17 @@ Optional<AK::URL> Parser::parse_url_function(StyleComponentValueRule const& comp
 
 RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 {
-    if (rule->m_type == StyleRule::Type::At) {
-        if (has_ignored_vendor_prefix(rule->m_name)) {
+    if (rule->is_at_rule()) {
+        if (has_ignored_vendor_prefix(rule->at_rule_name())) {
             return {};
-        } else if (rule->m_name.equals_ignoring_case("font-face"sv)) {
+        } else if (rule->at_rule_name().equals_ignoring_case("font-face"sv)) {
             if (rule->prelude().is_empty() || !rule->block()->is_curly()) {
                 dbgln_if(CSS_PARSER_DEBUG, "@font-face rule is malformed.");
                 return {};
             }
             TokenStream tokens { rule->block()->values() };
             return parse_font_face_rule(tokens);
-        } else if (rule->m_name.equals_ignoring_case("import"sv) && !rule->prelude().is_empty()) {
+        } else if (rule->at_rule_name().equals_ignoring_case("import"sv) && !rule->prelude().is_empty()) {
 
             Optional<AK::URL> url;
             for (auto& token : rule->prelude()) {
@@ -2293,7 +2293,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             else
                 dbgln_if(CSS_PARSER_DEBUG, "Unable to parse url from @import rule");
 
-        } else if (rule->m_name.equals_ignoring_case("media"sv)) {
+        } else if (rule->at_rule_name().equals_ignoring_case("media"sv)) {
 
             auto media_query_tokens = TokenStream { rule->prelude() };
             auto media_query_list = parse_a_media_query_list(media_query_tokens);
@@ -2310,7 +2310,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 
             return CSSMediaRule::create(MediaList::create(move(media_query_list)), move(child_rules));
 
-        } else if (rule->m_name.equals_ignoring_case("supports"sv)) {
+        } else if (rule->at_rule_name().equals_ignoring_case("supports"sv)) {
 
             auto supports_tokens = TokenStream { rule->prelude() };
             auto supports = parse_a_supports(supports_tokens);
@@ -2335,13 +2335,13 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             return CSSSupportsRule::create(supports.release_nonnull(), move(child_rules));
 
         } else {
-            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized CSS at-rule: @{}", rule->m_name);
+            dbgln_if(CSS_PARSER_DEBUG, "Unrecognized CSS at-rule: @{}", rule->at_rule_name());
         }
 
         // FIXME: More at rules!
 
     } else {
-        auto prelude_stream = TokenStream(rule->m_prelude);
+        auto prelude_stream = TokenStream(rule->prelude());
         auto selectors = parse_a_selector_list(prelude_stream, SelectorType::Standalone);
 
         if (selectors.is_error()) {
