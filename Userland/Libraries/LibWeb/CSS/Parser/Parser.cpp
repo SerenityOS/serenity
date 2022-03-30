@@ -1770,30 +1770,47 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tok
     }
 }
 
+// 5.4.9. Consume a function
+// https://www.w3.org/TR/css-syntax-3/#consume-function
 template<typename T>
 NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& tokens)
 {
+    // Note: This algorithm assumes that the current input token has already been checked to be a <function-token>.
     auto name_ident = tokens.current_token();
     VERIFY(name_ident.is(Token::Type::Function));
+
+    // To consume a function:
+
+    // Create a function with its name equal to the value of the current input token
+    // and with its value initially set to an empty list.
     auto function = make_ref_counted<StyleFunctionRule>(((Token)name_ident).function());
 
+    // Repeatedly consume the next input token and process it as follows:
     for (;;) {
         auto& token = tokens.next_token();
+
+        // <)-token>
         if (token.is(Token::Type::CloseParen)) {
+            // Return the function.
             return function;
         }
 
+        // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
+            // This is a parse error. Return the function.
             log_parse_error();
             return function;
         }
 
-        tokens.reconsume_current_input_token();
-        auto value = consume_a_component_value(tokens);
-        function->m_values.append(value);
-    }
+        // anything else
+        {
+            // Reconsume the current input token.
+            tokens.reconsume_current_input_token();
 
-    return function;
+            // Consume a component value and append the returned value to the function’s value.
+            function->m_values.append(consume_a_component_value(tokens));
+        }
+    }
 }
 
 // 5.4.6. Consume a declaration
