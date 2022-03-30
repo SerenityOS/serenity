@@ -1584,42 +1584,62 @@ NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& t
     }
 }
 
+// 5.4.2. Consume an at-rule
+// https://www.w3.org/TR/css-syntax-3/#consume-at-rule
 template<typename T>
 NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 {
+    // To consume an at-rule:
+
+    // Consume the next input token.
     auto& name_ident = tokens.next_token();
     VERIFY(name_ident.is(Token::Type::AtKeyword));
 
+    // Create a new at-rule with its name set to the value of the current input token, its prelude initially set to an empty list, and its value initially set to nothing.
     auto rule = make_ref_counted<StyleRule>(StyleRule::Type::At);
     rule->m_name = ((Token)name_ident).at_keyword();
 
+    // Repeatedly consume the next input token:
     for (;;) {
         auto& token = tokens.next_token();
+
+        // <semicolon-token>
         if (token.is(Token::Type::Semicolon)) {
+            // Return the at-rule.
             return rule;
         }
 
+        // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
+            // This is a parse error. Return the at-rule.
             log_parse_error();
             return rule;
         }
 
+        // <{-token>
         if (token.is(Token::Type::OpenCurly)) {
+            // Consume a simple block and assign it to the at-rule’s block. Return the at-rule.
             rule->m_block = consume_a_simple_block(tokens);
             return rule;
         }
 
+        // simple block with an associated token of <{-token>
         if constexpr (IsSame<T, StyleComponentValueRule>) {
             StyleComponentValueRule const& component_value = token;
             if (component_value.is_block() && component_value.block().is_curly()) {
+                // Assign the block to the at-rule’s block. Return the at-rule.
                 rule->m_block = component_value.block();
                 return rule;
             }
         }
 
-        tokens.reconsume_current_input_token();
-        auto value = consume_a_component_value(tokens);
-        rule->m_prelude.append(value);
+        // anything else
+        {
+            // Reconsume the current input token.
+            tokens.reconsume_current_input_token();
+            // Consume a component value. Append the returned value to the at-rule’s prelude.
+            rule->m_prelude.append(consume_a_component_value(tokens));
+        }
     }
 }
 
