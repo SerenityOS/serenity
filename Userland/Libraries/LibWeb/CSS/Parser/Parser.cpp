@@ -1516,50 +1516,72 @@ Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<StyleCompon
     return {};
 }
 
+// 5.4.1. Consume a list of rules
+// https://www.w3.org/TR/css-syntax-3/#consume-list-of-rules
 template<typename T>
 NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& tokens, TopLevel top_level)
 {
+    // To consume a list of rules, given a top-level flag:
+
+    // Create an initially empty list of rules.
     NonnullRefPtrVector<StyleRule> rules;
 
+    // Repeatedly consume the next input token:
     for (;;) {
         auto& token = tokens.next_token();
 
+        // <whitespace-token>
         if (token.is(Token::Type::Whitespace)) {
+            // Do nothing.
             continue;
         }
 
+        // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
-            break;
+            // Return the list of rules.
+            return rules;
         }
 
+        // <CDO-token>
+        // <CDC-token>
         if (token.is(Token::Type::CDO) || token.is(Token::Type::CDC)) {
-            if (top_level == TopLevel::Yes) {
+            // If the top-level flag is set, do nothing.
+            if (top_level == TopLevel::Yes)
                 continue;
-            }
 
+            // Otherwise, reconsume the current input token.
             tokens.reconsume_current_input_token();
-            auto maybe_qualified = consume_a_qualified_rule(tokens);
-            if (maybe_qualified) {
+
+            // Consume a qualified rule. If anything is returned, append it to the list of rules.
+            if (auto maybe_qualified = consume_a_qualified_rule(tokens))
                 rules.append(maybe_qualified.release_nonnull());
-            }
 
             continue;
         }
 
+        // <at-keyword-token>
         if (token.is(Token::Type::AtKeyword)) {
+            // Reconsume the current input token.
             tokens.reconsume_current_input_token();
+
+            // Consume an at-rule, and append the returned value to the list of rules.
             rules.append(consume_an_at_rule(tokens));
+
             continue;
         }
 
-        tokens.reconsume_current_input_token();
-        auto maybe_qualified = consume_a_qualified_rule(tokens);
-        if (maybe_qualified) {
-            rules.append(maybe_qualified.release_nonnull());
+        // anything else
+        {
+            // Reconsume the current input token.
+            tokens.reconsume_current_input_token();
+
+            // Consume a qualified rule. If anything is returned, append it to the list of rules.
+            if (auto maybe_qualified = consume_a_qualified_rule(tokens))
+                rules.append(maybe_qualified.release_nonnull());
+
+            continue;
         }
     }
-
-    return rules;
 }
 
 template<typename T>
