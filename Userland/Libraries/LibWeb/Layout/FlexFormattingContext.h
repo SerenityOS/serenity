@@ -79,6 +79,7 @@ private:
     bool has_main_max_size(Box const&) const;
     bool has_cross_max_size(Box const&) const;
     float sum_of_margin_padding_border_in_main_axis(Box const&) const;
+    float determine_min_main_size_of_child(Box const& box);
 
     void set_main_size(Box const&, float size);
     void set_cross_size(Box const&, float size);
