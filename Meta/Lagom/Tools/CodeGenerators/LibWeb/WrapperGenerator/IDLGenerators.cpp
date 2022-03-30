@@ -640,6 +640,32 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             VERIFY(interface.dictionaries.contains(current_dictionary->parent_name));
             current_dictionary = &interface.dictionaries.find(current_dictionary->parent_name)->value;
         }
+    } else if (interface.callback_functions.contains(parameter.type->name)) {
+        // https://webidl.spec.whatwg.org/#es-callback-function
+
+        auto callback_function_generator = scoped_generator.fork();
+        auto& callback_function = interface.callback_functions.find(parameter.type->name)->value;
+
+        // An ECMAScript value V is converted to an IDL callback function type value by running the following algorithm:
+        // 1. If the result of calling IsCallable(V) is false and the conversion to an IDL value is not being performed due to V being assigned to an attribute whose type is a nullable callback function that is annotated with [LegacyTreatNonObjectAsNull], then throw a TypeError.
+        if (!callback_function.is_legacy_treat_non_object_as_null) {
+            callback_function_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_function())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAFunction, @js_name@@js_suffix@.to_string_without_side_effects());
+)~~~");
+        }
+        // 2. Return the IDL callback function type value that represents a reference to the same object that V represents, with the incumbent settings object as the callback context.
+        if (callback_function.is_legacy_treat_non_object_as_null) {
+            callback_function_generator.append(R"~~~(
+    Optional<Bindings::CallbackType> @cpp_name@;
+    if (@js_name@@js_suffix@.is_object())
+        @cpp_name@ = Bindings::CallbackType { JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object() };
+)~~~");
+        } else {
+            callback_function_generator.append(R"~~~(
+    auto @cpp_name@ = Bindings::CallbackType { JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object() };
+)~~~");
+        }
     } else if (parameter.type->name == "sequence") {
         // https://webidl.spec.whatwg.org/#es-sequence
 
@@ -1342,6 +1368,28 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         scoped_generator.append(R"~~~(
     @result_expression@ JS::js_string(global_object.heap(), Bindings::idl_enum_to_string(@value@));
 )~~~");
+    } else if (interface.callback_functions.contains(type.name)) {
+        // https://webidl.spec.whatwg.org/#es-callback-function
+
+        auto& callback_function = interface.callback_functions.find(type.name)->value;
+
+        // The result of converting an IDL callback function type value to an ECMAScript value is a reference to the same object that the IDL callback function type value represents.
+
+        if (callback_function.is_legacy_treat_non_object_as_null && !type.nullable) {
+            scoped_generator.append(R"~~~(
+  if (!@value@) {
+      @result_expression@ JS::js_null();
+  } else {
+      VERIFY(!@value@->callback.is_null());
+      @result_expression@ @value@->callback.cell();
+  }
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+  VERIFY(!@value@->callback.is_null());
+  @result_expression@ @value@->callback.cell();
+)~~~");
+        }
     } else {
         if (wrapping_reference == WrappingReference::No) {
             scoped_generator.append(R"~~~(

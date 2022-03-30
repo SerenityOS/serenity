@@ -133,6 +133,12 @@ struct Enumeration {
     bool is_original_definition { true };
 };
 
+struct CallbackFunction {
+    NonnullRefPtr<Type> return_type;
+    Vector<Parameter> parameters;
+    bool is_legacy_treat_non_object_as_null { false };
+};
+
 struct Interface;
 
 struct ParameterizedType : public Type {
@@ -191,6 +197,7 @@ struct Interface {
     HashMap<String, Enumeration> enumerations;
     HashMap<String, Typedef> typedefs;
     HashMap<String, NonnullOwnPtr<Interface>> mixins;
+    HashMap<String, CallbackFunction> callback_functions;
 
     // Added for convenience after parsing
     String wrapper_class;
