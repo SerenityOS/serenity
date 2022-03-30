@@ -196,7 +196,8 @@ struct Interface {
     HashMap<String, HashTable<String>> included_mixins;
 
     String module_own_path;
-    HashTable<String> imported_paths;
+    HashTable<String> all_imported_paths;
+    HashTable<String> required_imported_paths;
     NonnullOwnPtrVector<Interface> imported_modules;
 
     HashMap<String, Vector<Function&>> overload_sets;
@@ -210,6 +211,11 @@ struct Interface {
 
     // https://webidl.spec.whatwg.org/#dfn-legacy-platform-object
     bool is_legacy_platform_object() const { return !extended_attributes.contains("Global") && (supports_indexed_properties() || supports_named_properties()); }
+
+    bool will_generate_code() const
+    {
+        return !name.is_empty() || any_of(enumerations, [](auto& entry) { return entry.value.is_original_definition; });
+    }
 };
 
 CppType idl_type_name_to_cpp_type(Type const& type, IDL::Interface const& interface);

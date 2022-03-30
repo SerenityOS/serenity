@@ -222,6 +222,9 @@ static void emit_includes_for_all_imports(auto& interface, auto& generator, bool
                 interfaces.enqueue(&imported_interface);
         }
 
+        if (!interface->will_generate_code())
+            continue;
+
         generate_include_for(generator, interface->module_own_path);
 
         if (is_iterator) {
@@ -1543,7 +1546,7 @@ void generate_header(IDL::Interface const& interface)
 #include <LibWeb/Bindings/Wrapper.h>
 )~~~");
 
-    for (auto& path : interface.imported_paths)
+    for (auto& path : interface.required_imported_paths)
         generate_include_for(generator, path);
 
     emit_includes_for_all_imports(interface, generator, true);
@@ -2886,7 +2889,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 
 )~~~");
 
-    for (auto& path : interface.imported_paths)
+    for (auto& path : interface.required_imported_paths)
         generate_include_for(generator, path);
 
     emit_includes_for_all_imports(interface, generator, false, interface.pair_iterator_types.has_value());
@@ -3334,7 +3337,7 @@ void generate_iterator_implementation(IDL::Interface const& interface)
 
 )~~~");
 
-    for (auto& path : interface.imported_paths)
+    for (auto& path : interface.required_imported_paths)
         generate_include_for(generator, path);
 
     emit_includes_for_all_imports(interface, generator, false, true);

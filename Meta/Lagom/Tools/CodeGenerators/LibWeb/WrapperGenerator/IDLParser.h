@@ -52,6 +52,7 @@ private:
     void parse_constant(Interface&);
 
     static HashTable<String> s_all_imported_paths;
+    HashTable<String> required_imported_paths;
     String import_base_path;
     String filename;
     StringView input;
