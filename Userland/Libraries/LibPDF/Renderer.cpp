@@ -38,8 +38,8 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
     Gfx::AffineTransform userspace_matrix;
     userspace_matrix.translate(media_box.lower_left_x, media_box.lower_left_y);
 
-    float width = media_box.upper_right_x - media_box.lower_left_x;
-    float height = media_box.upper_right_y - media_box.lower_left_y;
+    float width = media_box.width();
+    float height = media_box.height();
     float scale_x = static_cast<float>(bitmap->width()) / width;
     float scale_y = static_cast<float>(bitmap->height()) / height;
     userspace_matrix.scale(scale_x, scale_y);

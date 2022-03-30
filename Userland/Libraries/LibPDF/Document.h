@@ -23,6 +23,9 @@ struct Rectangle {
     float lower_left_y;
     float upper_right_x;
     float upper_right_y;
+
+    float width() const { return upper_right_x - lower_left_x; }
+    float height() const { return upper_right_y - lower_left_y; }
 };
 
 struct Page {
