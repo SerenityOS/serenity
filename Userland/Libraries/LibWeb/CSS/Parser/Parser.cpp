@@ -2032,33 +2032,42 @@ Vector<StyleComponentValueRule> Parser::parse_a_list_of_component_values(TokenSt
     return component_values;
 }
 
-Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of_component_values()
-{
-    return parse_a_comma_separated_list_of_component_values(m_token_stream);
-}
-
+// 5.3.11. Parse a comma-separated list of component values
+// https://www.w3.org/TR/css-syntax-3/#parse-comma-separated-list-of-component-values
 template<typename T>
 Vector<Vector<StyleComponentValueRule>> Parser::parse_a_comma_separated_list_of_component_values(TokenStream<T>& tokens)
 {
-    Vector<Vector<StyleComponentValueRule>> lists;
-    lists.append({});
+    // To parse a comma-separated list of component values from input:
 
+    // 1. Normalize input, and set input to the result.
+    // Note: This is done when initializing the Parser.
+
+    // 2. Let list of cvls be an initially empty list of component value lists.
+    Vector<Vector<StyleComponentValueRule>> list_of_component_value_lists;
+
+    // 3. Repeatedly consume a component value from input until an <EOF-token> or <comma-token> is returned,
+    //    appending the returned values (except the final <EOF-token> or <comma-token>) into a list.
+    //    Append the list to list of cvls.
+    //    If it was a <comma-token> that was returned, repeat this step.
+    Vector<StyleComponentValueRule> current_list;
     for (;;) {
-        auto& next = tokens.next_token();
+        auto component_value = consume_a_component_value(tokens);
 
-        if (next.is(Token::Type::Comma)) {
-            lists.append({});
-            continue;
-        } else if (next.is(Token::Type::EndOfFile)) {
+        if (component_value.is(Token::Type::EndOfFile)) {
+            list_of_component_value_lists.append(move(current_list));
             break;
         }
+        if (component_value.is(Token::Type::Comma)) {
+            list_of_component_value_lists.append(move(current_list));
+            current_list = {};
+            continue;
+        }
 
-        tokens.reconsume_current_input_token();
-        auto component_value = consume_a_component_value(tokens);
-        lists.last().append(component_value);
+        current_list.append(component_value);
     }
 
-    return lists;
+    // 4. Return list of cvls.
+    return list_of_component_value_lists;
 }
 
 RefPtr<ElementInlineCSSStyleDeclaration> Parser::parse_as_style_attribute(DOM::Element& element)
