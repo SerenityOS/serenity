@@ -1724,29 +1724,49 @@ StyleComponentValueRule Parser::consume_a_component_value(TokenStream<T>& tokens
     return StyleComponentValueRule(token);
 }
 
+// 5.4.8. Consume a simple block
+// https://www.w3.org/TR/css-syntax-3/#consume-simple-block
 template<typename T>
 NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tokens)
 {
+    // Note: This algorithm assumes that the current input token has already been checked
+    // to be an <{-token>, <[-token>, or <(-token>.
+
+    // To consume a simple block:
+
+    // The ending token is the mirror variant of the current input token.
+    // (E.g. if it was called with <[-token>, the ending token is <]-token>.)
     auto ending_token = ((Token)tokens.current_token()).mirror_variant();
 
+    // Create a simple block with its associated token set to the current input token
+    // and with its value initially set to an empty list.
     auto block = make_ref_counted<StyleBlockRule>();
     block->m_token = tokens.current_token();
 
+    // Repeatedly consume the next input token and process it as follows:
     for (;;) {
         auto& token = tokens.next_token();
 
+        // ending token
         if (token.is(ending_token)) {
+            // Return the block.
             return block;
         }
-
+        // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
+            // This is a parse error. Return the block.
             log_parse_error();
             return block;
         }
 
-        tokens.reconsume_current_input_token();
-        auto value = consume_a_component_value(tokens);
-        block->m_values.append(value);
+        // anything else
+        {
+            // Reconsume the current input token.
+            tokens.reconsume_current_input_token();
+
+            // Consume a component value and append it to the value of the block.
+            block->m_values.append(consume_a_component_value(tokens));
+        }
     }
 }
 
