@@ -89,8 +89,6 @@ public:
     Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
     ~Parser() = default;
 
-    Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
-
     NonnullRefPtr<CSSStyleSheet> parse_as_css_stylesheet(Optional<AK::URL> location);
     RefPtr<ElementInlineCSSStyleDeclaration> parse_as_style_attribute(DOM::Element&);
     RefPtr<CSSRule> parse_as_css_rule();
