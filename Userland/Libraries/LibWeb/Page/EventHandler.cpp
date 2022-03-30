@@ -194,8 +194,6 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
             node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mouseup, offset.x(), offset.y(), position.x(), position.y()));
             handled_event = true;
 
-            bool should_dispatch_event = true;
-
             // FIXME: This is ad-hoc and incorrect. The reason this exists is
             //        because we are missing browsing context navigation:
             //
@@ -229,11 +227,16 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
                 } else if (button == GUI::MouseButton::Middle) {
                     if (auto* page = m_browsing_context.page())
                         page->client().page_did_middle_click_link(url, link->target(), modifiers);
-                    should_dispatch_event = false;
+                } else if (button == GUI::MouseButton::Secondary) {
+                    if (auto* page = m_browsing_context.page())
+                        page->client().page_did_request_link_context_menu(m_browsing_context.to_top_level_position(position), url, link->target(), modifiers);
                 }
+            } else if (button == GUI::MouseButton::Secondary) {
+                if (auto* page = m_browsing_context.page())
+                    page->client().page_did_request_context_menu(m_browsing_context.to_top_level_position(position));
             }
 
-            if (node.ptr() == m_mousedown_target && should_dispatch_event) {
+            if (node.ptr() == m_mousedown_target && button == GUI::MouseButton::Primary) {
                 node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::click, offset.x(), offset.y(), position.x(), position.y()));
             }
         }
@@ -334,9 +337,6 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 }
             }
         }
-    } else if (button == GUI::MouseButton::Secondary) {
-        if (auto* page = m_browsing_context.page())
-            page->client().page_did_request_context_menu(m_browsing_context.to_top_level_position(position));
     }
     return true;
 }
