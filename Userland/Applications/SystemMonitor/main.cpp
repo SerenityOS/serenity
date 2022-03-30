@@ -302,11 +302,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         &process_table_view);
 
-    auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the()->quit();
-    }));
-
     auto process_context_menu = GUI::Menu::construct();
     process_context_menu->add_action(kill_action);
     process_context_menu->add_action(stop_action);
