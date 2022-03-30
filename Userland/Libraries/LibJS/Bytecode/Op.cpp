@@ -44,6 +44,42 @@ String Instruction::to_string(Bytecode::Executable const& executable) const
 
 namespace JS::Bytecode::Op {
 
+static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, PropertyKey name, Bytecode::Interpreter& interpreter, PropertyKind kind)
+{
+    if (kind == PropertyKind::Getter || kind == PropertyKind::Setter) {
+        // The generator should only pass us functions for getters and setters.
+        VERIFY(value.is_function());
+    }
+    switch (kind) {
+    case PropertyKind::Getter: {
+        auto& function = value.as_function();
+        if (function.name().is_empty() && is<ECMAScriptFunctionObject>(function))
+            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(String::formatted("get {}", name));
+        object->define_direct_accessor(name, &function, nullptr, Attribute::Configurable | Attribute::Enumerable);
+        break;
+    }
+    case PropertyKind::Setter: {
+        auto& function = value.as_function();
+        if (function.name().is_empty() && is<ECMAScriptFunctionObject>(function))
+            static_cast<ECMAScriptFunctionObject*>(&function)->set_name(String::formatted("set {}", name));
+        object->define_direct_accessor(name, nullptr, &function, Attribute::Configurable | Attribute::Enumerable);
+        break;
+    }
+    case PropertyKind::KeyValue:
+        TRY(object->set(name, interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
+        break;
+    case PropertyKind::Spread:
+        TRY(object->copy_data_properties(value, {}, interpreter.global_object()));
+        break;
+    case PropertyKind::ProtoSetter:
+        if (value.is_object() || value.is_null())
+            MUST(object->internal_set_prototype_of(value.is_object() ? &value.as_object() : nullptr));
+        break;
+    }
+
+    return {};
+}
+
 ThrowCompletionOr<void> Load::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = interpreter.reg(m_src);
@@ -350,8 +386,9 @@ ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter
 ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto* object = TRY(interpreter.reg(m_base).to_object(interpreter.global_object()));
-    TRY(object->set(interpreter.current_executable().get_identifier(m_property), interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
-    return {};
+    PropertyKey name = interpreter.current_executable().get_identifier(m_property);
+    auto value = interpreter.accumulator();
+    return put_by_property_key(object, value, name, interpreter, m_kind);
 }
 
 ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -592,8 +629,7 @@ ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpre
     auto* object = TRY(interpreter.reg(m_base).to_object(interpreter.global_object()));
 
     auto property_key = TRY(interpreter.reg(m_property).to_property_key(interpreter.global_object()));
-    TRY(object->set(property_key, interpreter.accumulator(), Object::ShouldThrowExceptions::Yes));
-    return {};
+    return put_by_property_key(object, interpreter.accumulator(), property_key, interpreter, m_kind);
 }
 
 ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -839,7 +875,13 @@ String SetVariable::to_string_impl(Bytecode::Executable const& executable) const
 
 String PutById::to_string_impl(Bytecode::Executable const& executable) const
 {
-    return String::formatted("PutById base:{}, property:{} ({})", m_base, m_property, executable.identifier_table->get(m_property));
+    auto kind = m_kind == PropertyKind::Getter
+        ? "getter"
+        : m_kind == PropertyKind::Setter
+        ? "setter"
+        : "property";
+
+    return String::formatted("PutById kind:{} base:{}, property:{} ({})", kind, m_base, m_property, executable.identifier_table->get(m_property));
 }
 
 String GetById::to_string_impl(Bytecode::Executable const& executable) const
@@ -985,7 +1027,13 @@ String GetByValue::to_string_impl(const Bytecode::Executable&) const
 
 String PutByValue::to_string_impl(const Bytecode::Executable&) const
 {
-    return String::formatted("PutByValue base:{}, property:{}", m_base, m_property);
+    auto kind = m_kind == PropertyKind::Getter
+        ? "getter"
+        : m_kind == PropertyKind::Setter
+        ? "setter"
+        : "property";
+
+    return String::formatted("PutByValue kind:{} base:{}, property:{}", kind, m_base, m_property);
 }
 
 String DeleteByValue::to_string_impl(Bytecode::Executable const&) const
