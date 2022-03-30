@@ -1910,7 +1910,12 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
                 VERIFY(declaration.declarations().size() == 1);
                 TRY(assign_accumulator_to_variable_declarator(generator, declaration.declarations().first(), declaration));
             } else {
-                TRY(generator.emit_store_to_reference(*lhs.get<NonnullRefPtr<ASTNode>>()));
+                if (auto ptr = lhs.get_pointer<NonnullRefPtr<ASTNode>>()) {
+                    TRY(generator.emit_store_to_reference(**ptr));
+                } else {
+                    auto& binding_pattern = lhs.get<NonnullRefPtr<BindingPattern>>();
+                    TRY(generate_binding_pattern_bytecode(generator, *binding_pattern, Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Register::accumulator()));
+                }
             }
         }
     }
