@@ -2008,25 +2008,28 @@ Optional<StyleComponentValueRule> Parser::parse_a_component_value(TokenStream<T>
     return {};
 }
 
-Vector<StyleComponentValueRule> Parser::parse_as_list_of_component_values()
-{
-    return parse_a_list_of_component_values(m_token_stream);
-}
-
+// 5.3.10. Parse a list of component values
+// https://www.w3.org/TR/css-syntax-3/#parse-list-of-component-values
 template<typename T>
 Vector<StyleComponentValueRule> Parser::parse_a_list_of_component_values(TokenStream<T>& tokens)
 {
-    Vector<StyleComponentValueRule> rules;
+    // To parse a list of component values from input:
+
+    // 1. Normalize input, and set input to the result.
+    // Note: This is done when initializing the Parser.
+
+    // 2. Repeatedly consume a component value from input until an <EOF-token> is returned, appending the returned values (except the final <EOF-token>) into a list. Return the list.
+    Vector<StyleComponentValueRule> component_values;
 
     for (;;) {
         if (tokens.peek_token().is(Token::Type::EndOfFile)) {
             break;
         }
 
-        rules.append(consume_a_component_value(tokens));
+        component_values.append(consume_a_component_value(tokens));
     }
 
-    return rules;
+    return component_values;
 }
 
 Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of_component_values()
@@ -4322,7 +4325,7 @@ RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<StyleComponentVal
 
 RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 {
-    auto component_values = parse_as_list_of_component_values();
+    auto component_values = parse_a_list_of_component_values(m_token_stream);
     auto tokens = TokenStream(component_values);
     auto parsed_value = parse_css_value(property_id, tokens);
     if (parsed_value.is_error())
