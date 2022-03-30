@@ -378,6 +378,14 @@ void BrowserWindow::build_menus()
     m_user_agent_spoof_actions.add_action(custom_user_agent);
 
     debug_menu.add_separator();
+    auto scripting_enabled_action = GUI::Action::create_checkable(
+        "Enable Scripting", [this](auto& action) {
+            active_tab().m_web_content_view->debug_request("scripting", action.is_checked() ? "on" : "off");
+        },
+        this);
+    scripting_enabled_action->set_checked(true);
+    debug_menu.add_action(scripting_enabled_action);
+
     auto same_origin_policy_action = GUI::Action::create_checkable(
         "Enable Same Origin &Policy", [this](auto& action) {
             active_tab().m_web_content_view->debug_request("same-origin-policy", action.is_checked() ? "on" : "off");

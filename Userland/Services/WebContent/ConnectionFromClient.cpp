@@ -223,6 +223,10 @@ void ConnectionFromClient::debug_request(const String& request, const String& ar
         m_page_host->page().set_same_origin_policy_enabled(argument == "on");
     }
 
+    if (request == "scripting") {
+        m_page_host->page().set_is_scripting_enabled(argument == "on");
+    }
+
     if (request == "dump-local-storage") {
         if (auto* doc = page().top_level_browsing_context().active_document())
             doc->window().local_storage()->dump();
