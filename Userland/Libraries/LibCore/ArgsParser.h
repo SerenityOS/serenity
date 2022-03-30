@@ -92,6 +92,11 @@ public:
     void add_positional_argument(Vector<char const*>& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
 
+    bool get_show_help()
+    {
+        return m_show_help;
+    }
+
 private:
     void autocomplete(FILE*, StringView program_name, Span<char const* const> remaining_arguments);
 
