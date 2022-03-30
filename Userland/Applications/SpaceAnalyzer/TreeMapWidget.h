@@ -47,6 +47,7 @@ private:
     virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
 
     bool rect_can_contain_children(const Gfx::IntRect& rect) const;
     bool rect_can_contain_label(const Gfx::IntRect& rect) const;

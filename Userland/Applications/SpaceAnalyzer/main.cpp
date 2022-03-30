@@ -320,6 +320,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& treemapwidget = *mainwidget.find_descendant_of_type_named<SpaceAnalyzer::TreeMapWidget>("tree_map");
     auto& statusbar = *mainwidget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
+    treemapwidget.set_focus(true);
+
     auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::Action::create("&Analyze", [&](auto&) {
         analyze(tree, treemapwidget, statusbar);
