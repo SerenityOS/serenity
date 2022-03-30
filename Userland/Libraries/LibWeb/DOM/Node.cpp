@@ -847,8 +847,7 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
 bool Node::is_scripting_enabled() const
 {
     // Scripting is enabled for a node node if node's node document's browsing context is non-null, and scripting is enabled for node's relevant settings object.
-    // FIXME: Check if scripting is enabled for the ESO.
-    return document().browsing_context();
+    return document().browsing_context() && const_cast<Document&>(document()).relevant_settings_object().is_scripting_enabled();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#concept-n-noscript

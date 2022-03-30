@@ -243,6 +243,7 @@ public:
     void removed_last_ref();
 
     HTML::Window& window() { return *m_window; }
+    HTML::Window const& window() const { return *m_window; }
 
     ExceptionOr<void> write(Vector<String> const& strings);
     ExceptionOr<void> writeln(Vector<String> const& strings);
