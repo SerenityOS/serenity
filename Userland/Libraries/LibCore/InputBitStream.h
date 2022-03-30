@@ -99,9 +99,9 @@ public:
                         m_current_byte.clear();
                 }
             } else {
-                auto temp_buffer = TRY(ByteBuffer::create_uninitialized(1));
-                TRY(m_stream.read(temp_buffer.bytes()));
-                m_current_byte = temp_buffer[0];
+                u8 temp_stream_value;
+                TRY(m_stream.read({ &temp_stream_value, sizeof(temp_stream_value) }));
+                m_current_byte = temp_stream_value;
                 m_bit_offset = 0;
             }
         }
