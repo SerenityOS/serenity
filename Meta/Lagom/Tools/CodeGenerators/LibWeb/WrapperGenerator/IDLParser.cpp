@@ -722,6 +722,29 @@ void Parser::parse_interface_mixin(Interface& interface)
     interface.mixins.set(move(name), move(mixin_interface));
 }
 
+void Parser::parse_callback_function(HashMap<String, String>& extended_attributes, Interface& interface)
+{
+    assert_string("callback");
+    consume_whitespace();
+
+    auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
+    consume_whitespace();
+
+    assert_specific('=');
+    consume_whitespace();
+
+    auto return_type = parse_type();
+    consume_whitespace();
+    assert_specific('(');
+    auto parameters = parse_parameters();
+    assert_specific(')');
+    consume_whitespace();
+    assert_specific(';');
+
+    interface.callback_functions.set(name, CallbackFunction { move(return_type), move(parameters), extended_attributes.contains("LegacyTreatNonObjectAsNull") });
+    consume_whitespace();
+}
+
 void Parser::parse_non_interface_entities(bool allow_interface, Interface& interface)
 {
     while (!lexer.is_eof()) {
@@ -736,6 +759,8 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
             parse_typedef(interface);
         } else if (lexer.next_is("interface mixin")) {
             parse_interface_mixin(interface);
+        } else if (lexer.next_is("callback")) {
+            parse_callback_function(extended_attributes, interface);
         } else if ((allow_interface && !lexer.next_is("interface")) || !allow_interface) {
             auto current_offset = lexer.tell();
             auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
@@ -841,6 +866,9 @@ NonnullOwnPtr<Interface> Parser::parse()
                 report_parsing_error(String::formatted("Mixin '{}' was already defined in {}", mixin.key, mixin.value->module_own_path), filename, input, lexer.tell());
             interface->mixins.set(mixin.key, move(mixin.value));
         }
+
+        for (auto& callback_function : import.callback_functions)
+            interface->callback_functions.set(callback_function.key, move(callback_function.value));
     }
 
     // Resolve mixins

@@ -41,6 +41,7 @@ private:
     void parse_typedef(Interface&);
     void parse_interface_mixin(Interface&);
     void parse_dictionary(Interface&);
+    void parse_callback_function(HashMap<String, String>& extended_attributes, Interface&);
     void parse_constructor(Interface&);
     void parse_getter(HashMap<String, String>& extended_attributes, Interface&);
     void parse_setter(HashMap<String, String>& extended_attributes, Interface&);
