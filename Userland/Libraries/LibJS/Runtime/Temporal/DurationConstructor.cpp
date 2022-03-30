@@ -117,11 +117,11 @@ JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::compare)
     // 4. Let relativeTo be ? ToRelativeTemporalObject(options).
     auto relative_to = TRY(to_relative_temporal_object(global_object, *options));
 
-    // 5. Let shift1 be ? CalculateOffsetShift(relativeTo, one.[[Years]], one.[[Months]], one.[[Weeks]], one.[[Days]], one.[[Hours]], one.[[Minutes]], one.[[Seconds]], one.[[Milliseconds]], one.[[Microseconds]], one.[[Nanoseconds]]).
-    auto shift1 = TRY(calculate_offset_shift(global_object, relative_to, one->years(), one->months(), one->weeks(), one->days(), one->hours(), one->minutes(), one->seconds(), one->milliseconds(), one->microseconds(), one->nanoseconds()));
+    // 5. Let shift1 be ? CalculateOffsetShift(relativeTo, one.[[Years]], one.[[Months]], one.[[Weeks]], one.[[Days]], 0, 0, 0, 0, 0, 0, 0).
+    auto shift1 = TRY(calculate_offset_shift(global_object, relative_to, one->years(), one->months(), one->weeks(), one->days(), 0, 0, 0, 0, 0, 0));
 
-    // 6. Let shift2 be ? CalculateOffsetShift(relativeTo, two.[[Years]], two.[[Months]], two.[[Weeks]], two.[[Days]], two.[[Hours]], two.[[Minutes]], two.[[Seconds]], two.[[Milliseconds]], two.[[Microseconds]], two.[[Nanoseconds]]).
-    auto shift2 = TRY(calculate_offset_shift(global_object, relative_to, two->years(), two->months(), two->weeks(), two->days(), two->hours(), two->minutes(), two->seconds(), two->milliseconds(), two->microseconds(), two->nanoseconds()));
+    // 6. Let shift2 be ? CalculateOffsetShift(relativeTo, two.[[Years]], two.[[Months]], two.[[Weeks]], two.[[Days]], 0, 0, 0, 0, 0, 0, 0).
+    auto shift2 = TRY(calculate_offset_shift(global_object, relative_to, two->years(), two->months(), two->weeks(), two->days(), 0, 0, 0, 0, 0, 0));
 
     double days1;
     double days2;
