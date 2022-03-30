@@ -16,9 +16,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<IntelNativeDisplayConnector>> IntelNativeDisplayConnector::try_create(IntelDisplayConnectorGroup const& parent_connector_group, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
+ErrorOr<NonnullLockRefPtr<IntelNativeDisplayConnector>> IntelNativeDisplayConnector::try_create(IntelDisplayConnectorGroup const& parent_connector_group, Type type, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
 {
-    return TRY(DeviceManagement::try_create_device<IntelNativeDisplayConnector>(parent_connector_group, framebuffer_address, framebuffer_resource_size));
+    return TRY(DeviceManagement::try_create_device<IntelNativeDisplayConnector>(parent_connector_group, type, framebuffer_address, framebuffer_resource_size));
 }
 
 ErrorOr<void> IntelNativeDisplayConnector::create_attached_framebuffer_console(Badge<IntelDisplayConnectorGroup>)
@@ -38,10 +38,18 @@ ErrorOr<void> IntelNativeDisplayConnector::create_attached_framebuffer_console(B
     return {};
 }
 
-IntelNativeDisplayConnector::IntelNativeDisplayConnector(IntelDisplayConnectorGroup const& parent_connector_group, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
+IntelNativeDisplayConnector::IntelNativeDisplayConnector(IntelDisplayConnectorGroup const& parent_connector_group, Type type, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
     : DisplayConnector(framebuffer_address, framebuffer_resource_size, true)
+    , m_type(type)
     , m_parent_connector_group(parent_connector_group)
 {
+}
+
+void IntelNativeDisplayConnector::set_edid_bytes(Badge<IntelDisplayConnectorGroup>, Array<u8, 128> const& raw_bytes)
+{
+    // Note: The provided EDID might be invalid (because there's no attached monitor)
+    // Therefore, set might_be_invalid to true to indicate that.
+    DisplayConnector::set_edid_bytes(raw_bytes, true);
 }
 
 ErrorOr<void> IntelNativeDisplayConnector::set_y_offset(size_t)
@@ -52,11 +60,6 @@ ErrorOr<void> IntelNativeDisplayConnector::set_y_offset(size_t)
 ErrorOr<void> IntelNativeDisplayConnector::unblank()
 {
     return Error::from_errno(ENOTIMPL);
-}
-
-void IntelNativeDisplayConnector::set_edid_bytes(Badge<IntelDisplayConnectorGroup>, Array<u8, 128> const& edid_bytes)
-{
-    DisplayConnector::set_edid_bytes(edid_bytes);
 }
 
 ErrorOr<void> IntelNativeDisplayConnector::set_safe_mode_setting()

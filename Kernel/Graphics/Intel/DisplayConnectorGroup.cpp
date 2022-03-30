@@ -12,6 +12,7 @@
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/Intel/DisplayConnectorGroup.h>
 #include <Kernel/Memory/Region.h>
+#include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel {
 
@@ -149,28 +150,31 @@ Optional<IntelGraphics::PLLSettings> IntelDisplayConnectorGroup::create_pll_sett
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> IntelDisplayConnectorGroup::try_create(MMIORegion const& first_region, MMIORegion const& second_region)
+ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> IntelDisplayConnectorGroup::try_create(Badge<IntelNativeGraphicsAdapter>, Generation generation, MMIORegion const& first_region, MMIORegion const& second_region)
 {
     auto registers_region = TRY(MM.allocate_kernel_region(first_region.pci_bar_paddr, first_region.pci_bar_space_length, "Intel Native Graphics Registers"sv, Memory::Region::Access::ReadWrite));
-    // FIXME: Try to put the address as parameter to this function to allow creating this DisplayConnector for many generations...
-    auto gmbus_connector = TRY(GMBusConnector::create_with_physical_address(first_region.pci_bar_paddr.offset(to_underlying(IntelGraphics::RegisterIndex::GMBusClock))));
-    auto connector_group = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) IntelDisplayConnectorGroup(move(gmbus_connector), move(registers_region), first_region, second_region)));
+    // NOTE: 0x5100 is the offset of the start of the GMBus registers
+    auto gmbus_connector = TRY(GMBusConnector::create_with_physical_address(first_region.pci_bar_paddr.offset(0x5100)));
+    auto connector_group = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) IntelDisplayConnectorGroup(generation, move(gmbus_connector), move(registers_region), first_region, second_region)));
     TRY(connector_group->initialize_connectors());
     return connector_group;
 }
 
-IntelDisplayConnectorGroup::IntelDisplayConnectorGroup(NonnullOwnPtr<GMBusConnector> gmbus_connector, NonnullOwnPtr<Memory::Region> registers_region, MMIORegion const& first_region, MMIORegion const& second_region)
+IntelDisplayConnectorGroup::IntelDisplayConnectorGroup(Generation generation, NonnullOwnPtr<GMBusConnector> gmbus_connector, NonnullOwnPtr<Memory::Region> registers_region, MMIORegion const& first_region, MMIORegion const& second_region)
     : m_mmio_first_region(first_region)
     , m_mmio_second_region(second_region)
     , m_assigned_mmio_registers_region(m_mmio_first_region)
+    , m_generation(generation)
     , m_registers_region(move(registers_region))
     , m_gmbus_connector(move(gmbus_connector))
 {
 }
 
-ErrorOr<void> IntelDisplayConnectorGroup::initialize_connectors()
+ErrorOr<void> IntelDisplayConnectorGroup::initialize_gen4_connectors()
 {
-    m_connectors[0] = TRY(IntelNativeDisplayConnector::try_create(*this, m_mmio_second_region.pci_bar_paddr, m_mmio_second_region.pci_bar_space_length));
+    // Note: Just assume we will need one Gen4 "transcoder", starting at HorizontalTotalA register (0x60000)
+    m_transcoders[0] = TRY(IntelDisplayTranscoder::create_with_physical_address(m_mmio_first_region.pci_bar_paddr.offset(0x60000)));
+    m_planes[0] = TRY(IntelDisplayPlane::create_with_physical_address(m_mmio_first_region.pci_bar_paddr.offset(0x70180)));
     Array<u8, 128> crt_edid_bytes {};
     {
         SpinlockLocker control_lock(m_control_lock);
@@ -182,19 +186,40 @@ ErrorOr<void> IntelDisplayConnectorGroup::initialize_connectors()
         // For now, this "hack" works well enough.
         crt_edid_bytes[0] = 0x0;
     }
+    m_connectors[0] = TRY(IntelNativeDisplayConnector::try_create(*this, IntelNativeDisplayConnector::Type::Analog, m_mmio_second_region.pci_bar_paddr, m_mmio_second_region.pci_bar_space_length));
     m_connectors[0]->set_edid_bytes({}, crt_edid_bytes);
-    TRY(m_connectors[0]->set_safe_mode_setting());
-    TRY(m_connectors[0]->create_attached_framebuffer_console({}));
+    return {};
+}
+
+ErrorOr<void> IntelDisplayConnectorGroup::initialize_connectors()
+{
+
+    // NOTE: Intel Graphics Generation 4 is pretty ancient beast, and we should not
+    // assume we can find a VBT for it. Just initialize the (assumed) CRT connector and be done with it.
+    if (m_generation == Generation::Gen4) {
+        TRY(initialize_gen4_connectors());
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
+    for (size_t connector_index = 0; connector_index < m_connectors.size(); connector_index++) {
+        if (!m_connectors[connector_index])
+            continue;
+        if (!m_connectors[connector_index]->m_edid_valid)
+            continue;
+        TRY(m_connectors[connector_index]->set_safe_mode_setting());
+        TRY(m_connectors[connector_index]->create_attached_framebuffer_console({}));
+    }
     return {};
 }
 
 ErrorOr<void> IntelDisplayConnectorGroup::set_safe_mode_setting(Badge<IntelNativeDisplayConnector>, IntelNativeDisplayConnector& connector)
 {
-    if (!m_connectors[0]->m_edid_parser.has_value())
+    if (!connector.m_edid_parser.has_value())
         return Error::from_errno(ENOTSUP);
-    if (!m_connectors[0]->m_edid_parser.value().detailed_timing(0).has_value())
+    if (!connector.m_edid_parser.value().detailed_timing(0).has_value())
         return Error::from_errno(ENOTSUP);
-    auto details = m_connectors[0]->m_edid_parser.value().detailed_timing(0).release_value();
+    auto details = connector.m_edid_parser.value().detailed_timing(0).release_value();
 
     DisplayConnector::ModeSetting modesetting {
         // Note: We assume that we always use 32 bit framebuffers.
@@ -223,15 +248,29 @@ ErrorOr<void> IntelDisplayConnectorGroup::set_mode_setting(Badge<IntelNativeDisp
 ErrorOr<void> IntelDisplayConnectorGroup::set_mode_setting(IntelNativeDisplayConnector& connector, DisplayConnector::ModeSetting const& mode_setting)
 {
     SpinlockLocker locker(connector.m_modeset_lock);
-    VERIFY(const_cast<IntelNativeDisplayConnector*>(&connector) == m_connectors[0].ptr());
+
     DisplayConnector::ModeSetting actual_mode_setting = mode_setting;
     actual_mode_setting.horizontal_stride = actual_mode_setting.horizontal_active * sizeof(u32);
     VERIFY(actual_mode_setting.horizontal_stride != 0);
-    if (!set_crt_resolution(actual_mode_setting))
-        return Error::from_errno(ENOTSUP);
+    if (m_generation == Generation::Gen4) {
+        TRY(set_gen4_mode_setting(connector, actual_mode_setting));
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
     connector.m_current_mode_setting = actual_mode_setting;
     if (!connector.m_framebuffer_console.is_null())
         static_cast<Graphics::GenericFramebufferConsoleImpl*>(connector.m_framebuffer_console.ptr())->set_resolution(actual_mode_setting.horizontal_active, actual_mode_setting.vertical_active, actual_mode_setting.horizontal_stride);
+    return {};
+}
+
+ErrorOr<void> IntelDisplayConnectorGroup::set_gen4_mode_setting(IntelNativeDisplayConnector& connector, DisplayConnector::ModeSetting const& mode_setting)
+{
+    VERIFY(connector.m_modeset_lock.is_locked());
+    SpinlockLocker control_lock(m_control_lock);
+    SpinlockLocker modeset_lock(m_modeset_lock);
+    if (!set_crt_resolution(mode_setting))
+        return Error::from_errno(ENOTSUP);
     return {};
 }
 
@@ -241,110 +280,70 @@ void IntelDisplayConnectorGroup::enable_vga_plane()
     VERIFY(m_modeset_lock.is_locked());
 }
 
-[[maybe_unused]] static StringView convert_register_index_to_string(IntelGraphics::RegisterIndex index)
+[[maybe_unused]] static StringView convert_global_generation_register_index_to_string(IntelGraphics::GlobalGenerationRegister index)
 {
     switch (index) {
-    case IntelGraphics::RegisterIndex::PipeAConf:
+    case IntelGraphics::GlobalGenerationRegister::PipeAConf:
         return "PipeAConf"sv;
-    case IntelGraphics::RegisterIndex::PipeBConf:
+    case IntelGraphics::GlobalGenerationRegister::PipeBConf:
         return "PipeBConf"sv;
-    case IntelGraphics::RegisterIndex::GMBusData:
-        return "GMBusData"sv;
-    case IntelGraphics::RegisterIndex::GMBusStatus:
-        return "GMBusStatus"sv;
-    case IntelGraphics::RegisterIndex::GMBusCommand:
-        return "GMBusCommand"sv;
-    case IntelGraphics::RegisterIndex::GMBusClock:
-        return "GMBusClock"sv;
-    case IntelGraphics::RegisterIndex::DisplayPlaneAControl:
-        return "DisplayPlaneAControl"sv;
-    case IntelGraphics::RegisterIndex::DisplayPlaneALinearOffset:
-        return "DisplayPlaneALinearOffset"sv;
-    case IntelGraphics::RegisterIndex::DisplayPlaneAStride:
-        return "DisplayPlaneAStride"sv;
-    case IntelGraphics::RegisterIndex::DisplayPlaneASurface:
-        return "DisplayPlaneASurface"sv;
-    case IntelGraphics::RegisterIndex::DPLLDivisorA0:
+    case IntelGraphics::GlobalGenerationRegister::DPLLDivisorA0:
         return "DPLLDivisorA0"sv;
-    case IntelGraphics::RegisterIndex::DPLLDivisorA1:
+    case IntelGraphics::GlobalGenerationRegister::DPLLDivisorA1:
         return "DPLLDivisorA1"sv;
-    case IntelGraphics::RegisterIndex::DPLLControlA:
+    case IntelGraphics::GlobalGenerationRegister::DPLLControlA:
         return "DPLLControlA"sv;
-    case IntelGraphics::RegisterIndex::DPLLControlB:
+    case IntelGraphics::GlobalGenerationRegister::DPLLControlB:
         return "DPLLControlB"sv;
-    case IntelGraphics::RegisterIndex::DPLLMultiplierA:
+    case IntelGraphics::GlobalGenerationRegister::DPLLMultiplierA:
         return "DPLLMultiplierA"sv;
-    case IntelGraphics::RegisterIndex::HTotalA:
-        return "HTotalA"sv;
-    case IntelGraphics::RegisterIndex::HBlankA:
-        return "HBlankA"sv;
-    case IntelGraphics::RegisterIndex::HSyncA:
-        return "HSyncA"sv;
-    case IntelGraphics::RegisterIndex::VTotalA:
-        return "VTotalA"sv;
-    case IntelGraphics::RegisterIndex::VBlankA:
-        return "VBlankA"sv;
-    case IntelGraphics::RegisterIndex::VSyncA:
-        return "VSyncA"sv;
-    case IntelGraphics::RegisterIndex::PipeASource:
-        return "PipeASource"sv;
-    case IntelGraphics::RegisterIndex::AnalogDisplayPort:
+    case IntelGraphics::GlobalGenerationRegister::AnalogDisplayPort:
         return "AnalogDisplayPort"sv;
-    case IntelGraphics::RegisterIndex::VGADisplayPlaneControl:
+    case IntelGraphics::GlobalGenerationRegister::VGADisplayPlaneControl:
         return "VGADisplayPlaneControl"sv;
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-void IntelDisplayConnectorGroup::write_to_register(IntelGraphics::RegisterIndex index, u32 value) const
+void IntelDisplayConnectorGroup::write_to_general_register(RegisterOffset offset, u32 value) const
 {
     VERIFY(m_control_lock.is_locked());
     SpinlockLocker lock(m_registers_lock);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics Display Connector:: Write to {} value of {:x}", convert_register_index_to_string(index), value);
-    auto* reg = (u32 volatile*)m_registers_region->vaddr().offset(to_underlying(index)).as_ptr();
+    auto* reg = (u32 volatile*)m_registers_region->vaddr().offset(offset.value()).as_ptr();
     *reg = value;
 }
-u32 IntelDisplayConnectorGroup::read_from_register(IntelGraphics::RegisterIndex index) const
+u32 IntelDisplayConnectorGroup::read_from_general_register(RegisterOffset offset) const
 {
     VERIFY(m_control_lock.is_locked());
     SpinlockLocker lock(m_registers_lock);
-    auto* reg = (u32 volatile*)m_registers_region->vaddr().offset(to_underlying(index)).as_ptr();
+    auto* reg = (u32 volatile*)m_registers_region->vaddr().offset(offset.value()).as_ptr();
     u32 value = *reg;
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics Display Connector: Read from {} value of {:x}", convert_register_index_to_string(index), value);
+    return value;
+}
+
+void IntelDisplayConnectorGroup::write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister index, u32 value) const
+{
+    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics Display Connector:: Write to {} value of {:x}", convert_global_generation_register_index_to_string(index), value);
+    write_to_general_register(to_underlying(index), value);
+}
+u32 IntelDisplayConnectorGroup::read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister index) const
+{
+    u32 value = read_from_general_register(to_underlying(index));
+    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics Display Connector: Read from {} value of {:x}", convert_global_generation_register_index_to_string(index), value);
     return value;
 }
 
 bool IntelDisplayConnectorGroup::pipe_a_enabled() const
 {
     VERIFY(m_control_lock.is_locked());
-    return read_from_register(IntelGraphics::RegisterIndex::PipeAConf) & (1 << 30);
+    return read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf) & (1 << 30);
 }
 
 bool IntelDisplayConnectorGroup::pipe_b_enabled() const
 {
     VERIFY(m_control_lock.is_locked());
-    return read_from_register(IntelGraphics::RegisterIndex::PipeBConf) & (1 << 30);
-}
-
-void IntelDisplayConnectorGroup::disable_output()
-{
-    VERIFY(m_control_lock.is_locked());
-    disable_dac_output();
-    disable_all_planes();
-    disable_pipe_a();
-    disable_pipe_b();
-    disable_dpll();
-    disable_vga_emulation();
-}
-
-void IntelDisplayConnectorGroup::enable_output(size_t width)
-{
-    VERIFY(m_control_lock.is_locked());
-    VERIFY(!pipe_a_enabled());
-    enable_pipe_a();
-    enable_primary_plane(width);
-    enable_dac_output();
+    return read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeBConf) & (1 << 30);
 }
 
 static size_t compute_dac_multiplier(size_t pixel_clock_in_khz)
@@ -362,8 +361,8 @@ static size_t compute_dac_multiplier(size_t pixel_clock_in_khz)
 
 bool IntelDisplayConnectorGroup::set_crt_resolution(DisplayConnector::ModeSetting const& mode_setting)
 {
-    SpinlockLocker control_lock(m_control_lock);
-    SpinlockLocker modeset_lock(m_modeset_lock);
+    VERIFY(m_control_lock.is_locked());
+    VERIFY(m_modeset_lock.is_locked());
 
     // Note: Just in case we still allow access to VGA IO ports, disable it now.
     GraphicsManagement::the().disable_vga_emulation_access_permanently();
@@ -374,44 +373,24 @@ bool IntelDisplayConnectorGroup::set_crt_resolution(DisplayConnector::ModeSettin
         return false;
     auto settings = pll_settings.value();
 
-    disable_output();
+    disable_dac_output();
+    MUST(m_planes[0]->disable({}));
+    disable_pipe_a();
+    disable_pipe_b();
+    disable_dpll();
+    disable_vga_emulation();
+
     dbgln_if(INTEL_GRAPHICS_DEBUG, "PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
     enable_dpll_without_vga(settings, dac_multiplier);
-    set_display_timings(mode_setting);
-    enable_output(mode_setting.horizontal_active);
+    MUST(m_transcoders[0]->set_mode_setting_timings({}, mode_setting));
+
+    VERIFY(!pipe_a_enabled());
+    enable_pipe_a();
+    MUST(m_planes[0]->set_plane_settings({}, m_mmio_second_region.pci_bar_paddr, IntelDisplayPlane::PipeSelect::PipeA, mode_setting.horizontal_active));
+    MUST(m_planes[0]->enable({}));
+    enable_dac_output();
 
     return true;
-}
-
-void IntelDisplayConnectorGroup::set_display_timings(DisplayConnector::ModeSetting const& mode_setting)
-{
-    VERIFY(m_control_lock.is_locked());
-    VERIFY(m_modeset_lock.is_locked());
-    VERIFY(!(read_from_register(IntelGraphics::RegisterIndex::PipeAConf) & (1 << 31)));
-    VERIFY(!(read_from_register(IntelGraphics::RegisterIndex::PipeAConf) & (1 << 30)));
-
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "htotal - {}, {}", (mode_setting.horizontal_active - 1), (mode_setting.horizontal_total() - 1));
-    write_to_register(IntelGraphics::RegisterIndex::HTotalA, (mode_setting.horizontal_active - 1) | (mode_setting.horizontal_total() - 1) << 16);
-
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "hblank - {}, {}", (mode_setting.horizontal_blanking_start() - 1), (mode_setting.horizontal_blanking_start() + mode_setting.horizontal_blank_pixels - 1));
-    write_to_register(IntelGraphics::RegisterIndex::HBlankA, (mode_setting.horizontal_blanking_start() - 1) | (mode_setting.horizontal_blanking_start() + mode_setting.horizontal_blank_pixels - 1) << 16);
-
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "hsync - {}, {}", (mode_setting.horizontal_sync_start() - 1), (mode_setting.horizontal_sync_end() - 1));
-    write_to_register(IntelGraphics::RegisterIndex::HSyncA, (mode_setting.horizontal_sync_start() - 1) | (mode_setting.horizontal_sync_end() - 1) << 16);
-
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "vtotal - {}, {}", (mode_setting.vertical_active - 1), (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1));
-    write_to_register(IntelGraphics::RegisterIndex::VTotalA, (mode_setting.vertical_active - 1) | (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1) << 16);
-
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "vblank - {}, {}", (mode_setting.vertical_blanking_start() - 1), (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1));
-    write_to_register(IntelGraphics::RegisterIndex::VBlankA, (mode_setting.vertical_blanking_start() - 1) | (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1) << 16);
-
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "vsync - {}, {}", (mode_setting.vertical_sync_start() - 1), (mode_setting.vertical_sync_end() - 1));
-    write_to_register(IntelGraphics::RegisterIndex::VSyncA, (mode_setting.vertical_sync_start() - 1) | (mode_setting.vertical_sync_end() - 1) << 16);
-
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "sourceSize - {}, {}", (mode_setting.vertical_active - 1), (mode_setting.horizontal_active - 1));
-    write_to_register(IntelGraphics::RegisterIndex::PipeASource, (mode_setting.vertical_active - 1) | (mode_setting.horizontal_active - 1) << 16);
-
-    microseconds_delay(200);
 }
 
 bool IntelDisplayConnectorGroup::wait_for_enabled_pipe_a(size_t milliseconds_timeout) const
@@ -453,15 +432,15 @@ void IntelDisplayConnectorGroup::disable_dpll()
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
-    write_to_register(IntelGraphics::RegisterIndex::DPLLControlA, 0);
-    write_to_register(IntelGraphics::RegisterIndex::DPLLControlB, 0);
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLControlA, 0);
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLControlB, 0);
 }
 
 void IntelDisplayConnectorGroup::disable_pipe_a()
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
-    write_to_register(IntelGraphics::RegisterIndex::PipeAConf, 0);
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf, 0);
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe A");
     wait_for_disabled_pipe_a(100);
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe A - done.");
@@ -471,7 +450,7 @@ void IntelDisplayConnectorGroup::disable_pipe_b()
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
-    write_to_register(IntelGraphics::RegisterIndex::PipeAConf, 0);
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf, 0);
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe B");
     wait_for_disabled_pipe_b(100);
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe B - done.");
@@ -481,37 +460,23 @@ void IntelDisplayConnectorGroup::enable_pipe_a()
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
-    VERIFY(!(read_from_register(IntelGraphics::RegisterIndex::PipeAConf) & (1 << 31)));
-    VERIFY(!(read_from_register(IntelGraphics::RegisterIndex::PipeAConf) & (1 << 30)));
-    write_to_register(IntelGraphics::RegisterIndex::PipeAConf, (1 << 31) | (1 << 24));
+    VERIFY(!(read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf) & (1 << 31)));
+    VERIFY(!(read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf) & (1 << 30)));
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf, (1 << 31) | (1 << 24));
     dbgln_if(INTEL_GRAPHICS_DEBUG, "enabling Pipe A");
     // FIXME: Seems like my video card is buggy and doesn't set the enabled bit (bit 30)!!
     wait_for_enabled_pipe_a(100);
     dbgln_if(INTEL_GRAPHICS_DEBUG, "enabling Pipe A - done.");
 }
 
-void IntelDisplayConnectorGroup::enable_primary_plane(size_t width)
-{
-    VERIFY(m_control_lock.is_locked());
-    VERIFY(m_modeset_lock.is_locked());
-    VERIFY(((width * 4) % 64 == 0));
-
-    write_to_register(IntelGraphics::RegisterIndex::DisplayPlaneAStride, width * 4);
-    write_to_register(IntelGraphics::RegisterIndex::DisplayPlaneALinearOffset, 0);
-    write_to_register(IntelGraphics::RegisterIndex::DisplayPlaneASurface, m_mmio_second_region.pci_bar_paddr.get());
-
-    // FIXME: Serenity uses BGR 32 bit pixel format, but maybe we should try to determine it somehow!
-    write_to_register(IntelGraphics::RegisterIndex::DisplayPlaneAControl, (0b0110 << 26) | (1 << 31));
-}
-
 void IntelDisplayConnectorGroup::set_dpll_registers(IntelGraphics::PLLSettings const& settings)
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
-    write_to_register(IntelGraphics::RegisterIndex::DPLLDivisorA0, (settings.m2 - 2) | ((settings.m1 - 2) << 8) | ((settings.n - 2) << 16));
-    write_to_register(IntelGraphics::RegisterIndex::DPLLDivisorA1, (settings.m2 - 2) | ((settings.m1 - 2) << 8) | ((settings.n - 2) << 16));
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLDivisorA0, (settings.m2 - 2) | ((settings.m1 - 2) << 8) | ((settings.n - 2) << 16));
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLDivisorA1, (settings.m2 - 2) | ((settings.m1 - 2) << 8) | ((settings.n - 2) << 16));
 
-    write_to_register(IntelGraphics::RegisterIndex::DPLLControlA, 0);
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLControlA, 0);
 }
 
 void IntelDisplayConnectorGroup::enable_dpll_without_vga(IntelGraphics::PLLSettings const& settings, size_t dac_multiplier)
@@ -523,43 +488,35 @@ void IntelDisplayConnectorGroup::enable_dpll_without_vga(IntelGraphics::PLLSetti
 
     microseconds_delay(200);
 
-    write_to_register(IntelGraphics::RegisterIndex::DPLLControlA, (6 << 9) | (settings.p1) << 16 | (1 << 26) | (1 << 28) | (1 << 31));
-    write_to_register(IntelGraphics::RegisterIndex::DPLLMultiplierA, (dac_multiplier - 1) | ((dac_multiplier - 1) << 8));
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLControlA, (6 << 9) | (settings.p1) << 16 | (1 << 26) | (1 << 28) | (1 << 31));
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLMultiplierA, (dac_multiplier - 1) | ((dac_multiplier - 1) << 8));
 
     // The specification says we should wait (at least) about 150 microseconds
     // after enabling the DPLL to allow the clock to stabilize
     microseconds_delay(200);
-    VERIFY(read_from_register(IntelGraphics::RegisterIndex::DPLLControlA) & (1 << 31));
+    VERIFY(read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLControlA) & (1 << 31));
 }
 
 void IntelDisplayConnectorGroup::disable_dac_output()
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
-    write_to_register(IntelGraphics::RegisterIndex::AnalogDisplayPort, 0b11 << 10);
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::AnalogDisplayPort, 0b11 << 10);
 }
 
 void IntelDisplayConnectorGroup::enable_dac_output()
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
-    write_to_register(IntelGraphics::RegisterIndex::AnalogDisplayPort, (1 << 31));
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::AnalogDisplayPort, (1 << 31));
 }
 
 void IntelDisplayConnectorGroup::disable_vga_emulation()
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
-    write_to_register(IntelGraphics::RegisterIndex::VGADisplayPlaneControl, (1 << 31));
-    read_from_register(IntelGraphics::RegisterIndex::VGADisplayPlaneControl);
-}
-
-void IntelDisplayConnectorGroup::disable_all_planes()
-{
-    VERIFY(m_control_lock.is_locked());
-    VERIFY(m_modeset_lock.is_locked());
-    write_to_register(IntelGraphics::RegisterIndex::DisplayPlaneAControl, 0);
-    write_to_register(IntelGraphics::RegisterIndex::DisplayPlaneBControl, 0);
+    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::VGADisplayPlaneControl, (1 << 31));
+    read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::VGADisplayPlaneControl);
 }
 
 }
