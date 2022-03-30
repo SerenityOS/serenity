@@ -35,7 +35,7 @@ public:
     {
         if (m_current_byte.has_value() && is_aligned_to_byte_boundary()) {
             bytes[0] = m_current_byte.release_value();
-            return m_stream.read(bytes.slice(1));
+            return TRY(m_stream.read(bytes.slice(1))) + 1;
         }
         align_to_byte_boundary();
         return m_stream.read(bytes);
