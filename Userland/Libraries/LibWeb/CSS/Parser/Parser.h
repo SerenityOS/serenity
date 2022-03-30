@@ -89,8 +89,6 @@ public:
     Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
     ~Parser() = default;
 
-    // Used in @supports conditions. [CSS3-CONDITIONAL]
-    Optional<StyleProperty> parse_as_declaration();
     // For the contents of a style attribute, which parses text into the contents of a single style rule.
     Vector<DeclarationOrAtRule> parse_as_list_of_declarations();
     // For things that need to consume a single value, like the parsing rules for attr().
@@ -102,6 +100,7 @@ public:
     NonnullRefPtr<CSSStyleSheet> parse_as_css_stylesheet(Optional<AK::URL> location);
     RefPtr<ElementInlineCSSStyleDeclaration> parse_as_style_attribute(DOM::Element&);
     RefPtr<CSSRule> parse_as_css_rule();
+    Optional<StyleProperty> parse_as_supports_condition();
 
     enum class SelectorParsingMode {
         Standard,
@@ -146,8 +145,9 @@ private:
     template<typename T>
     RefPtr<StyleRule> parse_a_rule(TokenStream<T>&);
 
+    // "Parse a declaration" is used in @supports conditions. [CSS3-CONDITIONAL]
     template<typename T>
-    Optional<StyleProperty> parse_a_declaration(TokenStream<T>&);
+    Optional<StyleDeclarationRule> parse_a_declaration(TokenStream<T>&);
     template<typename T>
     Vector<DeclarationOrAtRule> parse_a_list_of_declarations(TokenStream<T>&);
     template<typename T>
