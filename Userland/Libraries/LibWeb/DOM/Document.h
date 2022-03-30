@@ -70,8 +70,6 @@ public:
     Origin origin() const;
     void set_origin(const Origin& origin);
 
-    bool is_scripting_enabled() const { return true; }
-
     AK::URL parse_url(String const&) const;
 
     CSS::StyleComputer& style_computer() { return *m_style_computer; }
