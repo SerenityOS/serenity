@@ -18,9 +18,10 @@ describe("normal behavior", () => {
             ["GMT", "UTC"],
             ["Etc/UTC", "UTC"],
             ["Etc/GMT", "UTC"],
-            // FIXME: https://github.com/tc39/proposal-temporal/issues/1993
-            // ["Etc/GMT+12", "Etc/GMT+12"],
-            // ["Etc/GMT-12", "Etc/GMT-12"],
+            ["Etc/GMT+6", "Etc/GMT+6"],
+            ["Etc/GMT-6", "Etc/GMT-6"],
+            ["Etc/GMT+12", "Etc/GMT+12"],
+            ["Etc/GMT-12", "Etc/GMT-12"],
             ["Europe/London", "Europe/London"],
             ["Europe/Isle_of_Man", "Europe/London"],
             ["1970-01-01+01", "+01:00"],

@@ -88,6 +88,7 @@ public:
     [[nodiscard]] bool parse_non_zero_digit();
     [[nodiscard]] bool parse_ascii_sign();
     [[nodiscard]] bool parse_sign();
+    [[nodiscard]] bool parse_unpadded_hour();
     [[nodiscard]] bool parse_hour();
     [[nodiscard]] bool parse_minute_second();
     [[nodiscard]] bool parse_decimal_separator();
