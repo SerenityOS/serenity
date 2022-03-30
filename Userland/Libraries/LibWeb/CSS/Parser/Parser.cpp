@@ -1697,20 +1697,30 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
 template<>
 StyleComponentValueRule Parser::consume_a_component_value(TokenStream<StyleComponentValueRule>& tokens)
 {
+    // Note: This overload is called once tokens have already been converted into component values,
+    //       so we do not need to do the work in the more general overload.
     return tokens.next_token();
 }
 
+// 5.4.7. Consume a component value
+// https://www.w3.org/TR/css-syntax-3/#consume-component-value
 template<typename T>
 StyleComponentValueRule Parser::consume_a_component_value(TokenStream<T>& tokens)
 {
+    // To consume a component value:
+
+    // Consume the next input token.
     auto& token = tokens.next_token();
 
+    // If the current input token is a <{-token>, <[-token>, or <(-token>, consume a simple block and return it.
     if (token.is(Token::Type::OpenCurly) || token.is(Token::Type::OpenSquare) || token.is(Token::Type::OpenParen))
         return StyleComponentValueRule(consume_a_simple_block(tokens));
 
+    // Otherwise, if the current input token is a <function-token>, consume a function and return it.
     if (token.is(Token::Type::Function))
         return StyleComponentValueRule(consume_a_function(tokens));
 
+    // Otherwise, return the current input token.
     return StyleComponentValueRule(token);
 }
 
