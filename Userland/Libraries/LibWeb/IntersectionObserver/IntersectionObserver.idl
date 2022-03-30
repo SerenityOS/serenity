@@ -1,10 +1,11 @@
 #import <DOM/Element.idl>
 #import <DOM/Node.idl>
 
+callback IntersectionObserverCallback = undefined (sequence<IntersectionObserverEntry> entries, IntersectionObserver observer);
+
 [Exposed=(Window)]
 interface IntersectionObserver {
-    // FIXME: Should be: IntersectionObserverCallback
-    constructor(any callback, optional IntersectionObserverInit options = {});
+    constructor(IntersectionObserverCallback callback, optional IntersectionObserverInit options = {});
 
     undefined observe(Element target);
     undefined unobserve(Element target);
