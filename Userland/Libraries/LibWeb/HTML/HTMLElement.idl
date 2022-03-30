@@ -1,4 +1,5 @@
 #import <HTML/DOMStringMap.idl>
+#import <DOM/EventHandler.idl>
 
 interface HTMLElement : Element {
 
