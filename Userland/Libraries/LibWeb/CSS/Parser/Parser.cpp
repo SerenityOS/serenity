@@ -1694,6 +1694,99 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
     return rule;
 }
 
+// 5.4.4. Consume a style block’s contents
+// https://www.w3.org/TR/css-syntax-3/#consume-a-style-blocks-contents
+template<typename T>
+Vector<DeclarationOrAtRule> Parser::consume_a_style_blocks_contents(TokenStream<T>& tokens)
+{
+    // To consume a style block’s contents:
+    // Create an initially empty list of declarations decls, and an initially empty list of rules rules.
+    Vector<DeclarationOrAtRule> declarations;
+    Vector<DeclarationOrAtRule> rules;
+
+    // Repeatedly consume the next input token:
+    for (;;) {
+        auto& token = tokens.next_token();
+
+        // <whitespace-token>
+        // <semicolon-token>
+        if (token.is(Token::Type::Whitespace) || token.is(Token::Type::Semicolon)) {
+            // Do nothing.
+            continue;
+        }
+
+        // <EOF-token>
+        if (token.is(Token::Type::EndOfFile)) {
+            // Extend decls with rules, then return decls.
+            declarations.extend(move(rules));
+            return declarations;
+        }
+
+        // <at-keyword-token>
+        if (token.is(Token::Type::AtKeyword)) {
+            // Reconsume the current input token.
+            tokens.reconsume_current_input_token();
+
+            // Consume an at-rule, and append the result to rules.
+            rules.empend(consume_an_at_rule(tokens));
+            continue;
+        }
+
+        // <ident-token>
+        if (token.is(Token::Type::Ident)) {
+            // Initialize a temporary list initially filled with the current input token.
+            Vector<StyleComponentValueRule> temporary_list;
+            temporary_list.append(token);
+
+            // As long as the next input token is anything other than a <semicolon-token> or <EOF-token>,
+            // consume a component value and append it to the temporary list.
+            for (;;) {
+                auto& next_input_token = tokens.peek_token();
+                if (next_input_token.is(Token::Type::Semicolon) || next_input_token.is(Token::Type::EndOfFile))
+                    break;
+                temporary_list.append(consume_a_component_value(tokens));
+            }
+
+            // Consume a declaration from the temporary list. If anything was returned, append it to decls.
+            auto token_stream = TokenStream(temporary_list);
+            if (auto maybe_declaration = consume_a_declaration(token_stream); maybe_declaration.has_value())
+                declarations.empend(maybe_declaration.release_value());
+
+            continue;
+        }
+
+        // <delim-token> with a value of "&" (U+0026 AMPERSAND)
+        if (token.is(Token::Type::Delim) && token.token().delim() == '&') {
+            // Reconsume the current input token.
+            tokens.reconsume_current_input_token();
+
+            // Consume a qualified rule. If anything was returned, append it to rules.
+            if (auto qualified_rule = consume_a_qualified_rule(tokens))
+                rules.empend(qualified_rule);
+
+            continue;
+        }
+
+        // anything else
+        {
+            // This is a parse error.
+            log_parse_error();
+
+            // Reconsume the current input token.
+            tokens.reconsume_current_input_token();
+
+            // As long as the next input token is anything other than a <semicolon-token> or <EOF-token>,
+            // consume a component value and throw away the returned value.
+            for (;;) {
+                auto& peek = tokens.peek_token();
+                if (peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))
+                    break;
+                (void)consume_a_component_value(tokens);
+            }
+        }
+    }
+}
+
 template<>
 StyleComponentValueRule Parser::consume_a_component_value(TokenStream<StyleComponentValueRule>& tokens)
 {
@@ -2099,6 +2192,20 @@ Optional<StyleDeclarationRule> Parser::parse_a_declaration(TokenStream<T>& token
     return {};
 }
 
+// 5.3.7. Parse a style block’s contents
+// https://www.w3.org/TR/css-syntax-3/#parse-style-blocks-contents
+template<typename T>
+Vector<DeclarationOrAtRule> Parser::parse_a_style_blocks_contents(TokenStream<T>& tokens)
+{
+    // To parse a style block’s contents from input:
+
+    // 1. Normalize input, and set input to the result.
+    // Note: This is done when initializing the Parser.
+
+    // 2. Consume a style block’s contents from input, and return the result.
+    return consume_a_style_blocks_contents(tokens);
+}
+
 // 5.3.8. Parse a list of declarations
 // https://www.w3.org/TR/css-syntax-3/#parse-list-of-declarations
 template<typename T>
@@ -2363,7 +2470,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             return {};
 
         auto stream = TokenStream(rule->block()->values());
-        auto declarations_and_at_rules = parse_a_list_of_declarations(stream);
+        auto declarations_and_at_rules = parse_a_style_blocks_contents(stream);
 
         auto declaration = convert_to_style_declaration(declarations_and_at_rules);
         if (!declaration) {
