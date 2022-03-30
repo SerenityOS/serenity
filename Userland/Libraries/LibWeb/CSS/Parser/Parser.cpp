@@ -1869,60 +1869,85 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
     return declaration;
 }
 
+// 5.4.5. Consume a list of declarations
+// https://www.w3.org/TR/css-syntax-3/#consume-list-of-declarations
 template<typename T>
 Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T>& tokens)
 {
-    Vector<DeclarationOrAtRule> list;
+    // To consume a list of declarations:
 
+    // Create an initially empty list of declarations.
+    Vector<DeclarationOrAtRule> list_of_declarations;
+
+    // Repeatedly consume the next input token:
     for (;;) {
         auto& token = tokens.next_token();
+
+        // <whitespace-token>
+        // <semicolon-token>
         if (token.is(Token::Type::Whitespace) || token.is(Token::Type::Semicolon)) {
+            // Do nothing.
             continue;
         }
 
+        // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
-            return list;
+            // Return the list of declarations.
+            return list_of_declarations;
         }
 
+        // <at-keyword-token>
         if (token.is(Token::Type::AtKeyword)) {
+            // Reconsume the current input token.
             tokens.reconsume_current_input_token();
-            list.append(DeclarationOrAtRule(consume_an_at_rule(tokens)));
+
+            // Consume an at-rule. Append the returned rule to the list of declarations.
+            list_of_declarations.append(DeclarationOrAtRule(consume_an_at_rule(tokens)));
             continue;
         }
 
+        // <ident-token>
         if (token.is(Token::Type::Ident)) {
-            Vector<StyleComponentValueRule> temp;
-            temp.append(token);
+            // Initialize a temporary list initially filled with the current input token.
+            Vector<StyleComponentValueRule> temporary_list;
+            temporary_list.append(token);
 
+            // As long as the next input token is anything other than a <semicolon-token> or <EOF-token>,
+            // consume a component value and append it to the temporary list.
             for (;;) {
                 auto& peek = tokens.peek_token();
-                if (peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile)) {
+                if (peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))
                     break;
-                }
-                temp.append(consume_a_component_value(tokens));
+                temporary_list.append(consume_a_component_value(tokens));
             }
 
-            auto token_stream = TokenStream(temp);
-            auto maybe_declaration = consume_a_declaration(token_stream);
-            if (maybe_declaration.has_value()) {
-                list.append(DeclarationOrAtRule(maybe_declaration.value()));
-            }
+            // Consume a declaration from the temporary list. If anything was returned, append it to the list of declarations.
+            auto token_stream = TokenStream(temporary_list);
+            if (auto maybe_declaration = consume_a_declaration(token_stream); maybe_declaration.has_value())
+                list_of_declarations.append(DeclarationOrAtRule(maybe_declaration.value()));
+
             continue;
         }
 
-        log_parse_error();
-        tokens.reconsume_current_input_token();
+        // anything else
+        {
+            // This is a parse error.
+            log_parse_error();
 
-        for (;;) {
-            auto& peek = tokens.peek_token();
-            if (peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))
-                break;
-            dbgln_if(CSS_PARSER_DEBUG, "Discarding token: '{}'", peek.to_debug_string());
-            (void)consume_a_component_value(tokens);
+            // Reconsume the current input token.
+            tokens.reconsume_current_input_token();
+
+            // As long as the next input token is anything other than a <semicolon-token> or <EOF-token>,
+            // consume a component value and throw away the returned value.
+            for (;;) {
+                auto& peek = tokens.peek_token();
+                if (peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))
+                    break;
+                dbgln_if(CSS_PARSER_DEBUG, "Discarding token: '{}'", peek.to_debug_string());
+                (void)consume_a_component_value(tokens);
+            }
         }
     }
-
-    return list;
 }
 
 RefPtr<CSSRule> Parser::parse_as_css_rule()
