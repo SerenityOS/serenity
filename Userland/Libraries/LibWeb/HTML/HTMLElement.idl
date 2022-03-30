@@ -22,9 +22,6 @@ interface HTMLElement : Element {
     readonly attribute long offsetWidth;
     readonly attribute long offsetHeight;
 
-    // FIXME: This should come from a HTMLOrSVGElement mixin
-    [SameObject] readonly attribute DOMStringMap dataset;
-
     // FIXME: These should all come from a GlobalEventHandlers mixin
     attribute EventHandler onabort;
     attribute EventHandler onauxclick;
@@ -96,4 +93,10 @@ interface HTMLElement : Element {
     attribute EventHandler onwebkittransitionend;
     attribute EventHandler onwheel;
 
+};
+
+HTMLElement includes HTMLOrSVGElement;
+
+interface mixin HTMLOrSVGElement {
+    [SameObject] readonly attribute DOMStringMap dataset;
 };
