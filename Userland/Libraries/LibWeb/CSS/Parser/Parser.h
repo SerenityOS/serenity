@@ -186,27 +186,27 @@ private:
     template<typename T>
     [[nodiscard]] NonnullRefPtr<StyleRule> consume_an_at_rule(TokenStream<T>&);
     template<typename T>
-    [[nodiscard]] RefPtr<StyleRule> consume_a_qualified_rule(TokenStream<T>&);
+    RefPtr<StyleRule> consume_a_qualified_rule(TokenStream<T>&);
     template<typename T>
     [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_style_blocks_contents(TokenStream<T>&);
     template<typename T>
     [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_list_of_declarations(TokenStream<T>&);
     template<typename T>
-    [[nodiscard]] Optional<StyleDeclarationRule> consume_a_declaration(TokenStream<T>&);
+    Optional<StyleDeclarationRule> consume_a_declaration(TokenStream<T>&);
     template<typename T>
     [[nodiscard]] StyleComponentValueRule consume_a_component_value(TokenStream<T>&);
     template<typename T>
-    [[nodiscard]] NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
+    NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
     template<typename T>
-    [[nodiscard]] NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
+    NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
 
-    [[nodiscard]] Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<StyleComponentValueRule>&);
+    Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<StyleComponentValueRule>&);
 
     RefPtr<CSSRule> parse_font_face_rule(TokenStream<StyleComponentValueRule>&);
 
-    [[nodiscard]] RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
-    [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
-    [[nodiscard]] Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule const&);
+    RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
+    RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
+    Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule const&);
 
     class Dimension {
     public:
