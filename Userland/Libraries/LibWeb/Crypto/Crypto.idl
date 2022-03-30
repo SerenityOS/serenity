@@ -6,4 +6,6 @@ interface Crypto {
 
   // FIXME: the argument and the return value should be of type ArrayBufferView
   any getRandomValues(any array);
+
+  [SecureContext] DOMString randomUUID();
 };
