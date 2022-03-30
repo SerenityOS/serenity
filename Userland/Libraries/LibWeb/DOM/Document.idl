@@ -5,6 +5,7 @@
 #import <DOM/DocumentType.idl>
 #import <DOM/Element.idl>
 #import <DOM/Event.idl>
+#import <DOM/EventHandler.idl>
 #import <DOM/HTMLCollection.idl>
 #import <DOM/Node.idl>
 #import <DOM/NodeFilter.idl>

@@ -510,18 +510,6 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         @cpp_name@ = @parameter.optional_default_value@L;
 )~~~");
         }
-    } else if (parameter.type->name == "EventHandler") {
-        // x.onfoo = function() { ... }, x.onfoo = () => { ... }, x.onfoo = {}
-        // NOTE: Anything else than an object will be treated as null. This is because EventHandler has the [LegacyTreatNonObjectAsNull] extended attribute.
-        //       Yes, you can store objects in event handler attributes. They just get ignored when there's any attempt to invoke them.
-        // FIXME: Replace this with proper support for callback function types.
-
-        scoped_generator.append(R"~~~(
-    Optional<Bindings::CallbackType> @cpp_name@;
-    if (@js_name@@js_suffix@.is_object()) {
-        @cpp_name@ = Bindings::CallbackType { JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object() };
-    }
-)~~~");
     } else if (parameter.type->name == "Promise") {
         // NOTE: It's not clear to me where the implicit wrapping of non-Promise values in a resolved
         // Promise is defined in the spec; https://webidl.spec.whatwg.org/#idl-promise doesn't say
@@ -1350,17 +1338,6 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
     } else if (type.name == "Location" || type.name == "Promise" || type.name == "Uint8Array" || type.name == "Uint8ClampedArray" || type.name == "any") {
         scoped_generator.append(R"~~~(
     @result_expression@ @value@;
-)~~~");
-    } else if (type.name == "EventHandler") {
-        // FIXME: Replace this with proper support for callback function types.
-
-        scoped_generator.append(R"~~~(
-    if (!@value@) {
-        @result_expression@ JS::js_null();
-    } else {
-        VERIFY(!@value@->callback.is_null());
-        @result_expression@ @value@->callback.cell();
-    }
 )~~~");
     } else if (is<IDL::UnionType>(type)) {
         TODO();
