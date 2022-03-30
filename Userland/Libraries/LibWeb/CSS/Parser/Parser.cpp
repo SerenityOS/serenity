@@ -1776,6 +1776,7 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
     return function;
 }
 
+// 5.4.6. Consume a declaration
 // https://www.w3.org/TR/css-syntax-3/#consume-declaration
 template<typename T>
 Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tokens)
@@ -1790,6 +1791,8 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
     auto start_position = tokens.position();
     auto& token = tokens.next_token();
 
+    // Note: Not to spec, handle the case where the input token *isn't* an <ident-token>.
+    // FIXME: Perform this check before calling consume_a_declaration().
     if (!token.is(Token::Type::Ident)) {
         tokens.rewind_to_position(start_position);
         return {};
