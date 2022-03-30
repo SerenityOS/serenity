@@ -81,6 +81,7 @@ protected:
     static float tentative_height_for_replaced_element(FormattingState const&, ReplacedBox const&, CSS::Length const& height);
     static float compute_auto_height_for_block_formatting_context_root(FormattingState const&, BlockContainer const&);
     static float compute_auto_height_for_block_level_element(FormattingState const&, Box const&);
+    static float compute_intrinsic_height(FormattingState const& state, Box const& box);
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 
