@@ -141,6 +141,9 @@ private:
     template<typename T>
     Optional<StyleDeclarationRule> parse_a_declaration(TokenStream<T>&);
 
+    template<typename T>
+    Vector<DeclarationOrAtRule> parse_a_style_blocks_contents(TokenStream<T>&);
+
     // "Parse a list of declarations" is for the contents of a style attribute, which parses text into the contents of a single style rule.
     template<typename T>
     Vector<DeclarationOrAtRule> parse_a_list_of_declarations(TokenStream<T>&);
@@ -184,6 +187,8 @@ private:
     [[nodiscard]] NonnullRefPtr<StyleRule> consume_an_at_rule(TokenStream<T>&);
     template<typename T>
     [[nodiscard]] RefPtr<StyleRule> consume_a_qualified_rule(TokenStream<T>&);
+    template<typename T>
+    [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_style_blocks_contents(TokenStream<T>&);
     template<typename T>
     [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_list_of_declarations(TokenStream<T>&);
     template<typename T>
