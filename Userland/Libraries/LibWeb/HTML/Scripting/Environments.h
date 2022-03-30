@@ -101,6 +101,9 @@ struct EnvironmentSettingsObject
 
     void notify_about_rejected_promises(Badge<EventLoop>);
 
+    bool is_scripting_enabled() const;
+    bool is_scripting_disabled() const;
+
 protected:
     explicit EnvironmentSettingsObject(JS::ExecutionContext& realm_execution_context);
 

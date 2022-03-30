@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
 
@@ -68,7 +69,9 @@ RunScriptDecision EnvironmentSettingsObject::can_run_script()
     if (is<Bindings::WindowObject>(global_object()) && !verify_cast<Bindings::WindowObject>(global_object()).impl().associated_document().is_fully_active())
         return RunScriptDecision::DoNotRun;
 
-    // FIXME: 2. If scripting is disabled for settings, then return "do not run".
+    // 2. If scripting is disabled for settings, then return "do not run".
+    if (is_scripting_disabled())
+        return RunScriptDecision::DoNotRun;
 
     // 3. Return "run".
     return RunScriptDecision::Run;
@@ -232,6 +235,31 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
                 dbgln("WARNING: A promise was rejected without any handlers. promise={:p}, result={}", &promise, promise.result().to_string_without_side_effects());
         }
     });
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-script
+bool EnvironmentSettingsObject::is_scripting_enabled() const
+{
+    // Scripting is enabled for an environment settings object settings when all of the following conditions are true:
+    // The user agent supports scripting.
+    // NOTE: This is always true in LibWeb :^)
+
+    // The user has not disabled scripting for settings at this time. (User agents may provide users with the option to disable scripting globally, or in a finer-grained manner, e.g., on a per-origin basis, down to the level of individual environment settings objects.)
+    auto document = const_cast<EnvironmentSettingsObject&>(*this).responsible_document();
+    VERIFY(document);
+    if (!document->window().page()->is_scripting_enabled())
+        return false;
+
+    // FIXME: Either settings's global object is not a Window object, or settings's global object's associated Document's active sandboxing flag set does not have its sandboxed scripts browsing context flag set.
+
+    return true;
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#concept-environment-noscript
+bool EnvironmentSettingsObject::is_scripting_disabled() const
+{
+    // Scripting is disabled for an environment settings object when scripting is not enabled for it, i.e., when any of the above conditions are false.
+    return !is_scripting_enabled();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#incumbent-settings-object
