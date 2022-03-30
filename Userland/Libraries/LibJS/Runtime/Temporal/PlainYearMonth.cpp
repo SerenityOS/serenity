@@ -245,8 +245,8 @@ ThrowCompletionOr<String> temporal_year_month_to_string(GlobalObject& global_obj
     // 6. Let calendarID be ? ToString(yearMonth.[[Calendar]]).
     auto calendar_id = TRY(Value(&year_month.calendar()).to_string(global_object));
 
-    // 7. If calendarID is not "iso8601", then
-    if (calendar_id != "iso8601") {
+    // 7. If showCalendar is "always" or if calendarID is not "iso8601", then
+    if (show_calendar == "always"sv || calendar_id != "iso8601") {
         // a. Let day be yearMonth.[[ISODay]] formatted as a two-digit decimal number, padded to the left with a zero if necessary.
         // b. Set result to the string-concatenation of result, the code unit 0x002D (HYPHEN-MINUS), and day.
         result = String::formatted("{}-{:02}", result, year_month.iso_day());

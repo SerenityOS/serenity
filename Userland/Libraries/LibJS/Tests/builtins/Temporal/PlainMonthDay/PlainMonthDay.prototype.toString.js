@@ -9,7 +9,7 @@ describe("correct behavior", () => {
         plainMonthDay = new Temporal.PlainMonthDay(7, 6);
         expect(plainMonthDay.toString()).toBe("07-06");
         expect(plainMonthDay.toString({ calendarName: "auto" })).toBe("07-06");
-        expect(plainMonthDay.toString({ calendarName: "always" })).toBe("07-06[u-ca=iso8601]");
+        expect(plainMonthDay.toString({ calendarName: "always" })).toBe("1972-07-06[u-ca=iso8601]");
         expect(plainMonthDay.toString({ calendarName: "never" })).toBe("07-06");
 
         plainMonthDay = new Temporal.PlainMonthDay(7, 6, { toString: () => "foo" }, 2021);
