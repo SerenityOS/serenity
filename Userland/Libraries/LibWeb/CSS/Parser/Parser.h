@@ -89,8 +89,6 @@ public:
     Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
     ~Parser() = default;
 
-    // For the contents of a style attribute, which parses text into the contents of a single style rule.
-    Vector<DeclarationOrAtRule> parse_as_list_of_declarations();
     // For things that need to consume a single value, like the parsing rules for attr().
     Optional<StyleComponentValueRule> parse_as_component_value();
     // For the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
@@ -148,6 +146,8 @@ private:
     // "Parse a declaration" is used in @supports conditions. [CSS3-CONDITIONAL]
     template<typename T>
     Optional<StyleDeclarationRule> parse_a_declaration(TokenStream<T>&);
+
+    // "Parse a list of declarations" is for the contents of a style attribute, which parses text into the contents of a single style rule.
     template<typename T>
     Vector<DeclarationOrAtRule> parse_a_list_of_declarations(TokenStream<T>&);
     template<typename T>
