@@ -70,6 +70,8 @@ private:
 template<class T>
 inline Handle<T> make_handle(T* cell)
 {
+    if (!cell)
+        return Handle<T> {};
     return Handle<T>::create(cell);
 }
 
