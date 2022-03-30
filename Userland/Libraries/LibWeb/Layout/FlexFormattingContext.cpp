@@ -565,9 +565,14 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
     }();
 
     // The hypothetical main size is the item’s flex base size clamped according to its used min and max main sizes (and flooring the content box size at zero).
-    auto clamp_min = has_main_min_size(child_box) ? specified_main_min_size(child_box) : 0;
+    auto clamp_min = has_main_min_size(child_box) ? specified_main_min_size(child_box) : determine_min_main_size_of_child(child_box);
     auto clamp_max = has_main_max_size(child_box) ? specified_main_max_size(child_box) : NumericLimits<float>::max();
     flex_item.hypothetical_main_size = clamp(flex_item.flex_base_size, clamp_min, clamp_max);
+}
+
+float FlexFormattingContext::determine_min_main_size_of_child(Box const& box)
+{
+    return is_row_layout() ? calculate_min_and_max_content_width(box).min_content_size : calculate_min_and_max_content_height(box).min_content_size;
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-main-container
