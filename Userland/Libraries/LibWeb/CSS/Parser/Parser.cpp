@@ -1965,18 +1965,16 @@ Optional<StyleDeclarationRule> Parser::parse_a_declaration(TokenStream<T>& token
     return {};
 }
 
-Vector<DeclarationOrAtRule> Parser::parse_as_list_of_declarations()
-{
-    return parse_a_list_of_declarations(m_token_stream);
-}
-
 // 5.3.8. Parse a list of declarations
 // https://www.w3.org/TR/css-syntax-3/#parse-list-of-declarations
 template<typename T>
 Vector<DeclarationOrAtRule> Parser::parse_a_list_of_declarations(TokenStream<T>& tokens)
 {
     // To parse a list of declarations from input:
+
     // 1. Normalize input, and set input to the result.
+    // Note: This is done when initializing the Parser.
+
     // 2. Consume a list of declarations from input, and return the result.
     return consume_a_list_of_declarations(tokens);
 }
