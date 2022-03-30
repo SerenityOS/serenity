@@ -843,11 +843,19 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
     }
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#concept-n-script
+bool Node::is_scripting_enabled() const
+{
+    // Scripting is enabled for a node node if node's node document's browsing context is non-null, and scripting is enabled for node's relevant settings object.
+    // FIXME: Check if scripting is enabled for the ESO.
+    return document().browsing_context();
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#concept-n-noscript
 bool Node::is_scripting_disabled() const
 {
-    // FIXME: or when scripting is disabled for its relevant settings object.
-    return !document().browsing_context();
+    // Scripting is disabled for a node when scripting is not enabled, i.e., when its node document's browsing context is null or when scripting is disabled for its relevant settings object.
+    return !is_scripting_enabled();
 }
 
 // https://dom.spec.whatwg.org/#dom-node-contains
