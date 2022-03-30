@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,7 +8,8 @@
 #include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
-#include <LibCore/File.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -490,25 +491,27 @@ static OwnPtr<Condition> parse_complex_expression(char* argv[])
     return command;
 }
 
-int main(int argc, char* argv[])
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
+    auto maybe_error = Core::System::pledge("stdio rpath");
+    if (maybe_error.is_error()) {
+        warnln("{}", maybe_error.error());
         return 126;
     }
 
-    if (LexicalPath::basename(argv[0]) == "[") {
+    int argc = arguments.argc;
+    if (LexicalPath::basename(arguments.strings[0]) == "[") {
         --argc;
-        if (StringView { argv[argc] } != "]")
+        if (StringView { arguments.strings[argc] } != "]")
             fatal_error("test invoked as '[' requires a closing bracket ']'");
-        argv[argc] = nullptr;
+        arguments.strings[argc] = nullptr;
     }
 
     // Exit false when no arguments are given.
     if (argc == 1)
         return 1;
 
-    auto condition = parse_complex_expression(argv);
+    auto condition = parse_complex_expression(arguments.argv);
     if (optind != argc - 1)
         fatal_error("Too many arguments");
     auto result = condition ? condition->check() : false;
