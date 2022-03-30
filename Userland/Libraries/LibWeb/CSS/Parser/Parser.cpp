@@ -1932,26 +1932,36 @@ NonnullRefPtrVector<StyleRule> Parser::parse_a_list_of_rules(TokenStream<T>& tok
     return list_of_rules;
 }
 
-Optional<StyleProperty> Parser::parse_as_declaration()
+Optional<StyleProperty> Parser::parse_as_supports_condition()
 {
-    return parse_a_declaration(m_token_stream);
+    auto maybe_declaration = parse_a_declaration(m_token_stream);
+    if (maybe_declaration.has_value())
+        return convert_to_style_property(maybe_declaration.release_value());
+    return {};
 }
 
+// 5.3.6. Parse a declaration
+// https://www.w3.org/TR/css-syntax-3/#parse-a-declaration
 template<typename T>
-Optional<StyleProperty> Parser::parse_a_declaration(TokenStream<T>& tokens)
+Optional<StyleDeclarationRule> Parser::parse_a_declaration(TokenStream<T>& tokens)
 {
+    // To parse a declaration from input:
+
+    // 1. Normalize input, and set input to the result.
+    // Note: This is done when initializing the Parser.
+
+    // 2. While the next input token from input is a <whitespace-token>, consume the next input token.
     tokens.skip_whitespace();
 
+    // 3. If the next input token from input is not an <ident-token>, return a syntax error.
     auto& token = tokens.peek_token();
-
     if (!token.is(Token::Type::Ident)) {
         return {};
     }
 
-    auto declaration = consume_a_declaration(tokens);
-    if (declaration.has_value())
-        return convert_to_style_property(declaration.value());
-
+    // 4. Consume a declaration from input. If anything was returned, return it. Otherwise, return a syntax error.
+    if (auto declaration = consume_a_declaration(tokens); declaration.has_value())
+        return declaration.release_value();
     return {};
 }
 
