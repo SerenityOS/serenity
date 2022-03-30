@@ -27,6 +27,7 @@ public:
     NonnullRefPtr<SubtleCrypto> subtle() const { return m_subtle; }
 
     DOM::ExceptionOr<JS::Value> get_random_values(JS::Value array) const;
+    String random_uuid() const;
 
 private:
     Crypto();
