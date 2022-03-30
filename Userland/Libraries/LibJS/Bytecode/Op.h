@@ -410,12 +410,21 @@ private:
     IdentifierTableIndex m_property;
 };
 
+enum class PropertyKind {
+    Getter,
+    Setter,
+    KeyValue,
+    Spread,
+    ProtoSetter,
+};
+
 class PutById final : public Instruction {
 public:
-    explicit PutById(Register base, IdentifierTableIndex property)
+    explicit PutById(Register base, IdentifierTableIndex property, PropertyKind kind = PropertyKind::KeyValue)
         : Instruction(Type::PutById)
         , m_base(base)
         , m_property(property)
+        , m_kind(kind)
     {
     }
 
@@ -426,6 +435,7 @@ public:
 private:
     Register m_base;
     IdentifierTableIndex m_property;
+    PropertyKind m_kind;
 };
 
 class DeleteById final : public Instruction {
@@ -462,10 +472,11 @@ private:
 
 class PutByValue final : public Instruction {
 public:
-    PutByValue(Register base, Register property)
+    PutByValue(Register base, Register property, PropertyKind kind = PropertyKind::KeyValue)
         : Instruction(Type::PutByValue)
         , m_base(base)
         , m_property(property)
+        , m_kind(kind)
     {
     }
 
@@ -476,6 +487,7 @@ public:
 private:
     Register m_base;
     Register m_property;
+    PropertyKind m_kind;
 };
 
 class DeleteByValue final : public Instruction {
