@@ -42,6 +42,10 @@ FindWidget::FindWidget(NonnullRefPtr<Editor> editor)
     m_input_field->on_return_pressed = [this]() {
         find_next(GUI::TextEditor::SearchDirection::Forward);
     };
+
+    m_input_field->on_escape_pressed = [this]() {
+        hide();
+    };
 }
 
 void FindWidget::show()
