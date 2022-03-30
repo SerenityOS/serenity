@@ -49,6 +49,11 @@ public:
     {
     }
 
+    Completion(Completion const&) = default;
+    Completion& operator=(Completion const&) = default;
+    Completion(Completion&&) = default;
+    Completion& operator=(Completion&&) = default;
+
     [[nodiscard]] Type type() const { return m_type; }
     [[nodiscard]] Optional<Value>& value() { return m_value; }
     [[nodiscard]] Optional<Value> const& value() const { return m_value; }
@@ -111,6 +116,11 @@ public:
         if constexpr (IsSame<ValueType, Value>)
             VERIFY(!m_value->is_empty());
     }
+
+    ThrowCompletionOr(ThrowCompletionOr const&) = default;
+    ThrowCompletionOr& operator=(ThrowCompletionOr const&) = default;
+    ThrowCompletionOr(ThrowCompletionOr&&) = default;
+    ThrowCompletionOr& operator=(ThrowCompletionOr&&) = default;
 
     // Allows implicit construction of ThrowCompletionOr<T> from a type U if T(U) is a supported constructor.
     // Most commonly: Value from Object* or similar, so we can omit the curly braces from "return { TRY(...) };".
