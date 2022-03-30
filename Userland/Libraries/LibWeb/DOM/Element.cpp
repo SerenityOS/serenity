@@ -172,6 +172,54 @@ bool Element::has_attribute(const FlyString& name) const
     return m_attributes->get_attribute(name) != nullptr;
 }
 
+// https://dom.spec.whatwg.org/#dom-element-toggleattribute
+DOM::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optional<bool> force)
+{
+    // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
+    // FIXME: Proper name validation
+    if (name.is_empty())
+        return InvalidCharacterError::create("Attribute name must not be empty");
+
+    // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
+    // FIXME: Handle the second condition, assume it is an HTML document for now.
+    bool insert_as_lowercase = namespace_uri() == Namespace::HTML;
+
+    // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
+    auto* attribute = m_attributes->get_attribute(name);
+
+    // 4. If attribute is null, then:
+    if (!attribute) {
+        // 1. If force is not given or is true, create an attribute whose local name is qualifiedName, value is the empty string, and node document is this’s node document, then append this attribute to this, and then return true.
+        if (!force.has_value() || force.value()) {
+            auto new_attribute = Attribute::create(document(), insert_as_lowercase ? name.to_lowercase() : name, "");
+            m_attributes->append_attribute(new_attribute);
+
+            parse_attribute(new_attribute->local_name(), "");
+
+            // FIXME: Invalidate less.
+            document().invalidate_style();
+
+            return true;
+        }
+
+        // 2. Return false.
+        return false;
+    }
+
+    // 5. Otherwise, if force is not given or is false, remove an attribute given qualifiedName and this, and then return false.
+    if (!force.has_value() || !force.value()) {
+        m_attributes->remove_attribute(name);
+
+        did_remove_attribute(name);
+
+        // FIXME: Invalidate less.
+        document().invalidate_style();
+    }
+
+    // 6. Return true.
+    return true;
+}
+
 // https://dom.spec.whatwg.org/#dom-element-getattributenames
 Vector<String> Element::get_attribute_names() const
 {

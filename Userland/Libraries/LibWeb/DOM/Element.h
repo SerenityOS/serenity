@@ -57,6 +57,7 @@ public:
     ExceptionOr<void> set_attribute(const FlyString& name, const String& value);
     ExceptionOr<void> set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value);
     void remove_attribute(const FlyString& name);
+    DOM::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const { return m_attributes->length(); }
     NonnullRefPtr<NamedNodeMap> const& attributes() const { return m_attributes; }
     Vector<String> get_attribute_names() const;
