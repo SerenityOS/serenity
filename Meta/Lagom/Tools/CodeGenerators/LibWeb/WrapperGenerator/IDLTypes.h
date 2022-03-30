@@ -121,6 +121,11 @@ struct Dictionary {
     Vector<DictionaryMember> members;
 };
 
+struct Typedef {
+    HashMap<String, String> extended_attributes;
+    NonnullRefPtr<Type> type;
+};
+
 struct Enumeration {
     HashTable<String> values;
     HashMap<String, String> translated_cpp_names;
@@ -184,6 +189,7 @@ struct Interface {
 
     HashMap<String, Dictionary> dictionaries;
     HashMap<String, Enumeration> enumerations;
+    HashMap<String, Typedef> typedefs;
     HashMap<String, NonnullOwnPtr<Interface>> mixins;
 
     // Added for convenience after parsing
