@@ -1058,10 +1058,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
                 return generate_binding_pattern_bytecode(generator, pattern, initialization_mode, target_reg);
             },
             [&](NonnullRefPtr<MemberExpression> const& expr) -> Bytecode::CodeGenerationErrorOr<void> {
-                return Bytecode::CodeGenerationError {
-                    expr.ptr(),
-                    "Unimplemented alias mode: MemberExpression"sv,
-                };
+                return generator.emit_store_to_reference(*expr);
             });
     };
 
