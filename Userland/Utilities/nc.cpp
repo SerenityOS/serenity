@@ -61,7 +61,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(udp_mode, "UDP mode", "udp", 'u');
     args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N');
     args_parser.add_option(maximum_tcp_receive_buffer_size_input, "Set maximum tcp receive buffer size", "length", 'I', nullptr);
-    args_parser.add_positional_argument(target, "Address to listen on, or the address or hostname to connect to", "target");
+    args_parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore);
+    if (args_parser.get_show_help())
+        return 0;
+    if (should_listen)
+        target = "0.0.0.0";
+    args_parser.add_positional_argument(target, "Address to listen on, or the address or hostname to connect to", "target",
+        should_listen ? Core::ArgsParser::Required::No : Core::ArgsParser::Required::Yes);
     args_parser.add_positional_argument(port, "Port to connect to or listen on", "port");
     args_parser.parse(arguments);
 
