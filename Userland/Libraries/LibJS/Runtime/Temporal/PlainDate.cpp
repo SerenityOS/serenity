@@ -499,13 +499,14 @@ String pad_iso_year(i32 y)
 {
     // 1. Assert: y is an integer.
 
-    // 2. If y > 999 and y ≤ 9999, then
-    if (y > 999 && y <= 9999) {
-        // a. Return y formatted as a four-digit decimal number.
-        return String::number(y);
+    // 2. If y ≥ 0 and y ≤ 9999, then
+    if (y >= 0 && y <= 9999) {
+        // a. Return y formatted as a four-digit decimal number, padded to the left with zeroes as necessary.
+        return String::formatted("{:04}", y);
     }
-    // 3. If y ≥ 0, let yearSign be "+"; otherwise, let yearSign be "-".
-    auto year_sign = y >= 0 ? '+' : '-';
+
+    // 3. If y > 0, let yearSign be "+"; otherwise, let yearSign be "-".
+    auto year_sign = y > 0 ? '+' : '-';
 
     // 4. Let year be abs(y), formatted as a six-digit decimal number, padded to the left with zeroes as necessary.
     // 5. Return the string-concatenation of yearSign and year.
