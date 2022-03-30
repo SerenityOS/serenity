@@ -89,8 +89,6 @@ public:
     Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
     ~Parser() = default;
 
-    // For use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
-    RefPtr<CSSRule> parse_as_rule();
     // Used in @supports conditions. [CSS3-CONDITIONAL]
     Optional<StyleProperty> parse_as_declaration();
     // For the contents of a style attribute, which parses text into the contents of a single style rule.
@@ -103,6 +101,7 @@ public:
 
     NonnullRefPtr<CSSStyleSheet> parse_as_css_stylesheet(Optional<AK::URL> location);
     RefPtr<ElementInlineCSSStyleDeclaration> parse_as_style_attribute(DOM::Element&);
+    RefPtr<CSSRule> parse_as_css_rule();
 
     enum class SelectorParsingMode {
         Standard,
@@ -142,8 +141,11 @@ private:
     // "Parse a list of rules" is intended for the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
     template<typename T>
     NonnullRefPtrVector<StyleRule> parse_a_list_of_rules(TokenStream<T>&);
+
+    // "Parse a rule" is intended for use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
     template<typename T>
-    RefPtr<CSSRule> parse_a_rule(TokenStream<T>&);
+    RefPtr<StyleRule> parse_a_rule(TokenStream<T>&);
+
     template<typename T>
     Optional<StyleProperty> parse_a_declaration(TokenStream<T>&);
     template<typename T>
