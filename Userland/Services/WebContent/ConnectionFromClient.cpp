@@ -459,4 +459,9 @@ void ConnectionFromClient::set_has_focus(bool has_focus)
     m_page_host->set_has_focus(has_focus);
 }
 
+void ConnectionFromClient::set_is_scripting_enabled(bool is_scripting_enabled)
+{
+    m_page_host->set_is_scripting_enabled(is_scripting_enabled);
+}
+
 }
