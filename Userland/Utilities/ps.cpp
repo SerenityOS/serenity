@@ -20,15 +20,18 @@ static ErrorOr<String> determine_tty_pseudo_name()
         perror("fstat");
         return Error::from_errno(saved_errno);
     }
+
     int tty_device_major = major(tty_stat.st_rdev);
     int tty_device_minor = minor(tty_stat.st_rdev);
+
     if (tty_device_major == 201) {
         return String::formatted("pts:{}", tty_device_minor);
     }
+
     if (tty_device_major == 4) {
         return String::formatted("tty:{}", tty_device_minor);
     }
-    VERIFY_NOT_REACHED();
+    return "n/a";
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
