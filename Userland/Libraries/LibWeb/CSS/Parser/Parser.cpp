@@ -1866,40 +1866,52 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
     return list;
 }
 
-RefPtr<CSSRule> Parser::parse_as_rule()
+RefPtr<CSSRule> Parser::parse_as_css_rule()
 {
-    return parse_a_rule(m_token_stream);
+    auto maybe_rule = parse_a_rule(m_token_stream);
+    if (maybe_rule)
+        return convert_to_rule(maybe_rule.release_nonnull());
+    return {};
 }
 
+// 5.3.5. Parse a rule
+// https://www.w3.org/TR/css-syntax-3/#parse-rule
 template<typename T>
-RefPtr<CSSRule> Parser::parse_a_rule(TokenStream<T>& tokens)
+RefPtr<StyleRule> Parser::parse_a_rule(TokenStream<T>& tokens)
 {
-    RefPtr<CSSRule> rule;
+    // To parse a rule from input:
+    RefPtr<StyleRule> rule;
 
+    // 1. Normalize input, and set input to the result.
+    // Note: This is done when initializing the Parser.
+
+    // 2. While the next input token from input is a <whitespace-token>, consume the next input token from input.
     tokens.skip_whitespace();
 
+    // 3. If the next input token from input is an <EOF-token>, return a syntax error.
     auto& token = tokens.peek_token();
-
     if (token.is(Token::Type::EndOfFile)) {
         return {};
-    } else if (token.is(Token::Type::AtKeyword)) {
-        auto at_rule = consume_an_at_rule(m_token_stream);
-        rule = convert_to_rule(at_rule);
-    } else {
+    }
+    // Otherwise, if the next input token from input is an <at-keyword-token>, consume an at-rule from input, and let rule be the return value.
+    else if (token.is(Token::Type::AtKeyword)) {
+        rule = consume_an_at_rule(m_token_stream);
+    }
+    // Otherwise, consume a qualified rule from input and let rule be the return value. If nothing was returned, return a syntax error.
+    else {
         auto qualified_rule = consume_a_qualified_rule(tokens);
         if (!qualified_rule)
             return {};
 
-        rule = convert_to_rule(*qualified_rule);
+        rule = qualified_rule;
     }
 
+    // 4. While the next input token from input is a <whitespace-token>, consume the next input token from input.
     tokens.skip_whitespace();
 
-    auto& maybe_eof = tokens.peek_token();
-    if (maybe_eof.is(Token::Type::EndOfFile)) {
+    // 5. If the next input token from input is an <EOF-token>, return rule. Otherwise, return a syntax error.
+    if (tokens.peek_token().is(Token::Type::EndOfFile))
         return rule;
-    }
-
     return {};
 }
 
@@ -5268,7 +5280,7 @@ RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const& context, Stri
 RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const& context, StringView css_text)
 {
     CSS::Parser parser(context, css_text);
-    return parser.parse_as_rule();
+    return parser.parse_as_css_rule();
 }
 
 Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const& context, StringView selector_text)
