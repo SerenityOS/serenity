@@ -171,13 +171,19 @@ void PDFViewerWidget::open_file(Core::File& file)
 {
     window()->set_title(String::formatted("{} - PDF Viewer", file.filename()));
 
+    auto handle_error = [&]<typename T>(PDF::PDFErrorOr<T> maybe_error) {
+        if (maybe_error.is_error()) {
+            auto error = maybe_error.release_error();
+            GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't load PDF {}:\n{}", file.filename(), error.message()));
+            return true;
+        }
+        return false;
+    };
+
     m_buffer = file.read_all();
     auto maybe_document = PDF::Document::create(m_buffer);
-    if (maybe_document.is_error()) {
-        auto error = maybe_document.release_error();
-        GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't load PDF {}:\n{}", file.filename(), error.message()));
+    if (handle_error(maybe_document))
         return;
-    }
 
     auto document = maybe_document.release_value();
 
@@ -186,14 +192,12 @@ void PDFViewerWidget::open_file(Core::File& file)
         VERIFY_NOT_REACHED();
     }
 
-    auto result = document->initialize();
-    if (result.is_error()) {
-        auto error = result.release_error();
-        GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't load PDF {}:\n{}", file.filename(), error.message()));
+    if (handle_error(document->initialize()))
         return;
-    }
 
-    m_viewer->set_document(document);
+    if (handle_error(m_viewer->set_document(document)))
+        return;
+
     m_total_page_label->set_text(String::formatted("of {}", document->get_page_count()));
 
     m_page_text_box->set_enabled(true);
