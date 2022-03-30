@@ -219,6 +219,8 @@
 #include <LibWeb/Bindings/HTMLVideoElementPrototype.h>
 #include <LibWeb/Bindings/HistoryConstructor.h>
 #include <LibWeb/Bindings/HistoryPrototype.h>
+#include <LibWeb/Bindings/IdleDeadlineConstructor.h>
+#include <LibWeb/Bindings/IdleDeadlinePrototype.h>
 #include <LibWeb/Bindings/ImageConstructor.h>
 #include <LibWeb/Bindings/ImageDataConstructor.h>
 #include <LibWeb/Bindings/ImageDataPrototype.h>
@@ -442,6 +444,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(HTMLUListElement)                                                   \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLUnknownElement)                                                 \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLVideoElement)                                                   \
+    ADD_WINDOW_OBJECT_INTERFACE(IdleDeadline)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(ImageData)                                                          \
     ADD_WINDOW_OBJECT_INTERFACE(IntersectionObserver)                                               \
     ADD_WINDOW_OBJECT_INTERFACE(KeyboardEvent)                                                      \
