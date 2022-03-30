@@ -23,7 +23,7 @@ class ResizeObserver
 public:
     using WrapperType = Bindings::ResizeObserverWrapper;
 
-    static NonnullRefPtr<ResizeObserver> create_with_global_object(JS::GlobalObject&, JS::Value callback);
+    static NonnullRefPtr<ResizeObserver> create_with_global_object(JS::GlobalObject&, Bindings::CallbackType const& callback);
 
     void observe(DOM::Element& target, ResizeObserverOptions);
     void unobserve(DOM::Element& target);

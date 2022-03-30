@@ -3,13 +3,14 @@
 [Exposed=(Window)]
 interface ResizeObserver {
 
-    // FIXME: This should be a ResizeObserverCallback.
-    constructor(any callback);
+    constructor(ResizeObserverCallback callback);
     undefined observe(Element target, optional ResizeObserverOptions options = {});
     undefined unobserve(Element target);
     undefined disconnect();
 
 };
+
+callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
 
 dictionary ResizeObserverOptions {
 
