@@ -421,7 +421,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with)
     fields = TRY(prepare_temporal_fields(global_object, *fields, field_names, {}));
 
     // 12. Return ? DateFromFields(calendar, fields, options).
-    return TRY(date_from_fields(global_object, calendar, *fields, *options));
+    return TRY(date_from_fields(global_object, calendar, *fields, options));
 }
 
 // 3.3.22 Temporal.PlainDate.prototype.withCalendar ( calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar

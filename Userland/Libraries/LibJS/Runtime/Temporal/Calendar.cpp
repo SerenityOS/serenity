@@ -457,7 +457,7 @@ ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(GlobalObject& 
 }
 
 // 12.1.24 DateFromFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-datefromfields
-ThrowCompletionOr<PlainDate*> date_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const& options)
+ThrowCompletionOr<PlainDate*> date_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
 {
     auto& vm = global_object.vm();
 
@@ -465,7 +465,7 @@ ThrowCompletionOr<PlainDate*> date_from_fields(GlobalObject& global_object, Obje
     // 2. Assert: Type(fields) is Object.
 
     // 3. Let date be ? Invoke(calendar, "dateFromFields", « fields, options »).
-    auto date = TRY(Value(&calendar).invoke(global_object, vm.names.dateFromFields, &fields, &options));
+    auto date = TRY(Value(&calendar).invoke(global_object, vm.names.dateFromFields, &fields, options ?: js_undefined()));
 
     // 4. Perform ? RequireInternalSlot(date, [[InitializedTemporalDate]]).
     auto* date_object = TRY(date.to_object(global_object));

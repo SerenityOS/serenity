@@ -252,7 +252,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::to_plain_date)
     MUST(options->create_data_property_or_throw(vm.names.overflow, js_string(vm, vm.names.reject.as_string())));
 
     // 14. Return ? DateFromFields(calendar, mergedFields, options).
-    return TRY(date_from_fields(global_object, calendar, *merged_fields, *options));
+    return TRY(date_from_fields(global_object, calendar, *merged_fields, options));
 }
 
 // 10.3.13 Temporal.PlainMonthDay.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainmonthday.prototype.getisofields

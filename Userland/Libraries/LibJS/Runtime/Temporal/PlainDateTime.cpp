@@ -111,7 +111,7 @@ ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(GlobalObject&
     auto overflow = TRY(to_temporal_overflow(global_object, options));
 
     // 3. Let temporalDate be ? DateFromFields(calendar, fields, options).
-    auto* temporal_date = TRY(date_from_fields(global_object, calendar, fields, options));
+    auto* temporal_date = TRY(date_from_fields(global_object, calendar, fields, &options));
 
     // 4. Let timeResult be ? RegulateTime(timeResult.[[Hour]], timeResult.[[Minute]], timeResult.[[Second]], timeResult.[[Millisecond]], timeResult.[[Microsecond]], timeResult.[[Nanosecond]], overflow).
     auto time_result = TRY(regulate_time(global_object, unregulated_time_result.hour, unregulated_time_result.minute, unregulated_time_result.second, unregulated_time_result.millisecond, unregulated_time_result.microsecond, unregulated_time_result.nanosecond, overflow));
