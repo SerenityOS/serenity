@@ -1643,35 +1643,52 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
     }
 }
 
+// 5.4.3. Consume a qualified rule
+// https://www.w3.org/TR/css-syntax-3/#consume-qualified-rule
 template<typename T>
 RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
 {
+    // To consume a qualified rule:
+
+    // Create a new qualified rule with its prelude initially set to an empty list, and its value initially set to nothing.
     auto rule = make_ref_counted<StyleRule>(StyleRule::Type::Qualified);
 
+    // Repeatedly consume the next input token:
     for (;;) {
         auto& token = tokens.next_token();
 
+        // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
+            // This is a parse error. Return nothing.
             log_parse_error();
             return {};
         }
 
+        // <{-token>
         if (token.is(Token::Type::OpenCurly)) {
+            // Consume a simple block and assign it to the qualified rule’s block. Return the qualified rule.
             rule->m_block = consume_a_simple_block(tokens);
             return rule;
         }
 
+        // simple block with an associated token of <{-token>
         if constexpr (IsSame<T, StyleComponentValueRule>) {
             StyleComponentValueRule const& component_value = token;
             if (component_value.is_block() && component_value.block().is_curly()) {
+                // Assign the block to the qualified rule’s block. Return the qualified rule.
                 rule->m_block = component_value.block();
                 return rule;
             }
         }
 
-        tokens.reconsume_current_input_token();
-        auto value = consume_a_component_value(tokens);
-        rule->m_prelude.append(value);
+        // anything else
+        {
+            // Reconsume the current input token.
+            tokens.reconsume_current_input_token();
+
+            // Consume a component value. Append the returned value to the qualified rule’s prelude.
+            rule->m_prelude.append(consume_a_component_value(tokens));
+        }
     }
 
     return rule;
