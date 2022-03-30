@@ -141,7 +141,10 @@ Optional<NonnullOwnPtr<Interface>> Parser::resolve_import(auto path)
         report_parsing_error(String::formatted("Failed to open {}: {}", real_path, file_or_error.error()), filename, input, lexer.tell());
 
     auto data = file_or_error.value()->read_all();
-    return Parser(real_path, data, import_base_path).parse();
+    auto result = Parser(real_path, data, import_base_path).parse();
+    if (result->will_generate_code())
+        required_imported_paths.set(real_path);
+    return result;
 }
 
 NonnullRefPtr<Type> Parser::parse_type()
@@ -745,13 +748,16 @@ NonnullOwnPtr<Interface> Parser::parse()
         lexer.ignore();
         auto maybe_interface = resolve_import(path);
         if (maybe_interface.has_value()) {
-            for (auto& entry : maybe_interface.value()->imported_paths)
+            for (auto& entry : maybe_interface.value()->all_imported_paths)
                 s_all_imported_paths.set(entry);
+            for (auto& entry : maybe_interface.value()->required_imported_paths)
+                required_imported_paths.set(entry);
             imports.append(maybe_interface.release_value());
         }
         consume_whitespace();
     }
-    interface->imported_paths = s_all_imported_paths;
+    interface->all_imported_paths = s_all_imported_paths;
+    interface->required_imported_paths = required_imported_paths;
 
     if (lexer.consume_specific('['))
         interface->extended_attributes = parse_extended_attributes();
@@ -828,6 +834,8 @@ NonnullOwnPtr<Interface> Parser::parse()
     }
     // FIXME: Add support for overloading constructors
 
+    if (interface->will_generate_code())
+        interface->required_imported_paths.set(this_module);
     interface->imported_modules = move(imports);
 
     return interface;
