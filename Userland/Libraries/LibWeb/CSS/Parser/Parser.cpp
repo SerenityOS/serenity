@@ -4412,6 +4412,11 @@ RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens
                     continue;
                 }
                 if (part.is(Token::Type::Ident)) {
+                    if (is_builtin(part.token().ident())) {
+                        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face font-family format invalid; discarding.");
+                        had_syntax_error = true;
+                        break;
+                    }
                     auto value_id = value_id_from_string(part.token().ident());
                     if (is_generic_font_family(value_id)) {
                         dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face font-family format invalid; discarding.");
