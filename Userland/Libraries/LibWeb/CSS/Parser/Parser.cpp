@@ -18,10 +18,10 @@
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/CSSSupportsRule.h>
+#include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
-#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Selector.h>
@@ -134,9 +134,9 @@ Token TokenStream<Token>::make_eof()
 }
 
 template<>
-StyleComponentValueRule TokenStream<StyleComponentValueRule>::make_eof()
+ComponentValue TokenStream<ComponentValue>::make_eof()
 {
-    return StyleComponentValueRule(Tokenizer::create_eof_token());
+    return ComponentValue(Tokenizer::create_eof_token());
 }
 
 template<typename T>
@@ -241,7 +241,7 @@ Result<SelectorList, Parser::ParsingResult> Parser::parse_a_selector_list(TokenS
     return selectors;
 }
 
-Result<NonnullRefPtr<Selector>, Parser::ParsingResult> Parser::parse_complex_selector(TokenStream<StyleComponentValueRule>& tokens, SelectorType mode)
+Result<NonnullRefPtr<Selector>, Parser::ParsingResult> Parser::parse_complex_selector(TokenStream<ComponentValue>& tokens, SelectorType mode)
 {
     Vector<Selector::CompoundSelector> compound_selectors;
 
@@ -272,7 +272,7 @@ Result<NonnullRefPtr<Selector>, Parser::ParsingResult> Parser::parse_complex_sel
     return Selector::create(move(compound_selectors));
 }
 
-Result<Selector::CompoundSelector, Parser::ParsingResult> Parser::parse_compound_selector(TokenStream<StyleComponentValueRule>& tokens)
+Result<Selector::CompoundSelector, Parser::ParsingResult> Parser::parse_compound_selector(TokenStream<ComponentValue>& tokens)
 {
     tokens.skip_whitespace();
 
@@ -300,7 +300,7 @@ Result<Selector::CompoundSelector, Parser::ParsingResult> Parser::parse_compound
     return Selector::CompoundSelector { combinator, move(simple_selectors) };
 }
 
-Optional<Selector::Combinator> Parser::parse_selector_combinator(TokenStream<StyleComponentValueRule>& tokens)
+Optional<Selector::Combinator> Parser::parse_selector_combinator(TokenStream<ComponentValue>& tokens)
 {
     auto const& current_value = tokens.next_token();
     if (current_value.is(Token::Type::Delim)) {
@@ -328,7 +328,7 @@ Optional<Selector::Combinator> Parser::parse_selector_combinator(TokenStream<Sty
     return {};
 }
 
-Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_attribute_simple_selector(StyleComponentValueRule const& first_value)
+Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_attribute_simple_selector(ComponentValue const& first_value)
 {
     auto attribute_tokens = TokenStream { first_value.block().values() };
 
@@ -445,7 +445,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_attribute_
     return simple_selector;
 }
 
-Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_pseudo_simple_selector(TokenStream<StyleComponentValueRule>& tokens)
+Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_pseudo_simple_selector(TokenStream<ComponentValue>& tokens)
 {
     auto peek_token_ends_selector = [&]() -> bool {
         auto const& value = tokens.peek_token();
@@ -562,8 +562,8 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_pseudo_sim
     }
 
     if (pseudo_class_token.is_function()) {
-        auto parse_nth_child_selector = [this](auto pseudo_class, Vector<StyleComponentValueRule> const& function_values, bool allow_of = false) -> Result<Selector::SimpleSelector, Parser::ParsingResult> {
-            auto tokens = TokenStream<StyleComponentValueRule>(function_values);
+        auto parse_nth_child_selector = [this](auto pseudo_class, Vector<ComponentValue> const& function_values, bool allow_of = false) -> Result<Selector::SimpleSelector, Parser::ParsingResult> {
+            auto tokens = TokenStream<ComponentValue>(function_values);
             auto nth_child_pattern = parse_a_n_plus_b_pattern(tokens, allow_of ? AllowTrailingTokens::Yes : AllowTrailingTokens::No);
             if (!nth_child_pattern.has_value()) {
                 dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid An+B format for {}", pseudo_class_name(pseudo_class));
@@ -664,7 +664,7 @@ Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_pseudo_sim
     return ParsingResult::SyntaxError;
 }
 
-Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_selector(TokenStream<StyleComponentValueRule>& tokens)
+Result<Selector::SimpleSelector, Parser::ParsingResult> Parser::parse_simple_selector(TokenStream<ComponentValue>& tokens)
 {
     auto peek_token_ends_selector = [&]() -> bool {
         auto const& value = tokens.peek_token();
@@ -770,7 +770,7 @@ RefPtr<MediaQuery> Parser::parse_as_media_query()
 }
 
 // `<media-query>`, https://www.w3.org/TR/mediaqueries-4/#typedef-media-query
-NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<StyleComponentValueRule>& tokens)
+NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<ComponentValue>& tokens)
 {
     // `<media-query> = <media-condition>
     //                | [ not | only ]? <media-type> [ and <media-condition-without-or> ]?`
@@ -857,7 +857,7 @@ NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<StyleComponentVa
 // `<media-condition>`, https://www.w3.org/TR/mediaqueries-4/#typedef-media-condition
 // `<media-condition-widthout-or>`, https://www.w3.org/TR/mediaqueries-4/#typedef-media-condition-without-or
 // (We distinguish between these two with the `allow_or` parameter.)
-OwnPtr<MediaCondition> Parser::parse_media_condition(TokenStream<StyleComponentValueRule>& tokens, MediaCondition::AllowOr allow_or)
+OwnPtr<MediaCondition> Parser::parse_media_condition(TokenStream<ComponentValue>& tokens, MediaCondition::AllowOr allow_or)
 {
     // `<media-not> | <media-in-parens> [ <media-and>* | <media-or>* ]`
     auto position = tokens.position();
@@ -958,7 +958,7 @@ OwnPtr<MediaCondition> Parser::parse_media_condition(TokenStream<StyleComponentV
 }
 
 // `<media-feature>`, https://www.w3.org/TR/mediaqueries-4/#typedef-media-feature
-Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentValueRule>& tokens)
+Optional<MediaFeature> Parser::parse_media_feature(TokenStream<ComponentValue>& tokens)
 {
     // `[ <mf-plain> | <mf-boolean> | <mf-range> ]`
     auto position = tokens.position();
@@ -1201,7 +1201,7 @@ Optional<MediaFeature> Parser::parse_media_feature(TokenStream<StyleComponentVal
     return {};
 }
 
-Optional<MediaQuery::MediaType> Parser::parse_media_type(TokenStream<StyleComponentValueRule>& tokens)
+Optional<MediaQuery::MediaType> Parser::parse_media_type(TokenStream<ComponentValue>& tokens)
 {
     auto position = tokens.position();
     tokens.skip_whitespace();
@@ -1242,7 +1242,7 @@ Optional<MediaQuery::MediaType> Parser::parse_media_type(TokenStream<StyleCompon
 }
 
 // `<media-in-parens>`, https://www.w3.org/TR/mediaqueries-4/#typedef-media-in-parens
-OwnPtr<MediaCondition> Parser::parse_media_in_parens(TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<MediaCondition> Parser::parse_media_in_parens(TokenStream<ComponentValue>& tokens)
 {
     // `<media-in-parens> = ( <media-condition> ) | ( <media-feature> ) | <general-enclosed>`
     auto position = tokens.position();
@@ -1274,7 +1274,7 @@ OwnPtr<MediaCondition> Parser::parse_media_in_parens(TokenStream<StyleComponentV
 }
 
 // `<mf-value>`, https://www.w3.org/TR/mediaqueries-4/#typedef-mf-value
-Optional<MediaFeatureValue> Parser::parse_media_feature_value(MediaFeatureID media_feature, TokenStream<StyleComponentValueRule>& tokens)
+Optional<MediaFeatureValue> Parser::parse_media_feature_value(MediaFeatureID media_feature, TokenStream<ComponentValue>& tokens)
 {
     auto position = tokens.position();
     tokens.skip_whitespace();
@@ -1336,7 +1336,7 @@ template<typename T>
 RefPtr<Supports> Parser::parse_a_supports(TokenStream<T>& tokens)
 {
     auto component_values = parse_a_list_of_component_values(tokens);
-    TokenStream<StyleComponentValueRule> token_stream { component_values };
+    TokenStream<ComponentValue> token_stream { component_values };
     auto maybe_condition = parse_supports_condition(token_stream);
     token_stream.skip_whitespace();
     if (maybe_condition && !token_stream.has_next_token())
@@ -1345,7 +1345,7 @@ RefPtr<Supports> Parser::parse_a_supports(TokenStream<T>& tokens)
     return {};
 }
 
-OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<ComponentValue>& tokens)
 {
     tokens.skip_whitespace();
     auto start_position = tokens.position();
@@ -1422,7 +1422,7 @@ OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<StyleCo
     return {};
 }
 
-Optional<Supports::InParens> Parser::parse_supports_in_parens(TokenStream<StyleComponentValueRule>& tokens)
+Optional<Supports::InParens> Parser::parse_supports_in_parens(TokenStream<ComponentValue>& tokens)
 {
     tokens.skip_whitespace();
     auto start_position = tokens.position();
@@ -1465,7 +1465,7 @@ Optional<Supports::InParens> Parser::parse_supports_in_parens(TokenStream<StyleC
     return {};
 }
 
-Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<StyleComponentValueRule>& tokens)
+Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<ComponentValue>& tokens)
 {
     tokens.skip_whitespace();
     auto start_position = tokens.position();
@@ -1497,7 +1497,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<StyleComp
 }
 
 // https://www.w3.org/TR/mediaqueries-4/#typedef-general-enclosed
-Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<StyleComponentValueRule>& tokens)
+Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<ComponentValue>& tokens)
 {
     tokens.skip_whitespace();
     auto start_position = tokens.position();
@@ -1624,8 +1624,8 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
         }
 
         // simple block with an associated token of <{-token>
-        if constexpr (IsSame<T, StyleComponentValueRule>) {
-            StyleComponentValueRule const& component_value = token;
+        if constexpr (IsSame<T, ComponentValue>) {
+            ComponentValue const& component_value = token;
             if (component_value.is_block() && component_value.block().is_curly()) {
                 // Assign the block to the at-rule’s block. Return the at-rule.
                 rule->m_block = component_value.block();
@@ -1672,8 +1672,8 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
         }
 
         // simple block with an associated token of <{-token>
-        if constexpr (IsSame<T, StyleComponentValueRule>) {
-            StyleComponentValueRule const& component_value = token;
+        if constexpr (IsSame<T, ComponentValue>) {
+            ComponentValue const& component_value = token;
             if (component_value.is_block() && component_value.block().is_curly()) {
                 // Assign the block to the qualified rule’s block. Return the qualified rule.
                 rule->m_block = component_value.block();
@@ -1735,7 +1735,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_style_blocks_contents(TokenStream<
         // <ident-token>
         if (token.is(Token::Type::Ident)) {
             // Initialize a temporary list initially filled with the current input token.
-            Vector<StyleComponentValueRule> temporary_list;
+            Vector<ComponentValue> temporary_list;
             temporary_list.append(token);
 
             // As long as the next input token is anything other than a <semicolon-token> or <EOF-token>,
@@ -1788,7 +1788,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_style_blocks_contents(TokenStream<
 }
 
 template<>
-StyleComponentValueRule Parser::consume_a_component_value(TokenStream<StyleComponentValueRule>& tokens)
+ComponentValue Parser::consume_a_component_value(TokenStream<ComponentValue>& tokens)
 {
     // Note: This overload is called once tokens have already been converted into component values,
     //       so we do not need to do the work in the more general overload.
@@ -1798,7 +1798,7 @@ StyleComponentValueRule Parser::consume_a_component_value(TokenStream<StyleCompo
 // 5.4.7. Consume a component value
 // https://www.w3.org/TR/css-syntax-3/#consume-component-value
 template<typename T>
-StyleComponentValueRule Parser::consume_a_component_value(TokenStream<T>& tokens)
+ComponentValue Parser::consume_a_component_value(TokenStream<T>& tokens)
 {
     // To consume a component value:
 
@@ -1807,14 +1807,14 @@ StyleComponentValueRule Parser::consume_a_component_value(TokenStream<T>& tokens
 
     // If the current input token is a <{-token>, <[-token>, or <(-token>, consume a simple block and return it.
     if (token.is(Token::Type::OpenCurly) || token.is(Token::Type::OpenSquare) || token.is(Token::Type::OpenParen))
-        return StyleComponentValueRule(consume_a_simple_block(tokens));
+        return ComponentValue(consume_a_simple_block(tokens));
 
     // Otherwise, if the current input token is a <function-token>, consume a function and return it.
     if (token.is(Token::Type::Function))
-        return StyleComponentValueRule(consume_a_function(tokens));
+        return ComponentValue(consume_a_function(tokens));
 
     // Otherwise, return the current input token.
-    return StyleComponentValueRule(token);
+    return ComponentValue(token);
 }
 
 // 5.4.8. Consume a simple block
@@ -2052,7 +2052,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
         // <ident-token>
         if (token.is(Token::Type::Ident)) {
             // Initialize a temporary list initially filled with the current input token.
-            Vector<StyleComponentValueRule> temporary_list;
+            Vector<ComponentValue> temporary_list;
             temporary_list.append(token);
 
             // As long as the next input token is anything other than a <semicolon-token> or <EOF-token>,
@@ -2223,7 +2223,7 @@ Vector<DeclarationOrAtRule> Parser::parse_a_list_of_declarations(TokenStream<T>&
 // 5.3.9. Parse a component value
 // https://www.w3.org/TR/css-syntax-3/#parse-component-value
 template<typename T>
-Optional<StyleComponentValueRule> Parser::parse_a_component_value(TokenStream<T>& tokens)
+Optional<ComponentValue> Parser::parse_a_component_value(TokenStream<T>& tokens)
 {
     // To parse a component value from input:
 
@@ -2252,7 +2252,7 @@ Optional<StyleComponentValueRule> Parser::parse_a_component_value(TokenStream<T>
 // 5.3.10. Parse a list of component values
 // https://www.w3.org/TR/css-syntax-3/#parse-list-of-component-values
 template<typename T>
-Vector<StyleComponentValueRule> Parser::parse_a_list_of_component_values(TokenStream<T>& tokens)
+Vector<ComponentValue> Parser::parse_a_list_of_component_values(TokenStream<T>& tokens)
 {
     // To parse a list of component values from input:
 
@@ -2260,7 +2260,7 @@ Vector<StyleComponentValueRule> Parser::parse_a_list_of_component_values(TokenSt
     // Note: This is done when initializing the Parser.
 
     // 2. Repeatedly consume a component value from input until an <EOF-token> is returned, appending the returned values (except the final <EOF-token>) into a list. Return the list.
-    Vector<StyleComponentValueRule> component_values;
+    Vector<ComponentValue> component_values;
 
     for (;;) {
         if (tokens.peek_token().is(Token::Type::EndOfFile)) {
@@ -2276,7 +2276,7 @@ Vector<StyleComponentValueRule> Parser::parse_a_list_of_component_values(TokenSt
 // 5.3.11. Parse a comma-separated list of component values
 // https://www.w3.org/TR/css-syntax-3/#parse-comma-separated-list-of-component-values
 template<typename T>
-Vector<Vector<StyleComponentValueRule>> Parser::parse_a_comma_separated_list_of_component_values(TokenStream<T>& tokens)
+Vector<Vector<ComponentValue>> Parser::parse_a_comma_separated_list_of_component_values(TokenStream<T>& tokens)
 {
     // To parse a comma-separated list of component values from input:
 
@@ -2284,13 +2284,13 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_a_comma_separated_list_of_
     // Note: This is done when initializing the Parser.
 
     // 2. Let list of cvls be an initially empty list of component value lists.
-    Vector<Vector<StyleComponentValueRule>> list_of_component_value_lists;
+    Vector<Vector<ComponentValue>> list_of_component_value_lists;
 
     // 3. Repeatedly consume a component value from input until an <EOF-token> or <comma-token> is returned,
     //    appending the returned values (except the final <EOF-token> or <comma-token>) into a list.
     //    Append the list to list of cvls.
     //    If it was a <comma-token> that was returned, repeat this step.
-    Vector<StyleComponentValueRule> current_list;
+    Vector<ComponentValue> current_list;
     for (;;) {
         auto component_value = consume_a_component_value(tokens);
 
@@ -2318,7 +2318,7 @@ RefPtr<ElementInlineCSSStyleDeclaration> Parser::parse_as_style_attribute(DOM::E
     return ElementInlineCSSStyleDeclaration::create(element, move(properties), move(custom_properties));
 }
 
-Optional<AK::URL> Parser::parse_url_function(StyleComponentValueRule const& component_value, AllowedDataUrlType allowed_data_url_type)
+Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_value, AllowedDataUrlType allowed_data_url_type)
 {
     // FIXME: Handle list of media queries. https://www.w3.org/TR/css-cascade-3/#conditional-import
     // FIXME: Handle data: urls (RFC2397)
@@ -2548,7 +2548,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule c
     }
 }
 
-RefPtr<StyleValue> Parser::parse_builtin_value(StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_builtin_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
@@ -2564,7 +2564,7 @@ RefPtr<StyleValue> Parser::parse_builtin_value(StyleComponentValueRule const& co
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_calculated_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_calculated_value(Vector<ComponentValue> const& component_values)
 {
     auto calc_expression = parse_calc_expression(component_values);
     if (calc_expression == nullptr)
@@ -2600,7 +2600,7 @@ RefPtr<StyleValue> Parser::parse_calculated_value(Vector<StyleComponentValueRule
     return CalculatedStyleValue::create(calc_expression.release_nonnull(), calc_type.release_value());
 }
 
-RefPtr<StyleValue> Parser::parse_dynamic_value(StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_dynamic_value(ComponentValue const& component_value)
 {
     if (component_value.is_function()) {
         auto& function = component_value.function();
@@ -2617,7 +2617,7 @@ RefPtr<StyleValue> Parser::parse_dynamic_value(StyleComponentValueRule const& co
     return {};
 }
 
-Optional<Parser::Dimension> Parser::parse_dimension(StyleComponentValueRule const& component_value)
+Optional<Parser::Dimension> Parser::parse_dimension(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::Dimension)) {
         float numeric_value = component_value.token().dimension_value();
@@ -2658,7 +2658,7 @@ Optional<Parser::Dimension> Parser::parse_dimension(StyleComponentValueRule cons
     return {};
 }
 
-Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_value)
+Optional<Length> Parser::parse_length(ComponentValue const& component_value)
 {
     auto dimension = parse_dimension(component_value);
     if (!dimension.has_value())
@@ -2674,7 +2674,7 @@ Optional<Length> Parser::parse_length(StyleComponentValueRule const& component_v
     return {};
 }
 
-Optional<Ratio> Parser::parse_ratio(TokenStream<StyleComponentValueRule>& tokens)
+Optional<Ratio> Parser::parse_ratio(TokenStream<ComponentValue>& tokens)
 {
     auto position = tokens.position();
     tokens.skip_whitespace();
@@ -2707,7 +2707,7 @@ Optional<Ratio> Parser::parse_ratio(TokenStream<StyleComponentValueRule>& tokens
     return Ratio { static_cast<float>(first_number.token().number_value()) };
 }
 
-RefPtr<StyleValue> Parser::parse_dimension_value(StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_dimension_value(ComponentValue const& component_value)
 {
     // Numbers with no units can be lengths, in two situations:
     // 1) We're in quirks mode, and it's an integer.
@@ -2739,7 +2739,7 @@ RefPtr<StyleValue> Parser::parse_dimension_value(StyleComponentValueRule const& 
     VERIFY_NOT_REACHED();
 }
 
-RefPtr<StyleValue> Parser::parse_numeric_value(StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_numeric_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::Number)) {
         auto number = component_value.token();
@@ -2753,7 +2753,7 @@ RefPtr<StyleValue> Parser::parse_numeric_value(StyleComponentValueRule const& co
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_identifier_value(StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_identifier_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::Ident)) {
         auto value_id = value_id_from_string(component_value.token().ident());
@@ -2764,7 +2764,7 @@ RefPtr<StyleValue> Parser::parse_identifier_value(StyleComponentValueRule const&
     return {};
 }
 
-Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_value)
+Optional<Color> Parser::parse_color(ComponentValue const& component_value)
 {
     // https://www.w3.org/TR/css-color-3/
     if (component_value.is(Token::Type::Ident)) {
@@ -2973,7 +2973,7 @@ Optional<Color> Parser::parse_color(StyleComponentValueRule const& component_val
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_color_value(StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_color_value(ComponentValue const& component_value)
 {
     auto color = parse_color(component_value);
     if (color.has_value())
@@ -2982,7 +2982,7 @@ RefPtr<StyleValue> Parser::parse_color_value(StyleComponentValueRule const& comp
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_string_value(StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_string_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::String))
         return StringStyleValue::create(component_value.token().string());
@@ -2990,7 +2990,7 @@ RefPtr<StyleValue> Parser::parse_string_value(StyleComponentValueRule const& com
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_image_value(StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_image_value(ComponentValue const& component_value)
 {
     auto url = parse_url_function(component_value, AllowedDataUrlType::Image);
     if (url.has_value())
@@ -3001,7 +3001,7 @@ RefPtr<StyleValue> Parser::parse_image_value(StyleComponentValueRule const& comp
 }
 
 template<typename ParseFunction>
-RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<StyleComponentValueRule> const& component_values, ParseFunction parse_one_value)
+RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<ComponentValue> const& component_values, ParseFunction parse_one_value)
 {
     auto tokens = TokenStream { component_values };
     auto first = parse_one_value(tokens);
@@ -3025,7 +3025,7 @@ RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<StyleComponen
     return StyleValueList::create(move(values), StyleValueList::Separator::Comma);
 }
 
-RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(Vector<ComponentValue> const& component_values)
 {
     return parse_comma_separated_value_list(component_values, [=, this](auto& tokens) -> RefPtr<StyleValue> {
         auto& token = tokens.next_token();
@@ -3036,7 +3036,7 @@ RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(Vector<StyleC
     });
 }
 
-RefPtr<StyleValue> Parser::parse_background_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& component_values)
 {
     NonnullRefPtrVector<StyleValue> background_images;
     NonnullRefPtrVector<StyleValue> background_positions;
@@ -3234,7 +3234,7 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<StyleComponentValueRule
         background_clip.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<StyleComponentValueRule>& tokens)
+RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<ComponentValue>& tokens)
 {
     // NOTE: This *looks* like it parses a <position>, but it doesn't. From the spec:
     //      "Note: The background-position property also accepts a three-value syntax.
@@ -3407,7 +3407,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<St
         vertical->edge, vertical->offset);
 }
 
-RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<StyleComponentValueRule>& tokens)
+RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<ComponentValue>& tokens)
 {
     auto start_position = tokens.position();
     auto error = [&]() {
@@ -3462,7 +3462,7 @@ RefPtr<StyleValue> Parser::parse_single_background_repeat_value(TokenStream<Styl
     return BackgroundRepeatStyleValue::create(as_repeat(x_value->to_identifier()), as_repeat(y_value->to_identifier()));
 }
 
-RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<StyleComponentValueRule>& tokens)
+RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<ComponentValue>& tokens)
 {
     auto start_position = tokens.position();
     auto error = [&]() {
@@ -3505,7 +3505,7 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<StyleC
     return error();
 }
 
-RefPtr<StyleValue> Parser::parse_border_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() > 3)
         return nullptr;
@@ -3551,7 +3551,7 @@ RefPtr<StyleValue> Parser::parse_border_value(Vector<StyleComponentValueRule> co
     return BorderStyleValue::create(border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() == 2) {
         auto horizontal = parse_dimension(component_values[0]);
@@ -3572,7 +3572,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_value(Vector<StyleComponentValueR
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<ComponentValue> const& component_values)
 {
     auto top_left = [&](Vector<LengthPercentage>& radii) { return radii[0]; };
     auto top_right = [&](Vector<LengthPercentage>& radii) {
@@ -3654,7 +3654,7 @@ RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(Vector<StyleCompo
     return StyleValueList::create(move(border_radii), StyleValueList::Separator::Space);
 }
 
-RefPtr<StyleValue> Parser::parse_shadow_value(Vector<StyleComponentValueRule> const& component_values, AllowInsetKeyword allow_inset_keyword)
+RefPtr<StyleValue> Parser::parse_shadow_value(Vector<ComponentValue> const& component_values, AllowInsetKeyword allow_inset_keyword)
 {
     // "none"
     if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
@@ -3668,7 +3668,7 @@ RefPtr<StyleValue> Parser::parse_shadow_value(Vector<StyleComponentValueRule> co
     });
 }
 
-RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<StyleComponentValueRule>& tokens, AllowInsetKeyword allow_inset_keyword)
+RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>& tokens, AllowInsetKeyword allow_inset_keyword)
 {
     auto start_position = tokens.position();
     auto error = [&]() {
@@ -3767,7 +3767,7 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<StyleComponentV
     return ShadowStyleValue::create(color.release_value(), offset_x.release_value(), offset_y.release_value(), blur_radius.release_value(), spread_distance.release_value(), placement.release_value());
 }
 
-RefPtr<StyleValue> Parser::parse_content_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& component_values)
 {
     // FIXME: `content` accepts several kinds of function() type, which we don't handle in property_accepts_value() yet.
 
@@ -3827,7 +3827,7 @@ RefPtr<StyleValue> Parser::parse_content_value(Vector<StyleComponentValueRule> c
     return ContentStyleValue::create(StyleValueList::create(move(content_values), StyleValueList::Separator::Space), move(alt_text));
 }
 
-RefPtr<StyleValue> Parser::parse_flex_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() == 1) {
         auto value = parse_css_value(component_values[0]);
@@ -3901,7 +3901,7 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<StyleComponentValueRule> cons
     return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() > 2)
         return nullptr;
@@ -3953,7 +3953,7 @@ static bool is_generic_font_family(ValueID identifier)
     }
 }
 
-RefPtr<StyleValue> Parser::parse_font_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& component_values)
 {
     RefPtr<StyleValue> font_style;
     RefPtr<StyleValue> font_weight;
@@ -4044,7 +4044,7 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<StyleComponentValueRule> cons
     return FontStyleValue::create(font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_font_family_value(Vector<StyleComponentValueRule> const& component_values, size_t start_index)
+RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const& component_values, size_t start_index)
 {
     auto is_comma_or_eof = [&](size_t i) -> bool {
         if (i < component_values.size()) {
@@ -4117,7 +4117,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<StyleComponentValueRul
     return StyleValueList::create(move(font_families), StyleValueList::Separator::Comma);
 }
 
-RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<StyleComponentValueRule>& tokens)
+RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
 {
     auto declarations_and_at_rules = parse_a_list_of_declarations(tokens);
 
@@ -4212,7 +4212,7 @@ RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<StyleComponentValueRule
     return CSSFontFaceRule::create(FontFace { font_family.release_value(), move(src) });
 }
 
-RefPtr<StyleValue> Parser::parse_list_style_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() > 3)
         return nullptr;
@@ -4282,7 +4282,7 @@ RefPtr<StyleValue> Parser::parse_list_style_value(Vector<StyleComponentValueRule
     return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
 }
 
-RefPtr<StyleValue> Parser::parse_overflow_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_overflow_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() == 1) {
         auto maybe_value = parse_css_value(component_values.first());
@@ -4311,7 +4311,7 @@ RefPtr<StyleValue> Parser::parse_overflow_value(Vector<StyleComponentValueRule> 
     return nullptr;
 }
 
-RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() > 4)
         return nullptr;
@@ -4393,7 +4393,7 @@ static Optional<CSS::TransformFunction> parse_transform_function_name(StringView
     return {};
 }
 
-RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& component_values)
 {
     NonnullRefPtrVector<StyleValue> transformations;
 
@@ -4461,7 +4461,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<StyleComponentValueRule>
 
 // https://www.w3.org/TR/css-transforms-1/#propdef-transform-origin
 // FIXME: This only supports a 2D position
-RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<StyleComponentValueRule> const& component_values)
+RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<ComponentValue> const& component_values)
 {
     enum class Axis {
         None,
@@ -4583,7 +4583,7 @@ RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
     return parsed_value.release_value();
 }
 
-Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
+Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
     auto block_contains_var_or_attr = [](StyleBlockRule const& block, auto&& recurse) -> bool {
         for (auto const& token : block.values()) {
@@ -4596,7 +4596,7 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
     };
 
     m_context.set_current_property_id(property_id);
-    Vector<StyleComponentValueRule> component_values;
+    Vector<ComponentValue> component_values;
     bool contains_var_or_attr = false;
 
     while (tokens.has_next_token()) {
@@ -4756,7 +4756,7 @@ Result<NonnullRefPtr<StyleValue>, Parser::ParsingResult> Parser::parse_css_value
     return ParsingResult::SyntaxError;
 }
 
-RefPtr<StyleValue> Parser::parse_css_value(StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_css_value(ComponentValue const& component_value)
 {
     if (auto builtin = parse_builtin_value(component_value))
         return builtin;
@@ -4786,7 +4786,7 @@ RefPtr<StyleValue> Parser::parse_css_value(StyleComponentValueRule const& compon
     return {};
 }
 
-Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>& values, AllowTrailingTokens allow_trailing_tokens)
+Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<ComponentValue>& values, AllowTrailingTokens allow_trailing_tokens)
 {
     int a = 0;
     int b = 0;
@@ -4813,22 +4813,22 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         }
     };
 
-    auto is_n = [](StyleComponentValueRule const& value) -> bool {
+    auto is_n = [](ComponentValue const& value) -> bool {
         return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("n"sv);
     };
-    auto is_ndash = [](StyleComponentValueRule const& value) -> bool {
+    auto is_ndash = [](ComponentValue const& value) -> bool {
         return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("n-"sv);
     };
-    auto is_dashn = [](StyleComponentValueRule const& value) -> bool {
+    auto is_dashn = [](ComponentValue const& value) -> bool {
         return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("-n"sv);
     };
-    auto is_dashndash = [](StyleComponentValueRule const& value) -> bool {
+    auto is_dashndash = [](ComponentValue const& value) -> bool {
         return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("-n-"sv);
     };
-    auto is_delim = [](StyleComponentValueRule const& value, u32 delim) -> bool {
+    auto is_delim = [](ComponentValue const& value, u32 delim) -> bool {
         return value.is(Token::Type::Delim) && value.token().delim() == delim;
     };
-    auto is_n_dimension = [](StyleComponentValueRule const& value) -> bool {
+    auto is_n_dimension = [](ComponentValue const& value) -> bool {
         if (!value.is(Token::Type::Dimension))
             return false;
         if (!value.token().number().is_integer())
@@ -4837,7 +4837,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
             return false;
         return true;
     };
-    auto is_ndash_dimension = [](StyleComponentValueRule const& value) -> bool {
+    auto is_ndash_dimension = [](ComponentValue const& value) -> bool {
         if (!value.is(Token::Type::Dimension))
             return false;
         if (!value.token().number().is_integer())
@@ -4846,7 +4846,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
             return false;
         return true;
     };
-    auto is_ndashdigit_dimension = [](StyleComponentValueRule const& value) -> bool {
+    auto is_ndashdigit_dimension = [](ComponentValue const& value) -> bool {
         if (!value.is(Token::Type::Dimension))
             return false;
         if (!value.token().number().is_integer())
@@ -4860,7 +4860,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         }
         return true;
     };
-    auto is_ndashdigit_ident = [](StyleComponentValueRule const& value) -> bool {
+    auto is_ndashdigit_ident = [](ComponentValue const& value) -> bool {
         if (!value.is(Token::Type::Ident))
             return false;
         auto ident = value.token().ident();
@@ -4872,7 +4872,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         }
         return true;
     };
-    auto is_dashndashdigit_ident = [](StyleComponentValueRule const& value) -> bool {
+    auto is_dashndashdigit_ident = [](ComponentValue const& value) -> bool {
         if (!value.is(Token::Type::Ident))
             return false;
         auto ident = value.token().ident();
@@ -4884,13 +4884,13 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
         }
         return true;
     };
-    auto is_integer = [](StyleComponentValueRule const& value) -> bool {
+    auto is_integer = [](ComponentValue const& value) -> bool {
         return value.is(Token::Type::Number) && value.token().number().is_integer();
     };
-    auto is_signed_integer = [](StyleComponentValueRule const& value) -> bool {
+    auto is_signed_integer = [](ComponentValue const& value) -> bool {
         return value.is(Token::Type::Number) && value.token().number().is_integer_with_explicit_sign();
     };
-    auto is_signless_integer = [](StyleComponentValueRule const& value) -> bool {
+    auto is_signless_integer = [](ComponentValue const& value) -> bool {
         return value.is(Token::Type::Number) && !value.token().number().is_integer_with_explicit_sign();
     };
 
@@ -5093,13 +5093,13 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     return syntax_error();
 }
 
-OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_expression(Vector<StyleComponentValueRule> const& values)
+OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_expression(Vector<ComponentValue> const& values)
 {
     auto tokens = TokenStream(values);
     return parse_calc_sum(tokens);
 }
 
-Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<StyleComponentValueRule>& tokens)
+Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<ComponentValue>& tokens)
 {
     auto current_token = tokens.next_token();
 
@@ -5140,7 +5140,7 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<S
     return {};
 }
 
-OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_product_part_with_operator(TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_product_part_with_operator(TokenStream<ComponentValue>& tokens)
 {
     // Note: The default value is not used or passed around.
     auto product_with_operator = make<CalculatedStyleValue::CalcProductPartWithOperator>(
@@ -5179,7 +5179,7 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
     return product_with_operator;
 }
 
-OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_calc_number_product_part_with_operator(TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_calc_number_product_part_with_operator(TokenStream<ComponentValue>& tokens)
 {
     // Note: The default value is not used or passed around.
     auto number_product_with_operator = make<CalculatedStyleValue::CalcNumberProductPartWithOperator>(
@@ -5214,7 +5214,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
     return number_product_with_operator;
 }
 
-OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_product(TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_product(TokenStream<ComponentValue>& tokens)
 {
     auto calc_number_product = make<CalculatedStyleValue::CalcNumberProduct>(
         CalculatedStyleValue::CalcNumberValue { Number {} },
@@ -5235,7 +5235,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_produc
     return calc_number_product;
 }
 
-OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> Parser::parse_calc_number_sum_part_with_operator(TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> Parser::parse_calc_number_sum_part_with_operator(TokenStream<ComponentValue>& tokens)
 {
     if (!(tokens.peek_token().is(Token::Type::Delim)
             && (tokens.peek_token().token().delim() == '+' || tokens.peek_token().token().delim() == '-')
@@ -5260,7 +5260,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> Parser::parse_calc_n
     return make<CalculatedStyleValue::CalcNumberSumPartWithOperator>(op, calc_number_product.release_nonnull());
 }
 
-OwnPtr<CalculatedStyleValue::CalcNumberSum> Parser::parse_calc_number_sum(TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcNumberSum> Parser::parse_calc_number_sum(TokenStream<ComponentValue>& tokens)
 {
     auto first_calc_number_product_or_error = parse_calc_number_product(tokens);
     if (!first_calc_number_product_or_error)
@@ -5280,7 +5280,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberSum> Parser::parse_calc_number_sum(TokenS
     return calc_number_sum;
 }
 
-Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(TokenStream<StyleComponentValueRule>& tokens)
+Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(TokenStream<ComponentValue>& tokens)
 {
     auto& first = tokens.peek_token();
     if (first.is_block() && first.block().is_paren()) {
@@ -5298,7 +5298,7 @@ Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(
     return CalculatedStyleValue::CalcNumberValue { first.token().number() };
 }
 
-OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(TokenStream<ComponentValue>& tokens)
 {
     auto calc_product = make<CalculatedStyleValue::CalcProduct>(
         CalculatedStyleValue::CalcValue { Number {} },
@@ -5319,7 +5319,7 @@ OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(TokenStream
     return calc_product;
 }
 
-OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> Parser::parse_calc_sum_part_with_operator(TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> Parser::parse_calc_sum_part_with_operator(TokenStream<ComponentValue>& tokens)
 {
     // The following has to have the shape of <Whitespace><+ or -><Whitespace>
     // But the first whitespace gets eaten in parse_calc_product_part_with_operator().
@@ -5346,7 +5346,7 @@ OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> Parser::parse_calc_sum_par
     return make<CalculatedStyleValue::CalcSumPartWithOperator>(op, calc_product.release_nonnull());
 };
 
-OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_sum(TokenStream<StyleComponentValueRule>& tokens)
+OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_sum(TokenStream<ComponentValue>& tokens)
 {
     auto parsed_calc_product = parse_calc_product(tokens);
     if (!parsed_calc_product)
@@ -5383,13 +5383,13 @@ bool Parser::is_builtin(StringView name)
         || name.equals_ignoring_case("unset"sv);
 }
 
-RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext const& context, PropertyID property_id, Vector<StyleComponentValueRule> const& tokens)
+RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext const& context, PropertyID property_id, Vector<ComponentValue> const& tokens)
 {
     if (tokens.is_empty() || property_id == CSS::PropertyID::Invalid || property_id == CSS::PropertyID::Custom)
         return {};
 
     CSS::Parser parser(context, "");
-    CSS::TokenStream<CSS::StyleComponentValueRule> token_stream { tokens };
+    CSS::TokenStream<CSS::ComponentValue> token_stream { tokens };
     auto result = parser.parse_css_value(property_id, token_stream);
     if (result.is_error())
         return {};

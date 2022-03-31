@@ -15,9 +15,9 @@
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/GeneralEnclosed.h>
 #include <LibWeb/CSS/MediaQuery.h>
+#include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
-#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Parser/StyleDeclarationRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
@@ -112,7 +112,7 @@ public:
 
     RefPtr<StyleValue> parse_as_css_value(PropertyID);
 
-    static RefPtr<StyleValue> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<StyleComponentValueRule> const&);
+    static RefPtr<StyleValue> parse_css_value(Badge<StyleComputer>, ParsingContext const&, PropertyID, Vector<ComponentValue> const&);
 
 private:
     enum class ParsingResult {
@@ -150,14 +150,14 @@ private:
 
     // "Parse a component value" is for things that need to consume a single value, like the parsing rules for attr().
     template<typename T>
-    Optional<StyleComponentValueRule> parse_a_component_value(TokenStream<T>&);
+    Optional<ComponentValue> parse_a_component_value(TokenStream<T>&);
 
     // "Parse a list of component values" is for the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
     template<typename T>
-    Vector<StyleComponentValueRule> parse_a_list_of_component_values(TokenStream<T>&);
+    Vector<ComponentValue> parse_a_list_of_component_values(TokenStream<T>&);
 
     template<typename T>
-    Vector<Vector<StyleComponentValueRule>> parse_a_comma_separated_list_of_component_values(TokenStream<T>&);
+    Vector<Vector<ComponentValue>> parse_a_comma_separated_list_of_component_values(TokenStream<T>&);
 
     enum class SelectorType {
         Standalone,
@@ -175,7 +175,7 @@ private:
         No,
         Yes
     };
-    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&, AllowTrailingTokens = AllowTrailingTokens::No);
+    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<ComponentValue>&, AllowTrailingTokens = AllowTrailingTokens::No);
 
     enum class TopLevel {
         No,
@@ -194,15 +194,15 @@ private:
     template<typename T>
     Optional<StyleDeclarationRule> consume_a_declaration(TokenStream<T>&);
     template<typename T>
-    [[nodiscard]] StyleComponentValueRule consume_a_component_value(TokenStream<T>&);
+    [[nodiscard]] ComponentValue consume_a_component_value(TokenStream<T>&);
     template<typename T>
     NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
     template<typename T>
     NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
 
-    Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<StyleComponentValueRule>&);
+    Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<ComponentValue>&);
 
-    RefPtr<CSSRule> parse_font_face_rule(TokenStream<StyleComponentValueRule>&);
+    RefPtr<CSSRule> parse_font_face_rule(TokenStream<ComponentValue>&);
 
     RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
     RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
@@ -272,87 +272,87 @@ private:
     private:
         Variant<Angle, Frequency, Length, Percentage, Resolution, Time> m_value;
     };
-    Optional<Dimension> parse_dimension(StyleComponentValueRule const&);
-    Optional<Color> parse_color(StyleComponentValueRule const&);
-    Optional<Length> parse_length(StyleComponentValueRule const&);
-    Optional<Ratio> parse_ratio(TokenStream<StyleComponentValueRule>&);
+    Optional<Dimension> parse_dimension(ComponentValue const&);
+    Optional<Color> parse_color(ComponentValue const&);
+    Optional<Length> parse_length(ComponentValue const&);
+    Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);
 
     enum class AllowedDataUrlType {
         None,
         Image,
     };
-    Optional<AK::URL> parse_url_function(StyleComponentValueRule const&, AllowedDataUrlType = AllowedDataUrlType::None);
+    Optional<AK::URL> parse_url_function(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
 
-    Result<NonnullRefPtr<StyleValue>, ParsingResult> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
-    RefPtr<StyleValue> parse_css_value(StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_builtin_value(StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_dynamic_value(StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_calculated_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_dimension_value(StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_numeric_value(StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_identifier_value(StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_color_value(StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_string_value(StyleComponentValueRule const&);
-    RefPtr<StyleValue> parse_image_value(StyleComponentValueRule const&);
+    Result<NonnullRefPtr<StyleValue>, ParsingResult> parse_css_value(PropertyID, TokenStream<ComponentValue>&);
+    RefPtr<StyleValue> parse_css_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_builtin_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_dynamic_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_calculated_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_dimension_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_numeric_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_identifier_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_color_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_string_value(ComponentValue const&);
+    RefPtr<StyleValue> parse_image_value(ComponentValue const&);
     template<typename ParseFunction>
-    RefPtr<StyleValue> parse_comma_separated_value_list(Vector<StyleComponentValueRule> const&, ParseFunction);
-    RefPtr<StyleValue> parse_simple_comma_separated_value_list(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_comma_separated_value_list(Vector<ComponentValue> const&, ParseFunction);
+    RefPtr<StyleValue> parse_simple_comma_separated_value_list(Vector<ComponentValue> const&);
 
-    RefPtr<StyleValue> parse_background_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_single_background_position_value(TokenStream<StyleComponentValueRule>&);
-    RefPtr<StyleValue> parse_single_background_repeat_value(TokenStream<StyleComponentValueRule>&);
-    RefPtr<StyleValue> parse_single_background_size_value(TokenStream<StyleComponentValueRule>&);
-    RefPtr<StyleValue> parse_border_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_border_radius_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_border_radius_shorthand_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_content_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_flex_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_flex_flow_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_font_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_font_family_value(Vector<StyleComponentValueRule> const&, size_t start_index = 0);
-    RefPtr<StyleValue> parse_list_style_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_overflow_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_background_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_single_background_position_value(TokenStream<ComponentValue>&);
+    RefPtr<StyleValue> parse_single_background_repeat_value(TokenStream<ComponentValue>&);
+    RefPtr<StyleValue> parse_single_background_size_value(TokenStream<ComponentValue>&);
+    RefPtr<StyleValue> parse_border_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_border_radius_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_border_radius_shorthand_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_content_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_flex_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_flex_flow_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_font_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_font_family_value(Vector<ComponentValue> const&, size_t start_index = 0);
+    RefPtr<StyleValue> parse_list_style_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_overflow_value(Vector<ComponentValue> const&);
     enum class AllowInsetKeyword {
         No,
         Yes,
     };
-    RefPtr<StyleValue> parse_shadow_value(Vector<StyleComponentValueRule> const&, AllowInsetKeyword);
-    RefPtr<StyleValue> parse_single_shadow_value(TokenStream<StyleComponentValueRule>&, AllowInsetKeyword);
-    RefPtr<StyleValue> parse_text_decoration_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_transform_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_transform_origin_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_shadow_value(Vector<ComponentValue> const&, AllowInsetKeyword);
+    RefPtr<StyleValue> parse_single_shadow_value(TokenStream<ComponentValue>&, AllowInsetKeyword);
+    RefPtr<StyleValue> parse_text_decoration_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_transform_value(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_transform_origin_value(Vector<ComponentValue> const&);
 
     // calc() parsing, according to https://www.w3.org/TR/css-values-3/#calc-syntax
-    OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_sum(TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcProduct> parse_calc_product(TokenStream<StyleComponentValueRule>&);
-    Optional<CalculatedStyleValue::CalcValue> parse_calc_value(TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcNumberSum> parse_calc_number_sum(TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcNumberProduct> parse_calc_number_product(TokenStream<StyleComponentValueRule>&);
-    Optional<CalculatedStyleValue::CalcNumberValue> parse_calc_number_value(TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> parse_calc_product_part_with_operator(TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> parse_calc_sum_part_with_operator(TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> parse_calc_number_product_part_with_operator(TokenStream<StyleComponentValueRule>& tokens);
-    OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(TokenStream<StyleComponentValueRule>&);
-    OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(Vector<StyleComponentValueRule> const&);
+    OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_sum(TokenStream<ComponentValue>&);
+    OwnPtr<CalculatedStyleValue::CalcProduct> parse_calc_product(TokenStream<ComponentValue>&);
+    Optional<CalculatedStyleValue::CalcValue> parse_calc_value(TokenStream<ComponentValue>&);
+    OwnPtr<CalculatedStyleValue::CalcNumberSum> parse_calc_number_sum(TokenStream<ComponentValue>&);
+    OwnPtr<CalculatedStyleValue::CalcNumberProduct> parse_calc_number_product(TokenStream<ComponentValue>&);
+    Optional<CalculatedStyleValue::CalcNumberValue> parse_calc_number_value(TokenStream<ComponentValue>&);
+    OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> parse_calc_product_part_with_operator(TokenStream<ComponentValue>&);
+    OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> parse_calc_sum_part_with_operator(TokenStream<ComponentValue>&);
+    OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> parse_calc_number_product_part_with_operator(TokenStream<ComponentValue>& tokens);
+    OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(TokenStream<ComponentValue>&);
+    OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(Vector<ComponentValue> const&);
 
-    Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<StyleComponentValueRule>&, SelectorType);
-    Result<Selector::CompoundSelector, ParsingResult> parse_compound_selector(TokenStream<StyleComponentValueRule>&);
-    Optional<Selector::Combinator> parse_selector_combinator(TokenStream<StyleComponentValueRule>&);
+    Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<ComponentValue>&, SelectorType);
+    Result<Selector::CompoundSelector, ParsingResult> parse_compound_selector(TokenStream<ComponentValue>&);
+    Optional<Selector::Combinator> parse_selector_combinator(TokenStream<ComponentValue>&);
 
-    Result<Selector::SimpleSelector, ParsingResult> parse_attribute_simple_selector(StyleComponentValueRule const&);
-    Result<Selector::SimpleSelector, ParsingResult> parse_pseudo_simple_selector(TokenStream<StyleComponentValueRule>&);
-    Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
+    Result<Selector::SimpleSelector, ParsingResult> parse_attribute_simple_selector(ComponentValue const&);
+    Result<Selector::SimpleSelector, ParsingResult> parse_pseudo_simple_selector(TokenStream<ComponentValue>&);
+    Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<ComponentValue>&);
 
-    NonnullRefPtr<MediaQuery> parse_media_query(TokenStream<StyleComponentValueRule>&);
-    OwnPtr<MediaCondition> parse_media_condition(TokenStream<StyleComponentValueRule>&, MediaCondition::AllowOr allow_or);
-    Optional<MediaFeature> parse_media_feature(TokenStream<StyleComponentValueRule>&);
-    Optional<MediaQuery::MediaType> parse_media_type(TokenStream<StyleComponentValueRule>&);
-    OwnPtr<MediaCondition> parse_media_in_parens(TokenStream<StyleComponentValueRule>&);
-    Optional<MediaFeatureValue> parse_media_feature_value(MediaFeatureID, TokenStream<StyleComponentValueRule>&);
+    NonnullRefPtr<MediaQuery> parse_media_query(TokenStream<ComponentValue>&);
+    OwnPtr<MediaCondition> parse_media_condition(TokenStream<ComponentValue>&, MediaCondition::AllowOr allow_or);
+    Optional<MediaFeature> parse_media_feature(TokenStream<ComponentValue>&);
+    Optional<MediaQuery::MediaType> parse_media_type(TokenStream<ComponentValue>&);
+    OwnPtr<MediaCondition> parse_media_in_parens(TokenStream<ComponentValue>&);
+    Optional<MediaFeatureValue> parse_media_feature_value(MediaFeatureID, TokenStream<ComponentValue>&);
 
-    OwnPtr<Supports::Condition> parse_supports_condition(TokenStream<StyleComponentValueRule>&);
-    Optional<Supports::InParens> parse_supports_in_parens(TokenStream<StyleComponentValueRule>&);
-    Optional<Supports::Feature> parse_supports_feature(TokenStream<StyleComponentValueRule>&);
+    OwnPtr<Supports::Condition> parse_supports_condition(TokenStream<ComponentValue>&);
+    Optional<Supports::InParens> parse_supports_in_parens(TokenStream<ComponentValue>&);
+    Optional<Supports::Feature> parse_supports_feature(TokenStream<ComponentValue>&);
 
     static bool has_ignored_vendor_prefix(StringView);
     static bool is_builtin(StringView);
