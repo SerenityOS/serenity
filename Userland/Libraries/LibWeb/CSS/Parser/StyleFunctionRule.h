@@ -10,27 +10,27 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
+#include <LibWeb/CSS/Parser/ComponentValue.h>
 
 namespace Web::CSS {
 
-class StyleComponentValueRule;
+class ComponentValue;
 
 class StyleFunctionRule : public RefCounted<StyleFunctionRule> {
     friend class Parser;
 
 public:
     explicit StyleFunctionRule(String name);
-    StyleFunctionRule(String name, Vector<StyleComponentValueRule>&& values);
+    StyleFunctionRule(String name, Vector<ComponentValue>&& values);
     ~StyleFunctionRule();
 
     String const& name() const { return m_name; }
-    Vector<StyleComponentValueRule> const& values() const { return m_values; }
+    Vector<ComponentValue> const& values() const { return m_values; }
 
     String to_string() const;
 
 private:
     String m_name;
-    Vector<StyleComponentValueRule> m_values;
+    Vector<ComponentValue> m_values;
 };
 }

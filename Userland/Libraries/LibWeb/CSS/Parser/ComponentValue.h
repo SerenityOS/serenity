@@ -16,14 +16,13 @@ namespace Web::CSS {
 class StyleBlockRule;
 class StyleFunctionRule;
 
-class StyleComponentValueRule {
-    friend class Parser;
-
+// https://www.w3.org/TR/css-syntax-3/#component-value
+class ComponentValue {
 public:
-    StyleComponentValueRule(Token);
-    explicit StyleComponentValueRule(NonnullRefPtr<StyleFunctionRule>);
-    explicit StyleComponentValueRule(NonnullRefPtr<StyleBlockRule>);
-    ~StyleComponentValueRule();
+    ComponentValue(Token);
+    explicit ComponentValue(NonnullRefPtr<StyleFunctionRule>);
+    explicit ComponentValue(NonnullRefPtr<StyleBlockRule>);
+    ~ComponentValue();
 
     bool is_block() const { return m_value.has<NonnullRefPtr<StyleBlockRule>>(); }
     StyleBlockRule const& block() const { return m_value.get<NonnullRefPtr<StyleBlockRule>>(); }

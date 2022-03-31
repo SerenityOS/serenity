@@ -492,7 +492,7 @@ static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, FlySt
     return nullptr;
 }
 
-bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index) const
+bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<ComponentValue> const& source, Vector<ComponentValue>& dest, size_t source_start_index) const
 {
     // FIXME: Do this better!
     // We build a copy of the tree of StyleComponentValueRules, with all var()s and attr()s replaced with their contents.
@@ -585,7 +585,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
             }
 
             auto const& source_function = value.function();
-            Vector<StyleComponentValueRule> function_values;
+            Vector<ComponentValue> function_values;
             if (!expand_unresolved_values(element, property_name, dependencies, source_function.values(), function_values, 0))
                 return false;
             NonnullRefPtr<StyleFunctionRule> function = adopt_ref(*new StyleFunctionRule(source_function.name(), move(function_values)));
@@ -594,7 +594,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
         }
         if (value.is_block()) {
             auto const& source_block = value.block();
-            Vector<StyleComponentValueRule> block_values;
+            Vector<ComponentValue> block_values;
             if (!expand_unresolved_values(element, property_name, dependencies, source_block.values(), block_values, 0))
                 return false;
             NonnullRefPtr<StyleBlockRule> block = adopt_ref(*new StyleBlockRule(source_block.token(), move(block_values)));
@@ -613,7 +613,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     // to produce a different StyleValue from it.
     VERIFY(unresolved.contains_var_or_attr());
 
-    Vector<StyleComponentValueRule> expanded_values;
+    Vector<ComponentValue> expanded_values;
     HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
     if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values, 0))
         return {};

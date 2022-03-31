@@ -13,7 +13,7 @@
 #include <AK/OwnPtr.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
-#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
+#include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/Forward.h>
@@ -84,7 +84,7 @@ private:
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID, Optional<CSS::Selector::PseudoElement>) const;
 
     RefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, PropertyID, UnresolvedStyleValue const&) const;
-    bool expand_unresolved_values(DOM::Element&, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index) const;
+    bool expand_unresolved_values(DOM::Element&, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<ComponentValue> const& source, Vector<ComponentValue>& dest, size_t source_start_index) const;
 
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;

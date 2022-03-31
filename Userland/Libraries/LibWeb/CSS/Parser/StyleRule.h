@@ -9,8 +9,8 @@
 
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
+#include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
-#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 
 namespace Web::CSS {
 
@@ -29,7 +29,7 @@ public:
     bool is_qualified_rule() const { return m_type == Type::Qualified; }
     bool is_at_rule() const { return m_type == Type::At; }
 
-    Vector<StyleComponentValueRule> const& prelude() const { return m_prelude; }
+    Vector<ComponentValue> const& prelude() const { return m_prelude; }
     RefPtr<StyleBlockRule const> block() const { return m_block; }
     String const& at_rule_name() const { return m_at_rule_name; }
 
@@ -38,7 +38,7 @@ public:
 private:
     Type const m_type;
     String m_at_rule_name;
-    Vector<StyleComponentValueRule> m_prelude;
+    Vector<ComponentValue> m_prelude;
     RefPtr<StyleBlockRule> m_block;
 };
 

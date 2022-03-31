@@ -28,7 +28,7 @@
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Number.h>
-#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
+#include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Percentage.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/Resolution.h>
@@ -1625,7 +1625,7 @@ private:
 
 class UnresolvedStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<UnresolvedStyleValue> create(Vector<StyleComponentValueRule>&& values, bool contains_var_or_attr)
+    static NonnullRefPtr<UnresolvedStyleValue> create(Vector<ComponentValue>&& values, bool contains_var_or_attr)
     {
         return adopt_ref(*new UnresolvedStyleValue(move(values), contains_var_or_attr));
     }
@@ -1633,18 +1633,18 @@ public:
 
     virtual String to_string() const override;
 
-    Vector<StyleComponentValueRule> const& values() const { return m_values; }
+    Vector<ComponentValue> const& values() const { return m_values; }
     bool contains_var_or_attr() const { return m_contains_var_or_attr; }
 
 private:
-    UnresolvedStyleValue(Vector<StyleComponentValueRule>&& values, bool contains_var_or_attr)
+    UnresolvedStyleValue(Vector<ComponentValue>&& values, bool contains_var_or_attr)
         : StyleValue(Type::Unresolved)
         , m_values(move(values))
         , m_contains_var_or_attr(contains_var_or_attr)
     {
     }
 
-    Vector<StyleComponentValueRule> m_values;
+    Vector<ComponentValue> m_values;
     bool m_contains_var_or_attr { false };
 };
 
