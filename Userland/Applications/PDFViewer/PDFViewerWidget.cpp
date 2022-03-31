@@ -160,7 +160,7 @@ void PDFViewerWidget::open_file(Core::File& file)
 
     auto document = maybe_document.release_value();
 
-    if (auto sh = document->security_handler(); !sh->has_user_password()) {
+    if (auto sh = document->security_handler(); sh && !sh->has_user_password()) {
         // FIXME: Prompt the user for a password
         VERIFY_NOT_REACHED();
     }
