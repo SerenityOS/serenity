@@ -689,6 +689,13 @@
       "number"
     ]
   },
+  "order": {
+    "inherited": false,
+    "initial": "0",
+    "valid-types": [
+      "integer"
+    ]
+  },
   "flex-wrap": {
     "inherited": false,
     "initial": "nowrap",

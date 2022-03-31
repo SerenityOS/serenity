@@ -65,6 +65,7 @@ public:
     Optional<CSS::FlexBasisData> flex_basis() const;
     float flex_grow() const;
     float flex_shrink() const;
+    int order() const;
     Optional<CSS::AlignItems> align_items() const;
     float opacity() const;
     Optional<CSS::Visibility> visibility() const;
