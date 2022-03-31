@@ -225,7 +225,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
         HashMap<String, String> headers;
         headers.set("User-Agent", m_user_agent);
-        headers.set("Accept-Encoding", "gzip, deflate");
+        headers.set("Accept-Encoding", "gzip, deflate, br");
 
         for (auto& it : request.headers()) {
             headers.set(it.key, it.value);
