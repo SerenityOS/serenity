@@ -549,6 +549,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return NumericStyleValue::create_float(layout_node.computed_values().flex_grow());
     case CSS::PropertyID::FlexShrink:
         return NumericStyleValue::create_float(layout_node.computed_values().flex_shrink());
+    case CSS::PropertyID::Order:
+        return NumericStyleValue::create_integer(layout_node.computed_values().order());
     case CSS::PropertyID::Opacity:
         return NumericStyleValue::create_float(layout_node.computed_values().opacity());
     case CSS::PropertyID::ImageRendering:

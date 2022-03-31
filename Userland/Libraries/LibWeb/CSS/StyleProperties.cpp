@@ -263,6 +263,14 @@ float StyleProperties::flex_shrink() const
     return value.value()->to_number();
 }
 
+int StyleProperties::order() const
+{
+    auto value = property(CSS::PropertyID::Order);
+    if (!value.has_value() || !value.value()->has_integer())
+        return 0;
+    return value.value()->to_integer();
+}
+
 Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
 {
     auto value = property(CSS::PropertyID::ImageRendering);
