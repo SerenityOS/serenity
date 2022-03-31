@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,16 +19,15 @@ public:
     using WrapperType = Bindings::IdleDeadlineWrapper;
     using AllowOwnPtr = TrueType;
 
-    static NonnullRefPtr<IdleDeadline> create(double time_remaining, bool did_timeout);
+    static NonnullRefPtr<IdleDeadline> create(bool did_timeout = false);
     virtual ~IdleDeadline() override;
 
-    double time_remaining() const { return m_time_remaining; }
+    double time_remaining() const;
     bool did_timeout() const { return m_did_timeout; }
 
 private:
-    IdleDeadline(double time_remaining, bool did_timeout);
+    IdleDeadline(bool did_timeout);
 
-    double m_time_remaining { 0 };
     bool m_did_timeout { false };
 };
 

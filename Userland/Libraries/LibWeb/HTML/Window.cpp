@@ -27,6 +27,7 @@
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/RequestIdleCallback/IdleDeadline.h>
 #include <LibWeb/Selection/Selection.h>
 
 namespace Web::HTML {
@@ -106,6 +107,20 @@ void run_animation_frame_callbacks(DOM::Document&, double)
     // FIXME: Bring this closer to the spec.
     request_animation_frame_driver().run();
 }
+
+class IdleCallback : public RefCounted<IdleCallback> {
+public:
+    explicit IdleCallback(Function<JS::Completion(NonnullRefPtr<RequestIdleCallback::IdleDeadline>)> handler)
+        : m_handler(move(handler))
+    {
+    }
+    ~IdleCallback() = default;
+
+    JS::Completion invoke(NonnullRefPtr<RequestIdleCallback::IdleDeadline> deadline) { return m_handler(move(deadline)); }
+
+private:
+    Function<JS::Completion(NonnullRefPtr<RequestIdleCallback::IdleDeadline>)> m_handler;
+};
 
 NonnullRefPtr<Window> Window::create_with_document(DOM::Document& document)
 {
@@ -635,6 +650,56 @@ void Window::set_name(String const& name)
         return;
     // 2. Set this's browsing context's name to the given value.
     browsing_context()->set_name(name);
+}
+
+// https://w3c.github.io/requestidlecallback/#start-an-idle-period-algorithm
+void Window::start_an_idle_period()
+{
+    // 1. Optionally, if the user agent determines the idle period should be delayed, return from this algorithm.
+    if (!wrapper())
+        return;
+    // 2. Let pending_list be window's list of idle request callbacks.
+    auto& pending_list = m_idle_request_callbacks;
+    // 3. Let run_list be window's list of runnable idle callbacks.
+    auto& run_list = m_runnable_idle_callbacks;
+    run_list.extend(pending_list);
+    // 4. Clear pending_list.
+    pending_list.clear();
+
+    // FIXME: This might not agree with the spec, but currently we use 100% CPU if we keep queueing tasks
+    if (run_list.is_empty())
+        return;
+
+    // 5. Queue a task on the queue associated with the idle-task task source,
+    //    which performs the steps defined in the invoke idle callbacks algorithm with window and getDeadline as parameters.
+    HTML::queue_global_task(HTML::Task::Source::IdleTask, *wrapper(), [window = NonnullRefPtr(*this)]() mutable {
+        window->invoke_idle_callbacks();
+    });
+}
+
+// https://w3c.github.io/requestidlecallback/#invoke-idle-callbacks-algorithm
+void Window::invoke_idle_callbacks()
+{
+    auto& event_loop = main_thread_event_loop();
+    // 1. If the user-agent believes it should end the idle period early due to newly scheduled high-priority work, return from the algorithm.
+    // 2. Let now be the current time.
+    auto now = event_loop.unsafe_shared_current_time();
+    // 3. If now is less than the result of calling getDeadline and the window's list of runnable idle callbacks is not empty:
+    if (now < event_loop.compute_deadline() && !m_runnable_idle_callbacks.is_empty()) {
+        // 1. Pop the top callback from window's list of runnable idle callbacks.
+        auto callback = m_runnable_idle_callbacks.take_first();
+        // 2. Let deadlineArg be a new IdleDeadline whose [get deadline time algorithm] is getDeadline.
+        auto deadline_arg = RequestIdleCallback::IdleDeadline::create();
+        // 3. Call callback with deadlineArg as its argument. If an uncaught runtime script error occurs, then report the exception.
+        auto result = callback->invoke(deadline_arg);
+        if (result.is_error())
+            HTML::report_exception(result);
+        // 4. If window's list of runnable idle callbacks is not empty, queue a task which performs the steps
+        //    in the invoke idle callbacks algorithm with getDeadline and window as a parameters and return from this algorithm
+        HTML::queue_global_task(HTML::Task::Source::IdleTask, *wrapper(), [window = NonnullRefPtr(*this)]() mutable {
+            window->invoke_idle_callbacks();
+        });
+    }
 }
 
 }

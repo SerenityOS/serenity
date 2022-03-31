@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -90,33 +91,43 @@ void EventLoop::process()
 {
     // An event loop must continually run through the following steps for as long as it exists:
 
-    // 1. Let taskQueue be one of the event loop's task queues, chosen in an implementation-defined manner, with the constraint that the chosen task queue must contain at least one runnable task. If there is no such task queue, then jump to the microtasks step below.
+    // 1. Let oldestTask be null.
+    OwnPtr<Task> oldest_task;
+
+    // 2. Let taskStartTime be the current high resolution time.
+    // FIXME: 'current high resolution time' in hr-time-3 takes a global object,
+    //        the HTML spec has not been updated to reflect this, let's use the shared timer.
+    //        - https://github.com/whatwg/html/issues/7776
+    double task_start_time = unsafe_shared_current_time();
+
+    // 3. Let taskQueue be one of the event loop's task queues, chosen in an implementation-defined manner,
+    //    with the constraint that the chosen task queue must contain at least one runnable task.
+    //    If there is no such task queue, then jump to the microtasks step below.
     auto& task_queue = m_task_queue;
 
-    if (auto oldest_task = task_queue.take_first_runnable()) {
-        // 2. Let oldestTask be the first runnable task in taskQueue, and remove it from taskQueue.
+    // 4. Set oldestTask to the first runnable task in taskQueue, and remove it from taskQueue.
+    oldest_task = task_queue.take_first_runnable();
 
-        // 3. Set the event loop's currently running task to oldestTask.
+    if (oldest_task) {
+        // 5. Set the event loop's currently running task to oldestTask.
         m_currently_running_task = oldest_task.ptr();
 
-        // FIXME: 4. Let taskStartTime be the current high resolution time.
-
-        // 5. Perform oldestTask's steps.
+        // 6. Perform oldestTask's steps.
         oldest_task->execute();
 
-        // 6. Set the event loop's currently running task back to null.
+        // 7. Set the event loop's currently running task back to null.
         m_currently_running_task = nullptr;
     }
 
-    // 7. Microtasks: Perform a microtask checkpoint.
+    // 8. Microtasks: Perform a microtask checkpoint.
     perform_a_microtask_checkpoint();
 
-    // 8. Let hasARenderingOpportunity be false.
+    // 9. Let hasARenderingOpportunity be false.
     [[maybe_unused]] bool has_a_rendering_opportunity = false;
 
-    // FIXME: 9. Let now be the current high resolution time. [HRT]
+    // FIXME: 10. Let now be the current high resolution time. [HRT]
 
-    // FIXME: 10. Report the task's duration by performing the following steps:
+    // FIXME: 11. If oldestTask is not null, then:
 
     // FIXME:     1. Let top-level browsing contexts be an empty set.
 
@@ -124,7 +135,7 @@ void EventLoop::process()
 
     // FIXME:     3. Report long tasks, passing in taskStartTime, now (the end time of the task), top-level browsing contexts, and oldestTask.
 
-    // FIXME: 11. Update the rendering: if this is a window event loop, then:
+    // FIXME: 12. Update the rendering: if this is a window event loop, then:
 
     // FIXME:     1. Let docs be all Document objects whose relevant agent's event loop is this event loop, sorted arbitrarily except that the following conditions must be met:
     //               - Any Document B whose browsing context's container document is A must be listed after A in the list.
@@ -144,9 +155,12 @@ void EventLoop::process()
         return document->browsing_context() && !document->browsing_context()->has_a_rendering_opportunity();
     });
 
-    // 3. If docs is not empty, then set hasARenderingOpportunity to true.
-    if (!docs.is_empty())
+    // 3. If docs is not empty, then set hasARenderingOpportunity to true
+    //    and set this event loop's last render opportunity time to taskStartTime.
+    if (!docs.is_empty()) {
         has_a_rendering_opportunity = true;
+        m_last_render_opportunity_time = task_start_time;
+    }
 
     // FIXME:     4. Unnecessary rendering: Remove from docs all Document objects which meet both of the following conditions:
     //               - The user agent believes that updating the rendering of the Document's browsing context would have no visible effect, and
@@ -185,14 +199,26 @@ void EventLoop::process()
 
     // FIXME:     16. For each fully active Document in docs, update the rendering or user interface of that Document and its browsing context to reflect the current state.
 
-    // FIXME: 12. If all of the following are true
-    //            - this is a window event loop
-    //            - there is no task in this event loop's task queues whose document is fully active
-    //            - this event loop's microtask queue is empty
-    //            - hasARenderingOpportunity is false
-    // FIXME:         then for each Window object whose relevant agent's event loop is this event loop, run the start an idle period algorithm, passing the Window. [REQUESTIDLECALLBACK]
+    // 13. If all of the following are true
+    // - this is a window event loop
+    // - there is no task in this event loop's task queues whose document is fully active
+    // - this event loop's microtask queue is empty
+    // - hasARenderingOpportunity is false
+    // FIXME: has_a_rendering_opportunity is always true
+    if (m_type == Type::Window && !task_queue.has_runnable_tasks() && m_microtask_queue.is_empty() /*&& !has_a_rendering_opportunity*/) {
+        // 1. Set this event loop's last idle period start time to the current high resolution time.
+        m_last_idle_period_start_time = unsafe_shared_current_time();
 
-    // FIXME: 13. If this is a worker event loop, then:
+        // 2. Let computeDeadline be the following steps:
+        // NOTE: instead of passing around a function we use this event loop, which has compute_deadline()
+
+        // 3. For each win of the same-loop windows for this event loop,
+        //    perform the start an idle period algorithm for win with computeDeadline. [REQUESTIDLECALLBACK]
+        for (auto& win : same_loop_windows())
+            win.start_an_idle_period();
+    }
+
+    // FIXME: 14. If this is a worker event loop, then:
 
     // FIXME:     1. If this event loop's agent's single realm's global object is a supported DedicatedWorkerGlobalScope and the user agent believes that it would benefit from having its rendering updated at this time, then:
     // FIXME:        1. Let now be the current high resolution time. [HRT]
@@ -339,6 +365,51 @@ void EventLoop::unregister_environment_settings_object(Badge<EnvironmentSettings
 {
     bool did_remove = m_related_environment_settings_objects.remove_first_matching([&](auto& entry) { return &entry == &environment_settings_object; });
     VERIFY(did_remove);
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#same-loop-windows
+NonnullRefPtrVector<Window> EventLoop::same_loop_windows() const
+{
+    NonnullRefPtrVector<Window> windows;
+    for (auto& document : documents_in_this_event_loop())
+        windows.append(document.window());
+    return windows;
+}
+
+// https://w3c.github.io/hr-time/#dfn-unsafe-shared-current-time
+double EventLoop::unsafe_shared_current_time() const
+{
+    return Time::now_monotonic().to_nanoseconds() / 1e6;
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model:last-idle-period-start-time
+double EventLoop::compute_deadline() const
+{
+    // 1. Let deadline be this event loop's last idle period start time plus 50.
+    auto deadline = m_last_idle_period_start_time + 50;
+    // 2. Let hasPendingRenders be false.
+    auto has_pending_renders = false;
+    // 3. For each windowInSameLoop of the same-loop windows for this event loop:
+    for (auto& window : same_loop_windows()) {
+        // 1. If windowInSameLoop's map of animation frame callbacks is not empty,
+        //    or if the user agent believes that the windowInSameLoop might have pending rendering updates,
+        //    set hasPendingRenders to true.
+        if (window.has_animation_frame_callbacks())
+            has_pending_renders = true;
+        // FIXME: 2. Let timerCallbackEstimates be the result of getting the values of windowInSameLoop's map of active timers.
+        // FIXME: 3. For each timeoutDeadline of timerCallbackEstimates, if timeoutDeadline is less than deadline, set deadline to timeoutDeadline.
+    }
+    // 4. If hasPendingRenders is true, then:
+    if (has_pending_renders) {
+        // 1. Let nextRenderDeadline be this event loop's last render opportunity time plus (1000 divided by the current refresh rate).
+        // FIXME: Hardcoded to 60Hz
+        auto next_render_deadline = m_last_render_opportunity_time + (1000.0 / 60.0);
+        // 2. If nextRenderDeadline is less than deadline, then return nextRenderDeadline.
+        if (next_render_deadline < deadline)
+            return next_render_deadline;
+    }
+    // 5. Return deadline.
+    return deadline;
 }
 
 }
