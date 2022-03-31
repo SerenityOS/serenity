@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include "HardwareScreenBackend.h"
+#include "ScreenBackend.h"
 #include "ScreenLayout.h"
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
@@ -145,13 +148,13 @@ public:
     void make_main_screen() { s_main_screen = this; }
     bool is_main_screen() const { return s_main_screen == this; }
 
-    bool can_set_buffer() { return m_can_set_buffer; }
+    bool can_set_buffer() { return m_backend->m_can_set_head_buffer; }
     void set_buffer(int index);
     size_t buffer_offset(int index) const;
 
     int physical_width() const { return width() * scale_factor(); }
     int physical_height() const { return height() * scale_factor(); }
-    size_t pitch() const { return m_pitch; }
+    size_t pitch() const { return m_backend->m_pitch; }
 
     int width() const { return m_virtual_rect.width(); }
     int height() const { return m_virtual_rect.height(); }
@@ -164,7 +167,7 @@ public:
     Gfx::IntSize size() const { return { m_virtual_rect.width(), m_virtual_rect.height() }; }
     Gfx::IntRect rect() const { return m_virtual_rect; }
 
-    bool can_device_flush_buffers() const { return m_can_device_flush_buffers; }
+    bool can_device_flush_buffers() const { return m_backend->m_can_device_flush_buffers; }
     void queue_flush_display_rect(Gfx::IntRect const& rect);
     void flush_display(int buffer_index);
     void flush_display_front_buffer(int front_buffer_index, Gfx::IntRect&);
@@ -187,7 +190,7 @@ private:
     static void update_bounding_rect();
     static void update_scale_factors_in_use();
 
-    bool is_opened() const { return m_framebuffer_fd >= 0; }
+    bool is_opened() const { return m_backend != nullptr; }
 
     void set_index(size_t index) { m_index = index; }
     void update_virtual_rect();
@@ -201,23 +204,16 @@ private:
     static Vector<int, default_scale_factors_in_use_count> s_scale_factors_in_use;
     size_t m_index { 0 };
 
-    size_t m_size_in_bytes { 0 };
-    size_t m_back_buffer_offset { 0 };
+    OwnPtr<ScreenBackend> m_backend;
 
-    Gfx::ARGB32* m_framebuffer { nullptr };
-    bool m_can_set_buffer { false };
-    bool m_can_device_flush_buffers { true }; // If the device can't do it we revert to false
-
-    int m_pitch { 0 };
     Gfx::IntRect m_virtual_rect;
-    int m_framebuffer_fd { -1 };
     NonnullOwnPtr<FlushRectData> m_flush_rects;
     NonnullOwnPtr<CompositorScreenData> m_compositor_screen_data;
 };
 
 inline Gfx::ARGB32* Screen::scanline(int buffer_index, int y)
 {
-    return reinterpret_cast<Gfx::ARGB32*>(((u8*)m_framebuffer) + buffer_offset(buffer_index) + (y * m_pitch));
+    return reinterpret_cast<Gfx::ARGB32*>(((u8*)m_backend->m_framebuffer) + buffer_offset(buffer_index) + (y * m_backend->m_pitch));
 }
 
 }
