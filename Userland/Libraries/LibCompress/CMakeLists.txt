@@ -1,4 +1,6 @@
 set(SOURCES
+    Brotli.cpp
+    BrotliDictionary.cpp
     Deflate.cpp
     Zlib.cpp
     Gzip.cpp

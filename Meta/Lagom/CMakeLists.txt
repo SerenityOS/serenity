@@ -569,6 +569,7 @@ if (BUILD_LAGOM)
         endforeach()
 
         # Compress
+        file(COPY "${SERENITY_PROJECT_ROOT}/Tests/LibCompress/brotli-test-files" DESTINATION "./")
         file(GLOB LIBCOMPRESS_TESTS CONFIGURE_DEPENDS "../../Tests/LibCompress/*.cpp")
         foreach(source ${LIBCOMPRESS_TESTS})
             lagom_test(${source} LIBS LagomCompress)
