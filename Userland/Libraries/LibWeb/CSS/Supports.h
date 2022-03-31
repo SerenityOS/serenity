@@ -12,7 +12,7 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/GeneralEnclosed.h>
-#include <LibWeb/CSS/Parser/StyleDeclarationRule.h>
+#include <LibWeb/CSS/Parser/Declaration.h>
 
 namespace Web::CSS {
 
