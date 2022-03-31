@@ -580,6 +580,13 @@ void dump_font_face_rule(StringBuilder& builder, CSS::CSSFontFaceRule const& rul
         indent(builder, indent_levels + 2);
         builder.appendff("{}\n", source.url);
     }
+
+    indent(builder, indent_levels + 1);
+    builder.append("unicode-ranges:\n");
+    for (auto const& unicode_range : font_face.unicode_ranges()) {
+        indent(builder, indent_levels + 2);
+        builder.appendff("{}\n", unicode_range.to_string());
+    }
 }
 
 void dump_import_rule(StringBuilder& builder, CSS::CSSImportRule const& rule, int indent_levels)
