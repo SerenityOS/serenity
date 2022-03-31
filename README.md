@@ -27,6 +27,7 @@ You can watch videos of the system being developed on YouTube:
 
 * x86 (32-bit) and x86_64 (64-bit) kernel with pre-emptive multi-threading
 * Hardware protections (SMEP, SMAP, UMIP, NX, WP, TSD, ...)
+* Software protections (KASLR...)
 * IPv4 stack with ARP, TCP, UDP and ICMP protocols
 * ext2 filesystem
 * POSIX signals
