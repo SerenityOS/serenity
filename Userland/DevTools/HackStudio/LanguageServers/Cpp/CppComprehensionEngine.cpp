@@ -429,15 +429,21 @@ RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentDa
 Optional<GUI::AutocompleteProvider::ProjectLocation> CppComprehensionEngine::find_preprocessor_definition(const DocumentData& document, const GUI::TextPosition& text_position)
 {
     Position cpp_position { text_position.line(), text_position.column() };
+    auto substitution = find_preprocessor_substitution(document, cpp_position);
+    if (!substitution.has_value())
+        return {};
+    return GUI::AutocompleteProvider::ProjectLocation { substitution->defined_value.filename, substitution->defined_value.line, substitution->defined_value.column };
+}
 
+Optional<Cpp::Preprocessor::Substitution> CppComprehensionEngine::find_preprocessor_substitution(DocumentData const& document, Cpp::Position const& cpp_position)
+{
     // Search for a replaced preprocessor token that intersects with text_position
     for (auto& substitution : document.preprocessor().substitutions()) {
         if (substitution.original_tokens.first().start() > cpp_position)
             continue;
         if (substitution.original_tokens.first().end() < cpp_position)
             continue;
-
-        return GUI::AutocompleteProvider::ProjectLocation { substitution.defined_value.filename, substitution.defined_value.line, substitution.defined_value.column };
+        return substitution;
     }
     return {};
 }
@@ -978,6 +984,9 @@ GUI::AutocompleteProvider::TokenInfo::SemanticType CppComprehensionEngine::get_t
 
 GUI::AutocompleteProvider::TokenInfo::SemanticType CppComprehensionEngine::get_semantic_type_for_identifier(DocumentData const& document, Position position)
 {
+    if (find_preprocessor_substitution(document, position).has_value())
+        return GUI::AutocompleteProvider::TokenInfo::SemanticType::PreprocessorMacro;
+
     auto decl = find_declaration_of(document, GUI::TextPosition { position.line, position.column });
     if (!decl)
         return GUI::AutocompleteProvider::TokenInfo::SemanticType::Identifier;

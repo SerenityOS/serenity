@@ -149,8 +149,8 @@ void ConnectionFromClient::get_tokens_info(String const& filename)
         return;
     }
 
-    auto token_info = m_autocomplete_engine->get_tokens_info(filename);
-    async_tokens_info_result(move(token_info));
+    auto tokens_info = m_autocomplete_engine->get_tokens_info(filename);
+    async_tokens_info_result(move(tokens_info));
 }
 
 }
