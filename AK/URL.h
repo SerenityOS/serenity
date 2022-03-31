@@ -104,7 +104,7 @@ public:
     static u16 default_port_for_scheme(StringView);
     static bool is_special_scheme(StringView);
 
-    static String percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo);
+    static String percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo, StringView reserved_chars = {});
     static String percent_decode(StringView input);
 
     bool operator==(URL const& other) const { return equals(other, ExcludeFragment::No); }
@@ -122,7 +122,7 @@ private:
     bool compute_validity() const;
     String serialize_data_url() const;
 
-    static void append_percent_encoded_if_necessary(StringBuilder&, u32 code_point, PercentEncodeSet set = PercentEncodeSet::Userinfo);
+    static void append_percent_encoded_if_necessary(StringBuilder&, u32 code_point, PercentEncodeSet set = PercentEncodeSet::Userinfo, StringView reserved_chars = {});
     static void append_percent_encoded(StringBuilder&, u32 code_point);
 
     bool m_valid { false };
