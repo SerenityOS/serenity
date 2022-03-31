@@ -4438,34 +4438,10 @@ RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens
             continue;
         }
         if (declaration.name().equals_ignoring_case("src"sv)) {
-            Vector<FontFace::Source> supported_sources;
-            // FIXME: Implement `local()`.
-            // FIXME: Implement `format()`.
             TokenStream token_stream { declaration.values() };
-            auto list_of_source_token_lists = parse_a_comma_separated_list_of_component_values(token_stream);
-            for (auto const& source_token_list : list_of_source_token_lists) {
-                Optional<AK::URL> url;
-                bool had_syntax_error = false;
-                for (auto const& source_token : source_token_list) {
-                    // FIXME: Allow data urls for fonts.
-                    if (auto maybe_url = parse_url_function(source_token); maybe_url.has_value()) {
-                        if (url.has_value()) {
-                            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face src format invalid; discarding.");
-                            had_syntax_error = true;
-                            break;
-                        }
-                        url = maybe_url.release_value();
-                    }
-                }
-                if (had_syntax_error)
-                    continue;
-                if (!url.has_value())
-                    continue;
-                supported_sources.empend(url.release_value());
-            }
-            if (supported_sources.is_empty())
-                continue;
-            src = move(supported_sources);
+            Vector<FontFace::Source> supported_sources = parse_font_face_src(token_stream);
+            if (!supported_sources.is_empty())
+                src = move(supported_sources);
             continue;
         }
         if (declaration.name().equals_ignoring_case("unicode-range"sv)) {
@@ -4504,6 +4480,89 @@ RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens
     }
 
     return CSSFontFaceRule::create(FontFace { font_family.release_value(), move(src), move(unicode_range) });
+}
+
+Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>& component_values)
+{
+    // FIXME: Get this information from the system somehow?
+    // Format-name table: https://www.w3.org/TR/css-fonts-4/#font-format-definitions
+    auto font_format_is_supported = [](StringView name) {
+        // The spec requires us to treat opentype and truetype as synonymous.
+        if (name.is_one_of_ignoring_case("opentype"sv, "truetype"sv))
+            return true;
+        return false;
+    };
+
+    Vector<FontFace::Source> supported_sources;
+
+    auto list_of_source_token_lists = parse_a_comma_separated_list_of_component_values(component_values);
+    for (auto const& source_token_list : list_of_source_token_lists) {
+        TokenStream source_tokens { source_token_list };
+        source_tokens.skip_whitespace();
+        auto& first = source_tokens.next_token();
+
+        // <url> [ format(<font-format>)]?
+        // FIXME: Allow data urls for fonts.
+        // FIXME: Implement optional tech() function from CSS-Fonts-4.
+        if (auto maybe_url = parse_url_function(first); maybe_url.has_value()) {
+            auto url = maybe_url.release_value();
+            Optional<FlyString> format;
+
+            source_tokens.skip_whitespace();
+            if (!source_tokens.has_next_token()) {
+                supported_sources.empend(move(url), format);
+                continue;
+            }
+
+            auto maybe_function = source_tokens.next_token();
+            if (!maybe_function.is_function()) {
+                dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face src invalid (token after `url()` that isn't a function: {}); discarding.", maybe_function.to_debug_string());
+                return {};
+            }
+
+            auto& function = maybe_function.function();
+            if (function.name().equals_ignoring_case("format"sv)) {
+                TokenStream format_tokens { function.values() };
+                format_tokens.skip_whitespace();
+                auto& format_name_token = format_tokens.next_token();
+                StringView format_name;
+                if (format_name_token.is(Token::Type::Ident)) {
+                    format_name = format_name_token.token().ident();
+                } else if (format_name_token.is(Token::Type::String)) {
+                    format_name = format_name_token.token().string();
+                } else {
+                    dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face src invalid (`format()` parameter not an ident or string; is: {}); discarding.", format_name_token.to_debug_string());
+                    return {};
+                }
+
+                if (!font_format_is_supported(format_name)) {
+                    dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face src format({}) not supported; skipping.", format_name);
+                    continue;
+                }
+
+                format = format_name;
+            } else {
+                dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face src invalid (unrecognized function token `{}`); discarding.", function.name());
+                return {};
+            }
+
+            source_tokens.skip_whitespace();
+            if (source_tokens.has_next_token()) {
+                dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face src invalid (extra token `{}`); discarding.", source_tokens.peek_token().to_debug_string());
+                return {};
+            }
+
+            supported_sources.empend(move(url), format);
+            continue;
+
+        } else {
+            // FIXME: Implement `local()`.
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face src invalid (failed to parse url from: {}); discarding.", first.to_debug_string());
+            return {};
+        }
+    }
+
+    return supported_sources;
 }
 
 RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& component_values)

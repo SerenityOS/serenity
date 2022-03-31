@@ -16,6 +16,8 @@ class FontFace {
 public:
     struct Source {
         AK::URL url;
+        // FIXME: Do we need to keep this around, or is it only needed to discard unwanted formats during parsing?
+        Optional<FlyString> format;
     };
 
     FontFace(FlyString font_family, Vector<Source> sources, Vector<UnicodeRange> unicode_ranges);

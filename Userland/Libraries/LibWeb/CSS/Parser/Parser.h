@@ -13,6 +13,7 @@
 #include <AK/Result.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
+#include <LibWeb/CSS/FontFace.h>
 #include <LibWeb/CSS/GeneralEnclosed.h>
 #include <LibWeb/CSS/MediaQuery.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
@@ -204,6 +205,7 @@ private:
     Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<ComponentValue>&);
 
     RefPtr<CSSRule> parse_font_face_rule(TokenStream<ComponentValue>&);
+    Vector<FontFace::Source> parse_font_face_src(TokenStream<ComponentValue>&);
 
     RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
     RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
