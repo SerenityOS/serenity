@@ -9,6 +9,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
+#include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/Intel/DisplayConnectorGroup.h>
 #include <Kernel/Memory/Region.h>
@@ -17,8 +18,6 @@
 namespace Kernel {
 
 namespace IntelGraphics {
-
-#define DDC2_I2C_ADDRESS 0x50
 
 struct PLLSettings {
     bool is_valid() const { return (n != 0 && m1 != 0 && m2 != 0 && p1 != 0 && p2 != 0); }
@@ -178,8 +177,8 @@ ErrorOr<void> IntelDisplayConnectorGroup::initialize_gen4_connectors()
     Array<u8, 128> crt_edid_bytes {};
     {
         SpinlockLocker control_lock(m_control_lock);
-        MUST(m_gmbus_connector->write(DDC2_I2C_ADDRESS, 0));
-        MUST(m_gmbus_connector->read(DDC2_I2C_ADDRESS, crt_edid_bytes.data(), sizeof(crt_edid_bytes)));
+        MUST(m_gmbus_connector->write(Graphics::ddc2_i2c_address, 0));
+        MUST(m_gmbus_connector->read(Graphics::ddc2_i2c_address, crt_edid_bytes.data(), sizeof(crt_edid_bytes)));
 
         // FIXME: It seems like the returned EDID is almost correct,
         // but the first byte is set to 0xD0 instead of 0x00.
