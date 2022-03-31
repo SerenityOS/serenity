@@ -279,6 +279,16 @@ void ComboBox::set_text(String const& text)
     m_editor->set_text(text);
 }
 
+Gfx::Bitmap const* ComboBox::icon() const
+{
+    return m_editor->icon();
+}
+
+void ComboBox::set_icon(Gfx::Bitmap const* icon)
+{
+    m_editor->set_icon(icon);
+}
+
 void ComboBox::set_only_allow_values_from_model(bool b)
 {
     if (m_only_allow_values_from_model == b)

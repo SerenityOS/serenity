@@ -23,6 +23,9 @@ public:
     String text() const;
     void set_text(String const&);
 
+    void set_icon(Gfx::Bitmap const*);
+    Gfx::Bitmap const* icon() const;
+
     void open();
     void close();
     void select_all();
