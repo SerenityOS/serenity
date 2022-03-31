@@ -16,9 +16,9 @@
 #include <LibWeb/CSS/GeneralEnclosed.h>
 #include <LibWeb/CSS/MediaQuery.h>
 #include <LibWeb/CSS/Parser/ComponentValue.h>
+#include <LibWeb/CSS/Parser/Declaration.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
-#include <LibWeb/CSS/Parser/StyleDeclarationRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
@@ -139,7 +139,7 @@ private:
 
     // "Parse a declaration" is used in @supports conditions. [CSS3-CONDITIONAL]
     template<typename T>
-    Optional<StyleDeclarationRule> parse_a_declaration(TokenStream<T>&);
+    Optional<Declaration> parse_a_declaration(TokenStream<T>&);
 
     template<typename T>
     Vector<DeclarationOrAtRule> parse_a_style_blocks_contents(TokenStream<T>&);
@@ -192,7 +192,7 @@ private:
     template<typename T>
     [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_list_of_declarations(TokenStream<T>&);
     template<typename T>
-    Optional<StyleDeclarationRule> consume_a_declaration(TokenStream<T>&);
+    Optional<Declaration> consume_a_declaration(TokenStream<T>&);
     template<typename T>
     [[nodiscard]] ComponentValue consume_a_component_value(TokenStream<T>&);
     template<typename T>
@@ -206,7 +206,7 @@ private:
 
     RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
     RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
-    Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule const&);
+    Optional<StyleProperty> convert_to_style_property(Declaration const&);
 
     class Dimension {
     public:

@@ -6,9 +6,9 @@
  */
 
 #include <LibWeb/CSS/Parser/ComponentValue.h>
+#include <LibWeb/CSS/Parser/Declaration.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
-#include <LibWeb/CSS/Parser/StyleDeclarationRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Serialize.h>
@@ -20,7 +20,7 @@ DeclarationOrAtRule::DeclarationOrAtRule(RefPtr<StyleRule> at)
     , m_at(move(at))
 {
 }
-DeclarationOrAtRule::DeclarationOrAtRule(StyleDeclarationRule declaration)
+DeclarationOrAtRule::DeclarationOrAtRule(Declaration declaration)
     : m_type(DeclarationType::Declaration)
     , m_declaration(move(declaration))
 {
@@ -50,8 +50,8 @@ ComponentValue::ComponentValue(NonnullRefPtr<StyleBlockRule> block)
 }
 ComponentValue::~ComponentValue() = default;
 
-StyleDeclarationRule::StyleDeclarationRule() = default;
-StyleDeclarationRule::~StyleDeclarationRule() = default;
+Declaration::Declaration() = default;
+Declaration::~Declaration() = default;
 
 StyleFunctionRule::StyleFunctionRule(String name)
     : m_name(move(name))
@@ -146,7 +146,7 @@ String ComponentValue::to_debug_string() const
         });
 }
 
-String StyleDeclarationRule::to_string() const
+String Declaration::to_string() const
 {
     StringBuilder builder;
 

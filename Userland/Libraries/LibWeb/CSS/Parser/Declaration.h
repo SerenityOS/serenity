@@ -13,12 +13,12 @@
 
 namespace Web::CSS {
 
-class StyleDeclarationRule {
+class Declaration {
     friend class Parser;
 
 public:
-    StyleDeclarationRule();
-    ~StyleDeclarationRule();
+    Declaration();
+    ~Declaration();
 
     String to_string() const;
 

@@ -1909,7 +1909,7 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
 // 5.4.6. Consume a declaration
 // https://www.w3.org/TR/css-syntax-3/#consume-declaration
 template<typename T>
-Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tokens)
+Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
 {
     // Note: This algorithm assumes that the next input token has already been checked to
     // be an <ident-token>.
@@ -1930,7 +1930,7 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
 
     // Create a new declaration with its name set to the value of the current input token
     // and its value initially set to the empty list.
-    StyleDeclarationRule declaration;
+    Declaration declaration;
     declaration.m_name = ((Token)token).ident();
 
     // 1. While the next input token is a <whitespace-token>, consume the next input token.
@@ -2170,7 +2170,7 @@ Optional<StyleProperty> Parser::parse_as_supports_condition()
 // 5.3.6. Parse a declaration
 // https://www.w3.org/TR/css-syntax-3/#parse-a-declaration
 template<typename T>
-Optional<StyleDeclarationRule> Parser::parse_a_declaration(TokenStream<T>& tokens)
+Optional<Declaration> Parser::parse_a_declaration(TokenStream<T>& tokens)
 {
     // To parse a declaration from input:
 
@@ -2513,7 +2513,7 @@ RefPtr<PropertyOwningCSSStyleDeclaration> Parser::convert_to_style_declaration(V
     return PropertyOwningCSSStyleDeclaration::create(move(properties), move(custom_properties));
 }
 
-Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule const& declaration)
+Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& declaration)
 {
     auto& property_name = declaration.m_name;
     auto property_id = property_id_from_string(property_name);
