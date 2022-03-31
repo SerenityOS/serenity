@@ -24,6 +24,7 @@
 namespace Web::HTML {
 
 class RequestAnimationFrameCallback;
+class IdleCallback;
 
 class Window final
     : public RefCounted<Window>
@@ -58,6 +59,7 @@ public:
     String prompt(String const&, String const&);
     i32 request_animation_frame(NonnullOwnPtr<Bindings::CallbackType> js_callback);
     void cancel_animation_frame(i32);
+    bool has_animation_frame_callbacks() const { return !m_request_animation_frame_callbacks.is_empty(); }
 
     i32 set_timeout(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
     i32 set_interval(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
@@ -115,6 +117,8 @@ public:
     String name() const;
     void set_name(String const&);
 
+    void start_an_idle_period();
+
 private:
     explicit Window(DOM::Document&);
 
@@ -126,6 +130,8 @@ private:
         No,
     };
     i32 run_timer_initialization_steps(Bindings::TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments, Repeat repeat, Optional<i32> previous_id = {});
+
+    void invoke_idle_callbacks();
 
     // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
     WeakPtr<DOM::Document> m_associated_document;
@@ -141,6 +147,13 @@ private:
     RefPtr<DOM::Event> m_current_event;
 
     HashMap<i32, NonnullRefPtr<RequestAnimationFrameCallback>> m_request_animation_frame_callbacks;
+
+    // https://w3c.github.io/requestidlecallback/#dfn-list-of-idle-request-callbacks
+    NonnullRefPtrVector<IdleCallback> m_idle_request_callbacks;
+    // https://w3c.github.io/requestidlecallback/#dfn-list-of-runnable-idle-callbacks
+    NonnullRefPtrVector<IdleCallback> m_runnable_idle_callbacks;
+    // https://w3c.github.io/requestidlecallback/#dfn-idle-callback-identifier
+    u32 m_idle_callback_identifier = 0;
 };
 
 void run_animation_frame_callbacks(DOM::Document&, double now);

@@ -55,6 +55,8 @@ public:
 
     NonnullRefPtrVector<DOM::Document> documents_in_this_event_loop() const;
 
+    NonnullRefPtrVector<Window> same_loop_windows() const;
+
     void push_onto_backup_incumbent_settings_object_stack(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject& environment_settings_object);
     void pop_backup_incumbent_settings_object_stack(Badge<EnvironmentSettingsObject>);
     EnvironmentSettingsObject& top_of_backup_incumbent_settings_object_stack();
@@ -62,6 +64,9 @@ public:
 
     void register_environment_settings_object(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject&);
     void unregister_environment_settings_object(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject&);
+
+    double unsafe_shared_current_time() const;
+    double compute_deadline() const;
 
 private:
     Type m_type { Type::Window };
@@ -71,6 +76,11 @@ private:
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#currently-running-task
     Task* m_currently_running_task { nullptr };
+
+    // https://html.spec.whatwg.org/multipage/webappapis.html#last-render-opportunity-time
+    double m_last_render_opportunity_time { 0 };
+    // https://html.spec.whatwg.org/multipage/webappapis.html#last-idle-period-start-time
+    double m_last_idle_period_start_time { 0 };
 
     JS::VM* m_vm { nullptr };
 
