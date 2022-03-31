@@ -127,6 +127,7 @@ private:
     Vector<StringView> scope_of_reference_to_symbol(const ASTNode&) const;
 
     Optional<GUI::AutocompleteProvider::ProjectLocation> find_preprocessor_definition(const DocumentData&, const GUI::TextPosition&);
+    Optional<Cpp::Preprocessor::Substitution> find_preprocessor_substitution(DocumentData const&, Cpp::Position const&);
 
     OwnPtr<DocumentData> create_document_data(String&& text, const String& filename);
     Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_property(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
