@@ -2515,7 +2515,7 @@ RefPtr<PropertyOwningCSSStyleDeclaration> Parser::convert_to_style_declaration(V
 
 Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& declaration)
 {
-    auto& property_name = declaration.m_name;
+    auto& property_name = declaration.name();
     auto property_id = property_id_from_string(property_name);
 
     if (property_id == PropertyID::Invalid) {
@@ -2529,7 +2529,7 @@ Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& dec
         }
     }
 
-    auto value_token_stream = TokenStream(declaration.m_values);
+    auto value_token_stream = TokenStream(declaration.values());
     auto value = parse_css_value(property_id, value_token_stream);
     if (value.is_error()) {
         if (value.error() != ParsingResult::IncludesIgnoredVendorPrefix) {
@@ -2542,9 +2542,9 @@ Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& dec
     }
 
     if (property_id == PropertyID::Custom) {
-        return StyleProperty { declaration.m_important, property_id, value.release_value(), declaration.m_name };
+        return StyleProperty { declaration.importance(), property_id, value.release_value(), declaration.name() };
     } else {
-        return StyleProperty { declaration.m_important, property_id, value.release_value(), {} };
+        return StyleProperty { declaration.importance(), property_id, value.release_value(), {} };
     }
 }
 
@@ -4131,13 +4131,13 @@ RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens
         }
 
         auto& declaration = declaration_or_at_rule.declaration();
-        if (declaration.m_name.equals_ignoring_case("font-family"sv)) {
+        if (declaration.name().equals_ignoring_case("font-family"sv)) {
             // FIXME: This is very similar to, but different from, the logic in parse_font_family_value().
             //        Ideally they could share code.
             Vector<String> font_family_parts;
             bool had_syntax_error = false;
-            for (size_t i = 0; i < declaration.m_values.size(); ++i) {
-                auto& part = declaration.m_values[i];
+            for (size_t i = 0; i < declaration.values().size(); ++i) {
+                auto& part = declaration.values()[i];
                 if (part.is(Token::Type::Whitespace))
                     continue;
                 if (part.is(Token::Type::String)) {
@@ -4170,11 +4170,11 @@ RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens
             font_family = String::join(' ', font_family_parts);
             continue;
         }
-        if (declaration.m_name.equals_ignoring_case("src"sv)) {
+        if (declaration.name().equals_ignoring_case("src"sv)) {
             Vector<FontFace::Source> supported_sources;
             // FIXME: Implement `local()`.
             // FIXME: Implement `format()`.
-            TokenStream token_stream { declaration.m_values };
+            TokenStream token_stream { declaration.values() };
             auto list_of_source_token_lists = parse_a_comma_separated_list_of_component_values(token_stream);
             for (auto const& source_token_list : list_of_source_token_lists) {
                 Optional<AK::URL> url;
@@ -4201,7 +4201,7 @@ RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens
             src = move(supported_sources);
         }
 
-        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Unrecognized descriptor '{}' in @font-family; discarding.", declaration.m_name);
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Unrecognized descriptor '{}' in @font-family; discarding.", declaration.name());
     }
 
     if (!font_family.has_value()) {
