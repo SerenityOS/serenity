@@ -135,7 +135,6 @@ private:
     ssize_t negative_offset_from_tls_block_end(ssize_t tls_offset, size_t value_of_symbol) const;
 
     String m_filename;
-    String m_program_interpreter;
     size_t m_file_size { 0 };
     int m_image_fd { -1 };
     void* m_file_data { nullptr };
