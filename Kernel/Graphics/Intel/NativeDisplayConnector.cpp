@@ -351,8 +351,8 @@ void IntelNativeDisplayConnector::gmbus_read_edid()
     Array<u8, 128> crt_edid_bytes {};
     {
         SpinlockLocker control_lock(m_control_lock);
-        MUST(m_gmbus_connector->write(DDC2_I2C_ADDRESS, 0));
-        MUST(m_gmbus_connector->read(DDC2_I2C_ADDRESS, crt_edid_bytes.data(), crt_edid_bytes.size()));
+        MUST(m_gmbus_connector->write(Graphics::ddc2_i2c_address, 0));
+        MUST(m_gmbus_connector->read(Graphics::ddc2_i2c_address, crt_edid_bytes.data(), crt_edid_bytes.size()));
     }
     set_edid_bytes(crt_edid_bytes);
 }
