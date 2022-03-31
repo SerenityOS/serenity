@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,5 +31,7 @@ struct Modesetting {
     Timings horizontal;
     Timings vertical;
 };
+// Note: Address 0x50 is expected to be the DDC2 (EDID) i2c address.
+static constexpr u8 ddc2_i2c_address = 0x50;
 
 }
