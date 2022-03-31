@@ -59,7 +59,7 @@ private:
 };
 
 struct CompositorScreenData;
-struct ScreenFBData;
+struct FlushRectData;
 
 class Screen : public RefCounted<Screen> {
 public:
@@ -211,7 +211,7 @@ private:
     int m_pitch { 0 };
     Gfx::IntRect m_virtual_rect;
     int m_framebuffer_fd { -1 };
-    NonnullOwnPtr<ScreenFBData> m_framebuffer_data;
+    NonnullOwnPtr<FlushRectData> m_flush_rects;
     NonnullOwnPtr<CompositorScreenData> m_compositor_screen_data;
 };
 

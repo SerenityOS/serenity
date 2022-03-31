@@ -25,7 +25,7 @@ Gfx::IntRect Screen::s_bounding_screens_rect {};
 ScreenLayout Screen::s_layout;
 Vector<int, default_scale_factors_in_use_count> Screen::s_scale_factors_in_use;
 
-struct ScreenFBData {
+struct FlushRectData {
     Vector<FBRect, 32> pending_flush_rects;
     bool too_many_pending_flush_rects { false };
 };
@@ -208,7 +208,7 @@ void Screen::update_scale_factors_in_use()
 
 Screen::Screen(size_t screen_index)
     : m_index(screen_index)
-    , m_framebuffer_data(adopt_own(*new ScreenFBData()))
+    , m_flush_rects(adopt_own(*new FlushRectData()))
     , m_compositor_screen_data(Compositor::create_screen_data({}))
 {
     update_virtual_rect();
@@ -479,20 +479,20 @@ void ScreenInput::on_receive_keyboard_data(::KeyEvent kernel_event)
 
 void Screen::constrain_pending_flush_rects()
 {
-    auto& fb_data = *m_framebuffer_data;
-    if (fb_data.pending_flush_rects.is_empty())
+    auto& flush_rects = *m_flush_rects;
+    if (flush_rects.pending_flush_rects.is_empty())
         return;
     Gfx::IntRect screen_rect({}, rect().size());
     Gfx::DisjointRectSet rects;
-    for (auto& fb_rect : fb_data.pending_flush_rects) {
+    for (auto& fb_rect : flush_rects.pending_flush_rects) {
         Gfx::IntRect rect { (int)fb_rect.x, (int)fb_rect.y, (int)fb_rect.width, (int)fb_rect.height };
         auto intersected_rect = rect.intersected(screen_rect);
         if (!intersected_rect.is_empty())
             rects.add(intersected_rect);
     }
-    fb_data.pending_flush_rects.clear_with_capacity();
+    flush_rects.pending_flush_rects.clear_with_capacity();
     for (auto const& rect : rects.rects()) {
-        fb_data.pending_flush_rects.append({
+        flush_rects.pending_flush_rects.append({
             .head_index = 0,
             .x = (unsigned)rect.x(),
             .y = (unsigned)rect.y(),
@@ -507,12 +507,12 @@ void Screen::queue_flush_display_rect(Gfx::IntRect const& flush_region)
     // NOTE: we don't scale until in Screen::flush_display so that when
     // there are too many rectangles that we end up throwing away, we didn't
     // waste accounting for scale factor!
-    auto& fb_data = *m_framebuffer_data;
-    if (fb_data.too_many_pending_flush_rects) {
+    auto& flush_rects = *m_flush_rects;
+    if (flush_rects.too_many_pending_flush_rects) {
         // We already have too many, just make sure we extend it if needed
-        VERIFY(!fb_data.pending_flush_rects.is_empty());
-        if (fb_data.pending_flush_rects.size() == 1) {
-            auto& union_rect = fb_data.pending_flush_rects[0];
+        VERIFY(!flush_rects.pending_flush_rects.is_empty());
+        if (flush_rects.pending_flush_rects.size() == 1) {
+            auto& union_rect = flush_rects.pending_flush_rects[0];
             auto new_union = flush_region.united(Gfx::IntRect((int)union_rect.x, (int)union_rect.y, (int)union_rect.width, (int)union_rect.height));
             union_rect.x = new_union.left();
             union_rect.y = new_union.top();
@@ -521,10 +521,10 @@ void Screen::queue_flush_display_rect(Gfx::IntRect const& flush_region)
         } else {
             // Convert all the rectangles into one union
             auto new_union = flush_region;
-            for (auto& flush_rect : fb_data.pending_flush_rects)
+            for (auto& flush_rect : flush_rects.pending_flush_rects)
                 new_union = new_union.united(Gfx::IntRect((int)flush_rect.x, (int)flush_rect.y, (int)flush_rect.width, (int)flush_rect.height));
-            fb_data.pending_flush_rects.resize(1, true);
-            auto& union_rect = fb_data.pending_flush_rects[0];
+            flush_rects.pending_flush_rects.resize(1, true);
+            auto& union_rect = flush_rects.pending_flush_rects[0];
             union_rect.x = new_union.left();
             union_rect.y = new_union.top();
             union_rect.width = new_union.width();
@@ -532,28 +532,28 @@ void Screen::queue_flush_display_rect(Gfx::IntRect const& flush_region)
         }
         return;
     }
-    VERIFY(fb_data.pending_flush_rects.size() < fb_data.pending_flush_rects.capacity());
-    fb_data.pending_flush_rects.append({ 0,
+    VERIFY(flush_rects.pending_flush_rects.size() < flush_rects.pending_flush_rects.capacity());
+    flush_rects.pending_flush_rects.append({ 0,
         (unsigned)flush_region.left(),
         (unsigned)flush_region.top(),
         (unsigned)flush_region.width(),
         (unsigned)flush_region.height() });
-    if (fb_data.pending_flush_rects.size() == fb_data.pending_flush_rects.capacity()) {
+    if (flush_rects.pending_flush_rects.size() == flush_rects.pending_flush_rects.capacity()) {
         // If we get one more rectangle then we need to convert it to a single union rectangle
-        fb_data.too_many_pending_flush_rects = true;
+        flush_rects.too_many_pending_flush_rects = true;
     }
 }
 
 void Screen::flush_display(int buffer_index)
 {
     VERIFY(m_can_device_flush_buffers);
-    auto& fb_data = *m_framebuffer_data;
-    if (fb_data.pending_flush_rects.is_empty())
+    auto& flush_rects = *m_flush_rects;
+    if (flush_rects.pending_flush_rects.is_empty())
         return;
 
     // Now that we have a final set of rects, apply the scale factor
     auto scale_factor = this->scale_factor();
-    for (auto& flush_rect : fb_data.pending_flush_rects) {
+    for (auto& flush_rect : flush_rects.pending_flush_rects) {
         VERIFY(Gfx::IntRect({}, m_virtual_rect.size()).contains({ (int)flush_rect.x, (int)flush_rect.y, (int)flush_rect.width, (int)flush_rect.height }));
         flush_rect.x *= scale_factor;
         flush_rect.y *= scale_factor;
@@ -561,7 +561,7 @@ void Screen::flush_display(int buffer_index)
         flush_rect.height *= scale_factor;
     }
 
-    if (fb_flush_buffers(m_framebuffer_fd, buffer_index, fb_data.pending_flush_rects.data(), (unsigned)fb_data.pending_flush_rects.size()) < 0) {
+    if (fb_flush_buffers(m_framebuffer_fd, buffer_index, flush_rects.pending_flush_rects.data(), (unsigned)flush_rects.pending_flush_rects.size()) < 0) {
         int err = errno;
         if (err == ENOTSUP)
             m_can_device_flush_buffers = false;
@@ -569,8 +569,8 @@ void Screen::flush_display(int buffer_index)
             dbgln("Screen #{}: Error ({}) flushing display: {}", index(), err, strerror(err));
     }
 
-    fb_data.too_many_pending_flush_rects = false;
-    fb_data.pending_flush_rects.clear_with_capacity();
+    flush_rects.too_many_pending_flush_rects = false;
+    flush_rects.pending_flush_rects.clear_with_capacity();
 }
 
 void Screen::flush_display_front_buffer(int front_buffer_index, Gfx::IntRect& rect)
