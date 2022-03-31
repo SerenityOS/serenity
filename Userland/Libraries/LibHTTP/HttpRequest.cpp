@@ -37,7 +37,7 @@ ByteBuffer HttpRequest::to_raw_request() const
     builder.append(URL::percent_encode(m_url.path(), URL::PercentEncodeSet::EncodeURI));
     if (!m_url.query().is_empty()) {
         builder.append('?');
-        builder.append(URL::percent_encode(m_url.query(), URL::PercentEncodeSet::EncodeURI));
+        builder.append(URL::percent_encode(m_url.query(), URL::PercentEncodeSet::EncodeURI, "+"sv));
     }
     builder.append(" HTTP/1.1\r\nHost: ");
     builder.append(m_url.host());
