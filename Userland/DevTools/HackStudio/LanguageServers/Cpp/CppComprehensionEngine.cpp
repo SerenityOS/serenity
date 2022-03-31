@@ -940,6 +940,7 @@ Vector<GUI::AutocompleteProvider::TokenInfo> CppComprehensionEngine::get_tokens_
         tokens_info.append({ get_token_semantic_type(document, token),
             token.start().line, token.start().column, token.end().line, token.end().column });
         ++i;
+        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "{}: {}", token.text(), GUI::AutocompleteProvider::TokenInfo::type_to_string(tokens_info.last().type));
     }
     return tokens_info;
 }
