@@ -6399,3 +6399,16 @@ index ff44d5ae0..2ca1a4262 100644
    arm*-*-symbianelf*)
      # This is a freestanding configuration; there is nothing to do here.
      ;;
+diff -ru a/gcc/config/aarch64/aarch64.h b/gcc/config/aarch64/aarch64.h
+--- a/gcc/config/aarch64/aarch64.h	2021-04-08 13:56:28.000000000 +0200
++++ b/gcc/config/aarch64/aarch64.h	2021-04-20 22:41:03.000000000 +0200
+@@ -1200,7 +1200,7 @@
+ #define MCPU_TO_MARCH_SPEC_FUNCTIONS \
+   { "rewrite_mcpu", aarch64_rewrite_mcpu },
+ 
+-#if defined(__aarch64__)
++#if defined(__aarch64__) && ! defined(__APPLE__)
+ extern const char *host_detect_local_cpu (int argc, const char **argv);
+ #define HAVE_LOCAL_CPU_DETECT
+ # define EXTRA_SPEC_FUNCTION
+ 
