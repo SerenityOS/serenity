@@ -54,4 +54,21 @@ struct PLLSettings {
     u64 p1 { 0 };
     u64 p2 { 0 };
 };
+
+enum class DisplayPortAuxiliaryOperation {
+    I2CWrite = 0,
+    I2CRead = 1,
+    MOT = 4,
+    NativeWrite = 0x8,
+    NativeRead = 0x9,
+};
+
+struct [[gnu::packed]] DisplayPortAuxChannelRegisters {
+    u32 control;
+    u32 data1;
+    u32 data2;
+    u32 data3;
+    u32 data4;
+};
+
 }

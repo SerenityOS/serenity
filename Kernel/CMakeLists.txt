@@ -78,6 +78,7 @@ set(KERNEL_SOURCES
     Graphics/Intel/Transcoder/DisplayTranscoder.cpp
     Graphics/Intel/DisplayConnectorGroup.cpp
     Graphics/Intel/DisplayPlane.cpp
+    Graphics/Intel/DisplayPortAuxiliaryConnector.cpp
     Graphics/Intel/GMBusConnector.cpp
     Graphics/Intel/NativeDisplayConnector.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
