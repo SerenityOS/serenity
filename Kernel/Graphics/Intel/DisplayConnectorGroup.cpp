@@ -12,40 +12,13 @@
 #include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/Intel/DisplayConnectorGroup.h>
+#include <Kernel/Graphics/Intel/Transcoder/CRTDisplayTranscoder.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel {
 
 namespace IntelGraphics {
-
-struct PLLSettings {
-    bool is_valid() const { return (n != 0 && m1 != 0 && m2 != 0 && p1 != 0 && p2 != 0); }
-    u64 compute_dot_clock(u64 refclock) const
-    {
-        return (refclock * (5 * m1 + m2) / n) / (p1 * p2);
-    }
-
-    u64 compute_vco(u64 refclock) const
-    {
-        return refclock * (5 * m1 + m2) / n;
-    }
-
-    u64 compute_m() const
-    {
-        return 5 * m1 + m2;
-    }
-
-    u64 compute_p() const
-    {
-        return p1 * p2;
-    }
-    u64 n { 0 };
-    u64 m1 { 0 };
-    u64 m2 { 0 };
-    u64 p1 { 0 };
-    u64 p2 { 0 };
-};
 
 static constexpr PLLMaxSettings G35Limits {
     { 20'000'000, 400'000'000 },      // values in Hz, dot_clock
@@ -171,8 +144,15 @@ IntelDisplayConnectorGroup::IntelDisplayConnectorGroup(Generation generation, No
 
 ErrorOr<void> IntelDisplayConnectorGroup::initialize_gen4_connectors()
 {
-    // Note: Just assume we will need one Gen4 "transcoder", starting at HorizontalTotalA register (0x60000)
-    m_transcoders[0] = TRY(IntelDisplayTranscoder::create_with_physical_address(m_mmio_first_region.pci_bar_paddr.offset(0x60000)));
+    // NOTE: Just assume we will need one Gen4 "transcoder"
+    // NOTE: Main block of registers starting at HorizontalTotalA register (0x60000)
+    auto transcoder_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x60000);
+    // NOTE: DPLL registers starting at DPLLDivisorA0 register (0x6040)
+    auto dpll_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x6040);
+    // NOTE: DPLL A control registers starting at 0x6014 (DPLL A Control register),
+    // DPLL A Multiplier is at 0x601C, between them (at 0x6018) there is the DPLL B Control register.
+    auto dpll_control_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x6014);
+    m_transcoders[0] = TRY(IntelCRTDisplayTranscoder::create_with_physical_addresses(transcoder_registers_paddr, dpll_registers_paddr, dpll_control_registers_paddr));
     m_planes[0] = TRY(IntelDisplayPlane::create_with_physical_address(m_mmio_first_region.pci_bar_paddr.offset(0x70180)));
     Array<u8, 128> crt_edid_bytes {};
     {
@@ -289,16 +269,6 @@ void IntelDisplayConnectorGroup::enable_vga_plane()
         return "PipeAConf"sv;
     case IntelGraphics::GlobalGenerationRegister::PipeBConf:
         return "PipeBConf"sv;
-    case IntelGraphics::GlobalGenerationRegister::DPLLDivisorA0:
-        return "DPLLDivisorA0"sv;
-    case IntelGraphics::GlobalGenerationRegister::DPLLDivisorA1:
-        return "DPLLDivisorA1"sv;
-    case IntelGraphics::GlobalGenerationRegister::DPLLControlA:
-        return "DPLLControlA"sv;
-    case IntelGraphics::GlobalGenerationRegister::DPLLControlB:
-        return "DPLLControlB"sv;
-    case IntelGraphics::GlobalGenerationRegister::DPLLMultiplierA:
-        return "DPLLMultiplierA"sv;
     case IntelGraphics::GlobalGenerationRegister::AnalogDisplayPort:
         return "AnalogDisplayPort"sv;
     case IntelGraphics::GlobalGenerationRegister::VGADisplayPlaneControl:
@@ -379,11 +349,13 @@ bool IntelDisplayConnectorGroup::set_crt_resolution(DisplayConnector::ModeSettin
     MUST(m_planes[0]->disable({}));
     disable_pipe_a();
     disable_pipe_b();
-    disable_dpll();
+    MUST(m_transcoders[0]->disable_dpll({}));
     disable_vga_emulation();
 
     dbgln_if(INTEL_GRAPHICS_DEBUG, "PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
-    enable_dpll_without_vga(settings, dac_multiplier);
+    MUST(m_transcoders[0]->set_dpll_settings({}, settings, dac_multiplier));
+    MUST(m_transcoders[0]->disable_dpll({}));
+    MUST(m_transcoders[0]->enable_dpll_without_vga({}));
     MUST(m_transcoders[0]->set_mode_setting_timings({}, mode_setting));
 
     VERIFY(!pipe_a_enabled());
@@ -430,14 +402,6 @@ bool IntelDisplayConnectorGroup::wait_for_disabled_pipe_b(size_t milliseconds_ti
     return false;
 }
 
-void IntelDisplayConnectorGroup::disable_dpll()
-{
-    VERIFY(m_control_lock.is_locked());
-    VERIFY(m_modeset_lock.is_locked());
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLControlA, 0);
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLControlB, 0);
-}
-
 void IntelDisplayConnectorGroup::disable_pipe_a()
 {
     VERIFY(m_control_lock.is_locked());
@@ -469,34 +433,6 @@ void IntelDisplayConnectorGroup::enable_pipe_a()
     // FIXME: Seems like my video card is buggy and doesn't set the enabled bit (bit 30)!!
     wait_for_enabled_pipe_a(100);
     dbgln_if(INTEL_GRAPHICS_DEBUG, "enabling Pipe A - done.");
-}
-
-void IntelDisplayConnectorGroup::set_dpll_registers(IntelGraphics::PLLSettings const& settings)
-{
-    VERIFY(m_control_lock.is_locked());
-    VERIFY(m_modeset_lock.is_locked());
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLDivisorA0, (settings.m2 - 2) | ((settings.m1 - 2) << 8) | ((settings.n - 2) << 16));
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLDivisorA1, (settings.m2 - 2) | ((settings.m1 - 2) << 8) | ((settings.n - 2) << 16));
-
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLControlA, 0);
-}
-
-void IntelDisplayConnectorGroup::enable_dpll_without_vga(IntelGraphics::PLLSettings const& settings, size_t dac_multiplier)
-{
-    VERIFY(m_control_lock.is_locked());
-    VERIFY(m_modeset_lock.is_locked());
-
-    set_dpll_registers(settings);
-
-    microseconds_delay(200);
-
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLControlA, (6 << 9) | (settings.p1) << 16 | (1 << 26) | (1 << 28) | (1 << 31));
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLMultiplierA, (dac_multiplier - 1) | ((dac_multiplier - 1) << 8));
-
-    // The specification says we should wait (at least) about 150 microseconds
-    // after enabling the DPLL to allow the clock to stabilize
-    microseconds_delay(200);
-    VERIFY(read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::DPLLControlA) & (1 << 31));
 }
 
 void IntelDisplayConnectorGroup::disable_dac_output()

@@ -11,9 +11,9 @@
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/Intel/Definitions.h>
 #include <Kernel/Graphics/Intel/DisplayPlane.h>
-#include <Kernel/Graphics/Intel/DisplayTranscoder.h>
 #include <Kernel/Graphics/Intel/GMBusConnector.h>
 #include <Kernel/Graphics/Intel/NativeDisplayConnector.h>
+#include <Kernel/Graphics/Intel/Transcoder/DisplayTranscoder.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <LibEDID/EDID.h>
@@ -78,11 +78,7 @@ private:
 
     void disable_pipe_a();
     void disable_pipe_b();
-    void disable_dpll();
 
-    void set_dpll_registers(IntelGraphics::PLLSettings const&);
-
-    void enable_dpll_without_vga(IntelGraphics::PLLSettings const&, size_t dac_multiplier);
     void enable_pipe_a();
 
     bool wait_for_enabled_pipe_a(size_t milliseconds_timeout) const;

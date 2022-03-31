@@ -34,15 +34,32 @@ public:
         u32 reserved;
         u32 vsync_shift;
         u32 pipe_mult;
+        u32 dpll_reserved_dac_multiplier;
+        u32 dpll_raw_dac_multiplier;
+        u32 dpll_divisor_a0;
+        u32 dpll_divisor_a1;
+        u32 dpll_p1;
+        u32 dpll_control;
+        u32 m1_value;
+        u32 n1_value;
+        u32 m2_value;
+        u32 n2_value;
+        u32 m1_link;
+        u32 n1_link;
+        u32 m2_link;
+        u32 n2_link;
     };
 
-    static ErrorOr<NonnullOwnPtr<IntelDisplayTranscoder>> create_with_physical_address(PhysicalAddress transcoder_registers_start_address);
-
     ErrorOr<void> set_mode_setting_timings(Badge<IntelDisplayConnectorGroup>, DisplayConnector::ModeSetting const&);
+    virtual ErrorOr<void> set_dpll_settings(Badge<IntelDisplayConnectorGroup>, IntelGraphics::PLLSettings const& settings, size_t dac_multiplier) = 0;
+    virtual ErrorOr<void> enable_dpll_without_vga(Badge<IntelDisplayConnectorGroup>) = 0;
+    virtual ErrorOr<void> disable_dpll(Badge<IntelDisplayConnectorGroup>) = 0;
 
     ShadowRegisters current_registers_state() const;
 
-private:
+    virtual ~IntelDisplayTranscoder() = default;
+
+protected:
     struct [[gnu::packed]] TranscoderRegisters {
         u32 horizontal_total;
         u32 horizontal_blank;
@@ -56,6 +73,14 @@ private:
         u32 reserved;
         u32 vsync_shift;
         u32 pipe_mult;
+        u32 m1_value;
+        u32 n1_value;
+        u32 m2_value;
+        u32 n2_value;
+        u32 m1_link;
+        u32 n1_link;
+        u32 m2_link;
+        u32 n2_link;
     };
 
     explicit IntelDisplayTranscoder(Memory::TypedMapping<TranscoderRegisters volatile>);
