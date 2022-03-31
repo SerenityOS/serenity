@@ -185,7 +185,7 @@ ErrorOr<void> IntelDisplayConnectorGroup::initialize_gen4_connectors()
         // For now, this "hack" works well enough.
         crt_edid_bytes[0] = 0x0;
     }
-    m_connectors[0] = TRY(IntelNativeDisplayConnector::try_create(*this, IntelNativeDisplayConnector::Type::Analog, m_mmio_second_region.pci_bar_paddr, m_mmio_second_region.pci_bar_space_length));
+    m_connectors[0] = TRY(IntelNativeDisplayConnector::try_create(*this, IntelNativeDisplayConnector::ConnectorIndex::PortA, IntelNativeDisplayConnector::Type::Analog, m_mmio_second_region.pci_bar_paddr, m_mmio_second_region.pci_bar_space_length));
     m_connectors[0]->set_edid_bytes({}, crt_edid_bytes);
     return {};
 }
@@ -247,6 +247,9 @@ ErrorOr<void> IntelDisplayConnectorGroup::set_mode_setting(Badge<IntelNativeDisp
 ErrorOr<void> IntelDisplayConnectorGroup::set_mode_setting(IntelNativeDisplayConnector& connector, DisplayConnector::ModeSetting const& mode_setting)
 {
     SpinlockLocker locker(connector.m_modeset_lock);
+
+    VERIFY(to_underlying(connector.connector_index()) < m_connectors.size());
+    VERIFY(const_cast<IntelNativeDisplayConnector*>(&connector) == m_connectors[to_underlying(connector.connector_index())].ptr());
 
     DisplayConnector::ModeSetting actual_mode_setting = mode_setting;
     actual_mode_setting.horizontal_stride = actual_mode_setting.horizontal_active * sizeof(u32);

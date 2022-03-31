@@ -34,10 +34,24 @@ public:
         EmbeddedDisplayPort,
     };
 
-    static ErrorOr<NonnullLockRefPtr<IntelNativeDisplayConnector>> try_create(IntelDisplayConnectorGroup const&, Type, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+    enum class ConnectorIndex : size_t {
+        PortA = 0,
+        PortB = 1,
+        PortC = 2,
+        PortD = 3,
+        PortE = 4,
+        PortF = 5,
+        PortH = 6,
+        PortG = 7,
+        PortI = 8,
+    };
+
+    static ErrorOr<NonnullLockRefPtr<IntelNativeDisplayConnector>> try_create(IntelDisplayConnectorGroup const&, ConnectorIndex, Type, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
 
     void set_edid_bytes(Badge<IntelDisplayConnectorGroup>, Array<u8, 128> const& edid_bytes);
     ErrorOr<void> create_attached_framebuffer_console(Badge<IntelDisplayConnectorGroup>);
+
+    ConnectorIndex connector_index() const { return m_connector_index; }
 
 private:
     // ^DisplayConnector
@@ -57,8 +71,9 @@ private:
     // Note: Paravirtualized hardware doesn't require a defined refresh rate for modesetting.
     virtual bool refresh_rate_support() const override { return true; }
 
-    IntelNativeDisplayConnector(IntelDisplayConnectorGroup const&, Type, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+    IntelNativeDisplayConnector(IntelDisplayConnectorGroup const&, ConnectorIndex connector_index, Type, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
     Type const m_type { Type::Analog };
+    ConnectorIndex const m_connector_index { 0 };
     NonnullLockRefPtr<IntelDisplayConnectorGroup> m_parent_connector_group;
     LockRefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
 };
