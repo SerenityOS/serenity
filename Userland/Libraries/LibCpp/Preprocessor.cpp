@@ -277,7 +277,7 @@ Optional<Preprocessor::MacroCall> Preprocessor::parse_macro_call(Vector<Token> c
     ++token_index;
 
     Vector<MacroCall::Argument> arguments;
-    MacroCall::Argument current_argument;
+    Optional<MacroCall::Argument> current_argument;
 
     size_t paren_depth = 1;
     for (; token_index < tokens.size(); ++token_index) {
@@ -288,15 +288,19 @@ Optional<Preprocessor::MacroCall> Preprocessor::parse_macro_call(Vector<Token> c
             --paren_depth;
 
         if (paren_depth == 0) {
-            arguments.append(move(current_argument));
+            if (current_argument.has_value())
+                arguments.append(*current_argument);
             break;
         }
 
         if (paren_depth == 1 && token.type() == Token::Type::Comma) {
-            arguments.append(move(current_argument));
+            if (current_argument.has_value())
+                arguments.append(*current_argument);
             current_argument = {};
         } else {
-            current_argument.tokens.append(token);
+            if (!current_argument.has_value())
+                current_argument = MacroCall::Argument {};
+            current_argument->tokens.append(token);
         }
     }
 
