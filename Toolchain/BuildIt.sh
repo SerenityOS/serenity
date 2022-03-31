@@ -308,12 +308,31 @@ pushd "$DIR/Build/$ARCH"
 
         pushd gdb
             echo "XXX configure gdb"
-            buildstep "gdb/configure" "$DIR"/Tarballs/$GDB_NAME/configure --prefix="$PREFIX" \
-                                                     --target="$TARGET" \
-                                                     --with-sysroot="$SYSROOT" \
-                                                     --enable-shared \
-                                                     --disable-nls \
-                                                     ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+
+
+            if [ "$SYSTEM_NAME" = "Darwin" ]; then
+                buildstep "gdb/configure" "$DIR"/Tarballs/$GDB_NAME/configure --prefix="$PREFIX" \
+                                                        --target="$TARGET" \
+                                                        --with-sysroot="$SYSROOT" \
+                                                        --enable-shared \
+                                                        --disable-werror \
+                                                        --with-libgmp-prefix="$(brew --prefix gmp)" \
+                                                        --with-gmp="$(brew --prefix gmp)" \
+                                                        --with-isl="$(brew --prefix isl)" \
+                                                        --with-mpc="$(brew --prefix libmpc)" \
+                                                        --with-mpfr="$(brew --prefix mpfr)" \
+                                                        --disable-nls \
+                                                        ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+            else 
+                buildstep "gdb/configure" "$DIR"/Tarballs/$GDB_NAME/configure --prefix="$PREFIX" \
+                                                        --target="$TARGET" \
+                                                        --with-sysroot="$SYSROOT" \
+                                                        --enable-shared \
+                                                        --disable-nls \
+                                                        ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+            fi
+
+            
             echo "XXX build gdb"
             buildstep "gdb/build" "$MAKE" -j "$MAKEJOBS" || exit 1
             buildstep "gdb/install" "$MAKE" install || exit 1
