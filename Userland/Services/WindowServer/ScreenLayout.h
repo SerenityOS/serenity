@@ -18,7 +18,12 @@ namespace WindowServer {
 class ScreenLayout {
 public:
     struct Screen {
-        String device;
+        enum class Mode {
+            Invalid,
+            Device,
+            Virtual,
+        } mode;
+        Optional<String> device;
         Gfx::IntPoint location;
         Gfx::IntSize resolution;
         int scale_factor;
@@ -26,6 +31,22 @@ public:
         Gfx::IntRect virtual_rect() const
         {
             return { location, { resolution.width() / scale_factor, resolution.height() / scale_factor } };
+        }
+
+        static StringView mode_to_string(Mode mode)
+        {
+#define __ENUMERATE_MODE_ENUM(val) \
+    case Mode::val:                \
+        return #val;
+
+            switch (mode) {
+                __ENUMERATE_MODE_ENUM(Invalid)
+                __ENUMERATE_MODE_ENUM(Device)
+                __ENUMERATE_MODE_ENUM(Virtual)
+            }
+            VERIFY_NOT_REACHED();
+
+#undef __ENUMERATE_MODE_ENUM
         }
 
         bool operator==(Screen const&) const = default;

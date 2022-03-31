@@ -98,7 +98,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
 
     for (auto& it : screens_with_resolution_change) {
         auto& existing_screen = *it.key;
-        dbgln("Closing device {} in preparation for resolution change", layout_backup.screens[existing_screen.index()].device);
+        dbgln("Closing device {} in preparation for resolution change", layout_backup.screens[existing_screen.index()].device.value_or("<virtual screen>"));
         existing_screen.close_device();
     }
 
@@ -229,15 +229,20 @@ bool Screen::open_device()
     auto& info = screen_layout_info();
 
     // TODO: Support other backends
-    m_backend = make<HardwareScreenBackend>(info.device);
-    auto return_value = m_backend->open();
-    if (return_value.is_error()) {
-        dbgln("Screen #{}: Failed to open backend: {}", index(), return_value.error());
-        return false;
+    if (info.mode == ScreenLayout::Screen::Mode::Device) {
+        m_backend = make<HardwareScreenBackend>(info.device.value());
+        auto return_value = m_backend->open();
+        if (return_value.is_error()) {
+            dbgln("Screen #{}: Failed to open backend: {}", index(), return_value.error());
+            return false;
+        }
+
+        set_resolution(true);
+        return true;
     }
 
-    set_resolution(true);
-    return true;
+    dbgln("Unsupported screen type {}", ScreenLayout::Screen::mode_to_string(info.mode));
+    return false;
 }
 
 void Screen::close_device()
