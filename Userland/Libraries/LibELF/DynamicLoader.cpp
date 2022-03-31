@@ -122,11 +122,9 @@ bool DynamicLoader::validate()
     auto* elf_header = (ElfW(Ehdr)*)m_file_data;
     if (!validate_elf_header(*elf_header, m_file_size))
         return false;
-    StringBuilder interpreter_path_builder;
-    auto result_or_error = validate_program_headers(*elf_header, m_file_size, { m_file_data, m_file_size }, &interpreter_path_builder);
+    auto result_or_error = validate_program_headers(*elf_header, m_file_size, { m_file_data, m_file_size });
     if (result_or_error.is_error() || !result_or_error.value())
         return false;
-    m_program_interpreter = interpreter_path_builder.string_view();
     return true;
 }
 

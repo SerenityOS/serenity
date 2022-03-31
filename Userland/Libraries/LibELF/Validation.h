@@ -13,6 +13,6 @@
 namespace ELF {
 
 bool validate_elf_header(ElfW(Ehdr) const& elf_header, size_t file_size, bool verbose = true);
-ErrorOr<bool> validate_program_headers(ElfW(Ehdr) const& elf_header, size_t file_size, ReadonlyBytes buffer, StringBuilder* interpreter_path_builder, bool verbose = true);
+ErrorOr<bool> validate_program_headers(ElfW(Ehdr) const& elf_header, size_t file_size, ReadonlyBytes buffer, StringBuilder* interpreter_path_builder = nullptr, bool verbose = true);
 
 } // end namespace ELF
