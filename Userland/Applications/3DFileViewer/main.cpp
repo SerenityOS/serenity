@@ -97,6 +97,7 @@ private:
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
 
 private:
     RefPtr<Mesh> m_mesh;
@@ -181,6 +182,14 @@ void GLContextWidget::mousewheel_event(GUI::MouseEvent& event)
         m_zoom /= 1.1f;
     else
         m_zoom *= 1.1f;
+}
+
+void GLContextWidget::keydown_event(GUI::KeyEvent& event)
+{
+    if (event.key() == Key_Escape && window()->is_fullscreen()) {
+        window()->set_fullscreen(false);
+        return;
+    }
 }
 
 void GLContextWidget::timer_event(Core::TimerEvent&)
