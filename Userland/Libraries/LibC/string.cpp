@@ -90,23 +90,23 @@ char* strndup(char const* str, size_t maxlen)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strcmp.html
 int strcmp(char const* s1, char const* s2)
 {
-    while (*s1 == *s2++)
-        if (*s1++ == 0)
-            return 0;
-    return *(unsigned char const*)s1 - *(unsigned char const*)--s2;
+    return strncmp(s1, s2, SIZE_MAX);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strncmp.html
 int strncmp(char const* s1, char const* s2, size_t n)
 {
-    if (!n)
-        return 0;
-    do {
-        if (*s1 != *s2++)
-            return *(unsigned char const*)s1 - *(unsigned char const*)--s2;
-        if (*s1++ == 0)
+    unsigned char const* u1 = reinterpret_cast<unsigned char const*>(s1);
+    unsigned char const* u2 = reinterpret_cast<unsigned char const*>(s2);
+
+    for (size_t i = 0; i < n; i += 1) {
+        int cmp = static_cast<int>(u1[i]) - u2[i];
+        if (cmp != 0)
+            return cmp;
+        if (u2[i] == '\0')
             break;
-    } while (--n);
+    }
+
     return 0;
 }
 
