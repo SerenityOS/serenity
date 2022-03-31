@@ -20,6 +20,10 @@ public:
     Declaration();
     ~Declaration();
 
+    String const& name() const { return m_name; }
+    Vector<ComponentValue> const& values() const { return m_values; }
+    Important importance() const { return m_important; }
+
     String to_string() const;
 
 private:
