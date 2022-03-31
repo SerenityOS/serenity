@@ -55,6 +55,7 @@ ComboBox::ComboBox()
 {
     REGISTER_STRING_PROPERTY("placeholder", editor_placeholder, set_editor_placeholder);
     REGISTER_BOOL_PROPERTY("model_only", only_allow_values_from_model, set_only_allow_values_from_model);
+    REGISTER_INT_PROPERTY("max_rows", max_rows, set_max_rows);
 
     set_min_width(32);
     set_fixed_height(22);
@@ -211,6 +212,11 @@ void ComboBox::set_selected_index(size_t index, AllowCallback allow_callback)
         on_change(m_editor->text(), m_list_view->cursor_index());
 }
 
+void ComboBox::set_max_rows(size_t rows)
+{
+    m_max_rows = rows;
+}
+
 size_t ComboBox::selected_index() const
 {
     return m_selected_index.has_value() ? m_selected_index.value().row() : 0;
@@ -236,7 +242,7 @@ void ComboBox::open()
     }
     Gfx::IntSize size {
         max(width(), longest_item_width + m_list_view->width_occupied_by_vertical_scrollbar() + m_list_view->frame_thickness() * 2 + m_list_view->horizontal_padding()),
-        model()->row_count() * m_list_view->item_height() + m_list_view->frame_thickness() * 2
+        min(model()->row_count(), static_cast<int>(max_rows())) * m_list_view->item_height() + m_list_view->frame_thickness() * 2
     };
 
     auto taskbar_height = GUI::Desktop::the().taskbar_height();

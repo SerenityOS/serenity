@@ -43,6 +43,9 @@ public:
     int model_column() const;
     void set_model_column(int);
 
+    void set_max_rows(size_t rows);
+    size_t max_rows() const { return m_max_rows; };
+
     void set_editor_placeholder(StringView placeholder);
     String const& editor_placeholder() const;
 
@@ -65,6 +68,7 @@ private:
     Optional<ModelIndex> m_selected_index;
     bool m_only_allow_values_from_model { false };
     bool m_updating_model { false };
+    size_t m_max_rows { 10 };
 };
 
 }
