@@ -773,7 +773,7 @@ void FlexFormattingContext::resolve_flexible_lengths()
             for_each_unfrozen_item([&](FlexItem* item) {
                 auto min_main = has_main_min_size(item->box)
                     ? specified_main_min_size(item->box)
-                    : 0;
+                    : determine_min_main_size_of_child(item->box);
                 auto max_main = has_main_max_size(item->box)
                     ? specified_main_max_size(item->box)
                     : NumericLimits<float>::max();
