@@ -68,8 +68,8 @@ protected:
     void set_gid(GroupID gid) { m_gid = gid; }
 
 private:
-    MajorNumber m_major { 0 };
-    MinorNumber m_minor { 0 };
+    MajorNumber const m_major { 0 };
+    MinorNumber const m_minor { 0 };
     UserID m_uid { 0 };
     GroupID m_gid { 0 };
 
