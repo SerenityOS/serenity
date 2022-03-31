@@ -69,6 +69,7 @@ protected:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
+    virtual void did_change_font() override;
 
 private:
     bool m_readonly { false };
@@ -85,16 +86,15 @@ private:
     bool m_cursor_blink_active { false };
     NonnullOwnPtr<HexDocument> m_document;
 
-    static constexpr int m_address_bar_width = 90;
-    static constexpr int m_padding = 5;
+    int m_padding { 8 };
+    int m_address_bar_width { 90 };
 
     void scroll_position_into_view(size_t position);
-
     size_t total_rows() const { return ceil_div(m_content_length, m_bytes_per_row); }
     size_t line_height() const { return font().glyph_height() + m_line_spacing; }
     size_t character_width() const { return font().glyph_width('W'); }
     size_t cell_width() const { return character_width() * 3; }
-    size_t offset_margin_width() const { return 80; }
+    size_t offset_margin_width() const { return m_address_bar_width - (2 * m_padding); }
 
     void hex_mode_keydown_event(GUI::KeyEvent&);
     void text_mode_keydown_event(GUI::KeyEvent&);

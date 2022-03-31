@@ -55,6 +55,7 @@ void HexEditor::set_readonly(bool readonly)
     m_readonly = readonly;
 }
 
+
 bool HexEditor::open_new_file(size_t size)
 {
     auto maybe_buffer = ByteBuffer::create_zeroed(size);
@@ -139,6 +140,11 @@ bool HexEditor::save()
 
     static_cast<HexDocumentFile*>(m_document.ptr())->write_to_file();
     return true;
+}
+
+void HexEditor::did_change_font() {
+    m_address_bar_width = character_width() * 15;
+    m_padding = character_width();
 }
 
 size_t HexEditor::selection_size()
