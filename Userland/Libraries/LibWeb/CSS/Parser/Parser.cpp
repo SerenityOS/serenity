@@ -4384,6 +4384,7 @@ RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens
 
     Optional<FlyString> font_family;
     Vector<FontFace::Source> src;
+    Vector<UnicodeRange> unicode_range;
 
     for (auto& declaration_or_at_rule : declarations_and_at_rules) {
         if (declaration_or_at_rule.is_at_rule()) {
@@ -4460,6 +4461,29 @@ RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens
             if (supported_sources.is_empty())
                 continue;
             src = move(supported_sources);
+            continue;
+        }
+        if (declaration.name().equals_ignoring_case("unicode-range"sv)) {
+            Vector<UnicodeRange> unicode_ranges;
+            bool unicode_range_invalid = false;
+            TokenStream all_tokens { declaration.values() };
+            auto range_token_lists = parse_a_comma_separated_list_of_component_values(all_tokens);
+            for (auto& range_tokens : range_token_lists) {
+                TokenStream range_token_stream { range_tokens };
+                auto maybe_unicode_range = parse_unicode_range(range_token_stream);
+                if (!maybe_unicode_range.has_value()) {
+                    dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face unicode-range format invalid; discarding.");
+                    unicode_range_invalid = true;
+                    break;
+                }
+                unicode_ranges.append(maybe_unicode_range.release_value());
+            }
+
+            if (unicode_range_invalid || unicode_ranges.is_empty())
+                continue;
+
+            unicode_range = move(unicode_ranges);
+            continue;
         }
 
         dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Unrecognized descriptor '{}' in @font-family; discarding.", declaration.name());
@@ -4470,7 +4494,11 @@ RefPtr<CSSRule> Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens
         return {};
     }
 
-    return CSSFontFaceRule::create(FontFace { font_family.release_value(), move(src) });
+    if (unicode_range.is_empty()) {
+        unicode_range.empend(0x0u, 0x10FFFFu);
+    }
+
+    return CSSFontFaceRule::create(FontFace { font_family.release_value(), move(src), move(unicode_range) });
 }
 
 RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& component_values)
