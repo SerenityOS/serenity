@@ -638,31 +638,15 @@ add_custom_command(
 add_custom_target(generate_PropertyID.cpp DEPENDS CSS/PropertyID.cpp)
 add_dependencies(all_generated generate_PropertyID.cpp)
 
-add_custom_command(
-    OUTPUT CSS/ValueID.h
-    COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
-    COMMAND "$<TARGET_FILE:Lagom::Generate_CSS_ValueID_h>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json" > CSS/ValueID.h.tmp
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/ValueID.h.tmp CSS/ValueID.h
-    COMMAND "${CMAKE_COMMAND}" -E remove CSS/ValueID.h.tmp
-    VERBATIM
-    DEPENDS Lagom::Generate_CSS_ValueID_h
-    MAIN_DEPENDENCY CSS/Identifiers.json
+invoke_generator(
+    "ValueID"
+    Lagom::GenerateCSSValueID
+    "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json"
+    ""
+    "CSS/ValueID.h"
+    "CSS/ValueID.cpp"
+    arguments -j "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json"
 )
-add_custom_target(generate_ValueID.h DEPENDS CSS/ValueID.h)
-add_dependencies(all_generated generate_ValueID.h)
-
-add_custom_command(
-    OUTPUT CSS/ValueID.cpp
-    COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
-    COMMAND "$<TARGET_FILE:Lagom::Generate_CSS_ValueID_cpp>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json" > CSS/ValueID.cpp.tmp
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/ValueID.cpp.tmp CSS/ValueID.cpp
-    COMMAND "${CMAKE_COMMAND}" -E remove CSS/ValueID.cpp.tmp
-    VERBATIM
-    DEPENDS Lagom::Generate_CSS_ValueID_cpp
-    MAIN_DEPENDENCY CSS/Identifiers.json
-)
-add_custom_target(generate_ValueID.cpp DEPENDS CSS/ValueID.cpp)
-add_dependencies(all_generated generate_ValueID.cpp)
 
 add_custom_command(
     OUTPUT CSS/DefaultStyleSheetSource.cpp
