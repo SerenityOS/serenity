@@ -850,7 +850,7 @@ static void build_sse_f3(u8 op, char const* mnemonic, InstructionFormat format, 
     build_sse_f3(0x11, "MOVSS", OP_xmm1m32_xmm2, &Interpreter::MOVSS_xmm1m32_xmm2);
     build_sse_np(0x12, "MOVLPS", OP_xmm1_xmm2m64, &Interpreter::MOVLPS_xmm1_xmm2m64); // FIXME: This mnemonic is MOVHLPS when providing xmm2
     build_sse_np(0x13, "MOVLPS", OP_m64_xmm2, &Interpreter::MOVLPS_m64_xmm2);
-    build_sse_np(0x15, "UNPCKLS", OP_xmm1_xmm2m128, &Interpreter::UNPCKLPS_xmm1_xmm2m128);
+    build_sse_np(0x14, "UNPCKLS", OP_xmm1_xmm2m128, &Interpreter::UNPCKLPS_xmm1_xmm2m128);
     build_sse_np(0x15, "UNPCKHS", OP_xmm1_xmm2m128, &Interpreter::UNPCKHPS_xmm1_xmm2m128);
     build_sse_np(0x16, "MOVHPS", OP_xmm1_xmm2m64, &Interpreter::MOVHPS_xmm1_xmm2m64); // FIXME: This mnemonic is MOVLHPS when providing xmm2
     build_sse_np(0x17, "MOVHPS", OP_m64_xmm2, &Interpreter::MOVHPS_m64_xmm2);
