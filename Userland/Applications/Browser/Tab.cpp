@@ -613,6 +613,12 @@ void Tab::show_storage_inspector()
             m_storage_widget->add_cookie(cookie);
     }
 
+    if (on_get_local_storage_entries) {
+        auto local_storage_entries = on_get_local_storage_entries();
+        m_storage_widget->clear_local_storage_entries();
+        m_storage_widget->set_local_storage_entries(local_storage_entries);
+    }
+
     auto* window = m_storage_widget->window();
     window->show();
     window->move_to_front();

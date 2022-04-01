@@ -47,4 +47,6 @@ endpoint WebContentServer
     set_has_focus(bool has_focus) =|
     set_is_scripting_enabled(bool is_scripting_enabled) =|
 
+    get_local_storage_entries() => (OrderedHashMap<String,String> entries)
+
 }

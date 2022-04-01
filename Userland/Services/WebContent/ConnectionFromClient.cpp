@@ -468,4 +468,10 @@ void ConnectionFromClient::set_is_scripting_enabled(bool is_scripting_enabled)
     m_page_host->set_is_scripting_enabled(is_scripting_enabled);
 }
 
+Messages::WebContentServer::GetLocalStorageEntriesResponse ConnectionFromClient::get_local_storage_entries()
+{
+    auto* document = page().top_level_browsing_context().active_document();
+    auto local_storage = document->window().local_storage();
+    return local_storage->map();
+}
 }
