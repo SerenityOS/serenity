@@ -276,7 +276,7 @@ StringView IntelDisplayConnectorGroup::convert_analog_output_register_to_string(
     }
 }
 
-void IntelDisplayConnectorGroup::write_to_general_register(RegisterOffset offset, u32 value) const
+void IntelDisplayConnectorGroup::write_to_general_register(RegisterOffset offset, u32 value)
 {
     VERIFY(m_control_lock.is_locked());
     SpinlockLocker lock(m_registers_lock);
