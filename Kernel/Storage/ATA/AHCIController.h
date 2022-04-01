@@ -34,7 +34,6 @@ public:
     virtual void start_request(ATADevice const&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
-    PhysicalAddress get_identify_metadata_physical_region(Badge<AHCIPort>, u32 port_index) const;
     void handle_interrupt_for_port(Badge<AHCIInterruptHandler>, u32 port_index) const;
 
 private:
@@ -51,7 +50,6 @@ private:
     NonnullOwnPtr<Memory::Region> default_hba_region() const;
     volatile AHCI::HBA& hba() const;
 
-    NonnullRefPtrVector<Memory::PhysicalPage> m_identify_metadata_pages;
     Array<RefPtr<AHCIPort>, 32> m_ports;
     NonnullOwnPtr<Memory::Region> m_hba_region;
     AHCI::HBADefinedCapabilities m_hba_capabilities;
