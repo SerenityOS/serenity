@@ -60,7 +60,7 @@ bool write_block(int fd, int seed, off_t block, AK::ByteBuffer& buffer)
 
 int main(int argc, char** argv)
 {
-    const char* target = nullptr;
+    char const* target = nullptr;
     int min_block_offset = 0;
     int block_length = 2048;
     int block_size = 512;

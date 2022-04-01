@@ -24,13 +24,13 @@ struct ParsedCookie {
     bool http_only_attribute_present { false };
 };
 
-Optional<ParsedCookie> parse_cookie(const String& cookie_string);
+Optional<ParsedCookie> parse_cookie(String const& cookie_string);
 
 }
 
 namespace IPC {
 
-bool encode(IPC::Encoder&, const Web::Cookie::ParsedCookie&);
+bool encode(IPC::Encoder&, Web::Cookie::ParsedCookie const&);
 ErrorOr<void> decode(IPC::Decoder&, Web::Cookie::ParsedCookie&);
 
 }

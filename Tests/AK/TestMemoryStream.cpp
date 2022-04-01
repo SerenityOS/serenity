@@ -63,7 +63,7 @@ TEST_CASE(recoverable_error)
 
 TEST_CASE(chain_stream_operator)
 {
-    const Array<u8, 4> expected { 0, 1, 2, 3 };
+    Array<u8, 4> const expected { 0, 1, 2, 3 };
     Array<u8, 4> actual;
 
     InputMemoryStream stream { expected };
@@ -76,10 +76,10 @@ TEST_CASE(chain_stream_operator)
 
 TEST_CASE(seeking_slicing_offset)
 {
-    const Array<u8, 8> input { 0, 1, 2, 3, 4, 5, 6, 7 };
-    const Array<u8, 4> expected0 { 0, 1, 2, 3 };
-    const Array<u8, 4> expected1 { 4, 5, 6, 7 };
-    const Array<u8, 4> expected2 { 1, 2, 3, 4 };
+    Array<u8, 8> const input { 0, 1, 2, 3, 4, 5, 6, 7 };
+    Array<u8, 4> const expected0 { 0, 1, 2, 3 };
+    Array<u8, 4> const expected1 { 4, 5, 6, 7 };
+    Array<u8, 4> const expected2 { 1, 2, 3, 4 };
 
     Array<u8, 4> actual0 {}, actual1 {}, actual2 {};
 
@@ -140,7 +140,7 @@ TEST_CASE(duplex_large_buffer)
 
 TEST_CASE(read_endian_values)
 {
-    const Array<u8, 8> input { 0, 1, 2, 3, 4, 5, 6, 7 };
+    Array<u8, 8> const input { 0, 1, 2, 3, 4, 5, 6, 7 };
     InputMemoryStream stream { input };
 
     LittleEndian<u32> value1;
@@ -153,7 +153,7 @@ TEST_CASE(read_endian_values)
 
 TEST_CASE(write_endian_values)
 {
-    const Array<u8, 8> expected { 4, 3, 2, 1, 1, 2, 3, 4 };
+    Array<u8, 8> const expected { 4, 3, 2, 1, 1, 2, 3, 4 };
 
     DuplexMemoryStream stream;
     stream << LittleEndian<u32> { 0x01020304 } << BigEndian<u32> { 0x01020304 };

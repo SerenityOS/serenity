@@ -18,8 +18,8 @@ class CoverWizardPage : public AbstractWizardPage {
 
     ImageWidget& banner_image_widget() { return *m_banner_image_widget; }
 
-    void set_header_text(const String& text);
-    void set_body_text(const String& text);
+    void set_header_text(String const& text);
+    void set_body_text(String const& text);
 
 private:
     explicit CoverWizardPage();

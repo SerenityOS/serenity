@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
     TRY(Core::System::pledge("stdio rpath"));
 
-    const char* device = nullptr;
+    char const* device = nullptr;
 
     bool flag_get_disk_size = false;
     bool flag_get_block_size = false;

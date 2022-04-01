@@ -15,7 +15,7 @@
 
 namespace Web::CSS {
 
-StyleProperties::StyleProperties(const StyleProperties& other)
+StyleProperties::StyleProperties(StyleProperties const& other)
     : m_property_values(other.m_property_values)
 {
     if (other.m_font) {
@@ -412,7 +412,7 @@ Optional<CSS::Position> StyleProperties::position() const
     }
 }
 
-bool StyleProperties::operator==(const StyleProperties& other) const
+bool StyleProperties::operator==(StyleProperties const& other) const
 {
     if (m_property_values.size() != other.m_property_values.size())
         return false;

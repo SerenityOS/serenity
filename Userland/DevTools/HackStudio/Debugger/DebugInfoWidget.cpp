@@ -89,7 +89,7 @@ DebugInfoWidget::DebugInfoWidget()
     };
 }
 
-bool DebugInfoWidget::does_variable_support_writing(const Debug::DebugInfo::VariableInfo* variable)
+bool DebugInfoWidget::does_variable_support_writing(Debug::DebugInfo::VariableInfo const* variable)
 {
     if (variable->location_type != Debug::DebugInfo::VariableInfo::LocationType::Address)
         return false;
@@ -102,7 +102,7 @@ RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::Mode
         return nullptr;
     auto context_menu = GUI::Menu::construct();
 
-    auto* variable = static_cast<const Debug::DebugInfo::VariableInfo*>(index.internal_data());
+    auto* variable = static_cast<Debug::DebugInfo::VariableInfo const*>(index.internal_data());
     if (does_variable_support_writing(variable)) {
         context_menu->add_action(GUI::Action::create("Change value", [&](auto&) {
             String value;
@@ -155,7 +155,7 @@ NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_registers_tab()
     return registers_widget;
 }
 
-void DebugInfoWidget::update_state(Debug::ProcessInspector& inspector, const PtraceRegisters& regs)
+void DebugInfoWidget::update_state(Debug::ProcessInspector& inspector, PtraceRegisters const& regs)
 {
     m_variables_view->set_model(VariablesModel::create(inspector, regs));
     m_backtrace_view->set_model(BacktraceModel::create(inspector, regs));

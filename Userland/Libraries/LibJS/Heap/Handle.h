@@ -25,7 +25,7 @@ public:
     ~HandleImpl();
 
     Cell* cell() { return m_cell; }
-    const Cell* cell() const { return m_cell; }
+    Cell const* cell() const { return m_cell; }
 
 private:
     template<class T>

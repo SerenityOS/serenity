@@ -862,7 +862,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     float font_size_in_px = 10;
 
     if (font_size->is_identifier()) {
-        switch (static_cast<const IdentifierStyleValue&>(*font_size).id()) {
+        switch (static_cast<IdentifierStyleValue const&>(*font_size).id()) {
         case CSS::ValueID::XxSmall:
         case CSS::ValueID::XSmall:
         case CSS::ValueID::Small:

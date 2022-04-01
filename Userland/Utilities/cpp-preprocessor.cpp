@@ -13,7 +13,7 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
-    const char* path = nullptr;
+    char const* path = nullptr;
     bool print_definitions = false;
     args_parser.add_positional_argument(path, "File", "file", Core::ArgsParser::Required::Yes);
     args_parser.add_option(print_definitions, "Print preprocessor definitions", "definitions", 'D');

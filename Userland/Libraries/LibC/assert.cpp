@@ -17,7 +17,7 @@ extern "C" {
 
 extern bool __stdio_is_initialized;
 
-void __assertion_failed(const char* msg)
+void __assertion_failed(char const* msg)
 {
     if (__heap_is_stable) {
         dbgln("ASSERTION FAILED: {}", msg);

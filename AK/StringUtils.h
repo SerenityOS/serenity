@@ -37,11 +37,11 @@ struct MaskSpan {
     size_t start;
     size_t length;
 
-    bool operator==(const MaskSpan& other) const
+    bool operator==(MaskSpan const& other) const
     {
         return start == other.start && length == other.length;
     }
-    bool operator!=(const MaskSpan& other) const
+    bool operator!=(MaskSpan const& other) const
     {
         return !(*this == other);
     }

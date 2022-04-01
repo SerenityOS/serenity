@@ -15,14 +15,14 @@
 
 namespace Web {
 
-NonnullRefPtr<Resource> Resource::create(Badge<ResourceLoader>, Type type, const LoadRequest& request)
+NonnullRefPtr<Resource> Resource::create(Badge<ResourceLoader>, Type type, LoadRequest const& request)
 {
     if (type == Type::Image)
         return adopt_ref(*new ImageResource(request));
     return adopt_ref(*new Resource(type, request));
 }
 
-Resource::Resource(Type type, const LoadRequest& request)
+Resource::Resource(Type type, LoadRequest const& request)
     : m_request(request)
     , m_type(type)
 {
@@ -57,7 +57,7 @@ void Resource::for_each_client(Function<void(ResourceClient&)> callback)
     }
 }
 
-static Optional<String> encoding_from_content_type(const String& content_type)
+static Optional<String> encoding_from_content_type(String const& content_type)
 {
     auto offset = content_type.find("charset="sv);
     if (offset.has_value()) {
@@ -72,7 +72,7 @@ static Optional<String> encoding_from_content_type(const String& content_type)
     return {};
 }
 
-static String mime_type_from_content_type(const String& content_type)
+static String mime_type_from_content_type(String const& content_type)
 {
     auto offset = content_type.find(';');
     if (offset.has_value())
@@ -86,7 +86,7 @@ static bool is_valid_encoding(String const& encoding)
     return TextCodec::decoder_for(encoding);
 }
 
-void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers, Optional<u32> status_code)
+void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<String, String, CaseInsensitiveStringTraits> const& headers, Optional<u32> status_code)
 {
     VERIFY(!m_loaded);
     // FIXME: Handle OOM failure.
@@ -131,7 +131,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
     });
 }
 
-void Resource::did_fail(Badge<ResourceLoader>, const String& error, Optional<u32> status_code)
+void Resource::did_fail(Badge<ResourceLoader>, String const& error, Optional<u32> status_code)
 {
     m_error = error;
     m_status_code = move(status_code);

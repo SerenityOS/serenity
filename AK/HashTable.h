@@ -57,8 +57,8 @@ class HashTableIterator {
     friend HashTableType;
 
 public:
-    bool operator==(const HashTableIterator& other) const { return m_bucket == other.m_bucket; }
-    bool operator!=(const HashTableIterator& other) const { return m_bucket != other.m_bucket; }
+    bool operator==(HashTableIterator const& other) const { return m_bucket == other.m_bucket; }
+    bool operator!=(HashTableIterator const& other) const { return m_bucket != other.m_bucket; }
     T& operator*() { return *m_bucket->slot(); }
     T* operator->() { return m_bucket->slot(); }
     void operator++() { skip_to_next(); }
@@ -90,8 +90,8 @@ class OrderedHashTableIterator {
     friend OrderedHashTableType;
 
 public:
-    bool operator==(const OrderedHashTableIterator& other) const { return m_bucket == other.m_bucket; }
-    bool operator!=(const OrderedHashTableIterator& other) const { return m_bucket != other.m_bucket; }
+    bool operator==(OrderedHashTableIterator const& other) const { return m_bucket == other.m_bucket; }
+    bool operator!=(OrderedHashTableIterator const& other) const { return m_bucket != other.m_bucket; }
     T& operator*() { return *m_bucket->slot(); }
     T* operator->() { return m_bucket->slot(); }
     void operator++() { m_bucket = m_bucket->next; }
@@ -156,14 +156,14 @@ public:
         kfree_sized(m_buckets, size_in_bytes(m_capacity));
     }
 
-    HashTable(const HashTable& other)
+    HashTable(HashTable const& other)
     {
         rehash(other.capacity());
         for (auto& it : other)
             set(it);
     }
 
-    HashTable& operator=(const HashTable& other)
+    HashTable& operator=(HashTable const& other)
     {
         HashTable temporary(other);
         swap(*this, temporary);

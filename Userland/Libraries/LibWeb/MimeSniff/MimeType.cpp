@@ -56,7 +56,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
     // https://fetch.spec.whatwg.org/#http-whitespace
     // HTTP whitespace is U+000A LF, U+000D CR, or an HTTP tab or space.
     // An HTTP tab or space is U+0009 TAB or U+0020 SPACE.
-    constexpr const char* http_whitespace = "\n\r\t ";
+    constexpr char const* http_whitespace = "\n\r\t ";
 
     // 1. Remove any leading and trailing HTTP whitespace from input.
     auto trimmed_string = string.trim(http_whitespace, TrimMode::Both);

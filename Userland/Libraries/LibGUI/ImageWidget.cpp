@@ -28,7 +28,7 @@ ImageWidget::ImageWidget(StringView)
     REGISTER_BOOL_PROPERTY("should_stretch", should_stretch, set_should_stretch);
 }
 
-void ImageWidget::set_bitmap(const Gfx::Bitmap* bitmap)
+void ImageWidget::set_bitmap(Gfx::Bitmap const* bitmap)
 {
     if (m_bitmap == bitmap)
         return;

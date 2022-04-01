@@ -7,12 +7,12 @@
 #include "OutlineModel.h"
 #include <LibGfx/FontDatabase.h>
 
-NonnullRefPtr<OutlineModel> OutlineModel::create(const NonnullRefPtr<PDF::OutlineDict>& outline)
+NonnullRefPtr<OutlineModel> OutlineModel::create(NonnullRefPtr<PDF::OutlineDict> const& outline)
 {
     return adopt_ref(*new OutlineModel(outline));
 }
 
-OutlineModel::OutlineModel(const NonnullRefPtr<PDF::OutlineDict>& outline)
+OutlineModel::OutlineModel(NonnullRefPtr<PDF::OutlineDict> const& outline)
     : m_outline(outline)
 {
     m_closed_item_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book.png").release_value_but_fixme_should_propagate_errors());

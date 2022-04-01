@@ -39,7 +39,7 @@ class PlaylistTableView : public GUI::TableView {
 public:
     void doubleclick_event(GUI::MouseEvent& event) override;
 
-    Function<void(const Gfx::Point<int>&)> on_doubleclick;
+    Function<void(Gfx::Point<int> const&)> on_doubleclick;
 
 private:
     PlaylistTableView();

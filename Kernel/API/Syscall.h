@@ -218,7 +218,7 @@ constexpr StringView to_string(Function function)
 
 #ifdef __serenity__
 struct StringArgument {
-    const char* characters;
+    char const* characters;
     size_t length { 0 };
 };
 
@@ -262,7 +262,7 @@ struct SC_poll_params {
     struct pollfd* fds;
     unsigned nfds;
     const struct timespec* timeout;
-    const u32* sigmask;
+    u32 const* sigmask;
 };
 
 struct SC_clock_nanosleep_params {
@@ -288,7 +288,7 @@ struct SC_getsockopt_params {
 };
 
 struct SC_setsockopt_params {
-    const void* value;
+    void const* value;
     int sockfd;
     int level;
     int option;
@@ -319,7 +319,7 @@ struct SC_futex_params {
     int futex_op;
     u32 val;
     union {
-        const timespec* timeout;
+        timespec const* timeout;
         uintptr_t val2;
     };
     u32* userspace_address2;
@@ -327,11 +327,11 @@ struct SC_futex_params {
 };
 
 struct SC_setkeymap_params {
-    const u32* map;
-    const u32* shift_map;
-    const u32* alt_map;
-    const u32* altgr_map;
-    const u32* shift_altgr_map;
+    u32 const* map;
+    u32 const* shift_map;
+    u32 const* alt_map;
+    u32 const* altgr_map;
+    u32 const* shift_altgr_map;
     StringArgument map_name;
 };
 

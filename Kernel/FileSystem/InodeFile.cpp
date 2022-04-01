@@ -37,7 +37,7 @@ ErrorOr<size_t> InodeFile::read(OpenFileDescription& description, u64 offset, Us
     return nread;
 }
 
-ErrorOr<size_t> InodeFile::write(OpenFileDescription& description, u64 offset, const UserOrKernelBuffer& data, size_t count)
+ErrorOr<size_t> InodeFile::write(OpenFileDescription& description, u64 offset, UserOrKernelBuffer const& data, size_t count)
 {
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
@@ -91,7 +91,7 @@ ErrorOr<Memory::Region*> InodeFile::mmap(Process& process, OpenFileDescription& 
     return process.address_space().allocate_region_with_vmobject(range, vmobject.release_nonnull(), offset, path->view(), prot, shared);
 }
 
-ErrorOr<NonnullOwnPtr<KString>> InodeFile::pseudo_path(const OpenFileDescription&) const
+ErrorOr<NonnullOwnPtr<KString>> InodeFile::pseudo_path(OpenFileDescription const&) const
 {
     // If it has an inode, then it has a path, and therefore the caller should have been able to get a custody at some point.
     VERIFY_NOT_REACHED();

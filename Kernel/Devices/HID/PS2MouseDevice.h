@@ -20,7 +20,7 @@ class PS2MouseDevice : public IRQHandler
     friend class DeviceManagement;
 
 public:
-    static ErrorOr<NonnullRefPtr<PS2MouseDevice>> try_to_initialize(const I8042Controller&);
+    static ErrorOr<NonnullRefPtr<PS2MouseDevice>> try_to_initialize(I8042Controller const&);
     ErrorOr<void> initialize();
 
     virtual ~PS2MouseDevice() override;
@@ -35,10 +35,10 @@ public:
     }
 
 protected:
-    explicit PS2MouseDevice(const I8042Controller&);
+    explicit PS2MouseDevice(I8042Controller const&);
 
     // ^IRQHandler
-    virtual bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(RegisterState const&) override;
 
     struct RawPacket {
         union {
@@ -50,7 +50,7 @@ protected:
     ErrorOr<u8> read_from_device();
     ErrorOr<u8> send_command(u8 command);
     ErrorOr<u8> send_command(u8 command, u8 data);
-    MousePacket parse_data_packet(const RawPacket&);
+    MousePacket parse_data_packet(RawPacket const&);
     ErrorOr<void> set_sample_rate(u8);
     ErrorOr<u8> get_device_id();
 

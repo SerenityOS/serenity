@@ -794,7 +794,7 @@ String NewArray::to_string_impl(Bytecode::Executable const&) const
     return builder.to_string();
 }
 
-String IteratorToArray::to_string_impl(const Bytecode::Executable&) const
+String IteratorToArray::to_string_impl(Bytecode::Executable const&) const
 {
     return "IteratorToArray";
 }
@@ -814,7 +814,7 @@ String NewRegExp::to_string_impl(Bytecode::Executable const& executable) const
     return String::formatted("NewRegExp source:{} (\"{}\") flags:{} (\"{}\")", m_source_index, executable.get_string(m_source_index), m_flags_index, executable.get_string(m_flags_index));
 }
 
-String CopyObjectExcludingProperties::to_string_impl(const Bytecode::Executable&) const
+String CopyObjectExcludingProperties::to_string_impl(Bytecode::Executable const&) const
 {
     StringBuilder builder;
     builder.appendff("CopyObjectExcludingProperties from:{}", m_from_object);
@@ -859,7 +859,7 @@ String CreateVariable::to_string_impl(Bytecode::Executable const& executable) co
     return String::formatted("CreateVariable env:{} immutable:{} {} ({})", mode_string, m_is_immutable, m_identifier, executable.identifier_table->get(m_identifier));
 }
 
-String EnterObjectEnvironment::to_string_impl(const Executable&) const
+String EnterObjectEnvironment::to_string_impl(Executable const&) const
 {
     return String::formatted("EnterObjectEnvironment");
 }
@@ -975,7 +975,7 @@ String EnterUnwindContext::to_string_impl(Bytecode::Executable const&) const
     return String::formatted("EnterUnwindContext handler:{} finalizer:{} entry:{}", handler_string, finalizer_string, m_entry_point);
 }
 
-String FinishUnwind::to_string_impl(const Bytecode::Executable&) const
+String FinishUnwind::to_string_impl(Bytecode::Executable const&) const
 {
     return String::formatted("FinishUnwind next:{}", m_next_target);
 }
@@ -998,7 +998,7 @@ String ContinuePendingUnwind::to_string_impl(Bytecode::Executable const&) const
     return String::formatted("ContinuePendingUnwind resume:{}", m_resume_target);
 }
 
-String PushDeclarativeEnvironment::to_string_impl(const Bytecode::Executable& executable) const
+String PushDeclarativeEnvironment::to_string_impl(Bytecode::Executable const& executable) const
 {
     StringBuilder builder;
     builder.append("PushDeclarativeEnvironment");
@@ -1020,12 +1020,12 @@ String Yield::to_string_impl(Bytecode::Executable const&) const
     return String::formatted("Yield return");
 }
 
-String GetByValue::to_string_impl(const Bytecode::Executable&) const
+String GetByValue::to_string_impl(Bytecode::Executable const&) const
 {
     return String::formatted("GetByValue base:{}", m_base);
 }
 
-String PutByValue::to_string_impl(const Bytecode::Executable&) const
+String PutByValue::to_string_impl(Bytecode::Executable const&) const
 {
     auto kind = m_kind == PropertyKind::Getter
         ? "getter"
@@ -1046,7 +1046,7 @@ String GetIterator::to_string_impl(Executable const&) const
     return "GetIterator";
 }
 
-String GetObjectPropertyIterator::to_string_impl(const Bytecode::Executable&) const
+String GetObjectPropertyIterator::to_string_impl(Bytecode::Executable const&) const
 {
     return "GetObjectPropertyIterator";
 }

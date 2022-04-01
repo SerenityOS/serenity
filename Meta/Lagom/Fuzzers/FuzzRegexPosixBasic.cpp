@@ -9,9 +9,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    auto pattern = StringView(static_cast<const unsigned char*>(data), size);
+    auto pattern = StringView(static_cast<unsigned char const*>(data), size);
     [[maybe_unused]] auto re = Regex<PosixBasic>(pattern);
     return 0;
 }

@@ -1216,7 +1216,7 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
             "Unimplemented callee kind: SuperExpression"sv,
         };
     } else if (is<MemberExpression>(*m_callee)) {
-        auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
+        auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
         if (is<SuperExpression>(member_expression.object())) {
             return Bytecode::CodeGenerationError {
                 this,

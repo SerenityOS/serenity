@@ -35,7 +35,7 @@ private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
     Web::Page& page();
-    const Web::Page& page() const;
+    Web::Page const& page() const;
 
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;
     virtual void update_system_fonts(String const&, String const&) override;

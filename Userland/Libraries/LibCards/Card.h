@@ -41,7 +41,7 @@ public:
 
     Gfx::IntRect& rect() { return m_rect; }
     Gfx::IntPoint position() const { return m_rect.location(); }
-    const Gfx::IntPoint& old_position() const { return m_old_position; }
+    Gfx::IntPoint const& old_position() const { return m_old_position; }
     uint8_t value() const { return m_value; };
     Suit suit() const { return m_suit; }
 
@@ -59,8 +59,8 @@ public:
     void save_old_position();
 
     void draw(GUI::Painter&) const;
-    void clear(GUI::Painter&, const Color& background_color) const;
-    void clear_and_draw(GUI::Painter&, const Color& background_color);
+    void clear(GUI::Painter&, Color const& background_color) const;
+    void clear_and_draw(GUI::Painter&, Color const& background_color);
 
 private:
     Card(Suit suit, uint8_t value);

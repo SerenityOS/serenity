@@ -121,7 +121,7 @@ private:
 
     class EditingDelegate final : public GUI::StringModelEditingDelegate {
     public:
-        EditingDelegate(const Sheet& sheet)
+        EditingDelegate(Sheet const& sheet)
             : m_sheet(sheet)
         {
         }
@@ -148,7 +148,7 @@ private:
 
     private:
         bool m_has_set_initial_value { false };
-        const Sheet& m_sheet;
+        Sheet const& m_sheet;
     };
 
     class TableCellPainter final : public GUI::TableCellPaintingDelegate {
@@ -157,7 +157,7 @@ private:
             : m_table_view(view)
         {
         }
-        void paint(GUI::Painter&, const Gfx::IntRect&, const Gfx::Palette&, const GUI::ModelIndex&) override;
+        void paint(GUI::Painter&, Gfx::IntRect const&, Gfx::Palette const&, const GUI::ModelIndex&) override;
 
     private:
         const GUI::TableView& m_table_view;

@@ -137,10 +137,10 @@ private:
     void disable_pipe_b();
     void disable_dpll();
 
-    void set_dpll_registers(const PLLSettings&);
+    void set_dpll_registers(PLLSettings const&);
 
-    void enable_dpll_without_vga(const PLLSettings&, size_t dac_multiplier);
-    void set_display_timings(const Graphics::Modesetting&);
+    void enable_dpll_without_vga(PLLSettings const&, size_t dac_multiplier);
+    void set_display_timings(Graphics::Modesetting const&);
     void enable_pipe_a();
     void set_framebuffer_parameters(size_t, size_t);
     void enable_primary_plane(PhysicalAddress fb_address, size_t stride);
@@ -158,7 +158,7 @@ private:
     void gmbus_read(unsigned address, u8* buf, size_t length);
     bool gmbus_wait_for(GMBusStatus desired_status, Optional<size_t> milliseconds_timeout);
 
-    Optional<PLLSettings> create_pll_settings(u64 target_frequency, u64 reference_clock, const PLLMaxSettings&);
+    Optional<PLLSettings> create_pll_settings(u64 target_frequency, u64 reference_clock, PLLMaxSettings const&);
 
     Spinlock m_control_lock;
     Spinlock m_modeset_lock;

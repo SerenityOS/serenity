@@ -23,7 +23,7 @@ public:
         Separator,
     };
 
-    MenuItem(Menu&, unsigned identifier, const String& text, const String& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false, const Gfx::Bitmap* icon = nullptr);
+    MenuItem(Menu&, unsigned identifier, String const& text, String const& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false, Gfx::Bitmap const* icon = nullptr);
     MenuItem(Menu&, Type);
     ~MenuItem() = default;
 
@@ -47,20 +47,20 @@ public:
     String shortcut_text() const { return m_shortcut_text; }
     void set_shortcut_text(String text) { m_shortcut_text = move(text); }
 
-    void set_rect(const Gfx::IntRect& rect) { m_rect = rect; }
+    void set_rect(Gfx::IntRect const& rect) { m_rect = rect; }
     Gfx::IntRect rect() const;
 
     unsigned identifier() const { return m_identifier; }
 
-    const Gfx::Bitmap* icon() const { return m_icon; }
-    void set_icon(const Gfx::Bitmap*);
+    Gfx::Bitmap const* icon() const { return m_icon; }
+    void set_icon(Gfx::Bitmap const*);
 
     bool is_submenu() const { return m_submenu_id != -1; }
     int submenu_id() const { return m_submenu_id; }
     void set_submenu_id(int submenu_id) { m_submenu_id = submenu_id; }
 
     Menu* submenu();
-    const Menu* submenu() const;
+    Menu const* submenu() const;
 
     bool is_exclusive() const { return m_exclusive; }
     void set_exclusive(bool exclusive) { m_exclusive = exclusive; }

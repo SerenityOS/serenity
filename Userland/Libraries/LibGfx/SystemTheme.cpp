@@ -13,7 +13,7 @@
 namespace Gfx {
 
 static SystemTheme dummy_theme;
-static const SystemTheme* theme_page = &dummy_theme;
+static SystemTheme const* theme_page = &dummy_theme;
 static Core::AnonymousBuffer theme_buffer;
 
 Core::AnonymousBuffer& current_system_theme_buffer()

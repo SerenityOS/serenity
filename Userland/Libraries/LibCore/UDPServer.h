@@ -22,7 +22,7 @@ public:
 
     bool is_bound() const { return m_bound; }
 
-    bool bind(const IPv4Address& address, u16 port);
+    bool bind(IPv4Address const& address, u16 port);
     ByteBuffer receive(size_t size, sockaddr_in& from);
     ByteBuffer receive(size_t size)
     {

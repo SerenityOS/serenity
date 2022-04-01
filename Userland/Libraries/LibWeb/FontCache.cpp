@@ -13,7 +13,7 @@ FontCache& FontCache::the()
     return cache;
 }
 
-RefPtr<Gfx::Font> FontCache::get(const FontSelector& font_selector) const
+RefPtr<Gfx::Font> FontCache::get(FontSelector const& font_selector) const
 {
     auto cached_font = m_fonts.get(font_selector);
     if (cached_font.has_value())
@@ -21,7 +21,7 @@ RefPtr<Gfx::Font> FontCache::get(const FontSelector& font_selector) const
     return nullptr;
 }
 
-void FontCache::set(const FontSelector& font_selector, NonnullRefPtr<Gfx::Font> font)
+void FontCache::set(FontSelector const& font_selector, NonnullRefPtr<Gfx::Font> font)
 {
     m_fonts.set(font_selector, move(font));
 }

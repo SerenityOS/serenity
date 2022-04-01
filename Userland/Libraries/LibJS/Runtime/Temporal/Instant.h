@@ -32,9 +32,9 @@ private:
 };
 
 // -86400 * 10^17
-const auto INSTANT_NANOSECONDS_MIN = "-8640000000000000000000"_sbigint;
+auto const INSTANT_NANOSECONDS_MIN = "-8640000000000000000000"_sbigint;
 // +86400 * 10^17
-const auto INSTANT_NANOSECONDS_MAX = "8640000000000000000000"_sbigint;
+auto const INSTANT_NANOSECONDS_MAX = "8640000000000000000000"_sbigint;
 
 bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds);
 ThrowCompletionOr<Instant*> create_temporal_instant(GlobalObject&, BigInt const& nanoseconds, FunctionObject const* new_target = nullptr);

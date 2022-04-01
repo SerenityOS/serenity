@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<ATADiskDevice> ATADiskDevice::create(const ATAController& controller, ATADevice::Address ata_address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block)
+NonnullRefPtr<ATADiskDevice> ATADiskDevice::create(ATAController const& controller, ATADevice::Address ata_address, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block)
 {
     auto minor_device_number = StorageManagement::generate_storage_minor_number();
 
@@ -26,7 +26,7 @@ NonnullRefPtr<ATADiskDevice> ATADiskDevice::create(const ATAController& controll
     return disk_device_or_error.release_value();
 }
 
-ATADiskDevice::ATADiskDevice(const ATAController& controller, ATADevice::Address ata_address, MinorNumber minor_number, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> early_storage_name)
+ATADiskDevice::ATADiskDevice(ATAController const& controller, ATADevice::Address ata_address, MinorNumber minor_number, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> early_storage_name)
     : ATADevice(controller, ata_address, minor_number, capabilities, logical_sector_size, max_addressable_block, move(early_storage_name))
 {
 }

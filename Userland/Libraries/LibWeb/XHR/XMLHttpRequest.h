@@ -54,13 +54,13 @@ public:
     DOM::ExceptionOr<JS::Value> response();
     Bindings::XMLHttpRequestResponseType response_type() const { return m_response_type; }
 
-    DOM::ExceptionOr<void> open(const String& method, const String& url);
+    DOM::ExceptionOr<void> open(String const& method, String const& url);
     DOM::ExceptionOr<void> send(String body);
 
-    DOM::ExceptionOr<void> set_request_header(const String& header, const String& value);
+    DOM::ExceptionOr<void> set_request_header(String const& header, String const& value);
     void set_response_type(Bindings::XMLHttpRequestResponseType type) { m_response_type = type; }
 
-    String get_response_header(const String& name) { return m_response_headers.get(name).value_or({}); }
+    String get_response_header(String const& name) { return m_response_headers.get(name).value_or({}); }
     String get_all_response_headers() const;
 
     Bindings::CallbackType* onreadystatechange();
@@ -75,7 +75,7 @@ private:
 
     void set_ready_state(ReadyState);
     void set_status(unsigned status) { m_status = status; }
-    void fire_progress_event(const String&, u64, u64);
+    void fire_progress_event(String const&, u64, u64);
 
     MimeSniff::MimeType get_response_mime_type() const;
     Optional<StringView> get_final_encoding() const;

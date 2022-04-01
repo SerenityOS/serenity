@@ -2155,7 +2155,7 @@ VALIDATE_INSTRUCTION(call_indirect)
     return {};
 }
 
-ErrorOr<void, ValidationError> Validator::validate(const Instruction& instruction, Stack& stack, bool& is_constant)
+ErrorOr<void, ValidationError> Validator::validate(Instruction const& instruction, Stack& stack, bool& is_constant)
 {
     switch (instruction.opcode().value()) {
 #define M(name, integer_value)                                                   \
@@ -2194,7 +2194,7 @@ ErrorOr<Validator::ExpressionTypeResult, ValidationError> Validator::validate(Ex
     return ExpressionTypeResult { stack.release_vector(), is_constant_expression };
 }
 
-bool Validator::Stack::operator==(const Stack& other) const
+bool Validator::Stack::operator==(Stack const& other) const
 {
     if (!m_did_insert_unknown_entry && !other.m_did_insert_unknown_entry)
         return static_cast<Vector<StackEntry> const&>(*this) == static_cast<Vector<StackEntry> const&>(other);

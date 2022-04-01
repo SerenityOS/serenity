@@ -36,7 +36,7 @@ public:
     FlatPtr as_addr() const;
     u64 as_unsigned() const { return m_data.as_unsigned; }
     i64 as_signed() const { return m_data.as_signed; }
-    const char* as_string() const;
+    char const* as_string() const;
     bool as_bool() const { return m_data.as_bool; }
     ReadonlyBytes as_raw_bytes() const { return m_data.as_raw_bytes; }
 
@@ -46,7 +46,7 @@ private:
         FlatPtr as_addr;
         u64 as_unsigned;
         i64 as_signed;
-        const char* as_string; // points to bytes in the memory mapped elf image
+        char const* as_string; // points to bytes in the memory mapped elf image
         bool as_bool;
         ReadonlyBytes as_raw_bytes;
     } m_data {};

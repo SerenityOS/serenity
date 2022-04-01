@@ -13,8 +13,8 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Vector<const char*> paths;
-    const char* opt_algorithm = nullptr;
+    Vector<char const*> paths;
+    char const* opt_algorithm = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(opt_algorithm, "Checksum algorithm (default 'crc32', use 'list' to list available algorithms)", "algorithm", '\0', nullptr);

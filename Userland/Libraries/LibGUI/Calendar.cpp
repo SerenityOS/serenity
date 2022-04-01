@@ -17,10 +17,10 @@ REGISTER_WIDGET(GUI, Calendar);
 
 namespace GUI {
 
-static const auto extra_large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular36.font");
-static const auto large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular24.font");
-static const auto medium_font = Gfx::BitmapFont::load_from_file("/res/fonts/PebbletonRegular14.font");
-static const auto small_font = Gfx::BitmapFont::load_from_file("/res/fonts/KaticaRegular10.font");
+static auto const extra_large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular36.font");
+static auto const large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular24.font");
+static auto const medium_font = Gfx::BitmapFont::load_from_file("/res/fonts/PebbletonRegular14.font");
+static auto const small_font = Gfx::BitmapFont::load_from_file("/res/fonts/KaticaRegular10.font");
 
 Calendar::Calendar(Core::DateTime date_time, Mode mode)
     : m_selected_date(date_time)
@@ -75,7 +75,7 @@ void Calendar::resize_event(GUI::ResizeEvent& event)
 
         set_show_year(false);
 
-        const int GRID_LINES = 6;
+        int const GRID_LINES = 6;
         int tile_width = (m_event_size.width() - GRID_LINES) / 7;
         int width_remainder = (m_event_size.width() - GRID_LINES) % 7;
         int y_offset = is_showing_days_of_the_week() ? 16 : 0;
@@ -124,10 +124,10 @@ void Calendar::resize_event(GUI::ResizeEvent& event)
 
         set_show_month_and_year(false);
 
-        const int VERT_GRID_LINES = 27;
-        const int HORI_GRID_LINES = 15;
-        const int THREADING = 3;
-        const int MONTH_TITLE = 19;
+        int const VERT_GRID_LINES = 27;
+        int const HORI_GRID_LINES = 15;
+        int const THREADING = 3;
+        int const MONTH_TITLE = 19;
         int tile_width = (m_event_size.width() - VERT_GRID_LINES) / 28;
         int width_remainder = (m_event_size.width() - VERT_GRID_LINES) % 28;
         int y_offset = is_showing_year() ? 22 : 0;

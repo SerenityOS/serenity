@@ -24,7 +24,7 @@ struct Result {
     u64 read_bps {};
 };
 
-static Result average_result(const Vector<Result>& results)
+static Result average_result(Vector<Result> const& results)
 {
     Result average;
 
@@ -39,7 +39,7 @@ static Result average_result(const Vector<Result>& results)
     return average;
 }
 
-static ErrorOr<Result> benchmark(const String& filename, int file_size, ByteBuffer& buffer, bool allow_cache);
+static ErrorOr<Result> benchmark(String const& filename, int file_size, ByteBuffer& buffer, bool allow_cache);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -99,7 +99,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-ErrorOr<Result> benchmark(const String& filename, int file_size, ByteBuffer& buffer, bool allow_cache)
+ErrorOr<Result> benchmark(String const& filename, int file_size, ByteBuffer& buffer, bool allow_cache)
 {
     int flags = O_CREAT | O_TRUNC | O_RDWR;
     if (!allow_cache)

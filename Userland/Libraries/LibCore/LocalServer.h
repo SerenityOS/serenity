@@ -19,7 +19,7 @@ public:
 
     ErrorOr<void> take_over_from_system_server(String const& path = String());
     bool is_listening() const { return m_listening; }
-    bool listen(const String& address);
+    bool listen(String const& address);
 
     ErrorOr<NonnullOwnPtr<Stream::LocalSocket>> accept();
 

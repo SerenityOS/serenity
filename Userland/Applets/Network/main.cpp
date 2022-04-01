@@ -51,7 +51,7 @@ private:
             return;
 
         pid_t child_pid;
-        const char* argv[] = { "SystemMonitor", "-t", "network", nullptr };
+        char const* argv[] = { "SystemMonitor", "-t", "network", nullptr };
 
         if ((errno = posix_spawn(&child_pid, "/bin/SystemMonitor", nullptr, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
@@ -179,7 +179,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     bool display_notifications = false;
-    const char* name = nullptr;
+    char const* name = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_option(display_notifications, "Display notifications", "display-notifications", 'd');
     args_parser.add_option(name, "Applet name used by WindowServer.ini to set the applet order", "name", 'n', "name");

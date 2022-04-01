@@ -41,7 +41,7 @@ public:
 
     virtual JS::Object* create_wrapper(JS::GlobalObject&) = 0;
 
-    virtual EventTarget* get_parent(const Event&) { return nullptr; }
+    virtual EventTarget* get_parent(Event const&) { return nullptr; }
 
     void add_an_event_listener(NonnullRefPtr<DOMEventListener>);
     void remove_an_event_listener(DOMEventListener&);
@@ -50,7 +50,7 @@ public:
     auto& event_listener_list() { return m_event_listener_list; }
     auto const& event_listener_list() const { return m_event_listener_list; }
 
-    Function<void(const Event&)> activation_behavior;
+    Function<void(Event const&)> activation_behavior;
 
     // NOTE: These only exist for checkbox and radio input elements.
     virtual void legacy_pre_activation_behavior() { }

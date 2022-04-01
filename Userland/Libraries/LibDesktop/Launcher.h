@@ -28,7 +28,7 @@ public:
         String executable;
         LauncherType launcher_type { LauncherType::Default };
 
-        static NonnullRefPtr<Details> from_details_str(const String&);
+        static NonnullRefPtr<Details> from_details_str(String const&);
     };
 
     static void ensure_connection();
@@ -36,8 +36,8 @@ public:
     static ErrorOr<void> add_allowed_handler_with_any_url(String const& handler);
     static ErrorOr<void> add_allowed_handler_with_only_specific_urls(String const& handler, Vector<URL> const&);
     static ErrorOr<void> seal_allowlist();
-    static bool open(const URL&, const String& handler_name = {});
-    static bool open(const URL&, const Details& details);
+    static bool open(const URL&, String const& handler_name = {});
+    static bool open(const URL&, Details const& details);
     static Vector<String> get_handlers_for_url(const URL&);
     static NonnullRefPtrVector<Details> get_handlers_with_details_for_url(const URL&);
 };

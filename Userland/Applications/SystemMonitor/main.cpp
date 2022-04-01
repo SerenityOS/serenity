@@ -64,7 +64,7 @@ class UnavailableProcessWidget final : public GUI::Frame {
 public:
     virtual ~UnavailableProcessWidget() override = default;
 
-    const String& text() const { return m_text; }
+    String const& text() const { return m_text; }
     void set_text(String text) { m_text = move(text); }
 
 private:
@@ -390,7 +390,7 @@ class ProgressbarPaintingDelegate final : public GUI::TableCellPaintingDelegate 
 public:
     virtual ~ProgressbarPaintingDelegate() override = default;
 
-    virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, const Palette& palette, const GUI::ModelIndex& index) override
+    virtual void paint(GUI::Painter& painter, Gfx::IntRect const& a_rect, Palette const& palette, const GUI::ModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
         auto percentage = index.data(GUI::ModelRole::Custom).to_i32();
@@ -707,7 +707,7 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
             cpu_graphs.append(cpu_graph);
         }
     }
-    ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) mutable {
+    ProcessModel::the().on_cpu_info_change = [cpu_graphs](NonnullOwnPtrVector<ProcessModel::CpuInfo> const& cpus) mutable {
         float sum_cpu = 0;
         for (size_t i = 0; i < cpus.size(); ++i) {
             cpu_graphs[i].add_value({ static_cast<size_t>(cpus[i].total_cpu_percent), static_cast<size_t>(cpus[i].total_cpu_percent_kernel) });

@@ -24,7 +24,7 @@
 
 namespace HackStudio {
 
-ErrorOr<void> TerminalWrapper::run_command(const String& command, Optional<String> working_directory, WaitForExit wait_for_exit, Optional<StringView> failure_message)
+ErrorOr<void> TerminalWrapper::run_command(String const& command, Optional<String> working_directory, WaitForExit wait_for_exit, Optional<StringView> failure_message)
 {
     if (m_pid != -1) {
         GUI::MessageBox::show(window(),
@@ -62,7 +62,7 @@ ErrorOr<void> TerminalWrapper::run_command(const String& command, Optional<Strin
 
     auto parts = command.split(' ');
     VERIFY(!parts.is_empty());
-    const char** args = (const char**)calloc(parts.size() + 1, sizeof(const char*));
+    char const** args = (char const**)calloc(parts.size() + 1, sizeof(char const*));
     for (size_t i = 0; i < parts.size(); i++) {
         args[i] = parts[i].characters();
     }

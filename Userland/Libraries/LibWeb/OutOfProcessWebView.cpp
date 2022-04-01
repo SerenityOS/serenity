@@ -213,7 +213,7 @@ void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 b
     }
 }
 
-void OutOfProcessWebView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, [[maybe_unused]] const Gfx::IntRect& content_rect)
+void OutOfProcessWebView::notify_server_did_invalidate_content_rect(Badge<WebContentClient>, [[maybe_unused]] Gfx::IntRect const& content_rect)
 {
     request_repaint();
 }
@@ -228,12 +228,12 @@ void OutOfProcessWebView::notify_server_did_request_cursor_change(Badge<WebConte
     set_override_cursor(cursor);
 }
 
-void OutOfProcessWebView::notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size)
+void OutOfProcessWebView::notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize const& content_size)
 {
     set_content_size(content_size);
 }
 
-void OutOfProcessWebView::notify_server_did_change_title(Badge<WebContentClient>, const String& title)
+void OutOfProcessWebView::notify_server_did_change_title(Badge<WebContentClient>, String const& title)
 {
     if (on_title_change)
         on_title_change(title);
@@ -251,12 +251,12 @@ void OutOfProcessWebView::notify_server_did_request_scroll_to(Badge<WebContentCl
     vertical_scrollbar().set_value(scroll_position.y());
 }
 
-void OutOfProcessWebView::notify_server_did_request_scroll_into_view(Badge<WebContentClient>, const Gfx::IntRect& rect)
+void OutOfProcessWebView::notify_server_did_request_scroll_into_view(Badge<WebContentClient>, Gfx::IntRect const& rect)
 {
     scroll_into_view(rect, true, true);
 }
 
-void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, const Gfx::IntPoint&, const String& title)
+void OutOfProcessWebView::notify_server_did_enter_tooltip_area(Badge<WebContentClient>, Gfx::IntPoint const&, String const& title)
 {
     GUI::Application::the()->show_tooltip(title, nullptr);
 }
@@ -279,13 +279,13 @@ void OutOfProcessWebView::notify_server_did_unhover_link(Badge<WebContentClient>
         on_link_hover({});
 }
 
-void OutOfProcessWebView::notify_server_did_click_link(Badge<WebContentClient>, const AK::URL& url, const String& target, unsigned int modifiers)
+void OutOfProcessWebView::notify_server_did_click_link(Badge<WebContentClient>, const AK::URL& url, String const& target, unsigned int modifiers)
 {
     if (on_link_click)
         on_link_click(url, target, modifiers);
 }
 
-void OutOfProcessWebView::notify_server_did_middle_click_link(Badge<WebContentClient>, const AK::URL& url, const String& target, unsigned int modifiers)
+void OutOfProcessWebView::notify_server_did_middle_click_link(Badge<WebContentClient>, const AK::URL& url, String const& target, unsigned int modifiers)
 {
     if (on_link_middle_click)
         on_link_middle_click(url, target, modifiers);
@@ -303,36 +303,36 @@ void OutOfProcessWebView::notify_server_did_finish_loading(Badge<WebContentClien
         on_load_finish(url);
 }
 
-void OutOfProcessWebView::notify_server_did_request_context_menu(Badge<WebContentClient>, const Gfx::IntPoint& content_position)
+void OutOfProcessWebView::notify_server_did_request_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position)
 {
     if (on_context_menu_request)
         on_context_menu_request(screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void OutOfProcessWebView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, const Gfx::IntPoint& content_position, const AK::URL& url, const String&, unsigned)
+void OutOfProcessWebView::notify_server_did_request_link_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, const AK::URL& url, String const&, unsigned)
 {
     if (on_link_context_menu_request)
         on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, const Gfx::IntPoint& content_position, const AK::URL& url, const String&, unsigned, const Gfx::ShareableBitmap& bitmap)
+void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<WebContentClient>, Gfx::IntPoint const& content_position, const AK::URL& url, String const&, unsigned, Gfx::ShareableBitmap const& bitmap)
 {
     if (on_image_context_menu_request)
         on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), bitmap);
 }
 
-void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, const String& message)
+void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
 {
     GUI::MessageBox::show(window(), message, "Alert", GUI::MessageBox::Type::Information);
 }
 
-bool OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, const String& message)
+bool OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
 {
     auto confirm_result = GUI::MessageBox::show(window(), message, "Confirm", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
     return confirm_result == GUI::Dialog::ExecResult::ExecOK;
 }
 
-String OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, const String& message, const String& default_)
+String OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
 {
     String response { default_ };
     if (GUI::InputBox::show(window(), response, message, "Prompt") == GUI::InputBox::ExecOK)
@@ -340,13 +340,13 @@ String OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentCli
     return {};
 }
 
-void OutOfProcessWebView::notify_server_did_get_source(const AK::URL& url, const String& source)
+void OutOfProcessWebView::notify_server_did_get_source(const AK::URL& url, String const& source)
 {
     if (on_get_source)
         on_get_source(url, source);
 }
 
-void OutOfProcessWebView::notify_server_did_get_dom_tree(const String& dom_tree)
+void OutOfProcessWebView::notify_server_did_get_dom_tree(String const& dom_tree)
 {
     if (on_get_dom_tree)
         on_get_dom_tree(dom_tree);
@@ -364,13 +364,13 @@ void OutOfProcessWebView::notify_server_did_output_js_console_message(i32 messag
         on_js_console_new_message(message_index);
 }
 
-void OutOfProcessWebView::notify_server_did_get_js_console_messages(i32 start_index, const Vector<String>& message_types, const Vector<String>& messages)
+void OutOfProcessWebView::notify_server_did_get_js_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)
 {
     if (on_get_js_console_messages)
         on_get_js_console_messages(start_index, message_types, messages);
 }
 
-void OutOfProcessWebView::notify_server_did_change_favicon(const Gfx::Bitmap& favicon)
+void OutOfProcessWebView::notify_server_did_change_favicon(Gfx::Bitmap const& favicon)
 {
     if (on_favicon_change)
         on_favicon_change(favicon);
@@ -383,7 +383,7 @@ String OutOfProcessWebView::notify_server_did_request_cookie(Badge<WebContentCli
     return {};
 }
 
-void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source)
+void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Cookie::ParsedCookie const& cookie, Cookie::Source source)
 {
     if (on_set_cookie)
         on_set_cookie(url, cookie, source);
@@ -422,7 +422,7 @@ WebContentClient& OutOfProcessWebView::client()
     return *m_client_state.client;
 }
 
-void OutOfProcessWebView::debug_request(const String& request, const String& argument)
+void OutOfProcessWebView::debug_request(String const& request, String const& argument)
 {
     client().async_debug_request(request, argument);
 }
@@ -460,7 +460,7 @@ i32 OutOfProcessWebView::get_hovered_node_id()
     return client().get_hovered_node_id();
 }
 
-void OutOfProcessWebView::js_console_input(const String& js_source)
+void OutOfProcessWebView::js_console_input(String const& js_source)
 {
     client().async_js_console_input(js_source);
 }

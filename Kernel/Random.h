@@ -67,7 +67,7 @@ public:
         if (pool == 0) {
             m_p0_len++;
         }
-        m_pools[pool].update(reinterpret_cast<const u8*>(&event_data), sizeof(T));
+        m_pools[pool].update(reinterpret_cast<u8 const*>(&event_data), sizeof(T));
     }
 
     [[nodiscard]] bool is_seeded() const

@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-ATADevice::ATADevice(const ATAController& controller, ATADevice::Address ata_address, MinorNumber minor_number, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> early_storage_name)
+ATADevice::ATADevice(ATAController const& controller, ATADevice::Address ata_address, MinorNumber minor_number, u16 capabilities, u16 logical_sector_size, u64 max_addressable_block, NonnullOwnPtr<KString> early_storage_name)
     : StorageDevice(StorageManagement::storage_type_major_number(), minor_number, logical_sector_size, max_addressable_block, move(early_storage_name))
     , m_controller(controller)
     , m_ata_address(ata_address)

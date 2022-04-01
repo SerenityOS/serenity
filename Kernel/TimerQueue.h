@@ -47,15 +47,15 @@ private:
     Atomic<bool> m_callback_finished { false };
     Atomic<bool> m_in_use { false };
 
-    bool operator<(const Timer& rhs) const
+    bool operator<(Timer const& rhs) const
     {
         return m_expires < rhs.m_expires;
     }
-    bool operator>(const Timer& rhs) const
+    bool operator>(Timer const& rhs) const
     {
         return m_expires > rhs.m_expires;
     }
-    bool operator==(const Timer& rhs) const
+    bool operator==(Timer const& rhs) const
     {
         return m_id == rhs.m_id;
     }
@@ -88,7 +88,7 @@ public:
     static TimerQueue& the();
 
     TimerId add_timer(NonnullRefPtr<Timer>&&);
-    bool add_timer_without_id(NonnullRefPtr<Timer>, clockid_t, const Time&, Function<void()>&&);
+    bool add_timer_without_id(NonnullRefPtr<Timer>, clockid_t, Time const&, Function<void()>&&);
     bool cancel_timer(Timer& timer, bool* was_in_use = nullptr);
     void fire();
 

@@ -146,12 +146,12 @@ Device::~Device()
     VERIFY(m_state == State::BeingRemoved);
 }
 
-ErrorOr<NonnullOwnPtr<KString>> Device::pseudo_path(const OpenFileDescription&) const
+ErrorOr<NonnullOwnPtr<KString>> Device::pseudo_path(OpenFileDescription const&) const
 {
     return KString::formatted("device:{},{}", major(), minor());
 }
 
-void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest& completed_request)
+void Device::process_next_queued_request(Badge<AsyncDeviceRequest>, AsyncDeviceRequest const& completed_request)
 {
     SpinlockLocker lock(m_requests_lock);
     VERIFY(!m_requests.is_empty());

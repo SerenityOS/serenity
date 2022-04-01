@@ -29,7 +29,7 @@ struct InstructionData {
 
 class DisassemblyModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<DisassemblyModel> create(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
+    static NonnullRefPtr<DisassemblyModel> create(Debug::DebugSession const& debug_session, PtraceRegisters const& regs)
     {
         return adopt_ref(*new DisassemblyModel(debug_session, regs));
     }
@@ -49,7 +49,7 @@ public:
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
 
 private:
-    DisassemblyModel(const Debug::DebugSession&, const PtraceRegisters&);
+    DisassemblyModel(Debug::DebugSession const&, PtraceRegisters const&);
 
     Vector<InstructionData> m_instructions;
 };

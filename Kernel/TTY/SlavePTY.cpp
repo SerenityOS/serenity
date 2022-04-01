@@ -67,7 +67,7 @@ void SlavePTY::echo(u8 ch)
     }
 }
 
-void SlavePTY::on_master_write(const UserOrKernelBuffer& buffer, size_t size)
+void SlavePTY::on_master_write(UserOrKernelBuffer const& buffer, size_t size)
 {
     auto result = buffer.read_buffered<128>(size, [&](ReadonlyBytes data) {
         for (const auto& byte : data)
@@ -78,18 +78,18 @@ void SlavePTY::on_master_write(const UserOrKernelBuffer& buffer, size_t size)
         evaluate_block_conditions();
 }
 
-ErrorOr<size_t> SlavePTY::on_tty_write(const UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> SlavePTY::on_tty_write(UserOrKernelBuffer const& data, size_t size)
 {
     m_time_of_last_write = kgettimeofday().to_truncated_seconds();
     return m_master->on_slave_write(data, size);
 }
 
-bool SlavePTY::can_write(const OpenFileDescription&, u64) const
+bool SlavePTY::can_write(OpenFileDescription const&, u64) const
 {
     return m_master->can_write_from_slave();
 }
 
-bool SlavePTY::can_read(const OpenFileDescription& description, u64 offset) const
+bool SlavePTY::can_read(OpenFileDescription const& description, u64 offset) const
 {
     if (m_master->is_closed())
         return true;

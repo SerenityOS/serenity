@@ -41,7 +41,7 @@ ResourceLoader::ResourceLoader(NonnullRefPtr<Protocol::RequestClient> protocol_c
 {
 }
 
-void ResourceLoader::load_sync(LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load_sync(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
 {
     Core::EventLoop loop;
 
@@ -123,7 +123,7 @@ static void emit_signpost(String const& message, int id)
 
 static size_t resource_id = 0;
 
-void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
 {
     auto& url = request.url();
     request.start_timer();
@@ -133,13 +133,13 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
     emit_signpost(String::formatted("Starting load: {}", url_for_logging), id);
     dbgln("ResourceLoader: Starting load of: \"{}\"", url_for_logging);
 
-    const auto log_success = [url_for_logging, id](const auto& request) {
+    auto const log_success = [url_for_logging, id](auto const& request) {
         auto load_time_ms = request.load_time().to_milliseconds();
         emit_signpost(String::formatted("Finished load: {}", url_for_logging), id);
         dbgln("ResourceLoader: Finished load of: \"{}\", Duration: {}ms", url_for_logging, load_time_ms);
     };
 
-    const auto log_failure = [url_for_logging, id](const auto& request, const auto error_message) {
+    auto const log_failure = [url_for_logging, id](auto const& request, auto const error_message) {
         auto load_time_ms = request.load_time().to_milliseconds();
         emit_signpost(String::formatted("Failed load: {}", url_for_logging), id);
         dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", url_for_logging, error_message, load_time_ms);
@@ -267,7 +267,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
         error_callback(not_implemented_error, {});
 }
 
-void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
 {
     LoadRequest request;
     request.set_url(url);

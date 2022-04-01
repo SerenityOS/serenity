@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath sendfd unix"));
 
-    const char* path = nullptr;
+    char const* path = nullptr;
     bool should_loop = false;
     bool show_sample_progress = false;
 

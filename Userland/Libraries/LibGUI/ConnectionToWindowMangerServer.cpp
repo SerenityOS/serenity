@@ -27,7 +27,7 @@ void ConnectionToWindowMangerServer::window_state_changed(i32 wm_id, i32 client_
         Core::EventLoop::current().post_event(*window, make<WMWindowStateChangedEvent>(client_id, window_id, parent_client_id, parent_window_id, title, rect, workspace_row, workspace_column, is_active, is_modal, static_cast<WindowType>(window_type), is_minimized, is_frameless, progress));
 }
 
-void ConnectionToWindowMangerServer::applet_area_size_changed(i32 wm_id, const Gfx::IntSize& size)
+void ConnectionToWindowMangerServer::applet_area_size_changed(i32 wm_id, Gfx::IntSize const& size)
 {
     if (auto* window = Window::from_window_id(wm_id))
         Core::EventLoop::current().post_event(*window, make<WMAppletAreaSizeChangedEvent>(size));

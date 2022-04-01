@@ -32,18 +32,18 @@ struct Position {
         return m_hash;
     }
 
-    bool operator==(const Position& other) const
+    bool operator==(Position const& other) const
     {
         return row == other.row && column == other.column;
     }
 
-    bool operator!=(const Position& other) const
+    bool operator!=(Position const& other) const
     {
         return !(other == *this);
     }
 
-    String to_cell_identifier(const Sheet& sheet) const;
-    URL to_url(const Sheet& sheet) const;
+    String to_cell_identifier(Sheet const& sheet) const;
+    URL to_url(Sheet const& sheet) const;
 
     size_t column { 0 };
     size_t row { 0 };

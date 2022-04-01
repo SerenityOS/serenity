@@ -71,7 +71,7 @@ ErrorOr<size_t> TLSv12::write(ReadonlyBytes bytes)
     return bytes.size();
 }
 
-ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(const String& host, u16 port, Options options)
+ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(String const& host, u16 port, Options options)
 {
     Core::EventLoop loop;
     OwnPtr<Core::Stream::Socket> tcp_socket = TRY(Core::Stream::TCPSocket::connect(host, port));
@@ -93,7 +93,7 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(const String& host, u16 port, Opt
     return AK::Error::from_string_literal(alert_name(static_cast<AlertDescription>(256 - result)));
 }
 
-ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(const String& host, Core::Stream::Socket& underlying_stream, Options options)
+ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(String const& host, Core::Stream::Socket& underlying_stream, Options options)
 {
     StreamVariantType socket { &underlying_stream };
     auto tls_socket = make<TLSv12>(&underlying_stream, move(options));

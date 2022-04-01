@@ -57,7 +57,7 @@ ErrorOr<void> Process::traverse_stacks_directory(FileSystemID fsid, Function<Err
     });
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& procfs, StringView name) const
+ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS const& procfs, StringView name) const
 {
     auto maybe_needle = name.to_uint();
     if (!maybe_needle.has_value())
@@ -65,7 +65,7 @@ ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& pro
     auto needle = maybe_needle.release_value();
 
     ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> thread_stack_inode { ENOENT };
-    for_each_thread([&](const Thread& thread) {
+    for_each_thread([&](Thread const& thread) {
         int tid = thread.tid().value();
         VERIFY(!(tid < 0));
         if (needle == (unsigned)tid) {
@@ -110,7 +110,7 @@ ErrorOr<void> Process::traverse_file_descriptions_directory(FileSystemID fsid, F
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(const ProcFS& procfs, StringView name) const
+ErrorOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(ProcFS const& procfs, StringView name) const
 {
     auto maybe_index = name.to_uint();
     if (!maybe_index.has_value())

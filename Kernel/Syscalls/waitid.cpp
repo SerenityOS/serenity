@@ -19,7 +19,7 @@ ErrorOr<siginfo_t> Process::do_waitid(Variant<Empty, NonnullRefPtr<Process>, Non
     return result;
 }
 
-ErrorOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$waitid(Userspace<Syscall::SC_waitid_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::proc));

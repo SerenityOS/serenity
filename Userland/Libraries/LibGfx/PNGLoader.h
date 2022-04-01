@@ -15,7 +15,7 @@ struct PNGLoadingContext;
 class PNGImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     virtual ~PNGImageDecoderPlugin() override;
-    PNGImageDecoderPlugin(const u8*, size_t);
+    PNGImageDecoderPlugin(u8 const*, size_t);
 
     virtual IntSize size() override;
     virtual void set_volatile() override;

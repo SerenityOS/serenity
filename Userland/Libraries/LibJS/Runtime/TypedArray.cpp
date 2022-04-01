@@ -230,7 +230,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_typed_array(GlobalObj
 
 // 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
 template<typename T>
-static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, const Object& array_like)
+static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, Object const& array_like)
 {
     auto& vm = global_object.vm();
 
@@ -291,7 +291,7 @@ static ThrowCompletionOr<void> initialize_typed_array_from_array_like(GlobalObje
 
 // 23.2.5.1.4 InitializeTypedArrayFromList, https://tc39.es/ecma262/#sec-initializetypedarrayfromlist
 template<typename T>
-static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, const MarkedVector<Value>& list)
+static ThrowCompletionOr<void> initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, MarkedVector<Value> const& list)
 {
     auto& vm = global_object.vm();
 

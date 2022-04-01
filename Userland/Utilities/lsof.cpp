@@ -80,7 +80,7 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
     auto json = json_or_error.release_value();
 
     Vector<OpenFile> files;
-    json.as_array().for_each([pid, &files](const JsonValue& object) {
+    json.as_array().for_each([pid, &files](JsonValue const& object) {
         OpenFile open_file;
         open_file.pid = pid;
         open_file.fd = object.as_object().get("fd").to_int();
@@ -94,7 +94,7 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
     return files;
 }
 
-static void display_entry(const OpenFile& file, const Core::ProcessStatistics& statistics)
+static void display_entry(OpenFile const& file, Core::ProcessStatistics const& statistics)
 {
     outln("{:28} {:>4} {:>4} {:10} {:>4} {}", statistics.name, file.pid, statistics.pgid, statistics.username, file.fd, file.full_name);
 }

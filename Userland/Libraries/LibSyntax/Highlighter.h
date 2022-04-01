@@ -29,7 +29,7 @@ enum class Language {
 
 struct TextStyle {
     const Gfx::Color color;
-    const bool bold { false };
+    bool const bold { false };
 };
 
 class Highlighter {
@@ -41,7 +41,7 @@ public:
 
     virtual Language language() const = 0;
     StringView language_string(Language) const;
-    virtual void rehighlight(const Palette&) = 0;
+    virtual void rehighlight(Palette const&) = 0;
     virtual void highlight_matching_token_pair();
 
     virtual bool is_identifier(u64) const { return false; };
@@ -125,7 +125,7 @@ public:
 
 private:
     virtual Vector<GUI::TextDocumentSpan>& spans() override { return m_spans; }
-    virtual const Vector<GUI::TextDocumentSpan>& spans() const override { return m_spans; }
+    virtual Vector<GUI::TextDocumentSpan> const& spans() const override { return m_spans; }
     virtual void set_span_at_index(size_t index, GUI::TextDocumentSpan span) override { m_spans.at(index) = move(span); }
 
     virtual String highlighter_did_request_text() const override { return m_text; }

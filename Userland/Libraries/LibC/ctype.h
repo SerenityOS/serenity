@@ -20,7 +20,7 @@ __BEGIN_DECLS
 #define _X 0100
 #define _B 0200
 
-extern const char _ctype_[256];
+extern char const _ctype_[256];
 
 static inline int __inline_isalnum(int c)
 {

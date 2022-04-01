@@ -74,7 +74,7 @@ public:
             }
 
             if (m_next_byte.has_value()) {
-                const auto bit = (m_next_byte.value() >> m_bit_offset) & 1;
+                auto const bit = (m_next_byte.value() >> m_bit_offset) & 1;
                 result |= bit << nread;
                 ++nread;
 
@@ -109,7 +109,7 @@ public:
                     nread += 8;
                     m_next_byte.clear();
                 } else {
-                    const auto bit = (m_next_byte.value() >> (7 - m_bit_offset)) & 1;
+                    auto const bit = (m_next_byte.value() >> (7 - m_bit_offset)) & 1;
                     result <<= 1;
                     result |= bit;
                     ++nread;

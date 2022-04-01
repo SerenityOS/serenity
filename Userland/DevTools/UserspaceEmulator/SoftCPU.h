@@ -81,7 +81,7 @@ public:
     ValueWithShadow<u16> pop16();
 
     void push_string(StringView);
-    void push_buffer(const u8* data, size_t);
+    void push_buffer(u8 const* data, size_t);
 
     u16 segment(X86::SegmentRegister seg) const { return m_segment[(int)seg]; }
     u16& segment(X86::SegmentRegister seg) { return m_segment[(int)seg]; }
@@ -463,7 +463,7 @@ public:
         m_flags_tainted = a.is_uninitialized() || b.is_uninitialized() || c.is_uninitialized();
     }
 
-    void warn_if_flags_tainted(const char* message) const;
+    void warn_if_flags_tainted(char const* message) const;
 
     // ^X86::InstructionStream
     virtual bool can_read() override { return false; }

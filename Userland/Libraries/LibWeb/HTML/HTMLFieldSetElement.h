@@ -22,7 +22,7 @@ public:
     HTMLFieldSetElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLFieldSetElement() override;
 
-    const String& type() const
+    String const& type() const
     {
         static String fieldset = "fieldset";
         return fieldset;

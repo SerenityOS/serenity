@@ -156,15 +156,15 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
     for (auto possible_pointer : possible_pointers) {
         if (!possible_pointer)
             continue;
-        dbgln_if(HEAP_DEBUG, "  ? {}", (const void*)possible_pointer);
-        auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<const Cell*>(possible_pointer));
+        dbgln_if(HEAP_DEBUG, "  ? {}", (void const*)possible_pointer);
+        auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<Cell const*>(possible_pointer));
         if (all_live_heap_blocks.contains(possible_heap_block)) {
             if (auto* cell = possible_heap_block->cell_from_possible_pointer(possible_pointer)) {
                 if (cell->state() == Cell::State::Live) {
-                    dbgln_if(HEAP_DEBUG, "  ?-> {}", (const void*)cell);
+                    dbgln_if(HEAP_DEBUG, "  ?-> {}", (void const*)cell);
                     roots.set(cell);
                 } else {
-                    dbgln_if(HEAP_DEBUG, "  #-> {}", (const void*)cell);
+                    dbgln_if(HEAP_DEBUG, "  #-> {}", (void const*)cell);
                 }
             }
         }
@@ -186,7 +186,7 @@ public:
     }
 };
 
-void Heap::mark_live_cells(const HashTable<Cell*>& roots)
+void Heap::mark_live_cells(HashTable<Cell*> const& roots)
 {
     dbgln_if(HEAP_DEBUG, "mark_live_cells:");
 
@@ -200,7 +200,7 @@ void Heap::mark_live_cells(const HashTable<Cell*>& roots)
     m_uprooted_cells.clear();
 }
 
-void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measurement_timer)
+void Heap::sweep_dead_cells(bool print_report, Core::ElapsedTimer const& measurement_timer)
 {
     dbgln_if(HEAP_DEBUG, "sweep_dead_cells:");
     Vector<HeapBlock*, 32> empty_blocks;

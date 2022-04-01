@@ -79,7 +79,7 @@ ErrorOr<size_t> TTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer,
     return result;
 }
 
-ErrorOr<size_t> TTY::write(OpenFileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> TTY::write(OpenFileDescription&, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
     if (m_termios.c_lflag & TOSTOP && Process::current().pgid() != pgid()) {
         [[maybe_unused]] auto rc = Process::current().send_signal(SIGTTOU, nullptr);
@@ -138,7 +138,7 @@ void TTY::process_output(u8 ch, Functor put_char)
     }
 }
 
-bool TTY::can_read(const OpenFileDescription&, u64) const
+bool TTY::can_read(OpenFileDescription const&, u64) const
 {
     if (in_canonical_mode()) {
         return m_available_lines > 0;
@@ -146,7 +146,7 @@ bool TTY::can_read(const OpenFileDescription&, u64) const
     return !m_input_buffer.is_empty();
 }
 
-bool TTY::can_write(const OpenFileDescription&, u64) const
+bool TTY::can_write(OpenFileDescription const&, u64) const
 {
     return true;
 }
@@ -313,8 +313,8 @@ void TTY::do_backspace()
 
 void TTY::erase_word()
 {
-    //Note: if we have leading whitespace before the word
-    //we want to delete we have to also delete that.
+    // Note: if we have leading whitespace before the word
+    // we want to delete we have to also delete that.
     bool first_char = false;
     bool did_dequeue = false;
     while (can_do_backspace()) {
@@ -373,7 +373,7 @@ void TTY::flush_input()
     evaluate_block_conditions();
 }
 
-ErrorOr<void> TTY::set_termios(const termios& t)
+ErrorOr<void> TTY::set_termios(termios const& t)
 {
     ErrorOr<void> rc;
     m_termios = t;

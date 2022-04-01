@@ -115,10 +115,10 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
 
     auto margin_left = CSS::Length::make_auto();
     auto margin_right = CSS::Length::make_auto();
-    const auto padding_left = computed_values.padding().left.resolved(box, width_of_containing_block_as_length).resolved(box);
-    const auto padding_right = computed_values.padding().right.resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto const padding_left = computed_values.padding().left.resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto const padding_right = computed_values.padding().right.resolved(box, width_of_containing_block_as_length).resolved(box);
 
-    auto try_compute_width = [&](const auto& a_width) {
+    auto try_compute_width = [&](auto const& a_width) {
         CSS::Length width = a_width;
         margin_left = computed_values.margin().left.resolved(box, width_of_containing_block_as_length).resolved(box);
         margin_right = computed_values.margin().right.resolved(box, width_of_containing_block_as_length).resolved(box);
@@ -253,8 +253,8 @@ void BlockFormattingContext::compute_width_for_floating_box(Box const& box, Layo
 
     auto margin_left = computed_values.margin().left.resolved(box, width_of_containing_block_as_length).resolved(box);
     auto margin_right = computed_values.margin().right.resolved(box, width_of_containing_block_as_length).resolved(box);
-    const auto padding_left = computed_values.padding().left.resolved(box, width_of_containing_block_as_length).resolved(box);
-    const auto padding_right = computed_values.padding().right.resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto const padding_left = computed_values.padding().left.resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto const padding_right = computed_values.padding().right.resolved(box, width_of_containing_block_as_length).resolved(box);
 
     // If 'margin-left', or 'margin-right' are computed as 'auto', their used value is '0'.
     if (margin_left.is_auto())

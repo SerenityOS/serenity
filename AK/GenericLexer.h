@@ -43,7 +43,7 @@ public:
         return true;
     }
 
-    constexpr bool next_is(const char* expected) const
+    constexpr bool next_is(char const* expected) const
     {
         for (size_t i = 0; expected[i] != '\0'; ++i)
             if (peek(i) != expected[i])
@@ -84,13 +84,13 @@ public:
     }
 
 #ifndef KERNEL
-    bool consume_specific(const String& next)
+    bool consume_specific(String const& next)
     {
         return consume_specific(StringView { next });
     }
 #endif
 
-    constexpr bool consume_specific(const char* next)
+    constexpr bool consume_specific(char const* next)
     {
         return consume_specific(StringView { next });
     }
@@ -114,7 +114,7 @@ public:
     StringView consume_all();
     StringView consume_line();
     StringView consume_until(char);
-    StringView consume_until(const char*);
+    StringView consume_until(char const*);
     StringView consume_until(StringView);
     StringView consume_quoted_string(char escape_char = 0);
 #ifndef KERNEL
@@ -144,7 +144,7 @@ public:
         ignore();
     }
 
-    constexpr void ignore_until(const char* stop)
+    constexpr void ignore_until(char const* stop)
     {
         while (!is_eof() && !next_is(stop)) {
             ++m_index;

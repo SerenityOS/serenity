@@ -12,7 +12,7 @@
 
 namespace JS {
 
-static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, JS::TokenType type)
+static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, JS::TokenType type)
 {
     switch (JS::Token::category(type)) {
     case JS::TokenCategory::Invalid:
@@ -47,7 +47,7 @@ bool SyntaxHighlighter::is_navigatable([[maybe_unused]] u64 token) const
     return false;
 }
 
-void SyntaxHighlighter::rehighlight(const Palette& palette)
+void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
 

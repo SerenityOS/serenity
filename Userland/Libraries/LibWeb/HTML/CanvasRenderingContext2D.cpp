@@ -207,7 +207,7 @@ void CanvasRenderingContext2D::rotate(float radians)
     m_drawing_state.transform.rotate_radians(radians);
 }
 
-void CanvasRenderingContext2D::did_draw(const Gfx::FloatRect&)
+void CanvasRenderingContext2D::did_draw(Gfx::FloatRect const&)
 {
     // FIXME: Make use of the rect to reduce the invalidated area when possible.
     if (!m_element)
@@ -230,7 +230,7 @@ OwnPtr<Gfx::Painter> CanvasRenderingContext2D::painter()
     return make<Gfx::Painter>(*m_element->bitmap());
 }
 
-void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, Optional<double> max_width)
+void CanvasRenderingContext2D::fill_text(String const& text, float x, float y, Optional<double> max_width)
 {
     if (max_width.has_value() && max_width.value() <= 0)
         return;
@@ -383,7 +383,7 @@ void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
     did_draw(m_path.bounding_box());
 }
 
-void CanvasRenderingContext2D::fill(const String& fill_rule)
+void CanvasRenderingContext2D::fill(String const& fill_rule)
 {
     if (fill_rule == "evenodd")
         return fill(Gfx::Painter::WindingRule::EvenOdd);
@@ -439,7 +439,7 @@ DOM::ExceptionOr<RefPtr<ImageData>> CanvasRenderingContext2D::get_image_data(int
     return image_data;
 }
 
-void CanvasRenderingContext2D::put_image_data(const ImageData& image_data, float x, float y)
+void CanvasRenderingContext2D::put_image_data(ImageData const& image_data, float x, float y)
 {
     auto painter = this->painter();
     if (!painter)

@@ -42,7 +42,7 @@ private:
     u8* m_data;
 };
 
-static ByteBuffer write_pixel_data(const RefPtr<Bitmap> bitmap, int pixel_row_data_size, int bytes_per_pixel, bool include_alpha_channel)
+static ByteBuffer write_pixel_data(RefPtr<Bitmap> const bitmap, int pixel_row_data_size, int bytes_per_pixel, bool include_alpha_channel)
 {
     int image_size = pixel_row_data_size * bitmap->height();
     auto buffer_result = ByteBuffer::create_uninitialized(image_size);
@@ -67,7 +67,7 @@ static ByteBuffer write_pixel_data(const RefPtr<Bitmap> bitmap, int pixel_row_da
     return buffer;
 }
 
-static ByteBuffer compress_pixel_data(const ByteBuffer& pixel_data, BMPWriter::Compression compression)
+static ByteBuffer compress_pixel_data(ByteBuffer const& pixel_data, BMPWriter::Compression compression)
 {
     switch (compression) {
     case BMPWriter::Compression::BI_BITFIELDS:
@@ -78,7 +78,7 @@ static ByteBuffer compress_pixel_data(const ByteBuffer& pixel_data, BMPWriter::C
     VERIFY_NOT_REACHED();
 }
 
-ByteBuffer BMPWriter::dump(const RefPtr<Bitmap> bitmap, DibHeader dib_header)
+ByteBuffer BMPWriter::dump(RefPtr<Bitmap> const bitmap, DibHeader dib_header)
 {
 
     switch (dib_header) {

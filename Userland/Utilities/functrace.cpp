@@ -71,7 +71,7 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
 static NonnullOwnPtr<HashMap<FlatPtr, X86::Instruction>> instrument_code()
 {
     auto instrumented = make<HashMap<FlatPtr, X86::Instruction>>();
-    g_debug_session->for_each_loaded_library([&](const Debug::LoadedLibrary& lib) {
+    g_debug_session->for_each_loaded_library([&](Debug::LoadedLibrary const& lib) {
         lib.debug_info->elf().for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
             if (section.name() != ".text")
                 return IterationDecision::Continue;

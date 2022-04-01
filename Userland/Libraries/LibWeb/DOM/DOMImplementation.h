@@ -28,7 +28,7 @@ public:
     }
 
     ExceptionOr<NonnullRefPtr<Document>> create_document(String const&, String const&, RefPtr<DocumentType>) const;
-    NonnullRefPtr<Document> create_html_document(const String& title) const;
+    NonnullRefPtr<Document> create_html_document(String const& title) const;
     ExceptionOr<NonnullRefPtr<DocumentType>> create_document_type(String const& qualified_name, String const& public_id, String const& system_id);
 
     // https://dom.spec.whatwg.org/#dom-domimplementation-hasfeature

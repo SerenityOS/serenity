@@ -24,7 +24,7 @@ static int kill_test();
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    const char* test_name = "n";
+    char const* test_name = "n";
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(

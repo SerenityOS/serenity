@@ -15,7 +15,7 @@ CardStack::CardStack()
 {
 }
 
-CardStack::CardStack(const Gfx::IntPoint& position, Type type)
+CardStack::CardStack(Gfx::IntPoint const& position, Type type)
     : m_position(position)
     , m_type(type)
     , m_rules(rules_for_type(type))
@@ -25,7 +25,7 @@ CardStack::CardStack(const Gfx::IntPoint& position, Type type)
     calculate_bounding_box();
 }
 
-CardStack::CardStack(const Gfx::IntPoint& position, Type type, NonnullRefPtr<CardStack> associated_stack)
+CardStack::CardStack(Gfx::IntPoint const& position, Type type, NonnullRefPtr<CardStack> associated_stack)
     : m_associated_stack(move(associated_stack))
     , m_position(position)
     , m_type(type)
@@ -42,7 +42,7 @@ void CardStack::clear()
     m_stack_positions.clear();
 }
 
-void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
+void CardStack::draw(GUI::Painter& painter, Gfx::Color const& background_color)
 {
     auto draw_background_if_empty = [&]() {
         size_t number_of_moving_cards = 0;
@@ -108,7 +108,7 @@ void CardStack::rebound_cards()
         card.set_position(m_stack_positions.at(card_index++));
 }
 
-void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule)
+void CardStack::add_all_grabbed_cards(Gfx::IntPoint const& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule)
 {
     VERIFY(grabbed.is_empty());
 
@@ -187,7 +187,7 @@ void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, Nonnu
     }
 }
 
-bool CardStack::is_allowed_to_push(const Card& card, size_t stack_size, MovementRule movement_rule) const
+bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, MovementRule movement_rule) const
 {
     if (m_type == Type::Stock || m_type == Type::Waste || m_type == Type::Play)
         return false;

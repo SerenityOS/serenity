@@ -45,7 +45,7 @@ void DoubleBuffer::flip()
     compute_lockfree_metadata();
 }
 
-ErrorOr<size_t> DoubleBuffer::write(const UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> DoubleBuffer::write(UserOrKernelBuffer const& data, size_t size)
 {
     if (!size)
         return 0;

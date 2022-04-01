@@ -109,8 +109,8 @@ public:
 
     virtual String to_string() const override;
 
-    const String& name() const { return m_name; }
-    const Optional<String>& value() const { return m_value; }
+    String const& name() const { return m_name; }
+    Optional<String> const& value() const { return m_value; }
 
 private:
     String m_name;
@@ -119,7 +119,7 @@ private:
 
 class PositionCommand : public Command {
 public:
-    explicit PositionCommand(const Optional<String>& fen, const Vector<Chess::Move>& moves)
+    explicit PositionCommand(Optional<String> const& fen, Vector<Chess::Move> const& moves)
         : Command(Command::Type::Position)
         , m_fen(fen)
         , m_moves(moves)
@@ -130,8 +130,8 @@ public:
 
     virtual String to_string() const override;
 
-    const Optional<String>& fen() const { return m_fen; }
-    const Vector<Chess::Move>& moves() const { return m_moves; }
+    Optional<String> const& fen() const { return m_fen; }
+    Vector<Chess::Move> const& moves() const { return m_moves; }
 
 private:
     Optional<String> m_fen;
@@ -194,7 +194,7 @@ public:
     virtual String to_string() const override;
 
     Type field_type() const { return m_field_type; }
-    const String& value() const { return m_value; }
+    String const& value() const { return m_value; }
 
 private:
     Type m_field_type;
@@ -227,7 +227,7 @@ public:
 
 class BestMoveCommand : public Command {
 public:
-    explicit BestMoveCommand(const Chess::Move& move)
+    explicit BestMoveCommand(Chess::Move const& move)
         : Command(Command::Type::BestMove)
         , m_move(move)
     {

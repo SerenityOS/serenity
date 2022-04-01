@@ -64,7 +64,7 @@ GUI::ModelIndex FilterModel::index(int row, int column, const GUI::ModelIndex& p
             return {};
         return create_index(row, column, &m_filters[row]);
     }
-    auto* parent = static_cast<const FilterInfo*>(parent_index.internal_data());
+    auto* parent = static_cast<FilterInfo const*>(parent_index.internal_data());
     if (static_cast<size_t>(row) >= parent->children.size())
         return {};
     auto* child = &parent->children[row];
@@ -76,7 +76,7 @@ GUI::ModelIndex FilterModel::parent_index(const GUI::ModelIndex& index) const
     if (!index.is_valid())
         return {};
 
-    auto* child = static_cast<const FilterInfo*>(index.internal_data());
+    auto* child = static_cast<FilterInfo const*>(index.internal_data());
     auto* parent = child->parent;
     if (parent == nullptr)
         return {};
@@ -99,13 +99,13 @@ int FilterModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return m_filters.size();
-    auto* node = static_cast<const FilterInfo*>(index.internal_data());
+    auto* node = static_cast<FilterInfo const*>(index.internal_data());
     return node->children.size();
 }
 
 GUI::Variant FilterModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    auto* filter = static_cast<const FilterInfo*>(index.internal_data());
+    auto* filter = static_cast<FilterInfo const*>(index.internal_data());
     switch (role) {
     case GUI::ModelRole::Display:
         return filter->text;

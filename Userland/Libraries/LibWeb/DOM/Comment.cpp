@@ -10,7 +10,7 @@
 
 namespace Web::DOM {
 
-Comment::Comment(Document& document, const String& data)
+Comment::Comment(Document& document, String const& data)
     : CharacterData(document, NodeType::COMMENT_NODE, data)
 {
 }

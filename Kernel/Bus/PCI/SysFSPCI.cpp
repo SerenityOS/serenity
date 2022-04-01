@@ -12,14 +12,14 @@
 
 namespace Kernel::PCI {
 
-UNMAP_AFTER_INIT NonnullRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirectory::create(const SysFSDirectory& parent_directory, Address address)
+UNMAP_AFTER_INIT NonnullRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirectory::create(SysFSDirectory const& parent_directory, Address address)
 {
     // FIXME: Handle allocation failure gracefully
     auto device_name = MUST(KString::formatted("{:04x}:{:02x}:{:02x}.{}", address.domain(), address.bus(), address.device(), address.function()));
     return adopt_ref(*new (nothrow) PCIDeviceSysFSDirectory(move(device_name), parent_directory, address));
 }
 
-UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, const SysFSDirectory& parent_directory, Address address)
+UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const& parent_directory, Address address)
     : SysFSDirectory(parent_directory)
     , m_address(address)
     , m_device_directory_name(move(device_directory_name))
@@ -92,12 +92,12 @@ StringView PCIDeviceAttributeSysFSComponent::name() const
     }
 }
 
-NonnullRefPtr<PCIDeviceAttributeSysFSComponent> PCIDeviceAttributeSysFSComponent::create(const PCIDeviceSysFSDirectory& device, PCI::RegisterOffset offset, size_t field_bytes_width)
+NonnullRefPtr<PCIDeviceAttributeSysFSComponent> PCIDeviceAttributeSysFSComponent::create(PCIDeviceSysFSDirectory const& device, PCI::RegisterOffset offset, size_t field_bytes_width)
 {
     return adopt_ref(*new (nothrow) PCIDeviceAttributeSysFSComponent(device, offset, field_bytes_width));
 }
 
-PCIDeviceAttributeSysFSComponent::PCIDeviceAttributeSysFSComponent(const PCIDeviceSysFSDirectory& device, PCI::RegisterOffset offset, size_t field_bytes_width)
+PCIDeviceAttributeSysFSComponent::PCIDeviceAttributeSysFSComponent(PCIDeviceSysFSDirectory const& device, PCI::RegisterOffset offset, size_t field_bytes_width)
     : SysFSComponent()
     , m_device(device)
     , m_offset(offset)

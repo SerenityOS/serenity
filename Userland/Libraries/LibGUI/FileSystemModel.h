@@ -110,7 +110,7 @@ public:
     String full_path(ModelIndex const&) const;
     ModelIndex index(String path, int column) const;
 
-    void update_node_on_selection(ModelIndex const&, const bool);
+    void update_node_on_selection(ModelIndex const&, bool const);
     ModelIndex m_previously_selected_index {};
 
     Node const& node(ModelIndex const& index) const;

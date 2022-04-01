@@ -20,7 +20,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!TRY(Core::System::isatty(STDIN_FILENO)))
         return Error::from_string_literal("Standard input is not a terminal");
 
-    const char* user = nullptr;
+    char const* user = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(user, "User to switch to (defaults to user with UID 0)", "user", Core::ArgsParser::Required::No);

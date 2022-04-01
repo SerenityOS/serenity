@@ -11,10 +11,10 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 
-static void write8(void* ptr) { *(volatile uint8_t*)ptr = 1; }
-static void write16(void* ptr) { *(volatile uint16_t*)ptr = 1; }
-static void write32(void* ptr) { *(volatile uint32_t*)ptr = 1; }
-static void write64(void* ptr) { *(volatile double*)ptr = 1.0; }
+static void write8(void* ptr) { *(uint8_t volatile*)ptr = 1; }
+static void write16(void* ptr) { *(uint16_t volatile*)ptr = 1; }
+static void write32(void* ptr) { *(uint32_t volatile*)ptr = 1; }
+static void write64(void* ptr) { *(double volatile*)ptr = 1.0; }
 // A u64 write might be translated by the compiler as a 32-then-32-bit write:
 // static void write64_bad(void* ptr) { *(volatile uint64_t*)ptr = 1.0; }
 // Let's hope this won't be translated like that.

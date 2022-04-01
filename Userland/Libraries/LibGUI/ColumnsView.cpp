@@ -156,7 +156,7 @@ void ColumnsView::paint_event(PaintEvent& event)
     }
 }
 
-void ColumnsView::push_column(const ModelIndex& parent_index)
+void ColumnsView::push_column(ModelIndex const& parent_index)
 {
     VERIFY(model());
 
@@ -206,7 +206,7 @@ void ColumnsView::update_column_sizes()
     set_content_size({ total_width, total_height });
 }
 
-ModelIndex ColumnsView::index_at_event_position(const Gfx::IntPoint& a_position) const
+ModelIndex ColumnsView::index_at_event_position(Gfx::IntPoint const& a_position) const
 {
     if (!model())
         return {};
@@ -306,7 +306,7 @@ void ColumnsView::move_cursor(CursorMovement movement, SelectionUpdate selection
         set_cursor(new_index, selection_update);
 }
 
-Gfx::IntRect ColumnsView::content_rect(const ModelIndex& index) const
+Gfx::IntRect ColumnsView::content_rect(ModelIndex const& index) const
 {
     if (!index.is_valid())
         return {};

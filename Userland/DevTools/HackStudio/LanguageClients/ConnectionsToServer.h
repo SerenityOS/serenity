@@ -17,10 +17,10 @@
     class ConnectionToServer final : public HackStudio::ConnectionToServer {                            \
         IPC_CLIENT_CONNECTION(ConnectionToServer, "/tmp/portal/language/" #socket_name)                 \
     public:                                                                                             \
-        static const char* language_name() { return #language_name_; }                                  \
+        static char const* language_name() { return #language_name_; }                                  \
                                                                                                         \
     private:                                                                                            \
-        ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket, const String& project_path) \
+        ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket, String const& project_path) \
             : HackStudio::ConnectionToServer(move(socket), project_path)                                \
         {                                                                                               \
         }                                                                                               \

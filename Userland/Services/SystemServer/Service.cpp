@@ -61,7 +61,7 @@ void Service::setup_socket(SocketDescriptor& socket)
     auto un = un_optional.value();
 
     // FIXME: Propagate errors
-    MUST(Core::System::bind(socket_fd, (const sockaddr*)&un, sizeof(un)));
+    MUST(Core::System::bind(socket_fd, (sockaddr const*)&un, sizeof(un)));
     // FIXME: Propagate errors
     MUST(Core::System::listen(socket_fd, 16));
 }
@@ -270,7 +270,7 @@ void Service::did_exit(int exit_code)
     activate();
 }
 
-Service::Service(const Core::ConfigFile& config, StringView name)
+Service::Service(Core::ConfigFile const& config, StringView name)
     : Core::Object(nullptr)
 {
     VERIFY(config.has_group(name));

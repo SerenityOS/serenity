@@ -152,7 +152,7 @@ bool File::looks_like_shared_library() const
     return File::looks_like_shared_library(m_filename);
 }
 
-bool File::looks_like_shared_library(const String& filename)
+bool File::looks_like_shared_library(String const& filename)
 {
     return filename.ends_with(".so"sv) || filename.contains(".so."sv);
 }

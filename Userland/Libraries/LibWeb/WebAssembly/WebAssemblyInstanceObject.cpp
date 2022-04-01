@@ -33,7 +33,7 @@ void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
     auto& cache = this->cache();
     for (auto& export_ : instance.exports()) {
         export_.value().visit(
-            [&](const Wasm::FunctionAddress& address) {
+            [&](Wasm::FunctionAddress const& address) {
                 auto object = cache.function_instances.get(address);
                 if (!object.has_value()) {
                     object = create_native_function(global_object, address, export_.name());
@@ -41,7 +41,7 @@ void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
                 }
                 m_exports_object->define_direct_property(export_.name(), *object, JS::default_attributes);
             },
-            [&](const Wasm::MemoryAddress& address) {
+            [&](Wasm::MemoryAddress const& address) {
                 auto object = cache.memory_instances.get(address);
                 if (!object.has_value()) {
                     object = heap().allocate<Web::Bindings::WebAssemblyMemoryObject>(global_object, global_object, address);
@@ -49,7 +49,7 @@ void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
                 }
                 m_exports_object->define_direct_property(export_.name(), *object, JS::default_attributes);
             },
-            [&](const auto&) {
+            [&](auto const&) {
                 // FIXME: Implement other exports!
             });
     }

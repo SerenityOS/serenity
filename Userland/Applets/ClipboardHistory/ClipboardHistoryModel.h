@@ -35,7 +35,7 @@ public:
 
     virtual ~ClipboardHistoryModel() override = default;
 
-    const ClipboardItem& item_at(int index) const { return m_history_items[index]; }
+    ClipboardItem const& item_at(int index) const { return m_history_items[index]; }
     void remove_item(int index);
 
     // ^GUI::Model
@@ -54,7 +54,7 @@ private:
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
 
     // ^GUI::Clipboard::ClipboardClient
-    virtual void clipboard_content_did_change(const String&) override { add_item(GUI::Clipboard::the().fetch_data_and_type()); }
+    virtual void clipboard_content_did_change(String const&) override { add_item(GUI::Clipboard::the().fetch_data_and_type()); }
 
     Vector<ClipboardItem> m_history_items;
     size_t m_history_limit;

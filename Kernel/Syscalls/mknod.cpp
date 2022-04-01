@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$mknod(Userspace<const Syscall::SC_mknod_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$mknod(Userspace<Syscall::SC_mknod_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::dpath));

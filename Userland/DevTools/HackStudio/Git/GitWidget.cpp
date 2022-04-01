@@ -167,8 +167,8 @@ void GitWidget::show_diff(String const& file_path)
         m_view_diff_callback("", Diff::generate_only_additions(content_string));
         return;
     }
-    const auto& original_content = m_git_repo->original_file_content(file_path);
-    const auto& diff = m_git_repo->unstaged_diff(file_path);
+    auto const& original_content = m_git_repo->original_file_content(file_path);
+    auto const& diff = m_git_repo->unstaged_diff(file_path);
     VERIFY(original_content.has_value() && diff.has_value());
     m_view_diff_callback(original_content.value(), diff.value());
 }

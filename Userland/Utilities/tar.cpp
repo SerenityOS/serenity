@@ -32,8 +32,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool gzip = false;
     bool no_auto_compress = false;
     StringView archive_file;
-    const char* directory = nullptr;
-    Vector<const char*> paths;
+    char const* directory = nullptr;
+    Vector<char const*> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(create, "Create archive", "create", 'c');
@@ -96,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
 
         for (; !tar_stream.finished(); tar_stream.advance()) {
-            const Archive::TarFileHeader& header = tar_stream.header();
+            Archive::TarFileHeader const& header = tar_stream.header();
 
             // Handle meta-entries earlier to avoid consuming the file content stream.
             if (header.content_is_like_extended_header()) {

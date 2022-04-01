@@ -15,7 +15,7 @@ __BEGIN_DECLS
 #define optional_argument 2
 
 struct option {
-    const char* name;
+    char const* name;
     int has_arg;
     int* flag;
     int val;
@@ -26,6 +26,6 @@ extern int optopt;
 extern int optind;
 extern int optreset;
 extern char* optarg;
-int getopt_long(int argc, char* const* argv, const char* short_options, const struct option* long_options, int* out_long_option_index);
+int getopt_long(int argc, char* const* argv, char const* short_options, const struct option* long_options, int* out_long_option_index);
 
 __END_DECLS

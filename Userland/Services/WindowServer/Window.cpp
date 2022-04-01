@@ -137,7 +137,7 @@ void Window::destroy()
     set_visible(false);
 }
 
-void Window::set_title(const String& title)
+void Window::set_title(String const& title)
 {
     if (m_title == title)
         return;
@@ -146,7 +146,7 @@ void Window::set_title(const String& title)
     WindowManager::the().notify_title_changed(*this);
 }
 
-void Window::set_rect(const Gfx::IntRect& rect)
+void Window::set_rect(Gfx::IntRect const& rect)
 {
     if (m_rect == rect)
         return;
@@ -167,7 +167,7 @@ void Window::set_rect(const Gfx::IntRect& rect)
     invalidate_last_rendered_screen_rects();
 }
 
-void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
+void Window::set_rect_without_repaint(Gfx::IntRect const& rect)
 {
     VERIFY(!rect.is_empty());
     if (m_rect == rect)
@@ -246,7 +246,7 @@ void Window::nudge_into_desktop(Screen* target_screen, bool force_titlebar_visib
     set_rect(new_window_rect);
 }
 
-void Window::set_minimum_size(const Gfx::IntSize& size)
+void Window::set_minimum_size(Gfx::IntSize const& size)
 {
     if (size.is_null())
         return;
@@ -261,7 +261,7 @@ void Window::set_minimum_size(const Gfx::IntSize& size)
     m_minimum_size = size;
 }
 
-void Window::handle_mouse_event(const MouseEvent& event)
+void Window::handle_mouse_event(MouseEvent const& event)
 {
     set_automatic_cursor_tracking_enabled(event.buttons() != 0);
 
@@ -357,7 +357,7 @@ void Window::set_closeable(bool closeable)
     update_window_menu_items();
 }
 
-void Window::set_taskbar_rect(const Gfx::IntRect& rect)
+void Window::set_taskbar_rect(Gfx::IntRect const& rect)
 {
     m_taskbar_rect = rect;
     m_have_taskbar_rect = !m_taskbar_rect.is_empty();
@@ -536,7 +536,7 @@ void Window::event(Core::Event& event)
     }
 
     if (static_cast<Event&>(event).is_mouse_event())
-        return handle_mouse_event(static_cast<const MouseEvent&>(event));
+        return handle_mouse_event(static_cast<MouseEvent const&>(event));
 
     switch (event.type()) {
     case Event::WindowEntered:
@@ -546,14 +546,14 @@ void Window::event(Core::Event& event)
         m_client->async_window_left(m_window_id);
         break;
     case Event::KeyDown:
-        handle_keydown_event(static_cast<const KeyEvent&>(event));
+        handle_keydown_event(static_cast<KeyEvent const&>(event));
         break;
     case Event::KeyUp:
         m_client->async_key_up(m_window_id,
-            (u32) static_cast<const KeyEvent&>(event).code_point(),
-            (u32) static_cast<const KeyEvent&>(event).key(),
-            static_cast<const KeyEvent&>(event).modifiers(),
-            (u32) static_cast<const KeyEvent&>(event).scancode());
+            (u32) static_cast<KeyEvent const&>(event).code_point(),
+            (u32) static_cast<KeyEvent const&>(event).key(),
+            static_cast<KeyEvent const&>(event).modifiers(),
+            (u32) static_cast<KeyEvent const&>(event).scancode());
         break;
     case Event::WindowActivated:
         m_client->async_window_activated(m_window_id);
@@ -571,14 +571,14 @@ void Window::event(Core::Event& event)
         m_client->async_window_close_request(m_window_id);
         break;
     case Event::WindowResized:
-        m_client->async_window_resized(m_window_id, static_cast<const ResizeEvent&>(event).rect());
+        m_client->async_window_resized(m_window_id, static_cast<ResizeEvent const&>(event).rect());
         break;
     default:
         break;
     }
 }
 
-void Window::handle_keydown_event(const KeyEvent& event)
+void Window::handle_keydown_event(KeyEvent const& event)
 {
     if (event.modifiers() == Mod_Alt && event.key() == Key_Space && type() == WindowType::Normal && !is_frameless()) {
         auto position = frame().titlebar_rect().bottom_left().translated(frame().rect().location());
@@ -661,7 +661,7 @@ void Window::invalidate(Gfx::IntRect const& rect, bool invalidate_frame)
         Compositor::the().invalidate_window();
 }
 
-bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool invalidate_frame)
+bool Window::invalidate_no_notify(Gfx::IntRect const& rect, bool invalidate_frame)
 {
     if (rect.is_empty())
         return false;
@@ -764,7 +764,7 @@ void Window::set_default_icon()
     m_icon = default_window_icon();
 }
 
-void Window::request_update(const Gfx::IntRect& rect, bool ignore_occlusion)
+void Window::request_update(Gfx::IntRect const& rect, bool ignore_occlusion)
 {
     if (rect.is_empty())
         return;
@@ -865,7 +865,7 @@ void Window::handle_window_menu_action(WindowMenuAction action)
     }
 }
 
-void Window::popup_window_menu(const Gfx::IntPoint& position, WindowMenuDefaultAction default_action)
+void Window::popup_window_menu(Gfx::IntPoint const& position, WindowMenuDefaultAction default_action)
 {
     ensure_window_menu();
     if (default_action == WindowMenuDefaultAction::BasedOnWindowState) {

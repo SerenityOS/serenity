@@ -15,7 +15,7 @@ void glBitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLflo
     g_gl_context->gl_bitmap(width, height, xorig, yorig, xmove, ymove, bitmap);
 }
 
-void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void* data)
+void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, void const* data)
 {
     g_gl_context->gl_draw_pixels(width, height, format, type, data);
 }

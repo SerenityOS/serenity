@@ -20,9 +20,9 @@ public:
 
     void paint_all_phases(PaintContext&);
 
-    const LayoutRange& selection() const { return m_selection; }
-    void set_selection(const LayoutRange&);
-    void set_selection_end(const LayoutPosition&);
+    LayoutRange const& selection() const { return m_selection; }
+    void set_selection(LayoutRange const&);
+    void set_selection_end(LayoutPosition const&);
 
     void build_stacking_context_tree_if_needed();
     void recompute_selection_states();

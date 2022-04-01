@@ -85,14 +85,14 @@ static ErrorOr<void> determine_system_mode()
     return {};
 }
 
-static void chown_wrapper(const char* path, uid_t uid, gid_t gid)
+static void chown_wrapper(char const* path, uid_t uid, gid_t gid)
 {
     int rc = chown(path, uid, gid);
     if (rc < 0 && errno != ENOENT) {
         VERIFY_NOT_REACHED();
     }
 }
-static void chmod_wrapper(const char* path, mode_t mode)
+static void chmod_wrapper(char const* path, mode_t mode)
 {
     int rc = chmod(path, mode);
     if (rc < 0 && errno != ENOENT) {

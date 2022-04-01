@@ -11,7 +11,7 @@
 
 namespace Spreadsheet {
 
-void CellSyntaxHighlighter::rehighlight(const Palette& palette)
+void CellSyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
     m_client->spans().clear();

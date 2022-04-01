@@ -28,7 +28,7 @@ struct TransitionKey {
     StringOrSymbol property_key;
     PropertyAttributes attributes { 0 };
 
-    bool operator==(const TransitionKey& other) const
+    bool operator==(TransitionKey const& other) const
     {
         return property_key == other.property_key && attributes == other.attributes;
     }
@@ -51,14 +51,14 @@ public:
 
     explicit Shape(ShapeWithoutGlobalObjectTag) {};
     explicit Shape(Object& global_object);
-    Shape(Shape& previous_shape, const StringOrSymbol& property_key, PropertyAttributes attributes, TransitionType);
+    Shape(Shape& previous_shape, StringOrSymbol const& property_key, PropertyAttributes attributes, TransitionType);
     Shape(Shape& previous_shape, Object* new_prototype);
 
-    Shape* create_put_transition(const StringOrSymbol&, PropertyAttributes attributes);
-    Shape* create_configure_transition(const StringOrSymbol&, PropertyAttributes attributes);
+    Shape* create_put_transition(StringOrSymbol const&, PropertyAttributes attributes);
+    Shape* create_configure_transition(StringOrSymbol const&, PropertyAttributes attributes);
     Shape* create_prototype_transition(Object* new_prototype);
 
-    void add_property_without_transition(const StringOrSymbol&, PropertyAttributes);
+    void add_property_without_transition(StringOrSymbol const&, PropertyAttributes);
     void add_property_without_transition(PropertyKey const&, PropertyAttributes);
 
     bool is_unique() const { return m_unique; }
@@ -67,10 +67,10 @@ public:
     GlobalObject* global_object() const;
 
     Object* prototype() { return m_prototype; }
-    const Object* prototype() const { return m_prototype; }
+    Object const* prototype() const { return m_prototype; }
 
-    Optional<PropertyMetadata> lookup(const StringOrSymbol&) const;
-    const HashMap<StringOrSymbol, PropertyMetadata>& property_table() const;
+    Optional<PropertyMetadata> lookup(StringOrSymbol const&) const;
+    HashMap<StringOrSymbol, PropertyMetadata> const& property_table() const;
     u32 property_count() const { return m_property_count; }
 
     struct Property {
@@ -82,9 +82,9 @@ public:
 
     void set_prototype_without_transition(Object* new_prototype) { m_prototype = new_prototype; }
 
-    void remove_property_from_unique_shape(const StringOrSymbol&, size_t offset);
-    void add_property_to_unique_shape(const StringOrSymbol&, PropertyAttributes attributes);
-    void reconfigure_property_in_unique_shape(const StringOrSymbol& property_key, PropertyAttributes attributes);
+    void remove_property_from_unique_shape(StringOrSymbol const&, size_t offset);
+    void add_property_to_unique_shape(StringOrSymbol const&, PropertyAttributes attributes);
+    void reconfigure_property_in_unique_shape(StringOrSymbol const& property_key, PropertyAttributes attributes);
 
 private:
     virtual StringView class_name() const override { return "Shape"sv; }

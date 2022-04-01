@@ -74,7 +74,7 @@ ErrorOr<void> Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
     return {};
 }
 
-ErrorOr<void> Socket::setsockopt(int level, int option, Userspace<const void*> user_value, socklen_t user_value_size)
+ErrorOr<void> Socket::setsockopt(int level, int option, Userspace<void const*> user_value, socklen_t user_value_size)
 {
     MutexLocker locker(mutex());
 
@@ -95,7 +95,7 @@ ErrorOr<void> Socket::setsockopt(int level, int option, Userspace<const void*> u
     case SO_BINDTODEVICE: {
         if (user_value_size != IFNAMSIZ)
             return EINVAL;
-        auto user_string = static_ptr_cast<const char*>(user_value);
+        auto user_string = static_ptr_cast<char const*>(user_value);
         auto ifname = TRY(try_copy_kstring_from_user(user_string, user_value_size));
         auto device = NetworkingManagement::the().lookup_by_name(ifname->view());
         if (!device)
@@ -242,7 +242,7 @@ ErrorOr<size_t> Socket::read(OpenFileDescription& description, u64, UserOrKernel
     return recvfrom(description, buffer, size, 0, {}, 0, t);
 }
 
-ErrorOr<size_t> Socket::write(OpenFileDescription& description, u64, const UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> Socket::write(OpenFileDescription& description, u64, UserOrKernelBuffer const& data, size_t size)
 {
     if (is_shut_down_for_writing())
         return set_so_error(EPIPE);

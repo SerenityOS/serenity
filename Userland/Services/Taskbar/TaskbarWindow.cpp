@@ -104,9 +104,9 @@ void TaskbarWindow::show_desktop_button_clicked(unsigned)
     GUI::ConnectionToWindowMangerServer::the().async_toggle_show_desktop();
 }
 
-void TaskbarWindow::on_screen_rects_change(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index)
+void TaskbarWindow::on_screen_rects_change(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index)
 {
-    const auto& rect = rects[main_screen_index];
+    auto const& rect = rects[main_screen_index];
     Gfx::IntRect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
     set_rect(new_rect);
     update_applet_area();
@@ -123,7 +123,7 @@ void TaskbarWindow::update_applet_area()
     GUI::ConnectionToWindowMangerServer::the().async_set_applet_area_position(new_rect.location());
 }
 
-NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& identifier)
+NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(WindowIdentifier const& identifier)
 {
     auto& button = m_task_button_container->add<TaskbarButton>(identifier);
     button.set_min_size(20, 21);
@@ -133,7 +133,7 @@ NonnullRefPtr<GUI::Button> TaskbarWindow::create_button(const WindowIdentifier& 
     return button;
 }
 
-void TaskbarWindow::add_window_button(::Window& window, const WindowIdentifier& identifier)
+void TaskbarWindow::add_window_button(::Window& window, WindowIdentifier const& identifier)
 {
     if (window.button())
         return;
@@ -200,7 +200,7 @@ void TaskbarWindow::event(Core::Event& event)
         // we adjust it so that the nearest button ends up being clicked anyways.
 
         auto& mouse_event = static_cast<GUI::MouseEvent&>(event);
-        const int ADJUSTMENT = 4;
+        int const ADJUSTMENT = 4;
         auto adjusted_x = AK::clamp(mouse_event.x(), ADJUSTMENT, width() - ADJUSTMENT);
         auto adjusted_y = AK::min(mouse_event.y(), height() - ADJUSTMENT);
         Gfx::IntPoint adjusted_point = { adjusted_x, adjusted_y };

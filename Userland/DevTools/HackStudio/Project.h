@@ -19,21 +19,21 @@ class Project {
     AK_MAKE_NONMOVABLE(Project);
 
 public:
-    static OwnPtr<Project> open_with_root_path(const String& root_path);
+    static OwnPtr<Project> open_with_root_path(String const& root_path);
 
     GUI::FileSystemModel& model() { return *m_model; }
     const GUI::FileSystemModel& model() const { return *m_model; }
     String name() const { return LexicalPath::basename(m_root_path); }
     String root_path() const { return m_root_path; }
 
-    NonnullRefPtr<ProjectFile> create_file(const String& path) const;
+    NonnullRefPtr<ProjectFile> create_file(String const& path) const;
 
-    void for_each_text_file(Function<void(const ProjectFile&)>) const;
+    void for_each_text_file(Function<void(ProjectFile const&)>) const;
     String to_absolute_path(String const&) const;
     bool project_is_serenity() const;
 
 private:
-    explicit Project(const String& root_path);
+    explicit Project(String const& root_path);
 
     RefPtr<GUI::FileSystemModel> m_model;
 

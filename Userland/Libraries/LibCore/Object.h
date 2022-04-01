@@ -45,12 +45,12 @@ public:
     ~ObjectClassRegistration() = default;
 
     StringView class_name() const { return m_class_name; }
-    const ObjectClassRegistration* parent_class() const { return m_parent_class; }
+    ObjectClassRegistration const* parent_class() const { return m_parent_class; }
     RefPtr<Object> construct() const { return m_factory(); }
-    bool is_derived_from(const ObjectClassRegistration& base_class) const;
+    bool is_derived_from(ObjectClassRegistration const& base_class) const;
 
-    static void for_each(Function<void(const ObjectClassRegistration&)>);
-    static const ObjectClassRegistration* find(StringView class_name);
+    static void for_each(Function<void(ObjectClassRegistration const&)>);
+    static ObjectClassRegistration const* find(StringView class_name);
 
 private:
     StringView m_class_name;
@@ -98,11 +98,11 @@ public:
 
     virtual StringView class_name() const = 0;
 
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
     void set_name(String name) { m_name = move(name); }
 
     NonnullRefPtrVector<Object>& children() { return m_children; }
-    const NonnullRefPtrVector<Object>& children() const { return m_children; }
+    NonnullRefPtrVector<Object> const& children() const { return m_children; }
 
     template<typename Callback>
     void for_each_child(Callback callback)
@@ -117,15 +117,15 @@ public:
     void for_each_child_of_type(Callback callback) requires IsBaseOf<Object, T>;
 
     template<typename T>
-    T* find_child_of_type_named(const String&) requires IsBaseOf<Object, T>;
+    T* find_child_of_type_named(String const&) requires IsBaseOf<Object, T>;
 
     template<typename T>
-    T* find_descendant_of_type_named(const String&) requires IsBaseOf<Object, T>;
+    T* find_descendant_of_type_named(String const&) requires IsBaseOf<Object, T>;
 
-    bool is_ancestor_of(const Object&) const;
+    bool is_ancestor_of(Object const&) const;
 
     Object* parent() { return m_parent; }
-    const Object* parent() const { return m_parent; }
+    Object const* parent() const { return m_parent; }
 
     void start_timer(int ms, TimerShouldFireWhenNotVisible = TimerShouldFireWhenNotVisible::No);
     void stop_timer();
@@ -146,9 +146,9 @@ public:
 
     void save_to(JsonObject&);
 
-    bool set_property(String const& name, const JsonValue& value);
+    bool set_property(String const& name, JsonValue const& value);
     JsonValue property(String const& name) const;
-    const HashMap<String, NonnullOwnPtr<Property>>& properties() const { return m_properties; }
+    HashMap<String, NonnullOwnPtr<Property>> const& properties() const { return m_properties; }
 
     static IntrusiveList<&Object::m_all_objects_list_node>& all_objects();
 
@@ -186,7 +186,7 @@ public:
 protected:
     explicit Object(Object* parent = nullptr);
 
-    void register_property(const String& name, Function<JsonValue()> getter, Function<bool(const JsonValue&)> setter = nullptr);
+    void register_property(String const& name, Function<JsonValue()> getter, Function<bool(JsonValue const&)> setter = nullptr);
 
     virtual void event(Core::Event&);
 
@@ -213,7 +213,7 @@ private:
 
 template<>
 struct AK::Formatter<Core::Object> : AK::Formatter<FormatString> {
-    ErrorOr<void> format(FormatBuilder& builder, const Core::Object& value)
+    ErrorOr<void> format(FormatBuilder& builder, Core::Object const& value)
     {
         return AK::Formatter<FormatString>::format(builder, "{}({})", value.class_name(), &value);
     }
@@ -231,7 +231,7 @@ inline void Object::for_each_child_of_type(Callback callback) requires IsBaseOf<
 }
 
 template<typename T>
-T* Object::find_child_of_type_named(const String& name) requires IsBaseOf<Object, T>
+T* Object::find_child_of_type_named(String const& name) requires IsBaseOf<Object, T>
 {
     T* found_child = nullptr;
     for_each_child_of_type<T>([&](auto& child) {

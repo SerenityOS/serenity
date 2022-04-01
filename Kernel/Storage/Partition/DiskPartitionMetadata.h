@@ -40,7 +40,7 @@ public:
     DiskPartitionMetadata offset(u64 blocks_count) const;
 
     Optional<u64> special_attributes() const;
-    const PartitionType& type() const;
+    PartitionType const& type() const;
     const UUID& unique_guid() const;
 
 private:

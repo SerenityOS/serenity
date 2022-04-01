@@ -22,7 +22,7 @@ public:
     void play();
     void stop();
     void pause();
-    void seek(const int position);
+    void seek(int const position);
     void loop(bool);
     bool toggle_pause();
     void set_loader(NonnullRefPtr<Audio::Loader>&&);

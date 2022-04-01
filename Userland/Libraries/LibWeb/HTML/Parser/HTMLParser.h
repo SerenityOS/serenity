@@ -39,7 +39,7 @@ namespace Web::HTML {
     __ENUMERATE_INSERTION_MODE(AfterAfterBody)  \
     __ENUMERATE_INSERTION_MODE(AfterAfterFrameset)
 
-RefPtr<DOM::Document> parse_html_document(StringView, const AK::URL&, const String& encoding);
+RefPtr<DOM::Document> parse_html_document(StringView, const AK::URL&, String const& encoding);
 
 class HTMLParser : public RefCounted<HTMLParser> {
     friend class HTMLTokenizer;
@@ -67,7 +67,7 @@ public:
 
     InsertionMode insertion_mode() const { return m_insertion_mode; }
 
-    static bool is_special_tag(const FlyString& tag_name, const FlyString& namespace_);
+    static bool is_special_tag(FlyString const& tag_name, FlyString const& namespace_);
 
     HTMLTokenizer& tokenizer() { return m_tokenizer; }
 
@@ -76,12 +76,12 @@ public:
     size_t script_nesting_level() const { return m_script_nesting_level; }
 
 private:
-    HTMLParser(DOM::Document&, StringView input, const String& encoding);
+    HTMLParser(DOM::Document&, StringView input, String const& encoding);
     HTMLParser(DOM::Document&);
 
-    const char* insertion_mode_name() const;
+    char const* insertion_mode_name() const;
 
-    DOM::QuirksMode which_quirks_mode(const HTMLToken&) const;
+    DOM::QuirksMode which_quirks_mode(HTMLToken const&) const;
 
     void handle_initial(HTMLToken&);
     void handle_before_html(HTMLToken&);
@@ -111,7 +111,7 @@ private:
 
     void stop_parsing() { m_stop_parsing = true; }
 
-    void generate_implied_end_tags(const FlyString& exception = {});
+    void generate_implied_end_tags(FlyString const& exception = {});
     void generate_all_implied_end_tags_thoroughly();
     NonnullRefPtr<DOM::Element> create_element_for(HTMLToken const&, FlyString const& namespace_, DOM::Node const& intended_parent);
 
@@ -124,8 +124,8 @@ private:
 
     DOM::Text* find_character_insertion_node();
     void flush_character_insertions();
-    NonnullRefPtr<DOM::Element> insert_foreign_element(const HTMLToken&, const FlyString&);
-    NonnullRefPtr<DOM::Element> insert_html_element(const HTMLToken&);
+    NonnullRefPtr<DOM::Element> insert_foreign_element(HTMLToken const&, FlyString const&);
+    NonnullRefPtr<DOM::Element> insert_html_element(HTMLToken const&);
     DOM::Element& current_node();
     DOM::Element& adjusted_current_node();
     DOM::Element& node_before_current_node();

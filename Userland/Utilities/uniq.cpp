@@ -18,7 +18,7 @@ struct linebuf {
     size_t len = 0;
 };
 
-static FILE* get_stream(const char* filepath, const char* perms)
+static FILE* get_stream(char const* filepath, char const* perms)
 {
     FILE* ret;
 
@@ -41,8 +41,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
-    const char* inpath = nullptr;
-    const char* outpath = nullptr;
+    char const* inpath = nullptr;
+    char const* outpath = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(inpath, "Input file", "input", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(outpath, "Output file", "output", Core::ArgsParser::Required::No);

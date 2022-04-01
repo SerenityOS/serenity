@@ -187,7 +187,7 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address
 
 UNMAP_AFTER_INIT NE2000NetworkAdapter::~NE2000NetworkAdapter() = default;
 
-bool NE2000NetworkAdapter::handle_irq(const RegisterState&)
+bool NE2000NetworkAdapter::handle_irq(RegisterState const&)
 {
     u8 status = in8(REG_RW_INTERRUPTSTATUS);
 

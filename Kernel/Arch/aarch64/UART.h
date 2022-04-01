@@ -22,7 +22,7 @@ public:
     void send(u32 c);
     u32 receive();
 
-    void print_str(const char* s)
+    void print_str(char const* s)
     {
         while (*s)
             send(*s++);
@@ -42,7 +42,7 @@ public:
     void print_hex(u64 n)
     {
         char buf[17];
-        static const char* digits = "0123456789ABCDEF";
+        static char const* digits = "0123456789ABCDEF";
         int i = 0;
         do {
             buf[i++] = digits[n % 16];

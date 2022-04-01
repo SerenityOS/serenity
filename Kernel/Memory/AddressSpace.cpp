@@ -245,7 +245,7 @@ ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange co
     if (!found_region)
         return regions;
     for (auto iter = m_regions.begin_from((*found_region)->vaddr().get()); !iter.is_end(); ++iter) {
-        const auto& iter_range = (*iter)->range();
+        auto const& iter_range = (*iter)->range();
         if (iter_range.base() < range.end() && iter_range.end() > range.base()) {
             TRY(regions.try_append(*iter));
 
@@ -267,7 +267,7 @@ ErrorOr<Region*> AddressSpace::add_region(NonnullOwnPtr<Region> region)
 }
 
 // Carve out a virtual address range from a region and return the two regions on either side
-ErrorOr<Vector<Region*, 2>> AddressSpace::try_split_region_around_range(const Region& source_region, VirtualRange const& desired_range)
+ErrorOr<Vector<Region*, 2>> AddressSpace::try_split_region_around_range(Region const& source_region, VirtualRange const& desired_range)
 {
     VirtualRange old_region_range = source_region.range();
     auto remaining_ranges_after_unmap = old_region_range.carve(desired_range);
@@ -343,10 +343,10 @@ size_t AddressSpace::amount_dirty_private() const
 ErrorOr<size_t> AddressSpace::amount_clean_inode() const
 {
     SpinlockLocker lock(m_lock);
-    HashTable<const InodeVMObject*> vmobjects;
+    HashTable<InodeVMObject const*> vmobjects;
     for (auto const& region : m_regions) {
         if (region->vmobject().is_inode())
-            TRY(vmobjects.try_set(&static_cast<const InodeVMObject&>(region->vmobject())));
+            TRY(vmobjects.try_set(&static_cast<InodeVMObject const&>(region->vmobject())));
     }
     size_t amount = 0;
     for (auto& vmobject : vmobjects)

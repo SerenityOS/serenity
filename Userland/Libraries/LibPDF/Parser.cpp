@@ -49,7 +49,7 @@ PDFErrorOr<void> Parser::initialize()
 {
     TRY(parse_header());
 
-    const auto linearization_result = TRY(initialize_linearization_dict());
+    auto const linearization_result = TRY(initialize_linearization_dict());
 
     if (linearization_result == LinearizationResult::NotLinearized)
         return initialize_non_linearized_xref_table();

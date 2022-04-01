@@ -59,7 +59,7 @@ bool JsonArrayModel::store()
     return true;
 }
 
-bool JsonArrayModel::add(const Vector<JsonValue>&& values)
+bool JsonArrayModel::add(Vector<JsonValue> const&& values)
 {
     VERIFY(values.size() == m_fields.size());
     JsonObject obj;
@@ -108,7 +108,7 @@ bool JsonArrayModel::remove(int row)
     return true;
 }
 
-Variant JsonArrayModel::data(const ModelIndex& index, ModelRole role) const
+Variant JsonArrayModel::data(ModelIndex const& index, ModelRole role) const
 {
     auto& field_spec = m_fields[index.column()];
     auto& object = m_array.at(index.row()).as_object();
@@ -142,7 +142,7 @@ Variant JsonArrayModel::data(const ModelIndex& index, ModelRole role) const
     return {};
 }
 
-void JsonArrayModel::set_json_path(const String& json_path)
+void JsonArrayModel::set_json_path(String const& json_path)
 {
     if (m_json_path == json_path)
         return;

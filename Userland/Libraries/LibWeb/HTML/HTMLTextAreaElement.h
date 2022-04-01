@@ -23,7 +23,7 @@ public:
     HTMLTextAreaElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTextAreaElement() override;
 
-    const String& type() const
+    String const& type() const
     {
         static String textarea = "textarea";
         return textarea;

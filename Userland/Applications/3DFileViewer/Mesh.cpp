@@ -34,7 +34,7 @@ Mesh::Mesh(Vector<Vertex> vertices, Vector<TexCoord> tex_coords, Vector<Vertex> 
 void Mesh::draw(float uv_scale)
 {
     for (u32 i = 0; i < m_triangle_list.size(); i++) {
-        const auto& triangle = m_triangle_list[i];
+        auto const& triangle = m_triangle_list[i];
 
         const FloatVector3 vertex_a(
             m_vertex_list.at(triangle.a).x,

@@ -78,7 +78,7 @@ bool Crash::do_report(Report report)
         out("\x1B[31mFAIL\x1B[0m: ");
 
     report.visit(
-        [&](const Failure& failure) {
+        [&](Failure const& failure) {
             switch (failure) {
             case Failure::DidNotCrash:
                 out("Did not crash");
@@ -90,7 +90,7 @@ bool Crash::do_report(Report report)
                 VERIFY_NOT_REACHED();
             }
         },
-        [&](const int& signal) {
+        [&](int const& signal) {
             out("Terminated with signal {}", signal);
         });
 

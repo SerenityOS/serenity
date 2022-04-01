@@ -22,7 +22,7 @@ PaletteImpl::PaletteImpl(Core::AnonymousBuffer buffer)
 {
 }
 
-Palette::Palette(const PaletteImpl& impl)
+Palette::Palette(PaletteImpl const& impl)
     : m_impl(impl)
 {
 }

@@ -17,7 +17,7 @@ volatile ucontext_t saved_ucontext;
 siginfo_t* sig_info_addr;
 ucontext_t* ucontext_addr;
 void* stack_ptr;
-volatile bool signal_was_delivered = false;
+bool volatile signal_was_delivered = false;
 
 static void signal_handler(int sig, siginfo_t* sig_info, void* u_context)
 {

@@ -13,7 +13,7 @@
 
 TEST_CASE(wcspbrk)
 {
-    const wchar_t* input;
+    wchar_t const* input;
     wchar_t* ret;
 
     // Test empty haystack.
@@ -40,7 +40,7 @@ TEST_CASE(wcspbrk)
 
 TEST_CASE(wcsstr)
 {
-    const wchar_t* input = L"abcde";
+    wchar_t const* input = L"abcde";
     wchar_t* ret;
 
     // Empty needle should return haystack.
@@ -70,7 +70,7 @@ TEST_CASE(wcsstr)
 
 TEST_CASE(wmemchr)
 {
-    const wchar_t* input = L"abcde";
+    wchar_t const* input = L"abcde";
     wchar_t* ret;
 
     // Empty haystack returns nothing.
@@ -102,7 +102,7 @@ TEST_CASE(wmemchr)
 
 TEST_CASE(wmemcpy)
 {
-    const wchar_t* input = L"abc\0def";
+    wchar_t const* input = L"abc\0def";
     auto buf = static_cast<wchar_t*>(malloc(8 * sizeof(wchar_t)));
 
     if (!buf) {
@@ -142,7 +142,7 @@ TEST_CASE(wmemset)
 TEST_CASE(wmemmove)
 {
     wchar_t* ret;
-    const wchar_t* string = L"abc\0def";
+    wchar_t const* string = L"abc\0def";
     auto buf = static_cast<wchar_t*>(calloc(32, sizeof(wchar_t)));
 
     if (!buf) {
@@ -324,7 +324,7 @@ TEST_CASE(wcsrtombs)
     char buf[MB_LEN_MAX * 4];
     const wchar_t good_chars[] = { L'\U0001F41E', L'\U0001F41E', L'\0' };
     const wchar_t bad_chars[] = { L'\U0001F41E', static_cast<wchar_t>(0x1111F41E), L'\0' };
-    const wchar_t* src;
+    wchar_t const* src;
     size_t ret = 0;
 
     // Convert normal and valid wchar_t values.
@@ -369,7 +369,7 @@ TEST_CASE(wcsnrtombs)
 {
     mbstate_t state = {};
     const wchar_t good_chars[] = { L'\U0001F41E', L'\U0001F41E', L'\0' };
-    const wchar_t* src;
+    wchar_t const* src;
     size_t ret = 0;
 
     // Convert nothing.
@@ -395,9 +395,9 @@ TEST_CASE(mbsrtowcs)
 {
     mbstate_t state = {};
     wchar_t buf[4];
-    const char good_chars[] = "\xf0\x9f\x90\x9e\xf0\x9f\x90\x9e";
-    const char bad_chars[] = "\xf0\x9f\x90\x9e\xf0\xff\x90\x9e";
-    const char* src;
+    char const good_chars[] = "\xf0\x9f\x90\x9e\xf0\x9f\x90\x9e";
+    char const bad_chars[] = "\xf0\x9f\x90\x9e\xf0\xff\x90\x9e";
+    char const* src;
     size_t ret = 0;
 
     // Convert normal and valid multibyte sequences.
@@ -445,8 +445,8 @@ TEST_CASE(mbsrtowcs)
 TEST_CASE(mbsnrtowcs)
 {
     mbstate_t state = {};
-    const char good_chars[] = "\xf0\x9f\x90\x9e\xf0\x9f\x90\x9e";
-    const char* src;
+    char const good_chars[] = "\xf0\x9f\x90\x9e\xf0\x9f\x90\x9e";
+    char const* src;
     size_t ret = 0;
 
     // Convert nothing.

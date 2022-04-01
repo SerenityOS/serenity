@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$unlink(Userspace<const char*> user_path, size_t path_length)
+ErrorOr<FlatPtr> Process::sys$unlink(Userspace<char const*> user_path, size_t path_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::cpath));

@@ -36,12 +36,12 @@ public:
     {
     }
 
-    Matrix(const Matrix& other)
+    Matrix(Matrix const& other)
     {
         __builtin_memcpy(m_elements, other.elements(), sizeof(T) * N * N);
     }
 
-    Matrix& operator=(const Matrix& other)
+    Matrix& operator=(Matrix const& other)
     {
         __builtin_memcpy(m_elements, other.elements(), sizeof(T) * N * N);
         return *this;
@@ -50,7 +50,7 @@ public:
     constexpr auto elements() const { return m_elements; }
     constexpr auto elements() { return m_elements; }
 
-    constexpr Matrix operator*(const Matrix& other) const
+    constexpr Matrix operator*(Matrix const& other) const
     {
         Matrix product;
         for (size_t i = 0; i < N; ++i) {

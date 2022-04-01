@@ -45,7 +45,7 @@ static bool read_number(Streamer& streamer, TValue* value)
         sb.append(byte);
     }
 
-    const auto opt_value = sb.to_string().to_uint();
+    auto const opt_value = sb.to_string().to_uint();
     if (!opt_value.has_value()) {
         *value = 0;
         return false;
@@ -133,7 +133,7 @@ static bool read_whitespace(TContext& context, Streamer& streamer)
 template<typename TContext>
 static bool read_width(TContext& context, Streamer& streamer)
 {
-    if (const bool result = read_number(streamer, &context.width);
+    if (bool const result = read_number(streamer, &context.width);
         !result || context.width == 0) {
         return false;
     }
@@ -145,7 +145,7 @@ static bool read_width(TContext& context, Streamer& streamer)
 template<typename TContext>
 static bool read_height(TContext& context, Streamer& streamer)
 {
-    if (const bool result = read_number(streamer, &context.height);
+    if (bool const result = read_number(streamer, &context.height);
         !result || context.height == 0) {
         return false;
     }
@@ -157,7 +157,7 @@ static bool read_height(TContext& context, Streamer& streamer)
 template<typename TContext>
 static bool read_max_val(TContext& context, Streamer& streamer)
 {
-    if (const bool result = read_number(streamer, &context.format_details.max_val);
+    if (bool const result = read_number(streamer, &context.format_details.max_val);
         !result || context.format_details.max_val == 0) {
         return false;
     }
@@ -185,7 +185,7 @@ static bool create_bitmap(TContext& context)
 }
 
 template<typename TContext>
-static void set_pixels(TContext& context, const Vector<Gfx::Color>& color_data)
+static void set_pixels(TContext& context, Vector<Gfx::Color> const& color_data)
 {
     size_t index = 0;
     for (size_t y = 0; y < context.height; ++y) {
@@ -248,7 +248,7 @@ static bool decode(TContext& context)
 }
 
 template<typename TContext>
-static RefPtr<Gfx::Bitmap> load_impl(const u8* data, size_t data_size)
+static RefPtr<Gfx::Bitmap> load_impl(u8 const* data, size_t data_size)
 {
     TContext context {};
     context.data = data;

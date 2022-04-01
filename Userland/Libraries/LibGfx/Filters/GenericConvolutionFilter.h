@@ -34,14 +34,14 @@ class GenericConvolutionFilter : public Filter {
 public:
     class Parameters : public Filter::Parameters {
     public:
-        Parameters(const Gfx::Matrix<N, float>& kernel, bool should_wrap = false)
+        Parameters(Gfx::Matrix<N, float> const& kernel, bool should_wrap = false)
             : m_kernel(kernel)
             , m_should_wrap(should_wrap)
 
         {
         }
 
-        const Gfx::Matrix<N, float>& kernel() const { return m_kernel; }
+        Gfx::Matrix<N, float> const& kernel() const { return m_kernel; }
         Gfx::Matrix<N, float>& kernel() { return m_kernel; }
         bool should_wrap() const { return m_should_wrap; }
 
@@ -64,16 +64,16 @@ public:
 
     virtual StringView class_name() const override { return "GenericConvolutionFilter"sv; }
 
-    virtual void apply(Bitmap& target_bitmap, const IntRect& target_rect, const Bitmap& source_bitmap, const IntRect& source_rect, const Filter::Parameters& parameters) override
+    virtual void apply(Bitmap& target_bitmap, IntRect const& target_rect, Bitmap const& source_bitmap, IntRect const& source_rect, Filter::Parameters const& parameters) override
     {
         VERIFY(parameters.is_generic_convolution_filter());
-        auto& gcf_params = static_cast<const GenericConvolutionFilter::Parameters&>(parameters);
+        auto& gcf_params = static_cast<GenericConvolutionFilter::Parameters const&>(parameters);
 
         ApplyCache apply_cache;
         apply_with_cache(target_bitmap, target_rect, source_bitmap, source_rect, gcf_params, apply_cache);
     }
 
-    void apply_with_cache(Bitmap& target, IntRect target_rect, const Bitmap& source, const IntRect& source_rect, const GenericConvolutionFilter::Parameters& parameters, ApplyCache& apply_cache)
+    void apply_with_cache(Bitmap& target, IntRect target_rect, Bitmap const& source, IntRect const& source_rect, GenericConvolutionFilter::Parameters const& parameters, ApplyCache& apply_cache)
     {
         // The target area (where the filter is applied) must be entirely
         // contained by the source area. source_rect should be describing

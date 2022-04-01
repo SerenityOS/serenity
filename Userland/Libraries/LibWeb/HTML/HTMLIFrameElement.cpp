@@ -25,7 +25,7 @@ RefPtr<Layout::Node> HTMLIFrameElement::create_layout_node(NonnullRefPtr<CSS::St
     return adopt_ref(*new Layout::FrameBox(document(), *this, move(style)));
 }
 
-void HTMLIFrameElement::parse_attribute(const FlyString& name, const String& value)
+void HTMLIFrameElement::parse_attribute(FlyString const& name, String const& value)
 {
     HTMLElement::parse_attribute(name, value);
     if (name == HTML::AttributeNames::src)
@@ -56,7 +56,7 @@ void HTMLIFrameElement::removed_from(DOM::Node* node)
     discard_nested_browsing_context();
 }
 
-void HTMLIFrameElement::load_src(const String& value)
+void HTMLIFrameElement::load_src(String const& value)
 {
     if (!m_nested_browsing_context)
         return;

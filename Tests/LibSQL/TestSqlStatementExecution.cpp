@@ -19,7 +19,7 @@
 
 namespace {
 
-constexpr const char* db_name = "/tmp/test.db";
+constexpr char const* db_name = "/tmp/test.db";
 
 SQL::ResultOr<SQL::ResultSet> try_execute(NonnullRefPtr<SQL::Database> database, String const& sql)
 {

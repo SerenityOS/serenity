@@ -32,6 +32,6 @@ struct Hunk {
     Vector<String> added_lines;
 };
 
-Vector<Hunk> parse_hunks(const String& diff);
-HunkLocation parse_hunk_location(const String& location_line);
+Vector<Hunk> parse_hunks(String const& diff);
+HunkLocation parse_hunk_location(String const& location_line);
 };

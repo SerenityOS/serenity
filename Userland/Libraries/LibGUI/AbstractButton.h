@@ -21,7 +21,7 @@ public:
     Function<void(bool)> on_checked;
 
     void set_text(String);
-    const String& text() const { return m_text; }
+    String const& text() const { return m_text; }
 
     bool is_exclusive() const { return m_exclusive; }
     void set_exclusive(bool b) { m_exclusive = b; }
@@ -54,7 +54,7 @@ protected:
     virtual void focusout_event(GUI::FocusEvent&) override;
     virtual void change_event(Event&) override;
 
-    void paint_text(Painter&, const Gfx::IntRect&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextWrapping = Gfx::TextWrapping::DontWrap);
+    void paint_text(Painter&, Gfx::IntRect const&, Gfx::Font const&, Gfx::TextAlignment, Gfx::TextWrapping = Gfx::TextWrapping::DontWrap);
 
 private:
     String m_text;

@@ -45,7 +45,7 @@ public:
         size_t line { 0 };
         size_t column { 0 };
 
-        bool operator==(const ProjectLocation&) const;
+        bool operator==(ProjectLocation const&) const;
     };
 
     enum class DeclarationType {
@@ -64,7 +64,7 @@ public:
         DeclarationType type;
         String scope;
 
-        bool operator==(const Declaration&) const;
+        bool operator==(Declaration const&) const;
     };
 
     virtual void provide_completions(Function<void(Vector<Entry>)>) = 0;
@@ -102,7 +102,7 @@ public:
         size_t end_line { 0 };
         size_t end_column { 0 };
 
-        static constexpr const char* type_to_string(SemanticType t)
+        static constexpr char const* type_to_string(SemanticType t)
         {
             switch (t) {
 #define __SEMANTIC(x)     \

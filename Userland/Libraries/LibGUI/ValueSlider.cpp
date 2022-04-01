@@ -21,7 +21,7 @@ ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
     : AbstractSlider(orientation)
     , m_suffix(move(suffix))
 {
-    //FIXME: Implement vertical mode
+    // FIXME: Implement vertical mode
     VERIFY(orientation == Orientation::Horizontal);
 
     set_fixed_height(20);
@@ -132,7 +132,7 @@ Gfx::IntRect ValueSlider::knob_rect() const
     return knob_rect;
 }
 
-int ValueSlider::value_at(const Gfx::IntPoint& position) const
+int ValueSlider::value_at(Gfx::IntPoint const& position) const
 {
     if (position.x() < bar_rect().left())
         return min();

@@ -49,7 +49,7 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
     for (auto& redir : value.redirections) {
         TRY(builder.put_padding(' ', 1));
         if (redir.is_path_redirection()) {
-            auto path_redir = (const Shell::AST::PathRedirection*)&redir;
+            auto path_redir = (Shell::AST::PathRedirection const*)&redir;
             TRY(builder.put_i64(path_redir->fd));
             switch (path_redir->direction) {
             case Shell::AST::PathRedirection::Read:
@@ -67,12 +67,12 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
             }
             TRY(builder.put_literal(path_redir->path));
         } else if (redir.is_fd_redirection()) {
-            auto* fdredir = (const Shell::AST::FdRedirection*)&redir;
+            auto* fdredir = (Shell::AST::FdRedirection const*)&redir;
             TRY(builder.put_i64(fdredir->new_fd));
             TRY(builder.put_literal(">"));
             TRY(builder.put_i64(fdredir->old_fd));
         } else if (redir.is_close_redirection()) {
-            auto close_redir = (const Shell::AST::CloseRedirection*)&redir;
+            auto close_redir = (Shell::AST::CloseRedirection const*)&redir;
             TRY(builder.put_i64(close_redir->fd));
             TRY(builder.put_literal(">&-"));
         } else {
@@ -111,7 +111,7 @@ static inline void print_indented(StringView str, int indent)
     dbgln("{}{}", String::repeated(' ', indent * 2), str);
 }
 
-static inline Optional<Position> merge_positions(const Optional<Position>& left, const Optional<Position>& right)
+static inline Optional<Position> merge_positions(Optional<Position> const& left, Optional<Position> const& right)
 {
     if (!left.has_value())
         return right;
@@ -260,7 +260,7 @@ void Node::clear_syntax_error()
     m_syntax_error_node->clear_syntax_error();
 }
 
-void Node::set_is_syntax_error(const SyntaxError& error_node)
+void Node::set_is_syntax_error(SyntaxError const& error_node)
 {
     if (!m_syntax_error_node) {
         m_syntax_error_node = error_node;
@@ -331,7 +331,7 @@ Node::Node(Position position)
 {
 }
 
-Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
     if (matching_node) {
@@ -747,7 +747,7 @@ HitTestResult CastToCommand::hit_test_position(size_t offset) const
     return result;
 }
 
-Vector<Line::CompletionSuggestion> CastToCommand::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+Vector<Line::CompletionSuggestion> CastToCommand::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node || !matching_node->is_bareword())
@@ -1107,7 +1107,7 @@ HitTestResult FunctionDeclaration::hit_test_position(size_t offset) const
     return result;
 }
 
-Vector<Line::CompletionSuggestion> FunctionDeclaration::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+Vector<Line::CompletionSuggestion> FunctionDeclaration::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node)
@@ -1438,7 +1438,7 @@ void HistoryEvent::dump(int level) const
     print_indented(String::formatted("{}({})", m_selector.event.index, m_selector.event.text), level + 3);
 
     print_indented("Word Selector", level + 1);
-    auto print_word_selector = [&](const HistorySelector::WordSelector& selector) {
+    auto print_word_selector = [&](HistorySelector::WordSelector const& selector) {
         switch (selector.kind) {
         case HistorySelector::WordSelectorKind::Index:
             print_indented(String::formatted("Index {}", selector.selector), level + 3);
@@ -1798,7 +1798,7 @@ HitTestResult Execute::hit_test_position(size_t offset) const
     return result;
 }
 
-Vector<Line::CompletionSuggestion> Execute::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+Vector<Line::CompletionSuggestion> Execute::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node || !matching_node->is_bareword())
@@ -1851,7 +1851,7 @@ RefPtr<Value> IfCond::run(RefPtr<Shell> shell)
 
     // The condition could be a builtin, in which case it has already run and exited.
     if (cond->is_job()) {
-        auto cond_job_value = static_cast<const JobValue*>(cond.ptr());
+        auto cond_job_value = static_cast<JobValue const*>(cond.ptr());
         auto cond_job = cond_job_value->job();
 
         shell->block_on_job(cond_job);
@@ -1978,7 +1978,7 @@ void ImmediateExpression::highlight_in_editor(Line::Editor& editor, Shell& shell
         editor.stylize({ m_closing_brace_position->start_offset, m_closing_brace_position->end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Green) });
 }
 
-Vector<Line::CompletionSuggestion> ImmediateExpression::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+Vector<Line::CompletionSuggestion> ImmediateExpression::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node || matching_node != this)
@@ -2455,7 +2455,7 @@ HitTestResult PathRedirectionNode::hit_test_position(size_t offset) const
     return result;
 }
 
-Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node || !matching_node->is_bareword())
@@ -2796,7 +2796,7 @@ HitTestResult Slice::hit_test_position(size_t offset) const
     return m_selector->hit_test_position(offset);
 }
 
-Vector<Line::CompletionSuggestion> Slice::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+Vector<Line::CompletionSuggestion> Slice::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
 {
     // TODO: Maybe intercept this, and suggest values in range?
     return m_selector->complete_for_editor(shell, offset, hit_test_result);
@@ -2855,7 +2855,7 @@ HitTestResult SimpleVariable::hit_test_position(size_t offset) const
     return { this, this, nullptr };
 }
 
-Vector<Line::CompletionSuggestion> SimpleVariable::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+Vector<Line::CompletionSuggestion> SimpleVariable::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node)
@@ -2909,7 +2909,7 @@ void SpecialVariable::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
         m_slice->highlight_in_editor(editor, shell, metadata);
 }
 
-Vector<Line::CompletionSuggestion> SpecialVariable::complete_for_editor(Shell&, size_t, const HitTestResult&)
+Vector<Line::CompletionSuggestion> SpecialVariable::complete_for_editor(Shell&, size_t, HitTestResult const&)
 {
     return {};
 }
@@ -3013,7 +3013,7 @@ void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, High
     }
 }
 
-Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
     if (m_left->would_execute() || m_right->would_execute()) {
@@ -3190,7 +3190,7 @@ SyntaxError::SyntaxError(Position position, String error, bool is_continuable)
 {
 }
 
-const SyntaxError& SyntaxError::syntax_error_node() const
+SyntaxError const& SyntaxError::syntax_error_node() const
 {
     return *this;
 }
@@ -3242,7 +3242,7 @@ HitTestResult Tilde::hit_test_position(size_t offset) const
     return { this, this, nullptr };
 }
 
-Vector<Line::CompletionSuggestion> Tilde::complete_for_editor(Shell& shell, size_t offset, const HitTestResult& hit_test_result)
+Vector<Line::CompletionSuggestion> Tilde::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node)

@@ -110,7 +110,7 @@ private:
         if (event.button() != GUI::MouseButton::Primary)
             return;
         pid_t child_pid;
-        const char* argv[] = { "SystemMonitor", "-t", "graphs", nullptr };
+        char const* argv[] = { "SystemMonitor", "-t", "graphs", nullptr };
         if ((errno = posix_spawn(&child_pid, "/bin/SystemMonitor", nullptr, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
         } else {
@@ -197,8 +197,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
 
-    const char* cpu = nullptr;
-    const char* memory = nullptr;
+    char const* cpu = nullptr;
+    char const* memory = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_option(cpu, "Create CPU graph", "cpu", 'C', "cpu");
     args_parser.add_option(memory, "Create memory graph", "memory", 'M', "memory");

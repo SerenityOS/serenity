@@ -19,7 +19,7 @@ static void signal_printer(int)
 typedef struct yank_shared_t {
     timespec* remaining_sleep;
     // TODO: Be nice and use thread ID
-    //pthread_t sleeper_thread;
+    // pthread_t sleeper_thread;
 } yank_shared_t;
 
 static void* yanker_fn(void* shared_)

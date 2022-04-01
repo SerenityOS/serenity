@@ -54,7 +54,7 @@ TEST_CASE(vector_strings)
     strings.append("cat");
     strings.append("dog");
 
-    auto string_compare = [](const String& a, const String& b) -> int {
+    auto string_compare = [](String const& a, String const& b) -> int {
         return strcmp(a.characters(), b.characters());
     };
     auto test1 = *binary_search(strings, String("bat"), nullptr, string_compare);
@@ -108,7 +108,7 @@ TEST_CASE(constexpr_array_search)
 
 TEST_CASE(unsigned_to_signed_regression)
 {
-    const Array<u32, 5> input { 0, 1, 2, 3, 4 };
+    Array<u32, 5> const input { 0, 1, 2, 3, 4 };
 
     // The algorithm computes 1 - input[2] = -1, and if this is (incorrectly) cast
     // to an unsigned then it will look in the wrong direction and miss the 1.

@@ -19,7 +19,7 @@
 namespace {
 
 template<PDF::IsObject T>
-const char* object_name()
+char const* object_name()
 {
 #    define ENUMERATE_TYPE(class_name, snake_name)  \
         if constexpr (IsSame<PDF::class_name, T>) { \
@@ -73,7 +73,7 @@ public:
         return NonnullRefPtr<T>(static_cast<T const&>(*this));
     }
 
-    virtual const char* type_name() const = 0;
+    virtual char const* type_name() const = 0;
     virtual String to_string(int indent) const = 0;
 
 protected:

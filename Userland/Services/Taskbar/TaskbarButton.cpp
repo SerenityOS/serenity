@@ -14,7 +14,7 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 
-TaskbarButton::TaskbarButton(const WindowIdentifier& identifier)
+TaskbarButton::TaskbarButton(WindowIdentifier const& identifier)
     : m_identifier(identifier)
 {
 }
@@ -49,7 +49,7 @@ void TaskbarButton::resize_event(GUI::ResizeEvent& event)
     return GUI::Button::resize_event(event);
 }
 
-static void paint_custom_progressbar(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::IntRect& text_rect, const Palette& palette, int min, int max, int value, StringView text, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
+static void paint_custom_progressbar(GUI::Painter& painter, Gfx::IntRect const& rect, Gfx::IntRect const& text_rect, Palette const& palette, int min, int max, int value, StringView text, Gfx::Font const& font, Gfx::TextAlignment text_alignment)
 {
     float range_size = max - min;
     float progress = (value - min) / range_size;

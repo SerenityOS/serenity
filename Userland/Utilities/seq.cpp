@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char* const g_usage = R"(Usage:
+char const* const g_usage = R"(Usage:
     seq [-h|--help]
     seq LAST
     seq FIRST LAST
@@ -25,7 +25,7 @@ static void print_usage(FILE* stream)
     return;
 }
 
-static double get_double(const char* name, const char* d_string, int* number_of_decimals)
+static double get_double(char const* name, char const* d_string, int* number_of_decimals)
 {
     char* end;
     double d = strtod(d_string, &end);
@@ -34,7 +34,7 @@ static double get_double(const char* name, const char* d_string, int* number_of_
         print_usage(stderr);
         exit(1);
     }
-    if (const char* dot = strchr(d_string, '.'))
+    if (char const* dot = strchr(d_string, '.'))
         *number_of_decimals = strlen(dot + 1);
     else
         *number_of_decimals = 0;

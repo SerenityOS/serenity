@@ -33,15 +33,15 @@ enum class DNSRecordClass : u16 {
 
 class DNSAnswer {
 public:
-    DNSAnswer(const DNSName& name, DNSRecordType type, DNSRecordClass class_code, u32 ttl, const String& record_data, bool mdns_cache_flush);
+    DNSAnswer(DNSName const& name, DNSRecordType type, DNSRecordClass class_code, u32 ttl, String const& record_data, bool mdns_cache_flush);
 
-    const DNSName& name() const { return m_name; }
+    DNSName const& name() const { return m_name; }
     DNSRecordType type() const { return m_type; }
     DNSRecordClass class_code() const { return m_class_code; }
     u16 raw_class_code() const { return (u16)m_class_code | (m_mdns_cache_flush ? MDNS_CACHE_FLUSH : 0); }
     u32 ttl() const { return m_ttl; }
     time_t received_time() const { return m_received_time; }
-    const String& record_data() const { return m_record_data; }
+    String const& record_data() const { return m_record_data; }
     bool mdns_cache_flush() const { return m_mdns_cache_flush; }
 
     bool has_expired() const;

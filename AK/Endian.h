@@ -89,7 +89,7 @@ template<typename T>
 class [[gnu::packed]] LittleEndian {
 public:
     friend InputStream& operator>><T>(InputStream&, LittleEndian<T>&);
-    friend OutputStream& operator<<<T>(OutputStream&, LittleEndian<T>);
+    friend OutputStream& operator<< <T>(OutputStream&, LittleEndian<T>);
 
     constexpr LittleEndian() = default;
 
@@ -117,7 +117,7 @@ template<typename T>
 class [[gnu::packed]] BigEndian {
 public:
     friend InputStream& operator>><T>(InputStream&, BigEndian<T>&);
-    friend OutputStream& operator<<<T>(OutputStream&, BigEndian<T>);
+    friend OutputStream& operator<< <T>(OutputStream&, BigEndian<T>);
 
     constexpr BigEndian() = default;
 

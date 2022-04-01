@@ -18,7 +18,7 @@ class CircularDuplexStream : public AK::DuplexStream {
 public:
     size_t write(ReadonlyBytes bytes) override
     {
-        const auto nwritten = min(bytes.size(), Capacity - m_queue.size());
+        auto const nwritten = min(bytes.size(), Capacity - m_queue.size());
 
         for (size_t idx = 0; idx < nwritten; ++idx)
             m_queue.enqueue(bytes[idx]);
@@ -34,7 +34,7 @@ public:
             return false;
         }
 
-        const auto nwritten = write(bytes);
+        auto const nwritten = write(bytes);
         VERIFY(nwritten == bytes.size());
         return true;
     }
@@ -44,7 +44,7 @@ public:
         if (has_any_error())
             return 0;
 
-        const auto nread = min(bytes.size(), m_queue.size());
+        auto const nread = min(bytes.size(), m_queue.size());
 
         for (size_t idx = 0; idx < nread; ++idx)
             bytes[idx] = m_queue.dequeue();
@@ -59,10 +59,10 @@ public:
             return 0;
         }
 
-        const auto nread = min(bytes.size(), seekback);
+        auto const nread = min(bytes.size(), seekback);
 
         for (size_t idx = 0; idx < nread; ++idx) {
-            const auto index = (m_total_written - seekback + idx) % Capacity;
+            auto const index = (m_total_written - seekback + idx) % Capacity;
             bytes[idx] = m_queue.m_storage[index];
         }
 

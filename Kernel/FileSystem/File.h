@@ -81,20 +81,20 @@ public:
     virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options);
     virtual ErrorOr<void> close();
 
-    virtual bool can_read(const OpenFileDescription&, u64) const = 0;
-    virtual bool can_write(const OpenFileDescription&, u64) const = 0;
+    virtual bool can_read(OpenFileDescription const&, u64) const = 0;
+    virtual bool can_write(OpenFileDescription const&, u64) const = 0;
 
     virtual ErrorOr<void> attach(OpenFileDescription&);
     virtual void detach(OpenFileDescription&);
     virtual void did_seek(OpenFileDescription&, off_t) { }
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) = 0;
-    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) = 0;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) = 0;
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg);
     virtual ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared);
     virtual ErrorOr<struct stat> stat() const { return EBADF; }
 
     // Although this might be better described "name" or "description", these terms already have other meanings.
-    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const = 0;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const = 0;
 
     virtual ErrorOr<void> truncate(u64) { return EINVAL; }
     virtual ErrorOr<void> sync() { return EINVAL; }

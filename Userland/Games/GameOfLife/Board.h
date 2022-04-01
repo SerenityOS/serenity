@@ -23,7 +23,7 @@ public:
     void toggle_cell(size_t row, size_t column);
     void set_cell(size_t row, size_t column, bool on);
     bool cell(size_t row, size_t column) const;
-    const Vector<Vector<bool>>& cells() const { return m_cells; }
+    Vector<Vector<bool>> const& cells() const { return m_cells; }
 
     void run_generation();
     bool is_stalled() const { return m_stalled; }

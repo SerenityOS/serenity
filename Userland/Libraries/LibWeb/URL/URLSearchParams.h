@@ -17,7 +17,7 @@ struct QueryParam {
     String name;
     String value;
 };
-String url_encode(const Vector<QueryParam>&, AK::URL::PercentEncodeSet);
+String url_encode(Vector<QueryParam> const&, AK::URL::PercentEncodeSet);
 Vector<QueryParam> url_decode(StringView);
 
 class URLSearchParams : public Bindings::Wrappable

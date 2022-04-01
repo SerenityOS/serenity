@@ -21,7 +21,7 @@ public:
 
     const DOM::Text& dom_node() const { return static_cast<const DOM::Text&>(*Node::dom_node()); }
 
-    const String& text_for_rendering() const { return m_text_for_rendering; }
+    String const& text_for_rendering() const { return m_text_for_rendering; }
 
     struct Chunk {
         Utf8View view;
@@ -40,8 +40,8 @@ public:
         Optional<Chunk> try_commit_chunk(Utf8View::Iterator const& start, Utf8View::Iterator const& end, bool has_breaking_newline, bool must_commit = false) const;
 
         const LayoutMode m_layout_mode;
-        const bool m_wrap_lines;
-        const bool m_respect_linebreaks;
+        bool const m_wrap_lines;
+        bool const m_respect_linebreaks;
         Utf8View m_utf8_view;
         Utf8View::Iterator m_iterator;
     };

@@ -185,7 +185,7 @@ public:
             source.blue()
         };
 
-        const int d = 255 * (alpha() + source.alpha()) - alpha() * source.alpha();
+        int const d = 255 * (alpha() + source.alpha()) - alpha() * source.alpha();
         const i32x4 out = (color * alpha() * (255 - source.alpha()) + 255 * source.alpha() * source_color) / d;
         return Color(out[0], out[1], out[2], d / 255);
 #else

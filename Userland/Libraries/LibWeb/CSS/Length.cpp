@@ -118,7 +118,7 @@ String Length::to_string() const
     return String::formatted("{}{}", m_value, unit_name());
 }
 
-const char* Length::unit_name() const
+char const* Length::unit_name() const
 {
     switch (m_type) {
     case Type::Cm:

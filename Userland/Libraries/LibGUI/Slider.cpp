@@ -85,7 +85,7 @@ void Slider::mousedown_event(MouseEvent& event)
             return;
         }
 
-        const auto mouse_offset = event.position().primary_offset_for_orientation(orientation());
+        auto const mouse_offset = event.position().primary_offset_for_orientation(orientation());
 
         if (jump_to_cursor()) {
             float normalized_mouse_offset = 0.0f;

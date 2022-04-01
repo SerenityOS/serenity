@@ -21,7 +21,7 @@ public:
     virtual ~Symbol() = default;
 
     String description() const { return m_description.value_or(""); }
-    const Optional<String>& raw_description() const { return m_description; }
+    Optional<String> const& raw_description() const { return m_description; }
     bool is_global() const { return m_is_global; }
     String to_string() const { return String::formatted("Symbol({})", description()); }
 

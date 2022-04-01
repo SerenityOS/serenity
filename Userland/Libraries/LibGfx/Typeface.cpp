@@ -77,7 +77,7 @@ RefPtr<Font> Typeface::get_font(float point_size, Font::AllowInexactSizeMatch al
     return {};
 }
 
-void Typeface::for_each_fixed_size_font(Function<void(const Font&)> callback) const
+void Typeface::for_each_fixed_size_font(Function<void(Font const&)> callback) const
 {
     for (auto font : m_bitmap_fonts) {
         callback(*font);

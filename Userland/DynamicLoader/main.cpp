@@ -42,7 +42,7 @@ static void perform_self_relocations(auxv_t* auxvp)
 
 static void display_help()
 {
-    const char message[] =
+    char const message[] =
         R"(You have invoked `Loader.so'. This is the helper program for programs that
 use shared libraries. Special directives embedded in executables tell the
 kernel to load this program.
@@ -85,7 +85,7 @@ void _entry(int argc, char** argv, char** envp)
             main_program_fd = auxvp->a_un.a_val;
         }
         if (auxvp->a_type == ELF::AuxiliaryValue::ExecFilename) {
-            main_program_name = (const char*)auxvp->a_un.a_ptr;
+            main_program_name = (char const*)auxvp->a_un.a_ptr;
         }
         if (auxvp->a_type == ELF::AuxiliaryValue::Secure) {
             is_secure = auxvp->a_un.a_val == 1;

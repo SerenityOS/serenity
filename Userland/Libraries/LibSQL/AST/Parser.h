@@ -38,7 +38,7 @@ public:
     NonnullRefPtr<Statement> next_statement();
 
     bool has_errors() const { return m_parser_state.m_errors.size(); }
-    const Vector<Error>& errors() const { return m_parser_state.m_errors; }
+    Vector<Error> const& errors() const { return m_parser_state.m_errors; }
 
 protected:
     NonnullRefPtr<Expression> parse_expression(); // Protected for unit testing.

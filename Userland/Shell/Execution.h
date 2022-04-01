@@ -29,7 +29,7 @@ private:
 
 class SavedFileDescriptors {
 public:
-    SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiring>&);
+    SavedFileDescriptors(NonnullRefPtrVector<AST::Rewiring> const&);
     ~SavedFileDescriptors();
 
 private:

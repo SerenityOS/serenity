@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("filetype-image");
 
-    const char* path = nullptr;
+    char const* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "The image file to be displayed.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -244,7 +244,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->set_scaling_mode(Gfx::Painter::ScalingMode::BilinearBlend);
     });
 
-    widget->on_image_change = [&](const Gfx::Bitmap* bitmap) {
+    widget->on_image_change = [&](Gfx::Bitmap const* bitmap) {
         bool should_enable_image_actions = (bitmap != nullptr);
         bool should_enable_forward_actions = (widget->is_next_available() && should_enable_image_actions);
         bool should_enable_backward_actions = (widget->is_previous_available() && should_enable_image_actions);

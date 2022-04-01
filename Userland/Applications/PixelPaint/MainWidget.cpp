@@ -101,7 +101,7 @@ MainWidget::MainWidget()
 }
 
 // Note: Update these together! v
-static const Vector<String> s_suggested_zoom_levels { "25%", "50%", "100%", "200%", "300%", "400%", "800%", "1600%", "Fit to width", "Fit to height", "Fit entire image" };
+static Vector<String> const s_suggested_zoom_levels { "25%", "50%", "100%", "200%", "300%", "400%", "800%", "1600%", "Fit to width", "Fit to height", "Fit entire image" };
 static constexpr int s_zoom_level_fit_width = 8;
 static constexpr int s_zoom_level_fit_height = 9;
 static constexpr int s_zoom_level_fit_image = 10;

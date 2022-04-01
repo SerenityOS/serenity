@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$access(Userspace<const char*> user_path, size_t path_length, int mode)
+ErrorOr<FlatPtr> Process::sys$access(Userspace<char const*> user_path, size_t path_length, int mode)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::rpath));

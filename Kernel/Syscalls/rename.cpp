@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$rename(Userspace<const Syscall::SC_rename_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$rename(Userspace<Syscall::SC_rename_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::cpath));

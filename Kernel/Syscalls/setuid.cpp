@@ -167,7 +167,7 @@ ErrorOr<FlatPtr> Process::sys$setresgid(GroupID new_rgid, GroupID new_egid, Grou
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<const gid_t*> user_gids)
+ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<gid_t const*> user_gids)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::id));

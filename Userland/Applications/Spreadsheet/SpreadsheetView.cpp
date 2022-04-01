@@ -32,7 +32,7 @@ void SpreadsheetView::EditingDelegate::set_value(GUI::Variant const& value, GUI:
         return StringModelEditingDelegate::set_value(value, selection_behavior);
 
     m_has_set_initial_value = true;
-    const auto option = m_sheet.at({ (size_t)index().column(), (size_t)index().row() });
+    auto const option = m_sheet.at({ (size_t)index().column(), (size_t)index().row() });
     if (option)
         return StringModelEditingDelegate::set_value(option->source(), selection_behavior);
 
@@ -461,7 +461,7 @@ void SpreadsheetView::move_cursor(GUI::AbstractView::CursorMovement direction)
     m_table_view->move_cursor(direction, GUI::AbstractView::SelectionUpdate::Set);
 }
 
-void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::Palette& palette, const GUI::ModelIndex& index)
+void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, Gfx::IntRect const& rect, Gfx::Palette const& palette, const GUI::ModelIndex& index)
 {
     // Draw a border.
     // Undo the horizontal padding done by the table view...

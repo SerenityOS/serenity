@@ -21,7 +21,7 @@
 
 class Quote {
 public:
-    static Optional<Quote> try_parse(const JsonValue& value)
+    static Optional<Quote> try_parse(JsonValue const& value)
     {
         if (!value.is_object())
             return {};
@@ -41,11 +41,11 @@ public:
         return q;
     }
 
-    const String& quote() const { return m_quote; }
-    const String& author() const { return m_author; }
-    const u64& utc_time() const { return m_utc_time; }
-    const String& url() const { return m_url; }
-    const Optional<String>& context() const { return m_context; }
+    String const& quote() const { return m_quote; }
+    String const& author() const { return m_author; }
+    u64 const& utc_time() const { return m_utc_time; }
+    String const& url() const { return m_url; }
+    Optional<String> const& context() const { return m_context; }
 
 private:
     Quote() = default;
@@ -57,7 +57,7 @@ private:
     Optional<String> m_context;
 };
 
-static Vector<Quote> parse_all(const JsonArray& array)
+static Vector<Quote> parse_all(JsonArray const& array)
 {
     Vector<Quote> quotes;
     for (size_t i = 0; i < array.size(); ++i) {
@@ -75,7 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    const char* path = "/res/fortunes.json";
+    char const* path = "/res/fortunes.json";
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Open a fortune cookie, receive a free quote for the day!");
@@ -94,14 +94,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    const auto quotes = parse_all(json.as_array());
+    auto const quotes = parse_all(json.as_array());
     if (quotes.is_empty()) {
         warnln("{} does not contain any valid quotes", path);
         return 1;
     }
 
     u32 i = get_random_uniform(quotes.size());
-    const auto& chosen_quote = quotes[i];
+    auto const& chosen_quote = quotes[i];
     auto datetime = Core::DateTime::from_timestamp(chosen_quote.utc_time());
 
     outln(); // Tasteful spacing

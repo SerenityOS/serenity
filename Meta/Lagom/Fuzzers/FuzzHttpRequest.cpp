@@ -8,7 +8,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     auto request_wrapper = HTTP::HttpRequest::from_raw_request(ReadonlyBytes { data, size });
     if (!request_wrapper.has_value())

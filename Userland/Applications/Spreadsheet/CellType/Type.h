@@ -32,15 +32,15 @@ enum class MetadataName {
 
 class CellType {
 public:
-    static const CellType* get_by_name(StringView);
+    static CellType const* get_by_name(StringView);
     static Vector<StringView> names();
 
-    virtual JS::ThrowCompletionOr<String> display(Cell&, const CellTypeMetadata&) const = 0;
-    virtual JS::ThrowCompletionOr<JS::Value> js_value(Cell&, const CellTypeMetadata&) const = 0;
+    virtual JS::ThrowCompletionOr<String> display(Cell&, CellTypeMetadata const&) const = 0;
+    virtual JS::ThrowCompletionOr<JS::Value> js_value(Cell&, CellTypeMetadata const&) const = 0;
     virtual String metadata_hint(MetadataName) const { return {}; }
     virtual ~CellType() = default;
 
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
 
 protected:
     CellType(StringView name);

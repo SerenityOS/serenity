@@ -51,12 +51,12 @@ void Playlist::try_fill_missing_info(Vector<M3UEntry>& entries, StringView path)
             entry.extended_info->track_display_title = LexicalPath::title(entry.path);
 
         if (!entry.extended_info->track_length_in_seconds.has_value()) {
-            //TODO: Implement embedded metadata extractor for other audio formats
+            // TODO: Implement embedded metadata extractor for other audio formats
             if (auto reader = Audio::Loader::create(entry.path); !reader.is_error())
                 entry.extended_info->track_length_in_seconds = reader.value()->total_samples() / reader.value()->sample_rate();
         }
 
-        //TODO: Implement a metadata parser for the uncomfortably numerous popular embedded metadata formats
+        // TODO: Implement a metadata parser for the uncomfortably numerous popular embedded metadata formats
     }
 
     for (auto& entry : to_delete)

@@ -53,7 +53,7 @@ public:
     static void must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_number);
 
     virtual StringView purpose() const override { return "ACPI Parser"sv; }
-    virtual bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(RegisterState const&) override;
 
     Optional<PhysicalAddress> find_table(StringView signature);
 
@@ -75,8 +75,8 @@ public:
         return m_x86_specific_flags.keyboard_8042;
     }
 
-    const FADTFlags::HardwareFeatures& hardware_features() const { return m_hardware_flags; }
-    const FADTFlags::x86_Specific_Flags& x86_specific_flags() const { return m_x86_specific_flags; }
+    FADTFlags::HardwareFeatures const& hardware_features() const { return m_hardware_flags; }
+    FADTFlags::x86_Specific_Flags const& x86_specific_flags() const { return m_x86_specific_flags; }
 
     ~Parser() = default;
 
@@ -91,7 +91,7 @@ private:
     void process_fadt_data();
 
     bool validate_reset_register(Memory::TypedMapping<Structures::FADT> const&);
-    void access_generic_address(const Structures::GenericAddressStructure&, u32 value);
+    void access_generic_address(Structures::GenericAddressStructure const&, u32 value);
 
     PhysicalAddress m_rsdp;
     PhysicalAddress m_main_system_description_table;

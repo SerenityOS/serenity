@@ -278,7 +278,7 @@ UNMAP_AFTER_INIT KeyboardDevice::KeyboardDevice()
 // like USB keyboards, we need to remove this
 UNMAP_AFTER_INIT KeyboardDevice::~KeyboardDevice() = default;
 
-bool KeyboardDevice::can_read(const OpenFileDescription&, u64) const
+bool KeyboardDevice::can_read(OpenFileDescription const&, u64) const
 {
     return !m_queue.is_empty();
 }

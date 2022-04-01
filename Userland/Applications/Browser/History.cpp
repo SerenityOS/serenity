@@ -18,7 +18,7 @@ void History::dump() const
     }
 }
 
-void History::push(const URL& url, const String& title)
+void History::push(const URL& url, String const& title)
 {
     if (!m_items.is_empty() && m_items[m_current].url == url)
         return;
@@ -55,12 +55,12 @@ void History::clear()
     m_current = -1;
 }
 
-void History::update_title(const String& title)
+void History::update_title(String const& title)
 {
     m_items[m_current].title = title;
 }
 
-const Vector<StringView> History::get_back_title_history()
+Vector<StringView> const History::get_back_title_history()
 {
     Vector<StringView> back_title_history;
     for (int i = m_current - 1; i >= 0; i--) {
@@ -69,7 +69,7 @@ const Vector<StringView> History::get_back_title_history()
     return back_title_history;
 }
 
-const Vector<StringView> History::get_forward_title_history()
+Vector<StringView> const History::get_forward_title_history()
 {
     Vector<StringView> forward_title_history;
     for (int i = m_current + 1; i < static_cast<int>(m_items.size()); i++) {

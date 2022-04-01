@@ -63,7 +63,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(OpenFileDescription* descript
         VERIFY(nread <= sizeof(buffer));
         if (nread == 0)
             break;
-        TRY(builder.append((const char*)buffer, nread));
+        TRY(builder.append((char const*)buffer, nread));
         offset += nread;
         if (nread < sizeof(buffer))
             break;

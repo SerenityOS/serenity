@@ -170,7 +170,7 @@ Point<T> Rect<T>::closest_to(Point<T> const& point) const
         return {};
     Optional<Point<T>> closest_point;
     float closest_distance = 0.0;
-    auto check_distance = [&](const Line<T>& line) {
+    auto check_distance = [&](Line<T> const& line) {
         auto point_on_line = line.closest_to(point);
         auto distance = Line { point_on_line, point }.length();
         if (!closest_point.has_value() || distance < closest_distance) {

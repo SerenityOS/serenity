@@ -14,7 +14,7 @@ namespace Kernel {
 
 using BlockFlags = Thread::FileBlocker::BlockFlags;
 
-ErrorOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::stdio));

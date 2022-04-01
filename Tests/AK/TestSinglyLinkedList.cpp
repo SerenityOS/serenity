@@ -37,14 +37,14 @@ TEST_CASE(should_find_mutable_with_predicate)
 {
     auto sut = make_list();
 
-    EXPECT_EQ(4, *sut.find_if([](const auto v) { return v == 4; }));
+    EXPECT_EQ(4, *sut.find_if([](auto const v) { return v == 4; }));
 
-    EXPECT_EQ(sut.end(), sut.find_if([](const auto v) { return v == 42; }));
+    EXPECT_EQ(sut.end(), sut.find_if([](auto const v) { return v == 42; }));
 }
 
 TEST_CASE(should_find_const)
 {
-    const auto sut = make_list();
+    auto const sut = make_list();
 
     EXPECT_EQ(4, *sut.find(4));
 
@@ -53,11 +53,11 @@ TEST_CASE(should_find_const)
 
 TEST_CASE(should_find_const_with_predicate)
 {
-    const auto sut = make_list();
+    auto const sut = make_list();
 
-    EXPECT_EQ(4, *sut.find_if([](const auto v) { return v == 4; }));
+    EXPECT_EQ(4, *sut.find_if([](auto const v) { return v == 4; }));
 
-    EXPECT_EQ(sut.end(), sut.find_if([](const auto v) { return v == 42; }));
+    EXPECT_EQ(sut.end(), sut.find_if([](auto const v) { return v == 42; }));
 }
 
 TEST_CASE(removal_during_iteration)

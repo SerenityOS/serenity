@@ -12,7 +12,7 @@
 #include <ctype.h>
 
 namespace Cpp {
-Preprocessor::Preprocessor(const String& filename, StringView program)
+Preprocessor::Preprocessor(String const& filename, StringView program)
     : m_filename(filename)
     , m_program(program)
 {

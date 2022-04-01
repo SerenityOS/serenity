@@ -18,7 +18,7 @@ ErrorOr<FlatPtr> Process::sys$dump_backtrace()
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$dbgputstr(Userspace<const char*> characters, size_t size)
+ErrorOr<FlatPtr> Process::sys$dbgputstr(Userspace<char const*> characters, size_t size)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     if (size == 0)

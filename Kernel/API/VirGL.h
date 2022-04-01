@@ -23,7 +23,7 @@ struct VirGL3DResourceSpec {
 };
 
 struct VirGLCommandBuffer {
-    const u32* data;
+    u32 const* data;
     u32 num_elems;
 };
 

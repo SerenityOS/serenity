@@ -24,7 +24,7 @@ public:
     virtual void encode(ReadonlyBytes in, ByteBuffer& out, size_t em_bits) = 0;
     virtual VerificationConsistency verify(ReadonlyBytes msg, ReadonlyBytes emsg, size_t em_bits) = 0;
 
-    const HashFunction& hasher() const { return m_hasher; }
+    HashFunction const& hasher() const { return m_hasher; }
     HashFunction& hasher() { return m_hasher; }
 
 protected:

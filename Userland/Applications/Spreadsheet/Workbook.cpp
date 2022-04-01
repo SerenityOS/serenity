@@ -43,7 +43,7 @@ Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_wind
     m_vm->enable_default_host_import_module_dynamically_hook();
 }
 
-bool Workbook::set_filename(const String& filename)
+bool Workbook::set_filename(String const& filename)
 {
     if (m_current_filename == filename)
         return false;

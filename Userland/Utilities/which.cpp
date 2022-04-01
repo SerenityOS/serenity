@@ -14,7 +14,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    const char* filename = nullptr;
+    char const* filename = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(filename, "Name of executable", "executable");

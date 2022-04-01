@@ -130,7 +130,7 @@ struct BMPLoadingContext {
     };
     State state { State::NotDecoded };
 
-    const u8* file_bytes { nullptr };
+    u8 const* file_bytes { nullptr };
     size_t file_size { 0 };
     u32 data_offset { 0 };
 
@@ -167,7 +167,7 @@ struct BMPLoadingContext {
 
 class InputStreamer {
 public:
-    InputStreamer(const u8* data, size_t size)
+    InputStreamer(u8 const* data, size_t size)
         : m_data_ptr(data)
         , m_size_remaining(size)
     {
@@ -217,7 +217,7 @@ public:
     size_t remaining() const { return m_size_remaining; }
 
 private:
-    const u8* m_data_ptr { nullptr };
+    u8 const* m_data_ptr { nullptr };
     size_t m_size_remaining { 0 };
 };
 
@@ -1300,7 +1300,7 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
     return true;
 }
 
-BMPImageDecoderPlugin::BMPImageDecoderPlugin(const u8* data, size_t data_size)
+BMPImageDecoderPlugin::BMPImageDecoderPlugin(u8 const* data, size_t data_size)
 {
     m_context = make<BMPLoadingContext>();
     m_context->file_bytes = data;

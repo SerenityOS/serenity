@@ -42,11 +42,11 @@ public:
     LocationObject* location_object() { return m_location_object; }
     LocationObject const* location_object() const { return m_location_object; }
 
-    JS::Object* web_prototype(const String& class_name) { return m_prototypes.get(class_name).value_or(nullptr); }
-    JS::NativeFunction* web_constructor(const String& class_name) { return m_constructors.get(class_name).value_or(nullptr); }
+    JS::Object* web_prototype(String const& class_name) { return m_prototypes.get(class_name).value_or(nullptr); }
+    JS::NativeFunction* web_constructor(String const& class_name) { return m_constructors.get(class_name).value_or(nullptr); }
 
     template<typename T>
-    JS::Object& ensure_web_prototype(const String& class_name)
+    JS::Object& ensure_web_prototype(String const& class_name)
     {
         auto it = m_prototypes.find(class_name);
         if (it != m_prototypes.end())
@@ -57,7 +57,7 @@ public:
     }
 
     template<typename T>
-    JS::NativeFunction& ensure_web_constructor(const String& class_name)
+    JS::NativeFunction& ensure_web_constructor(String const& class_name)
     {
         auto it = m_constructors.find(class_name);
         if (it != m_constructors.end())

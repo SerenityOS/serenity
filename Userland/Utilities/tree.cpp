@@ -27,7 +27,7 @@ static int max_depth = INT_MAX;
 static int g_directories_seen = 0;
 static int g_files_seen = 0;
 
-static void print_directory_tree(const String& root_path, int depth, const String& indent_string)
+static void print_directory_tree(String const& root_path, int depth, String const& indent_string)
 {
     if (depth > 0) {
         String root_indent_string;
@@ -106,7 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty"));
 
-    Vector<const char*> directories;
+    Vector<char const*> directories;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(flag_show_hidden_files, "Show hidden files", "all", 'a');
@@ -124,7 +124,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         print_directory_tree(".", 0, "");
         puts("");
     } else {
-        for (const char* directory : directories) {
+        for (char const* directory : directories) {
             print_directory_tree(directory, 0, "");
             puts("");
         }

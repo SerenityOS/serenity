@@ -43,7 +43,7 @@ public:
 
 private:
     void set_new_countdown();
-    virtual bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(RegisterState const&) override;
     HPETComparator(u8 number, u8 irq, bool periodic_capable, bool is_64bit_capable);
     bool m_periodic : 1;
     bool m_periodic_capable : 1;

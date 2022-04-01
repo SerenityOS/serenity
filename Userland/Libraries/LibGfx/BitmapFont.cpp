@@ -173,7 +173,7 @@ BitmapFont::~BitmapFont()
 
 RefPtr<BitmapFont> BitmapFont::load_from_memory(u8 const* data)
 {
-    auto const& header = *reinterpret_cast<const FontFileHeader*>(data);
+    auto const& header = *reinterpret_cast<FontFileHeader const*>(data);
     if (memcmp(header.magic, "!Fnt", 4)) {
         dbgln("header.magic != '!Fnt', instead it's '{:c}{:c}{:c}{:c}'", header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
         return nullptr;

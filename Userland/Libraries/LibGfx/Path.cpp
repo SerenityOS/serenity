@@ -14,7 +14,7 @@
 
 namespace Gfx {
 
-void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, double x_axis_rotation, bool large_arc, bool sweep)
+void Path::elliptical_arc_to(FloatPoint const& point, FloatPoint const& radii, double x_axis_rotation, bool large_arc, bool sweep)
 {
     auto next_point = point;
 
@@ -207,16 +207,16 @@ String Path::to_string() const
         switch (segment.type()) {
         case Segment::Type::QuadraticBezierCurveTo:
             builder.append(", ");
-            builder.append(static_cast<const QuadraticBezierCurveSegment&>(segment).through().to_string());
+            builder.append(static_cast<QuadraticBezierCurveSegment const&>(segment).through().to_string());
             break;
         case Segment::Type::CubicBezierCurveTo:
             builder.append(", ");
-            builder.append(static_cast<const CubicBezierCurveSegment&>(segment).through_0().to_string());
+            builder.append(static_cast<CubicBezierCurveSegment const&>(segment).through_0().to_string());
             builder.append(", ");
-            builder.append(static_cast<const CubicBezierCurveSegment&>(segment).through_1().to_string());
+            builder.append(static_cast<CubicBezierCurveSegment const&>(segment).through_1().to_string());
             break;
         case Segment::Type::EllipticalArcTo: {
-            auto& arc = static_cast<const EllipticalArcSegment&>(segment);
+            auto& arc = static_cast<EllipticalArcSegment const&>(segment);
             builder.appendff(", {}, {}, {}, {}, {}",
                 arc.radii().to_string().characters(),
                 arc.center().to_string().characters(),
@@ -243,7 +243,7 @@ void Path::segmentize_path()
     float max_x = 0;
     float max_y = 0;
 
-    auto add_point_to_bbox = [&](const Gfx::FloatPoint& point) {
+    auto add_point_to_bbox = [&](Gfx::FloatPoint const& point) {
         float x = point.x();
         float y = point.y();
         min_x = min(min_x, x);
@@ -252,7 +252,7 @@ void Path::segmentize_path()
         max_y = max(max_y, y);
     };
 
-    auto add_line = [&](const auto& p0, const auto& p1) {
+    auto add_line = [&](auto const& p0, auto const& p1) {
         float ymax = p0.y(), ymin = p1.y(), x_of_ymin = p1.x(), x_of_ymax = p0.x();
         auto slope = p0.x() == p1.x() ? 0 : ((float)(p0.y() - p1.y())) / ((float)(p0.x() - p1.x()));
         if (p0.y() < p1.y()) {
@@ -292,7 +292,7 @@ void Path::segmentize_path()
         }
         case Segment::Type::QuadraticBezierCurveTo: {
             auto& control = static_cast<QuadraticBezierCurveSegment&>(segment).through();
-            Painter::for_each_line_segment_on_bezier_curve(control, cursor, segment.point(), [&](const FloatPoint& p0, const FloatPoint& p1) {
+            Painter::for_each_line_segment_on_bezier_curve(control, cursor, segment.point(), [&](FloatPoint const& p0, FloatPoint const& p1) {
                 add_line(p0, p1);
             });
             cursor = segment.point();
@@ -302,7 +302,7 @@ void Path::segmentize_path()
             auto& curve = static_cast<CubicBezierCurveSegment const&>(segment);
             auto& control_0 = curve.through_0();
             auto& control_1 = curve.through_1();
-            Painter::for_each_line_segment_on_cubic_bezier_curve(control_0, control_1, cursor, segment.point(), [&](const FloatPoint& p0, const FloatPoint& p1) {
+            Painter::for_each_line_segment_on_cubic_bezier_curve(control_0, control_1, cursor, segment.point(), [&](FloatPoint const& p0, FloatPoint const& p1) {
                 add_line(p0, p1);
             });
             cursor = segment.point();
@@ -310,7 +310,7 @@ void Path::segmentize_path()
         }
         case Segment::Type::EllipticalArcTo: {
             auto& arc = static_cast<EllipticalArcSegment&>(segment);
-            Painter::for_each_line_segment_on_elliptical_arc(cursor, arc.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), [&](const FloatPoint& p0, const FloatPoint& p1) {
+            Painter::for_each_line_segment_on_elliptical_arc(cursor, arc.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), [&](FloatPoint const& p0, FloatPoint const& p1) {
                 add_line(p0, p1);
             });
             cursor = segment.point();
@@ -324,7 +324,7 @@ void Path::segmentize_path()
     }
 
     // sort segments by ymax
-    quick_sort(segments, [](const auto& line0, const auto& line1) {
+    quick_sort(segments, [](auto const& line0, auto const& line1) {
         return line1.maximum_y < line0.maximum_y;
     });
 

@@ -66,7 +66,7 @@ void PlaybackManager::loop(bool loop)
     m_loop = loop;
 }
 
-void PlaybackManager::seek(const int position)
+void PlaybackManager::seek(int const position)
 {
     if (!m_loader)
         return;

@@ -37,9 +37,9 @@ static constexpr u32 lookup_server_endpoint_magic = "LookupServer"sv.hash();
 
 // Get service entry buffers and file information for the getservent() family of functions.
 static FILE* services_file = nullptr;
-static const char* services_path = "/etc/services";
+static char const* services_path = "/etc/services";
 
-static bool fill_getserv_buffers(const char* line, ssize_t read);
+static bool fill_getserv_buffers(char const* line, ssize_t read);
 static servent __getserv_buffer;
 static String __getserv_name_buffer;
 static String __getserv_protocol_buffer;
@@ -51,9 +51,9 @@ static ssize_t service_file_offset = 0;
 
 // Get protocol entry buffers and file information for the getprotent() family of functions.
 static FILE* protocols_file = nullptr;
-static const char* protocols_path = "/etc/protocols";
+static char const* protocols_path = "/etc/protocols";
 
-static bool fill_getproto_buffers(const char* line, ssize_t read);
+static bool fill_getproto_buffers(char const* line, ssize_t read);
 static protoent __getproto_buffer;
 static String __getproto_name_buffer;
 static Vector<ByteBuffer> __getproto_alias_list_buffer;
@@ -75,7 +75,7 @@ static int connect_to_lookup_server()
         "/tmp/portal/lookup"
     };
 
-    if (connect(fd, (const sockaddr*)&address, sizeof(address)) < 0) {
+    if (connect(fd, (sockaddr const*)&address, sizeof(address)) < 0) {
         perror("connect_to_lookup_server");
         close(fd);
         return -1;
@@ -85,7 +85,7 @@ static int connect_to_lookup_server()
 
 static String gethostbyname_name_buffer;
 
-hostent* gethostbyname(const char* name)
+hostent* gethostbyname(char const* name)
 {
     h_errno = 0;
 
@@ -205,7 +205,7 @@ hostent* gethostbyname(const char* name)
 
 static String gethostbyaddr_name_buffer;
 
-hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
+hostent* gethostbyaddr(void const* addr, socklen_t addr_size, int type)
 {
     h_errno = 0;
 
@@ -229,7 +229,7 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         close(fd);
     });
 
-    const in_addr_t& in_addr = ((const struct in_addr*)addr)->s_addr;
+    in_addr_t const& in_addr = ((const struct in_addr*)addr)->s_addr;
 
     struct [[gnu::packed]] {
         u32 message_size;
@@ -367,7 +367,7 @@ struct servent* getservent()
     return service_entry;
 }
 
-struct servent* getservbyname(const char* name, const char* protocol)
+struct servent* getservbyname(char const* name, char const* protocol)
 {
     if (name == nullptr)
         return nullptr;
@@ -394,7 +394,7 @@ struct servent* getservbyname(const char* name, const char* protocol)
     return current_service;
 }
 
-struct servent* getservbyport(int port, const char* protocol)
+struct servent* getservbyport(int port, char const* protocol)
 {
     bool previous_file_open_setting = keep_service_file_open;
     setservent(1);
@@ -444,7 +444,7 @@ void endservent()
 // Fill the service entry buffer with the information contained
 // in the currently read line, returns true if successful,
 // false if failure occurs.
-static bool fill_getserv_buffers(const char* line, ssize_t read)
+static bool fill_getserv_buffers(char const* line, ssize_t read)
 {
     // Splitting the line by tab delimiter and filling the servent buffers name, port, and protocol members.
     auto split_line = StringView(line, read).replace(" ", "\t", true).split('\t');
@@ -555,7 +555,7 @@ struct protoent* getprotoent()
     return protocol_entry;
 }
 
-struct protoent* getprotobyname(const char* name)
+struct protoent* getprotobyname(char const* name)
 {
     bool previous_file_open_setting = keep_protocols_file_open;
     setprotoent(1);
@@ -623,7 +623,7 @@ void endprotoent()
     protocols_file = nullptr;
 }
 
-static bool fill_getproto_buffers(const char* line, ssize_t read)
+static bool fill_getproto_buffers(char const* line, ssize_t read)
 {
     String string_line = String(line, read);
     auto split_line = string_line.replace(" ", "\t", true).split('\t');
@@ -660,7 +660,7 @@ static bool fill_getproto_buffers(const char* line, ssize_t read)
     return true;
 }
 
-int getaddrinfo(const char* __restrict node, const char* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res)
+int getaddrinfo(char const* __restrict node, char const* __restrict service, const struct addrinfo* __restrict hints, struct addrinfo** __restrict res)
 {
     *res = nullptr;
 
@@ -678,7 +678,7 @@ int getaddrinfo(const char* __restrict node, const char* __restrict service, con
     if (!host_ent)
         return EAI_FAIL;
 
-    const char* proto = nullptr;
+    char const* proto = nullptr;
     if (hints && hints->ai_socktype) {
         switch (hints->ai_socktype) {
         case SOCK_STREAM:
@@ -767,7 +767,7 @@ void freeaddrinfo(struct addrinfo* res)
     }
 }
 
-const char* gai_strerror(int errcode)
+char const* gai_strerror(int errcode)
 {
     switch (errcode) {
     case EAI_ADDRFAMILY:
@@ -804,7 +804,7 @@ int getnameinfo(const struct sockaddr* __restrict addr, socklen_t addrlen, char*
     if (addr->sa_family != AF_INET || addrlen < sizeof(sockaddr_in))
         return EAI_FAMILY;
 
-    const sockaddr_in* sin = reinterpret_cast<const sockaddr_in*>(addr);
+    sockaddr_in const* sin = reinterpret_cast<sockaddr_in const*>(addr);
 
     if (host && hostlen > 0) {
         if (flags != 0)

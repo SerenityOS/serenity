@@ -26,7 +26,7 @@ public:
     Optional<u32> status_code() const { return m_status_code; }
     Optional<u32> total_size() const { return m_total_size; }
     size_t downloaded_size() const { return m_downloaded_size; }
-    const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers() const { return m_response_headers; }
+    HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers() const { return m_response_headers; }
 
     void stop();
     virtual void set_certificate(String, String);
@@ -39,9 +39,9 @@ public:
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
     void set_status_code(u32 status_code) { m_status_code = status_code; }
     void did_request_certificates();
-    void set_response_headers(const HashMap<String, String, CaseInsensitiveStringTraits>&);
+    void set_response_headers(HashMap<String, String, CaseInsensitiveStringTraits> const&);
     void set_downloaded_size(size_t size) { m_downloaded_size = size; }
-    const Core::Stream::File& output_stream() const { return *m_output_stream; }
+    Core::Stream::File const& output_stream() const { return *m_output_stream; }
 
 protected:
     explicit Request(ConnectionFromClient&, NonnullOwnPtr<Core::Stream::File>&&);

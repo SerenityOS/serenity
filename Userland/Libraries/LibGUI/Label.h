@@ -22,9 +22,9 @@ public:
     String text() const { return m_text; }
     void set_text(String);
 
-    void set_icon(const Gfx::Bitmap*);
+    void set_icon(Gfx::Bitmap const*);
     void set_icon_from_path(String const&);
-    const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
+    Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
     Gfx::Bitmap* icon() { return m_icon.ptr(); }
 
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }

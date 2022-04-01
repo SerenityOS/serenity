@@ -65,7 +65,7 @@ int LineBoxFragment::text_index_at(float x) const
     return m_start + m_length;
 }
 
-Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
+Gfx::FloatRect LineBoxFragment::selection_rect(Gfx::Font const& font) const
 {
     if (layout_node().selection_state() == Node::SelectionState::None)
         return {};
@@ -79,8 +79,8 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
     if (!is<TextNode>(layout_node()))
         return {};
 
-    const auto start_index = m_start;
-    const auto end_index = m_start + m_length;
+    auto const start_index = m_start;
+    auto const end_index = m_start + m_length;
     auto text = this->text();
 
     if (layout_node().selection_state() == Node::SelectionState::StartAndEnd) {

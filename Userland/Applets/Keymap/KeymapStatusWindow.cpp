@@ -40,7 +40,7 @@ void KeymapStatusWindow::wm_event(GUI::WMEvent& event)
     }
 }
 
-void KeymapStatusWindow::set_keymap_text(const String& keymap)
+void KeymapStatusWindow::set_keymap_text(String const& keymap)
 {
     GUI::Painter painter(*m_status_widget);
     painter.clear_rect(m_status_widget->rect(), Color::from_argb(0));

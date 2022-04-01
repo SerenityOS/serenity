@@ -57,7 +57,7 @@ public:
     HTML::BrowsingContext const& browsing_context() const;
     HTML::BrowsingContext& browsing_context();
 
-    const InitialContainingBlock& root() const;
+    InitialContainingBlock const& root() const;
     InitialContainingBlock& root();
 
     bool is_root_element() const;
@@ -99,19 +99,19 @@ public:
     bool is_flex_item() const { return m_is_flex_item; }
     void set_flex_item(bool b) { m_is_flex_item = b; }
 
-    const BlockContainer* containing_block() const;
-    BlockContainer* containing_block() { return const_cast<BlockContainer*>(const_cast<const Node*>(this)->containing_block()); }
+    BlockContainer const* containing_block() const;
+    BlockContainer* containing_block() { return const_cast<BlockContainer*>(const_cast<Node const*>(this)->containing_block()); }
 
     bool establishes_stacking_context() const;
 
     bool can_contain_boxes_with_position_absolute() const;
 
-    const Gfx::Font& font() const;
+    Gfx::Font const& font() const;
     const CSS::ImmutableComputedValues& computed_values() const;
     float line_height() const;
 
     NodeWithStyle* parent();
-    const NodeWithStyle* parent() const;
+    NodeWithStyle const* parent() const;
 
     void inserted_into(Node&) { }
     void removed_from(Node&) { }
@@ -165,7 +165,7 @@ public:
 
     void apply_style(const CSS::StyleProperties&);
 
-    const Gfx::Font& font() const { return *m_font; }
+    Gfx::Font const& font() const { return *m_font; }
     float line_height() const { return m_line_height; }
     Vector<CSS::BackgroundLayerData> const& background_layers() const { return computed_values().background_layers(); }
     const CSS::ImageStyleValue* list_style_image() const { return m_list_style_image; }
@@ -197,7 +197,7 @@ private:
 class NodeWithStyleAndBoxModelMetrics : public NodeWithStyle {
 public:
     BoxModelMetrics& box_model() { return m_box_model; }
-    const BoxModelMetrics& box_model() const { return m_box_model; }
+    BoxModelMetrics const& box_model() const { return m_box_model; }
 
 protected:
     NodeWithStyleAndBoxModelMetrics(DOM::Document& document, DOM::Node* node, NonnullRefPtr<CSS::StyleProperties> style)
@@ -214,17 +214,17 @@ private:
     BoxModelMetrics m_box_model;
 };
 
-inline const Gfx::Font& Node::font() const
+inline Gfx::Font const& Node::font() const
 {
     if (m_has_style)
-        return static_cast<const NodeWithStyle*>(this)->font();
+        return static_cast<NodeWithStyle const*>(this)->font();
     return parent()->font();
 }
 
 inline const CSS::ImmutableComputedValues& Node::computed_values() const
 {
     if (m_has_style)
-        return static_cast<const NodeWithStyle*>(this)->computed_values();
+        return static_cast<NodeWithStyle const*>(this)->computed_values();
     return parent()->computed_values();
 }
 
@@ -235,9 +235,9 @@ inline float Node::line_height() const
     return parent()->line_height();
 }
 
-inline const NodeWithStyle* Node::parent() const
+inline NodeWithStyle const* Node::parent() const
 {
-    return static_cast<const NodeWithStyle*>(TreeNode<Node>::parent());
+    return static_cast<NodeWithStyle const*>(TreeNode<Node>::parent());
 }
 
 inline NodeWithStyle* Node::parent()

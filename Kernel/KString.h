@@ -24,7 +24,7 @@ public:
     [[nodiscard]] static ErrorOr<NonnullOwnPtr<KString>> vformatted(StringView fmtstr, AK::TypeErasedFormatParams&);
 
     template<typename... Parameters>
-    [[nodiscard]] static ErrorOr<NonnullOwnPtr<KString>> formatted(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+    [[nodiscard]] static ErrorOr<NonnullOwnPtr<KString>> formatted(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
         AK::VariadicFormatParams variadic_format_parameters { parameters... };
         return vformatted(fmtstr.view(), variadic_format_parameters);

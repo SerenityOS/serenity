@@ -88,7 +88,7 @@ public:
     bool is_modified() const { return m_modified; }
     void set_modified(bool);
 
-    void popup_window_menu(const Gfx::IntPoint&, WindowMenuDefaultAction);
+    void popup_window_menu(Gfx::IntPoint const&, WindowMenuDefaultAction);
     void handle_window_menu_action(WindowMenuAction);
     void window_menu_activate_default();
     void request_close();
@@ -139,12 +139,12 @@ public:
     }
 
     WindowFrame& frame() { return m_frame; }
-    const WindowFrame& frame() const { return m_frame; }
+    WindowFrame const& frame() const { return m_frame; }
 
     Window* blocking_modal_window();
 
     ConnectionFromClient* client() { return m_client; }
-    const ConnectionFromClient* client() const { return m_client; }
+    ConnectionFromClient const* client() const { return m_client; }
 
     WindowType type() const { return m_type; }
     int window_id() const { return m_window_id; }
@@ -153,7 +153,7 @@ public:
     i32 client_id() const { return m_client_id; }
 
     String title() const { return m_title; }
-    void set_title(const String&);
+    void set_title(String const&);
 
     String computed_title() const;
 
@@ -170,7 +170,7 @@ public:
         m_alpha_hit_threshold = threshold;
     }
 
-    Optional<HitTestResult> hit_test(const Gfx::IntPoint&, bool include_frame = true);
+    Optional<HitTestResult> hit_test(Gfx::IntPoint const&, bool include_frame = true);
 
     int x() const { return m_rect.x(); }
     int y() const { return m_rect.y(); }
@@ -186,34 +186,34 @@ public:
     bool is_modal_dont_unparent() const { return m_modal && m_parent_window; }
 
     Gfx::IntRect rect() const { return m_rect; }
-    void set_rect(const Gfx::IntRect&);
+    void set_rect(Gfx::IntRect const&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
-    void set_rect_without_repaint(const Gfx::IntRect&);
+    void set_rect_without_repaint(Gfx::IntRect const&);
     bool apply_minimum_size(Gfx::IntRect&);
     void nudge_into_desktop(Screen*, bool force_titlebar_visible = true);
 
     Gfx::IntSize minimum_size() const { return m_minimum_size; }
-    void set_minimum_size(const Gfx::IntSize&);
+    void set_minimum_size(Gfx::IntSize const&);
     void set_minimum_size(int width, int height) { set_minimum_size({ width, height }); }
 
-    void set_taskbar_rect(const Gfx::IntRect&);
-    const Gfx::IntRect& taskbar_rect() const { return m_taskbar_rect; }
+    void set_taskbar_rect(Gfx::IntRect const&);
+    Gfx::IntRect const& taskbar_rect() const { return m_taskbar_rect; }
 
-    void move_to(const Gfx::IntPoint& position) { set_rect({ position, size() }); }
+    void move_to(Gfx::IntPoint const& position) { set_rect({ position, size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
 
-    void move_by(const Gfx::IntPoint& delta) { set_position_without_repaint(position().translated(delta)); }
+    void move_by(Gfx::IntPoint const& delta) { set_position_without_repaint(position().translated(delta)); }
 
     Gfx::IntPoint position() const { return m_rect.location(); }
-    void set_position(const Gfx::IntPoint& position) { set_rect({ position.x(), position.y(), width(), height() }); }
-    void set_position_without_repaint(const Gfx::IntPoint& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
+    void set_position(Gfx::IntPoint const& position) { set_rect({ position.x(), position.y(), width(), height() }); }
+    void set_position_without_repaint(Gfx::IntPoint const& position) { set_rect_without_repaint({ position.x(), position.y(), width(), height() }); }
 
     Gfx::IntSize size() const { return m_rect.size(); }
 
     void invalidate(bool with_frame = true, bool re_render_frame = false);
     void invalidate(Gfx::IntRect const&, bool invalidate_frame = false);
     void invalidate_menubar();
-    bool invalidate_no_notify(const Gfx::IntRect& rect, bool invalidate_frame = false);
+    bool invalidate_no_notify(Gfx::IntRect const& rect, bool invalidate_frame = false);
     void invalidate_last_rendered_screen_rects();
     void invalidate_last_rendered_screen_rects_now();
     [[nodiscard]] bool should_invalidate_last_rendered_screen_rects() { return exchange(m_invalidate_last_render_rects, false); }
@@ -225,10 +225,10 @@ public:
     Gfx::DisjointRectSet& dirty_rects() { return m_dirty_rects; }
 
     // Only used by WindowType::Applet. Perhaps it could be a Window subclass? I don't know.
-    void set_rect_in_applet_area(const Gfx::IntRect& rect) { m_rect_in_applet_area = rect; }
-    const Gfx::IntRect& rect_in_applet_area() const { return m_rect_in_applet_area; }
+    void set_rect_in_applet_area(Gfx::IntRect const& rect) { m_rect_in_applet_area = rect; }
+    Gfx::IntRect const& rect_in_applet_area() const { return m_rect_in_applet_area; }
 
-    const Gfx::Bitmap* backing_store() const { return m_backing_store.ptr(); }
+    Gfx::Bitmap const* backing_store() const { return m_backing_store.ptr(); }
     Gfx::Bitmap* backing_store() { return m_backing_store.ptr(); }
 
     void set_backing_store(RefPtr<Gfx::Bitmap> backing_store, i32 serial)
@@ -257,10 +257,10 @@ public:
     void set_has_alpha_channel(bool value);
 
     Gfx::IntSize size_increment() const { return m_size_increment; }
-    void set_size_increment(const Gfx::IntSize& increment) { m_size_increment = increment; }
+    void set_size_increment(Gfx::IntSize const& increment) { m_size_increment = increment; }
 
-    const Optional<Gfx::IntSize>& resize_aspect_ratio() const { return m_resize_aspect_ratio; }
-    void set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
+    Optional<Gfx::IntSize> const& resize_aspect_ratio() const { return m_resize_aspect_ratio; }
+    void set_resize_aspect_ratio(Optional<Gfx::IntSize> const& ratio)
     {
         // "Tiled" means that we take up a chunk of space relative to the screen.
         // The screen can change, so "tiled" and "fixed aspect ratio" are mutually exclusive.
@@ -272,19 +272,19 @@ public:
     }
 
     Gfx::IntSize base_size() const { return m_base_size; }
-    void set_base_size(const Gfx::IntSize& size) { m_base_size = size; }
+    void set_base_size(Gfx::IntSize const& size) { m_base_size = size; }
 
-    const Gfx::Bitmap& icon() const { return *m_icon; }
+    Gfx::Bitmap const& icon() const { return *m_icon; }
     void set_icon(NonnullRefPtr<Gfx::Bitmap>&& icon) { m_icon = move(icon); }
 
     void set_default_icon();
 
-    const Cursor* cursor() const { return (m_cursor_override ? m_cursor_override : m_cursor).ptr(); }
+    Cursor const* cursor() const { return (m_cursor_override ? m_cursor_override : m_cursor).ptr(); }
     void set_cursor(RefPtr<Cursor> cursor) { m_cursor = move(cursor); }
     void set_cursor_override(RefPtr<Cursor> cursor) { m_cursor_override = move(cursor); }
     void remove_cursor_override() { m_cursor_override = nullptr; }
 
-    void request_update(const Gfx::IntRect&, bool ignore_occlusion = false);
+    void request_update(Gfx::IntRect const&, bool ignore_occlusion = false);
     Gfx::DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
 
     bool has_taskbar_rect() const { return m_have_taskbar_rect; };
@@ -299,15 +299,15 @@ public:
     void detach_client(Badge<ConnectionFromClient>);
 
     Window* parent_window() { return m_parent_window; }
-    const Window* parent_window() const { return m_parent_window; }
+    Window const* parent_window() const { return m_parent_window; }
 
     void set_parent_window(Window&);
 
     Vector<WeakPtr<Window>>& child_windows() { return m_child_windows; }
-    const Vector<WeakPtr<Window>>& child_windows() const { return m_child_windows; }
+    Vector<WeakPtr<Window>> const& child_windows() const { return m_child_windows; }
 
     Vector<WeakPtr<Window>>& accessory_windows() { return m_accessory_windows; }
-    const Vector<WeakPtr<Window>>& accessory_windows() const { return m_accessory_windows; }
+    Vector<WeakPtr<Window>> const& accessory_windows() const { return m_accessory_windows; }
 
     bool is_descendant_of(Window&) const;
 
@@ -364,7 +364,7 @@ public:
     bool is_on_any_window_stack(Badge<WindowStack>) const { return m_window_stack != nullptr; }
     void set_window_stack(Badge<WindowStack>, WindowStack* stack) { m_window_stack = stack; }
 
-    const Vector<Screen*, default_screen_count>& screens() const { return m_screens; }
+    Vector<Screen*, default_screen_count> const& screens() const { return m_screens; }
     Vector<Screen*, default_screen_count>& screens() { return m_screens; }
 
     void set_moving_to_another_stack(bool value) { m_moving_to_another_stack = value; }
@@ -385,8 +385,8 @@ private:
     Window(Core::Object&, WindowType);
 
     virtual void event(Core::Event&) override;
-    void handle_mouse_event(const MouseEvent&);
-    void handle_keydown_event(const KeyEvent&);
+    void handle_mouse_event(MouseEvent const&);
+    void handle_keydown_event(KeyEvent const&);
     void add_child_window(Window&);
     void add_accessory_window(Window&);
     void ensure_window_menu();

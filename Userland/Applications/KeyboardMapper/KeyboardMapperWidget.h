@@ -18,7 +18,7 @@ public:
     virtual ~KeyboardMapperWidget() override = default;
 
     void create_frame();
-    ErrorOr<void> load_map_from_file(const String&);
+    ErrorOr<void> load_map_from_file(String const&);
     ErrorOr<void> load_map_from_system();
     ErrorOr<void> save();
     ErrorOr<void> save_to_file(StringView);

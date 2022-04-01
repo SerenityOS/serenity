@@ -20,26 +20,26 @@
 namespace AK {
 
 #ifndef KERNEL
-StringView::StringView(const String& string)
+StringView::StringView(String const& string)
     : m_characters(string.characters())
     , m_length(string.length())
 {
 }
 
-StringView::StringView(const FlyString& string)
+StringView::StringView(FlyString const& string)
     : m_characters(string.characters())
     , m_length(string.length())
 {
 }
 #endif
 
-StringView::StringView(const ByteBuffer& buffer)
-    : m_characters((const char*)buffer.data())
+StringView::StringView(ByteBuffer const& buffer)
+    : m_characters((char const*)buffer.data())
     , m_length(buffer.size())
 {
 }
 
-Vector<StringView> StringView::split_view(const char separator, bool keep_empty) const
+Vector<StringView> StringView::split_view(char const separator, bool keep_empty) const
 {
     StringView seperator_view { &separator, 1 };
     return split_view(seperator_view, keep_empty);
@@ -166,7 +166,7 @@ String StringView::to_titlecase_string() const
 
 StringView StringView::substring_view_starting_from_substring(StringView substring) const
 {
-    const char* remaining_characters = substring.characters_without_null_termination();
+    char const* remaining_characters = substring.characters_without_null_termination();
     VERIFY(remaining_characters >= m_characters);
     VERIFY(remaining_characters <= m_characters + m_length);
     size_t remaining_length = m_length - (remaining_characters - m_characters);
@@ -175,7 +175,7 @@ StringView StringView::substring_view_starting_from_substring(StringView substri
 
 StringView StringView::substring_view_starting_after_substring(StringView substring) const
 {
-    const char* remaining_characters = substring.characters_without_null_termination() + substring.length();
+    char const* remaining_characters = substring.characters_without_null_termination() + substring.length();
     VERIFY(remaining_characters >= m_characters);
     VERIFY(remaining_characters <= m_characters + m_length);
     size_t remaining_length = m_length - (remaining_characters - m_characters);
@@ -209,7 +209,7 @@ template Optional<long> StringView::to_uint() const;
 template Optional<long long> StringView::to_uint() const;
 
 #ifndef KERNEL
-bool StringView::operator==(const String& string) const
+bool StringView::operator==(String const& string) const
 {
     return *this == string.view();
 }

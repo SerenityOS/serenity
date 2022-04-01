@@ -47,7 +47,7 @@ void Cell::set_data(JS::Value new_data)
     m_evaluated_data = move(new_data);
 }
 
-void Cell::set_type(const CellType* type)
+void Cell::set_type(CellType const* type)
 {
     m_type = type;
 }
@@ -67,7 +67,7 @@ void Cell::set_type_metadata(CellTypeMetadata&& metadata)
     m_type_metadata = move(metadata);
 }
 
-const CellType& Cell::type() const
+CellType const& Cell::type() const
 {
     if (m_type)
         return *m_type;
@@ -171,13 +171,13 @@ void Cell::reference_from(Cell* other)
     if (!other || other == this)
         return;
 
-    if (!m_referencing_cells.find_if([other](const auto& ptr) { return ptr.ptr() == other; }).is_end())
+    if (!m_referencing_cells.find_if([other](auto const& ptr) { return ptr.ptr() == other; }).is_end())
         return;
 
     m_referencing_cells.append(other->make_weak_ptr());
 }
 
-void Cell::copy_from(const Cell& other)
+void Cell::copy_from(Cell const& other)
 {
     m_dirty = true;
     m_evaluated_externally = other.m_evaluated_externally;

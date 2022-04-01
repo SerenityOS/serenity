@@ -33,7 +33,7 @@ public:
     void for_each(Function<void(NetworkAdapter&)>);
     ErrorOr<void> try_for_each(Function<ErrorOr<void>(NetworkAdapter&)>);
 
-    RefPtr<NetworkAdapter> from_ipv4_address(const IPv4Address&) const;
+    RefPtr<NetworkAdapter> from_ipv4_address(IPv4Address const&) const;
     RefPtr<NetworkAdapter> lookup_by_name(StringView) const;
 
     NonnullRefPtr<NetworkAdapter> loopback_adapter() const;

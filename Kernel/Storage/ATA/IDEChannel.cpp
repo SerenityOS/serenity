@@ -22,12 +22,12 @@ namespace Kernel {
 #define PATA_PRIMARY_IRQ 14
 #define PATA_SECONDARY_IRQ 15
 
-UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
+UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(IDEController const& controller, IOAddressGroup io_group, ChannelType type)
 {
     return adopt_ref(*new IDEChannel(controller, io_group, type));
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
+UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(IDEController const& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
 {
     return adopt_ref(*new IDEChannel(controller, irq, io_group, type));
 }
@@ -77,7 +77,7 @@ UNMAP_AFTER_INIT void IDEChannel::initialize()
     clear_pending_interrupts();
 }
 
-UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
+UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
     : IRQHandler(irq)
     , m_channel_type(type)
     , m_io_group(io_group)
@@ -86,7 +86,7 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, u8 irq,
     initialize();
 }
 
-UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
+UNMAP_AFTER_INIT IDEChannel::IDEChannel(IDEController const& controller, IOAddressGroup io_group, ChannelType type)
     : IRQHandler(type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ)
     , m_channel_type(type)
     , m_io_group(io_group)
@@ -188,7 +188,7 @@ void IDEChannel::try_disambiguate_error()
     }
 }
 
-bool IDEChannel::handle_irq(const RegisterState&)
+bool IDEChannel::handle_irq(RegisterState const&)
 {
     u8 status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
 
@@ -394,7 +394,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
         for (u32 i = 93; i > 54 && bbuf[i] == ' '; --i)
             bbuf[i] = 0;
 
-        volatile ATAIdentifyBlock& identify_block = (volatile ATAIdentifyBlock&)(*wbuf.data());
+        ATAIdentifyBlock volatile& identify_block = (ATAIdentifyBlock volatile&)(*wbuf.data());
 
         u16 capabilities = identify_block.capabilities[0];
 

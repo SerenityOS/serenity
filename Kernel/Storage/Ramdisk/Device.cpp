@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(const RamdiskController& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
+NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(RamdiskController const& controller, NonnullOwnPtr<Memory::Region>&& region, int major, int minor)
 {
     // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
     size_t drive_index = minor / 16;
@@ -25,7 +25,7 @@ NonnullRefPtr<RamdiskDevice> RamdiskDevice::create(const RamdiskController& cont
     return device_or_error.release_value();
 }
 
-RamdiskDevice::RamdiskDevice(const RamdiskController&, NonnullOwnPtr<Memory::Region>&& region, int major, int minor, NonnullOwnPtr<KString> device_name)
+RamdiskDevice::RamdiskDevice(RamdiskController const&, NonnullOwnPtr<Memory::Region>&& region, int major, int minor, NonnullOwnPtr<KString> device_name)
     : StorageDevice(major, minor, 512, region->size() / 512, move(device_name))
     , m_region(move(region))
 {

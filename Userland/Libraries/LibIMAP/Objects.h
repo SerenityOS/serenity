@@ -505,7 +505,7 @@ public:
 
     ResponseData(ResponseData&) = delete;
     ResponseData(ResponseData&&) = default;
-    ResponseData& operator=(const ResponseData&) = delete;
+    ResponseData& operator=(ResponseData const&) = delete;
     ResponseData& operator=(ResponseData&&) = default;
 
     [[nodiscard]] bool contains_response_type(ResponseType response_type) const

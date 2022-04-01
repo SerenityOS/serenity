@@ -191,7 +191,7 @@ public:
             cursor = m_buffer.size();
         m_cursor = cursor;
     }
-    const Vector<u32, 1024>& buffer() const { return m_buffer; }
+    Vector<u32, 1024> const& buffer() const { return m_buffer; }
     u32 buffer_at(size_t pos) const { return m_buffer.at(pos); }
     String line() const { return line(m_buffer.size()); }
     String line(size_t up_to_index) const;

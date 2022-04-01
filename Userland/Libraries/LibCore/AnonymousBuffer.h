@@ -24,7 +24,7 @@ public:
     int fd() const { return m_fd; }
     size_t size() const { return m_size; }
     void* data() { return m_data; }
-    const void* data() const { return m_data; }
+    void const* data() const { return m_data; }
 
 private:
     AnonymousBufferImpl(int fd, size_t, void*);
@@ -74,7 +74,7 @@ private:
 
 namespace IPC {
 
-bool encode(Encoder&, const Core::AnonymousBuffer&);
+bool encode(Encoder&, Core::AnonymousBuffer const&);
 ErrorOr<void> decode(Decoder&, Core::AnonymousBuffer&);
 
 }

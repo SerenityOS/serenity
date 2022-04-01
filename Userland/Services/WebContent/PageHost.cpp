@@ -50,7 +50,7 @@ Gfx::Palette PageHost::palette() const
     return Gfx::Palette(*m_palette_impl);
 }
 
-void PageHost::set_palette_impl(const Gfx::PaletteImpl& impl)
+void PageHost::set_palette_impl(Gfx::PaletteImpl const& impl)
 {
     m_palette_impl = impl;
 }
@@ -75,7 +75,7 @@ Web::Layout::InitialContainingBlock* PageHost::layout_root()
     return document->layout_node();
 }
 
-void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
+void PageHost::paint(Gfx::IntRect const& content_rect, Gfx::Bitmap& target)
 {
     Gfx::Painter painter(target);
     Gfx::IntRect bitmap_rect { {}, content_rect.size() };
@@ -96,7 +96,7 @@ void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
     layout_root->paint_all_phases(context);
 }
 
-void PageHost::set_viewport_rect(const Gfx::IntRect& rect)
+void PageHost::set_viewport_rect(Gfx::IntRect const& rect)
 {
     page().top_level_browsing_context().set_viewport_rect(rect);
 }
@@ -130,7 +130,7 @@ void PageHost::page_did_layout()
     m_client.async_did_layout(content_size);
 }
 
-void PageHost::page_did_change_title(const String& title)
+void PageHost::page_did_change_title(String const& title)
 {
     m_client.async_did_change_title(title);
 }
@@ -145,12 +145,12 @@ void PageHost::page_did_request_scroll_to(Gfx::IntPoint const& scroll_position)
     m_client.async_did_request_scroll_to(scroll_position);
 }
 
-void PageHost::page_did_request_scroll_into_view(const Gfx::IntRect& rect)
+void PageHost::page_did_request_scroll_into_view(Gfx::IntRect const& rect)
 {
     m_client.async_did_request_scroll_into_view(rect);
 }
 
-void PageHost::page_did_enter_tooltip_area(const Gfx::IntPoint& content_position, const String& title)
+void PageHost::page_did_enter_tooltip_area(Gfx::IntPoint const& content_position, String const& title)
 {
     m_client.async_did_enter_tooltip_area(content_position, title);
 }
@@ -170,12 +170,12 @@ void PageHost::page_did_unhover_link()
     m_client.async_did_unhover_link();
 }
 
-void PageHost::page_did_click_link(const URL& url, const String& target, unsigned modifiers)
+void PageHost::page_did_click_link(const URL& url, String const& target, unsigned modifiers)
 {
     m_client.async_did_click_link(url, target, modifiers);
 }
 
-void PageHost::page_did_middle_click_link(const URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
+void PageHost::page_did_middle_click_link(const URL& url, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers)
 {
     m_client.async_did_middle_click_link(url, target, modifiers);
 }
@@ -193,17 +193,17 @@ void PageHost::page_did_finish_loading(const URL& url)
     m_client.async_did_finish_loading(url);
 }
 
-void PageHost::page_did_request_context_menu(const Gfx::IntPoint& content_position)
+void PageHost::page_did_request_context_menu(Gfx::IntPoint const& content_position)
 {
     m_client.async_did_request_context_menu(content_position);
 }
 
-void PageHost::page_did_request_link_context_menu(const Gfx::IntPoint& content_position, const URL& url, const String& target, unsigned modifiers)
+void PageHost::page_did_request_link_context_menu(Gfx::IntPoint const& content_position, const URL& url, String const& target, unsigned modifiers)
 {
     m_client.async_did_request_link_context_menu(content_position, url, target, modifiers);
 }
 
-void PageHost::page_did_request_alert(const String& message)
+void PageHost::page_did_request_alert(String const& message)
 {
     auto response = m_client.send_sync_but_allow_failure<Messages::WebContentClient::DidRequestAlert>(message);
     if (!response) {
@@ -212,7 +212,7 @@ void PageHost::page_did_request_alert(const String& message)
     }
 }
 
-bool PageHost::page_did_request_confirm(const String& message)
+bool PageHost::page_did_request_confirm(String const& message)
 {
     auto response = m_client.send_sync_but_allow_failure<Messages::WebContentClient::DidRequestConfirm>(message);
     if (!response) {
@@ -222,7 +222,7 @@ bool PageHost::page_did_request_confirm(const String& message)
     return response->take_result();
 }
 
-String PageHost::page_did_request_prompt(const String& message, const String& default_)
+String PageHost::page_did_request_prompt(String const& message, String const& default_)
 {
     auto response = m_client.send_sync_but_allow_failure<Messages::WebContentClient::DidRequestPrompt>(message, default_);
     if (!response) {
@@ -232,12 +232,12 @@ String PageHost::page_did_request_prompt(const String& message, const String& de
     return response->take_response();
 }
 
-void PageHost::page_did_change_favicon(const Gfx::Bitmap& favicon)
+void PageHost::page_did_change_favicon(Gfx::Bitmap const& favicon)
 {
     m_client.async_did_change_favicon(favicon.to_shareable_bitmap());
 }
 
-void PageHost::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, const URL& url, const String& target, unsigned modifiers, const Gfx::Bitmap* bitmap_pointer)
+void PageHost::page_did_request_image_context_menu(Gfx::IntPoint const& content_position, const URL& url, String const& target, unsigned modifiers, Gfx::Bitmap const* bitmap_pointer)
 {
     auto bitmap = bitmap_pointer ? bitmap_pointer->to_shareable_bitmap() : Gfx::ShareableBitmap();
     m_client.async_did_request_image_context_menu(content_position, url, target, modifiers, bitmap);
@@ -253,7 +253,7 @@ String PageHost::page_did_request_cookie(const URL& url, Web::Cookie::Source sou
     return response->take_cookie();
 }
 
-void PageHost::page_did_set_cookie(const URL& url, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)
+void PageHost::page_did_set_cookie(const URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)
 {
     m_client.async_did_set_cookie(url, cookie, static_cast<u8>(source));
 }

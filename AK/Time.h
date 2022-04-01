@@ -106,8 +106,8 @@ constexpr i64 seconds_since_epoch_to_year(i64 seconds)
 class Time {
 public:
     Time() = default;
-    Time(const Time&) = default;
-    Time& operator=(const Time&) = default;
+    Time(Time const&) = default;
+    Time& operator=(Time const&) = default;
 
     Time(Time&& other)
         : m_seconds(exchange(other.m_seconds, 0))
@@ -218,16 +218,16 @@ public:
     [[nodiscard]] bool is_zero() const { return (m_seconds == 0) && (m_nanoseconds == 0); }
     [[nodiscard]] bool is_negative() const { return m_seconds < 0; }
 
-    bool operator==(const Time& other) const { return this->m_seconds == other.m_seconds && this->m_nanoseconds == other.m_nanoseconds; }
-    bool operator!=(const Time& other) const { return !(*this == other); }
-    Time operator+(const Time& other) const;
-    Time& operator+=(const Time& other);
-    Time operator-(const Time& other) const;
-    Time& operator-=(const Time& other);
-    bool operator<(const Time& other) const;
-    bool operator<=(const Time& other) const;
-    bool operator>(const Time& other) const;
-    bool operator>=(const Time& other) const;
+    bool operator==(Time const& other) const { return this->m_seconds == other.m_seconds && this->m_nanoseconds == other.m_nanoseconds; }
+    bool operator!=(Time const& other) const { return !(*this == other); }
+    Time operator+(Time const& other) const;
+    Time& operator+=(Time const& other);
+    Time operator-(Time const& other) const;
+    Time& operator-=(Time const& other);
+    bool operator<(Time const& other) const;
+    bool operator<=(Time const& other) const;
+    bool operator>(Time const& other) const;
+    bool operator>=(Time const& other) const;
 
 private:
     constexpr explicit Time(i64 seconds, u32 nanoseconds)
@@ -243,7 +243,7 @@ private:
 };
 
 template<typename TimevalType>
-inline void timeval_sub(const TimevalType& a, const TimevalType& b, TimevalType& result)
+inline void timeval_sub(TimevalType const& a, TimevalType const& b, TimevalType& result)
 {
     result.tv_sec = a.tv_sec - b.tv_sec;
     result.tv_usec = a.tv_usec - b.tv_usec;
@@ -254,7 +254,7 @@ inline void timeval_sub(const TimevalType& a, const TimevalType& b, TimevalType&
 }
 
 template<typename TimevalType>
-inline void timeval_add(const TimevalType& a, const TimevalType& b, TimevalType& result)
+inline void timeval_add(TimevalType const& a, TimevalType const& b, TimevalType& result)
 {
     result.tv_sec = a.tv_sec + b.tv_sec;
     result.tv_usec = a.tv_usec + b.tv_usec;
@@ -265,7 +265,7 @@ inline void timeval_add(const TimevalType& a, const TimevalType& b, TimevalType&
 }
 
 template<typename TimespecType>
-inline void timespec_sub(const TimespecType& a, const TimespecType& b, TimespecType& result)
+inline void timespec_sub(TimespecType const& a, TimespecType const& b, TimespecType& result)
 {
     result.tv_sec = a.tv_sec - b.tv_sec;
     result.tv_nsec = a.tv_nsec - b.tv_nsec;
@@ -276,7 +276,7 @@ inline void timespec_sub(const TimespecType& a, const TimespecType& b, TimespecT
 }
 
 template<typename TimespecType>
-inline void timespec_add(const TimespecType& a, const TimespecType& b, TimespecType& result)
+inline void timespec_add(TimespecType const& a, TimespecType const& b, TimespecType& result)
 {
     result.tv_sec = a.tv_sec + b.tv_sec;
     result.tv_nsec = a.tv_nsec + b.tv_nsec;
@@ -287,7 +287,7 @@ inline void timespec_add(const TimespecType& a, const TimespecType& b, TimespecT
 }
 
 template<typename TimespecType, typename TimevalType>
-inline void timespec_add_timeval(const TimespecType& a, const TimevalType& b, TimespecType& result)
+inline void timespec_add_timeval(TimespecType const& a, TimevalType const& b, TimespecType& result)
 {
     result.tv_sec = a.tv_sec + b.tv_sec;
     result.tv_nsec = a.tv_nsec + b.tv_usec * 1000;
@@ -298,14 +298,14 @@ inline void timespec_add_timeval(const TimespecType& a, const TimevalType& b, Ti
 }
 
 template<typename TimevalType, typename TimespecType>
-inline void timeval_to_timespec(const TimevalType& tv, TimespecType& ts)
+inline void timeval_to_timespec(TimevalType const& tv, TimespecType& ts)
 {
     ts.tv_sec = tv.tv_sec;
     ts.tv_nsec = tv.tv_usec * 1000;
 }
 
 template<typename TimespecType, typename TimevalType>
-inline void timespec_to_timeval(const TimespecType& ts, TimevalType& tv)
+inline void timespec_to_timeval(TimespecType const& ts, TimevalType& tv)
 {
     tv.tv_sec = ts.tv_sec;
     tv.tv_usec = ts.tv_nsec / 1000;

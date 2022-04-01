@@ -36,27 +36,27 @@ public:
     Element(Document&, DOM::QualifiedName);
     virtual ~Element() override;
 
-    const String& qualified_name() const { return m_qualified_name.as_string(); }
-    const String& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
+    String const& qualified_name() const { return m_qualified_name.as_string(); }
+    String const& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
     virtual FlyString node_name() const final { return html_uppercased_qualified_name(); }
-    const FlyString& local_name() const { return m_qualified_name.local_name(); }
+    FlyString const& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
-    const String& tag_name() const { return html_uppercased_qualified_name(); }
+    String const& tag_name() const { return html_uppercased_qualified_name(); }
 
-    const FlyString& prefix() const { return m_qualified_name.prefix(); }
-    const FlyString& namespace_() const { return m_qualified_name.namespace_(); }
+    FlyString const& prefix() const { return m_qualified_name.prefix(); }
+    FlyString const& namespace_() const { return m_qualified_name.namespace_(); }
 
     // NOTE: This is for the JS bindings
-    const FlyString& namespace_uri() const { return namespace_(); }
+    FlyString const& namespace_uri() const { return namespace_(); }
 
-    bool has_attribute(const FlyString& name) const;
+    bool has_attribute(FlyString const& name) const;
     bool has_attributes() const { return !m_attributes->is_empty(); }
-    String attribute(const FlyString& name) const { return get_attribute(name); }
-    String get_attribute(const FlyString& name) const;
-    ExceptionOr<void> set_attribute(const FlyString& name, const String& value);
+    String attribute(FlyString const& name) const { return get_attribute(name); }
+    String get_attribute(FlyString const& name) const;
+    ExceptionOr<void> set_attribute(FlyString const& name, String const& value);
     ExceptionOr<void> set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value);
-    void remove_attribute(const FlyString& name);
+    void remove_attribute(FlyString const& name);
     DOM::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const { return m_attributes->length(); }
     NonnullRefPtr<NamedNodeMap> const& attributes() const { return m_attributes; }
@@ -81,11 +81,11 @@ public:
         }
     }
 
-    bool has_class(const FlyString&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    const Vector<FlyString>& class_names() const { return m_classes; }
+    bool has_class(FlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    Vector<FlyString> const& class_names() const { return m_classes; }
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
-    virtual void parse_attribute(const FlyString& name, const String& value);
+    virtual void parse_attribute(FlyString const& name, String const& value);
     virtual void did_remove_attribute(FlyString const&);
 
     enum class NeedsRelayout {
@@ -95,7 +95,7 @@ public:
     NeedsRelayout recompute_style();
 
     Layout::NodeWithStyle* layout_node() { return static_cast<Layout::NodeWithStyle*>(Node::layout_node()); }
-    const Layout::NodeWithStyle* layout_node() const { return static_cast<const Layout::NodeWithStyle*>(Node::layout_node()); }
+    Layout::NodeWithStyle const* layout_node() const { return static_cast<Layout::NodeWithStyle const*>(Node::layout_node()); }
 
     String name() const { return attribute(HTML::AttributeNames::name); }
 
@@ -116,7 +116,7 @@ public:
     NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
 
     ShadowRoot* shadow_root() { return m_shadow_root; }
-    const ShadowRoot* shadow_root() const { return m_shadow_root; }
+    ShadowRoot const* shadow_root() const { return m_shadow_root; }
     void set_shadow_root(RefPtr<ShadowRoot>);
 
     void set_custom_properties(HashMap<FlyString, CSS::StyleProperty> custom_properties) { m_custom_properties = move(custom_properties); }

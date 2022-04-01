@@ -43,7 +43,7 @@ public:
     }
 
     Gfx::Bitmap& bitmap() { return *m_bitmap; }
-    const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
+    Gfx::Bitmap const& bitmap() const { return *m_bitmap; }
 
     Gfx::IntSize size() const { return m_bitmap->size(); }
 
@@ -255,7 +255,7 @@ Gfx::IntRect Window::rect() const
     return ConnectionToWindowServer::the().get_window_rect(m_window_id);
 }
 
-void Window::set_rect(const Gfx::IntRect& a_rect)
+void Window::set_rect(Gfx::IntRect const& a_rect)
 {
     if (a_rect.location() != m_rect_when_windowless.location()) {
         m_moved_by_client = true;
@@ -284,7 +284,7 @@ Gfx::IntSize Window::minimum_size() const
     return ConnectionToWindowServer::the().get_window_minimum_size(m_window_id);
 }
 
-void Window::set_minimum_size(const Gfx::IntSize& size)
+void Window::set_minimum_size(Gfx::IntSize const& size)
 {
     m_minimum_size_modified = true;
     m_minimum_size_when_windowless = size;
@@ -298,7 +298,7 @@ void Window::center_on_screen()
     set_rect(rect().centered_within(Desktop::the().rect()));
 }
 
-void Window::center_within(const Window& other)
+void Window::center_within(Window const& other)
 {
     if (this == &other)
         return;
@@ -688,7 +688,7 @@ void Window::force_update()
     ConnectionToWindowServer::the().async_invalidate_rect(m_window_id, { { 0, 0, rect.width(), rect.height() } }, true);
 }
 
-void Window::update(const Gfx::IntRect& a_rect)
+void Window::update(Gfx::IntRect const& a_rect)
 {
     if (!is_visible())
         return;
@@ -847,7 +847,7 @@ void Window::set_current_backing_store(WindowBackingStore& backing_store, bool f
     ConnectionToWindowServer::the().set_window_backing_store(m_window_id, 32, bitmap.pitch(), bitmap.anonymous_buffer().fd(), backing_store.serial(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
 
-void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
+void Window::flip(Vector<Gfx::IntRect, 32> const& dirty_rects)
 {
     swap(m_front_store, m_back_store);
 
@@ -869,7 +869,7 @@ void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
     m_back_store->bitmap().set_volatile();
 }
 
-OwnPtr<WindowBackingStore> Window::create_backing_store(const Gfx::IntSize& size)
+OwnPtr<WindowBackingStore> Window::create_backing_store(Gfx::IntSize const& size)
 {
     auto format = m_has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
 
@@ -911,7 +911,7 @@ void Window::applet_area_rect_change_event(AppletAreaRectChangeEvent&)
 {
 }
 
-void Window::set_icon(const Gfx::Bitmap* icon)
+void Window::set_icon(Gfx::Bitmap const* icon)
 {
     if (m_icon == icon)
         return;
@@ -1096,7 +1096,7 @@ void Window::notify_state_changed(Badge<ConnectionToWindowServer>, bool minimize
     }
 }
 
-Action* Window::action_for_key_event(const KeyEvent& event)
+Action* Window::action_for_key_event(KeyEvent const& event)
 {
     Shortcut shortcut(event.modifiers(), (KeyCode)event.key());
     Action* found_action = nullptr;
@@ -1110,7 +1110,7 @@ Action* Window::action_for_key_event(const KeyEvent& event)
     return found_action;
 }
 
-void Window::set_base_size(const Gfx::IntSize& base_size)
+void Window::set_base_size(Gfx::IntSize const& base_size)
 {
     if (m_base_size == base_size)
         return;
@@ -1119,7 +1119,7 @@ void Window::set_base_size(const Gfx::IntSize& base_size)
         ConnectionToWindowServer::the().async_set_window_base_size_and_size_increment(m_window_id, m_base_size, m_size_increment);
 }
 
-void Window::set_size_increment(const Gfx::IntSize& size_increment)
+void Window::set_size_increment(Gfx::IntSize const& size_increment)
 {
     if (m_size_increment == size_increment)
         return;
@@ -1128,7 +1128,7 @@ void Window::set_size_increment(const Gfx::IntSize& size_increment)
         ConnectionToWindowServer::the().async_set_window_base_size_and_size_increment(m_window_id, m_base_size, m_size_increment);
 }
 
-void Window::set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio)
+void Window::set_resize_aspect_ratio(Optional<Gfx::IntSize> const& ratio)
 {
     if (m_resize_aspect_ratio == ratio)
         return;
@@ -1219,7 +1219,7 @@ Menu& Window::add_menu(String name)
     return *menu;
 }
 
-void Window::flash_menubar_menu_for(const MenuItem& menu_item)
+void Window::flash_menubar_menu_for(MenuItem const& menu_item)
 {
     auto menu_id = menu_item.menu_id();
     if (menu_id < 0)

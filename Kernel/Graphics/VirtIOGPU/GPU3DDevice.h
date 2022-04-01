@@ -112,10 +112,10 @@ public:
         OwnPtr<Memory::Region> m_transfer_buffer_region;
     };
 
-    virtual bool can_read(const OpenFileDescription&, u64) const override { return true; }
-    virtual bool can_write(const OpenFileDescription&, u64) const override { return true; }
+    virtual bool can_read(OpenFileDescription const&, u64) const override { return true; }
+    virtual bool can_write(OpenFileDescription const&, u64) const override { return true; }
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override { return ENOTSUP; }
-    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return ENOTSUP; }
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override { return ENOTSUP; }
     virtual StringView class_name() const override { return "virgl3d"; }
 
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;

@@ -22,7 +22,7 @@ Desktop& Desktop::the()
     return s_the;
 }
 
-void Desktop::did_receive_screen_rects(Badge<ConnectionToWindowServer>, const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index, unsigned workspace_rows, unsigned workspace_columns)
+void Desktop::did_receive_screen_rects(Badge<ConnectionToWindowServer>, Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index, unsigned workspace_rows, unsigned workspace_columns)
 {
     m_main_screen_index = main_screen_index;
     m_rects = rects;

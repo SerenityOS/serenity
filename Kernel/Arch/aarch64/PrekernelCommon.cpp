@@ -11,7 +11,7 @@
 
 namespace Prekernel {
 
-[[noreturn]] void panic(const char* msg)
+[[noreturn]] void panic(char const* msg)
 {
     auto& uart = Prekernel::UART::the();
 

@@ -78,13 +78,13 @@ void InitialContainingBlock::recompute_selection_states()
     });
 }
 
-void InitialContainingBlock::set_selection(const LayoutRange& selection)
+void InitialContainingBlock::set_selection(LayoutRange const& selection)
 {
     m_selection = selection;
     recompute_selection_states();
 }
 
-void InitialContainingBlock::set_selection_end(const LayoutPosition& position)
+void InitialContainingBlock::set_selection_end(LayoutPosition const& position)
 {
     m_selection.set_end(position);
     recompute_selection_states();

@@ -44,7 +44,7 @@ static __thread int s_cached_tid = 0;
 static int s_cached_pid = 0;
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/lchown.html
-int lchown(const char* pathname, uid_t uid, gid_t gid)
+int lchown(char const* pathname, uid_t uid, gid_t gid)
 {
     if (!pathname) {
         errno = EFAULT;
@@ -56,7 +56,7 @@ int lchown(const char* pathname, uid_t uid, gid_t gid)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/chown.html
-int chown(const char* pathname, uid_t uid, gid_t gid)
+int chown(char const* pathname, uid_t uid, gid_t gid)
 {
     if (!pathname) {
         errno = EFAULT;
@@ -74,7 +74,7 @@ int fchown(int fd, uid_t uid, gid_t gid)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int fchownat(int fd, const char* pathname, uid_t uid, gid_t gid, int flags)
+int fchownat(int fd, char const* pathname, uid_t uid, gid_t gid, int flags)
 {
     if (!pathname) {
         errno = EFAULT;
@@ -141,13 +141,13 @@ int daemon(int nochdir, int noclose)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/execv.html
-int execv(const char* path, char* const argv[])
+int execv(char const* path, char* const argv[])
 {
     return execve(path, argv, environ);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/execve.html
-int execve(const char* filename, char* const argv[], char* const envp[])
+int execve(char const* filename, char* const argv[], char* const envp[])
 {
     size_t arg_count = 0;
     for (size_t i = 0; argv[i]; ++i)
@@ -177,7 +177,7 @@ int execve(const char* filename, char* const argv[], char* const envp[])
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int execvpe(const char* filename, char* const argv[], char* const envp[])
+int execvpe(char const* filename, char* const argv[], char* const envp[])
 {
     if (strchr(filename, '/'))
         return execve(filename, argv, envp);
@@ -202,7 +202,7 @@ int execvpe(const char* filename, char* const argv[], char* const envp[])
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/execvp.html
-int execvp(const char* filename, char* const argv[])
+int execvp(char const* filename, char* const argv[])
 {
     int rc = execvpe(filename, argv, environ);
     int saved_errno = errno;
@@ -212,15 +212,15 @@ int execvp(const char* filename, char* const argv[])
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/execl.html
-int execl(const char* filename, const char* arg0, ...)
+int execl(char const* filename, char const* arg0, ...)
 {
-    Vector<const char*, 16> args;
+    Vector<char const*, 16> args;
     args.append(arg0);
 
     va_list ap;
     va_start(ap, arg0);
     for (;;) {
-        const char* arg = va_arg(ap, const char*);
+        char const* arg = va_arg(ap, char const*);
         if (!arg)
             break;
         args.append(arg);
@@ -252,15 +252,15 @@ int execle(char const* filename, char const* arg0, ...)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/execlp.html
-int execlp(const char* filename, const char* arg0, ...)
+int execlp(char const* filename, char const* arg0, ...)
 {
-    Vector<const char*, 16> args;
+    Vector<char const*, 16> args;
     args.append(arg0);
 
     va_list ap;
     va_start(ap, arg0);
     for (;;) {
-        const char* arg = va_arg(ap, const char*);
+        char const* arg = va_arg(ap, char const*);
         if (!arg)
             break;
         args.append(arg);
@@ -386,14 +386,14 @@ ssize_t pread(int fd, void* buf, size_t count, off_t offset)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/write.html
-ssize_t write(int fd, const void* buf, size_t count)
+ssize_t write(int fd, void const* buf, size_t count)
 {
     int rc = syscall(SC_write, fd, buf, count);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/pwrite.html
-ssize_t pwrite(int fd, const void* buf, size_t count, off_t offset)
+ssize_t pwrite(int fd, void const* buf, size_t count, off_t offset)
 {
     // FIXME: This is not thread safe and should be implemented in the kernel instead.
     off_t old_offset = lseek(fd, 0, SEEK_CUR);
@@ -404,7 +404,7 @@ ssize_t pwrite(int fd, const void* buf, size_t count, off_t offset)
 }
 
 // Note: Be sure to send to directory_name parameter a directory name ended with trailing slash.
-static int ttyname_r_for_directory(const char* directory_name, dev_t device_mode, ino_t inode_number, char* buffer, size_t size)
+static int ttyname_r_for_directory(char const* directory_name, dev_t device_mode, ino_t inode_number, char* buffer, size_t size)
 {
     DIR* dirstream = opendir(directory_name);
     if (!dirstream) {
@@ -489,7 +489,7 @@ int close(int fd)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/chdir.html
-int chdir(const char* path)
+int chdir(char const* path)
 {
     if (!path) {
         errno = EFAULT;
@@ -608,14 +608,14 @@ int gethostname(char* buffer, size_t size)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int sethostname(const char* hostname, ssize_t size)
+int sethostname(char const* hostname, ssize_t size)
 {
     int rc = syscall(SC_sethostname, hostname, size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/readlink.html
-ssize_t readlink(const char* path, char* buffer, size_t size)
+ssize_t readlink(char const* path, char* buffer, size_t size)
 {
     Syscall::SC_readlink_params params { { path, strlen(path) }, { buffer, size } };
     int rc = syscall(SC_readlink, &params);
@@ -630,7 +630,7 @@ off_t lseek(int fd, off_t offset, int whence)
     __RETURN_WITH_ERRNO(rc, offset, -1);
 }
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/link.html
-int link(const char* old_path, const char* new_path)
+int link(char const* old_path, char const* new_path)
 {
     if (!old_path || !new_path) {
         errno = EFAULT;
@@ -642,14 +642,14 @@ int link(const char* old_path, const char* new_path)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/unlink.html
-int unlink(const char* pathname)
+int unlink(char const* pathname)
 {
     int rc = syscall(SC_unlink, pathname, strlen(pathname));
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/symlink.html
-int symlink(const char* target, const char* linkpath)
+int symlink(char const* target, char const* linkpath)
 {
     if (!target || !linkpath) {
         errno = EFAULT;
@@ -661,7 +661,7 @@ int symlink(const char* target, const char* linkpath)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/rmdir.html
-int rmdir(const char* pathname)
+int rmdir(char const* pathname)
 {
     if (!pathname) {
         errno = EFAULT;
@@ -690,7 +690,7 @@ int dup2(int old_fd, int new_fd)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int setgroups(size_t size, const gid_t* list)
+int setgroups(size_t size, gid_t const* list)
 {
     int rc = syscall(SC_setgroups, size, list);
     __RETURN_WITH_ERRNO(rc, rc, -1);
@@ -763,7 +763,7 @@ int setresgid(gid_t rgid, gid_t egid, gid_t sgid)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/access.html
-int access(const char* pathname, int mode)
+int access(char const* pathname, int mode)
 {
     if (!pathname) {
         errno = EFAULT;
@@ -774,7 +774,7 @@ int access(const char* pathname, int mode)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mknod.html
-int mknod(const char* pathname, mode_t mode, dev_t dev)
+int mknod(char const* pathname, mode_t mode, dev_t dev)
 {
     if (!pathname) {
         errno = EFAULT;
@@ -803,7 +803,7 @@ long fpathconf([[maybe_unused]] int fd, int name)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/pathconf.html
-long pathconf([[maybe_unused]] const char* path, int name)
+long pathconf([[maybe_unused]] char const* path, int name)
 {
     switch (name) {
     case _PC_NAME_MAX:
@@ -853,7 +853,7 @@ int ftruncate(int fd, off_t length)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/truncate.html
-int truncate(const char* path, off_t length)
+int truncate(char const* path, off_t length)
 {
     int fd = open(path, O_RDWR | O_CREAT, 0666);
     if (fd < 0)
@@ -889,7 +889,7 @@ int fsync(int fd)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int mount(int source_fd, const char* target, const char* fs_type, int flags)
+int mount(int source_fd, char const* target, char const* fs_type, int flags)
 {
     if (!target || !fs_type) {
         errno = EFAULT;
@@ -906,7 +906,7 @@ int mount(int source_fd, const char* target, const char* fs_type, int flags)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int umount(const char* mountpoint)
+int umount(char const* mountpoint)
 {
     int rc = syscall(SC_umount, mountpoint, strlen(mountpoint));
     __RETURN_WITH_ERRNO(rc, rc, -1);
@@ -923,13 +923,13 @@ int get_process_name(char* buffer, int buffer_size)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int set_process_name(const char* name, size_t name_length)
+int set_process_name(char const* name, size_t name_length)
 {
     int rc = syscall(SC_set_process_name, name, name_length);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int pledge(const char* promises, const char* execpromises)
+int pledge(char const* promises, char const* execpromises)
 {
     Syscall::SC_pledge_params params {
         { promises, promises ? strlen(promises) : 0 },
@@ -939,7 +939,7 @@ int pledge(const char* promises, const char* execpromises)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int unveil(const char* path, const char* permissions)
+int unveil(char const* path, char const* permissions)
 {
     Syscall::SC_unveil_params params {
         { path, path ? strlen(path) : 0 },
@@ -950,7 +950,7 @@ int unveil(const char* path, const char* permissions)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/getpass.html
-char* getpass(const char* prompt)
+char* getpass(char const* prompt)
 {
     dbgln("FIXME: getpass('{}')", prompt);
     TODO();
@@ -976,7 +976,7 @@ int pause()
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/chroot.html
-int chroot(const char* path)
+int chroot(char const* path)
 {
     dbgln("FIXME: chroot(\"{}\")", path);
     return -1;

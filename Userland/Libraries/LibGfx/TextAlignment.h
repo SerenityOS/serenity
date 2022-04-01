@@ -62,7 +62,7 @@ inline Optional<TextAlignment> text_alignment_from_string(StringView string)
     return {};
 }
 
-inline const char* to_string(TextAlignment text_alignment)
+inline char const* to_string(TextAlignment text_alignment)
 {
 #define __ENUMERATE(x)                      \
     if (text_alignment == TextAlignment::x) \

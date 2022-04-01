@@ -68,7 +68,7 @@ public:
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const { VERIFY_NOT_REACHED(); }
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView) { VERIFY_NOT_REACHED(); };
-    virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*) { return EROFS; }
+    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) { return EROFS; }
     virtual ErrorOr<void> truncate(u64) { return EPERM; }
     virtual ErrorOr<void> set_mtime(time_t) { return ENOTIMPL; }
 
@@ -83,7 +83,7 @@ public:
         return {};
     }
 
-    virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const;
+    virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const;
 
     virtual InodeIndex component_index() const { return m_component_index; }
 
@@ -106,7 +106,7 @@ class ProcFSExposedDirectory
 public:
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView name) override;
-    void add_component(const ProcFSExposedComponent&);
+    void add_component(ProcFSExposedComponent const&);
 
     virtual void prepare_for_deletion() override
     {
@@ -116,18 +116,18 @@ public:
     }
     virtual mode_t required_mode() const override { return 0555; }
 
-    virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override final;
+    virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const override final;
 
 protected:
     explicit ProcFSExposedDirectory(StringView name);
-    ProcFSExposedDirectory(StringView name, const ProcFSExposedDirectory& parent_directory);
+    ProcFSExposedDirectory(StringView name, ProcFSExposedDirectory const& parent_directory);
     NonnullRefPtrVector<ProcFSExposedComponent> m_components;
     WeakPtr<ProcFSExposedDirectory> m_parent_directory;
 };
 
 class ProcFSExposedLink : public ProcFSExposedComponent {
 public:
-    virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override final;
+    virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const override final;
 
     virtual ErrorOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription* description) const override;
 
@@ -195,7 +195,7 @@ private:
     virtual ErrorOr<void> try_generate(KBufferBuilder&) override final;
 
     // ^ProcFSExposedComponent
-    virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*) override final;
+    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override final;
     virtual mode_t required_mode() const override final { return 0644; }
     virtual ErrorOr<void> truncate(u64) override final;
     virtual ErrorOr<void> set_mtime(time_t) override final;

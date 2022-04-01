@@ -127,7 +127,7 @@ u32* KeyboardMapperWidget::map_from_name(const StringView map_name)
     return map;
 }
 
-ErrorOr<void> KeyboardMapperWidget::load_map_from_file(const String& filename)
+ErrorOr<void> KeyboardMapperWidget::load_map_from_file(String const& filename)
 {
     auto character_map = TRY(Keyboard::CharacterMapFile::load_from_file(filename));
 

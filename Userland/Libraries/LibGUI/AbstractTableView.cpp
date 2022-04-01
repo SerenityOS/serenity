@@ -219,7 +219,7 @@ void AbstractTableView::mousedown_event(MouseEvent& event)
     AbstractView::mousedown_event(event);
 }
 
-ModelIndex AbstractTableView::index_at_event_position(const Gfx::IntPoint& position, bool& is_toggle) const
+ModelIndex AbstractTableView::index_at_event_position(Gfx::IntPoint const& position, bool& is_toggle) const
 {
     is_toggle = false;
     if (!model())
@@ -239,7 +239,7 @@ ModelIndex AbstractTableView::index_at_event_position(const Gfx::IntPoint& posit
     return {};
 }
 
-ModelIndex AbstractTableView::index_at_event_position(const Gfx::IntPoint& position) const
+ModelIndex AbstractTableView::index_at_event_position(Gfx::IntPoint const& position) const
 {
     bool is_toggle;
     auto index = index_at_event_position(position, is_toggle);
@@ -269,7 +269,7 @@ void AbstractTableView::move_cursor_relative(int vertical_steps, int horizontal_
     }
 }
 
-void AbstractTableView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
+void AbstractTableView::scroll_into_view(ModelIndex const& index, bool scroll_horizontally, bool scroll_vertically)
 {
     Gfx::IntRect rect;
     switch (selection_behavior()) {
@@ -321,12 +321,12 @@ Gfx::IntRect AbstractTableView::content_rect(int row, int column) const
     return { row_rect.x() + x, row_rect.y(), column_width(column) + horizontal_padding() * 2, row_height() };
 }
 
-Gfx::IntRect AbstractTableView::content_rect(const ModelIndex& index) const
+Gfx::IntRect AbstractTableView::content_rect(ModelIndex const& index) const
 {
     return content_rect(index.row(), index.column());
 }
 
-Gfx::IntRect AbstractTableView::content_rect_minus_scrollbars(const ModelIndex& index) const
+Gfx::IntRect AbstractTableView::content_rect_minus_scrollbars(ModelIndex const& index) const
 {
     auto naive_content_rect = content_rect(index.row(), index.column());
     return { naive_content_rect.x() - horizontal_scrollbar().value(), naive_content_rect.y() - vertical_scrollbar().value(), naive_content_rect.width(), naive_content_rect.height() };
@@ -340,7 +340,7 @@ Gfx::IntRect AbstractTableView::row_rect(int item_index) const
         row_height() };
 }
 
-Gfx::IntPoint AbstractTableView::adjusted_position(const Gfx::IntPoint& position) const
+Gfx::IntPoint AbstractTableView::adjusted_position(Gfx::IntPoint const& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
@@ -469,7 +469,7 @@ bool AbstractTableView::is_navigation(GUI::KeyEvent& event)
     }
 }
 
-Gfx::IntPoint AbstractTableView::automatic_scroll_delta_from_position(const Gfx::IntPoint& pos) const
+Gfx::IntPoint AbstractTableView::automatic_scroll_delta_from_position(Gfx::IntPoint const& pos) const
 {
     if (pos.y() > column_header().height() + autoscroll_threshold())
         return AbstractScrollableWidget::automatic_scroll_delta_from_position(pos);

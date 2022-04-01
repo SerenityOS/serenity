@@ -39,7 +39,7 @@ FrameLoader::FrameLoader(HTML::BrowsingContext& browsing_context)
 
 FrameLoader::~FrameLoader() = default;
 
-static bool build_markdown_document(DOM::Document& document, const ByteBuffer& data)
+static bool build_markdown_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto markdown_document = Markdown::Document::parse(data);
     if (!markdown_document)
@@ -50,7 +50,7 @@ static bool build_markdown_document(DOM::Document& document, const ByteBuffer& d
     return true;
 }
 
-static bool build_text_document(DOM::Document& document, const ByteBuffer& data)
+static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto html_element = document.create_element("html").release_value();
     document.append_child(html_element);
@@ -106,7 +106,7 @@ static bool build_image_document(DOM::Document& document, ByteBuffer const& data
     return true;
 }
 
-static bool build_gemini_document(DOM::Document& document, const ByteBuffer& data)
+static bool build_gemini_document(DOM::Document& document, ByteBuffer const& data)
 {
     StringView gemini_data { data };
     auto gemini_document = Gemini::Document::parse(gemini_data, document.url());
@@ -120,7 +120,7 @@ static bool build_gemini_document(DOM::Document& document, const ByteBuffer& dat
     return true;
 }
 
-static bool build_xml_document(DOM::Document& document, const ByteBuffer& data)
+static bool build_xml_document(DOM::Document& document, ByteBuffer const& data)
 {
 
     XML::Parser parser(data, { .resolve_external_resource = resolve_xml_resource });
@@ -129,7 +129,7 @@ static bool build_xml_document(DOM::Document& document, const ByteBuffer& data)
     return !result.is_error() && !builder.has_error();
 }
 
-bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data)
+bool FrameLoader::parse_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto& mime_type = document.content_type();
     if (mime_type == "text/html" || mime_type == "image/svg+xml") {
@@ -244,7 +244,7 @@ void FrameLoader::load_html(StringView html, const AK::URL& url)
 // FIXME: Use an actual templating engine (our own one when it's built, preferably
 // with a way to check these usages at compile time)
 
-void FrameLoader::load_error_page(const AK::URL& failed_url, const String& error)
+void FrameLoader::load_error_page(const AK::URL& failed_url, String const& error)
 {
     auto error_page_url = "file:///res/html/error.html";
     ResourceLoader::the().load(
@@ -285,7 +285,7 @@ void FrameLoader::store_response_cookies(AK::URL const& url, String const& cooki
     auto set_cookie_json_value = MUST(JsonValue::from_string(cookies));
     VERIFY(set_cookie_json_value.type() == JsonValue::Type::Array);
 
-    for (const auto& set_cookie_entry : set_cookie_json_value.as_array().values()) {
+    for (auto const& set_cookie_entry : set_cookie_json_value.as_array().values()) {
         VERIFY(set_cookie_entry.type() == JsonValue::Type::String);
 
         auto cookie = Cookie::parse_cookie(set_cookie_entry.as_string());

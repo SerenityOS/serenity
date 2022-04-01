@@ -17,7 +17,7 @@ NumericCell::NumericCell()
 {
 }
 
-JS::ThrowCompletionOr<String> NumericCell::display(Cell& cell, const CellTypeMetadata& metadata) const
+JS::ThrowCompletionOr<String> NumericCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
     return propagate_failure(cell, [&]() -> JS::ThrowCompletionOr<String> {
         auto value = TRY(js_value(cell, metadata));
@@ -34,7 +34,7 @@ JS::ThrowCompletionOr<String> NumericCell::display(Cell& cell, const CellTypeMet
     });
 }
 
-JS::ThrowCompletionOr<JS::Value> NumericCell::js_value(Cell& cell, const CellTypeMetadata&) const
+JS::ThrowCompletionOr<JS::Value> NumericCell::js_value(Cell& cell, CellTypeMetadata const&) const
 {
     return propagate_failure(cell, [&]() {
         return cell.js_data().to_number(cell.sheet().global_object());

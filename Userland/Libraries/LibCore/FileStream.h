@@ -40,7 +40,7 @@ public:
         if (has_any_error())
             return 0;
 
-        const auto buffer = m_file->read(bytes.size());
+        auto const buffer = m_file->read(bytes.size());
         return buffer.bytes().copy_to(bytes);
     }
 

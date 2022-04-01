@@ -14,7 +14,7 @@
 #include <string.h>
 #include <unistd.h>
 
-int head(const String& filename, bool print_filename, ssize_t line_count, ssize_t byte_count);
+int head(String const& filename, bool print_filename, ssize_t line_count, ssize_t byte_count);
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     int byte_count = -1;
     bool never_print_filenames = false;
     bool always_print_filenames = false;
-    Vector<const char*> files;
+    Vector<char const*> files;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print the beginning ('head') of a file.");
@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     return rc;
 }
 
-int head(const String& filename, bool print_filename, ssize_t line_count, ssize_t byte_count)
+int head(String const& filename, bool print_filename, ssize_t line_count, ssize_t byte_count)
 {
     bool is_stdin = false;
     int fd = -1;
@@ -114,7 +114,7 @@ int head(const String& filename, bool print_filename, ssize_t line_count, ssize_
             // Count line breaks.
             ntowrite = 0;
             while (line_count) {
-                const char* newline = strchr(buffer + ntowrite, '\n');
+                char const* newline = strchr(buffer + ntowrite, '\n');
                 if (newline) {
                     // Found another line break, include this line.
                     ntowrite = newline - buffer + 1;

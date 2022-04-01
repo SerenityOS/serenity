@@ -125,8 +125,8 @@ public:
 
 private:
     const String m_executable_path;
-    const Vector<StringView> m_arguments;
-    const Vector<String> m_environment;
+    Vector<StringView> const m_arguments;
+    Vector<String> const m_environment;
 
     SoftMMU m_mmu;
     NonnullOwnPtr<SoftCPU> m_cpu;

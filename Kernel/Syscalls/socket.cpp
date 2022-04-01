@@ -48,7 +48,7 @@ ErrorOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
     });
 }
 
-ErrorOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<const sockaddr*> address, socklen_t address_length)
+ErrorOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<sockaddr const*> address, socklen_t address_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
@@ -80,7 +80,7 @@ ErrorOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
     });
 }
 
-ErrorOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::accept));
@@ -93,7 +93,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_params
 
     socklen_t address_size = 0;
     if (user_address) {
-        TRY(copy_from_user(&address_size, static_ptr_cast<const socklen_t*>(user_address_size)));
+        TRY(copy_from_user(&address_size, static_ptr_cast<socklen_t const*>(user_address_size)));
     }
 
     ScopedDescriptionAllocation fd_allocation;
@@ -148,7 +148,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_params
     return fd_allocation.fd;
 }
 
-ErrorOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<const sockaddr*> user_address, socklen_t user_address_size)
+ErrorOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<sockaddr const*> user_address, socklen_t user_address_size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
 
@@ -190,7 +190,7 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
     if (iovs[0].iov_len > NumericLimits<ssize_t>::max())
         return EINVAL;
 
-    Userspace<const sockaddr*> user_addr((FlatPtr)msg.msg_name);
+    Userspace<sockaddr const*> user_addr((FlatPtr)msg.msg_name);
     socklen_t addr_length = msg.msg_namelen;
 
     auto description = TRY(open_file_description(sockfd));
@@ -286,7 +286,7 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
 }
 
 template<bool sockname, typename Params>
-ErrorOr<void> Process::get_sock_or_peer_name(const Params& params)
+ErrorOr<void> Process::get_sock_or_peer_name(Params const& params)
 {
     socklen_t addrlen_value;
     TRY(copy_from_user(&addrlen_value, params.addrlen, sizeof(socklen_t)));
@@ -311,7 +311,7 @@ ErrorOr<void> Process::get_sock_or_peer_name(const Params& params)
     return copy_to_user(params.addrlen, &addrlen_value);
 }
 
-ErrorOr<FlatPtr> Process::sys$getsockname(Userspace<const Syscall::SC_getsockname_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$getsockname(Userspace<Syscall::SC_getsockname_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto params = TRY(copy_typed_from_user(user_params));
@@ -319,7 +319,7 @@ ErrorOr<FlatPtr> Process::sys$getsockname(Userspace<const Syscall::SC_getsocknam
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$getpeername(Userspace<const Syscall::SC_getpeername_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$getpeername(Userspace<Syscall::SC_getpeername_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto params = TRY(copy_typed_from_user(user_params));
@@ -327,7 +327,7 @@ ErrorOr<FlatPtr> Process::sys$getpeername(Userspace<const Syscall::SC_getpeernam
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$getsockopt(Userspace<const Syscall::SC_getsockopt_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$getsockopt(Userspace<Syscall::SC_getsockopt_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto params = TRY(copy_typed_from_user(user_params));
@@ -350,12 +350,12 @@ ErrorOr<FlatPtr> Process::sys$getsockopt(Userspace<const Syscall::SC_getsockopt_
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$setsockopt(Userspace<Syscall::SC_setsockopt_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto params = TRY(copy_typed_from_user(user_params));
 
-    Userspace<const void*> user_value((FlatPtr)params.value);
+    Userspace<void const*> user_value((FlatPtr)params.value);
     auto description = TRY(open_file_description(params.sockfd));
     if (!description->is_socket())
         return ENOTSOCK;
@@ -365,7 +365,7 @@ ErrorOr<FlatPtr> Process::sys$setsockopt(Userspace<const Syscall::SC_setsockopt_
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$socketpair(Userspace<const Syscall::SC_socketpair_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$socketpair(Userspace<Syscall::SC_socketpair_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto params = TRY(copy_typed_from_user(user_params));

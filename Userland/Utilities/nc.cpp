@@ -50,7 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool verbose = false;
     bool should_close = false;
     bool udp_mode = false;
-    const char* target = nullptr;
+    char const* target = nullptr;
     int port = 0;
     int maximum_tcp_receive_buffer_size_input = -1;
 
@@ -135,7 +135,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         sockaddr_in dst_addr {};
         dst_addr.sin_family = AF_INET;
         dst_addr.sin_port = htons(port);
-        dst_addr.sin_addr.s_addr = *(const in_addr_t*)hostent->h_addr_list[0];
+        dst_addr.sin_addr.s_addr = *(in_addr_t const*)hostent->h_addr_list[0];
 
         if (verbose) {
             char addr_str[INET_ADDRSTRLEN];

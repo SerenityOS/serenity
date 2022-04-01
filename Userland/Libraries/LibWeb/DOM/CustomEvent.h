@@ -23,7 +23,7 @@ public:
     {
         return adopt_ref(*new CustomEvent(event_name, event_init));
     }
-    static NonnullRefPtr<CustomEvent> create_with_global_object(Bindings::WindowObject&, const FlyString& event_name, CustomEventInit const& event_init)
+    static NonnullRefPtr<CustomEvent> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, CustomEventInit const& event_init)
     {
         return CustomEvent::create(event_name, event_init);
     }

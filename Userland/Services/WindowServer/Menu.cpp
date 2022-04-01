@@ -47,7 +47,7 @@ Menu::Menu(ConnectionFromClient* client, int menu_id, String name)
     m_alt_shortcut_character = find_ampersand_shortcut_character(m_name);
 }
 
-const Gfx::Font& Menu::font() const
+Gfx::Font const& Menu::font() const
 {
     return Gfx::FontDatabase::default_font();
 }
@@ -332,7 +332,7 @@ void Menu::descend_into_submenu_at_hovered_item()
     VERIFY(submenu->hovered_item()->type() != MenuItem::Separator);
 }
 
-void Menu::handle_mouse_move_event(const MouseEvent& mouse_event)
+void Menu::handle_mouse_move_event(MouseEvent const& mouse_event)
 {
     VERIFY(menu_window());
     MenuManager::the().set_current_menu(this);
@@ -357,7 +357,7 @@ void Menu::handle_mouse_move_event(const MouseEvent& mouse_event)
 void Menu::event(Core::Event& event)
 {
     if (event.type() == Event::MouseMove) {
-        handle_mouse_move_event(static_cast<const MouseEvent&>(event));
+        handle_mouse_move_event(static_cast<MouseEvent const&>(event));
         return;
     }
 
@@ -368,7 +368,7 @@ void Menu::event(Core::Event& event)
 
     if (event.type() == Event::MouseWheel && is_scrollable()) {
         VERIFY(menu_window());
-        auto& mouse_event = static_cast<const MouseEvent&>(event);
+        auto& mouse_event = static_cast<MouseEvent const&>(event);
         auto previous_scroll_offset = m_scroll_offset;
         m_scroll_offset += mouse_event.wheel_delta_y();
         m_scroll_offset = clamp(m_scroll_offset, 0, m_max_scroll_offset);
@@ -402,7 +402,7 @@ void Menu::event(Core::Event& event)
             } else {
                 // Default to the first enabled, non-separator item on key press if one has not been selected yet
                 int counter = 0;
-                for (const auto& item : m_items) {
+                for (auto const& item : m_items) {
                     if (item.type() != MenuItem::Separator && item.is_enabled()) {
                         set_hovered_index(counter, key == Key_Right);
                         break;
@@ -567,7 +567,7 @@ bool Menu::remove_item_with_identifier(unsigned identifier)
     return m_items.remove_first_matching([&](auto& item) { return item->identifier() == identifier; });
 }
 
-int Menu::item_index_at(const Gfx::IntPoint& position)
+int Menu::item_index_at(Gfx::IntPoint const& position)
 {
     int i = 0;
     for (auto& item : m_items) {
@@ -589,12 +589,12 @@ void Menu::redraw_if_theme_changed()
         redraw();
 }
 
-void Menu::popup(const Gfx::IntPoint& position)
+void Menu::popup(Gfx::IntPoint const& position)
 {
     do_popup(position, true);
 }
 
-void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_submenu)
+void Menu::do_popup(Gfx::IntPoint const& position, bool make_input, bool as_submenu)
 {
     if (is_empty()) {
         dbgln("Menu: Empty menu popup");
@@ -605,7 +605,7 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_subm
     auto& window = ensure_menu_window(position);
     redraw_if_theme_changed();
 
-    const int margin = 30;
+    int const margin = 30;
     Gfx::IntPoint adjusted_pos = position;
 
     if (adjusted_pos.x() + window.width() > screen.rect().right() - margin) {
@@ -624,7 +624,7 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_subm
     WindowManager::the().did_popup_a_menu({});
 }
 
-bool Menu::is_menu_ancestor_of(const Menu& other) const
+bool Menu::is_menu_ancestor_of(Menu const& other) const
 {
     for (auto& item : m_items) {
         if (!item.is_submenu())
@@ -657,7 +657,7 @@ void Menu::add_item(NonnullOwnPtr<MenuItem> item)
     m_items.append(move(item));
 }
 
-const Vector<size_t>* Menu::items_with_alt_shortcut(u32 alt_shortcut) const
+Vector<size_t> const* Menu::items_with_alt_shortcut(u32 alt_shortcut) const
 {
     auto it = m_alt_shortcut_character_to_item_indices.find(to_ascii_lowercase(alt_shortcut));
     if (it == m_alt_shortcut_character_to_item_indices.end())

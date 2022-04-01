@@ -21,7 +21,7 @@ class NativeFunction : public FunctionObject {
 
 public:
     static NativeFunction* create(GlobalObject&, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
-    static NativeFunction* create(GlobalObject&, const FlyString& name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>);
+    static NativeFunction* create(GlobalObject&, FlyString const& name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>);
 
     NativeFunction(GlobalObject&, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>, Object* prototype, Realm& realm);
     NativeFunction(FlyString name, Function<ThrowCompletionOr<Value>(VM&, GlobalObject&)>, Object& prototype);
@@ -36,7 +36,7 @@ public:
     virtual ThrowCompletionOr<Value> call();
     virtual ThrowCompletionOr<Object*> construct(FunctionObject& new_target);
 
-    virtual const FlyString& name() const override { return m_name; };
+    virtual FlyString const& name() const override { return m_name; };
     virtual bool is_strict_mode() const override;
     virtual bool has_constructor() const override { return false; }
     virtual Realm* realm() const override { return m_realm; }

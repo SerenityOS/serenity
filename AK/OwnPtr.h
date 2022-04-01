@@ -47,29 +47,29 @@ public:
 #endif
     }
 
-    OwnPtr(const OwnPtr&) = delete;
+    OwnPtr(OwnPtr const&) = delete;
     template<typename U>
-    OwnPtr(const OwnPtr<U>&) = delete;
-    OwnPtr& operator=(const OwnPtr&) = delete;
+    OwnPtr(OwnPtr<U> const&) = delete;
+    OwnPtr& operator=(OwnPtr const&) = delete;
     template<typename U>
-    OwnPtr& operator=(const OwnPtr<U>&) = delete;
+    OwnPtr& operator=(OwnPtr<U> const&) = delete;
 
     template<typename U>
-    OwnPtr(const NonnullOwnPtr<U>&) = delete;
+    OwnPtr(NonnullOwnPtr<U> const&) = delete;
     template<typename U>
-    OwnPtr& operator=(const NonnullOwnPtr<U>&) = delete;
+    OwnPtr& operator=(NonnullOwnPtr<U> const&) = delete;
     template<typename U>
-    OwnPtr(const RefPtr<U>&) = delete;
+    OwnPtr(RefPtr<U> const&) = delete;
     template<typename U>
-    OwnPtr(const NonnullRefPtr<U>&) = delete;
+    OwnPtr(NonnullRefPtr<U> const&) = delete;
     template<typename U>
-    OwnPtr(const WeakPtr<U>&) = delete;
+    OwnPtr(WeakPtr<U> const&) = delete;
     template<typename U>
-    OwnPtr& operator=(const RefPtr<U>&) = delete;
+    OwnPtr& operator=(RefPtr<U> const&) = delete;
     template<typename U>
-    OwnPtr& operator=(const NonnullRefPtr<U>&) = delete;
+    OwnPtr& operator=(NonnullRefPtr<U> const&) = delete;
     template<typename U>
-    OwnPtr& operator=(const WeakPtr<U>&) = delete;
+    OwnPtr& operator=(WeakPtr<U> const&) = delete;
 
     OwnPtr& operator=(OwnPtr&& other)
     {
@@ -232,8 +232,8 @@ template<typename T>
 struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
     using PeekType = T*;
     using ConstPeekType = const T*;
-    static unsigned hash(const OwnPtr<T>& p) { return ptr_hash(p.ptr()); }
-    static bool equals(const OwnPtr<T>& a, const OwnPtr<T>& b) { return a.ptr() == b.ptr(); }
+    static unsigned hash(OwnPtr<T> const& p) { return ptr_hash(p.ptr()); }
+    static bool equals(OwnPtr<T> const& a, OwnPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };
 
 }

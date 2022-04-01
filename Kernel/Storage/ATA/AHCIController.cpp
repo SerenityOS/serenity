@@ -51,7 +51,7 @@ size_t AHCIController::devices_count() const
 {
     size_t count = 0;
     for (auto& port_handler : m_handlers) {
-        port_handler.enumerate_ports([&](const AHCIPort& port) {
+        port_handler.enumerate_ports([&](AHCIPort const& port) {
             if (port.connected_device())
                 count++;
         });
@@ -59,7 +59,7 @@ size_t AHCIController::devices_count() const
     return count;
 }
 
-void AHCIController::start_request(const ATADevice& device, AsyncBlockDeviceRequest& request)
+void AHCIController::start_request(ATADevice const& device, AsyncBlockDeviceRequest& request)
 {
     // FIXME: For now we have one port handler, check all of them...
     VERIFY(m_handlers.size() > 0);
@@ -154,7 +154,7 @@ void AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_iden
     PCI::enable_bus_mastering(pci_address());
     enable_global_interrupts();
     m_handlers.append(AHCIPortHandler::create(*this, pci_device_identifier.interrupt_line().value(),
-        AHCI::MaskedBitField((volatile u32&)(hba().control_regs.pi))));
+        AHCI::MaskedBitField((u32 volatile&)(hba().control_regs.pi))));
 }
 
 void AHCIController::disable_global_interrupts() const

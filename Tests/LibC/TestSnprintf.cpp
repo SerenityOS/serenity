@@ -18,16 +18,16 @@
 
 template<typename TArg>
 struct Testcase {
-    const char* dest;
+    char const* dest;
     size_t dest_n;
-    const char* fmt;
+    char const* fmt;
     const TArg arg;
     int expected_return;
-    const char* dest_expected;
+    char const* dest_expected;
     size_t dest_expected_n; // == dest_n
 };
 
-static String show(const ByteBuffer& buf)
+static String show(ByteBuffer const& buf)
 {
     StringBuilder builder;
     for (size_t i = 0; i < buf.size(); ++i) {
@@ -46,7 +46,7 @@ static String show(const ByteBuffer& buf)
 }
 
 template<typename TArg>
-static bool test_single(const Testcase<TArg>& testcase)
+static bool test_single(Testcase<TArg> const& testcase)
 {
     constexpr size_t SANDBOX_CANARY_SIZE = 8;
 
@@ -109,41 +109,41 @@ static bool test_single(const Testcase<TArg>& testcase)
 // Drop the NUL terminator added by the C++ compiler.
 #define LITERAL(x) x, (sizeof(x) - 1)
 
-static const char* const POISON = (const char*)1;
+static char const* const POISON = (char const*)1;
 
 TEST_CASE(golden_path)
 {
-    EXPECT(test_single<const char*>({ LITERAL("Hello World!\0\0\0"), "Hello Friend!", POISON, 13, LITERAL("Hello Friend!\0\0") }));
-    EXPECT(test_single<const char*>({ LITERAL("Hello World!\0\0\0"), "Hello %s!", "Friend", 13, LITERAL("Hello Friend!\0\0") }));
-    EXPECT(test_single<const char*>({ LITERAL("aaaaaaaaaa"), "whf", POISON, 3, LITERAL("whf\0aaaaaa") }));
-    EXPECT(test_single<const char*>({ LITERAL("aaaaaaaaaa"), "w%sf", "h", 3, LITERAL("whf\0aaaaaa") }));
+    EXPECT(test_single<char const*>({ LITERAL("Hello World!\0\0\0"), "Hello Friend!", POISON, 13, LITERAL("Hello Friend!\0\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("Hello World!\0\0\0"), "Hello %s!", "Friend", 13, LITERAL("Hello Friend!\0\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("aaaaaaaaaa"), "whf", POISON, 3, LITERAL("whf\0aaaaaa") }));
+    EXPECT(test_single<char const*>({ LITERAL("aaaaaaaaaa"), "w%sf", "h", 3, LITERAL("whf\0aaaaaa") }));
 }
 
 TEST_CASE(border_cases)
 {
-    EXPECT(test_single<const char*>({ LITERAL("Hello World!\0\0"), "Hello Friend!", POISON, 13, LITERAL("Hello Friend!\0") }));
-    EXPECT(test_single<const char*>({ LITERAL("AAAA"), "whf", POISON, 3, LITERAL("whf\0") }));
-    EXPECT(test_single<const char*>({ LITERAL("AAAA"), "%s", "whf", 3, LITERAL("whf\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("Hello World!\0\0"), "Hello Friend!", POISON, 13, LITERAL("Hello Friend!\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("AAAA"), "whf", POISON, 3, LITERAL("whf\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("AAAA"), "%s", "whf", 3, LITERAL("whf\0") }));
 }
 
 TEST_CASE(too_long)
 {
-    EXPECT(test_single<const char*>({ LITERAL("Hello World!\0"), "Hello Friend!", POISON, 13, LITERAL("Hello Friend\0") }));
-    EXPECT(test_single<const char*>({ LITERAL("Hello World!\0"), "This source is %s too long!", "just *way*", 35, LITERAL("This source \0") }));
-    EXPECT(test_single<const char*>({ LITERAL("x"), "This source is %s too long!", "just *way*", 35, LITERAL("\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("Hello World!\0"), "Hello Friend!", POISON, 13, LITERAL("Hello Friend\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("Hello World!\0"), "This source is %s too long!", "just *way*", 35, LITERAL("This source \0") }));
+    EXPECT(test_single<char const*>({ LITERAL("x"), "This source is %s too long!", "just *way*", 35, LITERAL("\0") }));
 }
 
 TEST_CASE(special_cases)
 {
-    EXPECT(test_single<const char*>({ LITERAL(""), "Hello Friend!", POISON, 13, LITERAL("") }));
+    EXPECT(test_single<char const*>({ LITERAL(""), "Hello Friend!", POISON, 13, LITERAL("") }));
     EXPECT_EQ(snprintf(nullptr, 0, "Hello, friend!"), 14);
-    EXPECT(test_single<const char*>({ LITERAL(""), "", POISON, 0, LITERAL("") }));
-    EXPECT(test_single<const char*>({ LITERAL("x"), "", POISON, 0, LITERAL("\0") }));
-    EXPECT(test_single<const char*>({ LITERAL("xx"), "", POISON, 0, LITERAL("\0x") }));
-    EXPECT(test_single<const char*>({ LITERAL("xxx"), "", POISON, 0, LITERAL("\0xx") }));
-    EXPECT(test_single<const char*>({ LITERAL(""), "whf", POISON, 3, LITERAL("") }));
-    EXPECT(test_single<const char*>({ LITERAL("x"), "whf", POISON, 3, LITERAL("\0") }));
-    EXPECT(test_single<const char*>({ LITERAL("xx"), "whf", POISON, 3, LITERAL("w\0") }));
+    EXPECT(test_single<char const*>({ LITERAL(""), "", POISON, 0, LITERAL("") }));
+    EXPECT(test_single<char const*>({ LITERAL("x"), "", POISON, 0, LITERAL("\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("xx"), "", POISON, 0, LITERAL("\0x") }));
+    EXPECT(test_single<char const*>({ LITERAL("xxx"), "", POISON, 0, LITERAL("\0xx") }));
+    EXPECT(test_single<char const*>({ LITERAL(""), "whf", POISON, 3, LITERAL("") }));
+    EXPECT(test_single<char const*>({ LITERAL("x"), "whf", POISON, 3, LITERAL("\0") }));
+    EXPECT(test_single<char const*>({ LITERAL("xx"), "whf", POISON, 3, LITERAL("w\0") }));
 }
 
 TEST_CASE(octal_values)

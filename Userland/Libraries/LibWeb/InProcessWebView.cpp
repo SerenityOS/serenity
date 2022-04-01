@@ -64,7 +64,7 @@ void InProcessWebView::page_did_layout()
     set_content_size(layout_root()->paint_box()->content_size().to_type<int>());
 }
 
-void InProcessWebView::page_did_change_title(const String& title)
+void InProcessWebView::page_did_change_title(String const& title)
 {
     if (on_title_change)
         on_title_change(title);
@@ -101,19 +101,19 @@ void InProcessWebView::page_did_request_cursor_change(Gfx::StandardCursor cursor
     set_override_cursor(cursor);
 }
 
-void InProcessWebView::page_did_request_context_menu(const Gfx::IntPoint& content_position)
+void InProcessWebView::page_did_request_context_menu(Gfx::IntPoint const& content_position)
 {
     if (on_context_menu_request)
         on_context_menu_request(screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void InProcessWebView::page_did_request_link_context_menu(const Gfx::IntPoint& content_position, const AK::URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers)
+void InProcessWebView::page_did_request_link_context_menu(Gfx::IntPoint const& content_position, const AK::URL& url, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers)
 {
     if (on_link_context_menu_request)
         on_link_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)));
 }
 
-void InProcessWebView::page_did_request_image_context_menu(const Gfx::IntPoint& content_position, const AK::URL& url, [[maybe_unused]] const String& target, [[maybe_unused]] unsigned modifiers, const Gfx::Bitmap* bitmap)
+void InProcessWebView::page_did_request_image_context_menu(Gfx::IntPoint const& content_position, const AK::URL& url, [[maybe_unused]] String const& target, [[maybe_unused]] unsigned modifiers, Gfx::Bitmap const* bitmap)
 {
     if (!on_image_context_menu_request)
         return;
@@ -123,19 +123,19 @@ void InProcessWebView::page_did_request_image_context_menu(const Gfx::IntPoint& 
     on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), move(shareable_bitmap));
 }
 
-void InProcessWebView::page_did_click_link(const AK::URL& url, const String& target, unsigned modifiers)
+void InProcessWebView::page_did_click_link(const AK::URL& url, String const& target, unsigned modifiers)
 {
     if (on_link_click)
         on_link_click(url, target, modifiers);
 }
 
-void InProcessWebView::page_did_middle_click_link(const AK::URL& url, const String& target, unsigned modifiers)
+void InProcessWebView::page_did_middle_click_link(const AK::URL& url, String const& target, unsigned modifiers)
 {
     if (on_link_middle_click)
         on_link_middle_click(url, target, modifiers);
 }
 
-void InProcessWebView::page_did_enter_tooltip_area([[maybe_unused]] const Gfx::IntPoint& content_position, const String& title)
+void InProcessWebView::page_did_enter_tooltip_area([[maybe_unused]] Gfx::IntPoint const& content_position, String const& title)
 {
     GUI::Application::the()->show_tooltip(title, nullptr);
 }
@@ -157,12 +157,12 @@ void InProcessWebView::page_did_unhover_link()
         on_link_hover({});
 }
 
-void InProcessWebView::page_did_invalidate(const Gfx::IntRect&)
+void InProcessWebView::page_did_invalidate(Gfx::IntRect const&)
 {
     update();
 }
 
-void InProcessWebView::page_did_change_favicon(const Gfx::Bitmap& bitmap)
+void InProcessWebView::page_did_change_favicon(Gfx::Bitmap const& bitmap)
 {
     if (on_favicon_change)
         on_favicon_change(bitmap);
@@ -306,7 +306,7 @@ bool InProcessWebView::load(const AK::URL& url)
     return page().top_level_browsing_context().loader().load(url, FrameLoader::Type::Navigation);
 }
 
-const Layout::InitialContainingBlock* InProcessWebView::layout_root() const
+Layout::InitialContainingBlock const* InProcessWebView::layout_root() const
 {
     return document() ? document()->layout_node() : nullptr;
 }
@@ -318,7 +318,7 @@ Layout::InitialContainingBlock* InProcessWebView::layout_root()
     return const_cast<Layout::InitialContainingBlock*>(document()->layout_node());
 }
 
-void InProcessWebView::page_did_request_scroll_into_view(const Gfx::IntRect& rect)
+void InProcessWebView::page_did_request_scroll_into_view(Gfx::IntRect const& rect)
 {
     scroll_into_view(rect, true, true);
     set_override_cursor(Gfx::StandardCursor::None);
@@ -360,18 +360,18 @@ void InProcessWebView::drop_event(GUI::DropEvent& event)
     AbstractScrollableWidget::drop_event(event);
 }
 
-void InProcessWebView::page_did_request_alert(const String& message)
+void InProcessWebView::page_did_request_alert(String const& message)
 {
     GUI::MessageBox::show(window(), message, "Alert", GUI::MessageBox::Type::Information);
 }
 
-bool InProcessWebView::page_did_request_confirm(const String& message)
+bool InProcessWebView::page_did_request_confirm(String const& message)
 {
     auto confirm_result = GUI::MessageBox::show(window(), message, "Confirm", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
     return confirm_result == GUI::Dialog::ExecResult::ExecOK;
 }
 
-String InProcessWebView::page_did_request_prompt(const String& message, const String& default_)
+String InProcessWebView::page_did_request_prompt(String const& message, String const& default_)
 {
     String value { default_ };
     if (GUI::InputBox::show(window(), value, message, "Prompt") == GUI::InputBox::ExecOK)
@@ -386,7 +386,7 @@ String InProcessWebView::page_did_request_cookie(const AK::URL& url, Cookie::Sou
     return {};
 }
 
-void InProcessWebView::page_did_set_cookie(const AK::URL& url, const Cookie::ParsedCookie& cookie, Cookie::Source source)
+void InProcessWebView::page_did_set_cookie(const AK::URL& url, Cookie::ParsedCookie const& cookie, Cookie::Source source)
 {
     if (on_set_cookie)
         on_set_cookie(url, cookie, source);

@@ -15,8 +15,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
-    const char* pid_argument = nullptr;
-    const char* cmd_argument = nullptr;
+    char const* pid_argument = nullptr;
+    char const* cmd_argument = nullptr;
     bool wait = false;
     bool free = false;
     bool enable = false;
@@ -108,7 +108,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto cmd_parts = String(cmd_argument).split(' ');
-    Vector<const char*> cmd_argv;
+    Vector<char const*> cmd_argv;
 
     for (auto& part : cmd_parts)
         cmd_argv.append(part.characters());

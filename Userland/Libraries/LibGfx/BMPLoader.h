@@ -15,7 +15,7 @@ struct BMPLoadingContext;
 class BMPImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     virtual ~BMPImageDecoderPlugin() override;
-    BMPImageDecoderPlugin(const u8*, size_t);
+    BMPImageDecoderPlugin(u8 const*, size_t);
 
     virtual IntSize size() override;
     virtual void set_volatile() override;

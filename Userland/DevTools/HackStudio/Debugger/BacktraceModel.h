@@ -43,7 +43,7 @@ public:
         Optional<Debug::DebugInfo::SourcePosition> m_source_position;
     };
 
-    const Vector<FrameInfo>& frames() const { return m_frames; }
+    Vector<FrameInfo> const& frames() const { return m_frames; }
 
 private:
     explicit BacktraceModel(Vector<FrameInfo>&& frames)

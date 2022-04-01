@@ -180,7 +180,7 @@ static ErrorOr<RequiredLoadRange> get_required_load_range(OpenFileDescription& p
     }
 
     RequiredLoadRange range {};
-    elf_image.for_each_program_header([&range](const auto& pheader) {
+    elf_image.for_each_program_header([&range](auto const& pheader) {
         if (pheader.type() != PT_LOAD)
             return;
 
@@ -833,7 +833,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KSt
     return do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header);
 }
 
-ErrorOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::exec));
@@ -858,7 +858,7 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*>
 
         auto path = TRY(get_syscall_path_argument(params.path));
 
-        auto copy_user_strings = [](const auto& list, auto& output) -> ErrorOr<void> {
+        auto copy_user_strings = [](auto const& list, auto& output) -> ErrorOr<void> {
             if (!list.length)
                 return {};
             Checked<size_t> size = sizeof(*list.strings);

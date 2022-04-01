@@ -22,7 +22,7 @@ Utf8CodePointIterator Utf8View::iterator_at_byte_offset(size_t byte_offset) cons
     return end();
 }
 
-size_t Utf8View::byte_offset_of(const Utf8CodePointIterator& it) const
+size_t Utf8View::byte_offset_of(Utf8CodePointIterator const& it) const
 {
     VERIFY(it.m_ptr >= begin_ptr());
     VERIFY(it.m_ptr <= end_ptr());
@@ -129,7 +129,7 @@ size_t Utf8View::calculate_length() const
     return length;
 }
 
-bool Utf8View::starts_with(const Utf8View& start) const
+bool Utf8View::starts_with(Utf8View const& start) const
 {
     if (start.is_empty())
         return true;
@@ -156,7 +156,7 @@ bool Utf8View::contains(u32 needle) const
     return false;
 }
 
-Utf8View Utf8View::trim(const Utf8View& characters, TrimMode mode) const
+Utf8View Utf8View::trim(Utf8View const& characters, TrimMode mode) const
 {
     size_t substring_start = 0;
     size_t substring_length = byte_length();

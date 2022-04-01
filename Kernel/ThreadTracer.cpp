@@ -14,7 +14,7 @@ ThreadTracer::ThreadTracer(ProcessID tracer_pid)
 {
 }
 
-void ThreadTracer::set_regs(const RegisterState& regs)
+void ThreadTracer::set_regs(RegisterState const& regs)
 {
     PtraceRegisters r {};
     copy_kernel_registers_into_ptrace_registers(r, regs);

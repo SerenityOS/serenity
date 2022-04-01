@@ -18,7 +18,7 @@ UNMAP_AFTER_INIT NVMeInterruptQueue::NVMeInterruptQueue(NonnullOwnPtr<Memory::Re
     enable_irq();
 }
 
-bool NVMeInterruptQueue::handle_irq(const RegisterState&)
+bool NVMeInterruptQueue::handle_irq(RegisterState const&)
 {
     SpinlockLocker lock(m_request_lock);
     return process_cq() ? true : false;

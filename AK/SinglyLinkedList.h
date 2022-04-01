@@ -18,7 +18,7 @@ template<typename ListType, typename ElementType>
 class SinglyLinkedListIterator {
 public:
     SinglyLinkedListIterator() = default;
-    bool operator!=(const SinglyLinkedListIterator& other) const { return m_node != other.m_node; }
+    bool operator!=(SinglyLinkedListIterator const& other) const { return m_node != other.m_node; }
     SinglyLinkedListIterator& operator++()
     {
         if (m_removed)
@@ -80,7 +80,7 @@ private:
 
 public:
     SinglyLinkedList() = default;
-    SinglyLinkedList(const SinglyLinkedList& other) = delete;
+    SinglyLinkedList(SinglyLinkedList const& other) = delete;
     SinglyLinkedList(SinglyLinkedList&& other)
         : m_head(other.m_head)
         , m_tail(other.m_tail)
@@ -88,7 +88,7 @@ public:
         other.m_head = nullptr;
         other.m_tail = nullptr;
     }
-    SinglyLinkedList& operator=(const SinglyLinkedList& other) = delete;
+    SinglyLinkedList& operator=(SinglyLinkedList const& other) = delete;
     SinglyLinkedList& operator=(SinglyLinkedList&&) = delete;
 
     ~SinglyLinkedList() { clear(); }
@@ -239,10 +239,10 @@ public:
 
 private:
     Node* head() { return m_head; }
-    const Node* head() const { return m_head; }
+    Node const* head() const { return m_head; }
 
     Node* tail() { return m_tail; }
-    const Node* tail() const { return m_tail; }
+    Node const* tail() const { return m_tail; }
 
     Node* m_head { nullptr };
     Node* m_tail { nullptr };

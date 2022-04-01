@@ -103,7 +103,7 @@ void EvaluateExpressionDialog::build(Window* parent_window)
     m_text_editor->set_focus(true);
 }
 
-void EvaluateExpressionDialog::handle_evaluation(const String& expression)
+void EvaluateExpressionDialog::handle_evaluation(String const& expression)
 {
     m_output_container->remove_all_children();
     m_output_view->update();

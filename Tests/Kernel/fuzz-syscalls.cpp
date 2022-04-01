@@ -32,7 +32,7 @@ static bool is_nosys_syscall(int fn)
     return fn == SC_futex || fn == SC_emuctl;
 }
 
-static bool is_bad_idea(int fn, const size_t* direct_sc_args, const size_t* fake_sc_params, const char* some_string)
+static bool is_bad_idea(int fn, size_t const* direct_sc_args, size_t const* fake_sc_params, char const* some_string)
 {
     switch (fn) {
     case SC_mprotect:
@@ -78,7 +78,7 @@ static void do_systematic_tests()
     VERIFY(rc == -ENOSYS);
 }
 
-static void randomize_from(size_t* buffer, size_t len, const Vector<size_t>& values)
+static void randomize_from(size_t* buffer, size_t len, Vector<size_t> const& values)
 {
     for (size_t i = 0; i < len; ++i) {
         buffer[i] = values[get_random_uniform(values.size())];
@@ -122,7 +122,7 @@ static void do_random_tests()
     size_t direct_sc_args[3] = { 0 };
     // Isolate to a separate region to make corruption less likely, because we will write to it:
     auto* fake_sc_params = reinterpret_cast<size_t*>(mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON | MAP_RANDOMIZED, 0, 0));
-    const char* some_string = "Hello, world!";
+    char const* some_string = "Hello, world!";
     Vector<size_t> interesting_values = {
         0,
         1,
@@ -134,7 +134,7 @@ static void do_random_tests()
         0xffffffff,
     };
     dbgln("Doing a few random syscalls with:");
-    for (const auto& interesting_value : interesting_values) {
+    for (auto const& interesting_value : interesting_values) {
         dbgln("  {0} ({0:p})", interesting_value);
     }
     for (size_t i = 0; i < fuzz_syscall_count; ++i) {

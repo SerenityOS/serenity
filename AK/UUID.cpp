@@ -124,7 +124,7 @@ bool UUID::operator==(const UUID& other) const
 
 bool UUID::is_zero() const
 {
-    return all_of(m_uuid_buffer, [](const auto octet) { return octet == 0; });
+    return all_of(m_uuid_buffer, [](auto const octet) { return octet == 0; });
 }
 
 }

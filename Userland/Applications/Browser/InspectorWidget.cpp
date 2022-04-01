@@ -183,7 +183,7 @@ void InspectorWidget::update_node_box_model(Optional<String> node_box_sizing_jso
         return;
     }
     auto json_value = json_or_error.release_value();
-    const auto& json_object = json_value.as_object();
+    auto const& json_object = json_value.as_object();
 
     m_node_box_sizing.margin.top = json_object.get("margin_top").to_float();
     m_node_box_sizing.margin.right = json_object.get("margin_right").to_float();

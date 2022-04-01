@@ -42,10 +42,10 @@ struct FileMetadata {
     };
 };
 
-static int do_file_system_object_long(const char* path);
-static int do_file_system_object_short(const char* path);
+static int do_file_system_object_long(char const* path);
+static int do_file_system_object_short(char const* path);
 
-static bool print_names(const char* path, size_t longest_name, const Vector<FileMetadata>& files);
+static bool print_names(char const* path, size_t longest_name, Vector<FileMetadata> const& files);
 
 static bool filemetadata_comparator(FileMetadata& a, FileMetadata& b);
 
@@ -136,7 +136,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         endgrent();
     }
 
-    auto do_file_system_object = [&](const char* path) {
+    auto do_file_system_object = [&](char const* path) {
         if (flag_long)
             return do_file_system_object_long(path);
         return do_file_system_object_short(path);
@@ -235,7 +235,7 @@ static String& hostname()
     return s_hostname;
 }
 
-static size_t print_name(const struct stat& st, const String& name, const char* path_for_link_resolution, const char* path_for_hyperlink)
+static size_t print_name(const struct stat& st, String const& name, char const* path_for_link_resolution, char const* path_for_hyperlink)
 {
     if (!flag_disable_hyperlinks) {
         auto full_path = Core::File::real_path_for(path_for_hyperlink);
@@ -250,8 +250,8 @@ static size_t print_name(const struct stat& st, const String& name, const char* 
     if (!flag_colorize || !output_is_terminal) {
         nprinted = printf("%s", name.characters());
     } else {
-        const char* begin_color = "";
-        const char* end_color = "\033[0m";
+        char const* begin_color = "";
+        char const* end_color = "\033[0m";
 
         if (st.st_mode & S_ISVTX)
             begin_color = "\033[42;30;1m";
@@ -300,7 +300,7 @@ static size_t print_name(const struct stat& st, const String& name, const char* 
     return nprinted;
 }
 
-static bool print_filesystem_object(const String& path, const String& name, const struct stat& st)
+static bool print_filesystem_object(String const& path, String const& name, const struct stat& st)
 {
     if (flag_show_inode)
         printf("%s ", String::formatted("{}", st.st_ino).characters());
@@ -373,7 +373,7 @@ static bool print_filesystem_object(const String& path, const String& name, cons
     return true;
 }
 
-static int do_file_system_object_long(const char* path)
+static int do_file_system_object_long(char const* path)
 {
     if (flag_list_directories_only) {
         struct stat stat {
@@ -440,7 +440,7 @@ static int do_file_system_object_long(const char* path)
     return 0;
 }
 
-static bool print_filesystem_object_short(const char* path, const char* name, size_t* nprinted)
+static bool print_filesystem_object_short(char const* path, char const* name, size_t* nprinted)
 {
     struct stat st;
     int rc = lstat(path, &st);
@@ -456,7 +456,7 @@ static bool print_filesystem_object_short(const char* path, const char* name, si
     return true;
 }
 
-static bool print_names(const char* path, size_t longest_name, const Vector<FileMetadata>& files)
+static bool print_names(char const* path, size_t longest_name, Vector<FileMetadata> const& files)
 {
     size_t printed_on_row = 0;
     size_t nprinted = 0;
@@ -490,7 +490,7 @@ static bool print_names(const char* path, size_t longest_name, const Vector<File
     return printed_on_row;
 }
 
-int do_file_system_object_short(const char* path)
+int do_file_system_object_short(char const* path)
 {
     if (flag_list_directories_only) {
         size_t nprinted = 0;

@@ -21,14 +21,14 @@ public:
     Result<bool, String> load(StringView filename);
     Result<bool, String> open_file(Core::File&);
 
-    const String& current_filename() const { return m_current_filename; }
-    bool set_filename(const String& filename);
+    String const& current_filename() const { return m_current_filename; }
+    bool set_filename(String const& filename);
     bool dirty() { return m_dirty; }
     void set_dirty(bool dirty) { m_dirty = dirty; }
 
     bool has_sheets() const { return !m_sheets.is_empty(); }
 
-    const NonnullRefPtrVector<Sheet>& sheets() const { return m_sheets; }
+    NonnullRefPtrVector<Sheet> const& sheets() const { return m_sheets; }
     NonnullRefPtrVector<Sheet> sheets() { return m_sheets; }
 
     Sheet& add_sheet(StringView name)

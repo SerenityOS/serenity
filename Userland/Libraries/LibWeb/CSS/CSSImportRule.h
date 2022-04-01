@@ -32,8 +32,8 @@ public:
 
     bool has_import_result() const { return !m_style_sheet.is_null(); }
     RefPtr<CSSStyleSheet> loaded_style_sheet() { return m_style_sheet; }
-    const RefPtr<CSSStyleSheet> loaded_style_sheet() const { return m_style_sheet; }
-    void set_style_sheet(const RefPtr<CSSStyleSheet>& style_sheet) { m_style_sheet = style_sheet; }
+    RefPtr<CSSStyleSheet> const loaded_style_sheet() const { return m_style_sheet; }
+    void set_style_sheet(RefPtr<CSSStyleSheet> const& style_sheet) { m_style_sheet = style_sheet; }
 
     virtual StringView class_name() const override { return "CSSImportRule"; };
     virtual Type type() const override { return Type::Import; };

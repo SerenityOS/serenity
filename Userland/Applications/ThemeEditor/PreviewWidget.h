@@ -24,8 +24,8 @@ class PreviewWidget final : public GUI::Frame {
 public:
     virtual ~PreviewWidget() override = default;
 
-    const Gfx::Palette& preview_palette() const { return m_preview_palette; }
-    void set_preview_palette(const Gfx::Palette&);
+    Gfx::Palette const& preview_palette() const { return m_preview_palette; }
+    void set_preview_palette(Gfx::Palette const&);
     void set_theme_from_file(Core::File&);
 
     void set_color_filter(OwnPtr<Gfx::ColorBlindnessFilter>);
@@ -33,7 +33,7 @@ public:
     Function<void(String const&)> on_theme_load_from_file;
 
 private:
-    explicit PreviewWidget(const Gfx::Palette&);
+    explicit PreviewWidget(Gfx::Palette const&);
 
     void load_theme_bitmaps();
 

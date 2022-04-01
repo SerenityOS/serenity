@@ -307,7 +307,7 @@ Origin Document::origin() const
     return { m_url.protocol(), m_url.host(), m_url.port_or_default() };
 }
 
-void Document::set_origin(const Origin& origin)
+void Document::set_origin(Origin const& origin)
 {
     m_url.set_protocol(origin.protocol());
     m_url.set_host(origin.host());
@@ -328,7 +328,7 @@ void Document::schedule_layout_update()
     m_layout_update_timer->start();
 }
 
-bool Document::is_child_allowed(const Node& node) const
+bool Document::is_child_allowed(Node const& node) const
 {
     switch (node.type()) {
     case NodeType::DOCUMENT_NODE:
@@ -350,7 +350,7 @@ Element* Document::document_element()
     return first_child_of_type<Element>();
 }
 
-const Element* Document::document_element() const
+Element const* Document::document_element() const
 {
     return first_child_of_type<Element>();
 }
@@ -432,7 +432,7 @@ String Document::title() const
     return builder.to_string();
 }
 
-void Document::set_title(const String& title)
+void Document::set_title(String const& title)
 {
     auto* head_element = const_cast<HTML::HTMLHeadElement*>(head());
     if (!head_element)
@@ -651,9 +651,9 @@ void Document::set_visited_link_color(Color color)
     m_visited_link_color = color;
 }
 
-const Layout::InitialContainingBlock* Document::layout_node() const
+Layout::InitialContainingBlock const* Document::layout_node() const
 {
-    return static_cast<const Layout::InitialContainingBlock*>(Node::layout_node());
+    return static_cast<Layout::InitialContainingBlock const*>(Node::layout_node());
 }
 
 Layout::InitialContainingBlock* Document::layout_node()
@@ -935,12 +935,12 @@ NonnullRefPtr<DocumentFragment> Document::create_document_fragment()
     return adopt_ref(*new DocumentFragment(*this));
 }
 
-NonnullRefPtr<Text> Document::create_text_node(const String& data)
+NonnullRefPtr<Text> Document::create_text_node(String const& data)
 {
     return adopt_ref(*new Text(*this, data));
 }
 
-NonnullRefPtr<Comment> Document::create_comment(const String& data)
+NonnullRefPtr<Comment> Document::create_comment(String const& data)
 {
     return adopt_ref(*new Comment(*this, data));
 }
@@ -951,7 +951,7 @@ NonnullRefPtr<Range> Document::create_range()
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createevent
-NonnullRefPtr<Event> Document::create_event(const String& interface)
+NonnullRefPtr<Event> Document::create_event(String const& interface)
 {
     auto interface_lowercase = interface.to_lowercase();
     RefPtr<Event> event;
@@ -1101,12 +1101,12 @@ ExceptionOr<NonnullRefPtr<Node>> Document::adopt_node_binding(NonnullRefPtr<Node
     return node;
 }
 
-const DocumentType* Document::doctype() const
+DocumentType const* Document::doctype() const
 {
     return first_child_of_type<DocumentType>();
 }
 
-const String& Document::compat_mode() const
+String const& Document::compat_mode() const
 {
     static String back_compat = "BackCompat";
     static String css1_compat = "CSS1Compat";
@@ -1192,12 +1192,12 @@ Page* Document::page()
     return m_browsing_context ? m_browsing_context->page() : nullptr;
 }
 
-const Page* Document::page() const
+Page const* Document::page() const
 {
     return m_browsing_context ? m_browsing_context->page() : nullptr;
 }
 
-EventTarget* Document::get_parent(const Event& event)
+EventTarget* Document::get_parent(Event const& event)
 {
     if (event.type() == HTML::EventNames::load)
         return nullptr;

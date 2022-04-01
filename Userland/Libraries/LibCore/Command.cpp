@@ -46,13 +46,13 @@ ErrorOr<CommandResult> command(String const& program, Vector<String> const& argu
         close(stderr_pipe[0]);
     });
 
-    Vector<const char*> parts = { program.characters() };
-    for (const auto& part : arguments) {
+    Vector<char const*> parts = { program.characters() };
+    for (auto const& part : arguments) {
         parts.append(part.characters());
     }
     parts.append(nullptr);
 
-    const char** argv = parts.data();
+    char const** argv = parts.data();
 
     posix_spawn_file_actions_t action;
     posix_spawn_file_actions_init(&action);

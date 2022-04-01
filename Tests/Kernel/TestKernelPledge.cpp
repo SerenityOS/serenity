@@ -18,7 +18,7 @@ TEST_CASE(test_nonexistent_pledge)
 
 TEST_CASE(test_pledge_argument_validation)
 {
-    const auto long_argument = String::repeated('a', 2048);
+    auto const long_argument = String::repeated('a', 2048);
 
     auto res = pledge(long_argument.characters(), "stdio");
     EXPECT_EQ(res, -1);

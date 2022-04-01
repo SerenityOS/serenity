@@ -89,7 +89,7 @@ String DateTime::to_string(StringView format) const
     struct tm tm;
     localtime_r(&m_timestamp, &tm);
     StringBuilder builder;
-    const int format_len = format.length();
+    int const format_len = format.length();
 
     auto format_time_zone_offset = [&](bool with_separator) {
 #if defined(__serenity__)
@@ -190,20 +190,20 @@ String DateTime::to_string(StringView format) const
                 builder.appendff("{}", tm.tm_wday ? tm.tm_wday : 7);
                 break;
             case 'U': {
-                const int wday_of_year_beginning = (tm.tm_wday + 6 * tm.tm_yday) % 7;
-                const int week_number = (tm.tm_yday + wday_of_year_beginning) / 7;
+                int const wday_of_year_beginning = (tm.tm_wday + 6 * tm.tm_yday) % 7;
+                int const week_number = (tm.tm_yday + wday_of_year_beginning) / 7;
                 builder.appendff("{:02}", week_number);
                 break;
             }
             case 'V': {
-                const int wday_of_year_beginning = (tm.tm_wday + 6 + 6 * tm.tm_yday) % 7;
+                int const wday_of_year_beginning = (tm.tm_wday + 6 + 6 * tm.tm_yday) % 7;
                 int week_number = (tm.tm_yday + wday_of_year_beginning) / 7 + 1;
                 if (wday_of_year_beginning > 3) {
                     if (tm.tm_yday >= 7 - wday_of_year_beginning)
                         --week_number;
                     else {
-                        const int days_of_last_year = days_in_year(tm.tm_year + 1900 - 1);
-                        const int wday_of_last_year_beginning = (wday_of_year_beginning + 6 * days_of_last_year) % 7;
+                        int const days_of_last_year = days_in_year(tm.tm_year + 1900 - 1);
+                        int const wday_of_last_year_beginning = (wday_of_year_beginning + 6 * days_of_last_year) % 7;
                         week_number = (days_of_last_year + wday_of_last_year_beginning) / 7 + 1;
                         if (wday_of_last_year_beginning > 3)
                             --week_number;
@@ -216,8 +216,8 @@ String DateTime::to_string(StringView format) const
                 builder.appendff("{}", tm.tm_wday);
                 break;
             case 'W': {
-                const int wday_of_year_beginning = (tm.tm_wday + 6 + 6 * tm.tm_yday) % 7;
-                const int week_number = (tm.tm_yday + wday_of_year_beginning) / 7;
+                int const wday_of_year_beginning = (tm.tm_wday + 6 + 6 * tm.tm_yday) % 7;
+                int const week_number = (tm.tm_yday + wday_of_year_beginning) / 7;
                 builder.appendff("{:02}", week_number);
                 break;
             }
@@ -253,7 +253,7 @@ String DateTime::to_string(StringView format) const
     return builder.build();
 }
 
-Optional<DateTime> DateTime::parse(StringView format, const String& string)
+Optional<DateTime> DateTime::parse(StringView format, String const& string)
 {
     unsigned format_pos = 0;
     unsigned string_pos = 0;

@@ -44,7 +44,7 @@ public:
     virtual ~TmpFSInode() override;
 
     TmpFS& fs() { return static_cast<TmpFS&>(Inode::fs()); }
-    const TmpFS& fs() const { return static_cast<const TmpFS&>(Inode::fs()); }
+    TmpFS const& fs() const { return static_cast<TmpFS const&>(Inode::fs()); }
 
     // ^Inode
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
@@ -52,7 +52,7 @@ public:
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<void> flush_metadata() override;
-    virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override;
+    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override;
     virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
@@ -64,7 +64,7 @@ public:
     virtual ErrorOr<void> set_mtime(time_t) override;
 
 private:
-    TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, WeakPtr<TmpFSInode> parent);
+    TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, WeakPtr<TmpFSInode> parent);
     static ErrorOr<NonnullRefPtr<TmpFSInode>> try_create(TmpFS&, InodeMetadata const& metadata, WeakPtr<TmpFSInode> parent);
     static ErrorOr<NonnullRefPtr<TmpFSInode>> try_create_root(TmpFS&);
 

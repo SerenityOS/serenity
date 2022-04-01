@@ -28,7 +28,7 @@ public:
         : CipherBlock(mode)
     {
     }
-    AESCipherBlock(const u8* data, size_t length, PaddingMode mode = PaddingMode::CMS)
+    AESCipherBlock(u8 const* data, size_t length, PaddingMode mode = PaddingMode::CMS)
         : AESCipherBlock(mode)
     {
         CipherBlock::overwrite(data, length);
@@ -40,7 +40,7 @@ public:
     virtual Bytes bytes() override { return Bytes { m_data, sizeof(m_data) }; }
 
     virtual void overwrite(ReadonlyBytes) override;
-    virtual void overwrite(const u8* data, size_t size) override { overwrite({ data, size }); }
+    virtual void overwrite(u8 const* data, size_t size) override { overwrite({ data, size }); }
 
     virtual void apply_initialization_vector(ReadonlyBytes ivec) override
     {
@@ -68,9 +68,9 @@ struct AESCipherKey : public CipherKey {
     String to_string() const;
 #endif
 
-    const u32* round_keys() const
+    u32 const* round_keys() const
     {
-        return (const u32*)m_rd_keys;
+        return (u32 const*)m_rd_keys;
     }
 
     AESCipherKey(ReadonlyBytes user_key, size_t key_bits, Intent intent)
@@ -114,11 +114,11 @@ public:
     {
     }
 
-    virtual const AESCipherKey& key() const override { return m_key; };
+    virtual AESCipherKey const& key() const override { return m_key; };
     virtual AESCipherKey& key() override { return m_key; };
 
-    virtual void encrypt_block(const BlockType& in, BlockType& out) override;
-    virtual void decrypt_block(const BlockType& in, BlockType& out) override;
+    virtual void encrypt_block(BlockType const& in, BlockType& out) override;
+    virtual void decrypt_block(BlockType const& in, BlockType& out) override;
 
 #ifndef KERNEL
     virtual String class_name() const override

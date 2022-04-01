@@ -57,7 +57,7 @@ static void fork_into(void (*fn)(void*), void* arg)
         exit(1);
     }
     if (rc > 0) {
-        const int disown_rc = disown(rc);
+        int const disown_rc = disown(rc);
         if (disown_rc < 0) {
             perror("disown");
             dbgln("This might cause PA1 to remain in the Zombie state, "
@@ -73,7 +73,7 @@ static void fork_into(void (*fn)(void*), void* arg)
 
 static void sleep_steps(useconds_t steps)
 {
-    const int rc = usleep(steps * STEP_SIZE);
+    int const rc = usleep(steps * STEP_SIZE);
     if (rc < 0) {
         perror("usleep");
         VERIFY_NOT_REACHED();

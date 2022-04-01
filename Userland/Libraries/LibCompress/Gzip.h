@@ -68,7 +68,7 @@ private:
         size_t m_nread { 0 };
     };
 
-    const Member& current_member() const { return m_current_member.value(); }
+    Member const& current_member() const { return m_current_member.value(); }
     Member& current_member() { return m_current_member.value(); }
 
     InputStream& m_input_stream;

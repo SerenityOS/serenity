@@ -58,7 +58,7 @@ JS::ThrowCompletionOr<bool> DebuggerGlobalJSObject::internal_set(JS::PropertyKey
     return vm().throw_completion<JS::TypeError>(const_cast<DebuggerGlobalJSObject&>(*this), move(error_string));
 }
 
-Optional<JS::Value> DebuggerGlobalJSObject::debugger_to_js(const Debug::DebugInfo::VariableInfo& variable) const
+Optional<JS::Value> DebuggerGlobalJSObject::debugger_to_js(Debug::DebugInfo::VariableInfo const& variable) const
 {
     if (variable.location_type != Debug::DebugInfo::VariableInfo::LocationType::Address)
         return {};
@@ -94,7 +94,7 @@ Optional<JS::Value> DebuggerGlobalJSObject::debugger_to_js(const Debug::DebugInf
     return JS::Value(object);
 }
 
-Optional<u32> DebuggerGlobalJSObject::js_to_debugger(JS::Value value, const Debug::DebugInfo::VariableInfo& variable) const
+Optional<u32> DebuggerGlobalJSObject::js_to_debugger(JS::Value value, Debug::DebugInfo::VariableInfo const& variable) const
 {
     if (value.is_string() && variable.type_name == "char") {
         auto string = value.as_string().string();

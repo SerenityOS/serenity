@@ -10,17 +10,17 @@
 
 namespace Assistant {
 
-static constexpr const int RECURSION_LIMIT = 10;
-static constexpr const int MAX_MATCHES = 256;
+static constexpr int const RECURSION_LIMIT = 10;
+static constexpr int const MAX_MATCHES = 256;
 
 // Bonuses and penalties are used to build up a final score for the match.
-static constexpr const int SEQUENTIAL_BONUS = 15;            // bonus for adjacent matches (needle: 'ca', haystack: 'cat')
-static constexpr const int SEPARATOR_BONUS = 30;             // bonus if match occurs after a separator ('_' or ' ')
-static constexpr const int CAMEL_BONUS = 30;                 // bonus if match is uppercase and prev is lower (needle: 'myF' haystack: '/path/to/myFile.txt')
-static constexpr const int FIRST_LETTER_BONUS = 20;          // bonus if the first letter is matched (needle: 'c' haystack: 'cat')
-static constexpr const int LEADING_LETTER_PENALTY = -5;      // penalty applied for every letter in str before the first match
-static constexpr const int MAX_LEADING_LETTER_PENALTY = -15; // maximum penalty for leading letters
-static constexpr const int UNMATCHED_LETTER_PENALTY = -1;    // penalty for every letter that doesn't matter
+static constexpr int const SEQUENTIAL_BONUS = 15;            // bonus for adjacent matches (needle: 'ca', haystack: 'cat')
+static constexpr int const SEPARATOR_BONUS = 30;             // bonus if match occurs after a separator ('_' or ' ')
+static constexpr int const CAMEL_BONUS = 30;                 // bonus if match is uppercase and prev is lower (needle: 'myF' haystack: '/path/to/myFile.txt')
+static constexpr int const FIRST_LETTER_BONUS = 20;          // bonus if the first letter is matched (needle: 'c' haystack: 'cat')
+static constexpr int const LEADING_LETTER_PENALTY = -5;      // penalty applied for every letter in str before the first match
+static constexpr int const MAX_LEADING_LETTER_PENALTY = -15; // maximum penalty for leading letters
+static constexpr int const UNMATCHED_LETTER_PENALTY = -1;    // penalty for every letter that doesn't matter
 
 static int calculate_score(String const& string, u8* index_points, size_t index_points_size)
 {

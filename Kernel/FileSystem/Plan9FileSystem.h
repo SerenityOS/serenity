@@ -93,7 +93,7 @@ private:
         virtual Type blocker_type() const override { return Type::Plan9FS; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
 
-        const NonnullRefPtr<ReceiveCompletion>& completion() const { return m_completion; }
+        NonnullRefPtr<ReceiveCompletion> const& completion() const { return m_completion; }
         u16 tag() const { return m_completion->tag; }
         bool is_completed() const;
 
@@ -115,7 +115,7 @@ private:
 
     virtual StringView class_name() const override { return "Plan9FS"sv; }
 
-    bool is_complete(const ReceiveCompletion&);
+    bool is_complete(ReceiveCompletion const&);
     ErrorOr<void> post_message(Message&, RefPtr<ReceiveCompletion>);
     ErrorOr<void> do_read(u8* buffer, size_t);
     ErrorOr<void> read_and_dispatch_one_message();
@@ -157,7 +157,7 @@ public:
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> flush_metadata() override;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
-    virtual ErrorOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, OpenFileDescription*) override;
+    virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
     virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
@@ -211,7 +211,7 @@ private:
     Plan9FS& fs() { return reinterpret_cast<Plan9FS&>(Inode::fs()); }
     Plan9FS& fs() const
     {
-        return const_cast<Plan9FS&>(reinterpret_cast<const Plan9FS&>(Inode::fs()));
+        return const_cast<Plan9FS&>(reinterpret_cast<Plan9FS const&>(Inode::fs()));
     }
 };
 

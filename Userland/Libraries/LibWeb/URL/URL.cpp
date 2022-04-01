@@ -101,7 +101,7 @@ String URL::username() const
     return m_url.username();
 }
 
-void URL::set_username(const String& username)
+void URL::set_username(String const& username)
 {
     // 1. If this’s URL cannot have a username/password/port, then return.
     if (m_url.cannot_have_a_username_or_password_or_port())
@@ -139,7 +139,7 @@ String URL::host() const
     return String::formatted("{}:{}", url.host(), *url.port());
 }
 
-void URL::set_host(const String& host)
+void URL::set_host(String const& host)
 {
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
     if (m_url.cannot_be_a_base_url())

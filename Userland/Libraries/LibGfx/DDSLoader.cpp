@@ -34,7 +34,7 @@ struct DDSLoadingContext {
 
     State state { State::NotDecoded };
 
-    const u8* data { nullptr };
+    u8 const* data { nullptr };
     size_t data_size { 0 };
 
     DDSHeader header;
@@ -937,7 +937,7 @@ void DDSLoadingContext::dump_debug()
     dbgln("{}", builder.to_string());
 }
 
-DDSImageDecoderPlugin::DDSImageDecoderPlugin(const u8* data, size_t size)
+DDSImageDecoderPlugin::DDSImageDecoderPlugin(u8 const* data, size_t size)
 {
     m_context = make<DDSLoadingContext>();
     m_context->data = data;

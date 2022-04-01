@@ -136,7 +136,7 @@ int iswctype(wint_t wc, wctype_t charclass)
     }
 }
 
-wctype_t wctype(const char* property)
+wctype_t wctype(char const* property)
 {
     if (strcmp(property, "alnum") == 0)
         return WCTYPE_ALNUM;
@@ -201,7 +201,7 @@ wint_t towctrans(wint_t wc, wctrans_t desc)
     }
 }
 
-wctrans_t wctrans(const char* charclass)
+wctrans_t wctrans(char const* charclass)
 {
     if (strcmp(charclass, "tolower") == 0)
         return WCTRANS_TOLOWER;

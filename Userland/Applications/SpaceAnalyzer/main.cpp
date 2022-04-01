@@ -46,7 +46,7 @@ struct TreeNode : public SpaceAnalyzer::TreeMapNode {
         }
         return 0;
     }
-    virtual const TreeNode& child_at(size_t i) const override { return m_children->at(i); }
+    virtual TreeNode const& child_at(size_t i) const override { return m_children->at(i); }
     virtual void sort_children_by_area() const override
     {
         if (m_children) {
@@ -65,7 +65,7 @@ struct Tree : public SpaceAnalyzer::TreeMap {
         : m_root(move(root_name)) {};
     virtual ~Tree() {};
     TreeNode m_root;
-    virtual const SpaceAnalyzer::TreeMapNode& root() const override
+    virtual SpaceAnalyzer::TreeMapNode const& root() const override
     {
         return m_root;
     };
@@ -278,7 +278,7 @@ static void analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidg
     treemapwidget.set_tree(tree);
 }
 
-static bool is_removable(const String& absolute_path)
+static bool is_removable(String const& absolute_path)
 {
     VERIFY(!absolute_path.is_empty());
     int access_result = access(LexicalPath::dirname(absolute_path).characters(), W_OK);
@@ -287,14 +287,14 @@ static bool is_removable(const String& absolute_path)
     return access_result == 0;
 }
 
-static String get_absolute_path_to_selected_node(const SpaceAnalyzer::TreeMapWidget& treemapwidget, bool include_last_node = true)
+static String get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget const& treemapwidget, bool include_last_node = true)
 {
     StringBuilder path_builder;
     for (size_t k = 0; k < treemapwidget.path_size() - (include_last_node ? 0 : 1); k++) {
         if (k != 0) {
             path_builder.append('/');
         }
-        const SpaceAnalyzer::TreeMapNode* node = treemapwidget.path_node(k);
+        SpaceAnalyzer::TreeMapNode const* node = treemapwidget.path_node(k);
         path_builder.append(node->name());
     }
     return path_builder.build();

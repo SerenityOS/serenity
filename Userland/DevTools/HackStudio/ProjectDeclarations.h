@@ -23,7 +23,7 @@ public:
     template<typename Func>
     void for_each_declared_symbol(Func);
 
-    void set_declared_symbols(const String& filename, const Vector<GUI::AutocompleteProvider::Declaration>&);
+    void set_declared_symbols(String const& filename, Vector<GUI::AutocompleteProvider::Declaration> const&);
 
     static Optional<GUI::Icon> get_icon_for(GUI::AutocompleteProvider::DeclarationType);
 

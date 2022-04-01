@@ -61,7 +61,7 @@ public:
     virtual ~Widget() override;
 
     Layout* layout() { return m_layout.ptr(); }
-    const Layout* layout() const { return m_layout.ptr(); }
+    Layout const* layout() const { return m_layout.ptr(); }
     void set_layout(NonnullRefPtr<Layout>);
 
     template<class T, class... Args>
@@ -81,7 +81,7 @@ public:
     }
 
     Gfx::IntSize min_size() const { return m_min_size; }
-    void set_min_size(const Gfx::IntSize&);
+    void set_min_size(Gfx::IntSize const&);
     void set_min_size(int width, int height) { set_min_size({ width, height }); }
 
     int min_width() const { return m_min_size.width(); }
@@ -90,7 +90,7 @@ public:
     void set_min_height(int height) { set_min_size(min_width(), height); }
 
     Gfx::IntSize max_size() const { return m_max_size; }
-    void set_max_size(const Gfx::IntSize&);
+    void set_max_size(Gfx::IntSize const&);
     void set_max_size(int width, int height) { set_max_size({ width, height }); }
 
     int max_width() const { return m_max_size.width(); }
@@ -98,7 +98,7 @@ public:
     void set_max_width(int width) { set_max_size(width, max_height()); }
     void set_max_height(int height) { set_max_size(max_width(), height); }
 
-    void set_fixed_size(const Gfx::IntSize& size)
+    void set_fixed_size(Gfx::IntSize const& size)
     {
         set_min_size(size);
         set_max_size(size);
@@ -154,7 +154,7 @@ public:
 
     // Invalidate the widget (or an area thereof), causing a repaint to happen soon.
     void update();
-    void update(const Gfx::IntRect&);
+    void update(Gfx::IntRect const&);
 
     // Repaint the widget (or an area thereof) immediately.
     void repaint();
@@ -163,13 +163,13 @@ public:
     bool is_focused() const;
     void set_focus(bool, FocusSource = FocusSource::Programmatic);
 
-    Function<void(const bool, const FocusSource)> on_focus_change;
+    Function<void(bool const, const FocusSource)> on_focus_change;
 
     // Returns true if this widget or one of its descendants is focused.
     bool has_focus_within() const;
 
     Widget* focus_proxy() { return m_focus_proxy; }
-    const Widget* focus_proxy() const { return m_focus_proxy; }
+    Widget const* focus_proxy() const { return m_focus_proxy; }
     void set_focus_proxy(Widget*);
 
     void set_focus_policy(FocusPolicy policy);
@@ -183,10 +183,10 @@ public:
         WeakPtr<Widget> widget;
         Gfx::IntPoint local_position;
     };
-    HitTestResult hit_test(const Gfx::IntPoint&, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
-    Widget* child_at(const Gfx::IntPoint&) const;
+    HitTestResult hit_test(Gfx::IntPoint const&, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
+    Widget* child_at(Gfx::IntPoint const&) const;
 
-    void set_relative_rect(const Gfx::IntRect&);
+    void set_relative_rect(Gfx::IntRect const&);
     void set_relative_rect(int x, int y, int width, int height) { set_relative_rect({ x, y, width, height }); }
 
     void set_x(int x) { set_relative_rect(x, y(), width(), height()); }
@@ -194,13 +194,13 @@ public:
     void set_width(int width) { set_relative_rect(x(), y(), width, height()); }
     void set_height(int height) { set_relative_rect(x(), y(), width(), height); }
 
-    void move_to(const Gfx::IntPoint& point) { set_relative_rect({ point, relative_rect().size() }); }
+    void move_to(Gfx::IntPoint const& point) { set_relative_rect({ point, relative_rect().size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
-    void resize(const Gfx::IntSize& size) { set_relative_rect({ relative_rect().location(), size }); }
+    void resize(Gfx::IntSize const& size) { set_relative_rect({ relative_rect().location(), size }); }
     void resize(int width, int height) { resize({ width, height }); }
 
     void move_by(int x, int y) { move_by({ x, y }); }
-    void move_by(const Gfx::IntPoint& delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
+    void move_by(Gfx::IntPoint const& delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
 
     Gfx::ColorRole background_role() const { return m_background_role; }
     void set_background_role(Gfx::ColorRole);
@@ -217,7 +217,7 @@ public:
         return m_window;
     }
 
-    const Window* window() const
+    Window const* window() const
     {
         if (auto* pw = parent_widget())
             return pw->window();
@@ -227,17 +227,17 @@ public:
     void set_window(Window*);
 
     Widget* parent_widget();
-    const Widget* parent_widget() const;
+    Widget const* parent_widget() const;
 
     void set_fill_with_background_color(bool b) { m_fill_with_background_color = b; }
     bool fill_with_background_color() const { return m_fill_with_background_color; }
 
-    const Gfx::Font& font() const { return *m_font; }
+    Gfx::Font const& font() const { return *m_font; }
 
-    void set_font(const Gfx::Font*);
-    void set_font(const Gfx::Font& font) { set_font(&font); }
+    void set_font(Gfx::Font const*);
+    void set_font(Gfx::Font const& font) { set_font(&font); }
 
-    void set_font_family(const String&);
+    void set_font_family(String const&);
     void set_font_size(unsigned);
     void set_font_weight(unsigned);
     void set_font_fixed_width(bool);
@@ -259,7 +259,7 @@ public:
     bool is_frontmost() const;
     bool is_backmost() const;
 
-    Action* action_for_key_event(const KeyEvent&);
+    Action* action_for_key_event(KeyEvent const&);
 
     template<typename Callback>
     void for_each_child_widget(Callback callback)
@@ -276,10 +276,10 @@ public:
     void do_layout();
 
     Gfx::Palette palette() const;
-    void set_palette(const Gfx::Palette&);
+    void set_palette(Gfx::Palette const&);
 
-    const Margins& grabbable_margins() const { return m_grabbable_margins; }
-    void set_grabbable_margins(const Margins&);
+    Margins const& grabbable_margins() const { return m_grabbable_margins; }
+    void set_grabbable_margins(Margins const&);
 
     Gfx::IntRect relative_non_grabbable_rect() const;
 
@@ -295,7 +295,7 @@ public:
     void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>>);
 
     bool load_from_gml(StringView);
-    bool load_from_gml(StringView, RefPtr<Core::Object> (*unregistered_child_handler)(const String&));
+    bool load_from_gml(StringView, RefPtr<Core::Object> (*unregistered_child_handler)(String const&));
 
     void set_shrink_to_fit(bool);
     bool is_shrink_to_fit() const { return m_shrink_to_fit; }
@@ -303,7 +303,7 @@ public:
     bool has_pending_drop() const;
 
     // In order for others to be able to call this, it needs to be public.
-    virtual bool load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(const String&));
+    virtual bool load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(String const&));
 
 protected:
     Widget();
@@ -403,7 +403,7 @@ inline Widget* Widget::parent_widget()
         return &verify_cast<Widget>(*parent());
     return nullptr;
 }
-inline const Widget* Widget::parent_widget() const
+inline Widget const* Widget::parent_widget() const
 {
     if (parent() && is<Widget>(*parent()))
         return &verify_cast<const Widget>(*parent());

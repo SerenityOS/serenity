@@ -34,7 +34,7 @@ ErrorOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timesp
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> user_ts)
+ErrorOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<timespec const*> user_ts)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::settime));
@@ -54,7 +54,7 @@ ErrorOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<const 
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<Syscall::SC_clock_nanosleep_params const*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
@@ -92,7 +92,7 @@ ErrorOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval*> user_old_delta)
+ErrorOr<FlatPtr> Process::sys$adjtime(Userspace<timeval const*> user_delta, Userspace<timeval*> user_old_delta)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     if (user_old_delta) {

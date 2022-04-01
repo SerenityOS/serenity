@@ -43,7 +43,7 @@ PaintableWithLines::~PaintableWithLines()
 {
 }
 
-void PaintableBox::set_offset(const Gfx::FloatPoint& offset)
+void PaintableBox::set_offset(Gfx::FloatPoint const& offset)
 {
     m_offset = offset;
     // FIXME: This const_cast is gross.
@@ -527,7 +527,7 @@ Optional<HitTestResult> PaintableBox::hit_test(Gfx::FloatPoint const& position, 
     return {};
 }
 
-Optional<HitTestResult> PaintableWithLines::hit_test(const Gfx::FloatPoint& position, HitTestType type) const
+Optional<HitTestResult> PaintableWithLines::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
     if (!layout_box().children_are_inline())
         return PaintableBox::hit_test(position, type);

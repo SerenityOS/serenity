@@ -164,7 +164,7 @@ extern "C" const u32 serenity_boot_logo_size;
 
 static void draw_logo()
 {
-    Prekernel::BootPPMParser logo_parser(reinterpret_cast<const u8*>(&serenity_boot_logo_start), serenity_boot_logo_size);
+    Prekernel::BootPPMParser logo_parser(reinterpret_cast<u8 const*>(&serenity_boot_logo_start), serenity_boot_logo_size);
     if (!logo_parser.parse()) {
         Prekernel::warnln("Invalid boot logo.");
         return;

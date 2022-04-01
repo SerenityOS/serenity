@@ -520,7 +520,7 @@ void* operator new(size_t size)
     return ptr;
 }
 
-void* operator new(size_t size, const std::nothrow_t&) noexcept
+void* operator new(size_t size, std::nothrow_t const&) noexcept
 {
     return kmalloc(size);
 }
@@ -532,7 +532,7 @@ void* operator new(size_t size, std::align_val_t al)
     return ptr;
 }
 
-void* operator new(size_t size, std::align_val_t al, const std::nothrow_t&) noexcept
+void* operator new(size_t size, std::align_val_t al, std::nothrow_t const&) noexcept
 {
     return kmalloc_aligned(size, (size_t)al);
 }
@@ -544,7 +544,7 @@ void* operator new[](size_t size)
     return ptr;
 }
 
-void* operator new[](size_t size, const std::nothrow_t&) noexcept
+void* operator new[](size_t size, std::nothrow_t const&) noexcept
 {
     return kmalloc(size);
 }

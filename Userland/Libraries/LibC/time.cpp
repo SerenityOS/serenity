@@ -68,7 +68,7 @@ int settimeofday(struct timeval* __restrict__ tv, void* __restrict__)
     return clock_settime(CLOCK_REALTIME, &ts);
 }
 
-int utimes(const char* pathname, const struct timeval times[2])
+int utimes(char const* pathname, const struct timeval times[2])
 {
     if (!times) {
         return utime(pathname, nullptr);
@@ -78,18 +78,18 @@ int utimes(const char* pathname, const struct timeval times[2])
     return utime(pathname, &buf);
 }
 
-char* ctime(const time_t* t)
+char* ctime(time_t const* t)
 {
     return asctime(localtime(t));
 }
 
-char* ctime_r(const time_t* t, char* buf)
+char* ctime_r(time_t const* t, char* buf)
 {
     struct tm tm_buf;
     return asctime_r(localtime_r(t, &tm_buf), buf);
 }
 
-static const int __seconds_per_day = 60 * 60 * 24;
+static int const __seconds_per_day = 60 * 60 * 24;
 
 static void time_to_tm(struct tm* tm, time_t t)
 {
@@ -150,7 +150,7 @@ time_t mktime(struct tm* tm)
     return tm_to_time(tm, daylight ? altzone : timezone);
 }
 
-struct tm* localtime(const time_t* t)
+struct tm* localtime(time_t const* t)
 {
     tzset();
 
@@ -158,7 +158,7 @@ struct tm* localtime(const time_t* t)
     return localtime_r(t, &tm_buf);
 }
 
-struct tm* localtime_r(const time_t* t, struct tm* tm)
+struct tm* localtime_r(time_t const* t, struct tm* tm)
 {
     if (!t)
         return nullptr;
@@ -172,13 +172,13 @@ time_t timegm(struct tm* tm)
     return tm_to_time(tm, 0);
 }
 
-struct tm* gmtime(const time_t* t)
+struct tm* gmtime(time_t const* t)
 {
     static struct tm tm_buf;
     return gmtime_r(t, &tm_buf);
 }
 
-struct tm* gmtime_r(const time_t* t, struct tm* tm)
+struct tm* gmtime_r(time_t const* t, struct tm* tm)
 {
     if (!t)
         return nullptr;
@@ -205,13 +205,13 @@ char* asctime_r(const struct tm* tm, char* buffer)
 }
 
 // FIXME: Some formats are not supported.
-size_t strftime(char* destination, size_t max_size, const char* format, const struct tm* tm)
+size_t strftime(char* destination, size_t max_size, char const* format, const struct tm* tm)
 {
     tzset();
 
     StringBuilder builder { max_size };
 
-    const int format_len = strlen(format);
+    int const format_len = strlen(format);
     for (int i = 0; i < format_len; ++i) {
         if (format[i] != '%') {
             builder.append(format[i]);
@@ -287,20 +287,20 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                 builder.appendff("{}", tm->tm_wday ? tm->tm_wday : 7);
                 break;
             case 'U': {
-                const int wday_of_year_beginning = (tm->tm_wday + 6 * tm->tm_yday) % 7;
-                const int week_number = (tm->tm_yday + wday_of_year_beginning) / 7;
+                int const wday_of_year_beginning = (tm->tm_wday + 6 * tm->tm_yday) % 7;
+                int const week_number = (tm->tm_yday + wday_of_year_beginning) / 7;
                 builder.appendff("{:02}", week_number);
                 break;
             }
             case 'V': {
-                const int wday_of_year_beginning = (tm->tm_wday + 6 + 6 * tm->tm_yday) % 7;
+                int const wday_of_year_beginning = (tm->tm_wday + 6 + 6 * tm->tm_yday) % 7;
                 int week_number = (tm->tm_yday + wday_of_year_beginning) / 7 + 1;
                 if (wday_of_year_beginning > 3) {
                     if (tm->tm_yday >= 7 - wday_of_year_beginning)
                         --week_number;
                     else {
-                        const int days_of_last_year = days_in_year(tm->tm_year + 1900 - 1);
-                        const int wday_of_last_year_beginning = (wday_of_year_beginning + 6 * days_of_last_year) % 7;
+                        int const days_of_last_year = days_in_year(tm->tm_year + 1900 - 1);
+                        int const wday_of_last_year_beginning = (wday_of_year_beginning + 6 * days_of_last_year) % 7;
                         week_number = (days_of_last_year + wday_of_last_year_beginning) / 7 + 1;
                         if (wday_of_last_year_beginning > 3)
                             --week_number;
@@ -313,8 +313,8 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                 builder.appendff("{}", tm->tm_wday);
                 break;
             case 'W': {
-                const int wday_of_year_beginning = (tm->tm_wday + 6 + 6 * tm->tm_yday) % 7;
-                const int week_number = (tm->tm_yday + wday_of_year_beginning) / 7;
+                int const wday_of_year_beginning = (tm->tm_wday + 6 + 6 * tm->tm_yday) % 7;
+                int const week_number = (tm->tm_yday + wday_of_year_beginning) / 7;
                 builder.appendff("{:02}", week_number);
                 break;
             }
@@ -342,7 +342,7 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
 
 static char __tzname_standard[TZNAME_MAX];
 static char __tzname_daylight[TZNAME_MAX];
-constexpr const char* __utc = "UTC";
+constexpr char const* __utc = "UTC";
 
 long timezone = 0;
 long altzone = 0;

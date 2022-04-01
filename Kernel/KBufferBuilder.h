@@ -27,13 +27,13 @@ public:
 
     ErrorOr<void> append(StringView);
     ErrorOr<void> append(char);
-    ErrorOr<void> append(const char*, int);
+    ErrorOr<void> append(char const*, int);
 
     ErrorOr<void> append_escaped_for_json(StringView);
     ErrorOr<void> append_bytes(ReadonlyBytes);
 
     template<typename... Parameters>
-    ErrorOr<void> appendff(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+    ErrorOr<void> appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
         // FIXME: This really not ideal, but vformat expects StringBuilder.
         StringBuilder builder;

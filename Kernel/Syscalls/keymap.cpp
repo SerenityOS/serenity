@@ -11,7 +11,7 @@ namespace Kernel {
 
 constexpr size_t map_name_max_size = 50;
 
-ErrorOr<FlatPtr> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$setkeymap(Userspace<Syscall::SC_setkeymap_params const*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::setkeymap));

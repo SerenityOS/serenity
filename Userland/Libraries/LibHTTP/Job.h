@@ -30,7 +30,7 @@ public:
     URL url() const { return m_request.url(); }
 
     HttpResponse* response() { return static_cast<HttpResponse*>(Core::NetworkJob::response()); }
-    const HttpResponse* response() const { return static_cast<const HttpResponse*>(Core::NetworkJob::response()); }
+    HttpResponse const* response() const { return static_cast<HttpResponse const*>(Core::NetworkJob::response()); }
 
 protected:
     void finish_up();

@@ -34,7 +34,7 @@
 #include <unistd.h>
 #include <wchar.h>
 
-static void strtons(const char* str, char** endptr)
+static void strtons(char const* str, char** endptr)
 {
     assert(endptr);
     char* ptr = const_cast<char*>(str);
@@ -49,7 +49,7 @@ enum Sign {
     Positive,
 };
 
-static Sign strtosign(const char* str, char** endptr)
+static Sign strtosign(char const* str, char** endptr)
 {
     assert(endptr);
     if (*str == '+') {
@@ -128,7 +128,7 @@ public:
 private:
     bool can_append_digit(int digit)
     {
-        const bool is_below_cutoff = positive() ? (m_num < m_cutoff) : (m_num > m_cutoff);
+        bool const is_below_cutoff = positive() ? (m_num < m_cutoff) : (m_num > m_cutoff);
 
         if (is_below_cutoff) {
             return true;
@@ -232,7 +232,7 @@ void abort()
 
 static HashTable<FlatPtr> s_malloced_environment_variables;
 
-static void free_environment_variable_if_needed(const char* var)
+static void free_environment_variable_if_needed(char const* var)
 {
     if (!s_malloced_environment_variables.contains((FlatPtr)var))
         return;
@@ -240,11 +240,11 @@ static void free_environment_variable_if_needed(const char* var)
     s_malloced_environment_variables.remove((FlatPtr)var);
 }
 
-char* getenv(const char* name)
+char* getenv(char const* name)
 {
     size_t vl = strlen(name);
     for (size_t i = 0; environ[i]; ++i) {
-        const char* decl = environ[i];
+        char const* decl = environ[i];
         char* eq = strchr(decl, '=');
         if (!eq)
             continue;
@@ -258,7 +258,7 @@ char* getenv(const char* name)
     return nullptr;
 }
 
-char* secure_getenv(const char* name)
+char* secure_getenv(char const* name)
 {
     if (getauxval(AT_SECURE))
         return nullptr;
@@ -266,7 +266,7 @@ char* secure_getenv(const char* name)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/unsetenv.html
-int unsetenv(const char* name)
+int unsetenv(char const* name)
 {
     auto new_var_len = strlen(name);
     size_t environ_size = 0;
@@ -307,12 +307,12 @@ int clearenv()
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/setenv.html
-int setenv(const char* name, const char* value, int overwrite)
+int setenv(char const* name, char const* value, int overwrite)
 {
     return serenity_setenv(name, strlen(name), value, strlen(value), overwrite);
 }
 
-int serenity_setenv(const char* name, ssize_t name_length, const char* value, ssize_t value_length, int overwrite)
+int serenity_setenv(char const* name, ssize_t name_length, char const* value, ssize_t value_length, int overwrite)
 {
     if (!overwrite && getenv(name))
         return 0;
@@ -374,14 +374,14 @@ int putenv(char* new_var)
     return 0;
 }
 
-static const char* __progname = NULL;
+static char const* __progname = NULL;
 
-const char* getprogname()
+char const* getprogname()
 {
     return __progname;
 }
 
-void setprogname(const char* progname)
+void setprogname(char const* progname)
 {
     for (int i = strlen(progname) - 1; i >= 0; i--) {
         if (progname[i] == '/') {
@@ -394,7 +394,7 @@ void setprogname(const char* progname)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtod.html
-double strtod(const char* str, char** endptr)
+double strtod(char const* str, char** endptr)
 {
     // Parse spaces, sign, and base
     char* parse_ptr = const_cast<char*>(str);
@@ -451,7 +451,7 @@ double strtod(const char* str, char** endptr)
     char exponent_upper;
     int base = 10;
     if (*parse_ptr == '0') {
-        const char base_ch = *(parse_ptr + 1);
+        char const base_ch = *(parse_ptr + 1);
         if (base_ch == 'x' || base_ch == 'X') {
             base = 16;
             parse_ptr += 2;
@@ -676,26 +676,26 @@ double strtod(const char* str, char** endptr)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtold.html
-long double strtold(const char* str, char** endptr)
+long double strtold(char const* str, char** endptr)
 {
     assert(sizeof(double) == sizeof(long double));
     return strtod(str, endptr);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtof.html
-float strtof(const char* str, char** endptr)
+float strtof(char const* str, char** endptr)
 {
     return strtod(str, endptr);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/atof.html
-double atof(const char* str)
+double atof(char const* str)
 {
     return strtod(str, nullptr);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/atoi.html
-int atoi(const char* str)
+int atoi(char const* str)
 {
     long value = strtol(str, nullptr, 10);
     if (value > INT_MAX) {
@@ -705,13 +705,13 @@ int atoi(const char* str)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/atol.html
-long atol(const char* str)
+long atol(char const* str)
 {
     return strtol(str, nullptr, 10);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/atoll.html
-long long atoll(const char* str)
+long long atoll(char const* str)
 {
     return strtoll(str, nullptr, 10);
 }
@@ -808,13 +808,13 @@ void srandom(unsigned seed)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/system.html
-int system(const char* command)
+int system(char const* command)
 {
     if (!command)
         return 1;
 
     pid_t child;
-    const char* argv[] = { "sh", "-c", command, nullptr };
+    char const* argv[] = { "sh", "-c", command, nullptr };
     if ((errno = posix_spawn(&child, "/bin/sh", nullptr, nullptr, const_cast<char**>(argv), environ)))
         return -1;
     int wstatus;
@@ -872,7 +872,7 @@ char* mkdtemp(char* pattern)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/bsearch.html
-void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
+void* bsearch(void const* key, void const* base, size_t nmemb, size_t size, int (*compar)(void const*, void const*))
 {
     char* start = static_cast<char*>(const_cast<void*>(base));
     while (nmemb > 0) {
@@ -956,14 +956,14 @@ int mblen(char const* s, size_t n)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mbstowcs.html
-size_t mbstowcs(wchar_t* pwcs, const char* s, size_t n)
+size_t mbstowcs(wchar_t* pwcs, char const* s, size_t n)
 {
     static mbstate_t state = {};
     return mbsrtowcs(pwcs, &s, n, &state);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mbtowc.html
-int mbtowc(wchar_t* pwc, const char* s, size_t n)
+int mbtowc(wchar_t* pwc, char const* s, size_t n)
 {
     static mbstate_t internal_state = {};
 
@@ -998,11 +998,11 @@ int wctomb(char* s, wchar_t wc)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/wcstombs.html
-size_t wcstombs(char* dest, const wchar_t* src, size_t max)
+size_t wcstombs(char* dest, wchar_t const* src, size_t max)
 {
     char* original_dest = dest;
     while ((size_t)(dest - original_dest) < max) {
-        StringView v { (const char*)src, sizeof(wchar_t) };
+        StringView v { (char const*)src, sizeof(wchar_t) };
 
         // FIXME: dependent on locale, for now utf-8 is supported.
         Utf8View utf8 { v };
@@ -1021,7 +1021,7 @@ size_t wcstombs(char* dest, const wchar_t* src, size_t max)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtol.html
-long strtol(const char* str, char** endptr, int base)
+long strtol(char const* str, char** endptr, int base)
 {
     long long value = strtoll(str, endptr, base);
     if (value < LONG_MIN) {
@@ -1035,7 +1035,7 @@ long strtol(const char* str, char** endptr, int base)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtoul.html
-unsigned long strtoul(const char* str, char** endptr, int base)
+unsigned long strtoul(char const* str, char** endptr, int base)
 {
     unsigned long long value = strtoull(str, endptr, base);
     if (value > ULONG_MAX) {
@@ -1046,7 +1046,7 @@ unsigned long strtoul(const char* str, char** endptr, int base)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtoll.html
-long long strtoll(const char* str, char** endptr, int base)
+long long strtoll(char const* str, char** endptr, int base)
 {
     // Parse spaces and sign
     char* parse_ptr = const_cast<char*>(str);
@@ -1124,7 +1124,7 @@ long long strtoll(const char* str, char** endptr, int base)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtoull.html
-unsigned long long strtoull(const char* str, char** endptr, int base)
+unsigned long long strtoull(char const* str, char** endptr, int base)
 {
     // Parse spaces and sign
     char* parse_ptr = const_cast<char*>(str);
@@ -1257,7 +1257,7 @@ uint32_t arc4random_uniform(uint32_t max_bounds)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/realpath.html
-char* realpath(const char* pathname, char* buffer)
+char* realpath(char const* pathname, char* buffer)
 {
     if (!pathname) {
         errno = EFAULT;

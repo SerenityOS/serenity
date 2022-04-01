@@ -84,8 +84,7 @@ Result Configuration::execute(Interpreter& interpreter)
 
 void Configuration::dump_stack()
 {
-    auto print_value = []<typename... Ts>(CheckedFormatString<Ts...> format, Ts... vs)
-    {
+    auto print_value = []<typename... Ts>(CheckedFormatString<Ts...> format, Ts... vs) {
         DuplexMemoryStream memory_stream;
         Printer { memory_stream }.print(vs...);
         ByteBuffer buffer = memory_stream.copy_into_contiguous_buffer();

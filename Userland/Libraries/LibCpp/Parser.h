@@ -29,11 +29,11 @@ public:
     Optional<Token> token_at(Position) const;
     Optional<size_t> index_of_token_at(Position) const;
     RefPtr<const TranslationUnit> root_node() const { return m_root_node; }
-    String text_of_node(const ASTNode&) const;
-    StringView text_of_token(const Cpp::Token& token) const;
+    String text_of_node(ASTNode const&) const;
+    StringView text_of_token(Cpp::Token const& token) const;
     void print_tokens() const;
     Vector<Token> const& tokens() const { return m_tokens; }
-    const Vector<String>& errors() const { return m_errors; }
+    Vector<String> const& errors() const { return m_errors; }
 
     struct TodoEntry {
         String content;
@@ -71,7 +71,7 @@ private:
     bool match_literal();
     bool match_unary_expression();
     bool match_boolean_literal();
-    bool match_keyword(const String&);
+    bool match_keyword(String const&);
     bool match_block_statement();
     bool match_namespace_declaration();
     bool match_template_arguments();
@@ -130,7 +130,7 @@ private:
     bool match(Token::Type);
     Token consume(Token::Type);
     Token consume();
-    Token consume_keyword(const String&);
+    Token consume_keyword(String const&);
     Token peek(size_t offset = 0) const;
     Optional<Token> peek(Token::Type) const;
     Position position() const;
@@ -149,7 +149,7 @@ private:
 
     template<class T, class... Args>
     NonnullRefPtr<T>
-    create_ast_node(ASTNode& parent, const Position& start, Optional<Position> end, Args&&... args)
+    create_ast_node(ASTNode& parent, Position const& start, Optional<Position> end, Args&&... args)
     {
         auto node = adopt_ref(*new T(&parent, start, end, m_filename, forward<Args>(args)...));
 
@@ -163,7 +163,7 @@ private:
     }
 
     NonnullRefPtr<TranslationUnit>
-    create_root_ast_node(const Position& start, Position end)
+    create_root_ast_node(Position const& start, Position end)
     {
         auto node = adopt_ref(*new TranslationUnit(nullptr, start, end, m_filename));
         m_nodes.append(node);

@@ -114,7 +114,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    static const char* operator_name(OperatorType operator_type)
+    static char const* operator_name(OperatorType operator_type)
     {
 #define V(name, snake_name, symbol)          \
     if (operator_type == OperatorType::name) \
@@ -130,7 +130,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    static const char* operator_symbol(OperatorType operator_type)
+    static char const* operator_symbol(OperatorType operator_type)
     {
 #define V(name, snake_name, symbol)          \
     if (operator_type == OperatorType::name) \

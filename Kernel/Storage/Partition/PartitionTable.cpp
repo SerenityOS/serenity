@@ -7,7 +7,7 @@
 #include <Kernel/Storage/Partition/PartitionTable.h>
 
 namespace Kernel {
-PartitionTable::PartitionTable(const StorageDevice& device)
+PartitionTable::PartitionTable(StorageDevice const& device)
     : m_device(device)
 {
 }

@@ -37,7 +37,7 @@ unsigned TmpFS::next_inode_index()
     return m_next_inode_index++;
 }
 
-TmpFSInode::TmpFSInode(TmpFS& fs, const InodeMetadata& metadata, WeakPtr<TmpFSInode> parent)
+TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, WeakPtr<TmpFSInode> parent)
     : Inode(fs, fs.next_inode_index())
     , m_metadata(metadata)
     , m_parent(move(parent))
@@ -106,7 +106,7 @@ ErrorOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernelBu
     return size;
 }
 
-ErrorOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& buffer, OpenFileDescription*)
+ErrorOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!is_directory());

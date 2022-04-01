@@ -133,13 +133,13 @@ private:
 
 class WMAppletAreaSizeChangedEvent : public WMEvent {
 public:
-    explicit WMAppletAreaSizeChangedEvent(const Gfx::IntSize& size)
+    explicit WMAppletAreaSizeChangedEvent(Gfx::IntSize const& size)
         : WMEvent(Event::Type::WM_AppletAreaSizeChanged, 0, 0)
         , m_size(size)
     {
     }
 
-    const Gfx::IntSize& size() const { return m_size; }
+    Gfx::IntSize const& size() const { return m_size; }
 
 private:
     Gfx::IntSize m_size;
@@ -155,7 +155,7 @@ public:
 
 class WMWindowStateChangedEvent : public WMEvent {
 public:
-    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, StringView title, const Gfx::IntRect& rect, unsigned workspace_row, unsigned workspace_column, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
+    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, StringView title, Gfx::IntRect const& rect, unsigned workspace_row, unsigned workspace_column, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
         : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
         , m_parent_client_id(parent_client_id)
         , m_parent_window_id(parent_window_id)
@@ -174,8 +174,8 @@ public:
 
     int parent_client_id() const { return m_parent_client_id; }
     int parent_window_id() const { return m_parent_window_id; }
-    const String& title() const { return m_title; }
-    const Gfx::IntRect& rect() const { return m_rect; }
+    String const& title() const { return m_title; }
+    Gfx::IntRect const& rect() const { return m_rect; }
     bool is_active() const { return m_active; }
     bool is_modal() const { return m_modal; }
     WindowType window_type() const { return m_window_type; }
@@ -202,13 +202,13 @@ private:
 
 class WMWindowRectChangedEvent : public WMEvent {
 public:
-    WMWindowRectChangedEvent(int client_id, int window_id, const Gfx::IntRect& rect)
+    WMWindowRectChangedEvent(int client_id, int window_id, Gfx::IntRect const& rect)
         : WMEvent(Event::Type::WM_WindowRectChanged, client_id, window_id)
         , m_rect(rect)
     {
     }
 
-    const Gfx::IntRect& rect() const { return m_rect; }
+    Gfx::IntRect const& rect() const { return m_rect; }
 
 private:
     Gfx::IntRect m_rect;
@@ -216,13 +216,13 @@ private:
 
 class WMWindowIconBitmapChangedEvent : public WMEvent {
 public:
-    WMWindowIconBitmapChangedEvent(int client_id, int window_id, const Gfx::Bitmap* bitmap)
+    WMWindowIconBitmapChangedEvent(int client_id, int window_id, Gfx::Bitmap const* bitmap)
         : WMEvent(Event::Type::WM_WindowIconBitmapChanged, client_id, window_id)
         , m_bitmap(move(bitmap))
     {
     }
 
-    const Gfx::Bitmap* bitmap() const { return m_bitmap; }
+    Gfx::Bitmap const* bitmap() const { return m_bitmap; }
 
 private:
     RefPtr<Gfx::Bitmap> m_bitmap;
@@ -241,8 +241,8 @@ public:
     unsigned current_column() const { return m_current_column; }
 
 private:
-    const unsigned m_current_row;
-    const unsigned m_current_column;
+    unsigned const m_current_row;
+    unsigned const m_current_column;
 };
 
 class WMKeymapChangedEvent : public WMEvent {
@@ -268,8 +268,8 @@ public:
     {
     }
 
-    const Vector<Gfx::IntRect, 32>& rects() const { return m_rects; }
-    const Gfx::IntSize& window_size() const { return m_window_size; }
+    Vector<Gfx::IntRect, 32> const& rects() const { return m_rects; }
+    Gfx::IntSize const& window_size() const { return m_window_size; }
 
 private:
     Vector<Gfx::IntRect, 32> m_rects;
@@ -278,15 +278,15 @@ private:
 
 class PaintEvent final : public Event {
 public:
-    explicit PaintEvent(const Gfx::IntRect& rect, const Gfx::IntSize& window_size = {})
+    explicit PaintEvent(Gfx::IntRect const& rect, Gfx::IntSize const& window_size = {})
         : Event(Event::Paint)
         , m_rect(rect)
         , m_window_size(window_size)
     {
     }
 
-    const Gfx::IntRect& rect() const { return m_rect; }
-    const Gfx::IntSize& window_size() const { return m_window_size; }
+    Gfx::IntRect const& rect() const { return m_rect; }
+    Gfx::IntSize const& window_size() const { return m_window_size; }
 
 private:
     Gfx::IntRect m_rect;
@@ -295,13 +295,13 @@ private:
 
 class ResizeEvent final : public Event {
 public:
-    explicit ResizeEvent(const Gfx::IntSize& size)
+    explicit ResizeEvent(Gfx::IntSize const& size)
         : Event(Event::Resize)
         , m_size(size)
     {
     }
 
-    const Gfx::IntSize& size() const { return m_size; }
+    Gfx::IntSize const& size() const { return m_size; }
 
 private:
     Gfx::IntSize m_size;
@@ -309,15 +309,15 @@ private:
 
 class ContextMenuEvent final : public Event {
 public:
-    explicit ContextMenuEvent(const Gfx::IntPoint& position, const Gfx::IntPoint& screen_position)
+    explicit ContextMenuEvent(Gfx::IntPoint const& position, Gfx::IntPoint const& screen_position)
         : Event(Event::ContextMenu)
         , m_position(position)
         , m_screen_position(screen_position)
     {
     }
 
-    const Gfx::IntPoint& position() const { return m_position; }
-    const Gfx::IntPoint& screen_position() const { return m_screen_position; }
+    Gfx::IntPoint const& position() const { return m_position; }
+    Gfx::IntPoint const& screen_position() const { return m_screen_position; }
 
 private:
     Gfx::IntPoint m_position;
@@ -401,7 +401,7 @@ private:
 
 class MouseEvent final : public Event {
 public:
-    MouseEvent(Type type, const Gfx::IntPoint& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta_x, int wheel_delta_y, int wheel_raw_delta_x, int wheel_raw_delta_y)
+    MouseEvent(Type type, Gfx::IntPoint const& position, unsigned buttons, MouseButton button, unsigned modifiers, int wheel_delta_x, int wheel_delta_y, int wheel_raw_delta_x, int wheel_raw_delta_y)
         : Event(type)
         , m_position(position)
         , m_buttons(buttons)
@@ -414,7 +414,7 @@ public:
     {
     }
 
-    const Gfx::IntPoint& position() const { return m_position; }
+    Gfx::IntPoint const& position() const { return m_position; }
     int x() const { return m_position.x(); }
     int y() const { return m_position.y(); }
     MouseButton button() const { return m_button; }
@@ -442,15 +442,15 @@ private:
 
 class DragEvent final : public Event {
 public:
-    DragEvent(Type type, const Gfx::IntPoint& position, Vector<String> mime_types)
+    DragEvent(Type type, Gfx::IntPoint const& position, Vector<String> mime_types)
         : Event(type)
         , m_position(position)
         , m_mime_types(move(mime_types))
     {
     }
 
-    const Gfx::IntPoint& position() const { return m_position; }
-    const Vector<String>& mime_types() const { return m_mime_types; }
+    Gfx::IntPoint const& position() const { return m_position; }
+    Vector<String> const& mime_types() const { return m_mime_types; }
 
 private:
     Gfx::IntPoint m_position;
@@ -459,13 +459,13 @@ private:
 
 class DropEvent final : public Event {
 public:
-    DropEvent(const Gfx::IntPoint&, const String& text, NonnullRefPtr<Core::MimeData> mime_data);
+    DropEvent(Gfx::IntPoint const&, String const& text, NonnullRefPtr<Core::MimeData> mime_data);
 
     ~DropEvent() = default;
 
-    const Gfx::IntPoint& position() const { return m_position; }
-    const String& text() const { return m_text; }
-    const Core::MimeData& mime_data() const { return m_mime_data; }
+    Gfx::IntPoint const& position() const { return m_position; }
+    String const& text() const { return m_text; }
+    Core::MimeData const& mime_data() const { return m_mime_data; }
 
 private:
     Gfx::IntPoint m_position;
@@ -491,14 +491,14 @@ public:
 
 class ScreenRectsChangeEvent final : public Event {
 public:
-    explicit ScreenRectsChangeEvent(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index)
+    explicit ScreenRectsChangeEvent(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index)
         : Event(Type::ScreenRectsChange)
         , m_rects(rects)
         , m_main_screen_index(main_screen_index)
     {
     }
 
-    const Vector<Gfx::IntRect, 4>& rects() const { return m_rects; }
+    Vector<Gfx::IntRect, 4> const& rects() const { return m_rects; }
     size_t main_screen_index() const { return m_main_screen_index; }
 
 private:

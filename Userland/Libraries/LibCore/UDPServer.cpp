@@ -38,7 +38,7 @@ UDPServer::~UDPServer()
     ::close(m_fd);
 }
 
-bool UDPServer::bind(const IPv4Address& address, u16 port)
+bool UDPServer::bind(IPv4Address const& address, u16 port)
 {
     if (m_bound)
         return false;
@@ -46,7 +46,7 @@ bool UDPServer::bind(const IPv4Address& address, u16 port)
     auto saddr = SocketAddress(address, port);
     auto in = saddr.to_sockaddr_in();
 
-    if (::bind(m_fd, (const sockaddr*)&in, sizeof(in)) != 0) {
+    if (::bind(m_fd, (sockaddr const*)&in, sizeof(in)) != 0) {
         perror("UDPServer::bind");
         return false;
     }

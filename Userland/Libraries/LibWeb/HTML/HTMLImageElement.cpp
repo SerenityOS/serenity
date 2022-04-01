@@ -70,7 +70,7 @@ void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) c
     });
 }
 
-void HTMLImageElement::parse_attribute(const FlyString& name, const String& value)
+void HTMLImageElement::parse_attribute(FlyString const& name, String const& value)
 {
     HTMLElement::parse_attribute(name, value);
 
@@ -83,7 +83,7 @@ RefPtr<Layout::Node> HTMLImageElement::create_layout_node(NonnullRefPtr<CSS::Sty
     return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
 }
 
-const Gfx::Bitmap* HTMLImageElement::bitmap() const
+Gfx::Bitmap const* HTMLImageElement::bitmap() const
 {
     return m_image_loader.bitmap(m_image_loader.current_frame_index());
 }

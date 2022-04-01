@@ -22,14 +22,14 @@ public:
     ~AddressSpace();
 
     PageDirectory& page_directory() { return *m_page_directory; }
-    const PageDirectory& page_directory() const { return *m_page_directory; }
+    PageDirectory const& page_directory() const { return *m_page_directory; }
 
     ErrorOr<Region*> add_region(NonnullOwnPtr<Region>);
 
     size_t region_count() const { return m_regions.size(); }
 
     RedBlackTree<FlatPtr, NonnullOwnPtr<Region>>& regions() { return m_regions; }
-    const RedBlackTree<FlatPtr, NonnullOwnPtr<Region>>& regions() const { return m_regions; }
+    RedBlackTree<FlatPtr, NonnullOwnPtr<Region>> const& regions() const { return m_regions; }
 
     void dump_regions();
 

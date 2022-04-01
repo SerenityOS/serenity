@@ -19,13 +19,13 @@ public:
     virtual ~BlockContainer() override;
 
     BlockContainer* previous_sibling() { return verify_cast<BlockContainer>(Node::previous_sibling()); }
-    const BlockContainer* previous_sibling() const { return verify_cast<BlockContainer>(Node::previous_sibling()); }
+    BlockContainer const* previous_sibling() const { return verify_cast<BlockContainer>(Node::previous_sibling()); }
     BlockContainer* next_sibling() { return verify_cast<BlockContainer>(Node::next_sibling()); }
-    const BlockContainer* next_sibling() const { return verify_cast<BlockContainer>(Node::next_sibling()); }
+    BlockContainer const* next_sibling() const { return verify_cast<BlockContainer>(Node::next_sibling()); }
 
     bool is_scrollable() const;
-    const Gfx::FloatPoint& scroll_offset() const { return m_scroll_offset; }
-    void set_scroll_offset(const Gfx::FloatPoint&);
+    Gfx::FloatPoint const& scroll_offset() const { return m_scroll_offset; }
+    void set_scroll_offset(Gfx::FloatPoint const&);
 
     Painting::PaintableWithLines const* paint_box() const;
 

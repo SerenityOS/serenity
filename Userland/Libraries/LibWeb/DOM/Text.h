@@ -16,7 +16,7 @@ class Text final : public CharacterData {
 public:
     using WrapperType = Bindings::TextWrapper;
 
-    explicit Text(Document&, const String&);
+    explicit Text(Document&, String const&);
     virtual ~Text() override = default;
 
     static NonnullRefPtr<Text> create_with_global_object(Bindings::WindowObject& window, String const& data);

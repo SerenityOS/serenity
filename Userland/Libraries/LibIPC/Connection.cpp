@@ -34,7 +34,7 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
 
     // Prepend the message size.
     uint32_t message_size = buffer.data.size();
-    TRY(buffer.data.try_prepend(reinterpret_cast<const u8*>(&message_size), sizeof(message_size)));
+    TRY(buffer.data.try_prepend(reinterpret_cast<u8 const*>(&message_size), sizeof(message_size)));
 
 #ifdef __serenity__
     for (auto& fd : buffer.fds) {

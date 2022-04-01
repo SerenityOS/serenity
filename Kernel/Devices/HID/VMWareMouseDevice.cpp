@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<VMWareMouseDevice>> VMWareMouseDevice::try_to_initialize(const I8042Controller& ps2_controller)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<VMWareMouseDevice>> VMWareMouseDevice::try_to_initialize(I8042Controller const& ps2_controller)
 {
     // FIXME: return the correct error
     if (!VMWareBackdoor::the())
@@ -51,7 +51,7 @@ void VMWareMouseDevice::irq_handle_byte_read(u8)
     evaluate_block_conditions();
 }
 
-VMWareMouseDevice::VMWareMouseDevice(const I8042Controller& ps2_controller)
+VMWareMouseDevice::VMWareMouseDevice(I8042Controller const& ps2_controller)
     : PS2MouseDevice(ps2_controller)
 {
 }

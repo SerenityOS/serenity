@@ -35,7 +35,7 @@
 
 class ColorRoleModel final : public GUI::ItemListModel<Gfx::ColorRole> {
 public:
-    explicit ColorRoleModel(const Vector<Gfx::ColorRole>& data)
+    explicit ColorRoleModel(Vector<Gfx::ColorRole> const& data)
         : ItemListModel<Gfx::ColorRole>(data)
     {
     }

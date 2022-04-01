@@ -184,7 +184,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
     if (!import_argument.is_undefined()) {
         auto* import_object = TRY(import_argument.to_object(global_object));
         dbgln("Trying to resolve stuff because import object was specified");
-        for (const Wasm::Linker::Name& import_name : linker.unresolved_imports()) {
+        for (Wasm::Linker::Name const& import_name : linker.unresolved_imports()) {
             dbgln("Trying to resolve {}::{}", import_name.module, import_name.name);
             auto value_or_error = import_object->get(import_name.module);
             if (value_or_error.is_error())
@@ -286,7 +286,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(Wasm::Module
                     resolved_imports.set(import_name, Wasm::ExternValue { address });
                     return {};
                 },
-                [&](const auto&) -> JS::ThrowCompletionOr<void> {
+                [&](auto const&) -> JS::ThrowCompletionOr<void> {
                     // FIXME: Implement these.
                     dbgln("Unimplemented import of non-function attempted");
                     return vm.throw_completion<JS::TypeError>(global_object, "LinkError: Not Implemented");
@@ -328,7 +328,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     }
     auto* buffer = buffer_or_error.release_value();
 
-    const Wasm::Module* module { nullptr };
+    Wasm::Module const* module { nullptr };
     if (is<JS::ArrayBuffer>(buffer) || is<JS::TypedArrayBase>(buffer)) {
         auto result = parse_module(global_object, buffer);
         if (result.is_error()) {
@@ -386,7 +386,7 @@ JS::Value to_js_value(JS::GlobalObject& global_object, Wasm::Value& wasm_value)
     VERIFY_NOT_REACHED();
 }
 
-JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::GlobalObject& global_object, JS::Value value, const Wasm::ValueType& type)
+JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::GlobalObject& global_object, JS::Value value, Wasm::ValueType const& type)
 {
     static ::Crypto::SignedBigInteger two_64 = "1"_sbigint.shift_left(64);
     auto& vm = global_object.vm();
@@ -439,7 +439,7 @@ JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::GlobalObject& global
 JS::NativeFunction* create_native_function(JS::GlobalObject& global_object, Wasm::FunctionAddress address, String const& name)
 {
     Optional<Wasm::FunctionType> type;
-    WebAssemblyObject::s_abstract_machine.store().get(address)->visit([&](const auto& value) { type = value.type(); });
+    WebAssemblyObject::s_abstract_machine.store().get(address)->visit([&](auto const& value) { type = value.type(); });
     if (auto entry = WebAssemblyObject::s_global_cache.function_instances.get(address); entry.has_value())
         return *entry;
 

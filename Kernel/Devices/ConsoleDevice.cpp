@@ -30,7 +30,7 @@ UNMAP_AFTER_INIT ConsoleDevice::ConsoleDevice()
 
 UNMAP_AFTER_INIT ConsoleDevice::~ConsoleDevice() = default;
 
-bool ConsoleDevice::can_read(const Kernel::OpenFileDescription&, u64) const
+bool ConsoleDevice::can_read(Kernel::OpenFileDescription const&, u64) const
 {
     return false;
 }
@@ -42,7 +42,7 @@ ErrorOr<size_t> ConsoleDevice::read(OpenFileDescription&, u64, Kernel::UserOrKer
     return 0;
 }
 
-ErrorOr<size_t> ConsoleDevice::write(OpenFileDescription&, u64, const Kernel::UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> ConsoleDevice::write(OpenFileDescription&, u64, Kernel::UserOrKernelBuffer const& data, size_t size)
 {
     if (!size)
         return 0;

@@ -75,7 +75,7 @@ bool ViewWidget::is_previous_available() const
     return false;
 }
 
-Vector<String> ViewWidget::load_files_from_directory(const String& path) const
+Vector<String> ViewWidget::load_files_from_directory(String const& path) const
 {
     Vector<String> files_in_directory;
 
@@ -90,7 +90,7 @@ Vector<String> ViewWidget::load_files_from_directory(const String& path) const
     return files_in_directory;
 }
 
-void ViewWidget::set_path(const String& path)
+void ViewWidget::set_path(String const& path)
 {
     m_path = path;
     m_files_in_same_dir = load_files_from_directory(path);
@@ -151,7 +151,7 @@ void ViewWidget::mouseup_event(GUI::MouseEvent& event)
     GUI::AbstractZoomPanWidget::mouseup_event(event);
 }
 
-void ViewWidget::load_from_file(const String& path)
+void ViewWidget::load_from_file(String const& path)
 {
     auto show_error = [&] {
         GUI::MessageBox::show(window(), String::formatted("Failed to open {}", path), "Cannot open image", GUI::MessageBox::Type::Error);
@@ -186,7 +186,7 @@ void ViewWidget::load_from_file(const String& path)
         on_image_change(m_bitmap);
 
     if (m_decoded_image->is_animated && m_decoded_image->frames.size() > 1) {
-        const auto& first_frame = m_decoded_image->frames[0];
+        auto const& first_frame = m_decoded_image->frames[0];
         m_timer->set_interval(first_frame.duration);
         m_timer->on_timeout = [this] { animate(); };
         m_timer->start();
@@ -229,7 +229,7 @@ void ViewWidget::resize_window()
     window()->resize(new_size);
 }
 
-void ViewWidget::set_bitmap(const Gfx::Bitmap* bitmap)
+void ViewWidget::set_bitmap(Gfx::Bitmap const* bitmap)
 {
     if (m_bitmap == bitmap)
         return;
@@ -246,7 +246,7 @@ void ViewWidget::animate()
 
     m_current_frame_index = (m_current_frame_index + 1) % m_decoded_image->frames.size();
 
-    const auto& current_frame = m_decoded_image->frames[m_current_frame_index];
+    auto const& current_frame = m_decoded_image->frames[m_current_frame_index];
     set_bitmap(current_frame.bitmap);
 
     if ((int)current_frame.duration != m_timer->interval()) {

@@ -62,7 +62,7 @@ public:
 
 class Link : public Line {
 public:
-    Link(String line, const Document&);
+    Link(String line, Document const&);
     virtual ~Link() override = default;
     virtual String render_to_html() const override;
 

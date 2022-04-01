@@ -37,7 +37,7 @@ class AHCIPort
     friend class AHCIController;
 
 public:
-    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPort> create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
+    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPort> create(AHCIPortHandler const&, volatile AHCI::PortRegisters&, u32 port_index);
 
     u32 port_index() const { return m_port_index; }
     u32 representative_port_index() const { return port_index() + 1; }
@@ -54,13 +54,13 @@ private:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
     bool initialize();
 
-    UNMAP_AFTER_INIT AHCIPort(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
+    UNMAP_AFTER_INIT AHCIPort(AHCIPortHandler const&, volatile AHCI::PortRegisters&, u32 port_index);
 
     ALWAYS_INLINE void clear_sata_error_register() const;
 
     void eject();
 
-    const char* try_disambiguate_sata_status();
+    char const* try_disambiguate_sata_status();
     void try_disambiguate_sata_error();
 
     bool initiate_sata_reset();

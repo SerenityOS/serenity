@@ -97,7 +97,7 @@ static constexpr u32 MUTEX_UNLOCKED = 0;
 static constexpr u32 MUTEX_LOCKED_NO_NEED_TO_WAKE = 1;
 static constexpr u32 MUTEX_LOCKED_NEED_TO_WAKE = 2;
 
-int __pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
+int __pthread_mutex_init(pthread_mutex_t* mutex, pthread_mutexattr_t const* attributes)
 {
     mutex->lock = 0;
     mutex->owner = 0;
@@ -106,7 +106,7 @@ int __pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attr
     return 0;
 }
 
-int pthread_mutex_init(pthread_mutex_t*, const pthread_mutexattr_t*) __attribute__((weak, alias("__pthread_mutex_init")));
+int pthread_mutex_init(pthread_mutex_t*, pthread_mutexattr_t const*) __attribute__((weak, alias("__pthread_mutex_init")));
 
 int __pthread_mutex_trylock(pthread_mutex_t* mutex)
 {

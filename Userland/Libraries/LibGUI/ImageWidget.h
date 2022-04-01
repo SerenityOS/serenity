@@ -18,7 +18,7 @@ class ImageWidget : public Frame {
 public:
     virtual ~ImageWidget() override = default;
 
-    void set_bitmap(const Gfx::Bitmap*);
+    void set_bitmap(Gfx::Bitmap const*);
     Gfx::Bitmap* bitmap() { return m_bitmap.ptr(); }
     Gfx::Bitmap const* bitmap() const { return m_bitmap.ptr(); }
 

@@ -23,7 +23,7 @@
 FlatPtr arg[SC_NARG];
 char outbuf[BUFSIZ];
 
-using Arguments = Vector<const char*>;
+using Arguments = Vector<char const*>;
 using ArgIter = Arguments::Iterator;
 
 static FlatPtr parse_from(ArgIter&);
@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool output_buffer = false;
     bool list_syscalls = false;
-    Vector<const char*> syscall_arguments;
+    Vector<char const*> syscall_arguments;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
@@ -154,7 +154,7 @@ static FlatPtr parse_parameter_buffer(ArgIter& iter)
 
 static FlatPtr parse_from(ArgIter& iter)
 {
-    const char* this_arg = *iter;
+    char const* this_arg = *iter;
     ++iter;
 
     // Is it a forced literal?

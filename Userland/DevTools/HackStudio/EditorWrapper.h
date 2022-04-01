@@ -29,7 +29,7 @@ public:
     virtual ~EditorWrapper() override = default;
 
     Editor& editor() { return *m_editor; }
-    const Editor& editor() const { return *m_editor; }
+    Editor const& editor() const { return *m_editor; }
 
     void save();
 
@@ -38,8 +38,8 @@ public:
     void set_mode_displayable();
     void set_mode_non_displayable();
     void set_debug_mode(bool);
-    void set_filename(const String&);
-    const String& filename() const { return m_filename; }
+    void set_filename(String const&);
+    String const& filename() const { return m_filename; }
     String const& filename_title() const { return m_filename_title; }
 
     Optional<String> const& project_root() const { return m_project_root; }

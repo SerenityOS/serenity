@@ -32,7 +32,7 @@ FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_or_without_allocation(
         return;
     }
 
-    const UnsignedBigInteger *shorter, *longer;
+    UnsignedBigInteger const *shorter, *longer;
     if (left.length() < right.length()) {
         shorter = &left;
         longer = &right;
@@ -71,7 +71,7 @@ FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_and_without_allocation(
         return;
     }
 
-    const UnsignedBigInteger *shorter, *longer;
+    UnsignedBigInteger const *shorter, *longer;
     if (left.length() < right.length()) {
         shorter = &left;
         longer = &right;
@@ -110,7 +110,7 @@ FLATTEN void UnsignedBigIntegerAlgorithms::bitwise_xor_without_allocation(
         return;
     }
 
-    const UnsignedBigInteger *shorter, *longer;
+    UnsignedBigInteger const *shorter, *longer;
     if (left.length() < right.length()) {
         shorter = &left;
         longer = &right;

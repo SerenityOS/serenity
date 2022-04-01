@@ -23,7 +23,7 @@ void ASTNode::dump(FILE* output, size_t indent) const
 void TranslationUnit::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
-    for (const auto& child : m_declarations) {
+    for (auto const& child : m_declarations) {
         child.dump(output, indent + 1);
     }
 }
@@ -45,7 +45,7 @@ void FunctionDeclaration::dump(FILE* output, size_t indent) const
     }
     print_indent(output, indent + 1);
     outln(output, "(");
-    for (const auto& arg : m_parameters) {
+    for (auto const& arg : m_parameters) {
         arg.dump(output, indent + 1);
     }
     print_indent(output, indent + 1);
@@ -155,7 +155,7 @@ void FunctionDefinition::dump(FILE* output, size_t indent) const
     ASTNode::dump(output, indent);
     print_indent(output, indent);
     outln(output, "{{");
-    for (const auto& statement : m_statements) {
+    for (auto const& statement : m_statements) {
         statement.dump(output, indent + 1);
     }
     print_indent(output, indent);
@@ -200,7 +200,7 @@ void BinaryExpression::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
 
-    const char* op_string = nullptr;
+    char const* op_string = nullptr;
     switch (m_op) {
     case BinaryOp::Addition:
         op_string = "+";
@@ -272,7 +272,7 @@ void AssignmentExpression::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
 
-    const char* op_string = nullptr;
+    char const* op_string = nullptr;
     switch (m_op) {
     case AssignmentOp::Assignment:
         op_string = "=";
@@ -296,7 +296,7 @@ void FunctionCall::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
     m_callee->dump(output, indent + 1);
-    for (const auto& arg : m_arguments) {
+    for (auto const& arg : m_arguments) {
         arg.dump(output, indent + 1);
     }
 }
@@ -349,7 +349,7 @@ void UnaryExpression::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
 
-    const char* op_string = nullptr;
+    char const* op_string = nullptr;
     switch (m_op) {
     case UnaryOp::BitwiseNot:
         op_string = "~";
@@ -449,7 +449,7 @@ NonnullRefPtrVector<Declaration> Statement::declarations() const
 {
     if (is_declaration()) {
         NonnullRefPtrVector<Declaration> vec;
-        const auto& decl = static_cast<const Declaration&>(*this);
+        auto const& decl = static_cast<Declaration const&>(*this);
         vec.empend(const_cast<Declaration&>(decl));
         return vec;
     }
@@ -607,7 +607,7 @@ void Constructor::dump(FILE* output, size_t indent) const
     outln(output, "C'tor");
     print_indent(output, indent + 1);
     outln(output, "(");
-    for (const auto& arg : parameters()) {
+    for (auto const& arg : parameters()) {
         arg.dump(output, indent + 1);
     }
     print_indent(output, indent + 1);
@@ -623,7 +623,7 @@ void Destructor::dump(FILE* output, size_t indent) const
     outln(output, "D'tor");
     print_indent(output, indent + 1);
     outln(output, "(");
-    for (const auto& arg : parameters()) {
+    for (auto const& arg : parameters()) {
         arg.dump(output, indent + 1);
     }
     print_indent(output, indent + 1);

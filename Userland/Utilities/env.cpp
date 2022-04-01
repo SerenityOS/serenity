@@ -17,8 +17,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath exec"));
 
     bool ignore_env = false;
-    const char* split_string = nullptr;
-    Vector<const char*> values;
+    char const* split_string = nullptr;
+    Vector<char const*> values;
 
     Core::ArgsParser args_parser;
     args_parser.set_stop_on_first_non_option(true);
@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     Vector<String> split_string_storage;
-    Vector<const char*> new_argv;
+    Vector<char const*> new_argv;
     if (split_string) {
         for (auto view : StringView(split_string).split_view(' ')) {
             split_string_storage.append(view);
@@ -65,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     new_argv.append(nullptr);
 
-    const char* executable = new_argv[0];
+    char const* executable = new_argv[0];
     char* const* new_argv_ptr = const_cast<char* const*>(&new_argv[0]);
 
     execvp(executable, new_argv_ptr);

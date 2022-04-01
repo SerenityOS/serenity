@@ -54,7 +54,7 @@ public:
     explicit HexDocumentFile(NonnullRefPtr<Core::File> file);
     virtual ~HexDocumentFile() = default;
 
-    HexDocumentFile(const HexDocumentFile&) = delete;
+    HexDocumentFile(HexDocumentFile const&) = delete;
 
     void set_file(NonnullRefPtr<Core::File> file);
     NonnullRefPtr<Core::File> file() const;

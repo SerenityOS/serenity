@@ -51,7 +51,7 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
 Element::~Element() = default;
 
 // https://dom.spec.whatwg.org/#dom-element-getattribute
-String Element::get_attribute(const FlyString& name) const
+String Element::get_attribute(FlyString const& name) const
 {
     // 1. Let attr be the result of getting an attribute given qualifiedName and this.
     auto const* attribute = m_attributes->get_attribute(name);
@@ -65,7 +65,7 @@ String Element::get_attribute(const FlyString& name) const
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattribute
-ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& value)
+ExceptionOr<void> Element::set_attribute(FlyString const& name, String const& value)
 {
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
@@ -156,7 +156,7 @@ ExceptionOr<void> Element::set_attribute_ns(FlyString const& namespace_, FlyStri
 }
 
 // https://dom.spec.whatwg.org/#dom-element-removeattribute
-void Element::remove_attribute(const FlyString& name)
+void Element::remove_attribute(FlyString const& name)
 {
     m_attributes->remove_attribute(name);
 
@@ -167,7 +167,7 @@ void Element::remove_attribute(const FlyString& name)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
-bool Element::has_attribute(const FlyString& name) const
+bool Element::has_attribute(FlyString const& name) const
 {
     return m_attributes->get_attribute(name) != nullptr;
 }
@@ -232,7 +232,7 @@ Vector<String> Element::get_attribute_names() const
     return names;
 }
 
-bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensitivity) const
+bool Element::has_class(FlyString const& class_name, CaseSensitivity case_sensitivity) const
 {
     return any_of(m_classes, [&](auto& it) {
         return case_sensitivity == CaseSensitivity::CaseSensitive
@@ -291,7 +291,7 @@ RefPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document&
     TODO();
 }
 
-void Element::parse_attribute(const FlyString& name, const String& value)
+void Element::parse_attribute(FlyString const& name, String const& value)
 {
     if (name == HTML::AttributeNames::class_) {
         auto new_classes = value.split_view(is_ascii_space);

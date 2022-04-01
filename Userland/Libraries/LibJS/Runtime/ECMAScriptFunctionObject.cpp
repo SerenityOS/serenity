@@ -875,7 +875,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
     VERIFY_NOT_REACHED();
 }
 
-void ECMAScriptFunctionObject::set_name(const FlyString& name)
+void ECMAScriptFunctionObject::set_name(FlyString const& name)
 {
     VERIFY(!name.is_null());
     auto& vm = this->vm();

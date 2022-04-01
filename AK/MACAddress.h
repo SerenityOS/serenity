@@ -36,7 +36,7 @@ public:
 
     constexpr ~MACAddress() = default;
 
-    constexpr const u8& operator[](unsigned i) const
+    constexpr u8 const& operator[](unsigned i) const
     {
         VERIFY(i < s_mac_address_length);
         return m_data[i];
@@ -48,7 +48,7 @@ public:
         return m_data[i];
     }
 
-    constexpr bool operator==(const MACAddress& other) const
+    constexpr bool operator==(MACAddress const& other) const
     {
         for (auto i = 0u; i < m_data.size(); ++i) {
             if (m_data[i] != other.m_data[i]) {
@@ -75,7 +75,7 @@ public:
         if (string.is_null())
             return {};
 
-        const auto parts = string.split_view(":");
+        auto const parts = string.split_view(":");
         if (parts.size() != 6)
             return {};
 
@@ -94,7 +94,7 @@ public:
 
     constexpr bool is_zero() const
     {
-        return all_of(m_data, [](const auto octet) { return octet == 0; });
+        return all_of(m_data, [](auto const octet) { return octet == 0; });
     }
 
     void copy_to(Bytes destination) const
@@ -112,7 +112,7 @@ namespace AK {
 
 template<>
 struct Traits<MACAddress> : public GenericTraits<MACAddress> {
-    static unsigned hash(const MACAddress& address) { return string_hash((const char*)&address, sizeof(address)); }
+    static unsigned hash(MACAddress const& address) { return string_hash((char const*)&address, sizeof(address)); }
 };
 
 }

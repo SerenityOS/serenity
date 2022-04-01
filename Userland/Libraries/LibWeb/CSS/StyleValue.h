@@ -941,7 +941,7 @@ public:
     {
         if (type() != other.type())
             return false;
-        return m_color == static_cast<const ColorStyleValue&>(other).m_color;
+        return m_color == static_cast<ColorStyleValue const&>(other).m_color;
     }
 
 private:
@@ -1151,7 +1151,7 @@ public:
     {
         if (type() != other.type())
             return false;
-        return m_id == static_cast<const IdentifierStyleValue&>(other).m_id;
+        return m_id == static_cast<IdentifierStyleValue const&>(other).m_id;
     }
 
 private:

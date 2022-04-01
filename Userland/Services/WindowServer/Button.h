@@ -25,14 +25,14 @@ public:
     ~Button();
 
     Gfx::IntRect relative_rect() const { return m_relative_rect; }
-    void set_relative_rect(const Gfx::IntRect& rect) { m_relative_rect = rect; }
+    void set_relative_rect(Gfx::IntRect const& rect) { m_relative_rect = rect; }
 
     Gfx::IntRect rect() const { return { {}, m_relative_rect.size() }; }
     Gfx::IntRect screen_rect() const;
 
     void paint(Screen&, Gfx::Painter&);
 
-    void on_mouse_event(const MouseEvent&);
+    void on_mouse_event(MouseEvent const&);
 
     Function<void(Button&)> on_click;
     Function<void(Button&)> on_secondary_click;
@@ -40,7 +40,7 @@ public:
 
     bool is_visible() const { return m_visible; }
 
-    void set_icon(const RefPtr<MultiScaleBitmaps>& icon) { m_icon = icon; }
+    void set_icon(RefPtr<MultiScaleBitmaps> const& icon) { m_icon = icon; }
 
 private:
     WindowFrame& m_frame;

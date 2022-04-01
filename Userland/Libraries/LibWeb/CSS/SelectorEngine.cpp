@@ -114,7 +114,7 @@ static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute co
         return !attribute.value.is_empty()
             && element.attribute(attribute.name).contains(attribute.value, case_sensitivity);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment: {
-        const auto element_attr_value = element.attribute(attribute.name);
+        auto const element_attr_value = element.attribute(attribute.name);
         if (element_attr_value.is_empty()) {
             // If the attribute value on element is empty, the selector is true
             // if the match value is also empty and false otherwise.

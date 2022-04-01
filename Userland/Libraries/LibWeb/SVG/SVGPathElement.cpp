@@ -15,7 +15,7 @@
 
 namespace Web::SVG {
 
-[[maybe_unused]] static void print_instruction(const PathInstruction& instruction)
+[[maybe_unused]] static void print_instruction(PathInstruction const& instruction)
 {
     VERIFY(PATH_DEBUG);
 

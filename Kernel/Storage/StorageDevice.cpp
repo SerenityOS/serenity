@@ -88,12 +88,12 @@ ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKern
     return pos + remaining;
 }
 
-bool StorageDevice::can_read(const OpenFileDescription&, u64 offset) const
+bool StorageDevice::can_read(OpenFileDescription const&, u64 offset) const
 {
     return offset < (max_addressable_block() * block_size());
 }
 
-ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, const UserOrKernelBuffer& inbuf, size_t len)
+ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, UserOrKernelBuffer const& inbuf, size_t len)
 {
     u64 index = offset >> block_size_log();
     off_t offset_within_block = 0;
@@ -188,7 +188,7 @@ StringView StorageDevice::early_storage_name() const
     return m_early_storage_device_name->view();
 }
 
-bool StorageDevice::can_write(const OpenFileDescription&, u64 offset) const
+bool StorageDevice::can_write(OpenFileDescription const&, u64 offset) const
 {
     return offset < (max_addressable_block() * block_size());
 }

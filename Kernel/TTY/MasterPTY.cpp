@@ -55,7 +55,7 @@ ErrorOr<size_t> MasterPTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& b
     return m_buffer->read(buffer, size);
 }
 
-ErrorOr<size_t> MasterPTY::write(OpenFileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> MasterPTY::write(OpenFileDescription&, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
     if (!m_slave)
         return EIO;
@@ -63,14 +63,14 @@ ErrorOr<size_t> MasterPTY::write(OpenFileDescription&, u64, const UserOrKernelBu
     return size;
 }
 
-bool MasterPTY::can_read(const OpenFileDescription&, u64) const
+bool MasterPTY::can_read(OpenFileDescription const&, u64) const
 {
     if (!m_slave)
         return true;
     return !m_buffer->is_empty();
 }
 
-bool MasterPTY::can_write(const OpenFileDescription&, u64) const
+bool MasterPTY::can_write(OpenFileDescription const&, u64) const
 {
     return true;
 }
@@ -84,7 +84,7 @@ void MasterPTY::notify_slave_closed(Badge<SlavePTY>)
         m_slave = nullptr;
 }
 
-ErrorOr<size_t> MasterPTY::on_slave_write(const UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> MasterPTY::on_slave_write(UserOrKernelBuffer const& data, size_t size)
 {
     if (m_closed)
         return EIO;
@@ -129,7 +129,7 @@ ErrorOr<void> MasterPTY::ioctl(OpenFileDescription& description, unsigned reques
     }
 }
 
-ErrorOr<NonnullOwnPtr<KString>> MasterPTY::pseudo_path(const OpenFileDescription&) const
+ErrorOr<NonnullOwnPtr<KString>> MasterPTY::pseudo_path(OpenFileDescription const&) const
 {
     return KString::formatted("ptm:{}", m_index);
 }

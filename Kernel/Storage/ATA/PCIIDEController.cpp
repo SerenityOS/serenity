@@ -53,7 +53,7 @@ bool PCIIDEController::is_bus_master_capable() const
     return m_prog_if.value() & (1 << 7);
 }
 
-static const char* detect_controller_type(u8 programming_value)
+static char const* detect_controller_type(u8 programming_value)
 {
     switch (programming_value) {
     case 0x00:

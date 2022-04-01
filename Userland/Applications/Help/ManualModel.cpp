@@ -34,10 +34,10 @@ Optional<GUI::ModelIndex> ManualModel::index_from_path(StringView path) const
         auto parent_index = index(section, 0);
         for (int row = 0; row < row_count(parent_index); ++row) {
             auto child_index = index(row, 0, parent_index);
-            auto* node = static_cast<const ManualNode*>(child_index.internal_data());
+            auto* node = static_cast<ManualNode const*>(child_index.internal_data());
             if (!node->is_page())
                 continue;
-            auto* page = static_cast<const ManualPageNode*>(node);
+            auto* page = static_cast<ManualPageNode const*>(node);
             if (page->path() != path)
                 continue;
             return child_index;
@@ -50,10 +50,10 @@ String ManualModel::page_name(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto* node = static_cast<const ManualNode*>(index.internal_data());
+    auto* node = static_cast<ManualNode const*>(index.internal_data());
     if (!node->is_page())
         return {};
-    auto* page = static_cast<const ManualPageNode*>(node);
+    auto* page = static_cast<ManualPageNode const*>(node);
     return page->name();
 }
 
@@ -61,10 +61,10 @@ String ManualModel::page_path(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto* node = static_cast<const ManualNode*>(index.internal_data());
+    auto* node = static_cast<ManualNode const*>(index.internal_data());
     if (!node->is_page())
         return {};
-    auto* page = static_cast<const ManualPageNode*>(node);
+    auto* page = static_cast<ManualPageNode const*>(node);
     return page->path();
 }
 
@@ -91,11 +91,11 @@ String ManualModel::page_and_section(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto* node = static_cast<const ManualNode*>(index.internal_data());
+    auto* node = static_cast<ManualNode const*>(index.internal_data());
     if (!node->is_page())
         return {};
-    auto* page = static_cast<const ManualPageNode*>(node);
-    auto* section = static_cast<const ManualSectionNode*>(page->parent());
+    auto* page = static_cast<ManualPageNode const*>(node);
+    auto* section = static_cast<ManualSectionNode const*>(page->parent());
     return String::formatted("{}({})", page->name(), section->section_name());
 }
 
@@ -103,7 +103,7 @@ GUI::ModelIndex ManualModel::index(int row, int column, const GUI::ModelIndex& p
 {
     if (!parent_index.is_valid())
         return create_index(row, column, &s_sections[row]);
-    auto* parent = static_cast<const ManualNode*>(parent_index.internal_data());
+    auto* parent = static_cast<ManualNode const*>(parent_index.internal_data());
     auto* child = &parent->children()[row];
     return create_index(row, column, child);
 }
@@ -112,7 +112,7 @@ GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto* child = static_cast<const ManualNode*>(index.internal_data());
+    auto* child = static_cast<ManualNode const*>(index.internal_data());
     auto* parent = child->parent();
     if (parent == nullptr)
         return {};
@@ -135,7 +135,7 @@ int ManualModel::row_count(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return sizeof(s_sections) / sizeof(s_sections[0]);
-    auto* node = static_cast<const ManualNode*>(index.internal_data());
+    auto* node = static_cast<ManualNode const*>(index.internal_data());
     return node->children().size();
 }
 
@@ -146,7 +146,7 @@ int ManualModel::column_count(const GUI::ModelIndex&) const
 
 GUI::Variant ManualModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    auto* node = static_cast<const ManualNode*>(index.internal_data());
+    auto* node = static_cast<ManualNode const*>(index.internal_data());
     switch (role) {
     case GUI::ModelRole::Search:
         if (!node->is_page())
@@ -165,7 +165,7 @@ GUI::Variant ManualModel::data(const GUI::ModelIndex& index, GUI::ModelRole role
     }
 }
 
-void ManualModel::update_section_node_on_toggle(const GUI::ModelIndex& index, const bool open)
+void ManualModel::update_section_node_on_toggle(const GUI::ModelIndex& index, bool const open)
 {
     auto* node = static_cast<ManualSectionNode*>(index.internal_data());
     node->set_open(open);

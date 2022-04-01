@@ -14,12 +14,12 @@
 namespace JS {
 
 // U+2028 LINE SEPARATOR
-constexpr const char line_separator_chars[] { (char)0xe2, (char)0x80, (char)0xa8, 0 };
+constexpr char const line_separator_chars[] { (char)0xe2, (char)0x80, (char)0xa8, 0 };
 constexpr const StringView LINE_SEPARATOR_STRING { line_separator_chars };
 constexpr const u32 LINE_SEPARATOR { 0x2028 };
 
 // U+2029 PARAGRAPH SEPARATOR
-constexpr const char paragraph_separator_chars[] { (char)0xe2, (char)0x80, (char)0xa9, 0 };
+constexpr char const paragraph_separator_chars[] { (char)0xe2, (char)0x80, (char)0xa9, 0 };
 constexpr const StringView PARAGRAPH_SEPARATOR_STRING { paragraph_separator_chars };
 constexpr const u32 PARAGRAPH_SEPARATOR { 0x2029 };
 
@@ -197,10 +197,10 @@ public:
     TokenType type() const { return m_type; }
     TokenCategory category() const;
     static TokenCategory category(TokenType);
-    const char* name() const;
-    static const char* name(TokenType);
+    char const* name() const;
+    static char const* name(TokenType);
 
-    const String& message() const { return m_message; }
+    String const& message() const { return m_message; }
     StringView trivia() const { return m_trivia; }
     StringView original_value() const { return m_original_value; }
     StringView value() const

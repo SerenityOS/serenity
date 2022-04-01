@@ -29,7 +29,7 @@ public:
         if (has_any_error())
             return 0;
 
-        const auto count = min(bytes.size(), remaining());
+        auto const count = min(bytes.size(), remaining());
         __builtin_memcpy(bytes.data(), m_bytes.data() + m_offset, count);
         m_offset += count;
         return count;
@@ -98,7 +98,7 @@ public:
 
     size_t write(ReadonlyBytes bytes) override
     {
-        const auto nwritten = bytes.copy_trimmed_to(m_bytes.slice(m_offset));
+        auto const nwritten = bytes.copy_trimmed_to(m_bytes.slice(m_offset));
         m_offset += nwritten;
         return nwritten;
     }
@@ -116,7 +116,7 @@ public:
 
     size_t fill_to_end(u8 value)
     {
-        const auto nwritten = m_bytes.slice(m_offset).fill(value);
+        auto const nwritten = m_bytes.slice(m_offset).fill(value);
         m_offset += nwritten;
         return nwritten;
     }
@@ -126,7 +126,7 @@ public:
     ReadonlyBytes bytes() const { return { data(), size() }; }
     Bytes bytes() { return { data(), size() }; }
 
-    const u8* data() const { return m_bytes.data(); }
+    u8 const* data() const { return m_bytes.data(); }
     u8* data() { return m_bytes.data(); }
 
     size_t size() const { return m_offset; }
@@ -186,8 +186,8 @@ public:
     {
         size_t nread = 0;
         while (bytes.size() - nread > 0 && m_write_offset - m_read_offset - nread > 0) {
-            const auto chunk_index = (m_read_offset - m_base_offset + nread) / chunk_size;
-            const auto chunk_bytes = m_chunks[chunk_index].bytes().slice((m_read_offset + nread) % chunk_size).trim(m_write_offset - m_read_offset - nread);
+            auto const chunk_index = (m_read_offset - m_base_offset + nread) / chunk_size;
+            auto const chunk_bytes = m_chunks[chunk_index].bytes().slice((m_read_offset + nread) % chunk_size).trim(m_write_offset - m_read_offset - nread);
             nread += chunk_bytes.copy_trimmed_to(bytes.slice(nread));
         }
 
@@ -199,7 +199,7 @@ public:
         if (has_any_error())
             return 0;
 
-        const auto nread = read_without_consuming(bytes);
+        auto const nread = read_without_consuming(bytes);
 
         m_read_offset += nread;
         try_discard_chunks();
@@ -244,7 +244,7 @@ public:
         // FIXME: Handle possible OOM situation.
         auto buffer = ByteBuffer::create_uninitialized(size()).release_value_but_fixme_should_propagate_errors();
 
-        const auto nread = read_without_consuming(buffer);
+        auto const nread = read_without_consuming(buffer);
         VERIFY(nread == buffer.size());
 
         return buffer;

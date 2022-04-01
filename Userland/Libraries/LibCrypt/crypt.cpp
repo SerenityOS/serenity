@@ -15,7 +15,7 @@ extern "C" {
 
 static struct crypt_data crypt_data;
 
-char* crypt(const char* key, const char* salt)
+char* crypt(char const* key, char const* salt)
 {
     crypt_data.initialized = true;
     return crypt_r(key, salt, &crypt_data);
@@ -24,7 +24,7 @@ char* crypt(const char* key, const char* salt)
 static constexpr size_t crypt_salt_max = 16;
 static constexpr size_t sha_string_length = 44;
 
-char* crypt_r(const char* key, const char* salt, struct crypt_data* data)
+char* crypt_r(char const* key, char const* salt, struct crypt_data* data)
 {
     if (!data->initialized) {
         errno = EINVAL;
@@ -33,7 +33,7 @@ char* crypt_r(const char* key, const char* salt, struct crypt_data* data)
 
     if (salt[0] == '$') {
         if (salt[1] == '5') {
-            const char* salt_value = salt + 3;
+            char const* salt_value = salt + 3;
             size_t salt_len = min(strcspn(salt_value, "$"), crypt_salt_max);
             size_t header_len = salt_len + 3;
 
@@ -46,7 +46,7 @@ char* crypt_r(const char* key, const char* salt, struct crypt_data* data)
 
             Crypto::Hash::SHA256 sha;
             sha.update(key);
-            sha.update((const u8*)salt_value, salt_len);
+            sha.update((u8 const*)salt_value, salt_len);
 
             auto digest = sha.digest();
             auto string = encode_base64(ReadonlyBytes(digest.immutable_data(), digest.data_length()));

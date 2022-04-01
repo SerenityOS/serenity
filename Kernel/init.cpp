@@ -131,7 +131,7 @@ READONLY_AFTER_INIT PhysicalAddress boot_pdpt;
 READONLY_AFTER_INIT PhysicalAddress boot_pd0;
 READONLY_AFTER_INIT PhysicalAddress boot_pd_kernel;
 READONLY_AFTER_INIT PageTableEntry* boot_pd_kernel_pt1023;
-READONLY_AFTER_INIT const char* kernel_cmdline;
+READONLY_AFTER_INIT char const* kernel_cmdline;
 READONLY_AFTER_INIT u32 multiboot_flags;
 READONLY_AFTER_INIT multiboot_memory_map_t* multiboot_memory_map;
 READONLY_AFTER_INIT size_t multiboot_memory_map_count;
@@ -395,7 +395,7 @@ void init_stage2(void*)
     if (boot_profiling) {
         dbgln("Starting full system boot profiling");
         MutexLocker mutex_locker(Process::current().big_lock());
-        const auto enable_all = ~(u64)0;
+        auto const enable_all = ~(u64)0;
         auto result = Process::current().sys$profiling_enable(-1, reinterpret_cast<FlatPtr>(&enable_all));
         VERIFY(!result.is_error());
     }

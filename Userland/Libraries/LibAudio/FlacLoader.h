@@ -101,7 +101,7 @@ private:
     u16 m_min_block_size { 0 };
     u16 m_max_block_size { 0 };
     // Frames are units of encoded audio data, both of these are 24-bit
-    u32 m_min_frame_size { 0 }; //24 bit
+    u32 m_min_frame_size { 0 }; // 24 bit
     u32 m_max_frame_size { 0 }; // 24 bit
     u64 m_total_samples { 0 };  // 36 bit
     u8 m_md5_checksum[128 / 8]; // 128 bit (!)

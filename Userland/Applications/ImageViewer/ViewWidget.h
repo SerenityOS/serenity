@@ -29,13 +29,13 @@ public:
 
     virtual ~ViewWidget() override = default;
 
-    const Gfx::Bitmap* bitmap() const { return m_bitmap.ptr(); }
-    const String& path() const { return m_path; }
+    Gfx::Bitmap const* bitmap() const { return m_bitmap.ptr(); }
+    String const& path() const { return m_path; }
     void set_toolbar_height(int height) { m_toolbar_height = height; }
     int toolbar_height() { return m_toolbar_height; }
     bool scaled_for_first_image() { return m_scaled_for_first_image; }
     void set_scaled_for_first_image(bool val) { m_scaled_for_first_image = val; }
-    void set_path(const String& path);
+    void set_path(String const& path);
     void resize_window();
     void set_scaling_mode(Gfx::Painter::ScalingMode);
 
@@ -46,11 +46,11 @@ public:
     void flip(Gfx::Orientation);
     void rotate(Gfx::RotationDirection);
     void navigate(Directions);
-    void load_from_file(const String&);
+    void load_from_file(String const&);
 
     Function<void()> on_doubleclick;
     Function<void(const GUI::DropEvent&)> on_drop;
-    Function<void(const Gfx::Bitmap*)> on_image_change;
+    Function<void(Gfx::Bitmap const*)> on_image_change;
 
 private:
     ViewWidget();
@@ -60,9 +60,9 @@ private:
     virtual void mouseup_event(GUI::MouseEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
 
-    void set_bitmap(const Gfx::Bitmap* bitmap);
+    void set_bitmap(Gfx::Bitmap const* bitmap);
     void animate();
-    Vector<String> load_files_from_directory(const String& path) const;
+    Vector<String> load_files_from_directory(String const& path) const;
 
     String m_path;
     RefPtr<Gfx::Bitmap> m_bitmap;

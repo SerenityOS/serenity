@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio id inet unix"));
 
-    const char* host_name;
+    char const* host_name;
     int max_hops = 30;
     int max_retries = 3;
     int echo_timeout = 5;
@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     sockaddr_in host_address {};
     host_address.sin_family = AF_INET;
     host_address.sin_port = 44444;
-    host_address.sin_addr.s_addr = *(const in_addr_t*)hostent->h_addr_list[0];
+    host_address.sin_addr.s_addr = *(in_addr_t const*)hostent->h_addr_list[0];
 
     int fd = TRY(Core::System::socket(AF_INET, SOCK_RAW, IPPROTO_ICMP));
 

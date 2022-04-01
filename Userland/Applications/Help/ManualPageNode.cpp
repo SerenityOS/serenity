@@ -8,7 +8,7 @@
 #include "ManualPageNode.h"
 #include "ManualSectionNode.h"
 
-const ManualNode* ManualPageNode::parent() const
+ManualNode const* ManualPageNode::parent() const
 {
     return &m_section;
 }

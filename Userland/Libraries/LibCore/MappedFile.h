@@ -24,7 +24,7 @@ public:
     ~MappedFile();
 
     void* data() { return m_data; }
-    const void* data() const { return m_data; }
+    void const* data() const { return m_data; }
 
     size_t size() const { return m_size; }
 

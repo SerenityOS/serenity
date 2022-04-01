@@ -371,11 +371,11 @@ int Emulator::virt$symlink(FlatPtr params_addr)
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
     auto target = mmu().copy_buffer_from_vm((FlatPtr)params.target.characters, params.target.length);
-    params.target.characters = (const char*)target.data();
+    params.target.characters = (char const*)target.data();
     params.target.length = target.size();
 
     auto link = mmu().copy_buffer_from_vm((FlatPtr)params.linkpath.characters, params.linkpath.length);
-    params.linkpath.characters = (const char*)link.data();
+    params.linkpath.characters = (char const*)link.data();
     params.linkpath.length = link.size();
 
     return syscall(SC_symlink, &params);
@@ -387,11 +387,11 @@ int Emulator::virt$rename(FlatPtr params_addr)
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
     auto new_path = mmu().copy_buffer_from_vm((FlatPtr)params.new_path.characters, params.new_path.length);
-    params.new_path.characters = (const char*)new_path.data();
+    params.new_path.characters = (char const*)new_path.data();
     params.new_path.length = new_path.size();
 
     auto old_path = mmu().copy_buffer_from_vm((FlatPtr)params.old_path.characters, params.old_path.length);
-    params.old_path.characters = (const char*)old_path.data();
+    params.old_path.characters = (char const*)old_path.data();
     params.old_path.length = old_path.size();
 
     return syscall(SC_rename, &params);
@@ -403,11 +403,11 @@ int Emulator::virt$set_coredump_metadata(FlatPtr params_addr)
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
     auto key = mmu().copy_buffer_from_vm((FlatPtr)params.key.characters, params.key.length);
-    params.key.characters = (const char*)key.data();
+    params.key.characters = (char const*)key.data();
     params.key.length = key.size();
 
     auto value = mmu().copy_buffer_from_vm((FlatPtr)params.value.characters, params.value.length);
-    params.value.characters = (const char*)value.data();
+    params.value.characters = (char const*)value.data();
     params.value.length = value.size();
 
     return syscall(SC_set_coredump_metadata, &params);
@@ -416,7 +416,7 @@ int Emulator::virt$set_coredump_metadata(FlatPtr params_addr)
 int Emulator::virt$dbgputstr(FlatPtr characters, int length)
 {
     auto buffer = mmu().copy_buffer_from_vm(characters, length);
-    dbgputstr((const char*)buffer.data(), buffer.size());
+    dbgputstr((char const*)buffer.data(), buffer.size());
     return 0;
 }
 
@@ -437,7 +437,7 @@ int Emulator::virt$chown(FlatPtr params_addr)
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
 
     auto path = mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length);
-    params.path.characters = (const char*)path.data();
+    params.path.characters = (char const*)path.data();
     params.path.length = path.size();
 
     return syscall(SC_chown, &params);
@@ -635,7 +635,7 @@ int Emulator::virt$recvmsg(int sockfd, FlatPtr msg_addr, int flags)
     mmu().copy_from_vm(mmu_iovs.data(), (FlatPtr)mmu_msg.msg_iov, mmu_msg.msg_iovlen * sizeof(iovec));
     Vector<ByteBuffer, 1> buffers;
     Vector<iovec, 1> iovs;
-    for (const auto& iov : mmu_iovs) {
+    for (auto const& iov : mmu_iovs) {
         auto buffer_result = ByteBuffer::create_uninitialized(iov.iov_len);
         if (buffer_result.is_error())
             return -ENOMEM;
@@ -819,7 +819,7 @@ u32 Emulator::virt$open(u32 params_addr)
     host_params.dirfd = params.dirfd;
     host_params.mode = params.mode;
     host_params.options = params.options;
-    host_params.path.characters = (const char*)path.data();
+    host_params.path.characters = (char const*)path.data();
     host_params.path.length = path.size();
 
     return syscall(SC_open, &host_params);
@@ -1315,7 +1315,7 @@ int Emulator::virt$realpath(FlatPtr params_addr)
     auto& host_buffer = buffer_result.value();
 
     Syscall::SC_realpath_params host_params;
-    host_params.path = { (const char*)path.data(), path.size() };
+    host_params.path = { (char const*)path.data(), path.size() };
     host_params.buffer = { (char*)host_buffer.data(), host_buffer.size() };
     int rc = syscall(SC_realpath, &host_params);
     if (rc < 0)
@@ -1587,7 +1587,7 @@ int Emulator::virt$readlink(FlatPtr params_addr)
     auto& host_buffer = buffer_result.value();
 
     Syscall::SC_readlink_params host_params;
-    host_params.path = { (const char*)path.data(), path.size() };
+    host_params.path = { (char const*)path.data(), path.size() };
     host_params.buffer = { (char*)host_buffer.data(), host_buffer.size() };
     int rc = syscall(SC_readlink, &host_params);
     if (rc < 0)
