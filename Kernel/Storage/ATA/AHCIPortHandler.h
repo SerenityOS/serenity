@@ -34,7 +34,6 @@ public:
     static ErrorOr<NonnullRefPtr<AHCIPortHandler>> create(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
     virtual ~AHCIPortHandler() override;
 
-    RefPtr<StorageDevice> device_at_port(size_t port_index) const;
     virtual StringView purpose() const override { return "SATA Port Handler"sv; }
 
     AHCI::HBADefinedCapabilities hba_capabilities() const;
@@ -57,9 +56,6 @@ private:
     };
 
     AHCI::MaskedBitField create_pending_ports_interrupts_bitfield() const;
-
-    void start_request(AsyncBlockDeviceRequest&, bool, bool, u16);
-    void complete_current_request(AsyncDeviceRequest::RequestResult);
 
     void enumerate_ports(Function<void(AHCIPort const&)> callback) const;
     RefPtr<AHCIPort> port_at_index(u32 port_index) const;
