@@ -20,9 +20,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AHCIPort>> AHCIPort::create(AHCIPortHandler const& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AHCIPort>> AHCIPort::create(AHCIController const& controller, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
-    auto port = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AHCIPort(handler, registers, port_index)));
+    auto port = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AHCIPort(controller, hba_capabilities, registers, port_index)));
     TRY(port->allocate_resources_and_initialize_ports());
     return port;
 }
@@ -53,10 +53,11 @@ ErrorOr<void> AHCIPort::allocate_resources_and_initialize_ports()
     return {};
 }
 
-UNMAP_AFTER_INIT AHCIPort::AHCIPort(AHCIPortHandler const& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
+UNMAP_AFTER_INIT AHCIPort::AHCIPort(AHCIController const& controller, AHCI::HBADefinedCapabilities hba_capabilities, volatile AHCI::PortRegisters& registers, u32 port_index)
     : m_port_index(port_index)
+    , m_hba_capabilities(hba_capabilities)
     , m_port_registers(registers)
-    , m_parent_handler(handler)
+    , m_parent_controller(controller)
     , m_interrupt_status((u32 volatile&)m_port_registers.is)
     , m_interrupt_enable((u32 volatile&)m_port_registers.ie)
 {
@@ -177,8 +178,14 @@ void AHCIPort::recover_from_fatal_error()
 {
     MutexLocker locker(m_lock);
     SpinlockLocker lock(m_hard_lock);
-    dmesgln("{}: AHCI Port {} fatal error, shutting down!", m_parent_handler->hba_controller()->pci_address(), representative_port_index());
-    dmesgln("{}: AHCI Port {} fatal error, SError {}", m_parent_handler->hba_controller()->pci_address(), representative_port_index(), (u32)m_port_registers.serr);
+    RefPtr<AHCIController> controller = m_parent_controller.strong_ref();
+    if (!controller) {
+        dmesgln("AHCI Port {}: fatal error, controller not available", representative_port_index());
+        return;
+    }
+
+    dmesgln("{}: AHCI Port {} fatal error, shutting down!", controller->pci_address(), representative_port_index());
+    dmesgln("{}: AHCI Port {} fatal error, SError {}", controller->pci_address(), representative_port_index(), (u32)m_port_registers.serr);
     stop_command_list_processing();
     stop_fis_receiving();
     m_interrupt_enable.clear();
@@ -319,8 +326,12 @@ bool AHCIPort::initialize()
     size_t logical_sector_size = 512;
     size_t physical_sector_size = 512;
     u64 max_addressable_sector = 0;
+    RefPtr<AHCIController> controller = m_parent_controller.strong_ref();
+    if (!controller)
+        return false;
+
     if (identify_device()) {
-        auto identify_block = Memory::map_typed<ATAIdentifyBlock>(m_parent_handler->get_identify_metadata_physical_region(m_port_index)).release_value_but_fixme_should_propagate_errors();
+        auto identify_block = Memory::map_typed<ATAIdentifyBlock>(controller->get_identify_metadata_physical_region({}, m_port_index)).release_value_but_fixme_should_propagate_errors();
         // Check if word 106 is valid before using it!
         if ((identify_block->physical_sector_size_to_logical_sector_size >> 14) == 1) {
             if (identify_block->physical_sector_size_to_logical_sector_size & (1 << 12)) {
@@ -345,7 +356,7 @@ bool AHCIPort::initialize()
 
         // FIXME: We don't support ATAPI devices yet, so for now we don't "create" them
         if (!is_atapi_attached()) {
-            m_connected_device = ATADiskDevice::create(m_parent_handler->hba_controller(), { m_port_index, 0 }, 0, logical_sector_size, max_addressable_sector);
+            m_connected_device = ATADiskDevice::create(*controller, { m_port_index, 0 }, 0, logical_sector_size, max_addressable_sector);
         } else {
             dbgln("AHCI Port {}: Ignoring ATAPI devices for now as we don't currently support them.", representative_port_index());
         }
@@ -647,6 +658,10 @@ bool AHCIPort::identify_device()
     if (!spin_until_ready())
         return false;
 
+    RefPtr<AHCIController> controller = m_parent_controller.strong_ref();
+    if (!controller)
+        return false;
+
     auto unused_command_header = try_to_find_unused_command_header();
     VERIFY(unused_command_header.has_value());
     auto* command_list_entries = (volatile AHCI::CommandHeader*)m_command_list_region->vaddr().as_ptr();
@@ -663,7 +678,7 @@ bool AHCIPort::identify_device()
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();
     memset(const_cast<u8*>(command_table.command_fis), 0, 64);
     command_table.descriptors[0].base_high = 0;
-    command_table.descriptors[0].base_low = m_parent_handler->get_identify_metadata_physical_region(m_port_index).get();
+    command_table.descriptors[0].base_low = controller->get_identify_metadata_physical_region({}, m_port_index).get();
     command_table.descriptors[0].byte_count = 512 - 1;
     auto& fis = *(volatile FIS::HostToDevice::Register*)command_table.command_fis;
     fis.header.fis_type = (u8)FIS::Type::RegisterHostToDevice;
@@ -799,8 +814,8 @@ void AHCIPort::spin_up() const
 {
     VERIFY(m_lock.is_locked());
     VERIFY(m_hard_lock.is_locked());
-    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Spin up. Staggered spin up? {}", representative_port_index(), m_parent_handler->hba_capabilities().staggered_spin_up_supported);
-    if (!m_parent_handler->hba_capabilities().staggered_spin_up_supported)
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Spin up. Staggered spin up? {}", representative_port_index(), m_hba_capabilities.staggered_spin_up_supported);
+    if (!m_hba_capabilities.staggered_spin_up_supported)
         return;
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Spinning up device.", representative_port_index());
     m_port_registers.cmd = m_port_registers.cmd | (1 << 1);
