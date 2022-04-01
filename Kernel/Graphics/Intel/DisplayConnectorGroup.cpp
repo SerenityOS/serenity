@@ -12,6 +12,7 @@
 #include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/Intel/DisplayConnectorGroup.h>
+#include <Kernel/Graphics/Intel/Plane/G33DisplayPlane.h>
 #include <Kernel/Graphics/Intel/Transcoder/CRTDisplayTranscoder.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -155,7 +156,7 @@ ErrorOr<void> IntelDisplayConnectorGroup::initialize_gen4_connectors()
     // DPLL A Multiplier is at 0x601C, between them (at 0x6018) there is the DPLL B Control register.
     auto dpll_control_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x6014);
     m_transcoders[0] = TRY(IntelCRTDisplayTranscoder::create_with_physical_addresses(transcoder_registers_paddr, pipe_registers_paddr, dpll_registers_paddr, dpll_control_registers_paddr));
-    m_planes[0] = TRY(IntelDisplayPlane::create_with_physical_address(m_mmio_first_region.pci_bar_paddr.offset(0x70180)));
+    m_planes[0] = TRY(IntelG33DisplayPlane::create_with_physical_address(m_mmio_first_region.pci_bar_paddr.offset(0x70180)));
     Array<u8, 128> crt_edid_bytes {};
     {
         SpinlockLocker control_lock(m_control_lock);
