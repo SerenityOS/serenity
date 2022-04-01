@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=ninja
-version=1.8.2
-files="https://github.com/ninja-build/ninja/archive/v${version}.tar.gz ninja-v${version}.tar.gz 86b8700c3d0880c2b44c2ff67ce42774aaf8c28cbf57725cb881569288c1c6f4"
+version=1.10.2
+files="https://github.com/ninja-build/ninja/archive/v${version}.tar.gz ninja-v${version}.tar.gz ce35865411f0490368a8fc383f29071de6690cbadc27704734978221f25e2bed"
 auth_type=sha256
 
 build() {
