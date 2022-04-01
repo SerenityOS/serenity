@@ -10,6 +10,7 @@
 #include "Emulator.h"
 #include "Region.h"
 #include "SoftFPU.h"
+#include "SoftVPU.h"
 #include "ValueWithShadow.h"
 #include <AK/ByteReader.h>
 #include <LibX86/Instruction.h>
@@ -1247,6 +1248,7 @@ private:
 
     Emulator& m_emulator;
     SoftFPU m_fpu;
+    SoftVPU m_vpu;
 
     ValueWithShadow<PartAddressableRegister> m_gpr[8];
 
