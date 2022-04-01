@@ -177,6 +177,27 @@ static void parse_args(Main::Arguments arguments, TopOption& top_option)
     args_parser.parse(arguments);
 }
 
+static bool check_quit()
+{
+    char c = '\0';
+    read(STDIN_FILENO, &c, sizeof(c));
+    return c == 'q' || c == 'Q';
+}
+
+static int g_old_stdin;
+
+static void restore_stdin()
+{
+    fcntl(STDIN_FILENO, F_SETFL, g_old_stdin);
+}
+
+static void enable_nonblocking_stdin()
+{
+    g_old_stdin = fcntl(STDIN_FILENO, F_GETFL);
+    fcntl(STDIN_FILENO, F_SETFL, g_old_stdin | O_NONBLOCK);
+    atexit(restore_stdin);
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty sigaction"));
@@ -191,6 +212,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath tty"));
     TopOption top_option;
     parse_args(arguments, top_option);
+
+    enable_nonblocking_stdin();
 
     Vector<ThreadData*> threads;
     auto prev = get_snapshot();
@@ -277,6 +300,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         threads.clear_with_capacity();
         prev = move(current);
-        sleep(top_option.delay_time);
+
+        for (int sleep_slice = 0; sleep_slice < top_option.delay_time * 1000; sleep_slice += 100) {
+            if (check_quit())
+                exit(0);
+            usleep(100 * 1000);
+        }
     }
 }
