@@ -58,7 +58,7 @@ private:
     ErrorOr<void> set_mode_setting(IntelNativeDisplayConnector&, DisplayConnector::ModeSetting const&);
 
     StringView convert_analog_output_register_to_string(AnalogOutputRegisterOffset index) const;
-    void write_to_analog_output_register(AnalogOutputRegisterOffset, u32 value) const;
+    void write_to_analog_output_register(AnalogOutputRegisterOffset, u32 value);
     u32 read_from_analog_output_register(AnalogOutputRegisterOffset) const;
     void write_to_general_register(RegisterOffset offset, u32 value) const;
     u32 read_from_general_register(RegisterOffset offset) const;

@@ -292,7 +292,7 @@ u32 IntelDisplayConnectorGroup::read_from_general_register(RegisterOffset offset
     return value;
 }
 
-void IntelDisplayConnectorGroup::write_to_analog_output_register(AnalogOutputRegisterOffset index, u32 value) const
+void IntelDisplayConnectorGroup::write_to_analog_output_register(AnalogOutputRegisterOffset index, u32 value)
 {
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics Display Connector:: Write to {} value of {:x}", convert_analog_output_register_to_string(index), value);
     write_to_general_register(to_underlying(index), value);
