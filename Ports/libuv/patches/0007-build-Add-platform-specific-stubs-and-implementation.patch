@@ -30,7 +30,7 @@ new file mode 100644
 index 0000000..821cf37
 --- /dev/null
 +++ b/src/unix/serenity-core.c
-@@ -0,0 +1,137 @@
+@@ -0,0 +1,112 @@
 +#include "uv.h"
 +#include "internal.h"
 +
@@ -60,31 +60,6 @@ index 0000000..821cf37
 +  }
 +
 +  uv__free(addresses);
-+}
-+
-+static int uv__slurp(const char* filename, char* buf, size_t len) {
-+  ssize_t n;
-+  int fd;
-+
-+  assert(len > 0);
-+
-+  fd = uv__open_cloexec(filename, O_RDONLY);
-+  if (fd < 0)
-+    return fd;
-+
-+  do
-+    n = read(fd, buf, len - 1);
-+  while (n == -1 && errno == EINTR);
-+
-+  if (uv__close_nocheckstdio(fd))
-+    abort();
-+
-+  if (n < 0)
-+    return UV__ERR(errno);
-+
-+  buf[n] = '\0';
-+
-+  return 0;
 +}
 +
 +
