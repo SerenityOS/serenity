@@ -2914,7 +2914,7 @@ void SoftCPU::MOVHPS_m64_xmm2(X86::Instruction const&) { TODO_INSN(); };
 void SoftCPU::MOVAPS_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); };
 void SoftCPU::MOVAPS_xmm1m128_xmm2(X86::Instruction const&) { TODO_INSN(); };
 void SoftCPU::CVTTPS2PI_mm1_xmm2m64(X86::Instruction const&) { TODO_INSN(); };
-void SoftCPU::CVTTPS2PI_r32_xmm2m32(X86::Instruction const&) { TODO_INSN(); };
+void SoftCPU::CVTTSS2SI_r32_xmm2m32(X86::Instruction const&) { TODO_INSN(); };
 void SoftCPU::CVTPI2PS_xmm1_mm2m64(X86::Instruction const&) { TODO_INSN(); };
 void SoftCPU::CVTSI2SS_xmm1_rm32(X86::Instruction const&) { TODO_INSN(); };
 void SoftCPU::MOVNTPS_xmm1m128_xmm2(X86::Instruction const&) { TODO_INSN(); };
