@@ -20,9 +20,37 @@
 
 namespace Kernel {
 
-NonnullRefPtr<AHCIPort> AHCIPort::create(AHCIPortHandler const& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
+ErrorOr<NonnullRefPtr<AHCIPort>> AHCIPort::create(AHCIPortHandler const& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
-    return adopt_ref(*new AHCIPort(handler, registers, port_index));
+    auto port = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AHCIPort(handler, registers, port_index)));
+    TRY(port->allocate_resources_and_initialize_ports());
+    return port;
+}
+
+ErrorOr<void> AHCIPort::allocate_resources_and_initialize_ports()
+{
+    if (is_interface_disabled()) {
+        m_disabled_by_firmware = true;
+        return {};
+    }
+
+    m_fis_receive_page = TRY(MM.allocate_supervisor_physical_page());
+
+    for (size_t index = 0; index < 1; index++) {
+        auto dma_page = TRY(MM.allocate_supervisor_physical_page());
+        m_dma_buffers.append(move(dma_page));
+    }
+    for (size_t index = 0; index < 1; index++) {
+        auto command_table_page = TRY(MM.allocate_supervisor_physical_page());
+        m_command_table_pages.append(move(command_table_page));
+    }
+
+    m_command_list_region = TRY(MM.allocate_dma_buffer_page("AHCI Port Command List", Memory::Region::Access::ReadWrite, m_command_list_page));
+
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list page at {}", representative_port_index(), m_command_list_page->paddr());
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: FIS receive page at {}", representative_port_index(), m_fis_receive_page->paddr());
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list region at {}", representative_port_index(), m_command_list_region->vaddr());
+    return {};
 }
 
 AHCIPort::AHCIPort(AHCIPortHandler const& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
@@ -32,25 +60,6 @@ AHCIPort::AHCIPort(AHCIPortHandler const& handler, volatile AHCI::PortRegisters&
     , m_interrupt_status((u32 volatile&)m_port_registers.is)
     , m_interrupt_enable((u32 volatile&)m_port_registers.ie)
 {
-    if (is_interface_disabled()) {
-        m_disabled_by_firmware = true;
-        return;
-    }
-
-    m_fis_receive_page = MM.allocate_supervisor_physical_page().release_value_but_fixme_should_propagate_errors();
-
-    for (size_t index = 0; index < 1; index++) {
-        m_dma_buffers.append(MM.allocate_supervisor_physical_page().release_value_but_fixme_should_propagate_errors());
-    }
-    for (size_t index = 0; index < 1; index++) {
-        m_command_table_pages.append(MM.allocate_supervisor_physical_page().release_value_but_fixme_should_propagate_errors());
-    }
-
-    m_command_list_region = MM.allocate_dma_buffer_page("AHCI Port Command List", Memory::Region::Access::ReadWrite, m_command_list_page).release_value_but_fixme_should_propagate_errors();
-
-    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list page at {}", representative_port_index(), m_command_list_page->paddr());
-    dbgln_if(AHCI_DEBUG, "AHCI Port {}: FIS receive page at {}", representative_port_index(), m_fis_receive_page->paddr());
-    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list region at {}", representative_port_index(), m_command_list_region->vaddr());
 }
 
 void AHCIPort::clear_sata_error_register() const

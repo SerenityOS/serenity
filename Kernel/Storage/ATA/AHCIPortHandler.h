@@ -31,7 +31,7 @@ class AHCIPortHandler final : public RefCounted<AHCIPortHandler>
     friend class AHCIController;
 
 public:
-    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPortHandler> create(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
+    UNMAP_AFTER_INIT static ErrorOr<NonnullRefPtr<AHCIPortHandler>> create(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
     virtual ~AHCIPortHandler() override;
 
     RefPtr<StorageDevice> device_at_port(size_t port_index) const;
@@ -45,6 +45,8 @@ public:
 
 private:
     UNMAP_AFTER_INIT AHCIPortHandler(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
+
+    void allocate_resources_and_initialize_ports();
 
     //^ IRQHandler
     virtual bool handle_irq(RegisterState const&) override;
@@ -63,7 +65,7 @@ private:
     RefPtr<AHCIPort> port_at_index(u32 port_index) const;
 
     // Data members
-    HashMap<u32, NonnullRefPtr<AHCIPort>> m_handled_ports;
+    Array<RefPtr<AHCIPort>, 32> m_handled_ports;
     NonnullRefPtr<AHCIController> m_parent_controller;
     NonnullRefPtrVector<Memory::PhysicalPage> m_identify_metadata_pages;
     AHCI::MaskedBitField m_taken_ports;
