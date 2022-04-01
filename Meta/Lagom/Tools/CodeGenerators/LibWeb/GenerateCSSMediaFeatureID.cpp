@@ -7,18 +7,85 @@
 #include "GeneratorUtil.h"
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
+
+ErrorOr<void> generate_header_file(JsonObject& media_feature_data, Core::Stream::File& file);
+ErrorOr<void> generate_implementation_file(JsonObject& media_feature_data, Core::Stream::File& file);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (arguments.argc != 2) {
-        warnln("usage: {} <path/to/CSS/MediaFeatures.json", arguments.strings[0]);
-        return 1;
-    }
+    StringView generated_header_path;
+    StringView generated_implementation_path;
+    StringView media_features_json_path;
 
-    auto json = TRY(read_entire_file_as_json(arguments.strings[1]));
+    Core::ArgsParser args_parser;
+    args_parser.add_option(generated_header_path, "Path to the MediaFeatureID header file to generate", "generated-header-path", 'h', "generated-header-path");
+    args_parser.add_option(generated_implementation_path, "Path to the MediaFeatureID implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
+    args_parser.add_option(media_features_json_path, "Path to the JSON file to read from", "json-path", 'j', "json-path");
+    args_parser.parse(arguments);
+
+    auto json = TRY(read_entire_file_as_json(media_features_json_path));
     VERIFY(json.is_object());
+    auto media_feature_data = json.as_object();
 
+    auto generated_header_file = TRY(Core::Stream::File::open(generated_header_path, Core::Stream::OpenMode::Write));
+    auto generated_implementation_file = TRY(Core::Stream::File::open(generated_implementation_path, Core::Stream::OpenMode::Write));
+
+    TRY(generate_header_file(media_feature_data, *generated_header_file));
+    TRY(generate_implementation_file(media_feature_data, *generated_implementation_file));
+
+    return 0;
+}
+
+ErrorOr<void> generate_header_file(JsonObject& media_feature_data, Core::Stream::File& file)
+{
+    StringBuilder builder;
+    SourceGenerator generator { builder };
+    generator.append(R"~~~(#pragma once
+
+#include <AK/StringView.h>
+#include <AK/Traits.h>
+#include <LibWeb/CSS/ValueID.h>
+
+namespace Web::CSS {
+
+enum class MediaFeatureValueType {
+    Boolean,
+    Integer,
+    Length,
+    Ratio,
+    Resolution,
+};
+
+enum class MediaFeatureID {)~~~");
+
+    media_feature_data.for_each_member([&](auto& name, auto&) {
+        auto member_generator = generator.fork();
+        member_generator.set("name:titlecase", title_casify(name));
+        member_generator.append(R"~~~(
+    @name:titlecase@,)~~~");
+    });
+
+    generator.append(R"~~~(
+};
+
+Optional<MediaFeatureID> media_feature_id_from_string(StringView);
+char const* string_from_media_feature_id(MediaFeatureID);
+
+bool media_feature_type_is_range(MediaFeatureID);
+bool media_feature_accepts_type(MediaFeatureID, MediaFeatureValueType);
+bool media_feature_accepts_identifier(MediaFeatureID, ValueID);
+
+}
+)~~~");
+
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
+}
+
+ErrorOr<void> generate_implementation_file(JsonObject& media_feature_data, Core::Stream::File& file)
+{
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.append(R"~~~(#include <LibWeb/CSS/MediaFeatureID.h>
@@ -28,7 +95,7 @@ namespace Web::CSS {
 Optional<MediaFeatureID> media_feature_id_from_string(StringView string)
 {)~~~");
 
-    json.as_object().for_each_member([&](auto& name, auto&) {
+    media_feature_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
         member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify(name));
@@ -46,7 +113,7 @@ char const* string_from_media_feature_id(MediaFeatureID media_feature_id)
 {
     switch (media_feature_id) {)~~~");
 
-    json.as_object().for_each_member([&](auto& name, auto&) {
+    media_feature_data.for_each_member([&](auto& name, auto&) {
         auto member_generator = generator.fork();
         member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify(name));
@@ -64,7 +131,7 @@ bool media_feature_type_is_range(MediaFeatureID media_feature_id)
 {
     switch (media_feature_id) {)~~~");
 
-    json.as_object().for_each_member([&](auto& name, auto& value) {
+    media_feature_data.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
         auto& feature = value.as_object();
 
@@ -88,7 +155,7 @@ bool media_feature_accepts_type(MediaFeatureID media_feature_id, MediaFeatureVal
 {
     switch (media_feature_id) {)~~~");
 
-    json.as_object().for_each_member([&](auto& name, auto& member) {
+    media_feature_data.for_each_member([&](auto& name, auto& member) {
         VERIFY(member.is_object());
         auto& feature = member.as_object();
 
@@ -166,7 +233,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
 {
     switch (media_feature_id) {)~~~");
 
-    json.as_object().for_each_member([&](auto& name, auto& member) {
+    media_feature_data.for_each_member([&](auto& name, auto& member) {
         VERIFY(member.is_object());
         auto& feature = member.as_object();
 
@@ -221,7 +288,6 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
 }
 )~~~");
 
-    outln("{}", generator.as_string_view());
-
-    return 0;
+    TRY(file.write(generator.as_string_view().bytes()));
+    return {};
 }
