@@ -112,7 +112,7 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     };
 
     m_total_page_label = toolbar.add<GUI::Label>();
-    m_total_page_label->set_fixed_width(30);
+    m_total_page_label->set_autosize(true, 5);
     toolbar.add_separator();
 
     m_zoom_in_action = GUI::CommonActions::make_zoom_in_action([&](auto&) {
