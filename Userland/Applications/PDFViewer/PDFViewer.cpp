@@ -297,17 +297,17 @@ PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> PDFViewer::render_page(u32 page_inde
 {
     auto page = TRY(m_document->get_page(page_index));
     auto& page_size = m_page_dimension_cache.render_info[page_index].size;
-    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, page_size.to_type<int>()).release_value_but_fixme_should_propagate_errors();
+    auto bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, page_size.to_type<int>()));
 
     TRY(PDF::Renderer::render(*m_document, page, bitmap));
 
     if (page.rotate + m_rotations != 0) {
         int rotation_count = ((page.rotate + m_rotations) / 90) % 4;
         if (rotation_count == 3) {
-            bitmap = bitmap->rotated(Gfx::RotationDirection::CounterClockwise).release_value_but_fixme_should_propagate_errors();
+            bitmap = TRY(bitmap->rotated(Gfx::RotationDirection::CounterClockwise));
         } else {
             for (int i = 0; i < rotation_count; i++)
-                bitmap = bitmap->rotated(Gfx::RotationDirection::Clockwise).release_value_but_fixme_should_propagate_errors();
+                bitmap = TRY(bitmap->rotated(Gfx::RotationDirection::Clockwise));
         }
     }
 
