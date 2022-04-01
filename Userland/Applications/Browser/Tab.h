@@ -65,6 +65,7 @@ public:
     Function<void(const URL&, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source)> on_set_cookie;
     Function<void()> on_dump_cookies;
     Function<Vector<Web::Cookie::Cookie>()> on_want_cookies;
+    Function<OrderedHashMap<String, String>()> on_get_local_storage_entries;
 
     enum class InspectorTarget {
         Document,

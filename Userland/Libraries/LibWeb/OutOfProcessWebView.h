@@ -55,6 +55,8 @@ public:
 
     String dump_layout_tree();
 
+    OrderedHashMap<String, String> get_local_storage_entries();
+
     void set_content_filters(Vector<String>);
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 

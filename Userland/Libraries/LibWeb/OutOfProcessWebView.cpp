@@ -490,6 +490,11 @@ String OutOfProcessWebView::dump_layout_tree()
     return client().dump_layout_tree();
 }
 
+OrderedHashMap<String, String> OutOfProcessWebView::get_local_storage_entries()
+{
+    return client().get_local_storage_entries();
+}
+
 void OutOfProcessWebView::set_content_filters(Vector<String> filters)
 {
     client().async_set_content_filters(filters);

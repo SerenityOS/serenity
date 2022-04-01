@@ -555,6 +555,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         return m_cookie_jar.get_all_cookies();
     };
 
+    new_tab.on_get_local_storage_entries = [this]() {
+        return active_tab().m_web_content_view->get_local_storage_entries();
+    };
+
     new_tab.load(url);
 
     dbgln_if(SPAM_DEBUG, "Added new tab {:p}, loading {}", &new_tab, url);
