@@ -103,7 +103,6 @@ PORTS_MISSING_DESCRIPTIONS = {
     'pcre2',
     'pfetch',
     'pkgconf',
-    'pt2-clone',
     'qt6-qtbase',
     'ruby',
     'sam',
