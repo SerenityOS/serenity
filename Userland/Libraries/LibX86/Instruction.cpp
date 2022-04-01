@@ -1418,7 +1418,8 @@ String Instruction::to_string(u32 origin, SymbolProvider const* symbol_provider,
         builder.append(m_o32 ? "o32 " : "o16 ");
     if (has_lock_prefix())
         builder.append("lock ");
-    if (has_rep_prefix())
+    // Note: SSE instructions use these to toggle between packed and single data
+    if (has_rep_prefix() && !(m_descriptor->format > __SSE && m_descriptor->format < __EndFormatsWithRMByte))
         builder.append(m_rep_prefix == Prefix::REPNZ ? "repnz " : "repz ");
     to_string_internal(builder, origin, symbol_provider, x32);
     return builder.to_string();
