@@ -107,6 +107,40 @@ constexpr T sqrt(T x)
 }
 
 template<FloatingPoint T>
+constexpr T rsqrt(T x)
+{
+    return (T)1. / sqrt(x);
+}
+
+#ifdef __SSE__
+template<>
+constexpr float sqrt(float x)
+{
+    if (is_constant_evaluated())
+        return __builtin_sqrtf(x);
+
+    float res;
+    asm("sqrtss %1, %0"
+        : "=x"(res)
+        : "x"(x));
+    return res;
+}
+
+template<>
+constexpr float rsqrt(float x)
+{
+    if (is_constant_evaluated())
+        return 1.f / __builtin_sqrtf(x);
+
+    float res;
+    asm("rsqrtss %1, %0"
+        : "=x"(res)
+        : "x"(x));
+    return res;
+}
+#endif
+
+template<FloatingPoint T>
 constexpr T cbrt(T x)
 {
     CONSTEXPR_STATE(cbrt, x);
