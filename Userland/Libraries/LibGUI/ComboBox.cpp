@@ -115,6 +115,7 @@ ComboBox::ComboBox()
     m_list_view->set_alternating_row_colors(false);
     m_list_view->set_hover_highlighting(true);
     m_list_view->set_frame_thickness(1);
+    m_list_view->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_list_view->set_frame_shadow(Gfx::FrameShadow::Plain);
     m_list_view->on_selection_change = [this] {
         VERIFY(model());
