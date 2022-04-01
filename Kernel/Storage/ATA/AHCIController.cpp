@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Storage/ATA/AHCIController.h>
 #include <Kernel/Storage/ATA/AHCIPortHandler.h>
@@ -52,20 +53,16 @@ bool AHCIController::shutdown()
 size_t AHCIController::devices_count() const
 {
     size_t count = 0;
-    for (auto& port_handler : m_handlers) {
-        port_handler.enumerate_ports([&](AHCIPort const& port) {
-            if (port.connected_device())
-                count++;
-        });
+    for (auto port : m_ports) {
+        if (port && port->connected_device())
+            count++;
     }
     return count;
 }
 
 void AHCIController::start_request(ATADevice const& device, AsyncBlockDeviceRequest& request)
 {
-    // FIXME: For now we have one port handler, check all of them...
-    VERIFY(m_handlers.size() > 0);
-    auto port = m_handlers[0].port_at_index(device.ata_address().port);
+    auto port = m_ports[device.ata_address().port];
     VERIFY(port);
     port->start_request(request);
 }
@@ -90,8 +87,14 @@ UNMAP_AFTER_INIT AHCIController::AHCIController(PCI::DeviceIdentifier const& pci
     : ATAController()
     , PCI::Device(pci_device_identifier.address())
     , m_hba_region(default_hba_region())
-    , m_capabilities(capabilities())
+    , m_hba_capabilities(capabilities())
 {
+}
+
+PhysicalAddress AHCIController::get_identify_metadata_physical_region(Badge<AHCIPort>, u32 port_index) const
+{
+    dbgln_if(AHCI_DEBUG, "AHCI Controller @ {}: Get identify metadata physical address of port {} - {}", pci_address(), port_index, (port_index * 512) / PAGE_SIZE);
+    return m_identify_metadata_pages[(port_index * 512) / PAGE_SIZE].paddr().offset((port_index * 512) % PAGE_SIZE);
 }
 
 AHCI::HBADefinedCapabilities AHCIController::capabilities() const
@@ -145,7 +148,7 @@ UNMAP_AFTER_INIT void AHCIController::initialize_hba(PCI::DeviceIdentifier const
         return;
     }
     dmesgln("{}: AHCI controller reset", pci_address());
-    dbgln("{}: AHCI command list entries count - {}", pci_address(), hba_capabilities().max_command_list_entries_count);
+    dbgln("{}: AHCI command list entries count - {}", pci_address(), m_hba_capabilities.max_command_list_entries_count);
 
     u32 version = hba().control_regs.version;
     dbgln_if(AHCI_DEBUG, "{}: AHCI Controller Version = {:#08x}", pci_address(), version);
@@ -155,8 +158,34 @@ UNMAP_AFTER_INIT void AHCIController::initialize_hba(PCI::DeviceIdentifier const
     PCI::enable_bus_mastering(pci_address());
     enable_global_interrupts();
 
-    auto port_handler = AHCIPortHandler::create(*this, pci_device_identifier.interrupt_line().value(), AHCI::MaskedBitField((u32 volatile&)(hba().control_regs.pi))).release_value_but_fixme_should_propagate_errors();
-    m_handlers.append(move(port_handler));
+    auto implemented_ports = AHCI::MaskedBitField((u32 volatile&)(hba().control_regs.pi));
+    m_irq_handler = AHCIPortHandler::create(*this, pci_device_identifier.interrupt_line().value(), implemented_ports).release_value_but_fixme_should_propagate_errors();
+
+    // FIXME: Use the number of ports to determine how many pages we should allocate.
+    for (size_t index = 0; index < (((size_t)AHCI::Limits::MaxPorts * 512) / PAGE_SIZE); index++) {
+        m_identify_metadata_pages.append(MM.allocate_supervisor_physical_page().release_value_but_fixme_should_propagate_errors());
+    }
+
+    if (kernel_command_line().ahci_reset_mode() == AHCIResetMode::Aggressive) {
+        for (auto index : implemented_ports.to_vector()) {
+            auto port = AHCIPort::create(*this, m_hba_capabilities, static_cast<volatile AHCI::PortRegisters&>(hba().port_regs[index]), index).release_value_but_fixme_should_propagate_errors();
+            m_ports[index] = port;
+            port->reset();
+        }
+        return;
+    }
+    for (auto index : implemented_ports.to_vector()) {
+        auto port = AHCIPort::create(*this, m_hba_capabilities, static_cast<volatile AHCI::PortRegisters&>(hba().port_regs[index]), index).release_value_but_fixme_should_propagate_errors();
+        m_ports[index] = port;
+        port->initialize_without_reset();
+    }
+}
+
+void AHCIController::handle_interrupt_for_port(Badge<AHCIPortHandler>, u32 port_index) const
+{
+    auto port = m_ports[port_index];
+    VERIFY(port);
+    port->handle_interrupt();
 }
 
 void AHCIController::disable_global_interrupts() const
@@ -170,16 +199,10 @@ void AHCIController::enable_global_interrupts() const
 
 RefPtr<StorageDevice> AHCIController::device_by_port(u32 port_index) const
 {
-    for (auto& port_handler : m_handlers) {
-        if (!port_handler.is_responsible_for_port_index(port_index))
-            continue;
-
-        auto port = port_handler.port_at_index(port_index);
-        if (!port)
-            return nullptr;
-        return port->connected_device();
-    }
-    return nullptr;
+    auto port = m_ports[port_index];
+    if (!port)
+        return {};
+    return port->connected_device();
 }
 
 RefPtr<StorageDevice> AHCIController::device(u32 index) const

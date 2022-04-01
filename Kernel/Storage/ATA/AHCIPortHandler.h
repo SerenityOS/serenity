@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,19 +26,14 @@ class AsyncBlockDeviceRequest;
 
 class AHCIController;
 class AHCIPort;
-class AHCIPortHandler final : public RefCounted<AHCIPortHandler>
-    , public IRQHandler {
+class AHCIPortHandler final : public IRQHandler {
     friend class AHCIController;
 
 public:
-    static ErrorOr<NonnullRefPtr<AHCIPortHandler>> create(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
+    static ErrorOr<NonnullOwnPtr<AHCIPortHandler>> create(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
     virtual ~AHCIPortHandler() override;
 
     virtual StringView purpose() const override { return "SATA Port Handler"sv; }
-
-    AHCI::HBADefinedCapabilities hba_capabilities() const;
-    NonnullRefPtr<AHCIController> hba_controller() const { return m_parent_controller; }
-    PhysicalAddress get_identify_metadata_physical_region(u32 port_index) const;
 
     bool is_responsible_for_port_index(u32 port_index) const { return m_taken_ports.is_set_at(port_index); }
 
@@ -57,13 +52,8 @@ private:
 
     AHCI::MaskedBitField create_pending_ports_interrupts_bitfield() const;
 
-    void enumerate_ports(Function<void(AHCIPort const&)> callback) const;
-    RefPtr<AHCIPort> port_at_index(u32 port_index) const;
-
     // Data members
-    Array<RefPtr<AHCIPort>, 32> m_handled_ports;
     NonnullRefPtr<AHCIController> m_parent_controller;
-    NonnullRefPtrVector<Memory::PhysicalPage> m_identify_metadata_pages;
     AHCI::MaskedBitField m_taken_ports;
     AHCI::MaskedBitField m_pending_ports_interrupts;
 };

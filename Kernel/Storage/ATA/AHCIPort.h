@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,11 +33,10 @@ class AHCIPortHandler;
 class AHCIPort
     : public RefCounted<AHCIPort>
     , public Weakable<AHCIPort> {
-    friend class AHCIPortHandler;
     friend class AHCIController;
 
 public:
-    static ErrorOr<NonnullRefPtr<AHCIPort>> create(AHCIPortHandler const&, volatile AHCI::PortRegisters&, u32 port_index);
+    static ErrorOr<NonnullRefPtr<AHCIPort>> create(AHCIController const&, AHCI::HBADefinedCapabilities, volatile AHCI::PortRegisters&, u32 port_index);
 
     u32 port_index() const { return m_port_index; }
     u32 representative_port_index() const { return port_index() + 1; }
@@ -56,7 +55,7 @@ private:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
     bool initialize();
 
-    AHCIPort(AHCIPortHandler const&, volatile AHCI::PortRegisters&, u32 port_index);
+    AHCIPort(AHCIController const&, AHCI::HBADefinedCapabilities, volatile AHCI::PortRegisters&, u32 port_index);
 
     ALWAYS_INLINE void clear_sata_error_register() const;
 
@@ -119,8 +118,14 @@ private:
     RefPtr<ATADevice> m_connected_device;
 
     u32 m_port_index;
+
+    // Note: Ideally the AHCIController should be the only object to hold this data
+    // but because using the m_parent_controller means we need to take a strong ref,
+    // it's probably better to just "cache" this here instead.
+    AHCI::HBADefinedCapabilities const m_hba_capabilities;
+
     volatile AHCI::PortRegisters& m_port_registers;
-    NonnullRefPtr<AHCIPortHandler> m_parent_handler;
+    WeakPtr<AHCIController> m_parent_controller;
     AHCI::PortInterruptStatusBitField m_interrupt_status;
     AHCI::PortInterruptEnableBitField m_interrupt_enable;
 

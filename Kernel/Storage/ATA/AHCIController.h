@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2022, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,7 +22,6 @@ class AHCIPort;
 class AHCIController final : public ATAController
     , public PCI::Device {
     friend class AHCIPortHandler;
-    friend class AHCIPort;
 
 public:
     static NonnullRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
@@ -35,7 +34,8 @@ public:
     virtual void start_request(ATADevice const&, AsyncBlockDeviceRequest&) override;
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
-    const AHCI::HBADefinedCapabilities& hba_capabilities() const { return m_capabilities; };
+    PhysicalAddress get_identify_metadata_physical_region(Badge<AHCIPort>, u32 port_index) const;
+    void handle_interrupt_for_port(Badge<AHCIPortHandler>, u32 port_index) const;
 
 private:
     void disable_global_interrupts() const;
@@ -51,8 +51,12 @@ private:
     NonnullOwnPtr<Memory::Region> default_hba_region() const;
     volatile AHCI::HBA& hba() const;
 
+    NonnullRefPtrVector<Memory::PhysicalPage> m_identify_metadata_pages;
+    Array<RefPtr<AHCIPort>, 32> m_ports;
     NonnullOwnPtr<Memory::Region> m_hba_region;
-    AHCI::HBADefinedCapabilities m_capabilities;
-    NonnullRefPtrVector<AHCIPortHandler> m_handlers;
+    AHCI::HBADefinedCapabilities m_hba_capabilities;
+
+    // FIXME: There could be multiple IRQ (MSI) handlers for AHCI. Find a way to use all of them.
+    OwnPtr<AHCIPortHandler> m_irq_handler;
 };
 }
