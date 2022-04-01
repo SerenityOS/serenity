@@ -562,5 +562,6 @@ class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
 enum class CanPlayTypeResult;
 enum class DOMParserSupportedType;
+enum class ResizeObserverBoxOptions;
 enum class XMLHttpRequestResponseType;
 }

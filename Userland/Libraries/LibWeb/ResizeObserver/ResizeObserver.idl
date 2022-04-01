@@ -12,9 +12,10 @@ interface ResizeObserver {
 
 callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
 
+enum ResizeObserverBoxOptions {
+    "border-box", "content-box", "device-pixel-content-box"
+};
+
 dictionary ResizeObserverOptions {
-
-    // FIXME: This should be an enum.
-    DOMString box = "content-box";
-
+    ResizeObserverBoxOptions box = "content-box";
 };

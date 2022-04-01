@@ -9,11 +9,12 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <LibWeb/Bindings/Wrappable.h>
+#include <LibWeb/Forward.h>
 
 namespace Web::ResizeObserver {
 
 struct ResizeObserverOptions {
-    String box;
+    Bindings::ResizeObserverBoxOptions box;
 };
 
 // https://drafts.csswg.org/resize-observer/#resize-observer-interface
