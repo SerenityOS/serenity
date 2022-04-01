@@ -15,6 +15,7 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FileIconProvider.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <serenity.h>
