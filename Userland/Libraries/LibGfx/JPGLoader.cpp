@@ -864,20 +864,20 @@ static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macrobloc
 
 static void inverse_dct(JPGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
-    static float const m0 = 2.0 * AK::cos(1.0 / 16.0 * 2.0 * AK::Pi<double>);
-    static float const m1 = 2.0 * AK::cos(2.0 / 16.0 * 2.0 * AK::Pi<double>);
-    static float const m3 = 2.0 * AK::cos(2.0 / 16.0 * 2.0 * AK::Pi<double>);
-    static float const m5 = 2.0 * AK::cos(3.0 / 16.0 * 2.0 * AK::Pi<double>);
+    static float const m0 = 2.0f * AK::cos(1.0f / 16.0f * 2.0f * AK::Pi<float>);
+    static float const m1 = 2.0f * AK::cos(2.0f / 16.0f * 2.0f * AK::Pi<float>);
+    static float const m3 = 2.0f * AK::cos(2.0f / 16.0f * 2.0f * AK::Pi<float>);
+    static float const m5 = 2.0f * AK::cos(3.0f / 16.0f * 2.0f * AK::Pi<float>);
     static float const m2 = m0 - m5;
     static float const m4 = m0 + m5;
-    static float const s0 = AK::cos(0.0 / 16.0 * AK::Pi<double>) / sqrt(8);
-    static float const s1 = AK::cos(1.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static float const s2 = AK::cos(2.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static float const s3 = AK::cos(3.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static float const s4 = AK::cos(4.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static float const s5 = AK::cos(5.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static float const s6 = AK::cos(6.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static float const s7 = AK::cos(7.0 / 16.0 * AK::Pi<double>) / 2.0;
+    static float const s0 = AK::cos(0.0f / 16.0f * AK::Pi<float>) * AK::rsqrt(8.0f);
+    static float const s1 = AK::cos(1.0f / 16.0f * AK::Pi<float>) / 2.0f;
+    static float const s2 = AK::cos(2.0f / 16.0f * AK::Pi<float>) / 2.0f;
+    static float const s3 = AK::cos(3.0f / 16.0f * AK::Pi<float>) / 2.0f;
+    static float const s4 = AK::cos(4.0f / 16.0f * AK::Pi<float>) / 2.0f;
+    static float const s5 = AK::cos(5.0f / 16.0f * AK::Pi<float>) / 2.0f;
+    static float const s6 = AK::cos(6.0f / 16.0f * AK::Pi<float>) / 2.0f;
+    static float const s7 = AK::cos(7.0f / 16.0f * AK::Pi<float>) / 2.0f;
 
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
