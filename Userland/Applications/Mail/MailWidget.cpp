@@ -327,8 +327,11 @@ void MailWidget::selected_mailbox()
             GenericLexer lexer(value);
             StringBuilder builder;
 
-            // There will be a space at the start of the value, which should be ignored.
-            VERIFY(lexer.consume_specific(' '));
+            // There might be a new line at the very beginning, which should be ignored.
+            if (!lexer.consume_specific("\r\n")) {
+                // There might be a space at the start of the value, which should be ignored.
+                lexer.consume_specific(' ');
+            }
 
             while (!lexer.is_eof()) {
                 auto current_line = lexer.consume_while([](char c) {
@@ -364,10 +367,15 @@ void MailWidget::selected_mailbox()
 
         auto& from_iterator_value = from_iterator->get<1>().value();
         auto from_index = from_iterator_value.find("From:");
-        VERIFY(from_index.has_value());
-        auto potential_from = from_iterator_value.substring(from_index.value());
-        auto from_parts = potential_from.split_limit(':', 2);
-        auto from = parse_and_unfold(from_parts.last());
+        String from;
+        if (from_index.has_value()) {
+            auto potential_from = from_iterator_value.substring(from_index.value());
+            auto from_parts = potential_from.split_limit(':', 2);
+            from = parse_and_unfold(from_parts.last());
+        }
+
+        if (from.is_empty())
+            from = "(unknown)";
 
         InboxEntry inbox_entry { from, subject };
 
