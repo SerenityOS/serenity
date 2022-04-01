@@ -292,7 +292,8 @@ class AKHashMapPrettyPrinter:
         buckets = val["m_buckets"]
         for i in range(0, val["m_capacity"]):
             bucket = buckets[i]
-            if bucket["used"]:
+            # if state == Used
+            if bucket["state"] & 0xf0 == 0x10:
                 cb(bucket["storage"].cast(entry_type_ptr))
 
     @staticmethod
