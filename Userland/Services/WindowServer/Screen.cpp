@@ -10,6 +10,7 @@
 #include "Event.h"
 #include "EventLoop.h"
 #include "ScreenBackend.h"
+#include "VirtualScreenBackend.h"
 #include "WindowManager.h"
 #include <AK/Debug.h>
 #include <AK/Format.h>
@@ -228,8 +229,8 @@ bool Screen::open_device()
     close_device();
     auto& info = screen_layout_info();
 
-    // TODO: Support other backends
-    if (info.mode == ScreenLayout::Screen::Mode::Device) {
+    switch (info.mode) {
+    case ScreenLayout::Screen::Mode::Device: {
         m_backend = make<HardwareScreenBackend>(info.device.value());
         auto return_value = m_backend->open();
         if (return_value.is_error()) {
@@ -240,9 +241,18 @@ bool Screen::open_device()
         set_resolution(true);
         return true;
     }
+    case ScreenLayout::Screen::Mode::Virtual: {
+        m_backend = make<VirtualScreenBackend>();
+        // Virtual device open should never fail.
+        MUST(m_backend->open());
 
-    dbgln("Unsupported screen type {}", ScreenLayout::Screen::mode_to_string(info.mode));
-    return false;
+        set_resolution(true);
+        return true;
+    }
+    default:
+        dbgln("Unsupported screen type {}", ScreenLayout::Screen::mode_to_string(info.mode));
+        return false;
+    }
 }
 
 void Screen::close_device()
