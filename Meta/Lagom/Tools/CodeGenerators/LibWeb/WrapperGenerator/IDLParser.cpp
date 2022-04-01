@@ -76,7 +76,7 @@ static String convert_enumeration_value_to_cpp_enum_member(String const& value, 
 
 namespace IDL {
 
-HashTable<String> Parser::s_all_imported_paths {};
+HashMap<String, NonnullRefPtr<Interface>> Parser::s_resolved_imports {};
 
 void Parser::assert_specific(char ch)
 {
@@ -124,17 +124,20 @@ HashMap<String, String> Parser::parse_extended_attributes()
     return extended_attributes;
 }
 
-Optional<NonnullOwnPtr<Interface>> Parser::resolve_import(auto path)
+static HashTable<String> import_stack;
+Optional<NonnullRefPtr<Interface>> Parser::resolve_import(auto path)
 {
     auto include_path = LexicalPath::join(import_base_path, path).string();
     if (!Core::File::exists(include_path))
         report_parsing_error(String::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
 
     auto real_path = Core::File::real_path_for(include_path);
-    if (s_all_imported_paths.contains(real_path))
-        return {};
+    if (s_resolved_imports.contains(real_path))
+        return s_resolved_imports.find(real_path)->value;
 
-    s_all_imported_paths.set(real_path);
+    if (import_stack.contains(real_path))
+        report_parsing_error(String::formatted("Circular import detected: {}", include_path), filename, input, lexer.tell());
+    import_stack.set(real_path);
 
     auto file_or_error = Core::File::open(real_path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error())
@@ -142,8 +145,9 @@ Optional<NonnullOwnPtr<Interface>> Parser::resolve_import(auto path)
 
     auto data = file_or_error.value()->read_all();
     auto result = Parser(real_path, data, import_base_path).parse();
-    if (result->will_generate_code())
-        required_imported_paths.set(real_path);
+    import_stack.remove(real_path);
+
+    s_resolved_imports.set(real_path, result);
     return result;
 }
 
@@ -705,7 +709,7 @@ void Parser::parse_dictionary(Interface& interface)
 
 void Parser::parse_interface_mixin(Interface& interface)
 {
-    auto mixin_interface = make<Interface>();
+    auto mixin_interface = make_ref_counted<Interface>();
     mixin_interface->module_own_path = interface.module_own_path;
     mixin_interface->is_mixin = true;
 
@@ -813,15 +817,15 @@ void resolve_function_typedefs(Interface& interface, FunctionType& function)
     resolve_parameters_typedefs(interface, function.parameters);
 }
 
-NonnullOwnPtr<Interface> Parser::parse()
+NonnullRefPtr<Interface> Parser::parse()
 {
     auto this_module = Core::File::real_path_for(filename);
-    s_all_imported_paths.set(this_module);
 
-    auto interface = make<Interface>();
+    auto interface = make_ref_counted<Interface>();
     interface->module_own_path = this_module;
+    s_resolved_imports.set(this_module, interface);
 
-    NonnullOwnPtrVector<Interface> imports;
+    NonnullRefPtrVector<Interface> imports;
     while (lexer.consume_specific("#import")) {
         consume_whitespace();
         assert_specific('<');
@@ -829,15 +833,12 @@ NonnullOwnPtr<Interface> Parser::parse()
         lexer.ignore();
         auto maybe_interface = resolve_import(path);
         if (maybe_interface.has_value()) {
-            for (auto& entry : maybe_interface.value()->all_imported_paths)
-                s_all_imported_paths.set(entry);
             for (auto& entry : maybe_interface.value()->required_imported_paths)
                 required_imported_paths.set(entry);
             imports.append(maybe_interface.release_value());
         }
         consume_whitespace();
     }
-    interface->all_imported_paths = s_all_imported_paths;
     interface->required_imported_paths = required_imported_paths;
 
     parse_non_interface_entities(true, *interface);
@@ -859,16 +860,16 @@ NonnullOwnPtr<Interface> Parser::parse()
         }
 
         for (auto& typedef_ : import.typedefs)
-            interface->typedefs.set(typedef_.key, move(typedef_.value));
+            interface->typedefs.set(typedef_.key, typedef_.value);
 
         for (auto& mixin : import.mixins) {
-            if (interface->mixins.contains(mixin.key))
+            if (auto it = interface->mixins.find(mixin.key); it != interface->mixins.end() && it->value.ptr() != mixin.value.ptr())
                 report_parsing_error(String::formatted("Mixin '{}' was already defined in {}", mixin.key, mixin.value->module_own_path), filename, input, lexer.tell());
-            interface->mixins.set(mixin.key, move(mixin.value));
+            interface->mixins.set(mixin.key, mixin.value);
         }
 
         for (auto& callback_function : import.callback_functions)
-            interface->callback_functions.set(callback_function.key, move(callback_function.value));
+            interface->callback_functions.set(callback_function.key, callback_function.value);
     }
 
     // Resolve mixins

@@ -10,9 +10,8 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/OwnPtr.h>
 #include <AK/SourceGenerator.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -165,7 +164,7 @@ static inline size_t get_shortest_function_length(Vector<Function&> const& overl
     return longest_length;
 }
 
-struct Interface {
+struct Interface : public RefCounted<Interface> {
     String name;
     String parent_name;
 
@@ -196,7 +195,7 @@ struct Interface {
     HashMap<String, Dictionary> dictionaries;
     HashMap<String, Enumeration> enumerations;
     HashMap<String, Typedef> typedefs;
-    HashMap<String, NonnullOwnPtr<Interface>> mixins;
+    HashMap<String, NonnullRefPtr<Interface>> mixins;
     HashMap<String, CallbackFunction> callback_functions;
 
     // Added for convenience after parsing
@@ -209,9 +208,8 @@ struct Interface {
     HashMap<String, HashTable<String>> included_mixins;
 
     String module_own_path;
-    HashTable<String> all_imported_paths;
     HashTable<String> required_imported_paths;
-    NonnullOwnPtrVector<Interface> imported_modules;
+    NonnullRefPtrVector<Interface> imported_modules;
 
     HashMap<String, Vector<Function&>> overload_sets;
     HashMap<String, Vector<Function&>> static_overload_sets;
