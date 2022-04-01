@@ -69,7 +69,7 @@ protected:
     BIOSSysFSComponent();
 };
 
-class DMIEntryPointExposedBlob : public BIOSSysFSComponent {
+class DMIEntryPointExposedBlob final : public BIOSSysFSComponent {
 public:
     virtual StringView name() const override { return "smbios_entry_point"sv; }
     static NonnullRefPtr<DMIEntryPointExposedBlob> must_create(PhysicalAddress dmi_entry_point, size_t blob_size);
@@ -81,7 +81,7 @@ private:
     size_t const m_dmi_entry_point_length { 0 };
 };
 
-class SMBIOSExposedTable : public BIOSSysFSComponent {
+class SMBIOSExposedTable final : public BIOSSysFSComponent {
 public:
     virtual StringView name() const override { return "DMI"sv; }
     static NonnullRefPtr<SMBIOSExposedTable> must_create(PhysicalAddress, size_t blob_size);
