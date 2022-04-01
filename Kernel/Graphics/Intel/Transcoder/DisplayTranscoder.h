@@ -48,12 +48,17 @@ public:
         u32 n1_link;
         u32 m2_link;
         u32 n2_link;
+        u32 pipe_conf;
     };
 
     ErrorOr<void> set_mode_setting_timings(Badge<IntelDisplayConnectorGroup>, DisplayConnector::ModeSetting const&);
     virtual ErrorOr<void> set_dpll_settings(Badge<IntelDisplayConnectorGroup>, IntelGraphics::PLLSettings const& settings, size_t dac_multiplier) = 0;
     virtual ErrorOr<void> enable_dpll_without_vga(Badge<IntelDisplayConnectorGroup>) = 0;
     virtual ErrorOr<void> disable_dpll(Badge<IntelDisplayConnectorGroup>) = 0;
+
+    ErrorOr<void> disable_pipe(Badge<IntelDisplayConnectorGroup>);
+    ErrorOr<void> enable_pipe(Badge<IntelDisplayConnectorGroup>);
+    bool pipe_enabled(Badge<IntelDisplayConnectorGroup>) const;
 
     ShadowRegisters current_registers_state() const;
 
@@ -83,9 +88,31 @@ protected:
         u32 n2_link;
     };
 
-    explicit IntelDisplayTranscoder(Memory::TypedMapping<TranscoderRegisters volatile>);
+    struct [[gnu::packed]] PipeRegisters {
+        u32 pipe_display_scan_line;
+        u32 pipe_display_scan_line_count_range_compare;
+        u32 pipe_configuration;
+        u32 reserved;
+        u32 pipe_gamma_correction_max_red;
+        u32 pipe_gamma_correction_max_green;
+        u32 pipe_gamma_correction_max_blue;
+        u32 reserved2[2];
+        u32 pipe_display_status;
+        u32 reserved3[2];
+        u32 display_arbitration_control;
+        u32 display_fifo_watermark_control1;
+        u32 display_fifo_watermark_control2;
+        u32 display_fifo_watermark_control3;
+        u32 pipe_frame_count_high;
+        // Note: The specification calls this "Pipe Frame Count Low and Pixel Count"
+        u32 pipe_frame_count_low;
+    };
+
+    IntelDisplayTranscoder(Memory::TypedMapping<TranscoderRegisters volatile>, Memory::TypedMapping<PipeRegisters volatile>);
     mutable Spinlock<LockRank::None> m_access_lock;
+
     ShadowRegisters m_shadow_registers {};
     Memory::TypedMapping<TranscoderRegisters volatile> m_transcoder_registers;
+    Memory::TypedMapping<PipeRegisters volatile> m_pipe_registers;
 };
 }

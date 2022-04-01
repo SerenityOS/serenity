@@ -60,8 +60,6 @@ private:
     StringView convert_analog_output_register_to_string(AnalogOutputRegisterOffset index) const;
     void write_to_analog_output_register(AnalogOutputRegisterOffset, u32 value);
     u32 read_from_analog_output_register(AnalogOutputRegisterOffset) const;
-    u32 read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister index) const;
-    void write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister index, u32 value);
     void write_to_general_register(RegisterOffset offset, u32 value);
     u32 read_from_general_register(RegisterOffset offset) const;
 
@@ -71,8 +69,6 @@ private:
 
     // General Modesetting methods
     ErrorOr<void> set_gen4_mode_setting(IntelNativeDisplayConnector&, DisplayConnector::ModeSetting const&);
-    bool pipe_a_enabled() const;
-    bool pipe_b_enabled() const;
 
     bool set_crt_resolution(DisplayConnector::ModeSetting const&);
 
@@ -81,15 +77,6 @@ private:
 
     void disable_dac_output();
     void enable_dac_output();
-
-    void disable_pipe_a();
-    void disable_pipe_b();
-
-    void enable_pipe_a();
-
-    bool wait_for_enabled_pipe_a(size_t milliseconds_timeout) const;
-    bool wait_for_disabled_pipe_a(size_t milliseconds_timeout) const;
-    bool wait_for_disabled_pipe_b(size_t milliseconds_timeout) const;
 
     Optional<IntelGraphics::PLLSettings> create_pll_settings(u64 target_frequency, u64 reference_clock, IntelGraphics::PLLMaxSettings const&);
 

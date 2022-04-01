@@ -10,11 +10,6 @@
 
 namespace Kernel::IntelGraphics {
 
-enum class GlobalGenerationRegister {
-    PipeAConf = 0x70008,
-    PipeBConf = 0x71008,
-};
-
 struct PLLSettings;
 
 struct PLLParameterLimit {

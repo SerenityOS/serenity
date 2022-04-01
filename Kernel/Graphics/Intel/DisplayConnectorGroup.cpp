@@ -147,12 +147,14 @@ ErrorOr<void> IntelDisplayConnectorGroup::initialize_gen4_connectors()
     // NOTE: Just assume we will need one Gen4 "transcoder"
     // NOTE: Main block of registers starting at HorizontalTotalA register (0x60000)
     auto transcoder_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x60000);
+    // NOTE: Main block of Pipe registers starting at PipeA_DSL register (0x70000)
+    auto pipe_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x70000);
     // NOTE: DPLL registers starting at DPLLDivisorA0 register (0x6040)
     auto dpll_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x6040);
     // NOTE: DPLL A control registers starting at 0x6014 (DPLL A Control register),
     // DPLL A Multiplier is at 0x601C, between them (at 0x6018) there is the DPLL B Control register.
     auto dpll_control_registers_paddr = m_mmio_first_region.pci_bar_paddr.offset(0x6014);
-    m_transcoders[0] = TRY(IntelAnalogDisplayTranscoder::create_with_physical_addresses(transcoder_registers_paddr, dpll_registers_paddr, dpll_control_registers_paddr));
+    m_transcoders[0] = TRY(IntelAnalogDisplayTranscoder::create_with_physical_addresses(transcoder_registers_paddr, pipe_registers_paddr, dpll_registers_paddr, dpll_control_registers_paddr));
     m_planes[0] = TRY(IntelG33DisplayPlane::create_with_physical_address(m_mmio_first_region.pci_bar_paddr.offset(0x70180)));
     Array<u8, 128> crt_edid_bytes {};
     {
@@ -299,29 +301,6 @@ u32 IntelDisplayConnectorGroup::read_from_analog_output_register(AnalogOutputReg
     return value;
 }
 
-void IntelDisplayConnectorGroup::write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister index, u32 value)
-{
-    write_to_general_register(to_underlying(index), value);
-}
-
-u32 IntelDisplayConnectorGroup::read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister index) const
-{
-    u32 value = read_from_general_register(to_underlying(index));
-    return value;
-}
-
-bool IntelDisplayConnectorGroup::pipe_a_enabled() const
-{
-    VERIFY(m_control_lock.is_locked());
-    return read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf) & (1 << 30);
-}
-
-bool IntelDisplayConnectorGroup::pipe_b_enabled() const
-{
-    VERIFY(m_control_lock.is_locked());
-    return read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeBConf) & (1 << 30);
-}
-
 static size_t compute_dac_multiplier(size_t pixel_clock_in_khz)
 {
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel native graphics: Pixel clock is {} KHz", pixel_clock_in_khz);
@@ -351,8 +330,7 @@ bool IntelDisplayConnectorGroup::set_crt_resolution(DisplayConnector::ModeSettin
 
     disable_dac_output();
     MUST(m_planes[0]->disable({}));
-    disable_pipe_a();
-    disable_pipe_b();
+    MUST(m_transcoders[0]->disable_pipe({}));
     MUST(m_transcoders[0]->disable_dpll({}));
     disable_vga_emulation();
 
@@ -362,81 +340,13 @@ bool IntelDisplayConnectorGroup::set_crt_resolution(DisplayConnector::ModeSettin
     MUST(m_transcoders[0]->enable_dpll_without_vga({}));
     MUST(m_transcoders[0]->set_mode_setting_timings({}, mode_setting));
 
-    VERIFY(!pipe_a_enabled());
-    enable_pipe_a();
+    VERIFY(!m_transcoders[0]->pipe_enabled({}));
+    MUST(m_transcoders[0]->enable_pipe({}));
     MUST(m_planes[0]->set_plane_settings({}, m_mmio_second_region.pci_bar_paddr, IntelDisplayPlane::PipeSelect::PipeA, mode_setting.horizontal_active));
     MUST(m_planes[0]->enable({}));
     enable_dac_output();
 
     return true;
-}
-
-bool IntelDisplayConnectorGroup::wait_for_enabled_pipe_a(size_t milliseconds_timeout) const
-{
-    size_t current_time = 0;
-    while (current_time < milliseconds_timeout) {
-        if (pipe_a_enabled())
-            return true;
-        microseconds_delay(1000);
-        current_time++;
-    }
-    return false;
-}
-bool IntelDisplayConnectorGroup::wait_for_disabled_pipe_a(size_t milliseconds_timeout) const
-{
-    size_t current_time = 0;
-    while (current_time < milliseconds_timeout) {
-        if (!pipe_a_enabled())
-            return true;
-        microseconds_delay(1000);
-        current_time++;
-    }
-    return false;
-}
-
-bool IntelDisplayConnectorGroup::wait_for_disabled_pipe_b(size_t milliseconds_timeout) const
-{
-    size_t current_time = 0;
-    while (current_time < milliseconds_timeout) {
-        if (!pipe_b_enabled())
-            return true;
-        microseconds_delay(1000);
-        current_time++;
-    }
-    return false;
-}
-
-void IntelDisplayConnectorGroup::disable_pipe_a()
-{
-    VERIFY(m_control_lock.is_locked());
-    VERIFY(m_modeset_lock.is_locked());
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf, 0);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe A");
-    wait_for_disabled_pipe_a(100);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe A - done.");
-}
-
-void IntelDisplayConnectorGroup::disable_pipe_b()
-{
-    VERIFY(m_control_lock.is_locked());
-    VERIFY(m_modeset_lock.is_locked());
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf, 0);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe B");
-    wait_for_disabled_pipe_b(100);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe B - done.");
-}
-
-void IntelDisplayConnectorGroup::enable_pipe_a()
-{
-    VERIFY(m_control_lock.is_locked());
-    VERIFY(m_modeset_lock.is_locked());
-    VERIFY(!(read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf) & (1 << 31)));
-    VERIFY(!(read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf) & (1 << 30)));
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::PipeAConf, (1 << 31) | (1 << 24));
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "enabling Pipe A");
-    // FIXME: Seems like my video card is buggy and doesn't set the enabled bit (bit 30)!!
-    wait_for_enabled_pipe_a(100);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "enabling Pipe A - done.");
 }
 
 void IntelDisplayConnectorGroup::disable_dac_output()
