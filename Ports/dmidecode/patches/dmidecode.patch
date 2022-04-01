@@ -6,7 +6,7 @@ diff -u b/dmidecode.c b/dmidecode.c
  #define FLAG_STOP_AT_EOT        (1 << 1)
  
 -#define SYS_FIRMWARE_DIR "/sys/firmware/dmi/tables"
-+#define SYS_FIRMWARE_DIR "/sys/bios"
++#define SYS_FIRMWARE_DIR "/sys/firmware/bios"
  #define SYS_ENTRY_FILE SYS_FIRMWARE_DIR "/smbios_entry_point"
  #define SYS_TABLE_FILE SYS_FIRMWARE_DIR "/DMI"
  
