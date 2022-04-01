@@ -1387,8 +1387,8 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
             continue;
         }
 
-        int kerning = font.glyphs_horizontal_kerning(last_code_point, code_point);
-        if (kerning != 0)
+        int kerning = static_cast<int>(lroundf(font.glyphs_horizontal_kerning(last_code_point, code_point)));
+        if (kerning != 0.f)
             point.translate_by(direction == TextDirection::LTR ? kerning : -kerning, 0);
 
         IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.pixel_size());
