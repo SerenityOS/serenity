@@ -49,7 +49,7 @@ public:
 
     ScaledFontMetrics metrics(float x_scale, float y_scale) const;
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const;
-    i32 glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const;
+    float glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const;
     RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id, float x_scale, float y_scale) const;
     u32 glyph_count() const;
     u16 units_per_em() const;
@@ -122,7 +122,7 @@ public:
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id) const { return m_font->glyph_metrics(glyph_id, m_x_scale, m_y_scale); }
     RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id) const;
 
-    // Gfx::Font implementation
+    // ^Gfx::Font
     virtual NonnullRefPtr<Font> clone() const override { return *this; } // FIXME: clone() should not need to be implemented
     virtual u8 presentation_size() const override { return m_point_height; }
     virtual int pixel_size() const override { return m_point_height * 1.33333333f; }
@@ -134,7 +134,7 @@ public:
     virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_code_point(code_point) > 0; }
     virtual u8 glyph_width(u32 code_point) const override;
     virtual int glyph_or_emoji_width(u32 code_point) const override;
-    virtual i32 glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const override;
+    virtual float glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const override;
     virtual int preferred_line_height() const override { return metrics().height() + metrics().line_gap; }
     virtual u8 glyph_height() const override { return m_point_height; }
     virtual int x_height() const override { return m_point_height; }      // FIXME: Read from font

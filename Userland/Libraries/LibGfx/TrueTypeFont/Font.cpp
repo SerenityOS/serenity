@@ -558,10 +558,10 @@ ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y_scal
     };
 }
 
-i32 Font::glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const
+float Font::glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const
 {
     if (!m_kern.has_value())
-        return 0;
+        return 0.f;
     return m_kern->get_glyph_kerning(left_glyph_id, right_glyph_id) * x_scale;
 }
 
@@ -705,15 +705,15 @@ int ScaledFont::glyph_or_emoji_width(u32 code_point) const
     return metrics.advance_width;
 }
 
-i32 ScaledFont::glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const
+float ScaledFont::glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const
 {
     if (left_code_point == 0 || right_code_point == 0)
-        return 0;
+        return 0.f;
 
     auto left_glyph_id = glyph_id_for_code_point(left_code_point);
     auto right_glyph_id = glyph_id_for_code_point(right_code_point);
     if (left_glyph_id == 0 || right_glyph_id == 0)
-        return 0;
+        return 0.f;
 
     return m_font->glyphs_horizontal_kerning(left_glyph_id, right_glyph_id, m_x_scale);
 }
