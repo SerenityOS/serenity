@@ -2322,14 +2322,17 @@ void Painter::draw_text_run(FloatPoint const& baseline_start, Utf8View const& st
     int y = baseline_start.y() - pixel_metrics.ascent;
     float space_width = font.glyph_or_emoji_width(' ');
 
+    u32 last_code_point = 0;
     for (auto code_point : string) {
         if (code_point == ' ') {
             x += space_width;
+            last_code_point = code_point;
             continue;
         }
-        float advance = font.glyph_or_emoji_width(code_point) + font.glyph_spacing();
-        draw_glyph_or_emoji({ (int)roundf(x), y }, code_point, font, color);
-        x += advance;
+        x += font.glyphs_horizontal_kerning(last_code_point, code_point);
+        draw_glyph_or_emoji({ static_cast<int>(lroundf(x)), y }, code_point, font, color);
+        x += font.glyph_or_emoji_width(code_point) + font.glyph_spacing();
+        last_code_point = code_point;
     }
 }
 
