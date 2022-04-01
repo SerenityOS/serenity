@@ -202,12 +202,10 @@ static void generate_include_for(auto& generator, auto& path)
 )~~~");
 }
 
-static void emit_includes_for_all_imports(auto& interface, auto& generator, bool is_header, bool is_iterator = false)
+static void emit_includes_for_all_imports(auto& interface, auto& generator, bool is_iterator = false)
 {
     Queue<RemoveCVReference<decltype(interface)> const*> interfaces;
     HashTable<String> paths_imported;
-    if (is_header)
-        paths_imported.set(interface.module_own_path);
 
     interfaces.enqueue(&interface);
 
@@ -1583,7 +1581,6 @@ void generate_header(IDL::Interface const& interface)
     for (auto& path : interface.required_imported_paths)
         generate_include_for(generator, path);
 
-    emit_includes_for_all_imports(interface, generator, true);
     generator.set("name", interface.name);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("wrapper_base_class", interface.wrapper_base_class);
@@ -1747,7 +1744,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/WindowObject.h>
 )~~~");
 
-    emit_includes_for_all_imports(interface, generator, false);
+    emit_includes_for_all_imports(interface, generator);
 
     generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
@@ -2926,7 +2923,7 @@ void generate_prototype_implementation(IDL::Interface const& interface)
     for (auto& path : interface.required_imported_paths)
         generate_include_for(generator, path);
 
-    emit_includes_for_all_imports(interface, generator, false, interface.pair_iterator_types.has_value());
+    emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
 
     generator.append(R"~~~(
 
@@ -3374,7 +3371,7 @@ void generate_iterator_implementation(IDL::Interface const& interface)
     for (auto& path : interface.required_imported_paths)
         generate_include_for(generator, path);
 
-    emit_includes_for_all_imports(interface, generator, false, true);
+    emit_includes_for_all_imports(interface, generator, true);
 
     generator.append(R"~~~(
 
@@ -3487,7 +3484,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 #endif
 )~~~");
 
-    emit_includes_for_all_imports(interface, generator, false, true);
+    emit_includes_for_all_imports(interface, generator, true);
 
     generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
