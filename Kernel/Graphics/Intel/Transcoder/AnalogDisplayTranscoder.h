@@ -17,7 +17,7 @@ class IntelDisplayConnectorGroup;
 class IntelAnalogDisplayTranscoder final : public IntelDisplayTranscoder {
 public:
     static ErrorOr<NonnullOwnPtr<IntelAnalogDisplayTranscoder>> create_with_physical_addresses(PhysicalAddress transcoder_registers_start_address,
-        PhysicalAddress dpll_registers_start_address, PhysicalAddress dpll_control_registers_start_address);
+        PhysicalAddress pipe_registers_start_address, PhysicalAddress dpll_registers_start_address, PhysicalAddress dpll_control_registers_start_address);
 
     virtual ErrorOr<void> set_dpll_settings(Badge<IntelDisplayConnectorGroup>, IntelGraphics::PLLSettings const& settings, size_t dac_multiplier) override;
     virtual ErrorOr<void> enable_dpll_without_vga(Badge<IntelDisplayConnectorGroup>) override;
@@ -35,7 +35,7 @@ private:
         u32 multiplier;
     };
 
-    IntelAnalogDisplayTranscoder(Memory::TypedMapping<TranscoderRegisters volatile>, Memory::TypedMapping<DPLLRegisters volatile>, Memory::TypedMapping<DPLLControlRegisters volatile>);
+    IntelAnalogDisplayTranscoder(Memory::TypedMapping<TranscoderRegisters volatile>, Memory::TypedMapping<PipeRegisters volatile>, Memory::TypedMapping<DPLLRegisters volatile>, Memory::TypedMapping<DPLLControlRegisters volatile>);
     Memory::TypedMapping<DPLLRegisters volatile> m_dpll_registers;
     Memory::TypedMapping<DPLLControlRegisters volatile> m_dpll_control_registers;
 };
