@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<AHCIPortHandler>> AHCIPortHandler::create(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AHCIPortHandler>> AHCIPortHandler::create(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
 {
     auto port_handler = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AHCIPortHandler(controller, irq, taken_ports)));
     // FIXME: Propagate errors from this method too.
@@ -43,7 +43,7 @@ void AHCIPortHandler::allocate_resources_and_initialize_ports()
     }
 }
 
-AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
+UNMAP_AFTER_INIT AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
     : IRQHandler(irq)
     , m_parent_controller(controller)
     , m_taken_ports(taken_ports)

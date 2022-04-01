@@ -20,7 +20,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<AHCIPort>> AHCIPort::create(AHCIPortHandler const& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AHCIPort>> AHCIPort::create(AHCIPortHandler const& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
     auto port = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AHCIPort(handler, registers, port_index)));
     TRY(port->allocate_resources_and_initialize_ports());
@@ -53,7 +53,7 @@ ErrorOr<void> AHCIPort::allocate_resources_and_initialize_ports()
     return {};
 }
 
-AHCIPort::AHCIPort(AHCIPortHandler const& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
+UNMAP_AFTER_INIT AHCIPort::AHCIPort(AHCIPortHandler const& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
     : m_port_index(port_index)
     , m_port_registers(registers)
     , m_parent_handler(handler)
@@ -282,7 +282,7 @@ bool AHCIPort::reset()
     return initialize();
 }
 
-bool AHCIPort::initialize_without_reset()
+UNMAP_AFTER_INIT bool AHCIPort::initialize_without_reset()
 {
     MutexLocker locker(m_lock);
     SpinlockLocker lock(m_hard_lock);

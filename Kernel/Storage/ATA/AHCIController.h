@@ -25,7 +25,7 @@ class AHCIController final : public ATAController
     friend class AHCIPort;
 
 public:
-    UNMAP_AFTER_INIT static NonnullRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
+    static NonnullRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~AHCIController() override;
 
     virtual RefPtr<StorageDevice> device(u32 index) const override;
@@ -41,14 +41,14 @@ private:
     void disable_global_interrupts() const;
     void enable_global_interrupts() const;
 
-    UNMAP_AFTER_INIT explicit AHCIController(PCI::DeviceIdentifier const&);
-    UNMAP_AFTER_INIT void initialize_hba(PCI::DeviceIdentifier const&);
+    explicit AHCIController(PCI::DeviceIdentifier const&);
+    void initialize_hba(PCI::DeviceIdentifier const&);
 
     AHCI::HBADefinedCapabilities capabilities() const;
     RefPtr<StorageDevice> device_by_port(u32 index) const;
 
     volatile AHCI::PortRegisters& port(size_t port_number) const;
-    UNMAP_AFTER_INIT NonnullOwnPtr<Memory::Region> default_hba_region() const;
+    NonnullOwnPtr<Memory::Region> default_hba_region() const;
     volatile AHCI::HBA& hba() const;
 
     NonnullOwnPtr<Memory::Region> m_hba_region;
