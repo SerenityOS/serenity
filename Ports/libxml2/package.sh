@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libxml2
-useconfigure="true"
-use_fresh_config_sub="true"
-version="2.9.12"
-files="ftp://xmlsoft.org/libxml2/libxml2-${version}.tar.gz libxml2-${version}.tar.gz c8d6681e38c56f172892c85ddc0852e1fd4b53b4209e7f4ebf17f7e2eae71d92"
+version=2.9.13
+useconfigure=true
+use_fresh_config_sub=true
+files="https://download.gnome.org/sources/libxml2/2.9/libxml2-${version}.tar.xz libxml2-${version}.tar.xz 276130602d12fe484ecc03447ee5e759d0465558fbc9d6bd144e3745306ebf0e"
 auth_type=sha256
 depends=("libiconv" "xz")
 configopts=("--prefix=${SERENITY_INSTALL_ROOT}/usr/local" "--without-python")
