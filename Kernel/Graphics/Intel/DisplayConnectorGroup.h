@@ -63,8 +63,6 @@ private:
 
     // General Modesetting methods
     ErrorOr<void> set_gen4_mode_setting(IntelNativeDisplayConnector&, DisplayConnector::ModeSetting const&);
-    bool pipe_a_enabled() const;
-    bool pipe_b_enabled() const;
 
     bool is_resolution_valid(size_t width, size_t height);
 
@@ -75,11 +73,6 @@ private:
 
     void disable_dac_output();
     void enable_dac_output();
-
-    void disable_pipe_a();
-    void disable_pipe_b();
-
-    void enable_pipe_a();
 
     bool wait_for_enabled_pipe_a(size_t milliseconds_timeout) const;
     bool wait_for_disabled_pipe_a(size_t milliseconds_timeout) const;

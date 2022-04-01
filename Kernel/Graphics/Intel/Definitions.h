@@ -11,8 +11,6 @@
 namespace Kernel::IntelGraphics {
 
 enum class GlobalGenerationRegister {
-    PipeAConf = 0x70008,
-    PipeBConf = 0x71008,
     AnalogDisplayPort = 0x61100,
     VGADisplayPlaneControl = 0x71400,
 };
