@@ -13,9 +13,9 @@
 namespace Web::IntersectionObserver {
 
 struct IntersectionObserverInit {
-    DOM::Node* root { nullptr };
+    Optional<Variant<NonnullRefPtr<DOM::Element>, NonnullRefPtr<DOM::Document>>> root;
     String root_margin { "0px"sv };
-    JS::Value threshold { 0 };
+    Variant<double, Vector<double>> threshold { 0 };
 };
 
 // https://w3c.github.io/IntersectionObserver/#intersection-observer-interface
