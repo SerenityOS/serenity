@@ -18,7 +18,9 @@ namespace Kernel {
 
 NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    return adopt_ref(*new AHCIController(pci_device_identifier));
+    auto controller = adopt_ref_if_nonnull(new (nothrow) AHCIController(pci_device_identifier)).release_nonnull();
+    controller->initialize_hba(pci_device_identifier);
+    return controller;
 }
 
 bool AHCIController::reset()
@@ -90,7 +92,6 @@ AHCIController::AHCIController(PCI::DeviceIdentifier const& pci_device_identifie
     , m_hba_region(default_hba_region())
     , m_capabilities(capabilities())
 {
-    initialize_hba(pci_device_identifier);
 }
 
 AHCI::HBADefinedCapabilities AHCIController::capabilities() const
@@ -153,8 +154,9 @@ void AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_iden
     PCI::enable_interrupt_line(pci_address());
     PCI::enable_bus_mastering(pci_address());
     enable_global_interrupts();
-    m_handlers.append(AHCIPortHandler::create(*this, pci_device_identifier.interrupt_line().value(),
-        AHCI::MaskedBitField((u32 volatile&)(hba().control_regs.pi))));
+
+    auto port_handler = AHCIPortHandler::create(*this, pci_device_identifier.interrupt_line().value(), AHCI::MaskedBitField((u32 volatile&)(hba().control_regs.pi))).release_value_but_fixme_should_propagate_errors();
+    m_handlers.append(move(port_handler));
 }
 
 void AHCIController::disable_global_interrupts() const
