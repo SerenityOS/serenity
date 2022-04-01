@@ -48,7 +48,6 @@ PORTS_MISSING_DESCRIPTIONS = {
     'freeciv',
     'freedink',
     'freetype',
-    'gawk',
     'gcc',
     'genemu',
     'gettext',
