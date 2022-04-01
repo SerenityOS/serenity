@@ -61,7 +61,6 @@ PORTS_MISSING_DESCRIPTIONS = {
     'harfbuzz',
     'indent',
     'jq',
-    'klong',
     'libassuan',
     'libgcrypt',
     'libgd',
