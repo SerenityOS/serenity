@@ -26,6 +26,7 @@ set(SOURCES
     Overlays.cpp
     Screen.cpp
     HardwareScreenBackend.cpp
+    VirtualScreenBackend.cpp
     ScreenLayout.cpp
     Window.cpp
     WindowFrame.cpp
