@@ -34,11 +34,12 @@ Label::Label(String text)
     REGISTER_STRING_PROPERTY("icon", icon, set_icon_from_path);
 }
 
-void Label::set_autosize(bool autosize)
+void Label::set_autosize(bool autosize, size_t padding)
 {
-    if (m_autosize == autosize)
+    if (m_autosize == autosize && m_autosize_padding == padding)
         return;
     m_autosize = autosize;
+    m_autosize_padding = padding;
     if (m_autosize)
         size_to_fit();
 }
@@ -108,7 +109,7 @@ void Label::paint_event(PaintEvent& event)
 
 void Label::size_to_fit()
 {
-    set_fixed_width(font().width(m_text));
+    set_fixed_width(font().width(m_text) + m_autosize_padding * 2);
 }
 
 int Label::preferred_height() const

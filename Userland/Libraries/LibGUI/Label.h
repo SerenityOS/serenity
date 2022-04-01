@@ -37,7 +37,7 @@ public:
     void set_should_stretch_icon(bool b) { m_should_stretch_icon = b; }
 
     bool is_autosize() const { return m_autosize; }
-    void set_autosize(bool);
+    void set_autosize(bool, size_t padding = 0);
 
     int preferred_height() const;
 
@@ -58,6 +58,7 @@ private:
     Gfx::TextWrapping m_text_wrapping { Gfx::TextWrapping::Wrap };
     bool m_should_stretch_icon { false };
     bool m_autosize { false };
+    size_t m_autosize_padding { 0 };
 };
 
 }
