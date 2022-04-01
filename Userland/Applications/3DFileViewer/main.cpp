@@ -91,6 +91,7 @@ private:
         glEndList();
     }
 
+    virtual void drop_event(GUI::DropEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
@@ -122,6 +123,27 @@ private:
     GLint m_mag_filter = GL_NEAREST;
     float m_zoom = 1;
 };
+
+void GLContextWidget::drop_event(GUI::DropEvent& event)
+{
+    if (!event.mime_data().has_urls())
+        return;
+
+    event.accept();
+
+    if (event.mime_data().urls().is_empty())
+        return;
+
+    for (auto& url : event.mime_data().urls()) {
+        if (url.protocol() != "file")
+            continue;
+
+        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), url.path(), Core::OpenMode::ReadOnly);
+        if (response.is_error())
+            return;
+        load_file(response.value());
+    }
+}
 
 void GLContextWidget::paint_event(GUI::PaintEvent& event)
 {
