@@ -78,7 +78,7 @@ private:
     DMIEntryPointExposedBlob(PhysicalAddress dmi_entry_point, size_t blob_size);
     virtual ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const override;
     PhysicalAddress m_dmi_entry_point;
-    size_t m_dmi_entry_point_length { 0 };
+    size_t const m_dmi_entry_point_length { 0 };
 };
 
 class SMBIOSExposedTable : public BIOSSysFSComponent {
@@ -91,7 +91,7 @@ private:
     virtual ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const override;
 
     PhysicalAddress m_smbios_structure_table;
-    size_t m_smbios_structure_table_length { 0 };
+    size_t const m_smbios_structure_table_length { 0 };
 };
 
 class BIOSSysFSDirectory : public SysFSDirectory {
