@@ -37,7 +37,6 @@ PORTS_MISSING_DESCRIPTIONS = {
     'c-ray',
     'curl',
     'dash',
-    'diffutils',
     'dosbox-staging',
     'dropbear',
     'ed',
