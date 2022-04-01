@@ -264,12 +264,12 @@ void IntelDisplayConnectorGroup::enable_vga_plane()
     VERIFY(m_modeset_lock.is_locked());
 }
 
-[[maybe_unused]] static StringView convert_global_generation_register_index_to_string(IntelGraphics::GlobalGenerationRegister index)
+StringView IntelDisplayConnectorGroup::convert_analog_output_register_to_string(AnalogOutputRegisterOffset index) const
 {
     switch (index) {
-    case IntelGraphics::GlobalGenerationRegister::AnalogDisplayPort:
+    case AnalogOutputRegisterOffset::AnalogDisplayPort:
         return "AnalogDisplayPort"sv;
-    case IntelGraphics::GlobalGenerationRegister::VGADisplayPlaneControl:
+    case AnalogOutputRegisterOffset::VGADisplayPlaneControl:
         return "VGADisplayPlaneControl"sv;
     default:
         VERIFY_NOT_REACHED();
@@ -292,15 +292,15 @@ u32 IntelDisplayConnectorGroup::read_from_general_register(RegisterOffset offset
     return value;
 }
 
-void IntelDisplayConnectorGroup::write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister index, u32 value) const
+void IntelDisplayConnectorGroup::write_to_analog_output_register(AnalogOutputRegisterOffset index, u32 value) const
 {
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics Display Connector:: Write to {} value of {:x}", convert_global_generation_register_index_to_string(index), value);
+    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics Display Connector:: Write to {} value of {:x}", convert_analog_output_register_to_string(index), value);
     write_to_general_register(to_underlying(index), value);
 }
-u32 IntelDisplayConnectorGroup::read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister index) const
+u32 IntelDisplayConnectorGroup::read_from_analog_output_register(AnalogOutputRegisterOffset index) const
 {
     u32 value = read_from_general_register(to_underlying(index));
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics Display Connector: Read from {} value of {:x}", convert_global_generation_register_index_to_string(index), value);
+    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics Display Connector: Read from {} value of {:x}", convert_analog_output_register_to_string(index), value);
     return value;
 }
 
@@ -356,22 +356,22 @@ void IntelDisplayConnectorGroup::disable_dac_output()
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::AnalogDisplayPort, 0b11 << 10);
+    write_to_analog_output_register(AnalogOutputRegisterOffset::AnalogDisplayPort, 0b11 << 10);
 }
 
 void IntelDisplayConnectorGroup::enable_dac_output()
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::AnalogDisplayPort, (1 << 31));
+    write_to_analog_output_register(AnalogOutputRegisterOffset::AnalogDisplayPort, (1 << 31));
 }
 
 void IntelDisplayConnectorGroup::disable_vga_emulation()
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
-    write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister::VGADisplayPlaneControl, (1 << 31));
-    read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister::VGADisplayPlaneControl);
+    write_to_analog_output_register(AnalogOutputRegisterOffset::VGADisplayPlaneControl, (1 << 31));
+    read_from_analog_output_register(AnalogOutputRegisterOffset::VGADisplayPlaneControl);
 }
 
 }

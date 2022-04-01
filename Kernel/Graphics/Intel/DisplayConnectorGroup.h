@@ -41,6 +41,11 @@ public:
 private:
     AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, RegisterOffset);
 
+    enum class AnalogOutputRegisterOffset {
+        AnalogDisplayPort = 0x61100,
+        VGADisplayPlaneControl = 0x71400,
+    };
+
 public:
     static ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> try_create(Badge<IntelNativeGraphicsAdapter>, Generation, MMIORegion const&, MMIORegion const&);
 
@@ -52,8 +57,9 @@ private:
 
     ErrorOr<void> set_mode_setting(IntelNativeDisplayConnector&, DisplayConnector::ModeSetting const&);
 
-    void write_to_global_generation_register(IntelGraphics::GlobalGenerationRegister, u32 value) const;
-    u32 read_from_global_generation_register(IntelGraphics::GlobalGenerationRegister) const;
+    StringView convert_analog_output_register_to_string(AnalogOutputRegisterOffset index) const;
+    void write_to_analog_output_register(AnalogOutputRegisterOffset, u32 value) const;
+    u32 read_from_analog_output_register(AnalogOutputRegisterOffset) const;
     void write_to_general_register(RegisterOffset offset, u32 value) const;
     u32 read_from_general_register(RegisterOffset offset) const;
 

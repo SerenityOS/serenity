@@ -10,11 +10,6 @@
 
 namespace Kernel::IntelGraphics {
 
-enum class GlobalGenerationRegister {
-    AnalogDisplayPort = 0x61100,
-    VGADisplayPlaneControl = 0x71400,
-};
-
 struct PLLSettings;
 
 struct PLLParameterLimit {
