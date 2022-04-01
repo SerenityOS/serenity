@@ -560,7 +560,16 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (interface.enumerations.contains(parameter.type->name)) {
         auto enum_generator = scoped_generator.fork();
         auto& enumeration = interface.enumerations.find(parameter.type->name)->value;
-        enum_generator.set("enum.default.cpp_value", *enumeration.translated_cpp_names.get(optional_default_value.value_or(enumeration.first_member)));
+        StringView enum_member_name;
+        if (optional_default_value.has_value()) {
+            VERIFY(optional_default_value->length() >= 2 && (*optional_default_value)[0] == '"' && (*optional_default_value)[optional_default_value->length() - 1] == '"');
+            enum_member_name = optional_default_value->substring_view(1, optional_default_value->length() - 2);
+        } else {
+            enum_member_name = enumeration.first_member;
+        }
+        auto default_value_cpp_name = enumeration.translated_cpp_names.get(enum_member_name);
+        VERIFY(default_value_cpp_name.has_value());
+        enum_generator.set("enum.default.cpp_value", *default_value_cpp_name);
         enum_generator.set("js_name.as_string", String::formatted("{}{}_string", enum_generator.get("js_name"), enum_generator.get("js_suffix")));
         enum_generator.append(R"~~~(
     @parameter.type.name@ @cpp_name@ { @parameter.type.name@::@enum.default.cpp_value@ };
