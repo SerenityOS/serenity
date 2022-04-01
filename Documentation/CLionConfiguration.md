@@ -56,6 +56,27 @@ following options under `Settings -> Editor -> Code Style -> C/C++`:
 
   ![Screenshot of Naming Convention settings](./CLion_Naming_Convention.png)
 
+## Quick switching between Kernel and Userland targets
+
+In order to let CLion know what kind of code you're currently working on (Kernel / Userland) to make sure it parses and displays the correct half of statements like this:
+```c++
+#ifdef KERNEL
+...
+#else
+...
+#endif
+```
+You need to add build configurations for each:
+
+Click on one of the buttons below (top right of the IDE) - If you have the second one, press Edit Configurations after the dropdown box opens, then press CTRL+A to select the 1000s of automatically generated targets, and then press Delete to remove them.
+
+![Add Configuration...](CLion_Add_Configuration.png)
+![Kernel | Default](CLion_Add_Configuration_Existing.png)
+
+Then press the `+` button to add a new configuration, select `CMake Application`, name the configuration `Kernel`, set the target to `Kernel` (typing while the dropdown box is open searches), and then repeat the process one more time, this time with the name being `Userland` and the target being `true`.
+
+Finally, to quickly switch between the two different contexts, simply click the `Kernel | Default` / `Userland | Default` button to switch.
+
 ## Notes for WSL Users
 
 It is possible to set the embedded terminal in CLion to the one that your WSL distribution provides.
