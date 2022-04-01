@@ -119,6 +119,9 @@ public:
 
     void start_an_idle_period();
 
+    u32 request_idle_callback(NonnullOwnPtr<Bindings::CallbackType> callback);
+    void cancel_idle_callback(u32);
+
 private:
     explicit Window(DOM::Document&);
 
