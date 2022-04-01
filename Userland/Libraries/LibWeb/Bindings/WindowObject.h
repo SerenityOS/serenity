@@ -131,6 +131,9 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(queue_microtask);
 
+    JS_DECLARE_NATIVE_FUNCTION(request_idle_callback);
+    JS_DECLARE_NATIVE_FUNCTION(cancel_idle_callback);
+
     JS_DECLARE_NATIVE_FUNCTION(crypto_getter);
 
 #define __ENUMERATE(attribute, event_name)          \

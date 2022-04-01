@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/IDLAbstractOperations.h>
+#include <LibWeb/Bindings/IdleDeadlineWrapper.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/Crypto/Crypto.h>
@@ -110,16 +111,19 @@ void run_animation_frame_callbacks(DOM::Document&, double)
 
 class IdleCallback : public RefCounted<IdleCallback> {
 public:
-    explicit IdleCallback(Function<JS::Completion(NonnullRefPtr<RequestIdleCallback::IdleDeadline>)> handler)
+    explicit IdleCallback(Function<JS::Completion(NonnullRefPtr<RequestIdleCallback::IdleDeadline>)> handler, u32 handle)
         : m_handler(move(handler))
+        , m_handle(handle)
     {
     }
     ~IdleCallback() = default;
 
     JS::Completion invoke(NonnullRefPtr<RequestIdleCallback::IdleDeadline> deadline) { return m_handler(move(deadline)); }
+    u32 handle() const { return m_handle; }
 
 private:
     Function<JS::Completion(NonnullRefPtr<RequestIdleCallback::IdleDeadline>)> m_handler;
+    u32 m_handle { 0 };
 };
 
 NonnullRefPtr<Window> Window::create_with_document(DOM::Document& document)
@@ -700,6 +704,47 @@ void Window::invoke_idle_callbacks()
             window->invoke_idle_callbacks();
         });
     }
+}
+
+// https://w3c.github.io/requestidlecallback/#the-requestidlecallback-method
+u32 Window::request_idle_callback(NonnullOwnPtr<Bindings::CallbackType> callback)
+{
+    // 1. Let window be this Window object.
+    auto& window = *this;
+    // 2. Increment the window's idle callback identifier by one.
+    window.m_idle_callback_identifier++;
+    // 3. Let handle be the current value of window's idle callback identifier.
+    auto handle = window.m_idle_callback_identifier;
+    // 4. Push callback to the end of window's list of idle request callbacks, associated with handle.
+    auto handler = [callback = move(callback)](NonnullRefPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
+        auto& global_object = callback->callback.cell()->global_object();
+        auto* wrapped_deadline = Bindings::wrap(global_object, *deadline);
+        return Bindings::IDL::invoke_callback(const_cast<Bindings::CallbackType&>(*callback), {}, JS::Value(wrapped_deadline));
+    };
+    window.m_idle_request_callbacks.append(adopt_ref(*new IdleCallback(move(handler), handle)));
+    // 5. Return handle and then continue running this algorithm asynchronously.
+    return handle;
+    // FIXME: 6. If the timeout property is present in options and has a positive value:
+    // FIXME:    1. Wait for timeout milliseconds.
+    // FIXME:    2. Wait until all invocations of this algorithm, whose timeout added to their posted time occurred before this one's, have completed.
+    // FIXME:    3. Optionally, wait a further user-agent defined length of time.
+    // FIXME:    4. Queue a task on the queue associated with the idle-task task source, which performs the invoke idle callback timeout algorithm, passing handle and window as arguments.
+}
+
+// https://w3c.github.io/requestidlecallback/#the-cancelidlecallback-method
+void Window::cancel_idle_callback(u32 handle)
+{
+    // 1. Let window be this Window object.
+    auto& window = *this;
+    // 2. Find the entry in either the window's list of idle request callbacks or list of runnable idle callbacks
+    //    that is associated with the value handle.
+    // 3. If there is such an entry, remove it from both window's list of idle request callbacks and the list of runnable idle callbacks.
+    window.m_idle_request_callbacks.remove_first_matching([handle](auto& callback) {
+        return callback->handle() == handle;
+    });
+    window.m_runnable_idle_callbacks.remove_first_matching([handle](auto& callback) {
+        return callback->handle() == handle;
+    });
 }
 
 }
