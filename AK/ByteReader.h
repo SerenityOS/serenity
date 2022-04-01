@@ -18,34 +18,34 @@ struct ByteReader {
         __builtin_memcpy(addr, &value, sizeof(T));
     }
     template<typename T>
-    requires(IsTriviallyConstructible<T>) static void load(const u8* addr, T& value)
+    requires(IsTriviallyConstructible<T>) static void load(u8 const* addr, T& value)
     {
         __builtin_memcpy(&value, addr, sizeof(T));
     }
 
     template<typename T>
-    static T* load_pointer(const u8* address)
+    static T* load_pointer(u8 const* address)
     {
         FlatPtr value;
         load<FlatPtr>(address, value);
         return reinterpret_cast<T*>(value);
     }
 
-    static u16 load16(const u8* address)
+    static u16 load16(u8 const* address)
     {
         u16 value;
         load(address, value);
         return value;
     }
 
-    static u32 load32(const u8* address)
+    static u32 load32(u8 const* address)
     {
         u32 value;
         load(address, value);
         return value;
     }
 
-    static u64 load64(const u8* address)
+    static u64 load64(u8 const* address)
     {
         u64 value;
         load(address, value);

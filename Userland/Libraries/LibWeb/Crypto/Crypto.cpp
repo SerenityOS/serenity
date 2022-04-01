@@ -62,27 +62,27 @@ String Crypto::random_uuid() const
     bytes[8] |= 1 << 7;
     bytes[8] &= ~(1 << 6);
 
-    /* 5. Return the string concatenation of 
-        « 
+    /* 5. Return the string concatenation of
+        «
         hexadecimal representation of bytes[0],
-        hexadecimal representation of bytes[1], 
+        hexadecimal representation of bytes[1],
         hexadecimal representation of bytes[2],
         hexadecimal representation of bytes[3],
-        "-", 
-        hexadecimal representation of bytes[4], 
+        "-",
+        hexadecimal representation of bytes[4],
         hexadecimal representation of bytes[5],
         "-",
-        hexadecimal representation of bytes[6], 
+        hexadecimal representation of bytes[6],
         hexadecimal representation of bytes[7],
         "-",
-        hexadecimal representation of bytes[8], 
+        hexadecimal representation of bytes[8],
         hexadecimal representation of bytes[9],
         "-",
-        hexadecimal representation of bytes[10], 
-        hexadecimal representation of bytes[11], 
-        hexadecimal representation of bytes[12], 
-        hexadecimal representation of bytes[13], 
-        hexadecimal representation of bytes[14], 
+        hexadecimal representation of bytes[10],
+        hexadecimal representation of bytes[11],
+        hexadecimal representation of bytes[12],
+        hexadecimal representation of bytes[13],
+        hexadecimal representation of bytes[14],
         hexadecimal representation of bytes[15]
         ».
         */

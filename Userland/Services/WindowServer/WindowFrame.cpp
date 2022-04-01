@@ -52,7 +52,7 @@ static String s_last_menu_shadow_path;
 static String s_last_taskbar_shadow_path;
 static String s_last_tooltip_shadow_path;
 
-static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& rect)
+static Gfx::IntRect frame_rect_for_window(Window& window, Gfx::IntRect const& rect)
 {
     if (window.is_frameless())
         return rect;
@@ -148,7 +148,7 @@ void WindowFrame::reload_config()
     reload_icon(s_close_icon, "window-close.png", "/res/icons/16x16/window-close.png");
     reload_icon(s_close_modified_icon, "window-close-modified.png", "/res/icons/16x16/window-close-modified.png");
 
-    auto load_shadow = [](const String& path, String& last_path, RefPtr<MultiScaleBitmaps>& shadow_bitmap) {
+    auto load_shadow = [](String const& path, String& last_path, RefPtr<MultiScaleBitmaps>& shadow_bitmap) {
         if (path.is_empty()) {
             last_path = String::empty();
             shadow_bitmap = nullptr;
@@ -305,13 +305,13 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
         paint_menubar(painter);
 }
 
-void WindowFrame::paint(Screen& screen, Gfx::Painter& painter, const Gfx::IntRect& rect)
+void WindowFrame::paint(Screen& screen, Gfx::Painter& painter, Gfx::IntRect const& rect)
 {
     if (auto* cached = render_to_cache(screen))
         cached->paint(*this, painter, rect);
 }
 
-void WindowFrame::PerScaleRenderedCache::paint(WindowFrame& frame, Gfx::Painter& painter, const Gfx::IntRect& rect)
+void WindowFrame::PerScaleRenderedCache::paint(WindowFrame& frame, Gfx::Painter& painter, Gfx::IntRect const& rect)
 {
     auto frame_rect = frame.unconstrained_render_rect();
     auto window_rect = frame.window().rect();
@@ -526,7 +526,7 @@ void WindowFrame::set_opacity(float opacity)
     WindowManager::the().notify_opacity_changed(m_window);
 }
 
-Gfx::IntRect WindowFrame::inflated_for_shadow(const Gfx::IntRect& frame_rect) const
+Gfx::IntRect WindowFrame::inflated_for_shadow(Gfx::IntRect const& frame_rect) const
 {
     if (auto* shadow = shadow_bitmap()) {
         auto total_shadow_size = shadow->default_bitmap().height();
@@ -540,7 +540,7 @@ Gfx::IntRect WindowFrame::rect() const
     return frame_rect_for_window(m_window, m_window.rect());
 }
 
-Gfx::IntRect WindowFrame::constrained_render_rect_to_screen(const Gfx::IntRect& render_rect) const
+Gfx::IntRect WindowFrame::constrained_render_rect_to_screen(Gfx::IntRect const& render_rect) const
 {
     if (m_window.is_tiled())
         return render_rect.intersected(Screen::closest_to_rect(rect()).rect());
@@ -630,7 +630,7 @@ void WindowFrame::invalidate(Gfx::IntRect relative_rect)
     m_window.invalidate(relative_rect, true);
 }
 
-void WindowFrame::window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect)
+void WindowFrame::window_rect_changed(Gfx::IntRect const& old_rect, Gfx::IntRect const& new_rect)
 {
     layout_buttons();
 
@@ -810,7 +810,7 @@ void WindowFrame::handle_mouse_event(MouseEvent const& event)
     handle_border_mouse_event(event);
 }
 
-void WindowFrame::handle_border_mouse_event(const MouseEvent& event)
+void WindowFrame::handle_border_mouse_event(MouseEvent const& event)
 {
     if (!m_window.is_resizable())
         return;
@@ -838,7 +838,7 @@ void WindowFrame::handle_border_mouse_event(const MouseEvent& event)
         wm.start_window_resize(m_window, event.translated(rect().location()));
 }
 
-void WindowFrame::handle_menubar_mouse_event(const MouseEvent& event)
+void WindowFrame::handle_menubar_mouse_event(MouseEvent const& event)
 {
     Menu* hovered_menu = nullptr;
     auto menubar_rect = this->menubar_rect();
@@ -869,7 +869,7 @@ void WindowFrame::open_menubar_menu(Menu& menu)
     invalidate(menubar_rect);
 }
 
-void WindowFrame::handle_menu_mouse_event(Menu& menu, const MouseEvent& event)
+void WindowFrame::handle_menu_mouse_event(Menu& menu, MouseEvent const& event)
 {
     auto menubar_rect = this->menubar_rect();
     bool is_hover_with_any_menu_open = event.type() == MouseEvent::MouseMove && &m_window == WindowManager::the().window_with_active_menu();

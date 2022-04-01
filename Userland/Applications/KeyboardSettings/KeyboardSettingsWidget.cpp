@@ -268,7 +268,7 @@ void KeyboardSettingsWidget::set_keymaps(Vector<String> const& keymaps, String c
     pid_t child_pid;
 
     auto keymaps_string = String::join(',', keymaps);
-    const char* argv[] = { "/bin/keymap", "-s", keymaps_string.characters(), "-m", active_keymap.characters(), nullptr };
+    char const* argv[] = { "/bin/keymap", "-s", keymaps_string.characters(), "-m", active_keymap.characters(), nullptr };
     if ((errno = posix_spawn(&child_pid, "/bin/keymap", nullptr, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
         exit(1);

@@ -26,16 +26,16 @@ public:
     GUI::Model* model() { return m_model.ptr(); }
     const GUI::Model* model() const { return m_model.ptr(); }
 
-    Function<void(const String& url, unsigned modifiers)> on_bookmark_click;
-    Function<void(const String&, const String&)> on_bookmark_hover;
+    Function<void(String const& url, unsigned modifiers)> on_bookmark_click;
+    Function<void(String const&, String const&)> on_bookmark_hover;
 
-    bool contains_bookmark(const String& url);
-    bool remove_bookmark(const String& url);
-    bool add_bookmark(const String& url, const String& title);
-    bool edit_bookmark(const String& url);
+    bool contains_bookmark(String const& url);
+    bool remove_bookmark(String const& url);
+    bool add_bookmark(String const& url, String const& title);
+    bool edit_bookmark(String const& url);
 
 private:
-    BookmarksBarWidget(const String&, bool enabled);
+    BookmarksBarWidget(String const&, bool enabled);
 
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;

@@ -41,7 +41,7 @@ size_t IDEController::devices_count() const
     return count;
 }
 
-void IDEController::start_request(const ATADevice& device, AsyncBlockDeviceRequest& request)
+void IDEController::start_request(ATADevice const& device, AsyncBlockDeviceRequest& request)
 {
     auto& address = device.ata_address();
     VERIFY(address.subport < 2);

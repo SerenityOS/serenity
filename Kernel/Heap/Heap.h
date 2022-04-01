@@ -33,9 +33,9 @@ class Heap {
     {
         return (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
     }
-    ALWAYS_INLINE const AllocationHeader* allocation_header(const void* ptr) const
+    ALWAYS_INLINE AllocationHeader const* allocation_header(void const* ptr) const
     {
-        return (const AllocationHeader*)((((const u8*)ptr) - sizeof(AllocationHeader)));
+        return (AllocationHeader const*)((((u8 const*)ptr) - sizeof(AllocationHeader)));
     }
 
     static size_t calculate_chunks(size_t memory_size)
@@ -120,12 +120,12 @@ public:
         }
     }
 
-    bool contains(const void* ptr) const
+    bool contains(void const* ptr) const
     {
-        const auto* a = allocation_header(ptr);
-        if ((const u8*)a < m_chunks)
+        auto const* a = allocation_header(ptr);
+        if ((u8 const*)a < m_chunks)
             return false;
-        if ((const u8*)ptr >= m_chunks + m_total_chunks * CHUNK_SIZE)
+        if ((u8 const*)ptr >= m_chunks + m_total_chunks * CHUNK_SIZE)
             return false;
         return true;
     }

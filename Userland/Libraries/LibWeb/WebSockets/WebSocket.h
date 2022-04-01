@@ -64,7 +64,7 @@ public:
         return adopt_ref(*new WebSocket(window, url));
     }
 
-    static DOM::ExceptionOr<NonnullRefPtr<WebSocket>> create_with_global_object(Bindings::WindowObject& window, const String& url);
+    static DOM::ExceptionOr<NonnullRefPtr<WebSocket>> create_with_global_object(Bindings::WindowObject& window, String const& url);
 
     virtual ~WebSocket() override;
 
@@ -84,11 +84,11 @@ public:
     String extensions() const;
     String protocol() const;
 
-    const String& binary_type() { return m_binary_type; };
-    void set_binary_type(const String& type) { m_binary_type = type; };
+    String const& binary_type() { return m_binary_type; };
+    void set_binary_type(String const& type) { m_binary_type = type; };
 
     DOM::ExceptionOr<void> close(Optional<u16> code, Optional<String> reason);
-    DOM::ExceptionOr<void> send(const String& data);
+    DOM::ExceptionOr<void> send(String const& data);
 
 private:
     virtual void ref_event_target() override { ref(); }

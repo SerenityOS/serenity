@@ -94,21 +94,21 @@ struct TypeErasedParameter {
     {
         switch (type) {
         case TypeErasedParameter::Type::UInt8:
-            return visitor(*static_cast<const u8*>(value));
+            return visitor(*static_cast<u8 const*>(value));
         case TypeErasedParameter::Type::UInt16:
-            return visitor(*static_cast<const u16*>(value));
+            return visitor(*static_cast<u16 const*>(value));
         case TypeErasedParameter::Type::UInt32:
-            return visitor(*static_cast<const u32*>(value));
+            return visitor(*static_cast<u32 const*>(value));
         case TypeErasedParameter::Type::UInt64:
-            return visitor(*static_cast<const u64*>(value));
+            return visitor(*static_cast<u64 const*>(value));
         case TypeErasedParameter::Type::Int8:
-            return visitor(*static_cast<const i8*>(value));
+            return visitor(*static_cast<i8 const*>(value));
         case TypeErasedParameter::Type::Int16:
-            return visitor(*static_cast<const i16*>(value));
+            return visitor(*static_cast<i16 const*>(value));
         case TypeErasedParameter::Type::Int32:
-            return visitor(*static_cast<const i32*>(value));
+            return visitor(*static_cast<i32 const*>(value));
         case TypeErasedParameter::Type::Int64:
-            return visitor(*static_cast<const i64*>(value));
+            return visitor(*static_cast<i64 const*>(value));
         default:
             TODO();
         }
@@ -127,7 +127,7 @@ struct TypeErasedParameter {
 
     // FIXME: Getters and setters.
 
-    const void* value;
+    void const* value;
     Type type;
     ErrorOr<void> (*formatter)(TypeErasedFormatParams&, FormatBuilder&, FormatParser&, void const* value);
 };
@@ -227,7 +227,7 @@ public:
         size_t width,
         char fill = ' ');
 
-    const StringBuilder& builder() const
+    StringBuilder const& builder() const
     {
         return m_builder;
     }
@@ -250,7 +250,7 @@ private:
 };
 
 template<typename T>
-ErrorOr<void> __format_value(TypeErasedFormatParams& params, FormatBuilder& builder, FormatParser& parser, const void* value)
+ErrorOr<void> __format_value(TypeErasedFormatParams& params, FormatBuilder& builder, FormatParser& parser, void const* value)
 {
     Formatter<T> formatter;
 
@@ -263,7 +263,7 @@ class VariadicFormatParams : public TypeErasedFormatParams {
 public:
     static_assert(sizeof...(Parameters) <= max_format_arguments);
 
-    explicit VariadicFormatParams(const Parameters&... parameters)
+    explicit VariadicFormatParams(Parameters const&... parameters)
         : m_data({ TypeErasedParameter { &parameters, TypeErasedParameter::get_type<Parameters>(), __format_value<Parameters> }... })
     {
         this->set_parameters(m_data);
@@ -396,8 +396,8 @@ struct Formatter<Bytes> : Formatter<ReadonlyBytes> {
 };
 
 template<>
-struct Formatter<const char*> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, const char* value)
+struct Formatter<char const*> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, char const* value)
     {
         if (m_mode == Mode::Pointer) {
             Formatter<FlatPtr> formatter { *this };
@@ -407,14 +407,14 @@ struct Formatter<const char*> : Formatter<StringView> {
     }
 };
 template<>
-struct Formatter<char*> : Formatter<const char*> {
+struct Formatter<char*> : Formatter<char const*> {
 };
 template<size_t Size>
-struct Formatter<char[Size]> : Formatter<const char*> {
+struct Formatter<char[Size]> : Formatter<char const*> {
 };
 template<size_t Size>
 struct Formatter<unsigned char[Size]> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, const unsigned char* value)
+    ErrorOr<void> format(FormatBuilder& builder, unsigned char const* value)
     {
         if (m_mode == Mode::Pointer) {
             Formatter<FlatPtr> formatter { *this };
@@ -535,14 +535,14 @@ ErrorOr<void> vformat(StringBuilder&, StringView fmtstr, TypeErasedFormatParams&
 void vout(FILE*, StringView fmtstr, TypeErasedFormatParams&, bool newline = false);
 
 template<typename... Parameters>
-void out(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+void out(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
     VariadicFormatParams variadic_format_params { parameters... };
     vout(file, fmtstr.view(), variadic_format_params);
 }
 
 template<typename... Parameters>
-void outln(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+void outln(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
     VariadicFormatParams variadic_format_params { parameters... };
     vout(file, fmtstr.view(), variadic_format_params, true);
@@ -551,10 +551,10 @@ void outln(FILE* file, CheckedFormatString<Parameters...>&& fmtstr, const Parame
 inline void outln(FILE* file) { fputc('\n', file); }
 
 template<typename... Parameters>
-void out(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { out(stdout, move(fmtstr), parameters...); }
+void out(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters) { out(stdout, move(fmtstr), parameters...); }
 
 template<typename... Parameters>
-void outln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { outln(stdout, move(fmtstr), parameters...); }
+void outln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters) { outln(stdout, move(fmtstr), parameters...); }
 
 inline void outln() { outln(stdout); }
 
@@ -565,13 +565,13 @@ inline void outln() { outln(stdout); }
         } while (0)
 
 template<typename... Parameters>
-void warn(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+void warn(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
     out(stderr, move(fmtstr), parameters...);
 }
 
 template<typename... Parameters>
-void warnln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters) { outln(stderr, move(fmtstr), parameters...); }
+void warnln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters) { outln(stderr, move(fmtstr), parameters...); }
 
 inline void warnln() { outln(stderr); }
 
@@ -586,7 +586,7 @@ inline void warnln() { outln(stderr); }
 void vdbgln(StringView fmtstr, TypeErasedFormatParams&);
 
 template<typename... Parameters>
-void dbgln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+void dbgln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
     VariadicFormatParams variadic_format_params { parameters... };
     vdbgln(fmtstr.view(), variadic_format_params);
@@ -600,7 +600,7 @@ void set_debug_enabled(bool);
 void vdmesgln(StringView fmtstr, TypeErasedFormatParams&);
 
 template<typename... Parameters>
-void dmesgln(CheckedFormatString<Parameters...>&& fmt, const Parameters&... parameters)
+void dmesgln(CheckedFormatString<Parameters...>&& fmt, Parameters const&... parameters)
 {
     VariadicFormatParams variadic_format_params { parameters... };
     vdmesgln(fmt.view(), variadic_format_params);
@@ -611,7 +611,7 @@ void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams&);
 // be very careful to not cause any allocations here, since we could be in
 // a very unstable situation
 template<typename... Parameters>
-void critical_dmesgln(CheckedFormatString<Parameters...>&& fmt, const Parameters&... parameters)
+void critical_dmesgln(CheckedFormatString<Parameters...>&& fmt, Parameters const&... parameters)
 {
     VariadicFormatParams variadic_format_params { parameters... };
     v_critical_dmesgln(fmt.view(), variadic_format_params);
@@ -656,7 +656,7 @@ struct FormatString {
 template<>
 struct Formatter<FormatString> : Formatter<StringView> {
     template<typename... Parameters>
-    ErrorOr<void> format(FormatBuilder& builder, StringView fmtstr, const Parameters&... parameters)
+    ErrorOr<void> format(FormatBuilder& builder, StringView fmtstr, Parameters const&... parameters)
     {
         VariadicFormatParams variadic_format_params { parameters... };
         return vformat(builder, fmtstr, variadic_format_params);

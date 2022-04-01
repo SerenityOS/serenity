@@ -18,7 +18,7 @@ class PagemapPaintingDelegate final : public GUI::TableCellPaintingDelegate {
 public:
     virtual ~PagemapPaintingDelegate() override = default;
 
-    virtual void paint(GUI::Painter& painter, const Gfx::IntRect& a_rect, const Gfx::Palette&, const GUI::ModelIndex& index) override
+    virtual void paint(GUI::Painter& painter, Gfx::IntRect const& a_rect, Gfx::Palette const&, const GUI::ModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
         auto pagemap = index.data(GUI::ModelRole::Custom).to_string();
@@ -93,7 +93,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
         [](auto&) {
             return GUI::Variant(0);
         },
-        [](const JsonObject& object) {
+        [](JsonObject const& object) {
             auto pagemap = object.get("pagemap").as_string_or({});
             return pagemap;
         });

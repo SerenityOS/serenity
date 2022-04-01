@@ -28,8 +28,8 @@ public:
         Save
     };
 
-    static Optional<String> get_open_filepath(Window* parent_window, const String& window_title = {}, StringView path = Core::StandardPaths::home_directory(), bool folder = false, ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
-    static Optional<String> get_save_filepath(Window* parent_window, const String& title, const String& extension, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
+    static Optional<String> get_open_filepath(Window* parent_window, String const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), bool folder = false, ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
+    static Optional<String> get_save_filepath(Window* parent_window, String const& title, String const& extension, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent);
 
     virtual ~FilePicker() override;
 
@@ -38,7 +38,7 @@ public:
 private:
     void on_file_return();
 
-    void set_path(const String&);
+    void set_path(String const&);
 
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;

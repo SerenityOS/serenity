@@ -28,8 +28,8 @@
 
 namespace WindowServer {
 
-const int double_click_speed_max = 900;
-const int double_click_speed_min = 100;
+int const double_click_speed_max = 900;
+int const double_click_speed_min = 100;
 
 class Screen;
 class MouseEvent;

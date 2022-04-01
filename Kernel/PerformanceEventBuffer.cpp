@@ -72,7 +72,7 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
     return backtrace;
 }
 
-ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid, const RegisterState& regs,
+ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid, RegisterState const& regs,
     int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4, u64 arg5, ErrorOr<FlatPtr> arg6)
 {
     return append_with_ip_and_bp(pid, tid, regs.ip(), regs.bp(), type, lost_samples, arg1, arg2, arg3, arg4, arg5, arg6);
@@ -338,7 +338,7 @@ OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size
     return adopt_own_if_nonnull(new (nothrow) PerformanceEventBuffer(buffer_or_error.release_value()));
 }
 
-ErrorOr<void> PerformanceEventBuffer::add_process(const Process& process, ProcessEventType event_type)
+ErrorOr<void> PerformanceEventBuffer::add_process(Process const& process, ProcessEventType event_type)
 {
     SpinlockLocker locker(process.address_space().get_lock());
 

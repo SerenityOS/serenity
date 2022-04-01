@@ -156,14 +156,14 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
         app_category_menus.set(category, category_menu);
     };
 
-    for (const auto& category : sorted_app_categories) {
+    for (auto const& category : sorted_app_categories) {
         if (category != "Settings"sv)
             create_category_menu(category);
     }
 
     // Then we create and insert all the app menu items into the right place.
     int app_identifier = 0;
-    for (const auto& app : g_apps) {
+    for (auto const& app : g_apps) {
         if (app.category == "Settings"sv) {
             ++app_identifier;
             continue;

@@ -96,10 +96,10 @@ public:
     bool is_runnable(StringView);
     ErrorOr<RefPtr<Job>> run_command(const AST::Command&);
     NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
-    bool run_file(const String&, bool explicitly_invoked = true);
-    bool run_builtin(const AST::Command&, const NonnullRefPtrVector<AST::Rewiring>&, int& retval);
+    bool run_file(String const&, bool explicitly_invoked = true);
+    bool run_builtin(const AST::Command&, NonnullRefPtrVector<AST::Rewiring> const&, int& retval);
     bool has_builtin(StringView) const;
-    RefPtr<AST::Node> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&);
+    RefPtr<AST::Node> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&);
     static bool has_immediate_function(StringView);
     void block_on_job(RefPtr<Job>);
     void block_on_pipeline(RefPtr<AST::Pipeline>);
@@ -118,8 +118,8 @@ public:
 
     RefPtr<AST::Value> get_argument(size_t) const;
     RefPtr<AST::Value> lookup_local_variable(StringView) const;
-    String local_variable_or(StringView, const String&) const;
-    void set_local_variable(const String&, RefPtr<AST::Value>, bool only_in_current_frame = false);
+    String local_variable_or(StringView, String const&) const;
+    void set_local_variable(String const&, RefPtr<AST::Value>, bool only_in_current_frame = false);
     void unset_local_variable(StringView, bool only_in_current_frame = false);
 
     void define_function(String name, Vector<String> argnames, RefPtr<AST::Node> body);
@@ -142,7 +142,7 @@ public:
     };
 
     struct Frame {
-        Frame(NonnullOwnPtrVector<LocalFrame>& frames, const LocalFrame& frame)
+        Frame(NonnullOwnPtrVector<LocalFrame>& frames, LocalFrame const& frame)
             : frames(frames)
             , frame(frame)
         {
@@ -153,7 +153,7 @@ public:
 
     private:
         NonnullOwnPtrVector<LocalFrame>& frames;
-        const LocalFrame& frame;
+        LocalFrame const& frame;
         bool should_destroy_frame { true };
     };
 
@@ -235,9 +235,9 @@ public:
     void restore_ios();
 
     u64 find_last_job_id() const;
-    const Job* find_job(u64 id, bool is_pid = false);
-    const Job* current_job() const { return m_current_job; }
-    void kill_job(const Job*, int sig);
+    Job const* find_job(u64 id, bool is_pid = false);
+    Job const* current_job() const { return m_current_job; }
+    void kill_job(Job const*, int sig);
 
     String get_history_path();
     void print_path(StringView path);
@@ -298,7 +298,7 @@ public:
     }
     bool has_error(ShellError err) const { return m_error == err; }
     bool has_any_error() const { return !has_error(ShellError::None); }
-    const String& error_description() const { return m_error_description; }
+    String const& error_description() const { return m_error_description; }
     ShellError take_error()
     {
         auto err = m_error;
@@ -344,12 +344,12 @@ private:
 
     Optional<int> resolve_job_spec(StringView);
     void cache_path();
-    void add_entry_to_cache(const String&);
+    void add_entry_to_cache(String const&);
     void remove_entry_from_cache(StringView);
     void stop_all_jobs();
-    const Job* m_current_job { nullptr };
+    Job const* m_current_job { nullptr };
     LocalFrame* find_frame_containing_local_variable(StringView name);
-    const LocalFrame* find_frame_containing_local_variable(StringView name) const
+    LocalFrame const* find_frame_containing_local_variable(StringView name) const
     {
         return const_cast<Shell*>(this)->find_frame_containing_local_variable(name);
     }
@@ -357,21 +357,21 @@ private:
     void run_tail(RefPtr<Job>);
     void run_tail(const AST::Command&, const AST::NodeWithAction&, int head_exit_code);
 
-    [[noreturn]] void execute_process(Vector<const char*>&& argv);
+    [[noreturn]] void execute_process(Vector<char const*>&& argv);
 
     virtual void custom_event(Core::CustomEvent&) override;
 
 #define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(name) \
-    RefPtr<AST::Node> immediate_##name(AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&);
+    RefPtr<AST::Node> immediate_##name(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&);
 
     ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS();
 
 #undef __ENUMERATE_SHELL_IMMEDIATE_FUNCTION
 
-    RefPtr<AST::Node> immediate_length_impl(AST::ImmediateExpression& invoking_node, const NonnullRefPtrVector<AST::Node>&, bool across);
+    RefPtr<AST::Node> immediate_length_impl(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&, bool across);
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
-    int builtin_##builtin(int argc, const char** argv);
+    int builtin_##builtin(int argc, char const** argv);
 
     ENUMERATE_SHELL_BUILTINS();
 

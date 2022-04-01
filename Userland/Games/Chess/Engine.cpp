@@ -37,7 +37,7 @@ Engine::Engine(StringView command)
     posix_spawn_file_actions_adddup2(&file_actions, rpipefds[1], STDOUT_FILENO);
 
     String cstr(command);
-    const char* argv[] = { cstr.characters(), nullptr };
+    char const* argv[] = { cstr.characters(), nullptr };
     if (posix_spawnp(&m_pid, cstr.characters(), &file_actions, nullptr, const_cast<char**>(argv), environ) < 0) {
         perror("posix_spawnp");
         VERIFY_NOT_REACHED();
@@ -59,7 +59,7 @@ Engine::Engine(StringView command)
     send_command(Chess::UCI::UCICommand());
 }
 
-void Engine::handle_bestmove(const Chess::UCI::BestMoveCommand& command)
+void Engine::handle_bestmove(Chess::UCI::BestMoveCommand const& command)
 {
     if (m_bestmove_callback)
         m_bestmove_callback(command.move());

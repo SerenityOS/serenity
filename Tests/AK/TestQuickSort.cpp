@@ -50,7 +50,7 @@ TEST_CASE(sorts_without_copy)
 // So it provides no strong guarantees about the properties of quick_sort.
 TEST_CASE(maximum_stack_depth)
 {
-    const int size = 256;
+    int const size = 256;
     int* data = new int[size];
 
     for (int i = 0; i < size; i++) {
@@ -72,7 +72,7 @@ TEST_CASE(maximum_stack_depth)
             : max_depth(max_depth)
         {
         }
-        DepthMeasurer(const DepthMeasurer& obj)
+        DepthMeasurer(DepthMeasurer const& obj)
             : max_depth(obj.max_depth)
         {
             depth = obj.depth + 1;

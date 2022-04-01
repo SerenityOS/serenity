@@ -24,27 +24,27 @@ public:
     Variant(i64);
     Variant(u32);
     Variant(u64);
-    Variant(const char*);
+    Variant(char const*);
     Variant(StringView);
-    Variant(const String&);
-    Variant(const FlyString&);
-    Variant(const Gfx::Bitmap&);
+    Variant(String const&);
+    Variant(FlyString const&);
+    Variant(Gfx::Bitmap const&);
     Variant(const GUI::Icon&);
-    Variant(const Gfx::IntPoint&);
-    Variant(const Gfx::IntSize&);
-    Variant(const Gfx::IntRect&);
-    Variant(const Gfx::Font&);
+    Variant(Gfx::IntPoint const&);
+    Variant(Gfx::IntSize const&);
+    Variant(Gfx::IntRect const&);
+    Variant(Gfx::Font const&);
     Variant(const Gfx::TextAlignment);
     Variant(const Gfx::ColorRole);
     Variant(const Gfx::AlignmentRole);
     Variant(const Gfx::FlagRole);
     Variant(const Gfx::MetricRole);
     Variant(const Gfx::PathRole);
-    Variant(const JsonValue&);
+    Variant(JsonValue const&);
     Variant(Color);
 
-    Variant(const Variant&);
-    Variant& operator=(const Variant&);
+    Variant(Variant const&);
+    Variant& operator=(Variant const&);
 
     Variant(Variant&&) = delete;
     Variant& operator=(Variant&&);
@@ -220,7 +220,7 @@ public:
         return m_value.as_string;
     }
 
-    const Gfx::Bitmap& as_bitmap() const
+    Gfx::Bitmap const& as_bitmap() const
     {
         VERIFY(type() == Type::Bitmap);
         return *m_value.as_bitmap;
@@ -238,7 +238,7 @@ public:
         return Color::from_argb(m_value.as_color);
     }
 
-    const Gfx::Font& as_font() const
+    Gfx::Font const& as_font() const
     {
         VERIFY(type() == Type::Font);
         return *m_value.as_font;
@@ -300,11 +300,11 @@ public:
 
     String to_string() const;
 
-    bool operator==(const Variant&) const;
-    bool operator<(const Variant&) const;
+    bool operator==(Variant const&) const;
+    bool operator<(Variant const&) const;
 
 private:
-    void copy_from(const Variant&);
+    void copy_from(Variant const&);
     void move_from(Variant&&);
 
     struct RawPoint {
@@ -348,6 +348,6 @@ private:
     Type m_type { Type::Invalid };
 };
 
-const char* to_string(Variant::Type);
+char const* to_string(Variant::Type);
 
 }

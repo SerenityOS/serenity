@@ -75,8 +75,8 @@ public:
         auto operator->() const { return m_value; }
         T& operator*() { return *m_value; }
         auto operator->() { return m_value; }
-        bool operator==(const Iterator& other) const { return other.m_value == m_value; }
-        bool operator!=(const Iterator& other) const { return !(*this == other); }
+        bool operator==(Iterator const& other) const { return other.m_value == m_value; }
+        bool operator!=(Iterator const& other) const { return !(*this == other); }
         Iterator& operator++()
         {
             m_value = IntrusiveList<T, Container, member>::next(m_value);
@@ -103,8 +103,8 @@ public:
         auto operator->() const { return m_value; }
         T& operator*() { return *m_value; }
         auto operator->() { return m_value; }
-        bool operator==(const ReverseIterator& other) const { return other.m_value == m_value; }
-        bool operator!=(const ReverseIterator& other) const { return !(*this == other); }
+        bool operator==(ReverseIterator const& other) const { return other.m_value == m_value; }
+        bool operator!=(ReverseIterator const& other) const { return !(*this == other); }
         ReverseIterator& operator++()
         {
             m_value = IntrusiveList<T, Container, member>::prev(m_value);
@@ -129,8 +129,8 @@ public:
 
         const T& operator*() const { return *m_value; }
         auto operator->() const { return m_value; }
-        bool operator==(const ConstIterator& other) const { return other.m_value == m_value; }
-        bool operator!=(const ConstIterator& other) const { return !(*this == other); }
+        bool operator==(ConstIterator const& other) const { return other.m_value == m_value; }
+        bool operator!=(ConstIterator const& other) const { return !(*this == other); }
         ConstIterator& operator++()
         {
             m_value = IntrusiveList<T, Container, member>::next(m_value);

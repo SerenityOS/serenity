@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = GUI::Application::construct(arguments);
 
-    const char* filename = nullptr;
+    char const* filename = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(filename, "File to read from", "file", Core::ArgsParser::Required::No);

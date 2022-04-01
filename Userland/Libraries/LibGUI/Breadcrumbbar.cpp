@@ -101,7 +101,7 @@ void Breadcrumbbar::append_segment(String text, Gfx::Bitmap const* icon, String 
     auto icon_width = icon ? icon->width() : 0;
     auto icon_padding = icon ? 4 : 0;
 
-    const int max_button_width = 100;
+    int const max_button_width = 100;
 
     auto button_width = min(button_text_width + icon_width + icon_padding + 16, max_button_width);
     auto shrunken_width = icon_width + icon_padding + (icon ? 4 : 16);

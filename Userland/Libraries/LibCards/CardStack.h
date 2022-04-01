@@ -31,17 +31,17 @@ public:
     };
 
     CardStack();
-    CardStack(const Gfx::IntPoint& position, Type type);
-    CardStack(const Gfx::IntPoint& position, Type type, NonnullRefPtr<CardStack> associated_stack);
+    CardStack(Gfx::IntPoint const& position, Type type);
+    CardStack(Gfx::IntPoint const& position, Type type, NonnullRefPtr<CardStack> associated_stack);
 
     bool is_empty() const { return m_stack.is_empty(); }
     bool is_focused() const { return m_focused; }
     Type type() const { return m_type; }
-    const NonnullRefPtrVector<Card>& stack() const { return m_stack; }
+    NonnullRefPtrVector<Card> const& stack() const { return m_stack; }
     size_t count() const { return m_stack.size(); }
-    const Card& peek() const { return m_stack.last(); }
+    Card const& peek() const { return m_stack.last(); }
     Card& peek() { return m_stack.last(); }
-    const Gfx::IntRect& bounding_box() const { return m_bounding_box; }
+    Gfx::IntRect const& bounding_box() const { return m_bounding_box; }
 
     void set_focused(bool focused) { m_focused = focused; }
 
@@ -50,9 +50,9 @@ public:
     void move_to_stack(CardStack&);
     void rebound_cards();
 
-    bool is_allowed_to_push(const Card&, size_t stack_size = 1, MovementRule movement_rule = MovementRule::Alternating) const;
-    void add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
-    void draw(GUI::Painter&, const Gfx::Color& background_color);
+    bool is_allowed_to_push(Card const&, size_t stack_size = 1, MovementRule movement_rule = MovementRule::Alternating) const;
+    void add_all_grabbed_cards(Gfx::IntPoint const& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
+    void draw(GUI::Painter&, Gfx::Color const& background_color);
     void clear();
 
 private:
@@ -125,7 +125,7 @@ struct AK::Formatter<Cards::CardStack> : Formatter<FormatString> {
         StringBuilder cards;
         bool first_card = true;
 
-        for (const auto& card : stack.stack()) {
+        for (auto const& card : stack.stack()) {
             cards.appendff("{}{}", (first_card ? "" : " "), card);
             first_card = false;
         }

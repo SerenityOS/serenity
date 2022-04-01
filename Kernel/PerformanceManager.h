@@ -56,7 +56,7 @@ public:
         }
     }
 
-    inline static void add_cpu_sample_event(Thread& current_thread, const RegisterState& regs, u32 lost_time)
+    inline static void add_cpu_sample_event(Thread& current_thread, RegisterState const& regs, u32 lost_time)
     {
         if (current_thread.is_profiling_suppressed())
             return;
@@ -107,7 +107,7 @@ public:
         }
     }
 
-    inline static void add_page_fault_event(Thread& thread, const RegisterState& regs)
+    inline static void add_page_fault_event(Thread& thread, RegisterState const& regs)
     {
         if (thread.is_profiling_suppressed())
             return;
@@ -117,7 +117,7 @@ public:
         }
     }
 
-    inline static void add_syscall_event(Thread& thread, const RegisterState& regs)
+    inline static void add_syscall_event(Thread& thread, RegisterState const& regs)
     {
         if (thread.is_profiling_suppressed())
             return;
@@ -127,7 +127,7 @@ public:
         }
     }
 
-    inline static void add_read_event(Thread& thread, int fd, size_t size, const OpenFileDescription& file_description, u64 start_timestamp, ErrorOr<FlatPtr> result)
+    inline static void add_read_event(Thread& thread, int fd, size_t size, OpenFileDescription const& file_description, u64 start_timestamp, ErrorOr<FlatPtr> result)
     {
         if (thread.is_profiling_suppressed())
             return;

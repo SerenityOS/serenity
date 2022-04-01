@@ -34,7 +34,7 @@ public:
     HTMLObjectElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLObjectElement() override;
 
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
+    virtual void parse_attribute(FlyString const& name, String const& value) override;
 
     String data() const;
     void set_data(String const& data) { set_attribute(HTML::AttributeNames::data, data); }

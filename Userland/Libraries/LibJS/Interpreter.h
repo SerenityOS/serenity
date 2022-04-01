@@ -31,7 +31,7 @@ namespace JS {
 
 struct ExecutingASTNodeChain {
     ExecutingASTNodeChain* previous { nullptr };
-    const ASTNode& node;
+    ASTNode const& node;
 };
 
 class Interpreter : public Weakable<Interpreter> {
@@ -107,7 +107,7 @@ public:
     ThrowCompletionOr<Value> run(SourceTextModule&);
 
     GlobalObject& global_object();
-    const GlobalObject& global_object() const;
+    GlobalObject const& global_object() const;
 
     Realm& realm();
     Realm const& realm() const;
@@ -130,7 +130,7 @@ public:
         m_ast_node_chain = m_ast_node_chain->previous;
     }
 
-    const ASTNode* current_node() const { return m_ast_node_chain ? &m_ast_node_chain->node : nullptr; }
+    ASTNode const* current_node() const { return m_ast_node_chain ? &m_ast_node_chain->node : nullptr; }
 
 private:
     explicit Interpreter(VM&);

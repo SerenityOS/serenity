@@ -53,7 +53,7 @@ public:
     virtual void set_window_progress(int value, int max) = 0;
     virtual void terminal_did_resize(u16 columns, u16 rows) = 0;
     virtual void terminal_history_changed(int delta) = 0;
-    virtual void emit(const u8*, size_t) = 0;
+    virtual void emit(u8 const*, size_t) = 0;
     virtual void set_cursor_style(CursorStyle) = 0;
 };
 
@@ -129,7 +129,7 @@ public:
             return m_normal_screen_buffer[index - m_history.size()];
         }
     }
-    const Line& line(size_t index) const
+    Line const& line(size_t index) const
     {
         return const_cast<Terminal*>(this)->line(index);
     }
@@ -139,7 +139,7 @@ public:
         return active_buffer()[index];
     }
 
-    const Line& visible_line(size_t index) const
+    Line const& visible_line(size_t index) const
     {
         return active_buffer()[index];
     }
@@ -177,7 +177,7 @@ public:
     void handle_key_press(KeyCode, u32, u8 flags);
 
 #ifndef KERNEL
-    Attribute attribute_at(const Position&) const;
+    Attribute attribute_at(Position const&) const;
 #endif
 
     bool needs_bracketed_paste() const
@@ -404,7 +404,7 @@ protected:
     }
 
     NonnullOwnPtrVector<Line>& active_buffer() { return m_use_alternate_screen_buffer ? m_alternate_screen_buffer : m_normal_screen_buffer; };
-    const NonnullOwnPtrVector<Line>& active_buffer() const { return m_use_alternate_screen_buffer ? m_alternate_screen_buffer : m_normal_screen_buffer; };
+    NonnullOwnPtrVector<Line> const& active_buffer() const { return m_use_alternate_screen_buffer ? m_alternate_screen_buffer : m_normal_screen_buffer; };
     NonnullOwnPtrVector<Line> m_normal_screen_buffer;
     NonnullOwnPtrVector<Line> m_alternate_screen_buffer;
 #endif

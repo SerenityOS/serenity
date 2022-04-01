@@ -47,8 +47,8 @@ public:
     Statement const& ecmascript_code() const { return m_ecmascript_code; }
     Vector<FunctionNode::Parameter> const& formal_parameters() const { return m_formal_parameters; };
 
-    virtual const FlyString& name() const override { return m_name; };
-    void set_name(const FlyString& name);
+    virtual FlyString const& name() const override { return m_name; };
+    void set_name(FlyString const& name);
 
     void set_is_class_constructor() { m_is_class_constructor = true; };
 

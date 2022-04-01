@@ -72,7 +72,7 @@ TEST_CASE(test_regression)
 
         fclose(input_stream);
 
-        String content { reinterpret_cast<const char*>(buffer.data()), buffer.size() };
+        String content { reinterpret_cast<char const*>(buffer.data()), buffer.size() };
 
         auto equal = content == target_ast;
         EXPECT(equal);

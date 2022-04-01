@@ -38,7 +38,7 @@ READONLY_AFTER_INIT FPUState Processor::s_clean_fpu_state;
 
 READONLY_AFTER_INIT static ProcessorContainer s_processors {};
 READONLY_AFTER_INIT Atomic<u32> Processor::g_total_processors;
-READONLY_AFTER_INIT static volatile bool s_smp_enabled;
+READONLY_AFTER_INIT static bool volatile s_smp_enabled;
 
 static Atomic<ProcessorMessage*> s_message_pool;
 Atomic<u32> Processor::s_idle_cpu_mask { 0 };
@@ -775,7 +775,7 @@ void Processor::flush_gdt()
                  : "memory");
 }
 
-const DescriptorTablePointer& Processor::get_gdtr()
+DescriptorTablePointer const& Processor::get_gdtr()
 {
     return m_gdtr;
 }

@@ -128,9 +128,9 @@ float fminf(float, float) NOEXCEPT;
 long double remainderl(long double, long double) NOEXCEPT;
 double remainder(double, double) NOEXCEPT;
 float remainderf(float, float) NOEXCEPT;
-long double nanl(const char*) NOEXCEPT;
-double nan(const char*) NOEXCEPT;
-float nanf(const char*) NOEXCEPT;
+long double nanl(char const*) NOEXCEPT;
+double nan(char const*) NOEXCEPT;
+float nanf(char const*) NOEXCEPT;
 
 /* Exponential functions */
 long double expl(long double) NOEXCEPT;

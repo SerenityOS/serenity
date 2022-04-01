@@ -31,7 +31,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE bool is_binary() const { return m_is_binary; }
     void set_string(String string) { m_string = move(string); }
 
-    const char* type_name() const override { return "string"; }
+    char const* type_name() const override { return "string"; }
     String to_string(int indent) const override;
 
 protected:
@@ -53,7 +53,7 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE FlyString const& name() const { return m_name; }
 
-    const char* type_name() const override { return "name"; }
+    char const* type_name() const override { return "name"; }
     String to_string(int indent) const override;
 
 protected:
@@ -86,7 +86,7 @@ public:
     ENUMERATE_OBJECT_TYPES(DEFINE_INDEXER)
 #undef DEFINE_INDEXER
 
-    const char* type_name() const override
+    char const* type_name() const override
     {
         return "array";
     }
@@ -129,7 +129,7 @@ public:
     ENUMERATE_OBJECT_TYPES(DEFINE_GETTER)
 #undef DEFINE_GETTER
 
-    const char* type_name() const override
+    char const* type_name() const override
     {
         return "dict";
     }
@@ -156,7 +156,7 @@ public:
     [[nodiscard]] ReadonlyBytes bytes() const { return m_buffer.bytes(); };
     [[nodiscard]] ByteBuffer& buffer() { return m_buffer; };
 
-    const char* type_name() const override { return "stream"; }
+    char const* type_name() const override { return "stream"; }
     String to_string(int indent) const override;
 
 private:
@@ -180,7 +180,7 @@ public:
     [[nodiscard]] ALWAYS_INLINE u32 index() const { return m_index; }
     [[nodiscard]] ALWAYS_INLINE Value const& value() const { return m_value; }
 
-    const char* type_name() const override { return "indirect_object"; }
+    char const* type_name() const override { return "indirect_object"; }
     String to_string(int indent) const override;
 
 protected:

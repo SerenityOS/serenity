@@ -33,10 +33,10 @@ public:
         s_global = nullptr;
     }
 
-    int run(const NonnullRefPtrVector<TestCase>&);
-    int main(const String& suite_name, int argc, char** argv);
-    NonnullRefPtrVector<TestCase> find_cases(const String& search, bool find_tests, bool find_benchmarks);
-    void add_case(const NonnullRefPtr<TestCase>& test_case)
+    int run(NonnullRefPtrVector<TestCase> const&);
+    int main(String const& suite_name, int argc, char** argv);
+    NonnullRefPtrVector<TestCase> find_cases(String const& search, bool find_tests, bool find_benchmarks);
+    void add_case(NonnullRefPtr<TestCase> const& test_case)
     {
         m_cases.append(test_case);
     }

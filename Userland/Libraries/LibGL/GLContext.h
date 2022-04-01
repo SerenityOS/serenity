@@ -57,14 +57,14 @@ public:
     void gl_clear_depth(GLdouble depth);
     void gl_clear_stencil(GLint s);
     void gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a);
-    void gl_delete_textures(GLsizei n, const GLuint* textures);
+    void gl_delete_textures(GLsizei n, GLuint const* textures);
     void gl_end();
     void gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val);
     void gl_gen_textures(GLsizei n, GLuint* textures);
     GLenum gl_get_error();
     GLubyte* gl_get_string(GLenum name);
     void gl_load_identity();
-    void gl_load_matrix(const FloatMatrix4x4& matrix);
+    void gl_load_matrix(FloatMatrix4x4 const& matrix);
     void gl_matrix_mode(GLenum mode);
     void gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val);
     void gl_push_matrix();
@@ -110,12 +110,12 @@ public:
     void gl_enable_client_state(GLenum cap);
     void gl_disable_client_state(GLenum cap);
     void gl_client_active_texture(GLenum target);
-    void gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer);
-    void gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer);
-    void gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer);
+    void gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer);
+    void gl_color_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer);
+    void gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer);
     void gl_draw_arrays(GLenum mode, GLint first, GLsizei count);
-    void gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices);
-    void gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void* data);
+    void gl_draw_elements(GLenum mode, GLsizei count, GLenum type, void const* indices);
+    void gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLenum type, void const* data);
     void gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
     void gl_get_booleanv(GLenum pname, GLboolean* data);
     void gl_get_doublev(GLenum pname, GLdouble* params);
@@ -419,7 +419,7 @@ private:
         GLenum type { GL_FLOAT };
         bool normalize { true };
         GLsizei stride { 0 };
-        const void* pointer { 0 };
+        void const* pointer { 0 };
     };
 
     static void read_from_vertex_attribute_pointer(VertexAttribPointer const&, int index, float* elements);

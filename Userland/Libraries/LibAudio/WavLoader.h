@@ -34,7 +34,7 @@ class Buffer;
 class WavLoaderPlugin : public LoaderPlugin {
 public:
     explicit WavLoaderPlugin(StringView path);
-    explicit WavLoaderPlugin(const Bytes& buffer);
+    explicit WavLoaderPlugin(Bytes const& buffer);
 
     virtual MaybeLoaderError initialize() override;
 
@@ -46,7 +46,7 @@ public:
 
     // sample_index 0 is the start of the raw audio sample data
     // within the file/stream.
-    virtual MaybeLoaderError seek(const int sample_index) override;
+    virtual MaybeLoaderError seek(int const sample_index) override;
 
     virtual int loaded_samples() override { return m_loaded_samples; }
     virtual int total_samples() override { return m_total_samples; }

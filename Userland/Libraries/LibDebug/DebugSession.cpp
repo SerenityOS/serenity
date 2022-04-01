@@ -29,12 +29,12 @@ DebugSession::~DebugSession()
     if (m_is_debuggee_dead)
         return;
 
-    for (const auto& bp : m_breakpoints) {
+    for (auto const& bp : m_breakpoints) {
         disable_breakpoint(bp.key);
     }
     m_breakpoints.clear();
 
-    for (const auto& wp : m_watchpoints) {
+    for (auto const& wp : m_watchpoints) {
         disable_watchpoint(wp.key);
     }
     m_watchpoints.clear();
@@ -46,8 +46,8 @@ DebugSession::~DebugSession()
 
 void DebugSession::for_each_loaded_library(Function<IterationDecision(LoadedLibrary const&)> func) const
 {
-    for (const auto& lib_name : m_loaded_libraries.keys()) {
-        const auto& lib = *m_loaded_libraries.get(lib_name).value();
+    for (auto const& lib_name : m_loaded_libraries.keys()) {
+        auto const& lib = *m_loaded_libraries.get(lib_name).value();
         if (func(lib) == IterationDecision::Break)
             break;
     }
@@ -80,11 +80,11 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(String const& command,
 
         auto parts = command.split(' ');
         VERIFY(!parts.is_empty());
-        const char** args = bit_cast<const char**>(calloc(parts.size() + 1, sizeof(const char*)));
+        char const** args = bit_cast<char const**>(calloc(parts.size() + 1, sizeof(char const*)));
         for (size_t i = 0; i < parts.size(); i++) {
             args[i] = parts[i].characters();
         }
-        const char** envp = bit_cast<const char**>(calloc(2, sizeof(const char*)));
+        char const** envp = bit_cast<char const**>(calloc(2, sizeof(char const*)));
         // This causes loader to stop on a breakpoint before jumping to the entry point of the program.
         envp[0] = "_LOADER_BREAKPOINT=1";
         int rc = execvpe(args[0], const_cast<char**>(args), const_cast<char**>(envp));

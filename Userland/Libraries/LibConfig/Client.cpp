@@ -96,7 +96,7 @@ void Client::notify_changed_bool_value(String const& domain, String const& group
     });
 }
 
-void Client::notify_removed_key(const String& domain, const String& group, const String& key)
+void Client::notify_removed_key(String const& domain, String const& group, String const& key)
 {
     Listener::for_each([&](auto& listener) {
         listener.config_key_was_removed(domain, group, key);

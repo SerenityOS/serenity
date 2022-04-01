@@ -74,10 +74,10 @@ public:
     virtual ~PromiseReaction() = default;
 
     Type type() const { return m_type; }
-    const Optional<PromiseCapability>& capability() const { return m_capability; }
+    Optional<PromiseCapability> const& capability() const { return m_capability; }
 
     Optional<JobCallback>& handler() { return m_handler; }
-    const Optional<JobCallback>& handler() const { return m_handler; }
+    Optional<JobCallback> const& handler() const { return m_handler; }
 
 private:
     virtual StringView class_name() const override { return "PromiseReaction"sv; }

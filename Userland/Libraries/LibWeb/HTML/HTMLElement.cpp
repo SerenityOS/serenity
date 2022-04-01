@@ -78,7 +78,7 @@ String HTMLElement::content_editable() const
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#contenteditable
-DOM::ExceptionOr<void> HTMLElement::set_content_editable(const String& content_editable)
+DOM::ExceptionOr<void> HTMLElement::set_content_editable(String const& content_editable)
 {
     if (content_editable.equals_ignoring_case("inherit")) {
         remove_attribute(HTML::AttributeNames::contenteditable);
@@ -112,7 +112,7 @@ String HTMLElement::inner_text()
     if (!layout_node())
         return text_content();
 
-    Function<void(const Layout::Node&)> recurse = [&](auto& node) {
+    Function<void(Layout::Node const&)> recurse = [&](auto& node) {
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
             if (is<Layout::TextNode>(child))
                 builder.append(verify_cast<Layout::TextNode>(*child).text_for_rendering());
@@ -168,7 +168,7 @@ bool HTMLElement::cannot_navigate() const
     return !is<HTML::HTMLAnchorElement>(this) && !is_connected();
 }
 
-void HTMLElement::parse_attribute(const FlyString& name, const String& value)
+void HTMLElement::parse_attribute(FlyString const& name, String const& value)
 {
     Element::parse_attribute(name, value);
 

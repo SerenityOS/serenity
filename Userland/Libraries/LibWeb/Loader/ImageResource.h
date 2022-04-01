@@ -23,7 +23,7 @@ public:
         size_t duration { 0 };
     };
 
-    const Gfx::Bitmap* bitmap(size_t frame_index = 0) const;
+    Gfx::Bitmap const* bitmap(size_t frame_index = 0) const;
     int frame_duration(size_t frame_index) const;
     size_t frame_count() const
     {
@@ -44,7 +44,7 @@ public:
     void update_volatility();
 
 private:
-    explicit ImageResource(const LoadRequest&);
+    explicit ImageResource(LoadRequest const&);
     explicit ImageResource(Resource&);
 
     void decode_if_needed() const;
@@ -63,7 +63,7 @@ public:
 
 protected:
     ImageResource* resource() { return static_cast<ImageResource*>(ResourceClient::resource()); }
-    const ImageResource* resource() const { return static_cast<const ImageResource*>(ResourceClient::resource()); }
+    ImageResource const* resource() const { return static_cast<ImageResource const*>(ResourceClient::resource()); }
 
 private:
     virtual Resource::Type client_type() const override { return Resource::Type::Image; }

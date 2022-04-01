@@ -39,11 +39,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     String program_name = AK::LexicalPath::basename(args.strings[0]);
 
-    Vector<const char*> files;
+    Vector<char const*> files;
 
     bool recursive = (program_name == "rgrep"sv);
     bool use_ere = (program_name == "egrep"sv);
-    Vector<const char*> patterns;
+    Vector<char const*> patterns;
     BinaryFileMode binary_mode { BinaryFileMode::Binary };
     bool case_insensitive = false;
     bool line_numbers = false;

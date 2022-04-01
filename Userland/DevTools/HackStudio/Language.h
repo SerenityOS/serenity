@@ -23,8 +23,8 @@ enum class Language {
     SQL,
 };
 
-Language language_from_file(const LexicalPath&);
-Language language_from_name(const String&);
-String language_name_from_file(const LexicalPath&);
+Language language_from_file(LexicalPath const&);
+Language language_from_name(String const&);
+String language_name_from_file(LexicalPath const&);
 
 }

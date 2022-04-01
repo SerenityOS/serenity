@@ -26,7 +26,7 @@ TurkishDecoder s_turkish_decoder;
 XUserDefinedDecoder s_x_user_defined_decoder;
 }
 
-Decoder* decoder_for(const String& a_encoding)
+Decoder* decoder_for(String const& a_encoding)
 {
     auto encoding = get_standardized_encoding(a_encoding);
     if (encoding.has_value()) {

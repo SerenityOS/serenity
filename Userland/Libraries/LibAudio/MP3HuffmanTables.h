@@ -112,7 +112,7 @@ HuffmanDecodeResult<T> huffman_decode(InputBitStream& bitstream, Span<HuffmanNod
     size_t bits_read = 0;
 
     while (!node->is_leaf() && !bitstream.has_any_error() && max_bits_to_read-- > 0) {
-        const bool direction = bitstream.read_bit_big_endian();
+        bool const direction = bitstream.read_bit_big_endian();
         ++bits_read;
         if (direction) {
             if (node->left == -1)

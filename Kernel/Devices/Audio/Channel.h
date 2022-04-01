@@ -24,10 +24,10 @@ public:
     virtual ~AudioChannel() override = default;
 
     // ^CharacterDevice
-    virtual bool can_read(const OpenFileDescription&, u64) const override;
+    virtual bool can_read(OpenFileDescription const&, u64) const override;
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_write(const OpenFileDescription&, u64) const override { return true; }
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
+    virtual bool can_write(OpenFileDescription const&, u64) const override { return true; }
 
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned, Userspace<void*>) override;
 

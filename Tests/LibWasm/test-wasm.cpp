@@ -170,10 +170,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
                 return JS::Value(static_cast<unsigned long>(ptr->value()));
             if (auto v = value.get_pointer<Wasm::GlobalAddress>()) {
                 return m_machine.store().get(*v)->value().value().visit(
-                    [&](const auto& value) -> JS::Value { return JS::Value(static_cast<double>(value)); },
+                    [&](auto const& value) -> JS::Value { return JS::Value(static_cast<double>(value)); },
                     [&](i32 value) { return JS::Value(static_cast<double>(value)); },
                     [&](i64 value) -> JS::Value { return JS::js_bigint(vm, Crypto::SignedBigInteger::create_from(value)); },
-                    [&](const Wasm::Reference& reference) -> JS::Value {
+                    [&](Wasm::Reference const& reference) -> JS::Value {
                         return reference.ref().visit(
                             [&](const Wasm::Reference::Null&) -> JS::Value { return JS::js_null(); },
                             [&](const auto& ref) -> JS::Value { return JS::Value(static_cast<double>(ref.address.value())); });
@@ -193,7 +193,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
     if (!function_instance)
         return vm.throw_completion<JS::TypeError>(global_object, "Invalid function address");
 
-    const Wasm::FunctionType* type { nullptr };
+    Wasm::FunctionType const* type { nullptr };
     function_instance->visit([&](auto& value) { type = &value.type(); });
     if (!type)
         return vm.throw_completion<JS::TypeError>(global_object, "Invalid function found at given address");
@@ -249,10 +249,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
 
     JS::Value return_value;
     result.values().first().value().visit(
-        [&](const auto& value) { return_value = JS::Value(static_cast<double>(value)); },
+        [&](auto const& value) { return_value = JS::Value(static_cast<double>(value)); },
         [&](i32 value) { return_value = JS::Value(static_cast<double>(value)); },
         [&](i64 value) { return_value = JS::Value(JS::js_bigint(vm, Crypto::SignedBigInteger::create_from(value))); },
-        [&](const Wasm::Reference& reference) {
+        [&](Wasm::Reference const& reference) {
             reference.ref().visit(
                 [&](const Wasm::Reference::Null&) { return_value = JS::js_null(); },
                 [&](const auto& ref) { return_value = JS::Value(static_cast<double>(ref.address.value())); });

@@ -115,11 +115,11 @@ struct HardwareID {
 
     bool is_null() const { return !vendor_id && !device_id; }
 
-    bool operator==(const HardwareID& other) const
+    bool operator==(HardwareID const& other) const
     {
         return vendor_id == other.vendor_id && device_id == other.device_id;
     }
-    bool operator!=(const HardwareID& other) const
+    bool operator!=(HardwareID const& other) const
     {
         return vendor_id != other.vendor_id || device_id != other.device_id;
     }
@@ -162,24 +162,24 @@ public:
     {
     }
 
-    Address(const Address& address) = default;
+    Address(Address const& address) = default;
 
     bool is_null() const { return !m_bus && !m_device && !m_function; }
     operator bool() const { return !is_null(); }
 
     // Disable default implementations that would use surprising integer promotion.
-    bool operator<=(const Address&) const = delete;
-    bool operator>=(const Address&) const = delete;
-    bool operator<(const Address&) const = delete;
-    bool operator>(const Address&) const = delete;
+    bool operator<=(Address const&) const = delete;
+    bool operator>=(Address const&) const = delete;
+    bool operator<(Address const&) const = delete;
+    bool operator>(Address const&) const = delete;
 
-    bool operator==(const Address& other) const
+    bool operator==(Address const& other) const
     {
         if (this == &other)
             return true;
         return m_domain == other.m_domain && m_bus == other.m_bus && m_device == other.m_device && m_function == other.m_function;
     }
-    bool operator!=(const Address& other) const
+    bool operator!=(Address const& other) const
     {
         return !(*this == other);
     }
@@ -198,7 +198,7 @@ private:
 
 class Capability {
 public:
-    Capability(const Address& address, u8 id, u8 ptr)
+    Capability(Address const& address, u8 id, u8 ptr)
         : m_address(address)
         , m_id(id)
         , m_ptr(ptr)
@@ -246,7 +246,7 @@ public:
         , m_capabilities(capabilities)
     {
         if constexpr (PCI_DEBUG) {
-            for (const auto& capability : capabilities)
+            for (auto const& capability : capabilities)
                 dbgln("{} has capability {}", address, capability.id());
         }
     }

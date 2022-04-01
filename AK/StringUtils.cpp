@@ -37,11 +37,11 @@ bool matches(StringView str, StringView mask, CaseSensitivity case_sensitivity, 
         return true;
     }
 
-    const char* string_ptr = str.characters_without_null_termination();
-    const char* string_start = str.characters_without_null_termination();
-    const char* string_end = string_ptr + str.length();
-    const char* mask_ptr = mask.characters_without_null_termination();
-    const char* mask_end = mask_ptr + mask.length();
+    char const* string_ptr = str.characters_without_null_termination();
+    char const* string_start = str.characters_without_null_termination();
+    char const* string_end = string_ptr + str.length();
+    char const* mask_ptr = mask.characters_without_null_termination();
+    char const* mask_end = mask_ptr + mask.length();
 
     while (string_ptr < string_end && mask_ptr < mask_end) {
         auto string_start_ptr = string_ptr;
@@ -92,7 +92,7 @@ Optional<T> convert_to_int(StringView str, TrimWhitespace trim_whitespace)
 
     T sign = 1;
     size_t i = 0;
-    const auto characters = string.characters_without_null_termination();
+    auto const characters = string.characters_without_null_termination();
 
     if (characters[0] == '-' || characters[0] == '+') {
         if (string.length() == 1)
@@ -132,7 +132,7 @@ Optional<T> convert_to_uint(StringView str, TrimWhitespace trim_whitespace)
         return {};
 
     T value = 0;
-    const auto characters = string.characters_without_null_termination();
+    auto const characters = string.characters_without_null_termination();
 
     for (size_t i = 0; i < string.length(); i++) {
         if (characters[i] < '0' || characters[i] > '9')
@@ -165,7 +165,7 @@ Optional<T> convert_to_uint_from_hex(StringView str, TrimWhitespace trim_whitesp
         return {};
 
     T value = 0;
-    const auto count = string.length();
+    auto const count = string.length();
     const T upper_bound = NumericLimits<T>::max();
 
     for (size_t i = 0; i < count; i++) {
@@ -204,7 +204,7 @@ Optional<T> convert_to_uint_from_octal(StringView str, TrimWhitespace trim_white
         return {};
 
     T value = 0;
-    const auto count = string.length();
+    auto const count = string.length();
     const T upper_bound = NumericLimits<T>::max();
 
     for (size_t i = 0; i < count; i++) {

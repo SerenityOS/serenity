@@ -7,14 +7,14 @@
 #include <Kernel/Arch/aarch64/UART.h>
 #include <Kernel/Arch/aarch64/Utils.h>
 
-void Prekernel::dbgln(const char* text)
+void Prekernel::dbgln(char const* text)
 {
     auto& uart = Prekernel::UART::the();
     uart.print_str(text);
     uart.print_str("\r\n");
 }
 
-void Prekernel::warnln(const char* text)
+void Prekernel::warnln(char const* text)
 {
     dbgln(text);
 }

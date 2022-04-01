@@ -62,7 +62,7 @@ struct Variant<IndexType, InitialIndex, F, Ts...> {
             Variant<IndexType, InitialIndex + 1, Ts...>::move_(old_id, old_data, new_data);
     }
 
-    ALWAYS_INLINE static void copy_(IndexType old_id, const void* old_data, void* new_data)
+    ALWAYS_INLINE static void copy_(IndexType old_id, void const* old_data, void* new_data)
     {
         if (old_id == current_index)
             new (new_data) F(*bit_cast<F const*>(old_data));
@@ -75,7 +75,7 @@ template<typename IndexType, IndexType InitialIndex>
 struct Variant<IndexType, InitialIndex> {
     ALWAYS_INLINE static void delete_(IndexType, void*) { }
     ALWAYS_INLINE static void move_(IndexType, void*, void*) { }
-    ALWAYS_INLINE static void copy_(IndexType, const void*, void*) { }
+    ALWAYS_INLINE static void copy_(IndexType, void const*, void*) { }
 };
 
 template<typename IndexType, typename... Ts>
@@ -97,7 +97,7 @@ struct VisitImpl {
     }
 
     template<typename Self, typename Visitor, IndexType CurrentIndex = 0>
-    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
+    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, IndexType id, void const* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
     {
         using T = typename TypeList<Ts...>::template Type<CurrentIndex>;
 
@@ -239,7 +239,7 @@ public:
     }
 
     template<typename... NewTs>
-    Variant(const Variant<NewTs...>& old) requires((can_contain<NewTs>() && ...))
+    Variant(Variant<NewTs...> const& old) requires((can_contain<NewTs>() && ...))
         : Variant(old.template downcast<Ts...>())
     {
     }
@@ -254,8 +254,8 @@ public:
     }
 
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
-    Variant(const Variant&) requires(!(IsCopyConstructible<Ts> && ...)) = delete;
-    Variant(const Variant&) = default;
+    Variant(Variant const&) requires(!(IsCopyConstructible<Ts> && ...)) = delete;
+    Variant(Variant const&) = default;
 
     Variant(Variant&&) requires(!(IsMoveConstructible<Ts> && ...)) = delete;
     Variant(Variant&&) = default;
@@ -263,14 +263,14 @@ public:
     ~Variant() requires(!(IsDestructible<Ts> && ...)) = delete;
     ~Variant() = default;
 
-    Variant& operator=(const Variant&) requires(!(IsCopyConstructible<Ts> && ...) || !(IsDestructible<Ts> && ...)) = delete;
-    Variant& operator=(const Variant&) = default;
+    Variant& operator=(Variant const&) requires(!(IsCopyConstructible<Ts> && ...) || !(IsDestructible<Ts> && ...)) = delete;
+    Variant& operator=(Variant const&) = default;
 
     Variant& operator=(Variant&&) requires(!(IsMoveConstructible<Ts> && ...) || !(IsDestructible<Ts> && ...)) = delete;
     Variant& operator=(Variant&&) = default;
 #endif
 
-    ALWAYS_INLINE Variant(const Variant& old)
+    ALWAYS_INLINE Variant(Variant const& old)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!(IsTriviallyCopyConstructible<Ts> && ...))
 #endif
@@ -303,7 +303,7 @@ public:
         Helper::delete_(m_index, m_data);
     }
 
-    ALWAYS_INLINE Variant& operator=(const Variant& other)
+    ALWAYS_INLINE Variant& operator=(Variant const& other)
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
         requires(!(IsTriviallyCopyConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
 #endif
@@ -418,7 +418,7 @@ public:
     Variant<NewTs...> downcast() const&
     {
         Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
-        visit([&](const auto& value) {
+        visit([&](auto const& value) {
             if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
                 instance.set(value, Detail::VariantNoClearTag {});
         });

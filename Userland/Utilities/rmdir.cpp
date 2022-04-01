@@ -15,7 +15,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio cpath"));
 
-    Vector<const char*> paths;
+    Vector<char const*> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(paths, "Directories to remove", "paths");

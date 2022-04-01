@@ -21,7 +21,7 @@
 namespace Kernel {
 Atomic<u8> NVMeController::controller_id {};
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(const Kernel::PCI::DeviceIdentifier& device_identifier, bool is_queue_polled)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(Kernel::PCI::DeviceIdentifier const& device_identifier, bool is_queue_polled)
 {
     auto controller = TRY(adopt_nonnull_ref_or_enomem(new NVMeController(device_identifier)));
     TRY(controller->initialize(is_queue_polled));

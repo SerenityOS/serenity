@@ -23,7 +23,7 @@ public:
 
     void set_icon(RefPtr<Gfx::Bitmap>);
     void set_icon_from_path(String const&);
-    const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
+    Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
     Gfx::Bitmap* icon() { return m_icon.ptr(); }
 
     void set_text_alignment(Gfx::TextAlignment text_alignment) { m_text_alignment = text_alignment; }

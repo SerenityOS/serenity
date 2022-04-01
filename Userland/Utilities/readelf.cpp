@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static const char* object_program_header_type_to_string(ElfW(Word) type)
+static char const* object_program_header_type_to_string(ElfW(Word) type)
 {
     switch (type) {
     case PT_NULL:
@@ -65,7 +65,7 @@ static const char* object_program_header_type_to_string(ElfW(Word) type)
     }
 }
 
-static const char* object_section_header_type_to_string(ElfW(Word) type)
+static char const* object_section_header_type_to_string(ElfW(Word) type)
 {
     switch (type) {
     case SHT_NULL:
@@ -137,7 +137,7 @@ static const char* object_section_header_type_to_string(ElfW(Word) type)
     }
 }
 
-static const char* object_symbol_type_to_string(ElfW(Word) type)
+static char const* object_symbol_type_to_string(ElfW(Word) type)
 {
     switch (type) {
     case STT_NOTYPE:
@@ -161,7 +161,7 @@ static const char* object_symbol_type_to_string(ElfW(Word) type)
     }
 }
 
-static const char* object_symbol_binding_to_string(ElfW(Word) type)
+static char const* object_symbol_binding_to_string(ElfW(Word) type)
 {
     switch (type) {
     case STB_LOCAL:
@@ -181,7 +181,7 @@ static const char* object_symbol_binding_to_string(ElfW(Word) type)
     }
 }
 
-static const char* object_relocation_type_to_string(ElfW(Word) type)
+static char const* object_relocation_type_to_string(ElfW(Word) type)
 {
     switch (type) {
 #if ARCH(I386)
@@ -230,7 +230,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    const char* path;
+    char const* path;
     static bool display_all = false;
     static bool display_elf_header = false;
     static bool display_program_headers = false;

@@ -61,7 +61,7 @@ int fegetenv(fenv_t* env)
     return 0;
 }
 
-int fesetenv(const fenv_t* env)
+int fesetenv(fenv_t const* env)
 {
     if (!env)
         return 1;
@@ -96,7 +96,7 @@ int feholdexcept(fenv_t* env)
     return 0;
 }
 
-int feupdateenv(const fenv_t* env)
+int feupdateenv(fenv_t const* env)
 {
     auto currently_raised_exceptions = fetestexcept(FE_ALL_EXCEPT);
 
@@ -113,7 +113,7 @@ int fegetexceptflag(fexcept_t* except, int exceptions)
     *except = (uint16_t)fetestexcept(exceptions);
     return 0;
 }
-int fesetexceptflag(const fexcept_t* except, int exceptions)
+int fesetexceptflag(fexcept_t const* except, int exceptions)
 {
     if (!except)
         return 1;

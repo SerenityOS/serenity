@@ -28,12 +28,12 @@ inline void print_buffer(ReadonlyBytes buffer)
     dbgln("{:hex-dump}", buffer);
 }
 
-inline void print_buffer(const ByteBuffer& buffer)
+inline void print_buffer(ByteBuffer const& buffer)
 {
     print_buffer(buffer.bytes());
 }
 
-inline void print_buffer(const u8* buffer, size_t size)
+inline void print_buffer(u8 const* buffer, size_t size)
 {
     print_buffer(ReadonlyBytes { buffer, size });
 }
@@ -75,7 +75,7 @@ enum class AlertDescription : u8 {
 #undef ENUMERATE_ALERT_DESCRIPTION
 };
 
-constexpr static const char* alert_name(AlertDescription descriptor)
+constexpr static char const* alert_name(AlertDescription descriptor)
 {
 #define ENUMERATE_ALERT_DESCRIPTION(name, value) \
     case AlertDescription::name:                 \
@@ -445,7 +445,7 @@ private:
 
     void consume(ReadonlyBytes record);
 
-    ByteBuffer hmac_message(ReadonlyBytes buf, const Optional<ReadonlyBytes> buf2, size_t mac_length, bool local = false);
+    ByteBuffer hmac_message(ReadonlyBytes buf, Optional<ReadonlyBytes> const buf2, size_t mac_length, bool local = false);
     void ensure_hmac(size_t digest_size, bool local);
 
     void update_packet(ByteBuffer& packet);
@@ -486,7 +486,7 @@ private:
     ssize_t handle_message(ReadonlyBytes);
     ssize_t handle_random(ReadonlyBytes);
 
-    void pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b);
+    void pseudorandom_function(Bytes output, ReadonlyBytes secret, u8 const* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b);
 
     ssize_t verify_rsa_server_key_exchange(ReadonlyBytes server_key_info_buffer, ReadonlyBytes signature_buffer);
 

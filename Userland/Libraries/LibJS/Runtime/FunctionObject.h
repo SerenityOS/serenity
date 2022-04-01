@@ -27,7 +27,7 @@ public:
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) = 0;
     virtual ThrowCompletionOr<Object*> internal_construct([[maybe_unused]] MarkedVector<Value> arguments_list, [[maybe_unused]] FunctionObject& new_target) { VERIFY_NOT_REACHED(); }
 
-    virtual const FlyString& name() const = 0;
+    virtual FlyString const& name() const = 0;
 
     void set_function_name(Variant<PropertyKey, PrivateName> const& name_arg, Optional<StringView> const& prefix = {});
     void set_function_length(double length);

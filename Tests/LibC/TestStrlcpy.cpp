@@ -14,15 +14,15 @@
 #include <string.h>
 
 struct Testcase {
-    const char* dest;
+    char const* dest;
     size_t dest_n;
-    const char* src;
+    char const* src;
     size_t src_n;
-    const char* dest_expected;
+    char const* dest_expected;
     size_t dest_expected_n; // == dest_n
 };
 
-static String show(const ByteBuffer& buf)
+static String show(ByteBuffer const& buf)
 {
     StringBuilder builder;
     for (size_t i = 0; i < buf.size(); ++i) {
@@ -40,7 +40,7 @@ static String show(const ByteBuffer& buf)
     return builder.build();
 }
 
-static bool test_single(const Testcase& testcase)
+static bool test_single(Testcase const& testcase)
 {
     constexpr size_t SANDBOX_CANARY_SIZE = 8;
 

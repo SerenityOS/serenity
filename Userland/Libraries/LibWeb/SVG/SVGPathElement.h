@@ -20,7 +20,7 @@ public:
     SVGPathElement(DOM::Document&, DOM::QualifiedName);
     virtual ~SVGPathElement() override = default;
 
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
+    virtual void parse_attribute(FlyString const& name, String const& value) override;
 
     virtual Gfx::Path& get_path() override;
 

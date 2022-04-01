@@ -169,11 +169,11 @@ void ClockWidget::paint_event(GUI::PaintEvent& event)
     // Render string center-left aligned, but attempt to center the string based on a constant
     // "ideal" time string (i.e., the same one used to size this widget in the initializer).
     // This prevents the rest of the string from shifting around while seconds tick.
-    const Gfx::Font& font = Gfx::FontDatabase::default_font();
-    const int frame_width = frame_thickness();
-    const int ideal_width = m_time_width;
-    const int widget_width = max_width();
-    const int translation_x = (widget_width - ideal_width) / 2 - frame_width;
+    Gfx::Font const& font = Gfx::FontDatabase::default_font();
+    int const frame_width = frame_thickness();
+    int const ideal_width = m_time_width;
+    int const widget_width = max_width();
+    int const translation_x = (widget_width - ideal_width) / 2 - frame_width;
 
     painter.draw_text(frame_inner_rect().translated(translation_x, frame_width), time_text, font, Gfx::TextAlignment::CenterLeft, palette().window_text());
 }

@@ -774,8 +774,8 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
                 dbgln("  [!] The window is still maximized. Not moving yet.");
         }
 
-        const int tiling_deadzone = 10;
-        const int secondary_deadzone = 2;
+        int const tiling_deadzone = 10;
+        int const secondary_deadzone = 2;
         auto& cursor_screen = Screen::closest_to_location(event.position());
         auto desktop = desktop_rect(cursor_screen);
         auto desktop_relative_to_screen = desktop.translated(-cursor_screen.rect().location());
@@ -869,7 +869,7 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
         return false;
 
     if (event.type() == Event::MouseMove) {
-        const int vertical_maximize_deadzone = 5;
+        int const vertical_maximize_deadzone = 5;
         auto& cursor_screen = ScreenInput::the().cursor_location_screen();
         if (&cursor_screen == &Screen::closest_to_rect(m_resize_window->rect())) {
             auto desktop_rect = this->desktop_rect(cursor_screen);
@@ -2225,7 +2225,7 @@ void WindowManager::apply_cursor_theme(String const& theme_name)
     auto cursor_theme_config = cursor_theme_config_or_error.release_value();
 
     auto* current_cursor = Compositor::the().current_cursor();
-    auto reload_cursor = [&](RefPtr<Cursor>& cursor, const String& name) {
+    auto reload_cursor = [&](RefPtr<Cursor>& cursor, String const& name) {
         bool is_current_cursor = current_cursor && current_cursor == cursor.ptr();
 
         static auto const s_default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png";

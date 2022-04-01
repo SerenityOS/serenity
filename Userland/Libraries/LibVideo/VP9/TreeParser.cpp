@@ -560,8 +560,8 @@ u8 TreeParser::calculate_tx_size_probability(u8 node)
 
 u8 TreeParser::calculate_inter_mode_probability(u8 node)
 {
-    //FIXME: Implement when ModeContext is implemented
-    // m_ctx = m_decoder.m_mode_context[m_decoder.m_ref_frame[0]]
+    // FIXME: Implement when ModeContext is implemented
+    //  m_ctx = m_decoder.m_mode_context[m_decoder.m_ref_frame[0]]
     return m_decoder.m_probability_tables->inter_mode_probs()[m_ctx][node];
 }
 

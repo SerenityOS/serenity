@@ -33,9 +33,9 @@ public:
 
     RefPtr<Resource> load_resource(Resource::Type, LoadRequest&);
 
-    void load(LoadRequest&, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback = nullptr);
-    void load(const AK::URL&, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback = nullptr);
-    void load_sync(LoadRequest&, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback = nullptr);
+    void load(LoadRequest&, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback = nullptr);
+    void load(const AK::URL&, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback = nullptr);
+    void load_sync(LoadRequest&, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback = nullptr);
 
     void prefetch_dns(AK::URL const&);
     void preconnect(AK::URL const&);
@@ -46,8 +46,8 @@ public:
 
     Protocol::RequestClient& protocol_client() { return *m_protocol_client; }
 
-    const String& user_agent() const { return m_user_agent; }
-    void set_user_agent(const String& user_agent) { m_user_agent = user_agent; }
+    String const& user_agent() const { return m_user_agent; }
+    void set_user_agent(String const& user_agent) { m_user_agent = user_agent; }
 
     void clear_cache();
     void evict_from_cache(LoadRequest const&);

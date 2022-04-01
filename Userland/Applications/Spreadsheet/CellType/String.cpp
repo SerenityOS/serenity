@@ -15,7 +15,7 @@ StringCell::StringCell()
 {
 }
 
-JS::ThrowCompletionOr<String> StringCell::display(Cell& cell, const CellTypeMetadata& metadata) const
+JS::ThrowCompletionOr<String> StringCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
     auto string = TRY(cell.js_data().to_string(cell.sheet().global_object()));
     if (metadata.length >= 0)
@@ -24,7 +24,7 @@ JS::ThrowCompletionOr<String> StringCell::display(Cell& cell, const CellTypeMeta
     return string;
 }
 
-JS::ThrowCompletionOr<JS::Value> StringCell::js_value(Cell& cell, const CellTypeMetadata& metadata) const
+JS::ThrowCompletionOr<JS::Value> StringCell::js_value(Cell& cell, CellTypeMetadata const& metadata) const
 {
     auto string = TRY(display(cell, metadata));
     return JS::js_string(cell.sheet().interpreter().heap(), string);

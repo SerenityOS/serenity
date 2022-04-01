@@ -24,8 +24,8 @@ public:
     virtual JS::ThrowCompletionOr<JS::Value> internal_get(JS::PropertyKey const&, JS::Value receiver) const override;
     virtual JS::ThrowCompletionOr<bool> internal_set(JS::PropertyKey const&, JS::Value value, JS::Value receiver) override;
 
-    Optional<JS::Value> debugger_to_js(const Debug::DebugInfo::VariableInfo&) const;
-    Optional<u32> js_to_debugger(JS::Value value, const Debug::DebugInfo::VariableInfo&) const;
+    Optional<JS::Value> debugger_to_js(Debug::DebugInfo::VariableInfo const&) const;
+    Optional<u32> js_to_debugger(JS::Value value, Debug::DebugInfo::VariableInfo const&) const;
 
 private:
     NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo> m_variables;

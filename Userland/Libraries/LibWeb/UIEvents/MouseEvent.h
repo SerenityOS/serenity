@@ -16,7 +16,7 @@ class MouseEvent final : public UIEvent {
 public:
     using WrapperType = Bindings::MouseEventWrapper;
 
-    static NonnullRefPtr<MouseEvent> create(const FlyString& event_name, double offset_x, double offset_y, double client_x, double client_y)
+    static NonnullRefPtr<MouseEvent> create(FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y)
     {
         return adopt_ref(*new MouseEvent(event_name, offset_x, offset_y, client_x, client_y));
     }
@@ -33,7 +33,7 @@ public:
     double y() const { return client_y(); }
 
 protected:
-    MouseEvent(const FlyString& event_name, double offset_x, double offset_y, double client_x, double client_y);
+    MouseEvent(FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y);
 
 private:
     void set_event_characteristics();

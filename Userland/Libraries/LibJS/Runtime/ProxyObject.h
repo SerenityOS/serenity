@@ -21,11 +21,11 @@ public:
     ProxyObject(Object& target, Object& handler, Object& prototype);
     virtual ~ProxyObject() override = default;
 
-    virtual const FlyString& name() const override;
+    virtual FlyString const& name() const override;
     virtual bool has_constructor() const override;
 
-    const Object& target() const { return m_target; }
-    const Object& handler() const { return m_handler; }
+    Object const& target() const { return m_target; }
+    Object const& handler() const { return m_handler; }
 
     bool is_revoked() const { return m_is_revoked; }
     void revoke() { m_is_revoked = true; }

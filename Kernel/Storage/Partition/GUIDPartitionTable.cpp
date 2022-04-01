@@ -47,7 +47,7 @@ struct [[gnu::packed]] GUIDPartitionHeader {
     u32 crc32_entries_array;
 };
 
-Result<NonnullOwnPtr<GUIDPartitionTable>, PartitionTable::Error> GUIDPartitionTable::try_to_initialize(const StorageDevice& device)
+Result<NonnullOwnPtr<GUIDPartitionTable>, PartitionTable::Error> GUIDPartitionTable::try_to_initialize(StorageDevice const& device)
 {
     auto table = adopt_nonnull_own_or_enomem(new (nothrow) GUIDPartitionTable(device)).release_value_but_fixme_should_propagate_errors();
     if (!table->is_valid())
@@ -55,7 +55,7 @@ Result<NonnullOwnPtr<GUIDPartitionTable>, PartitionTable::Error> GUIDPartitionTa
     return table;
 }
 
-GUIDPartitionTable::GUIDPartitionTable(const StorageDevice& device)
+GUIDPartitionTable::GUIDPartitionTable(StorageDevice const& device)
     : MBRPartitionTable(device)
 {
     // FIXME: Handle OOM failure here.
@@ -65,9 +65,9 @@ GUIDPartitionTable::GUIDPartitionTable(const StorageDevice& device)
         m_valid = false;
 }
 
-const GUIDPartitionHeader& GUIDPartitionTable::header() const
+GUIDPartitionHeader const& GUIDPartitionTable::header() const
 {
-    return *(const GUIDPartitionHeader*)m_cached_header.data();
+    return *(GUIDPartitionHeader const*)m_cached_header.data();
 }
 
 bool GUIDPartitionTable::initialize()
@@ -101,7 +101,7 @@ bool GUIDPartitionTable::initialize()
         if (!m_device->read_block((raw_byte_index / m_device->block_size()), raw_entries_buffer)) {
             return false;
         }
-        auto* entries = (const GPTPartitionEntry*)entries_buffer.data();
+        auto* entries = (GPTPartitionEntry const*)entries_buffer.data();
         auto& entry = entries[entry_index % (m_device->block_size() / (size_t)header().partition_entry_size)];
         Array<u8, 16> partition_type {};
         partition_type.span().overwrite(0, entry.partition_guid, partition_type.size());
@@ -123,7 +123,7 @@ bool GUIDPartitionTable::initialize()
 
 bool GUIDPartitionTable::is_unused_entry(Array<u8, 16> partition_type) const
 {
-    return all_of(partition_type, [](const auto octet) { return octet == 0; });
+    return all_of(partition_type, [](auto const octet) { return octet == 0; });
 }
 
 }

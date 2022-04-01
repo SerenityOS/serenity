@@ -9,10 +9,10 @@
 
 namespace Debug {
 
-const LoadedLibrary* ProcessInspector::library_at(FlatPtr address) const
+LoadedLibrary const* ProcessInspector::library_at(FlatPtr address) const
 {
-    const LoadedLibrary* result = nullptr;
-    for_each_loaded_library([&result, address](const auto& lib) {
+    LoadedLibrary const* result = nullptr;
+    for_each_loaded_library([&result, address](auto const& lib) {
         if (address >= lib.base_address && address < lib.base_address + lib.debug_info->elf().size()) {
             result = &lib;
             return IterationDecision::Break;

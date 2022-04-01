@@ -24,7 +24,7 @@ enum class AugmentedTokenKind : u32 {
 
 class HighlightVisitor : public AST::NodeVisitor {
 public:
-    HighlightVisitor(Vector<GUI::TextDocumentSpan>& spans, const Gfx::Palette& palette, const GUI::TextDocument& document)
+    HighlightVisitor(Vector<GUI::TextDocumentSpan>& spans, Gfx::Palette const& palette, const GUI::TextDocument& document)
         : m_spans(spans)
         , m_palette(palette)
         , m_document(document)
@@ -516,7 +516,7 @@ private:
     }
 
     Vector<GUI::TextDocumentSpan>& m_spans;
-    const Gfx::Palette& m_palette;
+    Gfx::Palette const& m_palette;
     const GUI::TextDocument& m_document;
     bool m_is_first_in_command { false };
 };
@@ -537,7 +537,7 @@ bool SyntaxHighlighter::is_navigatable(u64) const
     return false;
 }
 
-void SyntaxHighlighter::rehighlight(const Palette& palette)
+void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
 

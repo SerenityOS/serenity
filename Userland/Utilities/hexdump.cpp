@@ -22,7 +22,7 @@ enum class State {
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
     Core::ArgsParser args_parser;
-    const char* path = nullptr;
+    char const* path = nullptr;
     bool verbose = false;
     args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
     args_parser.add_option(verbose, "Display all input data", "verbose", 'v');

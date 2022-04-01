@@ -93,23 +93,23 @@ public:
     Gfx::IntRect rect() const;
     Gfx::IntRect applet_rect_on_screen() const;
     Gfx::IntSize size() const { return rect().size(); }
-    void set_rect(const Gfx::IntRect&);
+    void set_rect(Gfx::IntRect const&);
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
 
     Gfx::IntPoint position() const { return rect().location(); }
 
     Gfx::IntSize minimum_size() const;
-    void set_minimum_size(const Gfx::IntSize&);
+    void set_minimum_size(Gfx::IntSize const&);
     void set_minimum_size(int width, int height) { set_minimum_size({ width, height }); }
 
     void move_to(int x, int y) { move_to({ x, y }); }
-    void move_to(const Gfx::IntPoint& point) { set_rect({ point, size() }); }
+    void move_to(Gfx::IntPoint const& point) { set_rect({ point, size() }); }
 
     void resize(int width, int height) { resize({ width, height }); }
-    void resize(const Gfx::IntSize& size) { set_rect({ position(), size }); }
+    void resize(Gfx::IntSize const& size) { set_rect({ position(), size }); }
 
     void center_on_screen();
-    void center_within(const Window&);
+    void center_within(Window const&);
 
     virtual void event(Core::Event&) override;
 
@@ -128,7 +128,7 @@ public:
     void start_interactive_resize();
 
     Widget* main_widget() { return m_main_widget; }
-    const Widget* main_widget() const { return m_main_widget; }
+    Widget const* main_widget() const { return m_main_widget; }
     void set_main_widget(Widget*);
 
     template<class T, class... Args>
@@ -152,37 +152,37 @@ public:
     void set_default_return_key_widget(Widget*);
 
     Widget* focused_widget() { return m_focused_widget; }
-    const Widget* focused_widget() const { return m_focused_widget; }
+    Widget const* focused_widget() const { return m_focused_widget; }
     void set_focused_widget(Widget*, FocusSource = FocusSource::Programmatic);
 
     void update();
-    void update(const Gfx::IntRect&);
+    void update(Gfx::IntRect const&);
 
     void set_automatic_cursor_tracking_widget(Widget*);
     Widget* automatic_cursor_tracking_widget() { return m_automatic_cursor_tracking_widget.ptr(); }
-    const Widget* automatic_cursor_tracking_widget() const { return m_automatic_cursor_tracking_widget.ptr(); }
+    Widget const* automatic_cursor_tracking_widget() const { return m_automatic_cursor_tracking_widget.ptr(); }
 
     Widget* hovered_widget() { return m_hovered_widget.ptr(); }
-    const Widget* hovered_widget() const { return m_hovered_widget.ptr(); }
+    Widget const* hovered_widget() const { return m_hovered_widget.ptr(); }
     void set_hovered_widget(Widget*);
 
     Gfx::Bitmap* back_bitmap();
 
     Gfx::IntSize size_increment() const { return m_size_increment; }
-    void set_size_increment(const Gfx::IntSize&);
+    void set_size_increment(Gfx::IntSize const&);
     Gfx::IntSize base_size() const { return m_base_size; }
-    void set_base_size(const Gfx::IntSize&);
-    const Optional<Gfx::IntSize>& resize_aspect_ratio() const { return m_resize_aspect_ratio; }
+    void set_base_size(Gfx::IntSize const&);
+    Optional<Gfx::IntSize> const& resize_aspect_ratio() const { return m_resize_aspect_ratio; }
     void set_resize_aspect_ratio(int width, int height) { set_resize_aspect_ratio(Gfx::IntSize(width, height)); }
     void set_no_resize_aspect_ratio() { set_resize_aspect_ratio({}); }
-    void set_resize_aspect_ratio(const Optional<Gfx::IntSize>& ratio);
+    void set_resize_aspect_ratio(Optional<Gfx::IntSize> const& ratio);
 
     void set_cursor(Gfx::StandardCursor);
     void set_cursor(NonnullRefPtr<Gfx::Bitmap>);
 
-    void set_icon(const Gfx::Bitmap*);
+    void set_icon(Gfx::Bitmap const*);
     void apply_icon();
-    const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
+    Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
 
     Vector<Widget&> focusable_widgets(FocusSource) const;
 
@@ -196,7 +196,7 @@ public:
 
     virtual bool is_visible_for_timer_purposes() const override { return m_visible_for_timer_purposes; }
 
-    Action* action_for_key_event(const KeyEvent&);
+    Action* action_for_key_event(KeyEvent const&);
 
     void did_add_widget(Badge<Widget>, Widget&);
     void did_remove_widget(Badge<Widget>, Widget&);
@@ -211,7 +211,7 @@ public:
 
     Menu& add_menu(String name);
     ErrorOr<NonnullRefPtr<Menu>> try_add_menu(String name);
-    void flash_menubar_menu_for(const MenuItem&);
+    void flash_menubar_menu_for(MenuItem const&);
 
     void flush_pending_paints_immediately();
 
@@ -249,9 +249,9 @@ private:
 
     void server_did_destroy();
 
-    OwnPtr<WindowBackingStore> create_backing_store(const Gfx::IntSize&);
+    OwnPtr<WindowBackingStore> create_backing_store(Gfx::IntSize const&);
     void set_current_backing_store(WindowBackingStore&, bool flush_immediately = false);
-    void flip(const Vector<Gfx::IntRect, 32>& dirty_rects);
+    void flip(Vector<Gfx::IntRect, 32> const& dirty_rects);
     void force_update();
 
     bool are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const&, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const&) const;

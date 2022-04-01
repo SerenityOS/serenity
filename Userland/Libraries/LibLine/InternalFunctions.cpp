@@ -516,7 +516,7 @@ void Editor::uppercase_word()
 
 void Editor::edit_in_external_editor()
 {
-    const auto* editor_command = getenv("EDITOR");
+    auto const* editor_command = getenv("EDITOR");
     if (!editor_command)
         editor_command = m_configuration.m_default_text_editor.characters();
 
@@ -553,7 +553,7 @@ void Editor::edit_in_external_editor()
         }
     };
 
-    Vector<const char*> args { editor_command, file_path, nullptr };
+    Vector<char const*> args { editor_command, file_path, nullptr };
     auto pid = fork();
 
     if (pid == -1) {

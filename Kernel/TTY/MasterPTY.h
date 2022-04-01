@@ -20,20 +20,20 @@ public:
     virtual ~MasterPTY() override;
 
     unsigned index() const { return m_index; }
-    ErrorOr<size_t> on_slave_write(const UserOrKernelBuffer&, size_t);
+    ErrorOr<size_t> on_slave_write(UserOrKernelBuffer const&, size_t);
     bool can_write_from_slave() const;
     void notify_slave_closed(Badge<SlavePTY>);
     bool is_closed() const { return m_closed; }
 
-    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const override;
 
 private:
     explicit MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer);
     // ^CharacterDevice
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const OpenFileDescription&, u64) const override;
-    virtual bool can_write(const OpenFileDescription&, u64) const override;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
+    virtual bool can_read(OpenFileDescription const&, u64) const override;
+    virtual bool can_write(OpenFileDescription const&, u64) const override;
     virtual ErrorOr<void> close() override;
     virtual bool is_master_pty() const override { return true; }
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;

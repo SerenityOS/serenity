@@ -19,7 +19,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GenericGraphicsAdapter& adapter, PhysicalAddress paddr, size_t width, size_t height, size_t pitch)
+NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(GenericGraphicsAdapter const& adapter, PhysicalAddress paddr, size_t width, size_t height, size_t pitch)
 {
     auto framebuffer_device_or_error = DeviceManagement::try_create_device<FramebufferDevice>(adapter, paddr, width, height, pitch);
     // FIXME: Find a way to propagate errors
@@ -112,7 +112,7 @@ UNMAP_AFTER_INIT ErrorOr<void> FramebufferDevice::try_to_initialize()
     return {};
 }
 
-UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(const GenericGraphicsAdapter& adapter, PhysicalAddress addr, size_t width, size_t height, size_t pitch)
+UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(GenericGraphicsAdapter const& adapter, PhysicalAddress addr, size_t width, size_t height, size_t pitch)
     : GenericFramebufferDevice(adapter)
     , m_framebuffer_address(addr)
     , m_framebuffer_pitch(pitch)

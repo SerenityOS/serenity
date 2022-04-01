@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-Thread::BlockTimeout::BlockTimeout(bool is_absolute, const Time* time, const Time* start_time, clockid_t clock_id)
+Thread::BlockTimeout::BlockTimeout(bool is_absolute, Time const* time, Time const* start_time, clockid_t clock_id)
     : m_clock_id(clock_id)
     , m_infinite(!time)
 {
@@ -245,7 +245,7 @@ void Thread::OpenFileDescriptionBlocker::will_unblock_immediately_without_blocki
     unblock_if_conditions_are_met(false, nullptr);
 }
 
-const OpenFileDescription& Thread::OpenFileDescriptionBlocker::blocked_description() const
+OpenFileDescription const& Thread::OpenFileDescriptionBlocker::blocked_description() const
 {
     return m_blocked_description;
 }
@@ -265,7 +265,7 @@ Thread::WriteBlocker::WriteBlocker(OpenFileDescription& description, BlockFlags&
 {
 }
 
-auto Thread::WriteBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
+auto Thread::WriteBlocker::override_timeout(BlockTimeout const& timeout) -> BlockTimeout const&
 {
     auto const& description = blocked_description();
     if (description.is_socket()) {
@@ -285,7 +285,7 @@ Thread::ReadBlocker::ReadBlocker(OpenFileDescription& description, BlockFlags& u
 {
 }
 
-auto Thread::ReadBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
+auto Thread::ReadBlocker::override_timeout(BlockTimeout const& timeout) -> BlockTimeout const&
 {
     auto const& description = blocked_description();
     if (description.is_socket()) {
@@ -300,13 +300,13 @@ auto Thread::ReadBlocker::override_timeout(const BlockTimeout& timeout) -> const
     return timeout;
 }
 
-Thread::SleepBlocker::SleepBlocker(const BlockTimeout& deadline, Time* remaining)
+Thread::SleepBlocker::SleepBlocker(BlockTimeout const& deadline, Time* remaining)
     : m_deadline(deadline)
     , m_remaining(remaining)
 {
 }
 
-auto Thread::SleepBlocker::override_timeout(const BlockTimeout& timeout) -> const BlockTimeout&
+auto Thread::SleepBlocker::override_timeout(BlockTimeout const& timeout) -> BlockTimeout const&
 {
     VERIFY(timeout.is_infinite()); // A timeout should not be provided
     // To simplify things only use the sleep deadline.
@@ -688,7 +688,7 @@ void Thread::WaitBlocker::do_was_disowned()
     m_result = ECHILD;
 }
 
-void Thread::WaitBlocker::do_set_result(const siginfo_t& result)
+void Thread::WaitBlocker::do_set_result(siginfo_t const& result)
 {
     VERIFY(!m_did_unblock);
     m_did_unblock = true;

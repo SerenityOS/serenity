@@ -39,7 +39,7 @@ u8 Decoder::merge_prob(u8 pre_prob, u8 count_0, u8 count_1, u8 count_sat, u8 max
     return round_2(pre_prob * (256 - factor) + (prob * factor), 8);
 }
 
-u8 Decoder::merge_probs(const int* tree, int index, u8* probs, u8* counts, u8 count_sat, u8 max_update_factor)
+u8 Decoder::merge_probs(int const* tree, int index, u8* probs, u8* counts, u8 count_sat, u8 max_update_factor)
 {
     auto s = tree[index];
     auto left_count = (s <= 0) ? counts[-s] : merge_probs(tree, s, probs, counts, count_sat, max_update_factor);

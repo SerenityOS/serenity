@@ -22,7 +22,7 @@ public:
 
     virtual ~ModelEditingDelegate() = default;
 
-    void bind(Model& model, const ModelIndex& index)
+    void bind(Model& model, ModelIndex const& index)
     {
         if (m_model.ptr() == &model && m_index == index)
             return;
@@ -32,7 +32,7 @@ public:
     }
 
     Widget* widget() { return m_widget; }
-    const Widget* widget() const { return m_widget; }
+    Widget const* widget() const { return m_widget; }
 
     Function<void()> on_commit;
     Function<void()> on_rollback;
@@ -63,7 +63,7 @@ protected:
             on_change();
     }
 
-    const ModelIndex& index() const { return m_index; }
+    ModelIndex const& index() const { return m_index; }
 
 private:
     RefPtr<Model> m_model;
@@ -92,7 +92,7 @@ public:
         };
         return textbox;
     }
-    virtual Variant value() const override { return static_cast<const TextBox*>(widget())->text(); }
+    virtual Variant value() const override { return static_cast<TextBox const*>(widget())->text(); }
     virtual void set_value(Variant const& value, SelectionBehavior selection_behavior) override
     {
         auto& textbox = static_cast<TextBox&>(*widget());

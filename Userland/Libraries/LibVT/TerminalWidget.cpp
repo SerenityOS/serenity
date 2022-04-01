@@ -492,7 +492,7 @@ void TerminalWidget::resize_event(GUI::ResizeEvent& event)
     relayout(event.size());
 }
 
-void TerminalWidget::relayout(const Gfx::IntSize& size)
+void TerminalWidget::relayout(Gfx::IntSize const& size)
 {
     if (!m_scrollbar)
         return;
@@ -580,7 +580,7 @@ bool TerminalWidget::selection_contains(const VT::Position& position) const
     return position >= normalized_selection.start() && position <= normalized_selection.end();
 }
 
-VT::Position TerminalWidget::buffer_position_at(const Gfx::IntPoint& position) const
+VT::Position TerminalWidget::buffer_position_at(Gfx::IntPoint const& position) const
 {
     auto adjusted_position = position.translated(-(frame_thickness() + m_inset), -(frame_thickness() + m_inset));
     int row = adjusted_position.y() / m_line_height;
@@ -1030,7 +1030,7 @@ void TerminalWidget::beep()
     update();
 }
 
-void TerminalWidget::emit(const u8* data, size_t size)
+void TerminalWidget::emit(u8 const* data, size_t size)
 {
     if (write(m_ptm_fd, data, size) < 0) {
         perror("TerminalWidget::emit: write");
@@ -1229,7 +1229,7 @@ void TerminalWidget::set_color_scheme(StringView name)
     update();
 }
 
-Gfx::IntSize TerminalWidget::widget_size_for_font(const Gfx::Font& font) const
+Gfx::IntSize TerminalWidget::widget_size_for_font(Gfx::Font const& font) const
 {
     return {
         (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.columns() * font.glyph_width('x')) + m_scrollbar->width(),
@@ -1260,7 +1260,7 @@ constexpr Gfx::Color TerminalWidget::terminal_color_to_rgb(VT::Color color) cons
     }
 };
 
-void TerminalWidget::set_font_and_resize_to_fit(const Gfx::Font& font)
+void TerminalWidget::set_font_and_resize_to_fit(Gfx::Font const& font)
 {
     set_font(font);
     resize(widget_size_for_font(font));

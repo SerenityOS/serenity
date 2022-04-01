@@ -45,7 +45,7 @@ bool PIC::is_enabled() const
     return !is_all_masked(m_cached_irq_mask) && !is_hard_disabled();
 }
 
-void PIC::disable(const GenericInterruptHandler& handler)
+void PIC::disable(GenericInterruptHandler const& handler)
 {
     InterruptDisabler disabler;
     VERIFY(!is_hard_disabled());
@@ -71,7 +71,7 @@ UNMAP_AFTER_INIT PIC::PIC()
     initialize();
 }
 
-void PIC::spurious_eoi(const GenericInterruptHandler& handler) const
+void PIC::spurious_eoi(GenericInterruptHandler const& handler) const
 {
     VERIFY(handler.type() == HandlerType::SpuriousInterruptHandler);
     if (handler.interrupt_number() == 7)
@@ -87,7 +87,7 @@ bool PIC::is_vector_enabled(u8 irq) const
     return m_cached_irq_mask & (1 << irq);
 }
 
-void PIC::enable(const GenericInterruptHandler& handler)
+void PIC::enable(GenericInterruptHandler const& handler)
 {
     InterruptDisabler disabler;
     VERIFY(!is_hard_disabled());
@@ -114,7 +114,7 @@ void PIC::enable_vector(u8 irq)
     m_cached_irq_mask &= ~(1 << irq);
 }
 
-void PIC::eoi(const GenericInterruptHandler& handler) const
+void PIC::eoi(GenericInterruptHandler const& handler) const
 {
     InterruptDisabler disabler;
     VERIFY(!is_hard_disabled());

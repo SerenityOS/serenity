@@ -132,7 +132,7 @@ class Provider : public RefCounted<Provider> {
 public:
     virtual ~Provider() = default;
 
-    virtual void query(const String&, Function<void(NonnullRefPtrVector<Result>)> on_complete) = 0;
+    virtual void query(String const&, Function<void(NonnullRefPtrVector<Result>)> on_complete) = 0;
 };
 
 class AppProvider final : public Provider {

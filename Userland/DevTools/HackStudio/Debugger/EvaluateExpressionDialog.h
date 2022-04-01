@@ -18,7 +18,7 @@ private:
     explicit EvaluateExpressionDialog(Window* parent_window);
 
     void build(Window* parent_window);
-    void handle_evaluation(const String& expression);
+    void handle_evaluation(String const& expression);
     void set_output(StringView html);
 
     NonnullOwnPtr<JS::Interpreter> m_interpreter;

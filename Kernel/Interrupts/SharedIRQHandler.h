@@ -18,7 +18,7 @@ class SharedIRQHandler final : public GenericInterruptHandler {
 public:
     static void initialize(u8 interrupt_number);
     virtual ~SharedIRQHandler();
-    virtual bool handle_interrupt(const RegisterState& regs) override;
+    virtual bool handle_interrupt(RegisterState const& regs) override;
 
     void register_handler(GenericInterruptHandler&);
     void unregister_handler(GenericInterruptHandler&);

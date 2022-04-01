@@ -20,7 +20,7 @@ struct NonPrimitiveIntWrapper {
 
 TEST_CASE(overlapping_source_and_destination_1)
 {
-    const Array<NonPrimitiveIntWrapper, 6> expected { 3, 4, 5, 6, 5, 6 };
+    Array<NonPrimitiveIntWrapper, 6> const expected { 3, 4, 5, 6, 5, 6 };
 
     Array<NonPrimitiveIntWrapper, 6> actual { 1, 2, 3, 4, 5, 6 };
     AK::TypedTransfer<NonPrimitiveIntWrapper>::copy(actual.data(), actual.data() + 2, 4);
@@ -31,7 +31,7 @@ TEST_CASE(overlapping_source_and_destination_1)
 
 TEST_CASE(overlapping_source_and_destination_2)
 {
-    const Array<NonPrimitiveIntWrapper, 6> expected { 1, 2, 1, 2, 3, 4 };
+    Array<NonPrimitiveIntWrapper, 6> const expected { 1, 2, 1, 2, 3, 4 };
 
     Array<NonPrimitiveIntWrapper, 6> actual { 1, 2, 3, 4, 5, 6 };
     AK::TypedTransfer<NonPrimitiveIntWrapper>::copy(actual.data() + 2, actual.data(), 4);

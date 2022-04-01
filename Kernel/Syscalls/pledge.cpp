@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$pledge(Userspace<Syscall::SC_pledge_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto params = TRY(copy_typed_from_user(user_params));

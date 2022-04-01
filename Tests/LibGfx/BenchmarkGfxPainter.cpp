@@ -22,8 +22,8 @@ static struct FontDatabaseSpoofer {
 
 BENCHMARK_CASE(diagonal_lines)
 {
-    const int run_count = 50;
-    const int bitmap_size = 2000;
+    int const run_count = 50;
+    int const bitmap_size = 2000;
 
     auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size }).release_value_but_fixme_should_propagate_errors();
     Gfx::Painter painter(bitmap);
@@ -38,8 +38,8 @@ BENCHMARK_CASE(diagonal_lines)
 
 BENCHMARK_CASE(fill)
 {
-    const int run_count = 1000;
-    const int bitmap_size = 2000;
+    int const run_count = 1000;
+    int const bitmap_size = 2000;
 
     auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size }).release_value_but_fixme_should_propagate_errors();
     Gfx::Painter painter(bitmap);
@@ -51,8 +51,8 @@ BENCHMARK_CASE(fill)
 
 BENCHMARK_CASE(fill_with_gradient)
 {
-    const int run_count = 50;
-    const int bitmap_size = 2000;
+    int const run_count = 50;
+    int const bitmap_size = 2000;
 
     auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size }).release_value_but_fixme_should_propagate_errors();
     Gfx::Painter painter(bitmap);

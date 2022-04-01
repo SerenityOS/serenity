@@ -40,12 +40,12 @@ public:
 
 private:
     // ^File
-    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual ErrorOr<struct stat> stat() const override;
-    virtual bool can_read(const OpenFileDescription&, u64) const override;
-    virtual bool can_write(const OpenFileDescription&, u64) const override;
-    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
+    virtual bool can_read(OpenFileDescription const&, u64) const override;
+    virtual bool can_write(OpenFileDescription const&, u64) const override;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const override;
     virtual StringView class_name() const override { return "FIFO"sv; }
     virtual bool is_fifo() const override { return true; }
 

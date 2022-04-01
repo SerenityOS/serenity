@@ -35,7 +35,7 @@ public:
     static ScreenInput& the();
 
     Screen& cursor_location_screen();
-    const Screen& cursor_location_screen() const;
+    Screen const& cursor_location_screen() const;
     unsigned mouse_button_state() const { return m_mouse_button_state; }
 
     double acceleration_factor() const { return m_acceleration_factor; }
@@ -44,7 +44,7 @@ public:
     unsigned scroll_step_size() const { return m_scroll_step_size; }
     void set_scroll_step_size(unsigned);
 
-    void on_receive_mouse_data(const MousePacket&);
+    void on_receive_mouse_data(MousePacket const&);
     void on_receive_keyboard_data(::KeyEvent);
 
     Gfx::IntPoint cursor_location() const { return m_cursor_location; }
@@ -80,7 +80,7 @@ public:
     ~Screen();
 
     static bool apply_layout(ScreenLayout&&, String&);
-    static const ScreenLayout& layout() { return s_layout; }
+    static ScreenLayout const& layout() { return s_layout; }
 
     static Screen& main()
     {
@@ -88,8 +88,8 @@ public:
         return *s_main_screen;
     }
 
-    static Screen& closest_to_rect(const Gfx::IntRect&);
-    static Screen& closest_to_location(const Gfx::IntPoint&);
+    static Screen& closest_to_rect(Gfx::IntRect const&);
+    static Screen& closest_to_location(Gfx::IntPoint const&);
 
     static Screen* find_by_index(size_t index)
     {
@@ -106,7 +106,7 @@ public:
         return rects;
     }
 
-    static Screen* find_by_location(const Gfx::IntPoint& point)
+    static Screen* find_by_location(Gfx::IntPoint const& point)
     {
         for (auto& screen : s_screens) {
             if (screen.rect().contains(point))
@@ -115,7 +115,7 @@ public:
         return nullptr;
     }
 
-    static const Gfx::IntRect& bounding_rect() { return s_bounding_screens_rect; }
+    static Gfx::IntRect const& bounding_rect() { return s_bounding_screens_rect; }
 
     static size_t count() { return s_screens.size(); }
     size_t index() const { return m_index; }

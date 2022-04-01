@@ -16,7 +16,7 @@
 #include <time.h>
 #include <unistd.h>
 
-static void wait_until_coredump_is_ready(const String& coredump_path)
+static void wait_until_coredump_is_ready(String const& coredump_path)
 {
     while (true) {
         struct stat statbuf;
@@ -31,10 +31,10 @@ static void wait_until_coredump_is_ready(const String& coredump_path)
     }
 }
 
-static void launch_crash_reporter(const String& coredump_path, bool unlink_on_exit)
+static void launch_crash_reporter(String const& coredump_path, bool unlink_on_exit)
 {
     pid_t child;
-    const char* argv[4] = { "CrashReporter" };
+    char const* argv[4] = { "CrashReporter" };
     if (unlink_on_exit) {
         argv[1] = "--unlink";
         argv[2] = coredump_path.characters();

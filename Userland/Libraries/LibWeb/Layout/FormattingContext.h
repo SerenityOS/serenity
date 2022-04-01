@@ -29,14 +29,14 @@ public:
     Box const& context_box() const { return m_context_box; }
 
     FormattingContext* parent() { return m_parent; }
-    const FormattingContext* parent() const { return m_parent; }
+    FormattingContext const* parent() const { return m_parent; }
 
     Type type() const { return m_type; }
     bool is_block_formatting_context() const { return type() == Type::Block; }
 
     virtual bool inhibits_floating() const { return false; }
 
-    static bool creates_block_formatting_context(const Box&);
+    static bool creates_block_formatting_context(Box const&);
 
     static float compute_width_for_replaced_element(FormattingState const&, ReplacedBox const&);
     static float compute_height_for_replaced_element(FormattingState const&, ReplacedBox const&);

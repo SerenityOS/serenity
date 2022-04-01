@@ -16,7 +16,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    const char* zip_path;
+    char const* zip_path;
     Vector<StringView> source_paths;
     bool recurse = false;
     bool force = false;

@@ -15,7 +15,7 @@ namespace AK {
 template<bool = true>
 class ScopeLogger {
 public:
-    ScopeLogger(StringView extra, const SourceLocation& location = SourceLocation::current())
+    ScopeLogger(StringView extra, SourceLocation const& location = SourceLocation::current())
         : m_location(location)
         , m_extra(extra)
     {

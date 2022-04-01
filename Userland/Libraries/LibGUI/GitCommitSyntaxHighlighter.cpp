@@ -10,7 +10,7 @@
 #include <LibGfx/Palette.h>
 
 namespace GUI {
-static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, GitCommitToken::Type type)
+static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, GitCommitToken::Type type)
 {
     switch (type) {
     case GitCommitToken::Type::Comment:

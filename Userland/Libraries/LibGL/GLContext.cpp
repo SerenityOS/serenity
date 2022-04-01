@@ -471,7 +471,7 @@ void GLContext::gl_load_identity()
     *m_current_matrix = FloatMatrix4x4::identity();
 }
 
-void GLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
+void GLContext::gl_load_matrix(FloatMatrix4x4 const& matrix)
 {
     APPEND_TO_CALL_LIST_WITH_ARG_AND_RETURN_IF_NEEDED(gl_load_matrix, matrix);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
@@ -859,7 +859,7 @@ void GLContext::gl_gen_textures(GLsizei n, GLuint* textures)
     }
 }
 
-void GLContext::gl_delete_textures(GLsizei n, const GLuint* textures)
+void GLContext::gl_delete_textures(GLsizei n, GLuint const* textures)
 {
     RETURN_WITH_ERROR_IF(n < 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
@@ -1070,8 +1070,7 @@ void GLContext::invoke_list(size_t list_index)
     for (auto& entry : listing.entries) {
         entry.function.visit([&](auto& function) {
             entry.arguments.visit([&](auto& arguments) {
-                auto apply = [&]<typename... Args>(Args && ... args)
-                {
+                auto apply = [&]<typename... Args>(Args&&... args) {
                     if constexpr (requires { (this->*function)(forward<Args>(args)...); })
                         (this->*function)(forward<Args>(args)...);
                 };
@@ -1987,7 +1986,7 @@ void GLContext::gl_client_active_texture(GLenum target)
     m_client_active_texture = target - GL_TEXTURE0;
 }
 
-void GLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
+void GLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(!(size == 2 || size == 3 || size == 4), GL_INVALID_VALUE);
@@ -1997,7 +1996,7 @@ void GLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const
     m_client_vertex_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
 }
 
-void GLContext::gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
+void GLContext::gl_color_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(!(size == 3 || size == 4), GL_INVALID_VALUE);
@@ -2015,7 +2014,7 @@ void GLContext::gl_color_pointer(GLint size, GLenum type, GLsizei stride, const 
     m_client_color_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
 }
 
-void GLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
+void GLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(!(size == 1 || size == 2 || size == 3 || size == 4), GL_INVALID_VALUE);
@@ -2117,7 +2116,7 @@ void GLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
     gl_end();
 }
 
-void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices)
+void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, void const* indices)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_elements, mode, count, type, indices);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
@@ -2147,13 +2146,13 @@ void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const 
         int i = 0;
         switch (type) {
         case GL_UNSIGNED_BYTE:
-            i = reinterpret_cast<const GLubyte*>(indices)[index];
+            i = reinterpret_cast<GLubyte const*>(indices)[index];
             break;
         case GL_UNSIGNED_SHORT:
-            i = reinterpret_cast<const GLushort*>(indices)[index];
+            i = reinterpret_cast<GLushort const*>(indices)[index];
             break;
         case GL_UNSIGNED_INT:
-            i = reinterpret_cast<const GLuint*>(indices)[index];
+            i = reinterpret_cast<GLuint const*>(indices)[index];
             break;
         }
 
@@ -2184,7 +2183,7 @@ void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const 
     gl_end();
 }
 
-void GLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void* data)
+void GLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLenum type, void const* data)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_pixels, width, height, format, type, data);
 
@@ -2335,7 +2334,7 @@ void GLContext::gl_depth_func(GLenum func)
 // General helper function to read arbitrary vertex attribute data into a float array
 void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& attrib, int index, float* elements)
 {
-    auto byte_ptr = reinterpret_cast<const char*>(attrib.pointer);
+    auto byte_ptr = reinterpret_cast<char const*>(attrib.pointer);
     auto normalize = attrib.normalize;
     size_t stride = attrib.stride;
 
@@ -2345,7 +2344,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLbyte) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLbyte*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLbyte const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0x80;
         }
@@ -2356,7 +2355,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLubyte) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLubyte*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLubyte const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0xff;
         }
@@ -2367,7 +2366,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLshort) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLshort*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLshort const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0x8000;
         }
@@ -2378,7 +2377,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLushort) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLushort*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLushort const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0xffff;
         }
@@ -2389,7 +2388,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLint) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLint*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLint const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0x80000000;
         }
@@ -2400,7 +2399,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLuint) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLuint*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLuint const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0xffffffff;
         }
@@ -2411,7 +2410,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLfloat) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++)
-            elements[i] = *(reinterpret_cast<const GLfloat*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLfloat const*>(byte_ptr + stride * index) + i);
         break;
     }
     case GL_DOUBLE: {
@@ -2419,7 +2418,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLdouble) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++)
-            elements[i] = static_cast<float>(*(reinterpret_cast<const GLdouble*>(byte_ptr + stride * index) + i));
+            elements[i] = static_cast<float>(*(reinterpret_cast<GLdouble const*>(byte_ptr + stride * index) + i));
         break;
     }
     }

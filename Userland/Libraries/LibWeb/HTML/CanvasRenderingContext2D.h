@@ -72,16 +72,16 @@ public:
     void rect(float x, float y, float width, float height);
     void stroke();
 
-    void fill_text(const String&, float x, float y, Optional<double> max_width);
+    void fill_text(String const&, float x, float y, Optional<double> max_width);
     void stroke_text(String const&, float x, float y, Optional<double> max_width);
 
     // FIXME: We should only have one fill(), really. Fix the wrapper generator!
     void fill(Gfx::Painter::WindingRule);
-    void fill(const String& fill_rule);
+    void fill(String const& fill_rule);
 
     RefPtr<ImageData> create_image_data(int width, int height) const;
     DOM::ExceptionOr<RefPtr<ImageData>> get_image_data(int x, int y, int width, int height) const;
-    void put_image_data(const ImageData&, float x, float y);
+    void put_image_data(ImageData const&, float x, float y);
 
     void save();
     void restore();
@@ -112,7 +112,7 @@ private:
         Gfx::IntRect bounding_box;
     };
 
-    void did_draw(const Gfx::FloatRect&);
+    void did_draw(Gfx::FloatRect const&);
     PreparedText prepare_text(String const& text, float max_width = INFINITY);
 
     OwnPtr<Gfx::Painter> painter();

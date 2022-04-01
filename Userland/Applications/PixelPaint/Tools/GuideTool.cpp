@@ -16,7 +16,7 @@
 
 namespace PixelPaint {
 
-RefPtr<Guide> GuideTool::closest_guide(const Gfx::IntPoint& point)
+RefPtr<Guide> GuideTool::closest_guide(Gfx::IntPoint const& point)
 {
     auto guides = editor()->guides();
     Guide* closest_guide = nullptr;

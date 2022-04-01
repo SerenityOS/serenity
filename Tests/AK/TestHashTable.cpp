@@ -136,7 +136,7 @@ TEST_CASE(many_strings)
 TEST_CASE(many_collisions)
 {
     struct StringCollisionTraits : public GenericTraits<String> {
-        static unsigned hash(const String&) { return 0; }
+        static unsigned hash(String const&) { return 0; }
     };
 
     HashTable<String, StringCollisionTraits> strings;
@@ -158,7 +158,7 @@ TEST_CASE(many_collisions)
 TEST_CASE(space_reuse)
 {
     struct StringCollisionTraits : public GenericTraits<String> {
-        static unsigned hash(const String&) { return 0; }
+        static unsigned hash(String const&) { return 0; }
     };
 
     HashTable<String, StringCollisionTraits> strings;

@@ -32,7 +32,7 @@
 
 namespace Web::HTML {
 
-static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
+static inline void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
     dbgln("Parse error! {}", location);
 }
@@ -118,7 +118,7 @@ static bool is_html_integration_point(DOM::Element const& element)
     return false;
 }
 
-RefPtr<DOM::Document> parse_html_document(StringView data, const AK::URL& url, const String& encoding)
+RefPtr<DOM::Document> parse_html_document(StringView data, const AK::URL& url, String const& encoding)
 {
     auto document = DOM::Document::create(url);
     auto parser = HTMLParser::create(document, data, encoding);
@@ -126,7 +126,7 @@ RefPtr<DOM::Document> parse_html_document(StringView data, const AK::URL& url, c
     return document;
 }
 
-HTMLParser::HTMLParser(DOM::Document& document, StringView input, const String& encoding)
+HTMLParser::HTMLParser(DOM::Document& document, StringView input, String const& encoding)
     : m_tokenizer(input, encoding)
     , m_document(document)
 {
@@ -389,7 +389,7 @@ void HTMLParser::process_using_the_rules_for(InsertionMode mode, HTMLToken& toke
     }
 }
 
-DOM::QuirksMode HTMLParser::which_quirks_mode(const HTMLToken& doctype_token) const
+DOM::QuirksMode HTMLParser::which_quirks_mode(HTMLToken const& doctype_token) const
 {
     if (doctype_token.doctype_data().force_quirks)
         return DOM::QuirksMode::Yes;
@@ -651,7 +651,7 @@ NonnullRefPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& toke
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-foreign-element
-NonnullRefPtr<DOM::Element> HTMLParser::insert_foreign_element(const HTMLToken& token, const FlyString& namespace_)
+NonnullRefPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken const& token, FlyString const& namespace_)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
 
@@ -677,7 +677,7 @@ NonnullRefPtr<DOM::Element> HTMLParser::insert_foreign_element(const HTMLToken& 
     return element;
 }
 
-NonnullRefPtr<DOM::Element> HTMLParser::insert_html_element(const HTMLToken& token)
+NonnullRefPtr<DOM::Element> HTMLParser::insert_html_element(HTMLToken const& token)
 {
     return insert_foreign_element(token, Namespace::HTML);
 }
@@ -1011,7 +1011,7 @@ AnythingElse:
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLParser::generate_implied_end_tags(const FlyString& exception)
+void HTMLParser::generate_implied_end_tags(FlyString const& exception)
 {
     while (current_node().local_name() != exception && current_node().local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc))
         (void)m_stack_of_open_elements.pop();
@@ -1335,7 +1335,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
     }
 }
 
-bool HTMLParser::is_special_tag(const FlyString& tag_name, const FlyString& namespace_)
+bool HTMLParser::is_special_tag(FlyString const& tag_name, FlyString const& namespace_)
 {
     if (namespace_ == Namespace::HTML) {
         return tag_name.is_one_of(
@@ -3357,7 +3357,7 @@ void HTMLParser::reset_the_insertion_mode_appropriately()
     m_insertion_mode = InsertionMode::InBody;
 }
 
-const char* HTMLParser::insertion_mode_name() const
+char const* HTMLParser::insertion_mode_name() const
 {
     switch (m_insertion_mode) {
 #define __ENUMERATE_INSERTION_MODE(mode) \
@@ -3430,7 +3430,7 @@ NonnullRefPtr<HTMLParser> HTMLParser::create_for_scripting(DOM::Document& docume
     return adopt_ref(*new HTMLParser(document));
 }
 
-NonnullRefPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, const ByteBuffer& input)
+NonnullRefPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, ByteBuffer const& input)
 {
     if (document.has_encoding())
         return adopt_ref(*new HTMLParser(document, input, document.encoding().value()));

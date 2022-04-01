@@ -388,7 +388,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
                 it->value->handle_thread_exit(event.tid, event.serial);
             continue;
         } else if (type_string == "read"sv) {
-            const auto string_index = perf_event.get("filename_index"sv).to_number<FlatPtr>();
+            auto const string_index = perf_event.get("filename_index"sv).to_number<FlatPtr>();
             event.data = Event::ReadData {
                 .fd = perf_event.get("fd"sv).to_number<int>(),
                 .size = perf_event.get("size"sv).to_number<size_t>(),

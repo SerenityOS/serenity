@@ -45,7 +45,7 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& 
 {
     auto rect = a_rect.to_rounded<float>();
 
-    const auto& border_data = [&] {
+    auto const& border_data = [&] {
         switch (edge) {
         case BorderEdge::Top:
             return borders_data.top;
@@ -71,7 +71,7 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& 
         Gfx::FloatPoint p2;
     };
 
-    auto points_for_edge = [](BorderEdge edge, const Gfx::FloatRect& rect) -> Points {
+    auto points_for_edge = [](BorderEdge edge, Gfx::FloatRect const& rect) -> Points {
         switch (edge) {
         case BorderEdge::Top:
             return { rect.top_left(), rect.top_right() };

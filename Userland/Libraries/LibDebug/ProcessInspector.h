@@ -22,7 +22,7 @@ public:
     virtual void set_registers(PtraceRegisters const&) = 0;
     virtual void for_each_loaded_library(Function<IterationDecision(LoadedLibrary const&)>) const = 0;
 
-    const LoadedLibrary* library_at(FlatPtr address) const;
+    LoadedLibrary const* library_at(FlatPtr address) const;
     struct SymbolicationResult {
         String library_name;
         String symbol;

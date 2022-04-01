@@ -108,7 +108,7 @@ GUI::ModelIndex FileEventModel::parent_index(GUI::ModelIndex const& index) const
         return {};
 
     if (node.parent()->parent()) {
-        const auto& children = node.parent()->parent()->children();
+        auto const& children = node.parent()->parent()->children();
 
         for (size_t row = 0; row < children.size(); ++row) {
             if (children.at(row).ptr() == node.parent()) {
@@ -117,7 +117,7 @@ GUI::ModelIndex FileEventModel::parent_index(GUI::ModelIndex const& index) const
         }
     }
 
-    const auto& children = node.parent()->children();
+    auto const& children = node.parent()->children();
 
     for (size_t row = 0; row < children.size(); ++row) {
         if (children.at(row).ptr() == &node) {

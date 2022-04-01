@@ -660,7 +660,7 @@ void Game::dump_layout() const
 {
     if constexpr (SOLITAIRE_DEBUG) {
         dbgln("------------------------------");
-        for (const auto& stack : m_stacks)
+        for (auto const& stack : m_stacks)
             dbgln("{}", stack);
     }
 }

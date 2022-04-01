@@ -38,14 +38,14 @@ public:
         String to_string(bool color = false) const;
     };
 
-    Backtrace(const Reader&, const ELF::Core::ThreadInfo&, Function<void(size_t, size_t)> on_progress = {});
+    Backtrace(Reader const&, const ELF::Core::ThreadInfo&, Function<void(size_t, size_t)> on_progress = {});
     ~Backtrace() = default;
 
     ELF::Core::ThreadInfo const& thread_info() const { return m_thread_info; }
     Vector<Entry> const& entries() const { return m_entries; }
 
 private:
-    void add_entry(const Reader&, FlatPtr ip);
+    void add_entry(Reader const&, FlatPtr ip);
     ELFObjectInfo const* object_info_for_region(Reader const&, MemoryRegionInfo const&);
 
     bool m_skip_loader_so { false };

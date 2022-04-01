@@ -1083,7 +1083,7 @@ void Object::ensure_shape_is_unique()
 }
 
 // Simple side-effect free property lookup, following the prototype chain. Non-standard.
-Value Object::get_without_side_effects(const PropertyKey& property_key) const
+Value Object::get_without_side_effects(PropertyKey const& property_key) const
 {
     auto* object = this;
     while (object) {

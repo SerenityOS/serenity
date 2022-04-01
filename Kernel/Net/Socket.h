@@ -68,7 +68,7 @@ public:
     SetupState setup_state() const { return m_setup_state; }
     void set_setup_state(SetupState setup_state);
 
-    virtual Role role(const OpenFileDescription&) const { return m_role; }
+    virtual Role role(OpenFileDescription const&) const { return m_role; }
 
     bool is_connected() const { return m_connected; }
     void set_connected(bool);
@@ -78,17 +78,17 @@ public:
 
     ErrorOr<void> shutdown(int how);
 
-    virtual ErrorOr<void> bind(Userspace<const sockaddr*>, socklen_t) = 0;
-    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock) = 0;
+    virtual ErrorOr<void> bind(Userspace<sockaddr const*>, socklen_t) = 0;
+    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<sockaddr const*>, socklen_t, ShouldBlock) = 0;
     virtual ErrorOr<void> listen(size_t) = 0;
     virtual void get_local_address(sockaddr*, socklen_t*) = 0;
     virtual void get_peer_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
     virtual bool is_ipv4() const { return false; }
-    virtual ErrorOr<size_t> sendto(OpenFileDescription&, const UserOrKernelBuffer&, size_t, int flags, Userspace<const sockaddr*>, socklen_t) = 0;
+    virtual ErrorOr<size_t> sendto(OpenFileDescription&, UserOrKernelBuffer const&, size_t, int flags, Userspace<sockaddr const*>, socklen_t) = 0;
     virtual ErrorOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) = 0;
 
-    virtual ErrorOr<void> setsockopt(int level, int option, Userspace<const void*>, socklen_t);
+    virtual ErrorOr<void> setsockopt(int level, int option, Userspace<void const*>, socklen_t);
     virtual ErrorOr<void> getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>);
 
     ProcessID origin_pid() const { return m_origin.pid; }
@@ -97,21 +97,21 @@ public:
     ProcessID acceptor_pid() const { return m_acceptor.pid; }
     UserID acceptor_uid() const { return m_acceptor.uid; }
     GroupID acceptor_gid() const { return m_acceptor.gid; }
-    const RefPtr<NetworkAdapter> bound_interface() const { return m_bound_interface; }
+    RefPtr<NetworkAdapter> const bound_interface() const { return m_bound_interface; }
 
     Mutex& mutex() { return m_mutex; }
 
     // ^File
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override final;
-    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override final;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override final;
     virtual ErrorOr<struct stat> stat() const override;
-    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override = 0;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const override = 0;
 
     bool has_receive_timeout() const { return m_receive_timeout != Time::zero(); }
-    const Time& receive_timeout() const { return m_receive_timeout; }
+    Time const& receive_timeout() const { return m_receive_timeout; }
 
     bool has_send_timeout() const { return m_send_timeout != Time::zero(); }
-    const Time& send_timeout() const { return m_send_timeout; }
+    Time const& send_timeout() const { return m_send_timeout; }
 
     bool wants_timestamp() const { return m_timestamp; }
 

@@ -83,7 +83,7 @@ public:
     }
     Span<const u8> bytes() const
     {
-        return Span<const u8>(reinterpret_cast<const u8*>(this), sizeof(R));
+        return Span<const u8>(reinterpret_cast<u8 const*>(this), sizeof(R));
     }
 
     template<Unsigned U>
@@ -417,7 +417,7 @@ public:
         return { lower, higher };
     }
 
-    constexpr R operator+(const bool& other) const
+    constexpr R operator+(bool const& other) const
     {
         bool carry = false; // unused
         return addc((u8)other, carry);
@@ -429,7 +429,7 @@ public:
         return addc(other, carry);
     }
 
-    constexpr R operator-(const bool& other) const
+    constexpr R operator-(bool const& other) const
     {
         bool carry = false; // unused
         return subc((u8)other, carry);
@@ -491,9 +491,9 @@ public:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdiv-by-zero"
         if (!divisor) {
-            volatile int x = 1;
-            volatile int y = 0;
-            [[maybe_unused]] volatile int z = x / y;
+            int volatile x = 1;
+            int volatile y = 0;
+            [[maybe_unused]] int volatile z = x / y;
         }
 #pragma GCC diagnostic pop
 
@@ -796,13 +796,13 @@ private:
 
 // reverse operators
 template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator<(const U a, const UFixedBigInt<T>& b) { return b >= a; }
+requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator<(const U a, UFixedBigInt<T> const& b) { return b >= a; }
 template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator>(const U a, const UFixedBigInt<T>& b) { return b <= a; }
+requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator>(const U a, UFixedBigInt<T> const& b) { return b <= a; }
 template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator<=(const U a, const UFixedBigInt<T>& b) { return b > a; }
+requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator<=(const U a, UFixedBigInt<T> const& b) { return b > a; }
 template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator>=(const U a, const UFixedBigInt<T>& b) { return b < a; }
+requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator>=(const U a, UFixedBigInt<T> const& b) { return b < a; }
 
 template<Unsigned T>
 struct Formatter<UFixedBigInt<T>> : StandardFormatter {

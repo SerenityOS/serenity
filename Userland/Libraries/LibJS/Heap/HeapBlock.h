@@ -68,7 +68,7 @@ public:
 
     Heap& heap() { return m_heap; }
 
-    static HeapBlock* from_cell(const Cell* cell)
+    static HeapBlock* from_cell(Cell const* cell)
     {
         return reinterpret_cast<HeapBlock*>((FlatPtr)cell & ~(block_size - 1));
     }
@@ -84,7 +84,7 @@ public:
         return cell(cell_index);
     }
 
-    bool is_valid_cell_pointer(const Cell* cell)
+    bool is_valid_cell_pointer(Cell const* cell)
     {
         return cell_from_possible_pointer((FlatPtr)cell);
     }

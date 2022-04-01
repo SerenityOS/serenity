@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             target_directory = getcwd(nullptr, 0);
         } else {
             LexicalPath template_path(file_template);
-            const char* env_directory = getenv("TMPDIR");
+            char const* env_directory = getenv("TMPDIR");
             target_directory = env_directory && *env_directory ? env_directory : "/tmp";
         }
     }

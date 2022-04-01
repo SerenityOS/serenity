@@ -22,7 +22,7 @@
 __BEGIN_DECLS
 
 #ifndef NDEBUG
-__attribute__((noreturn)) void __assertion_failed(const char* msg);
+__attribute__((noreturn)) void __assertion_failed(char const* msg);
 #    define assert(expr)                                                            \
         (__builtin_expect(!(expr), 0)                                               \
                 ? __assertion_failed(#expr "\n" __FILE__ ":" __stringify(__LINE__)) \

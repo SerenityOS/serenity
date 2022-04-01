@@ -30,7 +30,7 @@ bool FutexQueue::should_add_blocker(Thread::Blocker& b, void*)
     return true;
 }
 
-u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& get_target_queue, u32 requeue_count, bool& is_empty, bool& is_empty_target)
+u32 FutexQueue::wake_n_requeue(u32 wake_count, Function<FutexQueue*()> const& get_target_queue, u32 requeue_count, bool& is_empty, bool& is_empty_target)
 {
     is_empty_target = false;
     SpinlockLocker lock(m_lock);
@@ -87,7 +87,7 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
     return did_wake + did_requeue;
 }
 
-u32 FutexQueue::wake_n(u32 wake_count, const Optional<u32>& bitset, bool& is_empty)
+u32 FutexQueue::wake_n(u32 wake_count, Optional<u32> const& bitset, bool& is_empty)
 {
     if (wake_count == 0) {
         is_empty = false;

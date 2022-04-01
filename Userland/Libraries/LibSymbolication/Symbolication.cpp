@@ -211,7 +211,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
     bool first_frame = true;
 
     for (auto address : stack) {
-        const RegionWithSymbols* found_region = nullptr;
+        RegionWithSymbols const* found_region = nullptr;
         for (auto& region : regions) {
             FlatPtr region_end;
             if (Checked<FlatPtr>::addition_would_overflow(region.base, region.size))

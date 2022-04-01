@@ -116,14 +116,14 @@ public:
 
     String to_string() const;
 
-    bool operator==(const Length& other) const
+    bool operator==(Length const& other) const
     {
         if (is_calculated())
             return m_calculated_style == other.m_calculated_style;
         return m_type == other.m_type && m_value == other.m_value;
     }
 
-    bool operator!=(const Length& other) const
+    bool operator!=(Length const& other) const
     {
         return !(*this == other);
     }
@@ -131,7 +131,7 @@ public:
     float relative_length_to_px(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const;
 
 private:
-    const char* unit_name() const;
+    char const* unit_name() const;
 
     Type m_type;
     float m_value { 0 };

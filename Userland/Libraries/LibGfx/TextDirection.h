@@ -20,7 +20,7 @@ enum class BidirectionalClass {
     NEUTRAL,
 };
 
-extern const Array<BidirectionalClass, 0x1F000> char_bidi_class_lookup_table;
+extern Array<BidirectionalClass, 0x1F000> const char_bidi_class_lookup_table;
 
 constexpr BidirectionalClass get_char_bidi_class(u32 ch)
 {

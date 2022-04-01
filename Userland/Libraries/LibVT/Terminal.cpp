@@ -1347,7 +1347,7 @@ void Terminal::inject_string(StringView str)
 
 void Terminal::emit_string(StringView string)
 {
-    m_client.emit((const u8*)string.characters_without_null_termination(), string.length());
+    m_client.emit((u8 const*)string.characters_without_null_termination(), string.length());
 }
 
 void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
@@ -1657,7 +1657,7 @@ void Terminal::invalidate_cursor()
         active_buffer()[cursor_row()].set_dirty(true);
 }
 
-Attribute Terminal::attribute_at(const Position& position) const
+Attribute Terminal::attribute_at(Position const& position) const
 {
     if (!position.is_valid())
         return {};

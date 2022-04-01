@@ -213,7 +213,7 @@ UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
     detect_eeprom();
     dmesgln("E1000: Has EEPROM? {}", m_has_eeprom);
     read_mac_address();
-    const auto& mac = mac_address();
+    auto const& mac = mac_address();
     dmesgln("E1000: MAC address: {}", mac.to_string());
 
     initialize_rx_descriptors();
@@ -238,7 +238,7 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, 
 
 UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter() = default;
 
-bool E1000NetworkAdapter::handle_irq(const RegisterState&)
+bool E1000NetworkAdapter::handle_irq(RegisterState const&)
 {
     u32 status = in32(REG_INTERRUPT_CAUSE_READ);
 
@@ -370,7 +370,7 @@ void E1000NetworkAdapter::out8(u16 address, u8 data)
 {
     dbgln_if(E1000_DEBUG, "E1000: OUT8 {:#02x} @ {:#04x}", data, address);
     if (m_use_mmio) {
-        auto* ptr = (volatile u8*)(m_mmio_base.get() + address);
+        auto* ptr = (u8 volatile*)(m_mmio_base.get() + address);
         *ptr = data;
         return;
     }
@@ -381,7 +381,7 @@ void E1000NetworkAdapter::out16(u16 address, u16 data)
 {
     dbgln_if(E1000_DEBUG, "E1000: OUT16 {:#04x} @ {:#04x}", data, address);
     if (m_use_mmio) {
-        auto* ptr = (volatile u16*)(m_mmio_base.get() + address);
+        auto* ptr = (u16 volatile*)(m_mmio_base.get() + address);
         *ptr = data;
         return;
     }
@@ -392,7 +392,7 @@ void E1000NetworkAdapter::out32(u16 address, u32 data)
 {
     dbgln_if(E1000_DEBUG, "E1000: OUT32 {:#08x} @ {:#04x}", data, address);
     if (m_use_mmio) {
-        auto* ptr = (volatile u32*)(m_mmio_base.get() + address);
+        auto* ptr = (u32 volatile*)(m_mmio_base.get() + address);
         *ptr = data;
         return;
     }
@@ -403,7 +403,7 @@ u8 E1000NetworkAdapter::in8(u16 address)
 {
     dbgln_if(E1000_DEBUG, "E1000: IN8 @ {:#04x}", address);
     if (m_use_mmio)
-        return *(volatile u8*)(m_mmio_base.get() + address);
+        return *(u8 volatile*)(m_mmio_base.get() + address);
     return m_io_base.offset(address).in<u8>();
 }
 
@@ -411,7 +411,7 @@ u16 E1000NetworkAdapter::in16(u16 address)
 {
     dbgln_if(E1000_DEBUG, "E1000: IN16 @ {:#04x}", address);
     if (m_use_mmio)
-        return *(volatile u16*)(m_mmio_base.get() + address);
+        return *(u16 volatile*)(m_mmio_base.get() + address);
     return m_io_base.offset(address).in<u16>();
 }
 
@@ -419,7 +419,7 @@ u32 E1000NetworkAdapter::in32(u16 address)
 {
     dbgln_if(E1000_DEBUG, "E1000: IN32 @ {:#04x}", address);
     if (m_use_mmio)
-        return *(volatile u32*)(m_mmio_base.get() + address);
+        return *(u32 volatile*)(m_mmio_base.get() + address);
     return m_io_base.offset(address).in<u32>();
 }
 

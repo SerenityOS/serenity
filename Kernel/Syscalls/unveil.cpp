@@ -24,7 +24,7 @@ static void update_intermediate_node_permissions(UnveilNode& root_node, UnveilAc
     }
 }
 
-ErrorOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$unveil(Userspace<Syscall::SC_unveil_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto params = TRY(copy_typed_from_user(user_params));
@@ -52,7 +52,7 @@ ErrorOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*>
 
     // Let's work out permissions first...
     unsigned new_permissions = 0;
-    for (const char permission : permissions->view()) {
+    for (char const permission : permissions->view()) {
         switch (permission) {
         case 'r':
             new_permissions |= UnveilAccess::Read;

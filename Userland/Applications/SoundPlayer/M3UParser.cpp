@@ -24,7 +24,7 @@ NonnullOwnPtr<M3UParser> M3UParser::from_file(const String path)
     return from_memory(String { contents, NoChomp }, use_utf8);
 }
 
-NonnullOwnPtr<M3UParser> M3UParser::from_memory(const String& m3u_contents, bool utf8)
+NonnullOwnPtr<M3UParser> M3UParser::from_memory(String const& m3u_contents, bool utf8)
 {
     auto parser = make<M3UParser>();
     VERIFY(!m3u_contents.is_null() && !m3u_contents.is_empty() && !m3u_contents.is_whitespace());
@@ -38,7 +38,7 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
     auto vec = make<Vector<M3UEntry>>();
 
     if (m_use_utf8) {
-        //TODO: Implement M3U8 parsing
+        // TODO: Implement M3U8 parsing
         TODO();
         return vec;
     }
@@ -75,7 +75,7 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
             auto display_name = ext_inf.value().substring_view(seconds.length() + 1);
             VERIFY(!display_name.is_empty() && !display_name.is_null() && !display_name.is_empty());
             metadata_for_next_file.track_display_title = display_name;
-            //TODO: support the alternative, non-standard #EXTINF value of a key=value dictionary
+            // TODO: support the alternative, non-standard #EXTINF value of a key=value dictionary
             continue;
         }
         if (auto playlist = tag("#PLAYLIST:"); playlist.has_value())
@@ -88,7 +88,7 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
             metadata_for_next_file.album_artist = move(ext_art.value());
         else if (auto ext_genre = tag("#EXTGENRE:"); ext_genre.has_value())
             metadata_for_next_file.album_genre = move(ext_genre.value());
-        //TODO: Support M3A files (M3U files with embedded mp3 files)
+        // TODO: Support M3A files (M3U files with embedded mp3 files)
     }
 
     return vec;

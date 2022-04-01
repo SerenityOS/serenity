@@ -45,7 +45,7 @@ template<typename... Args>
 void compiletime_fail(Args...);
 
 template<size_t N>
-consteval auto extract_used_argument_index(const char (&fmt)[N], size_t specifier_start_index, size_t specifier_end_index, size_t& next_implicit_argument_index)
+consteval auto extract_used_argument_index(char const (&fmt)[N], size_t specifier_start_index, size_t specifier_end_index, size_t& next_implicit_argument_index)
 {
     struct {
         size_t index_value { 0 };
@@ -69,7 +69,7 @@ consteval auto extract_used_argument_index(const char (&fmt)[N], size_t specifie
 
 // FIXME: We should rather parse these format strings at compile-time if possible.
 template<size_t N>
-consteval auto count_fmt_params(const char (&fmt)[N])
+consteval auto count_fmt_params(char const (&fmt)[N])
 {
     struct {
         // FIXME: Switch to variable-sized storage whenever we can come up with one :)
@@ -118,7 +118,7 @@ consteval auto count_fmt_params(const char (&fmt)[N])
                 if (result.total_used_last_format_specifier_start_count == 0)
                     compiletime_fail("Format-String Checker internal error: Expected location information");
 
-                const auto specifier_start_index = result.last_format_specifier_start[--result.total_used_last_format_specifier_start_count];
+                auto const specifier_start_index = result.last_format_specifier_start[--result.total_used_last_format_specifier_start_count];
 
                 if (result.total_used_argument_count >= result.used_arguments.size())
                     compiletime_fail("Format-String Checker internal error: Too many format arguments in format string");
@@ -146,7 +146,7 @@ namespace AK::Format::Detail {
 template<typename... Args>
 struct CheckedFormatString {
     template<size_t N>
-    consteval CheckedFormatString(const char (&fmt)[N])
+    consteval CheckedFormatString(char const (&fmt)[N])
         : m_string { fmt }
     {
 #ifdef ENABLE_COMPILETIME_FORMAT_CHECK
@@ -165,7 +165,7 @@ struct CheckedFormatString {
 private:
 #ifdef ENABLE_COMPILETIME_FORMAT_CHECK
     template<size_t N, size_t param_count>
-    consteval static bool check_format_parameter_consistency(const char (&fmt)[N])
+    consteval static bool check_format_parameter_consistency(char const (&fmt)[N])
     {
         auto check = count_fmt_params<N>(fmt);
         if (check.unclosed_braces != 0)

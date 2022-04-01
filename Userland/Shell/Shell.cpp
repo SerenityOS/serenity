@@ -155,7 +155,7 @@ String Shell::expand_tilde(StringView expression)
         path.append(expression[i]);
 
     if (login_name.is_empty()) {
-        const char* home = getenv("HOME");
+        char const* home = getenv("HOME");
         if (!home) {
             auto passwd = getpwuid(getuid());
             VERIFY(passwd && passwd->pw_dir);
@@ -385,7 +385,7 @@ RefPtr<AST::Value> Shell::get_argument(size_t index) const
     return nullptr;
 }
 
-String Shell::local_variable_or(StringView name, const String& replacement) const
+String Shell::local_variable_or(StringView name, String const& replacement) const
 {
     auto value = lookup_local_variable(name);
     if (value) {
@@ -396,7 +396,7 @@ String Shell::local_variable_or(StringView name, const String& replacement) cons
     return replacement;
 }
 
-void Shell::set_local_variable(const String& name, RefPtr<AST::Value> value, bool only_in_current_frame)
+void Shell::set_local_variable(String const& name, RefPtr<AST::Value> value, bool only_in_current_frame)
 {
     if (!only_in_current_frame) {
         if (auto* frame = find_frame_containing_local_variable(name)) {
@@ -700,7 +700,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
         return nullptr;
     }
 
-    Vector<const char*> argv;
+    Vector<char const*> argv;
     Vector<String> copy_argv = command.argv;
     argv.ensure_capacity(command.argv.size() + 1);
 
@@ -842,7 +842,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     return *job;
 }
 
-void Shell::execute_process(Vector<const char*>&& argv)
+void Shell::execute_process(Vector<char const*>&& argv)
 {
 #ifdef __serenity__
     for (auto& promise : m_active_promises) {
@@ -1008,7 +1008,7 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
     return spawned_jobs;
 }
 
-bool Shell::run_file(const String& filename, bool explicitly_invoked)
+bool Shell::run_file(String const& filename, bool explicitly_invoked)
 {
     TemporaryChange script_change { current_script, filename };
     TemporaryChange interactive_change { m_is_interactive, false };
@@ -1062,7 +1062,7 @@ void Shell::block_on_pipeline(RefPtr<AST::Pipeline> pipeline)
 
 void Shell::block_on_job(RefPtr<Job> job)
 {
-    TemporaryChange<const Job*> current_job { m_current_job, job.ptr() };
+    TemporaryChange<Job const*> current_job { m_current_job, job.ptr() };
 
     if (!job)
         return;
@@ -1310,7 +1310,7 @@ String Shell::find_in_path(StringView program_name)
     String path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
-        for (const auto& directory : directories) {
+        for (auto const& directory : directories) {
             Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
             while (programs.has_next()) {
                 auto program = programs.next_path();
@@ -1335,7 +1335,7 @@ void Shell::cache_path()
         cached_path.clear_with_capacity();
 
     // Add shell builtins to the cache.
-    for (const auto& builtin_name : builtin_names)
+    for (auto const& builtin_name : builtin_names)
         cached_path.append(escape_token(builtin_name));
 
     // Add functions to the cache.
@@ -1347,7 +1347,7 @@ void Shell::cache_path()
     }
 
     // Add aliases to the cache.
-    for (const auto& alias : m_aliases) {
+    for (auto const& alias : m_aliases) {
         auto name = escape_token(alias.key);
         if (cached_path.contains_slow(name))
             continue;
@@ -1357,7 +1357,7 @@ void Shell::cache_path()
     String path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
-        for (const auto& directory : directories) {
+        for (auto const& directory : directories) {
             Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
             while (programs.has_next()) {
                 auto program = programs.next_path();
@@ -1374,7 +1374,7 @@ void Shell::cache_path()
     quick_sort(cached_path);
 }
 
-void Shell::add_entry_to_cache(const String& entry)
+void Shell::add_entry_to_cache(String const& entry)
 {
     size_t index = 0;
     auto match = binary_search(cached_path.span(), entry, &index);
@@ -2223,7 +2223,7 @@ u64 Shell::find_last_job_id() const
     return job_id;
 }
 
-const Job* Shell::find_job(u64 id, bool is_pid)
+Job const* Shell::find_job(u64 id, bool is_pid)
 {
     for (auto& entry : jobs) {
         if (is_pid) {
@@ -2237,7 +2237,7 @@ const Job* Shell::find_job(u64 id, bool is_pid)
     return nullptr;
 }
 
-void Shell::kill_job(const Job* job, int sig)
+void Shell::kill_job(Job const* job, int sig)
 {
     if (!job)
         return;
@@ -2441,7 +2441,7 @@ void FileDescriptionCollector::add(int fd)
     m_fds.append(fd);
 }
 
-SavedFileDescriptors::SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiring>& intended_rewirings)
+SavedFileDescriptors::SavedFileDescriptors(NonnullRefPtrVector<AST::Rewiring> const& intended_rewirings)
 {
     for (auto& rewiring : intended_rewirings) {
         int new_fd = dup(rewiring.new_fd);

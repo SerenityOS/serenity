@@ -46,7 +46,7 @@
 namespace UserspaceEmulator {
 
 template<typename T>
-ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* message)
+ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, char const* message)
 {
     if (value_with_shadow.is_uninitialized()) [[unlikely]] {
         reportln("\033[31;1mWarning! Use of uninitialized value: {}\033[0m\n", message);
@@ -54,7 +54,7 @@ ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* messag
     }
 }
 
-ALWAYS_INLINE void SoftCPU::warn_if_flags_tainted(const char* message) const
+ALWAYS_INLINE void SoftCPU::warn_if_flags_tainted(char const* message) const
 {
     if (m_flags_tainted) [[unlikely]] {
         reportln("\n=={}==  \033[31;1mConditional depends on uninitialized data\033[0m ({})\n", getpid(), message);
@@ -208,7 +208,7 @@ void SoftCPU::push_string(StringView string)
     m_emulator.mmu().write8({ 0x23, esp().value() + string.length() }, shadow_wrap_as_initialized((u8)'\0'));
 }
 
-void SoftCPU::push_buffer(const u8* data, size_t size)
+void SoftCPU::push_buffer(u8 const* data, size_t size)
 {
     set_esp({ esp().value() - size, esp().shadow() });
     warn_if_uninitialized(esp(), "push_buffer");

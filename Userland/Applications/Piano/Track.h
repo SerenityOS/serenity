@@ -26,11 +26,11 @@ class Track {
     AK_MAKE_NONMOVABLE(Track);
 
 public:
-    explicit Track(const u32& time);
+    explicit Track(u32 const& time);
     ~Track() = default;
 
-    const Vector<Audio::Sample>& recorded_sample() const { return m_recorded_sample; }
-    const SinglyLinkedList<RollNote>& roll_notes(int note) const { return m_roll_notes[note]; }
+    Vector<Audio::Sample> const& recorded_sample() const { return m_recorded_sample; }
+    SinglyLinkedList<RollNote> const& roll_notes(int note) const { return m_roll_notes[note]; }
     int volume() const { return m_volume; }
     NonnullRefPtr<LibDSP::Synthesizers::Classic> synth() { return m_synth; }
     NonnullRefPtr<LibDSP::Effects::Delay> delay() { return m_delay; }
@@ -51,7 +51,7 @@ private:
 
     int m_volume;
 
-    const u32& m_time;
+    u32 const& m_time;
 
     NonnullRefPtr<LibDSP::Transport> m_temporary_transport;
     NonnullRefPtr<LibDSP::Effects::Delay> m_delay;

@@ -15,7 +15,7 @@ NonnullRefPtr<ImageResource> ImageResource::convert_from_resource(Resource& reso
     return adopt_ref(*new ImageResource(resource));
 }
 
-ImageResource::ImageResource(const LoadRequest& request)
+ImageResource::ImageResource(LoadRequest const& request)
     : Resource(Type::Image, request)
 {
 }
@@ -63,7 +63,7 @@ void ImageResource::decode_if_needed() const
     m_has_attempted_decode = true;
 }
 
-const Gfx::Bitmap* ImageResource::bitmap(size_t frame_index) const
+Gfx::Bitmap const* ImageResource::bitmap(size_t frame_index) const
 {
     decode_if_needed();
     if (frame_index >= m_decoded_frames.size())

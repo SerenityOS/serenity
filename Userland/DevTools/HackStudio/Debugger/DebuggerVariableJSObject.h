@@ -20,9 +20,9 @@ class DebuggerVariableJSObject final : public JS::Object {
     using Base = JS::Object;
 
 public:
-    static DebuggerVariableJSObject* create(DebuggerGlobalJSObject&, const Debug::DebugInfo::VariableInfo& variable_info);
+    static DebuggerVariableJSObject* create(DebuggerGlobalJSObject&, Debug::DebugInfo::VariableInfo const& variable_info);
 
-    DebuggerVariableJSObject(const Debug::DebugInfo::VariableInfo& variable_info, JS::Object& prototype);
+    DebuggerVariableJSObject(Debug::DebugInfo::VariableInfo const& variable_info, JS::Object& prototype);
     virtual ~DebuggerVariableJSObject() override = default;
 
     virtual StringView class_name() const override { return m_variable_info.type_name; }
@@ -32,7 +32,7 @@ public:
 private:
     DebuggerGlobalJSObject& debugger_object() const;
 
-    const Debug::DebugInfo::VariableInfo& m_variable_info;
+    Debug::DebugInfo::VariableInfo const& m_variable_info;
 };
 
 }

@@ -18,8 +18,8 @@ namespace Kernel {
 
 class TCPSocket final : public IPv4Socket {
 public:
-    static void for_each(Function<void(const TCPSocket&)>);
-    static ErrorOr<void> try_for_each(Function<ErrorOr<void>(const TCPSocket&)>);
+    static void for_each(Function<void(TCPSocket const&)>);
+    static ErrorOr<void> try_for_each(Function<ErrorOr<void>(TCPSocket const&)>);
     static ErrorOr<NonnullRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~TCPSocket() override;
 
@@ -140,13 +140,13 @@ public:
     u32 duplicate_acks() const { return m_duplicate_acks; }
 
     ErrorOr<void> send_ack(bool allow_duplicate = false);
-    ErrorOr<void> send_tcp_packet(u16 flags, const UserOrKernelBuffer* = nullptr, size_t = 0, RoutingDecision* = nullptr);
-    void receive_tcp_packet(const TCPPacket&, u16 size);
+    ErrorOr<void> send_tcp_packet(u16 flags, UserOrKernelBuffer const* = nullptr, size_t = 0, RoutingDecision* = nullptr);
+    void receive_tcp_packet(TCPPacket const&, u16 size);
 
     bool should_delay_next_ack() const;
 
     static MutexProtected<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
-    static RefPtr<TCPSocket> from_tuple(const IPv4SocketTuple& tuple);
+    static RefPtr<TCPSocket> from_tuple(IPv4SocketTuple const& tuple);
 
     static MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
 
@@ -160,7 +160,7 @@ public:
 
     virtual ErrorOr<void> close() override;
 
-    virtual bool can_write(const OpenFileDescription&, u64) const override;
+    virtual bool can_write(OpenFileDescription const&, u64) const override;
 
     static NetworkOrdered<u16> compute_tcp_checksum(IPv4Address const& source, IPv4Address const& destination, TCPPacket const&, u16 payload_size);
 
@@ -174,7 +174,7 @@ private:
     virtual void shut_down_for_writing() override;
 
     virtual ErrorOr<size_t> protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, int flags) override;
-    virtual ErrorOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> protocol_send(UserOrKernelBuffer const&, size_t) override;
     virtual ErrorOr<void> protocol_connect(OpenFileDescription&, ShouldBlock) override;
     virtual ErrorOr<u16> protocol_allocate_local_port() override;
     virtual ErrorOr<size_t> protocol_size(ReadonlyBytes raw_ipv4_packet) override;

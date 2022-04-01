@@ -12,14 +12,14 @@
 namespace Crypto {
 namespace NumberTheory {
 
-UnsignedBigInteger ModularInverse(const UnsignedBigInteger& a_, const UnsignedBigInteger& b);
-UnsignedBigInteger ModularPower(const UnsignedBigInteger& b, const UnsignedBigInteger& e, const UnsignedBigInteger& m);
+UnsignedBigInteger ModularInverse(UnsignedBigInteger const& a_, UnsignedBigInteger const& b);
+UnsignedBigInteger ModularPower(UnsignedBigInteger const& b, UnsignedBigInteger const& e, UnsignedBigInteger const& m);
 
 // Note: This function _will_ generate extremely huge numbers, and in doing so,
 //       it will allocate and free a lot of memory!
 //       Please use |ModularPower| if your use-case is modexp.
 template<typename IntegerType>
-static IntegerType Power(const IntegerType& b, const IntegerType& e)
+static IntegerType Power(IntegerType const& b, IntegerType const& e)
 {
     IntegerType ep { e };
     IntegerType base { b };
@@ -39,11 +39,11 @@ static IntegerType Power(const IntegerType& b, const IntegerType& e)
     return exp;
 }
 
-UnsignedBigInteger GCD(const UnsignedBigInteger& a, const UnsignedBigInteger& b);
-UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b);
+UnsignedBigInteger GCD(UnsignedBigInteger const& a, UnsignedBigInteger const& b);
+UnsignedBigInteger LCM(UnsignedBigInteger const& a, UnsignedBigInteger const& b);
 
-UnsignedBigInteger random_number(const UnsignedBigInteger& min, const UnsignedBigInteger& max_excluded);
-bool is_probably_prime(const UnsignedBigInteger& p);
+UnsignedBigInteger random_number(UnsignedBigInteger const& min, UnsignedBigInteger const& max_excluded);
+bool is_probably_prime(UnsignedBigInteger const& p);
 UnsignedBigInteger random_big_prime(size_t bits);
 
 }

@@ -20,34 +20,34 @@ namespace AK {
 class StringView {
 public:
     ALWAYS_INLINE constexpr StringView() = default;
-    ALWAYS_INLINE constexpr StringView(const char* characters, size_t length)
+    ALWAYS_INLINE constexpr StringView(char const* characters, size_t length)
         : m_characters(characters)
         , m_length(length)
     {
         if (!is_constant_evaluated())
             VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
-    ALWAYS_INLINE StringView(const unsigned char* characters, size_t length)
-        : m_characters((const char*)characters)
+    ALWAYS_INLINE StringView(unsigned char const* characters, size_t length)
+        : m_characters((char const*)characters)
         , m_length(length)
     {
         VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
-    ALWAYS_INLINE constexpr StringView(const char* cstring)
+    ALWAYS_INLINE constexpr StringView(char const* cstring)
         : m_characters(cstring)
         , m_length(cstring ? __builtin_strlen(cstring) : 0)
     {
     }
     ALWAYS_INLINE StringView(ReadonlyBytes bytes)
-        : m_characters(reinterpret_cast<const char*>(bytes.data()))
+        : m_characters(reinterpret_cast<char const*>(bytes.data()))
         , m_length(bytes.size())
     {
     }
 
-    StringView(const ByteBuffer&);
+    StringView(ByteBuffer const&);
 #ifndef KERNEL
-    StringView(const String&);
-    StringView(const FlyString&);
+    StringView(String const&);
+    StringView(FlyString const&);
 #endif
 
     explicit StringView(ByteBuffer&&) = delete;
@@ -67,9 +67,9 @@ public:
 
     [[nodiscard]] ReadonlyBytes bytes() const { return { m_characters, m_length }; }
 
-    constexpr const char& operator[](size_t index) const { return m_characters[index]; }
+    constexpr char const& operator[](size_t index) const { return m_characters[index]; }
 
-    using ConstIterator = SimpleIterator<const StringView, const char>;
+    using ConstIterator = SimpleIterator<const StringView, char const>;
 
     [[nodiscard]] constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
     [[nodiscard]] constexpr ConstIterator end() const { return ConstIterator::end(*this); }
@@ -192,14 +192,14 @@ public:
     [[nodiscard]] StringView substring_view_starting_from_substring(StringView substring) const;
     [[nodiscard]] StringView substring_view_starting_after_substring(StringView substring) const;
 
-    constexpr bool operator==(const char* cstring) const
+    constexpr bool operator==(char const* cstring) const
     {
         if (is_null())
             return cstring == nullptr;
         if (!cstring)
             return false;
         // NOTE: `m_characters` is not guaranteed to be null-terminated, but `cstring` is.
-        const char* cp = cstring;
+        char const* cp = cstring;
         for (size_t i = 0; i < m_length; ++i) {
             if (*cp == '\0')
                 return false;
@@ -209,13 +209,13 @@ public:
         return *cp == '\0';
     }
 
-    constexpr bool operator!=(const char* cstring) const
+    constexpr bool operator!=(char const* cstring) const
     {
         return !(*this == cstring);
     }
 
 #ifndef KERNEL
-    bool operator==(const String&) const;
+    bool operator==(String const&) const;
 #endif
 
     [[nodiscard]] constexpr int compare(StringView other) const
@@ -293,7 +293,7 @@ public:
 
 private:
     friend class String;
-    const char* m_characters { nullptr };
+    char const* m_characters { nullptr };
     size_t m_length { 0 };
 };
 
@@ -321,7 +321,7 @@ struct CaseInsensitiveStringViewTraits : public Traits<StringView> {
 #    define AK_STRING_VIEW_LITERAL_CONSTEVAL consteval
 #endif
 
-[[nodiscard]] ALWAYS_INLINE AK_STRING_VIEW_LITERAL_CONSTEVAL AK::StringView operator"" sv(const char* cstring, size_t length)
+[[nodiscard]] ALWAYS_INLINE AK_STRING_VIEW_LITERAL_CONSTEVAL AK::StringView operator"" sv(char const* cstring, size_t length)
 {
     return AK::StringView(cstring, length);
 }

@@ -58,16 +58,16 @@ struct Cell : public Weakable<Cell> {
         return m_thrown_value;
     }
 
-    const String& data() const { return m_data; }
+    String const& data() const { return m_data; }
     const JS::Value& evaluated_data() const { return m_evaluated_data; }
     Kind kind() const { return m_kind; }
-    const Vector<WeakPtr<Cell>>& referencing_cells() const { return m_referencing_cells; }
+    Vector<WeakPtr<Cell>> const& referencing_cells() const { return m_referencing_cells; }
 
     void set_type(StringView name);
-    void set_type(const CellType*);
+    void set_type(CellType const*);
     void set_type_metadata(CellTypeMetadata&&);
 
-    const Position& position() const { return m_position; }
+    Position const& position() const { return m_position; }
     void set_position(Position position, Badge<Sheet>)
     {
         if (position != m_position) {
@@ -76,9 +76,9 @@ struct Cell : public Weakable<Cell> {
         }
     }
 
-    const Format& evaluated_formats() const { return m_evaluated_formats; }
+    Format const& evaluated_formats() const { return m_evaluated_formats; }
     Format& evaluated_formats() { return m_evaluated_formats; }
-    const Vector<ConditionalFormat>& conditional_formats() const { return m_conditional_formats; }
+    Vector<ConditionalFormat> const& conditional_formats() const { return m_conditional_formats; }
     void set_conditional_formats(Vector<ConditionalFormat>&& fmts)
     {
         m_dirty = true;
@@ -88,8 +88,8 @@ struct Cell : public Weakable<Cell> {
     JS::ThrowCompletionOr<String> typed_display() const;
     JS::ThrowCompletionOr<JS::Value> typed_js_data() const;
 
-    const CellType& type() const;
-    const CellTypeMetadata& type_metadata() const { return m_type_metadata; }
+    CellType const& type() const;
+    CellTypeMetadata const& type_metadata() const { return m_type_metadata; }
     CellTypeMetadata& type_metadata() { return m_type_metadata; }
 
     String source() const;
@@ -99,10 +99,10 @@ struct Cell : public Weakable<Cell> {
     void update();
     void update_data(Badge<Sheet>);
 
-    const Sheet& sheet() const { return *m_sheet; }
+    Sheet const& sheet() const { return *m_sheet; }
     Sheet& sheet() { return *m_sheet; }
 
-    void copy_from(const Cell&);
+    void copy_from(Cell const&);
 
 private:
     bool m_dirty { false };
@@ -113,7 +113,7 @@ private:
     Kind m_kind { LiteralString };
     WeakPtr<Sheet> m_sheet;
     Vector<WeakPtr<Cell>> m_referencing_cells;
-    const CellType* m_type { nullptr };
+    CellType const* m_type { nullptr };
     CellTypeMetadata m_type_metadata;
     Position m_position;
 

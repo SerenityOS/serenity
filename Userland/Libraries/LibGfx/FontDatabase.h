@@ -47,16 +47,16 @@ public:
     RefPtr<Gfx::Font> get(FlyString const& family, float point_size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
     RefPtr<Gfx::Font> get(FlyString const& family, FlyString const& variant, float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
     RefPtr<Gfx::Font> get_by_name(StringView);
-    void for_each_font(Function<void(const Gfx::Font&)>);
-    void for_each_fixed_width_font(Function<void(const Gfx::Font&)>);
+    void for_each_font(Function<void(Gfx::Font const&)>);
+    void for_each_fixed_width_font(Function<void(Gfx::Font const&)>);
 
-    void for_each_typeface(Function<void(const Typeface&)>);
+    void for_each_typeface(Function<void(Typeface const&)>);
 
 private:
     FontDatabase();
     ~FontDatabase() = default;
 
-    RefPtr<Typeface> get_or_create_typeface(const String& family, const String& variant);
+    RefPtr<Typeface> get_or_create_typeface(String const& family, String const& variant);
 
     struct Private;
     OwnPtr<Private> m_private;

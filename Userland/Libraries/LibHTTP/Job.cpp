@@ -17,7 +17,7 @@
 
 namespace HTTP {
 
-static Optional<ByteBuffer> handle_content_encoding(const ByteBuffer& buf, const String& content_encoding)
+static Optional<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, String const& content_encoding)
 {
     dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf has content_encoding={}", content_encoding);
 

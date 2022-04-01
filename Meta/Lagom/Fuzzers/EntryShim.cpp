@@ -12,9 +12,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size);
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size);
 
-int fuzz_from_file(const char* filename)
+int fuzz_from_file(char const* filename)
 {
     struct stat file_stats;
 

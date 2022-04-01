@@ -16,12 +16,12 @@
 
 namespace AK {
 
-bool String::operator==(const FlyString& fly_string) const
+bool String::operator==(FlyString const& fly_string) const
 {
     return m_impl == fly_string.impl() || view() == fly_string.view();
 }
 
-bool String::operator==(const String& other) const
+bool String::operator==(String const& other) const
 {
     return m_impl == other.impl() || view() == other.view();
 }
@@ -31,12 +31,12 @@ bool String::operator==(StringView other) const
     return view() == other;
 }
 
-bool String::operator<(const String& other) const
+bool String::operator<(String const& other) const
 {
     return view() < other.view();
 }
 
-bool String::operator>(const String& other) const
+bool String::operator>(String const& other) const
 {
     return view() > other.view();
 }
@@ -146,7 +146,7 @@ Vector<StringView> String::split_view(Function<bool(char)> separator, bool keep_
     return v;
 }
 
-Vector<StringView> String::split_view(const char separator, bool keep_empty) const
+Vector<StringView> String::split_view(char const separator, bool keep_empty) const
 {
     return split_view([separator](char ch) { return ch == separator; }, keep_empty);
 }
@@ -358,7 +358,7 @@ String escape_html_entities(StringView html)
     return builder.to_string();
 }
 
-String::String(const FlyString& string)
+String::String(FlyString const& string)
     : m_impl(string.impl())
 {
 }
@@ -387,27 +387,27 @@ String String::to_titlecase() const
     return StringUtils::to_titlecase(*this);
 }
 
-bool operator<(const char* characters, const String& string)
+bool operator<(char const* characters, String const& string)
 {
     return string.view() > characters;
 }
 
-bool operator>=(const char* characters, const String& string)
+bool operator>=(char const* characters, String const& string)
 {
     return string.view() <= characters;
 }
 
-bool operator>(const char* characters, const String& string)
+bool operator>(char const* characters, String const& string)
 {
     return string.view() < characters;
 }
 
-bool operator<=(const char* characters, const String& string)
+bool operator<=(char const* characters, String const& string)
 {
     return string.view() >= characters;
 }
 
-bool String::operator==(const char* cstring) const
+bool String::operator==(char const* cstring) const
 {
     return view() == cstring;
 }

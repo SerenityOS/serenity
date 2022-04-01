@@ -10,7 +10,7 @@
 
 namespace HackStudio {
 
-NonnullRefPtr<BacktraceModel> BacktraceModel::create(Debug::ProcessInspector const& inspector, const PtraceRegisters& regs)
+NonnullRefPtr<BacktraceModel> BacktraceModel::create(Debug::ProcessInspector const& inspector, PtraceRegisters const& regs)
 {
     return adopt_ref(*new BacktraceModel(create_backtrace(inspector, regs)));
 }

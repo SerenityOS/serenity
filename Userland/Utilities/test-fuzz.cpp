@@ -32,7 +32,7 @@
     T(URL)
 
 #undef __ENUMERATE_TARGET
-#define __ENUMERATE_TARGET(x) extern "C" int Test##x(const uint8_t*, size_t);
+#define __ENUMERATE_TARGET(x) extern "C" int Test##x(uint8_t const*, size_t);
 ENUMERATE_TARGETS(__ENUMERATE_TARGET)
 #undef __ENUMERATE_TARGET
 

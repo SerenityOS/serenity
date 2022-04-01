@@ -25,7 +25,7 @@ HashMap<String, FunctionWithLength> s_exposed_global_functions;
 Function<void()> g_main_hook;
 Function<NonnullOwnPtr<JS::Interpreter>()> g_create_interpreter_hook;
 HashMap<bool*, Tuple<String, String, char>> g_extra_args;
-IntermediateRunFileResult (*g_run_file)(const String&, JS::Interpreter&, JS::ExecutionContext&) = nullptr;
+IntermediateRunFileResult (*g_run_file)(String const&, JS::Interpreter&, JS::ExecutionContext&) = nullptr;
 String g_test_root;
 int g_test_argc;
 char** g_test_argv;
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 #endif
     bool print_json = false;
     bool per_file = false;
-    const char* specified_test_root = nullptr;
+    char const* specified_test_root = nullptr;
     String common_path;
     String test_glob;
 

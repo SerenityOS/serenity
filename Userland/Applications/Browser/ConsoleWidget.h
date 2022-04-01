@@ -26,7 +26,7 @@ public:
     void print_html(StringView);
     void reset();
 
-    Function<void(const String&)> on_js_input;
+    Function<void(String const&)> on_js_input;
     Function<void(i32)> on_request_messages;
 
 private:

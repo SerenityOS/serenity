@@ -26,7 +26,7 @@ public:
 
     virtual bool is_editable() const final;
     String content_editable() const;
-    DOM::ExceptionOr<void> set_content_editable(const String&);
+    DOM::ExceptionOr<void> set_content_editable(String const&);
 
     String inner_text();
     void set_inner_text(StringView);
@@ -50,7 +50,7 @@ public:
     virtual bool is_labelable() const { return false; }
 
 protected:
-    virtual void parse_attribute(const FlyString& name, const String& value) override;
+    virtual void parse_attribute(FlyString const& name, String const& value) override;
 
 private:
     // ^HTML::GlobalEventHandlers

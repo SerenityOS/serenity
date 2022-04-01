@@ -90,8 +90,8 @@ UNMAP_AFTER_INIT void initialize()
     register_user_callable_interrupt_handler(syscall_vector, syscall_asm_entry);
 }
 
-using Handler = auto (Process::*)(FlatPtr, FlatPtr, FlatPtr, FlatPtr) -> ErrorOr<FlatPtr>;
-using HandlerWithRegisterState = auto (Process::*)(RegisterState&) -> ErrorOr<FlatPtr>;
+using Handler = auto(Process::*)(FlatPtr, FlatPtr, FlatPtr, FlatPtr) -> ErrorOr<FlatPtr>;
+using HandlerWithRegisterState = auto(Process::*)(RegisterState&) -> ErrorOr<FlatPtr>;
 
 struct HandlerMetadata {
     Handler handler;
@@ -118,14 +118,14 @@ ErrorOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, Fla
         return ENOSYS;
     }
 
-    const auto syscall_metadata = s_syscall_table[function];
+    auto const syscall_metadata = s_syscall_table[function];
     if (syscall_metadata.handler == nullptr) {
         dbgln("Null syscall {} requested, you probably need to rebuild this program!", function);
         return ENOSYS;
     }
 
     MutexLocker mutex_locker;
-    const auto needs_big_lock = syscall_metadata.needs_lock == NeedsBigProcessLock::Yes;
+    auto const needs_big_lock = syscall_metadata.needs_lock == NeedsBigProcessLock::Yes;
     if (needs_big_lock) {
         mutex_locker.attach_and_lock(process.big_lock());
     };

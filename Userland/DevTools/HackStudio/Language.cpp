@@ -9,7 +9,7 @@
 
 namespace HackStudio {
 
-Language language_from_file(const LexicalPath& file)
+Language language_from_file(LexicalPath const& file)
 {
     if (file.title() == "COMMIT_EDITMSG")
         return Language::GitCommit;
@@ -37,7 +37,7 @@ Language language_from_file(const LexicalPath& file)
     return Language::Unknown;
 }
 
-Language language_from_name(const String& name)
+Language language_from_name(String const& name)
 {
     if (name == "Cpp")
         return Language::Cpp;
@@ -51,7 +51,7 @@ Language language_from_name(const String& name)
     return Language::Unknown;
 }
 
-String language_name_from_file(const LexicalPath& file)
+String language_name_from_file(LexicalPath const& file)
 {
     if (file.title() == "COMMIT_EDITMSG")
         return "GitCommit";

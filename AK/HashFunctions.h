@@ -21,7 +21,7 @@ constexpr unsigned int_hash(u32 key)
 
 constexpr unsigned double_hash(u32 key)
 {
-    const unsigned magic = 0xBA5EDB01;
+    unsigned const magic = 0xBA5EDB01;
     if (key == magic)
         return 0u;
     if (key == 0u)
@@ -53,7 +53,7 @@ constexpr unsigned ptr_hash(FlatPtr ptr)
         return int_hash(ptr);
 }
 
-inline unsigned ptr_hash(const void* ptr)
+inline unsigned ptr_hash(void const* ptr)
 {
     return ptr_hash(FlatPtr(ptr));
 }

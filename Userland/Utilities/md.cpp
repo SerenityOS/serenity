@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty"));
 
-    const char* filename = nullptr;
+    char const* filename = nullptr;
     bool html = false;
     int view_width = 0;
 

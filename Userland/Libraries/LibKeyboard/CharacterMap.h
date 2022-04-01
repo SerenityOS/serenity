@@ -15,14 +15,14 @@ namespace Keyboard {
 class CharacterMap {
 
 public:
-    CharacterMap(const String& map_name, const CharacterMapData& map_data);
-    static ErrorOr<CharacterMap> load_from_file(const String& filename);
+    CharacterMap(String const& map_name, CharacterMapData const& map_data);
+    static ErrorOr<CharacterMap> load_from_file(String const& filename);
 
     int set_system_map();
     static ErrorOr<CharacterMap> fetch_system_map();
 
-    const CharacterMapData& character_map_data() const { return m_character_map_data; };
-    const String& character_map_name() const;
+    CharacterMapData const& character_map_data() const { return m_character_map_data; };
+    String const& character_map_name() const;
 
 private:
     CharacterMapData m_character_map_data;

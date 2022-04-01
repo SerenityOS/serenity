@@ -29,7 +29,7 @@ struct [[gnu::packed]] InodeWatcherEvent {
     Type type { Type::Invalid };
     size_t name_length { 0 };
     // This is a VLA which is written during the read() from the descriptor.
-    const char name[];
+    char const name[];
 };
 
 AK_ENUM_BITWISE_OPERATORS(InodeWatcherEvent::Type);

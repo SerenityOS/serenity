@@ -55,7 +55,7 @@ public:
     // the compiler will inline this anyway and therefore not generate any duplicate code.
 
     template<size_t N>
-    static ErrorOr<FixedArray<T>> try_create(T(&&array)[N])
+    static ErrorOr<FixedArray<T>> try_create(T (&&array)[N])
     {
         if (N == 0)
             return FixedArray<T>();

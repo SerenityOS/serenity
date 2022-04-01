@@ -46,7 +46,7 @@ public:
     void clear_err() { m_error = 0; }
 
     size_t read(u8*, size_t);
-    size_t write(const u8*, size_t);
+    size_t write(u8 const*, size_t);
 
     template<typename CharType>
     bool gets(CharType*, size_t);
@@ -84,7 +84,7 @@ private:
         bool is_not_empty() const { return m_ungotten || !m_empty; }
         size_t buffered_size() const;
 
-        const u8* begin_dequeue(size_t& available_size) const;
+        u8 const* begin_dequeue(size_t& available_size) const;
         void did_dequeue(size_t actual_size);
 
         u8* begin_enqueue(size_t& available_size) const;
@@ -114,7 +114,7 @@ private:
 
     // Read or write using the underlying fd, bypassing the buffer.
     ssize_t do_read(u8*, size_t);
-    ssize_t do_write(const u8*, size_t);
+    ssize_t do_write(u8 const*, size_t);
 
     // Read some data into the buffer.
     bool read_into_buffer();

@@ -19,7 +19,7 @@ public:
     WeakPtr() = default;
 
     template<typename U>
-    WeakPtr(const WeakPtr<U>& other) requires(IsBaseOf<T, U>)
+    WeakPtr(WeakPtr<U> const& other) requires(IsBaseOf<T, U>)
         : m_link(other.m_link)
     {
     }
@@ -38,9 +38,9 @@ public:
     }
 
     template<typename U>
-    WeakPtr& operator=(const WeakPtr<U>& other) requires(IsBaseOf<T, U>)
+    WeakPtr& operator=(WeakPtr<U> const& other) requires(IsBaseOf<T, U>)
     {
-        if ((const void*)this != (const void*)&other)
+        if ((void const*)this != (void const*)&other)
             m_link = other.m_link;
         return *this;
     }
@@ -65,7 +65,7 @@ public:
     }
 
     template<typename U>
-    WeakPtr(const RefPtr<U>& object) requires(IsBaseOf<T, U>)
+    WeakPtr(RefPtr<U> const& object) requires(IsBaseOf<T, U>)
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
@@ -74,7 +74,7 @@ public:
     }
 
     template<typename U>
-    WeakPtr(const NonnullRefPtr<U>& object) requires(IsBaseOf<T, U>)
+    WeakPtr(NonnullRefPtr<U> const& object) requires(IsBaseOf<T, U>)
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
@@ -100,7 +100,7 @@ public:
     }
 
     template<typename U>
-    WeakPtr& operator=(const RefPtr<U>& object) requires(IsBaseOf<T, U>)
+    WeakPtr& operator=(RefPtr<U> const& object) requires(IsBaseOf<T, U>)
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
@@ -112,7 +112,7 @@ public:
     }
 
     template<typename U>
-    WeakPtr& operator=(const NonnullRefPtr<U>& object) requires(IsBaseOf<T, U>)
+    WeakPtr& operator=(NonnullRefPtr<U> const& object) requires(IsBaseOf<T, U>)
     {
         object.do_while_locked([&](U* obj) {
             if (obj)
@@ -156,7 +156,7 @@ public:
     [[nodiscard]] RefPtr<WeakLink> take_link() { return move(m_link); }
 
 private:
-    WeakPtr(const RefPtr<WeakLink>& link)
+    WeakPtr(RefPtr<WeakLink> const& link)
         : m_link(link)
     {
     }

@@ -12,9 +12,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    auto js = StringView(static_cast<const unsigned char*>(data), size);
+    auto js = StringView(static_cast<unsigned char const*>(data), size);
     auto vm = JS::VM::create();
     auto interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
     auto parse_result = JS::Script::parse(js, interpreter->realm());

@@ -27,7 +27,7 @@ String Ratio::to_string() const
     return String::formatted("{} / {}", m_first_value, m_second_value);
 }
 
-auto Ratio::operator<=>(const Ratio& other) const
+auto Ratio::operator<=>(Ratio const& other) const
 {
     return value() - other.value();
 }

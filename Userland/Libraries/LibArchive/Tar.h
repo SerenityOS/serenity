@@ -38,7 +38,7 @@ constexpr StringView posix1_tar_magic = "";   // POSIX.1-1988 format magic
 constexpr StringView posix1_tar_version = ""; // POSIX.1-1988 format version
 
 template<size_t N>
-static size_t get_field_as_integral(const char (&field)[N])
+static size_t get_field_as_integral(char const (&field)[N])
 {
     size_t value = 0;
     for (size_t i = 0; i < N; ++i) {
@@ -53,7 +53,7 @@ static size_t get_field_as_integral(const char (&field)[N])
 }
 
 template<size_t N>
-static StringView get_field_as_string_view(const char (&field)[N])
+static StringView get_field_as_string_view(char const (&field)[N])
 {
     return { field, min(__builtin_strlen(field), N) };
 }
@@ -95,23 +95,23 @@ public:
     // FIXME: support ustar filename prefix
     StringView prefix() const { return get_field_as_string_view(m_prefix); }
 
-    void set_filename(const String& filename) { set_field(m_filename, filename); }
+    void set_filename(String const& filename) { set_field(m_filename, filename); }
     void set_mode(mode_t mode) { set_octal_field(m_mode, mode); }
     void set_uid(uid_t uid) { set_octal_field(m_uid, uid); }
     void set_gid(gid_t gid) { set_octal_field(m_gid, gid); }
     void set_size(size_t size) { set_octal_field(m_size, size); }
     void set_timestamp(time_t timestamp) { set_octal_field(m_timestamp, timestamp); }
     void set_type_flag(TarFileType type) { m_type_flag = to_underlying(type); }
-    void set_link_name(const String& link_name) { set_field(m_link_name, link_name); }
+    void set_link_name(String const& link_name) { set_field(m_link_name, link_name); }
     // magic doesn't necessarily include a null byte
     void set_magic(StringView magic) { set_field(m_magic, magic); }
     // version doesn't necessarily include a null byte
     void set_version(StringView version) { set_field(m_version, version); }
-    void set_owner_name(const String& owner_name) { set_field(m_owner_name, owner_name); }
-    void set_group_name(const String& group_name) { set_field(m_group_name, group_name); }
+    void set_owner_name(String const& owner_name) { set_field(m_owner_name, owner_name); }
+    void set_group_name(String const& group_name) { set_field(m_group_name, group_name); }
     void set_major(int major) { set_octal_field(m_major, major); }
     void set_minor(int minor) { set_octal_field(m_minor, minor); }
-    void set_prefix(const String& prefix) { set_field(m_prefix, prefix); }
+    void set_prefix(String const& prefix) { set_field(m_prefix, prefix); }
 
     unsigned expected_checksum() const;
     void calculate_checksum();

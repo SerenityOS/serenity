@@ -24,7 +24,7 @@ class Application::TooltipWindow final : public Window {
     C_OBJECT(TooltipWindow);
 
 public:
-    void set_tooltip(const String& tooltip)
+    void set_tooltip(String const& tooltip)
     {
         m_label->set_text(Gfx::parse_ampersand_string(tooltip));
         int tooltip_width = m_label->min_width() + 10;
@@ -136,7 +136,7 @@ void Application::unregister_global_shortcut_action(Badge<Action>, Action& actio
     m_global_shortcut_actions.remove(action.alternate_shortcut());
 }
 
-Action* Application::action_for_key_event(const KeyEvent& event)
+Action* Application::action_for_key_event(KeyEvent const& event)
 {
     auto it = m_global_shortcut_actions.find(Shortcut(event.modifiers(), (KeyCode)event.key()));
     if (it == m_global_shortcut_actions.end())
@@ -144,7 +144,7 @@ Action* Application::action_for_key_event(const KeyEvent& event)
     return (*it).value;
 }
 
-void Application::show_tooltip(String tooltip, const Widget* tooltip_source_widget)
+void Application::show_tooltip(String tooltip, Widget const* tooltip_source_widget)
 {
     m_tooltip_source_widget = tooltip_source_widget;
     if (!m_tooltip_window) {
@@ -163,7 +163,7 @@ void Application::show_tooltip(String tooltip, const Widget* tooltip_source_widg
     }
 }
 
-void Application::show_tooltip_immediately(String tooltip, const Widget* tooltip_source_widget)
+void Application::show_tooltip_immediately(String tooltip, Widget const* tooltip_source_widget)
 {
     m_tooltip_source_widget = tooltip_source_widget;
     if (!m_tooltip_window) {
@@ -206,7 +206,7 @@ void Application::set_system_palette(Core::AnonymousBuffer& buffer)
         m_palette = m_system_palette;
 }
 
-void Application::set_palette(const Palette& palette)
+void Application::set_palette(Palette const& palette)
 {
     m_palette = palette.impl();
 }
@@ -221,7 +221,7 @@ void Application::request_tooltip_show()
     VERIFY(m_tooltip_window);
     Gfx::IntRect desktop_rect = Desktop::the().rect();
 
-    const int margin = 30;
+    int const margin = 30;
     Gfx::IntPoint adjusted_pos = ConnectionToWindowServer::the().get_global_cursor_position();
 
     adjusted_pos.translate_by(0, 18);
@@ -271,7 +271,7 @@ void Application::set_pending_drop_widget(Widget* widget)
         m_pending_drop_widget->update();
 }
 
-void Application::set_drag_hovered_widget_impl(Widget* widget, const Gfx::IntPoint& position, Vector<String> mime_types)
+void Application::set_drag_hovered_widget_impl(Widget* widget, Gfx::IntPoint const& position, Vector<String> mime_types)
 {
     if (widget == m_drag_hovered_widget)
         return;

@@ -58,7 +58,7 @@ GUI::Variant CookiesModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
     if (role != GUI::ModelRole::Display)
         return {};
 
-    const auto& cookie = m_cookies[index.row()];
+    auto const& cookie = m_cookies[index.row()];
 
     switch (index.column()) {
     case Column::Domain:

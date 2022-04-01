@@ -10,7 +10,7 @@
 
 namespace LookupServer {
 
-DNSAnswer::DNSAnswer(const DNSName& name, DNSRecordType type, DNSRecordClass class_code, u32 ttl, const String& record_data, bool mdns_cache_flush)
+DNSAnswer::DNSAnswer(DNSName const& name, DNSRecordType type, DNSRecordClass class_code, u32 ttl, String const& record_data, bool mdns_cache_flush)
     : m_name(name)
     , m_type(type)
     , m_class_code(class_code)

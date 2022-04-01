@@ -39,7 +39,7 @@ Client::Client(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket, int ptm_fd
         }
     };
 
-    m_parser.on_command = [this](const Command& command) {
+    m_parser.on_command = [this](Command const& command) {
         auto result = handle_command(command);
         if (result.is_error()) {
             dbgln("Failed to handle the command: {}", result.error());
@@ -110,7 +110,7 @@ void Client::handle_data(StringView data)
     write(m_ptm_fd, data.characters_without_null_termination(), data.length());
 }
 
-ErrorOr<void> Client::handle_command(const Command& command)
+ErrorOr<void> Client::handle_command(Command const& command)
 {
     switch (command.command) {
     case CMD_DO:

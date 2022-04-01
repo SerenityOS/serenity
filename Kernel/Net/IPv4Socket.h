@@ -32,36 +32,36 @@ public:
     virtual ~IPv4Socket() override;
 
     virtual ErrorOr<void> close() override;
-    virtual ErrorOr<void> bind(Userspace<const sockaddr*>, socklen_t) override;
-    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
+    virtual ErrorOr<void> bind(Userspace<sockaddr const*>, socklen_t) override;
+    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<sockaddr const*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
     virtual ErrorOr<void> listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
-    virtual bool can_read(const OpenFileDescription&, u64) const override;
-    virtual bool can_write(const OpenFileDescription&, u64) const override;
-    virtual ErrorOr<size_t> sendto(OpenFileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
+    virtual bool can_read(OpenFileDescription const&, u64) const override;
+    virtual bool can_write(OpenFileDescription const&, u64) const override;
+    virtual ErrorOr<size_t> sendto(OpenFileDescription&, UserOrKernelBuffer const&, size_t, int, Userspace<sockaddr const*>, socklen_t) override;
     virtual ErrorOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
-    virtual ErrorOr<void> setsockopt(int level, int option, Userspace<const void*>, socklen_t) override;
+    virtual ErrorOr<void> setsockopt(int level, int option, Userspace<void const*>, socklen_t) override;
     virtual ErrorOr<void> getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
 
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
 
-    bool did_receive(const IPv4Address& peer_address, u16 peer_port, ReadonlyBytes, const Time&);
+    bool did_receive(IPv4Address const& peer_address, u16 peer_port, ReadonlyBytes, Time const&);
 
-    const IPv4Address& local_address() const { return m_local_address; }
+    IPv4Address const& local_address() const { return m_local_address; }
     u16 local_port() const { return m_local_port; }
     void set_local_port(u16 port) { m_local_port = port; }
     bool has_specific_local_address() { return m_local_address.to_u32() != 0; }
 
-    const IPv4Address& peer_address() const { return m_peer_address; }
+    IPv4Address const& peer_address() const { return m_peer_address; }
     u16 peer_port() const { return m_peer_port; }
     void set_peer_port(u16 port) { m_peer_port = port; }
 
-    const Vector<IPv4Address>& multicast_memberships() const { return m_multicast_memberships; }
+    Vector<IPv4Address> const& multicast_memberships() const { return m_multicast_memberships; }
 
     IPv4SocketTuple tuple() const { return IPv4SocketTuple(m_local_address, m_local_port, m_peer_address, m_peer_port); }
 
-    ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription& description) const override;
+    ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const& description) const override;
 
     u8 type_of_service() const { return m_type_of_service; }
     u8 ttl() const { return m_ttl; }
@@ -81,7 +81,7 @@ protected:
     virtual ErrorOr<void> protocol_bind() { return {}; }
     virtual ErrorOr<void> protocol_listen([[maybe_unused]] bool did_allocate_port) { return {}; }
     virtual ErrorOr<size_t> protocol_receive(ReadonlyBytes /* raw_ipv4_packet */, UserOrKernelBuffer&, size_t, int) { return ENOTIMPL; }
-    virtual ErrorOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) { return ENOTIMPL; }
+    virtual ErrorOr<size_t> protocol_send(UserOrKernelBuffer const&, size_t) { return ENOTIMPL; }
     virtual ErrorOr<void> protocol_connect(OpenFileDescription&, ShouldBlock) { return {}; }
     virtual ErrorOr<u16> protocol_allocate_local_port() { return ENOPROTOOPT; }
     virtual ErrorOr<size_t> protocol_size(ReadonlyBytes /* raw_ipv4_packet */) { return ENOTIMPL; }

@@ -49,7 +49,7 @@ struct PortableImageMapLoadingContext {
 template<typename TContext>
 class PortableImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
-    PortableImageDecoderPlugin(const u8*, size_t);
+    PortableImageDecoderPlugin(u8 const*, size_t);
     virtual ~PortableImageDecoderPlugin() override = default;
 
     virtual IntSize size() override;
@@ -69,7 +69,7 @@ private:
 };
 
 template<typename TContext>
-PortableImageDecoderPlugin<TContext>::PortableImageDecoderPlugin(const u8* data, size_t size)
+PortableImageDecoderPlugin<TContext>::PortableImageDecoderPlugin(u8 const* data, size_t size)
 {
     m_context = make<TContext>();
     m_context->data = data;

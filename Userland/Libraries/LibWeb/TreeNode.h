@@ -123,10 +123,10 @@ public:
         return {};
     }
 
-    bool is_ancestor_of(const TreeNode&) const;
-    bool is_inclusive_ancestor_of(const TreeNode&) const;
-    bool is_descendant_of(const TreeNode&) const;
-    bool is_inclusive_descendant_of(const TreeNode&) const;
+    bool is_ancestor_of(TreeNode const&) const;
+    bool is_inclusive_ancestor_of(TreeNode const&) const;
+    bool is_descendant_of(TreeNode const&) const;
+    bool is_inclusive_descendant_of(TreeNode const&) const;
 
     bool is_following(TreeNode const&) const;
 
@@ -556,7 +556,7 @@ inline void TreeNode<T>::prepend_child(NonnullRefPtr<T> node)
 }
 
 template<typename T>
-inline bool TreeNode<T>::is_ancestor_of(const TreeNode<T>& other) const
+inline bool TreeNode<T>::is_ancestor_of(TreeNode<T> const& other) const
 {
     for (auto* ancestor = other.parent(); ancestor; ancestor = ancestor->parent()) {
         if (ancestor == this)
@@ -566,19 +566,19 @@ inline bool TreeNode<T>::is_ancestor_of(const TreeNode<T>& other) const
 }
 
 template<typename T>
-inline bool TreeNode<T>::is_inclusive_ancestor_of(const TreeNode<T>& other) const
+inline bool TreeNode<T>::is_inclusive_ancestor_of(TreeNode<T> const& other) const
 {
     return &other == this || is_ancestor_of(other);
 }
 
 template<typename T>
-inline bool TreeNode<T>::is_descendant_of(const TreeNode<T>& other) const
+inline bool TreeNode<T>::is_descendant_of(TreeNode<T> const& other) const
 {
     return other.is_ancestor_of(*this);
 }
 
 template<typename T>
-inline bool TreeNode<T>::is_inclusive_descendant_of(const TreeNode<T>& other) const
+inline bool TreeNode<T>::is_inclusive_descendant_of(TreeNode<T> const& other) const
 {
     return other.is_inclusive_ancestor_of(*this);
 }

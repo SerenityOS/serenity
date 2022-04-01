@@ -43,7 +43,7 @@ void Label::set_autosize(bool autosize)
         size_to_fit();
 }
 
-void Label::set_icon(const Gfx::Bitmap* icon)
+void Label::set_icon(Gfx::Bitmap const* icon)
 {
     if (m_icon == icon)
         return;

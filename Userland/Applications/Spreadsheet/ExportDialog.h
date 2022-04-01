@@ -20,11 +20,11 @@ class Workbook;
 struct CSVExportDialogPage {
     using XSV = Writer::XSV<Vector<Vector<String>>, Vector<String>>;
 
-    explicit CSVExportDialogPage(const Sheet&);
+    explicit CSVExportDialogPage(Sheet const&);
 
     NonnullRefPtr<GUI::WizardPage> page() { return *m_page; }
     Optional<XSV>& writer() { return m_previously_made_writer; }
-    Result<void, String> move_into(const String& target);
+    Result<void, String> move_into(String const& target);
 
 protected:
     void update_preview();

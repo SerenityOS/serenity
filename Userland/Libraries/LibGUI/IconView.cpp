@@ -40,7 +40,7 @@ void IconView::select_all()
     }
 }
 
-void IconView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
+void IconView::scroll_into_view(ModelIndex const& index, bool scroll_horizontally, bool scroll_vertically)
 {
     if (!index.is_valid())
         return;
@@ -106,7 +106,7 @@ auto IconView::get_item_data(int item_index) const -> ItemData&
     return item_data;
 }
 
-auto IconView::item_data_from_content_position(const Gfx::IntPoint& content_position) const -> ItemData*
+auto IconView::item_data_from_content_position(Gfx::IntPoint const& content_position) const -> ItemData*
 {
     if (!m_visual_row_count || !m_visual_column_count)
         return nullptr;
@@ -195,7 +195,7 @@ Gfx::IntRect IconView::item_rect(int item_index) const
     };
 }
 
-ModelIndex IconView::index_at_event_position(const Gfx::IntPoint& position) const
+ModelIndex IconView::index_at_event_position(Gfx::IntPoint const& position) const
 {
     VERIFY(model());
     auto adjusted_position = to_content_position(position);
@@ -244,7 +244,7 @@ void IconView::mouseup_event(MouseEvent& event)
     AbstractView::mouseup_event(event);
 }
 
-bool IconView::update_rubber_banding(const Gfx::IntPoint& input_position)
+bool IconView::update_rubber_banding(Gfx::IntPoint const& input_position)
 {
     auto adjusted_position = to_content_position(input_position.constrained(widget_inner_rect()));
     if (m_rubber_band_current != adjusted_position) {
@@ -378,7 +378,7 @@ Gfx::IntRect IconView::editing_rect(ModelIndex const& index) const
     return editing_rect;
 }
 
-void IconView::editing_widget_did_change(const ModelIndex& index)
+void IconView::editing_widget_did_change(ModelIndex const& index)
 {
     if (m_editing_delegate->value().is_string()) {
         auto text_width = font_for_index(index)->width(m_editing_delegate->value().as_string());
@@ -389,7 +389,7 @@ void IconView::editing_widget_did_change(const ModelIndex& index)
 }
 
 Gfx::IntRect
-IconView::paint_invalidation_rect(const ModelIndex& index) const
+IconView::paint_invalidation_rect(ModelIndex const& index) const
 {
     if (!index.is_valid())
         return {};
@@ -397,7 +397,7 @@ IconView::paint_invalidation_rect(const ModelIndex& index) const
     return item_data.rect(true);
 }
 
-void IconView::did_change_hovered_index(const ModelIndex& old_index, const ModelIndex& new_index)
+void IconView::did_change_hovered_index(ModelIndex const& old_index, ModelIndex const& new_index)
 {
     AbstractView::did_change_hovered_index(old_index, new_index);
     if (old_index.is_valid())
@@ -406,7 +406,7 @@ void IconView::did_change_hovered_index(const ModelIndex& old_index, const Model
         get_item_rects(new_index.row(), get_item_data(new_index.row()), font_for_index(new_index));
 }
 
-void IconView::did_change_cursor_index(const ModelIndex& old_index, const ModelIndex& new_index)
+void IconView::did_change_cursor_index(ModelIndex const& old_index, ModelIndex const& new_index)
 {
     AbstractView::did_change_cursor_index(old_index, new_index);
     if (old_index.is_valid())
@@ -415,7 +415,7 @@ void IconView::did_change_cursor_index(const ModelIndex& old_index, const ModelI
         get_item_rects(new_index.row(), get_item_data(new_index.row()), font_for_index(new_index));
 }
 
-void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Font& font) const
+void IconView::get_item_rects(int item_index, ItemData& item_data, Gfx::Font const& font) const
 {
     auto item_rect = this->item_rect(item_index);
     item_data.icon_rect = Gfx::IntRect(0, 0, 32, 32).centered_within(item_rect);
@@ -589,7 +589,7 @@ void IconView::did_update_selection()
 
     // Selection was modified externally, we need to synchronize our cache
     do_clear_selection();
-    selection().for_each_index([&](const ModelIndex& index) {
+    selection().for_each_index([&](ModelIndex const& index) {
         if (index.is_valid()) {
             auto item_index = model_index_to_item_index(index);
             if ((size_t)item_index < m_item_data_cache.size())
@@ -639,7 +639,7 @@ void IconView::add_selection(ItemData& item_data)
         AbstractView::add_selection(item_data.index);
 }
 
-void IconView::add_selection(const ModelIndex& new_index)
+void IconView::add_selection(ModelIndex const& new_index)
 {
     TemporaryChange change(m_changing_selection, true);
     auto item_index = model_index_to_item_index(new_index);
@@ -654,7 +654,7 @@ void IconView::toggle_selection(ItemData& item_data)
         remove_item_selection(item_data);
 }
 
-void IconView::toggle_selection(const ModelIndex& new_index)
+void IconView::toggle_selection(ModelIndex const& new_index)
 {
     TemporaryChange change(m_changing_selection, true);
     auto item_index = model_index_to_item_index(new_index);
@@ -684,7 +684,7 @@ void IconView::remove_item_selection(ItemData& item_data)
     AbstractView::remove_selection(item_data.index);
 }
 
-void IconView::set_selection(const ModelIndex& new_index)
+void IconView::set_selection(ModelIndex const& new_index)
 {
     TemporaryChange change(m_changing_selection, true);
     do_clear_selection();
@@ -775,7 +775,7 @@ void IconView::set_flow_direction(FlowDirection flow_direction)
 }
 
 template<typename Function>
-inline IterationDecision IconView::for_each_item_intersecting_rect(const Gfx::IntRect& rect, Function f) const
+inline IterationDecision IconView::for_each_item_intersecting_rect(Gfx::IntRect const& rect, Function f) const
 {
     VERIFY(model());
     if (rect.is_empty())
@@ -814,7 +814,7 @@ inline IterationDecision IconView::for_each_item_intersecting_rect(const Gfx::In
 }
 
 template<typename Function>
-inline IterationDecision IconView::for_each_item_intersecting_rects(const Vector<Gfx::IntRect>& rects, Function f) const
+inline IterationDecision IconView::for_each_item_intersecting_rects(Vector<Gfx::IntRect> const& rects, Function f) const
 {
     for (auto& rect : rects) {
         auto decision = for_each_item_intersecting_rect(rect, f);

@@ -22,7 +22,7 @@ mode_t umask(mode_t mask)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkdir.html
-int mkdir(const char* pathname, mode_t mode)
+int mkdir(char const* pathname, mode_t mode)
 {
     if (!pathname) {
         errno = EFAULT;
@@ -33,7 +33,7 @@ int mkdir(const char* pathname, mode_t mode)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/chmod.html
-int chmod(const char* pathname, mode_t mode)
+int chmod(char const* pathname, mode_t mode)
 {
     return fchmodat(AT_FDCWD, pathname, mode, 0);
 }
@@ -69,12 +69,12 @@ int fchmod(int fd, mode_t mode)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mkfifo.html
-int mkfifo(const char* pathname, mode_t mode)
+int mkfifo(char const* pathname, mode_t mode)
 {
     return mknod(pathname, mode | S_IFIFO, 0);
 }
 
-static int do_stat(int dirfd, const char* path, struct stat* statbuf, bool follow_symlinks)
+static int do_stat(int dirfd, char const* path, struct stat* statbuf, bool follow_symlinks)
 {
     if (!path) {
         errno = EFAULT;
@@ -86,13 +86,13 @@ static int do_stat(int dirfd, const char* path, struct stat* statbuf, bool follo
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/lstat.html
-int lstat(const char* path, struct stat* statbuf)
+int lstat(char const* path, struct stat* statbuf)
 {
     return do_stat(AT_FDCWD, path, statbuf, false);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/stat.html
-int stat(const char* path, struct stat* statbuf)
+int stat(char const* path, struct stat* statbuf)
 {
     return do_stat(AT_FDCWD, path, statbuf, true);
 }
@@ -105,7 +105,7 @@ int fstat(int fd, struct stat* statbuf)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fstatat.html
-int fstatat(int fd, const char* path, struct stat* statbuf, int flags)
+int fstatat(int fd, char const* path, struct stat* statbuf, int flags)
 {
     return do_stat(fd, path, statbuf, !(flags & AT_SYMLINK_NOFOLLOW));
 }

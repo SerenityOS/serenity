@@ -11,7 +11,7 @@
 
 namespace JS {
 
-TypedArrayConstructor::TypedArrayConstructor(const FlyString& name, Object& prototype)
+TypedArrayConstructor::TypedArrayConstructor(FlyString const& name, Object& prototype)
     : NativeFunction(name, prototype)
 {
 }

@@ -37,14 +37,14 @@ class UnregisteredWidget final : public GUI::Widget {
     C_OBJECT(UnregisteredWidget);
 
 private:
-    UnregisteredWidget(const String& class_name);
+    UnregisteredWidget(String const& class_name);
 
     virtual void paint_event(GUI::PaintEvent& event) override;
 
     String m_text;
 };
 
-UnregisteredWidget::UnregisteredWidget(const String& class_name)
+UnregisteredWidget::UnregisteredWidget(String const& class_name)
 {
     StringBuilder builder;
     builder.append(class_name);
@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath"));
 
-    const char* path = nullptr;
+    char const* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "GML file to edit", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);

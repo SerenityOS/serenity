@@ -47,11 +47,11 @@ public:
 
     using Path = Vector<PathEntry>;
 
-    static NonnullRefPtr<Event> create(const FlyString& event_name, EventInit const& event_init = {})
+    static NonnullRefPtr<Event> create(FlyString const& event_name, EventInit const& event_init = {})
     {
         return adopt_ref(*new Event(event_name, event_init));
     }
-    static NonnullRefPtr<Event> create_with_global_object(Bindings::WindowObject&, const FlyString& event_name, EventInit const& event_init)
+    static NonnullRefPtr<Event> create_with_global_object(Bindings::WindowObject&, FlyString const& event_name, EventInit const& event_init)
     {
         return Event::create(event_name, event_init);
     }
@@ -60,7 +60,7 @@ public:
 
     double time_stamp() const;
 
-    const FlyString& type() const { return m_type; }
+    FlyString const& type() const { return m_type; }
     void set_type(StringView type) { m_type = type; }
 
     RefPtr<EventTarget> target() const { return m_target; }
@@ -111,7 +111,7 @@ public:
 
     void append_to_path(EventTarget&, RefPtr<EventTarget>, RefPtr<EventTarget>, TouchTargetList&, bool);
     Path& path() { return m_path; }
-    const Path& path() const { return m_path; }
+    Path const& path() const { return m_path; }
     void clear_path() { m_path.clear(); }
 
     void set_touch_target_list(TouchTargetList& touch_target_list) { m_touch_target_list = touch_target_list; }
@@ -142,7 +142,7 @@ public:
         m_stop_immediate_propagation = true;
     }
 
-    void init_event(const String&, bool, bool);
+    void init_event(String const&, bool, bool);
 
     void set_time_stamp(double time_stamp) { m_time_stamp = time_stamp; }
 
@@ -163,7 +163,7 @@ protected:
     {
     }
 
-    void initialize(const String&, bool, bool);
+    void initialize(String const&, bool, bool);
 
 private:
     FlyString m_type;

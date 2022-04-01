@@ -26,7 +26,7 @@ u8 MemoryBackedHostBridge::read8_field(BusNumber bus, DeviceNumber device, Funct
 {
     VERIFY(Access::the().access_lock().is_locked());
     VERIFY(field <= 0xfff);
-    return *((volatile u8*)(get_device_configuration_memory_mapped_space(bus, device, function).get() + (field & 0xfff)));
+    return *((u8 volatile*)(get_device_configuration_memory_mapped_space(bus, device, function).get() + (field & 0xfff)));
 }
 u16 MemoryBackedHostBridge::read16_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
 {
@@ -48,7 +48,7 @@ void MemoryBackedHostBridge::write8_field(BusNumber bus, DeviceNumber device, Fu
 {
     VERIFY(Access::the().access_lock().is_locked());
     VERIFY(field <= 0xfff);
-    *((volatile u8*)(get_device_configuration_memory_mapped_space(bus, device, function).get() + (field & 0xfff))) = value;
+    *((u8 volatile*)(get_device_configuration_memory_mapped_space(bus, device, function).get() + (field & 0xfff))) = value;
 }
 void MemoryBackedHostBridge::write16_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u16 value)
 {

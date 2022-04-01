@@ -93,7 +93,7 @@ void ConsoleWidget::notify_about_new_console_message(i32 message_index)
         request_console_messages();
 }
 
-void ConsoleWidget::handle_console_messages(i32 start_index, const Vector<String>& message_types, const Vector<String>& messages)
+void ConsoleWidget::handle_console_messages(i32 start_index, Vector<String> const& message_types, Vector<String> const& messages)
 {
     i32 end_index = start_index + message_types.size() - 1;
     if (end_index <= m_highest_received_message_index) {

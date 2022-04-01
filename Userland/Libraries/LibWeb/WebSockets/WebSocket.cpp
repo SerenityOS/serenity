@@ -53,7 +53,7 @@ RefPtr<Protocol::WebSocket> WebSocketClientManager::connect(const AK::URL& url, 
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-websocket
-DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(Bindings::WindowObject& window, const String& url)
+DOM::ExceptionOr<NonnullRefPtr<WebSocket>> WebSocket::create_with_global_object(Bindings::WindowObject& window, String const& url)
 {
     AK::URL url_record(url);
     if (!url_record.is_valid())
@@ -169,7 +169,7 @@ DOM::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<String> rea
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-send
-DOM::ExceptionOr<void> WebSocket::send(const String& data)
+DOM::ExceptionOr<void> WebSocket::send(String const& data)
 {
     auto state = ready_state();
     if (state == WebSocket::ReadyState::Connecting)

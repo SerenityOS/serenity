@@ -29,7 +29,7 @@ FormattingContext::FormattingContext(Type type, FormattingState& state, Box cons
 
 FormattingContext::~FormattingContext() = default;
 
-bool FormattingContext::creates_block_formatting_context(const Box& box)
+bool FormattingContext::creates_block_formatting_context(Box const& box)
 {
     if (box.is_root_element())
         return true;
@@ -472,12 +472,12 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
 
     auto margin_left = CSS::Length::make_auto();
     auto margin_right = CSS::Length::make_auto();
-    const auto border_left = computed_values.border_left().width;
-    const auto border_right = computed_values.border_right().width;
-    const auto padding_left = computed_values.padding().left.resolved(box, width_of_containing_block).to_px(box);
-    const auto padding_right = computed_values.padding().right.resolved(box, width_of_containing_block).to_px(box);
+    auto const border_left = computed_values.border_left().width;
+    auto const border_right = computed_values.border_right().width;
+    auto const padding_left = computed_values.padding().left.resolved(box, width_of_containing_block).to_px(box);
+    auto const padding_right = computed_values.padding().right.resolved(box, width_of_containing_block).to_px(box);
 
-    auto try_compute_width = [&](const auto& a_width) {
+    auto try_compute_width = [&](auto const& a_width) {
         margin_left = computed_values.margin().left.resolved(box, width_of_containing_block).resolved(box);
         margin_right = computed_values.margin().right.resolved(box, width_of_containing_block).resolved(box);
 

@@ -45,7 +45,7 @@ public:
     static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, String filename);
     ~DynamicLoader();
 
-    const String& filename() const { return m_filename; }
+    String const& filename() const { return m_filename; }
 
     bool is_valid() const { return m_valid; }
 
@@ -74,7 +74,7 @@ public:
     void for_each_needed_library(F) const;
 
     VirtualAddress base_address() const { return m_base_address; }
-    const Vector<LoadedSegment> text_segments() const { return m_text_segments; }
+    Vector<LoadedSegment> const text_segments() const { return m_text_segments; }
     bool is_dynamic() const { return m_elf_image.is_dynamic(); }
 
     static Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&);
@@ -129,7 +129,7 @@ private:
         Success = 1,
         ResolveLater = 2,
     };
-    RelocationResult do_relocation(const DynamicObject::Relocation&, ShouldInitializeWeak should_initialize_weak);
+    RelocationResult do_relocation(DynamicObject::Relocation const&, ShouldInitializeWeak should_initialize_weak);
     void do_relr_relocations();
     size_t calculate_tls_size() const;
     ssize_t negative_offset_from_tls_block_end(ssize_t tls_offset, size_t value_of_symbol) const;

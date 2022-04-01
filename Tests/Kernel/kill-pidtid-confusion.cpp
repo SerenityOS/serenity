@@ -55,7 +55,7 @@ static void fork_into(void(fn)())
 static void thread_into(void* (*fn)(void*))
 {
     pthread_t tid;
-    const int rc = pthread_create(&tid, nullptr, fn, nullptr);
+    int const rc = pthread_create(&tid, nullptr, fn, nullptr);
     if (rc < 0) {
         perror("pthread_create");
         exit(1);
@@ -64,7 +64,7 @@ static void thread_into(void* (*fn)(void*))
 
 static void sleep_steps(useconds_t steps)
 {
-    const int rc = usleep(steps * STEP_SIZE);
+    int const rc = usleep(steps * STEP_SIZE);
     if (rc < 0) {
         perror("usleep");
         VERIFY_NOT_REACHED();

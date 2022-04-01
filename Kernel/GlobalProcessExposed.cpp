@@ -84,7 +84,7 @@ private:
     virtual ErrorOr<void> try_generate(KBufferBuilder& builder) override
     {
         auto array = TRY(JsonArraySerializer<>::try_create(builder));
-        TRY(arp_table().with([&](const auto& table) -> ErrorOr<void> {
+        TRY(arp_table().with([&](auto const& table) -> ErrorOr<void> {
             for (auto& it : table) {
                 auto obj = TRY(array.add_object());
                 auto mac_address = it.value.to_string().release_value_but_fixme_should_propagate_errors();
@@ -195,18 +195,18 @@ private:
 
 class ProcFSNetworkDirectory : public ProcFSExposedDirectory {
 public:
-    static NonnullRefPtr<ProcFSNetworkDirectory> must_create(const ProcFSRootDirectory& parent_directory);
+    static NonnullRefPtr<ProcFSNetworkDirectory> must_create(ProcFSRootDirectory const& parent_directory);
 
 private:
-    ProcFSNetworkDirectory(const ProcFSRootDirectory& parent_directory);
+    ProcFSNetworkDirectory(ProcFSRootDirectory const& parent_directory);
 };
 
 class ProcFSSystemDirectory : public ProcFSExposedDirectory {
 public:
-    static NonnullRefPtr<ProcFSSystemDirectory> must_create(const ProcFSRootDirectory& parent_directory);
+    static NonnullRefPtr<ProcFSSystemDirectory> must_create(ProcFSRootDirectory const& parent_directory);
 
 private:
-    ProcFSSystemDirectory(const ProcFSRootDirectory& parent_directory);
+    ProcFSSystemDirectory(ProcFSRootDirectory const& parent_directory);
 };
 
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSAdapters> ProcFSAdapters::must_create()
@@ -230,7 +230,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSUDP> ProcFSUDP::must_create()
     return adopt_ref_if_nonnull(new (nothrow) ProcFSUDP).release_nonnull();
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSNetworkDirectory> ProcFSNetworkDirectory::must_create(const ProcFSRootDirectory& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<ProcFSNetworkDirectory> ProcFSNetworkDirectory::must_create(ProcFSRootDirectory const& parent_directory)
 {
     auto directory = adopt_ref(*new (nothrow) ProcFSNetworkDirectory(parent_directory));
     directory->m_components.append(ProcFSAdapters::must_create());
@@ -261,14 +261,14 @@ UNMAP_AFTER_INIT ProcFSUDP::ProcFSUDP()
     : ProcFSGlobalInformation("udp"sv)
 {
 }
-UNMAP_AFTER_INIT ProcFSNetworkDirectory::ProcFSNetworkDirectory(const ProcFSRootDirectory& parent_directory)
+UNMAP_AFTER_INIT ProcFSNetworkDirectory::ProcFSNetworkDirectory(ProcFSRootDirectory const& parent_directory)
     : ProcFSExposedDirectory("net"sv, parent_directory)
 {
 }
 
 class ProcFSDumpKmallocStacks : public ProcFSSystemBoolean {
 public:
-    static NonnullRefPtr<ProcFSDumpKmallocStacks> must_create(const ProcFSSystemDirectory&);
+    static NonnullRefPtr<ProcFSDumpKmallocStacks> must_create(ProcFSSystemDirectory const&);
     virtual bool value() const override
     {
         MutexLocker locker(m_lock);
@@ -287,7 +287,7 @@ private:
 
 class ProcFSUBSanDeadly : public ProcFSSystemBoolean {
 public:
-    static NonnullRefPtr<ProcFSUBSanDeadly> must_create(const ProcFSSystemDirectory&);
+    static NonnullRefPtr<ProcFSUBSanDeadly> must_create(ProcFSSystemDirectory const&);
 
     virtual bool value() const override { return AK::UBSanitizer::g_ubsan_is_deadly; }
     virtual void set_value(bool new_value) override { AK::UBSanitizer::g_ubsan_is_deadly = new_value; }
@@ -298,7 +298,7 @@ private:
 
 class ProcFSCapsLockRemap : public ProcFSSystemBoolean {
 public:
-    static NonnullRefPtr<ProcFSCapsLockRemap> must_create(const ProcFSSystemDirectory&);
+    static NonnullRefPtr<ProcFSCapsLockRemap> must_create(ProcFSSystemDirectory const&);
     virtual bool value() const override
     {
         MutexLocker locker(m_lock);
@@ -315,15 +315,15 @@ private:
     mutable Mutex m_lock;
 };
 
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSDumpKmallocStacks> ProcFSDumpKmallocStacks::must_create(const ProcFSSystemDirectory&)
+UNMAP_AFTER_INIT NonnullRefPtr<ProcFSDumpKmallocStacks> ProcFSDumpKmallocStacks::must_create(ProcFSSystemDirectory const&)
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSDumpKmallocStacks).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSUBSanDeadly> ProcFSUBSanDeadly::must_create(const ProcFSSystemDirectory&)
+UNMAP_AFTER_INIT NonnullRefPtr<ProcFSUBSanDeadly> ProcFSUBSanDeadly::must_create(ProcFSSystemDirectory const&)
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSUBSanDeadly).release_nonnull();
 }
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSCapsLockRemap> ProcFSCapsLockRemap::must_create(const ProcFSSystemDirectory&)
+UNMAP_AFTER_INIT NonnullRefPtr<ProcFSCapsLockRemap> ProcFSCapsLockRemap::must_create(ProcFSSystemDirectory const&)
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSCapsLockRemap).release_nonnull();
 }
@@ -458,7 +458,7 @@ private:
         auto json = TRY(JsonObjectSerializer<>::try_create(builder));
 
         // Keep this in sync with CProcessStatistics.
-        auto build_process = [&](JsonArraySerializer<KBufferBuilder>& array, const Process& process) -> ErrorOr<void> {
+        auto build_process = [&](JsonArraySerializer<KBufferBuilder>& array, Process const& process) -> ErrorOr<void> {
             auto process_object = TRY(array.add_object());
 
             if (process.is_user_process()) {
@@ -944,7 +944,7 @@ UNMAP_AFTER_INIT ProcFSKernelBase::ProcFSKernelBase()
 {
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemDirectory> ProcFSSystemDirectory::must_create(const ProcFSRootDirectory& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemDirectory> ProcFSSystemDirectory::must_create(ProcFSRootDirectory const& parent_directory)
 {
     auto directory = adopt_ref(*new (nothrow) ProcFSSystemDirectory(parent_directory));
     directory->m_components.append(ProcFSDumpKmallocStacks::must_create(directory));
@@ -953,7 +953,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemDirectory> ProcFSSystemDirectory::mus
     return directory;
 }
 
-UNMAP_AFTER_INIT ProcFSSystemDirectory::ProcFSSystemDirectory(const ProcFSRootDirectory& parent_directory)
+UNMAP_AFTER_INIT ProcFSSystemDirectory::ProcFSSystemDirectory(ProcFSRootDirectory const& parent_directory)
     : ProcFSExposedDirectory("sys"sv, parent_directory)
 {
 }

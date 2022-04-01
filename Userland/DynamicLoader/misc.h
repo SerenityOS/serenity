@@ -7,7 +7,7 @@
 #pragma once
 
 extern "C" {
-const char* __cxa_demangle(const char*, void*, void*, int*);
+char const* __cxa_demangle(char const*, void*, void*, int*);
 
 extern void* __dso_handle;
 }

@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath proc exec"));
 
-    const char* specified_url = nullptr;
+    char const* specified_url = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);

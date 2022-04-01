@@ -117,7 +117,7 @@ void Parser::enumerate_static_tables(Function<void(StringView, PhysicalAddress, 
 static bool match_table_signature(PhysicalAddress table_header, StringView signature);
 static Optional<PhysicalAddress> search_table_in_xsdt(PhysicalAddress xsdt, StringView signature);
 static Optional<PhysicalAddress> search_table_in_rsdt(PhysicalAddress rsdt, StringView signature);
-static bool validate_table(const Structures::SDTHeader&, size_t length);
+static bool validate_table(Structures::SDTHeader const&, size_t length);
 
 UNMAP_AFTER_INIT void Parser::locate_static_data()
 {
@@ -144,7 +144,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> Parser::find_table(StringView signatu
     return {};
 }
 
-bool Parser::handle_irq(const RegisterState&)
+bool Parser::handle_irq(RegisterState const&)
 {
     TODO();
 }
@@ -209,7 +209,7 @@ bool Parser::can_reboot()
     return m_hardware_flags.reset_register_supported;
 }
 
-void Parser::access_generic_address(const Structures::GenericAddressStructure& structure, u32 value)
+void Parser::access_generic_address(Structures::GenericAddressStructure const& structure, u32 value)
 {
     switch ((GenericAddressStructure::AddressSpace)structure.address_space) {
     case GenericAddressStructure::AddressSpace::SystemIO: {
@@ -334,7 +334,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
     dmesgln("ACPI: Main Description Table valid? {}", validate_table(*sdt, length));
 
     if (m_xsdt_supported) {
-        auto& xsdt = (const Structures::XSDT&)*sdt;
+        auto& xsdt = (Structures::XSDT const&)*sdt;
         dmesgln("ACPI: Using XSDT, enumerating tables @ {}", m_main_system_description_table);
         dmesgln("ACPI: XSDT revision {}, total length: {}", revision, length);
         dbgln_if(ACPI_DEBUG, "ACPI: XSDT pointer @ {}", VirtualAddress { &xsdt });
@@ -343,7 +343,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
             m_sdt_pointers.append(PhysicalAddress(xsdt.table_ptrs[i]));
         }
     } else {
-        auto& rsdt = (const Structures::RSDT&)*sdt;
+        auto& rsdt = (Structures::RSDT const&)*sdt;
         dmesgln("ACPI: Using RSDT, enumerating tables @ {}", m_main_system_description_table);
         dmesgln("ACPI: RSDT revision {}, total length: {}", revision, length);
         dbgln_if(ACPI_DEBUG, "ACPI: RSDT pointer @ V{}", &rsdt);
@@ -382,10 +382,10 @@ UNMAP_AFTER_INIT Parser::Parser(PhysicalAddress rsdp, PhysicalAddress fadt, u8 i
     locate_static_data();
 }
 
-static bool validate_table(const Structures::SDTHeader& v_header, size_t length)
+static bool validate_table(Structures::SDTHeader const& v_header, size_t length)
 {
     u8 checksum = 0;
-    auto* sdt = (const u8*)&v_header;
+    auto* sdt = (u8 const*)&v_header;
     for (size_t i = 0; i < length; i++)
         checksum += sdt[i];
     if (checksum == 0)

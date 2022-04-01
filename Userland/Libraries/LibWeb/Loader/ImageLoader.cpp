@@ -155,7 +155,7 @@ unsigned ImageLoader::height() const
     return bitmap(0) ? bitmap(0)->height() : 0;
 }
 
-const Gfx::Bitmap* ImageLoader::bitmap(size_t frame_index) const
+Gfx::Bitmap const* ImageLoader::bitmap(size_t frame_index) const
 {
     if (!resource())
         return nullptr;

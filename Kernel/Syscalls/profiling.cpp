@@ -23,7 +23,7 @@ ErrorOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, Userspace<u64 const*> 
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_no_promises());
 
-    const auto event_mask = TRY(copy_typed_from_user(userspace_event_mask));
+    auto const event_mask = TRY(copy_typed_from_user(userspace_event_mask));
 
     if (pid == -1) {
         if (!is_superuser())

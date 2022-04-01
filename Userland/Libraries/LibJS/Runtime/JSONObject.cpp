@@ -122,7 +122,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
 }
 
 // 25.5.2.1 SerializeJSONProperty ( state, key, holder ), https://tc39.es/ecma262/#sec-serializejsonproperty
-ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& global_object, StringifyState& state, const PropertyKey& key, Object* holder)
+ThrowCompletionOr<String> JSONObject::serialize_json_property(GlobalObject& global_object, StringifyState& state, PropertyKey const& key, Object* holder)
 {
     auto& vm = global_object.vm();
 
@@ -229,7 +229,7 @@ ThrowCompletionOr<String> JSONObject::serialize_json_object(GlobalObject& global
     state.indent = String::formatted("{}{}", state.indent, state.gap);
     Vector<String> property_strings;
 
-    auto process_property = [&](const PropertyKey& key) -> ThrowCompletionOr<void> {
+    auto process_property = [&](PropertyKey const& key) -> ThrowCompletionOr<void> {
         if (key.is_symbol())
             return {};
         auto serialized_property_string = TRY(serialize_json_property(global_object, state, key, &object));
@@ -408,7 +408,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
     return unfiltered;
 }
 
-Value JSONObject::parse_json_value(GlobalObject& global_object, const JsonValue& value)
+Value JSONObject::parse_json_value(GlobalObject& global_object, JsonValue const& value)
 {
     if (value.is_object())
         return Value(parse_json_object(global_object, value.as_object()));
@@ -427,7 +427,7 @@ Value JSONObject::parse_json_value(GlobalObject& global_object, const JsonValue&
     VERIFY_NOT_REACHED();
 }
 
-Object* JSONObject::parse_json_object(GlobalObject& global_object, const JsonObject& json_object)
+Object* JSONObject::parse_json_object(GlobalObject& global_object, JsonObject const& json_object)
 {
     auto* object = Object::create(global_object, global_object.object_prototype());
     json_object.for_each_member([&](auto& key, auto& value) {
@@ -436,7 +436,7 @@ Object* JSONObject::parse_json_object(GlobalObject& global_object, const JsonObj
     return object;
 }
 
-Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray& json_array)
+Array* JSONObject::parse_json_array(GlobalObject& global_object, JsonArray const& json_array)
 {
     auto* array = MUST(Array::create(global_object, 0));
     size_t index = 0;
@@ -455,7 +455,7 @@ ThrowCompletionOr<Value> JSONObject::internalize_json_property(GlobalObject& glo
         auto is_array = TRY(value.is_array(global_object));
 
         auto& value_object = value.as_object();
-        auto process_property = [&](const PropertyKey& key) -> ThrowCompletionOr<void> {
+        auto process_property = [&](PropertyKey const& key) -> ThrowCompletionOr<void> {
             auto element = TRY(internalize_json_property(global_object, &value_object, key, reviver));
             if (element.is_undefined())
                 TRY(value_object.internal_delete(key));

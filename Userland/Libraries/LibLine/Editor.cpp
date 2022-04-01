@@ -2040,7 +2040,7 @@ size_t StringMetrics::offset_with_addition(StringMetrics const& offset, size_t c
 
 bool Editor::Spans::contains_up_to_offset(Spans const& other, size_t offset) const
 {
-    auto compare = [&]<typename K, typename V>(const HashMap<K, HashMap<K, V>>& left, const HashMap<K, HashMap<K, V>>& right) -> bool {
+    auto compare = [&]<typename K, typename V>(HashMap<K, HashMap<K, V>> const& left, HashMap<K, HashMap<K, V>> const& right) -> bool {
         for (auto& entry : right) {
             if (entry.key > offset + 1)
                 continue;

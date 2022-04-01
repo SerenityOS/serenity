@@ -26,11 +26,11 @@
 #include <unistd.h>
 
 // This is defined in ImportDialog.cpp, we can't include it twice, since the generated symbol is exported.
-extern const char select_format_page_gml[];
+extern char const select_format_page_gml[];
 
 namespace Spreadsheet {
 
-CSVExportDialogPage::CSVExportDialogPage(const Sheet& sheet)
+CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
     : m_data(sheet.to_xsv())
 {
     m_headers.extend(m_data.take_first());
@@ -213,7 +213,7 @@ void CSVExportDialogPage::update_preview()
     m_data_preview_text_editor->update();
 }
 
-Result<void, String> CSVExportDialogPage::move_into(const String& target)
+Result<void, String> CSVExportDialogPage::move_into(String const& target)
 {
     auto& source = m_temp_output_file_path;
 

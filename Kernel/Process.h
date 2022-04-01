@@ -261,18 +261,18 @@ public:
     bool is_traced() const { return !!m_tracer; }
     ErrorOr<void> start_tracing_from(ProcessID tracer);
     void stop_tracing();
-    void tracer_trap(Thread&, const RegisterState&);
+    void tracer_trap(Thread&, RegisterState const&);
 
     ErrorOr<FlatPtr> sys$emuctl();
     ErrorOr<FlatPtr> sys$yield();
     ErrorOr<FlatPtr> sys$sync();
     ErrorOr<FlatPtr> sys$beep();
     ErrorOr<FlatPtr> sys$get_process_name(Userspace<char*> buffer, size_t buffer_size);
-    ErrorOr<FlatPtr> sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length);
+    ErrorOr<FlatPtr> sys$set_process_name(Userspace<char const*> user_name, size_t user_name_length);
     ErrorOr<FlatPtr> sys$create_inode_watcher(u32 flags);
-    ErrorOr<FlatPtr> sys$inode_watcher_add_watch(Userspace<const Syscall::SC_inode_watcher_add_watch_params*> user_params);
+    ErrorOr<FlatPtr> sys$inode_watcher_add_watch(Userspace<Syscall::SC_inode_watcher_add_watch_params const*> user_params);
     ErrorOr<FlatPtr> sys$inode_watcher_remove_watch(int fd, int wd);
-    ErrorOr<FlatPtr> sys$dbgputstr(Userspace<const char*>, size_t);
+    ErrorOr<FlatPtr> sys$dbgputstr(Userspace<char const*>, size_t);
     ErrorOr<FlatPtr> sys$dump_backtrace();
     ErrorOr<FlatPtr> sys$gettid();
     ErrorOr<FlatPtr> sys$setsid();
@@ -290,53 +290,53 @@ public:
     ErrorOr<FlatPtr> sys$getresgid(Userspace<GroupID*>, Userspace<GroupID*>, Userspace<GroupID*>);
     ErrorOr<FlatPtr> sys$getrusage(int, Userspace<rusage*>);
     ErrorOr<FlatPtr> sys$umask(mode_t);
-    ErrorOr<FlatPtr> sys$open(Userspace<const Syscall::SC_open_params*>);
+    ErrorOr<FlatPtr> sys$open(Userspace<Syscall::SC_open_params const*>);
     ErrorOr<FlatPtr> sys$close(int fd);
     ErrorOr<FlatPtr> sys$read(int fd, Userspace<u8*>, size_t);
     ErrorOr<FlatPtr> sys$pread(int fd, Userspace<u8*>, size_t, Userspace<off_t const*>);
     ErrorOr<FlatPtr> sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count);
-    ErrorOr<FlatPtr> sys$write(int fd, Userspace<const u8*>, size_t);
+    ErrorOr<FlatPtr> sys$write(int fd, Userspace<u8 const*>, size_t);
     ErrorOr<FlatPtr> sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count);
     ErrorOr<FlatPtr> sys$fstat(int fd, Userspace<stat*>);
-    ErrorOr<FlatPtr> sys$stat(Userspace<const Syscall::SC_stat_params*>);
+    ErrorOr<FlatPtr> sys$stat(Userspace<Syscall::SC_stat_params const*>);
     ErrorOr<FlatPtr> sys$lseek(int fd, Userspace<off_t*>, int whence);
     ErrorOr<FlatPtr> sys$ftruncate(int fd, Userspace<off_t const*>);
     ErrorOr<FlatPtr> sys$kill(pid_t pid_or_pgid, int sig);
     [[noreturn]] void sys$exit(int status);
     ErrorOr<FlatPtr> sys$sigreturn(RegisterState& registers);
-    ErrorOr<FlatPtr> sys$waitid(Userspace<const Syscall::SC_waitid_params*>);
-    ErrorOr<FlatPtr> sys$mmap(Userspace<const Syscall::SC_mmap_params*>);
-    ErrorOr<FlatPtr> sys$mremap(Userspace<const Syscall::SC_mremap_params*>);
+    ErrorOr<FlatPtr> sys$waitid(Userspace<Syscall::SC_waitid_params const*>);
+    ErrorOr<FlatPtr> sys$mmap(Userspace<Syscall::SC_mmap_params const*>);
+    ErrorOr<FlatPtr> sys$mremap(Userspace<Syscall::SC_mremap_params const*>);
     ErrorOr<FlatPtr> sys$munmap(Userspace<void*>, size_t);
-    ErrorOr<FlatPtr> sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*>);
+    ErrorOr<FlatPtr> sys$set_mmap_name(Userspace<Syscall::SC_set_mmap_name_params const*>);
     ErrorOr<FlatPtr> sys$mprotect(Userspace<void*>, size_t, int prot);
     ErrorOr<FlatPtr> sys$madvise(Userspace<void*>, size_t, int advice);
     ErrorOr<FlatPtr> sys$msyscall(Userspace<void*>);
     ErrorOr<FlatPtr> sys$msync(Userspace<void*>, size_t, int flags);
     ErrorOr<FlatPtr> sys$purge(int mode);
-    ErrorOr<FlatPtr> sys$poll(Userspace<const Syscall::SC_poll_params*>);
+    ErrorOr<FlatPtr> sys$poll(Userspace<Syscall::SC_poll_params const*>);
     ErrorOr<FlatPtr> sys$get_dir_entries(int fd, Userspace<void*>, size_t);
     ErrorOr<FlatPtr> sys$getcwd(Userspace<char*>, size_t);
-    ErrorOr<FlatPtr> sys$chdir(Userspace<const char*>, size_t);
+    ErrorOr<FlatPtr> sys$chdir(Userspace<char const*>, size_t);
     ErrorOr<FlatPtr> sys$fchdir(int fd);
-    ErrorOr<FlatPtr> sys$adjtime(Userspace<const timeval*>, Userspace<timeval*>);
+    ErrorOr<FlatPtr> sys$adjtime(Userspace<timeval const*>, Userspace<timeval*>);
     ErrorOr<FlatPtr> sys$clock_gettime(clockid_t, Userspace<timespec*>);
-    ErrorOr<FlatPtr> sys$clock_settime(clockid_t, Userspace<const timespec*>);
-    ErrorOr<FlatPtr> sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*>);
+    ErrorOr<FlatPtr> sys$clock_settime(clockid_t, Userspace<timespec const*>);
+    ErrorOr<FlatPtr> sys$clock_nanosleep(Userspace<Syscall::SC_clock_nanosleep_params const*>);
     ErrorOr<FlatPtr> sys$gethostname(Userspace<char*>, size_t);
-    ErrorOr<FlatPtr> sys$sethostname(Userspace<const char*>, size_t);
+    ErrorOr<FlatPtr> sys$sethostname(Userspace<char const*>, size_t);
     ErrorOr<FlatPtr> sys$uname(Userspace<utsname*>);
-    ErrorOr<FlatPtr> sys$readlink(Userspace<const Syscall::SC_readlink_params*>);
+    ErrorOr<FlatPtr> sys$readlink(Userspace<Syscall::SC_readlink_params const*>);
     ErrorOr<FlatPtr> sys$fork(RegisterState&);
-    ErrorOr<FlatPtr> sys$execve(Userspace<const Syscall::SC_execve_params*>);
+    ErrorOr<FlatPtr> sys$execve(Userspace<Syscall::SC_execve_params const*>);
     ErrorOr<FlatPtr> sys$dup2(int old_fd, int new_fd);
-    ErrorOr<FlatPtr> sys$sigaction(int signum, Userspace<const sigaction*> act, Userspace<sigaction*> old_act);
-    ErrorOr<FlatPtr> sys$sigaltstack(Userspace<const stack_t*> ss, Userspace<stack_t*> old_ss);
-    ErrorOr<FlatPtr> sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set);
+    ErrorOr<FlatPtr> sys$sigaction(int signum, Userspace<sigaction const*> act, Userspace<sigaction*> old_act);
+    ErrorOr<FlatPtr> sys$sigaltstack(Userspace<stack_t const*> ss, Userspace<stack_t*> old_ss);
+    ErrorOr<FlatPtr> sys$sigprocmask(int how, Userspace<sigset_t const*> set, Userspace<sigset_t*> old_set);
     ErrorOr<FlatPtr> sys$sigpending(Userspace<sigset_t*>);
-    ErrorOr<FlatPtr> sys$sigtimedwait(Userspace<sigset_t const*>, Userspace<siginfo_t*>, Userspace<const timespec*>);
+    ErrorOr<FlatPtr> sys$sigtimedwait(Userspace<sigset_t const*>, Userspace<siginfo_t*>, Userspace<timespec const*>);
     ErrorOr<FlatPtr> sys$getgroups(size_t, Userspace<gid_t*>);
-    ErrorOr<FlatPtr> sys$setgroups(size_t, Userspace<const gid_t*>);
+    ErrorOr<FlatPtr> sys$setgroups(size_t, Userspace<gid_t const*>);
     ErrorOr<FlatPtr> sys$pipe(int pipefd[2], int flags);
     ErrorOr<FlatPtr> sys$killpg(pid_t pgrp, int sig);
     ErrorOr<FlatPtr> sys$seteuid(UserID);
@@ -347,70 +347,70 @@ public:
     ErrorOr<FlatPtr> sys$setresuid(UserID, UserID, UserID);
     ErrorOr<FlatPtr> sys$setresgid(GroupID, GroupID, GroupID);
     ErrorOr<FlatPtr> sys$alarm(unsigned seconds);
-    ErrorOr<FlatPtr> sys$access(Userspace<const char*> pathname, size_t path_length, int mode);
+    ErrorOr<FlatPtr> sys$access(Userspace<char const*> pathname, size_t path_length, int mode);
     ErrorOr<FlatPtr> sys$fcntl(int fd, int cmd, u32 extra_arg);
     ErrorOr<FlatPtr> sys$ioctl(int fd, unsigned request, FlatPtr arg);
-    ErrorOr<FlatPtr> sys$mkdir(Userspace<const char*> pathname, size_t path_length, mode_t mode);
+    ErrorOr<FlatPtr> sys$mkdir(Userspace<char const*> pathname, size_t path_length, mode_t mode);
     ErrorOr<FlatPtr> sys$times(Userspace<tms*>);
-    ErrorOr<FlatPtr> sys$utime(Userspace<const char*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
-    ErrorOr<FlatPtr> sys$link(Userspace<const Syscall::SC_link_params*>);
-    ErrorOr<FlatPtr> sys$unlink(Userspace<const char*> pathname, size_t path_length);
-    ErrorOr<FlatPtr> sys$symlink(Userspace<const Syscall::SC_symlink_params*>);
-    ErrorOr<FlatPtr> sys$rmdir(Userspace<const char*> pathname, size_t path_length);
-    ErrorOr<FlatPtr> sys$mount(Userspace<const Syscall::SC_mount_params*>);
-    ErrorOr<FlatPtr> sys$umount(Userspace<const char*> mountpoint, size_t mountpoint_length);
+    ErrorOr<FlatPtr> sys$utime(Userspace<char const*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
+    ErrorOr<FlatPtr> sys$link(Userspace<Syscall::SC_link_params const*>);
+    ErrorOr<FlatPtr> sys$unlink(Userspace<char const*> pathname, size_t path_length);
+    ErrorOr<FlatPtr> sys$symlink(Userspace<Syscall::SC_symlink_params const*>);
+    ErrorOr<FlatPtr> sys$rmdir(Userspace<char const*> pathname, size_t path_length);
+    ErrorOr<FlatPtr> sys$mount(Userspace<Syscall::SC_mount_params const*>);
+    ErrorOr<FlatPtr> sys$umount(Userspace<char const*> mountpoint, size_t mountpoint_length);
     ErrorOr<FlatPtr> sys$chmod(Userspace<Syscall::SC_chmod_params const*>);
     ErrorOr<FlatPtr> sys$fchmod(int fd, mode_t);
-    ErrorOr<FlatPtr> sys$chown(Userspace<const Syscall::SC_chown_params*>);
+    ErrorOr<FlatPtr> sys$chown(Userspace<Syscall::SC_chown_params const*>);
     ErrorOr<FlatPtr> sys$fchown(int fd, UserID, GroupID);
     ErrorOr<FlatPtr> sys$fsync(int fd);
     ErrorOr<FlatPtr> sys$socket(int domain, int type, int protocol);
-    ErrorOr<FlatPtr> sys$bind(int sockfd, Userspace<const sockaddr*> addr, socklen_t);
+    ErrorOr<FlatPtr> sys$bind(int sockfd, Userspace<sockaddr const*> addr, socklen_t);
     ErrorOr<FlatPtr> sys$listen(int sockfd, int backlog);
-    ErrorOr<FlatPtr> sys$accept4(Userspace<const Syscall::SC_accept4_params*>);
-    ErrorOr<FlatPtr> sys$connect(int sockfd, Userspace<const sockaddr*>, socklen_t);
+    ErrorOr<FlatPtr> sys$accept4(Userspace<Syscall::SC_accept4_params const*>);
+    ErrorOr<FlatPtr> sys$connect(int sockfd, Userspace<sockaddr const*>, socklen_t);
     ErrorOr<FlatPtr> sys$shutdown(int sockfd, int how);
     ErrorOr<FlatPtr> sys$sendmsg(int sockfd, Userspace<const struct msghdr*>, int flags);
     ErrorOr<FlatPtr> sys$recvmsg(int sockfd, Userspace<struct msghdr*>, int flags);
-    ErrorOr<FlatPtr> sys$getsockopt(Userspace<const Syscall::SC_getsockopt_params*>);
-    ErrorOr<FlatPtr> sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*>);
-    ErrorOr<FlatPtr> sys$getsockname(Userspace<const Syscall::SC_getsockname_params*>);
-    ErrorOr<FlatPtr> sys$getpeername(Userspace<const Syscall::SC_getpeername_params*>);
-    ErrorOr<FlatPtr> sys$socketpair(Userspace<const Syscall::SC_socketpair_params*>);
+    ErrorOr<FlatPtr> sys$getsockopt(Userspace<Syscall::SC_getsockopt_params const*>);
+    ErrorOr<FlatPtr> sys$setsockopt(Userspace<Syscall::SC_setsockopt_params const*>);
+    ErrorOr<FlatPtr> sys$getsockname(Userspace<Syscall::SC_getsockname_params const*>);
+    ErrorOr<FlatPtr> sys$getpeername(Userspace<Syscall::SC_getpeername_params const*>);
+    ErrorOr<FlatPtr> sys$socketpair(Userspace<Syscall::SC_socketpair_params const*>);
     ErrorOr<FlatPtr> sys$sched_setparam(pid_t pid, Userspace<const struct sched_param*>);
     ErrorOr<FlatPtr> sys$sched_getparam(pid_t pid, Userspace<struct sched_param*>);
-    ErrorOr<FlatPtr> sys$create_thread(void* (*)(void*), Userspace<const Syscall::SC_create_thread_params*>);
+    ErrorOr<FlatPtr> sys$create_thread(void* (*)(void*), Userspace<Syscall::SC_create_thread_params const*>);
     [[noreturn]] void sys$exit_thread(Userspace<void*>, Userspace<void*>, size_t);
     ErrorOr<FlatPtr> sys$join_thread(pid_t tid, Userspace<void**> exit_value);
     ErrorOr<FlatPtr> sys$detach_thread(pid_t tid);
-    ErrorOr<FlatPtr> sys$set_thread_name(pid_t tid, Userspace<const char*> buffer, size_t buffer_size);
+    ErrorOr<FlatPtr> sys$set_thread_name(pid_t tid, Userspace<char const*> buffer, size_t buffer_size);
     ErrorOr<FlatPtr> sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buffer_size);
     ErrorOr<FlatPtr> sys$kill_thread(pid_t tid, int signal);
-    ErrorOr<FlatPtr> sys$rename(Userspace<const Syscall::SC_rename_params*>);
-    ErrorOr<FlatPtr> sys$mknod(Userspace<const Syscall::SC_mknod_params*>);
-    ErrorOr<FlatPtr> sys$realpath(Userspace<const Syscall::SC_realpath_params*>);
+    ErrorOr<FlatPtr> sys$rename(Userspace<Syscall::SC_rename_params const*>);
+    ErrorOr<FlatPtr> sys$mknod(Userspace<Syscall::SC_mknod_params const*>);
+    ErrorOr<FlatPtr> sys$realpath(Userspace<Syscall::SC_realpath_params const*>);
     ErrorOr<FlatPtr> sys$getrandom(Userspace<void*>, size_t, unsigned int);
-    ErrorOr<FlatPtr> sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*>);
-    ErrorOr<FlatPtr> sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*>);
+    ErrorOr<FlatPtr> sys$getkeymap(Userspace<Syscall::SC_getkeymap_params const*>);
+    ErrorOr<FlatPtr> sys$setkeymap(Userspace<Syscall::SC_setkeymap_params const*>);
     ErrorOr<FlatPtr> sys$profiling_enable(pid_t, Userspace<u64 const*>);
     ErrorOr<FlatPtr> sys$profiling_disable(pid_t);
     ErrorOr<FlatPtr> sys$profiling_free_buffer(pid_t);
-    ErrorOr<FlatPtr> sys$futex(Userspace<const Syscall::SC_futex_params*>);
-    ErrorOr<FlatPtr> sys$pledge(Userspace<const Syscall::SC_pledge_params*>);
-    ErrorOr<FlatPtr> sys$unveil(Userspace<const Syscall::SC_unveil_params*>);
+    ErrorOr<FlatPtr> sys$futex(Userspace<Syscall::SC_futex_params const*>);
+    ErrorOr<FlatPtr> sys$pledge(Userspace<Syscall::SC_pledge_params const*>);
+    ErrorOr<FlatPtr> sys$unveil(Userspace<Syscall::SC_unveil_params const*>);
     ErrorOr<FlatPtr> sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
     ErrorOr<FlatPtr> sys$perf_register_string(Userspace<char const*>, size_t);
     ErrorOr<FlatPtr> sys$get_stack_bounds(Userspace<FlatPtr*> stack_base, Userspace<size_t*> stack_size);
-    ErrorOr<FlatPtr> sys$ptrace(Userspace<const Syscall::SC_ptrace_params*>);
+    ErrorOr<FlatPtr> sys$ptrace(Userspace<Syscall::SC_ptrace_params const*>);
     ErrorOr<FlatPtr> sys$sendfd(int sockfd, int fd);
     ErrorOr<FlatPtr> sys$recvfd(int sockfd, int options);
     ErrorOr<FlatPtr> sys$sysconf(int name);
     ErrorOr<FlatPtr> sys$disown(ProcessID);
-    ErrorOr<FlatPtr> sys$allocate_tls(Userspace<const char*> initial_data, size_t);
+    ErrorOr<FlatPtr> sys$allocate_tls(Userspace<char const*> initial_data, size_t);
     ErrorOr<FlatPtr> sys$prctl(int option, FlatPtr arg1, FlatPtr arg2);
-    ErrorOr<FlatPtr> sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*>);
+    ErrorOr<FlatPtr> sys$set_coredump_metadata(Userspace<Syscall::SC_set_coredump_metadata_params const*>);
     ErrorOr<FlatPtr> sys$anon_create(size_t, int options);
-    ErrorOr<FlatPtr> sys$statvfs(Userspace<const Syscall::SC_statvfs_params*> user_params);
+    ErrorOr<FlatPtr> sys$statvfs(Userspace<Syscall::SC_statvfs_params const*> user_params);
     ErrorOr<FlatPtr> sys$fstatvfs(int fd, statvfs* buf);
     ErrorOr<FlatPtr> sys$map_time_page();
 
@@ -433,7 +433,7 @@ public:
 
     NonnullRefPtr<Custody> current_directory();
     Custody* executable() { return m_executable.ptr(); }
-    const Custody* executable() const { return m_executable.ptr(); }
+    Custody const* executable() const { return m_executable.ptr(); }
 
     static constexpr size_t max_arguments_size = Thread::default_userspace_stack_size / 8;
     static constexpr size_t max_environment_size = Thread::default_userspace_stack_size / 8;
@@ -489,8 +489,8 @@ public:
         m_wait_for_tracer_at_next_execve = val;
     }
 
-    ErrorOr<void> peek_user_data(Span<u8> destination, Userspace<const u8*> address);
-    ErrorOr<FlatPtr> peek_user_data(Userspace<const FlatPtr*> address);
+    ErrorOr<void> peek_user_data(Span<u8> destination, Userspace<u8 const*> address);
+    ErrorOr<FlatPtr> peek_user_data(Userspace<FlatPtr const*> address);
     ErrorOr<void> poke_user_data(Userspace<FlatPtr*> address, FlatPtr data);
 
     void disowned_by_waiter(Process& process);
@@ -510,7 +510,7 @@ public:
     ErrorOr<void> set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value);
     ErrorOr<void> try_set_coredump_property(StringView key, StringView value);
 
-    const NonnullRefPtrVector<Thread>& threads_for_coredump(Badge<Coredump>) const { return m_threads_for_coredump; }
+    NonnullRefPtrVector<Thread> const& threads_for_coredump(Badge<Coredump>) const { return m_threads_for_coredump; }
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
     PerformanceEventBuffer const* perf_events() const { return m_perf_event_buffer; }
@@ -524,7 +524,7 @@ public:
     ErrorOr<void> require_no_promises() const;
 
     ErrorOr<void> validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Memory::Region const* region = nullptr) const;
-    ErrorOr<void> validate_inode_mmap_prot(int prot, const Inode& inode, bool map_shared) const;
+    ErrorOr<void> validate_inode_mmap_prot(int prot, Inode const& inode, bool map_shared) const;
 
 private:
     friend class MemoryManager;
@@ -548,7 +548,7 @@ private:
     void delete_perf_events_buffer();
 
     ErrorOr<void> do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header);
-    ErrorOr<FlatPtr> do_write(OpenFileDescription&, const UserOrKernelBuffer&, size_t);
+    ErrorOr<FlatPtr> do_write(OpenFileDescription&, UserOrKernelBuffer const&, size_t);
 
     ErrorOr<FlatPtr> do_statvfs(FileSystem const& path, Custody const*, statvfs* buf);
 
@@ -561,8 +561,8 @@ private:
 
     ErrorOr<siginfo_t> do_waitid(Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, int options);
 
-    static ErrorOr<NonnullOwnPtr<KString>> get_syscall_path_argument(Userspace<const char*> user_path, size_t path_length);
-    static ErrorOr<NonnullOwnPtr<KString>> get_syscall_path_argument(const Syscall::StringArgument&);
+    static ErrorOr<NonnullOwnPtr<KString>> get_syscall_path_argument(Userspace<char const*> user_path, size_t path_length);
+    static ErrorOr<NonnullOwnPtr<KString>> get_syscall_path_argument(Syscall::StringArgument const&);
 
     bool has_tracee_thread(ProcessID tracer_pid);
 
@@ -584,10 +584,10 @@ public:
     mode_t binary_link_required_mode() const;
     ErrorOr<void> procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_stacks_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
-    ErrorOr<NonnullRefPtr<Inode>> lookup_stacks_directory(const ProcFS&, StringView name) const;
+    ErrorOr<NonnullRefPtr<Inode>> lookup_stacks_directory(ProcFS const&, StringView name) const;
     ErrorOr<size_t> procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_file_descriptions_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
-    ErrorOr<NonnullRefPtr<Inode>> lookup_file_descriptions_directory(const ProcFS&, StringView name) const;
+    ErrorOr<NonnullRefPtr<Inode>> lookup_file_descriptions_directory(ProcFS const&, StringView name) const;
 
 private:
     inline PerformanceEventBuffer* current_perf_events_buffer()
@@ -632,7 +632,7 @@ public:
         }
 
         OpenFileDescription* description() { return m_description; }
-        const OpenFileDescription* description() const { return m_description; }
+        OpenFileDescription const* description() const { return m_description; }
         u32 flags() const { return m_flags; }
         void set_flags(u32 flags) { m_flags = flags; }
 
@@ -653,10 +653,10 @@ public:
 
     public:
         OpenFileDescriptions() { }
-        ALWAYS_INLINE const OpenFileDescriptionAndFlags& operator[](size_t i) const { return at(i); }
+        ALWAYS_INLINE OpenFileDescriptionAndFlags const& operator[](size_t i) const { return at(i); }
         ALWAYS_INLINE OpenFileDescriptionAndFlags& operator[](size_t i) { return at(i); }
 
-        ErrorOr<void> try_clone(const Kernel::Process::OpenFileDescriptions& other)
+        ErrorOr<void> try_clone(Kernel::Process::OpenFileDescriptions const& other)
         {
             TRY(try_resize(other.m_fds_metadatas.size()));
 
@@ -666,14 +666,14 @@ public:
             return {};
         }
 
-        const OpenFileDescriptionAndFlags& at(size_t i) const;
+        OpenFileDescriptionAndFlags const& at(size_t i) const;
         OpenFileDescriptionAndFlags& at(size_t i);
 
         OpenFileDescriptionAndFlags const* get_if_valid(size_t i) const;
         OpenFileDescriptionAndFlags* get_if_valid(size_t i);
 
-        void enumerate(Function<void(const OpenFileDescriptionAndFlags&)>) const;
-        ErrorOr<void> try_enumerate(Function<ErrorOr<void>(const OpenFileDescriptionAndFlags&)>) const;
+        void enumerate(Function<void(OpenFileDescriptionAndFlags const&)>) const;
+        ErrorOr<void> try_enumerate(Function<ErrorOr<void>(OpenFileDescriptionAndFlags const&)>) const;
         void change_each(Function<void(OpenFileDescriptionAndFlags&)>);
 
         ErrorOr<ScopedDescriptionAllocation> allocate(int first_candidate_fd = 0);
@@ -746,7 +746,7 @@ public:
         }
 
         virtual InodeIndex component_index() const override;
-        virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override;
+        virtual ErrorOr<NonnullRefPtr<Inode>> to_inode(ProcFS const& procfs_instance) const override;
         virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
         virtual mode_t required_mode() const override { return 0555; }
 
@@ -790,7 +790,7 @@ private:
 
     MutexProtected<OpenFileDescriptions> m_fds;
 
-    const bool m_is_kernel_process;
+    bool const m_is_kernel_process;
     Atomic<State> m_state { State::Running };
     bool m_profiling { false };
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_stopped { false };
@@ -865,7 +865,7 @@ template<IteratorFunction<Process&> Callback>
 inline void Process::for_each(Callback callback)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    Process::all_instances().with([&](const auto& list) {
+    Process::all_instances().with([&](auto const& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
@@ -879,7 +879,7 @@ template<IteratorFunction<Process&> Callback>
 inline void Process::for_each_child(Callback callback)
 {
     ProcessID my_pid = pid();
-    Process::all_instances().with([&](const auto& list) {
+    Process::all_instances().with([&](auto const& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
@@ -920,7 +920,7 @@ inline IterationDecision Process::for_each_thread(Callback callback)
 template<IteratorFunction<Process&> Callback>
 inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
 {
-    Process::all_instances().with([&](const auto& list) {
+    Process::all_instances().with([&](auto const& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
@@ -988,17 +988,17 @@ inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
     });
 }
 
-inline bool InodeMetadata::may_read(const Process& process) const
+inline bool InodeMetadata::may_read(Process const& process) const
 {
     return may_read(process.euid(), process.egid(), process.extra_gids());
 }
 
-inline bool InodeMetadata::may_write(const Process& process) const
+inline bool InodeMetadata::may_write(Process const& process) const
 {
     return may_write(process.euid(), process.egid(), process.extra_gids());
 }
 
-inline bool InodeMetadata::may_execute(const Process& process) const
+inline bool InodeMetadata::may_execute(Process const& process) const
 {
     return may_execute(process.euid(), process.egid(), process.extra_gids());
 }
@@ -1016,7 +1016,7 @@ inline ProcessID Thread::pid() const
 #define VERIFY_NO_PROCESS_BIG_LOCK(process) \
     VERIFY(!process->big_lock().is_exclusively_locked_by_current_thread());
 
-inline static ErrorOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(const Kernel::Syscall::StringArgument& string)
+inline static ErrorOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(Kernel::Syscall::StringArgument const& string)
 {
     Userspace<char const*> characters((FlatPtr)string.characters);
     return try_copy_kstring_from_user(characters, string.length);

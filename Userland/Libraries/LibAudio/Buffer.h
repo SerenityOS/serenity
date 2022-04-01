@@ -47,7 +47,7 @@ public:
         return MUST(adopt_nonnull_ref_or_enomem(new (nothrow) Buffer));
     }
 
-    Sample const* samples() const { return (const Sample*)data(); }
+    Sample const* samples() const { return (Sample const*)data(); }
 
     ErrorOr<FixedArray<Sample>> to_sample_array() const
     {
@@ -86,7 +86,7 @@ private:
 
     Core::AnonymousBuffer m_buffer;
     const i32 m_id { -1 };
-    const int m_sample_count { 0 };
+    int const m_sample_count { 0 };
 };
 
 // This only works for double resamplers, and therefore cannot be part of the class

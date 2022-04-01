@@ -11,7 +11,7 @@
 const in6_addr in6addr_any = IN6ADDR_ANY_INIT;
 const in6_addr in6addr_loopback = IN6ADDR_LOOPBACK_INIT;
 
-unsigned int if_nametoindex([[maybe_unused]] const char* ifname)
+unsigned int if_nametoindex([[maybe_unused]] char const* ifname)
 {
     errno = ENODEV;
     return -1;

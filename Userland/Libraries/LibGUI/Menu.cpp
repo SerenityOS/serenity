@@ -42,7 +42,7 @@ Menu::~Menu()
     unrealize_menu();
 }
 
-void Menu::set_icon(const Gfx::Bitmap* icon)
+void Menu::set_icon(Gfx::Bitmap const* icon)
 {
     m_icon = icon;
 }
@@ -110,13 +110,13 @@ void Menu::add_separator()
     MUST(try_add_separator());
 }
 
-void Menu::realize_if_needed(const RefPtr<Action>& default_action)
+void Menu::realize_if_needed(RefPtr<Action> const& default_action)
 {
     if (m_menu_id == -1 || m_current_default_action.ptr() != default_action)
         realize_menu(default_action);
 }
 
-void Menu::popup(const Gfx::IntPoint& screen_position, const RefPtr<Action>& default_action)
+void Menu::popup(Gfx::IntPoint const& screen_position, RefPtr<Action> const& default_action)
 {
     realize_if_needed(default_action);
     ConnectionToWindowServer::the().async_popup_menu(m_menu_id, screen_position);

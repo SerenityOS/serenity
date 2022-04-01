@@ -21,7 +21,7 @@ typedef volatile u64 kcov_pc_t;
  * for the first time. At this point it is in state OPENED. When a thread in
  * the same process then uses the KCOV_ENABLE ioctl on the block device, the
  * instance enters state TRACING.
- * 
+ *
  * A KCOVInstance in state TRACING can return to state OPENED by either the
  * KCOV_DISABLE ioctl or by killing the thread. A KCOVInstance in state OPENED
  * can return to state UNUSED only when the process dies. At this point

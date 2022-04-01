@@ -537,14 +537,14 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const) False positive; We call block<SleepBlocker> which is not const
-auto Thread::sleep(clockid_t clock_id, const Time& duration, Time* remaining_time) -> BlockResult
+auto Thread::sleep(clockid_t clock_id, Time const& duration, Time* remaining_time) -> BlockResult
 {
     VERIFY(state() == Thread::State::Running);
     return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(false, &duration, nullptr, clock_id), remaining_time);
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const) False positive; We call block<SleepBlocker> which is not const
-auto Thread::sleep_until(clockid_t clock_id, const Time& deadline) -> BlockResult
+auto Thread::sleep_until(clockid_t clock_id, Time const& deadline) -> BlockResult
 {
     VERIFY(state() == Thread::State::Running);
     return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(true, &deadline, nullptr, clock_id));
@@ -588,7 +588,7 @@ void Thread::finalize()
         dbgln("Thread {} leaking {} Locks!", *this, lock_count());
         SpinlockLocker list_lock(m_holding_locks_lock);
         for (auto& info : m_holding_locks_list) {
-            const auto& location = info.lock_location;
+            auto const& location = info.lock_location;
             dbgln(" - Mutex: \"{}\" @ {} locked in function \"{}\" at \"{}:{}\" with a count of: {}", info.lock->name(), info.lock, location.function_name(), location.filename(), location.line_number(), info.count);
         }
         VERIFY_NOT_REACHED();
@@ -1346,7 +1346,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
 
 struct RecognizedSymbol {
     FlatPtr address;
-    const KernelSymbol* symbol { nullptr };
+    KernelSymbol const* symbol { nullptr };
 };
 
 static ErrorOr<bool> symbolicate(RecognizedSymbol const& symbol, Process& process, StringBuilder& builder)

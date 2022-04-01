@@ -172,7 +172,7 @@ struct JPGLoadingContext {
     };
 
     State state { State::NotDecoded };
-    const u8* data { nullptr };
+    u8 const* data { nullptr };
     size_t data_size { 0 };
     u32 luma_table[64] = { 0 };
     u32 chroma_table[64] = { 0 };
@@ -224,7 +224,7 @@ static Optional<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t co
     return value;
 }
 
-static Optional<u8> get_next_symbol(HuffmanStreamState& hstream, const HuffmanTableSpec& table)
+static Optional<u8> get_next_symbol(HuffmanStreamState& hstream, HuffmanTableSpec const& table)
 {
     unsigned code = 0;
     size_t code_cursor = 0;
@@ -649,7 +649,7 @@ static bool read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& con
     return true;
 }
 
-static inline bool validate_luma_and_modify_context(const ComponentSpec& luma, JPGLoadingContext& context)
+static inline bool validate_luma_and_modify_context(ComponentSpec const& luma, JPGLoadingContext& context)
 {
     if ((luma.hsample_factor == 1 || luma.hsample_factor == 2) && (luma.vsample_factor == 1 || luma.vsample_factor == 2)) {
         context.mblock_meta.hpadded_count += luma.hsample_factor == 1 ? 0 : context.mblock_meta.hcount % 2;
@@ -847,7 +847,7 @@ static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macrobloc
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             for (u32 i = 0; i < context.component_count; i++) {
                 auto& component = context.components[i];
-                const u32* table = component.qtable_id == 0 ? context.luma_table : context.chroma_table;
+                u32 const* table = component.qtable_id == 0 ? context.luma_table : context.chroma_table;
                 for (u32 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
                     for (u32 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
                         u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
@@ -862,22 +862,22 @@ static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macrobloc
     }
 }
 
-static void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static void inverse_dct(JPGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
-    static const float m0 = 2.0 * AK::cos(1.0 / 16.0 * 2.0 * AK::Pi<double>);
-    static const float m1 = 2.0 * AK::cos(2.0 / 16.0 * 2.0 * AK::Pi<double>);
-    static const float m3 = 2.0 * AK::cos(2.0 / 16.0 * 2.0 * AK::Pi<double>);
-    static const float m5 = 2.0 * AK::cos(3.0 / 16.0 * 2.0 * AK::Pi<double>);
-    static const float m2 = m0 - m5;
-    static const float m4 = m0 + m5;
-    static const float s0 = AK::cos(0.0 / 16.0 * AK::Pi<double>) / sqrt(8);
-    static const float s1 = AK::cos(1.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s2 = AK::cos(2.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s3 = AK::cos(3.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s4 = AK::cos(4.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s5 = AK::cos(5.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s6 = AK::cos(6.0 / 16.0 * AK::Pi<double>) / 2.0;
-    static const float s7 = AK::cos(7.0 / 16.0 * AK::Pi<double>) / 2.0;
+    static float const m0 = 2.0 * AK::cos(1.0 / 16.0 * 2.0 * AK::Pi<double>);
+    static float const m1 = 2.0 * AK::cos(2.0 / 16.0 * 2.0 * AK::Pi<double>);
+    static float const m3 = 2.0 * AK::cos(2.0 / 16.0 * 2.0 * AK::Pi<double>);
+    static float const m5 = 2.0 * AK::cos(3.0 / 16.0 * 2.0 * AK::Pi<double>);
+    static float const m2 = m0 - m5;
+    static float const m4 = m0 + m5;
+    static float const s0 = AK::cos(0.0 / 16.0 * AK::Pi<double>) / sqrt(8);
+    static float const s1 = AK::cos(1.0 / 16.0 * AK::Pi<double>) / 2.0;
+    static float const s2 = AK::cos(2.0 / 16.0 * AK::Pi<double>) / 2.0;
+    static float const s3 = AK::cos(3.0 / 16.0 * AK::Pi<double>) / 2.0;
+    static float const s4 = AK::cos(4.0 / 16.0 * AK::Pi<double>) / 2.0;
+    static float const s5 = AK::cos(5.0 / 16.0 * AK::Pi<double>) / 2.0;
+    static float const s6 = AK::cos(6.0 / 16.0 * AK::Pi<double>) / 2.0;
+    static float const s7 = AK::cos(7.0 / 16.0 * AK::Pi<double>) / 2.0;
 
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
@@ -889,62 +889,62 @@ static void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& ma
                         Macroblock& block = macroblocks[mb_index];
                         i32* block_component = get_component(block, component_i);
                         for (u32 k = 0; k < 8; ++k) {
-                            const float g0 = block_component[0 * 8 + k] * s0;
-                            const float g1 = block_component[4 * 8 + k] * s4;
-                            const float g2 = block_component[2 * 8 + k] * s2;
-                            const float g3 = block_component[6 * 8 + k] * s6;
-                            const float g4 = block_component[5 * 8 + k] * s5;
-                            const float g5 = block_component[1 * 8 + k] * s1;
-                            const float g6 = block_component[7 * 8 + k] * s7;
-                            const float g7 = block_component[3 * 8 + k] * s3;
+                            float const g0 = block_component[0 * 8 + k] * s0;
+                            float const g1 = block_component[4 * 8 + k] * s4;
+                            float const g2 = block_component[2 * 8 + k] * s2;
+                            float const g3 = block_component[6 * 8 + k] * s6;
+                            float const g4 = block_component[5 * 8 + k] * s5;
+                            float const g5 = block_component[1 * 8 + k] * s1;
+                            float const g6 = block_component[7 * 8 + k] * s7;
+                            float const g7 = block_component[3 * 8 + k] * s3;
 
-                            const float f0 = g0;
-                            const float f1 = g1;
-                            const float f2 = g2;
-                            const float f3 = g3;
-                            const float f4 = g4 - g7;
-                            const float f5 = g5 + g6;
-                            const float f6 = g5 - g6;
-                            const float f7 = g4 + g7;
+                            float const f0 = g0;
+                            float const f1 = g1;
+                            float const f2 = g2;
+                            float const f3 = g3;
+                            float const f4 = g4 - g7;
+                            float const f5 = g5 + g6;
+                            float const f6 = g5 - g6;
+                            float const f7 = g4 + g7;
 
-                            const float e0 = f0;
-                            const float e1 = f1;
-                            const float e2 = f2 - f3;
-                            const float e3 = f2 + f3;
-                            const float e4 = f4;
-                            const float e5 = f5 - f7;
-                            const float e6 = f6;
-                            const float e7 = f5 + f7;
-                            const float e8 = f4 + f6;
+                            float const e0 = f0;
+                            float const e1 = f1;
+                            float const e2 = f2 - f3;
+                            float const e3 = f2 + f3;
+                            float const e4 = f4;
+                            float const e5 = f5 - f7;
+                            float const e6 = f6;
+                            float const e7 = f5 + f7;
+                            float const e8 = f4 + f6;
 
-                            const float d0 = e0;
-                            const float d1 = e1;
-                            const float d2 = e2 * m1;
-                            const float d3 = e3;
-                            const float d4 = e4 * m2;
-                            const float d5 = e5 * m3;
-                            const float d6 = e6 * m4;
-                            const float d7 = e7;
-                            const float d8 = e8 * m5;
+                            float const d0 = e0;
+                            float const d1 = e1;
+                            float const d2 = e2 * m1;
+                            float const d3 = e3;
+                            float const d4 = e4 * m2;
+                            float const d5 = e5 * m3;
+                            float const d6 = e6 * m4;
+                            float const d7 = e7;
+                            float const d8 = e8 * m5;
 
-                            const float c0 = d0 + d1;
-                            const float c1 = d0 - d1;
-                            const float c2 = d2 - d3;
-                            const float c3 = d3;
-                            const float c4 = d4 + d8;
-                            const float c5 = d5 + d7;
-                            const float c6 = d6 - d8;
-                            const float c7 = d7;
-                            const float c8 = c5 - c6;
+                            float const c0 = d0 + d1;
+                            float const c1 = d0 - d1;
+                            float const c2 = d2 - d3;
+                            float const c3 = d3;
+                            float const c4 = d4 + d8;
+                            float const c5 = d5 + d7;
+                            float const c6 = d6 - d8;
+                            float const c7 = d7;
+                            float const c8 = c5 - c6;
 
-                            const float b0 = c0 + c3;
-                            const float b1 = c1 + c2;
-                            const float b2 = c1 - c2;
-                            const float b3 = c0 - c3;
-                            const float b4 = c4 - c8;
-                            const float b5 = c8;
-                            const float b6 = c6 - c7;
-                            const float b7 = c7;
+                            float const b0 = c0 + c3;
+                            float const b1 = c1 + c2;
+                            float const b2 = c1 - c2;
+                            float const b3 = c0 - c3;
+                            float const b4 = c4 - c8;
+                            float const b5 = c8;
+                            float const b6 = c6 - c7;
+                            float const b7 = c7;
 
                             block_component[0 * 8 + k] = b0 + b7;
                             block_component[1 * 8 + k] = b1 + b6;
@@ -956,62 +956,62 @@ static void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& ma
                             block_component[7 * 8 + k] = b0 - b7;
                         }
                         for (u32 l = 0; l < 8; ++l) {
-                            const float g0 = block_component[l * 8 + 0] * s0;
-                            const float g1 = block_component[l * 8 + 4] * s4;
-                            const float g2 = block_component[l * 8 + 2] * s2;
-                            const float g3 = block_component[l * 8 + 6] * s6;
-                            const float g4 = block_component[l * 8 + 5] * s5;
-                            const float g5 = block_component[l * 8 + 1] * s1;
-                            const float g6 = block_component[l * 8 + 7] * s7;
-                            const float g7 = block_component[l * 8 + 3] * s3;
+                            float const g0 = block_component[l * 8 + 0] * s0;
+                            float const g1 = block_component[l * 8 + 4] * s4;
+                            float const g2 = block_component[l * 8 + 2] * s2;
+                            float const g3 = block_component[l * 8 + 6] * s6;
+                            float const g4 = block_component[l * 8 + 5] * s5;
+                            float const g5 = block_component[l * 8 + 1] * s1;
+                            float const g6 = block_component[l * 8 + 7] * s7;
+                            float const g7 = block_component[l * 8 + 3] * s3;
 
-                            const float f0 = g0;
-                            const float f1 = g1;
-                            const float f2 = g2;
-                            const float f3 = g3;
-                            const float f4 = g4 - g7;
-                            const float f5 = g5 + g6;
-                            const float f6 = g5 - g6;
-                            const float f7 = g4 + g7;
+                            float const f0 = g0;
+                            float const f1 = g1;
+                            float const f2 = g2;
+                            float const f3 = g3;
+                            float const f4 = g4 - g7;
+                            float const f5 = g5 + g6;
+                            float const f6 = g5 - g6;
+                            float const f7 = g4 + g7;
 
-                            const float e0 = f0;
-                            const float e1 = f1;
-                            const float e2 = f2 - f3;
-                            const float e3 = f2 + f3;
-                            const float e4 = f4;
-                            const float e5 = f5 - f7;
-                            const float e6 = f6;
-                            const float e7 = f5 + f7;
-                            const float e8 = f4 + f6;
+                            float const e0 = f0;
+                            float const e1 = f1;
+                            float const e2 = f2 - f3;
+                            float const e3 = f2 + f3;
+                            float const e4 = f4;
+                            float const e5 = f5 - f7;
+                            float const e6 = f6;
+                            float const e7 = f5 + f7;
+                            float const e8 = f4 + f6;
 
-                            const float d0 = e0;
-                            const float d1 = e1;
-                            const float d2 = e2 * m1;
-                            const float d3 = e3;
-                            const float d4 = e4 * m2;
-                            const float d5 = e5 * m3;
-                            const float d6 = e6 * m4;
-                            const float d7 = e7;
-                            const float d8 = e8 * m5;
+                            float const d0 = e0;
+                            float const d1 = e1;
+                            float const d2 = e2 * m1;
+                            float const d3 = e3;
+                            float const d4 = e4 * m2;
+                            float const d5 = e5 * m3;
+                            float const d6 = e6 * m4;
+                            float const d7 = e7;
+                            float const d8 = e8 * m5;
 
-                            const float c0 = d0 + d1;
-                            const float c1 = d0 - d1;
-                            const float c2 = d2 - d3;
-                            const float c3 = d3;
-                            const float c4 = d4 + d8;
-                            const float c5 = d5 + d7;
-                            const float c6 = d6 - d8;
-                            const float c7 = d7;
-                            const float c8 = c5 - c6;
+                            float const c0 = d0 + d1;
+                            float const c1 = d0 - d1;
+                            float const c2 = d2 - d3;
+                            float const c3 = d3;
+                            float const c4 = d4 + d8;
+                            float const c5 = d5 + d7;
+                            float const c6 = d6 - d8;
+                            float const c7 = d7;
+                            float const c8 = c5 - c6;
 
-                            const float b0 = c0 + c3;
-                            const float b1 = c1 + c2;
-                            const float b2 = c1 - c2;
-                            const float b3 = c0 - c3;
-                            const float b4 = c4 - c8;
-                            const float b5 = c8;
-                            const float b6 = c6 - c7;
-                            const float b7 = c7;
+                            float const b0 = c0 + c3;
+                            float const b1 = c1 + c2;
+                            float const b2 = c1 - c2;
+                            float const b3 = c0 - c3;
+                            float const b4 = c4 - c8;
+                            float const b5 = c8;
+                            float const b6 = c6 - c7;
+                            float const b7 = c7;
 
                             block_component[l * 8 + 0] = b0 + b7;
                             block_component[l * 8 + 1] = b1 + b6;
@@ -1029,12 +1029,12 @@ static void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& ma
     }
 }
 
-static void ycbcr_to_rgb(const JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static void ycbcr_to_rgb(JPGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             const u32 chroma_block_index = vcursor * context.mblock_meta.hpadded_count + hcursor;
-            const Macroblock& chroma = macroblocks[chroma_block_index];
+            Macroblock const& chroma = macroblocks[chroma_block_index];
             // Overflows are intentional.
             for (u8 vfactor_i = context.vsample_factor - 1; vfactor_i < context.vsample_factor; --vfactor_i) {
                 for (u8 hfactor_i = context.hsample_factor - 1; hfactor_i < context.hsample_factor; --hfactor_i) {
@@ -1062,7 +1062,7 @@ static void ycbcr_to_rgb(const JPGLoadingContext& context, Vector<Macroblock>& m
     }
 }
 
-static bool compose_bitmap(JPGLoadingContext& context, const Vector<Macroblock>& macroblocks)
+static bool compose_bitmap(JPGLoadingContext& context, Vector<Macroblock> const& macroblocks)
 {
     auto bitmap_or_error = Bitmap::try_create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height });
     if (bitmap_or_error.is_error())
@@ -1224,7 +1224,7 @@ static bool decode_jpg(JPGLoadingContext& context)
     return true;
 }
 
-JPGImageDecoderPlugin::JPGImageDecoderPlugin(const u8* data, size_t size)
+JPGImageDecoderPlugin::JPGImageDecoderPlugin(u8 const* data, size_t size)
 {
     m_context = make<JPGLoadingContext>();
     m_context->data = data;

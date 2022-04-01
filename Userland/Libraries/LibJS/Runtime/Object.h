@@ -149,7 +149,7 @@ public:
 
     // Non-standard methods
 
-    Value get_without_side_effects(const PropertyKey&) const;
+    Value get_without_side_effects(PropertyKey const&) const;
 
     void define_direct_property(PropertyKey const& property_key, Value value, PropertyAttributes attributes) { storage_set(property_key, { value, attributes }); };
     void define_direct_accessor(PropertyKey const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
@@ -176,7 +176,7 @@ public:
 
     Value get_direct(size_t index) const { return m_storage[index]; }
 
-    const IndexedProperties& indexed_properties() const { return m_indexed_properties; }
+    IndexedProperties const& indexed_properties() const { return m_indexed_properties; }
     IndexedProperties& indexed_properties() { return m_indexed_properties; }
     void set_indexed_property_elements(Vector<Value>&& values) { m_indexed_properties = IndexedProperties(move(values)); }
 

@@ -20,7 +20,7 @@ class FramebufferDevice final : public GenericFramebufferDevice {
     friend class DeviceManagement;
 
 public:
-    static NonnullRefPtr<FramebufferDevice> create(const GenericGraphicsAdapter&, PhysicalAddress, size_t, size_t, size_t);
+    static NonnullRefPtr<FramebufferDevice> create(GenericGraphicsAdapter const&, PhysicalAddress, size_t, size_t, size_t);
 
     virtual ErrorOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
 
@@ -50,7 +50,7 @@ private:
     virtual ErrorOr<void> flush_head_buffer(size_t head) override;
     virtual ErrorOr<void> flush_rectangle(size_t head, FBRect const&) override;
 
-    FramebufferDevice(const GenericGraphicsAdapter&, PhysicalAddress, size_t, size_t, size_t);
+    FramebufferDevice(GenericGraphicsAdapter const&, PhysicalAddress, size_t, size_t, size_t);
 
     PhysicalAddress m_framebuffer_address;
     size_t m_framebuffer_pitch { 0 };

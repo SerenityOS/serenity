@@ -12,8 +12,8 @@ namespace Archive {
 unsigned TarFileHeader::expected_checksum() const
 {
     auto checksum = 0u;
-    const u8* u8_this = reinterpret_cast<const u8*>(this);
-    const u8* u8_m_checksum = reinterpret_cast<const u8*>(&m_checksum);
+    u8 const* u8_this = reinterpret_cast<u8 const*>(this);
+    u8 const* u8_m_checksum = reinterpret_cast<u8 const*>(&m_checksum);
     for (auto i = 0u; i < sizeof(TarFileHeader); ++i) {
         if (u8_this + i >= u8_m_checksum && u8_this + i < u8_m_checksum + sizeof(m_checksum)) {
             checksum += ' ';

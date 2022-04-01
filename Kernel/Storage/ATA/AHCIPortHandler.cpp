@@ -46,7 +46,7 @@ AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::Maske
     }
 }
 
-void AHCIPortHandler::enumerate_ports(Function<void(const AHCIPort&)> callback) const
+void AHCIPortHandler::enumerate_ports(Function<void(AHCIPort const&)> callback) const
 {
     for (auto& port : m_handled_ports) {
         callback(*port.value);
@@ -70,7 +70,7 @@ PhysicalAddress AHCIPortHandler::get_identify_metadata_physical_region(u32 port_
 
 AHCI::MaskedBitField AHCIPortHandler::create_pending_ports_interrupts_bitfield() const
 {
-    return AHCI::MaskedBitField((volatile u32&)m_parent_controller->hba().control_regs.is, m_taken_ports.bit_mask());
+    return AHCI::MaskedBitField((u32 volatile&)m_parent_controller->hba().control_regs.is, m_taken_ports.bit_mask());
 }
 
 AHCI::HBADefinedCapabilities AHCIPortHandler::hba_capabilities() const
@@ -80,7 +80,7 @@ AHCI::HBADefinedCapabilities AHCIPortHandler::hba_capabilities() const
 
 AHCIPortHandler::~AHCIPortHandler() = default;
 
-bool AHCIPortHandler::handle_irq(const RegisterState&)
+bool AHCIPortHandler::handle_irq(RegisterState const&)
 {
     dbgln_if(AHCI_DEBUG, "AHCI Port Handler: IRQ received");
     if (m_pending_ports_interrupts.is_zeroed())

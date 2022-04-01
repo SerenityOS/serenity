@@ -25,7 +25,7 @@
 
 namespace HackStudio {
 
-static const Regex<PosixExtended> s_project_name_validity_regex("^([A-Za-z0-9_-])*$");
+static Regex<PosixExtended> const s_project_name_validity_regex("^([A-Za-z0-9_-])*$");
 
 int NewProjectDialog::show(GUI::Window* parent_window)
 {

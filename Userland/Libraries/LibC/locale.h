@@ -55,6 +55,6 @@ struct lconv {
 };
 
 struct lconv* localeconv(void);
-char* setlocale(int category, const char* locale);
+char* setlocale(int category, char const* locale);
 
 __END_DECLS

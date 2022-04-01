@@ -85,20 +85,20 @@ public:
         reset();
     }
 
-    virtual void update(const u8*, size_t) override;
+    virtual void update(u8 const*, size_t) override;
 
     virtual DigestType digest() override;
     virtual DigestType peek() override;
 
-    inline static DigestType hash(const u8* data, size_t length)
+    inline static DigestType hash(u8 const* data, size_t length)
     {
         SHA256 sha;
         sha.update(data, length);
         return sha.digest();
     }
 
-    inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
-    inline static DigestType hash(StringView buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
+    inline static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
+    inline static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
     virtual String class_name() const override
@@ -116,7 +116,7 @@ public:
     }
 
 private:
-    inline void transform(const u8*);
+    inline void transform(u8 const*);
 
     u8 m_data_buffer[BlockSize] {};
     size_t m_data_length { 0 };
@@ -137,20 +137,20 @@ public:
         reset();
     }
 
-    virtual void update(const u8*, size_t) override;
+    virtual void update(u8 const*, size_t) override;
 
     virtual DigestType digest() override;
     virtual DigestType peek() override;
 
-    inline static DigestType hash(const u8* data, size_t length)
+    inline static DigestType hash(u8 const* data, size_t length)
     {
         SHA384 sha;
         sha.update(data, length);
         return sha.digest();
     }
 
-    inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
-    inline static DigestType hash(StringView buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
+    inline static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
+    inline static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
     virtual String class_name() const override
@@ -168,7 +168,7 @@ public:
     }
 
 private:
-    inline void transform(const u8*);
+    inline void transform(u8 const*);
 
     u8 m_data_buffer[BlockSize] {};
     size_t m_data_length { 0 };
@@ -189,20 +189,20 @@ public:
         reset();
     }
 
-    virtual void update(const u8*, size_t) override;
+    virtual void update(u8 const*, size_t) override;
 
     virtual DigestType digest() override;
     virtual DigestType peek() override;
 
-    inline static DigestType hash(const u8* data, size_t length)
+    inline static DigestType hash(u8 const* data, size_t length)
     {
         SHA512 sha;
         sha.update(data, length);
         return sha.digest();
     }
 
-    inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
-    inline static DigestType hash(StringView buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
+    inline static DigestType hash(ByteBuffer const& buffer) { return hash(buffer.data(), buffer.size()); }
+    inline static DigestType hash(StringView buffer) { return hash((u8 const*)buffer.characters_without_null_termination(), buffer.length()); }
 
 #ifndef KERNEL
     virtual String class_name() const override
@@ -220,7 +220,7 @@ public:
     }
 
 private:
-    inline void transform(const u8*);
+    inline void transform(u8 const*);
 
     u8 m_data_buffer[BlockSize] {};
     size_t m_data_length { 0 };

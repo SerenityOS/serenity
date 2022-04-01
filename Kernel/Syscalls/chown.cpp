@@ -20,7 +20,7 @@ ErrorOr<FlatPtr> Process::sys$fchown(int fd, UserID uid, GroupID gid)
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$chown(Userspace<const Syscall::SC_chown_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$chown(Userspace<Syscall::SC_chown_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::chown));

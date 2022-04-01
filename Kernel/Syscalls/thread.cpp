@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::SC_create_thread_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Syscall::SC_create_thread_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::thread));
@@ -169,7 +169,7 @@ ErrorOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, size_t user_name_length)
+ErrorOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<char const*> user_name, size_t user_name_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::stdio));

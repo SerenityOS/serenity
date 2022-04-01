@@ -29,7 +29,7 @@ public:
     // NOTE: This returns {} if the peek is at or past EOF.
     Optional<u32> peek(size_t offset = 0) const;
 
-    ssize_t operator-(const Utf8CodePointIterator& other) const
+    ssize_t operator-(Utf8CodePointIterator const& other) const
     {
         return m_ptr - other.m_ptr;
     }
@@ -80,9 +80,9 @@ public:
     Utf8CodePointIterator end() const { return { end_ptr(), 0 }; }
     Utf8CodePointIterator iterator_at_byte_offset(size_t) const;
 
-    const unsigned char* bytes() const { return begin_ptr(); }
+    unsigned char const* bytes() const { return begin_ptr(); }
     size_t byte_length() const { return m_string.length(); }
-    size_t byte_offset_of(const Utf8CodePointIterator&) const;
+    size_t byte_offset_of(Utf8CodePointIterator const&) const;
     size_t byte_offset_of(size_t code_point_offset) const;
 
     Utf8View substring_view(size_t byte_offset, size_t byte_length) const { return Utf8View { m_string.substring_view(byte_offset, byte_length) }; }
@@ -92,12 +92,12 @@ public:
 
     bool is_empty() const { return m_string.is_empty(); }
     bool is_null() const { return m_string.is_null(); }
-    bool starts_with(const Utf8View&) const;
+    bool starts_with(Utf8View const&) const;
     bool contains(u32) const;
 
-    Utf8View trim(const Utf8View& characters, TrimMode mode = TrimMode::Both) const;
+    Utf8View trim(Utf8View const& characters, TrimMode mode = TrimMode::Both) const;
 
-    size_t iterator_offset(const Utf8CodePointIterator& it) const
+    size_t iterator_offset(Utf8CodePointIterator const& it) const
     {
         return byte_offset_of(it);
     }

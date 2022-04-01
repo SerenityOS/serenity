@@ -49,10 +49,10 @@ public:
     time_t ticks_per_second() const;
     time_t boot_time() const;
 
-    bool is_system_timer(const HardwareTimerBase&) const;
+    bool is_system_timer(HardwareTimerBase const&) const;
 
-    static void update_time(const RegisterState&);
-    static void update_time_hpet(const RegisterState&);
+    static void update_time(RegisterState const&);
+    static void update_time_hpet(RegisterState const&);
     void increment_time_since_boot_hpet();
     void increment_time_since_boot();
 
@@ -69,7 +69,7 @@ public:
     timespec remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
     // FIXME: Should use AK::Time internally
     // FIXME: Also, most likely broken, because it does not check m_update[12] for in-progress updates.
-    void set_remaining_epoch_time_adjustment(const timespec& adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
+    void set_remaining_epoch_time_adjustment(timespec const& adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
 
     bool can_query_precise_time() const { return m_can_query_precise_time; }
 
@@ -85,7 +85,7 @@ private:
     Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
     NonnullRefPtrVector<HardwareTimerBase> m_hardware_timers;
     void set_system_timer(HardwareTimerBase&);
-    static void system_timer_tick(const RegisterState&);
+    static void system_timer_tick(RegisterState const&);
 
     static u64 scheduling_current_time(bool);
 

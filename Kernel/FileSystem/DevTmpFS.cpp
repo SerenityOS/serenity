@@ -71,7 +71,7 @@ ErrorOr<void> DevTmpFSInode::flush_metadata()
     return {};
 }
 
-ErrorOr<size_t> DevTmpFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
+ErrorOr<size_t> DevTmpFSInode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
 {
     VERIFY_NOT_REACHED();
 }
@@ -318,7 +318,7 @@ ErrorOr<size_t> DevTmpFSDeviceInode::read_bytes(off_t offset, size_t count, User
     return result.value();
 }
 
-ErrorOr<size_t> DevTmpFSDeviceInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, OpenFileDescription* description)
+ErrorOr<size_t> DevTmpFSDeviceInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription* description)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);

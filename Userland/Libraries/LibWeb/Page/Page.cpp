@@ -59,22 +59,22 @@ CSS::PreferredColorScheme Page::preferred_color_scheme() const
     return m_client.preferred_color_scheme();
 }
 
-bool Page::handle_mousewheel(const Gfx::IntPoint& position, unsigned button, unsigned modifiers, int wheel_delta_x, int wheel_delta_y)
+bool Page::handle_mousewheel(Gfx::IntPoint const& position, unsigned button, unsigned modifiers, int wheel_delta_x, int wheel_delta_y)
 {
     return top_level_browsing_context().event_handler().handle_mousewheel(position, button, modifiers, wheel_delta_x, wheel_delta_y);
 }
 
-bool Page::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
+bool Page::handle_mouseup(Gfx::IntPoint const& position, unsigned button, unsigned modifiers)
 {
     return top_level_browsing_context().event_handler().handle_mouseup(position, button, modifiers);
 }
 
-bool Page::handle_mousedown(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
+bool Page::handle_mousedown(Gfx::IntPoint const& position, unsigned button, unsigned modifiers)
 {
     return top_level_browsing_context().event_handler().handle_mousedown(position, button, modifiers);
 }
 
-bool Page::handle_mousemove(const Gfx::IntPoint& position, unsigned buttons, unsigned modifiers)
+bool Page::handle_mousemove(Gfx::IntPoint const& position, unsigned buttons, unsigned modifiers)
 {
     return top_level_browsing_context().event_handler().handle_mousemove(position, buttons, modifiers);
 }

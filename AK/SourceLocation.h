@@ -19,7 +19,7 @@ public:
     [[nodiscard]] constexpr StringView filename() const { return StringView(m_file); }
     [[nodiscard]] constexpr u32 line_number() const { return m_line; }
 
-    [[nodiscard]] static constexpr SourceLocation current(const char* const file = __builtin_FILE(), u32 line = __builtin_LINE(), const char* const function = __builtin_FUNCTION())
+    [[nodiscard]] static constexpr SourceLocation current(char const* const file = __builtin_FILE(), u32 line = __builtin_LINE(), char const* const function = __builtin_FUNCTION())
     {
         return SourceLocation(file, line, function);
     }
@@ -27,15 +27,15 @@ public:
     constexpr SourceLocation() = default;
 
 private:
-    constexpr SourceLocation(const char* const file, u32 line, const char* const function)
+    constexpr SourceLocation(char const* const file, u32 line, char const* const function)
         : m_function(function)
         , m_file(file)
         , m_line(line)
     {
     }
 
-    const char* const m_function { nullptr };
-    const char* const m_file { nullptr };
+    char const* const m_function { nullptr };
+    char const* const m_file { nullptr };
     const u32 m_line { 0 };
 };
 

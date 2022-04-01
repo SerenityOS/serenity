@@ -190,8 +190,8 @@ concept ThrowCompletionOrVoidFunction = requires(Func func, Args... args)
 {
     {
         func(args...)
-    }
-    ->SameAs<ThrowCompletionOr<void>>;
+        }
+        -> SameAs<ThrowCompletionOr<void>>;
 };
 
 template<typename... Args>

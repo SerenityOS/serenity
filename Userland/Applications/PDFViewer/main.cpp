@@ -17,7 +17,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    const char* file_path = nullptr;
+    char const* file_path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(file_path, "PDF file to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);

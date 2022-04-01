@@ -69,9 +69,9 @@ public:
     virtual Optional<StyleProperty> property(PropertyID) const override;
     virtual bool set_property(PropertyID, StringView css_text) override;
 
-    const Vector<StyleProperty>& properties() const { return m_properties; }
-    const HashMap<String, StyleProperty>& custom_properties() const { return m_custom_properties; }
-    Optional<StyleProperty> custom_property(const String& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
+    Vector<StyleProperty> const& properties() const { return m_properties; }
+    HashMap<String, StyleProperty> const& custom_properties() const { return m_custom_properties; }
+    Optional<StyleProperty> custom_property(String const& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
     size_t custom_property_count() const { return m_custom_properties.size(); }
 
     virtual String serialized() const final override;

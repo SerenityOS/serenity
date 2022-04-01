@@ -67,7 +67,7 @@ int main()
         return 1;
     }
 
-    //cleanup
+    // cleanup
     munmap(map1, 6 * PAGE_SIZE);
 
     outln("PASS");

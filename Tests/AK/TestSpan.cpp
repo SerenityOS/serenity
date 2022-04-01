@@ -115,23 +115,23 @@ TEST_CASE(span_from_void_pointer)
 {
     int value = 0;
     [[maybe_unused]] Bytes bytes0 { reinterpret_cast<void*>(value), 4 };
-    [[maybe_unused]] ReadonlyBytes bytes1 { reinterpret_cast<const void*>(value), 4 };
+    [[maybe_unused]] ReadonlyBytes bytes1 { reinterpret_cast<void const*>(value), 4 };
 }
 
 TEST_CASE(span_from_c_string)
 {
-    const char* str = "Serenity";
+    char const* str = "Serenity";
     [[maybe_unused]] ReadonlyBytes bytes { str, strlen(str) };
 }
 
 TEST_CASE(starts_with)
 {
-    const char* str = "HeyFriends!";
+    char const* str = "HeyFriends!";
     ReadonlyBytes bytes { str, strlen(str) };
-    const char* str_hey = "Hey";
+    char const* str_hey = "Hey";
     ReadonlyBytes hey_bytes { str_hey, strlen(str_hey) };
     EXPECT(bytes.starts_with(hey_bytes));
-    const char* str_nah = "Nah";
+    char const* str_nah = "Nah";
     ReadonlyBytes nah_bytes { str_nah, strlen(str_nah) };
     EXPECT(!bytes.starts_with(nah_bytes));
 

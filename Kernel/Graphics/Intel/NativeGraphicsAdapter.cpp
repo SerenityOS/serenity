@@ -88,7 +88,7 @@ static Graphics::Modesetting calculate_modesetting_from_edid(EDID::Parser& edid,
     return mode;
 }
 
-static bool check_pll_settings(const IntelNativeGraphicsAdapter::PLLSettings& settings, size_t reference_clock, const IntelNativeGraphicsAdapter::PLLMaxSettings& limits)
+static bool check_pll_settings(IntelNativeGraphicsAdapter::PLLSettings const& settings, size_t reference_clock, IntelNativeGraphicsAdapter::PLLMaxSettings const& limits)
 {
     if (settings.n < limits.n.min || settings.n > limits.n.max) {
         dbgln_if(INTEL_GRAPHICS_DEBUG, "N is invalid {}", settings.n);
@@ -145,7 +145,7 @@ static size_t find_absolute_difference(u64 target_frequency, u64 checked_frequen
     return checked_frequency - target_frequency;
 }
 
-Optional<IntelNativeGraphicsAdapter::PLLSettings> IntelNativeGraphicsAdapter::create_pll_settings(u64 target_frequency, u64 reference_clock, const PLLMaxSettings& limits)
+Optional<IntelNativeGraphicsAdapter::PLLSettings> IntelNativeGraphicsAdapter::create_pll_settings(u64 target_frequency, u64 reference_clock, PLLMaxSettings const& limits)
 {
     IntelNativeGraphicsAdapter::PLLSettings settings;
     IntelNativeGraphicsAdapter::PLLSettings best_settings;
@@ -280,7 +280,7 @@ void IntelNativeGraphicsAdapter::write_to_register(IntelGraphics::RegisterIndex 
     VERIFY(m_registers_region);
     SpinlockLocker lock(m_registers_lock);
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics {}: Write to {} value of {:x}", pci_address(), convert_register_index_to_string(index), value);
-    auto* reg = (volatile u32*)m_registers_region->vaddr().offset(index).as_ptr();
+    auto* reg = (u32 volatile*)m_registers_region->vaddr().offset(index).as_ptr();
     *reg = value;
 }
 u32 IntelNativeGraphicsAdapter::read_from_register(IntelGraphics::RegisterIndex index) const
@@ -288,7 +288,7 @@ u32 IntelNativeGraphicsAdapter::read_from_register(IntelGraphics::RegisterIndex 
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_registers_region);
     SpinlockLocker lock(m_registers_lock);
-    auto* reg = (volatile u32*)m_registers_region->vaddr().offset(index).as_ptr();
+    auto* reg = (u32 volatile*)m_registers_region->vaddr().offset(index).as_ptr();
     u32 value = *reg;
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics {}: Read from {} value of {:x}", pci_address(), convert_register_index_to_string(index), value);
     return value;
@@ -460,7 +460,7 @@ bool IntelNativeGraphicsAdapter::set_crt_resolution(size_t width, size_t height)
     return true;
 }
 
-void IntelNativeGraphicsAdapter::set_display_timings(const Graphics::Modesetting& modesetting)
+void IntelNativeGraphicsAdapter::set_display_timings(Graphics::Modesetting const& modesetting)
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
@@ -589,7 +589,7 @@ void IntelNativeGraphicsAdapter::enable_primary_plane(PhysicalAddress fb_address
     write_to_register(IntelGraphics::RegisterIndex::DisplayPlaneAControl, (read_from_register(IntelGraphics::RegisterIndex::DisplayPlaneAControl) & (~(0b1111 << 26))) | (0b0110 << 26) | (1 << 31));
 }
 
-void IntelNativeGraphicsAdapter::set_dpll_registers(const PLLSettings& settings)
+void IntelNativeGraphicsAdapter::set_dpll_registers(PLLSettings const& settings)
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());
@@ -599,7 +599,7 @@ void IntelNativeGraphicsAdapter::set_dpll_registers(const PLLSettings& settings)
     write_to_register(IntelGraphics::RegisterIndex::DPLLControlA, read_from_register(IntelGraphics::RegisterIndex::DPLLControlA) & ~0x80000000);
 }
 
-void IntelNativeGraphicsAdapter::enable_dpll_without_vga(const PLLSettings& settings, size_t dac_multiplier)
+void IntelNativeGraphicsAdapter::enable_dpll_without_vga(PLLSettings const& settings, size_t dac_multiplier)
 {
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_modeset_lock.is_locked());

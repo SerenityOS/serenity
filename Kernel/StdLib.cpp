@@ -12,7 +12,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/StdLib.h>
 
-ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<const char*> user_str, size_t user_str_size)
+ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<char const*> user_str, size_t user_str_size)
 {
     bool is_user = Kernel::Memory::is_user_range(user_str.vaddr(), user_str_size);
     if (!is_user)
@@ -21,7 +21,7 @@ ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<con
     void* fault_at;
     ssize_t length = Kernel::safe_strnlen(user_str.unsafe_userspace_ptr(), user_str_size, fault_at);
     if (length < 0) {
-        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (strnlen)", static_cast<const void*>(user_str.unsafe_userspace_ptr()), user_str_size, VirtualAddress { fault_at });
+        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (strnlen)", static_cast<void const*>(user_str.unsafe_userspace_ptr()), user_str_size, VirtualAddress { fault_at });
         return EFAULT;
     }
     char* buffer;
@@ -33,7 +33,7 @@ ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<con
         return new_string;
 
     if (!Kernel::safe_memcpy(buffer, user_str.unsafe_userspace_ptr(), (size_t)length, fault_at)) {
-        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (memcpy)", static_cast<const void*>(user_str.unsafe_userspace_ptr()), user_str_size, VirtualAddress { fault_at });
+        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (memcpy)", static_cast<void const*>(user_str.unsafe_userspace_ptr()), user_str_size, VirtualAddress { fault_at });
         return EFAULT;
     }
     return new_string;
@@ -62,7 +62,7 @@ ErrorOr<Time> copy_time_from_user<const timespec>(Userspace<timespec const*> src
 template<>
 ErrorOr<Time> copy_time_from_user<timespec>(Userspace<timespec*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 
-Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
+Optional<u32> user_atomic_fetch_add_relaxed(u32 volatile* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
@@ -73,7 +73,7 @@ Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
     return Kernel::safe_atomic_fetch_add_relaxed(var, val);
 }
 
-Optional<u32> user_atomic_exchange_relaxed(volatile u32* var, u32 val)
+Optional<u32> user_atomic_exchange_relaxed(u32 volatile* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
@@ -84,7 +84,7 @@ Optional<u32> user_atomic_exchange_relaxed(volatile u32* var, u32 val)
     return Kernel::safe_atomic_exchange_relaxed(var, val);
 }
 
-Optional<u32> user_atomic_load_relaxed(volatile u32* var)
+Optional<u32> user_atomic_load_relaxed(u32 volatile* var)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
@@ -95,7 +95,7 @@ Optional<u32> user_atomic_load_relaxed(volatile u32* var)
     return Kernel::safe_atomic_load_relaxed(var);
 }
 
-bool user_atomic_store_relaxed(volatile u32* var, u32 val)
+bool user_atomic_store_relaxed(u32 volatile* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return false; // not aligned!
@@ -106,7 +106,7 @@ bool user_atomic_store_relaxed(volatile u32* var, u32 val)
     return Kernel::safe_atomic_store_relaxed(var, val);
 }
 
-Optional<bool> user_atomic_compare_exchange_relaxed(volatile u32* var, u32& expected, u32 val)
+Optional<bool> user_atomic_compare_exchange_relaxed(u32 volatile* var, u32& expected, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
@@ -118,7 +118,7 @@ Optional<bool> user_atomic_compare_exchange_relaxed(volatile u32* var, u32& expe
     return Kernel::safe_atomic_compare_exchange_relaxed(var, expected, val);
 }
 
-Optional<u32> user_atomic_fetch_and_relaxed(volatile u32* var, u32 val)
+Optional<u32> user_atomic_fetch_and_relaxed(u32 volatile* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
@@ -129,7 +129,7 @@ Optional<u32> user_atomic_fetch_and_relaxed(volatile u32* var, u32 val)
     return Kernel::safe_atomic_fetch_and_relaxed(var, val);
 }
 
-Optional<u32> user_atomic_fetch_and_not_relaxed(volatile u32* var, u32 val)
+Optional<u32> user_atomic_fetch_and_not_relaxed(u32 volatile* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
@@ -140,7 +140,7 @@ Optional<u32> user_atomic_fetch_and_not_relaxed(volatile u32* var, u32 val)
     return Kernel::safe_atomic_fetch_and_not_relaxed(var, val);
 }
 
-Optional<u32> user_atomic_fetch_or_relaxed(volatile u32* var, u32 val)
+Optional<u32> user_atomic_fetch_or_relaxed(u32 volatile* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
@@ -151,7 +151,7 @@ Optional<u32> user_atomic_fetch_or_relaxed(volatile u32* var, u32 val)
     return Kernel::safe_atomic_fetch_or_relaxed(var, val);
 }
 
-Optional<u32> user_atomic_fetch_xor_relaxed(volatile u32* var, u32 val)
+Optional<u32> user_atomic_fetch_xor_relaxed(u32 volatile* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
@@ -220,7 +220,7 @@ FlatPtr missing_got_workaround()
 
 extern "C" {
 
-const void* memmem(const void* haystack, size_t haystack_length, const void* needle, size_t needle_length)
+void const* memmem(void const* haystack, size_t haystack_length, void const* needle, size_t needle_length)
 {
     return AK::memmem(haystack, haystack_length, needle, needle_length);
 }

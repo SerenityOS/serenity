@@ -21,8 +21,8 @@
 #include <LibMain/Main.h>
 #include <unistd.h>
 
-const int WIDTH = 780;
-const int HEIGHT = 600;
+int const WIDTH = 780;
+int const HEIGHT = 600;
 
 class Canvas final : public GUI::Widget {
     C_OBJECT(Canvas)

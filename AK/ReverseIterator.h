@@ -55,7 +55,7 @@ public:
     ALWAYS_INLINE constexpr ValueType const* operator->() const { return &m_container[m_index]; }
     ALWAYS_INLINE constexpr ValueType* operator->() { return &m_container[m_index]; }
 
-    SimpleReverseIterator& operator=(const SimpleReverseIterator& other)
+    SimpleReverseIterator& operator=(SimpleReverseIterator const& other)
     {
         m_index = other.m_index;
         return *this;

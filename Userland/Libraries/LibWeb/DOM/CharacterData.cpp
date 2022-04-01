@@ -10,7 +10,7 @@
 
 namespace Web::DOM {
 
-CharacterData::CharacterData(Document& document, NodeType type, const String& data)
+CharacterData::CharacterData(Document& document, NodeType type, String const& data)
     : Node(document, type)
     , m_data(data)
 {

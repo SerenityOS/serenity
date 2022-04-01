@@ -25,7 +25,7 @@ Object* ChildEvent::child()
     return nullptr;
 }
 
-const Object* ChildEvent::child() const
+Object const* ChildEvent::child() const
 {
     if (auto ref = m_child.strong_ref())
         return ref.ptr();
@@ -39,7 +39,7 @@ Object* ChildEvent::insertion_before_child()
     return nullptr;
 }
 
-const Object* ChildEvent::insertion_before_child() const
+Object const* ChildEvent::insertion_before_child() const
 {
     if (auto ref = m_insertion_before_child.strong_ref())
         return ref.ptr();

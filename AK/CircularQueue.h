@@ -70,7 +70,7 @@ public:
 
     class ConstIterator {
     public:
-        bool operator!=(const ConstIterator& other) { return m_index != other.m_index; }
+        bool operator!=(ConstIterator const& other) { return m_index != other.m_index; }
         ConstIterator& operator++()
         {
             ++m_index;
@@ -81,12 +81,12 @@ public:
 
     private:
         friend class CircularQueue;
-        ConstIterator(const CircularQueue& queue, const size_t index)
+        ConstIterator(CircularQueue const& queue, const size_t index)
             : m_queue(queue)
             , m_index(index)
         {
         }
-        const CircularQueue& m_queue;
+        CircularQueue const& m_queue;
         size_t m_index { 0 };
     };
 

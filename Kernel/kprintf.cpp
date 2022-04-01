@@ -111,9 +111,9 @@ static void buffer_putch(char*& bufptr, char ch)
 
 // Declare it, so that the symbol is exported, because libstdc++ uses it.
 // However, *only* libstdc++ uses it, and none of the rest of the Kernel.
-extern "C" int sprintf(char* buffer, const char* fmt, ...);
+extern "C" int sprintf(char* buffer, char const* fmt, ...);
 
-int sprintf(char* buffer, const char* fmt, ...)
+int sprintf(char* buffer, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -123,7 +123,7 @@ int sprintf(char* buffer, const char* fmt, ...)
     return ret;
 }
 
-int snprintf(char* buffer, size_t size, const char* fmt, ...)
+int snprintf(char* buffer, size_t size, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -156,7 +156,7 @@ static inline void internal_dbgputch(char ch)
     IO::out8(IO::BOCHS_DEBUG_PORT, ch);
 }
 
-extern "C" void dbgputstr(const char* characters, size_t length)
+extern "C" void dbgputstr(char const* characters, size_t length)
 {
     if (!characters)
         return;
@@ -170,7 +170,7 @@ void dbgputstr(StringView view)
     ::dbgputstr(view.characters_without_null_termination(), view.length());
 }
 
-extern "C" void kernelputstr(const char* characters, size_t length)
+extern "C" void kernelputstr(char const* characters, size_t length)
 {
     if (!characters)
         return;
@@ -179,7 +179,7 @@ extern "C" void kernelputstr(const char* characters, size_t length)
         console_out(characters[i]);
 }
 
-extern "C" void kernelcriticalputstr(const char* characters, size_t length)
+extern "C" void kernelcriticalputstr(char const* characters, size_t length)
 {
     if (!characters)
         return;
@@ -188,7 +188,7 @@ extern "C" void kernelcriticalputstr(const char* characters, size_t length)
         critical_console_out(characters[i]);
 }
 
-extern "C" void kernelearlyputstr(const char* characters, size_t length)
+extern "C" void kernelearlyputstr(char const* characters, size_t length)
 {
     if (!characters)
         return;

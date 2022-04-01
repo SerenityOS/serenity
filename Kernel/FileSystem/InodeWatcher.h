@@ -43,14 +43,14 @@ public:
     static ErrorOr<NonnullRefPtr<InodeWatcher>> try_create();
     virtual ~InodeWatcher() override;
 
-    virtual bool can_read(const OpenFileDescription&, u64) const override;
+    virtual bool can_read(OpenFileDescription const&, u64) const override;
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     // Can't write to an inode watcher.
-    virtual bool can_write(const OpenFileDescription&, u64) const override { return true; }
-    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EIO; }
+    virtual bool can_write(OpenFileDescription const&, u64) const override { return true; }
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override { return EIO; }
     virtual ErrorOr<void> close() override;
 
-    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const override;
     virtual StringView class_name() const override { return "InodeWatcher"sv; };
     virtual bool is_inode_watcher() const override { return true; }
 

@@ -23,7 +23,7 @@ public:
     virtual bool is_seekable() const override { return true; }
 
     bool read_block(u64 index, UserOrKernelBuffer&);
-    bool write_block(u64 index, const UserOrKernelBuffer&);
+    bool write_block(u64 index, UserOrKernelBuffer const&);
 
     virtual void start_request(AsyncBlockDeviceRequest&) = 0;
 
@@ -52,14 +52,14 @@ public:
         Write
     };
     AsyncBlockDeviceRequest(Device& block_device, RequestType request_type,
-        u64 block_index, u32 block_count, const UserOrKernelBuffer& buffer, size_t buffer_size);
+        u64 block_index, u32 block_count, UserOrKernelBuffer const& buffer, size_t buffer_size);
 
     RequestType request_type() const { return m_request_type; }
     u64 block_index() const { return m_block_index; }
     u32 block_count() const { return m_block_count; }
     size_t block_size() const { return m_block_device.block_size(); }
     UserOrKernelBuffer& buffer() { return m_buffer; }
-    const UserOrKernelBuffer& buffer() const { return m_buffer; }
+    UserOrKernelBuffer const& buffer() const { return m_buffer; }
     size_t buffer_size() const { return m_buffer_size; }
 
     virtual void start() override;

@@ -19,9 +19,9 @@ void dummy();
 void dummy() { }
 
 // Assertions.h
-[[noreturn]] void __assertion_failed(const char*, const char*, unsigned, const char*);
+[[noreturn]] void __assertion_failed(char const*, char const*, unsigned, char const*);
 
-[[noreturn]] void __assertion_failed(const char*, const char*, unsigned, const char*)
+[[noreturn]] void __assertion_failed(char const*, char const*, unsigned, char const*)
 {
     for (;;) { }
 }
@@ -58,20 +58,20 @@ ssize_t safe_strnlen(char const*, unsigned long, void*&) { return 0; }
 bool safe_memcpy(void*, void const*, unsigned long, void*&);
 bool safe_memcpy(void*, void const*, unsigned long, void*&) { return false; }
 
-Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32*, u32&, u32);
-Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32*, u32&, u32) { return {}; }
+Optional<bool> safe_atomic_compare_exchange_relaxed(u32 volatile*, u32&, u32);
+Optional<bool> safe_atomic_compare_exchange_relaxed(u32 volatile*, u32&, u32) { return {}; }
 
-Optional<u32> safe_atomic_load_relaxed(volatile u32*);
-Optional<u32> safe_atomic_load_relaxed(volatile u32*) { return {}; }
+Optional<u32> safe_atomic_load_relaxed(u32 volatile*);
+Optional<u32> safe_atomic_load_relaxed(u32 volatile*) { return {}; }
 
-Optional<u32> safe_atomic_fetch_add_relaxed(volatile u32*, u32);
-Optional<u32> safe_atomic_fetch_add_relaxed(volatile u32*, u32) { return {}; }
+Optional<u32> safe_atomic_fetch_add_relaxed(u32 volatile*, u32);
+Optional<u32> safe_atomic_fetch_add_relaxed(u32 volatile*, u32) { return {}; }
 
-Optional<u32> safe_atomic_exchange_relaxed(volatile u32*, u32);
-Optional<u32> safe_atomic_exchange_relaxed(volatile u32*, u32) { return {}; }
+Optional<u32> safe_atomic_exchange_relaxed(u32 volatile*, u32);
+Optional<u32> safe_atomic_exchange_relaxed(u32 volatile*, u32) { return {}; }
 
-bool safe_atomic_store_relaxed(volatile u32*, u32);
-bool safe_atomic_store_relaxed(volatile u32*, u32) { return {}; }
+bool safe_atomic_store_relaxed(u32 volatile*, u32);
+bool safe_atomic_store_relaxed(u32 volatile*, u32) { return {}; }
 
 }
 
@@ -79,12 +79,12 @@ extern "C" {
 
 FlatPtr kernel_mapping_base;
 
-void kernelputstr(const char*, size_t);
-void kernelputstr(const char*, size_t) { }
+void kernelputstr(char const*, size_t);
+void kernelputstr(char const*, size_t) { }
 
-void kernelcriticalputstr(const char*, size_t);
-void kernelcriticalputstr(const char*, size_t) { }
+void kernelcriticalputstr(char const*, size_t);
+void kernelcriticalputstr(char const*, size_t) { }
 
-void kernelearlyputstr(const char*, size_t);
-void kernelearlyputstr(const char*, size_t) { }
+void kernelearlyputstr(char const*, size_t);
+void kernelearlyputstr(char const*, size_t) { }
 }

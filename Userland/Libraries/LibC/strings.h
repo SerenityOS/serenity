@@ -11,9 +11,9 @@
 
 __BEGIN_DECLS
 
-int strcasecmp(const char*, const char*);
-int strncasecmp(const char*, const char*, size_t);
+int strcasecmp(char const*, char const*);
+int strncasecmp(char const*, char const*, size_t);
 void bzero(void*, size_t);
-void bcopy(const void*, void*, size_t);
+void bcopy(void const*, void*, size_t);
 
 __END_DECLS

@@ -58,13 +58,13 @@ public:
     void set_client(ConsoleClient& client) { m_client = &client; }
 
     GlobalObject& global_object() { return m_global_object; }
-    const GlobalObject& global_object() const { return m_global_object; }
+    GlobalObject const& global_object() const { return m_global_object; }
 
     VM& vm();
     Vector<Value> vm_arguments();
 
     HashMap<String, unsigned>& counters() { return m_counters; }
-    const HashMap<String, unsigned>& counters() const { return m_counters; }
+    HashMap<String, unsigned> const& counters() const { return m_counters; }
 
     ThrowCompletionOr<Value> debug();
     ThrowCompletionOr<Value> error();
@@ -119,7 +119,7 @@ protected:
     VM& vm();
 
     GlobalObject& global_object() { return m_console.global_object(); }
-    const GlobalObject& global_object() const { return m_console.global_object(); }
+    GlobalObject const& global_object() const { return m_console.global_object(); }
 
     Console& m_console;
 };

@@ -10,7 +10,7 @@
 
 namespace Web::UIEvents {
 
-MouseEvent::MouseEvent(const FlyString& event_name, double offset_x, double offset_y, double client_x, double client_y)
+MouseEvent::MouseEvent(FlyString const& event_name, double offset_x, double offset_y, double client_x, double client_y)
     : UIEvent(event_name)
     , m_offset_x(offset_x)
     , m_offset_y(offset_y)

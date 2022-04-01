@@ -62,7 +62,7 @@ public:
         return m_data[index];
     }
 
-    constexpr VectorN& operator+=(const VectorN& other)
+    constexpr VectorN& operator+=(VectorN const& other)
     {
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
@@ -70,7 +70,7 @@ public:
         return *this;
     }
 
-    constexpr VectorN& operator-=(const VectorN& other)
+    constexpr VectorN& operator-=(VectorN const& other)
     {
         UNROLL_LOOP
         for (auto i = 0u; i < N; ++i)
@@ -86,7 +86,7 @@ public:
         return *this;
     }
 
-    [[nodiscard]] constexpr VectorN operator+(const VectorN& other) const
+    [[nodiscard]] constexpr VectorN operator+(VectorN const& other) const
     {
         VectorN result;
         UNROLL_LOOP
@@ -95,7 +95,7 @@ public:
         return result;
     }
 
-    [[nodiscard]] constexpr VectorN operator-(const VectorN& other) const
+    [[nodiscard]] constexpr VectorN operator-(VectorN const& other) const
     {
         VectorN result;
         UNROLL_LOOP
@@ -104,7 +104,7 @@ public:
         return result;
     }
 
-    [[nodiscard]] constexpr VectorN operator*(const VectorN& other) const
+    [[nodiscard]] constexpr VectorN operator*(VectorN const& other) const
     {
         VectorN result;
         UNROLL_LOOP
@@ -122,7 +122,7 @@ public:
         return result;
     }
 
-    [[nodiscard]] constexpr VectorN operator/(const VectorN& other) const
+    [[nodiscard]] constexpr VectorN operator/(VectorN const& other) const
     {
         VectorN result;
         UNROLL_LOOP
@@ -151,7 +151,7 @@ public:
         return result;
     }
 
-    [[nodiscard]] constexpr T dot(const VectorN& other) const
+    [[nodiscard]] constexpr T dot(VectorN const& other) const
     {
         T result {};
         UNROLL_LOOP
@@ -160,7 +160,7 @@ public:
         return result;
     }
 
-    [[nodiscard]] constexpr VectorN cross(const VectorN& other) const requires(N == 3)
+    [[nodiscard]] constexpr VectorN cross(VectorN const& other) const requires(N == 3)
     {
         return VectorN(
             y() * other.z() - z() * other.y(),

@@ -15,7 +15,7 @@
 #include <time.h>
 #include <unistd.h>
 
-static volatile bool g_interrupted;
+static bool volatile g_interrupted;
 static void handle_sigint(int)
 {
     g_interrupted = true;

@@ -44,7 +44,7 @@ public:
 
     virtual void run(String test_glob);
 
-    const Test::Counts& counts() const { return m_counts; }
+    Test::Counts const& counts() const { return m_counts; }
 
     bool is_printing_progress() const { return m_print_progress; }
 
@@ -65,8 +65,8 @@ protected:
     void print_test_results_as_json() const;
 
     virtual Vector<String> get_test_paths() const = 0;
-    virtual void do_run_single_test(const String&, size_t current_test_index, size_t num_tests) = 0;
-    virtual const Vector<String>* get_failed_test_names() const { return nullptr; }
+    virtual void do_run_single_test(String const&, size_t current_test_index, size_t num_tests) = 0;
+    virtual Vector<String> const* get_failed_test_names() const { return nullptr; }
 
     String m_test_root;
     bool m_print_times;
@@ -101,7 +101,7 @@ inline double get_time_in_ms()
 }
 
 template<typename Callback>
-inline void iterate_directory_recursively(const String& directory_path, Callback callback)
+inline void iterate_directory_recursively(String const& directory_path, Callback callback)
 {
     Core::DirIterator directory_iterator(directory_path, Core::DirIterator::Flags::SkipDots);
 

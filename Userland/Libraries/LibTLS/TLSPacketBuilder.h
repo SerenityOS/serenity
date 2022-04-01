@@ -46,11 +46,11 @@ public:
     inline void append(u16 value)
     {
         value = AK::convert_between_host_and_network_endian(value);
-        append((const u8*)&value, sizeof(value));
+        append((u8 const*)&value, sizeof(value));
     }
     inline void append(u8 value)
     {
-        append((const u8*)&value, sizeof(value));
+        append((u8 const*)&value, sizeof(value));
     }
     inline void append(ReadonlyBytes data)
     {
@@ -67,7 +67,7 @@ public:
 
         append(buf, 3);
     }
-    inline void append(const u8* data, size_t bytes)
+    inline void append(u8 const* data, size_t bytes)
     {
         if (bytes == 0)
             return;

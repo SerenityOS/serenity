@@ -388,7 +388,7 @@ private:
 
         VERIFY_NOT_REACHED();
     }
-    static auto safe_substring(const String& str, int start, int length)
+    static auto safe_substring(String const& str, int start, int length)
     {
         if (start < 1 || (size_t)start > str.length())
             fail("Index out of range");

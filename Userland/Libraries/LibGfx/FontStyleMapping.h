@@ -12,7 +12,7 @@
 namespace Gfx {
 
 struct FontStyleMapping {
-    constexpr FontStyleMapping(int s, const char* n)
+    constexpr FontStyleMapping(int s, char const* n)
         : style(s)
         , name(n)
     {

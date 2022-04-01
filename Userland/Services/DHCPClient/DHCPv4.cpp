@@ -11,7 +11,7 @@ ParsedDHCPv4Options DHCPv4Packet::parse_options() const
 {
     ParsedDHCPv4Options options;
     for (size_t index = 4; index < DHCPV4_OPTION_FIELD_MAX_LENGTH; ++index) {
-        auto opt_name = *(const DHCPOption*)&m_options[index];
+        auto opt_name = *(DHCPOption const*)&m_options[index];
         switch (opt_name) {
         case DHCPOption::Pad:
             continue;

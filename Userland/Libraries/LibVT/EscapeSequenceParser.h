@@ -19,7 +19,7 @@ class EscapeSequenceExecutor {
 public:
     virtual ~EscapeSequenceExecutor() = default;
 
-    using Parameters = Span<const unsigned>;
+    using Parameters = Span<unsigned const>;
     using Intermediates = Span<const u8>;
     using OscParameter = Span<const u8>;
     using OscParameters = Span<const OscParameter>;

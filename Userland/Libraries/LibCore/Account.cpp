@@ -38,7 +38,7 @@ static String get_salt()
     return builder.build();
 }
 
-static Vector<gid_t> get_extra_gids(const passwd& pwd)
+static Vector<gid_t> get_extra_gids(passwd const& pwd)
 {
     StringView username { pwd.pw_name };
     Vector<gid_t> extra_gids;
@@ -57,7 +57,7 @@ static Vector<gid_t> get_extra_gids(const passwd& pwd)
     return extra_gids;
 }
 
-ErrorOr<Account> Account::from_passwd(const passwd& pwd, const spwd& spwd)
+ErrorOr<Account> Account::from_passwd(passwd const& pwd, spwd const& spwd)
 {
     Account account(pwd, spwd, get_extra_gids(pwd));
     endpwent();
@@ -88,7 +88,7 @@ ErrorOr<Account> Account::self([[maybe_unused]] Read options)
     return Account(*pwd, spwd, extra_gids);
 }
 
-ErrorOr<Account> Account::from_name(const char* username, [[maybe_unused]] Read options)
+ErrorOr<Account> Account::from_name(char const* username, [[maybe_unused]] Read options)
 {
     auto pwd = TRY(Core::System::getpwnam(username));
     if (!pwd.has_value())
@@ -175,7 +175,7 @@ void Account::delete_password()
     m_password_hash = "";
 }
 
-Account::Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids)
+Account::Account(passwd const& pwd, spwd const& spwd, Vector<gid_t> extra_gids)
     : m_username(pwd.pw_name)
     , m_password_hash(spwd.sp_pwdp)
     , m_uid(pwd.pw_uid)

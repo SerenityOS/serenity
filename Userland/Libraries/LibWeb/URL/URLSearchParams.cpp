@@ -12,7 +12,7 @@
 
 namespace Web::URL {
 
-String url_encode(const Vector<QueryParam>& pairs, AK::URL::PercentEncodeSet percent_encode_set)
+String url_encode(Vector<QueryParam> const& pairs, AK::URL::PercentEncodeSet percent_encode_set)
 {
     StringBuilder builder;
     for (size_t i = 0; i < pairs.size(); ++i) {
@@ -185,7 +185,7 @@ bool URLSearchParams::has(String const& name)
                 .is_end();
 }
 
-void URLSearchParams::set(const String& name, const String& value)
+void URLSearchParams::set(String const& name, String const& value)
 {
     // 1. If this’s list contains any name-value pairs whose name is name, then set the value of the first such name-value pair to value and remove the others.
     auto existing = m_list.find_if([&name](auto& entry) {

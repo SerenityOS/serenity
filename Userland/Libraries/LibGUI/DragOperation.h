@@ -27,9 +27,9 @@ public:
     virtual ~DragOperation() override = default;
 
     void set_mime_data(RefPtr<Core::MimeData> mime_data) { m_mime_data = move(mime_data); }
-    void set_text(const String& text);
-    void set_bitmap(const Gfx::Bitmap* bitmap);
-    void set_data(const String& data_type, const String& data);
+    void set_text(String const& text);
+    void set_bitmap(Gfx::Bitmap const* bitmap);
+    void set_data(String const& data_type, String const& data);
 
     Outcome exec();
     Outcome outcome() const { return m_outcome; }

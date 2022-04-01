@@ -12,7 +12,7 @@
 TEST_CASE(setjmp)
 {
     jmp_buf env;
-    volatile int set = 1;
+    int volatile set = 1;
 
     if (setjmp(env)) {
         EXPECT_EQ(set, 0);
@@ -29,7 +29,7 @@ TEST_CASE(setjmp)
 TEST_CASE(setjmp_zero)
 {
     jmp_buf env;
-    volatile int set = 1;
+    int volatile set = 1;
 
     switch (setjmp(env)) {
     case 0:
@@ -50,7 +50,7 @@ TEST_CASE(setjmp_zero)
 TEST_CASE(setjmp_value)
 {
     jmp_buf env;
-    volatile int set = 1;
+    int volatile set = 1;
 
     switch (setjmp(env)) {
     case 0:
@@ -71,7 +71,7 @@ TEST_CASE(setjmp_value)
 TEST_CASE(sigsetjmp)
 {
     sigjmp_buf env;
-    volatile int set = 1;
+    int volatile set = 1;
 
     if (sigsetjmp(env, 0)) {
         EXPECT_EQ(set, 0);
@@ -88,7 +88,7 @@ TEST_CASE(sigsetjmp)
 TEST_CASE(sigsetjmp_zero)
 {
     sigjmp_buf env;
-    volatile int set = 1;
+    int volatile set = 1;
 
     switch (sigsetjmp(env, 0)) {
     case 0:
@@ -109,7 +109,7 @@ TEST_CASE(sigsetjmp_zero)
 TEST_CASE(sigsetjmp_value)
 {
     sigjmp_buf env;
-    volatile int set = 1;
+    int volatile set = 1;
 
     switch (sigsetjmp(env, 0)) {
     case 0:

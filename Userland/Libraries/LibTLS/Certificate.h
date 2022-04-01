@@ -63,7 +63,7 @@ class DefaultRootCACertificates {
 public:
     DefaultRootCACertificates();
 
-    const Vector<Certificate>& certificates() const { return m_ca_certificates; }
+    Vector<Certificate> const& certificates() const { return m_ca_certificates; }
 
     static DefaultRootCACertificates& the() { return s_the; }
 

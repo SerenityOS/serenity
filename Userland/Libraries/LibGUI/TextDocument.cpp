@@ -171,7 +171,7 @@ void TextDocumentLine::clear(TextDocument& document)
     document.update_views({});
 }
 
-void TextDocumentLine::set_text(TextDocument& document, const Vector<u32> text)
+void TextDocumentLine::set_text(TextDocument& document, Vector<u32> const text)
 {
     m_text = move(text);
     document.update_views({});
@@ -194,7 +194,7 @@ bool TextDocumentLine::set_text(TextDocument& document, StringView text)
     return true;
 }
 
-void TextDocumentLine::append(TextDocument& document, const u32* code_points, size_t length)
+void TextDocumentLine::append(TextDocument& document, u32 const* code_points, size_t length)
 {
     if (length == 0)
         return;
@@ -313,7 +313,7 @@ void TextDocument::notify_did_change()
     m_regex_needs_update = true;
 }
 
-void TextDocument::set_all_cursors(const TextPosition& position)
+void TextDocument::set_all_cursors(TextPosition const& position)
 {
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
@@ -333,7 +333,7 @@ String TextDocument::text() const
     return builder.to_string();
 }
 
-String TextDocument::text_in_range(const TextRange& a_range) const
+String TextDocument::text_in_range(TextRange const& a_range) const
 {
     auto range = a_range.normalized();
     if (is_empty() || line_count() < range.end().line() - range.start().line())
@@ -359,7 +359,7 @@ String TextDocument::text_in_range(const TextRange& a_range) const
     return builder.to_string();
 }
 
-u32 TextDocument::code_point_at(const TextPosition& position) const
+u32 TextDocument::code_point_at(TextPosition const& position) const
 {
     VERIFY(position.line() < line_count());
     auto& line = this->line(position.line());
@@ -368,7 +368,7 @@ u32 TextDocument::code_point_at(const TextPosition& position) const
     return line.code_points()[position.column()];
 }
 
-TextPosition TextDocument::next_position_after(const TextPosition& position, SearchShouldWrap should_wrap) const
+TextPosition TextDocument::next_position_after(TextPosition const& position, SearchShouldWrap should_wrap) const
 {
     auto& line = this->line(position.line());
     if (position.column() == line.length()) {
@@ -382,7 +382,7 @@ TextPosition TextDocument::next_position_after(const TextPosition& position, Sea
     return { position.line(), position.column() + 1 };
 }
 
-TextPosition TextDocument::previous_position_before(const TextPosition& position, SearchShouldWrap should_wrap) const
+TextPosition TextDocument::previous_position_before(TextPosition const& position, SearchShouldWrap should_wrap) const
 {
     if (position.column() == 0) {
         if (position.line() == 0) {
@@ -416,7 +416,7 @@ void TextDocument::update_regex_matches(StringView needle)
     }
 }
 
-TextRange TextDocument::find_next(StringView needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
+TextRange TextDocument::find_next(StringView needle, TextPosition const& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
 {
     if (needle.is_empty())
         return {};
@@ -496,7 +496,7 @@ TextRange TextDocument::find_next(StringView needle, const TextPosition& start, 
     return {};
 }
 
-TextRange TextDocument::find_previous(StringView needle, const TextPosition& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
+TextRange TextDocument::find_previous(StringView needle, TextPosition const& start, SearchShouldWrap should_wrap, bool regmatch, bool match_case)
 {
     if (needle.is_empty())
         return {};
@@ -595,7 +595,7 @@ Vector<TextRange> TextDocument::find_all(StringView needle, bool regmatch, bool 
     return ranges;
 }
 
-Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_before(const TextPosition& position) const
+Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_before(TextPosition const& position) const
 {
     for (int i = m_spans.size() - 1; i >= 0; --i) {
         if (!m_spans[i].range.contains(position))
@@ -609,7 +609,7 @@ Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_before(const T
     return {};
 }
 
-Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(const TextPosition& position) const
+Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(TextPosition const& position) const
 {
     size_t i = 0;
     // Find the first span containing the cursor
@@ -633,7 +633,7 @@ Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(const Te
     return {};
 }
 
-TextPosition TextDocument::first_word_break_before(const TextPosition& position, bool start_at_column_before) const
+TextPosition TextDocument::first_word_break_before(TextPosition const& position, bool start_at_column_before) const
 {
     if (position.column() == 0) {
         if (position.line() == 0) {
@@ -663,7 +663,7 @@ TextPosition TextDocument::first_word_break_before(const TextPosition& position,
     return target;
 }
 
-TextPosition TextDocument::first_word_break_after(const TextPosition& position) const
+TextPosition TextDocument::first_word_break_after(TextPosition const& position) const
 {
     auto target = position;
     auto line = this->line(target.line());
@@ -689,7 +689,7 @@ TextPosition TextDocument::first_word_break_after(const TextPosition& position) 
     return target;
 }
 
-TextPosition TextDocument::first_word_before(const TextPosition& position, bool start_at_column_before) const
+TextPosition TextDocument::first_word_before(TextPosition const& position, bool start_at_column_before) const
 {
     if (position.column() == 0) {
         if (position.line() == 0) {
@@ -748,7 +748,7 @@ TextDocumentUndoCommand::TextDocumentUndoCommand(TextDocument& document)
 {
 }
 
-InsertTextCommand::InsertTextCommand(TextDocument& document, const String& text, const TextPosition& position)
+InsertTextCommand::InsertTextCommand(TextDocument& document, String const& text, TextPosition const& position)
     : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range({ position, position })
@@ -777,11 +777,11 @@ bool InsertTextCommand::merge_with(GUI::Command const& other)
     return true;
 }
 
-void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
+void InsertTextCommand::perform_formatting(TextDocument::Client const& client)
 {
     const size_t tab_width = client.soft_tab_width();
-    const auto& dest_line = m_document.line(m_range.start().line());
-    const bool should_auto_indent = client.is_automatic_indentation_enabled();
+    auto const& dest_line = m_document.line(m_range.start().line());
+    bool const should_auto_indent = client.is_automatic_indentation_enabled();
 
     StringBuilder builder;
     size_t column = m_range.start().column();
@@ -842,7 +842,7 @@ void InsertTextCommand::undo()
     m_document.set_all_cursors(m_range.start());
 }
 
-RemoveTextCommand::RemoveTextCommand(TextDocument& document, const String& text, const TextRange& range)
+RemoveTextCommand::RemoveTextCommand(TextDocument& document, String const& text, TextRange const& range)
     : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range(range)
@@ -884,7 +884,7 @@ void RemoveTextCommand::undo()
     m_document.set_all_cursors(new_cursor);
 }
 
-TextPosition TextDocument::insert_at(const TextPosition& position, StringView text, const Client* client)
+TextPosition TextDocument::insert_at(TextPosition const& position, StringView text, Client const* client)
 {
     TextPosition cursor = position;
     Utf8View utf8_view(text);
@@ -893,7 +893,7 @@ TextPosition TextDocument::insert_at(const TextPosition& position, StringView te
     return cursor;
 }
 
-TextPosition TextDocument::insert_at(const TextPosition& position, u32 code_point, const Client*)
+TextPosition TextDocument::insert_at(TextPosition const& position, u32 code_point, Client const*)
 {
     if (code_point == '\n') {
         auto new_line = make<TextDocumentLine>(*this);
@@ -909,7 +909,7 @@ TextPosition TextDocument::insert_at(const TextPosition& position, u32 code_poin
     }
 }
 
-void TextDocument::remove(const TextRange& unnormalized_range)
+void TextDocument::remove(TextRange const& unnormalized_range)
 {
     if (!unnormalized_range.is_valid())
         return;
@@ -970,7 +970,7 @@ TextRange TextDocument::range_for_entire_line(size_t line_index) const
     return { { line_index, 0 }, { line_index, line(line_index).length() } };
 }
 
-const TextDocumentSpan* TextDocument::span_at(const TextPosition& position) const
+TextDocumentSpan const* TextDocument::span_at(TextPosition const& position) const
 {
     for (auto& span : m_spans) {
         if (span.range.contains(position))

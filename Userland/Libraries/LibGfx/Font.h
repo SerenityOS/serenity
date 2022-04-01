@@ -22,7 +22,7 @@ namespace Gfx {
 class GlyphBitmap {
 public:
     GlyphBitmap() = default;
-    GlyphBitmap(const u8* rows, size_t start_index, IntSize size)
+    GlyphBitmap(u8 const* rows, size_t start_index, IntSize size)
         : m_rows(rows)
         , m_start_index(start_index)
         , m_size(size)
@@ -48,14 +48,14 @@ private:
         return { const_cast<u8*>(m_rows) + bytes_per_row() * (m_start_index + y), bytes_per_row() * 8 };
     }
 
-    const u8* m_rows { nullptr };
+    u8 const* m_rows { nullptr };
     size_t m_start_index { 0 };
     IntSize m_size { 0, 0 };
 };
 
 class Glyph {
 public:
-    Glyph(const GlyphBitmap& glyph_bitmap, int left_bearing, int advance, int ascent)
+    Glyph(GlyphBitmap const& glyph_bitmap, int left_bearing, int advance, int ascent)
         : m_glyph_bitmap(glyph_bitmap)
         , m_left_bearing(left_bearing)
         , m_advance(advance)
@@ -140,8 +140,8 @@ public:
     virtual u8 mean_line() const = 0;
 
     virtual int width(StringView) const = 0;
-    virtual int width(const Utf8View&) const = 0;
-    virtual int width(const Utf32View&) const = 0;
+    virtual int width(Utf8View const&) const = 0;
+    virtual int width(Utf32View const&) const = 0;
 
     virtual String name() const = 0;
 

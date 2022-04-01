@@ -60,7 +60,7 @@ public:
     String selected_text() const;
     VT::Range normalized_selection() const { return m_selection.normalized(); }
     void set_selection(const VT::Range& selection);
-    VT::Position buffer_position_at(const Gfx::IntPoint&) const;
+    VT::Position buffer_position_at(Gfx::IntPoint const&) const;
 
     VT::Range find_next(StringView, const VT::Position& start = {}, bool case_sensitivity = false, bool should_wrap = false);
     VT::Range find_previous(StringView, const VT::Position& start = {}, bool case_sensitivity = false, bool should_wrap = false);
@@ -85,14 +85,14 @@ public:
     const StringView color_scheme_name() const { return m_color_scheme_name; }
 
     Function<void(StringView)> on_title_change;
-    Function<void(const Gfx::IntSize&)> on_terminal_size_change;
+    Function<void(Gfx::IntSize const&)> on_terminal_size_change;
     Function<void()> on_command_exit;
 
     GUI::Menu& context_menu() { return *m_context_menu; }
 
     constexpr Gfx::Color terminal_color_to_rgb(VT::Color) const;
 
-    void set_font_and_resize_to_fit(const Gfx::Font&);
+    void set_font_and_resize_to_fit(Gfx::Font const&);
 
     void set_color_scheme(StringView);
 
@@ -123,11 +123,11 @@ private:
     virtual void set_window_progress(int value, int max) override;
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
     virtual void terminal_history_changed(int delta) override;
-    virtual void emit(const u8*, size_t) override;
+    virtual void emit(u8 const*, size_t) override;
     virtual void set_cursor_style(CursorStyle) override;
 
     // ^GUI::Clipboard::ClipboardClient
-    virtual void clipboard_content_did_change(const String&) override { update_paste_action(); }
+    virtual void clipboard_content_did_change(String const&) override { update_paste_action(); }
 
     void set_logical_focus(bool);
 
@@ -136,12 +136,12 @@ private:
     Gfx::IntRect glyph_rect(u16 row, u16 column);
     Gfx::IntRect row_rect(u16 row);
 
-    Gfx::IntSize widget_size_for_font(const Gfx::Font&) const;
+    Gfx::IntSize widget_size_for_font(Gfx::Font const&) const;
 
     void update_cursor();
     void invalidate_cursor();
 
-    void relayout(const Gfx::IntSize&);
+    void relayout(Gfx::IntSize const&);
 
     void update_copy_action();
     void update_paste_action();

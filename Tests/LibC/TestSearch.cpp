@@ -13,11 +13,11 @@
 
 #define NODE(node) static_cast<struct search_tree_node*>(node)
 #define ROOTP(root) reinterpret_cast<void**>(root)
-#define COMP(func) reinterpret_cast<int (*)(const void*, const void*)>(func)
+#define COMP(func) reinterpret_cast<int (*)(void const*, void const*)>(func)
 #define U8(value) static_cast<u8>(value)
 
 struct twalk_test_entry {
-    const void* node;
+    void const* node;
     VISIT order;
     int depth;
 };
@@ -30,7 +30,7 @@ TEST_CASE(tsearch)
 {
     struct search_tree_node* root = nullptr;
     void* ret;
-    const char* key;
+    char const* key;
     char* search;
 
     // Try a nullptr rootp.
@@ -150,8 +150,8 @@ TEST_CASE(tfind)
     delete_node_recursive(root);
 }
 
-void twalk_action(const void* node, VISIT order, int depth);
-void twalk_action(const void* node, VISIT order, int depth)
+void twalk_action(void const* node, VISIT order, int depth);
+void twalk_action(void const* node, VISIT order, int depth)
 {
     static int count = 0;
     static const struct twalk_test_entry* tests = nullptr;

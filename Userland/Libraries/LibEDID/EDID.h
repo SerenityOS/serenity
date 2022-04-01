@@ -438,11 +438,11 @@ private:
 
     template<typename T>
     requires(IsIntegral<T> && sizeof(T) > 1) T read_le(T const*)
-        const;
+    const;
 
     template<typename T>
     requires(IsIntegral<T> && sizeof(T) > 1) T read_be(T const*)
-        const;
+    const;
 
     Definitions::EDID const& raw_edid() const;
     ErrorOr<IterationDecision> for_each_display_descriptor(Function<IterationDecision(u8, Definitions::DisplayDescriptor const&)>) const;

@@ -96,7 +96,7 @@
         {                                                                                                          \
             ::Test::JS::g_run_file = hook;                                                                         \
         }                                                                                                          \
-        static ::Test::JS::IntermediateRunFileResult hook(const String&, JS::Interpreter&, JS::ExecutionContext&); \
+        static ::Test::JS::IntermediateRunFileResult hook(String const&, JS::Interpreter&, JS::ExecutionContext&); \
     } __testjs_common_run_file {};                                                                                 \
     ::Test::JS::IntermediateRunFileResult __TestJS_run_file::hook(__VA_ARGS__)
 
@@ -164,7 +164,7 @@ enum class RunFileHookResult {
 };
 
 using IntermediateRunFileResult = AK::Result<JSFileResult, RunFileHookResult>;
-extern IntermediateRunFileResult (*g_run_file)(const String&, JS::Interpreter&, JS::ExecutionContext&);
+extern IntermediateRunFileResult (*g_run_file)(String const&, JS::Interpreter&, JS::ExecutionContext&);
 
 class TestRunner : public ::Test::TestRunner {
 public:
@@ -178,10 +178,10 @@ public:
     virtual ~TestRunner() = default;
 
 protected:
-    virtual void do_run_single_test(const String& test_path, size_t, size_t) override;
+    virtual void do_run_single_test(String const& test_path, size_t, size_t) override;
     virtual Vector<String> get_test_paths() const override;
-    virtual JSFileResult run_file_test(const String& test_path);
-    void print_file_result(const JSFileResult& file_result) const;
+    virtual JSFileResult run_file_test(String const& test_path);
+    void print_file_result(JSFileResult const& file_result) const;
 
     String m_common_path;
 };
@@ -261,7 +261,7 @@ inline ErrorOr<JsonValue> get_test_results(JS::Interpreter& interpreter)
     return JsonValue::from_string(json_string);
 }
 
-inline void TestRunner::do_run_single_test(const String& test_path, size_t, size_t)
+inline void TestRunner::do_run_single_test(String const& test_path, size_t, size_t)
 {
     auto file_result = run_file_test(test_path);
     if (!m_print_json)
@@ -274,7 +274,7 @@ inline void TestRunner::do_run_single_test(const String& test_path, size_t, size
 inline Vector<String> TestRunner::get_test_paths() const
 {
     Vector<String> paths;
-    iterate_directory_recursively(m_test_root, [&](const String& file_path) {
+    iterate_directory_recursively(m_test_root, [&](String const& file_path) {
         if (!file_path.ends_with(".js"))
             return;
         if (!file_path.ends_with("test-common.js"))
@@ -284,7 +284,7 @@ inline Vector<String> TestRunner::get_test_paths() const
     return paths;
 }
 
-inline JSFileResult TestRunner::run_file_test(const String& test_path)
+inline JSFileResult TestRunner::run_file_test(String const& test_path)
 {
     g_currently_running_test = test_path;
 
@@ -404,7 +404,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         file_result.logged_messages.append(message.to_string_without_side_effects());
     }
 
-    test_json.value().as_object().for_each_member([&](const String& suite_name, const JsonValue& suite_value) {
+    test_json.value().as_object().for_each_member([&](String const& suite_name, JsonValue const& suite_value) {
         Test::Suite suite { test_path, suite_name };
 
         VERIFY(suite_value.is_object());
@@ -461,7 +461,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
     return file_result;
 }
 
-inline void TestRunner::print_file_result(const JSFileResult& file_result) const
+inline void TestRunner::print_file_result(JSFileResult const& file_result) const
 {
     if (file_result.most_severe_test_result == Test::Result::Fail || file_result.error.has_value()) {
         print_modifiers({ BG_RED, FG_BLACK, FG_BOLD });

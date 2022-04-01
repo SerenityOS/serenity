@@ -15,7 +15,7 @@ struct JPGLoadingContext;
 class JPGImageDecoderPlugin : public ImageDecoderPlugin {
 public:
     virtual ~JPGImageDecoderPlugin() override;
-    JPGImageDecoderPlugin(const u8*, size_t);
+    JPGImageDecoderPlugin(u8 const*, size_t);
     virtual IntSize size() override;
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;

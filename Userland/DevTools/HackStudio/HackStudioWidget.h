@@ -53,7 +53,7 @@ public:
     GUI::TabWidget& current_editor_tab_widget();
     GUI::TabWidget const& current_editor_tab_widget() const;
 
-    const String& active_file() const { return m_current_editor_wrapper->filename(); }
+    String const& active_file() const { return m_current_editor_wrapper->filename(); }
     void initialize_menubar(GUI::Window&);
 
     Locator& locator()
@@ -66,7 +66,7 @@ public:
         No,
         Yes
     };
-    ContinueDecision warn_unsaved_changes(const String& prompt);
+    ContinueDecision warn_unsaved_changes(String const& prompt);
 
     enum class Mode {
         Code,
@@ -82,12 +82,12 @@ public:
 private:
     static constexpr size_t recent_projects_history_size = 15;
 
-    static String get_full_path_of_serenity_source(const String& file);
+    static String get_full_path_of_serenity_source(String const& file);
     String get_absolute_path(String const&) const;
     Vector<String> selected_file_paths() const;
 
     HackStudioWidget(String path_to_project);
-    void open_project(const String& root_path);
+    void open_project(String const& root_path);
 
     enum class EditMode {
         Text,
@@ -124,7 +124,7 @@ private:
 
     void add_new_editor_tab_widget(GUI::Widget& parent);
     void add_new_editor(GUI::TabWidget& parent);
-    RefPtr<EditorWrapper> get_editor_of_file(const String& filename);
+    RefPtr<EditorWrapper> get_editor_of_file(String const& filename);
     String get_project_executable_path() const;
 
     void on_action_tab_change();
@@ -132,7 +132,7 @@ private:
     void initialize_debugger();
     void update_statusbar();
 
-    void handle_external_file_deletion(const String& filepath);
+    void handle_external_file_deletion(String const& filepath);
     void stop_debugger_if_running();
     void close_current_project();
 

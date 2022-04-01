@@ -39,7 +39,7 @@ private:
     explicit ValueSlider(Gfx::Orientation = Gfx::Orientation::Horizontal, String suffix = "");
 
     String formatted_value() const;
-    int value_at(const Gfx::IntPoint& position) const;
+    int value_at(Gfx::IntPoint const& position) const;
     Gfx::IntRect bar_rect() const;
     Gfx::IntRect knob_rect() const;
 

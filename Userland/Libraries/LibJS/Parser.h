@@ -135,7 +135,7 @@ public:
     NonnullRefPtr<RegExpLiteral> parse_regexp_literal();
     NonnullRefPtr<ObjectExpression> parse_object_expression();
     NonnullRefPtr<ArrayExpression> parse_array_expression();
-    NonnullRefPtr<StringLiteral> parse_string_literal(const Token& token, bool in_template_literal = false);
+    NonnullRefPtr<StringLiteral> parse_string_literal(Token const& token, bool in_template_literal = false);
     NonnullRefPtr<TemplateLiteral> parse_template_literal(bool is_tagged);
     ExpressionResult parse_secondary_expression(NonnullRefPtr<Expression>, int min_precedence, Associativity associate = Associativity::Right, ForbiddenTokens forbidden = {});
     NonnullRefPtr<Expression> parse_call_expression(NonnullRefPtr<Expression>);
@@ -169,7 +169,7 @@ public:
             return String::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column);
         }
 
-        String source_location_hint(StringView source, const char spacer = ' ', const char indicator = '^') const
+        String source_location_hint(StringView source, char const spacer = ' ', char const indicator = '^') const
         {
             if (!position.has_value())
                 return {};
@@ -187,7 +187,7 @@ public:
     };
 
     bool has_errors() const { return m_state.errors.size(); }
-    const Vector<Error>& errors() const { return m_state.errors; }
+    Vector<Error> const& errors() const { return m_state.errors; }
     void print_errors(bool print_hint = true) const
     {
         for (auto& error : m_state.errors) {
@@ -229,8 +229,8 @@ private:
     bool is_private_identifier_valid() const;
     bool match(TokenType type) const;
     bool done() const;
-    void expected(const char* what);
-    void syntax_error(const String& message, Optional<Position> = {});
+    void expected(char const* what);
+    void syntax_error(String const& message, Optional<Position> = {});
     Token consume();
     Token consume_identifier();
     Token consume_identifier_reference();
@@ -248,8 +248,8 @@ private:
 
     void check_identifier_name_for_assignment_validity(FlyString const&, bool force_strict = false);
 
-    bool try_parse_arrow_function_expression_failed_at_position(const Position&) const;
-    void set_try_parse_arrow_function_expression_failed_at_position(const Position&, bool);
+    bool try_parse_arrow_function_expression_failed_at_position(Position const&) const;
+    void set_try_parse_arrow_function_expression_failed_at_position(Position const&, bool);
 
     bool match_invalid_escaped_keyword() const;
 
@@ -278,7 +278,7 @@ private:
             VERIFY(last.column == m_position.column);
         }
 
-        const Position& position() const { return m_position; }
+        Position const& position() const { return m_position; }
 
     private:
         Parser& m_parser;
@@ -316,12 +316,12 @@ private:
 
     class PositionKeyTraits {
     public:
-        static int hash(const Position& position)
+        static int hash(Position const& position)
         {
             return int_hash(position.line) ^ int_hash(position.column);
         }
 
-        static bool equals(const Position& a, const Position& b)
+        static bool equals(Position const& a, Position const& b)
         {
             return a.column == b.column && a.line == b.line;
         }

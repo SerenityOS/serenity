@@ -571,7 +571,7 @@ ErrorOr<void> VirtualFileSystem::chown(StringView path, UserID a_uid, GroupID a_
     return chown(custody, a_uid, a_gid);
 }
 
-static bool hard_link_allowed(const Inode& inode)
+static bool hard_link_allowed(Inode const& inode)
 {
     auto metadata = inode.metadata();
 
@@ -673,7 +673,7 @@ ErrorOr<void> VirtualFileSystem::symlink(StringView target, StringView linkpath,
 
     auto inode = TRY(parent_inode.create_child(basename, S_IFLNK | 0644, 0, current_process.euid(), current_process.egid()));
 
-    auto target_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((const u8*)target.characters_without_null_termination()));
+    auto target_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((u8 const*)target.characters_without_null_termination()));
     TRY(inode->write_bytes(0, target.length(), target_buffer, nullptr));
     return {};
 }
@@ -838,7 +838,7 @@ ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView path,
     return custody;
 }
 
-static bool safe_to_follow_symlink(const Inode& inode, const InodeMetadata& parent_metadata)
+static bool safe_to_follow_symlink(Inode const& inode, InodeMetadata const& parent_metadata)
 {
     auto metadata = inode.metadata();
     if (Process::current().euid() == metadata.uid)

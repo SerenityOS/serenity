@@ -44,18 +44,18 @@ using AK::SIMD::to_f32x4;
 using AK::SIMD::to_u32x4;
 using AK::SIMD::u32x4;
 
-constexpr static float edge_function(const FloatVector2& a, const FloatVector2& b, const FloatVector2& c)
+constexpr static float edge_function(FloatVector2 const& a, FloatVector2 const& b, FloatVector2 const& c)
 {
     return (c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x());
 }
 
-constexpr static f32x4 edge_function4(const FloatVector2& a, const FloatVector2& b, const Vector2<f32x4>& c)
+constexpr static f32x4 edge_function4(FloatVector2 const& a, FloatVector2 const& b, Vector2<f32x4> const& c)
 {
     return (c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x());
 }
 
 template<typename T, typename U>
-constexpr static auto interpolate(const T& v0, const T& v1, const T& v2, const Vector3<U>& barycentric_coords)
+constexpr static auto interpolate(const T& v0, const T& v1, const T& v2, Vector3<U> const& barycentric_coords)
 {
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
 }
@@ -175,7 +175,7 @@ void Device::setup_blend_factors()
     }
 }
 
-void Device::rasterize_triangle(const Triangle& triangle)
+void Device::rasterize_triangle(Triangle const& triangle)
 {
     INCREASE_STATISTICS_COUNTER(g_num_rasterized_triangles, 1);
 
@@ -1190,7 +1190,7 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
     painter.draw_text(target.rect().translated(2, 2), debug_string, font, Gfx::TextAlignment::TopLeft, Gfx::Color::White);
 }
 
-void Device::set_options(const RasterizerOptions& options)
+void Device::set_options(RasterizerOptions const& options)
 {
     m_options = options;
 
@@ -1198,7 +1198,7 @@ void Device::set_options(const RasterizerOptions& options)
         setup_blend_factors();
 }
 
-void Device::set_light_model_params(const LightModelParameters& lighting_model)
+void Device::set_light_model_params(LightModelParameters const& lighting_model)
 {
     m_lighting_model = lighting_model;
 }

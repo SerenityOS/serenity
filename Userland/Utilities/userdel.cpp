@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/", "rwc"));
     TRY(Core::System::unveil("/bin/rm", "x"));
 
-    const char* username = nullptr;
+    char const* username = nullptr;
     bool remove_home = false;
 
     Core::ArgsParser args_parser;
@@ -161,7 +161,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         pid_t child;
-        const char* argv[] = { "rm", "-r", target_account.home_directory().characters(), nullptr };
+        char const* argv[] = { "rm", "-r", target_account.home_directory().characters(), nullptr };
         if ((errno = posix_spawn(&child, "/bin/rm", nullptr, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
             return 12;

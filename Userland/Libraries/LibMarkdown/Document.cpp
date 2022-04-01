@@ -53,7 +53,7 @@ RecursionDecision Document::walk(Visitor& visitor) const
 
 OwnPtr<Document> Document::parse(StringView str)
 {
-    const Vector<StringView> lines_vec = str.lines();
+    Vector<StringView> const lines_vec = str.lines();
     LineIterator lines(lines_vec.begin());
     return make<Document>(ContainerBlock::parse(lines));
 }

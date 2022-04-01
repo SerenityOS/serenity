@@ -8,7 +8,7 @@
 
 namespace Gfx {
 
-bool DisjointRectSet::add_no_shatter(const IntRect& new_rect)
+bool DisjointRectSet::add_no_shatter(IntRect const& new_rect)
 {
     if (new_rect.is_empty())
         return false;
@@ -59,7 +59,7 @@ void DisjointRectSet::move_by(int dx, int dy)
         r.translate_by(dx, dy);
 }
 
-bool DisjointRectSet::contains(const IntRect& rect) const
+bool DisjointRectSet::contains(IntRect const& rect) const
 {
     if (is_empty() || rect.is_empty())
         return false;
@@ -75,7 +75,7 @@ bool DisjointRectSet::contains(const IntRect& rect) const
     return false;
 }
 
-bool DisjointRectSet::intersects(const IntRect& rect) const
+bool DisjointRectSet::intersects(IntRect const& rect) const
 {
     for (auto& r : m_rects) {
         if (r.intersects(rect))
@@ -84,7 +84,7 @@ bool DisjointRectSet::intersects(const IntRect& rect) const
     return false;
 }
 
-bool DisjointRectSet::intersects(const DisjointRectSet& rects) const
+bool DisjointRectSet::intersects(DisjointRectSet const& rects) const
 {
     if (this == &rects)
         return true;
@@ -98,7 +98,7 @@ bool DisjointRectSet::intersects(const DisjointRectSet& rects) const
     return false;
 }
 
-DisjointRectSet DisjointRectSet::intersected(const IntRect& rect) const
+DisjointRectSet DisjointRectSet::intersected(IntRect const& rect) const
 {
     DisjointRectSet intersected_rects;
     intersected_rects.m_rects.ensure_capacity(m_rects.capacity());
@@ -111,7 +111,7 @@ DisjointRectSet DisjointRectSet::intersected(const IntRect& rect) const
     return intersected_rects;
 }
 
-DisjointRectSet DisjointRectSet::intersected(const DisjointRectSet& rects) const
+DisjointRectSet DisjointRectSet::intersected(DisjointRectSet const& rects) const
 {
     if (&rects == this)
         return clone();
@@ -131,7 +131,7 @@ DisjointRectSet DisjointRectSet::intersected(const DisjointRectSet& rects) const
     return intersected_rects;
 }
 
-DisjointRectSet DisjointRectSet::shatter(const IntRect& hammer) const
+DisjointRectSet DisjointRectSet::shatter(IntRect const& hammer) const
 {
     if (hammer.is_empty())
         return clone();
@@ -145,7 +145,7 @@ DisjointRectSet DisjointRectSet::shatter(const IntRect& hammer) const
     return shards;
 }
 
-DisjointRectSet DisjointRectSet::shatter(const DisjointRectSet& hammer) const
+DisjointRectSet DisjointRectSet::shatter(DisjointRectSet const& hammer) const
 {
     if (this == &hammer)
         return {};

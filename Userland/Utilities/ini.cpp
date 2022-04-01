@@ -14,10 +14,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 
-    const char* path = nullptr;
-    const char* group = nullptr;
-    const char* key = nullptr;
-    const char* value_to_write = nullptr;
+    char const* path = nullptr;
+    char const* group = nullptr;
+    char const* key = nullptr;
+    char const* value_to_write = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Path to INI file", "path");

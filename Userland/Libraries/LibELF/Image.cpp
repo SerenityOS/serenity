@@ -26,7 +26,7 @@ Image::Image(ReadonlyBytes bytes, bool verbose_logging)
     parse();
 }
 
-Image::Image(const u8* buffer, size_t size, bool verbose_logging)
+Image::Image(u8 const* buffer, size_t size, bool verbose_logging)
     : Image(ReadonlyBytes { buffer, size }, verbose_logging)
 {
 }
@@ -69,7 +69,7 @@ void Image::dump() const
     dbgln("    phnum:   {}", header().e_phnum);
     dbgln(" shstrndx:   {}", header().e_shstrndx);
 
-    for_each_program_header([&](const ProgramHeader& program_header) {
+    for_each_program_header([&](ProgramHeader const& program_header) {
         dbgln("    Program Header {}: {{", program_header.index());
         dbgln("        type: {:x}", program_header.type());
         dbgln("      offset: {:x}", program_header.offset());
@@ -78,7 +78,7 @@ void Image::dump() const
     });
 
     for (unsigned i = 0; i < header().e_shnum; ++i) {
-        const auto& section = this->section(i);
+        auto const& section = this->section(i);
         dbgln("    Section {}: {{", i);
         dbgln("        name: {}", section.name());
         dbgln("        type: {:x}", section.type());
@@ -90,7 +90,7 @@ void Image::dump() const
 
     dbgln("Symbol count: {} (table is {})", symbol_count(), m_symbol_table_section_index);
     for (unsigned i = 1; i < symbol_count(); ++i) {
-        const auto& sym = symbol(i);
+        auto const& sym = symbol(i);
         dbgln("Symbol @{}:", i);
         dbgln("    Name: {}", sym.name());
         dbgln("    In section: {}", section_index_to_string(sym.section_index()));
@@ -187,10 +187,10 @@ StringView Image::table_string(unsigned offset) const
     return table_string(m_string_table_section_index, offset);
 }
 
-const char* Image::raw_data(unsigned offset) const
+char const* Image::raw_data(unsigned offset) const
 {
     VERIFY(offset < m_size); // Callers must check indices into raw_data()'s result are also in bounds.
-    return reinterpret_cast<const char*>(m_buffer) + offset;
+    return reinterpret_cast<char const*>(m_buffer) + offset;
 }
 
 const ElfW(Ehdr) & Image::header() const
@@ -361,7 +361,7 @@ StringView Image::Symbol::raw_data() const
 Optional<Image::Symbol> Image::find_demangled_function(StringView name) const
 {
     Optional<Image::Symbol> found;
-    for_each_symbol([&](const Image::Symbol& symbol) {
+    for_each_symbol([&](Image::Symbol const& symbol) {
         if (symbol.type() != STT_FUNC)
             return IterationDecision::Continue;
         if (symbol.is_undefined())
@@ -416,7 +416,7 @@ Optional<Image::Symbol> Image::find_symbol(FlatPtr address, u32* out_offset) con
 NEVER_INLINE void Image::sort_symbols() const
 {
     m_sorted_symbols.ensure_capacity(symbol_count());
-    for_each_symbol([this](const auto& symbol) {
+    for_each_symbol([this](auto const& symbol) {
         m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
     });
     quick_sort(m_sorted_symbols, [](auto& a, auto& b) {

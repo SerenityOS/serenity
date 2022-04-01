@@ -17,7 +17,7 @@ DateCell::DateCell()
 {
 }
 
-JS::ThrowCompletionOr<String> DateCell::display(Cell& cell, const CellTypeMetadata& metadata) const
+JS::ThrowCompletionOr<String> DateCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
     return propagate_failure(cell, [&]() -> JS::ThrowCompletionOr<String> {
         auto timestamp = TRY(js_value(cell, metadata));
@@ -30,7 +30,7 @@ JS::ThrowCompletionOr<String> DateCell::display(Cell& cell, const CellTypeMetada
     });
 }
 
-JS::ThrowCompletionOr<JS::Value> DateCell::js_value(Cell& cell, const CellTypeMetadata&) const
+JS::ThrowCompletionOr<JS::Value> DateCell::js_value(Cell& cell, CellTypeMetadata const&) const
 {
     auto js_data = cell.js_data();
     auto value = TRY(js_data.to_double(cell.sheet().global_object()));

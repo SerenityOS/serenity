@@ -16,17 +16,17 @@
 
 namespace Web::HTML {
 
-bool prescan_should_abort(const ByteBuffer& input, const size_t& position)
+bool prescan_should_abort(ByteBuffer const& input, size_t const& position)
 {
     return position >= input.size() || position >= 1024;
 }
 
-bool prescan_is_whitespace_or_slash(const u8& byte)
+bool prescan_is_whitespace_or_slash(u8 const& byte)
 {
     return byte == '\t' || byte == '\n' || byte == '\f' || byte == '\r' || byte == ' ' || byte == '/';
 }
 
-bool prescan_skip_whitespace_and_slashes(const ByteBuffer& input, size_t& position)
+bool prescan_skip_whitespace_and_slashes(ByteBuffer const& input, size_t& position)
 {
     while (!prescan_should_abort(input, position) && (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ' || input[position] == '/'))
         ++position;
@@ -96,7 +96,7 @@ Optional<StringView> extract_character_encoding_from_meta_element(String const& 
     return TextCodec::get_standardized_encoding(encoding);
 }
 
-RefPtr<DOM::Attribute> prescan_get_attribute(DOM::Document& document, const ByteBuffer& input, size_t& position)
+RefPtr<DOM::Attribute> prescan_get_attribute(DOM::Document& document, ByteBuffer const& input, size_t& position)
 {
     if (!prescan_skip_whitespace_and_slashes(input, position))
         return {};
@@ -160,7 +160,7 @@ value:
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding
-Optional<String> run_prescan_byte_stream_algorithm(DOM::Document& document, const ByteBuffer& input)
+Optional<String> run_prescan_byte_stream_algorithm(DOM::Document& document, ByteBuffer const& input)
 {
     // https://html.spec.whatwg.org/multipage/parsing.html#prescan-a-byte-stream-to-determine-its-encoding
 
@@ -249,7 +249,7 @@ Optional<String> run_prescan_byte_stream_algorithm(DOM::Document& document, cons
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#determining-the-character-encoding
-String run_encoding_sniffing_algorithm(DOM::Document& document, const ByteBuffer& input)
+String run_encoding_sniffing_algorithm(DOM::Document& document, ByteBuffer const& input)
 {
     if (input.size() >= 2) {
         if (input[0] == 0xFE && input[1] == 0xFF) {

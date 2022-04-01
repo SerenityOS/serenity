@@ -36,7 +36,7 @@ public:
     {
     }
 
-    JsonObjectSerializer(const JsonObjectSerializer&) = delete;
+    JsonObjectSerializer(JsonObjectSerializer const&) = delete;
 
     ~JsonObjectSerializer()
     {
@@ -44,7 +44,7 @@ public:
     }
 
 #ifndef KERNEL
-    ErrorOr<void> add(StringView key, const JsonValue& value)
+    ErrorOr<void> add(StringView key, JsonValue const& value)
     {
         TRY(begin_item(key));
         value.serialize(m_builder);
@@ -68,7 +68,7 @@ public:
     }
 
 #ifndef KERNEL
-    ErrorOr<void> add(StringView key, const String& value)
+    ErrorOr<void> add(StringView key, String const& value)
     {
         TRY(begin_item(key));
         if constexpr (IsLegacyBuilder<Builder>) {
@@ -84,7 +84,7 @@ public:
     }
 #endif
 
-    ErrorOr<void> add(StringView key, const char* value)
+    ErrorOr<void> add(StringView key, char const* value)
     {
         TRY(begin_item(key));
         if constexpr (IsLegacyBuilder<Builder>) {

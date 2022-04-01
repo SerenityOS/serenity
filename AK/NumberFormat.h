@@ -11,7 +11,7 @@
 namespace AK {
 
 // FIXME: Remove this hackery once printf() supports floats.
-static String number_string_with_one_decimal(u64 number, u64 unit, const char* suffix)
+static String number_string_with_one_decimal(u64 number, u64 unit, char const* suffix)
 {
     int decimal = (number % unit) * 10 / unit;
     return String::formatted("{}.{} {}", number / unit, decimal, suffix);

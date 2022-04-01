@@ -80,7 +80,7 @@ struct Traits<Line::Key> : public GenericTraits<Line::Key> {
 template<>
 struct Traits<Vector<Line::Key>> : public GenericTraits<Vector<Line::Key>> {
     static constexpr bool is_trivial() { return false; }
-    static unsigned hash(const Vector<Line::Key>& ks)
+    static unsigned hash(Vector<Line::Key> const& ks)
     {
         unsigned h = 0;
         for (auto& k : ks)

@@ -26,7 +26,7 @@
 #include <unistd.h>
 
 #ifndef __serenity__
-static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int fd, off_t offset, const char*)
+static void* mmap_with_name(void* addr, size_t length, int prot, int flags, int fd, off_t offset, char const*)
 {
     return mmap(addr, length, prot, flags, fd, offset);
 }
@@ -86,7 +86,7 @@ DynamicLoader::~DynamicLoader()
     }
 }
 
-const DynamicObject& DynamicLoader::dynamic_object() const
+DynamicObject const& DynamicLoader::dynamic_object() const
 {
     if (!m_cached_dynamic_object) {
         VirtualAddress dynamic_section_address;
@@ -238,7 +238,7 @@ void DynamicLoader::load_stage_4()
 
 void DynamicLoader::do_lazy_relocations()
 {
-    for (const auto& relocation : m_unresolved_relocations) {
+    for (auto const& relocation : m_unresolved_relocations) {
         if (auto res = do_relocation(relocation, ShouldInitializeWeak::Yes); res != RelocationResult::Success) {
             dbgln("Loader.so: {} unresolved symbol '{}'", m_filename, relocation.symbol().name());
             VERIFY_NOT_REACHED();
@@ -256,7 +256,7 @@ void DynamicLoader::load_program_headers()
 
     VirtualAddress dynamic_region_desired_vaddr;
 
-    m_elf_image.for_each_program_header([&](const Image::ProgramHeader& program_header) {
+    m_elf_image.for_each_program_header([&](Image::ProgramHeader const& program_header) {
         ProgramHeaderRegion region {};
         region.set_program_header(program_header.raw_header());
         if (region.is_tls_template()) {
@@ -555,7 +555,7 @@ ssize_t DynamicLoader::negative_offset_from_tls_block_end(ssize_t tls_offset, si
 
 void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer) const
 {
-    const u8* tls_data = nullptr;
+    u8 const* tls_data = nullptr;
     size_t tls_size_in_image = 0;
 
     m_elf_image.for_each_program_header([this, &tls_data, &tls_size_in_image](ELF::Image::ProgramHeader program_header) {

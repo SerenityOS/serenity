@@ -30,7 +30,7 @@ Compositor& Compositor::the()
     return s_the;
 }
 
-static WallpaperMode mode_to_enum(const String& name)
+static WallpaperMode mode_to_enum(String const& name)
 {
     if (name == "tile")
         return WallpaperMode::Tile;
@@ -66,14 +66,14 @@ Compositor::Compositor()
     init_bitmaps();
 }
 
-const Gfx::Bitmap* Compositor::cursor_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen& screen) const
+Gfx::Bitmap const* Compositor::cursor_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen& screen) const
 {
     if (!m_current_cursor)
         return nullptr;
     return &m_current_cursor->bitmap(screen.scale_factor());
 }
 
-const Gfx::Bitmap& Compositor::front_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen& screen) const
+Gfx::Bitmap const& Compositor::front_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen& screen) const
 {
     return *screen.compositor_screen_data().m_front_bitmap;
 }
@@ -255,7 +255,7 @@ void Compositor::compose()
     bool need_to_draw_cursor = false;
     Gfx::IntRect previous_cursor_rect;
     Screen* previous_cursor_screen = nullptr;
-    auto check_restore_cursor_back = [&](Screen& screen, const Gfx::IntRect& rect) {
+    auto check_restore_cursor_back = [&](Screen& screen, Gfx::IntRect const& rect) {
         if (&screen == &cursor_screen && !previous_cursor_screen && !need_to_draw_cursor && rect.intersects(cursor_rect)) {
             // Restore what's behind the cursor if anything touches the area of the cursor
             need_to_draw_cursor = true;
@@ -274,7 +274,7 @@ void Compositor::compose()
         m_current_cursor_screen = &cursor_screen;
     }
 
-    auto prepare_rect = [&](Screen& screen, const Gfx::IntRect& rect) {
+    auto prepare_rect = [&](Screen& screen, Gfx::IntRect const& rect) {
         auto& screen_data = screen.compositor_screen_data();
         dbgln_if(COMPOSE_DEBUG, "    -> flush opaque: {}", rect);
         VERIFY(!screen_data.m_flush_rects.intersects(rect));
@@ -284,7 +284,7 @@ void Compositor::compose()
         check_restore_cursor_back(screen, rect);
     };
 
-    auto prepare_transparency_rect = [&](Screen& screen, const Gfx::IntRect& rect) {
+    auto prepare_transparency_rect = [&](Screen& screen, Gfx::IntRect const& rect) {
         auto& screen_data = screen.compositor_screen_data();
         dbgln_if(COMPOSE_DEBUG, "   -> flush transparent: {}", rect);
         VERIFY(!screen_data.m_flush_rects.intersects(rect));
@@ -301,7 +301,7 @@ void Compositor::compose()
     if (!cursor_screen.compositor_screen_data().m_cursor_back_bitmap || m_invalidated_cursor)
         check_restore_cursor_back(cursor_screen, cursor_rect);
 
-    auto paint_wallpaper = [&](Screen& screen, Gfx::Painter& painter, const Gfx::IntRect& rect, const Gfx::IntRect& screen_rect) {
+    auto paint_wallpaper = [&](Screen& screen, Gfx::Painter& painter, Gfx::IntRect const& rect, Gfx::IntRect const& screen_rect) {
         // FIXME: If the wallpaper is opaque and covers the whole rect, no need to fill with color!
         painter.fill_rect(rect, background_color);
         if (m_wallpaper) {
@@ -728,7 +728,7 @@ void Compositor::invalidate_screen()
     invalidate_screen(Screen::bounding_rect());
 }
 
-void Compositor::invalidate_screen(const Gfx::IntRect& screen_rect)
+void Compositor::invalidate_screen(Gfx::IntRect const& screen_rect)
 {
     m_dirty_screen_rects.add(screen_rect.intersected(Screen::bounding_rect()));
 
@@ -773,7 +773,7 @@ void Compositor::start_compose_async_timer()
     }
 }
 
-bool Compositor::set_background_color(const String& background_color)
+bool Compositor::set_background_color(String const& background_color)
 {
     auto color = Color::from_string(background_color);
     if (!color.has_value())
@@ -791,7 +791,7 @@ bool Compositor::set_background_color(const String& background_color)
     return succeeded;
 }
 
-bool Compositor::set_wallpaper_mode(const String& mode)
+bool Compositor::set_wallpaper_mode(String const& mode)
 {
     auto& wm = WindowManager::the();
     wm.config()->write_entry("Background", "Mode", mode);
@@ -856,7 +856,7 @@ void Compositor::invalidate_cursor(bool compose_immediately)
         start_compose_async_timer();
 }
 
-void Compositor::change_cursor(const Cursor* cursor)
+void Compositor::change_cursor(Cursor const* cursor)
 {
     if (m_current_cursor == cursor)
         return;
@@ -935,7 +935,7 @@ void Compositor::remove_overlay(Overlay& overlay)
     overlay_rects_changed();
 }
 
-void CompositorScreenData::draw_cursor(Screen& screen, const Gfx::IntRect& cursor_rect)
+void CompositorScreenData::draw_cursor(Screen& screen, Gfx::IntRect const& cursor_rect)
 {
     auto& wm = WindowManager::the();
 

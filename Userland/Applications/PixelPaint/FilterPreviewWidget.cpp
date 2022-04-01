@@ -21,7 +21,7 @@ FilterPreviewWidget::~FilterPreviewWidget()
 {
 }
 
-void FilterPreviewWidget::set_bitmap(const RefPtr<Gfx::Bitmap>& bitmap)
+void FilterPreviewWidget::set_bitmap(RefPtr<Gfx::Bitmap> const& bitmap)
 {
     m_bitmap = bitmap;
     clear_filter();

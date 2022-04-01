@@ -59,9 +59,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    const char* section = nullptr;
-    const char* name = nullptr;
-    const char* pager = nullptr;
+    char const* section = nullptr;
+    char const* name = nullptr;
+    char const* pager = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Read manual pages. Try 'man man' to get started.");
@@ -70,11 +70,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(pager, "Pager to pipe the man page to", "pager", 'P', "pager");
     args_parser.parse(arguments);
 
-    auto make_path = [name](const char* section) {
+    auto make_path = [name](char const* section) {
         return String::formatted("/usr/share/man/man{}/{}.md", section, name);
     };
     if (!section) {
-        const char* sections[] = {
+        char const* sections[] = {
             "1",
             "2",
             "3",

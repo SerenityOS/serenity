@@ -8,7 +8,7 @@
 #include <AK/String.h>
 #include <stdlib.h>
 
-MCTSTree::MCTSTree(const Chess::Board& board, MCTSTree* parent)
+MCTSTree::MCTSTree(Chess::Board const& board, MCTSTree* parent)
     : m_parent(parent)
     , m_board(make<Chess::Board>(board))
     , m_last_move(board.last_move())

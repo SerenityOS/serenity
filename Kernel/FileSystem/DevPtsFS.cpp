@@ -83,7 +83,7 @@ ErrorOr<size_t> DevPtsFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, Op
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<size_t> DevPtsFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
+ErrorOr<size_t> DevPtsFSInode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
 {
     VERIFY_NOT_REACHED();
 }

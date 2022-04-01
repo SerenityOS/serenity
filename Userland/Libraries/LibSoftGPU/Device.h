@@ -111,7 +111,7 @@ struct StencilConfiguration {
 
 class Device final {
 public:
-    Device(const Gfx::IntSize& min_size);
+    Device(Gfx::IntSize const& min_size);
 
     DeviceInfo info() const;
 
@@ -123,8 +123,8 @@ public:
     void blit_color_buffer_to(Gfx::Bitmap& target);
     void blit_to_color_buffer_at_raster_position(Gfx::Bitmap const&);
     void blit_to_depth_buffer_at_raster_position(Vector<DepthType> const&, int, int);
-    void set_options(const RasterizerOptions&);
-    void set_light_model_params(const LightModelParameters&);
+    void set_options(RasterizerOptions const&);
+    void set_light_model_params(LightModelParameters const&);
     RasterizerOptions options() const { return m_options; }
     LightModelParameters light_model() const { return m_lighting_model; }
     ColorType get_color_buffer_pixel(int x, int y);
@@ -145,7 +145,7 @@ private:
     void draw_statistics_overlay(Gfx::Bitmap&);
     Gfx::IntRect get_rasterization_rect_of_size(Gfx::IntSize size);
 
-    void rasterize_triangle(const Triangle& triangle);
+    void rasterize_triangle(Triangle const& triangle);
     void setup_blend_factors();
     void shade_fragments(PixelQuad&);
     bool test_alpha(PixelQuad&);

@@ -343,7 +343,7 @@ static bool is_table_track_group(CSS::Display display)
         || display.is_table_column_group();
 }
 
-static bool is_not_proper_table_child(const Node& node)
+static bool is_not_proper_table_child(Node const& node)
 {
     if (!node.has_style())
         return true;
@@ -351,7 +351,7 @@ static bool is_not_proper_table_child(const Node& node)
     return !is_table_track_group(display) && !is_table_track(display) && !display.is_table_caption();
 }
 
-static bool is_not_table_row(const Node& node)
+static bool is_not_table_row(Node const& node)
 {
     if (!node.has_style())
         return true;
@@ -359,7 +359,7 @@ static bool is_not_table_row(const Node& node)
     return !display.is_table_row();
 }
 
-static bool is_not_table_cell(const Node& node)
+static bool is_not_table_cell(Node const& node)
 {
     if (!node.has_style())
         return true;

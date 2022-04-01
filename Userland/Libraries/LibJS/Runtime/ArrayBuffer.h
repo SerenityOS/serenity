@@ -36,7 +36,7 @@ public:
     size_t byte_length() const { return buffer_impl().size(); }
     size_t max_byte_length() const { return m_max_byte_length.value(); } // Will VERIFY() that it has value
     ByteBuffer& buffer() { return buffer_impl(); }
-    const ByteBuffer& buffer() const { return buffer_impl(); }
+    ByteBuffer const& buffer() const { return buffer_impl(); }
 
     // Used by allocate_array_buffer() to attach the data block after construction
     void set_buffer(ByteBuffer buffer) { m_buffer = move(buffer); }
@@ -71,7 +71,7 @@ private:
         return *ptr;
     }
 
-    const ByteBuffer& buffer_impl() const { return const_cast<ArrayBuffer*>(this)->buffer_impl(); }
+    ByteBuffer const& buffer_impl() const { return const_cast<ArrayBuffer*>(this)->buffer_impl(); }
 
     Variant<Empty, ByteBuffer, ByteBuffer*> m_buffer;
     // The various detach related members of ArrayBuffer are not used by any ECMA262 functionality,

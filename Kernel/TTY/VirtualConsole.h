@@ -70,7 +70,7 @@ public:
 
 public:
     static NonnullRefPtr<VirtualConsole> create(size_t index);
-    static NonnullRefPtr<VirtualConsole> create_with_preset_log(size_t index, const CircularQueue<char, 16384>&);
+    static NonnullRefPtr<VirtualConsole> create_with_preset_log(size_t index, CircularQueue<char, 16384> const&);
 
     virtual ~VirtualConsole() override;
 
@@ -84,13 +84,13 @@ public:
     void emit_char(char);
 
 private:
-    explicit VirtualConsole(const unsigned index);
+    explicit VirtualConsole(unsigned const index);
     // ^KeyboardClient
     virtual void on_key_pressed(KeyEvent) override;
 
     // ^TTY
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_name() const override;
-    virtual ErrorOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) override;
+    virtual ErrorOr<size_t> on_tty_write(UserOrKernelBuffer const&, size_t) override;
     virtual void echo(u8) override;
 
     // ^TerminalClient
@@ -99,7 +99,7 @@ private:
     virtual void set_window_progress(int, int) override;
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
     virtual void terminal_history_changed(int) override;
-    virtual void emit(const u8*, size_t) override;
+    virtual void emit(u8 const*, size_t) override;
     virtual void set_cursor_style(VT::CursorStyle) override;
 
     // ^CharacterDevice

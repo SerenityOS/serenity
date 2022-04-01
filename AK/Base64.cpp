@@ -126,10 +126,10 @@ String encode_base64(ReadonlyBytes input)
         const u8 index2 = ((in1 << 2) | (in2 >> 6)) & 0x3f;
         const u8 index3 = in2 & 0x3f;
 
-        const char out0 = alphabet[index0];
-        const char out1 = alphabet[index1];
-        const char out2 = is_16bit ? '=' : alphabet[index2];
-        const char out3 = is_8bit ? '=' : alphabet[index3];
+        char const out0 = alphabet[index0];
+        char const out1 = alphabet[index1];
+        char const out2 = is_16bit ? '=' : alphabet[index2];
+        char const out3 = is_8bit ? '=' : alphabet[index3];
 
         output.append(out0);
         output.append(out1);

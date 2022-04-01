@@ -45,7 +45,7 @@ ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
         TRY(description->get_flock(Userspace<flock*>(arg)));
         return 0;
     case F_SETLK:
-        TRY(description->apply_flock(Process::current(), Userspace<const flock*>(arg)));
+        TRY(description->apply_flock(Process::current(), Userspace<flock const*>(arg)));
         return 0;
     default:
         return EINVAL;

@@ -22,7 +22,7 @@ KeypadValue::KeypadValue(i64 value)
 
 KeypadValue::KeypadValue(StringView sv)
 {
-    String str = sv.to_string(); //TODO: Once we have a StringView equivalent for this C API, we won't need to create a copy for this anymore.
+    String str = sv.to_string(); // TODO: Once we have a StringView equivalent for this C API, we won't need to create a copy for this anymore.
     size_t first_index = 0;
     char* dot_ptr;
     i64 int_part = strtoll(&str[first_index], &dot_ptr, 10);

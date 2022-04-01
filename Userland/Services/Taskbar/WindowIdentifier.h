@@ -20,7 +20,7 @@ public:
     int client_id() const { return m_client_id; }
     int window_id() const { return m_window_id; }
 
-    bool operator==(const WindowIdentifier& other) const
+    bool operator==(WindowIdentifier const& other) const
     {
         return m_client_id == other.m_client_id && m_window_id == other.m_window_id;
     }
@@ -38,6 +38,6 @@ private:
 namespace AK {
 template<>
 struct Traits<WindowIdentifier> : public GenericTraits<WindowIdentifier> {
-    static unsigned hash(const WindowIdentifier& w) { return pair_int_hash(w.client_id(), w.window_id()); }
+    static unsigned hash(WindowIdentifier const& w) { return pair_int_hash(w.client_id(), w.window_id()); }
 };
 }

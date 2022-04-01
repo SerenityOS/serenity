@@ -19,7 +19,7 @@ PlaylistWidget::PlaylistWidget()
     m_table_view->set_selection_mode(GUI::AbstractView::SelectionMode::SingleSelection);
     m_table_view->set_selection_behavior(GUI::AbstractView::SelectionBehavior::SelectRows);
     m_table_view->set_highlight_selected_rows(true);
-    m_table_view->on_doubleclick = [&](const Gfx::Point<int>& point) {
+    m_table_view->on_doubleclick = [&](Gfx::Point<int> const& point) {
         auto player = dynamic_cast<Player*>(window()->main_widget());
         auto index = m_table_view->index_at_event_position(point);
         if (!index.is_valid())
@@ -50,7 +50,7 @@ GUI::Variant PlaylistModel::data(const GUI::ModelIndex& index, GUI::ModelRole ro
     }
     if (role == GUI::ModelRole::Sort)
         return data(index, GUI::ModelRole::Display);
-    if (role == static_cast<GUI::ModelRole>(PlaylistModelCustomRole::FilePath)) //path
+    if (role == static_cast<GUI::ModelRole>(PlaylistModelCustomRole::FilePath)) // path
         return m_playlist_items[index.row()].path;
 
     return {};

@@ -9,19 +9,19 @@
 
 namespace Cpp {
 
-bool Position::operator<(const Position& other) const
+bool Position::operator<(Position const& other) const
 {
     return line < other.line || (line == other.line && column < other.column);
 }
-bool Position::operator>(const Position& other) const
+bool Position::operator>(Position const& other) const
 {
     return !(*this < other) && !(*this == other);
 }
-bool Position::operator==(const Position& other) const
+bool Position::operator==(Position const& other) const
 {
     return line == other.line && column == other.column;
 }
-bool Position::operator<=(const Position& other) const
+bool Position::operator<=(Position const& other) const
 {
     return !(*this > other);
 }

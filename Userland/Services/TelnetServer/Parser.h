@@ -17,7 +17,7 @@
 
 class Parser {
 public:
-    Function<void(const Command&)> on_command;
+    Function<void(Command const&)> on_command;
     Function<void(StringView)> on_data;
     Function<void()> on_error;
 
@@ -31,7 +31,7 @@ protected:
         Error,
     };
 
-    void write(const String& str);
+    void write(String const& str);
 
 private:
     State m_state { State::Free };

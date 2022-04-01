@@ -28,7 +28,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 
-static void log_parse_error(const SourceLocation& location = SourceLocation::current())
+static void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parse error (CSS) {}", location);
 }

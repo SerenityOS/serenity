@@ -67,7 +67,7 @@ void KeymapSwitcher::next_keymap()
 
     dbgln("Current system keymap: {}", current_keymap_name);
 
-    auto it = m_keymaps.find_if([&](const auto& enumerator) {
+    auto it = m_keymaps.find_if([&](auto const& enumerator) {
         return enumerator == current_keymap_name;
     });
 
@@ -102,7 +102,7 @@ String KeymapSwitcher::get_current_keymap() const
 void KeymapSwitcher::setkeymap(const AK::String& keymap)
 {
     pid_t child_pid;
-    const char* argv[] = { "/bin/keymap", "-m", keymap.characters(), nullptr };
+    char const* argv[] = { "/bin/keymap", "-m", keymap.characters(), nullptr };
     if ((errno = posix_spawn(&child_pid, "/bin/keymap", nullptr, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
         dbgln("Failed to call /bin/keymap, error: {} ({})", errno, strerror(errno));

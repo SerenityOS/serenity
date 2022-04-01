@@ -19,7 +19,7 @@ public:
     virtual ~HTMLTemplateElement() override;
 
     NonnullRefPtr<DOM::DocumentFragment> content() { return *m_content; }
-    const NonnullRefPtr<DOM::DocumentFragment> content() const { return *m_content; }
+    NonnullRefPtr<DOM::DocumentFragment> const content() const { return *m_content; }
 
     virtual void adopted_from(DOM::Document&) override;
     virtual void cloned(Node& copy, bool clone_children) override;

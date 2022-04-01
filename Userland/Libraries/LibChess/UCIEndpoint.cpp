@@ -21,7 +21,7 @@ Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevic
     set_in_notifier();
 }
 
-void Endpoint::send_command(const Command& command)
+void Endpoint::send_command(Command const& command)
 {
     dbgln_if(UCI_DEBUG, "{} Sent UCI Command: {}", class_name(), String(command.to_string().characters(), Chomp));
     m_out->write(command.to_string());
@@ -33,27 +33,27 @@ void Endpoint::event(Core::Event& event)
     case Command::Type::UCI:
         return handle_uci();
     case Command::Type::Debug:
-        return handle_debug(static_cast<const DebugCommand&>(event));
+        return handle_debug(static_cast<DebugCommand const&>(event));
     case Command::Type::IsReady:
         return handle_uci();
     case Command::Type::SetOption:
-        return handle_setoption(static_cast<const SetOptionCommand&>(event));
+        return handle_setoption(static_cast<SetOptionCommand const&>(event));
     case Command::Type::Position:
-        return handle_position(static_cast<const PositionCommand&>(event));
+        return handle_position(static_cast<PositionCommand const&>(event));
     case Command::Type::Go:
-        return handle_go(static_cast<const GoCommand&>(event));
+        return handle_go(static_cast<GoCommand const&>(event));
     case Command::Type::Stop:
         return handle_stop();
     case Command::Type::Id:
-        return handle_id(static_cast<const IdCommand&>(event));
+        return handle_id(static_cast<IdCommand const&>(event));
     case Command::Type::UCIOk:
         return handle_uciok();
     case Command::Type::ReadyOk:
         return handle_readyok();
     case Command::Type::BestMove:
-        return handle_bestmove(static_cast<const BestMoveCommand&>(event));
+        return handle_bestmove(static_cast<BestMoveCommand const&>(event));
     case Command::Type::Info:
-        return handle_info(static_cast<const InfoCommand&>(event));
+        return handle_info(static_cast<InfoCommand const&>(event));
     default:
         break;
     }

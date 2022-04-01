@@ -30,7 +30,7 @@ class MiniWidgetGallery final : public GUI::Widget {
     C_OBJECT(MiniWidgetGallery);
 
 public:
-    void set_preview_palette(const Gfx::Palette& palette)
+    void set_preview_palette(Gfx::Palette const& palette)
     {
         set_palette(palette);
         Function<void(GUI::Widget&)> recurse = [&](GUI::Widget& parent_widget) {
@@ -79,7 +79,7 @@ private:
     RefPtr<GUI::Statusbar> m_statusbar;
 };
 
-PreviewWidget::PreviewWidget(const Gfx::Palette& preview_palette)
+PreviewWidget::PreviewWidget(Gfx::Palette const& preview_palette)
     : m_preview_palette(preview_palette)
 {
     m_active_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png").release_value_but_fixme_should_propagate_errors();
@@ -131,7 +131,7 @@ void PreviewWidget::load_theme_bitmaps()
     load_bitmap(m_preview_palette.tooltip_shadow_path(), m_last_tooltip_shadow_path, m_tooltip_shadow);
 }
 
-void PreviewWidget::set_preview_palette(const Gfx::Palette& palette)
+void PreviewWidget::set_preview_palette(Gfx::Palette const& palette)
 {
     m_preview_palette = palette;
     m_gallery->set_preview_palette(palette);
@@ -172,7 +172,7 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
         RefPtr<Gfx::Bitmap> bitmap;
     };
 
-    auto paint_window = [&](auto& title, const Gfx::IntRect& rect, auto state, const Gfx::Bitmap& icon) {
+    auto paint_window = [&](auto& title, Gfx::IntRect const& rect, auto state, Gfx::Bitmap const& icon) {
         int window_button_width = m_preview_palette.window_title_button_width();
         int window_button_height = m_preview_palette.window_title_button_height();
         auto titlebar_text_rect = Gfx::WindowTheme::current().titlebar_text_rect(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette);

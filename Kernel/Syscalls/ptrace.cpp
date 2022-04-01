@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-static ErrorOr<FlatPtr> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& params, Process& caller)
+static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& params, Process& caller)
 {
     SpinlockLocker scheduler_lock(g_scheduler_lock);
     if (params.request == PT_TRACE_ME) {
@@ -101,7 +101,7 @@ static ErrorOr<FlatPtr> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& p
             return EINVAL;
 
         PtraceRegisters regs {};
-        TRY(copy_from_user(&regs, (const PtraceRegisters*)params.addr));
+        TRY(copy_from_user(&regs, (PtraceRegisters const*)params.addr));
 
         auto& peer_saved_registers = peer->get_register_dump_from_stack();
         // Verify that the saved registers are in usermode context
@@ -114,7 +114,7 @@ static ErrorOr<FlatPtr> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& p
     }
 
     case PT_PEEK: {
-        auto data = TRY(peer->process().peek_user_data(Userspace<const FlatPtr*> { (FlatPtr)params.addr }));
+        auto data = TRY(peer->process().peek_user_data(Userspace<FlatPtr const*> { (FlatPtr)params.addr }));
         TRY(copy_to_user((FlatPtr*)params.data, &data));
         break;
     }
@@ -132,7 +132,7 @@ static ErrorOr<FlatPtr> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& p
         FlatPtr tracee_ptr = (FlatPtr)params.addr;
         while (buf_params.buf.size > 0) {
             size_t copy_this_iteration = min(buf.size(), buf_params.buf.size);
-            TRY(peer->process().peek_user_data(buf.span().slice(0, copy_this_iteration), Userspace<const u8*> { tracee_ptr }));
+            TRY(peer->process().peek_user_data(buf.span().slice(0, copy_this_iteration), Userspace<u8 const*> { tracee_ptr }));
             TRY(copy_to_user((void*)buf_params.buf.data, buf.data(), copy_this_iteration));
             tracee_ptr += copy_this_iteration;
             buf_params.buf.data += copy_this_iteration;
@@ -156,7 +156,7 @@ static ErrorOr<FlatPtr> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& p
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$ptrace(Userspace<Syscall::SC_ptrace_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::ptrace));
@@ -175,7 +175,7 @@ bool Process::has_tracee_thread(ProcessID tracer_pid)
     return false;
 }
 
-ErrorOr<FlatPtr> Process::peek_user_data(Userspace<const FlatPtr*> address)
+ErrorOr<FlatPtr> Process::peek_user_data(Userspace<FlatPtr const*> address)
 {
     // This function can be called from the context of another
     // process that called PT_PEEK
@@ -183,7 +183,7 @@ ErrorOr<FlatPtr> Process::peek_user_data(Userspace<const FlatPtr*> address)
     return TRY(copy_typed_from_user(address));
 }
 
-ErrorOr<void> Process::peek_user_data(Span<u8> destination, Userspace<const u8*> address)
+ErrorOr<void> Process::peek_user_data(Span<u8> destination, Userspace<u8 const*> address)
 {
     // This function can be called from the context of another
     // process that called PT_PEEKBUF
@@ -207,7 +207,7 @@ ErrorOr<void> Process::poke_user_data(Userspace<FlatPtr*> address, FlatPtr data)
         region->set_vmobject(move(vmobject));
         region->set_shared(false);
     }
-    const bool was_writable = region->is_writable();
+    bool const was_writable = region->is_writable();
     if (!was_writable) {
         region->set_writable(true);
         region->remap();

@@ -148,9 +148,9 @@ GlobalObject& Interpreter::global_object()
     return static_cast<GlobalObject&>(*m_global_object.cell());
 }
 
-const GlobalObject& Interpreter::global_object() const
+GlobalObject const& Interpreter::global_object() const
 {
-    return static_cast<const GlobalObject&>(*m_global_object.cell());
+    return static_cast<GlobalObject const&>(*m_global_object.cell());
 }
 
 Realm& Interpreter::realm()
@@ -158,9 +158,9 @@ Realm& Interpreter::realm()
     return static_cast<Realm&>(*m_realm.cell());
 }
 
-const Realm& Interpreter::realm() const
+Realm const& Interpreter::realm() const
 {
-    return static_cast<const Realm&>(*m_realm.cell());
+    return static_cast<Realm const&>(*m_realm.cell());
 }
 
 }

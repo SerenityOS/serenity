@@ -11,7 +11,7 @@ namespace Prekernel {
 void drop_to_exception_level_1();
 void init_prekernel_page_tables();
 
-[[noreturn]] void panic(const char* msg);
+[[noreturn]] void panic(char const* msg);
 
 [[noreturn]] void halt();
 

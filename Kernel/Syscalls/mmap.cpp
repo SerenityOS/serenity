@@ -103,7 +103,7 @@ ErrorOr<void> Process::validate_mmap_prot(int prot, bool map_stack, bool map_ano
     return {};
 }
 
-ErrorOr<void> Process::validate_inode_mmap_prot(int prot, const Inode& inode, bool map_shared) const
+ErrorOr<void> Process::validate_inode_mmap_prot(int prot, Inode const& inode, bool map_shared) const
 {
     auto metadata = inode.metadata();
     if ((prot & PROT_READ) && !metadata.may_read(*this))
@@ -125,7 +125,7 @@ ErrorOr<void> Process::validate_inode_mmap_prot(int prot, const Inode& inode, bo
     return {};
 }
 
-ErrorOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::stdio));
@@ -322,10 +322,10 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
         return 0;
     }
 
-    if (const auto& regions = TRY(address_space().find_regions_intersecting(range_to_mprotect)); regions.size()) {
+    if (auto const& regions = TRY(address_space().find_regions_intersecting(range_to_mprotect)); regions.size()) {
         size_t full_size_found = 0;
         // Check that all intersecting regions are compatible.
-        for (const auto* region : regions) {
+        for (auto const* region : regions) {
             if (!region->is_mmap())
                 return EPERM;
             TRY(validate_mmap_prot(prot, region->is_stack(), region->vmobject().is_anonymous(), region));
@@ -343,7 +343,7 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
             if (old_region->access() == Memory::prot_to_region_access_flags(prot))
                 continue;
 
-            const auto intersection_to_mprotect = range_to_mprotect.intersect(old_region->range());
+            auto const intersection_to_mprotect = range_to_mprotect.intersect(old_region->range());
             // If the region is completely covered by range, simply update the access flags
             if (intersection_to_mprotect == old_region->range()) {
                 old_region->set_readable(prot & PROT_READ);
@@ -419,7 +419,7 @@ ErrorOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int
     return EINVAL;
 }
 
-ErrorOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$set_mmap_name(Userspace<Syscall::SC_set_mmap_name_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::stdio));
@@ -451,7 +451,7 @@ ErrorOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$mremap(Userspace<Syscall::SC_mremap_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::stdio));
@@ -488,7 +488,7 @@ ErrorOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*>
     return ENOTIMPL;
 }
 
-ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data, size_t size)
+ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::stdio));

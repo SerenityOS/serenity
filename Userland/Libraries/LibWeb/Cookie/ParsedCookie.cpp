@@ -27,7 +27,7 @@ static void on_secure_attribute(ParsedCookie& parsed_cookie);
 static void on_http_only_attribute(ParsedCookie& parsed_cookie);
 static Optional<Core::DateTime> parse_date_time(StringView date_string);
 
-Optional<ParsedCookie> parse_cookie(const String& cookie_string)
+Optional<ParsedCookie> parse_cookie(String const& cookie_string)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2
 
@@ -293,7 +293,7 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
     bool found_month = false;
     bool found_year = false;
 
-    for (const auto& date_token : date_tokens) {
+    for (auto const& date_token : date_tokens) {
         if (!found_time && parse_time(date_token)) {
             found_time = true;
         } else if (!found_day_of_month && parse_day_of_month(date_token)) {
@@ -333,7 +333,7 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
 
 }
 
-bool IPC::encode(IPC::Encoder& encoder, const Web::Cookie::ParsedCookie& cookie)
+bool IPC::encode(IPC::Encoder& encoder, Web::Cookie::ParsedCookie const& cookie)
 {
     encoder << cookie.name;
     encoder << cookie.value;

@@ -86,7 +86,7 @@ private:
 
 void ToDoEntriesWidget::refresh()
 {
-    const auto& entries = ToDoEntries::the().get_entries();
+    auto const& entries = ToDoEntries::the().get_entries();
     auto results_model = adopt_ref(*new ToDoEntriesModel(move(entries)));
     m_result_view->set_model(results_model);
 }

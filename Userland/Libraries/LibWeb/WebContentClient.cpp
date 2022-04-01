@@ -23,7 +23,7 @@ void WebContentClient::die()
     on_web_content_process_crash();
 }
 
-void WebContentClient::did_paint(const Gfx::IntRect&, i32 bitmap_id)
+void WebContentClient::did_paint(Gfx::IntRect const&, i32 bitmap_id)
 {
     m_view.notify_server_did_paint({}, bitmap_id);
 }

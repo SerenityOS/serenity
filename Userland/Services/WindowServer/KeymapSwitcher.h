@@ -38,7 +38,7 @@ private:
 
     RefPtr<Core::FileWatcher> m_file_watcher;
 
-    const char* m_keyboard_config = "/etc/Keyboard.ini";
+    char const* m_keyboard_config = "/etc/Keyboard.ini";
 };
 
 }

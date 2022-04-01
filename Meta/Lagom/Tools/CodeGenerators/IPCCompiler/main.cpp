@@ -282,7 +282,7 @@ String constructor_for_message(String const& name, Vector<Parameter> const& para
     return builder.to_string();
 }
 
-void do_message(SourceGenerator message_generator, const String& name, const Vector<Parameter>& parameters, const String& response_type = {})
+void do_message(SourceGenerator message_generator, String const& name, Vector<Parameter> const& parameters, String const& response_type = {})
 {
     auto pascal_name = pascal_case(name);
     message_generator.set("message.name", name);
@@ -598,7 +598,7 @@ public:
         switch (message_id) {)~~~");
 
     for (auto const& message : endpoint.messages) {
-        auto do_decode_message = [&](const String& name) {
+        auto do_decode_message = [&](String const& name) {
             auto message_generator = generator.fork();
 
             message_generator.set("message.name", name);

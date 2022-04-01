@@ -16,7 +16,7 @@
 
 namespace Compress {
 
-const CanonicalCode& CanonicalCode::fixed_literal_codes()
+CanonicalCode const& CanonicalCode::fixed_literal_codes()
 {
     static CanonicalCode code;
     static bool initialized = false;
@@ -30,7 +30,7 @@ const CanonicalCode& CanonicalCode::fixed_literal_codes()
     return code;
 }
 
-const CanonicalCode& CanonicalCode::fixed_distance_codes()
+CanonicalCode const& CanonicalCode::fixed_distance_codes()
 {
     static CanonicalCode code;
     static bool initialized = false;
@@ -128,7 +128,7 @@ bool DeflateDecompressor::CompressedBlock::try_read_more()
     if (m_eof == true)
         return false;
 
-    const auto symbol = m_literal_codes.read_symbol(m_decompressor.m_input_stream);
+    auto const symbol = m_literal_codes.read_symbol(m_decompressor.m_input_stream);
 
     if (symbol >= 286) { // invalid deflate literal/length symbol
         m_decompressor.set_fatal_error();
@@ -147,13 +147,13 @@ bool DeflateDecompressor::CompressedBlock::try_read_more()
             return false;
         }
 
-        const auto length = m_decompressor.decode_length(symbol);
-        const auto distance_symbol = m_distance_codes.value().read_symbol(m_decompressor.m_input_stream);
+        auto const length = m_decompressor.decode_length(symbol);
+        auto const distance_symbol = m_distance_codes.value().read_symbol(m_decompressor.m_input_stream);
         if (distance_symbol >= 30) { // invalid deflate distance symbol
             m_decompressor.set_fatal_error();
             return false;
         }
-        const auto distance = m_decompressor.decode_distance(distance_symbol);
+        auto const distance = m_decompressor.decode_distance(distance_symbol);
 
         for (size_t idx = 0; idx < length; ++idx) {
             u8 byte = 0;
@@ -180,7 +180,7 @@ bool DeflateDecompressor::UncompressedBlock::try_read_more()
     if (m_bytes_remaining == 0)
         return false;
 
-    const auto nread = min(m_bytes_remaining, m_decompressor.m_output_stream.remaining_contiguous_space());
+    auto const nread = min(m_bytes_remaining, m_decompressor.m_output_stream.remaining_contiguous_space());
     m_bytes_remaining -= nread;
 
     m_decompressor.m_input_stream >> m_decompressor.m_output_stream.reserve_contiguous_space(nread);
@@ -215,7 +215,7 @@ size_t DeflateDecompressor::read(Bytes bytes)
                 break;
 
             m_read_final_bock = m_input_stream.read_bit();
-            const auto block_type = m_input_stream.read_bits(2);
+            auto const block_type = m_input_stream.read_bits(2);
 
             if (m_input_stream.has_any_error()) {
                 set_fatal_error();
@@ -363,7 +363,7 @@ Optional<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 
     u8 buffer[4096];
     while (!deflate_stream.has_any_error() && !deflate_stream.unreliable_eof()) {
-        const auto nread = deflate_stream.read({ buffer, sizeof(buffer) });
+        auto const nread = deflate_stream.read({ buffer, sizeof(buffer) });
         output_stream.write_or_error({ buffer, nread });
     }
 
@@ -428,7 +428,7 @@ void DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Optional<Can
         set_fatal_error();
         return;
     }
-    const auto code_length_code = code_length_code_result.value();
+    auto const code_length_code = code_length_code_result.value();
 
     // Next we extract the code lengths of the code that was used to encode the block.
 
@@ -544,7 +544,7 @@ bool DeflateCompressor::write_or_error(ReadonlyBytes bytes)
 }
 
 // Knuth's multiplicative hash on 4 bytes
-u16 DeflateCompressor::hash_sequence(const u8* bytes)
+u16 DeflateCompressor::hash_sequence(u8 const* bytes)
 {
     constexpr const u32 knuth_constant = 2654435761; // shares no common factors with 2^32
     return ((bytes[0] | bytes[1] << 8 | bytes[2] << 16 | bytes[3] << 24) * knuth_constant) >> (32 - hash_bits);
@@ -617,7 +617,7 @@ ALWAYS_INLINE u8 DeflateCompressor::distance_to_base(u16 distance)
 }
 
 template<size_t Size>
-void DeflateCompressor::generate_huffman_lengths(Array<u8, Size>& lengths, const Array<u16, Size>& frequencies, size_t max_bit_length, u16 frequency_cap)
+void DeflateCompressor::generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& frequencies, size_t max_bit_length, u16 frequency_cap)
 {
     VERIFY((1u << max_bit_length) >= Size);
     u16 heap_keys[Size]; // Used for O(n) heap construction
@@ -773,7 +773,7 @@ void DeflateCompressor::lz77_compress_block()
     }
 }
 
-size_t DeflateCompressor::huffman_block_length(const Array<u8, max_huffman_literals>& literal_bit_lengths, const Array<u8, max_huffman_distances>& distance_bit_lengths)
+size_t DeflateCompressor::huffman_block_length(Array<u8, max_huffman_literals> const& literal_bit_lengths, Array<u8, max_huffman_distances> const& distance_bit_lengths)
 {
     size_t length = 0;
 
@@ -807,7 +807,7 @@ size_t DeflateCompressor::fixed_block_length()
     return 3 + huffman_block_length(fixed_literal_bit_lengths, fixed_distance_bit_lengths);
 }
 
-size_t DeflateCompressor::dynamic_block_length(const Array<u8, max_huffman_literals>& literal_bit_lengths, const Array<u8, max_huffman_distances>& distance_bit_lengths, const Array<u8, 19>& code_lengths_bit_lengths, const Array<u16, 19>& code_lengths_frequencies, size_t code_lengths_count)
+size_t DeflateCompressor::dynamic_block_length(Array<u8, max_huffman_literals> const& literal_bit_lengths, Array<u8, max_huffman_distances> const& distance_bit_lengths, Array<u8, 19> const& code_lengths_bit_lengths, Array<u16, 19> const& code_lengths_frequencies, size_t code_lengths_count)
 {
     // block header + literal code count + distance code count + code length count
     auto length = 3 + 5 + 5 + 4;
@@ -831,7 +831,7 @@ size_t DeflateCompressor::dynamic_block_length(const Array<u8, max_huffman_liter
     return length + huffman_block_length(literal_bit_lengths, distance_bit_lengths);
 }
 
-void DeflateCompressor::write_huffman(const CanonicalCode& literal_code, const Optional<CanonicalCode>& distance_code)
+void DeflateCompressor::write_huffman(CanonicalCode const& literal_code, Optional<CanonicalCode> const& distance_code)
 {
     auto has_distances = distance_code.has_value();
     for (size_t i = 0; i < m_pending_symbol_size; i++) {
@@ -852,7 +852,7 @@ void DeflateCompressor::write_huffman(const CanonicalCode& literal_code, const O
     }
 }
 
-size_t DeflateCompressor::encode_huffman_lengths(const Array<u8, max_huffman_literals + max_huffman_distances>& lengths, size_t lengths_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths)
+size_t DeflateCompressor::encode_huffman_lengths(Array<u8, max_huffman_literals + max_huffman_distances> const& lengths, size_t lengths_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths)
 {
     size_t encoded_count = 0;
     size_t i = 0;
@@ -895,7 +895,7 @@ size_t DeflateCompressor::encode_huffman_lengths(const Array<u8, max_huffman_lit
     return encoded_count;
 }
 
-size_t DeflateCompressor::encode_block_lengths(const Array<u8, max_huffman_literals>& literal_bit_lengths, const Array<u8, max_huffman_distances>& distance_bit_lengths, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t& literal_code_count, size_t& distance_code_count)
+size_t DeflateCompressor::encode_block_lengths(Array<u8, max_huffman_literals> const& literal_bit_lengths, Array<u8, max_huffman_distances> const& distance_bit_lengths, Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t& literal_code_count, size_t& distance_code_count)
 {
     literal_code_count = max_huffman_literals;
     distance_code_count = max_huffman_distances;
@@ -920,7 +920,7 @@ size_t DeflateCompressor::encode_block_lengths(const Array<u8, max_huffman_liter
     return encode_huffman_lengths(all_lengths, lengths_count, encoded_lengths);
 }
 
-void DeflateCompressor::write_dynamic_huffman(const CanonicalCode& literal_code, size_t literal_code_count, const Optional<CanonicalCode>& distance_code, size_t distance_code_count, const Array<u8, 19>& code_lengths_bit_lengths, size_t code_length_count, const Array<code_length_symbol, max_huffman_literals + max_huffman_distances>& encoded_lengths, size_t encoded_lengths_count)
+void DeflateCompressor::write_dynamic_huffman(CanonicalCode const& literal_code, size_t literal_code_count, Optional<CanonicalCode> const& distance_code, size_t distance_code_count, Array<u8, 19> const& code_lengths_bit_lengths, size_t code_length_count, Array<code_length_symbol, max_huffman_literals + max_huffman_distances> const& encoded_lengths, size_t encoded_lengths_count)
 {
     m_output_stream.write_bits(literal_code_count - 257, 5);
     m_output_stream.write_bits(distance_code_count - 1, 5);

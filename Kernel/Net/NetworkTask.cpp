@@ -658,7 +658,7 @@ void retransmit_tcp_packets()
     // We must keep the sockets alive until after we've unlocked the hash table
     // in case retransmit_packets() realizes that it wants to close the socket.
     NonnullRefPtrVector<TCPSocket, 16> sockets;
-    TCPSocket::sockets_for_retransmit().for_each_shared([&](const auto& socket) {
+    TCPSocket::sockets_for_retransmit().for_each_shared([&](auto const& socket) {
         // We ignore allocation failures above the first 16 guaranteed socket slots, as
         // we will just retransmit their packets the next time around
         (void)sockets.try_append(socket);

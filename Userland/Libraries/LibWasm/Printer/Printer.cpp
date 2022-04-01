@@ -416,14 +416,15 @@ void Printer::print(Wasm::ImportSection::Import const& import)
     {
         TemporaryChange change { m_indent, m_indent + 1 };
         import.description().visit(
-            [this](auto const& type) { print(type); },
+            [this](auto const& type) { print(type);
+    },
             [this](TypeIndex const& index) {
-                print_indent();
-                print("(type index {})\n", index.value());
+        print_indent();
+        print("(type index {})\n", index.value());
             });
-    }
-    print_indent();
-    print(")\n");
+}
+print_indent();
+print(")\n");
 }
 
 void Printer::print(Wasm::Instruction const& instruction)
@@ -671,7 +672,6 @@ void Printer::print(Wasm::Reference const& value)
             [](Wasm::Reference::Null const&) { return String("null"); },
             [](auto const& ref) { return String::number(ref.address.value()); }));
 }
-
 }
 
 HashMap<Wasm::OpCode, String> Wasm::Names::instruction_names {

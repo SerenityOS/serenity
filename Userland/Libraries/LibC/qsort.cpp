@@ -28,12 +28,12 @@ private:
 namespace AK {
 
 template<>
-inline void swap(const SizedObject& a, const SizedObject& b)
+inline void swap(SizedObject const& a, SizedObject const& b)
 {
     VERIFY(a.size() == b.size());
     const size_t size = a.size();
-    const auto a_data = reinterpret_cast<char*>(a.data());
-    const auto b_data = reinterpret_cast<char*>(b.data());
+    auto const a_data = reinterpret_cast<char*>(a.data());
+    auto const b_data = reinterpret_cast<char*>(b.data());
     for (auto i = 0u; i < size; ++i) {
         swap(a_data[i], b_data[i]);
     }
@@ -60,7 +60,7 @@ private:
 };
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/qsort.html
-void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
+void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(void const*, void const*))
 {
     if (nmemb <= 1) {
         return;
@@ -68,10 +68,10 @@ void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, cons
 
     SizedObjectSlice slice { bot, size };
 
-    AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](const SizedObject& a, const SizedObject& b) { return compar(a.data(), b.data()) < 0; });
+    AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](SizedObject const& a, SizedObject const& b) { return compar(a.data(), b.data()) < 0; });
 }
 
-void qsort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*, void*), void* arg)
+void qsort_r(void* bot, size_t nmemb, size_t size, int (*compar)(void const*, void const*, void*), void* arg)
 {
     if (nmemb <= 1) {
         return;
@@ -79,5 +79,5 @@ void qsort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, co
 
     SizedObjectSlice slice { bot, size };
 
-    AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](const SizedObject& a, const SizedObject& b) { return compar(a.data(), b.data(), arg) < 0; });
+    AK::dual_pivot_quick_sort(slice, 0, nmemb - 1, [=](SizedObject const& a, SizedObject const& b) { return compar(a.data(), b.data(), arg) < 0; });
 }

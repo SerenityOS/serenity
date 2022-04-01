@@ -66,7 +66,7 @@ void Tab::start_download(const URL& url)
     window->show();
 }
 
-void Tab::view_source(const URL& url, const String& source)
+void Tab::view_source(const URL& url, String const& source)
 {
     auto window = GUI::Window::construct(&this->window());
     auto& editor = window->set_main_widget<GUI::TextEditor>();
@@ -282,7 +282,7 @@ Tab::Tab(BrowserWindow& window)
     m_image_context_menu->add_separator();
     m_image_context_menu->add_action(window.inspect_dom_node_action());
 
-    hooks().on_image_context_menu_request = [this](auto& image_url, auto& screen_position, const Gfx::ShareableBitmap& shareable_bitmap) {
+    hooks().on_image_context_menu_request = [this](auto& image_url, auto& screen_position, Gfx::ShareableBitmap const& shareable_bitmap) {
         m_image_context_menu_url = image_url;
         m_image_context_menu_bitmap = shareable_bitmap;
         m_image_context_menu->popup(screen_position);
@@ -469,7 +469,7 @@ void Tab::bookmark_current_url()
     update_bookmark_button(url);
 }
 
-void Tab::update_bookmark_button(const String& url)
+void Tab::update_bookmark_button(String const& url)
 {
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
         m_bookmark_button->set_icon(g_icon_bag.bookmark_filled);
@@ -503,7 +503,7 @@ void Tab::did_become_active()
     update_actions();
 }
 
-void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)
+void Tab::context_menu_requested(Gfx::IntPoint const& screen_position)
 {
     m_tab_context_menu->popup(screen_position);
 }

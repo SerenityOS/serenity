@@ -20,8 +20,8 @@ public:
     static RefPtr<Cursor> create(Gfx::StandardCursor);
     ~Cursor() = default;
 
-    const Gfx::CursorParams& params() const { return m_params; }
-    const Gfx::Bitmap& bitmap(int scale_factor) const
+    Gfx::CursorParams const& params() const { return m_params; }
+    Gfx::Bitmap const& bitmap(int scale_factor) const
     {
         auto it = m_bitmaps.find(scale_factor);
         if (it == m_bitmaps.end()) {
@@ -47,7 +47,7 @@ public:
 
 private:
     Cursor() = default;
-    Cursor(NonnullRefPtr<Gfx::Bitmap>&&, int, const Gfx::CursorParams&);
+    Cursor(NonnullRefPtr<Gfx::Bitmap>&&, int, Gfx::CursorParams const&);
 
     bool load(StringView, StringView);
     void update_rect_if_animated();

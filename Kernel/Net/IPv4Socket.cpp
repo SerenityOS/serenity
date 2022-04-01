@@ -94,7 +94,7 @@ void IPv4Socket::get_peer_address(sockaddr* address, socklen_t* address_size)
     *address_size = sizeof(sockaddr_in);
 }
 
-ErrorOr<void> IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t address_size)
+ErrorOr<void> IPv4Socket::bind(Userspace<sockaddr const*> user_address, socklen_t address_size)
 {
     VERIFY(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_in))
@@ -114,7 +114,7 @@ ErrorOr<void> IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_
         }
     }
 
-    m_local_address = IPv4Address((const u8*)&address.sin_addr.s_addr);
+    m_local_address = IPv4Address((u8 const*)&address.sin_addr.s_addr);
     m_local_port = requested_local_port;
 
     dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket::bind {}({}) to {}:{}", class_name(), this, m_local_address, m_local_port);
@@ -138,12 +138,12 @@ ErrorOr<void> IPv4Socket::listen(size_t backlog)
     return protocol_listen(result.did_allocate);
 }
 
-ErrorOr<void> IPv4Socket::connect(OpenFileDescription& description, Userspace<const sockaddr*> address, socklen_t address_size, ShouldBlock should_block)
+ErrorOr<void> IPv4Socket::connect(OpenFileDescription& description, Userspace<sockaddr const*> address, socklen_t address_size, ShouldBlock should_block)
 {
     if (address_size != sizeof(sockaddr_in))
         return set_so_error(EINVAL);
     u16 sa_family_copy;
-    auto* user_address = reinterpret_cast<const sockaddr*>(address.unsafe_userspace_ptr());
+    auto* user_address = reinterpret_cast<sockaddr const*>(address.unsafe_userspace_ptr());
     SOCKET_TRY(copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)));
     if (sa_family_copy != AF_INET)
         return set_so_error(EINVAL);
@@ -153,7 +153,7 @@ ErrorOr<void> IPv4Socket::connect(OpenFileDescription& description, Userspace<co
     sockaddr_in safe_address {};
     SOCKET_TRY(copy_from_user(&safe_address, (sockaddr_in const*)user_address, sizeof(sockaddr_in)));
 
-    m_peer_address = IPv4Address((const u8*)&safe_address.sin_addr.s_addr);
+    m_peer_address = IPv4Address((u8 const*)&safe_address.sin_addr.s_addr);
     if (m_peer_address == IPv4Address { 0, 0, 0, 0 })
         m_peer_address = IPv4Address { 127, 0, 0, 1 };
     m_peer_port = ntohs(safe_address.sin_port);
@@ -161,7 +161,7 @@ ErrorOr<void> IPv4Socket::connect(OpenFileDescription& description, Userspace<co
     return protocol_connect(description, should_block);
 }
 
-bool IPv4Socket::can_read(const OpenFileDescription&, u64) const
+bool IPv4Socket::can_read(OpenFileDescription const&, u64) const
 {
     if (m_role == Role::Listener)
         return can_accept();
@@ -170,7 +170,7 @@ bool IPv4Socket::can_read(const OpenFileDescription&, u64) const
     return m_can_read;
 }
 
-bool IPv4Socket::can_write(const OpenFileDescription&, u64) const
+bool IPv4Socket::can_write(OpenFileDescription const&, u64) const
 {
     return true;
 }
@@ -187,7 +187,7 @@ PortAllocationResult IPv4Socket::allocate_local_port_if_needed()
     return { m_local_port, true };
 }
 
-ErrorOr<size_t> IPv4Socket::sendto(OpenFileDescription&, const UserOrKernelBuffer& data, size_t data_length, [[maybe_unused]] int flags, Userspace<const sockaddr*> addr, socklen_t addr_length)
+ErrorOr<size_t> IPv4Socket::sendto(OpenFileDescription&, UserOrKernelBuffer const& data, size_t data_length, [[maybe_unused]] int flags, Userspace<sockaddr const*> addr, socklen_t addr_length)
 {
     MutexLocker locker(mutex());
 
@@ -196,14 +196,14 @@ ErrorOr<size_t> IPv4Socket::sendto(OpenFileDescription&, const UserOrKernelBuffe
 
     if (addr) {
         sockaddr_in ia {};
-        SOCKET_TRY(copy_from_user(&ia, Userspace<const sockaddr_in*>(addr.ptr())));
+        SOCKET_TRY(copy_from_user(&ia, Userspace<sockaddr_in const*>(addr.ptr())));
 
         if (ia.sin_family != AF_INET) {
             dmesgln("sendto: Bad address family: {} is not AF_INET", ia.sin_family);
             return set_so_error(EAFNOSUPPORT);
         }
 
-        m_peer_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
+        m_peer_address = IPv4Address((u8 const*)&ia.sin_addr.s_addr);
         m_peer_port = ntohs(ia.sin_port);
     }
 
@@ -413,7 +413,7 @@ ErrorOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKer
     return total_nreceived;
 }
 
-bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, ReadonlyBytes packet, const Time& packet_timestamp)
+bool IPv4Socket::did_receive(IPv4Address const& source_address, u16 source_port, ReadonlyBytes packet, Time const& packet_timestamp)
 {
     MutexLocker locker(mutex());
 
@@ -468,7 +468,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     return true;
 }
 
-ErrorOr<NonnullOwnPtr<KString>> IPv4Socket::pseudo_path(const OpenFileDescription&) const
+ErrorOr<NonnullOwnPtr<KString>> IPv4Socket::pseudo_path(OpenFileDescription const&) const
 {
     if (m_role == Role::None)
         return KString::try_create("socket"sv);
@@ -500,7 +500,7 @@ ErrorOr<NonnullOwnPtr<KString>> IPv4Socket::pseudo_path(const OpenFileDescriptio
     return KString::try_create(builder.string_view());
 }
 
-ErrorOr<void> IPv4Socket::setsockopt(int level, int option, Userspace<const void*> user_value, socklen_t user_value_size)
+ErrorOr<void> IPv4Socket::setsockopt(int level, int option, Userspace<void const*> user_value, socklen_t user_value_size)
 {
     if (level != IPPROTO_IP)
         return Socket::setsockopt(level, option, user_value, user_value_size);
@@ -512,7 +512,7 @@ ErrorOr<void> IPv4Socket::setsockopt(int level, int option, Userspace<const void
         if (user_value_size < sizeof(int))
             return EINVAL;
         int value;
-        TRY(copy_from_user(&value, static_ptr_cast<const int*>(user_value)));
+        TRY(copy_from_user(&value, static_ptr_cast<int const*>(user_value)));
         if (value < 0 || value > 255)
             return EINVAL;
         m_ttl = value;
@@ -522,7 +522,7 @@ ErrorOr<void> IPv4Socket::setsockopt(int level, int option, Userspace<const void
         if (user_value_size < sizeof(int))
             return EINVAL;
         int value;
-        TRY(copy_from_user(&value, static_ptr_cast<const int*>(user_value)));
+        TRY(copy_from_user(&value, static_ptr_cast<int const*>(user_value)));
         if (value < 0 || value > 255)
             return EINVAL;
         m_type_of_service = value;
@@ -532,7 +532,7 @@ ErrorOr<void> IPv4Socket::setsockopt(int level, int option, Userspace<const void
         if (user_value_size != 1)
             return EINVAL;
         u8 value;
-        TRY(copy_from_user(&value, static_ptr_cast<const u8*>(user_value)));
+        TRY(copy_from_user(&value, static_ptr_cast<u8 const*>(user_value)));
         if (value != 0 && value != 1)
             return EINVAL;
         m_multicast_loop = value;
@@ -542,10 +542,10 @@ ErrorOr<void> IPv4Socket::setsockopt(int level, int option, Userspace<const void
         if (user_value_size != sizeof(ip_mreq))
             return EINVAL;
         ip_mreq mreq;
-        TRY(copy_from_user(&mreq, static_ptr_cast<const ip_mreq*>(user_value)));
+        TRY(copy_from_user(&mreq, static_ptr_cast<ip_mreq const*>(user_value)));
         if (mreq.imr_interface.s_addr != INADDR_ANY)
             return ENOTSUP;
-        IPv4Address address { (const u8*)&mreq.imr_multiaddr.s_addr };
+        IPv4Address address { (u8 const*)&mreq.imr_multiaddr.s_addr };
         if (!m_multicast_memberships.contains_slow(address))
             m_multicast_memberships.append(address);
         return {};
@@ -554,10 +554,10 @@ ErrorOr<void> IPv4Socket::setsockopt(int level, int option, Userspace<const void
         if (user_value_size != sizeof(ip_mreq))
             return EINVAL;
         ip_mreq mreq;
-        TRY(copy_from_user(&mreq, static_ptr_cast<const ip_mreq*>(user_value)));
+        TRY(copy_from_user(&mreq, static_ptr_cast<ip_mreq const*>(user_value)));
         if (mreq.imr_interface.s_addr != INADDR_ANY)
             return ENOTSUP;
-        IPv4Address address { (const u8*)&mreq.imr_multiaddr.s_addr };
+        IPv4Address address { (u8 const*)&mreq.imr_multiaddr.s_addr };
         m_multicast_memberships.remove_first_matching([&address](auto& a) { return a == address; });
         return {};
     }
@@ -596,7 +596,7 @@ ErrorOr<void> IPv4Socket::getsockopt(OpenFileDescription& description, int level
     case IP_MULTICAST_LOOP: {
         if (size < 1)
             return EINVAL;
-        TRY(copy_to_user(static_ptr_cast<u8*>(value), (const u8*)&m_multicast_loop));
+        TRY(copy_to_user(static_ptr_cast<u8*>(value), (u8 const*)&m_multicast_loop));
         size = 1;
         return copy_to_user(value_size, &size);
     }

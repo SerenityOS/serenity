@@ -46,7 +46,7 @@ TEST_CASE(load_form)
 
     auto widgets = form_json.as_object().get("widgets").as_array();
 
-    widgets.for_each([&](const JsonValue& widget_value) {
+    widgets.for_each([&](JsonValue const& widget_value) {
         auto& widget_object = widget_value.as_object();
         auto widget_class = widget_object.get("class").as_string();
         widget_object.for_each_member([&]([[maybe_unused]] auto& property_name, [[maybe_unused]] const JsonValue& property_value) {
@@ -87,7 +87,7 @@ TEST_CASE(json_utf8_multibyte)
 {
     auto json_or_error = JsonValue::from_string("\"š\"");
     EXPECT_EQ(json_or_error.is_error(), false);
-    
+
     auto& json = json_or_error.value();
     EXPECT_EQ(json.type(), JsonValue::Type::String);
     EXPECT_EQ(json.as_string().is_null(), false);

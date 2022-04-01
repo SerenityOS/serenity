@@ -41,7 +41,7 @@ ELFObjectInfo const* Backtrace::object_info_for_region(Reader const& coredump, M
     return info_ptr;
 }
 
-Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread_info, Function<void(size_t, size_t)> on_progress)
+Backtrace::Backtrace(Reader const& coredump, const ELF::Core::ThreadInfo& thread_info, Function<void(size_t, size_t)> on_progress)
     : m_thread_info(move(thread_info))
 {
 #if ARCH(I386)
@@ -92,7 +92,7 @@ Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread
     }
 }
 
-void Backtrace::add_entry(const Reader& coredump, FlatPtr ip)
+void Backtrace::add_entry(Reader const& coredump, FlatPtr ip)
 {
     auto ip_region = coredump.region_containing(ip);
     if (!ip_region.has_value()) {

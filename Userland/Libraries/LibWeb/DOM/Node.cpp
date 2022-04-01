@@ -95,7 +95,7 @@ const HTML::HTMLElement* Node::enclosing_html_element() const
     return first_ancestor_of_type<HTML::HTMLElement>();
 }
 
-const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(const FlyString& attribute) const
+const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(FlyString const& attribute) const
 {
     for (auto* node = this; node; node = node->parent()) {
         if (is<HTML::HTMLElement>(*node) && verify_cast<HTML::HTMLElement>(*node).has_attribute(attribute))
@@ -162,7 +162,7 @@ String Node::node_value() const
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dom-node-nodevalue%E2%91%A0
-void Node::set_node_value(const String& value)
+void Node::set_node_value(String const& value)
 {
 
     if (is<Attribute>(this)) {
@@ -249,7 +249,7 @@ Element* Node::parent_element()
     return verify_cast<Element>(parent());
 }
 
-const Element* Node::parent_element() const
+Element const* Node::parent_element() const
 {
     if (!parent() || !is<Element>(parent()))
         return nullptr;
@@ -650,7 +650,7 @@ void Node::set_layout_node(Badge<Layout::Node>, Layout::Node* layout_node) const
         m_layout_node = nullptr;
 }
 
-EventTarget* Node::get_parent(const Event&)
+EventTarget* Node::get_parent(Event const&)
 {
     // FIXME: returns the node’s assigned slot, if node is assigned, and node’s parent otherwise.
     return parent();
@@ -746,7 +746,7 @@ u16 Node::compare_document_position(RefPtr<Node> other)
 }
 
 // https://dom.spec.whatwg.org/#concept-tree-host-including-inclusive-ancestor
-bool Node::is_host_including_inclusive_ancestor_of(const Node& other) const
+bool Node::is_host_including_inclusive_ancestor_of(Node const& other) const
 {
     if (is_inclusive_ancestor_of(other))
         return true;

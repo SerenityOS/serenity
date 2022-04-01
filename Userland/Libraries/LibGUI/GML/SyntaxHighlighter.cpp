@@ -11,7 +11,7 @@
 
 namespace GUI::GML {
 
-static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, Token::Type type)
+static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, Token::Type type)
 {
     switch (type) {
     case Token::Type::LeftCurly:
@@ -38,7 +38,7 @@ bool SyntaxHighlighter::is_identifier(u64 token) const
     return ini_token == Token::Type::Identifier;
 }
 
-void SyntaxHighlighter::rehighlight(const Palette& palette)
+void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
     Lexer lexer(text);

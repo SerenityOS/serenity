@@ -10,12 +10,12 @@
 #include <AK/Vector.h>
 
 namespace Diff {
-String generate_only_additions(const String& text)
+String generate_only_additions(String const& text)
 {
     auto lines = text.split('\n', true); // Keep empty
     StringBuilder builder;
     builder.appendff("@@ -0,0 +1,{} @@\n", lines.size());
-    for (const auto& line : lines) {
+    for (auto const& line : lines) {
         builder.appendff("+{}\n", line);
     }
     return builder.to_string();

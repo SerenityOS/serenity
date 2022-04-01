@@ -14,7 +14,7 @@ class EmojiInputDialog final : public Dialog {
     C_OBJECT(EmojiInputDialog);
 
 public:
-    const String& selected_emoji_text() const { return m_selected_emoji_text; }
+    String const& selected_emoji_text() const { return m_selected_emoji_text; }
 
 private:
     virtual void event(Core::Event&) override;

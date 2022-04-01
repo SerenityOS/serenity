@@ -182,7 +182,7 @@ Cell* Sheet::at(StringView name)
     return nullptr;
 }
 
-Cell* Sheet::at(const Position& position)
+Cell* Sheet::at(Position const& position)
 {
     auto it = m_cells.find(position);
 
@@ -271,7 +271,7 @@ Optional<Position> Sheet::position_from_url(const URL& url) const
     return parse_cell_name(url.fragment());
 }
 
-Position Sheet::offset_relative_to(const Position& base, const Position& offset, const Position& offset_base) const
+Position Sheet::offset_relative_to(Position const& base, Position const& offset, Position const& offset_base) const
 {
     if (offset.column >= m_columns.size()) {
         dbgln("Column '{}' does not exist!", offset.column);
@@ -361,7 +361,7 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
     }
 }
 
-RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
+RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)
 {
     auto sheet = adopt_ref(*new Sheet(workbook));
     auto rows = object.get("rows").to_u32(default_row_count);
@@ -391,7 +391,7 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
     auto json = sheet->interpreter().global_object().get_without_side_effects("JSON");
     auto& parse_function = json.as_object().get_without_side_effects("parse").as_function();
 
-    auto read_format = [](auto& format, const auto& obj) {
+    auto read_format = [](auto& format, auto const& obj) {
         if (auto value = obj.get("foreground_color"); value.is_string())
             format.foreground_color = Color::from_string(value.as_string());
         if (auto value = obj.get("background_color"); value.is_string())
@@ -519,7 +519,7 @@ JsonObject Sheet::to_json() const
     JsonObject object;
     object.set("name", m_name);
 
-    auto save_format = [](const auto& format, auto& obj) {
+    auto save_format = [](auto const& format, auto& obj) {
         if (format.foreground_color.has_value())
             obj.set("foreground_color", format.foreground_color.value().to_string());
         if (format.background_color.has_value())
@@ -629,7 +629,7 @@ Vector<Vector<String>> Sheet::to_xsv() const
     return data;
 }
 
-RefPtr<Sheet> Sheet::from_xsv(const Reader::XSV& xsv, Workbook& workbook)
+RefPtr<Sheet> Sheet::from_xsv(Reader::XSV const& xsv, Workbook& workbook)
 {
     auto cols = xsv.headers();
     auto rows = xsv.size();
@@ -736,12 +736,12 @@ String Sheet::generate_inline_documentation_for(StringView function, size_t argu
     return builder.build();
 }
 
-String Position::to_cell_identifier(const Sheet& sheet) const
+String Position::to_cell_identifier(Sheet const& sheet) const
 {
     return String::formatted("{}{}", sheet.column(column), row);
 }
 
-URL Position::to_url(const Sheet& sheet) const
+URL Position::to_url(Sheet const& sheet) const
 {
     URL url;
     url.set_protocol("spreadsheet");

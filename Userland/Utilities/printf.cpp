@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-[[gnu::noreturn]] static void fail(const char* message)
+[[gnu::noreturn]] static void fail(char const* message)
 {
     fputs("\e[31m", stderr);
     fputs(message, stderr);
@@ -23,15 +23,15 @@
 
 template<typename PutChFunc, typename ArgumentListRefT, template<typename T, typename U = ArgumentListRefT> typename NextArgument, typename CharType>
 requires(IsSame<CharType, char>) struct PrintfImpl : public PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument, CharType> {
-    ALWAYS_INLINE PrintfImpl(PutChFunc& putch, char*& bufptr, const int& nwritten)
+    ALWAYS_INLINE PrintfImpl(PutChFunc& putch, char*& bufptr, int const& nwritten)
         : PrintfImplementation::PrintfImpl<PutChFunc, ArgumentListRefT, NextArgument>(putch, bufptr, nwritten)
     {
     }
 
-    ALWAYS_INLINE int format_q(const PrintfImplementation::ModifierState& state, ArgumentListRefT& ap) const
+    ALWAYS_INLINE int format_q(PrintfImplementation::ModifierState const& state, ArgumentListRefT& ap) const
     {
         auto state_copy = state;
-        auto str = NextArgument<const char*>()(ap);
+        auto str = NextArgument<char const*>()(ap);
         if (!str)
             str = "(null)";
 
@@ -106,8 +106,8 @@ struct ArgvNextArgument<char*, V> {
 };
 
 template<typename V>
-struct ArgvNextArgument<const char*, V> {
-    ALWAYS_INLINE const char* operator()(V arg) const
+struct ArgvNextArgument<char const*, V> {
+    ALWAYS_INLINE char const* operator()(V arg) const
     {
         if (arg.argc == 0)
             return "";
@@ -119,8 +119,8 @@ struct ArgvNextArgument<const char*, V> {
 };
 
 template<typename V>
-struct ArgvNextArgument<const wchar_t*, V> {
-    ALWAYS_INLINE const wchar_t* operator()(V arg) const
+struct ArgvNextArgument<wchar_t const*, V> {
+    ALWAYS_INLINE wchar_t const* operator()(V arg) const
     {
         if (arg.argc == 0)
             return L"";
@@ -208,7 +208,7 @@ struct ArgvWithCount {
     int& argc;
 };
 
-static String handle_escapes(const char* string)
+static String handle_escapes(char const* string)
 {
     StringBuilder builder;
     for (auto c = *string; c; c = *++string) {

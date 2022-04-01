@@ -8,7 +8,7 @@
 
 #include <AK/Array.h>
 
-static constexpr int constexpr_sum(const Span<const int> span)
+static constexpr int constexpr_sum(Span<int const> const span)
 {
     int sum = 0;
     for (auto value : span)

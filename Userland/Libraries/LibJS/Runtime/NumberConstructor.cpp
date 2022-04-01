@@ -16,9 +16,9 @@
 #    define MAX_SAFE_INTEGER_VALUE AK::exp2(53.) - 1
 #    define MIN_SAFE_INTEGER_VALUE -(AK::exp2(53.) - 1)
 #else
-constexpr const double EPSILON_VALUE { __builtin_exp2(-52) };
-constexpr const double MAX_SAFE_INTEGER_VALUE { __builtin_exp2(53) - 1 };
-constexpr const double MIN_SAFE_INTEGER_VALUE { -(__builtin_exp2(53) - 1) };
+constexpr double const EPSILON_VALUE { __builtin_exp2(-52) };
+constexpr double const MAX_SAFE_INTEGER_VALUE { __builtin_exp2(53) - 1 };
+constexpr double const MIN_SAFE_INTEGER_VALUE { -(__builtin_exp2(53) - 1) };
 #endif
 
 namespace JS {

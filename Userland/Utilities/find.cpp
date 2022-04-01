@@ -44,7 +44,7 @@ struct FileData {
     // The parent directory of the file.
     int dirfd { -1 };
     // The file's basename, relative to the directory.
-    const char* basename { nullptr };
+    char const* basename { nullptr };
     // Optionally, cached information as returned by stat/lstat/fstatat.
     struct stat stat {
     };
@@ -110,7 +110,7 @@ private:
 
 class TypeCommand final : public Command {
 public:
-    TypeCommand(const char* arg)
+    TypeCommand(char const* arg)
     {
         StringView type = arg;
         if (type.length() != 1 || !StringView("bcdlpfs").contains(type[0]))
@@ -155,7 +155,7 @@ private:
 
 class LinksCommand final : public StatCommand {
 public:
-    LinksCommand(const char* arg)
+    LinksCommand(char const* arg)
     {
         auto number = StringView(arg).to_uint();
         if (!number.has_value())
@@ -174,7 +174,7 @@ private:
 
 class UserCommand final : public StatCommand {
 public:
-    UserCommand(const char* arg)
+    UserCommand(char const* arg)
     {
         if (struct passwd* passwd = getpwnam(arg)) {
             m_uid = passwd->pw_uid;
@@ -198,7 +198,7 @@ private:
 
 class GroupCommand final : public StatCommand {
 public:
-    GroupCommand(const char* arg)
+    GroupCommand(char const* arg)
     {
         if (struct group* gr = getgrnam(arg)) {
             m_gid = gr->gr_gid;
@@ -222,7 +222,7 @@ private:
 
 class SizeCommand final : public StatCommand {
 public:
-    SizeCommand(const char* arg)
+    SizeCommand(char const* arg)
     {
         StringView view = arg;
         if (view.ends_with('c')) {
@@ -251,7 +251,7 @@ private:
 
 class NameCommand : public Command {
 public:
-    NameCommand(const char* pattern, CaseSensitivity case_sensitivity)
+    NameCommand(char const* pattern, CaseSensitivity case_sensitivity)
         : m_pattern(pattern)
         , m_case_sensitivity(case_sensitivity)
     {

@@ -39,7 +39,7 @@ public:
     {
     }
 
-    ExceptionOr(const ValueType& result)
+    ExceptionOr(ValueType const& result)
         : m_result(result)
     {
     }
@@ -65,7 +65,7 @@ public:
     }
 
     ExceptionOr(ExceptionOr&& other) = default;
-    ExceptionOr(const ExceptionOr& other) = default;
+    ExceptionOr(ExceptionOr const& other) = default;
     ~ExceptionOr() = default;
 
     ValueType& value() requires(!IsSame<ValueType, Empty>)

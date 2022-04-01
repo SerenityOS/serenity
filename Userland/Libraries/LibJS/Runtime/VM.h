@@ -45,7 +45,7 @@ public:
     };
 
     Heap& heap() { return m_heap; }
-    const Heap& heap() const { return m_heap; }
+    Heap const& heap() const { return m_heap; }
 
     Interpreter& interpreter();
     Interpreter* interpreter_if_exists();
@@ -73,7 +73,7 @@ public:
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
-    Symbol* get_global_symbol(const String& description);
+    Symbol* get_global_symbol(String const& description);
 
     HashMap<String, PrimitiveString*>& string_cache() { return m_string_cache; }
     PrimitiveString& empty_string() { return *m_empty_string; }
@@ -158,7 +158,7 @@ public:
 
     ThrowCompletionOr<Value> resolve_this_binding(GlobalObject&);
 
-    const StackInfo& stack_info() const { return m_stack_info; };
+    StackInfo const& stack_info() const { return m_stack_info; };
 
     u32 execution_generation() const { return m_execution_generation; }
     void finish_execution_generation() { ++m_execution_generation; }

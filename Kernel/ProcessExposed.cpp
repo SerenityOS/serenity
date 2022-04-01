@@ -95,7 +95,7 @@ ProcFSExposedDirectory::ProcFSExposedDirectory(StringView name)
 {
 }
 
-ProcFSExposedDirectory::ProcFSExposedDirectory(StringView name, const ProcFSExposedDirectory& parent_directory)
+ProcFSExposedDirectory::ProcFSExposedDirectory(StringView name, ProcFSExposedDirectory const& parent_directory)
     : ProcFSExposedComponent(name)
     , m_parent_directory(parent_directory)
 {
@@ -156,7 +156,7 @@ ErrorOr<void> ProcFSSystemBoolean::try_generate(KBufferBuilder& builder)
     return builder.appendff("{}\n", static_cast<int>(value()));
 }
 
-ErrorOr<size_t> ProcFSSystemBoolean::write_bytes(off_t, size_t count, const UserOrKernelBuffer& buffer, OpenFileDescription*)
+ErrorOr<size_t> ProcFSSystemBoolean::write_bytes(off_t, size_t count, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
     if (count != 1)
         return EINVAL;
@@ -200,22 +200,22 @@ ErrorOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOr
     return nread;
 }
 
-ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedLink::to_inode(const ProcFS& procfs_instance) const
+ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedLink::to_inode(ProcFS const& procfs_instance) const
 {
     return TRY(ProcFSLinkInode::try_create(procfs_instance, *this));
 }
 
-ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedComponent::to_inode(const ProcFS& procfs_instance) const
+ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedComponent::to_inode(ProcFS const& procfs_instance) const
 {
     return TRY(ProcFSGlobalInode::try_create(procfs_instance, *this));
 }
 
-ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedDirectory::to_inode(const ProcFS& procfs_instance) const
+ErrorOr<NonnullRefPtr<Inode>> ProcFSExposedDirectory::to_inode(ProcFS const& procfs_instance) const
 {
     return TRY(ProcFSDirectoryInode::try_create(procfs_instance, *this));
 }
 
-void ProcFSExposedDirectory::add_component(const ProcFSExposedComponent&)
+void ProcFSExposedDirectory::add_component(ProcFSExposedComponent const&)
 {
     TODO();
 }

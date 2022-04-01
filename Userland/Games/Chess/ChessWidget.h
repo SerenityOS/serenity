@@ -27,22 +27,22 @@ public:
     virtual void keydown_event(GUI::KeyEvent&) override;
 
     Chess::Board& board() { return m_board; };
-    const Chess::Board& board() const { return m_board; };
+    Chess::Board const& board() const { return m_board; };
 
     Chess::Board& board_playback() { return m_board_playback; };
-    const Chess::Board& board_playback() const { return m_board_playback; };
+    Chess::Board const& board_playback() const { return m_board_playback; };
 
     Chess::Color side() const { return m_side; };
     void set_side(Chess::Color side) { m_side = side; };
 
     void set_piece_set(StringView set);
-    const String& piece_set() const { return m_piece_set; };
+    String const& piece_set() const { return m_piece_set; };
 
     Chess::Square mouse_to_square(GUI::MouseEvent& event) const;
 
     bool drag_enabled() const { return m_drag_enabled; }
     void set_drag_enabled(bool e) { m_drag_enabled = e; }
-    RefPtr<Gfx::Bitmap> get_piece_graphic(const Chess::Piece& piece) const;
+    RefPtr<Gfx::Bitmap> get_piece_graphic(Chess::Piece const& piece) const;
 
     bool show_available_moves() const { return m_show_available_moves; }
     void set_show_available_moves(bool e) { m_show_available_moves = e; }
@@ -61,8 +61,8 @@ public:
         Color light_square_color;
     };
 
-    const BoardTheme& board_theme() const { return m_board_theme; }
-    void set_board_theme(const BoardTheme& theme) { m_board_theme = theme; }
+    BoardTheme const& board_theme() const { return m_board_theme; }
+    void set_board_theme(BoardTheme const& theme) { m_board_theme = theme; }
     void set_board_theme(StringView name);
 
     enum class PlaybackDirection {
@@ -101,7 +101,7 @@ public:
 
             return Type::None;
         }
-        bool operator==(const BoardMarking& other) const { return from == other.from && to == other.to; }
+        bool operator==(BoardMarking const& other) const { return from == other.from && to == other.to; }
     };
 
 private:

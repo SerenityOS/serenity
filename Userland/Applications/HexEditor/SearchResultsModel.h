@@ -25,7 +25,7 @@ public:
         Value
     };
 
-    explicit SearchResultsModel(const Vector<Match>&& matches)
+    explicit SearchResultsModel(Vector<Match> const&& matches)
         : m_matches(move(matches))
     {
     }

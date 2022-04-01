@@ -58,7 +58,7 @@ struct CompositorScreenData {
 
     void init_bitmaps(Compositor&, Screen&);
     void flip_buffers(Screen&);
-    void draw_cursor(Screen&, const Gfx::IntRect&);
+    void draw_cursor(Screen&, Gfx::IntRect const&);
     bool restore_cursor_back(Screen&, Gfx::IntRect&);
 
     template<typename F>
@@ -96,22 +96,22 @@ public:
     void compose();
     void invalidate_window();
     void invalidate_screen();
-    void invalidate_screen(const Gfx::IntRect&);
+    void invalidate_screen(Gfx::IntRect const&);
     void invalidate_screen(Gfx::DisjointRectSet const&);
 
     void screen_resolution_changed();
 
-    bool set_background_color(const String& background_color);
+    bool set_background_color(String const& background_color);
 
-    bool set_wallpaper_mode(const String& mode);
+    bool set_wallpaper_mode(String const& mode);
 
     bool set_wallpaper(RefPtr<Gfx::Bitmap>);
     RefPtr<Gfx::Bitmap> wallpaper_bitmap() const { return m_wallpaper; }
 
     void invalidate_cursor(bool = false);
     Gfx::IntRect current_cursor_rect() const;
-    const Cursor* current_cursor() const { return m_current_cursor; }
-    void current_cursor_was_reloaded(const Cursor* new_cursor) { m_current_cursor = new_cursor; }
+    Cursor const* current_cursor() const { return m_current_cursor; }
+    void current_cursor_was_reloaded(Cursor const* new_cursor) { m_current_cursor = new_cursor; }
 
     void increment_display_link_count(Badge<ConnectionFromClient>);
     void decrement_display_link_count(Badge<ConnectionFromClient>);
@@ -174,8 +174,8 @@ public:
 
     void did_construct_window_manager(Badge<WindowManager>);
 
-    const Gfx::Bitmap* cursor_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen&) const;
-    const Gfx::Bitmap& front_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen&) const;
+    Gfx::Bitmap const* cursor_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen&) const;
+    Gfx::Bitmap const& front_bitmap_for_screenshot(Badge<ConnectionFromClient>, Screen&) const;
     Gfx::Color color_at_position(Badge<ConnectionFromClient>, Screen&, Gfx::IntPoint const&) const;
 
     void register_animation(Badge<Animation>, Animation&);
@@ -202,7 +202,7 @@ private:
     void start_compose_async_timer();
     void recompute_overlay_rects();
     void recompute_occlusions();
-    void change_cursor(const Cursor*);
+    void change_cursor(Cursor const*);
     void flush(Screen&);
     Gfx::IntPoint window_transition_offset(Window&);
     void update_animations(Screen&, Gfx::DisjointRectSet& flush_rects);
@@ -230,7 +230,7 @@ private:
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
     RefPtr<Gfx::Bitmap> m_wallpaper;
 
-    const Cursor* m_current_cursor { nullptr };
+    Cursor const* m_current_cursor { nullptr };
     Screen* m_current_cursor_screen { nullptr };
     unsigned m_current_cursor_frame { 0 };
     RefPtr<Core::Timer> m_cursor_timer;

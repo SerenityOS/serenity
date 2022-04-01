@@ -11,7 +11,7 @@
 
 extern "C" {
 
-int utime(const char* pathname, const struct utimbuf* buf)
+int utime(char const* pathname, const struct utimbuf* buf)
 {
     if (!pathname) {
         errno = EFAULT;

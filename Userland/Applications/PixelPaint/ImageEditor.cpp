@@ -162,49 +162,49 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
         m_selection.paint(painter);
 
     if (m_show_rulers) {
-        const auto ruler_bg_color = palette().color(Gfx::ColorRole::InactiveSelection);
-        const auto ruler_fg_color = palette().color(Gfx::ColorRole::Ruler);
-        const auto ruler_text_color = palette().color(Gfx::ColorRole::InactiveSelectionText);
-        const auto mouse_indicator_color = Color::White;
+        auto const ruler_bg_color = palette().color(Gfx::ColorRole::InactiveSelection);
+        auto const ruler_fg_color = palette().color(Gfx::ColorRole::Ruler);
+        auto const ruler_text_color = palette().color(Gfx::ColorRole::InactiveSelectionText);
+        auto const mouse_indicator_color = Color::White;
 
         // Ruler background
         painter.fill_rect({ { 0, 0 }, { m_ruler_thickness, rect().height() } }, ruler_bg_color);
         painter.fill_rect({ { 0, 0 }, { rect().width(), m_ruler_thickness } }, ruler_bg_color);
 
-        const auto ruler_step = calculate_ruler_step_size();
-        const auto editor_origin_to_image = frame_to_content_position({ 0, 0 });
-        const auto editor_max_to_image = frame_to_content_position({ width(), height() });
+        auto const ruler_step = calculate_ruler_step_size();
+        auto const editor_origin_to_image = frame_to_content_position({ 0, 0 });
+        auto const editor_max_to_image = frame_to_content_position({ width(), height() });
 
         // Horizontal ruler
         painter.draw_line({ 0, m_ruler_thickness }, { rect().width(), m_ruler_thickness }, ruler_fg_color);
-        const auto x_start = floor(editor_origin_to_image.x()) - ((int)floor(editor_origin_to_image.x()) % ruler_step) - ruler_step;
+        auto const x_start = floor(editor_origin_to_image.x()) - ((int)floor(editor_origin_to_image.x()) % ruler_step) - ruler_step;
         for (int x = x_start; x < editor_max_to_image.x(); x += ruler_step) {
-            const int num_sub_divisions = min(ruler_step, 10);
+            int const num_sub_divisions = min(ruler_step, 10);
             for (int x_sub = 0; x_sub < num_sub_divisions; ++x_sub) {
-                const int x_pos = x + (int)(ruler_step * x_sub / num_sub_divisions);
-                const int editor_x_sub = content_to_frame_position({ x_pos, 0 }).x();
-                const int line_length = (x_sub % 2 == 0) ? m_ruler_thickness / 3 : m_ruler_thickness / 6;
+                int const x_pos = x + (int)(ruler_step * x_sub / num_sub_divisions);
+                int const editor_x_sub = content_to_frame_position({ x_pos, 0 }).x();
+                int const line_length = (x_sub % 2 == 0) ? m_ruler_thickness / 3 : m_ruler_thickness / 6;
                 painter.draw_line({ editor_x_sub, m_ruler_thickness - line_length }, { editor_x_sub, m_ruler_thickness }, ruler_fg_color);
             }
 
-            const int editor_x = content_to_frame_position({ x, 0 }).x();
+            int const editor_x = content_to_frame_position({ x, 0 }).x();
             painter.draw_line({ editor_x, 0 }, { editor_x, m_ruler_thickness }, ruler_fg_color);
             painter.draw_text({ { editor_x + 2, 0 }, { m_ruler_thickness, m_ruler_thickness - 2 } }, String::formatted("{}", x), painter.font(), Gfx::TextAlignment::CenterLeft, ruler_text_color);
         }
 
         // Vertical ruler
         painter.draw_line({ m_ruler_thickness, 0 }, { m_ruler_thickness, rect().height() }, ruler_fg_color);
-        const auto y_start = floor(editor_origin_to_image.y()) - ((int)floor(editor_origin_to_image.y()) % ruler_step) - ruler_step;
+        auto const y_start = floor(editor_origin_to_image.y()) - ((int)floor(editor_origin_to_image.y()) % ruler_step) - ruler_step;
         for (int y = y_start; y < editor_max_to_image.y(); y += ruler_step) {
-            const int num_sub_divisions = min(ruler_step, 10);
+            int const num_sub_divisions = min(ruler_step, 10);
             for (int y_sub = 0; y_sub < num_sub_divisions; ++y_sub) {
-                const int y_pos = y + (int)(ruler_step * y_sub / num_sub_divisions);
-                const int editor_y_sub = content_to_frame_position({ 0, y_pos }).y();
-                const int line_length = (y_sub % 2 == 0) ? m_ruler_thickness / 3 : m_ruler_thickness / 6;
+                int const y_pos = y + (int)(ruler_step * y_sub / num_sub_divisions);
+                int const editor_y_sub = content_to_frame_position({ 0, y_pos }).y();
+                int const line_length = (y_sub % 2 == 0) ? m_ruler_thickness / 3 : m_ruler_thickness / 6;
                 painter.draw_line({ m_ruler_thickness - line_length, editor_y_sub }, { m_ruler_thickness, editor_y_sub }, ruler_fg_color);
             }
 
-            const int editor_y = content_to_frame_position({ 0, y }).y();
+            int const editor_y = content_to_frame_position({ 0, y }).y();
             painter.draw_line({ 0, editor_y }, { m_ruler_thickness, editor_y }, ruler_fg_color);
             painter.draw_text({ { 0, editor_y - m_ruler_thickness }, { m_ruler_thickness, m_ruler_thickness } }, String::formatted("{}", y), painter.font(), Gfx::TextAlignment::BottomRight, ruler_text_color);
         }
@@ -222,8 +222,8 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
 int ImageEditor::calculate_ruler_step_size() const
 {
-    const auto step_target = 80 / scale();
-    const auto max_factor = 5;
+    auto const step_target = 80 / scale();
+    auto const max_factor = 5;
     for (int factor = 0; factor < max_factor; ++factor) {
         int ten_to_factor = AK::pow<int>(10, factor);
         if (step_target <= 1 * ten_to_factor)
@@ -619,7 +619,7 @@ Result<void, String> ImageEditor::save_project_to_file(Core::File& file) const
     auto json = MUST(JsonObjectSerializer<>::try_create(builder));
     m_image->serialize_as_json(json);
     auto json_guides = MUST(json.add_array("guides"));
-    for (const auto& guide : m_guides) {
+    for (auto const& guide : m_guides) {
         auto json_guide = MUST(json_guides.add_object());
         MUST(json_guide.add("offset"sv, (double)guide.offset()));
         if (guide.orientation() == Guide::Orientation::Vertical)
