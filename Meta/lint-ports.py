@@ -276,7 +276,7 @@ def get_and_check_port_patch_list(ports):
         all_port_properties[port] = port_properties
 
         if len(non_patch_files) != 0:
-            print("Ports/{port}/patches contains the following non-patch files:",
+            print(f"Ports/{port}/patches contains the following non-patch files:",
                   ', '.join(x.name for x in non_patch_files))
             all_good = False
 
