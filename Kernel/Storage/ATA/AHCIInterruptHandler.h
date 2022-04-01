@@ -26,19 +26,19 @@ class AsyncBlockDeviceRequest;
 
 class AHCIController;
 class AHCIPort;
-class AHCIPortHandler final : public IRQHandler {
+class AHCIInterruptHandler final : public IRQHandler {
     friend class AHCIController;
 
 public:
-    static ErrorOr<NonnullOwnPtr<AHCIPortHandler>> create(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
-    virtual ~AHCIPortHandler() override;
+    static ErrorOr<NonnullOwnPtr<AHCIInterruptHandler>> create(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
+    virtual ~AHCIInterruptHandler() override;
 
-    virtual StringView purpose() const override { return "SATA Port Handler"sv; }
+    virtual StringView purpose() const override { return "SATA IRQ Handler"sv; }
 
     bool is_responsible_for_port_index(u32 port_index) const { return m_taken_ports.is_set_at(port_index); }
 
 private:
-    AHCIPortHandler(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
+    AHCIInterruptHandler(AHCIController&, u8 irq, AHCI::MaskedBitField taken_ports);
 
     void allocate_resources_and_initialize_ports();
 
