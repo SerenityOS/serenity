@@ -37,7 +37,7 @@ class AHCIPort
     friend class AHCIController;
 
 public:
-    UNMAP_AFTER_INIT static ErrorOr<NonnullRefPtr<AHCIPort>> create(AHCIPortHandler const&, volatile AHCI::PortRegisters&, u32 port_index);
+    static ErrorOr<NonnullRefPtr<AHCIPort>> create(AHCIPortHandler const&, volatile AHCI::PortRegisters&, u32 port_index);
 
     u32 port_index() const { return m_port_index; }
     u32 representative_port_index() const { return port_index() + 1; }
@@ -47,7 +47,7 @@ public:
     RefPtr<StorageDevice> connected_device() const { return m_connected_device; }
 
     bool reset();
-    UNMAP_AFTER_INIT bool initialize_without_reset();
+    bool initialize_without_reset();
     void handle_interrupt();
 
 private:
@@ -56,7 +56,7 @@ private:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
     bool initialize();
 
-    UNMAP_AFTER_INIT AHCIPort(AHCIPortHandler const&, volatile AHCI::PortRegisters&, u32 port_index);
+    AHCIPort(AHCIPortHandler const&, volatile AHCI::PortRegisters&, u32 port_index);
 
     ALWAYS_INLINE void clear_sata_error_register() const;
 

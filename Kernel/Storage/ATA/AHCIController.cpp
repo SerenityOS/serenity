@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     auto controller = adopt_ref_if_nonnull(new (nothrow) AHCIController(pci_device_identifier)).release_nonnull();
     controller->initialize_hba(pci_device_identifier);
@@ -86,7 +86,7 @@ volatile AHCI::HBA& AHCIController::hba() const
     return static_cast<volatile AHCI::HBA&>(*(volatile AHCI::HBA*)(m_hba_region->vaddr().as_ptr()));
 }
 
-AHCIController::AHCIController(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT AHCIController::AHCIController(PCI::DeviceIdentifier const& pci_device_identifier)
     : ATAController()
     , PCI::Device(pci_device_identifier.address())
     , m_hba_region(default_hba_region())
@@ -131,14 +131,14 @@ AHCI::HBADefinedCapabilities AHCIController::capabilities() const
     };
 }
 
-NonnullOwnPtr<Memory::Region> AHCIController::default_hba_region() const
+UNMAP_AFTER_INIT NonnullOwnPtr<Memory::Region> AHCIController::default_hba_region() const
 {
     return MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR5(pci_address())).page_base(), Memory::page_round_up(sizeof(AHCI::HBA)).release_value_but_fixme_should_propagate_errors(), "AHCI HBA", Memory::Region::Access::ReadWrite).release_value();
 }
 
 AHCIController::~AHCIController() = default;
 
-void AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT void AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     if (!reset()) {
         dmesgln("{}: AHCI controller reset failed", pci_address());
