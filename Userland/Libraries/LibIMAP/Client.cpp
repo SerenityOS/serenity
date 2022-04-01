@@ -61,7 +61,8 @@ ErrorOr<void> Client::on_ready_to_receive()
 
     auto pending_bytes = TRY(m_socket->pending_bytes());
     auto receive_buffer = TRY(m_buffer.get_bytes_for_writing(pending_bytes));
-    TRY(m_socket->read(receive_buffer));
+    size_t read = TRY(m_socket->read(receive_buffer));
+    m_buffer.resize(m_buffer.size() + read);
 
     // Once we get server hello we can start sending.
     if (m_connect_pending) {
