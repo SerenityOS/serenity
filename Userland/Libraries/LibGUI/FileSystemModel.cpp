@@ -64,10 +64,11 @@ bool FileSystemModel::Node::fetch_data(String const& full_path, bool is_root)
         auto sym_link_target_or_error = Core::File::read_link(full_path);
         if (sym_link_target_or_error.is_error())
             perror("readlink");
-
-        symlink_target = sym_link_target_or_error.release_value();
-        if (symlink_target.is_null())
-            perror("readlink");
+        else {
+            symlink_target = sym_link_target_or_error.release_value();
+            if (symlink_target.is_null())
+                perror("readlink");
+        }
     }
 
     if (S_ISDIR(mode)) {
