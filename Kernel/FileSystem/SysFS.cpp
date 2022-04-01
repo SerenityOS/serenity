@@ -137,7 +137,7 @@ InodeMetadata SysFSInode::metadata() const
     metadata.mode = S_IFREG | m_associated_component->permissions();
     metadata.uid = 0;
     metadata.gid = 0;
-    metadata.size = 0;
+    metadata.size = m_associated_component->size();
     metadata.mtime = mepoch;
     return metadata;
 }

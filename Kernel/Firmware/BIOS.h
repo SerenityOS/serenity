@@ -77,6 +77,9 @@ public:
 private:
     DMIEntryPointExposedBlob(PhysicalAddress dmi_entry_point, size_t blob_size);
     virtual ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const override;
+
+    virtual size_t size() const override { return m_dmi_entry_point_length; }
+
     PhysicalAddress m_dmi_entry_point;
     size_t const m_dmi_entry_point_length { 0 };
 };
@@ -89,6 +92,8 @@ public:
 private:
     SMBIOSExposedTable(PhysicalAddress dmi_entry_point, size_t blob_size);
     virtual ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const override;
+
+    virtual size_t size() const override { return m_smbios_structure_table_length; }
 
     PhysicalAddress m_smbios_structure_table;
     size_t const m_smbios_structure_table_length { 0 };
