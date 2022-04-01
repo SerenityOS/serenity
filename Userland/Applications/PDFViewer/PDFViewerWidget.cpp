@@ -34,7 +34,7 @@ PDFViewerWidget::PDFViewerWidget()
 
     m_viewer = splitter.add<PDFViewer>();
     m_viewer->on_page_change = [&](auto new_page) {
-        m_page_text_box->set_current_number(new_page + 1);
+        m_page_text_box->set_current_number(new_page + 1, GUI::AllowCallback::No);
     };
 
     initialize_toolbar(toolbar);
@@ -107,7 +107,6 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
         auto new_page_number = static_cast<u32>(number);
         VERIFY(new_page_number >= 1 && new_page_number <= page_count);
         m_viewer->set_current_page(new_page_number - 1);
-        m_viewer->update();
         m_go_to_prev_page_action->set_enabled(new_page_number > 1);
         m_go_to_next_page_action->set_enabled(new_page_number < page_count);
     };
@@ -201,7 +200,7 @@ void PDFViewerWidget::open_file(Core::File& file)
     m_total_page_label->set_text(String::formatted("of {}", document->get_page_count()));
 
     m_page_text_box->set_enabled(true);
-    m_page_text_box->set_current_number(1, false);
+    m_page_text_box->set_current_number(1, GUI::AllowCallback::No);
     m_page_text_box->set_max_number(document->get_page_count());
     m_go_to_prev_page_action->set_enabled(false);
     m_go_to_next_page_action->set_enabled(document->get_page_count() > 1);

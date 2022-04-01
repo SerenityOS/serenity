@@ -46,7 +46,7 @@ public:
     virtual ~PDFViewer() override = default;
 
     ALWAYS_INLINE u32 current_page() const { return m_current_page_index; }
-    ALWAYS_INLINE void set_current_page(u32 current_page) { m_current_page_index = current_page; }
+    void set_current_page(u32 current_page);
 
     ALWAYS_INLINE RefPtr<PDF::Document> const& document() const { return m_document; }
     PDF::PDFErrorOr<void> set_document(RefPtr<PDF::Document>);

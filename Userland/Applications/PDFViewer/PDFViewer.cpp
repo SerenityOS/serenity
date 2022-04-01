@@ -155,6 +155,13 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
     }
 }
 
+void PDFViewer::set_current_page(u32 current_page)
+{
+    m_current_page_index = current_page;
+    vertical_scrollbar().set_value(m_page_dimension_cache.render_info[current_page].total_height_before_this_page);
+    update();
+}
+
 void PDFViewer::resize_event(GUI::ResizeEvent&)
 {
     for (auto& map : m_rendered_page_list)
