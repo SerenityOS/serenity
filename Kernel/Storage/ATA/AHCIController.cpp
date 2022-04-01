@@ -13,7 +13,7 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Storage/ATA/AHCIController.h>
-#include <Kernel/Storage/ATA/AHCIPortHandler.h>
+#include <Kernel/Storage/ATA/AHCIInterruptHandler.h>
 
 namespace Kernel {
 
@@ -159,7 +159,7 @@ UNMAP_AFTER_INIT void AHCIController::initialize_hba(PCI::DeviceIdentifier const
     enable_global_interrupts();
 
     auto implemented_ports = AHCI::MaskedBitField((u32 volatile&)(hba().control_regs.pi));
-    m_irq_handler = AHCIPortHandler::create(*this, pci_device_identifier.interrupt_line().value(), implemented_ports).release_value_but_fixme_should_propagate_errors();
+    m_irq_handler = AHCIInterruptHandler::create(*this, pci_device_identifier.interrupt_line().value(), implemented_ports).release_value_but_fixme_should_propagate_errors();
 
     // FIXME: Use the number of ports to determine how many pages we should allocate.
     for (size_t index = 0; index < (((size_t)AHCI::Limits::MaxPorts * 512) / PAGE_SIZE); index++) {
@@ -181,7 +181,7 @@ UNMAP_AFTER_INIT void AHCIController::initialize_hba(PCI::DeviceIdentifier const
     }
 }
 
-void AHCIController::handle_interrupt_for_port(Badge<AHCIPortHandler>, u32 port_index) const
+void AHCIController::handle_interrupt_for_port(Badge<AHCIInterruptHandler>, u32 port_index) const
 {
     auto port = m_ports[port_index];
     VERIFY(port);

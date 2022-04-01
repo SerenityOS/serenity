@@ -97,8 +97,8 @@ set(KERNEL_SOURCES
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
     SanCov.cpp
     Storage/ATA/AHCIController.cpp
+    Storage/ATA/AHCIInterruptHandler.cpp
     Storage/ATA/AHCIPort.cpp
-    Storage/ATA/AHCIPortHandler.cpp
     Storage/ATA/ATADevice.cpp
     Storage/ATA/ATADiskDevice.cpp
     Storage/ATA/ATAPIDiscDevice.cpp

@@ -21,7 +21,7 @@
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/AHCI.h>
-#include <Kernel/Storage/ATA/AHCIPortHandler.h>
+#include <Kernel/Storage/ATA/AHCIInterruptHandler.h>
 #include <Kernel/Storage/ATA/ATADevice.h>
 #include <Kernel/WaitQueue.h>
 
@@ -29,7 +29,7 @@ namespace Kernel {
 
 class AsyncBlockDeviceRequest;
 
-class AHCIPortHandler;
+class AHCIInterruptHandler;
 class AHCIPort
     : public RefCounted<AHCIPort>
     , public Weakable<AHCIPort> {

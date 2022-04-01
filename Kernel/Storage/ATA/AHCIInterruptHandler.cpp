@@ -4,25 +4,25 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Storage/ATA/AHCIPortHandler.h>
+#include <Kernel/Storage/ATA/AHCIInterruptHandler.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<AHCIPortHandler>> AHCIPortHandler::create(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<AHCIInterruptHandler>> AHCIInterruptHandler::create(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
 {
-    auto port_handler = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AHCIPortHandler(controller, irq, taken_ports)));
+    auto port_handler = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AHCIInterruptHandler(controller, irq, taken_ports)));
     port_handler->allocate_resources_and_initialize_ports();
     return port_handler;
 }
 
-void AHCIPortHandler::allocate_resources_and_initialize_ports()
+void AHCIInterruptHandler::allocate_resources_and_initialize_ports()
 {
     // Clear pending interrupts, if there are any!
     m_pending_ports_interrupts.set_all();
     enable_irq();
 }
 
-UNMAP_AFTER_INIT AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
+UNMAP_AFTER_INIT AHCIInterruptHandler::AHCIInterruptHandler(AHCIController& controller, u8 irq, AHCI::MaskedBitField taken_ports)
     : IRQHandler(irq)
     , m_parent_controller(controller)
     , m_taken_ports(taken_ports)
@@ -31,14 +31,14 @@ UNMAP_AFTER_INIT AHCIPortHandler::AHCIPortHandler(AHCIController& controller, u8
     dbgln_if(AHCI_DEBUG, "AHCI Port Handler: IRQ {}", irq);
 }
 
-AHCI::MaskedBitField AHCIPortHandler::create_pending_ports_interrupts_bitfield() const
+AHCI::MaskedBitField AHCIInterruptHandler::create_pending_ports_interrupts_bitfield() const
 {
     return AHCI::MaskedBitField((u32 volatile&)m_parent_controller->hba().control_regs.is, m_taken_ports.bit_mask());
 }
 
-AHCIPortHandler::~AHCIPortHandler() = default;
+AHCIInterruptHandler::~AHCIInterruptHandler() = default;
 
-bool AHCIPortHandler::handle_irq(RegisterState const&)
+bool AHCIInterruptHandler::handle_irq(RegisterState const&)
 {
     dbgln_if(AHCI_DEBUG, "AHCI Port Handler: IRQ received");
     if (m_pending_ports_interrupts.is_zeroed())

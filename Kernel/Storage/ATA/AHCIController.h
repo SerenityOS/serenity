@@ -17,11 +17,11 @@
 namespace Kernel {
 
 class AsyncBlockDeviceRequest;
-class AHCIPortHandler;
+class AHCIInterruptHandler;
 class AHCIPort;
 class AHCIController final : public ATAController
     , public PCI::Device {
-    friend class AHCIPortHandler;
+    friend class AHCIInterruptHandler;
 
 public:
     static NonnullRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
@@ -35,7 +35,7 @@ public:
     virtual void complete_current_request(AsyncDeviceRequest::RequestResult) override;
 
     PhysicalAddress get_identify_metadata_physical_region(Badge<AHCIPort>, u32 port_index) const;
-    void handle_interrupt_for_port(Badge<AHCIPortHandler>, u32 port_index) const;
+    void handle_interrupt_for_port(Badge<AHCIInterruptHandler>, u32 port_index) const;
 
 private:
     void disable_global_interrupts() const;
@@ -57,6 +57,6 @@ private:
     AHCI::HBADefinedCapabilities m_hba_capabilities;
 
     // FIXME: There could be multiple IRQ (MSI) handlers for AHCI. Find a way to use all of them.
-    OwnPtr<AHCIPortHandler> m_irq_handler;
+    OwnPtr<AHCIInterruptHandler> m_irq_handler;
 };
 }
