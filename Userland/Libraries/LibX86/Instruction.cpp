@@ -1486,7 +1486,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     auto append_mm = [&] { builder.appendff("mm{}", register_index()); };
     auto append_mmrm32 = [&] { builder.append(m_modrm.to_string_mm(*this)); };
     auto append_mmrm64 = [&] { builder.append(m_modrm.to_string_mm(*this)); };
-    auto append_xmm = [&] { builder.appendff("mm{}", register_index()); };
+    auto append_xmm = [&] { builder.appendff("xmm{}", register_index()); };
     auto append_xmmrm32 = [&] { builder.append(m_modrm.to_string_xmm(*this)); };
     auto append_xmmrm64 = [&] { builder.append(m_modrm.to_string_xmm(*this)); };
     auto append_xmmrm128 = [&] { builder.append(m_modrm.to_string_xmm(*this)); };
