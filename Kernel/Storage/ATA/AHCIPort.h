@@ -55,7 +55,7 @@ private:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
     bool initialize();
 
-    AHCIPort(AHCIController const&, AHCI::HBADefinedCapabilities, volatile AHCI::PortRegisters&, u32 port_index);
+    AHCIPort(AHCIController const&, NonnullRefPtr<Memory::PhysicalPage> identify_buffer_page, AHCI::HBADefinedCapabilities, volatile AHCI::PortRegisters&, u32 port_index);
 
     ALWAYS_INLINE void clear_sata_error_register() const;
 
@@ -123,6 +123,8 @@ private:
     // but because using the m_parent_controller means we need to take a strong ref,
     // it's probably better to just "cache" this here instead.
     AHCI::HBADefinedCapabilities const m_hba_capabilities;
+
+    NonnullRefPtr<Memory::PhysicalPage> m_identify_buffer_page;
 
     volatile AHCI::PortRegisters& m_port_registers;
     WeakPtr<AHCIController> m_parent_controller;

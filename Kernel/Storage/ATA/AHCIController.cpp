@@ -91,12 +91,6 @@ UNMAP_AFTER_INIT AHCIController::AHCIController(PCI::DeviceIdentifier const& pci
 {
 }
 
-PhysicalAddress AHCIController::get_identify_metadata_physical_region(Badge<AHCIPort>, u32 port_index) const
-{
-    dbgln_if(AHCI_DEBUG, "AHCI Controller @ {}: Get identify metadata physical address of port {} - {}", pci_address(), port_index, (port_index * 512) / PAGE_SIZE);
-    return m_identify_metadata_pages[(port_index * 512) / PAGE_SIZE].paddr().offset((port_index * 512) % PAGE_SIZE);
-}
-
 AHCI::HBADefinedCapabilities AHCIController::capabilities() const
 {
     u32 capabilities = hba().control_regs.cap;
@@ -160,11 +154,6 @@ UNMAP_AFTER_INIT void AHCIController::initialize_hba(PCI::DeviceIdentifier const
 
     auto implemented_ports = AHCI::MaskedBitField((u32 volatile&)(hba().control_regs.pi));
     m_irq_handler = AHCIInterruptHandler::create(*this, pci_device_identifier.interrupt_line().value(), implemented_ports).release_value_but_fixme_should_propagate_errors();
-
-    // FIXME: Use the number of ports to determine how many pages we should allocate.
-    for (size_t index = 0; index < (((size_t)AHCI::Limits::MaxPorts * 512) / PAGE_SIZE); index++) {
-        m_identify_metadata_pages.append(MM.allocate_supervisor_physical_page().release_value_but_fixme_should_propagate_errors());
-    }
 
     if (kernel_command_line().ahci_reset_mode() == AHCIResetMode::Aggressive) {
         for (auto index : implemented_ports.to_vector()) {
