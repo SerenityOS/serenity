@@ -37,6 +37,11 @@ void Client::setup_callbacks()
             close();
         }
     };
+
+    // for the case the socket is already ready to read, call our callback right
+    // now, this prevents the application hanging forever in case the connection
+    // was established too fast
+    m_socket->on_ready_to_read();
 }
 
 ErrorOr<NonnullOwnPtr<Client>> Client::connect_tls(StringView host, u16 port)

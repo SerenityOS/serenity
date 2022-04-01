@@ -131,8 +131,8 @@ bool MailWidget::connect_and_login()
     m_imap_client = maybe_imap_client.release_value();
 
     auto connection_promise = m_imap_client->connection_promise();
-    VERIFY(!connection_promise.is_null());
-    connection_promise->await();
+    if (!connection_promise.is_null())
+        connection_promise->await();
 
     auto response = m_imap_client->login(username, password)->await().release_value();
 
