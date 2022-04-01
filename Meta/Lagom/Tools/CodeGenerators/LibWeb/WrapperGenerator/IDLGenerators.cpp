@@ -2657,6 +2657,14 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #    include <LibWeb/URL/@name@.h>
 #endif
 
+)~~~");
+
+    for (auto& path : interface.required_imported_paths)
+        generate_include_for(generator, path);
+
+    emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
+
+    generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
