@@ -10,9 +10,7 @@ interface WorkerGlobalScope : EventTarget {
     readonly attribute WorkerNavigator navigator;
     undefined importScripts(USVString... urls);
 
-    // FIXME: Should be an OnErrorEventHandler
-    attribute EventHandler onerror;
-
+    attribute OnErrorEventHandler onerror;
     attribute EventHandler onlanguagechange;
     attribute EventHandler onoffline;
     attribute EventHandler ononline;
