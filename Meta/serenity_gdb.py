@@ -251,6 +251,10 @@ class AKVector:
         else:
             elements = get_field_unalloced(self.val, "m_inline_buffer_storage", inner_type_ptr)
 
+        # Very arbitrary limit, just to catch UAF'd and garbage vector values with a silly number of elements
+        if vec_len > 373373:
+            return []
+
         return [(f"[{i}]", elements[i]) for i in range(vec_len)]
 
     @classmethod
