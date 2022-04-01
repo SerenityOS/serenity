@@ -12,6 +12,7 @@
 #include <AK/WeakPtr.h>
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/PageDirectory.h>
+#include <Kernel/Memory/Region.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel::Memory {
@@ -28,8 +29,8 @@ public:
 
     size_t region_count() const { return m_regions.size(); }
 
-    RedBlackTree<FlatPtr, NonnullOwnPtr<Region>>& regions() { return m_regions; }
-    RedBlackTree<FlatPtr, NonnullOwnPtr<Region>> const& regions() const { return m_regions; }
+    auto& regions() { return m_regions; }
+    auto const& regions() const { return m_regions; }
 
     void dump_regions();
 
@@ -68,11 +69,13 @@ public:
 private:
     explicit AddressSpace(NonnullRefPtr<PageDirectory>);
 
+    void delete_all_regions_assuming_they_are_unmapped();
+
     mutable RecursiveSpinlock m_lock;
 
     RefPtr<PageDirectory> m_page_directory;
 
-    RedBlackTree<FlatPtr, NonnullOwnPtr<Region>> m_regions;
+    IntrusiveRedBlackTree<&Region::m_tree_node> m_regions;
 
     bool m_enforces_syscall_regions { false };
 };

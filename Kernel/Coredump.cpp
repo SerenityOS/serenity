@@ -48,11 +48,11 @@ Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<OpenFileDescrip
     m_num_program_headers = 0;
     for ([[maybe_unused]] auto& region : m_process->address_space().regions()) {
 #if !INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS
-        if (looks_like_userspace_heap_region(*region))
+        if (looks_like_userspace_heap_region(region))
             continue;
 #endif
 
-        if (region->access() == Memory::Region::Access::None)
+        if (region.access() == Memory::Region::Access::None)
             continue;
         ++m_num_program_headers;
     }
@@ -127,28 +127,28 @@ ErrorOr<void> Coredump::write_program_headers(size_t notes_size)
     for (auto& region : m_process->address_space().regions()) {
 
 #if !INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS
-        if (looks_like_userspace_heap_region(*region))
+        if (looks_like_userspace_heap_region(region))
             continue;
 #endif
 
-        if (region->access() == Memory::Region::Access::None)
+        if (region.access() == Memory::Region::Access::None)
             continue;
 
         ElfW(Phdr) phdr {};
 
         phdr.p_type = PT_LOAD;
         phdr.p_offset = offset;
-        phdr.p_vaddr = region->vaddr().get();
+        phdr.p_vaddr = region.vaddr().get();
         phdr.p_paddr = 0;
 
-        phdr.p_filesz = region->page_count() * PAGE_SIZE;
-        phdr.p_memsz = region->page_count() * PAGE_SIZE;
+        phdr.p_filesz = region.page_count() * PAGE_SIZE;
+        phdr.p_memsz = region.page_count() * PAGE_SIZE;
         phdr.p_align = 0;
 
-        phdr.p_flags = region->is_readable() ? PF_R : 0;
-        if (region->is_writable())
+        phdr.p_flags = region.is_readable() ? PF_R : 0;
+        if (region.is_writable())
             phdr.p_flags |= PF_W;
-        if (region->is_executable())
+        if (region.is_executable())
             phdr.p_flags |= PF_X;
 
         offset += phdr.p_filesz;
@@ -176,28 +176,28 @@ ErrorOr<void> Coredump::write_regions()
     u8 zero_buffer[PAGE_SIZE] = {};
 
     for (auto& region : m_process->address_space().regions()) {
-        VERIFY(!region->is_kernel());
+        VERIFY(!region.is_kernel());
 
 #if !INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS
-        if (looks_like_userspace_heap_region(*region))
+        if (looks_like_userspace_heap_region(region))
             continue;
 #endif
 
-        if (region->access() == Memory::Region::Access::None)
+        if (region.access() == Memory::Region::Access::None)
             continue;
 
         // If we crashed in the middle of mapping in Regions, they do not have a page directory yet, and will crash on a remap() call
-        if (!region->is_mapped())
+        if (!region.is_mapped())
             continue;
 
-        region->set_readable(true);
-        region->remap();
+        region.set_readable(true);
+        region.remap();
 
-        for (size_t i = 0; i < region->page_count(); i++) {
-            auto const* page = region->physical_page(i);
+        for (size_t i = 0; i < region.page_count(); i++) {
+            auto const* page = region.physical_page(i);
             auto src_buffer = [&]() -> ErrorOr<UserOrKernelBuffer> {
                 if (page)
-                    return UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region->vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
+                    return UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region.vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
                 // If the current page is not backed by a physical page, we zero it in the coredump file.
                 return UserOrKernelBuffer::for_kernel_buffer(zero_buffer);
             }();
@@ -267,24 +267,24 @@ ErrorOr<void> Coredump::create_notes_regions_data(auto& builder) const
     for (auto const& region : m_process->address_space().regions()) {
 
 #if !INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS
-        if (looks_like_userspace_heap_region(*region))
+        if (looks_like_userspace_heap_region(region))
             continue;
 #endif
 
-        if (region->access() == Memory::Region::Access::None)
+        if (region.access() == Memory::Region::Access::None)
             continue;
 
         ELF::Core::MemoryRegionInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo;
 
-        info.region_start = region->vaddr().get();
-        info.region_end = region->vaddr().offset(region->size()).get();
+        info.region_start = region.vaddr().get();
+        info.region_end = region.vaddr().offset(region.size()).get();
         info.program_header_index = region_index++;
 
         TRY(builder.append_bytes(ReadonlyBytes { (void*)&info, sizeof(info) }));
 
         // NOTE: The region name *is* null-terminated, so the following is ok:
-        auto name = region->name();
+        auto name = region.name();
         if (name.is_empty())
             TRY(builder.append('\0'));
         else

@@ -362,7 +362,7 @@ ErrorOr<void> PerformanceEventBuffer::add_process(Process const& process, Proces
 
     for (auto const& region : process.address_space().regions()) {
         TRY(append_with_ip_and_bp(process.pid(), 0,
-            0, 0, PERF_EVENT_MMAP, 0, region->range().base().get(), region->range().size(), region->name()));
+            0, 0, PERF_EVENT_MMAP, 0, region.range().base().get(), region.range().size(), region.name()));
     }
 
     return {};

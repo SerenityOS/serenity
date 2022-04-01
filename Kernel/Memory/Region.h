@@ -31,6 +31,7 @@ enum class ShouldFlushTLB {
 
 class Region final
     : public Weakable<Region> {
+    friend class AddressSpace;
     friend class MemoryManager;
 
 public:

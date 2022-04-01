@@ -234,31 +234,31 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
     {
         SpinlockLocker lock(address_space().get_lock());
         for (auto const& region : address_space().regions()) {
-            if (!region->is_user() && !Process::current().is_superuser())
+            if (!region.is_user() && !Process::current().is_superuser())
                 continue;
             auto region_object = TRY(array.add_object());
-            TRY(region_object.add("readable", region->is_readable()));
-            TRY(region_object.add("writable", region->is_writable()));
-            TRY(region_object.add("executable", region->is_executable()));
-            TRY(region_object.add("stack", region->is_stack()));
-            TRY(region_object.add("shared", region->is_shared()));
-            TRY(region_object.add("syscall", region->is_syscall_region()));
-            TRY(region_object.add("purgeable", region->vmobject().is_anonymous()));
-            if (region->vmobject().is_anonymous()) {
-                TRY(region_object.add("volatile", static_cast<Memory::AnonymousVMObject const&>(region->vmobject()).is_volatile()));
+            TRY(region_object.add("readable", region.is_readable()));
+            TRY(region_object.add("writable", region.is_writable()));
+            TRY(region_object.add("executable", region.is_executable()));
+            TRY(region_object.add("stack", region.is_stack()));
+            TRY(region_object.add("shared", region.is_shared()));
+            TRY(region_object.add("syscall", region.is_syscall_region()));
+            TRY(region_object.add("purgeable", region.vmobject().is_anonymous()));
+            if (region.vmobject().is_anonymous()) {
+                TRY(region_object.add("volatile", static_cast<Memory::AnonymousVMObject const&>(region.vmobject()).is_volatile()));
             }
-            TRY(region_object.add("cacheable", region->is_cacheable()));
-            TRY(region_object.add("address", region->vaddr().get()));
-            TRY(region_object.add("size", region->size()));
-            TRY(region_object.add("amount_resident", region->amount_resident()));
-            TRY(region_object.add("amount_dirty", region->amount_dirty()));
-            TRY(region_object.add("cow_pages", region->cow_pages()));
-            TRY(region_object.add("name", region->name()));
-            TRY(region_object.add("vmobject", region->vmobject().class_name()));
+            TRY(region_object.add("cacheable", region.is_cacheable()));
+            TRY(region_object.add("address", region.vaddr().get()));
+            TRY(region_object.add("size", region.size()));
+            TRY(region_object.add("amount_resident", region.amount_resident()));
+            TRY(region_object.add("amount_dirty", region.amount_dirty()));
+            TRY(region_object.add("cow_pages", region.cow_pages()));
+            TRY(region_object.add("name", region.name()));
+            TRY(region_object.add("vmobject", region.vmobject().class_name()));
 
             StringBuilder pagemap_builder;
-            for (size_t i = 0; i < region->page_count(); ++i) {
-                auto const* page = region->physical_page(i);
+            for (size_t i = 0; i < region.page_count(); ++i) {
+                auto const* page = region.physical_page(i);
                 if (!page)
                     pagemap_builder.append('N');
                 else if (page->is_shared_zero_page() || page->is_lazy_committed_page())

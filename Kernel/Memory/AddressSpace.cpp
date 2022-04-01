@@ -30,7 +30,20 @@ AddressSpace::AddressSpace(NonnullRefPtr<PageDirectory> page_directory)
 {
 }
 
-AddressSpace::~AddressSpace() = default;
+AddressSpace::~AddressSpace()
+{
+    delete_all_regions_assuming_they_are_unmapped();
+}
+
+void AddressSpace::delete_all_regions_assuming_they_are_unmapped()
+{
+    // FIXME: This could definitely be done in a more efficient manner.
+    while (!m_regions.is_empty()) {
+        auto& region = *m_regions.begin();
+        m_regions.remove(region.vaddr().get());
+        delete &region;
+    }
+}
 
 ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 {
@@ -208,9 +221,9 @@ void AddressSpace::deallocate_region(Region& region)
 NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 {
     SpinlockLocker lock(m_lock);
-    auto found_region = m_regions.unsafe_remove(region.vaddr().get());
-    VERIFY(found_region.ptr() == &region);
-    return found_region;
+    auto did_remove = m_regions.remove(region.vaddr().get());
+    VERIFY(did_remove);
+    return NonnullOwnPtr { NonnullOwnPtr<Region>::Adopt, region };
 }
 
 Region* AddressSpace::find_region_from_range(VirtualRange const& range)
@@ -221,9 +234,9 @@ Region* AddressSpace::find_region_from_range(VirtualRange const& range)
         return nullptr;
     auto& region = *found_region;
     auto rounded_range_size = page_round_up(range.size());
-    if (rounded_range_size.is_error() || region->size() != rounded_range_size.value())
+    if (rounded_range_size.is_error() || region.size() != rounded_range_size.value())
         return nullptr;
-    return region;
+    return &region;
 }
 
 Region* AddressSpace::find_region_containing(VirtualRange const& range)
@@ -232,7 +245,7 @@ Region* AddressSpace::find_region_containing(VirtualRange const& range)
     auto* candidate = m_regions.find_largest_not_above(range.base().get());
     if (!candidate)
         return nullptr;
-    return (*candidate)->range().contains(range) ? candidate->ptr() : nullptr;
+    return (*candidate).range().contains(range) ? candidate : nullptr;
 }
 
 ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange const& range)
@@ -245,12 +258,12 @@ ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange co
     auto* found_region = m_regions.find_largest_not_above(range.base().get());
     if (!found_region)
         return regions;
-    for (auto iter = m_regions.begin_from((*found_region)->vaddr().get()); !iter.is_end(); ++iter) {
-        auto const& iter_range = (*iter)->range();
+    for (auto iter = m_regions.begin_from((*found_region).vaddr().get()); !iter.is_end(); ++iter) {
+        auto const& iter_range = (*iter).range();
         if (iter_range.base() < range.end() && iter_range.end() > range.base()) {
-            TRY(regions.try_append(*iter));
+            TRY(regions.try_append(&*iter));
 
-            total_size_collected += (*iter)->size() - iter_range.intersect(range).size();
+            total_size_collected += (*iter).size() - iter_range.intersect(range).size();
             if (total_size_collected == range.size())
                 break;
         }
@@ -261,9 +274,10 @@ ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange co
 
 ErrorOr<Region*> AddressSpace::add_region(NonnullOwnPtr<Region> region)
 {
-    auto* ptr = region.ptr();
     SpinlockLocker lock(m_lock);
-    TRY(m_regions.try_insert(region->vaddr().get(), move(region)));
+    // NOTE: We leak the region into the IRBT here. It must be deleted or readopted when removed from the tree.
+    auto* ptr = region.leak_ptr();
+    m_regions.insert(ptr->vaddr().get(), *ptr);
     return ptr;
 }
 
@@ -300,8 +314,7 @@ void AddressSpace::dump_regions()
 
     SpinlockLocker lock(m_lock);
 
-    for (auto const& sorted_region : m_regions) {
-        auto const& region = *sorted_region;
+    for (auto const& region : m_regions) {
         dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}", region.vaddr().get(), region.vaddr().offset(region.size() - 1).get(), region.size(),
             region.is_readable() ? 'R' : ' ',
             region.is_writable() ? 'W' : ' ',
@@ -322,9 +335,10 @@ void AddressSpace::remove_all_regions(Badge<Process>)
         SpinlockLocker pd_locker(m_page_directory->get_lock());
         SpinlockLocker mm_locker(s_mm_lock);
         for (auto& region : m_regions)
-            (*region).unmap_with_locks_held(Region::ShouldDeallocateVirtualRange::No, ShouldFlushTLB::No, pd_locker, mm_locker);
+            region.unmap_with_locks_held(Region::ShouldDeallocateVirtualRange::No, ShouldFlushTLB::No, pd_locker, mm_locker);
     }
-    m_regions.clear();
+
+    delete_all_regions_assuming_they_are_unmapped();
 }
 
 size_t AddressSpace::amount_dirty_private() const
@@ -335,8 +349,8 @@ size_t AddressSpace::amount_dirty_private() const
     //        That's probably a situation that needs to be looked at in general.
     size_t amount = 0;
     for (auto const& region : m_regions) {
-        if (!region->is_shared())
-            amount += region->amount_dirty();
+        if (!region.is_shared())
+            amount += region.amount_dirty();
     }
     return amount;
 }
@@ -346,8 +360,8 @@ ErrorOr<size_t> AddressSpace::amount_clean_inode() const
     SpinlockLocker lock(m_lock);
     HashTable<InodeVMObject const*> vmobjects;
     for (auto const& region : m_regions) {
-        if (region->vmobject().is_inode())
-            TRY(vmobjects.try_set(&static_cast<InodeVMObject const&>(region->vmobject())));
+        if (region.vmobject().is_inode())
+            TRY(vmobjects.try_set(&static_cast<InodeVMObject const&>(region.vmobject())));
     }
     size_t amount = 0;
     for (auto& vmobject : vmobjects)
@@ -360,7 +374,7 @@ size_t AddressSpace::amount_virtual() const
     SpinlockLocker lock(m_lock);
     size_t amount = 0;
     for (auto const& region : m_regions) {
-        amount += region->size();
+        amount += region.size();
     }
     return amount;
 }
@@ -371,7 +385,7 @@ size_t AddressSpace::amount_resident() const
     // FIXME: This will double count if multiple regions use the same physical page.
     size_t amount = 0;
     for (auto const& region : m_regions) {
-        amount += region->amount_resident();
+        amount += region.amount_resident();
     }
     return amount;
 }
@@ -385,7 +399,7 @@ size_t AddressSpace::amount_shared() const
     //        so that every Region contributes +1 ref to each of its PhysicalPages.
     size_t amount = 0;
     for (auto const& region : m_regions) {
-        amount += region->amount_shared();
+        amount += region.amount_shared();
     }
     return amount;
 }
@@ -395,11 +409,11 @@ size_t AddressSpace::amount_purgeable_volatile() const
     SpinlockLocker lock(m_lock);
     size_t amount = 0;
     for (auto const& region : m_regions) {
-        if (!region->vmobject().is_anonymous())
+        if (!region.vmobject().is_anonymous())
             continue;
-        auto const& vmobject = static_cast<AnonymousVMObject const&>(region->vmobject());
+        auto const& vmobject = static_cast<AnonymousVMObject const&>(region.vmobject());
         if (vmobject.is_purgeable() && vmobject.is_volatile())
-            amount += region->amount_resident();
+            amount += region.amount_resident();
     }
     return amount;
 }
@@ -409,11 +423,11 @@ size_t AddressSpace::amount_purgeable_nonvolatile() const
     SpinlockLocker lock(m_lock);
     size_t amount = 0;
     for (auto const& region : m_regions) {
-        if (!region->vmobject().is_anonymous())
+        if (!region.vmobject().is_anonymous())
             continue;
-        auto const& vmobject = static_cast<AnonymousVMObject const&>(region->vmobject());
+        auto const& vmobject = static_cast<AnonymousVMObject const&>(region.vmobject());
         if (vmobject.is_purgeable() && !vmobject.is_volatile())
-            amount += region->amount_resident();
+            amount += region.amount_resident();
     }
     return amount;
 }
