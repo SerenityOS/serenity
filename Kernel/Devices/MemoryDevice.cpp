@@ -33,7 +33,7 @@ UNMAP_AFTER_INIT MemoryDevice::~MemoryDevice() = default;
 ErrorOr<size_t> MemoryDevice::read(OpenFileDescription&, u64 offset, UserOrKernelBuffer& buffer, size_t length)
 {
     if (!MM.is_allowed_to_read_physical_memory_for_userspace(PhysicalAddress(offset), length)) {
-        dbgln("MemoryDevice: Trying to read physical memory at {} for range of {} bytes failed due to violation of access", PhysicalAddress(offset), length);
+        dbgln_if(MEMORY_DEVICE_DEBUG, "MemoryDevice: Trying to read physical memory at {} for range of {} bytes failed due to violation of access", PhysicalAddress(offset), length);
         return EINVAL;
     }
     auto mapping = TRY(Memory::map_typed<u8>(PhysicalAddress(offset), length));
