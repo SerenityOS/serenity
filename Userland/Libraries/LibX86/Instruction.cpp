@@ -867,7 +867,7 @@ static void build_sse_f3(u8 op, char const* mnemonic, InstructionFormat format, 
     build_sse_f3(0x2A, "CVTSI2SS", OP_xmm1_rm32, &Interpreter::CVTSI2SS_xmm1_rm32);
     build_sse_np(0x2B, "MOVNTPS", OP_xmm1m128_xmm2, &Interpreter::MOVNTPS_xmm1m128_xmm2);
     build_sse_np(0x2C, "CVTTPS2PI", OP_mm1_xmm2m64, &Interpreter::CVTTPS2PI_mm1_xmm2m64);
-    build_sse_f3(0x2C, "CVTTSS2SI", OP_r32_xmm2m32, &Interpreter::CVTTPS2PI_r32_xmm2m32);
+    build_sse_f3(0x2C, "CVTTSS2SI", OP_r32_xmm2m32, &Interpreter::CVTTSS2SI_r32_xmm2m32);
     build_sse_np(0x2D, "CVTPS2PI", OP_mm1_xmm2m64, &Interpreter::CVTPS2PI_xmm1_mm2m64);
     build_sse_f3(0x2D, "CVTSS2SI", OP_r32_xmm2m32, &Interpreter::CVTSS2SI_xmm1_rm32);
     build_sse_np(0x2E, "UCOMISS", OP_xmm1_xmm2m32, &Interpreter::UCOMISS_xmm1_xmm2m32);

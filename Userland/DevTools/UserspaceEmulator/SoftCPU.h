@@ -1130,7 +1130,7 @@ private:
     virtual void CVTSI2SS_xmm1_rm32(X86::Instruction const&) override;
     virtual void MOVNTPS_xmm1m128_xmm2(X86::Instruction const&) override;
     virtual void CVTTPS2PI_mm1_xmm2m64(X86::Instruction const&) override;
-    virtual void CVTTPS2PI_r32_xmm2m32(X86::Instruction const&) override;
+    virtual void CVTTSS2SI_r32_xmm2m32(X86::Instruction const&) override;
     virtual void CVTPS2PI_xmm1_mm2m64(X86::Instruction const&) override;
     virtual void CVTSS2SI_xmm1_rm32(X86::Instruction const&) override;
     virtual void UCOMISS_xmm1_xmm2m32(X86::Instruction const&) override;

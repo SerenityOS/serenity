@@ -676,7 +676,7 @@ public:
     virtual void MOVAPS_xmm1_xmm2m128(Instruction const&) = 0;
     virtual void MOVAPS_xmm1m128_xmm2(Instruction const&) = 0;
     virtual void CVTTPS2PI_mm1_xmm2m64(Instruction const&) = 0;
-    virtual void CVTTPS2PI_r32_xmm2m32(Instruction const&) = 0;
+    virtual void CVTTSS2SI_r32_xmm2m32(Instruction const&) = 0;
     virtual void CVTPI2PS_xmm1_mm2m64(Instruction const&) = 0;
     virtual void CVTSI2SS_xmm1_rm32(Instruction const&) = 0;
     virtual void MOVNTPS_xmm1m128_xmm2(Instruction const&) = 0;
