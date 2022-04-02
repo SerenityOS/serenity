@@ -320,7 +320,9 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
 
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
+        
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CrashHandler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPUID.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
@@ -388,6 +390,7 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
 else()
     set(SOURCES
         Arch/aarch64/BootPPMParser.cpp
+        Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/GPIO.cpp
         Arch/aarch64/Framebuffer.cpp
         Arch/aarch64/Mailbox.cpp
