@@ -57,6 +57,17 @@ public:
         return *this;
     }
 
+    template<typename K, typename V>
+    Encoder& operator<<(OrderedHashMap<K, V> const& hashmap)
+    {
+        *this << (u32)hashmap.size();
+        for (auto it : hashmap) {
+            *this << it.key;
+            *this << it.value;
+        }
+        return *this;
+    }
+
     template<typename T>
     Encoder& operator<<(Vector<T> const& vector)
     {
