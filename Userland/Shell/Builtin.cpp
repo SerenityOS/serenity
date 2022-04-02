@@ -41,7 +41,7 @@ int Shell::builtin_dump(int argc, char const** argv)
 
 int Shell::builtin_alias(int argc, char const** argv)
 {
-    Vector<char const*> arguments;
+    Vector<String> arguments;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(arguments, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No);
@@ -57,7 +57,7 @@ int Shell::builtin_alias(int argc, char const** argv)
 
     bool fail = false;
     for (auto& argument : arguments) {
-        auto parts = String { argument }.split_limit('=', 2, true);
+        auto parts = argument.split_limit('=', 2, true);
         if (parts.size() == 1) {
             auto alias = m_aliases.get(parts[0]);
             if (alias.has_value()) {
@@ -77,7 +77,7 @@ int Shell::builtin_alias(int argc, char const** argv)
 int Shell::builtin_unalias(int argc, char const** argv)
 {
     bool remove_all { false };
-    Vector<char const*> arguments;
+    Vector<String> arguments;
 
     Core::ArgsParser parser;
     parser.set_general_help("Remove alias from the list of aliases");
@@ -179,7 +179,7 @@ int Shell::builtin_bg(int argc, char const** argv)
 
 int Shell::builtin_type(int argc, char const** argv)
 {
-    Vector<char const*> commands;
+    Vector<String> commands;
     bool dont_show_function_source = false;
 
     Core::ArgsParser parser;
@@ -202,7 +202,7 @@ int Shell::builtin_type(int argc, char const** argv)
         // check if it is a function
         if (auto function = m_functions.get(command); function.has_value()) {
             auto fn = function.value();
-            printf("%s is a function\n", command);
+            printf("%s is a function\n", command.characters());
             if (!dont_show_function_source) {
                 StringBuilder builder;
                 builder.append(fn.name);
@@ -226,18 +226,18 @@ int Shell::builtin_type(int argc, char const** argv)
 
         // check if its a builtin
         if (has_builtin(command)) {
-            printf("%s is a shell builtin\n", command);
+            printf("%s is a shell builtin\n", command.characters());
             continue;
         }
 
         // check if its an executable in PATH
         auto fullpath = Core::find_executable_in_path(command);
         if (!fullpath.is_empty()) {
-            printf("%s is %s\n", command, escape_token(fullpath).characters());
+            printf("%s is %s\n", command.characters(), escape_token(fullpath).characters());
             continue;
         }
         something_not_found = true;
-        printf("type: %s not found\n", command);
+        printf("type: %s not found\n", command.characters());
     }
 
     if (something_not_found)
@@ -341,7 +341,7 @@ int Shell::builtin_dirs(int argc, char const** argv)
     bool number_when_printing = false;
     char separator = ' ';
 
-    Vector<char const*> paths;
+    Vector<String> paths;
 
     Core::ArgsParser parser;
     parser.add_option(clear, "Clear the directory stack", "clear", 'c');
@@ -425,7 +425,7 @@ int Shell::builtin_exit(int argc, char const** argv)
 
 int Shell::builtin_export(int argc, char const** argv)
 {
-    Vector<char const*> vars;
+    Vector<String> vars;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variable[=value]'s", "values", Core::ArgsParser::Required::No);
@@ -440,7 +440,7 @@ int Shell::builtin_export(int argc, char const** argv)
     }
 
     for (auto& value : vars) {
-        auto parts = String { value }.split_limit('=', 2);
+        auto parts = value.split_limit('=', 2);
 
         if (parts.size() == 1) {
             auto value = lookup_local_variable(parts[0]);
@@ -471,7 +471,7 @@ int Shell::builtin_export(int argc, char const** argv)
 
 int Shell::builtin_glob(int argc, char const** argv)
 {
-    Vector<char const*> globs;
+    Vector<String> globs;
     Core::ArgsParser parser;
     parser.add_positional_argument(globs, "Globs to resolve", "glob");
 
@@ -852,7 +852,7 @@ int Shell::builtin_shift(int argc, char const** argv)
 int Shell::builtin_source(int argc, char const** argv)
 {
     char const* file_to_source = nullptr;
-    Vector<char const*> args;
+    Vector<String> args;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(file_to_source, "File to read commands from", "path");
@@ -861,10 +861,6 @@ int Shell::builtin_source(int argc, char const** argv)
     if (!parser.parse(argc, const_cast<char**>(argv)))
         return 1;
 
-    Vector<String> string_argv;
-    for (auto& arg : args)
-        string_argv.append(arg);
-
     auto previous_argv = lookup_local_variable("ARGV");
     ScopeGuard guard { [&] {
         if (!args.is_empty())
@@ -872,7 +868,7 @@ int Shell::builtin_source(int argc, char const** argv)
     } };
 
     if (!args.is_empty())
-        set_local_variable("ARGV", AST::make_ref_counted<AST::ListValue>(move(string_argv)));
+        set_local_variable("ARGV", AST::make_ref_counted<AST::ListValue>(move(args)));
 
     if (!run_file(file_to_source, true))
         return 126;
@@ -882,24 +878,20 @@ int Shell::builtin_source(int argc, char const** argv)
 
 int Shell::builtin_time(int argc, char const** argv)
 {
-    Vector<char const*> args;
+    AST::Command command;
 
     int number_of_iterations = 1;
 
     Core::ArgsParser parser;
     parser.add_option(number_of_iterations, "Number of iterations", "iterations", 'n', "iterations");
     parser.set_stop_on_first_non_option(true);
-    parser.add_positional_argument(args, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes);
+    parser.add_positional_argument(command.argv, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes);
 
     if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (number_of_iterations < 1)
         return 1;
-
-    AST::Command command;
-    for (auto& arg : args)
-        command.argv.append(arg);
 
     auto commands = expand_aliases({ move(command) });
 
@@ -924,7 +916,7 @@ int Shell::builtin_time(int argc, char const** argv)
 
         warnln("Timing report: {} ms", iteration_times.sum());
         warnln("==============");
-        warnln("Command:         {}", String::join(' ', args));
+        warnln("Command:         {}", String::join(' ', command.argv));
         warnln("Average time:    {:.2} ms (median: {}, stddev: {:.2}, min: {}, max:{})",
             iteration_times.average(), iteration_times.median(),
             iteration_times.standard_deviation(),
@@ -1025,7 +1017,7 @@ int Shell::builtin_wait(int argc, char const** argv)
 
 int Shell::builtin_unset(int argc, char const** argv)
 {
-    Vector<char const*> vars;
+    Vector<String> vars;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variables", "variables", Core::ArgsParser::Required::Yes);
@@ -1041,7 +1033,7 @@ int Shell::builtin_unset(int argc, char const** argv)
         if (lookup_local_variable(value)) {
             unset_local_variable(value);
         } else {
-            unsetenv(value);
+            unsetenv(value.characters());
         }
     }
 
