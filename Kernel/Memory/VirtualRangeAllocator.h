@@ -30,6 +30,8 @@ public:
 
     bool contains(VirtualRange const& range) const { return m_total_range.contains(range); }
 
+    VirtualRange total_range() const { return m_total_range; }
+
 private:
     ErrorOr<void> carve_from_region(VirtualRange const& from, VirtualRange const&);
 

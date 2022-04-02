@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/MemoryLayout.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AddressSpace.h>
@@ -13,20 +14,33 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
+#include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
 
 namespace Kernel::Memory {
 
 ErrorOr<NonnullOwnPtr<AddressSpace>> AddressSpace::try_create(AddressSpace const* parent)
 {
-    auto page_directory = TRY(PageDirectory::try_create_for_userspace(parent ? &parent->page_directory().range_allocator() : nullptr));
-    auto space = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AddressSpace(page_directory)));
+    auto page_directory = TRY(PageDirectory::try_create_for_userspace());
+
+    VirtualRange total_range = [&]() -> VirtualRange {
+        if (parent)
+            return parent->m_total_range;
+        constexpr FlatPtr userspace_range_base = USER_RANGE_BASE;
+        FlatPtr const userspace_range_ceiling = USER_RANGE_CEILING;
+        size_t random_offset = (get_fast_random<u8>() % 32 * MiB) & PAGE_MASK;
+        FlatPtr base = userspace_range_base + random_offset;
+        return VirtualRange(VirtualAddress { base }, userspace_range_ceiling - base);
+    }();
+
+    auto space = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AddressSpace(move(page_directory), total_range)));
     space->page_directory().set_space({}, *space);
     return space;
 }
 
-AddressSpace::AddressSpace(NonnullRefPtr<PageDirectory> page_directory)
+AddressSpace::AddressSpace(NonnullRefPtr<PageDirectory> page_directory, VirtualRange total_range)
     : m_page_directory(move(page_directory))
+    , m_total_range(total_range)
 {
 }
 
@@ -78,9 +92,6 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 
         auto new_regions = TRY(try_split_region_around_range(*region, range_to_unmap));
 
-        // Instead we give back the unwanted VM manually.
-        page_directory().range_allocator().deallocate(range_to_unmap);
-
         // And finally we map the new region(s) using our page directory (they were just allocated and don't have one).
         for (auto* new_region : new_regions) {
             // TODO: Ideally we should do this in a way that can be rolled back on failure, as failing here
@@ -126,9 +137,6 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         TRY(new_regions.try_extend(split_regions));
     }
 
-    // Give back any unwanted VM to the range allocator.
-    page_directory().range_allocator().deallocate(range_to_unmap);
-
     // And finally map the new region(s) into our page directory.
     for (auto* new_region : new_regions) {
         // TODO: Ideally we should do this in a way that can be rolled back on failure, as failing here
@@ -141,13 +149,121 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
     return {};
 }
 
+ErrorOr<VirtualRange> AddressSpace::try_allocate_anywhere(size_t size, size_t alignment)
+{
+    if (!size)
+        return EINVAL;
+
+    VERIFY((size % PAGE_SIZE) == 0);
+    VERIFY((alignment % PAGE_SIZE) == 0);
+
+    if (Checked<size_t>::addition_would_overflow(size, alignment))
+        return EOVERFLOW;
+
+    VirtualAddress window_start = m_total_range.base();
+
+    for (auto it = m_regions.begin(); !it.is_end(); ++it) {
+        auto& region = *it;
+
+        if (window_start == region.vaddr()) {
+            window_start = region.range().end();
+            continue;
+        }
+
+        VirtualRange available_range { window_start, region.vaddr().get() - window_start.get() };
+
+        window_start = region.range().end();
+
+        // FIXME: This check is probably excluding some valid candidates when using a large alignment.
+        if (available_range.size() < (size + alignment))
+            continue;
+
+        FlatPtr initial_base = available_range.base().get();
+        FlatPtr aligned_base = round_up_to_power_of_two(initial_base, alignment);
+
+        return VirtualRange { VirtualAddress(aligned_base), size };
+    }
+
+    VirtualRange available_range { window_start, m_total_range.end().get() - window_start.get() };
+    if (m_total_range.contains(available_range))
+        return available_range;
+
+    dmesgln("VirtualRangeAllocator: Failed to allocate anywhere: size={}, alignment={}", size, alignment);
+    return ENOMEM;
+}
+
+ErrorOr<VirtualRange> AddressSpace::try_allocate_specific(VirtualAddress base, size_t size)
+{
+    if (!size)
+        return EINVAL;
+
+    VERIFY(base.is_page_aligned());
+    VERIFY((size % PAGE_SIZE) == 0);
+
+    VirtualRange const range { base, size };
+    if (!m_total_range.contains(range))
+        return ENOMEM;
+
+    auto* region = m_regions.find_largest_not_above(base.get());
+    if (!region) {
+        // The range can be accommodated below the current lowest range.
+        return range;
+    }
+
+    if (region->range().intersects(range)) {
+        // Requested range overlaps an existing range.
+        return ENOMEM;
+    }
+
+    auto it = m_regions.begin_from(region->vaddr().get());
+    VERIFY(!it.is_end());
+    ++it;
+
+    if (it.is_end()) {
+        // The range can be accommodated above the nearest range.
+        return range;
+    }
+
+    if (it->range().intersects(range)) {
+        // Requested range overlaps the next neighbor.
+        return ENOMEM;
+    }
+
+    // Requested range fits between first region and its next neighbor.
+    return range;
+}
+
+ErrorOr<VirtualRange> AddressSpace::try_allocate_randomized(size_t size, size_t alignment)
+{
+    if (!size)
+        return EINVAL;
+
+    VERIFY((size % PAGE_SIZE) == 0);
+    VERIFY((alignment % PAGE_SIZE) == 0);
+
+    // FIXME: I'm sure there's a smarter way to do this.
+    constexpr size_t maximum_randomization_attempts = 1000;
+    for (size_t i = 0; i < maximum_randomization_attempts; ++i) {
+        VirtualAddress random_address { round_up_to_power_of_two(get_fast_random<FlatPtr>() % m_total_range.end().get(), alignment) };
+
+        if (!m_total_range.contains(random_address, size))
+            continue;
+
+        auto range_or_error = try_allocate_specific(random_address, size);
+        if (!range_or_error.is_error())
+            return range_or_error.release_value();
+    }
+
+    return try_allocate_anywhere(size, alignment);
+}
+
 ErrorOr<VirtualRange> AddressSpace::try_allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
 {
     vaddr.mask(PAGE_MASK);
     size = TRY(page_round_up(size));
     if (vaddr.is_null())
-        return page_directory().range_allocator().try_allocate_anywhere(size, alignment);
-    return page_directory().range_allocator().try_allocate_specific(vaddr, size);
+        return try_allocate_anywhere(size, alignment);
+    return try_allocate_specific(vaddr, size);
 }
 
 ErrorOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_region, VirtualRange const& range, size_t offset_in_vmobject)

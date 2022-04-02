@@ -21,7 +21,7 @@ class PageDirectory : public RefCounted<PageDirectory> {
     friend class MemoryManager;
 
 public:
-    static ErrorOr<NonnullRefPtr<PageDirectory>> try_create_for_userspace(VirtualRangeAllocator const* parent_range_allocator = nullptr);
+    static ErrorOr<NonnullRefPtr<PageDirectory>> try_create_for_userspace();
     static NonnullRefPtr<PageDirectory> must_create_kernel_page_directory();
     static RefPtr<PageDirectory> find_current();
 

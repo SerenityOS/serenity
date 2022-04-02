@@ -34,20 +34,9 @@ UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_
     return directory;
 }
 
-ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(VirtualRangeAllocator const* parent_range_allocator)
+ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace()
 {
-    constexpr FlatPtr userspace_range_base = USER_RANGE_BASE;
-    FlatPtr const userspace_range_ceiling = USER_RANGE_CEILING;
-
     auto directory = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PageDirectory));
-
-    if (parent_range_allocator) {
-        TRY(directory->m_range_allocator.initialize_from_parent(*parent_range_allocator));
-    } else {
-        size_t random_offset = (get_fast_random<u8>() % 32 * MiB) & PAGE_MASK;
-        u32 base = userspace_range_base + random_offset;
-        TRY(directory->m_range_allocator.initialize_with_range(VirtualAddress(base), userspace_range_ceiling - base));
-    }
 
     // NOTE: Take the MM lock since we need it for quickmap.
     SpinlockLocker lock(s_mm_lock);

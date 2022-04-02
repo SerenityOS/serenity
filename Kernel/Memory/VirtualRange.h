@@ -51,6 +51,8 @@ public:
     Vector<VirtualRange, 2> carve(VirtualRange const&) const;
     VirtualRange intersect(VirtualRange const&) const;
 
+    bool intersects(VirtualRange const&) const;
+
     static ErrorOr<VirtualRange> expand_to_page_boundaries(FlatPtr address, size_t size);
 
 private:

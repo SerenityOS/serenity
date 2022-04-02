@@ -66,8 +66,12 @@ public:
     size_t amount_purgeable_volatile() const;
     size_t amount_purgeable_nonvolatile() const;
 
+    ErrorOr<VirtualRange> try_allocate_anywhere(size_t size, size_t alignment);
+    ErrorOr<VirtualRange> try_allocate_specific(VirtualAddress base, size_t size);
+    ErrorOr<VirtualRange> try_allocate_randomized(size_t size, size_t alignment);
+
 private:
-    explicit AddressSpace(NonnullRefPtr<PageDirectory>);
+    AddressSpace(NonnullRefPtr<PageDirectory>, VirtualRange total_range);
 
     void delete_all_regions_assuming_they_are_unmapped();
 
@@ -76,6 +80,7 @@ private:
     RefPtr<PageDirectory> m_page_directory;
 
     IntrusiveRedBlackTree<&Region::m_tree_node> m_regions;
+    VirtualRange const m_total_range;
 
     bool m_enforces_syscall_regions { false };
 };

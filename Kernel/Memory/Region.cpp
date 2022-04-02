@@ -58,7 +58,8 @@ Region::~Region()
         if (!is_readable() && !is_writable() && !is_executable()) {
             // If the region is "PROT_NONE", we didn't map it in the first place,
             // so all we need to do here is deallocate the VM.
-            m_page_directory->range_allocator().deallocate(range());
+            if (is_kernel())
+                m_page_directory->range_allocator().deallocate(range());
         } else {
             SpinlockLocker mm_locker(s_mm_lock);
             unmap_with_locks_held(ShouldDeallocateVirtualRange::Yes, ShouldFlushTLB::Yes, pd_locker, mm_locker);
@@ -270,7 +271,8 @@ void Region::unmap_with_locks_held(ShouldDeallocateVirtualRange deallocate_range
     if (should_flush_tlb == ShouldFlushTLB::Yes)
         MemoryManager::flush_tlb(m_page_directory, vaddr(), page_count());
     if (deallocate_range == ShouldDeallocateVirtualRange::Yes) {
-        m_page_directory->range_allocator().deallocate(range());
+        if (is_kernel())
+            m_page_directory->range_allocator().deallocate(range());
     }
     m_page_directory = nullptr;
 }

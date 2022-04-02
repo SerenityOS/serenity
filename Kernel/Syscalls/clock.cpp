@@ -17,7 +17,7 @@ ErrorOr<FlatPtr> Process::sys$map_time_page()
 
     auto& vmobject = TimeManagement::the().time_page_vmobject();
 
-    auto range = TRY(address_space().page_directory().range_allocator().try_allocate_randomized(PAGE_SIZE, PAGE_SIZE));
+    auto range = TRY(address_space().try_allocate_randomized(PAGE_SIZE, PAGE_SIZE));
     auto* region = TRY(address_space().allocate_region_with_vmobject(range, vmobject, 0, "Kernel time page"sv, PROT_READ, true));
     return region->vaddr().get();
 }

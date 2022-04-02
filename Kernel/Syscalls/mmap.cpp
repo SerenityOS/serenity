@@ -193,7 +193,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
 
     auto range = TRY([&]() -> ErrorOr<Memory::VirtualRange> {
         if (map_randomized)
-            return address_space().page_directory().range_allocator().try_allocate_randomized(rounded_size, alignment);
+            return address_space().try_allocate_randomized(rounded_size, alignment);
 
         // If MAP_FIXED is specified, existing mappings that intersect the requested range are removed.
         if (map_fixed)
