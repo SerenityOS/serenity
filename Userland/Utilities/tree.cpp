@@ -106,7 +106,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty"));
 
-    Vector<char const*> directories;
+    Vector<String> directories;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(flag_show_hidden_files, "Show hidden files", "all", 'a');
@@ -124,7 +124,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         print_directory_tree(".", 0, "");
         puts("");
     } else {
-        for (char const* directory : directories) {
+        for (auto const& directory : directories) {
             print_directory_tree(directory, 0, "");
             puts("");
         }

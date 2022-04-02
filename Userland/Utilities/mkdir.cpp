@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool create_parents = false;
     String mode_string;
-    Vector<char const*> directories;
+    Vector<String> directories;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(create_parents, "Create parent directories if they don't exist", "parents", 'p');
