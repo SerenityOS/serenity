@@ -39,6 +39,20 @@ SECTIONS
                physical memory. 8M is wasteful, so this should be properly calculated.
     */
     
+    /* FIXME: Placeholder to satisfy linker */
+    start_of_kernel_ksyms = .;
+    end_of_kernel_ksyms = .;
+    start_of_kernel_text = .;
+    end_of_kernel_text = .;
+    start_of_kernel_image = .;
+    end_of_kernel_image = .;
+    start_of_unmap_after_init = .;
+    end_of_unmap_after_init = .;
+    start_of_ro_after_init = .;
+    end_of_ro_after_init = .;
+    start_of_kernel_data = .;
+    end_of_kernel_data = .;
+
     . = ALIGN(4K);
     page_tables_phys_start = .;
     
