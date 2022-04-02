@@ -21,4 +21,7 @@ namespace Kernel {
 
 struct RegisterState;
 
+void dump_registers(RegisterState const& regs);
+void handle_crash(RegisterState const&, char const* description, int signal, bool out_of_memory = false);
+
 }

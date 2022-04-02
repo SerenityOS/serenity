@@ -6,8 +6,12 @@
 
 #pragma once
 
+namespace Kernel {
+
 struct RegisterState {
 };
 
 struct DebugRegisterState {
 };
+
+}
