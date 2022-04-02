@@ -245,10 +245,14 @@ constexpr void sincos(T angle, T& sin_val, T& cos_val)
         cos_val = cos(angle);
         return;
     }
+#if ARCH(I386) || ARCH(X86_64)
     asm(
         "fsincos"
         : "=t"(cos_val), "=u"(sin_val)
         : "0"(angle));
+#else
+    __builtin_sincosf(angle, sin_val, cos_val);
+#endif
 }
 
 template<FloatingPoint T>
