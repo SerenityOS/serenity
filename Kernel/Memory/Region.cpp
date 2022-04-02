@@ -6,7 +6,8 @@
 
 #include <AK/Memory.h>
 #include <AK/StringView.h>
-#include <Kernel/Arch/x86/PageFault.h>
+#include <Kernel/Arch/PageDirectory.h>
+#include <Kernel/Arch/PageFault.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -212,9 +213,9 @@ bool Region::map_individual_page_impl(size_t page_index)
             pte->set_writable(false);
         else
             pte->set_writable(is_writable());
-        if (Processor::current().has_feature(CPUFeature::NX))
+        if (Processor::current().has_nx())
             pte->set_execute_disabled(!is_executable());
-        if (Processor::current().has_feature(CPUFeature::PAT))
+        if (Processor::current().has_pat())
             pte->set_pat(is_write_combine());
         pte->set_user_allowed(user_allowed);
     }
@@ -317,7 +318,7 @@ void Region::remap()
 
 ErrorOr<void> Region::set_write_combine(bool enable)
 {
-    if (enable && !Processor::current().has_feature(CPUFeature::PAT)) {
+    if (enable && !Processor::current().has_pat()) {
         dbgln("PAT is not supported, implement MTRR fallback if available");
         return Error::from_errno(ENOTSUP);
     }

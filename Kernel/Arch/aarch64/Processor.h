@@ -48,6 +48,16 @@ public:
         return 0;
     }
 
+    ALWAYS_INLINE bool has_nx() const
+    {
+        return true;
+    }
+
+    ALWAYS_INLINE bool has_pat() const
+    {
+        return false;
+    }
+
     ALWAYS_INLINE static FlatPtr current_in_irq()
     {
         return 0;
