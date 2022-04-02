@@ -28,6 +28,8 @@ public:
 
     virtual ~Game() override = default;
 
+    void reset();
+
 private:
     Game();
 
@@ -37,7 +39,6 @@ private:
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void track_mouse_move(Gfx::IntPoint const&) override;
 
-    void reset();
     void reset_ball(int serve_to_player);
     void reset_paddles();
     void tick();
