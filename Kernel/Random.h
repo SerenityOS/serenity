@@ -10,6 +10,7 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/StdLib.h>
 #include <LibCrypto/Cipher/AES.h>
@@ -163,7 +164,7 @@ public:
         auto& kernel_rng = KernelRng::the();
         SpinlockLocker lock(kernel_rng.get_lock());
         // We don't lock this because on the off chance a pool is corrupted, entropy isn't lost.
-        Event<T> event = { read_tsc(), m_source, event_data };
+        Event<T> event = { Processor::read_cpu_counter(), m_source, event_data };
         kernel_rng.add_random_event(event, m_pool);
         m_pool++;
         kernel_rng.wake_if_ready();
