@@ -12,11 +12,11 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/DeferredCallEntry.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 #include <Kernel/Arch/x86/ASM_wrapper.h>
 #include <Kernel/Arch/x86/CPUID.h>
 #include <Kernel/Arch/x86/DescriptorTable.h>
-#include <Kernel/Arch/x86/PageDirectory.h>
 #include <Kernel/Arch/x86/TSS.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>

@@ -33,6 +33,9 @@ public:
     ALWAYS_INLINE static void pause() { }
     ALWAYS_INLINE static void wait_check() { }
 
+    ALWAYS_INLINE u8 physical_address_bit_width() const { return 0; }
+    ALWAYS_INLINE u8 virtual_address_bit_width() const { return 0; }
+
     ALWAYS_INLINE static bool is_initialized()
     {
         return false;
