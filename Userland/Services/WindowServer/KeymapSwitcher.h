@@ -27,14 +27,14 @@ public:
 
     String get_current_keymap() const;
 
+    void set_keymap(AK::String const&);
+
 private:
     void refresh();
 
     KeymapSwitcher();
 
     Vector<AK::String> m_keymaps;
-
-    void setkeymap(AK::String const&);
 
     RefPtr<Core::FileWatcher> m_file_watcher;
 

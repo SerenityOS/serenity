@@ -322,6 +322,8 @@ public:
 
     void apply_cursor_theme(String const& name);
 
+    RefPtr<KeymapSwitcher> keymap_switcher() { return m_keymap_switcher; }
+
 private:
     explicit WindowManager(Gfx::PaletteImpl const&);
 

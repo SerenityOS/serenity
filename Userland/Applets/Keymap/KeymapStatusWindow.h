@@ -7,14 +7,10 @@
 
 #pragma once
 
+#include "KeymapStatusWidget.h"
 #include <LibGUI/Label.h>
 #include <LibGUI/Window.h>
 
-class KeymapStatusWidget : public GUI::Label {
-    C_OBJECT(KeymapStatusWidget);
-
-    virtual void mousedown_event(GUI::MouseEvent& event) override;
-};
 class KeymapStatusWindow final : public GUI::Window {
     C_OBJECT(KeymapStatusWindow)
 public:
