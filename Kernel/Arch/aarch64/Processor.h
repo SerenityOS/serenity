@@ -13,7 +13,13 @@
 
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 
+class VirtualAddress;
+
 namespace Kernel {
+
+namespace Memory {
+class PageDirectory;
+};
 
 class Thread;
 
@@ -39,6 +45,14 @@ public:
     ALWAYS_INLINE static bool is_initialized()
     {
         return false;
+    }
+
+    ALWAYS_INLINE static void flush_tlb_local(VirtualAddress&, size_t&)
+    {
+    }
+
+    ALWAYS_INLINE static void flush_tlb(Memory::PageDirectory const*, VirtualAddress const&, size_t)
+    {
     }
 
     ALWAYS_INLINE static u32 current_id()

@@ -23,7 +23,7 @@ class PageDirectory : public RefCounted<PageDirectory> {
 public:
     static ErrorOr<NonnullRefPtr<PageDirectory>> try_create_for_userspace(VirtualRangeAllocator const* parent_range_allocator = nullptr);
     static NonnullRefPtr<PageDirectory> must_create_kernel_page_directory();
-    static RefPtr<PageDirectory> find_by_cr3(FlatPtr);
+    static RefPtr<PageDirectory> find_current();
 
     ~PageDirectory();
 
@@ -62,6 +62,8 @@ public:
 
 private:
     PageDirectory();
+    static void register_page_directory(PageDirectory* directory);
+    static void deregister_page_directory(PageDirectory* directory);
 
     AddressSpace* m_space { nullptr };
     VirtualRangeAllocator m_range_allocator;
@@ -76,5 +78,8 @@ private:
 #endif
     RecursiveSpinlock m_lock;
 };
+
+void activate_kernel_page_directory(PageDirectory const& pgd);
+void activate_page_directory(PageDirectory const& pgd, Thread* current_thread);
 
 }

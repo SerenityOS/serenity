@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Forward.h>
+
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/RegisterState.h>
 
