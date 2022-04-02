@@ -33,6 +33,7 @@ class Region final
     : public Weakable<Region> {
     friend class AddressSpace;
     friend class MemoryManager;
+    friend class RegionTree;
 
 public:
     enum Access : u8 {

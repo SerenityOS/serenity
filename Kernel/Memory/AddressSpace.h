@@ -13,6 +13,7 @@
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/Region.h>
+#include <Kernel/Memory/RegionTree.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel::Memory {
@@ -27,10 +28,10 @@ public:
 
     ErrorOr<Region*> add_region(NonnullOwnPtr<Region>);
 
-    size_t region_count() const { return m_regions.size(); }
+    size_t region_count() const { return m_region_tree.regions().size(); }
 
-    auto& regions() { return m_regions; }
-    auto const& regions() const { return m_regions; }
+    auto& regions() { return m_region_tree.regions(); }
+    auto const& regions() const { return m_region_tree.regions(); }
 
     void dump_regions();
 
@@ -66,21 +67,16 @@ public:
     size_t amount_purgeable_volatile() const;
     size_t amount_purgeable_nonvolatile() const;
 
-    ErrorOr<VirtualRange> try_allocate_anywhere(size_t size, size_t alignment);
-    ErrorOr<VirtualRange> try_allocate_specific(VirtualAddress base, size_t size);
-    ErrorOr<VirtualRange> try_allocate_randomized(size_t size, size_t alignment);
+    auto& region_tree() { return m_region_tree; }
 
 private:
     AddressSpace(NonnullRefPtr<PageDirectory>, VirtualRange total_range);
-
-    void delete_all_regions_assuming_they_are_unmapped();
 
     mutable RecursiveSpinlock m_lock;
 
     RefPtr<PageDirectory> m_page_directory;
 
-    IntrusiveRedBlackTree<&Region::m_tree_node> m_regions;
-    VirtualRange const m_total_range;
+    RegionTree m_region_tree;
 
     bool m_enforces_syscall_regions { false };
 };
