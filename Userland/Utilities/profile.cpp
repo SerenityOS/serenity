@@ -107,20 +107,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto cmd_parts = String(cmd_argument).split(' ');
-    Vector<char const*> cmd_argv;
-
-    for (auto& part : cmd_parts)
-        cmd_argv.append(part.characters());
-
-    cmd_argv.append(nullptr);
+    auto cmd_parts = String(cmd_argument).split_view(' ');
 
     dbgln("Enabling profiling for PID {}", getpid());
     TRY(Core::System::profiling_enable(getpid(), event_mask));
-    if (execvp(cmd_argv[0], const_cast<char**>(cmd_argv.data())) < 0) {
-        perror("execv");
-        return 1;
-    }
+    TRY(Core::System::exec(cmd_parts[0], cmd_parts, Core::System::SearchInPath::Yes));
 
     return 0;
 }
