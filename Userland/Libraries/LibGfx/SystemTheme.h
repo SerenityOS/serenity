@@ -11,6 +11,7 @@
 #include <AK/Forward.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/Color.h>
@@ -271,6 +272,13 @@ Core::AnonymousBuffer& current_system_theme_buffer();
 void set_system_theme(Core::AnonymousBuffer);
 Core::AnonymousBuffer load_system_theme(Core::ConfigFile const&);
 Core::AnonymousBuffer load_system_theme(String const& path);
+
+struct SystemThemeMetaData {
+    String name;
+    String path;
+};
+
+Vector<SystemThemeMetaData> list_installed_system_themes();
 
 }
 
