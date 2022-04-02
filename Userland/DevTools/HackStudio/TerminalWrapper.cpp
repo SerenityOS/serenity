@@ -60,18 +60,9 @@ ErrorOr<void> TerminalWrapper::run_command(String const& command, Optional<Strin
 
     TRY(setup_slave_pseudoterminal(ptm_fd));
 
-    auto parts = command.split(' ');
-    VERIFY(!parts.is_empty());
-    char const** args = (char const**)calloc(parts.size() + 1, sizeof(char const*));
-    for (size_t i = 0; i < parts.size(); i++) {
-        args[i] = parts[i].characters();
-    }
-
-    auto rc = execvp(args[0], const_cast<char**>(args));
-    if (rc < 0) {
-        perror("execve");
-        exit(1);
-    }
+    auto args = command.split_view(' ');
+    VERIFY(!args.is_empty());
+    TRY(Core::System::exec(args[0], args, Core::System::SearchInPath::Yes));
     VERIFY_NOT_REACHED();
 }
 
