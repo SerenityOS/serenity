@@ -15,6 +15,12 @@ Game::Game()
     reset();
 }
 
+void Game::reset_keys()
+{
+    m_up_key_held = false;
+    m_down_key_held = false;
+}
+
 void Game::reset_paddles()
 {
     if (m_cursor_paddle_target_y.has_value())
@@ -46,6 +52,7 @@ void Game::reset()
 
     reset_scores();
     reset_ball(1);
+    reset_keys();
     reset_paddles();
 }
 

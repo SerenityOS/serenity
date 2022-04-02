@@ -41,6 +41,7 @@ private:
 
     void reset_scores();
     void reset_ball(int serve_to_player);
+    void reset_keys();
     void reset_paddles();
     void tick();
     void round_over(int player);
