@@ -118,7 +118,7 @@ private:
 
     bool is_row_layout() const { return m_flex_direction == CSS::FlexDirection::Row || m_flex_direction == CSS::FlexDirection::RowReverse; }
     bool is_single_line() const { return flex_container().computed_values().flex_wrap() == CSS::FlexWrap::Nowrap; }
-
+    bool is_direction_reverse() const { return m_flex_direction == CSS::FlexDirection::ColumnReverse || m_flex_direction == CSS::FlexDirection::RowReverse; }
     void populate_specified_margins(FlexItem&, CSS::FlexDirection) const;
 
     FormattingState::NodeState& m_flex_container_state;
