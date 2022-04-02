@@ -95,8 +95,8 @@ public:
 
     auto cell() { return m_handle.cell(); }
     auto cell() const { return m_handle.cell(); }
-    auto value() const { return m_value; }
-    bool is_null() const { return m_handle.is_null(); }
+    auto value() const { return *m_value; }
+    bool is_null() const { return m_handle.is_null() && !m_value.has_value(); }
 
 private:
     explicit Handle(Value value)
@@ -110,7 +110,7 @@ private:
     {
     }
 
-    Value m_value;
+    Optional<Value> m_value;
     Handle<Cell> m_handle;
 };
 
