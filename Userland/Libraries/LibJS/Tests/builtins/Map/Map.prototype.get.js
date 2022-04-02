@@ -9,3 +9,12 @@ test("basic functionality", () => {
     expect(map.get("a")).toBe(0);
     expect(map.get("d")).toBe(undefined);
 });
+
+test("NaN differentiation", () => {
+    const map = new Map();
+    map.set(NaN, "a");
+
+    expect(map.get(0 / 0)).toBe("a");
+    expect(map.get(0 * Infinity)).toBe("a");
+    expect(map.get(Infinity - Infinity)).toBe("a");
+});
