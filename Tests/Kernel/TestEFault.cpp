@@ -34,16 +34,6 @@
         }                                                                                                                        \
     } while (0)
 
-#define EXPECT_EFAULT_NO_FD(syscall, address, size)                                                                              \
-    do {                                                                                                                         \
-        rc = syscall((address), (size_t)(size));                                                                                 \
-        EXPECT(rc < 0);                                                                                                          \
-        EXPECT_EQ(errno, EFAULT);                                                                                                \
-        if (rc >= 0 || errno != EFAULT) {                                                                                        \
-            warnln("Expected EFAULT: " #syscall "({:p}, {}), got rc={}, errno={}", (void*)(address), (size_t)(size), rc, errno); \
-        }                                                                                                                        \
-    } while (0)
-
 TEST_CASE(test_efault)
 {
     int fd = open("/dev/zero", O_RDONLY);
