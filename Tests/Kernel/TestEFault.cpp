@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -17,6 +17,7 @@
 
 #define EXPECT_OK(syscall, address, size)                                                                                         \
     do {                                                                                                                          \
+        errno = 0;                                                                                                                \
         rc = syscall(fd, (void*)(address), (size_t)(size));                                                                       \
         EXPECT(rc >= 0);                                                                                                          \
         if (rc < 0) {                                                                                                             \
@@ -26,6 +27,7 @@
 
 #define EXPECT_EFAULT(syscall, address, size)                                                                                    \
     do {                                                                                                                         \
+        errno = 0;                                                                                                               \
         rc = syscall(fd, (void*)(address), (size_t)(size));                                                                      \
         EXPECT(rc < 0);                                                                                                          \
         EXPECT_EQ(errno, EFAULT);                                                                                                \
