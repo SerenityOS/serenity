@@ -6,7 +6,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
+#include <AK/QuickSort.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DirIterator.h>
 #include <LibGfx/SystemTheme.h>
 #include <string.h>
 
@@ -148,6 +151,19 @@ Core::AnonymousBuffer load_system_theme(Core::ConfigFile const& file)
 Core::AnonymousBuffer load_system_theme(String const& path)
 {
     return load_system_theme(Core::ConfigFile::open(path).release_value_but_fixme_should_propagate_errors());
+}
+
+Vector<SystemThemeMetaData> list_installed_system_themes()
+{
+    Vector<SystemThemeMetaData> system_themes;
+    Core::DirIterator dt("/res/themes", Core::DirIterator::SkipDots);
+    while (dt.has_next()) {
+        auto theme_name = dt.next_path();
+        auto theme_path = String::formatted("/res/themes/{}", theme_name);
+        system_themes.append({ LexicalPath::title(theme_name), theme_path });
+    }
+    quick_sort(system_themes, [](auto& a, auto& b) { return a.name < b.name; });
+    return system_themes;
 }
 
 }
