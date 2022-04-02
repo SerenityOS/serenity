@@ -397,6 +397,16 @@ public:
 
     static void deferred_call_queue(Function<void()> callback);
 
+    ALWAYS_INLINE bool has_nx() const
+    {
+        return has_feature(CPUFeature::NX);
+    }
+
+    ALWAYS_INLINE bool has_pat() const
+    {
+        return has_feature(CPUFeature::PAT);
+    }
+
     ALWAYS_INLINE bool has_feature(CPUFeature::Type const& feature) const
     {
         return m_features.has_flag(feature);
