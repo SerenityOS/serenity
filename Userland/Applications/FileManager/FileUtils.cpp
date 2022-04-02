@@ -50,7 +50,7 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<String> const& 
         TRY(Core::System::close(pipe_fds[0]));
         TRY(Core::System::dup2(pipe_fds[1], STDOUT_FILENO));
 
-        Vector<char const*> file_operation_args;
+        Vector<StringView> file_operation_args;
         file_operation_args.append("/bin/FileOperation");
 
         switch (operation) {
@@ -68,17 +68,12 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<String> const& 
         }
 
         for (auto& source : sources)
-            file_operation_args.append(source.characters());
+            file_operation_args.append(source.view());
 
         if (operation != FileOperation::Delete)
-            file_operation_args.append(destination.characters());
+            file_operation_args.append(destination.view());
 
-        file_operation_args.append(nullptr);
-
-        if (execvp(file_operation_args.first(), const_cast<char**>(file_operation_args.data())) < 0) {
-            perror("execvp");
-            _exit(1);
-        }
+        TRY(Core::System::exec(file_operation_args.first(), file_operation_args, Core::System::SearchInPath::Yes));
         VERIFY_NOT_REACHED();
     } else {
         TRY(Core::System::close(pipe_fds[1]));
