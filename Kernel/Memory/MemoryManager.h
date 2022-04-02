@@ -22,6 +22,7 @@
 
 namespace Kernel {
 class PageDirectoryEntry;
+class PageTableEntry;
 }
 
 struct KmallocGlobalData;
