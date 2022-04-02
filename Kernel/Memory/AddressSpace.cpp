@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/CPU.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
