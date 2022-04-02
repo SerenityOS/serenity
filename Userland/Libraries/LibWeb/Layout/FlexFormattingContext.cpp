@@ -48,8 +48,6 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
 
     // This implements https://www.w3.org/TR/css-flexbox-1/#layout-algorithm
 
-    // FIXME: Implement reverse and ordering.
-
     // 1. Generate anonymous flex items
     generate_anonymous_flex_items();
 
@@ -203,13 +201,25 @@ void FlexFormattingContext::generate_anonymous_flex_items()
     });
 
     auto keys = order_item_bucket.keys();
-    quick_sort(keys, [](auto& a, auto& b) { return a < b; });
+
+    if (is_direction_reverse()) {
+        quick_sort(keys, [](auto& a, auto& b) { return a > b; });
+    } else {
+        quick_sort(keys, [](auto& a, auto& b) { return a < b; });
+    }
 
     for (auto key : keys) {
         auto order_bucket = order_item_bucket.get(key);
         if (order_bucket.has_value()) {
-            for (auto flex_item : order_bucket.value()) {
-                m_flex_items.append(move(flex_item));
+            auto items = order_bucket.value();
+            if (is_direction_reverse()) {
+                for (auto flex_item : items.in_reverse()) {
+                    m_flex_items.append(move(flex_item));
+                }
+            } else {
+                for (auto flex_item : items) {
+                    m_flex_items.append(move(flex_item));
+                }
             }
         }
     }
