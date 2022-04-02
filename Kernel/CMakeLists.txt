@@ -397,6 +397,8 @@ else()
         Arch/aarch64/UART.cpp
         Arch/aarch64/Utils.cpp
 
+        Arch/aarch64/Dummy.cpp
+
         # Preload specific
         Arch/aarch64/init.cpp
         Arch/aarch64/PrekernelMMU.cpp

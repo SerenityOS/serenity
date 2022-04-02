@@ -9,22 +9,10 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Sections.h>
 
-// init.cpp
-extern size_t __stack_chk_guard;
-READONLY_AFTER_INIT size_t __stack_chk_guard;
-
 // This is a temporary file to get a non-empty Kernel binary on aarch64.
 // The prekernel currently never jumps to the kernel. This is dead code.
 void dummy();
 void dummy() { }
-
-// Assertions.h
-[[noreturn]] void __assertion_failed(char const*, char const*, unsigned, char const*);
-
-[[noreturn]] void __assertion_failed(char const*, char const*, unsigned, char const*)
-{
-    for (;;) { }
-}
 
 // kmalloc.h
 size_t kmalloc_good_size(size_t);
