@@ -32,7 +32,9 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
     size_t pushed_scope_count = 0;
     auto const failing_completion = Completion(Completion::Type::Throw, {}, {});
 
-    if (is<BlockStatement>(*this) || is<SwitchStatement>(*this)) {
+    // Note: SwitchStatement has its own codegen, but still calls into this function to handle the scoping of the switch body.
+    auto is_switch_statement = is<SwitchStatement>(*this);
+    if (is<BlockStatement>(*this) || is_switch_statement) {
         // Perform the steps of BlockDeclarationInstantiation.
         if (has_lexical_declarations()) {
             generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Block);
@@ -59,6 +61,10 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
 
             return {};
         });
+
+        if (is_switch_statement)
+            return {};
+
     } else if (is<Program>(*this)) {
         // Perform the steps of GlobalDeclarationInstantiation.
         generator.begin_variable_scope(Bytecode::Generator::BindingMode::Global, Bytecode::Generator::SurroundingScopeKind::Global);
@@ -1615,7 +1621,13 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_bytecode(Bytecod
     Vector<Bytecode::BasicBlock&> case_blocks;
     Bytecode::BasicBlock* default_block { nullptr };
     Bytecode::BasicBlock* next_test_block = &generator.make_block();
+
+    auto has_lexical_block = has_lexical_declarations();
+    // Note: This call ends up calling begin_variable_scope() if has_lexical_block is true, so we need to clean up after it at the end.
+    TRY(ScopeNode::generate_bytecode(generator));
+
     generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { *next_test_block }, {});
+
     for (auto& switch_case : m_cases) {
         auto& case_block = generator.make_block();
         if (switch_case.test()) {
@@ -1661,6 +1673,8 @@ Bytecode::CodeGenerationErrorOr<void> SwitchStatement::generate_bytecode(Bytecod
         current_block++;
     }
     generator.end_breakable_scope();
+    if (has_lexical_block)
+        generator.end_variable_scope();
 
     generator.switch_to_basic_block(end_block);
     return {};
