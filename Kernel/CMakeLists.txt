@@ -422,6 +422,8 @@ else()
         MiniStdLib.cpp
         Prekernel/UBSanitizer.cpp
 
+        Heap/kmalloc.cpp
+
         Memory/AddressSpace.cpp
         Memory/AnonymousVMObject.cpp
         Memory/InodeVMObject.cpp
