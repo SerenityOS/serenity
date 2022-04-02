@@ -6,11 +6,9 @@
 
 #pragma once
 
+#include <AK/Platform.h>
 #include <AK/Types.h>
 #include <Kernel/VirtualAddress.h>
-
-#include <AK/Platform.h>
-VALIDATE_IS_X86()
 
 namespace Kernel {
 

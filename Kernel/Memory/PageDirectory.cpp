@@ -6,6 +6,8 @@
 
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
+#include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Prekernel/Prekernel.h>
