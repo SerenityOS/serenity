@@ -36,6 +36,10 @@ void Game::reset_paddles()
 
 void Game::reset()
 {
+    // Make sure the current ball disappears.
+    update(enclosing_int_rect(m_ball.rect()));
+
+    reset_scores();
     reset_ball(1);
     reset_paddles();
 }
@@ -128,6 +132,16 @@ void Game::track_mouse_move(Gfx::IntPoint const& point)
         m_player1_paddle.moving_down = true;
     }
     update(cursor_paddle_target_rect());
+}
+
+void Game::reset_scores()
+{
+    // Clearing the scores first would lead to overly narrow rects for multi-digit scores.
+    update(player_1_score_rect());
+    update(player_2_score_rect());
+
+    m_player_1_score = 0;
+    m_player_2_score = 0;
 }
 
 void Game::reset_ball(int serve_to_player)
