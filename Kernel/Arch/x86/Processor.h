@@ -158,6 +158,11 @@ public:
         return *g_total_processors.ptr();
     }
 
+    ALWAYS_INLINE static u64 read_cpu_counter()
+    {
+        return read_tsc();
+    }
+
     ALWAYS_INLINE static void pause()
     {
         asm volatile("pause");

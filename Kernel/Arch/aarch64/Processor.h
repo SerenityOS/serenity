@@ -63,6 +63,8 @@ public:
         return 0;
     }
 
+    ALWAYS_INLINE static u64 read_cpu_counter() { return 0; }
+
     ALWAYS_INLINE static void enter_critical() { }
     ALWAYS_INLINE static void leave_critical() { }
     ALWAYS_INLINE static u32 in_critical()
