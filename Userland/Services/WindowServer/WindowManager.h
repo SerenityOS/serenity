@@ -336,6 +336,8 @@ public:
 
     bool is_cursor_highlight_enabled() const { return m_cursor_highlight_radius > 0 && m_cursor_highlight_enabled; }
 
+    RefPtr<KeymapSwitcher> keymap_switcher() { return m_keymap_switcher; }
+
 private:
     explicit WindowManager(Gfx::PaletteImpl const&);
 

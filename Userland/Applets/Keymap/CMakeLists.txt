@@ -6,6 +6,7 @@ serenity_component(
 
 set(SOURCES
     KeymapStatusWindow.cpp
+    KeymapStatusWidget.cpp
     main.cpp
 )
 
