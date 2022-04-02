@@ -80,7 +80,6 @@ UNMAP_AFTER_INIT MemoryManager::MemoryManager()
     SpinlockLocker lock(s_mm_lock);
     parse_memory_map();
 
-    //FIXME: There is no thread context here
     activate_kernel_page_directory(kernel_page_directory());
     protect_kernel_image();
 

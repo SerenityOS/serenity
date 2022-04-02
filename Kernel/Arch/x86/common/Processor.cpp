@@ -29,7 +29,6 @@
 #include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 
-#include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 
 namespace Kernel {
