@@ -11,12 +11,12 @@
 #include <AK/Function.h>
 #include <AK/Types.h>
 
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/DeferredCallEntry.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 #include <Kernel/Arch/x86/ASM_wrapper.h>
 #include <Kernel/Arch/x86/CPUID.h>
 #include <Kernel/Arch/x86/DescriptorTable.h>
-#include <Kernel/Arch/x86/PageDirectory.h>
 #include <Kernel/Arch/x86/TSS.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
@@ -178,7 +178,7 @@ public:
     }
 
     static void flush_tlb_local(VirtualAddress vaddr, size_t page_count);
-    static void flush_tlb(Memory::PageDirectory const*, VirtualAddress, size_t);
+    static void flush_tlb(Memory::PageDirectory const*, VirtualAddress const& vaddr, size_t);
 
     Descriptor& get_gdt_entry(u16 selector);
     void flush_gdt();
@@ -396,6 +396,11 @@ public:
     static u32 smp_wake_n_idle_processors(u32 wake_count);
 
     static void deferred_call_queue(Function<void()> callback);
+
+    ALWAYS_INLINE bool has_nx() const
+    {
+        return has_feature(CPUFeature::NX);
+    }
 
     ALWAYS_INLINE bool has_feature(CPUFeature::Type const& feature) const
     {

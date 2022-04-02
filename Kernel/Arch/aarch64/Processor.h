@@ -11,9 +11,14 @@
 #include <AK/Function.h>
 #include <AK/Types.h>
 
+class VirtualAddress;
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 
 namespace Kernel {
+
+namespace Memory {
+    class PageDirectory;
+};
 
 class Thread;
 
@@ -46,6 +51,20 @@ public:
     ALWAYS_INLINE static Thread* current_thread()
     {
         return 0;
+    }
+
+    ALWAYS_INLINE static void flush_tlb_local(VirtualAddress&, size_t&)
+    {
+    }
+
+    ALWAYS_INLINE static void flush_tlb(Memory::PageDirectory const*, VirtualAddress const &, size_t)
+    {
+
+    }
+
+    ALWAYS_INLINE bool has_nx() const
+    {
+        return true;
     }
 
     ALWAYS_INLINE static FlatPtr current_in_irq()

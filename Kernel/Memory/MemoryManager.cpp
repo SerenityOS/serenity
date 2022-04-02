@@ -7,7 +7,8 @@
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
-#include <Kernel/Arch/x86/PageFault.h>
+#include <Kernel/Arch/PageDirectory.h>
+#include <Kernel/Arch/PageFault.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/FileSystem/Inode.h>
@@ -104,7 +105,7 @@ UNMAP_AFTER_INIT void MemoryManager::protect_kernel_image()
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
-    if (Processor::current().has_feature(CPUFeature::NX)) {
+    if (Processor::current().has_nx()) {
         // Disable execution of the kernel data, bss and heap segments.
         for (auto const* i = start_of_kernel_data; i < end_of_kernel_image; i += PAGE_SIZE) {
             auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
@@ -466,7 +467,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
             pte.set_physical_page_base(physical_page_array_current_page);
             pte.set_user_allowed(false);
             pte.set_writable(true);
-            if (Processor::current().has_feature(CPUFeature::NX))
+            if (Processor::current().has_nx())
                 pte.set_execute_disabled(false);
             pte.set_global(true);
             pte.set_present(true);
@@ -1023,6 +1024,13 @@ void MemoryManager::enter_address_space(AddressSpace& space)
     SpinlockLocker lock(s_mm_lock);
 
     current_thread->regs().cr3 = space.page_directory().cr3();
+
+#error "HERE"
+    // Delete calls to regs().cr3
+    current_thread->regs().set_page_directory(space.page_directory());
+    // Replace write_cr3 with calls to Processor::activate_page_directory
+    Processor::activate_page_directory(space.page_directory());
+
     write_cr3(space.page_directory().cr3());
 }
 

@@ -412,6 +412,8 @@ else()
         Arch/aarch64/ScopedCritical.cpp
         MiniStdLib.cpp
         Prekernel/UBSanitizer.cpp
+
+        Memory/MemoryManager.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'

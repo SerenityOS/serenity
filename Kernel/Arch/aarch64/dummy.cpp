@@ -7,7 +7,7 @@
 #include <AK/Types.h>
 #include <Kernel/KString.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Sections.h>
+//FIXME #include <Kernel/Sections.h>
 
 // init.cpp
 extern size_t __stack_chk_guard;
