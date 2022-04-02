@@ -26,10 +26,10 @@ static IntrusiveRedBlackTree<&PageDirectory::m_tree_node>& cr3_map()
     return *s_cr3_map;
 }
 
-RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
+RefPtr<PageDirectory> PageDirectory::find_current()
 {
     SpinlockLocker lock(s_mm_lock);
-    return cr3_map().find(cr3);
+    return cr3_map().find(read_cr3());
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_page_directory()

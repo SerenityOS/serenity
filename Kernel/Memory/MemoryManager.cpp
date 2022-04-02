@@ -7,6 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
+#include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/BootInfo.h>
@@ -78,7 +79,9 @@ UNMAP_AFTER_INIT MemoryManager::MemoryManager()
 
     SpinlockLocker lock(s_mm_lock);
     parse_memory_map();
-    write_cr3(kernel_page_directory().cr3());
+
+    //FIXME: There is no thread context here
+    activate_kernel_page_directory(kernel_page_directory());
     protect_kernel_image();
 
     // We're temporarily "committing" to two pages that we need to allocate below
@@ -710,7 +713,7 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
 {
     if (auto* region = kernel_region_from_vaddr(vaddr))
         return region;
-    auto page_directory = PageDirectory::find_by_cr3(read_cr3());
+    auto page_directory = PageDirectory::find_current();
     if (!page_directory)
         return nullptr;
     VERIFY(page_directory->address_space());
@@ -1023,15 +1026,7 @@ void MemoryManager::enter_address_space(AddressSpace& space)
     VERIFY(current_thread != nullptr);
     SpinlockLocker lock(s_mm_lock);
 
-    current_thread->regs().cr3 = space.page_directory().cr3();
-
-#error "HERE"
-    // Delete calls to regs().cr3
-    current_thread->regs().set_page_directory(space.page_directory());
-    // Replace write_cr3 with calls to Processor::activate_page_directory
-    Processor::activate_page_directory(space.page_directory());
-
-    write_cr3(space.page_directory().cr3());
+    activate_page_directory(space.page_directory(), current_thread);
 }
 
 void MemoryManager::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
@@ -1041,6 +1036,8 @@ void MemoryManager::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 
 void MemoryManager::flush_tlb(PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
 {
+    //FIXME: Remove page_directory from the call - processor should not know about it!
+    //       Move into platform specific PageDirectory file if platform specific info is needed
     Processor::flush_tlb(page_directory, vaddr, page_count);
 }
 

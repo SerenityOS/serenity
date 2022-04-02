@@ -23,9 +23,11 @@
 
 #include <LibC/mallocdefs.h>
 
+#include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/RegisterState.h>
+#include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Arch/x86/ISRStubs.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 
@@ -173,7 +175,7 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
 
 // clang-format on
 
-static void dump(RegisterState const& regs)
+void dump_registers(RegisterState const& regs)
 {
 #if ARCH(I386)
     u16 ss;
@@ -215,34 +217,7 @@ static void dump(RegisterState const& regs)
 #endif
 }
 
-void handle_crash(RegisterState const& regs, char const* description, int signal, bool out_of_memory)
-{
-    auto* current_thread = Thread::current();
-    if (!current_thread)
-        PANIC("{} with !Thread::current()", description);
 
-    auto crashed_in_kernel = (regs.cs & 3) == 0;
-    if (!crashed_in_kernel && current_thread->has_signal_handler(signal) && !current_thread->should_ignore_signal(signal) && !current_thread->is_signal_masked(signal)) {
-        current_thread->send_urgent_signal_to_self(signal);
-        return;
-    }
-
-    auto& process = current_thread->process();
-
-    // If a process crashed while inspecting another process,
-    // make sure we switch back to the right page tables.
-    Memory::MemoryManager::enter_process_address_space(process);
-
-    dmesgln("CRASH: CPU #{} {} in ring {}", Processor::current_id(), description, (regs.cs & 3));
-    dump(regs);
-
-    if (crashed_in_kernel) {
-        process.address_space().dump_regions();
-        PANIC("Crash in ring 0");
-    }
-
-    process.crash(signal, regs.ip(), out_of_memory);
-}
 
 EH_ENTRY_NO_CODE(6, illegal_instruction);
 void illegal_instruction_handler(TrapFrame* trap)
@@ -294,7 +269,7 @@ void page_fault_handler(TrapFrame* trap)
             regs.exception_code & 2 ? "write" : "read",
             VirtualAddress(fault_address));
 
-        dump(regs);
+        dump_registers(regs);
     }
 
     bool faulted_in_kernel = !(regs.cs & 3);

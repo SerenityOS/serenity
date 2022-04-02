@@ -19,6 +19,7 @@ set(KERNEL_HEAP_SOURCES
 
 set(KERNEL_SOURCES
     AddressSanitizer.cpp
+    Arch/Interrupts.cpp
     Bus/PCI/Controller/HostBridge.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
     Bus/PCI/Controller/VolumeManagementDevice.cpp
@@ -324,6 +325,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPUID.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/PageDirectory.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ProcessorInfo.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/SafeMem.cpp
