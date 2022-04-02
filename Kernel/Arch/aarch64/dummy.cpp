@@ -18,6 +18,8 @@ void dummy() { }
 size_t kmalloc_good_size(size_t);
 size_t kmalloc_good_size(size_t) { return 0; }
 
+void* kcalloc(unsigned long, unsigned long) { return nullptr; }
+
 void kfree_sized(void*, size_t);
 void kfree_sized(void*, size_t) { }
 
@@ -26,6 +28,21 @@ void* kmalloc(size_t) { return nullptr; }
 
 void* operator new(size_t size) { return kmalloc(size); }
 void* operator new(size_t size, std::align_val_t) { return kmalloc(size); }
+
+void* operator new(size_t, std::nothrow_t const&) noexcept { return nullptr; }
+void* operator new(size_t, std::align_val_t, std::nothrow_t const&) noexcept { return nullptr; }
+void* operator new[](size_t) { return (void*)0xdeadbeef; }
+void* operator new[](size_t, std::nothrow_t const&) noexcept { return nullptr; }
+
+void operator delete(void*) noexcept { }
+void operator delete(void*, size_t) noexcept { }
+void operator delete(void*, size_t, std::align_val_t) noexcept { }
+void operator delete[](void*) noexcept { }
+void operator delete[](void*, size_t) noexcept { }
+
+namespace std {
+const nothrow_t nothrow;
+}
 
 namespace Kernel {
 
