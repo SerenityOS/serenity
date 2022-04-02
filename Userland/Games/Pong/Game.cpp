@@ -36,6 +36,11 @@ void Game::reset_paddles()
 
 void Game::reset()
 {
+    if (m_game_over) {
+        m_game_over = false;
+        start_timer(16);
+    }
+
     // Make sure the current ball disappears.
     update(enclosing_int_rect(m_ball.rect()));
 
@@ -162,7 +167,7 @@ void Game::reset_ball(int serve_to_player)
     m_ball.velocity = { velocity_x, velocity_y };
 }
 
-void Game::game_over(int winner)
+void Game::show_game_over_message(int winner)
 {
     GUI::MessageBox::show(window(), String::formatted("Player {} wins!", winner), "Pong", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OK);
 }
@@ -183,7 +188,8 @@ void Game::round_over(int winner)
     }
 
     if (m_player_1_score == m_score_to_win || m_player_2_score == m_score_to_win) {
-        game_over(winner);
+        m_game_over = true;
+        show_game_over_message(winner);
         return;
     }
 
