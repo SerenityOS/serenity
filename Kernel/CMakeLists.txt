@@ -390,6 +390,8 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     )
 else()
     set(SOURCES
+        ${AK_SOURCES}
+
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/GPIO.cpp
