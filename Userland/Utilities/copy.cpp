@@ -25,7 +25,7 @@ struct Options {
 static Options parse_options(Main::Arguments arguments)
 {
     char const* type = "text/plain";
-    Vector<char const*> text;
+    Vector<String> text;
     bool clear = false;
 
     Core::ArgsParser args_parser;

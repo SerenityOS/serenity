@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 #endif
 
     bool inplace = false;
-    Vector<char const*> files;
+    Vector<String> files;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Format GML files.");

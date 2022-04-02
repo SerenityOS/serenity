@@ -101,7 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio"));
 
-    Vector<char const*> text;
+    Vector<String> text;
     bool no_trailing_newline = false;
     bool should_interpret_backslash_escapes = false;
 
