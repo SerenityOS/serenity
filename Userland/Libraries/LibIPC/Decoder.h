@@ -67,6 +67,24 @@ public:
         return {};
     }
 
+    template<typename K, typename V>
+    ErrorOr<void> decode(OrderedHashMap<K, V>& hashmap)
+    {
+        u32 size;
+        TRY(decode(size));
+        if (size > NumericLimits<i32>::max())
+            return Error::from_string_literal("IPC: Invalid HashMap size"sv);
+
+        for (size_t i = 0; i < size; ++i) {
+            K key;
+            TRY(decode(key));
+            V value;
+            TRY(decode(value));
+            TRY(hashmap.try_set(move(key), move(value)));
+        }
+        return {};
+    }
+
     template<Enum T>
     ErrorOr<void> decode(T& enum_value)
     {
