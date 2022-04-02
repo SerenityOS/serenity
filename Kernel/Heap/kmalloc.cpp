@@ -6,6 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Heap/Heap.h>
 #include <Kernel/Heap/kmalloc.h>

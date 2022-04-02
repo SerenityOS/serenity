@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/DistinctNumeric.h>
 
 namespace AK {

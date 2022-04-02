@@ -6,6 +6,7 @@
 
 #include <AK/Memory.h>
 #include <AK/StringView.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
