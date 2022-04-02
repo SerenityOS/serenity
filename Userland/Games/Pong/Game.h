@@ -44,7 +44,7 @@ private:
     void reset_paddles();
     void tick();
     void round_over(int player);
-    void game_over(int player);
+    void show_game_over_message(int player);
     void calculate_move();
 
     struct Ball {
@@ -113,6 +113,8 @@ private:
     Optional<int> m_cursor_paddle_target_y;
     bool m_up_key_held = false;
     bool m_down_key_held = false;
+
+    bool m_game_over = false;
 };
 
 }
