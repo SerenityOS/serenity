@@ -60,6 +60,11 @@ public:
         return 0;
     }
 
+    ALWAYS_INLINE static Thread* idle_thread()
+    {
+        return nullptr;
+    }
+
     ALWAYS_INLINE static Processor& current() { VERIFY_NOT_REACHED(); }
 
     static void deferred_call_queue(Function<void()> /* callback */) { }
