@@ -67,17 +67,15 @@ ErrorOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (backlog < 0)
         return EINVAL;
-    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
-        auto description = TRY(fds.open_file_description(sockfd));
-        if (!description->is_socket())
-            return ENOTSOCK;
-        auto& socket = *description->socket();
-        REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-        if (socket.is_connected())
-            return EINVAL;
-        TRY(socket.listen(backlog));
-        return 0;
-    });
+    auto description = TRY(open_file_description(sockfd));
+    if (!description->is_socket())
+        return ENOTSOCK;
+    auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
+    if (socket.is_connected())
+        return EINVAL;
+    TRY(socket.listen(backlog));
+    return 0;
 }
 
 ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const*> user_params)
