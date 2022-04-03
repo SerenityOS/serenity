@@ -47,9 +47,9 @@ public:
     void delete_all_regions_assuming_they_are_unmapped();
 
 private:
-    ErrorOr<VirtualRange> try_allocate_anywhere(size_t size, size_t alignment = PAGE_SIZE);
-    ErrorOr<VirtualRange> try_allocate_specific(VirtualAddress base, size_t size);
-    ErrorOr<VirtualRange> try_allocate_randomized(size_t size, size_t alignment = PAGE_SIZE);
+    ErrorOr<VirtualRange> allocate_range_anywhere(size_t size, size_t alignment = PAGE_SIZE);
+    ErrorOr<VirtualRange> allocate_range_specific(VirtualAddress base, size_t size);
+    ErrorOr<VirtualRange> allocate_range_randomized(size_t size, size_t alignment = PAGE_SIZE);
 
     Spinlock m_lock;
 

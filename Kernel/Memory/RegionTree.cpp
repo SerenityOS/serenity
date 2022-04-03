@@ -27,7 +27,7 @@ void RegionTree::delete_all_regions_assuming_they_are_unmapped()
     }
 }
 
-ErrorOr<VirtualRange> RegionTree::try_allocate_anywhere(size_t size, size_t alignment)
+ErrorOr<VirtualRange> RegionTree::allocate_range_anywhere(size_t size, size_t alignment)
 {
     if (!size)
         return EINVAL;
@@ -78,7 +78,7 @@ ErrorOr<VirtualRange> RegionTree::try_allocate_anywhere(size_t size, size_t alig
     return ENOMEM;
 }
 
-ErrorOr<VirtualRange> RegionTree::try_allocate_specific(VirtualAddress base, size_t size)
+ErrorOr<VirtualRange> RegionTree::allocate_range_specific(VirtualAddress base, size_t size)
 {
     if (!size)
         return EINVAL;
@@ -119,7 +119,7 @@ ErrorOr<VirtualRange> RegionTree::try_allocate_specific(VirtualAddress base, siz
     return range;
 }
 
-ErrorOr<VirtualRange> RegionTree::try_allocate_randomized(size_t size, size_t alignment)
+ErrorOr<VirtualRange> RegionTree::allocate_range_randomized(size_t size, size_t alignment)
 {
     if (!size)
         return EINVAL;
@@ -135,12 +135,12 @@ ErrorOr<VirtualRange> RegionTree::try_allocate_randomized(size_t size, size_t al
         if (!m_total_range.contains(random_address, size))
             continue;
 
-        auto range_or_error = try_allocate_specific(random_address, size);
+        auto range_or_error = allocate_range_specific(random_address, size);
         if (!range_or_error.is_error())
             return range_or_error.release_value();
     }
 
-    return try_allocate_anywhere(size, alignment);
+    return allocate_range_anywhere(size, alignment);
 }
 
 ErrorOr<NonnullOwnPtr<Region>> RegionTree::allocate_unbacked_anywhere(size_t size, size_t alignment)
@@ -153,7 +153,7 @@ ErrorOr<NonnullOwnPtr<Region>> RegionTree::allocate_unbacked_anywhere(size_t siz
 ErrorOr<void> RegionTree::place_anywhere(Region& region, RandomizeVirtualAddress randomize_virtual_address, size_t size, size_t alignment)
 {
     SpinlockLocker locker(m_lock);
-    auto range = TRY(randomize_virtual_address == RandomizeVirtualAddress::Yes ? try_allocate_randomized(size, alignment) : try_allocate_anywhere(size, alignment));
+    auto range = TRY(randomize_virtual_address == RandomizeVirtualAddress::Yes ? allocate_range_randomized(size, alignment) : allocate_range_anywhere(size, alignment));
     region.m_range = range;
     m_regions.insert(region.vaddr().get(), region);
     return {};
@@ -162,7 +162,7 @@ ErrorOr<void> RegionTree::place_anywhere(Region& region, RandomizeVirtualAddress
 ErrorOr<void> RegionTree::place_specifically(Region& region, VirtualRange const& range)
 {
     SpinlockLocker locker(m_lock);
-    auto allocated_range = TRY(try_allocate_specific(range.base(), range.size()));
+    auto allocated_range = TRY(allocate_range_specific(range.base(), range.size()));
     region.m_range = allocated_range;
     m_regions.insert(region.vaddr().get(), region);
     return {};
