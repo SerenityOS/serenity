@@ -68,8 +68,8 @@ public:
     void blit_dimmed(IntPoint const&, Gfx::Bitmap const&, IntRect const& src_rect);
     void blit_brightened(IntPoint const&, Gfx::Bitmap const&, IntRect const& src_rect);
     void blit_filtered(IntPoint const&, Gfx::Bitmap const&, IntRect const& src_rect, Function<Color(Color)>);
-    void draw_tiled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&);
-    void blit_offset(IntPoint const&, Gfx::Bitmap const&, IntRect const& src_rect, IntPoint const&);
+    void draw_tiled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&, float = 1.0f);
+    void blit_offset(IntPoint const&, Gfx::Bitmap const&, IntRect const& src_rect, IntPoint const&, float = 1.0f);
     void blit_disabled(IntPoint const&, Gfx::Bitmap const&, IntRect const&, Palette const&);
     void blit_tiled(IntRect const&, Gfx::Bitmap const&, IntRect const& src_rect);
     void draw_text(IntRect const&, StringView, Font const&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::DontWrap);

@@ -936,7 +936,7 @@ void Painter::blit_dimmed(IntPoint const& position, Gfx::Bitmap const& source, I
     });
 }
 
-void Painter::draw_tiled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& source)
+void Painter::draw_tiled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& source, float opacity)
 {
     VERIFY((source.scale() == 1 || source.scale() == scale()) && "draw_tiled_bitmap only supports integer upsampling");
 
@@ -944,6 +944,11 @@ void Painter::draw_tiled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& so
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
+
+    if (opacity < 1.0f) {
+dbgln("draw_tiled_bitmap with opacity {}", opacity);
+        return;
+    }
 
     int scale = this->scale();
     clipped_rect *= scale;
@@ -982,7 +987,7 @@ void Painter::draw_tiled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& so
     VERIFY_NOT_REACHED();
 }
 
-void Painter::blit_offset(IntPoint const& a_position, Gfx::Bitmap const& source, IntRect const& a_src_rect, IntPoint const& offset)
+void Painter::blit_offset(IntPoint const& a_position, Gfx::Bitmap const& source, IntRect const& a_src_rect, IntPoint const& offset, float opacity)
 {
     auto src_rect = IntRect { a_src_rect.location() - offset, a_src_rect.size() };
     auto position = a_position;
@@ -994,7 +999,7 @@ void Painter::blit_offset(IntPoint const& a_position, Gfx::Bitmap const& source,
         position.set_y(position.y() - src_rect.y());
         src_rect.set_y(0);
     }
-    blit(position, source, src_rect);
+    blit(position, source, src_rect, opacity);
 }
 
 void Painter::blit(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& a_src_rect, float opacity, bool apply_alpha)
