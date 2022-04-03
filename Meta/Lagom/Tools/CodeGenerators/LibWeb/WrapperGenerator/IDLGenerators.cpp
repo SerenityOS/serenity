@@ -1530,7 +1530,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     auto fetched_arguments = 0u;
     for (auto i = 0u; i < overloaded_functions.size(); ++i) {
         auto const& overloaded_function = overloaded_functions[i];
-        auto argument_count = overloaded_function.length();
+        auto argument_count = overloaded_function.parameters.size();
 
         function_generator.set("argument_count", String::number(argument_count));
         function_generator.set("arguments_match_check", generate_arguments_match_check(overloaded_function));
