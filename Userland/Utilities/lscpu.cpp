@@ -14,8 +14,8 @@
 static void print_cpu_info(JsonObject const& value)
 {
     outln("CPU {}:", value.get("processor").as_u32());
-    outln("\tVendor ID: {}", value.get("cpuid").as_string());
-    outln("\tModel: {}", value.get("brand").as_string());
+    outln("\tVendor ID: {}", value.get("vendor_id").as_string());
+    outln("\tBrand: {}", value.get("brand").as_string());
     outln("\tFamily: {}", value.get("family").as_u32());
     outln("\tModel: {}", value.get("model").as_u32());
     outln("\tStepping: {}", value.get("stepping").as_u32());

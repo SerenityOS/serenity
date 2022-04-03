@@ -133,7 +133,7 @@ public:
             {
                 Vector<GUI::JsonArrayModel::FieldSpec> processors_field;
                 processors_field.empend("processor", "Processor", Gfx::TextAlignment::CenterRight);
-                processors_field.empend("cpuid", "CPUID", Gfx::TextAlignment::CenterLeft);
+                processors_field.empend("vendor_id", "Vendor ID", Gfx::TextAlignment::CenterLeft);
                 processors_field.empend("brand", "Brand", Gfx::TextAlignment::CenterLeft);
                 processors_field.empend("Features", Gfx::TextAlignment::CenterLeft, [](auto& object) {
                     StringBuilder builder;
