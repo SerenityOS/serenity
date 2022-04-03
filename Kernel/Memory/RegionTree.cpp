@@ -5,6 +5,7 @@
  */
 
 #include <AK/Format.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/RegionTree.h>
 #include <Kernel/Random.h>
 
@@ -143,9 +144,27 @@ ErrorOr<VirtualRange> RegionTree::try_allocate_randomized(size_t size, size_t al
 
 ErrorOr<NonnullOwnPtr<Region>> RegionTree::allocate_unbacked_anywhere(size_t size, size_t alignment)
 {
+    auto region = TRY(Region::create_unbacked());
+    TRY(place_anywhere(*region, size, alignment));
+    return region;
+}
+
+ErrorOr<void> RegionTree::place_anywhere(Region& region, size_t size, size_t alignment)
+{
     SpinlockLocker locker(m_lock);
     auto range = TRY(try_allocate_anywhere(size, alignment));
-    return Region::create_unbacked(range);
+    region.m_range = range;
+    m_regions.insert(region.vaddr().get(), region);
+    return {};
+}
+
+ErrorOr<void> RegionTree::place_specifically(Region& region, VirtualRange const& range)
+{
+    SpinlockLocker locker(m_lock);
+    auto allocated_range = TRY(try_allocate_specific(range.base(), range.size()));
+    region.m_range = allocated_range;
+    m_regions.insert(region.vaddr().get(), region);
+    return {};
 }
 
 }

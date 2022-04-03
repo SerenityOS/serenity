@@ -451,16 +451,13 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         // Carve out the whole page directory covering the kernel image to make MemoryManager::initialize_physical_pages() happy
         FlatPtr start_of_range = ((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
         FlatPtr end_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000;
-        auto reserved_range = MUST(m_region_tree.try_allocate_specific(VirtualAddress(start_of_range), end_of_range - start_of_range));
-        (void)MUST(Region::create_unbacked(reserved_range)).leak_ptr();
+        MUST(m_region_tree.place_specifically(*MUST(Region::create_unbacked()).leak_ptr(), VirtualRange { VirtualAddress(start_of_range), end_of_range - start_of_range }));
     }
 
     // Allocate a virtual address range for our array
+    // This looks awkward, but it basically creates a dummy region to occupy the address range permanently.
     auto range = MUST(m_region_tree.try_allocate_anywhere(physical_page_array_pages * PAGE_SIZE));
-
-    {
-        (void)MUST(Region::create_unbacked(range)).leak_ptr();
-    }
+    MUST(m_region_tree.place_specifically(*MUST(Region::create_unbacked()).leak_ptr(), range));
 
     // Now that we have our special m_physical_pages_region region with enough pages to hold the entire array
     // try to map the entire region into kernel space so we always have it
@@ -770,10 +767,14 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
 ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
-    SpinlockLocker lock(kernel_page_directory().get_lock());
+    OwnPtr<KString> name_kstring;
+    if (!name.is_null())
+        name_kstring = TRY(KString::try_create(name));
     auto vmobject = TRY(AnonymousVMObject::try_create_physically_contiguous_with_size(size));
-    auto range = TRY(m_region_tree.try_allocate_anywhere(size));
-    return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
+    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
+    TRY(m_region_tree.place_anywhere(*region, size));
+    TRY(region->map(kernel_page_directory()));
+    return region;
 }
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page)
@@ -809,27 +810,25 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(
 ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
+    OwnPtr<KString> name_kstring;
+    if (!name.is_null())
+        name_kstring = TRY(KString::try_create(name));
     auto vmobject = TRY(AnonymousVMObject::try_create_with_size(size, strategy));
-    SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range = TRY(m_region_tree.try_allocate_anywhere(size));
-    return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
+    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
+    TRY(m_region_tree.place_anywhere(*region, size));
+    TRY(region->map(kernel_page_directory()));
+    return region;
 }
 
 ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
     auto vmobject = TRY(AnonymousVMObject::try_create_for_physical_range(paddr, size));
-    SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range = TRY(m_region_tree.try_allocate_anywhere(size));
-    return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
-}
-
-ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
-{
     OwnPtr<KString> name_kstring;
     if (!name.is_null())
         name_kstring = TRY(KString::try_create(name));
-    auto region = TRY(Region::try_create_kernel_only(range, vmobject, 0, move(name_kstring), access, cacheable));
+    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
+    TRY(m_region_tree.place_anywhere(*region, size, PAGE_SIZE));
     TRY(region->map(kernel_page_directory()));
     return region;
 }
@@ -837,9 +836,15 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobje
 ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
-    SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range = TRY(m_region_tree.try_allocate_anywhere(size));
-    return allocate_kernel_region_with_vmobject(range, vmobject, name, access, cacheable);
+
+    OwnPtr<KString> name_kstring;
+    if (!name.is_null())
+        name_kstring = TRY(KString::try_create(name));
+
+    auto region = TRY(Region::create_unplaced(vmobject, 0, move(name_kstring), access, cacheable));
+    TRY(m_region_tree.place_anywhere(*region, size));
+    TRY(region->map(kernel_page_directory()));
+    return region;
 }
 
 ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_user_physical_pages(size_t page_count)
@@ -1155,13 +1160,6 @@ bool MemoryManager::validate_user_stack(AddressSpace& space, VirtualAddress vadd
 {
     SpinlockLocker lock(space.get_lock());
     return validate_user_stack_no_lock(space, vaddr);
-}
-
-void MemoryManager::register_kernel_region(Region& region)
-{
-    VERIFY(region.is_kernel());
-    SpinlockLocker lock(s_mm_lock);
-    m_region_tree.regions().insert(region.vaddr().get(), region);
 }
 
 void MemoryManager::unregister_kernel_region(Region& region)

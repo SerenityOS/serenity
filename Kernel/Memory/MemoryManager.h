@@ -135,6 +135,7 @@ class MemoryManager {
     friend class PageDirectory;
     friend class AnonymousVMObject;
     friend class Region;
+    friend class RegionTree;
     friend class VMObject;
     friend struct ::KmallocGlobalData;
 
@@ -187,7 +188,6 @@ public:
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(size_t, StringView name, Region::Access access, AllocationStrategy strategy = AllocationStrategy::Reserve, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region_with_vmobject(VMObject&, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
-    ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region_with_vmobject(VirtualRange const&, VMObject&, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
 
     struct SystemMemoryInfo {
         PhysicalSize user_physical_pages { 0 };
@@ -255,7 +255,6 @@ private:
     void initialize_physical_pages();
     void register_reserved_ranges();
 
-    void register_kernel_region(Region&);
     void unregister_kernel_region(Region&);
 
     void protect_kernel_image();

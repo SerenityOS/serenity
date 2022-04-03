@@ -22,11 +22,21 @@
 
 namespace Kernel::Memory {
 
-Region::Region(VirtualRange const& range)
-    : m_range(range)
+Region::Region()
+    : m_range(VirtualRange({}, 0))
 {
-    if (is_kernel())
-        MM.register_kernel_region(*this);
+}
+
+Region::Region(NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+    : m_range(VirtualRange({}, 0))
+    , m_offset_in_vmobject(offset_in_vmobject)
+    , m_vmobject(move(vmobject))
+    , m_name(move(name))
+    , m_access(access | ((access & 0x7) << 4))
+    , m_shared(shared)
+    , m_cacheable(cacheable == Cacheable::Yes)
+{
+    m_vmobject->add_region(*this);
 }
 
 Region::Region(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
@@ -43,9 +53,6 @@ Region::Region(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size
     VERIFY((m_range.size() % PAGE_SIZE) == 0);
 
     m_vmobject->add_region(*this);
-
-    if (is_kernel())
-        MM.register_kernel_region(*this);
 }
 
 Region::~Region()
@@ -72,9 +79,14 @@ Region::~Region()
     }
 }
 
-ErrorOr<NonnullOwnPtr<Region>> Region::create_unbacked(VirtualRange const& range)
+ErrorOr<NonnullOwnPtr<Region>> Region::create_unbacked()
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) Region(range));
+    return adopt_nonnull_own_or_enomem(new (nothrow) Region);
+}
+
+ErrorOr<NonnullOwnPtr<Region>> Region::create_unplaced(NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) Region(move(vmobject), offset_in_vmobject, move(name), access, cacheable, false));
 }
 
 ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()

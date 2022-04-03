@@ -56,7 +56,8 @@ public:
 
     static ErrorOr<NonnullOwnPtr<Region>> try_create_user_accessible(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
     static ErrorOr<NonnullOwnPtr<Region>> try_create_kernel_only(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
-    static ErrorOr<NonnullOwnPtr<Region>> create_unbacked(VirtualRange const&);
+    static ErrorOr<NonnullOwnPtr<Region>> create_unbacked();
+    static ErrorOr<NonnullOwnPtr<Region>> create_unplaced(NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
 
     ~Region();
 
@@ -199,7 +200,8 @@ public:
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
 private:
-    explicit Region(VirtualRange const&);
+    Region();
+    Region(NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
     Region(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
 
     [[nodiscard]] bool remap_vmobject_page(size_t page_index, bool with_flush = true);
