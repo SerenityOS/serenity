@@ -404,7 +404,7 @@ else()
         Arch/aarch64/UART.cpp
         Arch/aarch64/Utils.cpp
 
-        Arch/aarch64/Dummy.cpp
+        Arch/aarch64/dummy.cpp
 
         # Preload specific
         Arch/aarch64/init.cpp
