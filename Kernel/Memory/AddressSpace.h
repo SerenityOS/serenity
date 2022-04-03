@@ -36,8 +36,8 @@ public:
     ErrorOr<void> unmap_mmap_range(VirtualAddress, size_t);
 
     ErrorOr<Region*> allocate_region_with_vmobject(VirtualRange requested_range, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
-    ErrorOr<Region*> allocate_region_with_vmobject(VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
-    ErrorOr<Region*> allocate_region(VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, StringView name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
+    ErrorOr<Region*> allocate_region_with_vmobject(RandomizeVirtualAddress, VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
+    ErrorOr<Region*> allocate_region(RandomizeVirtualAddress, VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, StringView name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
     void deallocate_region(Region& region);
     NonnullOwnPtr<Region> take_region(Region& region);
 

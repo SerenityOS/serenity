@@ -157,7 +157,7 @@ ErrorOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_re
     return new_region.leak_ptr();
 }
 
-ErrorOr<Region*> AddressSpace::allocate_region(VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, StringView name, int prot, AllocationStrategy strategy)
+ErrorOr<Region*> AddressSpace::allocate_region(RandomizeVirtualAddress randomize_virtual_address, VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, StringView name, int prot, AllocationStrategy strategy)
 {
     if (!requested_address.is_page_aligned())
         return EINVAL;
@@ -168,20 +168,21 @@ ErrorOr<Region*> AddressSpace::allocate_region(VirtualAddress requested_address,
         region_name = TRY(KString::try_create(name));
     auto vmobject = TRY(AnonymousVMObject::try_create_with_size(size, strategy));
     auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(region_name), prot_to_region_access_flags(prot)));
-    if (requested_address.is_null())
-        TRY(m_region_tree.place_anywhere(*region, size, alignment));
-    else
+    if (requested_address.is_null()) {
+        TRY(m_region_tree.place_anywhere(*region, randomize_virtual_address, size, alignment));
+    } else {
         TRY(m_region_tree.place_specifically(*region, VirtualRange { requested_address, size }));
+    }
     TRY(region->map(page_directory(), ShouldFlushTLB::No));
     return region.leak_ptr();
 }
 
 ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange requested_range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
 {
-    return allocate_region_with_vmobject(requested_range.base(), requested_range.size(), PAGE_SIZE, move(vmobject), offset_in_vmobject, name, prot, shared);
+    return allocate_region_with_vmobject(RandomizeVirtualAddress::Yes, requested_range.base(), requested_range.size(), PAGE_SIZE, move(vmobject), offset_in_vmobject, name, prot, shared);
 }
 
-ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
+ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(RandomizeVirtualAddress randomize_virtual_address, VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
 {
     if (!requested_address.is_page_aligned())
         return EINVAL;
@@ -210,7 +211,7 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualAddress requ
     SpinlockLocker locker(m_lock);
 
     if (requested_address.is_null())
-        TRY(m_region_tree.place_anywhere(*region, size, alignment));
+        TRY(m_region_tree.place_anywhere(*region, randomize_virtual_address, size, alignment));
     else
         TRY(m_region_tree.place_specifically(*region, VirtualRange { VirtualAddress { requested_address }, size }));
 

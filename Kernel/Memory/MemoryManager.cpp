@@ -457,7 +457,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     // Allocate a virtual address range for our array
     // This looks awkward, but it basically creates a dummy region to occupy the address range permanently.
     auto& region = *MUST(Region::create_unbacked()).leak_ptr();
-    MUST(m_region_tree.place_anywhere(region, physical_page_array_pages * PAGE_SIZE));
+    MUST(m_region_tree.place_anywhere(region, RandomizeVirtualAddress::No, physical_page_array_pages * PAGE_SIZE));
     auto range = region.range();
 
     // Now that we have our special m_physical_pages_region region with enough pages to hold the entire array
@@ -773,7 +773,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
         name_kstring = TRY(KString::try_create(name));
     auto vmobject = TRY(AnonymousVMObject::try_create_physically_contiguous_with_size(size));
     auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
-    TRY(m_region_tree.place_anywhere(*region, size));
+    TRY(m_region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size));
     TRY(region->map(kernel_page_directory()));
     return region;
 }
@@ -816,7 +816,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size
         name_kstring = TRY(KString::try_create(name));
     auto vmobject = TRY(AnonymousVMObject::try_create_with_size(size, strategy));
     auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
-    TRY(m_region_tree.place_anywhere(*region, size));
+    TRY(m_region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size));
     TRY(region->map(kernel_page_directory()));
     return region;
 }
@@ -829,7 +829,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(PhysicalAdd
     if (!name.is_null())
         name_kstring = TRY(KString::try_create(name));
     auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
-    TRY(m_region_tree.place_anywhere(*region, size, PAGE_SIZE));
+    TRY(m_region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size, PAGE_SIZE));
     TRY(region->map(kernel_page_directory()));
     return region;
 }
@@ -843,7 +843,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobje
         name_kstring = TRY(KString::try_create(name));
 
     auto region = TRY(Region::create_unplaced(vmobject, 0, move(name_kstring), access, cacheable));
-    TRY(m_region_tree.place_anywhere(*region, size));
+    TRY(m_region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size));
     TRY(region->map(kernel_page_directory()));
     return region;
 }

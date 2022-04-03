@@ -210,7 +210,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
             vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(rounded_size, strategy));
         }
 
-        region = TRY(address_space().allocate_region_with_vmobject(requested_range.base(), requested_range.size(), alignment, vmobject.release_nonnull(), 0, {}, prot, map_shared));
+        region = TRY(address_space().allocate_region_with_vmobject(map_randomized ? Memory::RandomizeVirtualAddress::Yes : Memory::RandomizeVirtualAddress::No, requested_range.base(), requested_range.size(), alignment, vmobject.release_nonnull(), 0, {}, prot, map_shared));
     } else {
         if (offset < 0)
             return EINVAL;
@@ -507,7 +507,7 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, 
     if (multiple_threads)
         return EINVAL;
 
-    auto* region = TRY(address_space().allocate_region({}, size, PAGE_SIZE, "Master TLS"sv, PROT_READ | PROT_WRITE));
+    auto* region = TRY(address_space().allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, size, PAGE_SIZE, "Master TLS"sv, PROT_READ | PROT_WRITE));
 
     m_master_tls_region = TRY(region->try_make_weak_ptr());
     m_master_tls_size = size;

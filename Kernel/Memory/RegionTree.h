@@ -15,6 +15,11 @@
 
 namespace Kernel::Memory {
 
+enum class RandomizeVirtualAddress {
+    No,
+    Yes,
+};
+
 class RegionTree {
     AK_MAKE_NONCOPYABLE(RegionTree);
     AK_MAKE_NONMOVABLE(RegionTree);
@@ -34,7 +39,7 @@ public:
 
     ErrorOr<NonnullOwnPtr<Region>> allocate_unbacked_anywhere(size_t size, size_t alignment = PAGE_SIZE);
 
-    ErrorOr<void> place_anywhere(Region&, size_t size, size_t alignment = PAGE_SIZE);
+    ErrorOr<void> place_anywhere(Region&, RandomizeVirtualAddress, size_t size, size_t alignment = PAGE_SIZE);
     ErrorOr<void> place_specifically(Region&, VirtualRange const&);
 
     ErrorOr<NonnullOwnPtr<Memory::Region>> create_identity_mapped_region(PhysicalAddress, size_t);

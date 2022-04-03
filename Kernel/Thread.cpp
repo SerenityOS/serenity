@@ -1419,7 +1419,7 @@ ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
     if (!process().m_master_tls_region)
         return {};
 
-    auto* region = TRY(process().address_space().allocate_region({}, thread_specific_region_size(), PAGE_SIZE, "Thread-specific", PROT_READ | PROT_WRITE));
+    auto* region = TRY(process().address_space().allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, thread_specific_region_size(), PAGE_SIZE, "Thread-specific", PROT_READ | PROT_WRITE));
 
     m_thread_specific_range = region->range();
 
