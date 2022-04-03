@@ -34,17 +34,18 @@ void TableFormattingContext::run(Box const& box, LayoutMode)
     float total_content_width = 0;
     float total_content_height = 0;
 
+    Vector<ColumnWidth> column_widths;
     box.for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
-        auto& row_group_box_state = m_state.get_mutable(row_group_box);
-
         compute_width(row_group_box);
         auto column_count = row_group_box.column_count();
-        Vector<ColumnWidth> column_widths;
-        column_widths.resize(column_count);
+        column_widths.resize(max(column_count, column_widths.size()));
 
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
             calculate_column_widths(row, table_width, column_widths);
         });
+    });
+    box.for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
+        auto& row_group_box_state = m_state.get_mutable(row_group_box);
 
         float remaining_for_max = box_state.content_width;
         float remaining_for_min = box_state.content_width;
