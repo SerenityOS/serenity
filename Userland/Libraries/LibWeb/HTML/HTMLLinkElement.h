@@ -28,12 +28,18 @@ public:
     String type() const { return attribute(HTML::AttributeNames::type); }
     String href() const { return attribute(HTML::AttributeNames::href); }
 
+    bool has_loaded_icon() const;
+    bool load_favicon_and_use_if_window_is_active();
+
 private:
     void parse_attribute(FlyString const&, String const&) override;
 
     // ^ResourceClient
     virtual void resource_did_fail() override;
     virtual void resource_did_load() override;
+
+    void resource_did_load_stylesheet();
+    void resource_did_load_favicon();
 
     struct Relationship {
         enum {
