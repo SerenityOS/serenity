@@ -387,6 +387,11 @@ void AbstractTableView::set_column_headers_visible(bool visible)
     column_header().set_visible(visible);
 }
 
+bool AbstractTableView::column_headers_visible() const
+{
+    return column_header().is_visible();
+}
+
 void AbstractTableView::did_scroll()
 {
     AbstractView::did_scroll();
