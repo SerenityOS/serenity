@@ -677,7 +677,7 @@ UNMAP_AFTER_INIT void Processor::detect_hypervisor()
 {
     CPUID hypervisor_leaf_range(0x40000000);
     auto hypervisor_vendor_id_string = m_info->hypervisor_vendor_id_string();
-    dmesgln("CPU[{}]: CPUID hypervisor signature '{}' ({:#x} {:#x} {:#x}), max leaf {:#x}", current_id(), hypervisor_vendor_id_string, hypervisor_leaf_range.ebx(), hypervisor_leaf_range.ecx(), hypervisor_leaf_range.edx(), hypervisor_leaf_range.eax());
+    dmesgln("CPU[{}]: CPUID hypervisor signature '{}', max leaf {:#x}", current_id(), hypervisor_vendor_id_string, hypervisor_leaf_range.eax());
 
     if (hypervisor_vendor_id_string == "Microsoft Hv"sv)
         detect_hypervisor_hyperv(hypervisor_leaf_range);
