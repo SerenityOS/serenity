@@ -15,6 +15,8 @@ static void print_cpu_info(JsonObject const& value)
 {
     outln("CPU {}:", value.get("processor").as_u32());
     outln("\tVendor ID: {}", value.get("vendor_id").as_string());
+    if (value.has("hypervisor_vendor_id"))
+        outln("\tHypervisor Vendor ID: {}", value.get("hypervisor_vendor_id").as_string());
     outln("\tBrand: {}", value.get("brand").as_string());
     outln("\tFamily: {}", value.get("family").as_u32());
     outln("\tModel: {}", value.get("model").as_u32());
