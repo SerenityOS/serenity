@@ -339,6 +339,7 @@ public:
 
     bool in_removed_last_ref() const { return m_in_removed_last_ref; }
 
+    bool has_active_favicon() const { return m_active_favicon; }
     void check_favicon_after_loading_link_resource();
 
 private:
