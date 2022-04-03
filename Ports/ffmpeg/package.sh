@@ -2,7 +2,7 @@
 port=ffmpeg
 version=5.0
 useconfigure=true
-depends=("libiconv" "libtiff" "xz" "bzip2" "SDL2")
+depends=("libiconv" "libtiff" "xz" "bzip2" "SDL2" "x264")
 files="https://ffmpeg.org/releases/ffmpeg-${version}.tar.gz ffmpeg-${version}.tar.gz 7bf52bc242b5db8df67c62cb826df134d917dedcf6abf1289e15e4057bcc1750"
 auth_type="sha256"
 installopts=("INSTALL_TOP=${SERENITY_INSTALL_ROOT}/usr/local")
@@ -15,8 +15,10 @@ configure() {
         --cc="${CC} -std=gnu99" \
         --cxx="${CXX} -std=gnu99" \
         --enable-cross-compile \
-	--disable-stripping \
-	--disable-avx
+        --enable-gpl \
+        --enable-libx264 \
+        --disable-stripping \
+        --disable-avx
 }
 
 install() {
