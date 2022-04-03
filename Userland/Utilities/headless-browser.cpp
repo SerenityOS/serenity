@@ -14,12 +14,22 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/IODevice.h>
+#include <LibCore/MemoryStream.h>
+#include <LibCore/Stream.h>
 #include <LibCore/Timer.h>
+#include <LibGemini/GeminiRequest.h>
+#include <LibGemini/GeminiResponse.h>
+#include <LibGemini/Job.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibGfx/PNGWriter.h>
 #include <LibGfx/Rect.h>
+#include <LibHTTP/HttpRequest.h>
+#include <LibHTTP/HttpResponse.h>
+#include <LibHTTP/HttpsJob.h>
+#include <LibHTTP/Job.h>
 #include <LibMain/Main.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
@@ -30,6 +40,9 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/WebSockets/WebSocket.h>
+#include <LibWebSocket/ConnectionInfo.h>
+#include <LibWebSocket/Message.h>
+#include <LibWebSocket/WebSocket.h>
 
 class HeadlessBrowserPageClient final : public Web::PageClient {
 public:
@@ -255,8 +268,237 @@ private:
     explicit HeadlessImageDecoderClient() = default;
 };
 
+static HashTable<RefPtr<Web::ResourceLoaderConnectorRequest>> s_all_requests;
+
 class HeadlessRequestServer : public Web::ResourceLoaderConnector {
 public:
+    class HTTPHeadlessRequest
+        : public Web::ResourceLoaderConnectorRequest
+        , public Weakable<HTTPHeadlessRequest> {
+    public:
+        static ErrorOr<NonnullRefPtr<HTTPHeadlessRequest>> create(String const& method, AK::URL const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
+        {
+            auto stream_backing_buffer = TRY(ByteBuffer::create_uninitialized(1 * MiB));
+            auto underlying_socket = TRY(Core::Stream::TCPSocket::connect(url.host(), url.port().value_or(80)));
+            TRY(underlying_socket->set_blocking(false));
+            auto socket = TRY(Core::Stream::BufferedSocket<Core::Stream::TCPSocket>::create(move(underlying_socket)));
+
+            HTTP::HttpRequest request;
+            if (method.equals_ignoring_case("head"sv))
+                request.set_method(HTTP::HttpRequest::HEAD);
+            else if (method.equals_ignoring_case("get"sv))
+                request.set_method(HTTP::HttpRequest::GET);
+            else if (method.equals_ignoring_case("post"sv))
+                request.set_method(HTTP::HttpRequest::POST);
+            else
+                request.set_method(HTTP::HttpRequest::Invalid);
+            request.set_url(move(url));
+            request.set_headers(request_headers);
+            request.set_body(TRY(ByteBuffer::copy(request_body)));
+
+            return adopt_ref(*new HTTPHeadlessRequest(move(request), move(socket), move(stream_backing_buffer)));
+        }
+
+        virtual ~HTTPHeadlessRequest() override
+        {
+        }
+
+        virtual void set_should_buffer_all_input(bool) override
+        {
+        }
+
+        virtual bool stop() override
+        {
+            return false;
+        }
+
+        virtual void stream_into(Core::Stream::Stream&) override
+        {
+        }
+
+    private:
+        HTTPHeadlessRequest(HTTP::HttpRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
+            : m_stream_backing_buffer(move(stream_backing_buffer))
+            , m_output_stream(Core::Stream::MemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_socket(move(socket))
+            , m_job(HTTP::Job::construct(move(request), *m_output_stream))
+        {
+            m_job->on_headers_received = [weak_this = make_weak_ptr()](auto& response_headers, auto response_code) mutable {
+                if (auto strong_this = weak_this.strong_ref()) {
+                    strong_this->m_response_code = response_code;
+                    for (auto& header : response_headers) {
+                        strong_this->m_response_headers.set(header.key, header.value);
+                    }
+                }
+            };
+            m_job->on_finish = [weak_this = make_weak_ptr()](bool success) mutable {
+                Core::deferred_invoke([weak_this, success]() mutable {
+                    if (auto strong_this = weak_this.strong_ref()) {
+                        ReadonlyBytes response_bytes { strong_this->m_output_stream->bytes().data(), strong_this->m_output_stream->offset() };
+                        auto response_buffer = ByteBuffer::copy(response_bytes).release_value_but_fixme_should_propagate_errors();
+                        strong_this->on_buffered_request_finish(success, strong_this->m_output_stream->offset(), strong_this->m_response_headers, strong_this->m_response_code, response_buffer);
+                    }
+                });
+            };
+            m_job->start(*m_socket);
+        }
+
+        Optional<u32> m_response_code;
+        ByteBuffer m_stream_backing_buffer;
+        NonnullOwnPtr<Core::Stream::MemoryStream> m_output_stream;
+        NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
+        NonnullRefPtr<HTTP::Job> m_job;
+        HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
+    };
+
+    class HTTPSHeadlessRequest
+        : public Web::ResourceLoaderConnectorRequest
+        , public Weakable<HTTPSHeadlessRequest> {
+    public:
+        static ErrorOr<NonnullRefPtr<HTTPSHeadlessRequest>> create(String const& method, AK::URL const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
+        {
+            auto stream_backing_buffer = TRY(ByteBuffer::create_uninitialized(1 * MiB));
+            auto underlying_socket = TRY(TLS::TLSv12::connect(url.host(), url.port().value_or(80)));
+            TRY(underlying_socket->set_blocking(false));
+            auto socket = TRY(Core::Stream::BufferedSocket<TLS::TLSv12>::create(move(underlying_socket)));
+
+            HTTP::HttpRequest request;
+            if (method.equals_ignoring_case("head"sv))
+                request.set_method(HTTP::HttpRequest::HEAD);
+            else if (method.equals_ignoring_case("get"sv))
+                request.set_method(HTTP::HttpRequest::GET);
+            else if (method.equals_ignoring_case("post"sv))
+                request.set_method(HTTP::HttpRequest::POST);
+            else
+                request.set_method(HTTP::HttpRequest::Invalid);
+            request.set_url(move(url));
+            request.set_headers(request_headers);
+            request.set_body(TRY(ByteBuffer::copy(request_body)));
+
+            return adopt_ref(*new HTTPSHeadlessRequest(move(request), move(socket), move(stream_backing_buffer)));
+        }
+
+        virtual ~HTTPSHeadlessRequest() override
+        {
+        }
+
+        virtual void set_should_buffer_all_input(bool) override
+        {
+        }
+
+        virtual bool stop() override
+        {
+            return false;
+        }
+
+        virtual void stream_into(Core::Stream::Stream&) override
+        {
+        }
+
+    private:
+        HTTPSHeadlessRequest(HTTP::HttpRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
+            : m_stream_backing_buffer(move(stream_backing_buffer))
+            , m_output_stream(Core::Stream::MemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_socket(move(socket))
+            , m_job(HTTP::HttpsJob::construct(move(request), *m_output_stream))
+        {
+            m_job->on_headers_received = [weak_this = make_weak_ptr()](auto& response_headers, auto response_code) mutable {
+                if (auto strong_this = weak_this.strong_ref()) {
+                    strong_this->m_response_code = response_code;
+                    for (auto& header : response_headers) {
+                        strong_this->m_response_headers.set(header.key, header.value);
+                    }
+                }
+            };
+            m_job->on_finish = [weak_this = make_weak_ptr()](bool success) mutable {
+                Core::deferred_invoke([weak_this, success]() mutable {
+                    if (auto strong_this = weak_this.strong_ref()) {
+                        ReadonlyBytes response_bytes { strong_this->m_output_stream->bytes().data(), strong_this->m_output_stream->offset() };
+                        auto response_buffer = ByteBuffer::copy(response_bytes).release_value_but_fixme_should_propagate_errors();
+                        strong_this->on_buffered_request_finish(success, strong_this->m_output_stream->offset(), strong_this->m_response_headers, strong_this->m_response_code, response_buffer);
+                    }
+                });
+            };
+            m_job->start(*m_socket);
+        }
+
+        Optional<u32> m_response_code;
+        ByteBuffer m_stream_backing_buffer;
+        NonnullOwnPtr<Core::Stream::MemoryStream> m_output_stream;
+        NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
+        NonnullRefPtr<HTTP::HttpsJob> m_job;
+        HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
+    };
+
+    class GeminiHeadlessRequest
+        : public Web::ResourceLoaderConnectorRequest
+        , public Weakable<GeminiHeadlessRequest> {
+    public:
+        static ErrorOr<NonnullRefPtr<GeminiHeadlessRequest>> create(String const&, AK::URL const& url, HashMap<String, String> const&, ReadonlyBytes, Core::ProxyData const&)
+        {
+            auto stream_backing_buffer = TRY(ByteBuffer::create_uninitialized(1 * MiB));
+            auto underlying_socket = TRY(Core::Stream::TCPSocket::connect(url.host(), url.port().value_or(80)));
+            TRY(underlying_socket->set_blocking(false));
+            auto socket = TRY(Core::Stream::BufferedSocket<Core::Stream::TCPSocket>::create(move(underlying_socket)));
+
+            Gemini::GeminiRequest request;
+            request.set_url(url);
+
+            return adopt_ref(*new GeminiHeadlessRequest(move(request), move(socket), move(stream_backing_buffer)));
+        }
+
+        virtual ~GeminiHeadlessRequest() override
+        {
+        }
+
+        virtual void set_should_buffer_all_input(bool) override
+        {
+        }
+
+        virtual bool stop() override
+        {
+            return false;
+        }
+
+        virtual void stream_into(Core::Stream::Stream&) override
+        {
+        }
+
+    private:
+        GeminiHeadlessRequest(Gemini::GeminiRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
+            : m_stream_backing_buffer(move(stream_backing_buffer))
+            , m_output_stream(Core::Stream::MemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_socket(move(socket))
+            , m_job(Gemini::Job::construct(move(request), *m_output_stream))
+        {
+            m_job->on_headers_received = [weak_this = make_weak_ptr()](auto& response_headers, auto response_code) mutable {
+                if (auto strong_this = weak_this.strong_ref()) {
+                    strong_this->m_response_code = response_code;
+                    for (auto& header : response_headers) {
+                        strong_this->m_response_headers.set(header.key, header.value);
+                    }
+                }
+            };
+            m_job->on_finish = [weak_this = make_weak_ptr()](bool success) mutable {
+                Core::deferred_invoke([weak_this, success]() mutable {
+                    if (auto strong_this = weak_this.strong_ref()) {
+                        ReadonlyBytes response_bytes { strong_this->m_output_stream->bytes().data(), strong_this->m_output_stream->offset() };
+                        auto response_buffer = ByteBuffer::copy(response_bytes).release_value_but_fixme_should_propagate_errors();
+                        strong_this->on_buffered_request_finish(success, strong_this->m_output_stream->offset(), strong_this->m_response_headers, strong_this->m_response_code, response_buffer);
+                    }
+                });
+            };
+            m_job->start(*m_socket);
+        }
+
+        Optional<u32> m_response_code;
+        ByteBuffer m_stream_backing_buffer;
+        NonnullOwnPtr<Core::Stream::MemoryStream> m_output_stream;
+        NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
+        NonnullRefPtr<Gemini::Job> m_job;
+        HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
+    };
+
     static NonnullRefPtr<HeadlessRequestServer> create()
     {
         return adopt_ref(*new HeadlessRequestServer());
@@ -267,9 +509,30 @@ public:
     virtual void prefetch_dns(AK::URL const&) override { }
     virtual void preconnect(AK::URL const&) override { }
 
-    virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(String const&, AK::URL const&, HashMap<String, String> const&, ReadonlyBytes, Core::ProxyData const&) override
+    virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(String const& method, AK::URL const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy) override
     {
-        return {};
+        RefPtr<Web::ResourceLoaderConnectorRequest> request;
+        if (url.protocol().equals_ignoring_case("http"sv)) {
+            auto request_or_error = HTTPHeadlessRequest::create(method, url, request_headers, request_body, proxy);
+            if (request_or_error.is_error())
+                return {};
+            request = request_or_error.release_value();
+        }
+        if (url.protocol().equals_ignoring_case("https"sv)) {
+            auto request_or_error = HTTPSHeadlessRequest::create(method, url, request_headers, request_body, proxy);
+            if (request_or_error.is_error())
+                return {};
+            request = request_or_error.release_value();
+        }
+        if (url.protocol().equals_ignoring_case("gemini"sv)) {
+            auto request_or_error = GeminiHeadlessRequest::create(method, url, request_headers, request_body, proxy);
+            if (request_or_error.is_error())
+                return {};
+            request = request_or_error.release_value();
+        }
+        if (request)
+            s_all_requests.set(request);
+        return request;
     }
 
 private:
@@ -278,6 +541,96 @@ private:
 
 class HeadlessWebSocketClientManager : public Web::WebSockets::WebSocketClientManager {
 public:
+    class HeadlessWebSocket
+        : public Web::WebSockets::WebSocketClientSocket
+        , public Weakable<HeadlessWebSocket> {
+    public:
+        static NonnullRefPtr<HeadlessWebSocket> create(NonnullRefPtr<WebSocket::WebSocket> underlying_socket)
+        {
+            return adopt_ref(*new HeadlessWebSocket(move(underlying_socket)));
+        }
+
+        virtual ~HeadlessWebSocket() override
+        {
+        }
+
+        virtual Web::WebSockets::WebSocket::ReadyState ready_state() override
+        {
+            switch (m_websocket->ready_state()) {
+            case WebSocket::ReadyState::Connecting:
+                return Web::WebSockets::WebSocket::ReadyState::Connecting;
+            case WebSocket::ReadyState::Open:
+                return Web::WebSockets::WebSocket::ReadyState::Open;
+            case WebSocket::ReadyState::Closing:
+                return Web::WebSockets::WebSocket::ReadyState::Closing;
+            case WebSocket::ReadyState::Closed:
+                return Web::WebSockets::WebSocket::ReadyState::Closed;
+            }
+            VERIFY_NOT_REACHED();
+        }
+
+        virtual void send(ByteBuffer binary_or_text_message, bool is_text) override
+        {
+            m_websocket->send(WebSocket::Message(binary_or_text_message, is_text));
+        }
+
+        virtual void send(StringView message) override
+        {
+            m_websocket->send(WebSocket::Message(message));
+        }
+
+        virtual void close(u16 code, String reason) override
+        {
+            m_websocket->close(code, reason);
+        }
+
+    private:
+        HeadlessWebSocket(NonnullRefPtr<WebSocket::WebSocket> underlying_socket)
+            : m_websocket(move(underlying_socket))
+        {
+            m_websocket->on_open = [weak_this = make_weak_ptr()] {
+                if (auto strong_this = weak_this.strong_ref())
+                    if (strong_this->on_open)
+                        strong_this->on_open();
+            };
+            m_websocket->on_message = [weak_this = make_weak_ptr()](auto message) {
+                if (auto strong_this = weak_this.strong_ref()) {
+                    if (strong_this->on_message) {
+                        strong_this->on_message(Web::WebSockets::WebSocketClientSocket::Message {
+                            .data = move(message.data()),
+                            .is_text = message.is_text(),
+                        });
+                    }
+                }
+            };
+            m_websocket->on_error = [weak_this = make_weak_ptr()](auto error) {
+                if (auto strong_this = weak_this.strong_ref()) {
+                    if (strong_this->on_error) {
+                        switch (error) {
+                        case WebSocket::WebSocket::Error::CouldNotEstablishConnection:
+                            strong_this->on_error(Web::WebSockets::WebSocketClientSocket::Error::CouldNotEstablishConnection);
+                            return;
+                        case WebSocket::WebSocket::Error::ConnectionUpgradeFailed:
+                            strong_this->on_error(Web::WebSockets::WebSocketClientSocket::Error::ConnectionUpgradeFailed);
+                            return;
+                        case WebSocket::WebSocket::Error::ServerClosedSocket:
+                            strong_this->on_error(Web::WebSockets::WebSocketClientSocket::Error::ServerClosedSocket);
+                            return;
+                        }
+                        VERIFY_NOT_REACHED();
+                    }
+                }
+            };
+            m_websocket->on_close = [weak_this = make_weak_ptr()](u16 code, String reason, bool was_clean) {
+                if (auto strong_this = weak_this.strong_ref())
+                    if (strong_this->on_close)
+                        strong_this->on_close(code, move(reason), was_clean);
+            };
+        }
+
+        NonnullRefPtr<WebSocket::WebSocket> m_websocket;
+    };
+
     static NonnullRefPtr<HeadlessWebSocketClientManager> create()
     {
         return adopt_ref(*new HeadlessWebSocketClientManager());
@@ -285,9 +638,13 @@ public:
 
     virtual ~HeadlessWebSocketClientManager() override { }
 
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const&, String const&) override
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const& url, String const& origin) override
     {
-        return {};
+        WebSocket::ConnectionInfo connection_info(url);
+        connection_info.set_origin(origin);
+
+        auto connection = HeadlessWebSocket::create(WebSocket::WebSocket::create(move(connection_info)));
+        return connection;
     }
 
 private:
