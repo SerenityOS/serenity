@@ -35,7 +35,7 @@ ErrorOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timesp
 
 ErrorOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<timespec const*> user_ts)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::settime));
 
     if (!is_superuser())
