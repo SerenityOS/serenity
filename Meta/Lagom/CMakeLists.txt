@@ -474,6 +474,14 @@ if (BUILD_LAGOM)
         SOURCES ${LIBWASM_SOURCES}
     )
 
+    # WebSocket
+    file(GLOB LIBWEBSOCKET_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*.cpp")
+    file(GLOB LIBWEBSOCKET_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWebSocket/*/*.cpp")
+    lagom_lib(WebSocket websocket
+        SOURCES ${LIBWEBSOCKET_SOURCES} ${LIBWEBSOCKET_SUBDIR_SOURCES}
+        LIBS LagomCrypto LagomTLS
+    )
+
     # x86
     # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
     #        for Lagom on Apple M1
