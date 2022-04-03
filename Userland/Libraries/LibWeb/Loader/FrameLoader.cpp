@@ -259,14 +259,20 @@ void FrameLoader::load_html(StringView html, const AK::URL& url)
     browsing_context().set_active_document(&parser->document());
 }
 
+static String s_error_page_url = "file:///res/html/error.html";
+
+void FrameLoader::set_error_page_url(String error_page_url)
+{
+    s_error_page_url = error_page_url;
+}
+
 // FIXME: Use an actual templating engine (our own one when it's built, preferably
 // with a way to check these usages at compile time)
 
 void FrameLoader::load_error_page(const AK::URL& failed_url, String const& error)
 {
-    auto error_page_url = "file:///res/html/error.html";
     ResourceLoader::the().load(
-        error_page_url,
+        s_error_page_url,
         [this, failed_url, error](auto data, auto&, auto) {
             VERIFY(!data.is_null());
             StringBuilder builder;
