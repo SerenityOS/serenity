@@ -62,7 +62,7 @@ ErrorOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<sockaddr const*> addres
 
 ErrorOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     if (backlog < 0)
         return EINVAL;
     auto description = TRY(open_file_description(sockfd));
