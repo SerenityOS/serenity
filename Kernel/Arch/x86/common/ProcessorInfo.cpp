@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -75,19 +76,21 @@ NonnullOwnPtr<KString> ProcessorInfo::build_brand_string()
     if (max_extended_leaf < 0x80000004)
         return KString::must_create({});
 
-    alignas(u32) char buffer[48];
-    u32* bufptr = reinterpret_cast<u32*>(buffer);
-    auto copy_brand_string_part_to_buffer = [&](u32 i) {
+    StringBuilder builder;
+    auto append_brand_string_part_to_builder = [&](u32 i) {
         CPUID cpuid(0x80000002 + i);
-        *bufptr++ = cpuid.eax();
-        *bufptr++ = cpuid.ebx();
-        *bufptr++ = cpuid.ecx();
-        *bufptr++ = cpuid.edx();
+        emit_u32(builder, cpuid.eax());
+        emit_u32(builder, cpuid.ebx());
+        emit_u32(builder, cpuid.ecx());
+        emit_u32(builder, cpuid.edx());
     };
-    copy_brand_string_part_to_buffer(0);
-    copy_brand_string_part_to_buffer(1);
-    copy_brand_string_part_to_buffer(2);
-    return KString::must_create(buffer);
+    append_brand_string_part_to_builder(0);
+    append_brand_string_part_to_builder(1);
+    append_brand_string_part_to_builder(2);
+    auto string_view = builder.string_view();
+    // NOTE: Unlike the vendor ID strings, the brand string isn't necessarily fixed length and might have a null terminator in it.
+    //       Try to find it and use a substring from 0 to that index, or the full length as a fallback.
+    return KString::must_create(string_view.substring_view(0, string_view.find('\0').value_or(string_view.length())));
 }
 
 NonnullOwnPtr<KString> ProcessorInfo::build_features_string(Processor const& processor)
