@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=SimonTathamsPuzzles
+port=stpuzzles
 useconfigure=true
 version=git
-workdir=stpuzzles-main
+workdir="${port}-main"
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
-files="https://github.com/SerenityPorts/stpuzzles/archive/refs/heads/main.zip stpuzzles.zip"
+files="https://github.com/SerenityPorts/stpuzzles/archive/refs/heads/main.zip ${port}.zip"
 
 configure() {
     run cmake "${configopts[@]}" -DCMAKE_CXX_FLAGS="-std=c++2a -O2"

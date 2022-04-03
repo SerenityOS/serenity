@@ -1,7 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=DungeonRush
+port=dungeonrush
 version=1.1-beta
 useconfigure=true
+workdir="DungeonRush-${version}"
 files="https://github.com/Rapiz1/DungeonRush/archive/refs/tags/v${version}.tar.gz v${version}.tar.gz 295b83cb023bf5d21318992daee125399892bdf16a87c835dfc90b841c929eda"
 auth_type=sha256
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
