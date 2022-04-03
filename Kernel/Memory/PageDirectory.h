@@ -12,6 +12,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/PhysicalPage.h>
 
 namespace Kernel::Memory {
