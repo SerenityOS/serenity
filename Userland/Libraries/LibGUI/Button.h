@@ -64,6 +64,8 @@ protected:
     virtual void paint_event(PaintEvent&) override;
 
 private:
+    virtual void timer_event(Core::TimerEvent&) override;
+
     RefPtr<Gfx::Bitmap> m_icon;
     RefPtr<GUI::Menu> m_menu;
     Gfx::ButtonStyle m_button_style { Gfx::ButtonStyle::Normal };
