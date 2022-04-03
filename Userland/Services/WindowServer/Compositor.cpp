@@ -138,8 +138,8 @@ void Compositor::did_construct_window_manager(Badge<WindowManager>)
 
     m_current_window_stack = &wm.current_window_stack();
 
-    m_wallpaper_mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "center"));
-    m_custom_background_color = Color::from_string(wm.config()->read_entry("Background", "Color", ""));
+    m_wallpaper.mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "center"));
+    m_wallpaper.custom_background_color = Color::from_string(wm.config()->read_entry("Background", "Color", ""));
 
     invalidate_screen();
     invalidate_occlusions();
@@ -229,10 +229,6 @@ void Compositor::compose()
         return IterationDecision::Continue;
     });
 
-    Color background_color = wm.palette().desktop_background();
-    if (m_custom_background_color.has_value())
-        background_color = m_custom_background_color.value();
-
     if constexpr (COMPOSE_DEBUG) {
         dbgln("COMPOSE: invalidated: window: {} cursor: {}, any: {}", m_invalidated_window, m_invalidated_cursor, m_invalidated_any);
         for (auto& r : dirty_screen_rects.rects())
@@ -301,26 +297,68 @@ void Compositor::compose()
     if (!cursor_screen.compositor_screen_data().m_cursor_back_bitmap || m_invalidated_cursor)
         check_restore_cursor_back(cursor_screen, cursor_rect);
 
-    auto paint_wallpaper = [&](Screen& screen, Gfx::Painter& painter, Gfx::IntRect const& rect, Gfx::IntRect const& screen_rect) {
-        // FIXME: If the wallpaper is opaque and covers the whole rect, no need to fill with color!
-        painter.fill_rect(rect, background_color);
-        if (m_wallpaper) {
-            if (m_wallpaper_mode == WallpaperMode::Center) {
-                Gfx::IntPoint offset { (screen.width() - m_wallpaper->width()) / 2, (screen.height() - m_wallpaper->height()) / 2 };
-                painter.blit_offset(rect.location(), *m_wallpaper, rect.translated(-screen_rect.location()), offset);
-            } else if (m_wallpaper_mode == WallpaperMode::Tile) {
-                painter.draw_tiled_bitmap(rect, *m_wallpaper);
-            } else if (m_wallpaper_mode == WallpaperMode::Stretch) {
-                float hscale = (float)m_wallpaper->width() / (float)screen.width();
-                float vscale = (float)m_wallpaper->height() / (float)screen.height();
+    auto paint_wallpaper_rect = [&](Screen& screen, Gfx::Painter& painter, Wallpaper const& wallpaper, Gfx::IntRect const& rect, Gfx::IntRect const& screen_rect, float opacity, bool blit_bitmap) {
+        auto background_color = wallpaper.custom_background_color.value_or(wm.palette().desktop_background());
+        if (opacity < 1.0f)
+            background_color.set_alpha(255 * opacity);
+
+        if (wallpaper.bitmap) {
+            //if (wallpaper.bitmap->has_alpha_channel()) {
+                // If the wallpaper picture has an alpha channel we need to fill the background color first
+                painter.fill_rect(rect, background_color);
+            //}
+
+            switch (wallpaper.mode) {
+            case WallpaperMode::Center: {
+                Gfx::IntRect bitmap_rect {
+                    { (screen.width() - wallpaper.bitmap->width()) / 2, (screen.height() - wallpaper.bitmap->height()) / 2 },
+                    wallpaper.bitmap->size()
+                };
+                if (blit_bitmap)
+                    painter.blit_offset(rect.location(), *wallpaper.bitmap, rect.translated(-screen_rect.location()), bitmap_rect.location(), opacity);
+
+                // Fill areas outside of the bitmap
+                for (auto& background_rect_to_fill : screen_rect.translated(-screen_rect.location()).intersected(rect).shatter(bitmap_rect)) {
+                    painter.fill_rect(background_rect_to_fill, background_color);
+                }
+                break;
+            }
+            case WallpaperMode::Tile:
+                if (!blit_bitmap)
+                    break;
+                painter.draw_tiled_bitmap(rect, *wallpaper.bitmap, opacity);
+                break;
+            case WallpaperMode::Stretch: {
+                if (!blit_bitmap)
+                    break;
+                float hscale = (float)wallpaper.bitmap->width() / (float)screen.width();
+                float vscale = (float)wallpaper.bitmap->height() / (float)screen.height();
 
                 // TODO: this may look ugly, we should scale to a backing bitmap and then blit
                 auto relative_rect = rect.translated(-screen_rect.location());
                 auto src_rect = Gfx::FloatRect { relative_rect.x() * hscale, relative_rect.y() * vscale, relative_rect.width() * hscale, relative_rect.height() * vscale };
-                painter.draw_scaled_bitmap(rect, *m_wallpaper, src_rect);
-            } else {
+                painter.draw_scaled_bitmap(rect, *wallpaper.bitmap, src_rect, opacity);
+                break;
+            }
+            default:
                 VERIFY_NOT_REACHED();
             }
+        } else {
+            painter.fill_rect(rect, background_color);
+        }
+    };
+
+    auto paint_wallpaper = [&]<bool RenderTransparency>(Screen& screen, Gfx::IntRect const& rect, Gfx::IntRect const& screen_rect) {
+        if (m_next_wallpaper.has_value() && m_wallpaper_animation_progress < 1.0f) {
+            VERIFY(m_wallpaper_animation); // Wallpaper change animation in progress
+            // Because we're blending images we're always rendering to the temporary bitmap
+            auto& painter = *screen.compositor_screen_data().m_temp_painter;
+            paint_wallpaper_rect(screen, painter, m_wallpaper, rect, screen_rect, 1.0f, true);
+            paint_wallpaper_rect(screen, painter, *m_next_wallpaper, rect, screen_rect, m_wallpaper_animation_progress, m_wallpaper.bitmap && m_wallpaper.bitmap != m_next_wallpaper->bitmap);
+        } else {
+            VERIFY(!m_wallpaper_animation);
+            auto& painter = RenderTransparency ? *screen.compositor_screen_data().m_temp_painter : *screen.compositor_screen_data().m_back_painter;
+            paint_wallpaper_rect(screen, painter, m_wallpaper, rect, screen_rect, 1.0f, true);
         }
     };
 
@@ -334,8 +372,7 @@ void Compositor::compose()
                 if (!screen_render_rect.is_empty()) {
                     dbgln_if(COMPOSE_DEBUG, "  render wallpaper opaque: {} on screen #{}", screen_render_rect, screen.index());
                     prepare_rect(screen, render_rect);
-                    auto& back_painter = *screen.compositor_screen_data().m_back_painter;
-                    paint_wallpaper(screen, back_painter, render_rect, screen_rect);
+                    paint_wallpaper.template operator()<false>(screen, render_rect, screen_rect);
                 }
                 return IterationDecision::Continue;
             });
@@ -348,8 +385,7 @@ void Compositor::compose()
                 if (!screen_render_rect.is_empty()) {
                     dbgln_if(COMPOSE_DEBUG, "  render wallpaper transparent: {} on screen #{}", screen_render_rect, screen.index());
                     prepare_transparency_rect(screen, render_rect);
-                    auto& temp_painter = *screen.compositor_screen_data().m_temp_painter;
-                    paint_wallpaper(screen, temp_painter, render_rect, screen_rect);
+                    paint_wallpaper.template operator()<true>(screen,  render_rect, screen_rect);
                 }
                 return IterationDecision::Continue;
             });
@@ -499,9 +535,8 @@ void Compositor::compose()
                         continue;
                     dbgln_if(COMPOSE_DEBUG, "    render wallpaper: {} on screen #{}", screen_render_rect, screen->index());
 
-                    auto& temp_painter = *screen->compositor_screen_data().m_temp_painter;
                     prepare_transparency_rect(*screen, screen_render_rect);
-                    paint_wallpaper(*screen, temp_painter, screen_render_rect, screen_rect);
+                    paint_wallpaper.template operator()<true>(*screen, screen_render_rect, screen_rect);
                 }
                 return IterationDecision::Continue;
             });
@@ -581,6 +616,7 @@ void Compositor::compose()
     m_invalidated_any = false;
     m_invalidated_window = false;
     m_invalidated_cursor = false;
+    m_invalidated_wallpaper = false;
 
     if (!m_animations.is_empty()) {
         Screen::for_each([&](auto& screen) {
@@ -762,6 +798,26 @@ void Compositor::invalidate_window()
     start_compose_async_timer();
 }
 
+void Compositor::invalidate_wallpaper()
+{
+    if (m_invalidated_wallpaper)
+        return;
+
+    m_invalidated_any = true;
+    m_invalidated_wallpaper = true;
+
+    m_dirty_screen_rects.add(m_opaque_wallpaper_rects);
+    m_dirty_screen_rects.add(m_transparent_wallpaper_rects);
+    WindowManager::the().for_each_visible_window_from_back_to_front([&](Window& window) {
+        auto& wallpaper_rects = window.transparency_wallpaper_rects();
+        if (!wallpaper_rects.is_empty())
+            m_dirty_screen_rects.add(wallpaper_rects);
+        return IterationDecision::Continue;
+    });
+
+    start_compose_async_timer();
+}
+
 void Compositor::start_compose_async_timer()
 {
     // We delay composition by a timer interval, but to not affect latency too
@@ -779,27 +835,44 @@ bool Compositor::set_background_color(String const& background_color)
     if (!color.has_value())
         return false;
 
-    m_custom_background_color = color;
+    auto current_color = m_next_wallpaper.value_or(m_wallpaper).custom_background_color;
+    if (current_color.has_value() && *current_color == *color)
+        return true;
+
+    auto& next_wallpaper = ensure_next_wallpaper_for_animation();
+    next_wallpaper.custom_background_color = color;
 
     auto& wm = WindowManager::the();
     wm.config()->write_entry("Background", "Color", background_color);
     bool succeeded = !wm.config()->sync().is_error();
 
-    if (succeeded)
-        Compositor::invalidate_screen();
-
+    dbgln("set_background_color: start animation");
+    start_wallpaper_animation();
     return succeeded;
+}
+
+auto Compositor::ensure_next_wallpaper_for_animation() -> Wallpaper&
+{
+    if (!m_next_wallpaper.has_value())
+        m_next_wallpaper = m_wallpaper;
+    return m_next_wallpaper.value();
 }
 
 bool Compositor::set_wallpaper_mode(String const& mode)
 {
+    auto new_mode = mode_to_enum(mode);
+    if (new_mode == m_next_wallpaper.value_or(m_wallpaper).mode)
+        return true;
+
     auto& wm = WindowManager::the();
     wm.config()->write_entry("Background", "Mode", mode);
     bool succeeded = !wm.config()->sync().is_error();
 
     if (succeeded) {
-        m_wallpaper_mode = mode_to_enum(mode);
-        Compositor::invalidate_screen();
+        auto& next_wallpaper = ensure_next_wallpaper_for_animation();
+        next_wallpaper.mode = new_mode;
+        dbgln("set_wallpaper_mode: start animation");
+        start_wallpaper_animation();
     }
 
     return succeeded;
@@ -807,13 +880,41 @@ bool Compositor::set_wallpaper_mode(String const& mode)
 
 bool Compositor::set_wallpaper(RefPtr<Gfx::Bitmap> bitmap)
 {
+    auto& next_wallpaper = ensure_next_wallpaper_for_animation();
     if (!bitmap)
-        m_wallpaper = nullptr;
+        next_wallpaper.bitmap = nullptr;
     else
-        m_wallpaper = bitmap;
-    invalidate_screen();
-
+        next_wallpaper.bitmap = bitmap;
+    dbgln("set_wallpaper: start animation");
+    start_wallpaper_animation();
     return true;
+}
+
+void Compositor::start_wallpaper_animation()
+{
+    if (m_wallpaper_animation || !m_next_wallpaper.has_value())
+        return;
+
+    dbgln("start_wallpaper_animation START");
+    m_wallpaper_animation_progress = 0.0f;
+    m_wallpaper_animation = Animation::create();
+    m_wallpaper_animation->set_duration(750);
+    m_wallpaper_animation->on_update = [&](float progress, Gfx::Painter&, Screen&, Gfx::DisjointRectSet&) {
+        m_wallpaper_animation_progress = progress;
+        invalidate_wallpaper();
+    };
+    m_wallpaper_animation->on_stop = [&]() {
+        m_wallpaper_animation = nullptr;
+
+        VERIFY(m_next_wallpaper.has_value());
+        m_wallpaper = m_next_wallpaper.value();
+        m_next_wallpaper = {};
+
+        dbgln("start_wallpaper_animation STOP");
+    };
+    m_wallpaper_animation->start();
+
+    invalidate_wallpaper();
 }
 
 void CompositorScreenData::flip_buffers(Screen& screen)

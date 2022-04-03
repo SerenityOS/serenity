@@ -70,6 +70,7 @@ WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
 
 void WindowManager::reload_config()
 {
+    dbgln("WindowManager::reload_config");
     m_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
 
     unsigned workspace_rows = (unsigned)m_config->read_num_entry("Workspace", "Rows", default_window_stack_rows);
@@ -2071,6 +2072,7 @@ void WindowManager::end_dnd_drag()
 
 void WindowManager::invalidate_after_theme_or_font_change()
 {
+    dbgln("!!!! invalidate_after_theme_or_font_change");
     Compositor::the().set_background_color(m_config->read_entry("Background", "Color", palette().desktop_background().to_string()));
     WindowFrame::reload_config();
     for_each_window_stack([&](auto& window_stack) {

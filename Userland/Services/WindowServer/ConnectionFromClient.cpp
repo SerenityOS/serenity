@@ -306,6 +306,7 @@ void ConnectionFromClient::set_window_opacity(i32 window_id, float opacity)
 
 void ConnectionFromClient::set_wallpaper(Gfx::ShareableBitmap const& bitmap)
 {
+    dbgln("ConnectionFromClient::set_wallpaper");
     Compositor::the().set_wallpaper(bitmap.bitmap());
     async_set_wallpaper_finished(true);
 }

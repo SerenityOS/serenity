@@ -95,6 +95,7 @@ public:
 
     void compose();
     void invalidate_window();
+    void invalidate_wallpaper();
     void invalidate_screen();
     void invalidate_screen(Gfx::IntRect const&);
     void invalidate_screen(Gfx::DisjointRectSet const&);
@@ -106,7 +107,9 @@ public:
     bool set_wallpaper_mode(String const& mode);
 
     bool set_wallpaper(RefPtr<Gfx::Bitmap>);
-    RefPtr<Gfx::Bitmap> wallpaper_bitmap() const { return m_wallpaper; }
+    RefPtr<Gfx::Bitmap> wallpaper_bitmap() const { return m_wallpaper.bitmap; }
+
+    void start_wallpaper_animation();
 
     void invalidate_cursor(bool = false);
     Gfx::IntRect current_cursor_rect() const;
@@ -194,6 +197,13 @@ private:
     void invalidate_current_screen_number_rects();
     void overlays_theme_changed();
 
+    struct Wallpaper {
+        WallpaperMode mode { WallpaperMode::Unchecked };
+        RefPtr<Gfx::Bitmap> bitmap;
+        Optional<Gfx::Color> custom_background_color;
+    };
+    [[nodiscard]] Wallpaper& ensure_next_wallpaper_for_animation();
+
     void render_overlays();
     void add_overlay(Overlay&);
     void remove_overlay(Overlay&);
@@ -219,6 +229,7 @@ private:
     bool m_invalidated_any { true };
     bool m_invalidated_window { false };
     bool m_invalidated_cursor { false };
+    bool m_invalidated_wallpaper { false };
     bool m_overlay_rects_changed { false };
 
     IntrusiveList<&Overlay::m_list_node> m_overlay_list;
@@ -227,8 +238,10 @@ private:
     Gfx::DisjointRectSet m_opaque_wallpaper_rects;
     Gfx::DisjointRectSet m_transparent_wallpaper_rects;
 
-    WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
-    RefPtr<Gfx::Bitmap> m_wallpaper;
+    Wallpaper m_wallpaper;
+    Optional<Wallpaper> m_next_wallpaper;
+    RefPtr<Animation> m_wallpaper_animation;
+    float m_wallpaper_animation_progress{};
 
     Cursor const* m_current_cursor { nullptr };
     Screen* m_current_cursor_screen { nullptr };
@@ -244,7 +257,6 @@ private:
     RefPtr<Core::Timer> m_stack_switch_overlay_timer;
 
     size_t m_show_screen_number_count { 0 };
-    Optional<Gfx::Color> m_custom_background_color;
 
     HashTable<Animation*> m_animations;
 };
