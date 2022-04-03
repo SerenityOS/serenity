@@ -16,8 +16,8 @@ namespace AK {
 
 template<typename T>
 struct GenericTraits {
-    using PeekType = T;
-    using ConstPeekType = T;
+    using PeekType = T&;
+    using ConstPeekType = T const&;
     static constexpr bool is_trivial() { return false; }
     static constexpr bool equals(const T& a, const T& b) { return a == b; }
     template<Concepts::HashCompatible<T> U>
