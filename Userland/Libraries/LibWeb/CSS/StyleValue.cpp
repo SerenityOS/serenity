@@ -292,6 +292,8 @@ String BorderStyleValue::to_string() const
 
 String BorderRadiusStyleValue::to_string() const
 {
+    if (m_horizontal_radius == m_vertical_radius)
+        return m_horizontal_radius.to_string();
     return String::formatted("{} / {}", m_horizontal_radius.to_string(), m_vertical_radius.to_string());
 }
 
