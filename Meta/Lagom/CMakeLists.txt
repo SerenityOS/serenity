@@ -551,6 +551,10 @@ if (BUILD_LAGOM)
         set_target_properties(gml-format_lagom PROPERTIES OUTPUT_NAME gml-format)
         target_link_libraries(gml-format_lagom LagomCore LagomGML LagomMain)
 
+        add_executable(headless_browser_lagom ../../Userland/Utilities/headless-browser.cpp)
+        set_target_properties(headless_browser_lagom PROPERTIES OUTPUT_NAME headless-browser)
+        target_link_libraries(headless_browser_lagom LagomWeb LagomWebSocket LagomHTTP LagomJS LagomGfx LagomMain)
+
         add_executable(js_lagom ../../Userland/Utilities/js.cpp)
         set_target_properties(js_lagom PROPERTIES OUTPUT_NAME js)
         target_link_libraries(js_lagom LagomJS LagomLine LagomMain Threads::Threads)
