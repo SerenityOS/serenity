@@ -51,15 +51,13 @@ ErrorOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
 ErrorOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<sockaddr const*> address, socklen_t address_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
-        auto description = TRY(fds.open_file_description(sockfd));
-        if (!description->is_socket())
-            return ENOTSOCK;
-        auto& socket = *description->socket();
-        REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-        TRY(socket.bind(address, address_length));
-        return 0;
-    });
+    auto description = TRY(open_file_description(sockfd));
+    if (!description->is_socket())
+        return ENOTSOCK;
+    auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
+    TRY(socket.bind(address, address_length));
+    return 0;
 }
 
 ErrorOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
