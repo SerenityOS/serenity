@@ -388,7 +388,7 @@ if (BUILD_LAGOM)
     list(REMOVE_ITEM LIBJS_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibJS/SyntaxHighlighter.cpp")
     lagom_lib(JS js
         SOURCES ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBJS_SUBSUBDIR_SOURCES}
-        LIBS m LagomCrypto LagomRegex LagomUnicode
+        LIBS m LagomCrypto LagomRegex LagomUnicode LagomTextCodec
     )
 
     # Line
