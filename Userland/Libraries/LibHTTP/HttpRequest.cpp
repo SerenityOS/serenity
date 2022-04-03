@@ -21,6 +21,8 @@ String HttpRequest::method_name() const
         return "HEAD";
     case Method::POST:
         return "POST";
+    case Method::DELETE:
+        return "DELETE";
     default:
         VERIFY_NOT_REACHED();
     }
@@ -155,6 +157,8 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
         request.m_method = Method::HEAD;
     else if (method == "POST")
         request.m_method = Method::POST;
+    else if (method == "DELETE")
+        request.m_method = Method::DELETE;
     else
         return {};
 
