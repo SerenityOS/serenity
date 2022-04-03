@@ -584,6 +584,8 @@ private:
                 TRY(obj.add("processor", proc.id()));
                 TRY(obj.add("vendor_id", info.vendor_id_string()));
                 TRY(obj.add("family", info.display_family()));
+                if (!info.hypervisor_vendor_id_string().is_null())
+                    TRY(obj.add("hypervisor_vendor_id", info.hypervisor_vendor_id_string()));
 
                 auto features_array = TRY(obj.add_array("features"));
                 auto keep_empty = false;
