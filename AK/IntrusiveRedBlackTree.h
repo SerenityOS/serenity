@@ -117,11 +117,13 @@ public:
     Iterator begin() { return Iterator(static_cast<TreeNode*>(this->m_minimum)); }
     Iterator end() { return {}; }
     Iterator begin_from(K key) { return Iterator(static_cast<TreeNode*>(BaseTree::find(this->m_root, key))); }
+    Iterator begin_from(V& value) { return Iterator(&(value.*member)); }
 
     using ConstIterator = BaseIterator<const V>;
     ConstIterator begin() const { return ConstIterator(static_cast<TreeNode*>(this->m_minimum)); }
     ConstIterator end() const { return {}; }
     ConstIterator begin_from(K key) const { return ConstIterator(static_cast<TreeNode*>(BaseTree::find(this->m_rootF, key))); }
+    ConstIterator begin_from(V const& value) const { return Iterator(&(value.*member)); }
 
     bool remove(K key)
     {
