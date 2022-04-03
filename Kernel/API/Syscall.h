@@ -42,7 +42,7 @@ enum class NeedsBigProcessLock {
 #define ENUMERATE_SYSCALLS(S)                               \
     S(accept4, NeedsBigProcessLock::Yes)                    \
     S(access, NeedsBigProcessLock::Yes)                     \
-    S(adjtime, NeedsBigProcessLock::Yes)                    \
+    S(adjtime, NeedsBigProcessLock::No)                     \
     S(alarm, NeedsBigProcessLock::Yes)                      \
     S(allocate_tls, NeedsBigProcessLock::Yes)               \
     S(anon_create, NeedsBigProcessLock::No)                 \

@@ -93,7 +93,7 @@ ErrorOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<Syscall::SC_clock_nanosl
 
 ErrorOr<FlatPtr> Process::sys$adjtime(Userspace<timeval const*> user_delta, Userspace<timeval*> user_old_delta)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     if (user_old_delta) {
         timespec old_delta_ts = TimeManagement::the().remaining_epoch_time_adjustment();
         timeval old_delta;
