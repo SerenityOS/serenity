@@ -107,11 +107,12 @@ jobs:
       #     V1047 Lifetime of the lambda is greater than lifetime of the local variable captured by reference.
       #     V1076 Code contains invisible characters that may alter its logic.
       #     V591  Non-void function should return a value. 
+      #     V603  Object was created but is not being used.
       #
       - name: Filter PVS Log
         working-directory: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
         run: |
-          pvs-studio-analyzer suppress -v677 -v1061 -v530 -v1047 -v1076 -v591 project.plog
+          pvs-studio-analyzer suppress -v677 -v1061 -v530 -v1047 -v1076 -v591 -v603 project.plog
           pvs-studio-analyzer filter-suppressed project.plog
 
       - name: Print PVS Log
