@@ -128,8 +128,6 @@ class Processor {
     void cpu_detect();
     void cpu_setup();
 
-    NonnullOwnPtr<KString> features_string() const;
-
 public:
     Processor() = default;
 

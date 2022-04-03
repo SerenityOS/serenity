@@ -22,6 +22,7 @@ public:
 
     static NonnullOwnPtr<KString> build_vendor_id_string();
     static NonnullOwnPtr<KString> build_brand_string();
+    static NonnullOwnPtr<KString> build_features_string(Processor const&);
 
     StringView vendor_id_string() const { return m_vendor_id_string->view(); }
     StringView brand_string() const { return m_brand_string->view(); }
