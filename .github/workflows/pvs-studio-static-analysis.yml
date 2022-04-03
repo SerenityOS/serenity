@@ -100,14 +100,20 @@ jobs:
         run: pvs-studio-analyzer analyze -o project.plog --compiler ${{ env.PVS_STUDIO_ANALYSIS_ARCH }}-pc-serenity-g++ --compiler ${{ env.PVS_STUDIO_ANALYSIS_ARCH }}-pc-serenity-gcc -j2
 
       # Suppress Rules: 
-      # - TRY(..) macro breaks this rule: V530 The return value of function 'release_value' is required to be utilized.
-      # - We are the system headers: V677 Custom declaration of a standard '<example>' type. The declaration from system header files should be used instead.
-      # - We have no choice: V1061 Extending the 'std' namespace may result in undefined behavior.
-      # - False positives: 
-      #     V591  Non-void function should return a value. 
-      #     V603  Object was created but is not being used.
-      #     V1047 Lifetime of the lambda is greater than lifetime of the local variable captured by reference.
-      #     V1076 Code contains invisible characters that may alter its logic.
+      # - v530: The return value of function 'release_value' is required to be utilized.
+      #    Our TRY(..) macro seems to breaks this rule and trigger weird behavior in PVS Studio.
+      #
+      # - v677: Custom declaration of a standard '<example>' type. The declaration from system header files should be used instead.
+      #    This rule doesn't make sense for Serenity, as We are the system headers.
+      #
+      # - v1061: Extending the 'std' namespace may result in undefined behavior.
+      #    We have no choice, some features of C++ require us to.
+      #
+      # - False Positives: 
+      #    v591:  Non-void function should return a value.
+      #    v603:  Object was created but is not being used.
+      #    v1047: Lifetime of the lambda is greater than lifetime of the local variable captured by reference.
+      #    v1076: Code contains invisible characters that may alter its logic.
       #
       - name: Filter PVS Log
         working-directory: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}
