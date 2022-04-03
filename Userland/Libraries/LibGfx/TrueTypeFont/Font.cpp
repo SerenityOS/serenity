@@ -29,16 +29,19 @@ u32 tag_from_str(char const*);
 
 u16 be_u16(u8 const* ptr)
 {
+    VERIFY(reinterpret_cast<FlatPtr>(ptr) % 2 == 0);
     return (((u16)ptr[0]) << 8) | ((u16)ptr[1]);
 }
 
 u32 be_u32(u8 const* ptr)
 {
+    VERIFY(reinterpret_cast<FlatPtr>(ptr) % 4 == 0);
     return (((u32)ptr[0]) << 24) | (((u32)ptr[1]) << 16) | (((u32)ptr[2]) << 8) | ((u32)ptr[3]);
 }
 
 i16 be_i16(u8 const* ptr)
 {
+    VERIFY(reinterpret_cast<FlatPtr>(ptr) % 2 == 0);
     return (((i16)ptr[0]) << 8) | ((i16)ptr[1]);
 }
 
