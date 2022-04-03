@@ -101,20 +101,6 @@ ErrorOr<VirtualRange> RegionTree::allocate_range_specific(VirtualAddress base, s
         return ENOMEM;
     }
 
-    auto it = m_regions.begin_from(region->vaddr().get());
-    VERIFY(!it.is_end());
-    ++it;
-
-    if (it.is_end()) {
-        // The range can be accommodated above the nearest range.
-        return range;
-    }
-
-    if (it->range().intersects(range)) {
-        // Requested range overlaps the next neighbor.
-        return ENOMEM;
-    }
-
     // Requested range fits between first region and its next neighbor.
     return range;
 }
