@@ -26,13 +26,19 @@
 
 namespace Web {
 
+static String s_default_favicon_path = "/res/icons/16x16/app-browser.png";
 static RefPtr<Gfx::Bitmap> s_default_favicon_bitmap;
+
+void FrameLoader::set_default_favicon_path(String path)
+{
+    s_default_favicon_path = move(path);
+}
 
 FrameLoader::FrameLoader(HTML::BrowsingContext& browsing_context)
     : m_browsing_context(browsing_context)
 {
     if (!s_default_favicon_bitmap) {
-        s_default_favicon_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-browser.png").release_value_but_fixme_should_propagate_errors();
+        s_default_favicon_bitmap = Gfx::Bitmap::try_load_from_file(s_default_favicon_path).release_value_but_fixme_should_propagate_errors();
         VERIFY(s_default_favicon_bitmap);
     }
 }
@@ -281,7 +287,7 @@ void FrameLoader::load_favicon(RefPtr<Gfx::Bitmap> bitmap)
     if (auto* page = browsing_context().page()) {
         if (bitmap)
             page->client().page_did_change_favicon(*bitmap);
-        else
+        else if (s_default_favicon_bitmap)
             page->client().page_did_change_favicon(*s_default_favicon_bitmap);
     }
 }
