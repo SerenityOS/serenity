@@ -40,7 +40,7 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments main_arguments)
 {
-    TRY(Core::System::pledge("stdio rpath proc exec", nullptr));
+    TRY(Core::System::pledge("stdio rpath proc exec"));
 
     char const* placeholder = nullptr;
     bool split_with_nulls = false;
