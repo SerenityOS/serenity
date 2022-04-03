@@ -14,6 +14,8 @@
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -22,12 +24,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/proc/net", "r"));
     TRY(Core::System::unveil("/proc/all", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
+    TRY(Core::System::unveil("/etc/services", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     bool flag_all = false;
     bool flag_list = false;
     bool flag_tcp = false;
     bool flag_udp = false;
+    bool flag_numeric = false;
     bool flag_program = false;
 
     Core::ArgsParser args_parser;
@@ -36,6 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_list, "Display only listening sockets", "list", 'l');
     args_parser.add_option(flag_tcp, "Display only TCP network connections", "tcp", 't');
     args_parser.add_option(flag_udp, "Display only UDP network connections", "udp", 'u');
+    args_parser.add_option(flag_numeric, "Display numerical addresses", "numeric", 'n');
     args_parser.add_option(flag_program, "Show the PID and name of the program to which each socket belongs", "program", 'p');
     args_parser.parse(arguments);
 
@@ -157,11 +162,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto bytes_in = if_object.get("bytes_in").to_string();
             auto bytes_out = if_object.get("bytes_out").to_string();
             auto peer_address = if_object.get("peer_address").to_string();
+
             auto peer_port = if_object.get("peer_port").to_string();
+            if (!flag_numeric) {
+                auto service = getservbyport(htons(if_object.get("peer_port").to_u32()), "tcp");
+                if (service != nullptr) {
+                    auto s_name = StringView(service->s_name);
+                    if (!s_name.is_empty())
+                        peer_port = s_name;
+                }
+            }
             auto formatted_peer_address = String::formatted("{}:{}", peer_address, peer_port);
+
             auto local_address = if_object.get("local_address").to_string();
+
             auto local_port = if_object.get("local_port").to_string();
+            if (!flag_numeric) {
+                auto service = getservbyport(htons(if_object.get("local_port").to_u32()), "tcp");
+                if (service != nullptr) {
+                    auto s_name = StringView(service->s_name);
+                    if (!s_name.is_empty())
+                        local_port = s_name;
+                }
+            }
             auto formatted_local_address = String::formatted("{}:{}", local_address, local_port);
+
             auto state = if_object.get("state").to_string();
             auto origin_pid = (if_object.has("origin_pid")) ? if_object.get("origin_pid").to_u32() : -1;
 
@@ -203,9 +228,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& if_object = value.as_object();
 
             auto local_address = if_object.get("local_address").to_string();
+
             auto local_port = if_object.get("local_port").to_string();
+            if (!flag_numeric) {
+                auto service = getservbyport(htons(if_object.get("local_port").to_u32()), "udp");
+                if (service != nullptr) {
+                    auto s_name = StringView(service->s_name);
+                    if (!s_name.is_empty())
+                        local_port = s_name;
+                }
+            }
+
             auto peer_address = if_object.get("peer_address").to_string();
+
             auto peer_port = if_object.get("peer_port").to_string();
+            if (!flag_numeric) {
+                auto service = getservbyport(htons(if_object.get("peer_port").to_u32()), "udp");
+                if (service != nullptr) {
+                    auto s_name = StringView(service->s_name);
+                    if (!s_name.is_empty())
+                        peer_port = s_name;
+                }
+            }
+
             auto origin_pid = (if_object.has("origin_pid")) ? if_object.get("origin_pid").to_u32() : -1;
 
             if (protocol_column != -1)
