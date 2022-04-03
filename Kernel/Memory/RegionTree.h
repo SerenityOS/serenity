@@ -20,6 +20,9 @@ enum class RandomizeVirtualAddress {
     Yes,
 };
 
+// RegionTree represents a virtual address space.
+// It is used by MemoryManager for kernel VM and by AddressSpace for user VM.
+// Regions are stored in an intrusive data structure and there are no allocations when interacting with it.
 class RegionTree {
     AK_MAKE_NONCOPYABLE(RegionTree);
     AK_MAKE_NONMOVABLE(RegionTree);
