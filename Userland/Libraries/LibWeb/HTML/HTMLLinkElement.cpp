@@ -55,9 +55,15 @@ void HTMLLinkElement::inserted()
 
 void HTMLLinkElement::parse_attribute(FlyString const& name, String const& value)
 {
+    // 4.6.7 Link types - https://html.spec.whatwg.org/multipage/links.html#linkTypes
     if (name == HTML::AttributeNames::rel) {
         m_relationship = 0;
-        auto parts = value.split_view(' ');
+        // Keywords are always ASCII case-insensitive, and must be compared as such.
+        auto lowercased_value = value.to_lowercase();
+        // To determine which link types apply to a link, a, area, or form element,
+        // the element's rel attribute must be split on ASCII whitespace.
+        // The resulting tokens are the keywords for the link types that apply to that element.
+        auto parts = lowercased_value.split_view(' ');
         for (auto& part : parts) {
             if (part == "stylesheet"sv)
                 m_relationship |= Relationship::Stylesheet;
@@ -69,6 +75,8 @@ void HTMLLinkElement::parse_attribute(FlyString const& name, String const& value
                 m_relationship |= Relationship::DNSPrefetch;
             else if (part == "preconnect"sv)
                 m_relationship |= Relationship::Preconnect;
+            else if (part == "icon"sv)
+                m_relationship |= Relationship::Icon;
         }
     }
 }

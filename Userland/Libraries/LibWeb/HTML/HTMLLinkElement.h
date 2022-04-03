@@ -42,6 +42,7 @@ private:
             Preload = 1 << 2,
             DNSPrefetch = 1 << 3,
             Preconnect = 1 << 4,
+            Icon = 1 << 5,
         };
     };
 
