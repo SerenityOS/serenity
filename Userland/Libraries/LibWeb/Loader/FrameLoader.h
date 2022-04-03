@@ -23,6 +23,8 @@ public:
         IFrame,
     };
 
+    static void set_default_favicon_path(String);
+
     explicit FrameLoader(HTML::BrowsingContext&);
     ~FrameLoader();
 
