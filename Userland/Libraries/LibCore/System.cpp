@@ -657,6 +657,13 @@ ErrorOr<void> clock_settime(clockid_t clock_id, struct timespec* ts)
     return {};
 #endif
 }
+ErrorOr<pid_t> posix_spawn(StringView const path, posix_spawn_file_actions_t* const file_actions, posix_spawnattr_t* const attr, char* const arguments[], char* const envp[])
+{
+    pid_t child_pid;
+    if ((errno = ::posix_spawn(&child_pid, path.to_string().characters(), file_actions, attr, arguments, envp)))
+        return Error::from_syscall("posix_spawnp"sv, -errno);
+    return child_pid;
+}
 
 ErrorOr<pid_t> posix_spawnp(StringView const file, posix_spawn_file_actions_t* const file_actions, posix_spawnattr_t* const attr, char* const arguments[], char* const envp[])
 {
