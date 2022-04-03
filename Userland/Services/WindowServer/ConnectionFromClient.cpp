@@ -790,9 +790,9 @@ Messages::WindowServer::StartDragResponse ConnectionFromClient::start_drag(Strin
     return true;
 }
 
-Messages::WindowServer::SetSystemThemeResponse ConnectionFromClient::set_system_theme(String const& theme_path, String const& theme_name)
+Messages::WindowServer::SetSystemThemeResponse ConnectionFromClient::set_system_theme(String const& theme_path, String const& theme_name, bool keep_desktop_background)
 {
-    bool success = WindowManager::the().update_theme(theme_path, theme_name);
+    bool success = WindowManager::the().update_theme(theme_path, theme_name, keep_desktop_background);
     return success;
 }
 
