@@ -16,7 +16,7 @@
 namespace IPC {
 
 template<>
-inline bool encode(IPC::Encoder& encoder, const GUI::AutocompleteProvider::Entry& response)
+inline bool encode(Encoder& encoder, const GUI::AutocompleteProvider::Entry& response)
 {
     encoder << response.completion;
     encoder << response.partial_input_length;
@@ -27,7 +27,7 @@ inline bool encode(IPC::Encoder& encoder, const GUI::AutocompleteProvider::Entry
 }
 
 template<>
-inline ErrorOr<void> decode(IPC::Decoder& decoder, GUI::AutocompleteProvider::Entry& response)
+inline ErrorOr<void> decode(Decoder& decoder, GUI::AutocompleteProvider::Entry& response)
 {
     TRY(decoder.decode(response.completion));
     TRY(decoder.decode(response.partial_input_length));
