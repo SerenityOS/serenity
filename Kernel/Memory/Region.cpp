@@ -84,9 +84,9 @@ ErrorOr<NonnullOwnPtr<Region>> Region::create_unbacked()
     return adopt_nonnull_own_or_enomem(new (nothrow) Region);
 }
 
-ErrorOr<NonnullOwnPtr<Region>> Region::create_unplaced(NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> Region::create_unplaced(NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) Region(move(vmobject), offset_in_vmobject, move(name), access, cacheable, false));
+    return adopt_nonnull_own_or_enomem(new (nothrow) Region(move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
 }
 
 ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()

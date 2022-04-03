@@ -26,8 +26,6 @@ public:
     PageDirectory& page_directory() { return *m_page_directory; }
     PageDirectory const& page_directory() const { return *m_page_directory; }
 
-    ErrorOr<Region*> add_region(NonnullOwnPtr<Region>);
-
     size_t region_count() const { return m_region_tree.regions().size(); }
 
     auto& regions() { return m_region_tree.regions(); }
@@ -37,10 +35,9 @@ public:
 
     ErrorOr<void> unmap_mmap_range(VirtualAddress, size_t);
 
-    ErrorOr<VirtualRange> try_allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
-
-    ErrorOr<Region*> allocate_region_with_vmobject(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
-    ErrorOr<Region*> allocate_region(VirtualRange const&, StringView name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
+    ErrorOr<Region*> allocate_region_with_vmobject(VirtualRange requested_range, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
+    ErrorOr<Region*> allocate_region_with_vmobject(VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
+    ErrorOr<Region*> allocate_region(VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, StringView name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
     void deallocate_region(Region& region);
     NonnullOwnPtr<Region> take_region(Region& region);
 

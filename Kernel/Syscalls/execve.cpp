@@ -294,9 +294,8 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
             return ENOEXEC;
         }
 
-        auto range = TRY(new_space->try_allocate_range({}, program_header.size_in_memory()));
         auto region_name = TRY(KString::formatted("{} (master-tls)", elf_name));
-        master_tls_region = TRY(new_space->allocate_region(range, region_name->view(), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
+        master_tls_region = TRY(new_space->allocate_region({}, program_header.size_in_memory(), PAGE_SIZE, region_name->view(), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
         master_tls_size = program_header.size_in_memory();
         master_tls_alignment = program_header.alignment();
 
@@ -324,8 +323,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
         auto range_end = VirtualAddress { rounded_range_end };
 
-        auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get(), program_header.alignment()));
-        auto region = TRY(new_space->allocate_region(range, region_name->view(), prot, AllocationStrategy::Reserve));
+        auto region = TRY(new_space->allocate_region(range_base, range_end.get() - range_base.get(), PAGE_SIZE, region_name->view(), prot, AllocationStrategy::Reserve));
 
         // It's not always the case with PIE executables (and very well shouldn't be) that the
         // virtual address in the program header matches the one we end up giving the process.
@@ -360,8 +358,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
         size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
         auto range_end = VirtualAddress { rounded_range_end };
-        auto range = TRY(new_space->try_allocate_range(range_base, range_end.get() - range_base.get(), program_header.alignment()));
-        auto region = TRY(new_space->allocate_region_with_vmobject(range, *vmobject, program_header.offset(), elf_name->view(), prot, true));
+        auto region = TRY(new_space->allocate_region_with_vmobject(range_base, range_end.get() - range_base.get(), program_header.alignment(), *vmobject, program_header.offset(), elf_name->view(), prot, true));
 
         if (should_allow_syscalls == ShouldAllowSyscalls::Yes)
             region->set_syscall_region(true);
@@ -395,8 +392,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         return ENOEXEC;
     }
 
-    auto stack_range = TRY(new_space->try_allocate_range({}, Thread::default_userspace_stack_size));
-    auto* stack_region = TRY(new_space->allocate_region(stack_range, "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
+    auto* stack_region = TRY(new_space->allocate_region({}, Thread::default_userspace_stack_size, PAGE_SIZE, "Stack (Main thread)", PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
     stack_region->set_stack(true);
 
     return LoadResult {
@@ -473,8 +469,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     bool has_interpreter = interpreter_description;
     interpreter_description = nullptr;
 
-    auto signal_trampoline_range = TRY(load_result.space->try_allocate_range({}, PAGE_SIZE));
-    auto* signal_trampoline_region = TRY(load_result.space->allocate_region_with_vmobject(signal_trampoline_range, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true));
+    auto* signal_trampoline_region = TRY(load_result.space->allocate_region_with_vmobject({}, PAGE_SIZE, PAGE_SIZE, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true));
     signal_trampoline_region->set_syscall_region(true);
 
     // (For dynamically linked executable) Allocate an FD for passing the main executable to the dynamic loader.

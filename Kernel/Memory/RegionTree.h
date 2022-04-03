@@ -37,6 +37,8 @@ public:
     ErrorOr<void> place_anywhere(Region&, size_t size, size_t alignment = PAGE_SIZE);
     ErrorOr<void> place_specifically(Region&, VirtualRange const&);
 
+    ErrorOr<NonnullOwnPtr<Memory::Region>> create_identity_mapped_region(PhysicalAddress, size_t);
+
     ErrorOr<VirtualRange> try_allocate_anywhere(size_t size, size_t alignment = PAGE_SIZE);
     ErrorOr<VirtualRange> try_allocate_specific(VirtualAddress base, size_t size);
     ErrorOr<VirtualRange> try_allocate_randomized(size_t size, size_t alignment = PAGE_SIZE);

@@ -1419,10 +1419,9 @@ ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
     if (!process().m_master_tls_region)
         return {};
 
-    auto range = TRY(process().address_space().try_allocate_range({}, thread_specific_region_size()));
-    auto* region = TRY(process().address_space().allocate_region(range, "Thread-specific", PROT_READ | PROT_WRITE));
+    auto* region = TRY(process().address_space().allocate_region({}, thread_specific_region_size(), PAGE_SIZE, "Thread-specific", PROT_READ | PROT_WRITE));
 
-    m_thread_specific_range = range;
+    m_thread_specific_range = region->range();
 
     SmapDisabler disabler;
     auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();

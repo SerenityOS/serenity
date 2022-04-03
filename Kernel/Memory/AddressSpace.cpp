@@ -136,23 +136,14 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
     return {};
 }
 
-ErrorOr<VirtualRange> AddressSpace::try_allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
-{
-    vaddr.mask(PAGE_MASK);
-    size = TRY(page_round_up(size));
-    if (vaddr.is_null())
-        return m_region_tree.try_allocate_anywhere(size, alignment);
-    return m_region_tree.try_allocate_specific(vaddr, size);
-}
-
 ErrorOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_region, VirtualRange const& range, size_t offset_in_vmobject)
 {
     OwnPtr<KString> region_name;
     if (!source_region.name().is_null())
         region_name = TRY(KString::try_create(source_region.name()));
 
-    auto new_region = TRY(Region::try_create_user_accessible(
-        range, source_region.vmobject(), offset_in_vmobject, move(region_name), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared()));
+    auto new_region = TRY(Region::create_unplaced(
+        source_region.vmobject(), offset_in_vmobject, move(region_name), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared()));
     new_region->set_syscall_region(source_region.is_syscall_region());
     new_region->set_mmap(source_region.is_mmap());
     new_region->set_stack(source_region.is_stack());
@@ -161,29 +152,46 @@ ErrorOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_re
         if (source_region.should_cow(page_offset_in_source_region + i))
             TRY(new_region->set_should_cow(i, true));
     }
-    return add_region(move(new_region));
+    SpinlockLocker locker(m_lock);
+    TRY(m_region_tree.place_specifically(*new_region, range));
+    return new_region.leak_ptr();
 }
 
-ErrorOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, StringView name, int prot, AllocationStrategy strategy)
+ErrorOr<Region*> AddressSpace::allocate_region(VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, StringView name, int prot, AllocationStrategy strategy)
 {
-    VERIFY(range.is_valid());
+    if (!requested_address.is_page_aligned())
+        return EINVAL;
+    auto size = TRY(Memory::page_round_up(requested_size));
+    auto alignment = TRY(Memory::page_round_up(requested_alignment));
     OwnPtr<KString> region_name;
     if (!name.is_null())
         region_name = TRY(KString::try_create(name));
-    auto vmobject = TRY(AnonymousVMObject::try_create_with_size(range.size(), strategy));
-    auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), 0, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false));
+    auto vmobject = TRY(AnonymousVMObject::try_create_with_size(size, strategy));
+    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(region_name), prot_to_region_access_flags(prot)));
+    if (requested_address.is_null())
+        TRY(m_region_tree.place_anywhere(*region, size, alignment));
+    else
+        TRY(m_region_tree.place_specifically(*region, VirtualRange { requested_address, size }));
     TRY(region->map(page_directory(), ShouldFlushTLB::No));
-    return add_region(move(region));
+    return region.leak_ptr();
 }
 
-ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
+ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange requested_range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
 {
-    VERIFY(range.is_valid());
-    size_t end_in_vmobject = offset_in_vmobject + range.size();
-    if (end_in_vmobject <= offset_in_vmobject) {
-        dbgln("allocate_region_with_vmobject: Overflow (offset + size)");
+    return allocate_region_with_vmobject(requested_range.base(), requested_range.size(), PAGE_SIZE, move(vmobject), offset_in_vmobject, name, prot, shared);
+}
+
+ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualAddress requested_address, size_t requested_size, size_t requested_alignment, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
+{
+    if (!requested_address.is_page_aligned())
         return EINVAL;
-    }
+    auto size = TRY(page_round_up(requested_size));
+    auto alignment = TRY(page_round_up(requested_alignment));
+
+    if (Checked<size_t>::addition_would_overflow(offset_in_vmobject, requested_size))
+        return EOVERFLOW;
+
+    size_t end_in_vmobject = offset_in_vmobject + requested_size;
     if (offset_in_vmobject >= vmobject->size()) {
         dbgln("allocate_region_with_vmobject: Attempt to allocate a region with an offset past the end of its VMObject.");
         return EINVAL;
@@ -196,7 +204,16 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const&
     OwnPtr<KString> region_name;
     if (!name.is_null())
         region_name = TRY(KString::try_create(name));
-    auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), offset_in_vmobject, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
+
+    auto region = TRY(Region::create_unplaced(move(vmobject), offset_in_vmobject, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
+
+    SpinlockLocker locker(m_lock);
+
+    if (requested_address.is_null())
+        TRY(m_region_tree.place_anywhere(*region, size, alignment));
+    else
+        TRY(m_region_tree.place_specifically(*region, VirtualRange { VirtualAddress { requested_address }, size }));
+
     if (prot == PROT_NONE) {
         // For PROT_NONE mappings, we don't have to set up any page table mappings.
         // We do still need to attach the region to the page_directory though.
@@ -205,7 +222,7 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const&
     } else {
         TRY(region->map(page_directory(), ShouldFlushTLB::No));
     }
-    return add_region(move(region));
+    return region.leak_ptr();
 }
 
 void AddressSpace::deallocate_region(Region& region)
@@ -265,15 +282,6 @@ ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange co
     }
 
     return regions;
-}
-
-ErrorOr<Region*> AddressSpace::add_region(NonnullOwnPtr<Region> region)
-{
-    SpinlockLocker lock(m_lock);
-    // NOTE: We leak the region into the IRBT here. It must be deleted or readopted when removed from the tree.
-    auto* ptr = region.leak_ptr();
-    m_region_tree.regions().insert(ptr->vaddr().get(), *ptr);
-    return ptr;
 }
 
 // Carve out a virtual address range from a region and return the two regions on either side

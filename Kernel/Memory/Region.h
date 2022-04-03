@@ -57,7 +57,7 @@ public:
     static ErrorOr<NonnullOwnPtr<Region>> try_create_user_accessible(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
     static ErrorOr<NonnullOwnPtr<Region>> try_create_kernel_only(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
     static ErrorOr<NonnullOwnPtr<Region>> create_unbacked();
-    static ErrorOr<NonnullOwnPtr<Region>> create_unplaced(NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
+    static ErrorOr<NonnullOwnPtr<Region>> create_unplaced(NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes, bool shared = false);
 
     ~Region();
 
