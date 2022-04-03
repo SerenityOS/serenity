@@ -20,10 +20,6 @@ class ProcessorInfo {
 public:
     ProcessorInfo(Processor const& processor);
 
-    static NonnullOwnPtr<KString> build_vendor_id_string();
-    static NonnullOwnPtr<KString> build_brand_string();
-    static NonnullOwnPtr<KString> build_features_string(Processor const&);
-
     StringView vendor_id_string() const { return m_vendor_id_string->view(); }
     StringView brand_string() const { return m_brand_string->view(); }
     StringView features_string() const { return m_features_string->view(); }
@@ -36,6 +32,10 @@ public:
     void set_apic_id(u32 apic_id) { m_apic_id = apic_id; }
 
 private:
+    static NonnullOwnPtr<KString> build_vendor_id_string();
+    static NonnullOwnPtr<KString> build_brand_string();
+    static NonnullOwnPtr<KString> build_features_string(Processor const&);
+
     NonnullOwnPtr<KString> m_vendor_id_string;
     NonnullOwnPtr<KString> m_brand_string;
     NonnullOwnPtr<KString> m_features_string;
