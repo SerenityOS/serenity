@@ -23,6 +23,7 @@
 enum class GraphType {
     CPU,
     Memory,
+    Network,
 };
 
 class GraphWidget final : public GUI::Frame {
@@ -70,6 +71,37 @@ private:
             } else {
                 m_history.enqueue(-1);
                 m_tooltip = StringView("Unable to determine memory usage");
+            }
+            break;
+        }
+        case GraphType::Network: {
+            u64 tx, rx, link_speed;
+            if (get_network_usage(tx, rx, link_speed)) {
+                u64 recent_tx = tx - m_last_total;
+                m_last_total = tx;
+                if (recent_tx > m_current_scale) {
+                    u64 m_old_scale = m_current_scale;
+                    // Scale in multiples of 1000 kB/s
+                    m_current_scale = (recent_tx / scale_unit) * scale_unit;
+                    rescale_history(m_old_scale, m_current_scale);
+                } else {
+                    // Figure out if we can scale back down.
+                    float max = static_cast<float>(recent_tx) / static_cast<float>(m_current_scale);
+                    for (auto const value : m_history) {
+                        if (value > max)
+                            max = value;
+                    }
+                    if (max < 0.5f && m_current_scale > scale_unit) {
+                        u64 m_old_scale = m_current_scale;
+                        m_current_scale = ::max((static_cast<u64>(max * m_current_scale) / scale_unit) * scale_unit, scale_unit);
+                        rescale_history(m_old_scale, m_current_scale);
+                    }
+                }
+                m_history.enqueue(static_cast<float>(recent_tx) / static_cast<float>(m_current_scale));
+                m_tooltip = String::formatted("Network: TX {} / RX {} ({:.1} kbit/s)", tx, rx, static_cast<double>(recent_tx) * 8.0 / 1000.0);
+            } else {
+                m_history.enqueue(-1);
+                m_tooltip = StringView("Unable to determine network usage");
             }
             break;
         }
@@ -178,15 +210,59 @@ private:
         return true;
     }
 
+    bool get_network_usage(u64& tx, u64& rx, u64& link_speed)
+    {
+        tx = rx = link_speed = 0;
+        if (m_proc_net) {
+            // Seeking to the beginning causes a data refresh!
+            if (!m_proc_net->seek(0, Core::SeekMode::SetPosition))
+                return false;
+        } else {
+            auto proc_net_adapters = Core::File::construct("/proc/net/adapters");
+            if (!proc_net_adapters->open(Core::OpenMode::ReadOnly))
+                return false;
+            m_proc_net = move(proc_net_adapters);
+        }
+
+        auto file_contents = m_proc_net->read_all();
+        auto json_or_error = JsonValue::from_string(file_contents);
+        if (json_or_error.is_error())
+            return false;
+        auto json = json_or_error.release_value();
+        auto const& array = json.as_array();
+        for (auto const& adapter_value : array.values()) {
+            auto const& adapter_obj = adapter_value.as_object();
+            if (!adapter_obj.has_string("ipv4_address") || !adapter_obj.get("link_up").as_bool())
+                continue;
+
+            tx += adapter_obj.get("bytes_in").to_u64();
+            rx += adapter_obj.get("bytes_out").to_u64();
+            // Link speed data is given in megabits, but we want all return values to be in bytes.
+            link_speed += adapter_obj.get("link_speed").to_u64() * 8'000'000;
+        }
+        link_speed /= 8;
+        return tx != 0;
+    }
+
+    void rescale_history(u64 old_scale, u64 new_scale)
+    {
+        float factor = static_cast<float>(old_scale) / static_cast<float>(new_scale);
+        for (auto& value : m_history)
+            value *= factor;
+    }
+
     GraphType m_graph_type;
     Gfx::Color m_graph_color;
     Gfx::Color m_graph_error_color;
     CircularQueue<float, history_size> m_history;
     u64 m_last_idle { 0 };
     u64 m_last_total { 0 };
+    static constexpr u64 const scale_unit = 8000;
+    u64 m_current_scale { scale_unit };
     String m_tooltip;
     RefPtr<Core::File> m_proc_stat;
     RefPtr<Core::File> m_proc_mem;
+    RefPtr<Core::File> m_proc_net;
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -199,13 +275,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     char const* cpu = nullptr;
     char const* memory = nullptr;
+    char const* network = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_option(cpu, "Create CPU graph", "cpu", 'C', "cpu");
     args_parser.add_option(memory, "Create memory graph", "memory", 'M', "memory");
+    args_parser.add_option(network, "Create network graph", "network", 'N', "network");
     args_parser.parse(arguments);
 
-    if (!cpu && !memory) {
-        printf("At least one of --cpu or --memory must be used");
+    if (!cpu && !memory && !network) {
+        printf("At least one of --cpu, --memory, or --network must be used");
         return 1;
     }
 
@@ -238,10 +316,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(create_applet(GraphType::CPU, cpu));
     if (memory)
         TRY(create_applet(GraphType::Memory, memory));
+    if (network)
+        TRY(create_applet(GraphType::Network, network));
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/proc/stat", "r"));
     TRY(Core::System::unveil("/proc/memstat", "r"));
+    TRY(Core::System::unveil("/proc/net/adapters", "r"));
     TRY(Core::System::unveil("/bin/SystemMonitor", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
