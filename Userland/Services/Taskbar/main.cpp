@@ -79,10 +79,6 @@ Vector<AppMetadata> g_apps;
 
 Color g_menu_selection_color;
 
-Vector<Gfx::SystemThemeMetaData> g_themes;
-RefPtr<GUI::Menu> g_themes_menu;
-GUI::ActionGroup g_themes_group;
-
 ErrorOr<Vector<String>> discover_apps_and_categories()
 {
     HashTable<String> seen_app_categories;
@@ -202,31 +198,16 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
 
     system_menu->add_separator();
 
-    g_themes_group.set_exclusive(true);
-    g_themes_group.set_unchecking_allowed(false);
-
-    g_themes_menu = &system_menu->add_submenu("&Themes");
-    g_themes_menu->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/themes.png").release_value_but_fixme_should_propagate_errors());
-
-    g_themes = Gfx::list_installed_system_themes();
-    auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
-
-    {
-        int theme_identifier = 0;
-        for (auto& theme : g_themes) {
-            auto action = GUI::Action::create_checkable(theme.name, [theme_identifier](auto&) {
-                auto& theme = g_themes[theme_identifier];
-                dbgln("Theme switched to {} at path {}", theme.name, theme.path);
-                auto success = GUI::ConnectionToWindowServer::the().set_system_theme(theme.path, theme.name, false);
-                VERIFY(success);
-            });
-            if (theme.name == current_theme_name)
-                action->set_checked(true);
-            g_themes_group.add_action(action);
-            g_themes_menu->add_action(action);
-            ++theme_identifier;
+    system_menu->add_action(GUI::Action::create("&Themes", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/themes.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
+        pid_t child_pid;
+        char const* argv[] = { "/bin/DisplaySettings", "-t", "themes", nullptr };
+        if ((errno = posix_spawn(&child_pid, argv[0], nullptr, nullptr, const_cast<char**>(argv), environ))) {
+            perror("posix_spawn");
+        } else {
+            if (disown(child_pid) < 0)
+                perror("disown");
         }
-    }
+    }));
 
     system_menu->add_action(GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-settings.png").release_value_but_fixme_should_propagate_errors(), [](auto&) {
         Core::Process::spawn("/bin/Settings"sv);

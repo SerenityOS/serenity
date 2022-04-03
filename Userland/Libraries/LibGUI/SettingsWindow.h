@@ -41,6 +41,11 @@ public:
         return tab;
     }
 
+    inline void set_active_widget(Widget* tab)
+    {
+        m_tab_widget->set_active_widget(tab);
+    }
+
 private:
     SettingsWindow() = default;
 
