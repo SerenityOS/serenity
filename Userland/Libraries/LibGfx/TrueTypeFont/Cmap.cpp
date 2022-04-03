@@ -91,28 +91,32 @@ u32 Cmap::Subtable::glyph_id_for_code_point(u32 code_point) const
 u32 Cmap::Subtable::glyph_id_for_code_point_table_4(u32 code_point) const
 {
     u32 segcount_x2 = be_u16(m_slice.offset_pointer((u32)Table4Offsets::SegCountX2));
-    if (m_slice.size() < segcount_x2 * (u32)Table4Sizes::NonConstMultiplier + (u32)Table4Sizes::Constant) {
+    if (m_slice.size() < segcount_x2 * (u32)Table4Sizes::NonConstMultiplier + (u32)Table4Sizes::Constant)
         return 0;
+
+    u32 segcount = segcount_x2 / 2;
+    u32 l = 0, r = segcount - 1;
+    while (l < r) {
+        u32 mid = l + (r - l) / 2;
+        u32 end_code_point_at_mid = be_u16(m_slice.offset_pointer((u32)Table4Offsets::EndConstBase + (mid * 2)));
+        if (code_point <= end_code_point_at_mid)
+            r = mid;
+        else
+            l = mid + 1;
     }
-    for (u32 offset = 0; offset < segcount_x2; offset += 2) {
-        u32 end_code_point = be_u16(m_slice.offset_pointer((u32)Table4Offsets::EndConstBase + offset));
-        if (code_point > end_code_point) {
-            continue;
-        }
-        u32 start_code_point = be_u16(m_slice.offset_pointer((u32)Table4Offsets::StartConstBase + segcount_x2 + offset));
-        if (code_point < start_code_point) {
-            break;
-        }
-        u32 delta = be_u16(m_slice.offset_pointer((u32)Table4Offsets::DeltaConstBase + segcount_x2 * 2 + offset));
-        u32 range = be_u16(m_slice.offset_pointer((u32)Table4Offsets::RangeConstBase + segcount_x2 * 3 + offset));
-        if (range == 0) {
-            return (code_point + delta) & 0xffff;
-        }
-        u32 glyph_offset = (u32)Table4Offsets::GlyphOffsetConstBase + segcount_x2 * 3 + offset + range + (code_point - start_code_point) * 2;
-        VERIFY(glyph_offset + 2 <= m_slice.size());
-        return (be_u16(m_slice.offset_pointer(glyph_offset)) + delta) & 0xffff;
-    }
-    return 0;
+
+    u32 offset = l * 2;
+    u32 start_code_point = be_u16(m_slice.offset_pointer((u32)Table4Offsets::StartConstBase + segcount_x2 + offset));
+    if (start_code_point > code_point)
+        return 0;
+
+    u32 delta = be_u16(m_slice.offset_pointer((u32)Table4Offsets::DeltaConstBase + segcount_x2 * 2 + offset));
+    u32 range = be_u16(m_slice.offset_pointer((u32)Table4Offsets::RangeConstBase + segcount_x2 * 3 + offset));
+    if (range == 0)
+        return (code_point + delta) & 0xffff;
+    u32 glyph_offset = (u32)Table4Offsets::GlyphOffsetConstBase + segcount_x2 * 3 + offset + range + (code_point - start_code_point) * 2;
+    VERIFY(glyph_offset + 2 <= m_slice.size());
+    return (be_u16(m_slice.offset_pointer(glyph_offset)) + delta) & 0xffff;
 }
 
 u32 Cmap::Subtable::glyph_id_for_code_point_table_12(u32 code_point) const
