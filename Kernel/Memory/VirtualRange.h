@@ -13,8 +13,6 @@
 namespace Kernel::Memory {
 
 class VirtualRange {
-    friend class VirtualRangeAllocator;
-
 public:
     VirtualRange() = delete;
     VirtualRange(VirtualAddress base, size_t size)

@@ -177,7 +177,6 @@ set(KERNEL_SOURCES
     Memory/SharedInodeVMObject.cpp
     Memory/VMObject.cpp
     Memory/VirtualRange.cpp
-    Memory/VirtualRangeAllocator.cpp
     MiniStdLib.cpp
     Locking/LockRank.cpp
     Locking/Mutex.cpp

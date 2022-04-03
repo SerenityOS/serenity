@@ -8,6 +8,7 @@
 
 #include <AK/Error.h>
 #include <AK/IntrusiveRedBlackTree.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/VirtualAddress.h>
@@ -31,6 +32,8 @@ public:
 
     VirtualRange total_range() const { return m_total_range; }
 
+    ErrorOr<NonnullOwnPtr<Region>> allocate_unbacked_anywhere(size_t size, size_t alignment = PAGE_SIZE);
+
     ErrorOr<VirtualRange> try_allocate_anywhere(size_t size, size_t alignment = PAGE_SIZE);
     ErrorOr<VirtualRange> try_allocate_specific(VirtualAddress base, size_t size);
     ErrorOr<VirtualRange> try_allocate_randomized(size_t size, size_t alignment = PAGE_SIZE);
@@ -38,6 +41,8 @@ public:
     void delete_all_regions_assuming_they_are_unmapped();
 
 private:
+    Spinlock m_lock;
+
     IntrusiveRedBlackTree<&Region::m_tree_node> m_regions;
     VirtualRange const m_total_range;
 };

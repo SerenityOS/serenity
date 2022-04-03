@@ -18,6 +18,7 @@
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/Region.h>
+#include <Kernel/Memory/RegionTree.h>
 #include <Kernel/Memory/VMObject.h>
 
 namespace Kernel {
@@ -245,6 +246,8 @@ public:
 
     IterationDecision for_each_physical_memory_range(Function<IterationDecision(PhysicalMemoryRange const&)>);
 
+    auto& region_tree() { return m_region_tree; }
+
 private:
     MemoryManager();
     ~MemoryManager();
@@ -297,7 +300,7 @@ private:
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };
 
-    IntrusiveRedBlackTree<&Region::m_tree_node> m_kernel_regions;
+    RegionTree m_region_tree;
 
     Vector<UsedMemoryRange> m_used_memory_ranges;
     Vector<PhysicalMemoryRange> m_physical_memory_ranges;

@@ -22,16 +22,7 @@ namespace Kernel::Memory {
 
 UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_page_directory()
 {
-    auto directory = adopt_ref_if_nonnull(new (nothrow) PageDirectory).release_nonnull();
-
-    auto kernel_range_start = kernel_mapping_base + 2 * MiB; // The first 2 MiB are used for mapping the pre-kernel
-    MUST(directory->m_range_allocator.initialize_with_range(VirtualAddress(kernel_range_start), KERNEL_PD_END - kernel_range_start));
-    // Carve out the whole page directory covering the kernel image to make MemoryManager::initialize_physical_pages() happy
-    FlatPtr start_of_range = ((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
-    FlatPtr end_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000;
-    MUST(directory->m_range_allocator.try_allocate_specific(VirtualAddress(start_of_range), end_of_range - start_of_range));
-
-    return directory;
+    return adopt_ref_if_nonnull(new (nothrow) PageDirectory).release_nonnull();
 }
 
 ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace()

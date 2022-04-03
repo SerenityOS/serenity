@@ -80,7 +80,6 @@ class Region;
 class SharedInodeVMObject;
 class VMObject;
 class VirtualRange;
-class VirtualRangeAllocator;
 }
 
 class Spinlock;

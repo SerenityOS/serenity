@@ -23,6 +23,7 @@
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
@@ -74,7 +75,14 @@ bool MemoryManager::is_initialized()
     return s_the != nullptr;
 }
 
+static UNMAP_AFTER_INIT VirtualRange kernel_virtual_range()
+{
+    auto kernel_range_start = kernel_mapping_base + 2 * MiB; // The first 2 MiB are used for mapping the pre-kernel
+    return VirtualRange { VirtualAddress(kernel_range_start), KERNEL_PD_END - kernel_range_start };
+}
+
 UNMAP_AFTER_INIT MemoryManager::MemoryManager()
+    : m_region_tree(kernel_virtual_range())
 {
     s_the = this;
 
@@ -439,13 +447,20 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     // Create the bare page directory. This is not a fully constructed page directory and merely contains the allocators!
     m_kernel_page_directory = PageDirectory::must_create_kernel_page_directory();
 
-    // Allocate a virtual address range for our array
-    auto range_or_error = m_kernel_page_directory->range_allocator().try_allocate_anywhere(physical_page_array_pages * PAGE_SIZE);
-    if (range_or_error.is_error()) {
-        dmesgln("MM: Could not allocate {} bytes to map physical page array!", physical_page_array_pages * PAGE_SIZE);
-        VERIFY_NOT_REACHED();
+    {
+        // Carve out the whole page directory covering the kernel image to make MemoryManager::initialize_physical_pages() happy
+        FlatPtr start_of_range = ((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
+        FlatPtr end_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000;
+        auto reserved_range = MUST(m_region_tree.try_allocate_specific(VirtualAddress(start_of_range), end_of_range - start_of_range));
+        (void)MUST(Region::create_unbacked(reserved_range)).leak_ptr();
     }
-    auto range = range_or_error.release_value();
+
+    // Allocate a virtual address range for our array
+    auto range = MUST(m_region_tree.try_allocate_anywhere(physical_page_array_pages * PAGE_SIZE));
+
+    {
+        (void)MUST(Region::create_unbacked(range)).leak_ptr();
+    }
 
     // Now that we have our special m_physical_pages_region region with enough pages to hold the entire array
     // try to map the entire region into kernel space so we always have it
@@ -651,7 +666,7 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
         return nullptr;
 
     SpinlockLocker lock(s_mm_lock);
-    auto* region = MM.m_kernel_regions.find_largest_not_above(vaddr.get());
+    auto* region = MM.m_region_tree.regions().find_largest_not_above(vaddr.get());
     if (!region || !region->contains(vaddr))
         return nullptr;
     return region;
@@ -757,7 +772,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(kernel_page_directory().get_lock());
     auto vmobject = TRY(AnonymousVMObject::try_create_physically_contiguous_with_size(size));
-    auto range = TRY(kernel_page_directory().range_allocator().try_allocate_anywhere(size));
+    auto range = TRY(m_region_tree.try_allocate_anywhere(size));
     return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
 }
 
@@ -796,7 +811,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size
     VERIFY(!(size % PAGE_SIZE));
     auto vmobject = TRY(AnonymousVMObject::try_create_with_size(size, strategy));
     SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range = TRY(kernel_page_directory().range_allocator().try_allocate_anywhere(size));
+    auto range = TRY(m_region_tree.try_allocate_anywhere(size));
     return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
 }
 
@@ -805,7 +820,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(PhysicalAdd
     VERIFY(!(size % PAGE_SIZE));
     auto vmobject = TRY(AnonymousVMObject::try_create_for_physical_range(paddr, size));
     SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range = TRY(kernel_page_directory().range_allocator().try_allocate_anywhere(size));
+    auto range = TRY(m_region_tree.try_allocate_anywhere(size));
     return allocate_kernel_region_with_vmobject(range, move(vmobject), name, access, cacheable);
 }
 
@@ -823,7 +838,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobje
 {
     VERIFY(!(size % PAGE_SIZE));
     SpinlockLocker lock(kernel_page_directory().get_lock());
-    auto range = TRY(kernel_page_directory().range_allocator().try_allocate_anywhere(size));
+    auto range = TRY(m_region_tree.try_allocate_anywhere(size));
     return allocate_kernel_region_with_vmobject(range, vmobject, name, access, cacheable);
 }
 
@@ -1146,14 +1161,14 @@ void MemoryManager::register_kernel_region(Region& region)
 {
     VERIFY(region.is_kernel());
     SpinlockLocker lock(s_mm_lock);
-    m_kernel_regions.insert(region.vaddr().get(), region);
+    m_region_tree.regions().insert(region.vaddr().get(), region);
 }
 
 void MemoryManager::unregister_kernel_region(Region& region)
 {
     VERIFY(region.is_kernel());
     SpinlockLocker lock(s_mm_lock);
-    m_kernel_regions.remove(region.vaddr().get());
+    m_region_tree.regions().remove(region.vaddr().get());
 }
 
 void MemoryManager::dump_kernel_regions()
@@ -1167,7 +1182,7 @@ void MemoryManager::dump_kernel_regions()
     dbgln("BEGIN{}         END{}        SIZE{}       ACCESS NAME",
         addr_padding, addr_padding, addr_padding);
     SpinlockLocker lock(s_mm_lock);
-    for (auto const& region : m_kernel_regions) {
+    for (auto const& region : m_region_tree.regions()) {
         dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}",
             region.vaddr().get(),
             region.vaddr().offset(region.size() - 1).get(),

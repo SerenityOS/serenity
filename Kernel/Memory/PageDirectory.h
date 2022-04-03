@@ -13,7 +13,6 @@
 #include <AK/RefPtr.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Memory/PhysicalPage.h>
-#include <Kernel/Memory/VirtualRangeAllocator.h>
 
 namespace Kernel::Memory {
 
@@ -47,9 +46,6 @@ public:
 #endif
     }
 
-    VirtualRangeAllocator& range_allocator() { return m_range_allocator; }
-    VirtualRangeAllocator const& range_allocator() const { return m_range_allocator; }
-
     AddressSpace* address_space() { return m_space; }
     AddressSpace const* address_space() const { return m_space; }
 
@@ -66,7 +62,6 @@ private:
     static void deregister_page_directory(PageDirectory* directory);
 
     AddressSpace* m_space { nullptr };
-    VirtualRangeAllocator m_range_allocator;
 #if ARCH(X86_64)
     RefPtr<PhysicalPage> m_pml4t;
 #endif

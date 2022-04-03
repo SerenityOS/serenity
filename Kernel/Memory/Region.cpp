@@ -22,6 +22,13 @@
 
 namespace Kernel::Memory {
 
+Region::Region(VirtualRange const& range)
+    : m_range(range)
+{
+    if (is_kernel())
+        MM.register_kernel_region(*this);
+}
+
 Region::Region(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
     : m_range(range)
     , m_offset_in_vmobject(offset_in_vmobject)
@@ -56,16 +63,18 @@ Region::~Region()
     if (m_page_directory) {
         SpinlockLocker pd_locker(m_page_directory->get_lock());
         if (!is_readable() && !is_writable() && !is_executable()) {
-            // If the region is "PROT_NONE", we didn't map it in the first place,
-            // so all we need to do here is deallocate the VM.
-            if (is_kernel())
-                m_page_directory->range_allocator().deallocate(range());
+            // If the region is "PROT_NONE", we didn't map it in the first place.
         } else {
             SpinlockLocker mm_locker(s_mm_lock);
             unmap_with_locks_held(ShouldDeallocateVirtualRange::Yes, ShouldFlushTLB::Yes, pd_locker, mm_locker);
             VERIFY(!m_page_directory);
         }
     }
+}
+
+ErrorOr<NonnullOwnPtr<Region>> Region::create_unbacked(VirtualRange const& range)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) Region(range));
 }
 
 ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
@@ -84,7 +93,7 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
             region_name = TRY(m_name->try_clone());
 
         auto region = TRY(Region::try_create_user_accessible(
-            m_range, m_vmobject, m_offset_in_vmobject, move(region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
+            m_range, vmobject(), m_offset_in_vmobject, move(region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
         region->set_mmap(m_mmap);
         region->set_shared(m_shared);
         region->set_syscall_region(is_syscall_region());
@@ -259,7 +268,7 @@ void Region::unmap(ShouldDeallocateVirtualRange should_deallocate_range, ShouldF
     unmap_with_locks_held(should_deallocate_range, should_flush_tlb, pd_locker, mm_locker);
 }
 
-void Region::unmap_with_locks_held(ShouldDeallocateVirtualRange deallocate_range, ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&, SpinlockLocker<RecursiveSpinlock>&)
+void Region::unmap_with_locks_held(ShouldDeallocateVirtualRange, ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&, SpinlockLocker<RecursiveSpinlock>&)
 {
     if (!m_page_directory)
         return;
@@ -270,10 +279,6 @@ void Region::unmap_with_locks_held(ShouldDeallocateVirtualRange deallocate_range
     }
     if (should_flush_tlb == ShouldFlushTLB::Yes)
         MemoryManager::flush_tlb(m_page_directory, vaddr(), page_count());
-    if (deallocate_range == ShouldDeallocateVirtualRange::Yes) {
-        if (is_kernel())
-            m_page_directory->range_allocator().deallocate(range());
-    }
     m_page_directory = nullptr;
 }
 

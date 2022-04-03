@@ -14,7 +14,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
 #include <Kernel/Memory/PageFaultResponse.h>
-#include <Kernel/Memory/VirtualRangeAllocator.h>
+#include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Sections.h>
 #include <Kernel/UnixTypes.h>
 
@@ -56,6 +56,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<Region>> try_create_user_accessible(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
     static ErrorOr<NonnullOwnPtr<Region>> try_create_kernel_only(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
+    static ErrorOr<NonnullOwnPtr<Region>> create_unbacked(VirtualRange const&);
 
     ~Region();
 
@@ -198,6 +199,7 @@ public:
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
 private:
+    explicit Region(VirtualRange const&);
     Region(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
 
     [[nodiscard]] bool remap_vmobject_page(size_t page_index, bool with_flush = true);
@@ -220,7 +222,7 @@ private:
     RefPtr<PageDirectory> m_page_directory;
     VirtualRange m_range;
     size_t m_offset_in_vmobject { 0 };
-    NonnullRefPtr<VMObject> m_vmobject;
+    RefPtr<VMObject> m_vmobject;
     OwnPtr<KString> m_name;
     u8 m_access { Region::None };
     bool m_shared : 1 { false };

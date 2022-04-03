@@ -353,20 +353,22 @@ struct KmallocGlobalData {
     void enable_expansion()
     {
         // FIXME: This range can be much bigger on 64-bit, but we need to figure something out for 32-bit.
-        auto virtual_range = MM.kernel_page_directory().range_allocator().try_allocate_anywhere(64 * MiB, 1 * MiB);
+        auto reserved_region = MUST(MM.region_tree().allocate_unbacked_anywhere(64 * MiB, 1 * MiB));
 
         expansion_data = KmallocGlobalData::ExpansionData {
-            .virtual_range = virtual_range.value(),
-            .next_virtual_address = virtual_range.value().base(),
+            .virtual_range = reserved_region->range(),
+            .next_virtual_address = reserved_region->range().base(),
         };
 
         // Make sure the entire kmalloc VM range is backed by page tables.
         // This avoids having to deal with lazy page table allocation during heap expansion.
         SpinlockLocker mm_locker(Memory::s_mm_lock);
         SpinlockLocker pd_locker(MM.kernel_page_directory().get_lock());
-        for (auto vaddr = virtual_range.value().base(); vaddr < virtual_range.value().end(); vaddr = vaddr.offset(PAGE_SIZE)) {
+        for (auto vaddr = reserved_region->range().base(); vaddr < reserved_region->range().end(); vaddr = vaddr.offset(PAGE_SIZE)) {
             MM.ensure_pte(MM.kernel_page_directory(), vaddr);
         }
+
+        (void)reserved_region.leak_ptr();
     }
 
     struct ExpansionData {

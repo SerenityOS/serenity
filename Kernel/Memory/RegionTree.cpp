@@ -140,4 +140,12 @@ ErrorOr<VirtualRange> RegionTree::try_allocate_randomized(size_t size, size_t al
 
     return try_allocate_anywhere(size, alignment);
 }
+
+ErrorOr<NonnullOwnPtr<Region>> RegionTree::allocate_unbacked_anywhere(size_t size, size_t alignment)
+{
+    SpinlockLocker locker(m_lock);
+    auto range = TRY(try_allocate_anywhere(size, alignment));
+    return Region::create_unbacked(range);
+}
+
 }
