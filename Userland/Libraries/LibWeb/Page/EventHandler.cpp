@@ -218,7 +218,7 @@ bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button
                         document->run_javascript(href.substring_view(11, href.length() - 11));
                     } else if (!url.fragment().is_null() && url.equals(document->url(), AK::URL::ExcludeFragment::Yes)) {
                         m_browsing_context.scroll_to_anchor(url.fragment());
-                    } else if (modifiers != 0) {
+                    } else {
                         if (m_browsing_context.is_top_level()) {
                             if (auto* page = m_browsing_context.page())
                                 page->client().page_did_click_link(url, link->target(), modifiers);
