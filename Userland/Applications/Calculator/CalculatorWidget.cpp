@@ -142,16 +142,7 @@ void CalculatorWidget::set_entry(KeypadValue value)
 
 void CalculatorWidget::mimic_pressed_button(RefPtr<GUI::Button> button)
 {
-    constexpr int TIMER_MS = 80;
-
-    if (!m_mimic_pressed_button.is_null())
-        m_mimic_pressed_button->set_mimic_pressed(false);
-
     button->set_mimic_pressed(true);
-    m_mimic_pressed_button = button;
-
-    stop_timer();
-    start_timer(TIMER_MS, Core::TimerShouldFireWhenNotVisible::Yes);
 }
 
 void CalculatorWidget::update_display()
@@ -226,10 +217,4 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
     }
 
     update_display();
-}
-
-void CalculatorWidget::timer_event(Core::TimerEvent&)
-{
-    if (!m_mimic_pressed_button.is_null())
-        m_mimic_pressed_button->set_mimic_pressed(false);
 }

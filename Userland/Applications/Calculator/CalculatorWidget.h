@@ -31,7 +31,6 @@ private:
     void update_display();
 
     virtual void keydown_event(GUI::KeyEvent&) override;
-    virtual void timer_event(Core::TimerEvent&) override;
 
     Calculator m_calculator;
     Keypad m_keypad;
@@ -57,6 +56,4 @@ private:
     RefPtr<GUI::Button> m_inverse_button;
     RefPtr<GUI::Button> m_percent_button;
     RefPtr<GUI::Button> m_equals_button;
-
-    RefPtr<GUI::Button> m_mimic_pressed_button {};
 };
