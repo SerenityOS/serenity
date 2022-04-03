@@ -995,4 +995,11 @@ int getdtablesize()
     int rc = getrlimit(RLIMIT_NOFILE, &dtablesize);
     __RETURN_WITH_ERRNO(rc, dtablesize.rlim_cur, rc);
 }
+
+// https://pubs.opengroup.org/onlinepubs/007904975/functions/nice.html
+int nice(int incr)
+{
+    dbgln("FIXME: nice was called with: {}, not implemented", incr);
+    return incr;
+}
 }
