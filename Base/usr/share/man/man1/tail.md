@@ -14,9 +14,6 @@ Print the end ('tail') of a file.
 
 ## Options:
 
-* `--help`: Display help message and exit
-* `--version`: Print version
-* `--complete`: Perform autocompletion
 * `-f`, `--follow`: Output data as it is written to the file
 * `-n number`, `--lines number`: Fetch the specified number of lines
 

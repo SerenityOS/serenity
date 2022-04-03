@@ -14,9 +14,6 @@ Open a fortune cookie, receive a free quote for the day!
 
 ## Options:
 
-* `--help`: Display help message and exit
-* `--version`: Print version
-* `--complete`: Perform autocompletion
 
 ## Arguments:
 

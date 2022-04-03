@@ -10,9 +10,6 @@ $ shot [--clipboard] [--delay seconds] [--screen index] [--region] [output]
 
 ## Options:
 
-* `--help`: Display help message and exit
-* `--version`: Print version
-* `--complete`: Perform autocompletion
 * `-c`, `--clipboard`: Output to clipboard
 * `-d seconds`, `--delay seconds`: Seconds to wait before taking a screenshot
 * `-s index`, `--screen index`: The index of the screen (default: -1 for all screens)
