@@ -389,14 +389,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_action([&](auto&) {
         if (path.has_value()) {
-            save_to_result(FileSystemAccessClient::Client::the().try_request_file(window, *path, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
+            save_to_result(FileSystemAccessClient::Client::the().try_request_file(window, *path, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate));
         } else {
-            save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini"));
+            save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate));
         }
     })));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini"));
+        save_to_result(FileSystemAccessClient::Client::the().try_save_file(window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate));
     })));
 
     TRY(file_menu->try_add_separator());
