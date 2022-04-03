@@ -140,13 +140,13 @@ enum class NeedsBigProcessLock {
     S(readlink, NeedsBigProcessLock::No)                    \
     S(readv, NeedsBigProcessLock::Yes)                      \
     S(realpath, NeedsBigProcessLock::No)                    \
-    S(recvfd, NeedsBigProcessLock::Yes)                     \
+    S(recvfd, NeedsBigProcessLock::No)                      \
     S(recvmsg, NeedsBigProcessLock::Yes)                    \
     S(rename, NeedsBigProcessLock::Yes)                     \
     S(rmdir, NeedsBigProcessLock::Yes)                      \
     S(sched_getparam, NeedsBigProcessLock::Yes)             \
     S(sched_setparam, NeedsBigProcessLock::Yes)             \
-    S(sendfd, NeedsBigProcessLock::Yes)                     \
+    S(sendfd, NeedsBigProcessLock::No)                      \
     S(sendmsg, NeedsBigProcessLock::Yes)                    \
     S(set_coredump_metadata, NeedsBigProcessLock::Yes)      \
     S(set_mmap_name, NeedsBigProcessLock::Yes)              \
