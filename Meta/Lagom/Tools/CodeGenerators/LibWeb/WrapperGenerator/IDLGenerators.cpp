@@ -1475,7 +1475,7 @@ static Optional<String> generate_arguments_match_check_for_count(Vector<IDL::Par
     Vector<String> conditions;
     for (auto i = 0u; i < argument_count; ++i) {
         auto const& parameter = parameters[i];
-        if (parameter.type->is_string() || parameter.type->is_numeric())
+        if (parameter.type->is_string() || parameter.type->is_primitive())
             continue;
         auto argument = String::formatted("arg{}", i);
         StringBuilder condition;

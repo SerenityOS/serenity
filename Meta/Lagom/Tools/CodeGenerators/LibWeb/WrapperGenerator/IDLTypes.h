@@ -61,6 +61,9 @@ struct Type : public RefCounted<Type> {
 
     // https://webidl.spec.whatwg.org/#dfn-numeric-type
     bool is_numeric() const { return is_integer() || name.is_one_of("float", "unrestricted float", "double", "unrestricted double"); }
+
+    // https://webidl.spec.whatwg.org/#dfn-primitive-type
+    bool is_primitive() const { return is_numeric() || name.is_one_of("bigint", "boolean"); }
 };
 
 struct Parameter {
