@@ -115,14 +115,13 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
 
     auto margin_left = CSS::Length::make_auto();
     auto margin_right = CSS::Length::make_auto();
-    auto const padding_left = computed_values.padding().left.resolved(box, width_of_containing_block_as_length).resolved(box);
-    auto const padding_right = computed_values.padding().right.resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto padding_left = computed_values.padding().left.resolved(box, width_of_containing_block_as_length).resolved(box);
+    auto padding_right = computed_values.padding().right.resolved(box, width_of_containing_block_as_length).resolved(box);
 
     auto try_compute_width = [&](auto const& a_width) {
         CSS::Length width = a_width;
         margin_left = computed_values.margin().left.resolved(box, width_of_containing_block_as_length).resolved(box);
         margin_right = computed_values.margin().right.resolved(box, width_of_containing_block_as_length).resolved(box);
-
         float total_px = computed_values.border_left().width + computed_values.border_right().width;
         for (auto& value : { margin_left, padding_left, width, padding_right, margin_right }) {
             total_px += value.to_px(box);
@@ -146,11 +145,26 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
                     margin_left = zero_value;
                 if (margin_right.is_auto())
                     margin_right = zero_value;
-                if (underflow_px >= 0) {
-                    width = CSS::Length(underflow_px, CSS::Length::Type::Px);
+
+                if (width_of_containing_block == INFINITY) {
+                    // If width of containing block is infinity
+                    // then we might as well behave like we don't have a containing block
+                    // and remove it from the calculation. In that case, our width
+                    // will end up being the sum of margin_*, padding_*, border_*
+
+                    float sum_of_all = computed_values.border_left().width + computed_values.border_right().width;
+                    for (const auto& value : { margin_left, padding_left, width, padding_right, margin_right }) {
+                        sum_of_all += value.to_px(box);
+                    }
+
+                    width = CSS::Length(sum_of_all, CSS::Length::Type::Px);
                 } else {
-                    width = zero_value;
-                    margin_right = CSS::Length(margin_right.to_px(box) + underflow_px, CSS::Length::Type::Px);
+                    if (underflow_px >= 0) {
+                        width = CSS::Length(underflow_px, CSS::Length::Type::Px);
+                    } else {
+                        width = zero_value;
+                        margin_right = CSS::Length(margin_right.to_px(box) + underflow_px, CSS::Length::Type::Px);
+                    }
                 }
             } else {
                 if (!margin_left.is_auto() && !margin_right.is_auto()) {
@@ -184,7 +198,6 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
                 float available_width = width_of_containing_block
                     - margin_left.to_px(box) - computed_values.border_left().width - padding_left.to_px(box)
                     - padding_right.to_px(box) - computed_values.border_right().width - margin_right.to_px(box);
-
                 auto result = calculate_shrink_to_fit_widths(box);
 
                 // Then the shrink-to-fit width is: min(max(preferred minimum width, available width), preferred width).
