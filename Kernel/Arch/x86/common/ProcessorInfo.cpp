@@ -14,6 +14,7 @@ namespace Kernel {
 
 ProcessorInfo::ProcessorInfo(Processor const& processor)
     : m_vendor_id_string(build_vendor_id_string())
+    , m_hypervisor_vendor_id_string(build_hypervisor_vendor_id_string(processor))
     , m_brand_string(build_brand_string())
     , m_features_string(build_features_string(processor))
 {
@@ -35,21 +36,35 @@ ProcessorInfo::ProcessorInfo(Processor const& processor)
         m_display_model = model;
     }
 }
+static void emit_u32(StringBuilder& builder, u32 value)
+{
+    builder.appendff("{:c}{:c}{:c}{:c}",
+        value & 0xff,
+        (value >> 8) & 0xff,
+        (value >> 16) & 0xff,
+        (value >> 24) & 0xff);
+};
 
 NonnullOwnPtr<KString> ProcessorInfo::build_vendor_id_string()
 {
     CPUID cpuid(0);
     StringBuilder builder;
-    auto emit_u32 = [&](u32 value) {
-        builder.appendff("{:c}{:c}{:c}{:c}",
-            value & 0xff,
-            (value >> 8) & 0xff,
-            (value >> 16) & 0xff,
-            (value >> 24) & 0xff);
-    };
-    emit_u32(cpuid.ebx());
-    emit_u32(cpuid.edx());
-    emit_u32(cpuid.ecx());
+    emit_u32(builder, cpuid.ebx());
+    emit_u32(builder, cpuid.edx());
+    emit_u32(builder, cpuid.ecx());
+    return KString::must_create(builder.string_view());
+}
+
+NonnullOwnPtr<KString> ProcessorInfo::build_hypervisor_vendor_id_string(Processor const& processor)
+{
+    if (!processor.has_feature(CPUFeature::HYPERVISOR))
+        return KString::must_create({});
+
+    CPUID cpuid(0x40000000);
+    StringBuilder builder;
+    emit_u32(builder, cpuid.ebx());
+    emit_u32(builder, cpuid.ecx());
+    emit_u32(builder, cpuid.edx());
     return KString::must_create(builder.string_view());
 }
 
