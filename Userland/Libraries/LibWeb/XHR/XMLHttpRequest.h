@@ -55,6 +55,7 @@ public:
     Bindings::XMLHttpRequestResponseType response_type() const { return m_response_type; }
 
     DOM::ExceptionOr<void> open(String const& method, String const& url);
+    DOM::ExceptionOr<void> open(String const& method, String const& url, bool async, String const& username = {}, String const& password = {});
     DOM::ExceptionOr<void> send(String body);
 
     DOM::ExceptionOr<void> set_request_header(String const& header, String const& value);
