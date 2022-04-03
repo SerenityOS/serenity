@@ -223,9 +223,32 @@ public:
 
     virtual ~HeadlessImageDecoderClient() override = default;
 
-    virtual Optional<Web::ImageDecoding::DecodedImage> decode_image(ReadonlyBytes) override
+    virtual Optional<Web::ImageDecoding::DecodedImage> decode_image(ReadonlyBytes data) override
     {
-        return {};
+        auto decoder = Gfx::ImageDecoder::try_create(data);
+
+        if (!decoder)
+            return Web::ImageDecoding::DecodedImage { false, 0, Vector<Web::ImageDecoding::Frame> {} };
+
+        if (!decoder->frame_count())
+            return Web::ImageDecoding::DecodedImage { false, 0, Vector<Web::ImageDecoding::Frame> {} };
+
+        Vector<Web::ImageDecoding::Frame> frames;
+        for (size_t i = 0; i < decoder->frame_count(); ++i) {
+            auto frame_or_error = decoder->frame(i);
+            if (frame_or_error.is_error()) {
+                frames.append({ {}, 0 });
+            } else {
+                auto frame = frame_or_error.release_value();
+                frames.append({ move(frame.image), static_cast<size_t>(frame.duration) });
+            }
+        }
+
+        return Web::ImageDecoding::DecodedImage {
+            decoder->is_animated(),
+            static_cast<u32>(decoder->loop_count()),
+            frames,
+        };
     }
 
 private:
