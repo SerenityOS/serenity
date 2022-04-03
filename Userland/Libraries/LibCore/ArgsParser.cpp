@@ -299,10 +299,21 @@ void ArgsParser::print_usage_markdown(FILE* file, char const* argv0)
         outln(file, "\n## Description\n\n{}", m_general_help);
     }
 
-    if (!m_options.is_empty())
+    auto should_display_option = [](Option& opt) {
+        return !(opt.hide_mode == OptionHideMode::Markdown || opt.hide_mode == OptionHideMode::CommandLineAndMarkdown);
+    };
+
+    size_t options_to_display = 0;
+    for (auto& opt : m_options) {
+        if (!should_display_option(opt))
+            continue;
+        options_to_display++;
+    }
+
+    if (options_to_display > 0)
         outln(file, "\n## Options:\n");
     for (auto& opt : m_options) {
-        if (opt.hide_mode == OptionHideMode::Markdown || opt.hide_mode == OptionHideMode::CommandLineAndMarkdown)
+        if (!should_display_option(opt))
             continue;
 
         auto print_argument = [&]() {
