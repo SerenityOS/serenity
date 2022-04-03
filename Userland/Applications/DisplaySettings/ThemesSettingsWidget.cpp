@@ -14,14 +14,18 @@
 
 namespace DisplaySettings {
 
+static inline String current_system_theme()
+{
+    return GUI::ConnectionToWindowServer::the().get_system_theme();
+}
+
 ThemesSettingsWidget::ThemesSettingsWidget()
 {
     load_from_gml(themes_settings_gml);
     m_themes = Gfx::list_installed_system_themes();
 
-    auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
-
     size_t current_theme_index;
+    auto current_theme_name = current_system_theme();
     m_theme_names.ensure_capacity(m_themes.size());
     for (auto& theme_meta : m_themes) {
         m_theme_names.append(theme_meta.name);
@@ -45,7 +49,7 @@ ThemesSettingsWidget::ThemesSettingsWidget()
 
 void ThemesSettingsWidget::apply_settings()
 {
-    if (m_selected_theme)
+    if (m_selected_theme && m_selected_theme->name != current_system_theme())
         VERIFY(GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name));
 }
 
