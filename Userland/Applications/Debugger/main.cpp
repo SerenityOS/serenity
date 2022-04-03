@@ -212,7 +212,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     editor = Line::Editor::construct();
 
-    TRY(Core::System::pledge("stdio proc ptrace exec rpath tty sigaction cpath unix", nullptr));
+    TRY(Core::System::pledge("stdio proc ptrace exec rpath tty sigaction cpath unix"));
 
     char const* command = nullptr;
     Core::ArgsParser args_parser;
