@@ -333,7 +333,7 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
 
 }
 
-bool IPC::encode(IPC::Encoder& encoder, Web::Cookie::ParsedCookie const& cookie)
+bool IPC::encode(Encoder& encoder, Web::Cookie::ParsedCookie const& cookie)
 {
     encoder << cookie.name;
     encoder << cookie.value;
@@ -347,7 +347,7 @@ bool IPC::encode(IPC::Encoder& encoder, Web::Cookie::ParsedCookie const& cookie)
     return true;
 }
 
-ErrorOr<void> IPC::decode(IPC::Decoder& decoder, Web::Cookie::ParsedCookie& cookie)
+ErrorOr<void> IPC::decode(Decoder& decoder, Web::Cookie::ParsedCookie& cookie)
 {
     TRY(decoder.decode(cookie.name));
     TRY(decoder.decode(cookie.value));

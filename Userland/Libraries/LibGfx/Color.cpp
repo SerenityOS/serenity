@@ -336,13 +336,13 @@ Vector<Color> Color::tints(u32 steps, float max) const
 
 }
 
-bool IPC::encode(IPC::Encoder& encoder, Color const& color)
+bool IPC::encode(Encoder& encoder, Color const& color)
 {
     encoder << color.value();
     return true;
 }
 
-ErrorOr<void> IPC::decode(IPC::Decoder& decoder, Color& color)
+ErrorOr<void> IPC::decode(Decoder& decoder, Color& color)
 {
     u32 rgba;
     TRY(decoder.decode(rgba));
