@@ -163,7 +163,7 @@ public:
     VisibleType& last() { return at(size() - 1); }
 
     template<typename TUnaryPredicate>
-    Optional<VisibleType> first_matching(TUnaryPredicate predicate) requires(!contains_reference)
+    Optional<VisibleType&> first_matching(TUnaryPredicate predicate) requires(!contains_reference)
     {
         for (size_t i = 0; i < size(); ++i) {
             if (predicate(at(i))) {
@@ -174,7 +174,7 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    Optional<VisibleType> last_matching(TUnaryPredicate predicate) requires(!contains_reference)
+    Optional<VisibleType&> last_matching(TUnaryPredicate predicate) requires(!contains_reference)
     {
         for (ssize_t i = size() - 1; i >= 0; --i) {
             if (predicate(at(i))) {
