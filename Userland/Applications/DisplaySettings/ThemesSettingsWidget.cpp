@@ -19,7 +19,8 @@ static inline String current_system_theme()
     return GUI::ConnectionToWindowServer::the().get_system_theme();
 }
 
-ThemesSettingsWidget::ThemesSettingsWidget()
+ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
+    : m_background_settings_changed { background_settings_changed }
 {
     load_from_gml(themes_settings_gml);
     m_themes = Gfx::list_installed_system_themes();
@@ -50,7 +51,8 @@ ThemesSettingsWidget::ThemesSettingsWidget()
 void ThemesSettingsWidget::apply_settings()
 {
     if (m_selected_theme && m_selected_theme->name != current_system_theme())
-        VERIFY(GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name));
+        VERIFY(GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed));
+    m_background_settings_changed = false;
 }
 
 }

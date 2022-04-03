@@ -31,7 +31,9 @@ private:
 
     Gfx::SystemThemeMetaData const* m_selected_theme { nullptr };
 
-    ThemesSettingsWidget();
+    bool& m_background_settings_changed;
+
+    ThemesSettingsWidget(bool& background_settings_changed);
 };
 
 }
