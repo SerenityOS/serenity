@@ -83,6 +83,12 @@ public:
         return m_value.template get<Percentage>();
     }
 
+    NonnullRefPtr<CalculatedStyleValue> const& calculated() const
+    {
+        VERIFY(is_calculated());
+        return m_value.template get<NonnullRefPtr<CalculatedStyleValue>>();
+    }
+
     virtual T resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, [[maybe_unused]] Layout::Node const&, [[maybe_unused]] T const& reference_value) const
     {
         VERIFY_NOT_REACHED();
