@@ -582,8 +582,7 @@ private:
                 auto& info = proc.info();
                 auto obj = TRY(array.add_object());
                 TRY(obj.add("processor", proc.id()));
-                // FIXME: Rename this to use the same name everywhere.
-                TRY(obj.add("cpuid", info.vendor_id_string()));
+                TRY(obj.add("vendor_id", info.vendor_id_string()));
                 TRY(obj.add("family", info.display_family()));
 
                 auto features_array = TRY(obj.add_array("features"));
