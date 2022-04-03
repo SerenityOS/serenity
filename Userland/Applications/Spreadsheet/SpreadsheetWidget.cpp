@@ -92,7 +92,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         m_workbook->add_sheet("Sheet 1");
 
     m_tab_context_menu = GUI::Menu::construct();
-    m_rename_action = GUI::Action::create("Rename...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/rename.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_rename_action = GUI::CommonActions::make_rename_action([this](auto&) {
         VERIFY(m_tab_context_menu_sheet_view);
 
         auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
@@ -137,16 +137,11 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (current_filename().is_empty()) {
-            String name = "workbook";
-            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), name, "sheets");
-            if (!save_path.has_value())
-                return;
-
-            save(save_path.value());
-            update_window_title();
-        } else {
-            save(current_filename());
+            m_save_as_action->activate();
+            return;
         }
+
+        save(current_filename());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -215,6 +210,14 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         redo();
     });
 
+    m_undo_stack.on_state_change = [this] {
+        m_undo_action->set_enabled(m_undo_stack.can_undo());
+        m_redo_action->set_enabled(m_undo_stack.can_redo());
+    };
+
+    m_undo_action->set_enabled(false);
+    m_redo_action->set_enabled(false);
+
     m_functions_help_action = GUI::Action::create(
         "&Functions Help", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             if (auto* worksheet_ptr = current_worksheet_if_available()) {
@@ -243,6 +246,11 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
 
+    m_tab_widget->on_change = [this](auto& selected_widget) {
+        // for keyboard shortcuts and command palette
+        m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(selected_widget);
+    };
+
     m_tab_widget->on_context_menu_request = [&](auto& widget, auto& event) {
         m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
         m_tab_context_menu->popup(event.screen_position());
@@ -250,17 +258,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
 
     m_tab_widget->on_double_click = [&](auto& widget) {
         m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
-        VERIFY(m_tab_context_menu_sheet_view);
-
-        auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
-        VERIFY(sheet_ptr); // How did we get here without a sheet?
-        auto& sheet = *sheet_ptr;
-        String new_name;
-        if (GUI::InputBox::show(window(), new_name, String::formatted("New name for '{}'", sheet.name()), "Rename sheet") == GUI::Dialog::ExecOK) {
-            sheet.set_name(new_name);
-            sheet.update();
-            m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
-        }
+        m_rename_action->activate();
     };
 }
 
@@ -427,7 +425,6 @@ void SpreadsheetWidget::load_file(Core::File& file)
         return;
     }
 
-    m_tab_widget->on_change = nullptr;
     m_cell_value_editor->on_change = nullptr;
     m_current_cell_label->set_text("");
     m_should_change_selected_cells = false;
@@ -446,18 +443,8 @@ bool SpreadsheetWidget::request_close()
 
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), current_filename());
     if (result == GUI::MessageBox::ExecYes) {
-        if (current_filename().is_empty()) {
-            String name = "workbook";
-            Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), name, "sheets");
-            if (!save_path.has_value())
-                return false;
-
-            save(save_path.value());
-            update_window_title();
-        } else {
-            save(current_filename());
-        }
-        return true;
+        m_save_action->activate();
+        return !m_workbook->dirty();
     }
 
     if (result == GUI::MessageBox::ExecNo)

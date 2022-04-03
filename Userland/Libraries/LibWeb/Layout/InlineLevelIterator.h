@@ -27,6 +27,7 @@ public:
             Element,
             ForcedBreak,
             AbsolutelyPositionedElement,
+            FloatingElement,
         };
         Type type {};
         Layout::Node const* node { nullptr };
@@ -39,7 +40,6 @@ public:
         float border_end { 0.0f };
         float margin_start { 0.0f };
         float margin_end { 0.0f };
-        bool should_force_break { false };
         bool is_collapsible_whitespace { false };
 
         float border_box_width() const
@@ -56,7 +56,7 @@ private:
     void skip_to_next();
     void compute_next();
 
-    void enter_text_node(Layout::TextNode const&, bool previous_is_empty_or_ends_in_whitespace);
+    void enter_text_node(Layout::TextNode const&);
 
     void enter_node_with_box_model_metrics(Layout::NodeWithStyleAndBoxModelMetrics const&);
     void exit_node_with_box_model_metrics();

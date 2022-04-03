@@ -30,3 +30,6 @@ Defines a GUI checkbox widget.
 | Property | Type | Possible values | Description              |
 |----------|------|-----------------|--------------------------|
 | autosize | bool | true or false   | Determines if auto-sized |
+
+## See also
+- [GML Button](help://man/5/GML-Widget-Button)

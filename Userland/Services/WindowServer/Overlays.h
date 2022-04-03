@@ -184,10 +184,10 @@ public:
 
 private:
     Gfx::IntSize m_content_size;
-    const int m_rows;
-    const int m_columns;
-    const int m_target_row;
-    const int m_target_column;
+    int const m_rows;
+    int const m_columns;
+    int const m_target_row;
+    int const m_target_column;
 };
 
 }

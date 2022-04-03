@@ -2,6 +2,7 @@ set(AK_TEST_SOURCES
     TestFixedPoint.cpp
     TestAllOf.cpp
     TestAnyOf.cpp
+    TestArbitrarySizedEnum.cpp
     TestArray.cpp
     TestAtomic.cpp
     TestBadge.cpp
@@ -47,6 +48,7 @@ set(AK_TEST_SOURCES
     TestNonnullRefPtr.cpp
     TestNumberFormat.cpp
     TestOptional.cpp
+    TestPrint.cpp
     TestQueue.cpp
     TestQuickSort.cpp
     TestRedBlackTree.cpp

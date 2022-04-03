@@ -92,8 +92,8 @@ void __asan_handle_no_return(void)
 {
 }
 
-void __asan_before_dynamic_init(const char*);
-void __asan_before_dynamic_init(const char* /* module_name */)
+void __asan_before_dynamic_init(char const*);
+void __asan_before_dynamic_init(char const* /* module_name */)
 {
 }
 

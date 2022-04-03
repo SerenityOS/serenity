@@ -79,7 +79,7 @@ public:
         return !done() && peek() == ch;
     }
 
-    bool matches(const char* chars) const
+    bool matches(char const* chars) const
     {
         String string(chars);
         if (remaining() < string.length())

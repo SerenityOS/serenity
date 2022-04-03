@@ -40,10 +40,14 @@ public:
     const Gfx::FloatRect absolute_rect() const;
     Type type() const { return m_type; }
 
-    const Gfx::FloatPoint& offset() const { return m_offset; }
-    void set_offset(const Gfx::FloatPoint& offset) { m_offset = offset; }
+    Gfx::FloatPoint const& offset() const { return m_offset; }
+    void set_offset(Gfx::FloatPoint const& offset) { m_offset = offset; }
 
-    const Gfx::FloatSize& size() const { return m_size; }
+    // The baseline of a fragment is the number of pixels from the top to the text baseline.
+    void set_baseline(float y) { m_baseline = y; }
+    float baseline() const { return m_baseline; }
+
+    Gfx::FloatSize const& size() const { return m_size; }
     void set_width(float width) { m_size.set_width(width); }
     void set_height(float height) { m_size.set_height(height); }
     float width() const { return m_size.width(); }
@@ -61,7 +65,11 @@ public:
 
     int text_index_at(float x) const;
 
-    Gfx::FloatRect selection_rect(const Gfx::Font&) const;
+    Gfx::FloatRect selection_rect(Gfx::Font const&) const;
+
+    float height_of_inline_level_box(FormattingState const&) const;
+    float top_of_inline_level_box(FormattingState const&) const;
+    float bottom_of_inline_level_box(FormattingState const&) const;
 
 private:
     Node const& m_layout_node;
@@ -71,6 +79,7 @@ private:
     Gfx::FloatSize m_size;
     float m_border_box_top { 0 };
     float m_border_box_bottom { 0 };
+    float m_baseline { 0 };
     Type m_type { Type::Normal };
 };
 

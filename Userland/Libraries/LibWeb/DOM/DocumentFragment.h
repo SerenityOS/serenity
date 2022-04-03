@@ -36,4 +36,7 @@ private:
     WeakPtr<Element> m_host;
 };
 
+template<>
+inline bool Node::fast_is<DocumentFragment>() const { return is_document_fragment(); }
+
 }

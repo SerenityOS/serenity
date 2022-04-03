@@ -24,8 +24,8 @@ public:
     static NonnullRefPtr<NodeIterator> create(Node& root, unsigned what_to_show, RefPtr<NodeFilter>);
 
     NonnullRefPtr<Node> root() { return m_root; }
-    NonnullRefPtr<Node> reference_node() { return m_reference; }
-    bool pointer_before_reference_node() const { return m_pointer_before_reference; }
+    NonnullRefPtr<Node> reference_node() { return m_reference.node; }
+    bool pointer_before_reference_node() const { return m_reference.is_before_node; }
     unsigned what_to_show() const { return m_what_to_show; }
 
     NodeFilter* filter() { return m_filter; }
@@ -52,11 +52,21 @@ private:
     // https://dom.spec.whatwg.org/#concept-traversal-root
     NonnullRefPtr<DOM::Node> m_root;
 
-    // https://dom.spec.whatwg.org/#nodeiterator-reference
-    NonnullRefPtr<DOM::Node> m_reference;
+    struct NodePointer {
+        NonnullRefPtr<DOM::Node> node;
 
-    // https://dom.spec.whatwg.org/#nodeiterator-pointer-before-reference
-    bool m_pointer_before_reference { true };
+        // https://dom.spec.whatwg.org/#nodeiterator-pointer-before-reference
+        bool is_before_node { true };
+    };
+
+    void run_pre_removing_steps_with_node_pointer(Node&, NodePointer&);
+
+    // https://dom.spec.whatwg.org/#nodeiterator-reference
+    NodePointer m_reference;
+
+    // While traversal is ongoing, we keep track of the current node pointer.
+    // This allows us to adjust it during traversal if calling the filter ends up removing the node from the DOM.
+    Optional<NodePointer> m_traversal_pointer;
 
     // https://dom.spec.whatwg.org/#concept-traversal-whattoshow
     unsigned m_what_to_show { 0 };

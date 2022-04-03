@@ -9,5 +9,5 @@
 #include <AK/String.h>
 
 namespace Diff {
-String generate_only_additions(const String&);
+String generate_only_additions(String const&);
 };

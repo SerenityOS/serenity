@@ -20,11 +20,13 @@ namespace HackStudio {
 EditorWrapper::EditorWrapper()
 {
     set_layout<GUI::VerticalBoxLayout>();
-
     m_filename_title = untitled_label;
 
     // FIXME: Propagate errors instead of giving up
-    m_editor = MUST(try_add<Editor>());
+    m_editor = MUST(Editor::try_create());
+    m_find_widget = add<FindWidget>(*m_editor);
+
+    add_child(*m_editor);
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
 
@@ -60,7 +62,7 @@ void EditorWrapper::set_mode_non_displayable()
     editor().document().set_text("The contents of this file could not be displayed. Is it a binary file?");
 }
 
-void EditorWrapper::set_filename(const String& filename)
+void EditorWrapper::set_filename(String const& filename)
 {
     m_filename = filename;
     update_title();
@@ -113,6 +115,14 @@ void EditorWrapper::update_title()
 void EditorWrapper::set_debug_mode(bool enabled)
 {
     m_editor->set_debug_mode(enabled);
+}
+
+void EditorWrapper::search_action()
+{
+    if (m_find_widget->visible())
+        m_find_widget->hide();
+    else
+        m_find_widget->show();
 }
 
 }

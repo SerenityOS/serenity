@@ -10,8 +10,18 @@
 
 namespace Web {
 
-ImageResource::ImageResource(const LoadRequest& request)
+NonnullRefPtr<ImageResource> ImageResource::convert_from_resource(Resource& resource)
+{
+    return adopt_ref(*new ImageResource(resource));
+}
+
+ImageResource::ImageResource(LoadRequest const& request)
     : Resource(Type::Image, request)
+{
+}
+
+ImageResource::ImageResource(Resource& resource)
+    : Resource(Type::Image, resource)
 {
 }
 
@@ -53,7 +63,7 @@ void ImageResource::decode_if_needed() const
     m_has_attempted_decode = true;
 }
 
-const Gfx::Bitmap* ImageResource::bitmap(size_t frame_index) const
+Gfx::Bitmap const* ImageResource::bitmap(size_t frame_index) const
 {
     decode_if_needed();
     if (frame_index >= m_decoded_frames.size())

@@ -21,12 +21,12 @@ public:
     FutexQueue();
     virtual ~FutexQueue();
 
-    u32 wake_n_requeue(u32, const Function<FutexQueue*()>&, u32, bool&, bool&);
-    u32 wake_n(u32, const Optional<u32>&, bool&);
+    u32 wake_n_requeue(u32, Function<FutexQueue*()> const&, u32, bool&, bool&);
+    u32 wake_n(u32, Optional<u32> const&, bool&);
     u32 wake_all(bool&);
 
     template<class... Args>
-    Thread::BlockResult wait_on(const Thread::BlockTimeout& timeout, Args&&... args)
+    Thread::BlockResult wait_on(Thread::BlockTimeout const& timeout, Args&&... args)
     {
         return Thread::current()->block<Thread::FutexBlocker>(timeout, *this, forward<Args>(args)...);
     }

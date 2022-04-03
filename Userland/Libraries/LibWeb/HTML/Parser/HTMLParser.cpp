@@ -32,7 +32,7 @@
 
 namespace Web::HTML {
 
-static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
+static inline void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
     dbgln("Parse error! {}", location);
 }
@@ -118,7 +118,7 @@ static bool is_html_integration_point(DOM::Element const& element)
     return false;
 }
 
-RefPtr<DOM::Document> parse_html_document(StringView data, const AK::URL& url, const String& encoding)
+RefPtr<DOM::Document> parse_html_document(StringView data, const AK::URL& url, String const& encoding)
 {
     auto document = DOM::Document::create(url);
     auto parser = HTMLParser::create(document, data, encoding);
@@ -126,7 +126,7 @@ RefPtr<DOM::Document> parse_html_document(StringView data, const AK::URL& url, c
     return document;
 }
 
-HTMLParser::HTMLParser(DOM::Document& document, StringView input, const String& encoding)
+HTMLParser::HTMLParser(DOM::Document& document, StringView input, String const& encoding)
     : m_tokenizer(input, encoding)
     , m_document(document)
 {
@@ -162,7 +162,7 @@ void HTMLParser::run()
             break;
         auto& token = optional_token.value();
 
-        dbgln_if(PARSER_DEBUG, "[{}] {}", insertion_mode_name(), token.to_string());
+        dbgln_if(HTML_PARSER_DEBUG, "[{}] {}", insertion_mode_name(), token.to_string());
 
         // https://html.spec.whatwg.org/multipage/parsing.html#tree-construction-dispatcher
         // As each token is emitted from the tokenizer, the user agent must follow the appropriate steps from the following list, known as the tree construction dispatcher:
@@ -189,7 +189,7 @@ void HTMLParser::run()
         }
 
         if (m_stop_parsing) {
-            dbgln_if(PARSER_DEBUG, "Stop parsing{}! :^)", m_parsing_fragment ? " fragment" : "");
+            dbgln_if(HTML_PARSER_DEBUG, "Stop parsing{}! :^)", m_parsing_fragment ? " fragment" : "");
             break;
         }
     }
@@ -389,7 +389,7 @@ void HTMLParser::process_using_the_rules_for(InsertionMode mode, HTMLToken& toke
     }
 }
 
-DOM::QuirksMode HTMLParser::which_quirks_mode(const HTMLToken& doctype_token) const
+DOM::QuirksMode HTMLParser::which_quirks_mode(HTMLToken const& doctype_token) const
 {
     if (doctype_token.doctype_data().force_quirks)
         return DOM::QuirksMode::Yes;
@@ -632,14 +632,17 @@ NonnullRefPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& toke
     //     then associate element with the form element pointed to by the form element pointer and set element's parser inserted flag.
     // FIXME: Check if the element is not a form-associated custom element.
     if (is<FormAssociatedElement>(*element)) {
-        auto& form_associated_element = static_cast<FormAssociatedElement&>(*element);
+        auto* form_associated_element = dynamic_cast<FormAssociatedElement*>(element.ptr());
+        VERIFY(form_associated_element);
+
+        auto& html_element = form_associated_element->form_associated_element_to_html_element();
 
         if (m_form_element
             && !m_stack_of_open_elements.contains(HTML::TagNames::template_)
-            && (!form_associated_element.is_listed() || !form_associated_element.has_attribute(HTML::AttributeNames::form))
+            && (!form_associated_element->is_listed() || !html_element.has_attribute(HTML::AttributeNames::form))
             && &intended_parent.root() == &m_form_element->root()) {
-            form_associated_element.set_form(m_form_element);
-            form_associated_element.set_parser_inserted({});
+            form_associated_element->set_form(m_form_element);
+            form_associated_element->set_parser_inserted({});
         }
     }
 
@@ -648,7 +651,7 @@ NonnullRefPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& toke
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-foreign-element
-NonnullRefPtr<DOM::Element> HTMLParser::insert_foreign_element(const HTMLToken& token, const FlyString& namespace_)
+NonnullRefPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken const& token, FlyString const& namespace_)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
 
@@ -674,7 +677,7 @@ NonnullRefPtr<DOM::Element> HTMLParser::insert_foreign_element(const HTMLToken& 
     return element;
 }
 
-NonnullRefPtr<DOM::Element> HTMLParser::insert_html_element(const HTMLToken& token)
+NonnullRefPtr<DOM::Element> HTMLParser::insert_html_element(HTMLToken const& token)
 {
     return insert_foreign_element(token, Namespace::HTML);
 }
@@ -788,12 +791,12 @@ void HTMLParser::handle_in_head(HTMLToken& token)
         auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
         auto element = create_element_for(token, Namespace::HTML, *adjusted_insertion_location.parent);
         auto& script_element = verify_cast<HTMLScriptElement>(*element);
-        script_element.set_parser_document({}, document());
-        script_element.set_non_blocking({}, false);
+        script_element.set_parser_document(Badge<HTMLParser> {}, document());
+        script_element.set_non_blocking(Badge<HTMLParser> {}, false);
         script_element.set_source_line_number({}, token.start_position().line + 1); // FIXME: This +1 is incorrect for script tags whose script does not start on a new line
 
         if (m_parsing_fragment) {
-            script_element.set_already_started({}, true);
+            script_element.set_already_started(Badge<HTMLParser> {}, true);
         }
 
         if (m_invoked_via_document_write) {
@@ -1008,7 +1011,7 @@ AnythingElse:
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLParser::generate_implied_end_tags(const FlyString& exception)
+void HTMLParser::generate_implied_end_tags(FlyString const& exception)
 {
     while (current_node().local_name() != exception && current_node().local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc))
         (void)m_stack_of_open_elements.pop();
@@ -1332,7 +1335,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
     }
 }
 
-bool HTMLParser::is_special_tag(const FlyString& tag_name, const FlyString& namespace_)
+bool HTMLParser::is_special_tag(FlyString const& tag_name, FlyString const& namespace_)
 {
     if (namespace_ == Namespace::HTML) {
         return tag_name.is_one_of(
@@ -2220,7 +2223,7 @@ void HTMLParser::handle_text(HTMLToken& token)
     if (token.is_end_of_file()) {
         log_parse_error();
         if (current_node().local_name() == HTML::TagNames::script)
-            verify_cast<HTMLScriptElement>(current_node()).set_already_started({}, true);
+            verify_cast<HTMLScriptElement>(current_node()).set_already_started(Badge<HTMLParser> {}, true);
         (void)m_stack_of_open_elements.pop();
         m_insertion_mode = m_original_insertion_mode;
         process_using_the_rules_for(m_insertion_mode, token);
@@ -2240,7 +2243,7 @@ void HTMLParser::handle_text(HTMLToken& token)
         m_tokenizer.update_insertion_point();
         increment_script_nesting_level();
         // FIXME: Check if active speculative HTML parser is null.
-        script->prepare_script({});
+        script->prepare_script(Badge<HTMLParser> {});
         decrement_script_nesting_level();
         if (script_nesting_level() == 0)
             m_parser_pause_flag = false;
@@ -3354,7 +3357,7 @@ void HTMLParser::reset_the_insertion_mode_appropriately()
     m_insertion_mode = InsertionMode::InBody;
 }
 
-const char* HTMLParser::insertion_mode_name() const
+char const* HTMLParser::insertion_mode_name() const
 {
     switch (m_insertion_mode) {
 #define __ENUMERATE_INSERTION_MODE(mode) \
@@ -3427,7 +3430,7 @@ NonnullRefPtr<HTMLParser> HTMLParser::create_for_scripting(DOM::Document& docume
     return adopt_ref(*new HTMLParser(document));
 }
 
-NonnullRefPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, const ByteBuffer& input)
+NonnullRefPtr<HTMLParser> HTMLParser::create_with_uncertain_encoding(DOM::Document& document, ByteBuffer const& input)
 {
     if (document.has_encoding())
         return adopt_ref(*new HTMLParser(document, input, document.encoding().value()));
@@ -3637,6 +3640,117 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node)
 
     // 5. Return s.
     return builder.to_string();
+}
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#current-dimension-value
+static RefPtr<CSS::StyleValue> parse_current_dimension_value(float value, Utf8View input, Utf8View::Iterator position)
+{
+    // 1. If position is past the end of input, then return value as a length.
+    if (position == input.end())
+        return CSS::LengthStyleValue::create(CSS::Length::make_px(value));
+
+    // 2. If the code point at position within input is U+0025 (%), then return value as a percentage.
+    if (*position == '%')
+        return CSS::PercentageStyleValue::create(CSS::Percentage(value));
+
+    // 3. Return value as a length.
+    return CSS::LengthStyleValue::create(CSS::Length::make_px(value));
+}
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-dimension-values
+RefPtr<CSS::StyleValue> parse_dimension_value(StringView string)
+{
+    // 1. Let input be the string being parsed.
+    auto input = Utf8View(string);
+    if (!input.validate())
+        return nullptr;
+
+    // 2. Let position be a position variable for input, initially pointing at the start of input.
+    auto position = input.begin();
+
+    // 3. Skip ASCII whitespace within input given position.
+    while (position != input.end() && is_ascii_space(*position))
+        ++position;
+
+    // 4. If position is past the end of input or the code point at position within input is not an ASCII digit,
+    //    then return failure.
+    if (position == input.end() || !is_ascii_digit(*position))
+        return nullptr;
+
+    // 5. Collect a sequence of code points that are ASCII digits from input given position,
+    //    and interpret the resulting sequence as a base-ten integer. Let value be that number.
+    StringBuilder number_string;
+    while (position != input.end() && is_ascii_digit(*position)) {
+        number_string.append(*position);
+        ++position;
+    }
+    auto integer_value = number_string.string_view().to_int();
+
+    // 6. If position is past the end of input, then return value as a length.
+    if (position == input.end())
+        return CSS::LengthStyleValue::create(CSS::Length::make_px(*integer_value));
+
+    float value = *integer_value;
+
+    // 7. If the code point at position within input is U+002E (.), then:
+    if (*position == '.') {
+        // 1. Advance position by 1.
+        ++position;
+
+        // 2. If position is past the end of input or the code point at position within input is not an ASCII digit,
+        //    then return the current dimension value with value, input, and position.
+        if (position == input.end() || !is_ascii_digit(*position))
+            return parse_current_dimension_value(value, input, position);
+
+        // 3. Let divisor have the value 1.
+        float divisor = 1;
+
+        // 4. While true:
+        while (true) {
+            // 1. Multiply divisor by ten.
+            divisor *= 10;
+
+            // 2. Add the value of the code point at position within input,
+            //    interpreted as a base-ten digit (0..9) and divided by divisor, to value.
+            value += (*position - '0') / divisor;
+
+            // 3. Advance position by 1.
+            ++position;
+
+            // 4. If position is past the end of input, then return value as a length.
+            if (position == input.end())
+                return CSS::LengthStyleValue::create(CSS::Length::make_px(value));
+
+            // 5. If the code point at position within input is not an ASCII digit, then break.
+            if (!is_ascii_digit(*position))
+                break;
+        }
+    }
+
+    // 8. Return the current dimension value with value, input, and position.
+    return parse_current_dimension_value(value, input, position);
+}
+
+// https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-non-zero-dimension-values
+RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView string)
+{
+    // 1. Let input be the string being parsed.
+    // 2. Let value be the result of parsing input using the rules for parsing dimension values.
+    auto value = parse_dimension_value(string);
+
+    // 3. If value is an error, return an error.
+    if (!value)
+        return nullptr;
+
+    // 4. If value is zero, return an error.
+    if (value->is_length() && value->as_length().length().raw_value() == 0)
+        return nullptr;
+    if (value->is_percentage() && value->as_percentage().percentage().value() == 0)
+        return nullptr;
+
+    // 5. If value is a percentage, return value as a percentage.
+    // 6. Return value as a length.
+    return value;
 }
 
 }

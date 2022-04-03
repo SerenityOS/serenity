@@ -13,7 +13,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio"));
 
-    const char* string = "yes";
+    char const* string = "yes";
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(string, "String to output (defaults to 'yes')", "string", Core::ArgsParser::Required::No);

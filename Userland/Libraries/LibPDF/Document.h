@@ -11,6 +11,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Color.h>
+#include <LibPDF/Encryption.h>
 #include <LibPDF/Error.h>
 #include <LibPDF/ObjectDerivatives.h>
 #include <LibPDF/Parser.h>
@@ -78,7 +79,16 @@ class Document final
 public:
     static PDFErrorOr<NonnullRefPtr<Document>> create(ReadonlyBytes bytes);
 
+    // If a security handler is present, it is the caller's responsibility to ensure
+    // this document is unencrypted before calling this function. The user does not
+    // need to handle the case where the user password is the empty string.
+    PDFErrorOr<void> initialize();
+
+    ALWAYS_INLINE RefPtr<SecurityHandler> const& security_handler() const { return m_security_handler; }
+
     ALWAYS_INLINE RefPtr<OutlineDict> const& outline() const { return m_outline; }
+
+    ALWAYS_INLINE RefPtr<DictObject> const& trailer() const { return m_trailer; }
 
     [[nodiscard]] PDFErrorOr<Value> get_or_load_value(u32 index);
 
@@ -139,10 +149,12 @@ private:
 
     NonnullRefPtr<Parser> m_parser;
     RefPtr<DictObject> m_catalog;
+    RefPtr<DictObject> m_trailer;
     Vector<u32> m_page_object_indices;
     HashMap<u32, Page> m_pages;
     HashMap<u32, Value> m_values;
     RefPtr<OutlineDict> m_outline;
+    RefPtr<SecurityHandler> m_security_handler;
 };
 
 }

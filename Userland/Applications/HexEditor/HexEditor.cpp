@@ -570,11 +570,11 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
             if (byte_position >= m_document->size())
                 return;
 
-            const bool edited_flag = m_document->get(byte_position).modified;
+            bool const edited_flag = m_document->get(byte_position).modified;
 
-            const bool selection_inbetween_start_end = byte_position >= m_selection_start && byte_position < m_selection_end;
-            const bool selection_inbetween_end_start = byte_position >= m_selection_end && byte_position < m_selection_start;
-            const bool highlight_flag = selection_inbetween_start_end || selection_inbetween_end_start;
+            bool const selection_inbetween_start_end = byte_position >= m_selection_start && byte_position < m_selection_end;
+            bool const selection_inbetween_end_start = byte_position >= m_selection_end && byte_position < m_selection_start;
+            bool const highlight_flag = selection_inbetween_start_end || selection_inbetween_end_start;
 
             Gfx::IntRect hex_display_rect {
                 frame_thickness() + offset_margin_width() + static_cast<int>(j) * cell_width() + 2 * m_padding,

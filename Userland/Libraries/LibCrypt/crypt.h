@@ -22,7 +22,7 @@ struct crypt_data {
     char result[65];
 };
 
-char* crypt(const char* key, const char* salt);
-char* crypt_r(const char* key, const char* salt, struct crypt_data* data);
+char* crypt(char const* key, char const* salt);
+char* crypt_r(char const* key, char const* salt, struct crypt_data* data);
 
 __END_DECLS

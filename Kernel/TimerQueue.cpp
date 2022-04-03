@@ -55,7 +55,7 @@ UNMAP_AFTER_INIT TimerQueue::TimerQueue()
     m_ticks_per_second = TimeManagement::the().ticks_per_second();
 }
 
-bool TimerQueue::add_timer_without_id(NonnullRefPtr<Timer> timer, clockid_t clock_id, const Time& deadline, Function<void()>&& callback)
+bool TimerQueue::add_timer_without_id(NonnullRefPtr<Timer> timer, clockid_t clock_id, Time const& deadline, Function<void()>&& callback)
 {
     if (deadline <= TimeManagement::the().current_time(clock_id))
         return false;

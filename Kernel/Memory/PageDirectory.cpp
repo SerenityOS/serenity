@@ -6,6 +6,8 @@
 
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
+#include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Prekernel/Prekernel.h>
@@ -13,49 +15,19 @@
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 
+extern u8 start_of_kernel_image[];
 extern u8 end_of_kernel_image[];
 
 namespace Kernel::Memory {
 
-static Singleton<IntrusiveRedBlackTree<&PageDirectory::m_tree_node>> s_cr3_map;
-
-static IntrusiveRedBlackTree<&PageDirectory::m_tree_node>& cr3_map()
-{
-    VERIFY_INTERRUPTS_DISABLED();
-    return *s_cr3_map;
-}
-
-RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
-{
-    SpinlockLocker lock(s_mm_lock);
-    return cr3_map().find(cr3);
-}
-
 UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_page_directory()
 {
-    auto directory = adopt_ref_if_nonnull(new (nothrow) PageDirectory).release_nonnull();
-
-    // make sure this starts in a new page directory to make MemoryManager::initialize_physical_pages() happy
-    FlatPtr start_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000;
-    MUST(directory->m_range_allocator.initialize_with_range(VirtualAddress(start_of_range), KERNEL_PD_END - start_of_range));
-
-    return directory;
+    return adopt_ref_if_nonnull(new (nothrow) PageDirectory).release_nonnull();
 }
 
-ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(VirtualRangeAllocator const* parent_range_allocator)
+ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace()
 {
-    constexpr FlatPtr userspace_range_base = USER_RANGE_BASE;
-    FlatPtr const userspace_range_ceiling = USER_RANGE_CEILING;
-
     auto directory = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PageDirectory));
-
-    if (parent_range_allocator) {
-        TRY(directory->m_range_allocator.initialize_from_parent(*parent_range_allocator));
-    } else {
-        size_t random_offset = (get_fast_random<u8>() % 32 * MiB) & PAGE_MASK;
-        u32 base = userspace_range_base + random_offset;
-        TRY(directory->m_range_allocator.initialize_with_range(VirtualAddress(base), userspace_range_ceiling - base));
-    }
 
     // NOTE: Take the MM lock since we need it for quickmap.
     SpinlockLocker lock(s_mm_lock);
@@ -119,7 +91,7 @@ ErrorOr<NonnullRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(Vi
         MM.unquickmap_page();
     }
 
-    cr3_map().insert(directory->cr3(), directory);
+    register_page_directory(directory);
     return directory;
 }
 
@@ -144,7 +116,7 @@ PageDirectory::~PageDirectory()
 {
     if (is_cr3_initialized()) {
         SpinlockLocker lock(s_mm_lock);
-        cr3_map().remove(cr3());
+        deregister_page_directory(this);
     }
 }
 

@@ -587,7 +587,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         }
 
-        const auto& sequence = sequence_value.value();
+        auto const& sequence = sequence_value.value();
 
         if (sequence.to_uint().has_value()) {
             modifier_buffer.append(sequence);

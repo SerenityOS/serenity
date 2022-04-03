@@ -59,3 +59,185 @@ test("deleting non-configurable property", () => {
     expect(delete q.foo).toBeFalse();
     expect(q.hasOwnProperty("foo")).toBeTrue();
 });
+
+test("deleting non-configurable property throws in strict mode", () => {
+    "use strict";
+    const q = {};
+    Object.defineProperty(q, "foo", { value: 1, writable: false, enumerable: false });
+    expect(q.foo).toBe(1);
+
+    expect(() => {
+        delete q.foo;
+    }).toThrowWithMessage(TypeError, "Cannot delete property 'foo' of [object Object]");
+    expect(q.hasOwnProperty("foo")).toBeTrue();
+});
+
+test("deleting super property", () => {
+    class A {
+        foo() {}
+    }
+
+    class B extends A {
+        bar() {
+            delete super.foo;
+        }
+
+        baz() {
+            delete super["foo"];
+        }
+    }
+
+    const obj = new B();
+    expect(() => {
+        obj.bar();
+    }).toThrowWithMessage(ReferenceError, "Can't delete a property on 'super'");
+
+    expect(() => {
+        obj.baz();
+    }).toThrowWithMessage(ReferenceError, "Can't delete a property on 'super'");
+});
+
+test("deleting an object computed property coerces the object to a property key", () => {
+    let called = false;
+    const obj = { prop1: 1, 2: 2 };
+
+    function createToPrimitiveFunction(object, valueToReturn) {
+        return function (hint) {
+            called = true;
+            console.log(this, object);
+            expect(this).toBe(object);
+            expect(hint).toBe("string");
+            return valueToReturn;
+        };
+    }
+
+    const a = {
+        [Symbol.toPrimitive]: function (hint) {
+            called = true;
+            expect(this).toBe(a);
+            expect(hint).toBe("string");
+            return "prop1";
+        },
+    };
+
+    const b = {
+        [Symbol.toPrimitive]: function (hint) {
+            called = true;
+            expect(this).toBe(b);
+            expect(hint).toBe("string");
+            return 2;
+        },
+    };
+
+    const c = {
+        [Symbol.toPrimitive]: function (hint) {
+            called = true;
+            expect(this).toBe(c);
+            expect(hint).toBe("string");
+            return {};
+        },
+    };
+
+    expect(Object.hasOwn(obj, "prop1")).toBeTrue();
+    expect(Object.hasOwn(obj, 2)).toBeTrue();
+
+    expect(delete obj[a]).toBeTrue();
+    expect(called).toBeTrue();
+    expect(Object.hasOwn(obj, "prop1")).toBeFalse();
+    expect(Object.hasOwn(obj, 2)).toBeTrue();
+    expect(obj.prop1).toBeUndefined();
+    expect(obj[2]).toBe(2);
+
+    called = false;
+    expect(delete obj[b]).toBeTrue();
+    expect(called).toBeTrue();
+    expect(Object.hasOwn(obj, "prop1")).toBeFalse();
+    expect(Object.hasOwn(obj, 2)).toBeFalse();
+    expect(obj.prop1).toBeUndefined();
+    expect(obj[2]).toBeUndefined();
+
+    called = false;
+    expect(() => {
+        delete obj[c];
+    }).toThrowWithMessage(
+        TypeError,
+        `Can't convert [object Object] to primitive with hint "string", its @@toPrimitive method returned an object`
+    );
+    expect(called).toBeTrue();
+});
+
+// FIXME: This currently does not work as it trys to coerce the returned Symbol to a String. I'm not sure why this is.
+test.skip("deleting a symbol returned by @@toPrimitive", () => {
+    let called = false;
+    const obj = { [Symbol.toStringTag]: "hello world" };
+
+    const a = {
+        [Symbol.toPrimitive]: function (hint) {
+            called = true;
+            expect(this).toBe(a);
+            expect(hint).toBe("string");
+            return Symbol.toStringTag;
+        },
+    };
+
+    expect(Object.hasOwn(obj, Symbol.toStringTag)).toBeTrue();
+    expect(delete obj[a]).toBeTrue();
+    expect(called).toBeTrue();
+    expect(Object.hasOwn(obj, Symbol.toStringTag)).toBeFalse();
+    expect(obj[Symbol.toStringTag]).toBeUndefined();
+});
+
+// FIXME: This currently does not work with the AST interpreter, but works with Bytecode.
+test.skip("delete always evaluates the lhs", () => {
+    const obj = { prop: 1 };
+    let called = false;
+    function a() {
+        called = true;
+        return obj;
+    }
+    expect(delete a()).toBeTrue();
+    expect(called).toBeTrue();
+    expect(obj).toBeDefined();
+    expect(Object.hasOwn(obj, "prop")).toBeTrue();
+    expect(obj.prop).toBe(1);
+
+    called = false;
+    expect(delete a().prop).toBeTrue();
+    expect(called).toBeTrue();
+    expect(obj).toBeDefined();
+    expect(Object.hasOwn(obj, "prop")).toBeFalse();
+    expect(obj.prop).toBeUndefined();
+
+    let b = 1;
+    expect(delete ++b).toBeTrue();
+    expect(b).toBe(2);
+
+    expect(delete b++).toBeTrue();
+    expect(b).toBe(3);
+
+    let c = { d: 1 };
+    expect(delete (b = c)).toBeTrue();
+    expect(b).toBeDefined();
+    expect(c).toBeDefined();
+    expect(b).toBe(c);
+
+    function d() {
+        throw new Error("called");
+    }
+
+    expect(() => {
+        delete d();
+    }).toThrowWithMessage(Error, "called");
+
+    expect(() => {
+        delete d().stack;
+    }).toThrowWithMessage(Error, "called");
+
+    expect(() => {
+        delete ~d();
+    }).toThrowWithMessage(Error, "called");
+
+    expect(() => {
+        delete new d();
+    }).toThrowWithMessage(Error, "called");
+});

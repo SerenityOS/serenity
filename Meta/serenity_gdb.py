@@ -251,6 +251,10 @@ class AKVector:
         else:
             elements = get_field_unalloced(self.val, "m_inline_buffer_storage", inner_type_ptr)
 
+        # Very arbitrary limit, just to catch UAF'd and garbage vector values with a silly number of elements
+        if vec_len > 373373:
+            return []
+
         return [(f"[{i}]", elements[i]) for i in range(vec_len)]
 
     @classmethod
@@ -292,7 +296,8 @@ class AKHashMapPrettyPrinter:
         buckets = val["m_buckets"]
         for i in range(0, val["m_capacity"]):
             bucket = buckets[i]
-            if bucket["used"]:
+            # if state == Used
+            if bucket["state"] & 0xf0 == 0x10:
                 cb(bucket["storage"].cast(entry_type_ptr))
 
     @staticmethod

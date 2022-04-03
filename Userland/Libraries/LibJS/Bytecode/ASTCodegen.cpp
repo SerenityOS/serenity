@@ -427,6 +427,9 @@ Bytecode::CodeGenerationErrorOr<void> LogicalExpression::generate_bytecode(Bytec
 
 Bytecode::CodeGenerationErrorOr<void> UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    if (m_op == UnaryOp::Delete)
+        return generator.emit_delete_reference(m_lhs);
+
     TRY(m_lhs->generate_bytecode(generator));
 
     switch (m_op) {
@@ -448,11 +451,9 @@ Bytecode::CodeGenerationErrorOr<void> UnaryExpression::generate_bytecode(Bytecod
     case UnaryOp::Void:
         generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
         break;
+    case UnaryOp::Delete: // Delete is implemented above.
     default:
-        return Bytecode::CodeGenerationError {
-            this,
-            "Unimplemented operation"sv,
-        };
+        VERIFY_NOT_REACHED();
     }
 
     return {};
@@ -816,25 +817,42 @@ Bytecode::CodeGenerationErrorOr<void> ObjectExpression::generate_bytecode(Byteco
     generator.emit<Bytecode::Op::Store>(object_reg);
 
     for (auto& property : m_properties) {
-        if (property.type() != ObjectProperty::Type::KeyValue)
-            return Bytecode::CodeGenerationError {
-                this,
-                "Unimplemented property kind"sv,
-            };
+        Bytecode::Op::PropertyKind property_kind;
+        switch (property.type()) {
+        case ObjectProperty::Type::KeyValue:
+            property_kind = Bytecode::Op::PropertyKind::KeyValue;
+            break;
+        case ObjectProperty::Type::Getter:
+            property_kind = Bytecode::Op::PropertyKind::Getter;
+            break;
+        case ObjectProperty::Type::Setter:
+            property_kind = Bytecode::Op::PropertyKind::Setter;
+            break;
+        case ObjectProperty::Type::Spread:
+            property_kind = Bytecode::Op::PropertyKind::Spread;
+            break;
+        case ObjectProperty::Type::ProtoSetter:
+            property_kind = Bytecode::Op::PropertyKind::ProtoSetter;
+            break;
+        }
 
         if (is<StringLiteral>(property.key())) {
             auto& string_literal = static_cast<StringLiteral const&>(property.key());
             Bytecode::IdentifierTableIndex key_name = generator.intern_identifier(string_literal.value());
 
-            TRY(property.value().generate_bytecode(generator));
-            generator.emit<Bytecode::Op::PutById>(object_reg, key_name);
+            if (property_kind != Bytecode::Op::PropertyKind::Spread)
+                TRY(property.value().generate_bytecode(generator));
+
+            generator.emit<Bytecode::Op::PutById>(object_reg, key_name, property_kind);
         } else {
             TRY(property.key().generate_bytecode(generator));
             auto property_reg = generator.allocate_register();
             generator.emit<Bytecode::Op::Store>(property_reg);
 
-            TRY(property.value().generate_bytecode(generator));
-            generator.emit<Bytecode::Op::PutByValue>(object_reg, property_reg);
+            if (property_kind != Bytecode::Op::PropertyKind::Spread)
+                TRY(property.value().generate_bytecode(generator));
+
+            generator.emit<Bytecode::Op::PutByValue>(object_reg, property_reg, property_kind);
         }
     }
 
@@ -1040,10 +1058,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
                 return generate_binding_pattern_bytecode(generator, pattern, initialization_mode, target_reg);
             },
             [&](NonnullRefPtr<MemberExpression> const& expr) -> Bytecode::CodeGenerationErrorOr<void> {
-                return Bytecode::CodeGenerationError {
-                    expr.ptr(),
-                    "Unimplemented alias mode: MemberExpression"sv,
-                };
+                return generator.emit_store_to_reference(*expr);
             });
     };
 
@@ -1201,7 +1216,7 @@ Bytecode::CodeGenerationErrorOr<void> CallExpression::generate_bytecode(Bytecode
             "Unimplemented callee kind: SuperExpression"sv,
         };
     } else if (is<MemberExpression>(*m_callee)) {
-        auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
+        auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
         if (is<SuperExpression>(member_expression.object())) {
             return Bytecode::CodeGenerationError {
                 this,
@@ -1895,7 +1910,12 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
                 VERIFY(declaration.declarations().size() == 1);
                 TRY(assign_accumulator_to_variable_declarator(generator, declaration.declarations().first(), declaration));
             } else {
-                TRY(generator.emit_store_to_reference(*lhs.get<NonnullRefPtr<ASTNode>>()));
+                if (auto ptr = lhs.get_pointer<NonnullRefPtr<ASTNode>>()) {
+                    TRY(generator.emit_store_to_reference(**ptr));
+                } else {
+                    auto& binding_pattern = lhs.get<NonnullRefPtr<BindingPattern>>();
+                    TRY(generate_binding_pattern_bytecode(generator, *binding_pattern, Bytecode::Op::SetVariable::InitializationMode::Set, Bytecode::Register::accumulator()));
+                }
             }
         }
     }
@@ -1999,7 +2019,11 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
     //         3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
     //         4. Return ? IteratorClose(iteratorRecord, status).
     // o. If result.[[Value]] is not empty, set V to result.[[Value]].
-    generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { loop_update }, {});
+
+    // The body can contain an unconditional block terminator (e.g. return, throw), so we have to check for that before generating the Jump.
+    if (!generator.is_current_block_terminated())
+        generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { loop_update }, {});
+
     generator.switch_to_basic_block(loop_end);
     return {};
 }

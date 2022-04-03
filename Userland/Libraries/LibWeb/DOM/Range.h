@@ -15,7 +15,7 @@ class Range final : public AbstractRange {
 public:
     using WrapperType = Bindings::RangeWrapper;
 
-    virtual ~Range() override = default;
+    virtual ~Range() override;
 
     static NonnullRefPtr<Range> create(Document&);
     static NonnullRefPtr<Range> create(HTML::Window&);
@@ -61,6 +61,17 @@ public:
     ExceptionOr<bool> is_point_in_range(Node const&, u32 offset) const;
     ExceptionOr<i16> compare_point(Node const&, u32 offset) const;
 
+    ExceptionOr<void> delete_contents();
+    ExceptionOr<NonnullRefPtr<DocumentFragment>> extract_contents();
+    ExceptionOr<NonnullRefPtr<DocumentFragment>> clone_contents();
+
+    ExceptionOr<void> insert_node(NonnullRefPtr<Node>);
+    ExceptionOr<void> surround_contents(NonnullRefPtr<Node> new_parent);
+
+    String to_string() const;
+
+    static HashTable<Range*>& live_ranges();
+
 private:
     explicit Range(Document&);
 
@@ -76,6 +87,13 @@ private:
 
     ExceptionOr<void> set_start_or_end(Node& node, u32 offset, StartOrEnd start_or_end);
     ExceptionOr<void> select(Node& node);
+
+    ExceptionOr<NonnullRefPtr<DocumentFragment>> extract();
+    ExceptionOr<NonnullRefPtr<DocumentFragment>> clone_the_contents();
+    ExceptionOr<void> insert(NonnullRefPtr<Node>);
+
+    bool contains_node(Node const&) const;
+    bool partially_contains_node(Node const&) const;
 };
 
 }

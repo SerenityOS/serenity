@@ -44,7 +44,7 @@ struct ProcessorMessage {
         } flush_tlb;
     };
 
-    volatile bool async;
+    bool volatile async;
 
     ProcessorMessageEntry* per_proc_entries;
 

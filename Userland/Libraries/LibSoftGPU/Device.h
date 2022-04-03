@@ -83,7 +83,7 @@ struct RasterizerOptions {
 struct LightModelParameters {
     FloatVector4 scene_ambient_color { 0.2f, 0.2f, 0.2f, 1.0f };
     bool viewer_at_infinity { false };
-    unsigned int single_color { 0x81F9 }; // This is the value of `GL_SINGLE_COLOR`. Considering we definitely don't leak gl.h stuff into here, we fix it to the gl.h macro value.
+    ColorControl color_control { ColorControl::SingleColor };
     bool two_sided_lighting { false };
 };
 
@@ -111,11 +111,11 @@ struct StencilConfiguration {
 
 class Device final {
 public:
-    Device(const Gfx::IntSize& min_size);
+    Device(Gfx::IntSize const& min_size);
 
     DeviceInfo info() const;
 
-    void draw_primitives(PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix3x3 const& normal_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
+    void draw_primitives(PrimitiveType, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units);
     void resize(Gfx::IntSize const& min_size);
     void clear_color(FloatVector4 const&);
     void clear_depth(DepthType);
@@ -123,8 +123,8 @@ public:
     void blit_color_buffer_to(Gfx::Bitmap& target);
     void blit_to_color_buffer_at_raster_position(Gfx::Bitmap const&);
     void blit_to_depth_buffer_at_raster_position(Vector<DepthType> const&, int, int);
-    void set_options(const RasterizerOptions&);
-    void set_light_model_params(const LightModelParameters&);
+    void set_options(RasterizerOptions const&);
+    void set_light_model_params(LightModelParameters const&);
     RasterizerOptions options() const { return m_options; }
     LightModelParameters light_model() const { return m_lighting_model; }
     ColorType get_color_buffer_pixel(int x, int y);
@@ -145,7 +145,7 @@ private:
     void draw_statistics_overlay(Gfx::Bitmap&);
     Gfx::IntRect get_rasterization_rect_of_size(Gfx::IntSize size);
 
-    void rasterize_triangle(const Triangle& triangle);
+    void rasterize_triangle(Triangle const& triangle);
     void setup_blend_factors();
     void shade_fragments(PixelQuad&);
     bool test_alpha(PixelQuad&);

@@ -27,25 +27,25 @@ public:
     virtual ~LocalSocket() override;
 
     ErrorOr<void> sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description);
-    ErrorOr<NonnullRefPtr<OpenFileDescription>> recvfd(const OpenFileDescription& socket_description);
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> recvfd(OpenFileDescription const& socket_description);
 
-    static void for_each(Function<void(const LocalSocket&)>);
-    static ErrorOr<void> try_for_each(Function<ErrorOr<void>(const LocalSocket&)>);
+    static void for_each(Function<void(LocalSocket const&)>);
+    static ErrorOr<void> try_for_each(Function<ErrorOr<void>(LocalSocket const&)>);
 
     StringView socket_path() const;
-    ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription& description) const override;
+    ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const& description) const override;
 
     // ^Socket
-    virtual ErrorOr<void> bind(Userspace<const sockaddr*>, socklen_t) override;
-    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
+    virtual ErrorOr<void> bind(Userspace<sockaddr const*>, socklen_t) override;
+    virtual ErrorOr<void> connect(OpenFileDescription&, Userspace<sockaddr const*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
     virtual ErrorOr<void> listen(size_t) override;
     virtual void get_local_address(sockaddr*, socklen_t*) override;
     virtual void get_peer_address(sockaddr*, socklen_t*) override;
     virtual ErrorOr<void> attach(OpenFileDescription&) override;
     virtual void detach(OpenFileDescription&) override;
-    virtual bool can_read(const OpenFileDescription&, u64) const override;
-    virtual bool can_write(const OpenFileDescription&, u64) const override;
-    virtual ErrorOr<size_t> sendto(OpenFileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
+    virtual bool can_read(OpenFileDescription const&, u64) const override;
+    virtual bool can_write(OpenFileDescription const&, u64) const override;
+    virtual ErrorOr<size_t> sendto(OpenFileDescription&, UserOrKernelBuffer const&, size_t, int, Userspace<sockaddr const*>, socklen_t) override;
     virtual ErrorOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
     virtual ErrorOr<void> getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
@@ -56,11 +56,11 @@ private:
     explicit LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, NonnullOwnPtr<DoubleBuffer> server_buffer);
     virtual StringView class_name() const override { return "LocalSocket"sv; }
     virtual bool is_local() const override { return true; }
-    bool has_attached_peer(const OpenFileDescription&) const;
+    bool has_attached_peer(OpenFileDescription const&) const;
     DoubleBuffer* receive_buffer_for(OpenFileDescription&);
     DoubleBuffer* send_buffer_for(OpenFileDescription&);
-    NonnullRefPtrVector<OpenFileDescription>& sendfd_queue_for(const OpenFileDescription&);
-    NonnullRefPtrVector<OpenFileDescription>& recvfd_queue_for(const OpenFileDescription&);
+    NonnullRefPtrVector<OpenFileDescription>& sendfd_queue_for(OpenFileDescription const&);
+    NonnullRefPtrVector<OpenFileDescription>& recvfd_queue_for(OpenFileDescription const&);
 
     void set_connect_side_role(Role connect_side_role, bool force_evaluate_block_conditions = false)
     {
@@ -86,7 +86,7 @@ private:
     Role m_connect_side_role { Role::None };
     OpenFileDescription* m_connect_side_fd { nullptr };
 
-    virtual Role role(const OpenFileDescription& description) const override
+    virtual Role role(OpenFileDescription const& description) const override
     {
         if (m_connect_side_fd == &description)
             return m_connect_side_role;

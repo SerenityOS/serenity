@@ -12,13 +12,13 @@
 class TaskbarButton final : public GUI::Button {
     C_OBJECT(TaskbarButton)
 public:
-    virtual ~TaskbarButton() override;
+    virtual ~TaskbarButton() override = default;
 
     void update_taskbar_rect();
     void clear_taskbar_rect();
 
 private:
-    explicit TaskbarButton(const WindowIdentifier&);
+    explicit TaskbarButton(WindowIdentifier const&);
 
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;

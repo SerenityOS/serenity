@@ -20,14 +20,14 @@ public:
     virtual ~GUIDPartitionTable() = default;
     ;
 
-    static Result<NonnullOwnPtr<GUIDPartitionTable>, PartitionTable::Error> try_to_initialize(const StorageDevice&);
-    explicit GUIDPartitionTable(const StorageDevice&);
+    static Result<NonnullOwnPtr<GUIDPartitionTable>, PartitionTable::Error> try_to_initialize(StorageDevice const&);
+    explicit GUIDPartitionTable(StorageDevice const&);
 
     virtual bool is_valid() const override { return m_valid; };
 
 private:
     bool is_unused_entry(Array<u8, 16>) const;
-    const GUIDPartitionHeader& header() const;
+    GUIDPartitionHeader const& header() const;
     bool initialize();
 
     bool m_valid { true };

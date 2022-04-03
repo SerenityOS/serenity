@@ -26,7 +26,7 @@ public:
     unsigned height() const;
 
     Gfx::Bitmap& bitmap() { return m_bitmap; }
-    const Gfx::Bitmap& bitmap() const { return m_bitmap; }
+    Gfx::Bitmap const& bitmap() const { return m_bitmap; }
 
     JS::Uint8ClampedArray* data();
     const JS::Uint8ClampedArray* data() const;

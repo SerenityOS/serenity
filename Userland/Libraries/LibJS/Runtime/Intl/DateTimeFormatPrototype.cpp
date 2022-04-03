@@ -71,7 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
 
     // 3. If date is undefined, then
     if (date.is_undefined()) {
-        // a. Let x be Call(%Date.now%, undefined).
+        // a. Let x be ! Call(%Date.now%, undefined).
         date = MUST(call(global_object, global_object.date_constructor_now_function(), js_undefined()));
     }
     // 4. Else,

@@ -80,7 +80,7 @@ Optional<Zip> Zip::try_create(ReadonlyBytes buffer)
     };
 }
 
-bool Zip::for_each_member(Function<IterationDecision(const ZipMember&)> callback)
+bool Zip::for_each_member(Function<IterationDecision(ZipMember const&)> callback)
 {
     size_t member_offset = m_members_start_offset;
     for (size_t i = 0; i < m_member_count; i++) {
@@ -119,7 +119,7 @@ static u16 minimum_version_needed(ZipCompressionMethod method)
     return method == ZipCompressionMethod::Deflate ? 20 : 10;
 }
 
-void ZipOutputStream::add_member(const ZipMember& member)
+void ZipOutputStream::add_member(ZipMember const& member)
 {
     VERIFY(!m_finished);
     VERIFY(member.name.length() <= UINT16_MAX);
@@ -151,7 +151,7 @@ void ZipOutputStream::finish()
 
     auto file_header_offset = 0u;
     auto central_directory_size = 0u;
-    for (const ZipMember& member : m_members) {
+    for (ZipMember const& member : m_members) {
         auto zip_version = minimum_version_needed(member.compression_method);
         CentralDirectoryRecord central_directory_record {
             .made_by_version = zip_version,

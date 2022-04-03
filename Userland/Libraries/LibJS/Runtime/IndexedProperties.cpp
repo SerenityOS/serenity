@@ -177,7 +177,7 @@ bool GenericIndexedPropertyStorage::set_array_like_size(size_t new_size)
     return !any_failed;
 }
 
-IndexedPropertyIterator::IndexedPropertyIterator(const IndexedProperties& indexed_properties, u32 staring_index, bool skip_empty)
+IndexedPropertyIterator::IndexedPropertyIterator(IndexedProperties const& indexed_properties, u32 staring_index, bool skip_empty)
     : m_indexed_properties(indexed_properties)
     , m_index(staring_index)
     , m_skip_empty(skip_empty)
@@ -203,7 +203,7 @@ IndexedPropertyIterator& IndexedPropertyIterator::operator*()
     return *this;
 }
 
-bool IndexedPropertyIterator::operator!=(const IndexedPropertyIterator& other) const
+bool IndexedPropertyIterator::operator!=(IndexedPropertyIterator const& other) const
 {
     return m_index != other.m_index;
 }
@@ -265,7 +265,7 @@ size_t IndexedProperties::real_size() const
     if (!m_storage)
         return 0;
     if (m_storage->is_simple_storage()) {
-        auto& packed_elements = static_cast<const SimpleIndexedPropertyStorage&>(*m_storage).elements();
+        auto& packed_elements = static_cast<SimpleIndexedPropertyStorage const&>(*m_storage).elements();
         size_t size = 0;
         for (auto& element : packed_elements) {
             if (!element.is_empty())
@@ -273,7 +273,7 @@ size_t IndexedProperties::real_size() const
         }
         return size;
     }
-    return static_cast<const GenericIndexedPropertyStorage&>(*m_storage).size();
+    return static_cast<GenericIndexedPropertyStorage const&>(*m_storage).size();
 }
 
 Vector<u32> IndexedProperties::indices() const
@@ -281,8 +281,8 @@ Vector<u32> IndexedProperties::indices() const
     if (!m_storage)
         return {};
     if (m_storage->is_simple_storage()) {
-        const auto& storage = static_cast<const SimpleIndexedPropertyStorage&>(*m_storage);
-        const auto& elements = storage.elements();
+        auto const& storage = static_cast<SimpleIndexedPropertyStorage const&>(*m_storage);
+        auto const& elements = storage.elements();
         Vector<u32> indices;
         indices.ensure_capacity(storage.array_like_size());
         for (size_t i = 0; i < elements.size(); ++i) {
@@ -291,7 +291,7 @@ Vector<u32> IndexedProperties::indices() const
         }
         return indices;
     }
-    const auto& storage = static_cast<const GenericIndexedPropertyStorage&>(*m_storage);
+    auto const& storage = static_cast<GenericIndexedPropertyStorage const&>(*m_storage);
     auto indices = storage.sparse_elements().keys();
     quick_sort(indices);
     return indices;

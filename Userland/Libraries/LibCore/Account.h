@@ -46,11 +46,11 @@ public:
     // You must call sync to apply changes.
     void set_password(SecretString const& password);
     void set_password_enabled(bool enabled);
-    void set_home_directory(const char* home_directory) { m_home_directory = home_directory; }
+    void set_home_directory(char const* home_directory) { m_home_directory = home_directory; }
     void set_uid(uid_t uid) { m_uid = uid; }
     void set_gid(gid_t gid) { m_gid = gid; }
-    void set_shell(const char* shell) { m_shell = shell; }
-    void set_gecos(const char* gecos) { m_gecos = gecos; }
+    void set_shell(char const* shell) { m_shell = shell; }
+    void set_gecos(char const* gecos) { m_gecos = gecos; }
     void delete_password();
 
     // A null password means that this account was missing from /etc/shadow.
@@ -59,17 +59,17 @@ public:
 
     uid_t uid() const { return m_uid; }
     gid_t gid() const { return m_gid; }
-    const String& gecos() const { return m_gecos; }
-    const String& home_directory() const { return m_home_directory; }
-    const String& shell() const { return m_shell; }
-    const Vector<gid_t>& extra_gids() const { return m_extra_gids; }
+    String const& gecos() const { return m_gecos; }
+    String const& home_directory() const { return m_home_directory; }
+    String const& shell() const { return m_shell; }
+    Vector<gid_t> const& extra_gids() const { return m_extra_gids; }
 
     ErrorOr<void> sync();
 
 private:
     static ErrorOr<Account> from_passwd(passwd const&, spwd const&);
 
-    Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids);
+    Account(passwd const& pwd, spwd const& spwd, Vector<gid_t> extra_gids);
 
     ErrorOr<String> generate_passwd_file() const;
 #ifndef AK_OS_BSD_GENERIC

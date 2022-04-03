@@ -52,7 +52,7 @@ String Control::render_to_html() const
     }
 }
 
-Link::Link(String text, const Document& document)
+Link::Link(String text, Document const& document)
     : Line(move(text))
 {
     size_t index = 2;

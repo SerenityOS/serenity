@@ -100,6 +100,8 @@ static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, GUI::
         return { palette.syntax_member(), false };
     case GUI::AutocompleteProvider::TokenInfo::SemanticType::Parameter:
         return { palette.syntax_parameter(), false };
+    case GUI::AutocompleteProvider::TokenInfo::SemanticType::PreprocessorMacro:
+        return { palette.syntax_preprocessor_value(), false };
     default:
         VERIFY_NOT_REACHED();
         return { palette.base_text(), false };
@@ -152,7 +154,8 @@ bool SemanticSyntaxHighlighter::is_identifier(u64 token_type) const
         || type == AutocompleteProvider::TokenInfo::SemanticType::CustomType
         || type == AutocompleteProvider::TokenInfo::SemanticType::Namespace
         || type == AutocompleteProvider::TokenInfo::SemanticType::Member
-        || type == AutocompleteProvider::TokenInfo::SemanticType::Parameter;
+        || type == AutocompleteProvider::TokenInfo::SemanticType::Parameter
+        || type == AutocompleteProvider::TokenInfo::SemanticType::PreprocessorMacro;
 }
 
 bool SemanticSyntaxHighlighter::is_navigatable(u64 token_type) const

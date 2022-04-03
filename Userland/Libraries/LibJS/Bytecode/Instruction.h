@@ -23,6 +23,9 @@
     O(CreateEnvironment)             \
     O(CreateVariable)                \
     O(Decrement)                     \
+    O(DeleteById)                    \
+    O(DeleteByValue)                 \
+    O(DeleteVariable)                \
     O(Div)                           \
     O(EnterUnwindContext)            \
     O(EnterObjectEnvironment)        \

@@ -35,6 +35,8 @@ static int parse_options(StringView options)
             flags |= MS_RDONLY;
         else if (part == "remount")
             flags |= MS_REMOUNT;
+        else if (part == "wxallowed")
+            flags |= MS_WXALLOWED;
         else
             warnln("Ignoring invalid option: {}", part);
     }
@@ -144,6 +146,8 @@ static ErrorOr<void> print_mounts()
             out(",nosuid");
         if (mount_flags & MS_BIND)
             out(",bind");
+        if (mount_flags & MS_WXALLOWED)
+            out(",wxallowed");
 
         outln(")");
     });

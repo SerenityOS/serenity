@@ -18,6 +18,12 @@ public:
         MalformedPDF,
     };
 
+    Error(AK::Error error)
+        : m_type(Type::Internal)
+        , m_message(String::formatted("Internal error while processing PDF file: {}", error.string_literal()))
+    {
+    }
+
     Error(Type type, String const& message)
         : m_type(type)
     {

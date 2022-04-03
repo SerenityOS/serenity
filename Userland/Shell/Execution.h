@@ -17,7 +17,7 @@ namespace Shell {
 
 class FileDescriptionCollector {
 public:
-    FileDescriptionCollector() { }
+    FileDescriptionCollector() = default;
     ~FileDescriptionCollector();
 
     void collect();
@@ -29,7 +29,7 @@ private:
 
 class SavedFileDescriptors {
 public:
-    SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiring>&);
+    SavedFileDescriptors(NonnullRefPtrVector<AST::Rewiring> const&);
     ~SavedFileDescriptors();
 
 private:

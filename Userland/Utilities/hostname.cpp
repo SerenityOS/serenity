@@ -14,7 +14,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    const char* hostname = nullptr;
+    char const* hostname = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(hostname, "Hostname to set", "hostname", Core::ArgsParser::Required::No);

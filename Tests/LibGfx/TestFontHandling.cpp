@@ -14,7 +14,7 @@
 
 TEST_CASE(test_fontdatabase_get_by_name)
 {
-    const char* name = "Liza 10 400 0";
+    char const* name = "Liza 10 400 0";
     auto& font_database = Gfx::FontDatabase::the();
     EXPECT(!font_database.get_by_name(name)->name().is_null());
 }
@@ -28,7 +28,7 @@ TEST_CASE(test_fontdatabase_get)
 TEST_CASE(test_fontdatabase_for_each_font)
 {
     auto& font_database = Gfx::FontDatabase::the();
-    font_database.for_each_font([&](const Gfx::Font& font) {
+    font_database.for_each_font([&](Gfx::Font const& font) {
         EXPECT(!font.name().is_null());
         EXPECT(!font.qualified_name().is_null());
         EXPECT(!font.family().is_null());
@@ -55,7 +55,7 @@ TEST_CASE(test_set_name)
     u8 glyph_width = 1;
     auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
-    const char* name = "my newly created font";
+    char const* name = "my newly created font";
     font->set_name(name);
 
     EXPECT(!font->name().is_null());
@@ -68,7 +68,7 @@ TEST_CASE(test_set_family)
     u8 glyph_width = 1;
     auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
-    const char* family = "my newly created font family";
+    char const* family = "my newly created font family";
     font->set_family(family);
 
     EXPECT(!font->family().is_null());

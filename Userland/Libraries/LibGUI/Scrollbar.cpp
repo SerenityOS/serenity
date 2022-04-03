@@ -119,13 +119,13 @@ void Scrollbar::set_scroll_animation(Animation scroll_animation)
     m_scroll_animation = scroll_animation;
 }
 
-void Scrollbar::set_value(int value, AllowCallback allow_callback)
+void Scrollbar::set_value(int value, AllowCallback allow_callback, DoClamp do_clamp)
 {
     m_target_value = value;
     if (!(m_animated_scrolling_timer.is_null()))
         m_animated_scrolling_timer->stop();
 
-    AbstractSlider::set_value(value, allow_callback);
+    AbstractSlider::set_value(value, allow_callback, do_clamp);
 }
 
 void Scrollbar::set_target_value(int new_target_value)
@@ -352,7 +352,7 @@ void Scrollbar::set_automatic_scrolling_active(bool active, Component pressed_co
     }
 }
 
-void Scrollbar::scroll_by_page(const Gfx::IntPoint& click_position)
+void Scrollbar::scroll_by_page(Gfx::IntPoint const& click_position)
 {
     float range_size = max() - min();
     float available = scrubbable_range_in_pixels();
@@ -368,7 +368,7 @@ void Scrollbar::scroll_by_page(const Gfx::IntPoint& click_position)
     }
 }
 
-void Scrollbar::scroll_to_position(const Gfx::IntPoint& click_position)
+void Scrollbar::scroll_to_position(Gfx::IntPoint const& click_position)
 {
     float range_size = max() - min();
     float available = scrubbable_range_in_pixels();
@@ -378,7 +378,7 @@ void Scrollbar::scroll_to_position(const Gfx::IntPoint& click_position)
     set_target_value(min() + rel_x_or_y * range_size);
 }
 
-Scrollbar::Component Scrollbar::component_at_position(const Gfx::IntPoint& position)
+Scrollbar::Component Scrollbar::component_at_position(Gfx::IntPoint const& position)
 {
     if (scrubber_rect().contains(position))
         return Component::Scrubber;

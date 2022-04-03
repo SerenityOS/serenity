@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$link(Userspace<const Syscall::SC_link_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$link(Userspace<Syscall::SC_link_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::cpath));
@@ -21,7 +21,7 @@ ErrorOr<FlatPtr> Process::sys$link(Userspace<const Syscall::SC_link_params*> use
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$symlink(Userspace<const Syscall::SC_symlink_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$symlink(Userspace<Syscall::SC_symlink_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::cpath));

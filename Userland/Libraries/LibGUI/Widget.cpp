@@ -21,6 +21,7 @@
 #include <LibGUI/Layout.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/TabWidget.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
@@ -69,6 +70,8 @@ Widget::Widget()
     REGISTER_STRING_PROPERTY("font", m_font->family, set_font_family);
     REGISTER_INT_PROPERTY("font_size", m_font->presentation_size, set_font_size);
     REGISTER_FONT_WEIGHT_PROPERTY("font_weight", m_font->weight, set_font_weight);
+
+    REGISTER_STRING_PROPERTY("title", title, set_title);
 
     register_property(
         "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },
@@ -217,7 +220,7 @@ void Widget::child_event(Core::ChildEvent& event)
     return Core::Object::child_event(event);
 }
 
-void Widget::set_relative_rect(const Gfx::IntRect& a_rect)
+void Widget::set_relative_rect(Gfx::IntRect const& a_rect)
 {
     // Get rid of negative width/height values.
     Gfx::IntRect rect = {
@@ -596,7 +599,7 @@ void Widget::update()
     update(rect());
 }
 
-void Widget::update(const Gfx::IntRect& rect)
+void Widget::update(Gfx::IntRect const& rect)
 {
     if (!is_visible())
         return;
@@ -653,7 +656,7 @@ Gfx::IntRect Widget::screen_relative_rect() const
     return window_relative_rect().translated(window_position);
 }
 
-Widget* Widget::child_at(const Gfx::IntPoint& point) const
+Widget* Widget::child_at(Gfx::IntPoint const& point) const
 {
     for (int i = children().size() - 1; i >= 0; --i) {
         if (!is<Widget>(children()[i]))
@@ -667,7 +670,7 @@ Widget* Widget::child_at(const Gfx::IntPoint& point) const
     return nullptr;
 }
 
-Widget::HitTestResult Widget::hit_test(const Gfx::IntPoint& position, ShouldRespectGreediness should_respect_greediness)
+Widget::HitTestResult Widget::hit_test(Gfx::IntPoint const& position, ShouldRespectGreediness should_respect_greediness)
 {
     if (should_respect_greediness == ShouldRespectGreediness::Yes && is_greedy_for_hits())
         return { this, position };
@@ -737,7 +740,7 @@ void Widget::set_focus(bool focus, FocusSource source)
     }
 }
 
-void Widget::set_font(const Gfx::Font* font)
+void Widget::set_font(Gfx::Font const* font)
 {
     if (m_font.ptr() == font)
         return;
@@ -754,7 +757,7 @@ void Widget::set_font(const Gfx::Font* font)
     update();
 }
 
-void Widget::set_font_family(const String& family)
+void Widget::set_font_family(String const& family)
 {
     set_font(Gfx::FontDatabase::the().get(family, m_font->presentation_size(), m_font->weight(), m_font->slope()));
 }
@@ -777,7 +780,7 @@ void Widget::set_font_fixed_width(bool fixed_width)
         set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_font().family(), m_font->presentation_size(), m_font->weight(), m_font->slope()));
 }
 
-void Widget::set_min_size(const Gfx::IntSize& size)
+void Widget::set_min_size(Gfx::IntSize const& size)
 {
     if (m_min_size == size)
         return;
@@ -785,7 +788,7 @@ void Widget::set_min_size(const Gfx::IntSize& size)
     invalidate_layout();
 }
 
-void Widget::set_max_size(const Gfx::IntSize& size)
+void Widget::set_max_size(Gfx::IntSize const& size)
 {
     if (m_max_size == size)
         return;
@@ -901,7 +904,7 @@ bool Widget::is_backmost() const
     return &parent->children().first() == this;
 }
 
-Action* Widget::action_for_key_event(const KeyEvent& event)
+Action* Widget::action_for_key_event(KeyEvent const& event)
 {
     Shortcut shortcut(event.modifiers(), (KeyCode)event.key());
 
@@ -970,10 +973,23 @@ Vector<Widget&> Widget::child_widgets() const
     return widgets;
 }
 
-void Widget::set_palette(const Palette& palette)
+void Widget::set_palette(Palette const& palette)
 {
     m_palette = palette.impl();
     update();
+}
+
+void Widget::set_title(String title)
+{
+    m_title = move(title);
+    // For tab widget children, our change in title also affects the parent.
+    if (parent_widget())
+        parent_widget()->update();
+}
+
+String Widget::title() const
+{
+    return m_title;
 }
 
 void Widget::set_background_role(ColorRole role)
@@ -1003,7 +1019,7 @@ void Widget::did_end_inspection()
     update();
 }
 
-void Widget::set_grabbable_margins(const Margins& margins)
+void Widget::set_grabbable_margins(Margins const& margins)
 {
     if (m_grabbable_margins == margins)
         return;
@@ -1061,13 +1077,13 @@ void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<
 
 bool Widget::load_from_gml(StringView gml_string)
 {
-    return load_from_gml(gml_string, [](const String& class_name) -> RefPtr<Core::Object> {
+    return load_from_gml(gml_string, [](String const& class_name) -> RefPtr<Core::Object> {
         dbgln("Class '{}' not registered", class_name);
         return nullptr;
     });
 }
 
-bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
+bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(String const&))
 {
     auto value = GML::parse_gml(gml_string);
     if (value.is_error()) {
@@ -1078,7 +1094,7 @@ bool Widget::load_from_gml(StringView gml_string, RefPtr<Core::Object> (*unregis
     return load_from_gml_ast(value.release_value(), unregistered_child_handler);
 }
 
-bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
+bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::Object> (*unregistered_child_handler)(String const&))
 {
     if (is<GUI::GML::GMLFile>(ast.ptr()))
         return load_from_gml_ast(static_ptr_cast<GUI::GML::GMLFile>(ast)->main_class(), unregistered_child_handler);
@@ -1117,6 +1133,7 @@ bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::O
     }
 
     auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget");
+    bool is_tab_widget = is<TabWidget>(*this);
     object->for_each_child_object_interruptible([&](auto child_data) {
         auto class_name = child_data->name();
 
@@ -1132,9 +1149,17 @@ bool Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, RefPtr<Core::O
         }
         if (!child)
             return IterationDecision::Break;
+
         add_child(*child);
         // This is possible as we ensure that Widget is a base class above.
         static_ptr_cast<Widget>(child)->load_from_gml_ast(child_data, unregistered_child_handler);
+
+        if (is_tab_widget) {
+            // FIXME: We need to have the child added before loading it so that it can access us. But the TabWidget logic requires the child to not be present yet.
+            remove_child(*child);
+            reinterpret_cast<TabWidget*>(this)->add_widget(*static_ptr_cast<Widget>(child));
+        }
+
         return IterationDecision::Continue;
     });
 

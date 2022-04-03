@@ -15,8 +15,8 @@ namespace AK {
 template<typename ListType, typename ElementType>
 class DoublyLinkedListIterator {
 public:
-    bool operator!=(const DoublyLinkedListIterator& other) const { return m_node != other.m_node; }
-    bool operator==(const DoublyLinkedListIterator& other) const { return m_node == other.m_node; }
+    bool operator!=(DoublyLinkedListIterator const& other) const { return m_node != other.m_node; }
+    bool operator==(DoublyLinkedListIterator const& other) const { return m_node == other.m_node; }
     DoublyLinkedListIterator& operator++()
     {
         m_node = m_node->next;

@@ -11,3 +11,12 @@ test("basic functionality", () => {
     expect(set.has(1)).toBeTrue();
     expect(set.has("serenity")).toBeFalse();
 });
+
+test("NaN differentiation", () => {
+    const set = new Set();
+    set.add(NaN);
+
+    expect(set.has(0 / 0)).toBeTrue();
+    expect(set.has(0 * Infinity)).toBeTrue();
+    expect(set.has(Infinity - Infinity)).toBeTrue();
+});

@@ -9,7 +9,7 @@
 
 namespace UserspaceEmulator {
 
-Vector<Range, 2> Range::carve(const Range& taken) const
+Vector<Range, 2> Range::carve(Range const& taken) const
 {
     VERIFY((taken.size() % PAGE_SIZE) == 0);
     Vector<Range, 2> parts;

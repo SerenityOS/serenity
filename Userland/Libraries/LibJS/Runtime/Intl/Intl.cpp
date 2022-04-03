@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::get_canonical_locales)
     for (auto& locale : locale_list)
         marked_locale_list.append(js_string(vm, move(locale)));
 
-    // 2. Return CreateArrayFromList(ll).
+    // 2. Return ! CreateArrayFromList(ll).
     return Array::create_from(global_object, marked_locale_list);
 }
 
@@ -141,7 +141,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
     // 7. Else if key is "unit", then
     else if (key == "unit"sv) {
         // a. Let list be ! AvailableUnits( ).
-        static auto units = sanctioned_simple_unit_identifiers();
+        static auto units = sanctioned_single_unit_identifiers();
         list = units.span();
     }
     // 8. Else,

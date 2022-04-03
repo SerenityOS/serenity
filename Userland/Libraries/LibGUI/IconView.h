@@ -29,7 +29,7 @@ public:
 
     int horizontal_padding() const { return m_horizontal_padding; }
 
-    virtual void scroll_into_view(const ModelIndex&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
+    virtual void scroll_into_view(ModelIndex const&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
 
     Gfx::IntSize effective_item_size() const { return m_effective_item_size; }
 
@@ -39,8 +39,8 @@ public:
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
 
-    virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
-    virtual Gfx::IntRect content_rect(const ModelIndex&) const override;
+    virtual ModelIndex index_at_event_position(Gfx::IntPoint const&) const override;
+    virtual Gfx::IntRect content_rect(ModelIndex const&) const override;
     virtual Gfx::IntRect editing_rect(ModelIndex const&) const override;
     virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const&) const override;
 
@@ -56,9 +56,9 @@ private:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
-    virtual void did_change_hovered_index(const ModelIndex& old_index, const ModelIndex& new_index) override;
-    virtual void did_change_cursor_index(const ModelIndex& old_index, const ModelIndex& new_index) override;
-    virtual void editing_widget_did_change(const ModelIndex& index) override;
+    virtual void did_change_hovered_index(ModelIndex const& old_index, ModelIndex const& new_index) override;
+    virtual void did_change_cursor_index(ModelIndex const& old_index, ModelIndex const& new_index) override;
+    virtual void editing_widget_did_change(ModelIndex const& index) override;
 
     virtual void move_cursor(CursorMovement, SelectionUpdate) override;
 
@@ -87,13 +87,13 @@ private:
         Gfx::IntRect hot_icon_rect() const { return icon_rect.inflated(10, 10); }
         Gfx::IntRect hot_text_rect() const { return text_rect.inflated(2, 2); }
 
-        bool is_intersecting(const Gfx::IntRect& rect) const
+        bool is_intersecting(Gfx::IntRect const& rect) const
         {
             VERIFY(valid);
             return hot_icon_rect().intersects(rect) || hot_text_rect().intersects(rect);
         }
 
-        bool is_containing(const Gfx::IntPoint& point) const
+        bool is_containing(Gfx::IntPoint const& point) const
         {
             VERIFY(valid);
             return hot_icon_rect().contains(point) || hot_text_rect().contains(point);
@@ -108,12 +108,12 @@ private:
     };
 
     template<typename Function>
-    IterationDecision for_each_item_intersecting_rect(const Gfx::IntRect&, Function) const;
+    IterationDecision for_each_item_intersecting_rect(Gfx::IntRect const&, Function) const;
 
     template<typename Function>
-    IterationDecision for_each_item_intersecting_rects(const Vector<Gfx::IntRect>&, Function) const;
+    IterationDecision for_each_item_intersecting_rects(Vector<Gfx::IntRect> const&, Function) const;
 
-    void column_row_from_content_position(const Gfx::IntPoint& content_position, int& row, int& column) const
+    void column_row_from_content_position(Gfx::IntPoint const& content_position, int& row, int& column) const
     {
         row = max(0, min(m_visual_row_count - 1, content_position.y() / effective_item_size().height()));
         column = max(0, min(m_visual_column_count - 1, content_position.x() / effective_item_size().width()));
@@ -123,12 +123,12 @@ private:
     Gfx::IntRect item_rect(int item_index) const;
     void update_content_size();
     void update_item_rects(int item_index, ItemData& item_data) const;
-    void get_item_rects(int item_index, ItemData& item_data, const Gfx::Font&) const;
-    bool update_rubber_banding(const Gfx::IntPoint&);
+    void get_item_rects(int item_index, ItemData& item_data, Gfx::Font const&) const;
+    bool update_rubber_banding(Gfx::IntPoint const&);
     int items_per_page() const;
 
     void rebuild_item_cache() const;
-    int model_index_to_item_index(const ModelIndex& model_index) const
+    int model_index_to_item_index(ModelIndex const& model_index) const
     {
         VERIFY(model_index.row() < item_count());
         return model_index.row();
@@ -136,12 +136,12 @@ private:
 
     virtual void did_update_selection() override;
     virtual void clear_selection() override;
-    virtual void add_selection(const ModelIndex& new_index) override;
-    virtual void set_selection(const ModelIndex& new_index) override;
-    virtual void toggle_selection(const ModelIndex& new_index) override;
+    virtual void add_selection(ModelIndex const& new_index) override;
+    virtual void set_selection(ModelIndex const& new_index) override;
+    virtual void toggle_selection(ModelIndex const& new_index) override;
 
     ItemData& get_item_data(int) const;
-    ItemData* item_data_from_content_position(const Gfx::IntPoint&) const;
+    ItemData* item_data_from_content_position(Gfx::IntPoint const&) const;
     void do_clear_selection();
     bool do_add_selection(ItemData&);
     void add_selection(ItemData&);

@@ -113,7 +113,7 @@ endpoint WindowServer
 
     start_drag([UTF8] String text, HashMap<String,ByteBuffer> mime_data, Gfx::ShareableBitmap drag_bitmap) => (bool started)
 
-    set_system_theme(String theme_path, [UTF8] String theme_name) => (bool success)
+    set_system_theme(String theme_path, [UTF8] String theme_name, bool keep_desktop_background) => (bool success)
     get_system_theme() => ([UTF8] String theme_name)
     refresh_system_theme() =|
 

@@ -23,7 +23,7 @@ public:
 
     ByteBuffer to_raw_request() const;
 
-    static Optional<GeminiRequest> from_raw_request(const ByteBuffer&);
+    static Optional<GeminiRequest> from_raw_request(ByteBuffer const&);
 
 private:
     URL m_url;

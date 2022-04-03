@@ -43,17 +43,17 @@ public:
     u16 operation() const { return m_operation; }
     void set_operation(u16 w) { m_operation = w; }
 
-    const MACAddress& sender_hardware_address() const { return m_sender_hardware_address; }
-    void set_sender_hardware_address(const MACAddress& address) { m_sender_hardware_address = address; }
+    MACAddress const& sender_hardware_address() const { return m_sender_hardware_address; }
+    void set_sender_hardware_address(MACAddress const& address) { m_sender_hardware_address = address; }
 
-    const IPv4Address& sender_protocol_address() const { return m_sender_protocol_address; }
-    void set_sender_protocol_address(const IPv4Address& address) { m_sender_protocol_address = address; }
+    IPv4Address const& sender_protocol_address() const { return m_sender_protocol_address; }
+    void set_sender_protocol_address(IPv4Address const& address) { m_sender_protocol_address = address; }
 
-    const MACAddress& target_hardware_address() const { return m_target_hardware_address; }
-    void set_target_hardware_address(const MACAddress& address) { m_target_hardware_address = address; }
+    MACAddress const& target_hardware_address() const { return m_target_hardware_address; }
+    void set_target_hardware_address(MACAddress const& address) { m_target_hardware_address = address; }
 
-    const IPv4Address& target_protocol_address() const { return m_target_protocol_address; }
-    void set_target_protocol_address(const IPv4Address& address) { m_target_protocol_address = address; }
+    IPv4Address const& target_protocol_address() const { return m_target_protocol_address; }
+    void set_target_protocol_address(IPv4Address const& address) { m_target_protocol_address = address; }
 
 private:
     NetworkOrdered<u16> m_hardware_type { ARPHardwareType::Ethernet };

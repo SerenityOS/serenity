@@ -122,7 +122,7 @@ struct Tuple : Detail::Tuple<Ts...> {
     {
     }
 
-    Tuple(const Tuple& other)
+    Tuple(Tuple const& other)
         : Tuple(other, Indices())
     {
     }
@@ -133,7 +133,7 @@ struct Tuple : Detail::Tuple<Ts...> {
         return *this;
     }
 
-    Tuple& operator=(const Tuple& other)
+    Tuple& operator=(Tuple const& other)
     {
         set(other, Indices());
         return *this;
@@ -185,7 +185,7 @@ private:
     }
 
     template<unsigned... Is>
-    Tuple(const Tuple& other, IndexSequence<Is...>)
+    Tuple(Tuple const& other, IndexSequence<Is...>)
         : Detail::Tuple<Ts...>(other.get<Is>()...)
     {
     }
@@ -197,7 +197,7 @@ private:
     }
 
     template<unsigned... Is>
-    void set(const Tuple& other, IndexSequence<Is...>)
+    void set(Tuple const& other, IndexSequence<Is...>)
     {
         ((get<Is>() = other.get<Is>()), ...);
     }

@@ -46,7 +46,7 @@ public:
 
     int metric(MetricRole) const;
     String path(PathRole) const;
-    const SystemTheme& theme() const { return *m_theme_buffer.data<SystemTheme>(); }
+    SystemTheme const& theme() const { return *m_theme_buffer.data<SystemTheme>(); }
 
     void replace_internal_buffer(Badge<GUI::Application>, Core::AnonymousBuffer buffer);
 
@@ -59,7 +59,7 @@ private:
 class Palette {
 
 public:
-    explicit Palette(const PaletteImpl&);
+    explicit Palette(PaletteImpl const&);
     ~Palette() = default;
 
     Color accent() const { return color(ColorRole::Accent); }
@@ -169,10 +169,10 @@ public:
     void set_metric(MetricRole, int);
     void set_path(PathRole, String);
 
-    const SystemTheme& theme() const { return m_impl->theme(); }
+    SystemTheme const& theme() const { return m_impl->theme(); }
 
     PaletteImpl& impl() { return *m_impl; }
-    const PaletteImpl& impl() const { return *m_impl; }
+    PaletteImpl const& impl() const { return *m_impl; }
 
 private:
     NonnullRefPtr<PaletteImpl> m_impl;

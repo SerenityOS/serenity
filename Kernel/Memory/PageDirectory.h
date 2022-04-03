@@ -6,13 +6,14 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/HashMap.h>
 #include <AK/IntrusiveRedBlackTree.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/PhysicalPage.h>
-#include <Kernel/Memory/VirtualRangeAllocator.h>
 
 namespace Kernel::Memory {
 
@@ -20,9 +21,9 @@ class PageDirectory : public RefCounted<PageDirectory> {
     friend class MemoryManager;
 
 public:
-    static ErrorOr<NonnullRefPtr<PageDirectory>> try_create_for_userspace(VirtualRangeAllocator const* parent_range_allocator = nullptr);
+    static ErrorOr<NonnullRefPtr<PageDirectory>> try_create_for_userspace();
     static NonnullRefPtr<PageDirectory> must_create_kernel_page_directory();
-    static RefPtr<PageDirectory> find_by_cr3(FlatPtr);
+    static RefPtr<PageDirectory> find_current();
 
     ~PageDirectory();
 
@@ -46,11 +47,8 @@ public:
 #endif
     }
 
-    VirtualRangeAllocator& range_allocator() { return m_range_allocator; }
-    VirtualRangeAllocator const& range_allocator() const { return m_range_allocator; }
-
     AddressSpace* address_space() { return m_space; }
-    const AddressSpace* address_space() const { return m_space; }
+    AddressSpace const* address_space() const { return m_space; }
 
     void set_space(Badge<AddressSpace>, AddressSpace& space) { m_space = &space; }
 
@@ -61,9 +59,10 @@ public:
 
 private:
     PageDirectory();
+    static void register_page_directory(PageDirectory* directory);
+    static void deregister_page_directory(PageDirectory* directory);
 
     AddressSpace* m_space { nullptr };
-    VirtualRangeAllocator m_range_allocator;
 #if ARCH(X86_64)
     RefPtr<PhysicalPage> m_pml4t;
 #endif
@@ -75,5 +74,8 @@ private:
 #endif
     RecursiveSpinlock m_lock;
 };
+
+void activate_kernel_page_directory(PageDirectory const& pgd);
+void activate_page_directory(PageDirectory const& pgd, Thread* current_thread);
 
 }

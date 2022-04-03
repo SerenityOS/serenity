@@ -80,7 +80,7 @@ ErrorOr<void> KBufferBuilder::append(StringView str)
     return {};
 }
 
-ErrorOr<void> KBufferBuilder::append(const char* characters, int length)
+ErrorOr<void> KBufferBuilder::append(char const* characters, int length)
 {
     if (!length)
         return {};

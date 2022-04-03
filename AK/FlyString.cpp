@@ -15,8 +15,8 @@
 namespace AK {
 
 struct FlyStringImplTraits : public Traits<StringImpl*> {
-    static unsigned hash(const StringImpl* s) { return s ? s->hash() : 0; }
-    static bool equals(const StringImpl* a, const StringImpl* b)
+    static unsigned hash(StringImpl const* s) { return s ? s->hash() : 0; }
+    static bool equals(StringImpl const* a, StringImpl const* b)
     {
         VERIFY(a);
         VERIFY(b);
@@ -36,7 +36,7 @@ void FlyString::did_destroy_impl(Badge<StringImpl>, StringImpl& impl)
     fly_impls().remove(&impl);
 }
 
-FlyString::FlyString(const String& string)
+FlyString::FlyString(String const& string)
 {
     if (string.is_null())
         return;
@@ -115,7 +115,7 @@ FlyString FlyString::to_lowercase() const
     return String(*m_impl).to_lowercase();
 }
 
-bool FlyString::operator==(const String& other) const
+bool FlyString::operator==(String const& other) const
 {
     return m_impl == other.impl() || view() == other.view();
 }
@@ -125,7 +125,7 @@ bool FlyString::operator==(StringView string) const
     return view() == string;
 }
 
-bool FlyString::operator==(const char* string) const
+bool FlyString::operator==(char const* string) const
 {
     return view() == string;
 }

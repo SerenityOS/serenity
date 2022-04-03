@@ -17,7 +17,7 @@
 static constexpr u32 POST_WAKES = 1 << 31;
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_open.html
-sem_t* sem_open(const char*, int, ...)
+sem_t* sem_open(char const*, int, ...)
 {
     errno = ENOSYS;
     return nullptr;
@@ -31,7 +31,7 @@ int sem_close(sem_t*)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sem_unlink.html
-int sem_unlink(const char*)
+int sem_unlink(char const*)
 {
     errno = ENOSYS;
     return -1;

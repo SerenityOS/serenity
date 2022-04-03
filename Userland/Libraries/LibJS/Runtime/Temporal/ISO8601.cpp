@@ -75,6 +75,32 @@ bool ISO8601Parser::parse_sign()
     return true;
 }
 
+// https://tc39.es/proposal-temporal/#prod-UnpaddedHour
+bool ISO8601Parser::parse_unpadded_hour()
+{
+    // UnpaddedHour :
+    //     DecimalDigit
+    //     1 DecimalDigit
+    //     20
+    //     21
+    //     22
+    //     23
+    StateTransaction transaction { *this };
+    auto success = m_state.lexer.consume_specific("20"sv)
+        || m_state.lexer.consume_specific("21"sv)
+        || m_state.lexer.consume_specific("22"sv)
+        || m_state.lexer.consume_specific("23"sv);
+    if (!success) {
+        // This could be either of the first two productions.
+        if (m_state.lexer.consume_specific('1'))
+            (void)parse_decimal_digit();
+        else if (!parse_decimal_digit())
+            return false;
+    }
+    transaction.commit();
+    return true;
+}
+
 // https://tc39.es/proposal-temporal/#prod-Hour
 bool ISO8601Parser::parse_hour()
 {
@@ -900,10 +926,25 @@ bool ISO8601Parser::parse_time_zone_iana_name_tail()
 bool ISO8601Parser::parse_time_zone_iana_name()
 {
     // TimeZoneIANAName :
-    //     TimeZoneIANANameTail
+    //     Etc/GMT ASCIISign UnpaddedHour
+    //     TimeZoneIANANameTail but not Etc/GMT ASCIISign UnpaddedHour
+    auto parse_etc_gmt_with_offset = [this] {
+        StateTransaction transaction { *this };
+        if (!m_state.lexer.consume_specific("Etc/GMT"sv))
+            return false;
+        if (!parse_ascii_sign())
+            return false;
+        if (!parse_unpadded_hour())
+            return false;
+        transaction.commit();
+        return true;
+    };
     StateTransaction transaction { *this };
-    if (!parse_time_zone_iana_name_tail())
+    if (parse_etc_gmt_with_offset()) {
+        // no-op.
+    } else if (!parse_time_zone_iana_name_tail()) {
         return false;
+    }
     m_state.parse_result.time_zone_iana_name = transaction.parsed_string_view();
     transaction.commit();
     return true;
@@ -914,16 +955,10 @@ bool ISO8601Parser::parse_time_zone_bracketed_name()
 {
     // TimeZoneBracketedName :
     //     TimeZoneIANAName
-    //     Etc/GMT ASCIISign Hour
     //     TimeZoneUTCOffsetName
     StateTransaction transaction { *this };
     if (parse_time_zone_iana_name()) {
         // no-op.
-    } else if (m_state.lexer.consume_specific("Etc/GMT"sv)) {
-        if (!parse_ascii_sign())
-            return false;
-        if (!parse_hour())
-            return false;
     } else if (!parse_time_zone_utc_offset_name()) {
         return false;
     }

@@ -20,7 +20,7 @@ static Spreadsheet::DateCell s_date_cell;
 
 namespace Spreadsheet {
 
-const CellType* CellType::get_by_name(StringView name)
+CellType const* CellType::get_by_name(StringView name)
 {
     return s_cell_types.get(name).value_or(nullptr);
 }

@@ -11,6 +11,8 @@
 #include <LibGUI/Frame.h>
 #include <LibGfx/SystemTheme.h>
 
+namespace SystemMonitor {
+
 class GraphWidget final : public GUI::Frame {
     C_OBJECT(GraphWidget)
 public:
@@ -32,10 +34,11 @@ public:
             m_value_format.resize(index + 1);
         m_value_format[index] = move(format);
     }
-    void set_stack_values(bool stack_values) { m_stack_values = stack_values; }
+    void set_stack_values(bool stack_values);
+    bool stack_values() const { return m_stack_values; }
 
 private:
-    explicit GraphWidget() = default;
+    explicit GraphWidget();
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
@@ -46,3 +49,5 @@ private:
 
     Vector<Gfx::IntPoint, 1> m_calculated_points;
 };
+
+}

@@ -15,6 +15,8 @@
 #include <LibWeb/Bindings/AbstractRangeConstructor.h>
 #include <LibWeb/Bindings/AbstractRangePrototype.h>
 #include <LibWeb/Bindings/AudioConstructor.h>
+#include <LibWeb/Bindings/CSSFontFaceRuleConstructor.h>
+#include <LibWeb/Bindings/CSSFontFaceRulePrototype.h>
 #include <LibWeb/Bindings/CSSRuleConstructor.h>
 #include <LibWeb/Bindings/CSSRuleListConstructor.h>
 #include <LibWeb/Bindings/CSSRuleListPrototype.h>
@@ -217,6 +219,8 @@
 #include <LibWeb/Bindings/HTMLVideoElementPrototype.h>
 #include <LibWeb/Bindings/HistoryConstructor.h>
 #include <LibWeb/Bindings/HistoryPrototype.h>
+#include <LibWeb/Bindings/IdleDeadlineConstructor.h>
+#include <LibWeb/Bindings/IdleDeadlinePrototype.h>
 #include <LibWeb/Bindings/ImageConstructor.h>
 #include <LibWeb/Bindings/ImageDataConstructor.h>
 #include <LibWeb/Bindings/ImageDataPrototype.h>
@@ -340,6 +344,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(AbortSignal)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(AbstractRange)                                                      \
     ADD_WINDOW_OBJECT_INTERFACE(Crypto)                                                             \
+    ADD_WINDOW_OBJECT_INTERFACE(CSSFontFaceRule)                                                    \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRule)                                                            \
     ADD_WINDOW_OBJECT_INTERFACE(CSSRuleList)                                                        \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleDeclaration)                                                \
@@ -439,6 +444,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(HTMLUListElement)                                                   \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLUnknownElement)                                                 \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLVideoElement)                                                   \
+    ADD_WINDOW_OBJECT_INTERFACE(IdleDeadline)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(ImageData)                                                          \
     ADD_WINDOW_OBJECT_INTERFACE(IntersectionObserver)                                               \
     ADD_WINDOW_OBJECT_INTERFACE(KeyboardEvent)                                                      \

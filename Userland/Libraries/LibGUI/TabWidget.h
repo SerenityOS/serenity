@@ -28,7 +28,7 @@ public:
     Optional<size_t> active_tab_index() const;
 
     Widget* active_widget() { return m_active_widget.ptr(); }
-    const Widget* active_widget() const { return m_active_widget.ptr(); }
+    Widget const* active_widget() const { return m_active_widget.ptr(); }
     void set_active_widget(Widget*);
     void set_tab_index(int);
 
@@ -37,16 +37,17 @@ public:
     GUI::Margins const& container_margins() const { return m_container_margins; }
     void set_container_margins(GUI::Margins const&);
 
-    ErrorOr<void> try_add_widget(String, Widget&);
+    ErrorOr<void> try_add_widget(Widget&);
 
-    void add_widget(String, Widget&);
+    void add_widget(Widget&);
     void remove_widget(Widget&);
 
     template<class T, class... Args>
     ErrorOr<NonnullRefPtr<T>> try_add_tab(String title, Args&&... args)
     {
         auto t = TRY(T::try_create(forward<Args>(args)...));
-        TRY(try_add_widget(move(title), *t));
+        t->set_title(move(title));
+        TRY(try_add_widget(*t));
         return *t;
     }
 
@@ -54,7 +55,8 @@ public:
     T& add_tab(String title, Args&&... args)
     {
         auto t = T::construct(forward<Args>(args)...);
-        add_widget(move(title), *t);
+        t->set_title(move(title));
+        add_widget(*t);
         return *t;
     }
 
@@ -62,10 +64,11 @@ public:
     void remove_all_tabs_except(Widget& tab);
 
     void set_tab_title(Widget& tab, StringView title);
-    void set_tab_icon(Widget& tab, const Gfx::Bitmap*);
+    void set_tab_icon(Widget& tab, Gfx::Bitmap const*);
 
     void activate_next_tab();
     void activate_previous_tab();
+    void activate_last_tab();
 
     void set_text_alignment(Gfx::TextAlignment alignment) { m_text_alignment = alignment; }
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
@@ -86,7 +89,7 @@ public:
     Function<void(Widget&)> on_change;
     Function<void(Widget&)> on_middle_click;
     Function<void(Widget&)> on_tab_close_click;
-    Function<void(Widget&, const ContextMenuEvent&)> on_context_menu_request;
+    Function<void(Widget&, ContextMenuEvent const&)> on_context_menu_request;
     Function<void(Widget&)> on_double_click;
 
 protected:
@@ -104,7 +107,7 @@ protected:
     virtual void doubleclick_event(MouseEvent&) override;
 
 private:
-    Gfx::IntRect child_rect_for_size(const Gfx::IntSize&) const;
+    Gfx::IntRect child_rect_for_size(Gfx::IntSize const&) const;
     Gfx::IntRect button_rect(size_t index) const;
     Gfx::IntRect close_button_rect(size_t index) const;
     Gfx::IntRect bar_rect() const;
@@ -116,7 +119,7 @@ private:
     RefPtr<Widget> m_active_widget;
 
     struct TabData {
-        int width(const Gfx::Font&) const;
+        int width(Gfx::Font const&) const;
         String title;
         RefPtr<Gfx::Bitmap> icon;
         Widget* widget { nullptr };

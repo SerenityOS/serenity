@@ -15,12 +15,12 @@
 
 namespace HackStudio {
 
-DebuggerVariableJSObject* DebuggerVariableJSObject::create(DebuggerGlobalJSObject& global_object, const Debug::DebugInfo::VariableInfo& variable_info)
+DebuggerVariableJSObject* DebuggerVariableJSObject::create(DebuggerGlobalJSObject& global_object, Debug::DebugInfo::VariableInfo const& variable_info)
 {
     return global_object.heap().allocate<DebuggerVariableJSObject>(global_object, variable_info, *global_object.object_prototype());
 }
 
-DebuggerVariableJSObject::DebuggerVariableJSObject(const Debug::DebugInfo::VariableInfo& variable_info, JS::Object& prototype)
+DebuggerVariableJSObject::DebuggerVariableJSObject(Debug::DebugInfo::VariableInfo const& variable_info, JS::Object& prototype)
     : JS::Object(prototype)
     , m_variable_info(variable_info)
 {

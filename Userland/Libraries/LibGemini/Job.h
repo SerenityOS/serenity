@@ -17,14 +17,14 @@ class Job : public Core::NetworkJob {
     C_OBJECT(Job);
 
 public:
-    explicit Job(const GeminiRequest&, Core::Stream::Stream&);
+    explicit Job(GeminiRequest const&, Core::Stream::Stream&);
     virtual ~Job() override = default;
 
     virtual void start(Core::Stream::Socket&) override;
     virtual void shutdown(ShutdownMode) override;
 
     GeminiResponse* response() { return static_cast<GeminiResponse*>(Core::NetworkJob::response()); }
-    const GeminiResponse* response() const { return static_cast<const GeminiResponse*>(Core::NetworkJob::response()); }
+    GeminiResponse const* response() const { return static_cast<GeminiResponse const*>(Core::NetworkJob::response()); }
 
     const URL& url() const { return m_request.url(); }
     Core::Stream::Socket const* socket() const { return m_socket; }

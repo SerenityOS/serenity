@@ -791,6 +791,13 @@ void Editor::handle_interrupt_event()
 
 void Editor::handle_read_event()
 {
+    if (m_prohibit_input_processing) {
+        m_have_unprocessed_read_event = true;
+        return;
+    }
+
+    auto prohibit_scope = prohibit_input();
+
     char keybuf[16];
     ssize_t nread = 0;
 
@@ -820,9 +827,9 @@ void Editor::handle_read_event()
     }
 
     m_incomplete_data.append(keybuf, nread);
-    nread = m_incomplete_data.size();
+    auto available_bytes = m_incomplete_data.size();
 
-    if (nread == 0) {
+    if (available_bytes == 0) {
         m_input_error = Error::Empty;
         finish();
         return;
@@ -832,12 +839,12 @@ void Editor::handle_read_event()
 
     // Discard starting bytes until they make sense as utf-8.
     size_t valid_bytes = 0;
-    while (nread) {
-        Utf8View { StringView { m_incomplete_data.data(), (size_t)nread } }.validate(valid_bytes);
-        if (valid_bytes)
+    while (available_bytes > 0) {
+        Utf8View { StringView { m_incomplete_data.data(), available_bytes } }.validate(valid_bytes);
+        if (valid_bytes != 0)
             break;
         m_incomplete_data.take_first();
-        --nread;
+        --available_bytes;
     }
 
     Utf8View input_view { StringView { m_incomplete_data.data(), valid_bytes } };
@@ -2033,7 +2040,7 @@ size_t StringMetrics::offset_with_addition(StringMetrics const& offset, size_t c
 
 bool Editor::Spans::contains_up_to_offset(Spans const& other, size_t offset) const
 {
-    auto compare = [&]<typename K, typename V>(const HashMap<K, HashMap<K, V>>& left, const HashMap<K, HashMap<K, V>>& right) -> bool {
+    auto compare = [&]<typename K, typename V>(HashMap<K, HashMap<K, V>> const& left, HashMap<K, HashMap<K, V>> const& right) -> bool {
         for (auto& entry : right) {
             if (entry.key > offset + 1)
                 continue;

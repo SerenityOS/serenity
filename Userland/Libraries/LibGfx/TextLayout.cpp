@@ -28,7 +28,7 @@ IntRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing) const
     }
 
     IntRect bounding_rect = {
-        0, 0, 0, static_cast<int>((lines.size() * (m_font->glyph_height() + line_spacing)) - line_spacing)
+        0, 0, 0, static_cast<int>((lines.size() * (m_font->pixel_size() + line_spacing)) - line_spacing)
     };
 
     for (auto& line : lines) {

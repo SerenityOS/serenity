@@ -176,6 +176,9 @@ namespace Web::Bindings {
 
 NodeWrapper* wrap(JS::GlobalObject& global_object, DOM::Node& node)
 {
+    if (node.wrapper())
+        return static_cast<NodeWrapper*>(node.wrapper());
+
     if (is<DOM::Document>(node))
         return static_cast<NodeWrapper*>(wrap_impl(global_object, verify_cast<DOM::Document>(node)));
     if (is<DOM::DocumentType>(node))

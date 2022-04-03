@@ -191,7 +191,7 @@ public:
             cursor = m_buffer.size();
         m_cursor = cursor;
     }
-    const Vector<u32, 1024>& buffer() const { return m_buffer; }
+    Vector<u32, 1024> const& buffer() const { return m_buffer; }
     u32 buffer_at(size_t pos) const { return m_buffer.at(pos); }
     String line() const { return line(m_buffer.size()); }
     String line(size_t up_to_index) const;
@@ -240,6 +240,20 @@ public:
     bool is_editing() const { return m_is_editing; }
 
     const Utf32View buffer_view() const { return { m_buffer.data(), m_buffer.size() }; }
+
+    auto prohibit_input()
+    {
+        auto previous_value = m_prohibit_input_processing;
+        m_prohibit_input_processing = true;
+        m_have_unprocessed_read_event = false;
+        return ScopeGuard {
+            [this, previous_value] {
+                m_prohibit_input_processing = previous_value;
+                if (!m_prohibit_input_processing && m_have_unprocessed_read_event)
+                    handle_read_event();
+            }
+        };
+    }
 
 private:
     explicit Editor(Configuration configuration = Configuration::from_config());
@@ -500,6 +514,8 @@ private:
     Vector<int, 2> m_signal_handlers;
 
     bool m_is_editing { false };
+    bool m_prohibit_input_processing { false };
+    bool m_have_unprocessed_read_event { false };
 
     Configuration m_configuration;
 };

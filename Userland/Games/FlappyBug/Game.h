@@ -41,9 +41,9 @@ private:
 
 public:
     struct Bug {
-        const float x { 50 };
-        const float radius { 16 };
-        const float starting_y { 200 };
+        float const x { 50 };
+        float const radius { 16 };
+        float const starting_y { 200 };
         NonnullRefPtr<Gfx::Bitmap> falling_bitmap;
         NonnullRefPtr<Gfx::Bitmap> flapping_bitmap;
         float y {};
@@ -81,13 +81,13 @@ public:
 
         void flap()
         {
-            const float flap_strength = 10.0f;
+            float const flap_strength = 10.0f;
             velocity = -flap_strength;
         }
 
         void fall()
         {
-            const float gravity = 1.0f;
+            float const gravity = 1.0f;
             velocity += gravity;
         }
 
@@ -98,7 +98,7 @@ public:
     };
 
     struct Obstacle {
-        const float width { 20 };
+        float const width { 20 };
         Color color { Color::DarkGray };
         float x {};
         float gap_top_y { 200 };

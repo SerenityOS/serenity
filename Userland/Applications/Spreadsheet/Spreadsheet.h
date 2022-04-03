@@ -36,37 +36,37 @@ public:
     Optional<String> column_arithmetic(StringView column_name, int offset);
 
     Cell* from_url(const URL&);
-    const Cell* from_url(const URL& url) const { return const_cast<Sheet*>(this)->from_url(url); }
+    Cell const* from_url(const URL& url) const { return const_cast<Sheet*>(this)->from_url(url); }
     Optional<Position> position_from_url(const URL& url) const;
 
     /// Resolve 'offset' to an absolute position assuming 'base' is at 'offset_base'.
     /// Effectively, "Walk the distance between 'offset' and 'offset_base' away from 'base'".
-    Position offset_relative_to(const Position& base, const Position& offset, const Position& offset_base) const;
+    Position offset_relative_to(Position const& base, Position const& offset, Position const& offset_base) const;
 
     JsonObject to_json() const;
-    static RefPtr<Sheet> from_json(const JsonObject&, Workbook&);
+    static RefPtr<Sheet> from_json(JsonObject const&, Workbook&);
 
     Vector<Vector<String>> to_xsv() const;
-    static RefPtr<Sheet> from_xsv(const Reader::XSV&, Workbook&);
+    static RefPtr<Sheet> from_xsv(Reader::XSV const&, Workbook&);
 
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
     void set_name(StringView name) { m_name = name; }
 
     JsonObject gather_documentation() const;
 
-    const HashTable<Position>& selected_cells() const { return m_selected_cells; }
+    HashTable<Position> const& selected_cells() const { return m_selected_cells; }
     HashTable<Position>& selected_cells() { return m_selected_cells; }
-    const HashMap<Position, NonnullOwnPtr<Cell>>& cells() const { return m_cells; }
+    HashMap<Position, NonnullOwnPtr<Cell>> const& cells() const { return m_cells; }
     HashMap<Position, NonnullOwnPtr<Cell>>& cells() { return m_cells; }
 
-    Cell* at(const Position& position);
-    const Cell* at(const Position& position) const { return const_cast<Sheet*>(this)->at(position); }
+    Cell* at(Position const& position);
+    Cell const* at(Position const& position) const { return const_cast<Sheet*>(this)->at(position); }
 
-    const Cell* at(StringView name) const { return const_cast<Sheet*>(this)->at(name); }
+    Cell const* at(StringView name) const { return const_cast<Sheet*>(this)->at(name); }
     Cell* at(StringView);
 
-    const Cell& ensure(const Position& position) const { return const_cast<Sheet*>(this)->ensure(position); }
-    Cell& ensure(const Position& position)
+    Cell const& ensure(Position const& position) const { return const_cast<Sheet*>(this)->ensure(position); }
+    Cell& ensure(Position const& position)
     {
         if (auto cell = at(position))
             return *cell;
@@ -80,8 +80,8 @@ public:
 
     size_t row_count() const { return m_rows; }
     size_t column_count() const { return m_columns.size(); }
-    const Vector<String>& columns() const { return m_columns; }
-    const String& column(size_t index)
+    Vector<String> const& columns() const { return m_columns; }
+    String const& column(size_t index)
     {
         for (size_t i = column_count(); i < index; ++i)
             add_column();
@@ -89,7 +89,7 @@ public:
         VERIFY(column_count() > index);
         return m_columns[index];
     }
-    const String& column(size_t index) const
+    String const& column(size_t index) const
     {
         VERIFY(column_count() > index);
         return m_columns[index];
@@ -114,7 +114,7 @@ public:
     Cell*& current_evaluated_cell() { return m_current_cell_being_evaluated; }
     bool has_been_visited(Cell* cell) const { return m_visited_cells_in_update.contains(cell); }
 
-    const Workbook& workbook() const { return m_workbook; }
+    Workbook const& workbook() const { return m_workbook; }
 
     enum class CopyOperation {
         Copy,
@@ -160,7 +160,7 @@ namespace AK {
 template<>
 struct Traits<Spreadsheet::Position> : public GenericTraits<Spreadsheet::Position> {
     static constexpr bool is_trivial() { return false; }
-    static unsigned hash(const Spreadsheet::Position& p)
+    static unsigned hash(Spreadsheet::Position const& p)
     {
         return p.hash();
     }

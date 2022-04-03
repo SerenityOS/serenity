@@ -95,10 +95,11 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
     };
 
     if (S_ISLNK(m_mode)) {
-        auto link_destination = Core::File::read_link(path);
-        if (link_destination.is_null()) {
+        auto link_destination_or_error = Core::File::read_link(path);
+        if (link_destination_or_error.is_error()) {
             perror("readlink");
         } else {
+            auto link_destination = link_destination_or_error.release_value();
             auto link_location = general_tab.find_descendant_of_type_named<GUI::LinkLabel>("link_location");
             link_location->set_text(link_destination);
             link_location->on_click = [link_destination] {

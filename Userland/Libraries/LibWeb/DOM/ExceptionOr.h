@@ -34,9 +34,12 @@ struct SimpleException {
 template<typename ValueType>
 class ExceptionOr {
 public:
-    ExceptionOr() requires(IsSame<ValueType, Empty>) = default;
+    ExceptionOr() requires(IsSame<ValueType, Empty>)
+        : m_result(Empty {})
+    {
+    }
 
-    ExceptionOr(const ValueType& result)
+    ExceptionOr(ValueType const& result)
         : m_result(result)
     {
     }
@@ -62,7 +65,7 @@ public:
     }
 
     ExceptionOr(ExceptionOr&& other) = default;
-    ExceptionOr(const ExceptionOr& other) = default;
+    ExceptionOr(ExceptionOr const& other) = default;
     ~ExceptionOr() = default;
 
     ValueType& value() requires(!IsSame<ValueType, Empty>)
@@ -70,7 +73,7 @@ public:
         return m_result.value();
     }
 
-    ValueType release_value() requires(!IsSame<ValueType, Empty>)
+    ValueType release_value()
     {
         return m_result.release_value();
     }
@@ -84,6 +87,10 @@ public:
     {
         return !m_exception.template has<Empty>();
     }
+
+    // These are for compatibility with the TRY() macro in AK.
+    [[nodiscard]] bool is_error() const { return is_exception(); }
+    Variant<SimpleException, NonnullRefPtr<DOMException>> release_error() { return exception(); }
 
 private:
     Optional<ValueType> m_result;

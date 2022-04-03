@@ -29,14 +29,14 @@ public:
     Box const& context_box() const { return m_context_box; }
 
     FormattingContext* parent() { return m_parent; }
-    const FormattingContext* parent() const { return m_parent; }
+    FormattingContext const* parent() const { return m_parent; }
 
     Type type() const { return m_type; }
     bool is_block_formatting_context() const { return type() == Type::Block; }
 
     virtual bool inhibits_floating() const { return false; }
 
-    static bool creates_block_formatting_context(const Box&);
+    static bool creates_block_formatting_context(Box const&);
 
     static float compute_width_for_replaced_element(FormattingState const&, ReplacedBox const&);
     static float compute_height_for_replaced_element(FormattingState const&, ReplacedBox const&);
@@ -65,7 +65,7 @@ protected:
     FormattingState::IntrinsicSizes calculate_intrinsic_sizes(Layout::Box const&) const;
 
     OwnPtr<FormattingContext> layout_inside(Box const&, LayoutMode);
-    void compute_position(Box const&);
+    void compute_inset(Box const& box);
 
     struct SpaceUsedByFloats {
         float left { 0 };
@@ -81,6 +81,7 @@ protected:
     static float tentative_height_for_replaced_element(FormattingState const&, ReplacedBox const&, CSS::Length const& height);
     static float compute_auto_height_for_block_formatting_context_root(FormattingState const&, BlockContainer const&);
     static float compute_auto_height_for_block_level_element(FormattingState const&, Box const&);
+    static float compute_intrinsic_height(FormattingState const& state, Box const& box);
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 

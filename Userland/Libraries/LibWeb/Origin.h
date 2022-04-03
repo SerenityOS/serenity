@@ -14,7 +14,7 @@ namespace Web {
 class Origin {
 public:
     Origin() = default;
-    Origin(const String& protocol, const String& host, u16 port)
+    Origin(String const& protocol, String const& host, u16 port)
         : m_protocol(protocol)
         , m_host(host)
         , m_port(port)
@@ -24,8 +24,8 @@ public:
     // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque
     bool is_opaque() const { return m_protocol.is_null() && m_host.is_null() && m_port == 0; }
 
-    const String& protocol() const { return m_protocol; }
-    const String& host() const { return m_host; }
+    String const& protocol() const { return m_protocol; }
+    String const& host() const { return m_host; }
     u16 port() const { return m_port; }
 
     // https://html.spec.whatwg.org/multipage/origin.html#same-origin

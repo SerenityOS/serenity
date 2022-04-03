@@ -113,7 +113,7 @@ ThrowCompletionOr<Value> Console::trace()
     }
 
     // 3. Perform Printer("trace", « trace »).
-    return m_client->printer(JS::Console::LogLevel::Trace, trace);
+    return m_client->printer(Console::LogLevel::Trace, trace);
 }
 
 // 1.2.1. count(label), https://console.spec.whatwg.org/#count
@@ -183,7 +183,7 @@ ThrowCompletionOr<Value> Console::assert_()
     auto message = js_string(vm(), "Assertion failed");
 
     // NOTE: Assemble `data` from the function arguments.
-    Vector<JS::Value> data;
+    Vector<Value> data;
     if (vm().argument_count() > 1) {
         data.ensure_capacity(vm().argument_count() - 1);
         for (size_t i = 1; i < vm().argument_count(); ++i) {
@@ -407,19 +407,19 @@ void Console::output_debug_message([[maybe_unused]] LogLevel log_level, [[maybe_
 {
 #ifdef __serenity__
     switch (log_level) {
-    case JS::Console::LogLevel::Debug:
+    case Console::LogLevel::Debug:
         dbgln("\033[32;1m(js debug)\033[0m {}", output);
         break;
-    case JS::Console::LogLevel::Error:
+    case Console::LogLevel::Error:
         dbgln("\033[32;1m(js error)\033[0m {}", output);
         break;
-    case JS::Console::LogLevel::Info:
+    case Console::LogLevel::Info:
         dbgln("\033[32;1m(js info)\033[0m {}", output);
         break;
-    case JS::Console::LogLevel::Log:
+    case Console::LogLevel::Log:
         dbgln("\033[32;1m(js log)\033[0m {}", output);
         break;
-    case JS::Console::LogLevel::Warn:
+    case Console::LogLevel::Warn:
         dbgln("\033[32;1m(js warn)\033[0m {}", output);
         break;
     default:

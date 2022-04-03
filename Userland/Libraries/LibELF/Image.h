@@ -21,18 +21,18 @@ namespace ELF {
 class Image {
 public:
     explicit Image(ReadonlyBytes, bool verbose_logging = true);
-    explicit Image(const u8*, size_t, bool verbose_logging = true);
+    explicit Image(u8 const*, size_t, bool verbose_logging = true);
 
     ~Image() = default;
     void dump() const;
     bool is_valid() const { return m_valid; }
     bool parse();
 
-    bool is_within_image(const void* address, size_t size) const
+    bool is_within_image(void const* address, size_t size) const
     {
         if (address < m_buffer)
             return false;
-        if (((const u8*)address + size) > m_buffer + m_size)
+        if (((u8 const*)address + size) > m_buffer + m_size)
             return false;
         return true;
     }
@@ -44,7 +44,7 @@ public:
 
     class Symbol {
     public:
-        Symbol(const Image& image, unsigned index, const ElfW(Sym) & sym)
+        Symbol(Image const& image, unsigned index, const ElfW(Sym) & sym)
             : m_image(image)
             , m_sym(sym)
             , m_index(index)
@@ -79,14 +79,14 @@ public:
         StringView raw_data() const;
 
     private:
-        const Image& m_image;
+        Image const& m_image;
         const ElfW(Sym) & m_sym;
-        const unsigned m_index;
+        unsigned const m_index;
     };
 
     class ProgramHeader {
     public:
-        ProgramHeader(const Image& image, unsigned program_header_index)
+        ProgramHeader(Image const& image, unsigned program_header_index)
             : m_image(image)
             , m_program_header(image.program_header_internal(program_header_index))
             , m_program_header_index(program_header_index)
@@ -105,18 +105,18 @@ public:
         bool is_readable() const { return flags() & PF_R; }
         bool is_writable() const { return flags() & PF_W; }
         bool is_executable() const { return flags() & PF_X; }
-        const char* raw_data() const { return m_image.raw_data(m_program_header.p_offset); }
+        char const* raw_data() const { return m_image.raw_data(m_program_header.p_offset); }
         ElfW(Phdr) raw_header() const { return m_program_header; }
 
     private:
-        const Image& m_image;
+        Image const& m_image;
         const ElfW(Phdr) & m_program_header;
         unsigned m_program_header_index { 0 };
     };
 
     class Section {
     public:
-        Section(const Image& image, unsigned sectionIndex)
+        Section(Image const& image, unsigned sectionIndex)
             : m_image(image)
             , m_section_header(image.section_header(sectionIndex))
             , m_section_index(sectionIndex)
@@ -131,7 +131,7 @@ public:
         size_t entry_size() const { return m_section_header.sh_entsize; }
         size_t entry_count() const { return !entry_size() ? 0 : size() / entry_size(); }
         FlatPtr address() const { return m_section_header.sh_addr; }
-        const char* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
+        char const* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
         ReadonlyBytes bytes() const { return { raw_data(), size() }; }
         Optional<RelocationSection> relocations() const;
         auto flags() const { return m_section_header.sh_flags; }
@@ -140,14 +140,14 @@ public:
 
     protected:
         friend class RelocationSection;
-        const Image& m_image;
+        Image const& m_image;
         const ElfW(Shdr) & m_section_header;
         unsigned m_section_index;
     };
 
     class RelocationSection : public Section {
     public:
-        explicit RelocationSection(const Section& section)
+        explicit RelocationSection(Section const& section)
             : Section(section.m_image, section.m_section_index)
         {
         }
@@ -160,7 +160,7 @@ public:
 
     class Relocation {
     public:
-        Relocation(const Image& image, const ElfW(Rel) & rel)
+        Relocation(Image const& image, const ElfW(Rel) & rel)
             : m_image(image)
             , m_rel(rel)
         {
@@ -188,7 +188,7 @@ public:
         }
 
     private:
-        const Image& m_image;
+        Image const& m_image;
         const ElfW(Rel) & m_rel;
     };
 
@@ -243,7 +243,7 @@ public:
     Optional<Image::Symbol> find_symbol(FlatPtr address, u32* offset = nullptr) const;
 
 private:
-    const char* raw_data(unsigned offset) const;
+    char const* raw_data(unsigned offset) const;
     const ElfW(Ehdr) & header() const;
     const ElfW(Shdr) & section_header(unsigned) const;
     const ElfW(Phdr) & program_header_internal(unsigned) const;
@@ -252,7 +252,7 @@ private:
     StringView section_index_to_string(unsigned index) const;
     StringView table_string(unsigned table_index, unsigned offset) const;
 
-    const u8* m_buffer { nullptr };
+    u8 const* m_buffer { nullptr };
     size_t m_size { 0 };
     bool m_verbose_logging { true };
     bool m_valid { false };

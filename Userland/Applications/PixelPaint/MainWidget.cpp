@@ -88,6 +88,10 @@ MainWidget::MainWidget()
         m_palette_widget->set_image_editor(&image_editor);
         m_layer_list_widget->set_image(&image_editor.image());
         m_layer_properties_widget->set_layer(image_editor.active_layer());
+        window()->set_modified(image_editor.is_modified());
+        image_editor.on_modified_change = [this](bool modified) {
+            window()->set_modified(modified);
+        };
         if (auto* active_tool = m_toolbox->active_tool())
             image_editor.set_active_tool(active_tool);
         m_show_guides_action->set_checked(image_editor.guide_visibility());
@@ -97,7 +101,7 @@ MainWidget::MainWidget()
 }
 
 // Note: Update these together! v
-static const Vector<String> s_suggested_zoom_levels { "25%", "50%", "100%", "200%", "300%", "400%", "800%", "1600%", "Fit to width", "Fit to height", "Fit entire image" };
+static Vector<String> const s_suggested_zoom_levels { "25%", "50%", "100%", "200%", "300%", "400%", "800%", "1600%", "Fit to width", "Fit to height", "Fit entire image" };
 static constexpr int s_zoom_level_fit_width = 8;
 static constexpr int s_zoom_level_fit_height = 9;
 static constexpr int s_zoom_level_fit_image = 10;

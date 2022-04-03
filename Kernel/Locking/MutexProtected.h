@@ -66,7 +66,7 @@ public:
     template<typename Callback>
     void for_each_shared(Callback callback, LockLocation const& location = LockLocation::current()) const
     {
-        with_shared([&](const auto& value) {
+        with_shared([&](auto const& value) {
             for (auto& item : value)
                 callback(item);
         },

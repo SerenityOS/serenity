@@ -11,7 +11,7 @@
 
 TEST_CASE(zlib_decompress_simple)
 {
-    const Array<u8, 40> compressed {
+    Array<u8, 40> const compressed {
         0x78, 0x01, 0x01, 0x1D, 0x00, 0xE2, 0xFF, 0x54, 0x68, 0x69, 0x73, 0x20,
         0x69, 0x73, 0x20, 0x61, 0x20, 0x73, 0x69, 0x6D, 0x70, 0x6C, 0x65, 0x20,
         0x74, 0x65, 0x78, 0x74, 0x20, 0x66, 0x69, 0x6C, 0x65, 0x20, 0x3A, 0x29,
@@ -20,6 +20,6 @@ TEST_CASE(zlib_decompress_simple)
 
     const u8 uncompressed[] = "This is a simple text file :)";
 
-    const auto decompressed = Compress::Zlib::decompress_all(compressed);
+    auto const decompressed = Compress::Zlib::decompress_all(compressed);
     EXPECT(decompressed.value().bytes() == (ReadonlyBytes { uncompressed, sizeof(uncompressed) - 1 }));
 }

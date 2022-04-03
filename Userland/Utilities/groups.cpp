@@ -12,7 +12,7 @@
 #include <grp.h>
 #include <unistd.h>
 
-static void print_account_gids(const Core::Account& account)
+static void print_account_gids(Core::Account const& account)
 {
     auto* gr = getgrgid(account.gid());
     if (!gr) {
@@ -35,7 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
     TRY(Core::System::pledge("stdio rpath", nullptr));
 
-    Vector<const char*> usernames;
+    Vector<char const*> usernames;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print group memberships for each username or, if no username is specified, for the current process.");

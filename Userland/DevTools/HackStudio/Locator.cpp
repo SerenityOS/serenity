@@ -21,7 +21,7 @@ namespace HackStudio {
 class LocatorSuggestionModel final : public GUI::Model {
 public:
     struct Suggestion {
-        static Suggestion create_filename(const String& filename);
+        static Suggestion create_filename(String const& filename);
         static Suggestion create_symbol_declaration(const GUI::AutocompleteProvider::Declaration&);
 
         bool is_filename() const { return as_filename.has_value(); }
@@ -76,13 +76,13 @@ public:
         return {};
     }
 
-    const Vector<Suggestion>& suggestions() const { return m_suggestions; }
+    Vector<Suggestion> const& suggestions() const { return m_suggestions; }
 
 private:
     Vector<Suggestion> m_suggestions;
 };
 
-LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_filename(const String& filename)
+LocatorSuggestionModel::Suggestion LocatorSuggestionModel::Suggestion::create_filename(String const& filename)
 {
     LocatorSuggestionModel::Suggestion s;
     s.as_filename = filename;

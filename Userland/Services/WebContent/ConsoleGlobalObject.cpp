@@ -19,10 +19,6 @@ ConsoleGlobalObject::ConsoleGlobalObject(Web::Bindings::WindowObject& parent_obj
 {
 }
 
-ConsoleGlobalObject::~ConsoleGlobalObject()
-{
-}
-
 void ConsoleGlobalObject::initialize_global_object()
 {
     Base::initialize_global_object();

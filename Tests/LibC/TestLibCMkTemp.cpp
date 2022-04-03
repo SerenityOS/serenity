@@ -33,7 +33,7 @@ TEST_CASE(test_mktemp_unique_filename)
     } else {
         wait(NULL);
 
-        auto path1 = String::formatted("{}", reinterpret_cast<const char*>(ptr));
+        auto path1 = String::formatted("{}", reinterpret_cast<char const*>(ptr));
 
         char path[] = "/tmp/test.mktemp.XXXXXX";
         auto path2 = String::formatted("{}", mktemp(path));
@@ -63,7 +63,7 @@ TEST_CASE(test_mkdtemp_unique_filename)
     } else {
         wait(NULL);
 
-        auto path1 = String::formatted("{}", reinterpret_cast<const char*>(ptr));
+        auto path1 = String::formatted("{}", reinterpret_cast<char const*>(ptr));
 
         char path[] = "/tmp/test.mkdtemp.XXXXXX";
         auto path2 = String::formatted("{}", mkdtemp(path));
@@ -86,7 +86,10 @@ TEST_CASE(test_mkstemp_unique_filename)
         auto fd = mkstemp(path);
         EXPECT_NE(fd, -1);
 
-        auto temp_path = Core::File::read_link(String::formatted("/proc/{}/fd/{}", getpid(), fd));
+        auto temp_path_or_error = Core::File::read_link(String::formatted("/proc/{}/fd/{}", getpid(), fd));
+        EXPECT(!temp_path_or_error.is_error());
+
+        auto temp_path = temp_path_or_error.release_value();
         EXPECT(temp_path.characters());
 
         close(fd);
@@ -98,13 +101,16 @@ TEST_CASE(test_mkstemp_unique_filename)
     } else {
         wait(NULL);
 
-        auto path1 = String::formatted("{}", reinterpret_cast<const char*>(ptr));
+        auto path1 = String::formatted("{}", reinterpret_cast<char const*>(ptr));
 
         char path[] = "/tmp/test.mkstemp.XXXXXX";
         auto fd = mkstemp(path);
         EXPECT(fd != -1);
 
-        auto path2 = Core::File::read_link(String::formatted("/proc/{}/fd/{}", getpid(), fd));
+        auto path2_or_error = Core::File::read_link(String::formatted("/proc/{}/fd/{}", getpid(), fd));
+        EXPECT(!path2_or_error.is_error());
+
+        auto path2 = path2_or_error.release_value();
         EXPECT(path2.characters());
 
         close(fd);

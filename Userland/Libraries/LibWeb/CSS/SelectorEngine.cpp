@@ -78,25 +78,63 @@ static inline bool matches_checked_pseudo_class(DOM::Element const& element)
 
 static inline bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& attribute, DOM::Element const& element)
 {
-    switch (attribute.match_type) {
-    case CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute:
+    if (attribute.match_type == CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute) {
+        // Early way out in case of an attribute existence selector.
         return element.has_attribute(attribute.name);
+    }
+
+    auto const case_insensitive_match = (attribute.case_type == CSS::Selector::SimpleSelector::Attribute::CaseType::CaseInsensitiveMatch);
+    auto const case_sensitivity = case_insensitive_match
+        ? CaseSensitivity::CaseInsensitive
+        : CaseSensitivity::CaseSensitive;
+
+    switch (attribute.match_type) {
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
-        return element.attribute(attribute.name) == attribute.value;
-    case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord:
-        return element.attribute(attribute.name).split_view(' ').contains_slow(attribute.value);
+        return case_insensitive_match
+            ? element.attribute(attribute.name).equals_ignoring_case(attribute.value)
+            : element.attribute(attribute.name) == attribute.value;
+    case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord: {
+        if (attribute.value.is_empty()) {
+            // This selector is always false is match value is empty.
+            return false;
+        }
+        auto const view = element.attribute(attribute.name).split_view(' ');
+        auto const size = view.size();
+        for (size_t i = 0; i < size; ++i) {
+            auto const value = view.at(i);
+            if (case_insensitive_match
+                    ? value.equals_ignoring_case(attribute.value)
+                    : value == attribute.value) {
+                return true;
+            }
+        }
+        return false;
+    }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
-        return element.attribute(attribute.name).contains(attribute.value);
+        return !attribute.value.is_empty()
+            && element.attribute(attribute.name).contains(attribute.value, case_sensitivity);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment: {
-        auto segments = element.attribute(attribute.name).split_view('-');
-        return !segments.is_empty() && segments.first() == attribute.value;
+        auto const element_attr_value = element.attribute(attribute.name);
+        if (element_attr_value.is_empty()) {
+            // If the attribute value on element is empty, the selector is true
+            // if the match value is also empty and false otherwise.
+            return attribute.value.is_empty();
+        }
+        if (attribute.value.is_empty()) {
+            return false;
+        }
+        auto segments = element_attr_value.split_view('-');
+        return case_insensitive_match
+            ? segments.first().equals_ignoring_case(attribute.value)
+            : segments.first() == attribute.value;
     }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
-        return element.attribute(attribute.name).starts_with(attribute.value);
+        return !attribute.value.is_empty()
+            && element.attribute(attribute.name).starts_with(attribute.value, case_sensitivity);
     case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
-        return element.attribute(attribute.name).ends_with(attribute.value);
-    case CSS::Selector::SimpleSelector::Attribute::MatchType::None:
-        VERIFY_NOT_REACHED();
+        return !attribute.value.is_empty()
+            && element.attribute(attribute.name).ends_with(attribute.value, case_sensitivity);
+    default:
         break;
     }
 
@@ -124,8 +162,6 @@ static inline DOM::Element const* next_sibling_with_same_tag_name(DOM::Element c
 static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass const& pseudo_class, DOM::Element const& element)
 {
     switch (pseudo_class.type) {
-    case CSS::Selector::SimpleSelector::PseudoClass::Type::None:
-        break;
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Link:
         return element.is_link();
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Visited:
@@ -301,15 +337,15 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, DOM::
     case CSS::Selector::SimpleSelector::Type::Universal:
         return true;
     case CSS::Selector::SimpleSelector::Type::Id:
-        return component.value == element.attribute(HTML::AttributeNames::id);
+        return component.name() == element.attribute(HTML::AttributeNames::id);
     case CSS::Selector::SimpleSelector::Type::Class:
-        return element.has_class(component.value);
+        return element.has_class(component.name());
     case CSS::Selector::SimpleSelector::Type::TagName:
-        return component.value == element.local_name();
+        return component.name() == element.local_name();
     case CSS::Selector::SimpleSelector::Type::Attribute:
-        return matches_attribute(component.attribute, element);
+        return matches_attribute(component.attribute(), element);
     case CSS::Selector::SimpleSelector::Type::PseudoClass:
-        return matches_pseudo_class(component.pseudo_class, element);
+        return matches_pseudo_class(component.pseudo_class(), element);
     case CSS::Selector::SimpleSelector::Type::PseudoElement:
         // Pseudo-element matching/not-matching is handled in the top level matches().
         return true;

@@ -147,10 +147,10 @@ private:
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    const char* url_str = nullptr;
+    char const* url_str = nullptr;
     bool save_at_provided_name = false;
     bool should_follow_url = false;
-    const char* data = nullptr;
+    char const* data = nullptr;
     String method = "GET";
     HashMap<String, String, CaseInsensitiveStringTraits> request_headers;
 

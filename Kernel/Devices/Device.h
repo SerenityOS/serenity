@@ -40,7 +40,7 @@ public:
     MajorNumber major() const { return m_major; }
     MinorNumber minor() const { return m_minor; }
 
-    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const override;
 
     UserID uid() const { return m_uid; }
     GroupID gid() const { return m_gid; }
@@ -48,7 +48,7 @@ public:
     virtual bool is_device() const override { return true; }
     virtual void will_be_destroyed() override;
     virtual void after_inserting();
-    void process_next_queued_request(Badge<AsyncDeviceRequest>, const AsyncDeviceRequest&);
+    void process_next_queued_request(Badge<AsyncDeviceRequest>, AsyncDeviceRequest const&);
 
     template<typename AsyncRequestType, typename... Args>
     ErrorOr<NonnullRefPtr<AsyncRequestType>> try_make_request(Args&&... args)
@@ -68,8 +68,8 @@ protected:
     void set_gid(GroupID gid) { m_gid = gid; }
 
 private:
-    MajorNumber m_major { 0 };
-    MinorNumber m_minor { 0 };
+    MajorNumber const m_major { 0 };
+    MinorNumber const m_minor { 0 };
     UserID m_uid { 0 };
     GroupID m_gid { 0 };
 

@@ -64,13 +64,14 @@ public:
     }
 
     const T& at(size_t index) const { return elements()[(m_head + index) % Capacity]; }
+    T& at(size_t index) { return elements()[(m_head + index) % Capacity]; }
 
     const T& first() const { return at(0); }
     const T& last() const { return at(size() - 1); }
 
     class ConstIterator {
     public:
-        bool operator!=(const ConstIterator& other) { return m_index != other.m_index; }
+        bool operator!=(ConstIterator const& other) { return m_index != other.m_index; }
         ConstIterator& operator++()
         {
             ++m_index;
@@ -81,17 +82,42 @@ public:
 
     private:
         friend class CircularQueue;
-        ConstIterator(const CircularQueue& queue, const size_t index)
+        ConstIterator(CircularQueue const& queue, const size_t index)
             : m_queue(queue)
             , m_index(index)
         {
         }
-        const CircularQueue& m_queue;
+        CircularQueue const& m_queue;
+        size_t m_index { 0 };
+    };
+
+    class Iterator {
+    public:
+        bool operator!=(Iterator const& other) { return m_index != other.m_index; }
+        Iterator& operator++()
+        {
+            ++m_index;
+            return *this;
+        }
+
+        T& operator*() const { return m_queue.at(m_index); }
+
+    private:
+        friend class CircularQueue;
+        Iterator(CircularQueue& queue, size_t const index)
+            : m_queue(queue)
+            , m_index(index)
+        {
+        }
+        CircularQueue& m_queue;
         size_t m_index { 0 };
     };
 
     ConstIterator begin() const { return ConstIterator(*this, 0); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
+
+    Iterator begin() { return Iterator(*this, 0); }
+    Iterator end() { return Iterator(*this, size()); }
 
     size_t head_index() const { return m_head; }
 

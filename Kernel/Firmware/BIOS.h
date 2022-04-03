@@ -69,7 +69,7 @@ protected:
     BIOSSysFSComponent();
 };
 
-class DMIEntryPointExposedBlob : public BIOSSysFSComponent {
+class DMIEntryPointExposedBlob final : public BIOSSysFSComponent {
 public:
     virtual StringView name() const override { return "smbios_entry_point"sv; }
     static NonnullRefPtr<DMIEntryPointExposedBlob> must_create(PhysicalAddress dmi_entry_point, size_t blob_size);
@@ -77,11 +77,14 @@ public:
 private:
     DMIEntryPointExposedBlob(PhysicalAddress dmi_entry_point, size_t blob_size);
     virtual ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const override;
+
+    virtual size_t size() const override { return m_dmi_entry_point_length; }
+
     PhysicalAddress m_dmi_entry_point;
-    size_t m_dmi_entry_point_length;
+    size_t const m_dmi_entry_point_length { 0 };
 };
 
-class SMBIOSExposedTable : public BIOSSysFSComponent {
+class SMBIOSExposedTable final : public BIOSSysFSComponent {
 public:
     virtual StringView name() const override { return "DMI"sv; }
     static NonnullRefPtr<SMBIOSExposedTable> must_create(PhysicalAddress, size_t blob_size);
@@ -90,8 +93,10 @@ private:
     SMBIOSExposedTable(PhysicalAddress dmi_entry_point, size_t blob_size);
     virtual ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const override;
 
+    virtual size_t size() const override { return m_smbios_structure_table_length; }
+
     PhysicalAddress m_smbios_structure_table;
-    size_t m_smbios_structure_table_length;
+    size_t const m_smbios_structure_table_length { 0 };
 };
 
 class BIOSSysFSDirectory : public SysFSDirectory {

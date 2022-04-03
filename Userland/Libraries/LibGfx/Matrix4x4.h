@@ -17,7 +17,7 @@ template<typename T>
 using Matrix4x4 = Matrix<4, T>;
 
 template<typename T>
-constexpr static Vector4<T> operator*(const Matrix4x4<T>& m, const Vector4<T>& v)
+constexpr static Vector4<T> operator*(Matrix4x4<T> const& m, Vector4<T> const& v)
 {
     auto const& elements = m.elements();
     return Vector4<T>(
@@ -27,8 +27,10 @@ constexpr static Vector4<T> operator*(const Matrix4x4<T>& m, const Vector4<T>& v
         v.x() * elements[3][0] + v.y() * elements[3][1] + v.z() * elements[3][2] + v.w() * elements[3][3]);
 }
 
+// FIXME: this is a specific Matrix4x4 * Vector3 interaction that implies W=1; maybe move this out of LibGfx
+//        or replace a Matrix4x4 * Vector4 operation?
 template<typename T>
-constexpr static Vector3<T> transform_point(const Matrix4x4<T>& m, const Vector3<T>& p)
+constexpr static Vector3<T> transform_point(Matrix4x4<T> const& m, Vector3<T> const& p)
 {
     auto const& elements = m.elements();
     return Vector3<T>(
@@ -38,17 +40,7 @@ constexpr static Vector3<T> transform_point(const Matrix4x4<T>& m, const Vector3
 }
 
 template<typename T>
-constexpr static Vector3<T> transform_direction(const Matrix4x4<T>& m, const Vector3<T>& d)
-{
-    auto const& elements = m.elements();
-    return Vector3<T>(
-        d.x() * elements[0][0] + d.y() * elements[0][1] + d.z() * elements[0][2],
-        d.x() * elements[1][0] + d.y() * elements[1][1] + d.z() * elements[1][2],
-        d.x() * elements[2][0] + d.y() * elements[2][1] + d.z() * elements[2][2]);
-}
-
-template<typename T>
-constexpr static Matrix4x4<T> translation_matrix(const Vector3<T>& p)
+constexpr static Matrix4x4<T> translation_matrix(Vector3<T> const& p)
 {
     return Matrix4x4<T>(
         1, 0, 0, p.x(),
@@ -58,7 +50,7 @@ constexpr static Matrix4x4<T> translation_matrix(const Vector3<T>& p)
 }
 
 template<typename T>
-constexpr static Matrix4x4<T> scale_matrix(const Vector3<T>& s)
+constexpr static Matrix4x4<T> scale_matrix(Vector3<T> const& s)
 {
     return Matrix4x4<T>(
         s.x(), 0, 0, 0,
@@ -68,7 +60,7 @@ constexpr static Matrix4x4<T> scale_matrix(const Vector3<T>& s)
 }
 
 template<typename T>
-constexpr static Matrix4x4<T> rotation_matrix(const Vector3<T>& axis, T angle)
+constexpr static Matrix4x4<T> rotation_matrix(Vector3<T> const& axis, T angle)
 {
     T c, s;
     AK::sincos(angle, s, c);

@@ -19,7 +19,7 @@ public:
     u32 wake_all();
 
     template<class... Args>
-    Thread::BlockResult wait_on(const Thread::BlockTimeout& timeout, Args&&... args)
+    Thread::BlockResult wait_on(Thread::BlockTimeout const& timeout, Args&&... args)
     {
         return Thread::current()->block<Thread::WaitQueueBlocker>(timeout, *this, forward<Args>(args)...);
     }

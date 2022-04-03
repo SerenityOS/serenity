@@ -12,7 +12,7 @@
 
 class OutlineModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<OutlineModel> create(const NonnullRefPtr<PDF::OutlineDict>& outline);
+    static NonnullRefPtr<OutlineModel> create(NonnullRefPtr<PDF::OutlineDict> const& outline);
 
     void set_index_open_state(const GUI::ModelIndex& index, bool is_open);
 
@@ -23,7 +23,7 @@ public:
     virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex&) const override;
 
 private:
-    OutlineModel(const NonnullRefPtr<PDF::OutlineDict>& outline);
+    OutlineModel(NonnullRefPtr<PDF::OutlineDict> const& outline);
 
     GUI::Icon m_closed_item_icon;
     GUI::Icon m_open_item_icon;

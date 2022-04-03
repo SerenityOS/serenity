@@ -54,7 +54,7 @@ UNMAP_AFTER_INIT SerialDevice::SerialDevice(IOAddress base_addr, unsigned minor)
 
 UNMAP_AFTER_INIT SerialDevice::~SerialDevice() = default;
 
-bool SerialDevice::can_read(const OpenFileDescription&, u64) const
+bool SerialDevice::can_read(OpenFileDescription const&, u64) const
 {
     return (get_line_status() & DataReady) != 0;
 }
@@ -75,12 +75,12 @@ ErrorOr<size_t> SerialDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer
     });
 }
 
-bool SerialDevice::can_write(const OpenFileDescription&, u64) const
+bool SerialDevice::can_write(OpenFileDescription const&, u64) const
 {
     return (get_line_status() & EmptyTransmitterHoldingRegister) != 0;
 }
 
-ErrorOr<size_t> SerialDevice::write(OpenFileDescription& description, u64, const UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> SerialDevice::write(OpenFileDescription& description, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
     if (!size)
         return 0;

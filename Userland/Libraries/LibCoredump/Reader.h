@@ -69,7 +69,7 @@ public:
         NonnullRefPtr<Core::MappedFile> file;
         ELF::Image lib_elf;
     };
-    const LibraryData* library_containing(FlatPtr address) const;
+    LibraryData const* library_containing(FlatPtr address) const;
 
     String resolve_object_path(StringView object_name) const;
 
@@ -89,7 +89,7 @@ private:
 
     class NotesEntryIterator {
     public:
-        NotesEntryIterator(const u8* notes_data);
+        NotesEntryIterator(u8 const* notes_data);
 
         ELF::Core::NotesEntryHeader::Type type() const;
         const ELF::Core::NotesEntry* current() const;
@@ -99,7 +99,7 @@ private:
 
     private:
         const ELF::Core::NotesEntry* m_current { nullptr };
-        const u8* start { nullptr };
+        u8 const* start { nullptr };
     };
 
     // Private as we don't need anyone poking around in this JsonObject
@@ -122,7 +122,7 @@ private:
 template<typename Func>
 void Reader::for_each_memory_region_info(Func func) const
 {
-    NotesEntryIterator it(bit_cast<const u8*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
+    NotesEntryIterator it(bit_cast<u8 const*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
     for (; !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo)
             continue;
@@ -138,7 +138,7 @@ void Reader::for_each_memory_region_info(Func func) const
             raw_memory_region_info.region_start,
             raw_memory_region_info.region_end,
             raw_memory_region_info.program_header_index,
-            { bit_cast<const char*>(raw_data.offset_pointer(raw_data.size())) },
+            { bit_cast<char const*>(raw_data.offset_pointer(raw_data.size())) },
         };
         IterationDecision decision = func(memory_region_info);
         if (decision == IterationDecision::Break)
@@ -149,12 +149,12 @@ void Reader::for_each_memory_region_info(Func func) const
 template<typename Func>
 void Reader::for_each_thread_info(Func func) const
 {
-    NotesEntryIterator it(bit_cast<const u8*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
+    NotesEntryIterator it(bit_cast<u8 const*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
     for (; !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::ThreadInfo)
             continue;
         ELF::Core::ThreadInfo thread_info;
-        ByteReader::load(bit_cast<const u8*>(it.current()), thread_info);
+        ByteReader::load(bit_cast<u8 const*>(it.current()), thread_info);
 
         IterationDecision decision = func(thread_info);
         if (decision == IterationDecision::Break)

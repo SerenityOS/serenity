@@ -44,18 +44,18 @@ using AK::SIMD::to_f32x4;
 using AK::SIMD::to_u32x4;
 using AK::SIMD::u32x4;
 
-constexpr static float edge_function(const FloatVector2& a, const FloatVector2& b, const FloatVector2& c)
+constexpr static float edge_function(FloatVector2 const& a, FloatVector2 const& b, FloatVector2 const& c)
 {
     return (c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x());
 }
 
-constexpr static f32x4 edge_function4(const FloatVector2& a, const FloatVector2& b, const Vector2<f32x4>& c)
+constexpr static f32x4 edge_function4(FloatVector2 const& a, FloatVector2 const& b, Vector2<f32x4> const& c)
 {
     return (c.x() - a.x()) * (b.y() - a.y()) - (c.y() - a.y()) * (b.x() - a.x());
 }
 
 template<typename T, typename U>
-constexpr static auto interpolate(const T& v0, const T& v1, const T& v2, const Vector3<U>& barycentric_coords)
+constexpr static auto interpolate(const T& v0, const T& v1, const T& v2, Vector3<U> const& barycentric_coords)
 {
     return v0 * barycentric_coords.x() + v1 * barycentric_coords.y() + v2 * barycentric_coords.z();
 }
@@ -175,7 +175,7 @@ void Device::setup_blend_factors()
     }
 }
 
-void Device::rasterize_triangle(const Triangle& triangle)
+void Device::rasterize_triangle(Triangle const& triangle)
 {
     INCREASE_STATISTICS_COUNTER(g_num_rasterized_triangles, 1);
 
@@ -639,9 +639,8 @@ static void generate_texture_coordinates(Vertex& vertex, RasterizerOptions const
     }
 }
 
-void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix3x3 const& normal_transform,
-    FloatMatrix4x4 const& projection_transform, FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices,
-    Vector<size_t> const& enabled_texture_units)
+void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const& model_view_transform, FloatMatrix4x4 const& projection_transform,
+    FloatMatrix4x4 const& texture_transform, Vector<Vertex> const& vertices, Vector<size_t> const& enabled_texture_units)
 {
     // At this point, the user has effectively specified that they are done with defining the geometry
     // of what they want to draw. We now need to do a few things (https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview):
@@ -716,6 +715,10 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         }
     }
 
+    // Set up normals transform by taking the upper left 3x3 elements from the model view matrix
+    // See section 2.11.3 of the OpenGL 1.5 spec
+    auto normal_transform = model_view_transform.submatrix_from_topleft<3>().transpose().inverse();
+
     // Now let's transform each triangle and send that to the GPU
     auto const viewport = m_options.viewport;
     auto const viewport_half_width = viewport.width() / 2.0f;
@@ -730,10 +733,15 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
         triangle.vertices[1].eye_coordinates = model_view_transform * triangle.vertices[1].position;
         triangle.vertices[2].eye_coordinates = model_view_transform * triangle.vertices[2].position;
 
-        // Transform the vertex normals into eye-space
-        triangle.vertices[0].normal = transform_direction(model_view_transform, triangle.vertices[0].normal);
-        triangle.vertices[1].normal = transform_direction(model_view_transform, triangle.vertices[1].normal);
-        triangle.vertices[2].normal = transform_direction(model_view_transform, triangle.vertices[2].normal);
+        // Transform normals before use in lighting
+        triangle.vertices[0].normal = normal_transform * triangle.vertices[0].normal;
+        triangle.vertices[1].normal = normal_transform * triangle.vertices[1].normal;
+        triangle.vertices[2].normal = normal_transform * triangle.vertices[2].normal;
+        if (m_options.normalization_enabled) {
+            triangle.vertices[0].normal.normalize();
+            triangle.vertices[1].normal.normalize();
+            triangle.vertices[2].normal.normalize();
+        }
 
         // Calculate per-vertex lighting
         if (m_options.lighting_enabled) {
@@ -813,7 +821,7 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
                     }
 
                     // FIXME: The spec allows for splitting the colors calculated here into multiple different colors (primary/secondary color). Investigate what this means.
-                    (void)m_lighting_model.single_color;
+                    (void)m_lighting_model.color_control;
 
                     // FIXME: Two sided lighting should be implemented eventually (I believe this is where the normals are -ve and then lighting is calculated with the BACK material)
                     (void)m_lighting_model.two_sided_lighting;
@@ -823,22 +831,23 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
 
                     // Diffuse
                     auto const normal_dot_vertex_to_light = sgi_dot_operator(vertex.normal, vertex_to_light);
-                    auto const diffuse_component = ((diffuse * light.diffuse_intensity) * normal_dot_vertex_to_light);
+                    auto const diffuse_component = diffuse * light.diffuse_intensity * normal_dot_vertex_to_light;
 
                     // Specular
                     FloatVector4 specular_component = { 0.0f, 0.0f, 0.0f, 0.0f };
                     if (normal_dot_vertex_to_light > 0.0f) {
                         FloatVector3 half_vector_normalized;
                         if (!m_lighting_model.viewer_at_infinity) {
-                            half_vector_normalized = (vertex_to_light + FloatVector3(0.0f, 0.0f, 1.0f)).normalized();
+                            half_vector_normalized = vertex_to_light + FloatVector3(0.0f, 0.0f, 1.0f);
                         } else {
-                            auto const vertex_to_eye_point = sgi_arrow_operator(vertex.eye_coordinates.normalized(), { 0.f, 0.f, 0.f, 1.f }, vertex_to_light_length);
+                            auto const vertex_to_eye_point = sgi_arrow_operator(vertex.eye_coordinates, { 0.f, 0.f, 0.f, 1.f }, vertex_to_light_length);
                             half_vector_normalized = vertex_to_light + vertex_to_eye_point;
                         }
+                        half_vector_normalized.normalize();
 
-                        auto const normal_dot_half_vector = sgi_dot_operator(vertex.normal.normalized(), half_vector_normalized);
+                        auto const normal_dot_half_vector = sgi_dot_operator(vertex.normal, half_vector_normalized);
                         auto const specular_coefficient = AK::pow(normal_dot_half_vector, material.shininess);
-                        specular_component = (specular * light.specular_intensity) * specular_coefficient;
+                        specular_component = specular * light.specular_intensity * specular_coefficient;
                     }
 
                     auto color = ambient_component + diffuse_component + specular_component;
@@ -937,16 +946,6 @@ void Device::draw_primitives(PrimitiveType primitive_type, FloatMatrix4x4 const&
 
         if (area > 0)
             swap(triangle.vertices[0], triangle.vertices[1]);
-
-        // Transform normals
-        triangle.vertices[0].normal = normal_transform * triangle.vertices[0].normal;
-        triangle.vertices[1].normal = normal_transform * triangle.vertices[1].normal;
-        triangle.vertices[2].normal = normal_transform * triangle.vertices[2].normal;
-        if (m_options.normalization_enabled) {
-            triangle.vertices[0].normal.normalize();
-            triangle.vertices[1].normal.normalize();
-            triangle.vertices[2].normal.normalize();
-        }
 
         if (texture_coordinate_generation_enabled) {
             generate_texture_coordinates(triangle.vertices[0], m_options);
@@ -1191,7 +1190,7 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
     painter.draw_text(target.rect().translated(2, 2), debug_string, font, Gfx::TextAlignment::TopLeft, Gfx::Color::White);
 }
 
-void Device::set_options(const RasterizerOptions& options)
+void Device::set_options(RasterizerOptions const& options)
 {
     m_options = options;
 
@@ -1199,7 +1198,7 @@ void Device::set_options(const RasterizerOptions& options)
         setup_blend_factors();
 }
 
-void Device::set_light_model_params(const LightModelParameters& lighting_model)
+void Device::set_light_model_params(LightModelParameters const& lighting_model)
 {
     m_lighting_model = lighting_model;
 }

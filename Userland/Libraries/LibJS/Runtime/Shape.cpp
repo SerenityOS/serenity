@@ -53,7 +53,7 @@ Shape* Shape::get_or_prune_cached_prototype_transition(Object* prototype)
     return it->value;
 }
 
-Shape* Shape::create_put_transition(const StringOrSymbol& property_key, PropertyAttributes attributes)
+Shape* Shape::create_put_transition(StringOrSymbol const& property_key, PropertyAttributes attributes)
 {
     TransitionKey key { property_key, attributes };
     if (auto* existing_shape = get_or_prune_cached_forward_transition(key))
@@ -65,7 +65,7 @@ Shape* Shape::create_put_transition(const StringOrSymbol& property_key, Property
     return new_shape;
 }
 
-Shape* Shape::create_configure_transition(const StringOrSymbol& property_key, PropertyAttributes attributes)
+Shape* Shape::create_configure_transition(StringOrSymbol const& property_key, PropertyAttributes attributes)
 {
     TransitionKey key { property_key, attributes };
     if (auto* existing_shape = get_or_prune_cached_forward_transition(key))
@@ -93,7 +93,7 @@ Shape::Shape(Object& global_object)
 {
 }
 
-Shape::Shape(Shape& previous_shape, const StringOrSymbol& property_key, PropertyAttributes attributes, TransitionType transition_type)
+Shape::Shape(Shape& previous_shape, StringOrSymbol const& property_key, PropertyAttributes attributes, TransitionType transition_type)
     : m_global_object(previous_shape.m_global_object)
     , m_previous(&previous_shape)
     , m_property_key(property_key)
@@ -126,7 +126,7 @@ void Shape::visit_edges(Cell::Visitor& visitor)
     }
 }
 
-Optional<PropertyMetadata> Shape::lookup(const StringOrSymbol& property_key) const
+Optional<PropertyMetadata> Shape::lookup(StringOrSymbol const& property_key) const
 {
     if (m_property_count == 0)
         return {};
@@ -162,7 +162,7 @@ void Shape::ensure_property_table() const
 
     u32 next_offset = 0;
 
-    Vector<const Shape*, 64> transition_chain;
+    Vector<Shape const*, 64> transition_chain;
     for (auto* shape = m_previous; shape; shape = shape->m_previous) {
         if (shape->m_property_table) {
             *m_property_table = *shape->m_property_table;
@@ -189,7 +189,7 @@ void Shape::ensure_property_table() const
     }
 }
 
-void Shape::add_property_to_unique_shape(const StringOrSymbol& property_key, PropertyAttributes attributes)
+void Shape::add_property_to_unique_shape(StringOrSymbol const& property_key, PropertyAttributes attributes)
 {
     VERIFY(is_unique());
     VERIFY(m_property_table);
@@ -200,7 +200,7 @@ void Shape::add_property_to_unique_shape(const StringOrSymbol& property_key, Pro
     ++m_property_count;
 }
 
-void Shape::reconfigure_property_in_unique_shape(const StringOrSymbol& property_key, PropertyAttributes attributes)
+void Shape::reconfigure_property_in_unique_shape(StringOrSymbol const& property_key, PropertyAttributes attributes)
 {
     VERIFY(is_unique());
     VERIFY(m_property_table);
@@ -210,7 +210,7 @@ void Shape::reconfigure_property_in_unique_shape(const StringOrSymbol& property_
     m_property_table->set(property_key, it->value);
 }
 
-void Shape::remove_property_from_unique_shape(const StringOrSymbol& property_key, size_t offset)
+void Shape::remove_property_from_unique_shape(StringOrSymbol const& property_key, size_t offset)
 {
     VERIFY(is_unique());
     VERIFY(m_property_table);

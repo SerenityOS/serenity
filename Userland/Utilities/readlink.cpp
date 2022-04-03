@@ -6,30 +6,23 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
 
     bool no_newline = false;
-    Vector<const char*> paths;
+    Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(no_newline, "Do not append a newline", "no-newline", 'n');
     args_parser.add_positional_argument(paths, "Symlink path", "path");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    for (const char* path : paths) {
-        auto destination = Core::File::read_link(path);
-        if (destination.is_null()) {
-            perror(path);
-            return 1;
-        }
+    for (auto path : paths) {
+        auto destination = TRY(Core::File::read_link(path));
         out("{}", destination);
         if (!no_newline)
             outln();

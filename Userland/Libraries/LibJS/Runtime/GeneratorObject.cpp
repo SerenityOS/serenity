@@ -72,10 +72,10 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
     auto previous_generated_value = TRY(generated_value(m_previous_value));
 
     auto result = Object::create(global_object, global_object.object_prototype());
-    result->define_direct_property("value", previous_generated_value, JS::default_attributes);
+    result->define_direct_property("value", previous_generated_value, default_attributes);
 
     if (m_done) {
-        result->define_direct_property("done", Value(true), JS::default_attributes);
+        result->define_direct_property("done", Value(true), default_attributes);
         return result;
     }
 
@@ -85,7 +85,7 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
     if (!next_block) {
         // The generator has terminated, now we can simply return done=true.
         m_done = true;
-        result->define_direct_property("done", Value(true), JS::default_attributes);
+        result->define_direct_property("done", Value(true), default_attributes);
         return result;
     }
 
@@ -116,8 +116,8 @@ ThrowCompletionOr<Value> GeneratorObject::next_impl(VM& vm, GlobalObject& global
 
     m_previous_value = TRY(next_result);
 
-    result->define_direct_property("value", TRY(generated_value(m_previous_value)), JS::default_attributes);
-    result->define_direct_property("done", Value(m_done), JS::default_attributes);
+    result->define_direct_property("value", TRY(generated_value(m_previous_value)), default_attributes);
+    result->define_direct_property("done", Value(m_done), default_attributes);
 
     return result;
 }

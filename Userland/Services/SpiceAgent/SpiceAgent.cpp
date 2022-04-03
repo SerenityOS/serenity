@@ -41,7 +41,7 @@ SpiceAgent::SpiceAgent(int fd, ConnectionToClipboardServer& connection)
     send_message(buffer);
 }
 
-Optional<SpiceAgent::ClipboardType> SpiceAgent::mime_type_to_clipboard_type(const String& mime)
+Optional<SpiceAgent::ClipboardType> SpiceAgent::mime_type_to_clipboard_type(String const& mime)
 {
     if (mime == "text/plain")
         return ClipboardType::Text;
@@ -120,7 +120,7 @@ void SpiceAgent::on_message_received()
         auto type = (ClipboardType)clipboard_message->type;
         auto data_buffer = ByteBuffer::create_uninitialized(message->size - sizeof(u32)).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
 
-        const auto total_bytes = message->size - sizeof(Clipboard);
+        auto const total_bytes = message->size - sizeof(Clipboard);
         auto bytes_copied = header.size - sizeof(Message) - sizeof(Clipboard);
         memcpy(data_buffer.data(), clipboard_message->data, bytes_copied);
 
@@ -206,7 +206,7 @@ SpiceAgent::Message* SpiceAgent::initialize_headers(u8* data, size_t additional_
     return message;
 }
 
-ByteBuffer SpiceAgent::AnnounceCapabilities::make_buffer(bool request, const Vector<Capability>& capabilities)
+ByteBuffer SpiceAgent::AnnounceCapabilities::make_buffer(bool request, Vector<Capability> const& capabilities)
 {
     size_t required_size = sizeof(ChunkHeader) + sizeof(Message) + sizeof(AnnounceCapabilities);
     auto buffer = ByteBuffer::create_uninitialized(required_size).release_value_but_fixme_should_propagate_errors(); // FIXME: Handle possible OOM situation.
@@ -226,7 +226,7 @@ ByteBuffer SpiceAgent::AnnounceCapabilities::make_buffer(bool request, const Vec
     return buffer;
 }
 
-ByteBuffer SpiceAgent::ClipboardGrab::make_buffer(const Vector<ClipboardType>& types)
+ByteBuffer SpiceAgent::ClipboardGrab::make_buffer(Vector<ClipboardType> const& types)
 {
     VERIFY(types.size() > 0);
     size_t variable_data_size = sizeof(u32) * types.size();

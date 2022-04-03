@@ -36,7 +36,7 @@ bool TLSv12::expand_key()
     pseudorandom_function(
         key_buffer,
         m_context.master_key,
-        (const u8*)"key expansion", 13,
+        (u8 const*)"key expansion", 13,
         ReadonlyBytes { m_context.remote_random, sizeof(m_context.remote_random) },
         ReadonlyBytes { m_context.local_random, sizeof(m_context.local_random) });
 
@@ -129,7 +129,7 @@ bool TLSv12::compute_master_secret_from_pre_master_secret(size_t length)
     pseudorandom_function(
         m_context.master_key,
         m_context.premaster_key,
-        (const u8*)"master secret", 13,
+        (u8 const*)"master secret", 13,
         ReadonlyBytes { m_context.local_random, sizeof(m_context.local_random) },
         ReadonlyBytes { m_context.remote_random, sizeof(m_context.remote_random) });
 
@@ -211,7 +211,7 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
     }
     m_context.premaster_key = premaster_key_result.release_value();
 
-    const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
+    auto const& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
     if (!certificate_option.has_value()) {
         dbgln("certificate verification failed :(");
         alert(AlertLevel::Critical, AlertDescription::BadCertificate);

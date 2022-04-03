@@ -236,7 +236,7 @@ struct DDSLoadingContext;
 class DDSImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     virtual ~DDSImageDecoderPlugin() override;
-    DDSImageDecoderPlugin(const u8*, size_t);
+    DDSImageDecoderPlugin(u8 const*, size_t);
 
     virtual IntSize size() override;
     virtual void set_volatile() override;

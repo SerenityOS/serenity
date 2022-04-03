@@ -1,4 +1,5 @@
 #import <XHR/XMLHttpRequestEventTarget.idl>
+#import <DOM/EventHandler.idl>
 
 enum XMLHttpRequestResponseType {
   "",

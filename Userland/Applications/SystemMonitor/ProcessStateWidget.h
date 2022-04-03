@@ -9,13 +9,19 @@
 
 #include <LibGUI/Widget.h>
 
+namespace SystemMonitor {
+
 class ProcessStateWidget final : public GUI::Widget {
     C_OBJECT(ProcessStateWidget);
 
 public:
     virtual ~ProcessStateWidget() override = default;
 
+    void set_pid(pid_t);
+
 private:
-    explicit ProcessStateWidget(pid_t);
+    ProcessStateWidget();
     RefPtr<GUI::TableView> m_table_view;
 };
+
+}

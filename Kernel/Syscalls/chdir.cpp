@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$chdir(Userspace<const char*> user_path, size_t path_length)
+ErrorOr<FlatPtr> Process::sys$chdir(Userspace<char const*> user_path, size_t path_length)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::rpath));

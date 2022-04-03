@@ -229,7 +229,7 @@ static String strip_ansi(StringView format_string)
 }
 
 template<typename... Parameters>
-static void js_out(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+static void js_out(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
     if (!s_strip_ansi)
         return out(move(fmtstr), parameters...);
@@ -238,7 +238,7 @@ static void js_out(CheckedFormatString<Parameters...>&& fmtstr, const Parameters
 }
 
 template<typename... Parameters>
-static void js_outln(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+static void js_outln(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
     if (!s_strip_ansi)
         return outln(move(fmtstr), parameters...);

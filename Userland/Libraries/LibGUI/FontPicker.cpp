@@ -18,7 +18,7 @@
 
 namespace GUI {
 
-FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, bool fixed_width_only)
+FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, bool fixed_width_only)
     : Dialog(parent_window)
     , m_fixed_width_only(fixed_width_only)
 {
@@ -170,7 +170,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     set_font(current_font);
 }
 
-void FontPicker::set_font(const Gfx::Font* font)
+void FontPicker::set_font(Gfx::Font const* font)
 {
     if (m_font == font)
         return;

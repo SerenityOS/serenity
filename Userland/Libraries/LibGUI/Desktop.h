@@ -35,7 +35,7 @@ public:
     bool set_wallpaper(RefPtr<Gfx::Bitmap> wallpaper_bitmap, Optional<String> path);
 
     Gfx::IntRect rect() const { return m_bounding_rect; }
-    const Vector<Gfx::IntRect, 4>& rects() const { return m_rects; }
+    Vector<Gfx::IntRect, 4> const& rects() const { return m_rects; }
     size_t main_screen_index() const { return m_main_screen_index; }
 
     unsigned workspace_rows() const { return m_workspace_rows; }
@@ -43,7 +43,7 @@ public:
 
     int taskbar_height() const { return TaskbarWindow::taskbar_height(); }
 
-    void did_receive_screen_rects(Badge<ConnectionToWindowServer>, const Vector<Gfx::IntRect, 4>&, size_t, unsigned, unsigned);
+    void did_receive_screen_rects(Badge<ConnectionToWindowServer>, Vector<Gfx::IntRect, 4> const&, size_t, unsigned, unsigned);
 
     template<typename F>
     void on_receive_screen_rects(F&& callback)

@@ -11,6 +11,7 @@
 #include <AK/Forward.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGfx/Color.h>
@@ -135,7 +136,7 @@ enum class ColorRole {
     DisabledText = ThreedShadow1,
 };
 
-inline const char* to_string(ColorRole role)
+inline char const* to_string(ColorRole role)
 {
     switch (role) {
     case ColorRole::NoRole:
@@ -162,7 +163,7 @@ enum class AlignmentRole {
         __Count,
 };
 
-inline const char* to_string(AlignmentRole role)
+inline char const* to_string(AlignmentRole role)
 {
     switch (role) {
     case AlignmentRole::NoRole:
@@ -189,7 +190,7 @@ enum class FlagRole {
         __Count,
 };
 
-inline const char* to_string(FlagRole role)
+inline char const* to_string(FlagRole role)
 {
     switch (role) {
     case FlagRole::NoRole:
@@ -216,7 +217,7 @@ enum class MetricRole {
         __Count,
 };
 
-inline const char* to_string(MetricRole role)
+inline char const* to_string(MetricRole role)
 {
     switch (role) {
     case MetricRole::NoRole:
@@ -243,7 +244,7 @@ enum class PathRole {
         __Count,
 };
 
-inline const char* to_string(PathRole role)
+inline char const* to_string(PathRole role)
 {
     switch (role) {
     case PathRole::NoRole:
@@ -271,6 +272,13 @@ Core::AnonymousBuffer& current_system_theme_buffer();
 void set_system_theme(Core::AnonymousBuffer);
 Core::AnonymousBuffer load_system_theme(Core::ConfigFile const&);
 Core::AnonymousBuffer load_system_theme(String const& path);
+
+struct SystemThemeMetaData {
+    String name;
+    String path;
+};
+
+Vector<SystemThemeMetaData> list_installed_system_themes();
 
 }
 

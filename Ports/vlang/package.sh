@@ -1,8 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=v
+port=vlang
 auth_type=sha256
 version=weekly.2021.31
-files="https://codeload.github.com/vlang/v/tar.gz/refs/tags/$version v-$version.tar.gz b0daf0a2e2cb6d463710952f4d2e8705c17d02a9270355b20861ff3fd5f72563"
+workdir="v-${version}"
+files="https://codeload.github.com/vlang/v/tar.gz/refs/tags/${version} v-${version}.tar.gz b0daf0a2e2cb6d463710952f4d2e8705c17d02a9270355b20861ff3fd5f72563"
 
 build() {
     (

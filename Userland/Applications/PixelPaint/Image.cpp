@@ -67,7 +67,11 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitma
     auto decoded_image = maybe_decoded_image.release_value();
     if (decoded_image.frames.is_empty())
         return Error::from_string_literal("Image decode failed (no frames)"sv);
-    return decoded_image.frames[0].bitmap.release_nonnull();
+
+    auto decoded_bitmap = decoded_image.frames.first().bitmap;
+    if (decoded_bitmap.is_null())
+        return Error::from_string_literal("Image decode failed (no bitmap for frame)"sv);
+    return decoded_bitmap.release_nonnull();
 }
 
 ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
@@ -122,7 +126,7 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
     MUST(json.add("height", m_size.height()));
     {
         auto json_layers = MUST(json.add_array("layers"));
-        for (const auto& layer : m_layers) {
+        for (auto const& layer : m_layers) {
             Gfx::BMPWriter bmp_writer;
             auto json_layer = MUST(json_layers.add_object());
             MUST(json_layer.add("width", layer.size().width()));
@@ -143,7 +147,7 @@ void Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const
     }
 }
 
-ErrorOr<void> Image::write_to_file(const String& file_path) const
+ErrorOr<void> Image::write_to_file(String const& file_path) const
 {
     StringBuilder builder;
     auto json = MUST(JsonObjectSerializer<>::try_create(builder));
@@ -224,7 +228,7 @@ void Image::add_layer(NonnullRefPtr<Layer> layer)
 ErrorOr<NonnullRefPtr<Image>> Image::take_snapshot() const
 {
     auto snapshot = TRY(try_create_with_size(m_size));
-    for (const auto& layer : m_layers) {
+    for (auto const& layer : m_layers) {
         auto layer_snapshot = TRY(Layer::try_create_snapshot(*snapshot, layer));
         snapshot->add_layer(move(layer_snapshot));
     }

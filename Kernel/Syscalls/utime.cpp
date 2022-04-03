@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$utime(Userspace<const char*> user_path, size_t path_length, Userspace<const struct utimbuf*> user_buf)
+ErrorOr<FlatPtr> Process::sys$utime(Userspace<char const*> user_path, size_t path_length, Userspace<const struct utimbuf*> user_buf)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::fattr));

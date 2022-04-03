@@ -11,6 +11,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
+#include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Selector.h>
@@ -48,7 +49,7 @@ private:
 class StyleComputer {
 public:
     explicit StyleComputer(DOM::Document&);
-    ~StyleComputer() = default;
+    ~StyleComputer();
 
     DOM::Document& document() { return m_document; }
     DOM::Document const& document() const { return m_document; }
@@ -70,6 +71,8 @@ public:
     void invalidate_rule_cache();
 
     Gfx::Font const& initial_font() const;
+
+    void did_load_font(FlyString const& family_name);
 
 private:
     void compute_cascaded_values(StyleProperties&, DOM::Element&, Optional<CSS::Selector::PseudoElement>) const;
@@ -109,6 +112,11 @@ private:
         Vector<MatchingRule> other_rules;
     };
     OwnPtr<RuleCache> m_rule_cache;
+
+    void load_fonts_if_needed() const;
+
+    class FontLoader;
+    HashMap<String, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
 };
 
 }

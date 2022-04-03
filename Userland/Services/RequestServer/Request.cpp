@@ -19,16 +19,12 @@ Request::Request(ConnectionFromClient& client, NonnullOwnPtr<Core::Stream::File>
 {
 }
 
-Request::~Request()
-{
-}
-
 void Request::stop()
 {
     m_client.did_finish_request({}, *this, false);
 }
 
-void Request::set_response_headers(const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers)
+void Request::set_response_headers(HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers)
 {
     m_response_headers = response_headers;
     m_client.did_receive_headers({}, *this);

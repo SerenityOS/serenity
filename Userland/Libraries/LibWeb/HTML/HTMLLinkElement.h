@@ -29,7 +29,7 @@ public:
     String href() const { return attribute(HTML::AttributeNames::href); }
 
 private:
-    void parse_attribute(const FlyString&, const String&) override;
+    void parse_attribute(FlyString const&, String const&) override;
 
     // ^ResourceClient
     virtual void resource_did_fail() override;

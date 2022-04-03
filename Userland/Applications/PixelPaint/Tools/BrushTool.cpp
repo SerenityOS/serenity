@@ -36,7 +36,7 @@ void BrushTool::on_mousedown(Layer* layer, MouseEvent& event)
         return;
     }
 
-    const int first_draw_opacity = 10;
+    int const first_draw_opacity = 10;
 
     for (int i = 0; i < first_draw_opacity; ++i)
         draw_point(layer->currently_edited_bitmap(), color_for(layer_event), layer_event.position());

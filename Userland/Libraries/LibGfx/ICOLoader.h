@@ -15,7 +15,7 @@ struct ICOLoadingContext;
 class ICOImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     virtual ~ICOImageDecoderPlugin() override;
-    ICOImageDecoderPlugin(const u8*, size_t);
+    ICOImageDecoderPlugin(u8 const*, size_t);
 
     virtual IntSize size() override;
     virtual void set_volatile() override;

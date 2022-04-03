@@ -42,7 +42,7 @@ enum class NeedsBigProcessLock {
 #define ENUMERATE_SYSCALLS(S)                               \
     S(accept4, NeedsBigProcessLock::Yes)                    \
     S(access, NeedsBigProcessLock::Yes)                     \
-    S(adjtime, NeedsBigProcessLock::Yes)                    \
+    S(adjtime, NeedsBigProcessLock::No)                     \
     S(alarm, NeedsBigProcessLock::Yes)                      \
     S(allocate_tls, NeedsBigProcessLock::Yes)               \
     S(anon_create, NeedsBigProcessLock::No)                 \
@@ -53,7 +53,7 @@ enum class NeedsBigProcessLock {
     S(chown, NeedsBigProcessLock::Yes)                      \
     S(clock_gettime, NeedsBigProcessLock::No)               \
     S(clock_nanosleep, NeedsBigProcessLock::No)             \
-    S(clock_settime, NeedsBigProcessLock::Yes)              \
+    S(clock_settime, NeedsBigProcessLock::No)               \
     S(close, NeedsBigProcessLock::Yes)                      \
     S(connect, NeedsBigProcessLock::Yes)                    \
     S(create_inode_watcher, NeedsBigProcessLock::Yes)       \
@@ -110,7 +110,7 @@ enum class NeedsBigProcessLock {
     S(kill_thread, NeedsBigProcessLock::Yes)                \
     S(killpg, NeedsBigProcessLock::Yes)                     \
     S(link, NeedsBigProcessLock::Yes)                       \
-    S(listen, NeedsBigProcessLock::Yes)                     \
+    S(listen, NeedsBigProcessLock::No)                      \
     S(lseek, NeedsBigProcessLock::No)                       \
     S(madvise, NeedsBigProcessLock::Yes)                    \
     S(map_time_page, NeedsBigProcessLock::Yes)              \
@@ -134,20 +134,19 @@ enum class NeedsBigProcessLock {
     S(profiling_enable, NeedsBigProcessLock::Yes)           \
     S(profiling_free_buffer, NeedsBigProcessLock::Yes)      \
     S(ptrace, NeedsBigProcessLock::Yes)                     \
-    S(ptsname, NeedsBigProcessLock::Yes)                    \
     S(purge, NeedsBigProcessLock::Yes)                      \
     S(read, NeedsBigProcessLock::Yes)                       \
     S(pread, NeedsBigProcessLock::Yes)                      \
     S(readlink, NeedsBigProcessLock::No)                    \
     S(readv, NeedsBigProcessLock::Yes)                      \
     S(realpath, NeedsBigProcessLock::No)                    \
-    S(recvfd, NeedsBigProcessLock::Yes)                     \
+    S(recvfd, NeedsBigProcessLock::No)                      \
     S(recvmsg, NeedsBigProcessLock::Yes)                    \
     S(rename, NeedsBigProcessLock::Yes)                     \
     S(rmdir, NeedsBigProcessLock::Yes)                      \
-    S(sched_getparam, NeedsBigProcessLock::Yes)             \
-    S(sched_setparam, NeedsBigProcessLock::Yes)             \
-    S(sendfd, NeedsBigProcessLock::Yes)                     \
+    S(sched_getparam, NeedsBigProcessLock::No)              \
+    S(sched_setparam, NeedsBigProcessLock::No)              \
+    S(sendfd, NeedsBigProcessLock::No)                      \
     S(sendmsg, NeedsBigProcessLock::Yes)                    \
     S(set_coredump_metadata, NeedsBigProcessLock::Yes)      \
     S(set_mmap_name, NeedsBigProcessLock::Yes)              \
@@ -181,7 +180,6 @@ enum class NeedsBigProcessLock {
     S(sync, NeedsBigProcessLock::No)                        \
     S(sysconf, NeedsBigProcessLock::No)                     \
     S(times, NeedsBigProcessLock::Yes)                      \
-    S(ttyname, NeedsBigProcessLock::Yes)                    \
     S(umask, NeedsBigProcessLock::Yes)                      \
     S(umount, NeedsBigProcessLock::Yes)                     \
     S(uname, NeedsBigProcessLock::No)                       \
@@ -220,7 +218,7 @@ constexpr StringView to_string(Function function)
 
 #ifdef __serenity__
 struct StringArgument {
-    const char* characters;
+    char const* characters;
     size_t length { 0 };
 };
 
@@ -264,7 +262,7 @@ struct SC_poll_params {
     struct pollfd* fds;
     unsigned nfds;
     const struct timespec* timeout;
-    const u32* sigmask;
+    u32 const* sigmask;
 };
 
 struct SC_clock_nanosleep_params {
@@ -290,7 +288,7 @@ struct SC_getsockopt_params {
 };
 
 struct SC_setsockopt_params {
-    const void* value;
+    void const* value;
     int sockfd;
     int level;
     int option;
@@ -321,7 +319,7 @@ struct SC_futex_params {
     int futex_op;
     u32 val;
     union {
-        const timespec* timeout;
+        timespec const* timeout;
         uintptr_t val2;
     };
     u32* userspace_address2;
@@ -329,11 +327,11 @@ struct SC_futex_params {
 };
 
 struct SC_setkeymap_params {
-    const u32* map;
-    const u32* shift_map;
-    const u32* alt_map;
-    const u32* altgr_map;
-    const u32* shift_altgr_map;
+    u32 const* map;
+    u32 const* shift_map;
+    u32 const* alt_map;
+    u32 const* altgr_map;
+    u32 const* shift_altgr_map;
     StringArgument map_name;
 };
 

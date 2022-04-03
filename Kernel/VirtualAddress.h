@@ -17,7 +17,7 @@ public:
     {
     }
 
-    explicit VirtualAddress(const void* address)
+    explicit VirtualAddress(void const* address)
         : m_address((FlatPtr)address)
     {
     }
@@ -30,16 +30,16 @@ public:
     void set(FlatPtr address) { m_address = address; }
     void mask(FlatPtr m) { m_address &= m; }
 
-    bool operator<=(const VirtualAddress& other) const { return m_address <= other.m_address; }
-    bool operator>=(const VirtualAddress& other) const { return m_address >= other.m_address; }
-    bool operator>(const VirtualAddress& other) const { return m_address > other.m_address; }
-    bool operator<(const VirtualAddress& other) const { return m_address < other.m_address; }
-    bool operator==(const VirtualAddress& other) const { return m_address == other.m_address; }
-    bool operator!=(const VirtualAddress& other) const { return m_address != other.m_address; }
+    bool operator<=(VirtualAddress const& other) const { return m_address <= other.m_address; }
+    bool operator>=(VirtualAddress const& other) const { return m_address >= other.m_address; }
+    bool operator>(VirtualAddress const& other) const { return m_address > other.m_address; }
+    bool operator<(VirtualAddress const& other) const { return m_address < other.m_address; }
+    bool operator==(VirtualAddress const& other) const { return m_address == other.m_address; }
+    bool operator!=(VirtualAddress const& other) const { return m_address != other.m_address; }
 
     // NOLINTNEXTLINE(readability-make-member-function-const) const VirtualAddress shouldn't be allowed to modify the underlying memory
     [[nodiscard]] u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
-    [[nodiscard]] const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
+    [[nodiscard]] u8 const* as_ptr() const { return reinterpret_cast<u8 const*>(m_address); }
 
     [[nodiscard]] VirtualAddress page_base() const { return VirtualAddress(m_address & ~(FlatPtr)0xfffu); }
 
@@ -47,14 +47,14 @@ private:
     FlatPtr m_address { 0 };
 };
 
-inline VirtualAddress operator-(const VirtualAddress& a, const VirtualAddress& b)
+inline VirtualAddress operator-(VirtualAddress const& a, VirtualAddress const& b)
 {
     return VirtualAddress(a.get() - b.get());
 }
 
 template<>
 struct AK::Formatter<VirtualAddress> : AK::Formatter<FormatString> {
-    ErrorOr<void> format(FormatBuilder& builder, const VirtualAddress& value)
+    ErrorOr<void> format(FormatBuilder& builder, VirtualAddress const& value)
     {
         return AK::Formatter<FormatString>::format(builder, "V{}", value.as_ptr());
     }

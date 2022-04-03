@@ -28,7 +28,7 @@
     } while (0)
 
 template<typename T>
-ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* message)
+ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, char const* message)
 {
     if (value_with_shadow.is_uninitialized()) [[unlikely]] {
         reportln("\033[31;1mWarning! Use of uninitialized value: {}\033[0m\n", message);
@@ -76,13 +76,13 @@ ALWAYS_INLINE void SoftFPU::fpu_set(u8 index, long double value)
     VERIFY(index < 8);
     fpu_set_absolute((m_fpu_stack_top + index) % 8, value);
 }
-ALWAYS_INLINE MMX SoftFPU::mmx_get(u8 index) const
+MMX SoftFPU::mmx_get(u8 index) const
 {
     VERIFY(index < 8);
     warn_if_fpu_absolute(index);
     return m_storage[index].mmx;
 }
-ALWAYS_INLINE void SoftFPU::mmx_set(u8 index, MMX value)
+void SoftFPU::mmx_set(u8 index, MMX value)
 {
     m_storage[index].mmx = value;
     // The high bytes are set to 0b11... to make the floating-point value NaN.

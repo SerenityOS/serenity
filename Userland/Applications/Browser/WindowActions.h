@@ -19,6 +19,7 @@ public:
     Function<void()> on_create_new_tab;
     Function<void()> on_next_tab;
     Function<void()> on_previous_tab;
+    Vector<Function<void()>> on_tabs;
     Function<void()> on_about;
     Function<void(GUI::Action&)> on_show_bookmarks_bar;
 
@@ -32,6 +33,7 @@ private:
     RefPtr<GUI::Action> m_create_new_tab_action;
     RefPtr<GUI::Action> m_next_tab_action;
     RefPtr<GUI::Action> m_previous_tab_action;
+    NonnullRefPtrVector<GUI::Action> m_tab_actions;
     RefPtr<GUI::Action> m_about_action;
     RefPtr<GUI::Action> m_show_bookmarks_bar_action;
 };

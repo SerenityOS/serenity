@@ -39,7 +39,7 @@
 
 namespace JS {
 
-static inline bool same_type_for_equality(const Value& lhs, const Value& rhs)
+static inline bool same_type_for_equality(Value const& lhs, Value const& rhs)
 {
     if (lhs.type() == rhs.type())
         return true;
@@ -50,12 +50,12 @@ static inline bool same_type_for_equality(const Value& lhs, const Value& rhs)
 
 static const Crypto::SignedBigInteger BIGINT_ZERO { 0 };
 
-ALWAYS_INLINE bool both_number(const Value& lhs, const Value& rhs)
+ALWAYS_INLINE bool both_number(Value const& lhs, Value const& rhs)
 {
     return lhs.is_number() && rhs.is_number();
 }
 
-ALWAYS_INLINE bool both_bigint(const Value& lhs, const Value& rhs)
+ALWAYS_INLINE bool both_bigint(Value const& lhs, Value const& rhs)
 {
     return lhs.is_bigint() && rhs.is_bigint();
 }
@@ -1295,7 +1295,7 @@ ThrowCompletionOr<Value> ordinary_has_instance(GlobalObject& global_object, Valu
     auto& rhs_function = rhs.as_function();
 
     if (is<BoundFunction>(rhs_function)) {
-        auto& bound_target = static_cast<const BoundFunction&>(rhs_function);
+        auto& bound_target = static_cast<BoundFunction const&>(rhs_function);
         return instance_of(global_object, lhs, Value(&bound_target.bound_target_function()));
     }
 
@@ -1598,7 +1598,7 @@ ThrowCompletionOr<TriState> is_less_than(GlobalObject& global_object, bool left_
 }
 
 // 7.3.21 Invoke ( V, P [ , argumentsList ] ), https://tc39.es/ecma262/#sec-invoke
-ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, JS::PropertyKey const& property_key, Optional<MarkedVector<Value>> arguments)
+ThrowCompletionOr<Value> Value::invoke_internal(GlobalObject& global_object, PropertyKey const& property_key, Optional<MarkedVector<Value>> arguments)
 {
     auto& vm = global_object.vm();
     auto property = TRY(get(global_object, property_key));

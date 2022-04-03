@@ -78,8 +78,7 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
 {
     for (auto const& rule : m_rules) {
         switch (rule.type()) {
-        case CSSRule::Type::Style:
-            callback(static_cast<CSSStyleRule const&>(rule));
+        case CSSRule::Type::FontFace:
             break;
         case CSSRule::Type::Import: {
             auto const& import_rule = static_cast<CSSImportRule const&>(rule);
@@ -89,6 +88,9 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
         }
         case CSSRule::Type::Media:
             static_cast<CSSMediaRule const&>(rule).for_each_effective_style_rule(callback);
+            break;
+        case CSSRule::Type::Style:
+            callback(static_cast<CSSStyleRule const&>(rule));
             break;
         case CSSRule::Type::Supports:
             static_cast<CSSSupportsRule const&>(rule).for_each_effective_style_rule(callback);
@@ -105,7 +107,7 @@ bool CSSRuleList::evaluate_media_queries(HTML::Window const& window)
 
     for (auto& rule : m_rules) {
         switch (rule.type()) {
-        case CSSRule::Type::Style:
+        case CSSRule::Type::FontFace:
             break;
         case CSSRule::Type::Import: {
             auto& import_rule = verify_cast<CSSImportRule>(rule);
@@ -123,6 +125,8 @@ bool CSSRuleList::evaluate_media_queries(HTML::Window const& window)
                 any_media_queries_changed_match_state = true;
             break;
         }
+        case CSSRule::Type::Style:
+            break;
         case CSSRule::Type::Supports: {
             auto& supports_rule = verify_cast<CSSSupportsRule>(rule);
             if (supports_rule.condition_matches() && supports_rule.css_rules().evaluate_media_queries(window))

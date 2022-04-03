@@ -19,7 +19,7 @@ ShadowRoot::ShadowRoot(Document& document, Element& host)
 }
 
 // https://dom.spec.whatwg.org/#ref-for-get-the-parent%E2%91%A6
-EventTarget* ShadowRoot::get_parent(const Event& event)
+EventTarget* ShadowRoot::get_parent(Event const& event)
 {
     if (!event.composed()) {
         auto& events_first_invocation_target = verify_cast<Node>(*event.path().first().invocation_target);
@@ -39,9 +39,7 @@ String ShadowRoot::inner_html() const
 // https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
 ExceptionOr<void> ShadowRoot::set_inner_html(String const& markup)
 {
-    auto result = DOMParsing::inner_html_setter(*this, markup);
-    if (result.is_exception())
-        return result.exception();
+    TRY(DOMParsing::inner_html_setter(*this, markup));
 
     set_needs_style_update(true);
     return {};

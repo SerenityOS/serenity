@@ -9,8 +9,8 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
 #include <AK/WeakPtr.h>
-#include <LibPDF/Command.h>
 #include <LibPDF/Object.h>
+#include <LibPDF/Operator.h>
 #include <LibPDF/Reader.h>
 #include <LibPDF/XRefTable.h>
 
@@ -25,9 +25,9 @@ public:
         Linearized,
     };
 
-    static PDFErrorOr<Vector<Command>> parse_graphics_commands(ReadonlyBytes);
+    static PDFErrorOr<Vector<Operator>> parse_operators(Document*, ReadonlyBytes);
 
-    Parser(Badge<Document>, ReadonlyBytes);
+    Parser(Document*, ReadonlyBytes);
 
     [[nodiscard]] ALWAYS_INLINE RefPtr<DictObject> const& trailer() const { return m_trailer; }
     void set_document(WeakPtr<Document> const&);
@@ -104,7 +104,7 @@ private:
 
     PDFErrorOr<Value> parse_value();
     PDFErrorOr<Value> parse_possible_indirect_value_or_ref();
-    PDFErrorOr<NonnullRefPtr<IndirectValue>> parse_indirect_value(int index, int generation);
+    PDFErrorOr<NonnullRefPtr<IndirectValue>> parse_indirect_value(u32 index, u32 generation);
     PDFErrorOr<NonnullRefPtr<IndirectValue>> parse_indirect_value();
     PDFErrorOr<Value> parse_number();
     PDFErrorOr<NonnullRefPtr<NameObject>> parse_name();
@@ -115,7 +115,10 @@ private:
     PDFErrorOr<NonnullRefPtr<DictObject>> parse_dict();
     PDFErrorOr<NonnullRefPtr<StreamObject>> parse_stream(NonnullRefPtr<DictObject> dict);
 
-    PDFErrorOr<Vector<Command>> parse_graphics_commands();
+    PDFErrorOr<Vector<Operator>> parse_operators();
+
+    void push_reference(Reference const& ref) { m_current_reference_stack.append(ref); }
+    void pop_reference() { m_current_reference_stack.take_last(); }
 
     bool matches_eol() const;
     bool matches_whitespace() const;
@@ -142,6 +145,8 @@ private:
     RefPtr<XRefTable> m_xref_table;
     RefPtr<DictObject> m_trailer;
     Optional<LinearizationDictionary> m_linearization_dictionary;
+    Vector<Reference> m_current_reference_stack;
+    bool m_disable_encryption { false };
 };
 
 };

@@ -79,7 +79,7 @@ ErrorOr<size_t> TTY::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer,
     return result;
 }
 
-ErrorOr<size_t> TTY::write(OpenFileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> TTY::write(OpenFileDescription&, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
     if (m_termios.c_lflag & TOSTOP && Process::current().pgid() != pgid()) {
         [[maybe_unused]] auto rc = Process::current().send_signal(SIGTTOU, nullptr);
@@ -138,7 +138,7 @@ void TTY::process_output(u8 ch, Functor put_char)
     }
 }
 
-bool TTY::can_read(const OpenFileDescription&, u64) const
+bool TTY::can_read(OpenFileDescription const&, u64) const
 {
     if (in_canonical_mode()) {
         return m_available_lines > 0;
@@ -146,7 +146,7 @@ bool TTY::can_read(const OpenFileDescription&, u64) const
     return !m_input_buffer.is_empty();
 }
 
-bool TTY::can_write(const OpenFileDescription&, u64) const
+bool TTY::can_write(OpenFileDescription const&, u64) const
 {
     return true;
 }
@@ -183,22 +183,18 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
 
     if (should_generate_signals()) {
         if (ch == m_termios.c_cc[VINFO]) {
-            dbgln("{}: VINFO pressed!", tty_name());
             generate_signal(SIGINFO);
             return;
         }
         if (ch == m_termios.c_cc[VINTR]) {
-            dbgln("{}: VINTR pressed!", tty_name());
             generate_signal(SIGINT);
             return;
         }
         if (ch == m_termios.c_cc[VQUIT]) {
-            dbgln("{}: VQUIT pressed!", tty_name());
             generate_signal(SIGQUIT);
             return;
         }
         if (ch == m_termios.c_cc[VSUSP]) {
-            dbgln("{}: VSUSP pressed!", tty_name());
             generate_signal(SIGTSTP);
             if (auto original_process_parent = m_original_process_parent.strong_ref()) {
                 [[maybe_unused]] auto rc = original_process_parent->send_signal(SIGCHLD, nullptr);
@@ -317,8 +313,8 @@ void TTY::do_backspace()
 
 void TTY::erase_word()
 {
-    //Note: if we have leading whitespace before the word
-    //we want to delete we have to also delete that.
+    // Note: if we have leading whitespace before the word
+    // we want to delete we have to also delete that.
     bool first_char = false;
     bool did_dequeue = false;
     while (can_do_backspace()) {
@@ -361,10 +357,10 @@ void TTY::generate_signal(int signal)
         return;
     if (should_flush_on_signal())
         flush_input();
-    dbgln_if(TTY_DEBUG, "{}: Send signal {} to everyone in pgrp {}", tty_name(), signal, pgid().value());
+    dbgln_if(TTY_DEBUG, "Send signal {} to everyone in pgrp {}", signal, pgid().value());
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
-        dbgln_if(TTY_DEBUG, "{}: Send signal {} to {}", tty_name(), signal, process);
+        dbgln_if(TTY_DEBUG, "Send signal {} to {}", signal, process);
         // FIXME: Should this error be propagated somehow?
         [[maybe_unused]] auto rc = process.send_signal(signal, nullptr);
     });
@@ -377,13 +373,12 @@ void TTY::flush_input()
     evaluate_block_conditions();
 }
 
-ErrorOr<void> TTY::set_termios(const termios& t)
+ErrorOr<void> TTY::set_termios(termios const& t)
 {
     ErrorOr<void> rc;
     m_termios = t;
 
-    dbgln_if(TTY_DEBUG, "{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}, OPOST={}, ONLCR={}",
-        tty_name(),
+    dbgln_if(TTY_DEBUG, "set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}, OPOST={}, ONLCR={}",
         should_echo_input(),
         should_generate_signals(),
         in_canonical_mode(),
@@ -569,11 +564,6 @@ ErrorOr<void> TTY::ioctl(OpenFileDescription&, unsigned request, Userspace<void*
         return {};
     }
     return EINVAL;
-}
-
-ErrorOr<NonnullOwnPtr<KString>> TTY::pseudo_path(const OpenFileDescription&) const
-{
-    return tty_name().try_clone();
 }
 
 void TTY::set_size(unsigned short columns, unsigned short rows)

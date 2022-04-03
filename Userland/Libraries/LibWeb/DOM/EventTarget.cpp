@@ -163,9 +163,16 @@ void EventTarget::remove_event_listener(FlyString const& type, RefPtr<IDLEventLi
 
     // 2. If this’s event listener list contains an event listener whose type is type, callback is callback, and capture is capture,
     //    then remove an event listener with this and that event listener.
+    auto callbacks_match = [&](NonnullRefPtr<DOMEventListener>& entry) {
+        if (entry->callback.is_null() && callback.is_null())
+            return true;
+        if (entry->callback.is_null() || callback.is_null())
+            return false;
+        return entry->callback->callback().callback.cell() == callback->callback().callback.cell();
+    };
     auto it = m_event_listener_list.find_if([&](auto& entry) {
         return entry->type == type
-            && entry->callback->callback().callback.cell() == callback->callback().callback.cell()
+            && callbacks_match(entry)
             && entry->capture == capture;
     });
     if (it != m_event_listener_list.end())
@@ -329,9 +336,11 @@ Bindings::CallbackType* EventTarget::get_current_value_of_event_handler(FlyStrin
         // 5. If element is not null and element has a form owner, let form owner be that form owner. Otherwise, let form owner be null.
         RefPtr<HTML::HTMLFormElement> form_owner;
         if (is<HTML::FormAssociatedElement>(element.ptr())) {
-            auto& form_associated_element = verify_cast<HTML::FormAssociatedElement>(*element);
-            if (form_associated_element.form())
-                form_owner = form_associated_element.form();
+            auto* form_associated_element = dynamic_cast<HTML::FormAssociatedElement*>(element.ptr());
+            VERIFY(form_associated_element);
+
+            if (form_associated_element->form())
+                form_owner = form_associated_element->form();
         }
 
         // 6. Let settings object be the relevant settings object of document.
@@ -510,15 +519,18 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
     //        returning the element's document's global object, which is the HTML::Window object.
     //        For any other HTMLElement who just had an element attribute set, `this` will be that HTMLElement, so the global object is this's document's realm's global object.
     //        For anything else, it came from JavaScript, so use the global object of the provided callback function.
-    //        Sadly, this doesn't work if an element attribute is set on a <body> element before any script is run, as Window::wrapper() will be null.
     JS::GlobalObject* global_object = nullptr;
     if (is_attribute == IsAttribute::Yes) {
         if (is<HTML::Window>(this)) {
-            auto* window_global_object = verify_cast<HTML::Window>(this)->wrapper();
-            global_object = static_cast<JS::GlobalObject*>(window_global_object);
+            auto& window = verify_cast<HTML::Window>(*this);
+            // If an element attribute is set on a <body> element before any script is run, Window::wrapper() will be null.
+            // Force creation of the global object via the Document::interpreter() lazy initialization mechanism.
+            if (window.wrapper() == nullptr)
+                window.associated_document().interpreter();
+            global_object = static_cast<JS::GlobalObject*>(window.wrapper());
         } else {
-            auto* html_element = verify_cast<HTML::HTMLElement>(this);
-            global_object = &html_element->document().realm().global_object();
+            auto& html_element = verify_cast<HTML::HTMLElement>(*this);
+            global_object = &html_element.document().realm().global_object();
         }
     } else {
         global_object = &event_handler.value.get<Bindings::CallbackType>().callback.cell()->global_object();

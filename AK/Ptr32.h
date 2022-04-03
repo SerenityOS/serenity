@@ -28,7 +28,7 @@ public:
     T const* operator->() const { return *this; }
 
     operator T*() { return reinterpret_cast<T*>(static_cast<FlatPtr>(m_ptr)); }
-    operator T const *() const { return reinterpret_cast<T const*>(static_cast<FlatPtr>(m_ptr)); }
+    operator T const*() const { return reinterpret_cast<T const*>(static_cast<FlatPtr>(m_ptr)); }
 
     T& operator[](size_t index) { return static_cast<T*>(*this)[index]; }
     T const& operator[](size_t index) const { return static_cast<T const*>(*this)[index]; }

@@ -74,9 +74,9 @@ BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, u8 month
 }
 
 // -864 * 10^19 - 864 * 10^11
-const auto DATETIME_NANOSECONDS_MIN = "-8640000086400000000000"_sbigint;
+auto const DATETIME_NANOSECONDS_MIN = "-8640000086400000000000"_sbigint;
 // +864 * 10^19 + 864 * 10^11
-const auto DATETIME_NANOSECONDS_MAX = "8640000086400000000000"_sbigint;
+auto const DATETIME_NANOSECONDS_MAX = "8640000086400000000000"_sbigint;
 
 // 5.5.2 ISODateTimeWithinLimits ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits
 bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
@@ -111,7 +111,7 @@ ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(GlobalObject&
     auto overflow = TRY(to_temporal_overflow(global_object, options));
 
     // 3. Let temporalDate be ? DateFromFields(calendar, fields, options).
-    auto* temporal_date = TRY(date_from_fields(global_object, calendar, fields, options));
+    auto* temporal_date = TRY(date_from_fields(global_object, calendar, fields, &options));
 
     // 4. Let timeResult be ? RegulateTime(timeResult.[[Hour]], timeResult.[[Minute]], timeResult.[[Second]], timeResult.[[Millisecond]], timeResult.[[Microsecond]], timeResult.[[Nanosecond]], overflow).
     auto time_result = TRY(regulate_time(global_object, unregulated_time_result.hour, unregulated_time_result.minute, unregulated_time_result.second, unregulated_time_result.millisecond, unregulated_time_result.microsecond, unregulated_time_result.nanosecond, overflow));

@@ -16,11 +16,11 @@ public:
     CellSyntaxHighlighter() = default;
     virtual ~CellSyntaxHighlighter() override = default;
 
-    virtual void rehighlight(const Palette&) override;
-    void set_cell(const Cell* cell) { m_cell = cell; }
+    virtual void rehighlight(Palette const&) override;
+    void set_cell(Cell const* cell) { m_cell = cell; }
 
 private:
-    const Cell* m_cell { nullptr };
+    Cell const* m_cell { nullptr };
 };
 
 }

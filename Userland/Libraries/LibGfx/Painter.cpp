@@ -5,6 +5,7 @@
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1096,8 +1097,12 @@ ALWAYS_INLINE static void do_draw_integer_scaled_bitmap(Gfx::Bitmap& target, Int
 template<bool has_alpha_channel, bool do_bilinear_blend, typename GetPixel>
 ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect const& dst_rect, IntRect const& clipped_rect, Gfx::Bitmap const& source, FloatRect const& src_rect, GetPixel get_pixel, float opacity)
 {
+    auto int_src_rect = enclosing_int_rect(src_rect);
+    auto clipped_src_rect = int_src_rect.intersected(source.rect());
+    if (clipped_src_rect.is_empty())
+        return;
+
     if constexpr (!do_bilinear_blend) {
-        IntRect int_src_rect = enclosing_int_rect(src_rect);
         if (dst_rect == clipped_rect && int_src_rect == src_rect && !(dst_rect.width() % int_src_rect.width()) && !(dst_rect.height() % int_src_rect.height())) {
             int hfactor = dst_rect.width() / int_src_rect.width();
             int vfactor = dst_rect.height() / int_src_rect.height();
@@ -1119,27 +1124,42 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
     i64 vscale = (src_rect.height() * shift) / dst_rect.height();
     i64 src_left = src_rect.left() * shift;
     i64 src_top = src_rect.top() * shift;
+    i64 clipped_src_bottom_shifted = (clipped_src_rect.y() + clipped_src_rect.height()) * shift;
+    i64 clipped_src_right_shifted = (clipped_src_rect.x() + clipped_src_rect.width()) * shift;
 
     for (int y = clipped_rect.top(); y <= clipped_rect.bottom(); ++y) {
         auto* scanline = (Color*)target.scanline(y);
+        auto desired_y = ((y - dst_rect.y()) * vscale + src_top);
+        if (desired_y < clipped_src_rect.top() || desired_y > clipped_src_bottom_shifted)
+            continue;
+
         for (int x = clipped_rect.left(); x <= clipped_rect.right(); ++x) {
             auto desired_x = ((x - dst_rect.x()) * hscale + src_left);
-            auto desired_y = ((y - dst_rect.y()) * vscale + src_top);
+            if (desired_x < clipped_src_rect.left() || desired_x > clipped_src_right_shifted)
+                continue;
 
             Color src_pixel;
             if constexpr (do_bilinear_blend) {
-                auto scaled_x0 = clamp((desired_x - half_pixel) >> 32, 0, src_rect.width() - 1);
-                auto scaled_x1 = clamp((desired_x + half_pixel) >> 32, 0, src_rect.width() - 1);
-                auto scaled_y0 = clamp((desired_y - half_pixel) >> 32, 0, src_rect.height() - 1);
-                auto scaled_y1 = clamp((desired_y + half_pixel) >> 32, 0, src_rect.height() - 1);
+                auto scaled_x0 = clamp((desired_x - half_pixel) >> 32, clipped_src_rect.left(), clipped_src_rect.right());
+                auto scaled_x1 = clamp((desired_x + half_pixel) >> 32, clipped_src_rect.left(), clipped_src_rect.right());
+                auto scaled_y0 = clamp((desired_y - half_pixel) >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
+                auto scaled_y1 = clamp((desired_y + half_pixel) >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
 
                 float x_ratio = (((desired_x + half_pixel) & fractional_mask) / (float)shift);
                 float y_ratio = (((desired_y + half_pixel) & fractional_mask) / (float)shift);
 
-                src_pixel = get_pixel(source, scaled_x0, scaled_y0).interpolate(get_pixel(source, scaled_x1, scaled_y0), x_ratio).interpolate(get_pixel(source, scaled_x0, scaled_y1).interpolate(get_pixel(source, scaled_x1, scaled_y1), x_ratio), y_ratio);
+                auto top_left = get_pixel(source, scaled_x0, scaled_y0);
+                auto top_right = get_pixel(source, scaled_x1, scaled_y0);
+                auto bottom_left = get_pixel(source, scaled_x0, scaled_y1);
+                auto bottom_right = get_pixel(source, scaled_x1, scaled_y1);
+
+                auto top = top_left.interpolate(top_right, x_ratio);
+                auto bottom = bottom_left.interpolate(bottom_right, x_ratio);
+
+                src_pixel = top.interpolate(bottom, y_ratio);
             } else {
-                auto scaled_x = desired_x >> 32;
-                auto scaled_y = desired_y >> 32;
+                auto scaled_x = clamp(desired_x >> 32, clipped_src_rect.left(), clipped_src_rect.right());
+                auto scaled_y = clamp(desired_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
                 src_pixel = get_pixel(source, scaled_x, scaled_y);
             }
 
@@ -1247,8 +1267,8 @@ void Painter::draw_emoji(IntPoint const& point, Gfx::Bitmap const& emoji, Font c
     IntRect dst_rect {
         point.x(),
         point.y(),
-        font.glyph_height() * emoji.width() / emoji.height(),
-        font.glyph_height()
+        font.pixel_size() * emoji.width() / emoji.height(),
+        font.pixel_size()
     };
     draw_scaled_bitmap(dst_rect, emoji, emoji.rect());
 }
@@ -1346,7 +1366,7 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
     }
 
     if (is_vertically_centered_text_alignment(alignment)) {
-        int distance_from_baseline_to_bottom = (font.glyph_height() - 1) - font.baseline();
+        int distance_from_baseline_to_bottom = (font.pixel_size() - 1) - font.baseline();
         rect.translate_by(0, distance_from_baseline_to_bottom / 2);
     }
 
@@ -1358,13 +1378,20 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
         space_width = -space_width;          // Draw spaces backwards
     }
 
+    u32 last_code_point { 0 };
     for (auto it = text.begin(); it != text.end(); ++it) {
         auto code_point = *it;
         if (code_point == ' ') {
             point.translate_by(space_width, 0);
+            last_code_point = code_point;
             continue;
         }
-        IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.glyph_height());
+
+        int kerning = static_cast<int>(lroundf(font.glyphs_horizontal_kerning(last_code_point, code_point)));
+        if (kerning != 0.f)
+            point.translate_by(direction == TextDirection::LTR ? kerning : -kerning, 0);
+
+        IntSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.pixel_size());
         if (direction == TextDirection::RTL)
             point.translate_by(-glyph_size.width(), 0); // If we are drawing right to left, we have to move backwards before drawing the glyph
         draw_glyph({ point, glyph_size }, it);
@@ -1373,6 +1400,7 @@ void draw_text_line(IntRect const& a_rect, Utf8View const& text, Font const& fon
         // The callback function might have exhausted the iterator.
         if (it == text.end())
             break;
+        last_code_point = code_point;
     }
 }
 
@@ -1546,7 +1574,7 @@ void Painter::do_draw_text(IntRect const& rect, Utf8View const& text, Font const
     TextLayout layout(&font, text, rect);
 
     static int const line_spacing = 4;
-    int line_height = font.glyph_height() + line_spacing;
+    int line_height = font.pixel_size() + line_spacing;
 
     auto lines = layout.lines(elision, wrapping, line_spacing);
     auto bounding_rect = layout.bounding_rect(wrapping, line_spacing);
@@ -1685,11 +1713,11 @@ void Painter::draw_text(Function<void(IntRect const&, Utf8CodePointIterator&)> d
 
 void Painter::set_pixel(IntPoint const& p, Color color, bool blend)
 {
-    VERIFY(scale() == 1); // FIXME: Add scaling support.
-
     auto point = p;
     point.translate_by(state().translation);
-    if (!clip_rect().contains(point))
+    // Use the scale only to avoid clipping pixels set in drawing functions that handle
+    // scaling and call set_pixel() -- do not scale the pixel.
+    if (!clip_rect().contains(point / scale()))
         return;
     auto& dst = m_target->scanline(point.y())[point.x()];
     if (!blend) {
@@ -2266,7 +2294,7 @@ void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::
     Optional<size_t> underline_offset;
     auto name_to_draw = parse_ampersand_string(text, &underline_offset);
 
-    Gfx::IntRect text_rect { 0, 0, font.width(name_to_draw), font.glyph_height() };
+    Gfx::IntRect text_rect { 0, 0, font.width(name_to_draw), font.pixel_size() };
     text_rect.align_within(rect, text_alignment);
 
     draw_text(text_rect, name_to_draw, font, text_alignment, color);
@@ -2286,4 +2314,26 @@ void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::
         }
     }
 }
+
+void Painter::draw_text_run(FloatPoint const& baseline_start, Utf8View const& string, Font const& font, Color color)
+{
+    auto pixel_metrics = font.pixel_metrics();
+    float x = baseline_start.x();
+    int y = baseline_start.y() - pixel_metrics.ascent;
+    float space_width = font.glyph_or_emoji_width(' ');
+
+    u32 last_code_point = 0;
+    for (auto code_point : string) {
+        if (code_point == ' ') {
+            x += space_width;
+            last_code_point = code_point;
+            continue;
+        }
+        x += font.glyphs_horizontal_kerning(last_code_point, code_point);
+        draw_glyph_or_emoji({ static_cast<int>(lroundf(x)), y }, code_point, font, color);
+        x += font.glyph_or_emoji_width(code_point) + font.glyph_spacing();
+        last_code_point = code_point;
+    }
+}
+
 }

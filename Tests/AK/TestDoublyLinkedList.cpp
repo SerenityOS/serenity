@@ -35,7 +35,7 @@ TEST_CASE(should_find_mutable)
 
 TEST_CASE(should_find_const)
 {
-    const auto sut = make_list();
+    auto const sut = make_list();
 
     EXPECT_EQ(4, *sut.find(4));
 

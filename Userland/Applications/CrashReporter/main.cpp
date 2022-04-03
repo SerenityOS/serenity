@@ -136,7 +136,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    const char* coredump_path = nullptr;
+    char const* coredump_path = nullptr;
     bool unlink_on_exit = false;
 
     Core::ArgsParser args_parser;

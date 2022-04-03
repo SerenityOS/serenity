@@ -18,7 +18,7 @@ class TaskbarWindow final : public GUI::Window {
     C_OBJECT(TaskbarWindow);
 
 public:
-    virtual ~TaskbarWindow() override;
+    virtual ~TaskbarWindow() override = default;
 
     static int taskbar_height() { return 27; }
     static int taskbar_icon_size() { return 16; }
@@ -27,9 +27,9 @@ private:
     explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu);
     static void show_desktop_button_clicked(unsigned);
     void set_quick_launch_button_data(GUI::Button&, String const&, NonnullRefPtr<Desktop::AppFile>);
-    void on_screen_rects_change(const Vector<Gfx::IntRect, 4>&, size_t);
-    NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
-    void add_window_button(::Window&, const WindowIdentifier&);
+    void on_screen_rects_change(Vector<Gfx::IntRect, 4> const&, size_t);
+    NonnullRefPtr<GUI::Button> create_button(WindowIdentifier const&);
+    void add_window_button(::Window&, WindowIdentifier const&);
     void remove_window_button(::Window&, bool);
     void update_window_button(::Window&, bool);
     ::Window* find_window_owner(::Window&) const;

@@ -16,7 +16,7 @@ String List::render_to_html(bool) const
 {
     StringBuilder builder;
 
-    const char* tag = m_is_ordered ? "ol" : "ul";
+    char const* tag = m_is_ordered ? "ol" : "ul";
     builder.appendff("<{}", tag);
 
     if (m_start_number != 1)

@@ -27,6 +27,10 @@ describe("errors", () => {
         expect(() => {
             new Intl.DisplayNames("en", { type: "calendar" }).of("hello!");
         }).toThrowWithMessage(RangeError, "hello! is not a valid value for option calendar");
+
+        expect(() => {
+            new Intl.DisplayNames("en", { type: "calendar" }).of("abc_def");
+        }).toThrowWithMessage(RangeError, "abc_def is not a valid value for option calendar");
     });
 
     test("invalid dateTimeField", () => {

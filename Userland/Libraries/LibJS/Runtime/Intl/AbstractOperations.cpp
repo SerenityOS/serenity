@@ -121,15 +121,15 @@ String canonicalize_unicode_locale_id(Unicode::LocaleID& locale)
     return locale_id.release_value();
 }
 
-// 6.3.1 IsWellFormedCurrencyCode ( currency ), https://tc39.es/ecma402/#sec-canonicalcodefordisplaynames
+// 6.3.1 IsWellFormedCurrencyCode ( currency ), https://tc39.es/ecma402/#sec-iswellformedcurrencycode
 bool is_well_formed_currency_code(StringView currency)
 {
-    // 1. Let normalized be the result of mapping currency to upper case as described in 6.1.
-    // 2. If the number of elements in normalized is not 3, return false.
+    // 1. If the length of currency is not 3, return false.
     if (currency.length() != 3)
         return false;
 
-    // 3. If normalized contains any character that is not in the range "A" to "Z" (U+0041 to U+005A), return false.
+    // 2. Let normalized be the ASCII-uppercase of currency.
+    // 3. If normalized contains any code unit outside of 0x0041 through 0x005A (corresponding to Unicode characters LATIN CAPITAL LETTER A through LATIN CAPITAL LETTER Z), return false.
     if (!all_of(currency, is_ascii_alpha))
         return false;
 
@@ -140,48 +140,46 @@ bool is_well_formed_currency_code(StringView currency)
 // 6.5.1 IsWellFormedUnitIdentifier ( unitIdentifier ), https://tc39.es/ecma402/#sec-iswellformedunitidentifier
 bool is_well_formed_unit_identifier(StringView unit_identifier)
 {
-    // 6.5.2 IsSanctionedSimpleUnitIdentifier ( unitIdentifier ), https://tc39.es/ecma402/#sec-iswellformedunitidentifier
-    constexpr auto is_sanctioned_simple_unit_identifier = [](StringView unit_identifier) {
+    // 6.5.2 IsSanctionedSingleUnitIdentifier ( unitIdentifier ), https://tc39.es/ecma402/#sec-issanctionedsingleunitidentifier
+    constexpr auto is_sanctioned_single_unit_identifier = [](StringView unit_identifier) {
         // 1. If unitIdentifier is listed in Table 2 below, return true.
         // 2. Else, return false.
-        static constexpr auto sanctioned_units = sanctioned_simple_unit_identifiers();
+        static constexpr auto sanctioned_units = sanctioned_single_unit_identifiers();
         return find(sanctioned_units.begin(), sanctioned_units.end(), unit_identifier) != sanctioned_units.end();
     };
 
-    // 1. If the result of IsSanctionedSimpleUnitIdentifier(unitIdentifier) is true, then
-    if (is_sanctioned_simple_unit_identifier(unit_identifier)) {
+    // 1. If ! IsSanctionedSingleUnitIdentifier(unitIdentifier) is true, then
+    if (is_sanctioned_single_unit_identifier(unit_identifier)) {
         // a. Return true.
         return true;
     }
 
+    // 2. Let i be ! StringIndexOf(unitIdentifier, "-per-", 0).
     auto indices = unit_identifier.find_all("-per-"sv);
 
-    // 2. If the substring "-per-" does not occur exactly once in unitIdentifier, then
+    // 3. If i is -1 or ! StringIndexOf(unitIdentifier, "-per-", i + 1) is not -1, then
     if (indices.size() != 1) {
         // a. Return false.
         return false;
     }
 
-    // 3. Let numerator be the substring of unitIdentifier from the beginning to just before "-per-".
+    // 4. Assert: The five-character substring "-per-" occurs exactly once in unitIdentifier, at index i.
+    // NOTE: We skip this because the indices vector being of size 1 already verifies this invariant.
+
+    // 5. Let numerator be the substring of unitIdentifier from 0 to i.
     auto numerator = unit_identifier.substring_view(0, indices[0]);
 
-    // 4. If the result of IsSanctionedSimpleUnitIdentifier(numerator) is false, then
-    if (!is_sanctioned_simple_unit_identifier(numerator)) {
-        // a. Return false.
-        return false;
-    }
-
-    // 5. Let denominator be the substring of unitIdentifier from just after "-per-" to the end.
+    // 6. Let denominator be the substring of unitIdentifier from i + 5.
     auto denominator = unit_identifier.substring_view(indices[0] + 5);
 
-    // 6. If the result of IsSanctionedSimpleUnitIdentifier(denominator) is false, then
-    if (!is_sanctioned_simple_unit_identifier(denominator)) {
-        // a. Return false.
-        return false;
+    // 7. If ! IsSanctionedSingleUnitIdentifier(numerator) and ! IsSanctionedSingleUnitIdentifier(denominator) are both true, then
+    if (is_sanctioned_single_unit_identifier(numerator) && is_sanctioned_single_unit_identifier(denominator)) {
+        // a. Return true.
+        return true;
     }
 
-    // 7. Return true.
-    return true;
+    // 8. Return false.
+    return false;
 }
 
 // 9.2.1 CanonicalizeLocaleList ( locales ), https://tc39.es/ecma402/#sec-canonicalizelocalelist
@@ -201,7 +199,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
     Object* object = nullptr;
     // 3. If Type(locales) is String or Type(locales) is Object and locales has an [[InitializedLocale]] internal slot, then
     if (locales.is_string() || (locales.is_object() && is<Locale>(locales.as_object()))) {
-        // a. Let O be CreateArrayFromList(« locales »).
+        // a. Let O be ! CreateArrayFromList(« locales »).
         object = Array::create_from(global_object, { locales });
     }
     // 4. Else,
@@ -245,12 +243,12 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(GlobalObject& global_
                 tag = TRY(key_value.to_string(global_object));
             }
 
-            // v. If IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
+            // v. If ! IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
             auto locale_id = is_structurally_valid_language_tag(tag);
             if (!locale_id.has_value())
                 return vm.throw_completion<RangeError>(global_object, ErrorType::IntlInvalidLanguageTag, tag);
 
-            // vi. Let canonicalizedTag be CanonicalizeUnicodeLocaleId(tag).
+            // vi. Let canonicalizedTag be ! CanonicalizeUnicodeLocaleId(tag).
             auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
 
             // vii. If canonicalizedTag is not an element of seen, append canonicalizedTag as the last element of seen.
@@ -310,7 +308,7 @@ static MatcherResult lookup_matcher(Vector<String> const& requested_locales)
         auto extensions = locale_id->remove_extension_type<Unicode::LocaleExtension>();
         auto no_extensions_locale = locale_id->to_string();
 
-        // b. Let availableLocale be BestAvailableLocale(availableLocales, noExtensionsLocale).
+        // b. Let availableLocale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
 
         // c. If availableLocale is not undefined, then
@@ -330,7 +328,7 @@ static MatcherResult lookup_matcher(Vector<String> const& requested_locales)
         }
     }
 
-    // 3. Let defLocale be DefaultLocale().
+    // 3. Let defLocale be ! DefaultLocale().
     // 4. Set result.[[locale]] to defLocale.
     result.locale = Unicode::default_locale();
 
@@ -386,12 +384,12 @@ LocaleResult resolve_locale(Vector<String> const& requested_locales, LocaleOptio
 
     // 2. If matcher is "lookup", then
     if (matcher.is_string() && (matcher.as_string().string() == "lookup"sv)) {
-        // a. Let r be LookupMatcher(availableLocales, requestedLocales).
+        // a. Let r be ! LookupMatcher(availableLocales, requestedLocales).
         matcher_result = lookup_matcher(requested_locales);
     }
     // 3. Else,
     else {
-        // a. Let r be BestFitMatcher(availableLocales, requestedLocales).
+        // a. Let r be ! BestFitMatcher(availableLocales, requestedLocales).
         matcher_result = best_fit_matcher(requested_locales);
     }
 
@@ -540,7 +538,7 @@ Vector<String> lookup_supported_locales(Vector<String> const& requested_locales)
         locale_id->remove_extension_type<Unicode::LocaleExtension>();
         auto no_extensions_locale = locale_id->to_string();
 
-        // b. Let availableLocale be BestAvailableLocale(availableLocales, noExtensionsLocale).
+        // b. Let availableLocale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
 
         // c. If availableLocale is not undefined, append locale to the end of subset.
@@ -588,7 +586,7 @@ ThrowCompletionOr<Array*> supported_locales(GlobalObject& global_object, Vector<
         supported_locales = lookup_supported_locales(requested_locales);
     }
 
-    // 5. Return CreateArrayFromList(supportedLocales).
+    // 5. Return ! CreateArrayFromList(supportedLocales).
     return Array::create_from<String>(global_object, supported_locales, [&vm](auto& locale) { return js_string(vm, locale); });
 }
 

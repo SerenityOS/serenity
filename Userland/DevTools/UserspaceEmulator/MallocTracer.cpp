@@ -208,7 +208,7 @@ Mallocation* MallocTracer::find_mallocation_after(FlatPtr address)
     return found_mallocation;
 }
 
-void MallocTracer::audit_read(const Region& region, FlatPtr address, size_t size)
+void MallocTracer::audit_read(Region const& region, FlatPtr address, size_t size)
 {
     if (!m_auditing_enabled)
         return;
@@ -259,7 +259,7 @@ void MallocTracer::audit_read(const Region& region, FlatPtr address, size_t size
     }
 }
 
-void MallocTracer::audit_write(const Region& region, FlatPtr address, size_t size)
+void MallocTracer::audit_write(Region const& region, FlatPtr address, size_t size)
 {
     if (!m_auditing_enabled)
         return;

@@ -89,6 +89,8 @@ List of options:
 * **`vmmouse`** - This parameter expects a binary value of **`on`** or **`off`**. If enabled and
   running on a VMWare Hypervisor, the kernel will enable absolute mouse mode.
 
+* **`disable_kaslr`** - If present on the command line, the KASLR security mitigation will be disabled.
+
 ## See also
 
 * [`SystemServer`(7)](help://man/7/SystemServer).

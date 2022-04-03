@@ -157,11 +157,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
     };
 
-    const char* command_to_run = nullptr;
-    const char* file_to_read_from = nullptr;
-    Vector<const char*> script_args;
+    char const* command_to_run = nullptr;
+    char const* file_to_read_from = nullptr;
+    Vector<char const*> script_args;
     bool skip_rc_files = false;
-    const char* format = nullptr;
+    char const* format = nullptr;
     bool should_format_live = false;
     bool keep_open = false;
 
@@ -225,6 +225,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
         run_rc_file(Shell::Shell::global_init_file_path);
         run_rc_file(Shell::Shell::local_init_file_path);
+        shell->cache_path();
     }
 
     {

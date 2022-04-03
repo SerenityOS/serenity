@@ -98,7 +98,7 @@ ErrorOr<String> ProjectBuilder::component_name(StringView cmake_file_path)
 {
     auto content = TRY(Core::File::open(cmake_file_path, Core::OpenMode::ReadOnly))->read_all();
 
-    static const Regex<ECMA262> component_name(R"~~~(serenity_component\([\s]*(\w+)[\s\S]*\))~~~");
+    static Regex<ECMA262> const component_name(R"~~~(serenity_component\([\s]*(\w+)[\s\S]*\))~~~");
     RegexResult result;
     if (!component_name.search(StringView { content }, result))
         return Error::from_string_literal("component not found"sv);
@@ -192,8 +192,8 @@ void ProjectBuilder::for_each_library_definition(Function<void(String, String)> 
         return;
     }
 
-    static const Regex<ECMA262> parse_library_definition(R"~~~(.+:serenity_lib[c]?\((\w+) (\w+)\).*)~~~");
-    for (auto& line : res.value().stdout.split('\n')) {
+    static Regex<ECMA262> const parse_library_definition(R"~~~(.+:serenity_lib[c]?\((\w+) (\w+)\).*)~~~");
+    for (auto& line : res.value().output.split('\n')) {
         RegexResult result;
         if (!parse_library_definition.search(line, result))
             continue;
@@ -219,8 +219,8 @@ void ProjectBuilder::for_each_library_dependencies(Function<void(String, Vector<
         return;
     }
 
-    static const Regex<ECMA262> parse_library_definition(R"~~~(.+:target_link_libraries\((\w+) ([\w\s]+)\).*)~~~");
-    for (auto& line : res.value().stdout.split('\n')) {
+    static Regex<ECMA262> const parse_library_definition(R"~~~(.+:target_link_libraries\((\w+) ([\w\s]+)\).*)~~~");
+    for (auto& line : res.value().output.split('\n')) {
 
         RegexResult result;
         if (!parse_library_definition.search(line, result))

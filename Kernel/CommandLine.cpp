@@ -16,7 +16,7 @@ static char s_cmd_line[1024];
 static constexpr StringView s_embedded_cmd_line = "";
 static CommandLine* s_the;
 
-UNMAP_AFTER_INIT void CommandLine::early_initialize(const char* cmd_line)
+UNMAP_AFTER_INIT void CommandLine::early_initialize(char const* cmd_line)
 {
     if (!cmd_line)
         return;
@@ -32,7 +32,7 @@ bool CommandLine::was_initialized()
     return s_the != nullptr;
 }
 
-const CommandLine& kernel_command_line()
+CommandLine const& kernel_command_line()
 {
     VERIFY(s_the);
     return *s_the;
@@ -64,7 +64,7 @@ UNMAP_AFTER_INIT NonnullOwnPtr<KString> CommandLine::build_commandline(StringVie
     return KString::must_create(builder.string_view());
 }
 
-UNMAP_AFTER_INIT void CommandLine::add_arguments(const Vector<StringView>& args)
+UNMAP_AFTER_INIT void CommandLine::add_arguments(Vector<StringView> const& args)
 {
     for (auto&& str : args) {
         if (str == ""sv) {
@@ -86,7 +86,7 @@ UNMAP_AFTER_INIT CommandLine::CommandLine(StringView cmdline_from_bootloader)
     : m_string(build_commandline(cmdline_from_bootloader))
 {
     s_the = this;
-    const auto& args = m_string->view().split_view(' ');
+    auto const& args = m_string->view().split_view(' ');
     m_params.ensure_capacity(args.size());
     add_arguments(args);
 }
@@ -251,7 +251,7 @@ UNMAP_AFTER_INIT bool CommandLine::disable_virtio() const
 
 UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const
 {
-    const auto ahci_reset_mode = lookup("ahci_reset_mode"sv).value_or("controllers"sv);
+    auto const ahci_reset_mode = lookup("ahci_reset_mode"sv).value_or("controllers"sv);
     if (ahci_reset_mode == "controllers"sv) {
         return AHCIResetMode::ControllerOnly;
     }
@@ -268,7 +268,7 @@ StringView CommandLine::system_mode() const
 
 PanicMode CommandLine::panic_mode(Validate should_validate) const
 {
-    const auto panic_mode = lookup("panic"sv).value_or("halt"sv);
+    auto const panic_mode = lookup("panic"sv).value_or("halt"sv);
     if (panic_mode == "halt"sv) {
         return PanicMode::Halt;
     }
@@ -284,7 +284,7 @@ PanicMode CommandLine::panic_mode(Validate should_validate) const
 
 UNMAP_AFTER_INIT auto CommandLine::are_framebuffer_devices_enabled() const -> FrameBufferDevices
 {
-    const auto fbdev_value = lookup("fbdev"sv).value_or("on"sv);
+    auto const fbdev_value = lookup("fbdev"sv).value_or("on"sv);
     if (fbdev_value == "on"sv)
         return FrameBufferDevices::Enabled;
     if (fbdev_value == "bootloader"sv)
@@ -311,7 +311,7 @@ NonnullOwnPtrVector<KString> CommandLine::userspace_init_args() const
 
 UNMAP_AFTER_INIT size_t CommandLine::switch_to_tty() const
 {
-    const auto default_tty = lookup("switch_to_tty"sv).value_or("1"sv);
+    auto const default_tty = lookup("switch_to_tty"sv).value_or("1"sv);
     auto switch_tty_number = default_tty.to_uint();
     if (switch_tty_number.has_value() && switch_tty_number.value() >= 1) {
         return switch_tty_number.value() - 1;

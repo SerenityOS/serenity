@@ -75,7 +75,7 @@ public:
         handler->register_interrupt_handler();
     }
 
-    virtual bool handle_interrupt(const RegisterState&) override;
+    virtual bool handle_interrupt(RegisterState const&) override;
 
     virtual bool eoi() override;
 
@@ -106,7 +106,7 @@ public:
         handler->register_interrupt_handler();
     }
 
-    virtual bool handle_interrupt(const RegisterState&) override;
+    virtual bool handle_interrupt(RegisterState const&) override;
 
     virtual bool eoi() override;
 
@@ -145,7 +145,7 @@ PhysicalAddress APIC::get_base()
     return PhysicalAddress(base & 0xfffff000);
 }
 
-void APIC::set_base(const PhysicalAddress& base)
+void APIC::set_base(PhysicalAddress const& base)
 {
     MSR msr(APIC_BASE_MSR);
     u64 flags = 1 << 11;
@@ -160,7 +160,7 @@ void APIC::write_register(u32 offset, u32 value)
         MSR msr(APIC_REGS_MSR_BASE + (offset >> 4));
         msr.set(value);
     } else {
-        *reinterpret_cast<volatile u32*>(m_apic_base->vaddr().offset(offset).as_ptr()) = value;
+        *reinterpret_cast<u32 volatile*>(m_apic_base->vaddr().offset(offset).as_ptr()) = value;
     }
 }
 
@@ -170,7 +170,7 @@ u32 APIC::read_register(u32 offset)
         MSR msr(APIC_REGS_MSR_BASE + (offset >> 4));
         return (u32)msr.get();
     }
-    return *reinterpret_cast<volatile u32*>(m_apic_base->vaddr().offset(offset).as_ptr());
+    return *reinterpret_cast<u32 volatile*>(m_apic_base->vaddr().offset(offset).as_ptr());
 }
 
 void APIC::set_lvt(u32 offset, u8 interrupt)
@@ -190,7 +190,7 @@ void APIC::wait_for_pending_icr()
     }
 }
 
-void APIC::write_icr(const ICRReg& icr)
+void APIC::write_icr(ICRReg const& icr)
 {
     if (m_is_x2) {
         MSR msr(APIC_REGS_MSR_BASE + (APIC_REG_ICR_LOW >> 4));
@@ -236,7 +236,7 @@ u8 APIC::spurious_interrupt_vector()
 }
 
 #define APIC_INIT_VAR_PTR(tpe, vaddr, varname)                         \
-    reinterpret_cast<volatile tpe*>(reinterpret_cast<ptrdiff_t>(vaddr) \
+    reinterpret_cast<tpe volatile*>(reinterpret_cast<ptrdiff_t>(vaddr) \
         + reinterpret_cast<ptrdiff_t>(&varname)                        \
         - reinterpret_cast<ptrdiff_t>(&apic_ap_start))
 
@@ -319,21 +319,6 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
     return true;
 }
 
-UNMAP_AFTER_INIT static NonnullOwnPtr<Memory::Region> create_identity_mapped_region(PhysicalAddress paddr, size_t size)
-{
-    auto maybe_vmobject = Memory::AnonymousVMObject::try_create_for_physical_range(paddr, size);
-    // FIXME: Would be nice to be able to return a ErrorOr from here.
-    VERIFY(!maybe_vmobject.is_error());
-
-    auto region_or_error = MM.allocate_kernel_region_with_vmobject(
-        Memory::VirtualRange { VirtualAddress { static_cast<FlatPtr>(paddr.get()) }, size },
-        maybe_vmobject.release_value(),
-        {},
-        Memory::Region::Access::ReadWriteExecute);
-    VERIFY(!region_or_error.is_error());
-    return region_or_error.release_value();
-}
-
 UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
 {
     VERIFY(!m_ap_boot_environment);
@@ -347,9 +332,9 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     constexpr u64 apic_startup_region_base = 0x8000;
     auto apic_startup_region_size = Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(FlatPtr))).release_value_but_fixme_should_propagate_errors();
     VERIFY(apic_startup_region_size < USER_RANGE_BASE);
-    auto apic_startup_region = create_identity_mapped_region(PhysicalAddress(apic_startup_region_base), apic_startup_region_size);
+    auto apic_startup_region = MUST(MM.region_tree().create_identity_mapped_region(PhysicalAddress(apic_startup_region_base), apic_startup_region_size));
     u8* apic_startup_region_ptr = apic_startup_region->vaddr().as_ptr();
-    memcpy(apic_startup_region_ptr, reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
+    memcpy(apic_startup_region_ptr, reinterpret_cast<void const*>(apic_ap_start), apic_ap_start_size);
 
     // Allocate enough stacks for all APs
     m_ap_temporary_boot_stacks.ensure_capacity(aps_to_enable);
@@ -387,9 +372,9 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_init_cr3) = MM.kernel_page_directory().cr3();
 
     // Store the BSP's GDT and IDT for the APs to use
-    const auto& gdtr = Processor::current().get_gdtr();
+    auto const& gdtr = Processor::current().get_gdtr();
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_gdtr) = FlatPtr(&gdtr);
-    const auto& idtr = get_idtr();
+    auto const& idtr = get_idtr();
     *APIC_INIT_VAR_PTR(FlatPtr, apic_startup_region_ptr, ap_cpu_idtr) = FlatPtr(&idtr);
 
 #if ARCH(X86_64)
@@ -656,7 +641,7 @@ u32 APIC::get_timer_divisor()
     return 16;
 }
 
-bool APICIPIInterruptHandler::handle_interrupt(const RegisterState&)
+bool APICIPIInterruptHandler::handle_interrupt(RegisterState const&)
 {
     dbgln_if(APIC_SMP_DEBUG, "APIC IPI on CPU #{}", Processor::current_id());
     return true;
@@ -669,7 +654,7 @@ bool APICIPIInterruptHandler::eoi()
     return true;
 }
 
-bool APICErrInterruptHandler::handle_interrupt(const RegisterState&)
+bool APICErrInterruptHandler::handle_interrupt(RegisterState const&)
 {
     dbgln("APIC: SMP error on CPU #{}", Processor::current_id());
     return true;

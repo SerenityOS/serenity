@@ -12,11 +12,11 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/DeferredCallEntry.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 #include <Kernel/Arch/x86/ASM_wrapper.h>
 #include <Kernel/Arch/x86/CPUID.h>
 #include <Kernel/Arch/x86/DescriptorTable.h>
-#include <Kernel/Arch/x86/PageDirectory.h>
 #include <Kernel/Arch/x86/TSS.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KString.h>
@@ -80,7 +80,7 @@ class Processor {
 
     TSS m_tss;
     static FPUState s_clean_fpu_state;
-    CPUFeature m_features;
+    CPUFeature::Type m_features;
     static Atomic<u32> g_total_processors;
     u8 m_physical_address_bit_width;
     u8 m_virtual_address_bit_width;
@@ -128,8 +128,6 @@ class Processor {
     void cpu_detect();
     void cpu_setup();
 
-    NonnullOwnPtr<KString> features_string() const;
-
 public:
     Processor() = default;
 
@@ -158,6 +156,11 @@ public:
         return *g_total_processors.ptr();
     }
 
+    ALWAYS_INLINE static u64 read_cpu_counter()
+    {
+        return read_tsc();
+    }
+
     ALWAYS_INLINE static void pause()
     {
         asm volatile("pause");
@@ -182,7 +185,7 @@ public:
 
     Descriptor& get_gdt_entry(u16 selector);
     void flush_gdt();
-    const DescriptorTablePointer& get_gdtr();
+    DescriptorTablePointer const& get_gdtr();
 
     template<IteratorFunction<Processor&> Callback>
     static inline IterationDecision for_each(Callback callback)
@@ -397,9 +400,19 @@ public:
 
     static void deferred_call_queue(Function<void()> callback);
 
-    ALWAYS_INLINE bool has_feature(CPUFeature f) const
+    ALWAYS_INLINE bool has_nx() const
     {
-        return (static_cast<u32>(m_features) & static_cast<u32>(f)) != 0;
+        return has_feature(CPUFeature::NX);
+    }
+
+    ALWAYS_INLINE bool has_pat() const
+    {
+        return has_feature(CPUFeature::PAT);
+    }
+
+    ALWAYS_INLINE bool has_feature(CPUFeature::Type const& feature) const
+    {
+        return m_features.has_flag(feature);
     }
 
     void check_invoke_scheduler();

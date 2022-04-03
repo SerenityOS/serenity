@@ -24,10 +24,14 @@ BorderRadiusData normalized_border_radius_data(Layout::Node const& node, Gfx::Fl
 
     // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
     auto f = 1.0f;
-    f = min(f, rect.width() / (float)(top_left_radius_px + top_right_radius_px));
-    f = min(f, rect.height() / (float)(top_right_radius_px + bottom_right_radius_px));
-    f = min(f, rect.width() / (float)(bottom_left_radius_px + bottom_right_radius_px));
-    f = min(f, rect.height() / (float)(top_left_radius_px + bottom_left_radius_px));
+    auto width_reciprocal = 1.0f / rect.width();
+    auto height_reciprocal = 1.0f / rect.height();
+    f = max(f, width_reciprocal * (top_left_radius_px + top_right_radius_px));
+    f = max(f, height_reciprocal * (top_right_radius_px + bottom_right_radius_px));
+    f = max(f, width_reciprocal * (bottom_left_radius_px + bottom_right_radius_px));
+    f = max(f, height_reciprocal * (top_left_radius_px + bottom_left_radius_px));
+
+    f = 1.0f / f;
 
     top_left_radius_px = (int)(top_left_radius_px * f);
     top_right_radius_px = (int)(top_right_radius_px * f);
@@ -39,11 +43,9 @@ BorderRadiusData normalized_border_radius_data(Layout::Node const& node, Gfx::Fl
 
 void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& a_rect, BorderRadiusData const& border_radius_data, BordersData const& borders_data)
 {
-    // FIXME: This is a hack that snaps the incoming rect to integer pixel values before painting each side.
-    //        This needs a more general solution.
-    auto rect = enclosing_int_rect(a_rect).to_type<float>();
+    auto rect = a_rect.to_rounded<float>();
 
-    const auto& border_data = [&] {
+    auto const& border_data = [&] {
         switch (edge) {
         case BorderEdge::Top:
             return borders_data.top;
@@ -69,7 +71,7 @@ void paint_border(PaintContext& context, BorderEdge edge, Gfx::FloatRect const& 
         Gfx::FloatPoint p2;
     };
 
-    auto points_for_edge = [](BorderEdge edge, const Gfx::FloatRect& rect) -> Points {
+    auto points_for_edge = [](BorderEdge edge, Gfx::FloatRect const& rect) -> Points {
         switch (edge) {
         case BorderEdge::Top:
             return { rect.top_left(), rect.top_right() };

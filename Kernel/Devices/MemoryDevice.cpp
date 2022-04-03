@@ -33,7 +33,7 @@ UNMAP_AFTER_INIT MemoryDevice::~MemoryDevice() = default;
 ErrorOr<size_t> MemoryDevice::read(OpenFileDescription&, u64 offset, UserOrKernelBuffer& buffer, size_t length)
 {
     if (!MM.is_allowed_to_read_physical_memory_for_userspace(PhysicalAddress(offset), length)) {
-        dbgln("MemoryDevice: Trying to read physical memory at {} for range of {} bytes failed due to violation of access", PhysicalAddress(offset), length);
+        dbgln_if(MEMORY_DEVICE_DEBUG, "MemoryDevice: Trying to read physical memory at {} for range of {} bytes failed due to violation of access", PhysicalAddress(offset), length);
         return EINVAL;
     }
     auto mapping = TRY(Memory::map_typed<u8>(PhysicalAddress(offset), length));
@@ -57,15 +57,13 @@ ErrorOr<Memory::Region*> MemoryDevice::mmap(Process& process, OpenFileDescriptio
     // is to be set to the page base of that start address.
     VERIFY(viewed_address == viewed_address.page_base());
 
-    dbgln("MemoryDevice: Trying to mmap physical memory at {} for range of {} bytes", viewed_address, range.size());
     if (!MM.is_allowed_to_read_physical_memory_for_userspace(viewed_address, range.size())) {
-        dbgln("MemoryDevice: Trying to mmap physical memory at {} for range of {} bytes failed due to violation of access", viewed_address, range.size());
+        dbgln_if(MEMORY_DEVICE_DEBUG, "MemoryDevice: Trying to mmap physical memory at {} for range of {} bytes failed due to violation of access", viewed_address, range.size());
         return EINVAL;
     }
 
     auto vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(viewed_address, range.size()));
 
-    dbgln("MemoryDevice: Mapped physical memory at {} for range of {} bytes", viewed_address, range.size());
     return process.address_space().allocate_region_with_vmobject(
         range,
         move(vmobject),

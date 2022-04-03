@@ -20,7 +20,7 @@ class StyleProperties : public RefCounted<StyleProperties> {
 public:
     StyleProperties() = default;
 
-    explicit StyleProperties(const StyleProperties&);
+    explicit StyleProperties(StyleProperties const&);
 
     static NonnullRefPtr<StyleProperties> create() { return adopt_ref(*new StyleProperties); }
 
@@ -58,24 +58,29 @@ public:
     Optional<CSS::TextDecorationLine> text_decoration_line() const;
     Optional<CSS::TextDecorationStyle> text_decoration_style() const;
     Optional<CSS::TextTransform> text_transform() const;
+    Vector<CSS::ShadowData> text_shadow() const;
     Optional<CSS::ListStyleType> list_style_type() const;
     Optional<CSS::FlexDirection> flex_direction() const;
     Optional<CSS::FlexWrap> flex_wrap() const;
     Optional<CSS::FlexBasisData> flex_basis() const;
     float flex_grow() const;
     float flex_shrink() const;
+    int order() const;
     Optional<CSS::AlignItems> align_items() const;
     float opacity() const;
+    Optional<CSS::Visibility> visibility() const;
     Optional<CSS::ImageRendering> image_rendering() const;
     Optional<CSS::JustifyContent> justify_content() const;
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;
-    Vector<CSS::BoxShadowData> box_shadow() const;
+    Vector<CSS::ShadowData> box_shadow() const;
     CSS::BoxSizing box_sizing() const;
     Optional<CSS::PointerEvents> pointer_events() const;
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() const;
+    Optional<CSS::FontVariant> font_variant() const;
 
     Vector<CSS::Transformation> transformations() const;
+    CSS::TransformOrigin transform_origin() const;
 
     Gfx::Font const& computed_font() const
     {
@@ -88,10 +93,10 @@ public:
         m_font = move(font);
     }
 
-    float line_height(const Layout::Node&) const;
+    float line_height(Layout::Node const&) const;
 
-    bool operator==(const StyleProperties&) const;
-    bool operator!=(const StyleProperties& other) const { return !(*this == other); }
+    bool operator==(StyleProperties const&) const;
+    bool operator!=(StyleProperties const& other) const { return !(*this == other); }
 
     Optional<CSS::Position> position() const;
     Optional<int> z_index() const;
@@ -103,6 +108,7 @@ private:
 
     Array<RefPtr<StyleValue>, to_underlying(CSS::last_property_id) + 1> m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
+    Vector<CSS::ShadowData> shadow(CSS::PropertyID) const;
 
     mutable RefPtr<Gfx::Font> m_font;
 };

@@ -12,6 +12,7 @@ $ nl [--body-numbering style] [--increment number] [--separator string] [--start
 
 * `--help`: Display help message and exit
 * `--version`: Print version
+* `--complete`: Perform autocompletion
 * `-b style`, `--body-numbering style`: Line numbering style: 't' for non-empty lines, 'a' for all lines, 'n' for no lines
 * `-i number`, `--increment number`: Line count increment
 * `-s string`, `--separator string`: Separator between line numbers and lines

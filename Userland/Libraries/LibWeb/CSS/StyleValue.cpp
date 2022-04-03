@@ -59,10 +59,10 @@ BorderRadiusStyleValue const& StyleValue::as_border_radius() const
     return static_cast<BorderRadiusStyleValue const&>(*this);
 }
 
-BoxShadowStyleValue const& StyleValue::as_box_shadow() const
+ShadowStyleValue const& StyleValue::as_shadow() const
 {
-    VERIFY(is_box_shadow());
-    return static_cast<BoxShadowStyleValue const&>(*this);
+    VERIFY(is_shadow());
+    return static_cast<ShadowStyleValue const&>(*this);
 }
 
 CalculatedStyleValue const& StyleValue::as_calculated() const
@@ -292,14 +292,16 @@ String BorderStyleValue::to_string() const
 
 String BorderRadiusStyleValue::to_string() const
 {
+    if (m_horizontal_radius == m_vertical_radius)
+        return m_horizontal_radius.to_string();
     return String::formatted("{} / {}", m_horizontal_radius.to_string(), m_vertical_radius.to_string());
 }
 
-String BoxShadowStyleValue::to_string() const
+String ShadowStyleValue::to_string() const
 {
     StringBuilder builder;
     builder.appendff("{} {} {} {} {}", m_color.to_string(), m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_spread_distance.to_string());
-    if (m_placement == BoxShadowPlacement::Inner)
+    if (m_placement == ShadowPlacement::Inner)
         builder.append(" inset");
     return builder.to_string();
 }
@@ -324,15 +326,9 @@ void CalculatedStyleValue::CalculationResult::add_or_subtract_internal(SumOperat
         [&](Number const& number) {
             auto other_number = other.m_value.get<Number>();
             if (op == SumOperation::Add) {
-                m_value = Number {
-                    .is_integer = number.is_integer && other_number.is_integer,
-                    .value = number.value + other_number.value
-                };
+                m_value = number + other_number;
             } else {
-                m_value = Number {
-                    .is_integer = number.is_integer && other_number.is_integer,
-                    .value = number.value - other_number.value
-                };
+                m_value = number - other_number;
             }
         },
         [&](Angle const& angle) {
@@ -437,11 +433,7 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
     m_value.visit(
         [&](Number const& number) {
             if (other_is_number) {
-                auto other_number = other.m_value.get<Number>();
-                m_value = Number {
-                    .is_integer = number.is_integer && other_number.is_integer,
-                    .value = number.value * other_number.value
-                };
+                m_value = number * other.m_value.get<Number>();
             } else {
                 // Avoid duplicating all the logic by swapping `this` and `other`.
                 CalculationResult new_value = other;
@@ -450,20 +442,20 @@ void CalculatedStyleValue::CalculationResult::multiply_by(CalculationResult cons
             }
         },
         [&](Angle const& angle) {
-            m_value = Angle::make_degrees(angle.to_degrees() * other.m_value.get<Number>().value);
+            m_value = Angle::make_degrees(angle.to_degrees() * other.m_value.get<Number>().value());
         },
         [&](Frequency const& frequency) {
-            m_value = Frequency::make_hertz(frequency.to_hertz() * other.m_value.get<Number>().value);
+            m_value = Frequency::make_hertz(frequency.to_hertz() * other.m_value.get<Number>().value());
         },
         [&](Length const& length) {
             VERIFY(layout_node);
-            m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<Number>().value);
+            m_value = Length::make_px(length.to_px(*layout_node) * other.m_value.get<Number>().value());
         },
         [&](Time const& time) {
-            m_value = Time::make_seconds(time.to_seconds() * other.m_value.get<Number>().value);
+            m_value = Time::make_seconds(time.to_seconds() * other.m_value.get<Number>().value());
         },
         [&](Percentage const& percentage) {
-            m_value = Percentage { percentage.value() * other.m_value.get<Number>().value };
+            m_value = Percentage { percentage.value() * other.m_value.get<Number>().value() };
         });
 }
 
@@ -471,15 +463,15 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
 {
     // We know from validation when resolving the type, that `other` must be a <number> or <integer>.
     // Both of these are represented as a Number.
-    auto denominator = other.m_value.get<Number>().value;
+    auto denominator = other.m_value.get<Number>().value();
     // FIXME: Dividing by 0 is invalid, and should be caught during parsing.
     VERIFY(denominator != 0.0f);
 
     m_value.visit(
         [&](Number const& number) {
             m_value = Number {
-                .is_integer = false,
-                .value = number.value / denominator
+                Number::Type::Number,
+                number.value() / denominator
             };
         },
         [&](Angle const& angle) {
@@ -508,14 +500,14 @@ String CalculatedStyleValue::to_string() const
 String CalculatedStyleValue::CalcNumberValue::to_string() const
 {
     return value.visit(
-        [](Number const& number) { return String::number(number.value); },
+        [](Number const& number) { return String::number(number.value()); },
         [](NonnullOwnPtr<CalcNumberSum> const& sum) { return String::formatted("({})", sum->to_string()); });
 }
 
 String CalculatedStyleValue::CalcValue::to_string() const
 {
     return value.visit(
-        [](Number const& number) { return String::number(number.value); },
+        [](Number const& number) { return String::number(number.value()); },
         [](NonnullOwnPtr<CalcSum> const& sum) { return String::formatted("({})", sum->to_string()); },
         [](auto const& v) { return v.to_string(); });
 }
@@ -691,7 +683,7 @@ Optional<float> CalculatedStyleValue::resolve_number()
 {
     auto result = m_expression->resolve(nullptr, {});
     if (result.value().has<Number>())
-        return result.value().get<Number>().value;
+        return result.value().get<Number>().value();
     return {};
 }
 
@@ -699,7 +691,7 @@ Optional<i64> CalculatedStyleValue::resolve_integer()
 {
     auto result = m_expression->resolve(nullptr, {});
     if (result.value().has<Number>())
-        return lroundf(result.value().get<Number>().value);
+        return result.value().get<Number>().integer_value();
     return {};
 }
 
@@ -860,7 +852,7 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::re
 {
     return value.visit(
         [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
-            return { number.is_integer ? ResolvedType::Integer : ResolvedType::Number };
+            return { number.is_integer() ? ResolvedType::Integer : ResolvedType::Number };
         },
         [](Angle const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Angle }; },
         [](Frequency const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Frequency }; },
@@ -874,7 +866,7 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberVal
 {
     return value.visit(
         [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
-            return { number.is_integer ? ResolvedType::Integer : ResolvedType::Number };
+            return { number.is_integer() ? ResolvedType::Integer : ResolvedType::Number };
         },
         [](NonnullOwnPtr<CalcNumberSum> const& sum) { return sum->resolved_type(); });
 }
@@ -952,7 +944,7 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProduct::resol
                 VERIFY(additional_value.op == CalculatedStyleValue::ProductOperation::Divide);
                 auto resolved_calc_number_value = calc_number_value.resolve(layout_node, percentage_basis);
                 // FIXME: Checking for division by 0 should happen during parsing.
-                VERIFY(resolved_calc_number_value.value().get<Number>().value != 0.0f);
+                VERIFY(resolved_calc_number_value.value().get<Number>().value() != 0.0f);
                 value.divide_by(resolved_calc_number_value, layout_node);
             });
     }
@@ -1433,7 +1425,7 @@ NonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length const& length)
     return adopt_ref(*new LengthStyleValue(length));
 }
 
-static Optional<CSS::Length> absolutized_length(CSS::Length const& length, Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size)
+static Optional<CSS::Length> absolutized_length(CSS::Length const& length, Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size)
 {
     if (length.is_px())
         return {};
@@ -1444,28 +1436,28 @@ static Optional<CSS::Length> absolutized_length(CSS::Length const& length, Gfx::
     return {};
 }
 
-NonnullRefPtr<StyleValue> StyleValue::absolutized(Gfx::IntRect const&, Gfx::FontMetrics const&, float, float) const
+NonnullRefPtr<StyleValue> StyleValue::absolutized(Gfx::IntRect const&, Gfx::FontPixelMetrics const&, float, float) const
 {
     return *this;
 }
 
-NonnullRefPtr<StyleValue> LengthStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
+NonnullRefPtr<StyleValue> LengthStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const
 {
     if (auto length = absolutized_length(m_length, viewport_rect, font_metrics, font_size, root_font_size); length.has_value())
         return LengthStyleValue::create(length.release_value());
     return *this;
 }
 
-NonnullRefPtr<StyleValue> BoxShadowStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
+NonnullRefPtr<StyleValue> ShadowStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const
 {
     auto absolutized_offset_x = absolutized_length(m_offset_x, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_offset_x);
     auto absolutized_offset_y = absolutized_length(m_offset_y, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_offset_y);
     auto absolutized_blur_radius = absolutized_length(m_blur_radius, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_blur_radius);
     auto absolutized_spread_distance = absolutized_length(m_spread_distance, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_spread_distance);
-    return BoxShadowStyleValue::create(m_color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_placement);
+    return ShadowStyleValue::create(m_color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_placement);
 }
 
-NonnullRefPtr<StyleValue> BorderRadiusStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontMetrics const& font_metrics, float font_size, float root_font_size) const
+NonnullRefPtr<StyleValue> BorderRadiusStyleValue::absolutized(Gfx::IntRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, float font_size, float root_font_size) const
 {
     if (m_horizontal_radius.is_percentage() && m_vertical_radius.is_percentage())
         return *this;

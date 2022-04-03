@@ -26,21 +26,11 @@ HTMLScriptElement::HTMLScriptElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLScriptElement::~HTMLScriptElement() = default;
 
-void HTMLScriptElement::set_parser_document(Badge<HTMLParser>, DOM::Document& document)
-{
-    m_parser_document = document;
-}
-
 void HTMLScriptElement::begin_delaying_document_load_event(DOM::Document& document)
 {
     // https://html.spec.whatwg.org/multipage/scripting.html#concept-script-script
     // The user agent must delay the load event of the element's node document until the script is ready.
     m_document_load_event_delayer.emplace(document);
-}
-
-void HTMLScriptElement::set_non_blocking(Badge<HTMLParser>, bool non_blocking)
-{
-    m_non_blocking = non_blocking;
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#execute-the-script-block
@@ -109,7 +99,7 @@ void HTMLScriptElement::execute_script()
 }
 
 // https://mimesniff.spec.whatwg.org/#javascript-mime-type-essence-match
-static bool is_javascript_mime_type_essence_match(const String& string)
+static bool is_javascript_mime_type_essence_match(String const& string)
 {
     auto lowercase_string = string.to_lowercase();
     return lowercase_string.is_one_of("application/ecmascript", "application/javascript", "application/x-ecmascript", "application/x-javascript", "text/ecmascript", "text/javascript", "text/javascript1.0", "text/javascript1.1", "text/javascript1.2", "text/javascript1.3", "text/javascript1.4", "text/javascript1.5", "text/jscript", "text/livescript", "text/x-ecmascript", "text/x-javascript");
@@ -139,10 +129,8 @@ void HTMLScriptElement::prepare_script()
     auto source_text = child_text_content();
 
     // 6. If the element has no src attribute, and source text is the empty string, then return. The script is not executed.
-    if (!has_attribute(HTML::AttributeNames::src) && source_text.is_empty()) {
-        dbgln("HTMLScriptElement: Refusing to run empty script.");
+    if (!has_attribute(HTML::AttributeNames::src) && source_text.is_empty())
         return;
-    }
 
     // 7. If the element is not connected, then return. The script is not executed.
     if (!is_connected()) {

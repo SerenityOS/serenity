@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibMain/Main.h>
 #include <LibVideo/MatroskaReader.h>
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
     auto document = Video::MatroskaReader::parse_matroska_from_file("/home/anon/Videos/test-webm.webm");
     if (!document) {
-        outln("Failed to parse :(");
-        return 1;
+        return Error::from_string_literal("Failed to parse :("sv);
     }
 
     outln("DocType is {}", document->header().doc_type.characters());
@@ -51,4 +51,6 @@ int main(int, char**)
             outln("\t\tBlock has lacing {}", static_cast<u8>(block.lacing()));
         }
     }
+
+    return 0;
 }

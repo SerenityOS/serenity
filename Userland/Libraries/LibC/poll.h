@@ -12,6 +12,6 @@
 __BEGIN_DECLS
 
 int poll(struct pollfd* fds, nfds_t nfds, int timeout);
-int ppoll(struct pollfd* fds, nfds_t nfds, const struct timespec* timeout, const sigset_t* sigmask);
+int ppoll(struct pollfd* fds, nfds_t nfds, const struct timespec* timeout, sigset_t const* sigmask);
 
 __END_DECLS

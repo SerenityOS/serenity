@@ -30,7 +30,7 @@ public:
     u16 checksum() const { return m_checksum; }
     void set_checksum(u16 w) { m_checksum = w; }
 
-    const void* payload() const { return this + 1; }
+    void const* payload() const { return this + 1; }
     void* payload() { return this + 1; }
 
 private:
@@ -47,5 +47,5 @@ struct [[gnu::packed]] ICMPEchoPacket {
     NetworkOrdered<u16> identifier;
     NetworkOrdered<u16> sequence_number;
     void* payload() { return this + 1; }
-    const void* payload() const { return this + 1; }
+    void const* payload() const { return this + 1; }
 };

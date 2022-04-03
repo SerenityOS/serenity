@@ -207,6 +207,10 @@
 #cmakedefine01 MOUSE_DEBUG
 #endif
 
+#ifndef MEMORY_DEVICE_DEBUG
+#cmakedefine01 MEMORY_DEVICE_DEBUG
+#endif
+
 #ifndef MULTIPROCESSOR_DEBUG
 #cmakedefine01 MULTIPROCESSOR_DEBUG
 #endif

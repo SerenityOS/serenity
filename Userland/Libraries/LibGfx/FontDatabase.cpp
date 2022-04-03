@@ -119,7 +119,7 @@ FontDatabase::FontDatabase()
     }
 }
 
-void FontDatabase::for_each_font(Function<void(const Gfx::Font&)> callback)
+void FontDatabase::for_each_font(Function<void(Gfx::Font const&)> callback)
 {
     Vector<RefPtr<Gfx::Font>> fonts;
     fonts.ensure_capacity(m_private->full_name_to_font_map.size());
@@ -130,7 +130,7 @@ void FontDatabase::for_each_font(Function<void(const Gfx::Font&)> callback)
         callback(*font);
 }
 
-void FontDatabase::for_each_fixed_width_font(Function<void(const Gfx::Font&)> callback)
+void FontDatabase::for_each_fixed_width_font(Function<void(Gfx::Font const&)> callback)
 {
     Vector<RefPtr<Gfx::Font>> fonts;
     fonts.ensure_capacity(m_private->full_name_to_font_map.size());
@@ -161,25 +161,25 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
     return it->value;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, unsigned size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
+RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, float point_size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->weight() == weight && typeface->slope() == slope)
-            return typeface->get_font(size, allow_inexact_size_match);
+            return typeface->get_font(point_size, allow_inexact_size_match);
     }
     return nullptr;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, FlyString const& variant, unsigned size, Font::AllowInexactSizeMatch allow_inexact_size_match)
+RefPtr<Gfx::Font> FontDatabase::get(FlyString const& family, FlyString const& variant, float point_size, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->variant() == variant)
-            return typeface->get_font(size, allow_inexact_size_match);
+            return typeface->get_font(point_size, allow_inexact_size_match);
     }
     return nullptr;
 }
 
-RefPtr<Typeface> FontDatabase::get_or_create_typeface(const String& family, const String& variant)
+RefPtr<Typeface> FontDatabase::get_or_create_typeface(String const& family, String const& variant)
 {
     for (auto typeface : m_private->typefaces) {
         if (typeface->family() == family && typeface->variant() == variant)
@@ -190,7 +190,7 @@ RefPtr<Typeface> FontDatabase::get_or_create_typeface(const String& family, cons
     return typeface;
 }
 
-void FontDatabase::for_each_typeface(Function<void(const Typeface&)> callback)
+void FontDatabase::for_each_typeface(Function<void(Typeface const&)> callback)
 {
     for (auto typeface : m_private->typefaces) {
         callback(*typeface);

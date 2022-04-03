@@ -173,7 +173,7 @@ BitmapFont::~BitmapFont()
 
 RefPtr<BitmapFont> BitmapFont::load_from_memory(u8 const* data)
 {
-    auto const& header = *reinterpret_cast<const FontFileHeader*>(data);
+    auto const& header = *reinterpret_cast<FontFileHeader const*>(data);
     if (memcmp(header.magic, "!Fnt", 4)) {
         dbgln("header.magic != '!Fnt', instead it's '{:c}{:c}{:c}{:c}'", header.magic[0], header.magic[1], header.magic[2], header.magic[3]);
         return nullptr;
@@ -372,13 +372,16 @@ Font const& Font::bold_variant() const
     return *m_bold_variant;
 }
 
-FontMetrics Font::metrics(u32 code_point) const
+FontPixelMetrics BitmapFont::pixel_metrics() const
 {
-    return FontMetrics {
-        .size = (float)presentation_size(),
+    return FontPixelMetrics {
+        .size = (float)pixel_size(),
         .x_height = (float)x_height(),
-        .glyph_width = (float)glyph_width(code_point),
+        .advance_of_ascii_zero = (float)glyph_width('0'),
         .glyph_spacing = (float)glyph_spacing(),
+        .ascent = (float)m_baseline,
+        .descent = (float)(m_glyph_height - m_baseline),
+        .line_gap = (float)pixel_size() * 0.4f, // FIXME: Do something nicer here.
     };
 }
 

@@ -18,7 +18,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/proc", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    const char* pid;
+    char const* pid;
     static bool extended = false;
 
     Core::ArgsParser args_parser;

@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-const char* usage = "usage:\n"
+char const* usage = "usage:\n"
                     "\tdd <options>\n"
                     "options:\n"
                     "\tif=<file>\tinput file (default: stdin)\n"

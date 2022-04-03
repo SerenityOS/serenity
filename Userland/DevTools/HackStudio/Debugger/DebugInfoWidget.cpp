@@ -61,8 +61,8 @@ DebugInfoWidget::DebugInfoWidget()
     m_backtrace_view = splitter.add<GUI::ListView>();
     auto& variables_tab_widget = splitter.add<GUI::TabWidget>();
     variables_tab_widget.set_tab_position(GUI::TabWidget::TabPosition::Bottom);
-    variables_tab_widget.add_widget("Variables", build_variables_tab());
-    variables_tab_widget.add_widget("Registers", build_registers_tab());
+    variables_tab_widget.add_widget(build_variables_tab());
+    variables_tab_widget.add_widget(build_registers_tab());
 
     m_backtrace_view->on_selection_change = [this] {
         const auto& index = m_backtrace_view->selection().first();
@@ -89,7 +89,7 @@ DebugInfoWidget::DebugInfoWidget()
     };
 }
 
-bool DebugInfoWidget::does_variable_support_writing(const Debug::DebugInfo::VariableInfo* variable)
+bool DebugInfoWidget::does_variable_support_writing(Debug::DebugInfo::VariableInfo const* variable)
 {
     if (variable->location_type != Debug::DebugInfo::VariableInfo::LocationType::Address)
         return false;
@@ -102,7 +102,7 @@ RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::Mode
         return nullptr;
     auto context_menu = GUI::Menu::construct();
 
-    auto* variable = static_cast<const Debug::DebugInfo::VariableInfo*>(index.internal_data());
+    auto* variable = static_cast<Debug::DebugInfo::VariableInfo const*>(index.internal_data());
     if (does_variable_support_writing(variable)) {
         context_menu->add_action(GUI::Action::create("Change value", [&](auto&) {
             String value;
@@ -132,6 +132,7 @@ RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::Mode
 NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_variables_tab()
 {
     auto variables_widget = GUI::Widget::construct();
+    variables_widget->set_title("Variables");
     variables_widget->set_layout<GUI::HorizontalBoxLayout>();
 
     m_variables_view = variables_widget->add<GUI::TreeView>();
@@ -148,6 +149,7 @@ NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_variables_tab()
 NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_registers_tab()
 {
     auto registers_widget = GUI::Widget::construct();
+    registers_widget->set_title("Registers");
     registers_widget->set_layout<GUI::HorizontalBoxLayout>();
 
     m_registers_view = registers_widget->add<GUI::TableView>();
@@ -155,7 +157,7 @@ NonnullRefPtr<GUI::Widget> DebugInfoWidget::build_registers_tab()
     return registers_widget;
 }
 
-void DebugInfoWidget::update_state(Debug::ProcessInspector& inspector, const PtraceRegisters& regs)
+void DebugInfoWidget::update_state(Debug::ProcessInspector& inspector, PtraceRegisters const& regs)
 {
     m_variables_view->set_model(VariablesModel::create(inspector, regs));
     m_backtrace_view->set_model(BacktraceModel::create(inspector, regs));

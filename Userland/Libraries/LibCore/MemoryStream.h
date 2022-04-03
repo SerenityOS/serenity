@@ -68,7 +68,7 @@ public:
     virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override
     {
         // FIXME: Can this not error?
-        const auto nwritten = bytes.copy_trimmed_to(m_bytes.slice(m_offset));
+        auto const nwritten = bytes.copy_trimmed_to(m_bytes.slice(m_offset));
         m_offset += nwritten;
         return nwritten;
     }

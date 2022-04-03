@@ -78,6 +78,9 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (type.name == "double" && !type.nullable)
         return { .name = "double", .sequence_storage_type = SequenceStorageType::Vector };
 
+    if (type.name == "float" && !type.nullable)
+        return { .name = "float", .sequence_storage_type = SequenceStorageType::Vector };
+
     if (type.name == "boolean" && !type.nullable)
         return { .name = "bool", .sequence_storage_type = SequenceStorageType::Vector };
 
@@ -199,12 +202,10 @@ static void generate_include_for(auto& generator, auto& path)
 )~~~");
 }
 
-static void emit_includes_for_all_imports(auto& interface, auto& generator, bool is_header, bool is_iterator = false)
+static void emit_includes_for_all_imports(auto& interface, auto& generator, bool is_iterator = false)
 {
     Queue<RemoveCVReference<decltype(interface)> const*> interfaces;
     HashTable<String> paths_imported;
-    if (is_header)
-        paths_imported.set(interface.module_own_path);
 
     interfaces.enqueue(&interface);
 
@@ -218,6 +219,9 @@ static void emit_includes_for_all_imports(auto& interface, auto& generator, bool
             if (!paths_imported.contains(imported_interface.module_own_path))
                 interfaces.enqueue(&imported_interface);
         }
+
+        if (!interface->will_generate_code())
+            continue;
 
         generate_include_for(generator, interface->module_own_path);
 
@@ -379,19 +383,19 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     }
 )~~~");
         }
-    } else if (parameter.type->name == "double") {
+    } else if (parameter.type->name == "double" || parameter.type->name == "float") {
         if (!optional) {
             scoped_generator.append(R"~~~(
-    double @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(global_object));
+    @parameter.type.name@ @cpp_name@ = TRY(@js_name@@js_suffix@.to_double(global_object));
 )~~~");
         } else {
             if (optional_default_value.has_value()) {
                 scoped_generator.append(R"~~~(
-    double @cpp_name@;
+    @parameter.type.name@ @cpp_name@;
 )~~~");
             } else {
                 scoped_generator.append(R"~~~(
-    Optional<double> @cpp_name@;
+    Optional<@parameter.type.name@> @cpp_name@;
 )~~~");
             }
             scoped_generator.append(R"~~~(
@@ -409,57 +413,101 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             }
         }
     } else if (parameter.type->name == "boolean") {
-        if (!optional) {
+        if (!optional || optional_default_value.has_value()) {
             scoped_generator.append(R"~~~(
-    bool @cpp_name@ = @js_name@@js_suffix@.to_boolean();
-)~~~");
-        } else {
-            if (optional_default_value.has_value()) {
-                scoped_generator.append(R"~~~(
     bool @cpp_name@;
 )~~~");
-            } else {
-                scoped_generator.append(R"~~~(
+        } else {
+            scoped_generator.append(R"~~~(
     Optional<bool> @cpp_name@;
 )~~~");
-            }
+        }
+        if (optional) {
             scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_undefined())
-        @cpp_name@ = @js_name@@js_suffix@.to_boolean();)~~~");
-            if (optional_default_value.has_value()) {
-                scoped_generator.append(R"~~~(
+)~~~");
+        }
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = @js_name@@js_suffix@.to_boolean();
+)~~~");
+        if (optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
     else
         @cpp_name@ = @parameter.optional_default_value@;
 )~~~");
-            } else {
-                scoped_generator.append(R"~~~(
-)~~~");
-            }
         }
     } else if (parameter.type->name == "unsigned long") {
-        scoped_generator.append(R"~~~(
-    auto @cpp_name@ = TRY(@js_name@@js_suffix@.to_u32(global_object));
+        if (!optional || optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    u32 @cpp_name@;
 )~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    Optional<u32> @cpp_name@;
+)~~~");
+        }
+        if (optional) {
+            scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined())
+)~~~");
+        }
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = TRY(@js_name@@js_suffix@.to_u32(global_object));
+)~~~");
+        if (optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = @parameter.optional_default_value@UL;
+)~~~");
+        }
     } else if (parameter.type->name == "unsigned short") {
-        scoped_generator.append(R"~~~(
-    auto @cpp_name@ = TRY(@js_name@@js_suffix@.to_u16(global_object));
+        if (!optional || optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    u16 @cpp_name@;
 )~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    Optional<u16> @cpp_name@;
+)~~~");
+        }
+        if (optional) {
+            scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined())
+)~~~");
+        }
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = TRY(@js_name@@js_suffix@.to_u16(global_object));
+)~~~");
+        if (optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = @parameter.optional_default_value@;
+)~~~");
+        }
     } else if (parameter.type->name == "long") {
-        scoped_generator.append(R"~~~(
-    auto @cpp_name@ = TRY(@js_name@@js_suffix@.to_i32(global_object));
+        if (!optional || optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    i32 @cpp_name@;
 )~~~");
-    } else if (parameter.type->name == "EventHandler") {
-        // x.onfoo = function() { ... }, x.onfoo = () => { ... }, x.onfoo = {}
-        // NOTE: Anything else than an object will be treated as null. This is because EventHandler has the [LegacyTreatNonObjectAsNull] extended attribute.
-        //       Yes, you can store objects in event handler attributes. They just get ignored when there's any attempt to invoke them.
-        // FIXME: Replace this with proper support for callback function types.
-
-        scoped_generator.append(R"~~~(
-    Optional<Bindings::CallbackType> @cpp_name@;
-    if (@js_name@@js_suffix@.is_object()) {
-        @cpp_name@ = Bindings::CallbackType { JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object() };
-    }
+        } else {
+            scoped_generator.append(R"~~~(
+    Optional<i32> @cpp_name@;
 )~~~");
+        }
+        if (optional) {
+            scoped_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_undefined())
+)~~~");
+        }
+        scoped_generator.append(R"~~~(
+    @cpp_name@ = TRY(@js_name@@js_suffix@.to_i32(global_object));
+)~~~");
+        if (optional_default_value.has_value()) {
+            scoped_generator.append(R"~~~(
+    else
+        @cpp_name@ = @parameter.optional_default_value@L;
+)~~~");
+        }
     } else if (parameter.type->name == "Promise") {
         // NOTE: It's not clear to me where the implicit wrapping of non-Promise values in a resolved
         // Promise is defined in the spec; https://webidl.spec.whatwg.org/#idl-promise doesn't say
@@ -510,7 +558,16 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     } else if (interface.enumerations.contains(parameter.type->name)) {
         auto enum_generator = scoped_generator.fork();
         auto& enumeration = interface.enumerations.find(parameter.type->name)->value;
-        enum_generator.set("enum.default.cpp_value", *enumeration.translated_cpp_names.get(optional_default_value.value_or(enumeration.first_member)));
+        StringView enum_member_name;
+        if (optional_default_value.has_value()) {
+            VERIFY(optional_default_value->length() >= 2 && (*optional_default_value)[0] == '"' && (*optional_default_value)[optional_default_value->length() - 1] == '"');
+            enum_member_name = optional_default_value->substring_view(1, optional_default_value->length() - 2);
+        } else {
+            enum_member_name = enumeration.first_member;
+        }
+        auto default_value_cpp_name = enumeration.translated_cpp_names.get(enum_member_name);
+        VERIFY(default_value_cpp_name.has_value());
+        enum_generator.set("enum.default.cpp_value", *default_value_cpp_name);
         enum_generator.set("js_name.as_string", String::formatted("{}{}_string", enum_generator.get("js_name"), enum_generator.get("js_suffix")));
         enum_generator.append(R"~~~(
     @parameter.type.name@ @cpp_name@ { @parameter.type.name@::@enum.default.cpp_value@ };
@@ -577,6 +634,32 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 break;
             VERIFY(interface.dictionaries.contains(current_dictionary->parent_name));
             current_dictionary = &interface.dictionaries.find(current_dictionary->parent_name)->value;
+        }
+    } else if (interface.callback_functions.contains(parameter.type->name)) {
+        // https://webidl.spec.whatwg.org/#es-callback-function
+
+        auto callback_function_generator = scoped_generator.fork();
+        auto& callback_function = interface.callback_functions.find(parameter.type->name)->value;
+
+        // An ECMAScript value V is converted to an IDL callback function type value by running the following algorithm:
+        // 1. If the result of calling IsCallable(V) is false and the conversion to an IDL value is not being performed due to V being assigned to an attribute whose type is a nullable callback function that is annotated with [LegacyTreatNonObjectAsNull], then throw a TypeError.
+        if (!callback_function.is_legacy_treat_non_object_as_null) {
+            callback_function_generator.append(R"~~~(
+    if (!@js_name@@js_suffix@.is_function())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAFunction, @js_name@@js_suffix@.to_string_without_side_effects());
+)~~~");
+        }
+        // 2. Return the IDL callback function type value that represents a reference to the same object that V represents, with the incumbent settings object as the callback context.
+        if (callback_function.is_legacy_treat_non_object_as_null) {
+            callback_function_generator.append(R"~~~(
+    Optional<Bindings::CallbackType> @cpp_name@;
+    if (@js_name@@js_suffix@.is_object())
+        @cpp_name@ = Bindings::CallbackType { JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object() };
+)~~~");
+        } else {
+            callback_function_generator.append(R"~~~(
+    auto @cpp_name@ = Bindings::CallbackType { JS::make_handle(&@js_name@@js_suffix@.as_object()), HTML::incumbent_settings_object() };
+)~~~");
         }
     } else if (parameter.type->name == "sequence") {
         // https://webidl.spec.whatwg.org/#es-sequence
@@ -1047,7 +1130,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     @union_type@ @cpp_name@ = TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
 )~~~");
             } else {
-                if (!optional_default_value.has_value()) {
+                if (!optional_default_value.has_value() || optional_default_value == "null"sv) {
                     union_generator.append(R"~~~(
     Optional<@union_type@> @cpp_name@;
     if (!@js_name@@js_suffix@.is_undefined())
@@ -1062,6 +1145,10 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                         VERIFY(dictionary_type);
                         union_generator.append(R"~~~(
     @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? TRY(@js_name@@js_suffix@_to_dictionary(@js_name@@js_suffix@)) : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
+)~~~");
+                    } else if (optional_default_value->to_int().has_value() || optional_default_value->to_uint().has_value()) {
+                        union_generator.append(R"~~~(
+    @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? @parameter.optional_default_value@ : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
 )~~~");
                     } else {
                         TODO();
@@ -1247,28 +1334,21 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
 
     @result_expression@ new_array@recursion_depth@;
 )~~~");
-    } else if (type.name == "boolean" || type.name == "double") {
+    } else if (type.name == "boolean" || type.name == "double" || type.name == "float") {
         scoped_generator.append(R"~~~(
     @result_expression@ JS::Value(@value@);
 )~~~");
-    } else if (type.name == "short" || type.name == "unsigned short" || type.name == "long" || type.name == "unsigned long") {
+    } else if (type.name == "short" || type.name == "long" || type.name == "unsigned short") {
         scoped_generator.append(R"~~~(
     @result_expression@ JS::Value((i32)@value@);
+)~~~");
+    } else if (type.name == "unsigned long") {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::Value((u32)@value@);
 )~~~");
     } else if (type.name == "Location" || type.name == "Promise" || type.name == "Uint8Array" || type.name == "Uint8ClampedArray" || type.name == "any") {
         scoped_generator.append(R"~~~(
     @result_expression@ @value@;
-)~~~");
-    } else if (type.name == "EventHandler") {
-        // FIXME: Replace this with proper support for callback function types.
-
-        scoped_generator.append(R"~~~(
-    if (!@value@) {
-        @result_expression@ JS::js_null();
-    } else {
-        VERIFY(!@value@->callback.is_null());
-        @result_expression@ @value@->callback.cell();
-    }
 )~~~");
     } else if (is<IDL::UnionType>(type)) {
         TODO();
@@ -1276,6 +1356,28 @@ static void generate_wrap_statement(SourceGenerator& generator, String const& va
         scoped_generator.append(R"~~~(
     @result_expression@ JS::js_string(global_object.heap(), Bindings::idl_enum_to_string(@value@));
 )~~~");
+    } else if (interface.callback_functions.contains(type.name)) {
+        // https://webidl.spec.whatwg.org/#es-callback-function
+
+        auto& callback_function = interface.callback_functions.find(type.name)->value;
+
+        // The result of converting an IDL callback function type value to an ECMAScript value is a reference to the same object that the IDL callback function type value represents.
+
+        if (callback_function.is_legacy_treat_non_object_as_null && !type.nullable) {
+            scoped_generator.append(R"~~~(
+  if (!@value@) {
+      @result_expression@ JS::js_null();
+  } else {
+      VERIFY(!@value@->callback.is_null());
+      @result_expression@ @value@->callback.cell();
+  }
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+  VERIFY(!@value@->callback.is_null());
+  @result_expression@ @value@->callback.cell();
+)~~~");
+        }
     } else {
         if (wrapping_reference == WrappingReference::No) {
             scoped_generator.append(R"~~~(
@@ -1480,10 +1582,9 @@ void generate_header(IDL::Interface const& interface)
 #include <LibWeb/Bindings/Wrapper.h>
 )~~~");
 
-    for (auto& path : interface.imported_paths)
+    for (auto& path : interface.required_imported_paths)
         generate_include_for(generator, path);
 
-    emit_includes_for_all_imports(interface, generator, true);
     generator.set("name", interface.name);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("wrapper_base_class", interface.wrapper_base_class);
@@ -1647,7 +1748,7 @@ void generate_implementation(IDL::Interface const& interface)
 #include <LibWeb/Bindings/WindowObject.h>
 )~~~");
 
-    emit_includes_for_all_imports(interface, generator, false);
+    emit_includes_for_all_imports(interface, generator);
 
     generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
@@ -1691,6 +1792,9 @@ namespace Web::Bindings {
 void @wrapper_class@::initialize(JS::GlobalObject& global_object)
 {
     @wrapper_base_class@::initialize(global_object);
+
+    auto& vm = global_object.vm();
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), JS::js_string(vm, "@name@"), JS::Attribute::Configurable);
 }
 
 @wrapper_class@::~@wrapper_class@()
@@ -2553,6 +2657,14 @@ void generate_constructor_implementation(IDL::Interface const& interface)
 #    include <LibWeb/URL/@name@.h>
 #endif
 
+)~~~");
+
+    for (auto& path : interface.required_imported_paths)
+        generate_include_for(generator, path);
+
+    emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
+
+    generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
 using namespace Web::CSS;
 using namespace Web::DOM;
@@ -2820,10 +2932,10 @@ void generate_prototype_implementation(IDL::Interface const& interface)
 
 )~~~");
 
-    for (auto& path : interface.imported_paths)
+    for (auto& path : interface.required_imported_paths)
         generate_include_for(generator, path);
 
-    emit_includes_for_all_imports(interface, generator, false, interface.pair_iterator_types.has_value());
+    emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
 
     generator.append(R"~~~(
 
@@ -2838,6 +2950,7 @@ using namespace Web::NavigationTiming;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
+using namespace Web::SVG;
 using namespace Web::URL;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
@@ -2996,9 +3109,9 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm, JS::
 {
     auto this_value = vm.this_value(global_object);
     JS::Object* this_object = nullptr;
-    if (this_value.is_nullish()) 
+    if (this_value.is_nullish())
         this_object = &vm.current_realm()->global_object();
-    else 
+    else
         this_object = TRY(this_value.to_object(global_object));
 )~~~");
 
@@ -3267,10 +3380,10 @@ void generate_iterator_implementation(IDL::Interface const& interface)
 
 )~~~");
 
-    for (auto& path : interface.imported_paths)
+    for (auto& path : interface.required_imported_paths)
         generate_include_for(generator, path);
 
-    emit_includes_for_all_imports(interface, generator, false, true);
+    emit_includes_for_all_imports(interface, generator, true);
 
     generator.append(R"~~~(
 
@@ -3383,7 +3496,7 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface)
 #endif
 )~~~");
 
-    emit_includes_for_all_imports(interface, generator, false, true);
+    emit_includes_for_all_imports(interface, generator, true);
 
     generator.append(R"~~~(
 // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.

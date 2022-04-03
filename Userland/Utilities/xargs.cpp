@@ -28,9 +28,9 @@ bool read_items(FILE* fp, char entry_separator, Function<Decision(StringView)>);
 
 class ParsedInitialArguments {
 public:
-    ParsedInitialArguments(Vector<const char*>&, StringView placeholder);
+    ParsedInitialArguments(Vector<char const*>&, StringView placeholder);
 
-    void for_each_joined_argument(StringView, Function<void(const String&)>) const;
+    void for_each_joined_argument(StringView, Function<void(String const&)>) const;
 
     size_t size() const { return m_all_parts.size(); }
 
@@ -42,12 +42,12 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
 {
     TRY(Core::System::pledge("stdio rpath proc exec", nullptr));
 
-    const char* placeholder = nullptr;
+    char const* placeholder = nullptr;
     bool split_with_nulls = false;
-    const char* specified_delimiter = "\n";
-    Vector<const char*> arguments;
+    char const* specified_delimiter = "\n";
+    Vector<char const*> arguments;
     bool verbose = false;
-    const char* file_to_read = "-";
+    char const* file_to_read = "-";
     int max_lines_for_one_command = 0;
     int max_bytes_for_one_command = ARG_MAX;
 
@@ -238,7 +238,7 @@ bool run_command(Vector<char*>&& child_argv, bool verbose, bool is_stdin, int de
     return true;
 }
 
-ParsedInitialArguments::ParsedInitialArguments(Vector<const char*>& arguments, StringView placeholder)
+ParsedInitialArguments::ParsedInitialArguments(Vector<char const*>& arguments, StringView placeholder)
 {
     m_all_parts.ensure_capacity(arguments.size());
     bool some_argument_has_placeholder = false;
@@ -264,7 +264,7 @@ ParsedInitialArguments::ParsedInitialArguments(Vector<const char*>& arguments, S
     }
 }
 
-void ParsedInitialArguments::for_each_joined_argument(StringView separator, Function<void(const String&)> callback) const
+void ParsedInitialArguments::for_each_joined_argument(StringView separator, Function<void(String const&)> callback) const
 {
     StringBuilder builder;
     for (auto& parts : m_all_parts) {

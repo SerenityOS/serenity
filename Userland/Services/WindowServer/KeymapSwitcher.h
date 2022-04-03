@@ -19,7 +19,7 @@ namespace WindowServer {
 class KeymapSwitcher final : public Core::Object {
     C_OBJECT(KeymapSwitcher)
 public:
-    virtual ~KeymapSwitcher() override;
+    virtual ~KeymapSwitcher() override = default;
 
     void next_keymap();
 
@@ -38,7 +38,7 @@ private:
 
     RefPtr<Core::FileWatcher> m_file_watcher;
 
-    const char* m_keyboard_config = "/etc/Keyboard.ini";
+    char const* m_keyboard_config = "/etc/Keyboard.ini";
 };
 
 }

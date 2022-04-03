@@ -1798,7 +1798,7 @@ NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
     return create_ast_node<ArrayExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(elements));
 }
 
-NonnullRefPtr<StringLiteral> Parser::parse_string_literal(const Token& token, bool in_template_literal)
+NonnullRefPtr<StringLiteral> Parser::parse_string_literal(Token const& token, bool in_template_literal)
 {
     auto rule_start = push_start();
     auto status = Token::StringValueStatus::Ok;
@@ -3919,7 +3919,7 @@ Token Parser::consume_and_validate_numeric_literal()
     return token;
 }
 
-void Parser::expected(const char* what)
+void Parser::expected(char const* what)
 {
     auto message = m_state.current_token.message();
     if (message.is_empty())
@@ -3936,7 +3936,7 @@ Position Parser::position() const
     };
 }
 
-bool Parser::try_parse_arrow_function_expression_failed_at_position(const Position& position) const
+bool Parser::try_parse_arrow_function_expression_failed_at_position(Position const& position) const
 {
     auto it = m_token_memoizations.find(position);
     if (it == m_token_memoizations.end())
@@ -3945,12 +3945,12 @@ bool Parser::try_parse_arrow_function_expression_failed_at_position(const Positi
     return (*it).value.try_parse_arrow_function_expression_failed;
 }
 
-void Parser::set_try_parse_arrow_function_expression_failed_at_position(const Position& position, bool failed)
+void Parser::set_try_parse_arrow_function_expression_failed_at_position(Position const& position, bool failed)
 {
     m_token_memoizations.set(position, { failed });
 }
 
-void Parser::syntax_error(const String& message, Optional<Position> position)
+void Parser::syntax_error(String const& message, Optional<Position> position)
 {
     if (!position.has_value())
         position = this->position();

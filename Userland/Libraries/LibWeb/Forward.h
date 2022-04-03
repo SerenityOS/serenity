@@ -7,6 +7,10 @@
 
 #pragma once
 
+namespace Web {
+class XMLDocumentBuilder;
+}
+
 namespace Web::Cookie {
 struct Cookie;
 struct ParsedCookie;
@@ -27,11 +31,11 @@ class BackgroundSizeStyleValue;
 class BackgroundStyleValue;
 class BorderRadiusStyleValue;
 class BorderStyleValue;
-class BoxShadowStyleValue;
 class CalculatedStyleValue;
 class ColorStyleValue;
 class ContentStyleValue;
 class CSSImportRule;
+class CSSFontFaceRule;
 class CSSMediaRule;
 class CSSRule;
 class CSSRuleList;
@@ -43,6 +47,7 @@ class Display;
 class ElementInlineCSSStyleDeclaration;
 class FlexFlowStyleValue;
 class FlexStyleValue;
+class FontFace;
 class FontStyleValue;
 class Frequency;
 class FrequencyPercentage;
@@ -59,6 +64,7 @@ class MediaList;
 class MediaQuery;
 class MediaQueryList;
 class MediaQueryListEvent;
+class Number;
 class NumericStyleValue;
 class OverflowStyleValue;
 class Percentage;
@@ -69,6 +75,7 @@ class Resolution;
 class ResolutionStyleValue;
 class Screen;
 class Selector;
+class ShadowStyleValue;
 class StringStyleValue;
 class StyleComputer;
 class StyleProperties;
@@ -286,11 +293,13 @@ class ResizeObserver;
 }
 
 namespace Web::SVG {
+class SVGAnimatedLength;
 class SVGCircleElement;
 class SVGElement;
 class SVGEllipseElement;
 class SVGGeometryElement;
 class SVGGraphicsElement;
+class SVGLength;
 class SVGLineElement;
 class SVGPathElement;
 class SVGPolygonElement;
@@ -378,6 +387,7 @@ class CharacterDataWrapper;
 class CloseEventWrapper;
 class CommentWrapper;
 class CryptoWrapper;
+class CSSFontFaceRuleWrapper;
 class CSSRuleListWrapper;
 class CSSRuleWrapper;
 class CSSStyleDeclarationWrapper;
@@ -509,11 +519,13 @@ class StyleSheetListWrapper;
 class StyleSheetWrapper;
 class SubmitEventWrapper;
 class SubtleCryptoWrapper;
+class SVGAnimatedLengthWrapper;
 class SVGCircleElementWrapper;
 class SVGElementWrapper;
 class SVGEllipseElementWrapper;
 class SVGGeometryElementWrapper;
 class SVGGraphicsElementWrapper;
+class SVGLengthWrapper;
 class SVGLineElementWrapper;
 class SVGPathElementWrapper;
 class SVGPolygonElementWrapper;
@@ -550,5 +562,6 @@ class XMLHttpRequestPrototype;
 class XMLHttpRequestWrapper;
 enum class CanPlayTypeResult;
 enum class DOMParserSupportedType;
+enum class ResizeObserverBoxOptions;
 enum class XMLHttpRequestResponseType;
 }

@@ -225,12 +225,12 @@ static void handle_sigint(int)
     }
 }
 
-static ErrorOr<void> copy_from_process(const void* source, Bytes target)
+static ErrorOr<void> copy_from_process(void const* source, Bytes target)
 {
     return Core::System::ptrace_peekbuf(g_pid, const_cast<void*>(source), target);
 }
 
-static ErrorOr<ByteBuffer> copy_from_process(const void* source, size_t length)
+static ErrorOr<ByteBuffer> copy_from_process(void const* source, size_t length)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(length));
     TRY(copy_from_process(source, buffer.bytes()));
@@ -261,7 +261,7 @@ struct BitflagBase {
 
 namespace AK {
 template<typename BitflagDerivative>
-    requires(IsBaseOf<BitflagBase, BitflagDerivative>) && requires { BitflagDerivative::options; }
+requires(IsBaseOf<BitflagBase, BitflagDerivative>) && requires { BitflagDerivative::options; }
 struct Formatter<BitflagDerivative> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
@@ -305,7 +305,7 @@ struct Formatter<BitflagDerivative> : StandardFormatter {
 }
 
 struct PointerArgument {
-    const void* value;
+    void const* value;
 };
 
 namespace AK {
@@ -809,11 +809,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio wpath cpath proc exec ptrace sigaction"));
 
-    Vector<const char*> child_argv;
+    Vector<char const*> child_argv;
 
-    const char* output_filename = nullptr;
-    const char* exclude_syscalls_option = nullptr;
-    const char* include_syscalls_option = nullptr;
+    char const* output_filename = nullptr;
+    char const* exclude_syscalls_option = nullptr;
+    char const* include_syscalls_option = nullptr;
     HashTable<StringView> exclude_syscalls;
     HashTable<StringView> include_syscalls;
     auto trace_file = Core::File::standard_error();
@@ -833,7 +833,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (output_filename != nullptr)
         trace_file = TRY(Core::File::open(output_filename, Core::OpenMode::WriteOnly));
 
-    auto parse_syscalls = [](const char* option, auto& hash_table) {
+    auto parse_syscalls = [](char const* option, auto& hash_table) {
         if (option != nullptr) {
             for (auto syscall : StringView(option).split_view(','))
                 hash_table.set(syscall);

@@ -80,7 +80,7 @@ static Gfx::StandardCursor cursor_css_to_gfx(Optional<CSS::Cursor> cursor)
     }
 }
 
-static Gfx::IntPoint compute_mouse_event_offset(const Gfx::IntPoint& position, const Layout::Node& layout_node)
+static Gfx::IntPoint compute_mouse_event_offset(Gfx::IntPoint const& position, Layout::Node const& layout_node)
 {
     auto top_left_of_layout_node = layout_node.box_type_agnostic_position();
     return {
@@ -97,7 +97,7 @@ EventHandler::EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& 
 
 EventHandler::~EventHandler() = default;
 
-const Layout::InitialContainingBlock* EventHandler::layout_root() const
+Layout::InitialContainingBlock const* EventHandler::layout_root() const
 {
     if (!m_browsing_context.active_document())
         return nullptr;
@@ -125,7 +125,7 @@ Painting::PaintableBox const* EventHandler::paint_root() const
     return const_cast<Painting::PaintableBox*>(m_browsing_context.active_document()->paint_box());
 }
 
-bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
+bool EventHandler::handle_mousewheel(Gfx::IntPoint const& position, unsigned int buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
 {
     if (m_browsing_context.active_document())
         m_browsing_context.active_document()->update_layout();
@@ -139,7 +139,7 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
     // FIXME: Support wheel events in nested browsing contexts.
 
     auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
-    if (result.paintable && result.paintable->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y))
+    if (result.has_value() && result->paintable->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y))
         return true;
 
     if (auto* page = m_browsing_context.page()) {
@@ -150,7 +150,7 @@ bool EventHandler::handle_mousewheel(const Gfx::IntPoint& position, unsigned int
     return false;
 }
 
-bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
+bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button, unsigned modifiers)
 {
     if (m_browsing_context.active_document())
         m_browsing_context.active_document()->update_layout();
@@ -164,8 +164,8 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
     } else {
-        auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
-        paintable = result.paintable;
+        if (auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact); result.has_value())
+            paintable = result->paintable;
     }
 
     if (paintable && paintable->wants_mouse_events()) {
@@ -175,14 +175,14 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
         // Things may have changed as a consequence of Layout::Node::handle_mouseup(). Hit test again.
         if (!paint_root())
             return true;
-        auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
-        paintable = result.paintable;
+        if (auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact); result.has_value())
+            paintable = result->paintable;
     }
 
     if (paintable) {
         RefPtr<DOM::Node> node = paintable->mouse_event_target();
         if (!node)
-            node = paintable->layout_node().dom_node();
+            node = paintable->dom_node();
 
         if (node) {
             if (is<HTML::HTMLIFrameElement>(*node)) {
@@ -194,7 +194,49 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
             node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mouseup, offset.x(), offset.y(), position.x(), position.y()));
             handled_event = true;
 
-            if (node.ptr() == m_mousedown_target) {
+            // FIXME: This is ad-hoc and incorrect. The reason this exists is
+            //        because we are missing browsing context navigation:
+            //
+            //        https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
+            //
+            //        Additionally, we currently cannot spawn a new top-level
+            //        browsing context for new tab operations, because the new
+            //        top-level browsing context would be in another process. To
+            //        fix this, there needs to be some way to be able to
+            //        communicate with browsing contexts in remote WebContent
+            //        processes, and then step 8 of this algorithm needs to be
+            //        implemented in BrowsingContext::choose_a_browsing_context:
+            //
+            //        https://html.spec.whatwg.org/multipage/browsers.html#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
+            if (RefPtr<HTML::HTMLAnchorElement> link = node->enclosing_link_element()) {
+                NonnullRefPtr document = *m_browsing_context.active_document();
+                auto href = link->href();
+                auto url = document->parse_url(href);
+                dbgln("Web::EventHandler: Clicking on a link to {}", url);
+                if (button == GUI::MouseButton::Primary) {
+                    if (href.starts_with("javascript:")) {
+                        document->run_javascript(href.substring_view(11, href.length() - 11));
+                    } else if (!url.fragment().is_null() && url.equals(document->url(), AK::URL::ExcludeFragment::Yes)) {
+                        m_browsing_context.scroll_to_anchor(url.fragment());
+                    } else {
+                        if (m_browsing_context.is_top_level()) {
+                            if (auto* page = m_browsing_context.page())
+                                page->client().page_did_click_link(url, link->target(), modifiers);
+                        }
+                    }
+                } else if (button == GUI::MouseButton::Middle) {
+                    if (auto* page = m_browsing_context.page())
+                        page->client().page_did_middle_click_link(url, link->target(), modifiers);
+                } else if (button == GUI::MouseButton::Secondary) {
+                    if (auto* page = m_browsing_context.page())
+                        page->client().page_did_request_link_context_menu(m_browsing_context.to_top_level_position(position), url, link->target(), modifiers);
+                }
+            } else if (button == GUI::MouseButton::Secondary) {
+                if (auto* page = m_browsing_context.page())
+                    page->client().page_did_request_context_menu(m_browsing_context.to_top_level_position(position));
+            }
+
+            if (node.ptr() == m_mousedown_target && button == GUI::MouseButton::Primary) {
                 node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::click, offset.x(), offset.y(), position.x(), position.y()));
             }
         }
@@ -205,7 +247,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
     return handled_event;
 }
 
-bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned button, unsigned modifiers)
+bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned button, unsigned modifiers)
 {
     if (m_browsing_context.active_document())
         m_browsing_context.active_document()->update_layout();
@@ -223,9 +265,9 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             paintable = m_mouse_event_tracking_layout_node->paintable();
         } else {
             auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
-            if (!result.paintable)
+            if (!result.has_value())
                 return false;
-            paintable = result.paintable;
+            paintable = result->paintable;
         }
 
         auto pointer_events = paintable->computed_values().pointer_events();
@@ -235,7 +277,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
 
         node = paintable->mouse_event_target();
         if (!node)
-            node = paintable->layout_node().dom_node();
+            node = paintable->dom_node();
         document->set_hovered_node(node);
 
         if (paintable->wants_mouse_events()) {
@@ -272,37 +314,10 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         return true;
     }
 
-    if (RefPtr<HTML::HTMLAnchorElement> link = node->enclosing_link_element()) {
-        auto href = link->href();
-        auto url = document->parse_url(href);
-        dbgln("Web::EventHandler: Clicking on a link to {}", url);
-        if (button == GUI::MouseButton::Primary) {
-            if (href.starts_with("javascript:")) {
-                document->run_javascript(href.substring_view(11, href.length() - 11));
-            } else if (!url.fragment().is_null() && url.equals(document->url(), AK::URL::ExcludeFragment::Yes)) {
-                m_browsing_context.scroll_to_anchor(url.fragment());
-            } else {
-                document->set_active_element(link);
-                if (m_browsing_context.is_top_level()) {
-                    if (auto* page = m_browsing_context.page())
-                        page->client().page_did_click_link(url, link->target(), modifiers);
-                } else {
-                    // FIXME: Handle different targets!
-                    m_browsing_context.loader().load(url, FrameLoader::Type::Navigation);
-                }
-            }
-        } else if (button == GUI::MouseButton::Secondary) {
-            if (auto* page = m_browsing_context.page())
-                page->client().page_did_request_link_context_menu(m_browsing_context.to_top_level_position(position), url, link->target(), modifiers);
-        } else if (button == GUI::MouseButton::Middle) {
-            if (auto* page = m_browsing_context.page())
-                page->client().page_did_middle_click_link(url, link->target(), modifiers);
-        }
-    } else {
-        if (button == GUI::MouseButton::Primary) {
-            auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor);
-            if (result.paintable && result.paintable->layout_node().dom_node()) {
-
+    if (button == GUI::MouseButton::Primary) {
+        if (auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor); result.has_value()) {
+            auto paintable = result->paintable;
+            if (paintable->dom_node()) {
                 // See if we want to focus something.
                 bool did_focus_something = false;
                 for (auto candidate = node; candidate; candidate = candidate->parent()) {
@@ -316,20 +331,17 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 // If we didn't focus anything, place the document text cursor at the mouse position.
                 // FIXME: This is all rather strange. Find a better solution.
                 if (!did_focus_something) {
-                    m_browsing_context.set_cursor_position(DOM::Position(*result.paintable->layout_node().dom_node(), result.index_in_node));
-                    layout_root()->set_selection({ { result.paintable->layout_node(), result.index_in_node }, {} });
+                    m_browsing_context.set_cursor_position(DOM::Position(*paintable->dom_node(), result->index_in_node));
+                    layout_root()->set_selection({ { paintable->layout_node(), result->index_in_node }, {} });
                     m_in_mouse_selection = true;
                 }
             }
-        } else if (button == GUI::MouseButton::Secondary) {
-            if (auto* page = m_browsing_context.page())
-                page->client().page_did_request_context_menu(m_browsing_context.to_top_level_position(position));
         }
     }
     return true;
 }
 
-bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned buttons, unsigned modifiers)
+bool EventHandler::handle_mousemove(Gfx::IntPoint const& position, unsigned buttons, unsigned modifiers)
 {
     if (m_browsing_context.active_document())
         m_browsing_context.active_document()->update_layout();
@@ -348,15 +360,16 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
     } else {
-        auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact);
-        paintable = result.paintable;
-        start_index = result.index_in_node;
+        if (auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::Exact); result.has_value()) {
+            paintable = result->paintable;
+            start_index = result->index_in_node;
+        }
     }
 
     const HTML::HTMLAnchorElement* hovered_link_element = nullptr;
     if (paintable) {
         if (paintable->wants_mouse_events()) {
-            document.set_hovered_node(paintable->layout_node().dom_node());
+            document.set_hovered_node(paintable->dom_node());
             if (paintable->handle_mousemove({}, position, buttons, modifiers) == Painting::Paintable::DispatchEventOfSameName::No)
                 return false;
 
@@ -367,7 +380,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
 
         RefPtr<DOM::Node> node = paintable->mouse_event_target();
         if (!node)
-            node = paintable->layout_node().dom_node();
+            node = paintable->dom_node();
 
         if (node && is<HTML::HTMLIFrameElement>(*node)) {
             if (auto* nested_browsing_context = static_cast<HTML::HTMLIFrameElement&>(*node).nested_browsing_context())
@@ -409,9 +422,9 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         }
         if (m_in_mouse_selection) {
             auto hit = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor);
-            if (start_index.has_value() && hit.paintable && hit.paintable->layout_node().dom_node()) {
-                m_browsing_context.set_cursor_position(DOM::Position(*hit.paintable->layout_node().dom_node(), *start_index));
-                layout_root()->set_selection_end({ hit.paintable->layout_node(), hit.index_in_node });
+            if (start_index.has_value() && hit.has_value() && hit->dom_node()) {
+                m_browsing_context.set_cursor_position(DOM::Position(*hit->dom_node(), *start_index));
+                layout_root()->set_selection_end({ hit->paintable->layout_node(), hit->index_in_node });
             }
             if (auto* page = m_browsing_context.page())
                 page->client().page_did_change_selection();

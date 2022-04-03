@@ -35,10 +35,9 @@ DOM::ExceptionOr<NonnullRefPtr<URL>> URL::create_with_global_object(Bindings::Wi
     auto& query = parsed_url.query().is_null() ? String::empty() : parsed_url.query();
     // 6. Set this’s URL to parsedURL.
     // 7. Set this’s query object to a new URLSearchParams object.
-    auto query_object = URLSearchParams::create_with_global_object(window_object, query);
-    VERIFY(!query_object.is_exception()); // The string variant of the constructor can't throw.
+    auto query_object = MUST(URLSearchParams::create_with_global_object(window_object, query));
     // 8. Initialize this’s query object with query.
-    auto result_url = URL::create(move(parsed_url), query_object.release_value());
+    auto result_url = URL::create(move(parsed_url), move(query_object));
     // 9. Set this’s query object’s URL object to this.
     result_url->m_query->m_url = result_url;
 
@@ -102,7 +101,7 @@ String URL::username() const
     return m_url.username();
 }
 
-void URL::set_username(const String& username)
+void URL::set_username(String const& username)
 {
     // 1. If this’s URL cannot have a username/password/port, then return.
     if (m_url.cannot_have_a_username_or_password_or_port())
@@ -140,7 +139,7 @@ String URL::host() const
     return String::formatted("{}:{}", url.host(), *url.port());
 }
 
-void URL::set_host(const String& host)
+void URL::set_host(String const& host)
 {
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
     if (m_url.cannot_be_a_base_url())

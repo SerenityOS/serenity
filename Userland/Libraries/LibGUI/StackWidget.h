@@ -17,7 +17,7 @@ public:
     virtual ~StackWidget() override = default;
 
     Widget* active_widget() { return m_active_widget.ptr(); }
-    const Widget* active_widget() const { return m_active_widget.ptr(); }
+    Widget const* active_widget() const { return m_active_widget.ptr(); }
     void set_active_widget(Widget*);
 
     Function<void(Widget*)> on_active_widget_change;

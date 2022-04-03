@@ -6,7 +6,8 @@
 
 #include <AK/Memory.h>
 #include <AK/StringView.h>
-#include <Kernel/Arch/x86/PageFault.h>
+#include <Kernel/Arch/PageDirectory.h>
+#include <Kernel/Arch/PageFault.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -20,6 +21,23 @@
 #include <Kernel/Thread.h>
 
 namespace Kernel::Memory {
+
+Region::Region()
+    : m_range(VirtualRange({}, 0))
+{
+}
+
+Region::Region(NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+    : m_range(VirtualRange({}, 0))
+    , m_offset_in_vmobject(offset_in_vmobject)
+    , m_vmobject(move(vmobject))
+    , m_name(move(name))
+    , m_access(access | ((access & 0x7) << 4))
+    , m_shared(shared)
+    , m_cacheable(cacheable == Cacheable::Yes)
+{
+    m_vmobject->add_region(*this);
+}
 
 Region::Region(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
     : m_range(range)
@@ -35,9 +53,6 @@ Region::Region(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size
     VERIFY((m_range.size() % PAGE_SIZE) == 0);
 
     m_vmobject->add_region(*this);
-
-    if (is_kernel())
-        MM.register_kernel_region(*this);
 }
 
 Region::~Region()
@@ -55,15 +70,23 @@ Region::~Region()
     if (m_page_directory) {
         SpinlockLocker pd_locker(m_page_directory->get_lock());
         if (!is_readable() && !is_writable() && !is_executable()) {
-            // If the region is "PROT_NONE", we didn't map it in the first place,
-            // so all we need to do here is deallocate the VM.
-            m_page_directory->range_allocator().deallocate(range());
+            // If the region is "PROT_NONE", we didn't map it in the first place.
         } else {
             SpinlockLocker mm_locker(s_mm_lock);
             unmap_with_locks_held(ShouldDeallocateVirtualRange::Yes, ShouldFlushTLB::Yes, pd_locker, mm_locker);
             VERIFY(!m_page_directory);
         }
     }
+}
+
+ErrorOr<NonnullOwnPtr<Region>> Region::create_unbacked()
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) Region);
+}
+
+ErrorOr<NonnullOwnPtr<Region>> Region::create_unplaced(NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) Region(move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
 }
 
 ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
@@ -82,7 +105,7 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
             region_name = TRY(m_name->try_clone());
 
         auto region = TRY(Region::try_create_user_accessible(
-            m_range, m_vmobject, m_offset_in_vmobject, move(region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
+            m_range, vmobject(), m_offset_in_vmobject, move(region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
         region->set_mmap(m_mmap);
         region->set_shared(m_shared);
         region->set_syscall_region(is_syscall_region());
@@ -212,9 +235,9 @@ bool Region::map_individual_page_impl(size_t page_index)
             pte->set_writable(false);
         else
             pte->set_writable(is_writable());
-        if (Processor::current().has_feature(CPUFeature::NX))
+        if (Processor::current().has_nx())
             pte->set_execute_disabled(!is_executable());
-        if (Processor::current().has_feature(CPUFeature::PAT))
+        if (Processor::current().has_pat())
             pte->set_pat(is_write_combine());
         pte->set_user_allowed(user_allowed);
     }
@@ -257,7 +280,7 @@ void Region::unmap(ShouldDeallocateVirtualRange should_deallocate_range, ShouldF
     unmap_with_locks_held(should_deallocate_range, should_flush_tlb, pd_locker, mm_locker);
 }
 
-void Region::unmap_with_locks_held(ShouldDeallocateVirtualRange deallocate_range, ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&, SpinlockLocker<RecursiveSpinlock>&)
+void Region::unmap_with_locks_held(ShouldDeallocateVirtualRange, ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&, SpinlockLocker<RecursiveSpinlock>&)
 {
     if (!m_page_directory)
         return;
@@ -268,9 +291,6 @@ void Region::unmap_with_locks_held(ShouldDeallocateVirtualRange deallocate_range
     }
     if (should_flush_tlb == ShouldFlushTLB::Yes)
         MemoryManager::flush_tlb(m_page_directory, vaddr(), page_count());
-    if (deallocate_range == ShouldDeallocateVirtualRange::Yes) {
-        m_page_directory->range_allocator().deallocate(range());
-    }
     m_page_directory = nullptr;
 }
 
@@ -317,7 +337,7 @@ void Region::remap()
 
 ErrorOr<void> Region::set_write_combine(bool enable)
 {
-    if (enable && !Processor::current().has_feature(CPUFeature::PAT)) {
+    if (enable && !Processor::current().has_pat()) {
         dbgln("PAT is not supported, implement MTRR fallback if available");
         return Error::from_errno(ENOTSUP);
     }

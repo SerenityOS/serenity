@@ -12,6 +12,7 @@ $ UserspaceEmulator [--report-to-debug] [--pause] [--profile] [--profile-interva
 
 * `--help`: Display help message and exit
 * `--version`: Print version
+* `--complete`: Perform autocompletion
 * `--report-to-debug`: Write reports to the debug log
 * `-p`, `--pause`: Pause on startup
 * `--profile`: Generate a ProfileViewer-compatible profile

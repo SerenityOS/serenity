@@ -13,7 +13,7 @@
 namespace Web::HTML {
 
 HTMLSelectElement::HTMLSelectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
-    : FormAssociatedElement(document, move(qualified_name))
+    : HTMLElement(document, move(qualified_name))
 {
 }
 
@@ -32,6 +32,13 @@ RefPtr<HTMLOptionsCollection> const& HTMLSelectElement::options()
         });
     }
     return m_options;
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-add
+DOM::ExceptionOr<void> HTMLSelectElement::add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before)
+{
+    // Similarly, the add(element, before) method must act like its namesake method on that same options collection.
+    return const_cast<RefPtr<HTMLOptionsCollection>&>(options())->add(move(element), move(before));
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#concept-select-option-list

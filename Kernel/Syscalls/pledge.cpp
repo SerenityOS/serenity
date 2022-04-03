@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$pledge(Userspace<Syscall::SC_pledge_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto params = TRY(copy_typed_from_user(user_params));
@@ -46,16 +46,23 @@ ErrorOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*>
     if (promises) {
         if (!parse_pledge(promises->view(), new_promises))
             return EINVAL;
-        if (m_protected_values.has_promises && (new_promises & ~m_protected_values.promises))
-            return EPERM;
+
+        if (m_protected_values.has_promises && (new_promises & ~m_protected_values.promises)) {
+            if (!(m_protected_values.promises & (1u << (u32)Pledge::no_error)))
+                return EPERM;
+            new_promises &= m_protected_values.promises;
+        }
     }
 
     u32 new_execpromises = 0;
     if (execpromises) {
         if (!parse_pledge(execpromises->view(), new_execpromises))
             return EINVAL;
-        if (m_protected_values.has_execpromises && (new_execpromises & ~m_protected_values.execpromises))
-            return EPERM;
+        if (m_protected_values.has_execpromises && (new_execpromises & ~m_protected_values.execpromises)) {
+            if (!(m_protected_values.promises & (1u << (u32)Pledge::no_error)))
+                return EPERM;
+            new_execpromises &= m_protected_values.execpromises;
+        }
     }
 
     // Only apply promises after all validation has occurred, this ensures

@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=php
 useconfigure="true"
-version="8.1.1"
-files="https://www.php.net/distributions/php-${version}.tar.xz php-${version}.tar.xz 33c09d76d0a8bbb5dd930d9dd32e6bfd44e9efcf867563759eb5492c3aff8856"
+version="8.1.4"
+files="https://www.php.net/distributions/php-${version}.tar.xz php-${version}.tar.xz 05a8c0ac30008154fb38a305560543fc172ba79fb957084a99b8d3b10d5bdb4b"
 auth_type=sha256
 depends=("libiconv" "libxml2" "openssl" "readline" "sqlite" "zlib")
 configopts=(
@@ -33,6 +33,8 @@ pre_configure() {
     export SQLITE_LIBS="-lsqlite3 -lpthread"
     export ZLIB_CFLAGS="y"
     export ZLIB_LIBS="-lz"
+
+    run ./buildconf --force
 }
 
 post_configure() {

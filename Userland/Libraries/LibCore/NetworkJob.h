@@ -28,7 +28,7 @@ public:
     virtual ~NetworkJob() override = default;
 
     // Could fire twice, after Headers and after Trailers!
-    Function<void(const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)> on_headers_received;
+    Function<void(HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code)> on_headers_received;
     Function<void(bool success)> on_finish;
     Function<void(Optional<u32>, u32)> on_progress;
 
@@ -36,7 +36,7 @@ public:
     bool has_error() const { return m_error != Error::None; }
     Error error() const { return m_error; }
     NetworkResponse* response() { return m_response.ptr(); }
-    const NetworkResponse* response() const { return m_response.ptr(); }
+    NetworkResponse const* response() const { return m_response.ptr(); }
 
     enum class ShutdownMode {
         DetachFromSocket,
@@ -66,7 +66,7 @@ private:
     Error m_error { Error::None };
 };
 
-const char* to_string(NetworkJob::Error);
+char const* to_string(NetworkJob::Error);
 
 }
 

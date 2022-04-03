@@ -35,7 +35,7 @@ class HIDManagement {
 
 public:
     HIDManagement();
-    static void initialize();
+    static ErrorOr<void> initialize();
     static HIDManagement& the();
 
     ErrorOr<void> enumerate();

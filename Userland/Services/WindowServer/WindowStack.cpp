@@ -15,10 +15,6 @@ WindowStack::WindowStack(unsigned row, unsigned column)
 {
 }
 
-WindowStack::~WindowStack()
-{
-}
-
 void WindowStack::add(Window& window)
 {
     VERIFY(!window.is_on_any_window_stack({}));

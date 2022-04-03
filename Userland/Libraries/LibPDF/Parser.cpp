@@ -22,14 +22,16 @@ static NonnullRefPtr<T> make_object(Args... args) requires(IsBaseOf<Object, T>)
     return adopt_ref(*new T(forward<Args>(args)...));
 }
 
-PDFErrorOr<Vector<Command>> Parser::parse_graphics_commands(ReadonlyBytes bytes)
+PDFErrorOr<Vector<Operator>> Parser::parse_operators(Document* document, ReadonlyBytes bytes)
 {
-    auto parser = adopt_ref(*new Parser(bytes));
-    return parser->parse_graphics_commands();
+    auto parser = adopt_ref(*new Parser(document, bytes));
+    parser->m_disable_encryption = true;
+    return parser->parse_operators();
 }
 
-Parser::Parser(Badge<Document>, ReadonlyBytes bytes)
+Parser::Parser(Document* document, ReadonlyBytes bytes)
     : m_reader(bytes)
+    , m_document(document)
 {
 }
 
@@ -47,7 +49,7 @@ PDFErrorOr<void> Parser::initialize()
 {
     TRY(parse_header());
 
-    const auto linearization_result = TRY(initialize_linearization_dict());
+    auto const linearization_result = TRY(initialize_linearization_dict());
 
     if (linearization_result == LinearizationResult::NotLinearized)
         return initialize_non_linearized_xref_table();
@@ -613,26 +615,34 @@ PDFErrorOr<Value> Parser::parse_possible_indirect_value_or_ref()
 
     if (m_reader.matches("obj")) {
         m_reader.discard();
-        return TRY(parse_indirect_value(first_number.get<int>(), second_number.value().get<int>()));
+        auto index = first_number.get<int>();
+        auto generation = second_number.value().get<int>();
+        VERIFY(index >= 0);
+        VERIFY(generation >= 0);
+        return TRY(parse_indirect_value(index, generation));
     }
 
     m_reader.load();
     return first_number;
 }
 
-PDFErrorOr<NonnullRefPtr<IndirectValue>> Parser::parse_indirect_value(int index, int generation)
+PDFErrorOr<NonnullRefPtr<IndirectValue>> Parser::parse_indirect_value(u32 index, u32 generation)
 {
     if (!m_reader.matches("obj"))
         return error("Expected \"obj\" at beginning of indirect value");
     m_reader.move_by(3);
     if (matches_eol())
         consume_eol();
+
+    push_reference({ index, generation });
     auto value = TRY(parse_value());
     if (!m_reader.matches("endobj"))
         return error("Expected \"endobj\" at end of indirect value");
 
     consume(6);
     consume_whitespace();
+
+    pop_reference();
 
     return make_object<IndirectValue>(index, generation, value);
 }
@@ -641,7 +651,11 @@ PDFErrorOr<NonnullRefPtr<IndirectValue>> Parser::parse_indirect_value()
 {
     auto first_number = TRY(parse_number());
     auto second_number = TRY(parse_number());
-    return parse_indirect_value(first_number.get<int>(), second_number.get<int>());
+    auto index = first_number.get<int>();
+    auto generation = second_number.get<int>();
+    VERIFY(index >= 0);
+    VERIFY(generation >= 0);
+    return parse_indirect_value(index, generation);
 }
 
 PDFErrorOr<Value> Parser::parse_number()
@@ -733,16 +747,23 @@ NonnullRefPtr<StringObject> Parser::parse_string()
 
     VERIFY(!string.is_null());
 
-    if (string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
+    auto string_object = make_object<StringObject>(string, is_binary_string);
+
+    if (m_document->security_handler() && !m_disable_encryption)
+        m_document->security_handler()->decrypt(string_object, m_current_reference_stack.last());
+
+    auto unencrypted_string = string_object->string();
+
+    if (unencrypted_string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
         // The string is encoded in UTF16-BE
-        string = TextCodec::decoder_for("utf-16be")->to_utf8(string);
-    } else if (string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 })) {
+        string_object->set_string(TextCodec::decoder_for("utf-16be")->to_utf8(unencrypted_string));
+    } else if (unencrypted_string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 })) {
         // The string is encoded in UTF-8. This is the default anyways, but if these bytes
         // are explicitly included, we have to trim them
-        string = string.substring(3);
+        string_object->set_string(unencrypted_string.substring(3));
     }
 
-    return make_object<StringObject>(string, is_binary_string);
+    return string_object;
 }
 
 String Parser::parse_literal_string()
@@ -990,52 +1011,57 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
     m_reader.move_by(9);
     consume_whitespace();
 
+    auto stream_object = make_object<StreamObject>(dict, MUST(ByteBuffer::copy(bytes)));
+
+    if (m_document->security_handler() && !m_disable_encryption)
+        m_document->security_handler()->decrypt(stream_object, m_current_reference_stack.last());
+
     if (dict->contains(CommonNames::Filter)) {
         auto filter_type = MUST(dict->get_name(m_document, CommonNames::Filter))->name();
-        auto maybe_bytes = Filter::decode(bytes, filter_type);
+        auto maybe_bytes = Filter::decode(stream_object->bytes(), filter_type);
         if (maybe_bytes.is_error()) {
             warnln("Failed to decode filter: {}", maybe_bytes.error().string_literal());
             return error(String::formatted("Failed to decode filter {}", maybe_bytes.error().string_literal()));
         }
-        return make_object<EncodedStreamObject>(dict, move(maybe_bytes.value()));
+        stream_object->buffer() = maybe_bytes.release_value();
     }
 
-    return make_object<PlainTextStreamObject>(dict, bytes);
+    return stream_object;
 }
 
-PDFErrorOr<Vector<Command>> Parser::parse_graphics_commands()
+PDFErrorOr<Vector<Operator>> Parser::parse_operators()
 {
-    Vector<Command> commands;
-    Vector<Value> command_args;
+    Vector<Operator> operators;
+    Vector<Value> operator_args;
 
-    constexpr static auto is_command_char = [](char ch) {
+    constexpr static auto is_operator_char = [](char ch) {
         return isalpha(ch) || ch == '*' || ch == '\'';
     };
 
     while (!m_reader.done()) {
         auto ch = m_reader.peek();
-        if (is_command_char(ch)) {
-            auto command_start = m_reader.offset();
-            while (is_command_char(ch)) {
+        if (is_operator_char(ch)) {
+            auto operator_start = m_reader.offset();
+            while (is_operator_char(ch)) {
                 consume();
                 if (m_reader.done())
                     break;
                 ch = m_reader.peek();
             }
 
-            auto command_string = StringView(m_reader.bytes().slice(command_start, m_reader.offset() - command_start));
-            auto command_type = Command::command_type_from_symbol(command_string);
-            commands.append(Command(command_type, move(command_args)));
-            command_args = Vector<Value>();
+            auto operator_string = StringView(m_reader.bytes().slice(operator_start, m_reader.offset() - operator_start));
+            auto operator_type = Operator::operator_type_from_symbol(operator_string);
+            operators.append(Operator(operator_type, move(operator_args)));
+            operator_args = Vector<Value>();
             consume_whitespace();
 
             continue;
         }
 
-        command_args.append(TRY(parse_value()));
+        operator_args.append(TRY(parse_value()));
     }
 
-    return commands;
+    return operators;
 }
 
 bool Parser::matches_eol() const

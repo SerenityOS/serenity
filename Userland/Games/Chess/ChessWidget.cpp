@@ -24,9 +24,9 @@ ChessWidget::ChessWidget()
 
 void ChessWidget::paint_event(GUI::PaintEvent& event)
 {
-    const int min_size = min(width(), height());
-    const int widget_offset_x = (window()->width() - min_size) / 2;
-    const int widget_offset_y = (window()->height() - min_size) / 2;
+    int const min_size = min(width(), height());
+    int const widget_offset_x = (window()->width() - min_size) / 2;
+    int const widget_offset_y = (window()->height() - min_size) / 2;
 
     GUI::Frame::paint_event(event);
 
@@ -144,7 +144,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
             Gfx::IntPoint move_point;
             Gfx::IntPoint point_offset = { tile_width / 3, tile_height / 3 };
             Gfx::IntSize rect_size = { tile_width / 3, tile_height / 3 };
-            for (const auto& square : m_available_moves) {
+            for (auto const& square : m_available_moves) {
                 if (side() == Chess::Color::White) {
                     move_point = { square.file * tile_width, (7 - square.rank) * tile_height };
                 } else {
@@ -165,9 +165,9 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
 void ChessWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    const int min_size = min(width(), height());
-    const int widget_offset_x = (window()->width() - min_size) / 2;
-    const int widget_offset_y = (window()->height() - min_size) / 2;
+    int const min_size = min(width(), height());
+    int const widget_offset_x = (window()->width() - min_size) / 2;
+    int const widget_offset_y = (window()->height() - min_size) / 2;
 
     if (!frame_inner_rect().contains(event.position()))
         return;
@@ -306,9 +306,9 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
 
 void ChessWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    const int min_size = min(width(), height());
-    const int widget_offset_x = (window()->width() - min_size) / 2;
-    const int widget_offset_y = (window()->height() - min_size) / 2;
+    int const min_size = min(width(), height());
+    int const widget_offset_x = (window()->width() - min_size) / 2;
+    int const widget_offset_y = (window()->height() - min_size) / 2;
 
     if (!frame_inner_rect().contains(event.position()))
         return;
@@ -391,9 +391,9 @@ void ChessWidget::set_piece_set(StringView set)
 
 Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
 {
-    const int min_size = min(width(), height());
-    const int widget_offset_x = (window()->width() - min_size) / 2;
-    const int widget_offset_y = (window()->height() - min_size) / 2;
+    int const min_size = min(width(), height());
+    int const widget_offset_x = (window()->width() - min_size) / 2;
+    int const widget_offset_y = (window()->height() - min_size) / 2;
 
     int tile_width = min_size / 8;
     int tile_height = min_size / 8;
@@ -405,7 +405,7 @@ Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
     }
 }
 
-RefPtr<Gfx::Bitmap> ChessWidget::get_piece_graphic(const Chess::Piece& piece) const
+RefPtr<Gfx::Bitmap> ChessWidget::get_piece_graphic(Chess::Piece const& piece) const
 {
     return m_pieces.get(piece).value();
 }

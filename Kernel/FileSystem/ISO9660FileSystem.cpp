@@ -214,7 +214,7 @@ unsigned ISO9660FS::total_inode_count() const
     return m_cached_inode_count;
 }
 
-u8 ISO9660FS::internal_file_type_to_directory_entry_type(const DirectoryEntryView& entry) const
+u8 ISO9660FS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
 {
     if (has_flag(static_cast<ISO::FileFlags>(entry.file_type), ISO::FileFlags::Directory)) {
         return DT_DIR;
@@ -493,7 +493,7 @@ ErrorOr<void> ISO9660Inode::flush_metadata()
     return {};
 }
 
-ErrorOr<size_t> ISO9660Inode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, OpenFileDescription*)
+ErrorOr<size_t> ISO9660Inode::write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
 {
     return EROFS;
 }

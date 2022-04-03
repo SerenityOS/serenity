@@ -23,6 +23,8 @@ public:
     NonnullRefPtr<Font> clone() const override;
     static NonnullRefPtr<BitmapFont> create(u8 glyph_height, u8 glyph_width, bool fixed, size_t glyph_count);
 
+    virtual FontPixelMetrics pixel_metrics() const override;
+
     NonnullRefPtr<BitmapFont> masked_character_set() const;
     NonnullRefPtr<BitmapFont> unmasked_character_set() const;
 
@@ -36,6 +38,9 @@ public:
 
     u8 presentation_size() const override { return m_presentation_size; }
     void set_presentation_size(u8 size) { m_presentation_size = size; }
+
+    virtual int pixel_size() const override { return m_glyph_height; }
+    virtual float point_size() const override { return static_cast<float>(m_glyph_height) * 0.75f; }
 
     u16 weight() const override { return m_weight; }
     void set_weight(u16 weight) { m_weight = weight; }
@@ -54,6 +59,7 @@ public:
             return m_glyph_width;
         return glyph_or_emoji_width_for_variable_width_font(code_point);
     }
+    float glyphs_horizontal_kerning(u32, u32) const override { return 0.f; }
     u8 glyph_height() const override { return m_glyph_height; }
     int x_height() const override { return m_x_height; }
     int preferred_line_height() const override { return glyph_height() + m_line_gap; }

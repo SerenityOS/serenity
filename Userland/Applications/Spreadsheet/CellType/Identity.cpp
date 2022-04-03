@@ -15,7 +15,7 @@ IdentityCell::IdentityCell()
 {
 }
 
-JS::ThrowCompletionOr<String> IdentityCell::display(Cell& cell, const CellTypeMetadata& metadata) const
+JS::ThrowCompletionOr<String> IdentityCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
     auto data = cell.js_data();
     if (!metadata.format.is_empty())
@@ -24,7 +24,7 @@ JS::ThrowCompletionOr<String> IdentityCell::display(Cell& cell, const CellTypeMe
     return data.to_string(cell.sheet().global_object());
 }
 
-JS::ThrowCompletionOr<JS::Value> IdentityCell::js_value(Cell& cell, const CellTypeMetadata&) const
+JS::ThrowCompletionOr<JS::Value> IdentityCell::js_value(Cell& cell, CellTypeMetadata const&) const
 {
     return cell.js_data();
 }

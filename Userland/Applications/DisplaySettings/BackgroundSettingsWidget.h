@@ -27,12 +27,14 @@ public:
     virtual void apply_settings() override;
 
 private:
-    BackgroundSettingsWidget();
+    BackgroundSettingsWidget(bool& background_settings_changed);
 
     void create_frame();
     void load_current_settings();
 
     Vector<String> m_modes;
+
+    bool& m_background_settings_changed;
 
     RefPtr<DisplaySettings::MonitorWidget> m_monitor_widget;
     RefPtr<GUI::IconView> m_wallpaper_view;

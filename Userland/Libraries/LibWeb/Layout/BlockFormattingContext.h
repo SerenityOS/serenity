@@ -13,6 +13,8 @@
 
 namespace Web::Layout {
 
+class LineBuilder;
+
 // https://www.w3.org/TR/css-display/#block-formatting-context
 class BlockFormattingContext : public FormattingContext {
 public:
@@ -42,6 +44,8 @@ public:
 
     virtual float greatest_child_width(Box const&) override;
 
+    void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode, LineBuilder* = nullptr);
+
 private:
     virtual bool is_block_formatting_context() const final { return true; }
 
@@ -57,8 +61,6 @@ private:
     void compute_vertical_box_model_metrics(Box const& box, BlockContainer const& containing_block);
     void place_block_level_element_in_normal_flow_horizontally(Box const& child_box, BlockContainer const&);
     void place_block_level_element_in_normal_flow_vertically(Box const& child_box, BlockContainer const&);
-
-    void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode);
 
     void layout_list_item_marker(ListItemBox const&);
 

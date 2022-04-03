@@ -78,7 +78,7 @@ class QuickLaunchWidget : public GUI::Frame
     C_OBJECT(QuickLaunchWidget);
 
 public:
-    virtual ~QuickLaunchWidget() override;
+    virtual ~QuickLaunchWidget() override = default;
 
     virtual void config_key_was_removed(String const&, String const&, String const&) override;
     virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;

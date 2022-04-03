@@ -19,7 +19,7 @@ namespace Kernel {
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
 #define PS2MOUSE_INTELLIMOUSE_EXPLORER_ID 0x04
 
-UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(const I8042Controller& ps2_controller)
+UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(I8042Controller const& ps2_controller)
     : IRQHandler(IRQ_MOUSE)
     , MouseDevice()
     , I8042Device(ps2_controller)
@@ -28,7 +28,7 @@ UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(const I8042Controller& ps2_contr
 
 UNMAP_AFTER_INIT PS2MouseDevice::~PS2MouseDevice() = default;
 
-bool PS2MouseDevice::handle_irq(const RegisterState&)
+bool PS2MouseDevice::handle_irq(RegisterState const&)
 {
     // The controller will read the data and call irq_handle_byte_read
     // for the appropriate device
@@ -82,7 +82,7 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
     }
 }
 
-MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
+MousePacket PS2MouseDevice::parse_data_packet(RawPacket const& raw_packet)
 {
     int x = raw_packet.bytes[1];
     int y = raw_packet.bytes[2];
@@ -137,70 +137,67 @@ MousePacket PS2MouseDevice::parse_data_packet(const RawPacket& raw_packet)
     return packet;
 }
 
-u8 PS2MouseDevice::get_device_id()
+ErrorOr<u8> PS2MouseDevice::get_device_id()
 {
-    if (send_command(I8042Command::GetDeviceID) != I8042Response::Acknowledge)
-        return 0;
+    TRY(send_command(I8042Command::GetDeviceID));
     return read_from_device();
 }
 
-u8 PS2MouseDevice::read_from_device()
+ErrorOr<u8> PS2MouseDevice::read_from_device()
 {
     return m_i8042_controller->read_from_device(instrument_type());
 }
 
-u8 PS2MouseDevice::send_command(u8 command)
+ErrorOr<u8> PS2MouseDevice::send_command(u8 command)
 {
-    u8 response = m_i8042_controller->send_command(instrument_type(), command);
-    if (response != I8042Response::Acknowledge)
+    u8 response = TRY(m_i8042_controller->send_command(instrument_type(), command));
+
+    if (response != I8042Response::Acknowledge) {
         dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, static_cast<u8>(I8042Response::Acknowledge));
-    return response;
-}
-
-u8 PS2MouseDevice::send_command(u8 command, u8 data)
-{
-    u8 response = m_i8042_controller->send_command(instrument_type(), command, data);
-    if (response != I8042Response::Acknowledge)
-        dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, static_cast<u8>(I8042Response::Acknowledge));
-    return response;
-}
-
-void PS2MouseDevice::set_sample_rate(u8 rate)
-{
-    send_command(I8042Command::SetSampleRate, rate);
-}
-
-UNMAP_AFTER_INIT RefPtr<PS2MouseDevice> PS2MouseDevice::try_to_initialize(const I8042Controller& ps2_controller)
-{
-    auto mouse_device_or_error = DeviceManagement::try_create_device<PS2MouseDevice>(ps2_controller);
-    // FIXME: Find a way to propagate errors
-    VERIFY(!mouse_device_or_error.is_error());
-    if (mouse_device_or_error.value()->initialize())
-        return mouse_device_or_error.release_value();
-    return nullptr;
-}
-
-UNMAP_AFTER_INIT bool PS2MouseDevice::initialize()
-{
-    if (!m_i8042_controller->reset_device(instrument_type())) {
-        dbgln("PS2MouseDevice: I8042 controller failed to reset device");
-        return false;
+        return Error::from_errno(EIO);
     }
+    return response;
+}
 
-    u8 device_id = read_from_device();
+ErrorOr<u8> PS2MouseDevice::send_command(u8 command, u8 data)
+{
+    u8 response = TRY(m_i8042_controller->send_command(instrument_type(), command, data));
+    if (response != I8042Response::Acknowledge) {
+        dbgln("PS2MouseDevice: Command {} got {} but expected ack: {}", command, response, static_cast<u8>(I8042Response::Acknowledge));
+        return Error::from_errno(EIO);
+    }
+    return response;
+}
 
-    if (send_command(I8042Command::SetDefaults) != I8042Response::Acknowledge)
-        return false;
+ErrorOr<void> PS2MouseDevice::set_sample_rate(u8 rate)
+{
+    TRY(send_command(I8042Command::SetSampleRate, rate));
+    return {};
+}
 
-    if (send_command(I8042Command::EnablePacketStreaming) != I8042Response::Acknowledge)
-        return false;
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<PS2MouseDevice>> PS2MouseDevice::try_to_initialize(I8042Controller const& ps2_controller)
+{
+    auto mouse_device = TRY(DeviceManagement::try_create_device<PS2MouseDevice>(ps2_controller));
+    TRY(mouse_device->initialize());
+    return mouse_device;
+}
+
+UNMAP_AFTER_INIT ErrorOr<void> PS2MouseDevice::initialize()
+{
+    TRY(m_i8042_controller->reset_device(instrument_type()));
+
+    u8 device_id = TRY(read_from_device());
+
+    TRY(send_command(I8042Command::SetDefaults));
+
+    TRY(send_command(I8042Command::EnablePacketStreaming));
 
     if (device_id != PS2MOUSE_INTELLIMOUSE_ID) {
         // Send magical wheel initiation sequence.
-        set_sample_rate(200);
-        set_sample_rate(100);
-        set_sample_rate(80);
-        device_id = get_device_id();
+        TRY(set_sample_rate(200));
+        TRY(set_sample_rate(100));
+        TRY(set_sample_rate(80));
+        device_id = TRY(get_device_id());
     }
     if (device_id == PS2MOUSE_INTELLIMOUSE_ID) {
         m_has_wheel = true;
@@ -211,17 +208,17 @@ UNMAP_AFTER_INIT bool PS2MouseDevice::initialize()
 
     if (device_id == PS2MOUSE_INTELLIMOUSE_ID) {
         // Try to enable 5 buttons as well!
-        set_sample_rate(200);
-        set_sample_rate(200);
-        set_sample_rate(80);
-        device_id = get_device_id();
+        TRY(set_sample_rate(200));
+        TRY(set_sample_rate(200));
+        TRY(set_sample_rate(80));
+        device_id = TRY(get_device_id());
     }
 
     if (device_id == PS2MOUSE_INTELLIMOUSE_EXPLORER_ID) {
         m_has_five_buttons = true;
         dmesgln("PS2MouseDevice: 5 buttons enabled!");
     }
-    return true;
+    return {};
 }
 
 }

@@ -33,7 +33,7 @@ bool ContentFilter::is_filtered(const AK::URL& url) const
     return false;
 }
 
-void ContentFilter::add_pattern(const String& pattern)
+void ContentFilter::add_pattern(String const& pattern)
 {
     StringBuilder builder;
     if (!pattern.starts_with('*'))

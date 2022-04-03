@@ -218,7 +218,7 @@ void AbstractButton::keyup_event(KeyEvent& event)
     Widget::keyup_event(event);
 }
 
-void AbstractButton::paint_text(Painter& painter, const Gfx::IntRect& rect, const Gfx::Font& font, Gfx::TextAlignment text_alignment, Gfx::TextWrapping text_wrapping)
+void AbstractButton::paint_text(Painter& painter, Gfx::IntRect const& rect, Gfx::Font const& font, Gfx::TextAlignment text_alignment, Gfx::TextWrapping text_wrapping)
 {
     auto clipped_rect = rect.intersected(this->rect());
 

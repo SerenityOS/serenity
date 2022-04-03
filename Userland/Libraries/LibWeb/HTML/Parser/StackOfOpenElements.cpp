@@ -14,7 +14,7 @@ static Vector<FlyString> s_base_list { "applet", "caption", "html", "table", "td
 
 StackOfOpenElements::~StackOfOpenElements() = default;
 
-bool StackOfOpenElements::has_in_scope_impl(const FlyString& tag_name, const Vector<FlyString>& list) const
+bool StackOfOpenElements::has_in_scope_impl(FlyString const& tag_name, Vector<FlyString> const& list) const
 {
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& node = m_elements.at(i);
@@ -26,12 +26,12 @@ bool StackOfOpenElements::has_in_scope_impl(const FlyString& tag_name, const Vec
     VERIFY_NOT_REACHED();
 }
 
-bool StackOfOpenElements::has_in_scope(const FlyString& tag_name) const
+bool StackOfOpenElements::has_in_scope(FlyString const& tag_name) const
 {
     return has_in_scope_impl(tag_name, s_base_list);
 }
 
-bool StackOfOpenElements::has_in_scope_impl(const DOM::Element& target_node, const Vector<FlyString>& list) const
+bool StackOfOpenElements::has_in_scope_impl(const DOM::Element& target_node, Vector<FlyString> const& list) const
 {
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& node = m_elements.at(i);
@@ -48,19 +48,19 @@ bool StackOfOpenElements::has_in_scope(const DOM::Element& target_node) const
     return has_in_scope_impl(target_node, s_base_list);
 }
 
-bool StackOfOpenElements::has_in_button_scope(const FlyString& tag_name) const
+bool StackOfOpenElements::has_in_button_scope(FlyString const& tag_name) const
 {
     auto list = s_base_list;
     list.append("button");
     return has_in_scope_impl(tag_name, list);
 }
 
-bool StackOfOpenElements::has_in_table_scope(const FlyString& tag_name) const
+bool StackOfOpenElements::has_in_table_scope(FlyString const& tag_name) const
 {
     return has_in_scope_impl(tag_name, { "html", "table", "template" });
 }
 
-bool StackOfOpenElements::has_in_list_item_scope(const FlyString& tag_name) const
+bool StackOfOpenElements::has_in_list_item_scope(FlyString const& tag_name) const
 {
     auto list = s_base_list;
     list.append("ol");
@@ -68,9 +68,30 @@ bool StackOfOpenElements::has_in_list_item_scope(const FlyString& tag_name) cons
     return has_in_scope_impl(tag_name, list);
 }
 
-bool StackOfOpenElements::has_in_select_scope(const FlyString& tag_name) const
+// https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-select-scope
+// The stack of open elements is said to have a particular element in select scope
+// when it has that element in the specific scope consisting of all element types except the following:
+// - optgroup in the HTML namespace
+// - option in the HTML namespace
+// NOTE: In this case it's "all element types _except_"
+bool StackOfOpenElements::has_in_select_scope(FlyString const& tag_name) const
 {
-    return has_in_scope_impl(tag_name, { "option", "optgroup" });
+    // https://html.spec.whatwg.org/multipage/parsing.html#has-an-element-in-the-specific-scope
+    for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
+        // 1. Initialize node to be the current node (the bottommost node of the stack).
+        auto& node = m_elements.at(i);
+        // 2. If node is the target node, terminate in a match state.
+        if (node.local_name() == tag_name)
+            return true;
+        // 3. Otherwise, if node is one of the element types in list, terminate in a failure state.
+        // NOTE: Here "list" refers to all elements except option and optgroup
+        if (node.local_name() != HTML::TagNames::option && node.local_name() != HTML::TagNames::optgroup)
+            return false;
+        // 4. Otherwise, set node to the previous entry in the stack of open elements and return to step 2.
+    }
+    // [4.] (This will never fail, since the loop will always terminate in the previous step if the top of the stack
+    // — an html element — is reached.)
+    VERIFY_NOT_REACHED();
 }
 
 bool StackOfOpenElements::contains(const DOM::Element& element) const
@@ -82,7 +103,7 @@ bool StackOfOpenElements::contains(const DOM::Element& element) const
     return false;
 }
 
-bool StackOfOpenElements::contains(const FlyString& tag_name) const
+bool StackOfOpenElements::contains(FlyString const& tag_name) const
 {
     for (auto& element_on_stack : m_elements) {
         if (element_on_stack.local_name() == tag_name)
@@ -91,7 +112,7 @@ bool StackOfOpenElements::contains(const FlyString& tag_name) const
     return false;
 }
 
-void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(const FlyString& tag_name)
+void StackOfOpenElements::pop_until_an_element_with_tag_name_has_been_popped(FlyString const& tag_name)
 {
     while (m_elements.last().local_name() != tag_name)
         (void)pop();
@@ -111,7 +132,7 @@ DOM::Element* StackOfOpenElements::topmost_special_node_below(const DOM::Element
     return found_element;
 }
 
-StackOfOpenElements::LastElementResult StackOfOpenElements::last_element_with_tag_name(const FlyString& tag_name)
+StackOfOpenElements::LastElementResult StackOfOpenElements::last_element_with_tag_name(FlyString const& tag_name)
 {
     for (ssize_t i = m_elements.size() - 1; i >= 0; --i) {
         auto& element = m_elements[i];

@@ -45,7 +45,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format)
     // 3. Let stringList be ? StringListFromIterable(list).
     auto string_list = TRY(string_list_from_iterable(global_object, list));
 
-    // 4. Return FormatList(lf, stringList).
+    // 4. Return ! FormatList(lf, stringList).
     auto formatted = format_list(*list_format, string_list);
     return js_string(vm, move(formatted));
 }
@@ -62,7 +62,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
     // 3. Let stringList be ? StringListFromIterable(list).
     auto string_list = TRY(string_list_from_iterable(global_object, list));
 
-    // 4. Return FormatListToParts(lf, stringList).
+    // 4. Return ! FormatListToParts(lf, stringList).
     return format_list_to_parts(global_object, *list_format, string_list);
 }
 

@@ -22,9 +22,9 @@ public:
     const HTML::HTMLLabelElement& dom_node() const { return static_cast<const HTML::HTMLLabelElement&>(*BlockContainer::dom_node()); }
     HTML::HTMLLabelElement& dom_node() { return static_cast<HTML::HTMLLabelElement&>(*BlockContainer::dom_node()); }
 
-    void handle_mousedown_on_label(Badge<Painting::TextPaintable>, const Gfx::IntPoint&, unsigned button);
-    void handle_mouseup_on_label(Badge<Painting::TextPaintable>, const Gfx::IntPoint&, unsigned button);
-    void handle_mousemove_on_label(Badge<Painting::TextPaintable>, const Gfx::IntPoint&, unsigned button);
+    void handle_mousedown_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint const&, unsigned button);
+    void handle_mouseup_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint const&, unsigned button);
+    void handle_mousemove_on_label(Badge<Painting::TextPaintable>, Gfx::IntPoint const&, unsigned button);
 
     LabelableNode* labeled_control();
 

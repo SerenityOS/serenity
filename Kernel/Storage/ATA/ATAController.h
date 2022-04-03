@@ -21,7 +21,7 @@ class ATAController
     : public StorageController
     , public Weakable<ATAController> {
 public:
-    virtual void start_request(const ATADevice&, AsyncBlockDeviceRequest&) = 0;
+    virtual void start_request(ATADevice const&, AsyncBlockDeviceRequest&) = 0;
 
 protected:
     ATAController() = default;

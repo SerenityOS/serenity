@@ -216,7 +216,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         roots.set(finalization_registry);
 }
 
-Symbol* VM::get_global_symbol(const String& description)
+Symbol* VM::get_global_symbol(String const& description)
 {
     auto result = m_global_symbol_map.get(description);
     if (result.has_value())

@@ -22,6 +22,9 @@ namespace Web::Bindings {
 
 EventWrapper* wrap(JS::GlobalObject& global_object, DOM::Event& event)
 {
+    if (event.wrapper())
+        return static_cast<EventWrapper*>(event.wrapper());
+
     if (is<DOM::CustomEvent>(event))
         return static_cast<CustomEventWrapper*>(wrap_impl(global_object, static_cast<DOM::CustomEvent&>(event)));
     if (is<CSS::MediaQueryListEvent>(event))

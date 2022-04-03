@@ -169,7 +169,7 @@ public:
     ~Message();
     Message& operator=(Message&&);
 
-    const KBuffer& build();
+    KBuffer const& build();
 
     static constexpr size_t max_header_size = 24;
 
@@ -179,7 +179,7 @@ private:
     {
         VERIFY(!m_have_been_built);
         // FIXME: Handle append failure.
-        (void)m_builder.append(reinterpret_cast<const char*>(&number), sizeof(number));
+        (void)m_builder.append(reinterpret_cast<char const*>(&number), sizeof(number));
         return *this;
     }
 
@@ -375,7 +375,7 @@ Plan9FS::Message& Plan9FS::Message::operator=(Message&& message)
     return *this;
 }
 
-const KBuffer& Plan9FS::Message::build()
+KBuffer const& Plan9FS::Message::build()
 {
     VERIFY(!m_have_been_built);
 
@@ -472,7 +472,7 @@ void Plan9FS::Plan9FSBlockerSet::try_unblock(Plan9FS::Blocker& blocker)
     }
 }
 
-bool Plan9FS::is_complete(const ReceiveCompletion& completion)
+bool Plan9FS::is_complete(ReceiveCompletion const& completion)
 {
     MutexLocker locker(m_lock);
     if (m_completions.contains(completion.tag)) {
@@ -490,7 +490,7 @@ bool Plan9FS::is_complete(const ReceiveCompletion& completion)
 ErrorOr<void> Plan9FS::post_message(Message& message, RefPtr<ReceiveCompletion> completion)
 {
     auto const& buffer = message.build();
-    const u8* data = buffer.data();
+    u8 const* data = buffer.data();
     size_t size = buffer.size();
     auto& description = file_description();
 
@@ -750,7 +750,7 @@ ErrorOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKernel
     return nread;
 }
 
-ErrorOr<size_t> Plan9FSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& data, OpenFileDescription*)
+ErrorOr<size_t> Plan9FSInode::write_bytes(off_t offset, size_t size, UserOrKernelBuffer const& data, OpenFileDescription*)
 {
     TRY(ensure_open_for_mode(O_WRONLY));
     size = fs().adjust_buffer_size(size);

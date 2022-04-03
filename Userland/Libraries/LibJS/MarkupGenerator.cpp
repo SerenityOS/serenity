@@ -64,7 +64,7 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
     if (value.is_object()) {
         auto& object = value.as_object();
         if (is<Array>(object))
-            return array_to_html(static_cast<const Array&>(object), output_html, seen_objects);
+            return array_to_html(static_cast<Array const&>(object), output_html, seen_objects);
         output_html.append(wrap_string_in_style(object.class_name(), StyleType::ObjectType));
         if (object.is_function())
             return function_to_html(object, output_html, seen_objects);
@@ -91,7 +91,7 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
     output_html.append("</span>");
 }
 
-void MarkupGenerator::array_to_html(const Array& array, StringBuilder& html_output, HashTable<Object*>& seen_objects)
+void MarkupGenerator::array_to_html(Array const& array, StringBuilder& html_output, HashTable<Object*>& seen_objects)
 {
     html_output.append(wrap_string_in_style("[ ", StyleType::Punctuation));
     bool first = true;
@@ -105,7 +105,7 @@ void MarkupGenerator::array_to_html(const Array& array, StringBuilder& html_outp
     html_output.append(wrap_string_in_style(" ]", StyleType::Punctuation));
 }
 
-void MarkupGenerator::object_to_html(const Object& object, StringBuilder& html_output, HashTable<Object*>& seen_objects)
+void MarkupGenerator::object_to_html(Object const& object, StringBuilder& html_output, HashTable<Object*>& seen_objects)
 {
     html_output.append(wrap_string_in_style("{ ", StyleType::Punctuation));
     bool first = true;
@@ -135,23 +135,23 @@ void MarkupGenerator::object_to_html(const Object& object, StringBuilder& html_o
     html_output.append(wrap_string_in_style(" }", StyleType::Punctuation));
 }
 
-void MarkupGenerator::function_to_html(const Object& function, StringBuilder& html_output, HashTable<Object*>&)
+void MarkupGenerator::function_to_html(Object const& function, StringBuilder& html_output, HashTable<Object*>&)
 {
     html_output.appendff("[{}]", function.class_name());
 }
 
-void MarkupGenerator::date_to_html(const Object& date, StringBuilder& html_output, HashTable<Object*>&)
+void MarkupGenerator::date_to_html(Object const& date, StringBuilder& html_output, HashTable<Object*>&)
 {
-    html_output.appendff("Date {}", JS::to_date_string(static_cast<JS::Date const&>(date).date_value()));
+    html_output.appendff("Date {}", to_date_string(static_cast<Date const&>(date).date_value()));
 }
 
-void MarkupGenerator::error_to_html(const Object& object, StringBuilder& html_output, HashTable<Object*>&)
+void MarkupGenerator::error_to_html(Object const& object, StringBuilder& html_output, HashTable<Object*>&)
 {
     auto& vm = object.vm();
-    auto name = object.get_without_side_effects(vm.names.name).value_or(JS::js_undefined());
-    auto message = object.get_without_side_effects(vm.names.message).value_or(JS::js_undefined());
+    auto name = object.get_without_side_effects(vm.names.name).value_or(js_undefined());
+    auto message = object.get_without_side_effects(vm.names.message).value_or(js_undefined());
     if (name.is_accessor() || message.is_accessor()) {
-        html_output.append(wrap_string_in_style(JS::Value(&object).to_string_without_side_effects(), StyleType::Invalid));
+        html_output.append(wrap_string_in_style(Value(&object).to_string_without_side_effects(), StyleType::Invalid));
     } else {
         auto name_string = name.to_string_without_side_effects();
         auto message_string = message.to_string_without_side_effects();

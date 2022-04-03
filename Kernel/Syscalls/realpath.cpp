@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$realpath(Userspace<const Syscall::SC_realpath_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$realpath(Userspace<Syscall::SC_realpath_params const*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::rpath));

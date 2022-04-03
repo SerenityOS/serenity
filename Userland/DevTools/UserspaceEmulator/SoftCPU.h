@@ -10,6 +10,7 @@
 #include "Emulator.h"
 #include "Region.h"
 #include "SoftFPU.h"
+#include "SoftVPU.h"
 #include "ValueWithShadow.h"
 #include <AK/ByteReader.h>
 #include <LibX86/Instruction.h>
@@ -81,7 +82,7 @@ public:
     ValueWithShadow<u16> pop16();
 
     void push_string(StringView);
-    void push_buffer(const u8* data, size_t);
+    void push_buffer(u8 const* data, size_t);
 
     u16 segment(X86::SegmentRegister seg) const { return m_segment[(int)seg]; }
     u16& segment(X86::SegmentRegister seg) { return m_segment[(int)seg]; }
@@ -463,7 +464,7 @@ public:
         m_flags_tainted = a.is_uninitialized() || b.is_uninitialized() || c.is_uninitialized();
     }
 
-    void warn_if_flags_tainted(const char* message) const;
+    void warn_if_flags_tainted(char const* message) const;
 
     // ^X86::InstructionStream
     virtual bool can_read() override { return false; }
@@ -1130,7 +1131,7 @@ private:
     virtual void CVTSI2SS_xmm1_rm32(X86::Instruction const&) override;
     virtual void MOVNTPS_xmm1m128_xmm2(X86::Instruction const&) override;
     virtual void CVTTPS2PI_mm1_xmm2m64(X86::Instruction const&) override;
-    virtual void CVTTPS2PI_r32_xmm2m32(X86::Instruction const&) override;
+    virtual void CVTTSS2SI_r32_xmm2m32(X86::Instruction const&) override;
     virtual void CVTPS2PI_xmm1_mm2m64(X86::Instruction const&) override;
     virtual void CVTSS2SI_xmm1_rm32(X86::Instruction const&) override;
     virtual void UCOMISS_xmm1_xmm2m32(X86::Instruction const&) override;
@@ -1247,6 +1248,7 @@ private:
 
     Emulator& m_emulator;
     SoftFPU m_fpu;
+    SoftVPU m_vpu;
 
     ValueWithShadow<PartAddressableRegister> m_gpr[8];
 

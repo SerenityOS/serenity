@@ -61,7 +61,7 @@ if [ "$#" -gt "0" ] && [ "--oss-fuzz" = "$1" ] ; then
     cmake -GNinja -B Build/fuzzers \
         -DBUILD_LAGOM=ON \
         -DBUILD_SHARED_LIBS=OFF \
-        -DENABLE_OSS_FUZZ=ON \
+        -DENABLE_FUZZERS_OSSFUZZ=ON \
         -DCMAKE_C_COMPILER="$CC" \
         -DCMAKE_CXX_COMPILER="$CXX" \
         -DCMAKE_CXX_FLAGS="$CXXFLAGS -DOSS_FUZZ=ON" \
@@ -74,7 +74,7 @@ else
     pick_clang
     cmake -GNinja -B Build/lagom-fuzzers \
         -DBUILD_LAGOM=ON \
-        -DENABLE_FUZZER_SANITIZER=ON \
+        -DENABLE_FUZZERS_LIBFUZZER=ON \
         -DENABLE_ADDRESS_SANITIZER=ON \
         -DENABLE_UNDEFINED_SANITIZER=ON \
         -DCMAKE_PREFIX_PATH=Build/tool-install \

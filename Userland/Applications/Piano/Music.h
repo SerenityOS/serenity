@@ -160,7 +160,7 @@ constexpr int beats_per_bar = 4;
 constexpr int notes_per_beat = 4;
 constexpr int roll_length = (sample_rate / (beats_per_minute / 60)) * beats_per_bar;
 
-constexpr const char* note_names[] = {
+constexpr char const* note_names[] = {
     "C",
     "C#",
     "D",

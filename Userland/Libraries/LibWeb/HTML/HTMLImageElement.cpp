@@ -11,6 +11,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
+#include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Painting/PaintableBox.h>
@@ -18,7 +19,7 @@
 namespace Web::HTML {
 
 HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName qualified_name)
-    : FormAssociatedElement(document, move(qualified_name))
+    : HTMLElement(document, move(qualified_name))
     , m_image_loader(*this)
 {
     m_image_loader.on_load = [this] {
@@ -50,18 +51,26 @@ void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) c
 {
     for_each_attribute([&](auto& name, auto& value) {
         if (name == HTML::AttributeNames::width) {
-            if (auto parsed_value = parse_html_length(document(), value)) {
+            if (auto parsed_value = parse_dimension_value(value))
                 style.set_property(CSS::PropertyID::Width, parsed_value.release_nonnull());
-            }
         } else if (name == HTML::AttributeNames::height) {
-            if (auto parsed_value = parse_html_length(document(), value)) {
+            if (auto parsed_value = parse_dimension_value(value))
                 style.set_property(CSS::PropertyID::Height, parsed_value.release_nonnull());
+        } else if (name == HTML::AttributeNames::hspace) {
+            if (auto parsed_value = parse_dimension_value(value)) {
+                style.set_property(CSS::PropertyID::MarginLeft, *parsed_value);
+                style.set_property(CSS::PropertyID::MarginRight, *parsed_value);
+            }
+        } else if (name == HTML::AttributeNames::vspace) {
+            if (auto parsed_value = parse_dimension_value(value)) {
+                style.set_property(CSS::PropertyID::MarginTop, *parsed_value);
+                style.set_property(CSS::PropertyID::MarginBottom, *parsed_value);
             }
         }
     });
 }
 
-void HTMLImageElement::parse_attribute(const FlyString& name, const String& value)
+void HTMLImageElement::parse_attribute(FlyString const& name, String const& value)
 {
     HTMLElement::parse_attribute(name, value);
 
@@ -74,7 +83,7 @@ RefPtr<Layout::Node> HTMLImageElement::create_layout_node(NonnullRefPtr<CSS::Sty
     return adopt_ref(*new Layout::ImageBox(document(), *this, move(style), m_image_loader));
 }
 
-const Gfx::Bitmap* HTMLImageElement::bitmap() const
+Gfx::Bitmap const* HTMLImageElement::bitmap() const
 {
     return m_image_loader.bitmap(m_image_loader.current_frame_index());
 }

@@ -9,7 +9,7 @@
 
 namespace WindowServer {
 
-const Gfx::Bitmap& MultiScaleBitmaps::bitmap(int scale_factor) const
+Gfx::Bitmap const& MultiScaleBitmaps::bitmap(int scale_factor) const
 {
     auto it = m_bitmaps.find(scale_factor);
     if (it == m_bitmaps.end()) {

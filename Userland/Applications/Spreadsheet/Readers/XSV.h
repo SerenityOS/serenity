@@ -146,11 +146,11 @@ public:
         }
 
         bool is_end() const { return m_index == m_xsv.m_rows.size(); }
-        bool operator==(const RowIterator& other) const
+        bool operator==(RowIterator const& other) const
         {
             return m_index == other.m_index && &m_xsv == &other.m_xsv;
         }
-        bool operator==(const RowIterator<!const_>& other) const
+        bool operator==(RowIterator<!const_> const& other) const
         {
             return m_index == other.m_index && &m_xsv == &other.m_xsv;
         }

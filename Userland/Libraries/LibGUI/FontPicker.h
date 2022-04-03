@@ -20,14 +20,14 @@ public:
     virtual ~FontPicker() override = default;
 
     RefPtr<Gfx::Font> font() const { return m_font; }
-    void set_font(const Gfx::Font*);
+    void set_font(Gfx::Font const*);
 
 private:
-    FontPicker(Window* parent_window = nullptr, const Gfx::Font* current_font = nullptr, bool fixed_width_only = false);
+    FontPicker(Window* parent_window = nullptr, Gfx::Font const* current_font = nullptr, bool fixed_width_only = false);
 
     void update_font();
 
-    const bool m_fixed_width_only;
+    bool const m_fixed_width_only;
 
     RefPtr<Gfx::Font> m_font;
 

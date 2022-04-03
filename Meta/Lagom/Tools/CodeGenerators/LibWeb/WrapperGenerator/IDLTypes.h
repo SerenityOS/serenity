@@ -10,9 +10,8 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/OwnPtr.h>
 #include <AK/SourceGenerator.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -121,11 +120,22 @@ struct Dictionary {
     Vector<DictionaryMember> members;
 };
 
+struct Typedef {
+    HashMap<String, String> extended_attributes;
+    NonnullRefPtr<Type> type;
+};
+
 struct Enumeration {
     HashTable<String> values;
     HashMap<String, String> translated_cpp_names;
     String first_member;
     bool is_original_definition { true };
+};
+
+struct CallbackFunction {
+    NonnullRefPtr<Type> return_type;
+    Vector<Parameter> parameters;
+    bool is_legacy_treat_non_object_as_null { false };
 };
 
 struct Interface;
@@ -154,7 +164,7 @@ static inline size_t get_shortest_function_length(Vector<Function&> const& overl
     return longest_length;
 }
 
-struct Interface {
+struct Interface : public RefCounted<Interface> {
     String name;
     String parent_name;
 
@@ -184,7 +194,9 @@ struct Interface {
 
     HashMap<String, Dictionary> dictionaries;
     HashMap<String, Enumeration> enumerations;
-    HashMap<String, NonnullOwnPtr<Interface>> mixins;
+    HashMap<String, Typedef> typedefs;
+    HashMap<String, NonnullRefPtr<Interface>> mixins;
+    HashMap<String, CallbackFunction> callback_functions;
 
     // Added for convenience after parsing
     String wrapper_class;
@@ -196,8 +208,8 @@ struct Interface {
     HashMap<String, HashTable<String>> included_mixins;
 
     String module_own_path;
-    HashTable<String> imported_paths;
-    NonnullOwnPtrVector<Interface> imported_modules;
+    HashTable<String> required_imported_paths;
+    NonnullRefPtrVector<Interface> imported_modules;
 
     HashMap<String, Vector<Function&>> overload_sets;
     HashMap<String, Vector<Function&>> static_overload_sets;
@@ -210,6 +222,11 @@ struct Interface {
 
     // https://webidl.spec.whatwg.org/#dfn-legacy-platform-object
     bool is_legacy_platform_object() const { return !extended_attributes.contains("Global") && (supports_indexed_properties() || supports_named_properties()); }
+
+    bool will_generate_code() const
+    {
+        return !name.is_empty() || any_of(enumerations, [](auto& entry) { return entry.value.is_original_definition; });
+    }
 };
 
 CppType idl_type_name_to_cpp_type(Type const& type, IDL::Interface const& interface);

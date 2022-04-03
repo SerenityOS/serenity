@@ -16,6 +16,7 @@
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <serenity.h>
 
 namespace Web {
 
@@ -40,7 +41,7 @@ ResourceLoader::ResourceLoader(NonnullRefPtr<Protocol::RequestClient> protocol_c
 {
 }
 
-void ResourceLoader::load_sync(LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load_sync(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
 {
     Core::EventLoop loop;
 
@@ -114,22 +115,34 @@ static String sanitized_url_for_logging(AK::URL const& url)
     return url.to_string();
 }
 
-void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
+static void emit_signpost(String const& message, int id)
+{
+    auto string_id = perf_register_string(message.characters(), message.length());
+    perf_event(PERF_EVENT_SIGNPOST, string_id, id);
+}
+
+static size_t resource_id = 0;
+
+void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
 {
     auto& url = request.url();
     request.start_timer();
-    dbgln("ResourceLoader: Starting load of: \"{}\"", sanitized_url_for_logging(url));
 
-    const auto log_success = [](const auto& request) {
-        auto& url = request.url();
+    auto id = resource_id++;
+    auto url_for_logging = sanitized_url_for_logging(url);
+    emit_signpost(String::formatted("Starting load: {}", url_for_logging), id);
+    dbgln("ResourceLoader: Starting load of: \"{}\"", url_for_logging);
+
+    auto const log_success = [url_for_logging, id](auto const& request) {
         auto load_time_ms = request.load_time().to_milliseconds();
-        dbgln("ResourceLoader: Finished load of: \"{}\", Duration: {}ms", sanitized_url_for_logging(url), load_time_ms);
+        emit_signpost(String::formatted("Finished load: {}", url_for_logging), id);
+        dbgln("ResourceLoader: Finished load of: \"{}\", Duration: {}ms", url_for_logging, load_time_ms);
     };
 
-    const auto log_failure = [](const auto& request, const auto error_message) {
-        auto& url = request.url();
+    auto const log_failure = [url_for_logging, id](auto const& request, auto const error_message) {
         auto load_time_ms = request.load_time().to_milliseconds();
-        dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", sanitized_url_for_logging(url), error_message, load_time_ms);
+        emit_signpost(String::formatted("Failed load: {}", url_for_logging), id);
+        dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", url_for_logging, error_message, load_time_ms);
     };
 
     if (is_port_blocked(url.port_or_default())) {
@@ -254,7 +267,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
         error_callback(not_implemented_error, {});
 }
 
-void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
+void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
 {
     LoadRequest request;
     request.set_url(url);
@@ -278,6 +291,12 @@ void ResourceLoader::clear_cache()
 {
     dbgln_if(CACHE_DEBUG, "Clearing {} items from ResourceLoader cache", s_resource_cache.size());
     s_resource_cache.clear();
+}
+
+void ResourceLoader::evict_from_cache(LoadRequest const& request)
+{
+    dbgln_if(CACHE_DEBUG, "Removing resource {} from cache", request.url());
+    s_resource_cache.remove(request);
 }
 
 }

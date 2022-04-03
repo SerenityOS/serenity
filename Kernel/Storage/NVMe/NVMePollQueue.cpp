@@ -33,7 +33,7 @@ void NVMePollQueue::complete_current_request(u16 status)
         return;
     }
     if (current_request->request_type() == AsyncBlockDeviceRequest::RequestType::Read) {
-        if (auto result = current_request->write_to_buffer(current_request->buffer(), m_rw_dma_region->vaddr().as_ptr(), 512 * current_request->block_count()); result.is_error()) {
+        if (auto result = current_request->write_to_buffer(current_request->buffer(), m_rw_dma_region->vaddr().as_ptr(), current_request->buffer_size()); result.is_error()) {
             current_request->complete(AsyncDeviceRequest::MemoryFault);
             return;
         }

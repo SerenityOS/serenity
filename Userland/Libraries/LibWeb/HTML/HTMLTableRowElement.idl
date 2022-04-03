@@ -10,6 +10,9 @@ interface HTMLTableRowElement : HTMLElement {
 
     [LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
 
+    readonly attribute long rowIndex;
+    readonly attribute long sectionRowIndex;
+
     [SameObject] readonly attribute HTMLCollection cells;
 
 };

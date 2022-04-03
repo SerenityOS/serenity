@@ -52,7 +52,7 @@ bool Supports::InParens::evaluate() const
 
 bool Supports::Declaration::evaluate() const
 {
-    auto style_property = Parser({}, declaration).parse_as_declaration();
+    auto style_property = Parser({}, declaration).parse_as_supports_condition();
     return style_property.has_value();
 }
 

@@ -66,7 +66,7 @@ void Tab::start_download(const URL& url)
     window->show();
 }
 
-void Tab::view_source(const URL& url, const String& source)
+void Tab::view_source(const URL& url, String const& source)
 {
     auto window = GUI::Window::construct(&this->window());
     auto& editor = window->set_main_widget<GUI::TextEditor>();
@@ -151,13 +151,15 @@ Tab::Tab(BrowserWindow& window)
     m_location_box->set_placeholder("Address");
 
     m_location_box->on_return_pressed = [this] {
-        if (m_location_box->text().starts_with('?') && g_search_engine.is_empty()) {
-            GUI::MessageBox::show(&this->window(), "Select a search engine in the Settings menu before searching.", "No search engine selected", GUI::MessageBox::Type::Information);
-            return;
-        }
+        auto url = url_from_location_bar();
+        if (url.has_value())
+            load(url.release_value());
+    };
 
-        auto url = url_from_user_input(m_location_box->text());
-        load(url);
+    m_location_box->on_ctrl_return_pressed = [this] {
+        auto url = url_from_location_bar(MayAppendTLD::Yes);
+        if (url.has_value())
+            load(url.release_value());
     };
 
     m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste && Go", [this](auto&) {
@@ -280,7 +282,7 @@ Tab::Tab(BrowserWindow& window)
     m_image_context_menu->add_separator();
     m_image_context_menu->add_action(window.inspect_dom_node_action());
 
-    hooks().on_image_context_menu_request = [this](auto& image_url, auto& screen_position, const Gfx::ShareableBitmap& shareable_bitmap) {
+    hooks().on_image_context_menu_request = [this](auto& image_url, auto& screen_position, Gfx::ShareableBitmap const& shareable_bitmap) {
         m_image_context_menu_url = image_url;
         m_image_context_menu_bitmap = shareable_bitmap;
         m_image_context_menu->popup(screen_position);
@@ -393,6 +395,29 @@ Tab::Tab(BrowserWindow& window)
     };
 }
 
+Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
+{
+    if (m_location_box->text().starts_with('?') && g_search_engine.is_empty()) {
+        GUI::MessageBox::show(&this->window(), "Select a search engine in the Settings menu before searching.", "No search engine selected", GUI::MessageBox::Type::Information);
+        return {};
+    }
+
+    String text = m_location_box->text();
+
+    StringBuilder builder;
+    builder.append(text);
+    if (may_append_tld == MayAppendTLD::Yes) {
+        // FIXME: Expand the list of top level domains.
+        if (!(text.ends_with(".com") || text.ends_with(".net") || text.ends_with(".org"))) {
+            builder.append(".com");
+        }
+    }
+    String final_text = builder.to_string();
+
+    auto url = url_from_user_input(final_text);
+    return url;
+}
+
 void Tab::load(const URL& url, LoadType load_type)
 {
     m_is_history_navigation = (load_type == LoadType::HistoryNavigation);
@@ -444,7 +469,7 @@ void Tab::bookmark_current_url()
     update_bookmark_button(url);
 }
 
-void Tab::update_bookmark_button(const String& url)
+void Tab::update_bookmark_button(String const& url)
 {
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
         m_bookmark_button->set_icon(g_icon_bag.bookmark_filled);
@@ -478,7 +503,7 @@ void Tab::did_become_active()
     update_actions();
 }
 
-void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)
+void Tab::context_menu_requested(Gfx::IntPoint const& screen_position)
 {
     m_tab_context_menu->popup(screen_position);
 }
@@ -586,6 +611,12 @@ void Tab::show_storage_inspector()
         m_storage_widget->clear_cookies();
         for (auto cookie : cookies)
             m_storage_widget->add_cookie(cookie);
+    }
+
+    if (on_get_local_storage_entries) {
+        auto local_storage_entries = on_get_local_storage_entries();
+        m_storage_widget->clear_local_storage_entries();
+        m_storage_widget->set_local_storage_entries(local_storage_entries);
     }
 
     auto* window = m_storage_widget->window();

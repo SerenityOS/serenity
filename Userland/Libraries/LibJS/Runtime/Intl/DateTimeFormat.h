@@ -60,7 +60,6 @@ public:
     bool has_hour_cycle() const { return m_hour_cycle.has_value(); }
     Unicode::HourCycle hour_cycle() const { return *m_hour_cycle; }
     StringView hour_cycle_string() const { return Unicode::hour_cycle_to_string(*m_hour_cycle); }
-    void set_hour_cycle(StringView hour_cycle) { m_hour_cycle = Unicode::hour_cycle_from_string(hour_cycle); }
     void set_hour_cycle(Unicode::HourCycle hour_cycle) { m_hour_cycle = hour_cycle; }
     void clear_hour_cycle() { m_hour_cycle.clear(); }
 

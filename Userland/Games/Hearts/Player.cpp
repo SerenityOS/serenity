@@ -158,7 +158,7 @@ bool Player::has_card_of_suit(Card::Suit suit)
     return matching_card.has_value();
 }
 
-void Player::remove_cards(const NonnullRefPtrVector<Card>& cards)
+void Player::remove_cards(NonnullRefPtrVector<Card> const& cards)
 {
     for (auto& card : cards) {
         hand.remove_first_matching([&card](auto& other_card) {

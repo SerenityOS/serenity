@@ -28,7 +28,7 @@ public:
             return { location, { resolution.width() / scale_factor, resolution.height() / scale_factor } };
         }
 
-        bool operator==(const Screen&) const = default;
+        bool operator==(Screen const&) const = default;
     };
 
     Vector<Screen> screens;
@@ -36,13 +36,13 @@ public:
 
     bool is_valid(String* error_msg = nullptr) const;
     bool normalize();
-    bool load_config(const Core::ConfigFile& config_file, String* error_msg = nullptr);
+    bool load_config(Core::ConfigFile const& config_file, String* error_msg = nullptr);
     bool save_config(Core::ConfigFile& config_file, bool sync = true) const;
     bool try_auto_add_framebuffer(String const&);
 
     // TODO: spaceship operator
-    bool operator!=(const ScreenLayout& other) const;
-    bool operator==(const ScreenLayout& other) const
+    bool operator!=(ScreenLayout const& other) const;
+    bool operator==(ScreenLayout const& other) const
     {
         return !(*this != other);
     }
@@ -52,9 +52,9 @@ public:
 
 namespace IPC {
 
-bool encode(Encoder&, const WindowServer::ScreenLayout::Screen&);
+bool encode(Encoder&, WindowServer::ScreenLayout::Screen const&);
 ErrorOr<void> decode(Decoder&, WindowServer::ScreenLayout::Screen&);
-bool encode(Encoder&, const WindowServer::ScreenLayout&);
+bool encode(Encoder&, WindowServer::ScreenLayout const&);
 ErrorOr<void> decode(Decoder&, WindowServer::ScreenLayout&);
 
 }

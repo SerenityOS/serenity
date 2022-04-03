@@ -22,7 +22,7 @@ enum class PaintPhase {
 };
 
 struct HitTestResult {
-    RefPtr<Painting::Paintable> paintable;
+    NonnullRefPtr<Painting::Paintable> paintable;
     int index_in_node { 0 };
 
     enum InternalPosition {
@@ -32,6 +32,9 @@ struct HitTestResult {
         After,
     };
     InternalPosition internal_position { None };
+
+    DOM::Node* dom_node();
+    DOM::Node const* dom_node() const;
 };
 
 enum class HitTestType {
@@ -50,7 +53,7 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) const { }
 
-    virtual HitTestResult hit_test(Gfx::FloatPoint const&, HitTestType) const;
+    virtual Optional<HitTestResult> hit_test(Gfx::FloatPoint const&, HitTestType) const;
 
     virtual bool wants_mouse_events() const { return false; }
 
@@ -61,15 +64,18 @@ public:
     // When these methods return true, the DOM event with the same name will be
     // dispatch at the mouse_event_target if it returns a valid DOM::Node, or
     // the layout node's associated DOM node if it doesn't.
-    virtual DispatchEventOfSameName handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
-    virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint&, unsigned button, unsigned modifiers);
-    virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers);
+    virtual DispatchEventOfSameName handle_mousedown(Badge<EventHandler>, Gfx::IntPoint const&, unsigned button, unsigned modifiers);
+    virtual DispatchEventOfSameName handle_mouseup(Badge<EventHandler>, Gfx::IntPoint const&, unsigned button, unsigned modifiers);
+    virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, Gfx::IntPoint const&, unsigned buttons, unsigned modifiers);
     virtual DOM::Node* mouse_event_target() const { return nullptr; }
 
-    virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
+    virtual bool handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint const&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y);
 
     Layout::Node const& layout_node() const { return m_layout_node; }
     Layout::Node& layout_node() { return const_cast<Layout::Node&>(m_layout_node); }
+
+    DOM::Node* dom_node() { return layout_node().dom_node(); }
+    DOM::Node const* dom_node() const { return layout_node().dom_node(); }
 
     auto const& computed_values() const { return m_layout_node.computed_values(); }
 
@@ -95,5 +101,15 @@ private:
     Layout::Node const& m_layout_node;
     Optional<Layout::BlockContainer*> mutable m_containing_block;
 };
+
+inline DOM::Node* HitTestResult::dom_node()
+{
+    return paintable->dom_node();
+}
+
+inline DOM::Node const* HitTestResult::dom_node() const
+{
+    return paintable->dom_node();
+}
 
 }

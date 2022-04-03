@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
+ * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Error.h>
+#include <AK/FixedArray.h>
 #include <AK/Span.h>
 #include <AK/String.h>
 
@@ -199,6 +202,29 @@ private:
     String string_for_id(NameId id) const;
 
     ReadonlyBytes m_slice;
+};
+
+class Kern {
+public:
+    static ErrorOr<Kern> from_slice(ReadonlyBytes);
+    i16 get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const;
+
+private:
+    enum Sizes : size_t {
+        SubtableHeader = 6,
+        Format0Entry = 6,
+    };
+
+    Kern(ReadonlyBytes slice, FixedArray<size_t> subtable_offsets)
+        : m_slice(slice)
+        , m_subtable_offsets(move(subtable_offsets))
+    {
+    }
+
+    static Optional<i16> read_glyph_kerning_format0(ReadonlyBytes slice, u16 left_glyph_id, u16 right_glyph_id);
+
+    ReadonlyBytes m_slice;
+    FixedArray<size_t> m_subtable_offsets;
 };
 
 }

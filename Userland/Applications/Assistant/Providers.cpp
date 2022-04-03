@@ -123,7 +123,7 @@ FileProvider::FileProvider()
     build_filesystem_cache();
 }
 
-void FileProvider::query(const String& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+void FileProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     build_filesystem_cache();
 

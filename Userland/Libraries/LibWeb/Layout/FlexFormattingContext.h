@@ -37,7 +37,7 @@ private:
         float flex_base_size { 0 };
         float hypothetical_main_size { 0 };
         float hypothetical_cross_size { 0 };
-        float hypothetical_cross_size_with_margins() { return hypothetical_cross_size + margins.cross_before + margins.cross_after; }
+        float hypothetical_cross_size_with_margins() { return hypothetical_cross_size + margins.cross_before + margins.cross_after + borders.cross_after + borders.cross_before + padding.cross_after + padding.cross_before; }
         float target_main_size { 0 };
         bool frozen { false };
         Optional<float> flex_factor {};
@@ -48,6 +48,8 @@ private:
         float main_offset { 0 };
         float cross_offset { 0 };
         DirectionAgnosticMargins margins {};
+        DirectionAgnosticMargins borders {};
+        DirectionAgnosticMargins padding {};
         bool is_min_violation { false };
         bool is_max_violation { false };
     };
@@ -77,6 +79,7 @@ private:
     bool has_main_max_size(Box const&) const;
     bool has_cross_max_size(Box const&) const;
     float sum_of_margin_padding_border_in_main_axis(Box const&) const;
+    float determine_min_main_size_of_child(Box const& box);
 
     void set_main_size(Box const&, float size);
     void set_cross_size(Box const&, float size);
@@ -115,7 +118,7 @@ private:
 
     bool is_row_layout() const { return m_flex_direction == CSS::FlexDirection::Row || m_flex_direction == CSS::FlexDirection::RowReverse; }
     bool is_single_line() const { return flex_container().computed_values().flex_wrap() == CSS::FlexWrap::Nowrap; }
-
+    bool is_direction_reverse() const { return m_flex_direction == CSS::FlexDirection::ColumnReverse || m_flex_direction == CSS::FlexDirection::RowReverse; }
     void populate_specified_margins(FlexItem&, CSS::FlexDirection) const;
 
     FormattingState::NodeState& m_flex_container_state;

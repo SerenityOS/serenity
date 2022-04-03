@@ -43,14 +43,14 @@ TEST_CASE(strings)
     strings.append("DEF");
 
     int loop_counter = 0;
-    for (const String& string : strings) {
+    for (String const& string : strings) {
         EXPECT(!string.is_null());
         EXPECT(!string.is_empty());
         ++loop_counter;
     }
 
     loop_counter = 0;
-    for (auto& string : (const_cast<const Vector<String>&>(strings))) {
+    for (auto& string : (const_cast<Vector<String> const&>(strings))) {
         EXPECT(!string.is_null());
         EXPECT(!string.is_empty());
         ++loop_counter;
@@ -402,7 +402,7 @@ TEST_CASE(should_find_value)
 {
     Vector<int> v { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
 
-    const auto expected = v.begin() + 4;
+    auto const expected = v.begin() + 4;
 
     EXPECT_EQ(expected, v.find(0));
 }
@@ -411,9 +411,9 @@ TEST_CASE(should_find_predicate)
 {
     Vector<int> v { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
 
-    const auto expected = v.begin() + 4;
+    auto const expected = v.begin() + 4;
 
-    EXPECT_EQ(expected, v.find_if([](const auto v) { return v == 0; }));
+    EXPECT_EQ(expected, v.find_if([](auto const v) { return v == 0; }));
 }
 
 TEST_CASE(should_find_index)
@@ -548,8 +548,8 @@ TEST_CASE(rend)
 {
     Vector<int> v { 1, 2, 3, 4, 5, 6, 7, 8, 0 };
 
-    const auto expected = v.end() - 5;
-    const auto expected_in_reverse = v.rend() - 5;
+    auto const expected = v.end() - 5;
+    auto const expected_in_reverse = v.rend() - 5;
     EXPECT_EQ(*expected, *expected_in_reverse);
 }
 

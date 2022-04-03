@@ -115,10 +115,10 @@ public:
     ~ChildEvent() = default;
 
     Object* child();
-    const Object* child() const;
+    Object const* child() const;
 
     Object* insertion_before_child();
-    const Object* insertion_before_child() const;
+    Object const* insertion_before_child() const;
 
 private:
     WeakPtr<Object> m_child;

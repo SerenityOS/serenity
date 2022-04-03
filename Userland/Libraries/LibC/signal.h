@@ -17,25 +17,25 @@ __BEGIN_DECLS
 int kill(pid_t, int sig);
 int killpg(int pgrp, int sig);
 sighandler_t signal(int sig, sighandler_t);
-int pthread_sigmask(int how, const sigset_t* set, sigset_t* old_set);
+int pthread_sigmask(int how, sigset_t const* set, sigset_t* old_set);
 int sigaction(int sig, const struct sigaction* act, struct sigaction* old_act);
 int sigemptyset(sigset_t*);
 int sigfillset(sigset_t*);
 int sigaddset(sigset_t*, int sig);
-int sigaltstack(const stack_t* ss, stack_t* old_ss);
+int sigaltstack(stack_t const* ss, stack_t* old_ss);
 int sigdelset(sigset_t*, int sig);
-int sigismember(const sigset_t*, int sig);
-int sigprocmask(int how, const sigset_t* set, sigset_t* old_set);
+int sigismember(sigset_t const*, int sig);
+int sigprocmask(int how, sigset_t const* set, sigset_t* old_set);
 int sigpending(sigset_t*);
-int sigsuspend(const sigset_t*);
+int sigsuspend(sigset_t const*);
 int sigtimedwait(sigset_t const*, siginfo_t*, struct timespec const*);
 int sigwait(sigset_t const*, int*);
 int sigwaitinfo(sigset_t const*, siginfo_t*);
 int raise(int sig);
-int getsignalbyname(const char*);
-const char* getsignalname(int);
+int getsignalbyname(char const*);
+char const* getsignalname(int);
 
-extern const char* sys_siglist[NSIG];
-extern const char* sys_signame[NSIG];
+extern char const* sys_siglist[NSIG];
+extern char const* sys_signame[NSIG];
 
 __END_DECLS

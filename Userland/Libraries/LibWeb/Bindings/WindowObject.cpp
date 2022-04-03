@@ -91,6 +91,9 @@ void WindowObject::initialize_global_object()
 
     define_native_function("queueMicrotask", queue_microtask, 1, attr);
 
+    define_native_function("requestIdleCallback", request_idle_callback, 1, attr);
+    define_native_function("cancelIdleCallback", cancel_idle_callback, 1, attr);
+
     define_native_function("getComputedStyle", get_computed_style, 1, attr);
     define_native_function("matchMedia", match_media, 1, attr);
     define_native_function("getSelection", get_selection, 0, attr);
@@ -330,6 +333,31 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::queue_microtask)
     auto callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
 
     impl->queue_microtask(move(callback));
+    return JS::js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_idle_callback)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    if (!vm.argument_count())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountAtLeastOne, "requestIdleCallback");
+    auto* callback_object = TRY(vm.argument(0).to_object(global_object));
+    if (!callback_object->is_function())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAFunctionNoParam);
+    // FIXME: accept options object
+
+    auto callback = adopt_own(*new Bindings::CallbackType(JS::make_handle(callback_object), HTML::incumbent_settings_object()));
+
+    return JS::Value(impl->request_idle_callback(move(callback)));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_idle_callback)
+{
+    auto* impl = TRY(impl_from(vm, global_object));
+    if (!vm.argument_count())
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::BadArgCountOne, "cancelIdleCallback");
+    auto id = TRY(vm.argument(0).to_u32(global_object));
+    impl->cancel_idle_callback(id);
     return JS::js_undefined();
 }
 

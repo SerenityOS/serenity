@@ -91,8 +91,8 @@ private:
         }
     }
 
-    const u64* m_start;
-    const u64* m_end;
+    u64 const* m_start;
+    u64 const* m_end;
     u64* m_current;
 };
 }
@@ -181,7 +181,7 @@ static void activate_mmu()
 
     // Enable MMU in the system control register
     Aarch64::SCTLR_EL1 sctlr_el1 = Aarch64::SCTLR_EL1::read();
-    sctlr_el1.M = 1; //Enable MMU
+    sctlr_el1.M = 1; // Enable MMU
     Aarch64::SCTLR_EL1::write(sctlr_el1);
 
     Aarch64::Asm::flush();

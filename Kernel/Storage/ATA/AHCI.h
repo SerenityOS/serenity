@@ -130,13 +130,13 @@ namespace Kernel::AHCI {
 class MaskedBitField {
 
 public:
-    explicit MaskedBitField(volatile u32& bitfield_register)
+    explicit MaskedBitField(u32 volatile& bitfield_register)
         : m_bitfield(bitfield_register)
         , m_bit_mask(0xffffffff)
     {
     }
 
-    MaskedBitField(volatile u32& bitfield_register, u32 bit_mask)
+    MaskedBitField(u32 volatile& bitfield_register, u32 bit_mask)
         : m_bitfield(bitfield_register)
         , m_bit_mask(bit_mask)
     {
@@ -180,14 +180,14 @@ public:
     u32 bit_mask() const { return m_bit_mask; };
 
     // Disable default implementations that would use surprising integer promotion.
-    bool operator==(const MaskedBitField&) const = delete;
-    bool operator<=(const MaskedBitField&) const = delete;
-    bool operator>=(const MaskedBitField&) const = delete;
-    bool operator<(const MaskedBitField&) const = delete;
-    bool operator>(const MaskedBitField&) const = delete;
+    bool operator==(MaskedBitField const&) const = delete;
+    bool operator<=(MaskedBitField const&) const = delete;
+    bool operator>=(MaskedBitField const&) const = delete;
+    bool operator<(MaskedBitField const&) const = delete;
+    bool operator>(MaskedBitField const&) const = delete;
 
 private:
-    volatile u32& m_bitfield;
+    u32 volatile& m_bitfield;
     const u32 m_bit_mask;
 };
 
@@ -321,7 +321,7 @@ enum SErr : u32 {
 class PortInterruptStatusBitField {
 
 public:
-    explicit PortInterruptStatusBitField(volatile u32& bitfield_register)
+    explicit PortInterruptStatusBitField(u32 volatile& bitfield_register)
         : m_bitfield(bitfield_register)
     {
     }
@@ -331,20 +331,20 @@ public:
     void clear() { m_bitfield = 0xffffffff; }
 
     // Disable default implementations that would use surprising integer promotion.
-    bool operator==(const MaskedBitField&) const = delete;
-    bool operator<=(const MaskedBitField&) const = delete;
-    bool operator>=(const MaskedBitField&) const = delete;
-    bool operator<(const MaskedBitField&) const = delete;
-    bool operator>(const MaskedBitField&) const = delete;
+    bool operator==(MaskedBitField const&) const = delete;
+    bool operator<=(MaskedBitField const&) const = delete;
+    bool operator>=(MaskedBitField const&) const = delete;
+    bool operator<(MaskedBitField const&) const = delete;
+    bool operator>(MaskedBitField const&) const = delete;
 
 private:
-    volatile u32& m_bitfield;
+    u32 volatile& m_bitfield;
 };
 
 class PortInterruptEnableBitField {
 
 public:
-    explicit PortInterruptEnableBitField(volatile u32& bitfield_register)
+    explicit PortInterruptEnableBitField(u32 volatile& bitfield_register)
         : m_bitfield(bitfield_register)
     {
     }
@@ -357,14 +357,14 @@ public:
     void set_all() { m_bitfield = 0xffffffff; }
 
     // Disable default implementations that would use surprising integer promotion.
-    bool operator==(const MaskedBitField&) const = delete;
-    bool operator<=(const MaskedBitField&) const = delete;
-    bool operator>=(const MaskedBitField&) const = delete;
-    bool operator<(const MaskedBitField&) const = delete;
-    bool operator>(const MaskedBitField&) const = delete;
+    bool operator==(MaskedBitField const&) const = delete;
+    bool operator<=(MaskedBitField const&) const = delete;
+    bool operator>=(MaskedBitField const&) const = delete;
+    bool operator<(MaskedBitField const&) const = delete;
+    bool operator>(MaskedBitField const&) const = delete;
 
 private:
-    volatile u32& m_bitfield;
+    u32 volatile& m_bitfield;
 };
 
 struct [[gnu::packed]] PortRegisters {

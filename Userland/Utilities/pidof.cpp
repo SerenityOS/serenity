@@ -14,7 +14,7 @@
 #include <string.h>
 #include <unistd.h>
 
-static ErrorOr<int> pid_of(const String& process_name, bool single_shot, bool omit_pid, pid_t pid)
+static ErrorOr<int> pid_of(String const& process_name, bool single_shot, bool omit_pid, pid_t pid)
 {
     bool displayed_at_least_one = false;
 
@@ -48,8 +48,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     bool single_shot = false;
-    const char* omit_pid_value = nullptr;
-    const char* process_name = nullptr;
+    char const* omit_pid_value = nullptr;
+    char const* process_name = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(single_shot, "Only return one pid", nullptr, 's');

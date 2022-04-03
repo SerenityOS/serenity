@@ -76,7 +76,7 @@ static String convert_enumeration_value_to_cpp_enum_member(String const& value, 
 
 namespace IDL {
 
-HashTable<String> Parser::s_all_imported_paths {};
+HashMap<String, NonnullRefPtr<Interface>> Parser::s_resolved_imports {};
 
 void Parser::assert_specific(char ch)
 {
@@ -124,24 +124,31 @@ HashMap<String, String> Parser::parse_extended_attributes()
     return extended_attributes;
 }
 
-Optional<NonnullOwnPtr<Interface>> Parser::resolve_import(auto path)
+static HashTable<String> import_stack;
+Optional<NonnullRefPtr<Interface>> Parser::resolve_import(auto path)
 {
     auto include_path = LexicalPath::join(import_base_path, path).string();
     if (!Core::File::exists(include_path))
         report_parsing_error(String::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
 
     auto real_path = Core::File::real_path_for(include_path);
-    if (s_all_imported_paths.contains(real_path))
-        return {};
+    if (s_resolved_imports.contains(real_path))
+        return s_resolved_imports.find(real_path)->value;
 
-    s_all_imported_paths.set(real_path);
+    if (import_stack.contains(real_path))
+        report_parsing_error(String::formatted("Circular import detected: {}", include_path), filename, input, lexer.tell());
+    import_stack.set(real_path);
 
     auto file_or_error = Core::File::open(real_path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error())
         report_parsing_error(String::formatted("Failed to open {}: {}", real_path, file_or_error.error()), filename, input, lexer.tell());
 
     auto data = file_or_error.value()->read_all();
-    return Parser(real_path, data, import_base_path).parse();
+    auto result = Parser(real_path, data, import_base_path).parse();
+    import_stack.remove(real_path);
+
+    s_resolved_imports.set(real_path, result);
+    return result;
 }
 
 NonnullRefPtr<Type> Parser::parse_type()
@@ -609,6 +616,25 @@ void Parser::parse_enumeration(Interface& interface)
     consume_whitespace();
 }
 
+void Parser::parse_typedef(Interface& interface)
+{
+    assert_string("typedef");
+    consume_whitespace();
+
+    HashMap<String, String> extended_attributes;
+    if (lexer.consume_specific('['))
+        extended_attributes = parse_extended_attributes();
+
+    auto type = parse_type();
+    consume_whitespace();
+
+    auto name = lexer.consume_until(';');
+    assert_specific(';');
+
+    interface.typedefs.set(name, Typedef { move(extended_attributes), move(type) });
+    consume_whitespace();
+}
+
 void Parser::parse_dictionary(Interface& interface)
 {
     assert_string("dictionary");
@@ -683,7 +709,7 @@ void Parser::parse_dictionary(Interface& interface)
 
 void Parser::parse_interface_mixin(Interface& interface)
 {
-    auto mixin_interface = make<Interface>();
+    auto mixin_interface = make_ref_counted<Interface>();
     mixin_interface->module_own_path = interface.module_own_path;
     mixin_interface->is_mixin = true;
 
@@ -700,15 +726,45 @@ void Parser::parse_interface_mixin(Interface& interface)
     interface.mixins.set(move(name), move(mixin_interface));
 }
 
+void Parser::parse_callback_function(HashMap<String, String>& extended_attributes, Interface& interface)
+{
+    assert_string("callback");
+    consume_whitespace();
+
+    auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
+    consume_whitespace();
+
+    assert_specific('=');
+    consume_whitespace();
+
+    auto return_type = parse_type();
+    consume_whitespace();
+    assert_specific('(');
+    auto parameters = parse_parameters();
+    assert_specific(')');
+    consume_whitespace();
+    assert_specific(';');
+
+    interface.callback_functions.set(name, CallbackFunction { move(return_type), move(parameters), extended_attributes.contains("LegacyTreatNonObjectAsNull") });
+    consume_whitespace();
+}
+
 void Parser::parse_non_interface_entities(bool allow_interface, Interface& interface)
 {
     while (!lexer.is_eof()) {
+        HashMap<String, String> extended_attributes;
+        if (lexer.consume_specific('['))
+            extended_attributes = parse_extended_attributes();
         if (lexer.next_is("dictionary")) {
             parse_dictionary(interface);
         } else if (lexer.next_is("enum")) {
             parse_enumeration(interface);
+        } else if (lexer.next_is("typedef")) {
+            parse_typedef(interface);
         } else if (lexer.next_is("interface mixin")) {
             parse_interface_mixin(interface);
+        } else if (lexer.next_is("callback")) {
+            parse_callback_function(extended_attributes, interface);
         } else if ((allow_interface && !lexer.next_is("interface")) || !allow_interface) {
             auto current_offset = lexer.tell();
             auto name = lexer.consume_until([](auto ch) { return is_ascii_space(ch); });
@@ -724,20 +780,52 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
                 report_parsing_error("expected 'enum' or 'dictionary'", filename, input, current_offset);
             }
         } else {
+            interface.extended_attributes = move(extended_attributes);
             break;
         }
     }
 }
 
-NonnullOwnPtr<Interface> Parser::parse()
+void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, HashMap<String, String>* extended_attributes = {})
+{
+    if (is<ParameterizedType>(*type)) {
+        auto parameterized_type = static_ptr_cast<ParameterizedType>(type);
+        auto& parameters = static_cast<Vector<NonnullRefPtr<Type>>&>(parameterized_type->parameters);
+        for (auto& parameter : parameters)
+            resolve_typedef(interface, parameter);
+        return;
+    }
+
+    auto it = interface.typedefs.find(type->name);
+    if (it == interface.typedefs.end())
+        return;
+    type = it->value.type;
+    if (!extended_attributes)
+        return;
+    for (auto& attribute : it->value.extended_attributes)
+        extended_attributes->set(attribute.key, attribute.value);
+}
+void resolve_parameters_typedefs(Interface& interface, Vector<Parameter>& parameters)
+{
+    for (auto& parameter : parameters)
+        resolve_typedef(interface, parameter.type, &parameter.extended_attributes);
+}
+template<typename FunctionType>
+void resolve_function_typedefs(Interface& interface, FunctionType& function)
+{
+    resolve_typedef(interface, function.return_type);
+    resolve_parameters_typedefs(interface, function.parameters);
+}
+
+NonnullRefPtr<Interface> Parser::parse()
 {
     auto this_module = Core::File::real_path_for(filename);
-    s_all_imported_paths.set(this_module);
 
-    auto interface = make<Interface>();
+    auto interface = make_ref_counted<Interface>();
     interface->module_own_path = this_module;
+    s_resolved_imports.set(this_module, interface);
 
-    NonnullOwnPtrVector<Interface> imports;
+    NonnullRefPtrVector<Interface> imports;
     while (lexer.consume_specific("#import")) {
         consume_whitespace();
         assert_specific('<');
@@ -745,16 +833,13 @@ NonnullOwnPtr<Interface> Parser::parse()
         lexer.ignore();
         auto maybe_interface = resolve_import(path);
         if (maybe_interface.has_value()) {
-            for (auto& entry : maybe_interface.value()->imported_paths)
-                s_all_imported_paths.set(entry);
+            for (auto& entry : maybe_interface.value()->required_imported_paths)
+                required_imported_paths.set(entry);
             imports.append(maybe_interface.release_value());
         }
         consume_whitespace();
     }
-    interface->imported_paths = s_all_imported_paths;
-
-    if (lexer.consume_specific('['))
-        interface->extended_attributes = parse_extended_attributes();
+    interface->required_imported_paths = required_imported_paths;
 
     parse_non_interface_entities(true, *interface);
 
@@ -774,11 +859,17 @@ NonnullOwnPtr<Interface> Parser::parse()
             interface->enumerations.set(enumeration.key, move(enumeration_copy));
         }
 
+        for (auto& typedef_ : import.typedefs)
+            interface->typedefs.set(typedef_.key, typedef_.value);
+
         for (auto& mixin : import.mixins) {
-            if (interface->mixins.contains(mixin.key))
+            if (auto it = interface->mixins.find(mixin.key); it != interface->mixins.end() && it->value.ptr() != mixin.value.ptr())
                 report_parsing_error(String::formatted("Mixin '{}' was already defined in {}", mixin.key, mixin.value->module_own_path), filename, input, lexer.tell());
-            interface->mixins.set(mixin.key, move(mixin.value));
+            interface->mixins.set(mixin.key, mixin.value);
         }
+
+        for (auto& callback_function : import.callback_functions)
+            interface->callback_functions.set(callback_function.key, callback_function.value);
     }
 
     // Resolve mixins
@@ -802,6 +893,42 @@ NonnullOwnPtr<Interface> Parser::parse()
             }
         }
     }
+
+    // Resolve typedefs
+    for (auto& attribute : interface->attributes)
+        resolve_typedef(*interface, attribute.type, &attribute.extended_attributes);
+    for (auto& constant : interface->constants)
+        resolve_typedef(*interface, constant.type);
+    for (auto& constructor : interface->constructors)
+        resolve_parameters_typedefs(*interface, constructor.parameters);
+    for (auto& function : interface->functions)
+        resolve_function_typedefs(*interface, function);
+    for (auto& static_function : interface->static_functions)
+        resolve_function_typedefs(*interface, static_function);
+    if (interface->value_iterator_type.has_value())
+        resolve_typedef(*interface, *interface->value_iterator_type);
+    if (interface->pair_iterator_types.has_value()) {
+        resolve_typedef(*interface, interface->pair_iterator_types->get<0>());
+        resolve_typedef(*interface, interface->pair_iterator_types->get<1>());
+    }
+    if (interface->named_property_getter.has_value())
+        resolve_function_typedefs(*interface, *interface->named_property_getter);
+    if (interface->named_property_setter.has_value())
+        resolve_function_typedefs(*interface, *interface->named_property_setter);
+    if (interface->indexed_property_getter.has_value())
+        resolve_function_typedefs(*interface, *interface->indexed_property_getter);
+    if (interface->indexed_property_setter.has_value())
+        resolve_function_typedefs(*interface, *interface->indexed_property_setter);
+    if (interface->named_property_deleter.has_value())
+        resolve_function_typedefs(*interface, *interface->named_property_deleter);
+    if (interface->named_property_getter.has_value())
+        resolve_function_typedefs(*interface, *interface->named_property_getter);
+    for (auto& dictionary : interface->dictionaries) {
+        for (auto& dictionary_member : dictionary.value.members)
+            resolve_typedef(*interface, dictionary_member.type, &dictionary_member.extended_attributes);
+    }
+    for (auto& callback_function : interface->callback_functions)
+        resolve_function_typedefs(*interface, callback_function.value);
 
     // Create overload sets
     for (auto& function : interface->functions) {
@@ -828,6 +955,8 @@ NonnullOwnPtr<Interface> Parser::parse()
     }
     // FIXME: Add support for overloading constructors
 
+    if (interface->will_generate_code())
+        interface->required_imported_paths.set(this_module);
     interface->imported_modules = move(imports);
 
     return interface;

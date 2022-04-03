@@ -116,7 +116,7 @@ public:
         return false;
     }
 
-    ValueAndShadowReference<T>& operator=(const ValueWithShadow<T>&);
+    ValueAndShadowReference<T>& operator=(ValueWithShadow<T> const&);
 
     T shadow_as_value() const requires(IsTriviallyConstructible<T>)
     {
@@ -165,14 +165,14 @@ ALWAYS_INLINE ValueWithShadow<T> shadow_wrap_with_taint_from(T value, U const& t
 }
 
 template<typename T>
-inline ValueWithShadow<T>::ValueWithShadow(const ValueAndShadowReference<T>& other)
+inline ValueWithShadow<T>::ValueWithShadow(ValueAndShadowReference<T> const& other)
     : m_value(other.value())
     , m_shadow(other.shadow())
 {
 }
 
 template<typename T>
-inline ValueAndShadowReference<T>& ValueAndShadowReference<T>::operator=(const ValueWithShadow<T>& other)
+inline ValueAndShadowReference<T>& ValueAndShadowReference<T>::operator=(ValueWithShadow<T> const& other)
 {
     m_value = other.value();
     m_shadow = other.shadow();

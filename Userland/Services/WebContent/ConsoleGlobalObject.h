@@ -21,7 +21,7 @@ class ConsoleGlobalObject final : public JS::GlobalObject {
 
 public:
     ConsoleGlobalObject(Web::Bindings::WindowObject&);
-    virtual ~ConsoleGlobalObject() override;
+    virtual ~ConsoleGlobalObject() override = default;
 
     virtual JS::ThrowCompletionOr<Object*> internal_get_prototype_of() const override;
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;

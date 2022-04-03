@@ -137,12 +137,11 @@ UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
     return {};
 }
 
-UNMAP_AFTER_INIT void HIDManagement::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::initialize()
 {
     VERIFY(!s_the.is_initialized());
     s_the.ensure_instance();
-    // FIXME: Propagate errors back to init to deal with them.
-    MUST(s_the->enumerate());
+    return s_the->enumerate();
 }
 
 HIDManagement& HIDManagement::the()

@@ -6,13 +6,15 @@
  */
 
 #include <LibGfx/Painter.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/PaintContext.h>
 
 namespace Web::Painting {
 
-void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, Gfx::IntRect const& border_rect, Color background_color, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiusData const& border_radius)
+// https://www.w3.org/TR/css-backgrounds-3/#backgrounds
+void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMetrics const& layout_node, Gfx::FloatRect const& border_rect, Color background_color, Vector<CSS::BackgroundLayerData> const* background_layers, BorderRadiusData const& border_radius)
 {
     auto& painter = context.painter();
 
@@ -39,7 +41,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
     if (background_layers && !background_layers->is_empty())
         color_rect = get_box(background_layers->last().clip);
     // FIXME: Support elliptical corners
-    painter.fill_rect_with_rounded_corners(color_rect, background_color, border_radius.top_left, border_radius.top_right, border_radius.bottom_right, border_radius.bottom_left);
+    painter.fill_rect_with_rounded_corners(color_rect.to_rounded<int>(), background_color, border_radius.top_left, border_radius.top_right, border_radius.bottom_right, border_radius.bottom_left);
 
     if (!background_layers)
         return;
@@ -55,33 +57,41 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         // Clip
         auto clip_rect = get_box(layer.clip);
         painter.save();
-        painter.add_clip_rect(clip_rect);
+        painter.add_clip_rect(clip_rect.to_rounded<int>());
 
-        // FIXME: Attachment
+        Gfx::FloatRect background_positioning_area;
 
-        // Origin
-        auto background_positioning_area = get_box(layer.origin);
+        // Attachment and Origin
+        switch (layer.attachment) {
+        case CSS::BackgroundAttachment::Fixed:
+            background_positioning_area = layout_node.root().browsing_context().viewport_rect().to_type<float>();
+            break;
+        case CSS::BackgroundAttachment::Local:
+        case CSS::BackgroundAttachment::Scroll:
+            background_positioning_area = get_box(layer.origin);
+            break;
+        }
 
         // Size
-        Gfx::IntRect image_rect;
+        Gfx::FloatRect image_rect;
         switch (layer.size_type) {
         case CSS::BackgroundSize::Contain: {
-            float max_width_ratio = (float)background_positioning_area.width() / (float)image.width();
-            float max_height_ratio = (float)background_positioning_area.height() / (float)image.height();
+            float max_width_ratio = background_positioning_area.width() / image.width();
+            float max_height_ratio = background_positioning_area.height() / image.height();
             float ratio = min(max_width_ratio, max_height_ratio);
-            image_rect.set_size(roundf(image.width() * ratio), roundf(image.height() * ratio));
+            image_rect.set_size(image.width() * ratio, image.height() * ratio);
             break;
         }
         case CSS::BackgroundSize::Cover: {
-            float max_width_ratio = (float)background_positioning_area.width() / (float)image.width();
-            float max_height_ratio = (float)background_positioning_area.height() / (float)image.height();
+            float max_width_ratio = background_positioning_area.width() / image.width();
+            float max_height_ratio = background_positioning_area.height() / image.height();
             float ratio = max(max_width_ratio, max_height_ratio);
-            image_rect.set_size(roundf(image.width() * ratio), roundf(image.height() * ratio));
+            image_rect.set_size(image.width() * ratio, image.height() * ratio);
             break;
         }
         case CSS::BackgroundSize::LengthPercentage: {
-            int width;
-            int height;
+            float width;
+            float height;
             bool x_is_auto = layer.size_x.is_length() && layer.size_x.length().is_auto();
             bool y_is_auto = layer.size_y.is_length() && layer.size_y.length().is_auto();
             if (x_is_auto && y_is_auto) {
@@ -89,10 +99,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 height = image.height();
             } else if (x_is_auto) {
                 height = layer.size_y.resolved(layout_node, CSS::Length::make_px(background_positioning_area.height())).to_px(layout_node);
-                width = roundf(image.width() * ((float)height / (float)image.height()));
+                width = image.width() * (height / image.height());
             } else if (y_is_auto) {
                 width = layer.size_x.resolved(layout_node, CSS::Length::make_px(background_positioning_area.width())).to_px(layout_node);
-                height = roundf(image.height() * ((float)width / (float)image.width()));
+                height = image.height() * (width / image.width());
             } else {
                 width = layer.size_x.resolved(layout_node, CSS::Length::make_px(background_positioning_area.width())).to_px(layout_node);
                 height = layer.size_y.resolved(layout_node, CSS::Length::make_px(background_positioning_area.height())).to_px(layout_node);
@@ -112,10 +122,10 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             // where round() is a function that returns the nearest natural number
             // (integer greater than zero).
             if (layer.repeat_x == CSS::Repeat::Round) {
-                image_rect.set_width((float)background_positioning_area.width() / roundf((float)background_positioning_area.width() / (float)image_rect.width()));
+                image_rect.set_width(background_positioning_area.width() / background_positioning_area.width() / image_rect.width());
             }
             if (layer.repeat_y == CSS::Repeat::Round) {
-                image_rect.set_height((float)background_positioning_area.height() / roundf((float)background_positioning_area.height() / (float)image_rect.height()));
+                image_rect.set_height(background_positioning_area.height() / background_positioning_area.height() / image_rect.height());
             }
 
             // If background-repeat is round for one dimension only and if background-size is auto
@@ -123,26 +133,26 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
             // so that the original aspect ratio is restored.
             if (layer.repeat_x != layer.repeat_y) {
                 if (layer.size_x.is_length() && layer.size_x.length().is_auto()) {
-                    image_rect.set_width((float)image.width() * ((float)image_rect.height() / (float)image.height()));
+                    image_rect.set_width(image.width() * (image_rect.height() / image.height()));
                 }
                 if (layer.size_y.is_length() && layer.size_y.length().is_auto()) {
-                    image_rect.set_height((float)image.height() * ((float)image_rect.width() / (float)image.width()));
+                    image_rect.set_height(image.height() * (image_rect.width() / image.width()));
                 }
             }
         }
 
-        int space_x = background_positioning_area.width() - image_rect.width();
-        int space_y = background_positioning_area.height() - image_rect.height();
+        float space_x = background_positioning_area.width() - image_rect.width();
+        float space_y = background_positioning_area.height() - image_rect.height();
 
         // Position
-        int offset_x = layer.position_offset_x.resolved(layout_node, CSS::Length::make_px(space_x)).to_px(layout_node);
+        float offset_x = layer.position_offset_x.resolved(layout_node, CSS::Length::make_px(space_x)).to_px(layout_node);
         if (layer.position_edge_x == CSS::PositionEdge::Right) {
             image_rect.set_right_without_resize(background_positioning_area.right() - offset_x);
         } else {
             image_rect.set_left(background_positioning_area.left() + offset_x);
         }
 
-        int offset_y = layer.position_offset_y.resolved(layout_node, CSS::Length::make_px(space_y)).to_px(layout_node);
+        float offset_y = layer.position_offset_y.resolved(layout_node, CSS::Length::make_px(space_y)).to_px(layout_node);
         if (layer.position_edge_y == CSS::PositionEdge::Bottom) {
             image_rect.set_bottom_without_resize(background_positioning_area.bottom() - offset_y);
         } else {
@@ -166,7 +176,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 x_step = image_rect.width();
                 repeat_x = false;
             } else {
-                int space = background_positioning_area.width() % image_rect.width();
+                float space = fmodf(background_positioning_area.width(), image_rect.width());
                 x_step = image_rect.width() + ((float)space / (float)(whole_images - 1));
                 repeat_x = true;
             }
@@ -197,7 +207,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                 y_step = image_rect.height();
                 repeat_y = false;
             } else {
-                int space = background_positioning_area.height() % image_rect.height();
+                float space = fmodf(background_positioning_area.height(), image_rect.height());
                 y_step = image_rect.height() + ((float)space / (float)(whole_images - 1));
                 repeat_y = true;
             }
@@ -221,12 +231,12 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         float initial_image_x = image_rect.x();
         float image_y = image_rect.y();
         while (image_y < clip_rect.bottom()) {
-            image_rect.set_y(roundf(image_y));
+            image_rect.set_y(image_y);
 
             float image_x = initial_image_x;
             while (image_x < clip_rect.right()) {
-                image_rect.set_x(roundf(image_x));
-                painter.draw_scaled_bitmap(image_rect, image, image.rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                image_rect.set_x(image_x);
+                painter.draw_scaled_bitmap(image_rect.to_rounded<int>(), image, image.rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
                 if (!repeat_x)
                     break;
                 image_x += x_step;

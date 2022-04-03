@@ -49,30 +49,30 @@ typedef struct {
     sigset_t sigmask;
 } posix_spawnattr_t;
 
-int posix_spawn(pid_t*, const char*, const posix_spawn_file_actions_t*, const posix_spawnattr_t*, char* const argv[], char* const envp[]);
-int posix_spawnp(pid_t*, const char*, const posix_spawn_file_actions_t*, const posix_spawnattr_t*, char* const argv[], char* const envp[]);
+int posix_spawn(pid_t*, char const*, posix_spawn_file_actions_t const*, posix_spawnattr_t const*, char* const argv[], char* const envp[]);
+int posix_spawnp(pid_t*, char const*, posix_spawn_file_actions_t const*, posix_spawnattr_t const*, char* const argv[], char* const envp[]);
 
-int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t*, const char*);
+int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t*, char const*);
 int posix_spawn_file_actions_addfchdir(posix_spawn_file_actions_t*, int);
 int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t*, int);
 int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t*, int old_fd, int new_fd);
-int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t*, int fd, const char*, int flags, mode_t);
+int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t*, int fd, char const*, int flags, mode_t);
 int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t*);
 int posix_spawn_file_actions_init(posix_spawn_file_actions_t*);
 
 int posix_spawnattr_destroy(posix_spawnattr_t*);
-int posix_spawnattr_getflags(const posix_spawnattr_t*, short*);
-int posix_spawnattr_getpgroup(const posix_spawnattr_t*, pid_t*);
-int posix_spawnattr_getschedparam(const posix_spawnattr_t*, struct sched_param*);
-int posix_spawnattr_getschedpolicy(const posix_spawnattr_t*, int*);
-int posix_spawnattr_getsigdefault(const posix_spawnattr_t*, sigset_t*);
-int posix_spawnattr_getsigmask(const posix_spawnattr_t*, sigset_t*);
+int posix_spawnattr_getflags(posix_spawnattr_t const*, short*);
+int posix_spawnattr_getpgroup(posix_spawnattr_t const*, pid_t*);
+int posix_spawnattr_getschedparam(posix_spawnattr_t const*, struct sched_param*);
+int posix_spawnattr_getschedpolicy(posix_spawnattr_t const*, int*);
+int posix_spawnattr_getsigdefault(posix_spawnattr_t const*, sigset_t*);
+int posix_spawnattr_getsigmask(posix_spawnattr_t const*, sigset_t*);
 int posix_spawnattr_init(posix_spawnattr_t*);
 int posix_spawnattr_setflags(posix_spawnattr_t*, short);
 int posix_spawnattr_setpgroup(posix_spawnattr_t*, pid_t);
 int posix_spawnattr_setschedparam(posix_spawnattr_t*, const struct sched_param*);
 int posix_spawnattr_setschedpolicy(posix_spawnattr_t*, int);
-int posix_spawnattr_setsigdefault(posix_spawnattr_t*, const sigset_t*);
-int posix_spawnattr_setsigmask(posix_spawnattr_t*, const sigset_t*);
+int posix_spawnattr_setsigdefault(posix_spawnattr_t*, sigset_t const*);
+int posix_spawnattr_setsigmask(posix_spawnattr_t*, sigset_t const*);
 
 __END_DECLS

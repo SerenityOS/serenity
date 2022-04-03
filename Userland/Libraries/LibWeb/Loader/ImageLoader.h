@@ -16,9 +16,11 @@ class ImageLoader : public ImageResourceClient {
 public:
     ImageLoader(DOM::Element& owner_element);
 
+    void adopt_object_resource(Badge<HTML::HTMLObjectElement>, Resource&);
+
     void load(const AK::URL&);
 
-    const Gfx::Bitmap* bitmap(size_t index) const;
+    Gfx::Bitmap const* bitmap(size_t index) const;
     size_t current_frame_index() const { return m_current_frame_index; }
 
     bool has_image() const;

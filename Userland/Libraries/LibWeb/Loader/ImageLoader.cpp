@@ -20,6 +20,12 @@ ImageLoader::ImageLoader(DOM::Element& owner_element)
 {
 }
 
+void ImageLoader::adopt_object_resource(Badge<HTML::HTMLObjectElement>, Resource& resource)
+{
+    auto image_resource = ImageResource::convert_from_resource(resource);
+    set_resource(image_resource);
+}
+
 void ImageLoader::load(const AK::URL& url)
 {
     m_redirects_count = 0;
@@ -149,7 +155,7 @@ unsigned ImageLoader::height() const
     return bitmap(0) ? bitmap(0)->height() : 0;
 }
 
-const Gfx::Bitmap* ImageLoader::bitmap(size_t frame_index) const
+Gfx::Bitmap const* ImageLoader::bitmap(size_t frame_index) const
 {
     if (!resource())
         return nullptr;

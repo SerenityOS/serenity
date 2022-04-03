@@ -38,10 +38,10 @@ public:
     explicit JsonValue(Type = Type::Null);
     ~JsonValue() { clear(); }
 
-    JsonValue(const JsonValue&);
+    JsonValue(JsonValue const&);
     JsonValue(JsonValue&&);
 
-    JsonValue& operator=(const JsonValue&);
+    JsonValue& operator=(JsonValue const&);
     JsonValue& operator=(JsonValue&&);
 
     JsonValue(int);
@@ -55,13 +55,13 @@ public:
     JsonValue(double);
 #endif
     JsonValue(bool);
-    JsonValue(const char*);
+    JsonValue(char const*);
 #ifndef KERNEL
-    JsonValue(const String&);
+    JsonValue(String const&);
 #endif
     JsonValue(StringView);
-    JsonValue(const JsonArray&);
-    JsonValue(const JsonObject&);
+    JsonValue(JsonArray const&);
+    JsonValue(JsonObject const&);
 
     JsonValue(JsonArray&&);
     JsonValue(JsonObject&&);
@@ -163,13 +163,13 @@ public:
     }
 #endif
 
-    const JsonObject& as_object() const
+    JsonObject const& as_object() const
     {
         VERIFY(is_object());
         return *m_value.as_object;
     }
 
-    const JsonArray& as_array() const
+    JsonArray const& as_array() const
     {
         VERIFY(is_array());
         return *m_value.as_array;
@@ -240,11 +240,11 @@ public:
         return default_value;
     }
 
-    bool equals(const JsonValue& other) const;
+    bool equals(JsonValue const& other) const;
 
 private:
     void clear();
-    void copy_from(const JsonValue&);
+    void copy_from(JsonValue const&);
 
     Type m_type { Type::Null };
 

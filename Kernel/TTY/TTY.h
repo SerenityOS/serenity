@@ -22,13 +22,10 @@ public:
     virtual ~TTY() override;
 
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
-    virtual bool can_read(const OpenFileDescription&, u64) const override;
-    virtual bool can_write(const OpenFileDescription&, u64) const override;
+    virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override;
+    virtual bool can_read(OpenFileDescription const&, u64) const override;
+    virtual bool can_write(OpenFileDescription const&, u64) const override;
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override final;
-    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(const OpenFileDescription&) const override;
-
-    virtual KString const& tty_name() const = 0;
 
     unsigned short rows() const { return m_rows; }
     unsigned short columns() const { return m_columns; }
@@ -40,7 +37,7 @@ public:
         return 0;
     }
 
-    ErrorOr<void> set_termios(const termios&);
+    ErrorOr<void> set_termios(termios const&);
     bool should_generate_signals() const { return (m_termios.c_lflag & ISIG) == ISIG; }
     bool should_flush_on_signal() const { return (m_termios.c_lflag & NOFLSH) != NOFLSH; }
     bool should_echo_input() const { return (m_termios.c_lflag & ECHO) == ECHO; }
@@ -49,8 +46,10 @@ public:
     void set_default_termios();
     void hang_up();
 
+    virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_name() const = 0;
+
 protected:
-    virtual ErrorOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) = 0;
+    virtual ErrorOr<size_t> on_tty_write(UserOrKernelBuffer const&, size_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);
 
     TTY(MajorNumber major, MinorNumber minor);

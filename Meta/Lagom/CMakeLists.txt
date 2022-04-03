@@ -55,15 +55,21 @@ if (ENABLE_LAGOM_CCACHE)
     endif()
 endif()
 
+if (ENABLE_FUZZERS_LIBFUZZER OR ENABLE_FUZZERS_OSSFUZZ)
+	set(ENABLE_FUZZERS ON)
+endif()
+
 include(wasm_spec_tests)
 
+add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wno-literal-suffix -Wno-implicit-const-int-float-conversion)
 add_compile_options(-O2)
 add_compile_options(-Wall -Wextra -Werror)
 add_compile_options(-fPIC -g)
 add_compile_options(-Wno-maybe-uninitialized)
 add_compile_options(-fno-exceptions)
-if (NOT ENABLE_FUZZER_SANITIZER)
+add_compile_options(-fdiagnostics-color=always)
+if (NOT ENABLE_FUZZERS)
     add_compile_options(-fno-semantic-interposition)
 endif()
 
@@ -104,21 +110,26 @@ if (ENABLE_UNDEFINED_SANITIZER)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
 endif()
 
+if (ENABLE_FUZZERS)
+    add_compile_options(-fno-omit-frame-pointer)
+endif()
+
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
     add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals -fconstexpr-steps=16777216)
 
-    if (ENABLE_FUZZER_SANITIZER)
-        add_compile_options(-fsanitize=fuzzer -fno-omit-frame-pointer)
+    if (ENABLE_FUZZERS_LIBFUZZER)
+        add_compile_options(-fsanitize=fuzzer)
         set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=fuzzer")
     endif()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-expansion-to-defined)
-    if (ENABLE_FUZZER_SANITIZER)
+    if (ENABLE_FUZZERS_LIBFUZZER)
         message(FATAL_ERROR
             "Fuzzer Sanitizer (-fsanitize=fuzzer) is only supported for Fuzzer targets with LLVM. "
-            "Reconfigure CMake with -DCMAKE_C_COMPILER and -DCMAKE_CXX_COMPILER pointing to a clang-based toolchain"
+            "Reconfigure CMake with -DCMAKE_C_COMPILER and -DCMAKE_CXX_COMPILER pointing to a clang-based toolchain "
+	    "or build binaries without built-in fuzzing support by setting -DENABLE_FUZZERS instead."
         )
     endif()
 endif()
@@ -172,7 +183,7 @@ function(lagom_lib library fs_name)
 
     # Don't make alias when we're going to import a previous build for Tools
     # FIXME: Is there a better way to write this?
-    if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
+    if (NOT ENABLE_FUZZERS)
         # alias for parity with exports
         add_library(Lagom::${library} ALIAS ${target_name})
     endif()
@@ -271,7 +282,7 @@ install(
 # Code Generators and other host tools
 # We need to make sure not to build code generators for Fuzzer builds, as they already have their own main.cpp
 # Instead, we import them from a previous install of Lagom. This mandates a two-stage build for fuzzers.
-if (ENABLE_OSS_FUZZ OR ENABLE_FUZZER_SANITIZER)
+if (ENABLE_FUZZERS)
     find_package(Lagom REQUIRED)
 else()
     add_subdirectory(Tools)
@@ -327,7 +338,7 @@ if (BUILD_LAGOM)
         LIBS LagomTLS
     )
 
-    # GFX
+    # Gfx
     file(GLOB LIBGFX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/*.cpp")
     file(GLOB LIBGFX_TTF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/TrueTypeFont/*.cpp")
     lagom_lib(Gfx gfx
@@ -395,8 +406,9 @@ if (BUILD_LAGOM)
 
     # PDF
     file(GLOB LIBPDF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibPDF/*.cpp")
+    file(GLOB LIBPDF_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibPDF/*/*.cpp")
     lagom_lib(PDF pdf
-       SOURCES ${LIBPDF_SOURCES}
+       SOURCES ${LIBPDF_SOURCES} ${LIBPDF_SUBDIR_SOURCES}
        LIBS LagomGfx LagomIPC LagomTextCodec
     )
 
@@ -477,7 +489,11 @@ if (BUILD_LAGOM)
         )
     endif()
 
-    if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER AND NOT ENABLE_COMPILER_EXPLORER_BUILD)
+    file(GLOB LIBXML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibXML/*/*.cpp")
+    lagom_lib(XML xml
+        SOURCES ${LIBXML_SOURCES})
+
+    if (NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD)
         # Lagom Examples
         add_executable(TestApp TestApp.cpp)
         target_link_libraries(TestApp LagomCore)
@@ -508,7 +524,7 @@ if (BUILD_LAGOM)
 
         add_executable(markdown-check_lagom ../../Userland/Utilities/markdown-check.cpp)
         set_target_properties(markdown-check_lagom PROPERTIES OUTPUT_NAME markdown-check)
-        target_link_libraries(markdown-check_lagom LagomMarkdown)
+        target_link_libraries(markdown-check_lagom LagomMarkdown LagomMain)
 
         add_executable(ntpquery_lagom ../../Userland/Utilities/ntpquery.cpp)
         set_target_properties(ntpquery_lagom PROPERTIES OUTPUT_NAME ntpquery)
@@ -521,6 +537,10 @@ if (BUILD_LAGOM)
         add_executable(wasm_lagom ../../Userland/Utilities/wasm.cpp)
         set_target_properties(wasm_lagom PROPERTIES OUTPUT_NAME wasm)
         target_link_libraries(wasm_lagom LagomCore LagomWasm LagomLine LagomMain)
+
+        add_executable(xml_lagom ../../Userland/Utilities/xml.cpp)
+        set_target_properties(xml_lagom PROPERTIES OUTPUT_NAME xml)
+        target_link_libraries(xml_lagom LagomCore LagomXML LagomMain)
 
         enable_testing()
         # LibTest
@@ -587,11 +607,24 @@ if (BUILD_LAGOM)
             lagom_test(${source} LIBS LagomSQL)
         endforeach()
 
+        # TextCodec
+        file(GLOB LIBTEXTCODEC_TESTS CONFIGURE_DEPENDS "../../Tests/LibTextCodec/*.cpp")
+        foreach(source ${LIBTEXTCODEC_TESTS})
+            lagom_test(${source} LIBS LagomTextCodec
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTextCodec)
+        endforeach()
+
         # TLS
         file(GLOB LIBTLS_TESTS CONFIGURE_DEPENDS "../../Tests/LibTLS/*.cpp")
         foreach(source ${LIBTLS_TESTS})
             lagom_test(${source} LIBS LagomTLS
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTLS)
+        endforeach()
+
+        # TTF
+        file(GLOB LIBTTF_TESTS CONFIGURE_DEPENDS "../../Tests/LibTTF/*.cpp")
+        foreach(source ${LIBTTF_TESTS})
+            lagom_test(${source} LIBS LagomGfx)
         endforeach()
 
         # TimeZone
@@ -694,6 +727,6 @@ if (BUILD_LAGOM)
     endif()
 endif()
 
-if (ENABLE_FUZZER_SANITIZER OR ENABLE_OSS_FUZZ)
+if (ENABLE_FUZZERS)
     add_subdirectory(Fuzzers)
 endif()

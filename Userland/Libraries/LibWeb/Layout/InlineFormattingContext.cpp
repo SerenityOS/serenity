@@ -69,17 +69,12 @@ void InlineFormattingContext::run(Box const&, LayoutMode layout_mode)
 
     generate_line_boxes(layout_mode);
 
-    float min_line_height = containing_block().line_height();
     float max_line_width = 0;
     float content_height = 0;
 
     for (auto& line_box : m_state.get(containing_block()).line_boxes) {
-        float max_height = min_line_height;
-        for (auto& fragment : line_box.fragments()) {
-            max_height = max(max_height, fragment.border_box_height());
-        }
         max_line_width = max(max_line_width, line_box.width());
-        content_height += max_height;
+        content_height += line_box.height();
     }
 
     auto& containing_block_state = m_state.get_mutable(containing_block());
@@ -232,7 +227,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
         auto& item = item_opt.value();
 
         // Ignore collapsible whitespace chunks at the start of line, and if the last fragment already ends in whitespace.
-        if (item.is_collapsible_whitespace && line_boxes.last().is_empty_or_ends_in_whitespace())
+        if (item.is_collapsible_whitespace && (line_boxes.is_empty() || line_boxes.last().is_empty_or_ends_in_whitespace()))
             continue;
 
         switch (item.type) {
@@ -241,7 +236,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
             break;
         case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
-            line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break);
+            line_builder.break_if_needed(layout_mode, item.border_box_width());
             line_builder.append_box(box, item.border_start + item.padding_start, item.padding_end + item.border_end, item.margin_start, item.margin_end);
             break;
         }
@@ -250,9 +245,27 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
                 parent().add_absolutely_positioned_box(static_cast<Layout::Box const&>(*item.node));
             break;
 
+        case InlineLevelIterator::Item::Type::FloatingElement:
+            if (is<Box>(*item.node))
+                parent().layout_floating_box(static_cast<Layout::Box const&>(*item.node), containing_block(), layout_mode, &line_builder);
+            break;
+
         case InlineLevelIterator::Item::Type::Text: {
             auto& text_node = verify_cast<Layout::TextNode>(*item.node);
-            line_builder.break_if_needed(layout_mode, item.border_box_width(), item.should_force_break);
+
+            if (text_node.computed_values().white_space() != CSS::WhiteSpace::Nowrap && line_builder.break_if_needed(layout_mode, item.border_box_width())) {
+                // If whitespace caused us to break, we swallow the whitespace instead of
+                // putting it on the next line.
+
+                // If we're in a whitespace-collapsing context, we can simply check the flag.
+                if (item.is_collapsible_whitespace)
+                    break;
+
+                // In whitespace-preserving contexts (white-space: pre*), we have to check manually.
+                auto view = text_node.text_for_rendering().substring_view(item.offset_in_node, item.length_in_node);
+                if (view.is_whitespace())
+                    break;
+            }
             line_builder.append_text_chunk(
                 text_node,
                 item.offset_in_node,
@@ -262,7 +275,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
                 item.margin_start,
                 item.margin_end,
                 item.width,
-                text_node.computed_values().font_size());
+                text_node.line_height());
             break;
         }
         }

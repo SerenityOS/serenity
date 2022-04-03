@@ -12,9 +12,9 @@
 #include <string.h>
 #include <time.h>
 
-const int line_width = 70;
-const int line_count = 8;
-const int column_width = 22;
+int const line_width = 70;
+int const line_count = 8;
+int const column_width = 22;
 
 char print_buffer[line_width * line_count];
 char temp_buffer[line_width * 8];

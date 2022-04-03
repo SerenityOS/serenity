@@ -11,7 +11,7 @@
 
 extern "C" {
 
-int statvfs(const char* path, struct statvfs* buf)
+int statvfs(char const* path, struct statvfs* buf)
 {
     Syscall::SC_statvfs_params params { { path, strlen(path) }, buf };
     int rc = syscall(SC_statvfs, &params);

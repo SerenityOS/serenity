@@ -7,11 +7,9 @@
 #include "ShutdownDialog.h"
 #include "TaskbarWindow.h"
 #include <AK/Debug.h>
-#include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
@@ -23,6 +21,7 @@
 #include <LibGUI/ConnectionToWindowMangerServer.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Menu.h>
+#include <LibGfx/SystemTheme.h>
 #include <LibMain/Main.h>
 #include <WindowServer/Window.h>
 #include <serenity.h>
@@ -78,14 +77,9 @@ struct AppMetadata {
 };
 Vector<AppMetadata> g_apps;
 
-struct ThemeMetadata {
-    String name;
-    String path;
-};
-
 Color g_menu_selection_color;
 
-Vector<ThemeMetadata> g_themes;
+Vector<Gfx::SystemThemeMetaData> g_themes;
 RefPtr<GUI::Menu> g_themes_menu;
 GUI::ActionGroup g_themes_group;
 
@@ -156,14 +150,14 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
         app_category_menus.set(category, category_menu);
     };
 
-    for (const auto& category : sorted_app_categories) {
+    for (auto const& category : sorted_app_categories) {
         if (category != "Settings"sv)
             create_category_menu(category);
     }
 
     // Then we create and insert all the app menu items into the right place.
     int app_identifier = 0;
-    for (const auto& app : g_apps) {
+    for (auto const& app : g_apps) {
         if (app.category == "Settings"sv) {
             ++app_identifier;
             continue;
@@ -214,16 +208,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
     g_themes_menu = &system_menu->add_submenu("&Themes");
     g_themes_menu->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/themes.png").release_value_but_fixme_should_propagate_errors());
 
-    {
-        Core::DirIterator dt("/res/themes", Core::DirIterator::SkipDots);
-        while (dt.has_next()) {
-            auto theme_name = dt.next_path();
-            auto theme_path = String::formatted("/res/themes/{}", theme_name);
-            g_themes.append({ LexicalPath::title(theme_name), theme_path });
-        }
-        quick_sort(g_themes, [](auto& a, auto& b) { return a.name < b.name; });
-    }
-
+    g_themes = Gfx::list_installed_system_themes();
     auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
 
     {
@@ -232,7 +217,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu()
             auto action = GUI::Action::create_checkable(theme.name, [theme_identifier](auto&) {
                 auto& theme = g_themes[theme_identifier];
                 dbgln("Theme switched to {} at path {}", theme.name, theme.path);
-                auto success = GUI::ConnectionToWindowServer::the().set_system_theme(theme.path, theme.name);
+                auto success = GUI::ConnectionToWindowServer::the().set_system_theme(theme.path, theme.name, false);
                 VERIFY(success);
             });
             if (theme.name == current_theme_name)

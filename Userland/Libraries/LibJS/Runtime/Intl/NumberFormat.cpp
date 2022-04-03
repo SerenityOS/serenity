@@ -346,7 +346,7 @@ int currency_digits(StringView currency)
 // 15.5.3 FormatNumericToString ( intlObject, x ), https://tc39.es/ecma402/#sec-formatnumberstring
 FormatResult format_numeric_to_string(GlobalObject& global_object, NumberFormatBase& intl_object, Value number)
 {
-    // 1. If x < 0 or x is -0𝔽, let isNegative be true; else let isNegative be false.
+    // 1. If ℝ(x) < 0 or x is -0𝔽, let isNegative be true; else let isNegative be false.
     bool is_negative = is_less_than(number, 0) || number.is_negative_zero();
 
     // 2. If isNegative, then
@@ -809,7 +809,7 @@ Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number
     // Note: Our implementation of PartitionNumberPattern does not throw.
     auto parts = partition_number_pattern(global_object, number_format, number);
 
-    // 2. Let result be ArrayCreate(0).
+    // 2. Let result be ! ArrayCreate(0).
     auto* result = MUST(Array::create(global_object, 0));
 
     // 3. Let n be 0.
@@ -817,7 +817,7 @@ Array* format_numeric_to_parts(GlobalObject& global_object, NumberFormat& number
 
     // 4. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
-        // a. Let O be OrdinaryObjectCreate(%Object.prototype%).
+        // a. Let O be ! OrdinaryObjectCreate(%Object.prototype%).
         auto* object = Object::create(global_object, global_object.object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
@@ -941,7 +941,7 @@ RawFormatResult to_raw_precision(GlobalObject& global_object, Value number, int 
     // 7. Else,
     else {
         // a. Assert: e < 0.
-        // b. Let m be the string-concatenation of the String value "0.", –(e+1) occurrences of the character "0", and m.
+        // b. Let m be the string-concatenation of "0.", –(e+1) occurrences of the character "0", and m.
         result.formatted_string = String::formatted(
             "0.{}{}",
             String::repeated('0', -1 * (exponent + 1)),
@@ -981,7 +981,7 @@ RawFormatResult to_raw_fixed(GlobalObject& global_object, Value number, int min_
     // 4. Let xFinal be n / 10^f.
     result.rounded_number = divide_by_power(global_object, n, fraction);
 
-    // 5. If n = 0, let m be the String "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
+    // 5. If n = 0, let m be "0". Otherwise, let m be the String consisting of the digits of the decimal representation of n (in order, with no leading zeroes).
     result.formatted_string = is_zero(n) ? String("0"sv) : number_to_string(n);
 
     // 6. If f ≠ 0, then
@@ -1160,12 +1160,12 @@ Optional<Variant<StringView, String>> get_number_format_pattern(NumberFormat& nu
     // 15. Else,
     case NumberFormat::SignDisplay::ExceptZero:
         // a. Assert: signDisplay is "exceptZero".
-        // b. If x is 0 or x is -0 or x is NaN, then
+        // b. If x is NaN, or if x is finite and ℝ(x) is 0, then
         if (is_positive_zero || is_negative_zero || is_nan) {
             // i. Let pattern be patterns.[[zeroPattern]].
             pattern = patterns->zero_format;
         }
-        // c. Else if x > 0, then
+        // c. Else if ℝ(x) > 0, then
         else if (is_greater_than(number, 0)) {
             // i. Let pattern be patterns.[[positivePattern]].
             pattern = patterns->positive_format;

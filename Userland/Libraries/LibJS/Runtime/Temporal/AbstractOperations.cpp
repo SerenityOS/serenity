@@ -666,9 +666,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(GlobalObject& global_object
 
         // f. If timeZoneName is not undefined, then
         if (time_zone_name.has_value()) {
-            // i. If ParseText(StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is not a List of errors, then
-            // FIXME: Logic error in the spec (check for no errors -> check for errors).
-            //        See: https://github.com/tc39/proposal-temporal/pull/2000
+            // i. If ParseText(StringToCodePoints(timeZoneName), TimeZoneNumericUTCOffset) is a List of errors, then
             if (!is_valid_time_zone_numeric_utc_offset_syntax(*time_zone_name)) {
                 // 1. If ! IsValidTimeZoneName(timeZoneName) is false, throw a RangeError exception.
                 if (!is_valid_time_zone_name(*time_zone_name))

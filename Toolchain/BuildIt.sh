@@ -77,8 +77,8 @@ BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
 BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
 
-GDB_VERSION="10.2"
-GDB_MD5SUM="7aeb896762924ae9a2ec59525088bada"
+GDB_VERSION="11.2"
+GDB_MD5SUM="b5674bef1fbd6beead889f80afa6f269"
 GDB_NAME="gdb-$GDB_VERSION"
 GDB_PKG="${GDB_NAME}.tar.gz"
 GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb"
@@ -308,12 +308,31 @@ pushd "$DIR/Build/$ARCH"
 
         pushd gdb
             echo "XXX configure gdb"
-            buildstep "gdb/configure" "$DIR"/Tarballs/$GDB_NAME/configure --prefix="$PREFIX" \
-                                                     --target="$TARGET" \
-                                                     --with-sysroot="$SYSROOT" \
-                                                     --enable-shared \
-                                                     --disable-nls \
-                                                     ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+
+
+            if [ "$SYSTEM_NAME" = "Darwin" ]; then
+                buildstep "gdb/configure" "$DIR"/Tarballs/$GDB_NAME/configure --prefix="$PREFIX" \
+                                                        --target="$TARGET" \
+                                                        --with-sysroot="$SYSROOT" \
+                                                        --enable-shared \
+                                                        --disable-werror \
+                                                        --with-libgmp-prefix="$(brew --prefix gmp)" \
+                                                        --with-gmp="$(brew --prefix gmp)" \
+                                                        --with-isl="$(brew --prefix isl)" \
+                                                        --with-mpc="$(brew --prefix libmpc)" \
+                                                        --with-mpfr="$(brew --prefix mpfr)" \
+                                                        --disable-nls \
+                                                        ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+            else 
+                buildstep "gdb/configure" "$DIR"/Tarballs/$GDB_NAME/configure --prefix="$PREFIX" \
+                                                        --target="$TARGET" \
+                                                        --with-sysroot="$SYSROOT" \
+                                                        --enable-shared \
+                                                        --disable-nls \
+                                                        ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
+            fi
+
+            
             echo "XXX build gdb"
             buildstep "gdb/build" "$MAKE" -j "$MAKEJOBS" || exit 1
             buildstep "gdb/install" "$MAKE" install || exit 1

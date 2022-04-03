@@ -50,7 +50,7 @@ ErrorOr<void> AudioChannel::ioctl(OpenFileDescription&, unsigned request, Usersp
     }
 }
 
-bool AudioChannel::can_read(const OpenFileDescription&, u64) const
+bool AudioChannel::can_read(OpenFileDescription const&, u64) const
 {
     // FIXME: Implement input from device
     return false;

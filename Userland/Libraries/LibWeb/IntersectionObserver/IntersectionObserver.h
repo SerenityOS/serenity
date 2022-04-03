@@ -13,9 +13,9 @@
 namespace Web::IntersectionObserver {
 
 struct IntersectionObserverInit {
-    DOM::Node* root { nullptr };
+    Optional<Variant<NonnullRefPtr<DOM::Element>, NonnullRefPtr<DOM::Document>>> root;
     String root_margin { "0px"sv };
-    JS::Value threshold { 0 };
+    Variant<double, Vector<double>> threshold { 0 };
 };
 
 // https://w3c.github.io/IntersectionObserver/#intersection-observer-interface
@@ -25,7 +25,7 @@ class IntersectionObserver
 public:
     using WrapperType = Bindings::IntersectionObserverWrapper;
 
-    static NonnullRefPtr<IntersectionObserver> create_with_global_object(JS::GlobalObject&, JS::Value callback, IntersectionObserverInit const& options = {});
+    static NonnullRefPtr<IntersectionObserver> create_with_global_object(JS::GlobalObject&, Bindings::CallbackType const& callback, IntersectionObserverInit const& options = {});
 
     void observe(DOM::Element& target);
     void unobserve(DOM::Element& target);

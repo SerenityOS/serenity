@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file2 = TRY(Core::File::open(filename2, Core::OpenMode::ReadOnly));
 
     auto hunks = Diff::from_text(file1->read_all(), file2->read_all());
-    for (const auto& hunk : hunks) {
+    for (auto const& hunk : hunks) {
         auto original_start = hunk.original_start_line;
         auto target_start = hunk.target_start_line;
         auto num_added = hunk.added_lines.size();
@@ -55,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         bool color_output = isatty(STDOUT_FILENO);
 
         outln("Hunk: {}", sb.build());
-        for (const auto& line : hunk.removed_lines) {
+        for (auto const& line : hunk.removed_lines) {
             if (color_output)
                 outln("\033[31;1m< {}\033[0m", line);
             else
@@ -63,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         if (num_added > 0 && num_removed > 0)
             outln("---");
-        for (const auto& line : hunk.added_lines) {
+        for (auto const& line : hunk.added_lines) {
             if (color_output)
                 outln("\033[32;1m> {}\033[0m", line);
             else

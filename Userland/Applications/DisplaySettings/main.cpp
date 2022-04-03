@@ -10,6 +10,7 @@
 #include "DesktopSettingsWidget.h"
 #include "FontSettingsWidget.h"
 #include "MonitorSettingsWidget.h"
+#include "ThemesSettingsWidget.h"
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
@@ -26,8 +27,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-display-settings");
 
+    bool background_settings_changed = false;
+
     auto window = TRY(GUI::SettingsWindow::create("Display Settings"));
-    (void)TRY(window->add_tab<DisplaySettings::BackgroundSettingsWidget>("Background"));
+    (void)TRY(window->add_tab<DisplaySettings::BackgroundSettingsWidget>("Background", background_settings_changed));
+    (void)TRY(window->add_tab<DisplaySettings::ThemesSettingsWidget>("Themes", background_settings_changed));
     (void)TRY(window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts"));
     (void)TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor"));
     (void)TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces"));

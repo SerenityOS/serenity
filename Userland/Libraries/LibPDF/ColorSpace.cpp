@@ -6,9 +6,46 @@
 
 #include <LibPDF/ColorSpace.h>
 #include <LibPDF/CommonNames.h>
+#include <LibPDF/Document.h>
 #include <LibPDF/ObjectDerivatives.h>
 
 namespace PDF {
+
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, FlyString const& name, Page const& page)
+{
+    // Simple color spaces with no parameters, which can be specified directly
+    if (name == CommonNames::DeviceGray)
+        return DeviceGrayColorSpace::the();
+    if (name == CommonNames::DeviceRGB)
+        return DeviceRGBColorSpace::the();
+    if (name == CommonNames::DeviceCMYK)
+        return DeviceCMYKColorSpace::the();
+    if (name == CommonNames::Pattern)
+        TODO();
+
+    // The color space is a complex color space with parameters that resides in
+    // the resource dictionary
+    auto color_space_resource_dict = TRY(page.resources->get_dict(document, CommonNames::ColorSpace));
+    if (!color_space_resource_dict->contains(name))
+        TODO();
+
+    auto color_space_array = TRY(color_space_resource_dict->get_array(document, name));
+    auto color_space_name = TRY(color_space_array->get_name_at(document, 0))->name();
+
+    Vector<Value> parameters;
+    parameters.ensure_capacity(color_space_array->size() - 1);
+    for (size_t i = 1; i < color_space_array->size(); i++)
+        parameters.unchecked_append(color_space_array->at(i));
+
+    if (color_space_name == CommonNames::CalRGB)
+        return TRY(CalRGBColorSpace::create(document, move(parameters)));
+
+    if (color_space_name == CommonNames::ICCBased)
+        return TRY(ICCBasedColorSpace::create(document, page, move(parameters)));
+
+    dbgln("Unknown color space: {}", color_space_name);
+    TODO();
+}
 
 NonnullRefPtr<DeviceGrayColorSpace> DeviceGrayColorSpace::the()
 {
@@ -54,7 +91,7 @@ Color DeviceCMYKColorSpace::color(Vector<Value> const& arguments) const
     return Color::from_cmyk(c, m, y, k);
 }
 
-PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(RefPtr<Document> document, Vector<Value>&& parameters)
+PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> CalRGBColorSpace::create(Document* document, Vector<Value>&& parameters)
 {
     if (parameters.size() != 1)
         return Error { Error::Type::MalformedPDF, "RGB color space expects one parameter" };
@@ -222,6 +259,28 @@ Color CalRGBColorSpace::color(Vector<Value> const& arguments) const
     auto blue = static_cast<u8>(srgb[2] * 255.0f);
 
     return Color(red, green, blue);
+}
+
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ICCBasedColorSpace::create(Document* document, Page const& page, Vector<Value>&& parameters)
+{
+    if (parameters.is_empty())
+        return Error { Error::Type::MalformedPDF, "ICCBased color space expected one parameter" };
+
+    auto param = TRY(document->resolve(parameters[0]));
+    if (!param.has<NonnullRefPtr<Object>>() || !param.get<NonnullRefPtr<Object>>()->is<StreamObject>())
+        return Error { Error::Type::MalformedPDF, "ICCBased color space expects a stream parameter" };
+
+    auto dict = param.get<NonnullRefPtr<Object>>()->cast<StreamObject>()->dict();
+    if (!dict->contains(CommonNames::Alternate))
+        TODO();
+
+    auto alternate = TRY(dict->get_name(document, CommonNames::Alternate))->name();
+    return TRY(ColorSpace::create(document, alternate, page));
+}
+
+Color ICCBasedColorSpace::color(Vector<Value> const&) const
+{
+    VERIFY_NOT_REACHED();
 }
 
 }

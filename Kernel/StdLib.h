@@ -14,38 +14,38 @@
 #include <Kernel/KString.h>
 #include <Kernel/UnixTypes.h>
 
-ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<const char*>, size_t);
+ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<char const*>, size_t);
 ErrorOr<Time> copy_time_from_user(timespec const*);
 ErrorOr<Time> copy_time_from_user(timeval const*);
 template<typename T>
 ErrorOr<Time> copy_time_from_user(Userspace<T*>);
 
-[[nodiscard]] Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_exchange_relaxed(volatile u32* var, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_load_relaxed(volatile u32* var);
-[[nodiscard]] bool user_atomic_store_relaxed(volatile u32* var, u32 val);
-[[nodiscard]] Optional<bool> user_atomic_compare_exchange_relaxed(volatile u32* var, u32& expected, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_fetch_and_relaxed(volatile u32* var, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_fetch_and_not_relaxed(volatile u32* var, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_fetch_or_relaxed(volatile u32* var, u32 val);
-[[nodiscard]] Optional<u32> user_atomic_fetch_xor_relaxed(volatile u32* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_add_relaxed(u32 volatile* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_exchange_relaxed(u32 volatile* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_load_relaxed(u32 volatile* var);
+[[nodiscard]] bool user_atomic_store_relaxed(u32 volatile* var, u32 val);
+[[nodiscard]] Optional<bool> user_atomic_compare_exchange_relaxed(u32 volatile* var, u32& expected, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_and_relaxed(u32 volatile* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_and_not_relaxed(u32 volatile* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_or_relaxed(u32 volatile* var, u32 val);
+[[nodiscard]] Optional<u32> user_atomic_fetch_xor_relaxed(u32 volatile* var, u32 val);
 
-ErrorOr<void> copy_to_user(void*, const void*, size_t);
-ErrorOr<void> copy_from_user(void*, const void*, size_t);
+ErrorOr<void> copy_to_user(void*, void const*, size_t);
+ErrorOr<void> copy_from_user(void*, void const*, size_t);
 ErrorOr<void> memset_user(void*, int, size_t);
 
 extern "C" {
 
-void* memcpy(void*, const void*, size_t);
-[[nodiscard]] int strncmp(const char* s1, const char* s2, size_t n);
-[[nodiscard]] char* strstr(const char* haystack, const char* needle);
-[[nodiscard]] int strcmp(char const*, const char*);
-[[nodiscard]] size_t strlen(const char*);
-[[nodiscard]] size_t strnlen(const char*, size_t);
+void* memcpy(void*, void const*, size_t);
+[[nodiscard]] int strncmp(char const* s1, char const* s2, size_t n);
+[[nodiscard]] char* strstr(char const* haystack, char const* needle);
+[[nodiscard]] int strcmp(char const*, char const*);
+[[nodiscard]] size_t strlen(char const*);
+[[nodiscard]] size_t strnlen(char const*, size_t);
 void* memset(void*, int, size_t);
-[[nodiscard]] int memcmp(const void*, const void*, size_t);
-void* memmove(void* dest, const void* src, size_t n);
-const void* memmem(const void* haystack, size_t, const void* needle, size_t);
+[[nodiscard]] int memcmp(void const*, void const*, size_t);
+void* memmove(void* dest, void const* src, size_t n);
+void const* memmem(void const* haystack, size_t, void const* needle, size_t);
 
 [[nodiscard]] inline u16 ntohs(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
 [[nodiscard]] inline u16 htons(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
@@ -107,7 +107,7 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> copy_to_user(Userspace<T*> dest, const void* src, size_t size)
+[[nodiscard]] inline ErrorOr<void> copy_to_user(Userspace<T*> dest, void const* src, size_t size)
 {
     static_assert(IsTriviallyCopyable<T>);
     return copy_to_user(dest.unsafe_userspace_ptr(), src, size);

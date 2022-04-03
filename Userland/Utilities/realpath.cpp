@@ -14,7 +14,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    const char* path;
+    char const* path;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(

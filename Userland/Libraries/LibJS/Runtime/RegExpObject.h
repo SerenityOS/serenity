@@ -44,10 +44,10 @@ public:
     virtual void initialize(GlobalObject&) override;
     virtual ~RegExpObject() override = default;
 
-    const String& pattern() const { return m_pattern; }
-    const String& flags() const { return m_flags; }
-    const Regex<ECMA262>& regex() { return *m_regex; }
-    const Regex<ECMA262>& regex() const { return *m_regex; }
+    String const& pattern() const { return m_pattern; }
+    String const& flags() const { return m_flags; }
+    Regex<ECMA262> const& regex() { return *m_regex; }
+    Regex<ECMA262> const& regex() const { return *m_regex; }
 
 private:
     String m_pattern;

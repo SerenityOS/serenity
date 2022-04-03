@@ -1,4 +1,4 @@
-From bd79f48415f3e3982d8d5b96cb22b2b87de4abc4 Mon Sep 17 00:00:00 2001
+From 1a5f8c57c86964bff49c0d0f61acb18b9223e7d7 Mon Sep 17 00:00:00 2001
 From: Linus Groh <mail@linusgroh.de>
 Date: Fri, 14 Jan 2022 23:36:52 +0330
 Subject: [PATCH 4/4] Tweak `setup.py`
@@ -17,10 +17,10 @@ Make some tweaks to Python's `setup.py`:
  1 file changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/setup.py b/setup.py
-index 43e807f..454be9e 100644
+index e74a275..acd7b05 100644
 --- a/setup.py
 +++ b/setup.py
-@@ -846,8 +846,8 @@ class PyBuildExt(build_ext):
+@@ -848,8 +848,8 @@ class PyBuildExt(build_ext):
              add_dir_to_list(self.compiler.include_dirs,
                              sysconfig.get_config_var("INCLUDEDIR"))
  
@@ -31,7 +31,7 @@ index 43e807f..454be9e 100644
          # lib_dirs and inc_dirs are used to search for files;
          # if a file is found in one of those directories, it can
          # be assumed that no additional -I,-L directives are needed.
-@@ -1158,7 +1158,12 @@ class PyBuildExt(build_ext):
+@@ -1160,7 +1160,12 @@ class PyBuildExt(build_ext):
          # Curses support, requiring the System V version of curses, often
          # provided by the ncurses library.
          curses_defines = []
@@ -46,5 +46,5 @@ index 43e807f..454be9e 100644
          if curses_library == 'ncursesw':
              curses_defines.append(('HAVE_NCURSESW', '1'))
 -- 
-2.34.1
+2.35.1
 

@@ -40,7 +40,7 @@ public:
     }
 
     template<typename It>
-    BaseType& traverse_until_last_accessible_node(It& it, const It& end)
+    BaseType& traverse_until_last_accessible_node(It& it, It const& end)
     {
         Trie* node = this;
         for (; it < end; ++it) {
@@ -53,17 +53,17 @@ public:
     }
 
     template<typename It>
-    const BaseType& traverse_until_last_accessible_node(It& it, const It& end) const { return const_cast<Trie*>(this)->traverse_until_last_accessible_node(it, end); }
+    BaseType const& traverse_until_last_accessible_node(It& it, It const& end) const { return const_cast<Trie*>(this)->traverse_until_last_accessible_node(it, end); }
 
     template<typename It>
-    BaseType& traverse_until_last_accessible_node(const It& begin, const It& end)
+    BaseType& traverse_until_last_accessible_node(It const& begin, It const& end)
     {
         auto it = begin;
         return const_cast<Trie*>(this)->traverse_until_last_accessible_node(it, end);
     }
 
     template<typename It>
-    const BaseType& traverse_until_last_accessible_node(const It& begin, const It& end) const
+    BaseType const& traverse_until_last_accessible_node(It const& begin, It const& end) const
     {
         auto it = begin;
         return const_cast<Trie*>(this)->traverse_until_last_accessible_node(it, end);
@@ -71,10 +71,10 @@ public:
 
     Optional<MetadataType> metadata() const requires(!IsNullPointer<MetadataType>) { return m_metadata; }
     void set_metadata(MetadataType metadata) requires(!IsNullPointer<MetadataType>) { m_metadata = move(metadata); }
-    const MetadataType& metadata_value() const requires(!IsNullPointer<MetadataType>) { return m_metadata.value(); }
+    MetadataType const& metadata_value() const requires(!IsNullPointer<MetadataType>) { return m_metadata.value(); }
     MetadataType& metadata_value() requires(!IsNullPointer<MetadataType>) { return m_metadata.value(); }
 
-    const ValueType& value() const { return m_value; }
+    ValueType const& value() const { return m_value; }
     ValueType& value() { return m_value; }
 
     ErrorOr<Trie*> ensure_child(ValueType value, Optional<MetadataType> metadata = {})
@@ -99,11 +99,10 @@ public:
 
     template<typename It, typename ProvideMetadataFunction>
     ErrorOr<BaseType*> insert(
-        It& it, const It& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata) requires(!IsNullPointer<MetadataType>)
+        It& it, It const& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata) requires(!IsNullPointer<MetadataType>)
     {
         Trie* last_root_node = &traverse_until_last_accessible_node(it, end);
-        auto invoke_provide_missing_metadata = [&]<typename... Ts>(Ts && ... args)->ErrorOr<Optional<MetadataType>>
-        {
+        auto invoke_provide_missing_metadata = [&]<typename... Ts>(Ts&&... args) -> ErrorOr<Optional<MetadataType>> {
             if constexpr (SameAs<MetadataType, decltype(provide_missing_metadata(forward<Ts>(args)...))>)
                 return Optional<MetadataType>(provide_missing_metadata(forward<Ts>(args)...));
             else
@@ -120,7 +119,7 @@ public:
     }
 
     template<typename It>
-    ErrorOr<BaseType*> insert(It& it, const It& end) requires(IsNullPointer<MetadataType>)
+    ErrorOr<BaseType*> insert(It& it, It const& end) requires(IsNullPointer<MetadataType>)
     {
         Trie* last_root_node = &traverse_until_last_accessible_node(it, end);
         for (; it != end; ++it) {
@@ -134,14 +133,14 @@ public:
 
     template<typename It, typename ProvideMetadataFunction>
     ErrorOr<BaseType*> insert(
-        const It& begin, const It& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata) requires(!IsNullPointer<MetadataType>)
+        It const& begin, It const& end, MetadataType metadata, ProvideMetadataFunction provide_missing_metadata) requires(!IsNullPointer<MetadataType>)
     {
         auto it = begin;
         return insert(it, end, move(metadata), move(provide_missing_metadata));
     }
 
     template<typename It>
-    ErrorOr<BaseType*> insert(const It& begin, const It& end) requires(IsNullPointer<MetadataType>)
+    ErrorOr<BaseType*> insert(It const& begin, It const& end) requires(IsNullPointer<MetadataType>)
     {
         auto it = begin;
         return insert(it, end);

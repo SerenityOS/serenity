@@ -21,7 +21,7 @@ class WebSocketClient final
     IPC_CLIENT_CONNECTION(WebSocketClient, "/tmp/portal/websocket")
 
 public:
-    RefPtr<WebSocket> connect(const URL&, const String& origin = {}, const Vector<String>& protocols = {}, const Vector<String>& extensions = {}, const HashMap<String, String>& request_headers = {});
+    RefPtr<WebSocket> connect(const URL&, String const& origin = {}, Vector<String> const& protocols = {}, Vector<String> const& extensions = {}, HashMap<String, String> const& request_headers = {});
 
     u32 ready_state(Badge<WebSocket>, WebSocket&);
     void send(Badge<WebSocket>, WebSocket&, ByteBuffer, bool is_text);

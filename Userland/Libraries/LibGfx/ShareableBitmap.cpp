@@ -22,7 +22,7 @@ ShareableBitmap::ShareableBitmap(NonnullRefPtr<Bitmap> bitmap, Tag)
 
 namespace IPC {
 
-bool encode(Encoder& encoder, const Gfx::ShareableBitmap& shareable_bitmap)
+bool encode(Encoder& encoder, Gfx::ShareableBitmap const& shareable_bitmap)
 {
     encoder << shareable_bitmap.is_valid();
     if (!shareable_bitmap.is_valid())

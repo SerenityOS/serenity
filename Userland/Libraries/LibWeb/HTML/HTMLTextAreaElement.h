@@ -8,21 +8,30 @@
 #pragma once
 
 #include <LibWeb/HTML/FormAssociatedElement.h>
+#include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
 
-class HTMLTextAreaElement final : public FormAssociatedElement {
+class HTMLTextAreaElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLTextAreaElement)
+
 public:
     using WrapperType = Bindings::HTMLTextAreaElementWrapper;
 
     HTMLTextAreaElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLTextAreaElement() override;
 
-    const String& type() const
+    String const& type() const
     {
         static String textarea = "textarea";
         return textarea;
     }
+
+    // ^EventTarget
+    // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-textarea-element
+    virtual bool is_focusable() const override { return true; }
 
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed

@@ -152,7 +152,7 @@ private:
         AST::Position::Line line;
     };
 
-    void restore_to(const ScopedOffset& offset) { restore_to(offset.offset, offset.line); }
+    void restore_to(ScopedOffset const& offset) { restore_to(offset.offset, offset.line); }
 
     OwnPtr<ScopedOffset> push_start();
     Offset current_position();

@@ -35,7 +35,7 @@ public:
 
     virtual MaybeLoaderError reset() = 0;
 
-    virtual MaybeLoaderError seek(const int sample_index) = 0;
+    virtual MaybeLoaderError seek(int const sample_index) = 0;
 
     // total_samples() and loaded_samples() should be independent
     // of the number of channels.
@@ -63,7 +63,7 @@ public:
     LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) const { return m_plugin->get_more_samples(max_bytes_to_read_from_input); }
 
     MaybeLoaderError reset() const { return m_plugin->reset(); }
-    MaybeLoaderError seek(const int position) const { return m_plugin->seek(position); }
+    MaybeLoaderError seek(int const position) const { return m_plugin->seek(position); }
 
     int loaded_samples() const { return m_plugin->loaded_samples(); }
     int total_samples() const { return m_plugin->total_samples(); }

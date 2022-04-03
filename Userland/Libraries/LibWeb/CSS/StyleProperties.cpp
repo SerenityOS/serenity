@@ -15,7 +15,7 @@
 
 namespace Web::CSS {
 
-StyleProperties::StyleProperties(const StyleProperties& other)
+StyleProperties::StyleProperties(StyleProperties const& other)
     : m_property_values(other.m_property_values)
 {
     if (other.m_font) {
@@ -117,13 +117,11 @@ NonnullRefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bol
 
 float StyleProperties::line_height(Layout::Node const& layout_node) const
 {
-    constexpr float font_height_to_line_height_multiplier = 1.4f;
-
     if (auto maybe_line_height = property(CSS::PropertyID::LineHeight); maybe_line_height.has_value()) {
         auto line_height = maybe_line_height.release_value();
 
         if (line_height->is_identifier() && line_height->to_identifier() == ValueID::Normal)
-            return Length(1, Length::Type::Em).to_px(layout_node) * font_height_to_line_height_multiplier;
+            return layout_node.font().pixel_metrics().line_spacing();
 
         if (line_height->is_length()) {
             auto line_height_length = line_height->to_length();
@@ -141,7 +139,7 @@ float StyleProperties::line_height(Layout::Node const& layout_node) const
         }
     }
 
-    return Length(font_height_to_line_height_multiplier, Length::Type::Em).to_px(layout_node);
+    return layout_node.font().pixel_metrics().line_spacing();
 }
 
 Optional<int> StyleProperties::z_index() const
@@ -265,6 +263,14 @@ float StyleProperties::flex_shrink() const
     return value.value()->to_number();
 }
 
+int StyleProperties::order() const
+{
+    auto value = property(CSS::PropertyID::Order);
+    if (!value.has_value() || !value.value()->has_integer())
+        return 0;
+    return value.value()->to_integer();
+}
+
 Optional<CSS::ImageRendering> StyleProperties::image_rendering() const
 {
     auto value = property(CSS::PropertyID::ImageRendering);
@@ -329,10 +335,12 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
         auto& transformation_style_value = it.as_transformation();
         CSS::Transformation transformation;
         transformation.function = transformation_style_value.transform_function();
-        Vector<Variant<CSS::Length, float>> values;
+        Vector<Variant<CSS::LengthPercentage, float>> values;
         for (auto& transformation_value : transformation_style_value.values()) {
             if (transformation_value.is_length()) {
                 values.append({ transformation_value.to_length() });
+            } else if (transformation_value.is_percentage()) {
+                values.append({ transformation_value.as_percentage().percentage() });
             } else if (transformation_value.is_numeric()) {
                 values.append({ transformation_value.to_number() });
             } else if (transformation_value.is_angle()) {
@@ -345,6 +353,29 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
         transformations.append(move(transformation));
     }
     return transformations;
+}
+
+static Optional<LengthPercentage> length_percentage_for_style_value(StyleValue const& value)
+{
+    if (value.is_length())
+        return value.to_length();
+    if (value.is_percentage())
+        return value.as_percentage().percentage();
+    return {};
+}
+
+CSS::TransformOrigin StyleProperties::transform_origin() const
+{
+    auto value = property(CSS::PropertyID::TransformOrigin);
+    if (!value.has_value() || !value.value()->is_value_list() || value.value()->as_value_list().size() != 2)
+        return {};
+    auto const& list = value.value()->as_value_list();
+    auto x_value = length_percentage_for_style_value(list.values()[0]);
+    auto y_value = length_percentage_for_style_value(list.values()[1]);
+    if (!x_value.has_value() || !y_value.has_value()) {
+        return {};
+    }
+    return { x_value.value(), y_value.value() };
 }
 
 Optional<CSS::AlignItems> StyleProperties::align_items() const
@@ -389,7 +420,7 @@ Optional<CSS::Position> StyleProperties::position() const
     }
 }
 
-bool StyleProperties::operator==(const StyleProperties& other) const
+bool StyleProperties::operator==(StyleProperties const& other) const
 {
     if (m_property_values.size() != other.m_property_values.size())
         return false;
@@ -698,6 +729,23 @@ Optional<CSS::Cursor> StyleProperties::cursor() const
     }
 }
 
+Optional<CSS::Visibility> StyleProperties::visibility() const
+{
+    auto value = property(CSS::PropertyID::Visibility);
+    if (!value.has_value() || !value.value()->is_identifier())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Visible:
+        return CSS::Visibility::Visible;
+    case CSS::ValueID::Hidden:
+        return CSS::Visibility::Hidden;
+    case CSS::ValueID::Collapse:
+        return CSS::Visibility::Collapse;
+    default:
+        return {};
+    }
+}
+
 CSS::Display StyleProperties::display() const
 {
     auto value = property(CSS::PropertyID::Display);
@@ -872,35 +920,45 @@ Optional<CSS::Overflow> StyleProperties::overflow(CSS::PropertyID property_id) c
     }
 }
 
-Vector<BoxShadowData> StyleProperties::box_shadow() const
+Vector<ShadowData> StyleProperties::shadow(PropertyID property_id) const
 {
-    auto value_or_error = property(PropertyID::BoxShadow);
+    auto value_or_error = property(property_id);
     if (!value_or_error.has_value())
         return {};
 
     auto value = value_or_error.value();
 
-    auto make_box_shadow_data = [](BoxShadowStyleValue const& box) {
-        return BoxShadowData { box.color(), box.offset_x(), box.offset_y(), box.blur_radius(), box.spread_distance(), box.placement() };
+    auto make_shadow_data = [](ShadowStyleValue const& value) {
+        return ShadowData { value.color(), value.offset_x(), value.offset_y(), value.blur_radius(), value.spread_distance(), value.placement() };
     };
 
     if (value->is_value_list()) {
         auto& value_list = value->as_value_list();
 
-        Vector<BoxShadowData> box_shadow_data;
-        box_shadow_data.ensure_capacity(value_list.size());
+        Vector<ShadowData> shadow_data;
+        shadow_data.ensure_capacity(value_list.size());
         for (auto const& layer_value : value_list.values())
-            box_shadow_data.append(make_box_shadow_data(layer_value.as_box_shadow()));
+            shadow_data.append(make_shadow_data(layer_value.as_shadow()));
 
-        return box_shadow_data;
+        return shadow_data;
     }
 
-    if (value->is_box_shadow()) {
-        auto& box = value->as_box_shadow();
-        return { make_box_shadow_data(box) };
+    if (value->is_shadow()) {
+        auto& box = value->as_shadow();
+        return { make_shadow_data(box) };
     }
 
     return {};
+}
+
+Vector<ShadowData> StyleProperties::box_shadow() const
+{
+    return shadow(PropertyID::BoxShadow);
+}
+
+Vector<ShadowData> StyleProperties::text_shadow() const
+{
+    return shadow(PropertyID::TextShadow);
 }
 
 CSS::BoxSizing StyleProperties::box_sizing() const
@@ -955,6 +1013,22 @@ Variant<CSS::VerticalAlign, CSS::LengthPercentage> StyleProperties::vertical_ali
         return CSS::LengthPercentage(value.value()->as_percentage().percentage());
 
     VERIFY_NOT_REACHED();
+}
+
+Optional<CSS::FontVariant> StyleProperties::font_variant() const
+{
+    auto value = property(CSS::PropertyID::FontVariant);
+    if (!value.has_value())
+        return {};
+
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Normal:
+        return CSS::FontVariant::Normal;
+    case CSS::ValueID::SmallCaps:
+        return CSS::FontVariant::SmallCaps;
+    default:
+        return {};
+    }
 }
 
 }

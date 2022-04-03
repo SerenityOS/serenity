@@ -14,7 +14,7 @@
 
 class Window {
 public:
-    explicit Window(const WindowIdentifier& identifier)
+    explicit Window(WindowIdentifier const& identifier)
         : m_identifier(identifier)
     {
     }
@@ -25,16 +25,16 @@ public:
             m_button->remove_from_parent();
     }
 
-    const WindowIdentifier& identifier() const { return m_identifier; }
+    WindowIdentifier const& identifier() const { return m_identifier; }
 
-    void set_parent_identifier(const WindowIdentifier& parent_identifier) { m_parent_identifier = parent_identifier; }
-    const WindowIdentifier& parent_identifier() const { return m_parent_identifier; }
+    void set_parent_identifier(WindowIdentifier const& parent_identifier) { m_parent_identifier = parent_identifier; }
+    WindowIdentifier const& parent_identifier() const { return m_parent_identifier; }
 
     String title() const { return m_title; }
-    void set_title(const String& title) { m_title = title; }
+    void set_title(String const& title) { m_title = title; }
 
     Gfx::IntRect rect() const { return m_rect; }
-    void set_rect(const Gfx::IntRect& rect) { m_rect = rect; }
+    void set_rect(Gfx::IntRect const& rect) { m_rect = rect; }
 
     GUI::Button* button() { return m_button; }
     void set_button(GUI::Button* button) { m_button = button; }
@@ -67,7 +67,7 @@ public:
 
     Optional<int> progress() const { return m_progress; }
 
-    const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
+    Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
 
 private:
     WindowIdentifier m_identifier;
@@ -95,10 +95,10 @@ public:
             callback(*it.value);
     }
 
-    Window* find_parent(const Window&);
-    Window* window(const WindowIdentifier&);
-    Window& ensure_window(const WindowIdentifier&);
-    void remove_window(const WindowIdentifier&);
+    Window* find_parent(Window const&);
+    Window* window(WindowIdentifier const&);
+    Window& ensure_window(WindowIdentifier const&);
+    void remove_window(WindowIdentifier const&);
 
 private:
     HashMap<WindowIdentifier, NonnullOwnPtr<Window>> m_windows;

@@ -70,4 +70,34 @@ Gfx::Path& SVGCircleElement::get_path()
     return m_path.value();
 }
 
+// https://www.w3.org/TR/SVG11/shapes.html#CircleElementCXAttribute
+NonnullRefPtr<SVGAnimatedLength> SVGCircleElement::cx() const
+{
+    // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
+    // FIXME: Create a proper animated value when animations are supported.
+    auto base_length = SVGLength::create(0, m_center_x.value_or(0));
+    auto anim_length = SVGLength::create(0, m_center_x.value_or(0));
+    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+}
+
+// https://www.w3.org/TR/SVG11/shapes.html#CircleElementCYAttribute
+NonnullRefPtr<SVGAnimatedLength> SVGCircleElement::cy() const
+{
+    // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
+    // FIXME: Create a proper animated value when animations are supported.
+    auto base_length = SVGLength::create(0, m_center_y.value_or(0));
+    auto anim_length = SVGLength::create(0, m_center_y.value_or(0));
+    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+}
+
+// https://www.w3.org/TR/SVG11/shapes.html#CircleElementRAttribute
+NonnullRefPtr<SVGAnimatedLength> SVGCircleElement::r() const
+{
+    // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
+    // FIXME: Create a proper animated value when animations are supported.
+    auto base_length = SVGLength::create(0, m_radius.value_or(0));
+    auto anim_length = SVGLength::create(0, m_radius.value_or(0));
+    return SVGAnimatedLength::create(move(base_length), move(anim_length));
+}
+
 }

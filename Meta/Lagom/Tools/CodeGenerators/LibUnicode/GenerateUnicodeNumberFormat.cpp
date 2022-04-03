@@ -26,6 +26,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/Stream.h>
+#include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibUnicode/Locale.h>
 #include <LibUnicode/NumberFormat.h>
 #include <math.h>
@@ -631,11 +632,9 @@ static ErrorOr<void> parse_units(String locale_units_path, UnicodeLocaleData& lo
     };
 
     auto is_sanctioned_unit = [](StringView unit_name) {
-        // This is a copy of the units sanctioned for use within ECMA-402. LibUnicode generally tries to
-        // avoid being directly dependent on ECMA-402, but this rather significantly reduces the amount
+        // LibUnicode generally tries to avoid being directly dependent on ECMA-402, but this rather significantly reduces the amount
         // of data generated here, and ECMA-402 is currently the only consumer of this data.
-        // https://tc39.es/ecma402/#table-sanctioned-simple-unit-identifiers
-        constexpr auto sanctioned_units = AK::Array { "acre"sv, "bit"sv, "byte"sv, "celsius"sv, "centimeter"sv, "day"sv, "degree"sv, "fahrenheit"sv, "fluid-ounce"sv, "foot"sv, "gallon"sv, "gigabit"sv, "gigabyte"sv, "gram"sv, "hectare"sv, "hour"sv, "inch"sv, "kilobit"sv, "kilobyte"sv, "kilogram"sv, "kilometer"sv, "liter"sv, "megabit"sv, "megabyte"sv, "meter"sv, "mile"sv, "mile-scandinavian"sv, "milliliter"sv, "millimeter"sv, "millisecond"sv, "minute"sv, "month"sv, "ounce"sv, "percent"sv, "petabyte"sv, "pound"sv, "second"sv, "stone"sv, "terabit"sv, "terabyte"sv, "week"sv, "yard"sv, "year"sv };
+        constexpr auto sanctioned_units = JS::Intl::sanctioned_single_unit_identifiers();
         return find(sanctioned_units.begin(), sanctioned_units.end(), unit_name) != sanctioned_units.end();
     };
 

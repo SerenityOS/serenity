@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,9 +14,10 @@
 namespace Kernel {
 
 ProcessorInfo::ProcessorInfo(Processor const& processor)
-    : m_cpuid(query_processor_cpuid())
-    , m_brand(query_processor_brand())
-    , m_features(processor.features_string())
+    : m_vendor_id_string(build_vendor_id_string())
+    , m_hypervisor_vendor_id_string(build_hypervisor_vendor_id_string(processor))
+    , m_brand_string(build_brand_string())
+    , m_features_string(build_features_string(processor))
 {
     CPUID cpuid(1);
     m_stepping = cpuid.eax() & 0xf;
@@ -35,44 +37,76 @@ ProcessorInfo::ProcessorInfo(Processor const& processor)
         m_display_model = model;
     }
 }
+static void emit_u32(StringBuilder& builder, u32 value)
+{
+    builder.appendff("{:c}{:c}{:c}{:c}",
+        value & 0xff,
+        (value >> 8) & 0xff,
+        (value >> 16) & 0xff,
+        (value >> 24) & 0xff);
+};
 
-NonnullOwnPtr<KString> ProcessorInfo::query_processor_cpuid()
+NonnullOwnPtr<KString> ProcessorInfo::build_vendor_id_string()
 {
     CPUID cpuid(0);
     StringBuilder builder;
-    auto emit_u32 = [&](u32 value) {
-        builder.appendff("{:c}{:c}{:c}{:c}",
-            value & 0xff,
-            (value >> 8) & 0xff,
-            (value >> 16) & 0xff,
-            (value >> 24) & 0xff);
-    };
-    emit_u32(cpuid.ebx());
-    emit_u32(cpuid.edx());
-    emit_u32(cpuid.ecx());
+    emit_u32(builder, cpuid.ebx());
+    emit_u32(builder, cpuid.edx());
+    emit_u32(builder, cpuid.ecx());
     return KString::must_create(builder.string_view());
 }
 
-NonnullOwnPtr<KString> ProcessorInfo::query_processor_brand()
+NonnullOwnPtr<KString> ProcessorInfo::build_hypervisor_vendor_id_string(Processor const& processor)
+{
+    if (!processor.has_feature(CPUFeature::HYPERVISOR))
+        return KString::must_create({});
+
+    CPUID cpuid(0x40000000);
+    StringBuilder builder;
+    emit_u32(builder, cpuid.ebx());
+    emit_u32(builder, cpuid.ecx());
+    emit_u32(builder, cpuid.edx());
+    return KString::must_create(builder.string_view());
+}
+
+NonnullOwnPtr<KString> ProcessorInfo::build_brand_string()
 {
     u32 max_extended_leaf = CPUID(0x80000000).eax();
 
     if (max_extended_leaf < 0x80000004)
         return KString::must_create({});
 
-    alignas(u32) char buffer[48];
-    u32* bufptr = reinterpret_cast<u32*>(buffer);
-    auto copy_brand_string_part_to_buffer = [&](u32 i) {
+    StringBuilder builder;
+    auto append_brand_string_part_to_builder = [&](u32 i) {
         CPUID cpuid(0x80000002 + i);
-        *bufptr++ = cpuid.eax();
-        *bufptr++ = cpuid.ebx();
-        *bufptr++ = cpuid.ecx();
-        *bufptr++ = cpuid.edx();
+        emit_u32(builder, cpuid.eax());
+        emit_u32(builder, cpuid.ebx());
+        emit_u32(builder, cpuid.ecx());
+        emit_u32(builder, cpuid.edx());
     };
-    copy_brand_string_part_to_buffer(0);
-    copy_brand_string_part_to_buffer(1);
-    copy_brand_string_part_to_buffer(2);
-    return KString::must_create(buffer);
+    append_brand_string_part_to_builder(0);
+    append_brand_string_part_to_builder(1);
+    append_brand_string_part_to_builder(2);
+    auto string_view = builder.string_view();
+    // NOTE: Unlike the vendor ID strings, the brand string isn't necessarily fixed length and might have a null terminator in it.
+    //       Try to find it and use a substring from 0 to that index, or the full length as a fallback.
+    return KString::must_create(string_view.substring_view(0, string_view.find('\0').value_or(string_view.length())));
+}
+
+NonnullOwnPtr<KString> ProcessorInfo::build_features_string(Processor const& processor)
+{
+    StringBuilder builder;
+    bool first = true;
+    for (auto feature = CPUFeature::Type(1u); feature != CPUFeature::__End; feature <<= 1u) {
+        if (processor.has_feature(feature)) {
+            if (first)
+                first = false;
+            else
+                MUST(builder.try_append(' '));
+            MUST(builder.try_append(cpu_feature_to_string_view(feature)));
+        }
+    }
+    return KString::must_create(builder.string_view());
 }
 
 }

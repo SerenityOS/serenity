@@ -18,7 +18,7 @@ public:
     virtual ~HighlighterClient() = default;
 
     virtual Vector<GUI::TextDocumentSpan>& spans() = 0;
-    virtual const Vector<GUI::TextDocumentSpan>& spans() const = 0;
+    virtual Vector<GUI::TextDocumentSpan> const& spans() const = 0;
     virtual void set_span_at_index(size_t index, GUI::TextDocumentSpan span) = 0;
 
     virtual String highlighter_did_request_text() const = 0;
@@ -33,6 +33,8 @@ public:
     String get_text() const { return highlighter_did_request_text(); }
     GUI::TextDocument& get_document() { return highlighter_did_request_document(); }
     GUI::TextPosition get_cursor() const { return highlighter_did_request_cursor(); }
+
+    static constexpr auto span_collection_index = 0;
 };
 
 }

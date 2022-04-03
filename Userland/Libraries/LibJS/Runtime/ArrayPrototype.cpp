@@ -407,7 +407,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
     // 2. Let len be ? ToLength(? Get(array, "length")).
     auto length = TRY(length_of_array_like(global_object, *this_object));
 
-    // 3. Let separator be the String value for the list-separator String appropriate for the host environment's current locale (this is derived in an implementation-defined way).
+    // 3. Let separator be the implementation-defined list-separator String value appropriate for the host environment's current locale (such as ", ").
     constexpr auto separator = ","sv;
 
     // 4. Let R be the empty String.

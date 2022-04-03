@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,11 +10,12 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
-#include <getopt.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -22,7 +24,7 @@ struct Result {
     u64 read_bps {};
 };
 
-static Result average_result(const Vector<Result>& results)
+static Result average_result(Vector<Result> const& results)
 {
     Result average;
 
@@ -37,15 +39,9 @@ static Result average_result(const Vector<Result>& results)
     return average;
 }
 
-static void exit_with_usage(int rc)
-{
-    warnln("Usage: disk_benchmark [-h] [-d directory] [-t time_per_benchmark] [-f file_size1,file_size2,...] [-b block_size1,block_size2,...]");
-    exit(rc);
-}
+static ErrorOr<Result> benchmark(String const& filename, int file_size, ByteBuffer& buffer, bool allow_cache);
 
-static Optional<Result> benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache);
-
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     String directory = ".";
     int time_per_benchmark = 10;
@@ -53,31 +49,13 @@ int main(int argc, char** argv)
     Vector<size_t> block_sizes;
     bool allow_cache = false;
 
-    int opt;
-    while ((opt = getopt(argc, argv, "chd:t:f:b:")) != -1) {
-        switch (opt) {
-        case 'h':
-            exit_with_usage(0);
-            break;
-        case 'c':
-            allow_cache = true;
-            break;
-        case 'd':
-            directory = optarg;
-            break;
-        case 't':
-            time_per_benchmark = atoi(optarg);
-            break;
-        case 'f':
-            for (const auto& size : String(optarg).split(','))
-                file_sizes.append(atoi(size.characters()));
-            break;
-        case 'b':
-            for (const auto& size : String(optarg).split(','))
-                block_sizes.append(atoi(size.characters()));
-            break;
-        }
-    }
+    Core::ArgsParser args_parser;
+    args_parser.add_option(allow_cache, "Allow using disk cache", "cache", 'c');
+    args_parser.add_option(directory, "Path to a directory where we can store the disk benchmark temp file", "directory", 'd', "directory");
+    args_parser.add_option(time_per_benchmark, "Time elapsed per benchmark", "time-per-benchmark", 't', "time-per-benchmark");
+    args_parser.add_option(file_sizes, "A comma-separated list of file sizes", "file-size", 'f', "file-size");
+    args_parser.add_option(block_sizes, "A comma-separated list of block sizes", "block-size", 'b', "block-size");
+    args_parser.parse(arguments);
 
     if (file_sizes.size() == 0) {
         file_sizes = { 131072, 262144, 524288, 1048576, 5242880 };
@@ -107,10 +85,8 @@ int main(int argc, char** argv)
             while (timer.elapsed() < time_per_benchmark * 1000) {
                 out(".");
                 fflush(stdout);
-                auto result = benchmark(filename, file_size, block_size, buffer_result.value(), allow_cache);
-                if (!result.has_value())
-                    return 1;
-                results.append(result.release_value());
+                auto result = TRY(benchmark(filename, file_size, buffer_result.value(), allow_cache));
+                results.append(result);
                 usleep(100);
             }
             auto average = average_result(results);
@@ -123,23 +99,22 @@ int main(int argc, char** argv)
     return 0;
 }
 
-Optional<Result> benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache)
+ErrorOr<Result> benchmark(String const& filename, int file_size, ByteBuffer& buffer, bool allow_cache)
 {
     int flags = O_CREAT | O_TRUNC | O_RDWR;
     if (!allow_cache)
         flags |= O_DIRECT;
 
-    int fd = open(filename.characters(), flags, 0644);
-    if (fd == -1) {
-        perror("open");
-        exit(1);
-    }
+    int fd = TRY(Core::System::open(filename.characters(), flags, 0644));
 
     auto fd_cleanup = ScopeGuard([fd, filename] {
-        if (close(fd) < 0)
-            perror("close");
-        if (unlink(filename.characters()) < 0)
-            perror("unlink");
+        auto void_or_error = Core::System::close(fd);
+        if (void_or_error.is_error())
+            warnln("{}", void_or_error.release_error());
+
+        void_or_error = Core::System::unlink(filename);
+        if (void_or_error.is_error())
+            warnln("{}", void_or_error.release_error());
     });
 
     Result result;
@@ -148,29 +123,18 @@ Optional<Result> benchmark(const String& filename, int file_size, int block_size
 
     ssize_t total_written = 0;
     while (total_written < file_size) {
-        auto nwritten = write(fd, buffer.data(), block_size);
-        if (nwritten < 0) {
-            perror("write");
-            return {};
-        }
+        auto nwritten = TRY(Core::System::write(fd, buffer));
         total_written += nwritten;
     }
 
     result.write_bps = (u64)(timer.elapsed() ? (file_size / timer.elapsed()) : file_size) * 1000;
 
-    if (lseek(fd, 0, SEEK_SET) < 0) {
-        perror("lseek");
-        return {};
-    }
+    TRY(Core::System::lseek(fd, 0, SEEK_SET));
 
     timer.start();
     ssize_t total_read = 0;
     while (total_read < file_size) {
-        auto nread = read(fd, buffer.data(), block_size);
-        if (nread < 0) {
-            perror("read");
-            return {};
-        }
+        auto nread = TRY(Core::System::read(fd, buffer));
         total_read += nread;
     }
 

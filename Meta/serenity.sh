@@ -410,7 +410,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
                 ADDR2LINE="$TOOLCHAIN_DIR/bin/llvm-addr2line"
             else
-                ADDR2LINE="$TOOLCHAIN_DIR/binutils/binutils/addr2line"
+                ADDR2LINE="$TOOLCHAIN_DIR/bin/$TARGET-pc-serenity-addr2line"
             fi
             "$ADDR2LINE" -e "$BUILD_DIR/Kernel/Kernel" "$@"
             ;;
@@ -425,7 +425,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             elif [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
                 ADDR2LINE="$TOOLCHAIN_DIR/bin/llvm-addr2line"
             else
-                ADDR2LINE="$TOOLCHAIN_DIR/binutils/binutils/addr2line"
+                ADDR2LINE="$TOOLCHAIN_DIR/bin/$TARGET-pc-serenity-addr2line"
             fi
             if [ -x "$BINARY_FILE_PATH" ]; then
                 "$ADDR2LINE" -e "$BINARY_FILE_PATH" "$@"
@@ -464,6 +464,8 @@ elif [ "$CMD" = "__tmux_cmd" ]; then
         fi
         # We need to make sure qemu doesn't start until we continue in gdb
         export SERENITY_EXTRA_QEMU_ARGS="${SERENITY_EXTRA_QEMU_ARGS} -d int -no-reboot -no-shutdown -S"
+        # We need to disable kaslr to let gdb map the kernel symbols correctly
+        export SERENITY_KERNEL_CMDLINE="${SERENITY_KERNEL_CMDLINE} disable_kaslr"
         set_tmux_title 'qemu'
         build_target run
     elif [ "$CMD" = "gdb" ]; then

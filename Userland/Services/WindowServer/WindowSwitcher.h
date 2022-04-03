@@ -26,7 +26,7 @@ public:
     };
     static WindowSwitcher& the();
 
-    virtual ~WindowSwitcher() override;
+    virtual ~WindowSwitcher() override = default;
 
     bool is_visible() const { return m_visible; }
     void set_visible(bool);
@@ -38,7 +38,7 @@ public:
     }
     void hide() { set_visible(false); }
 
-    void on_key_event(const KeyEvent&);
+    void on_key_event(KeyEvent const&);
 
     void refresh();
     void refresh_if_needed();

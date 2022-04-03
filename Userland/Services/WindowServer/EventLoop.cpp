@@ -41,10 +41,6 @@ EventLoop::EventLoop()
     }
 }
 
-EventLoop::~EventLoop()
-{
-}
-
 void EventLoop::drain_mouse()
 {
     auto& screen_input = ScreenInput::the();

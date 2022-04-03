@@ -23,6 +23,7 @@
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
+#include <Kernel/Devices/SelfTTYDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Devices/ZeroDevice.h>
@@ -99,7 +100,13 @@ READONLY_AFTER_INIT VirtualConsole* tty0;
 
 ProcessID g_init_pid { 0 };
 
-static Processor s_bsp_processor; // global but let's keep it "private"
+ALWAYS_INLINE static Processor& bsp_processor()
+{
+    // This solves a problem where the bsp Processor instance
+    // gets "re"-initialized in init() when we run all global constructors.
+    alignas(Processor) static u8 bsp_processor_storage[sizeof(Processor)];
+    return (Processor&)bsp_processor_storage;
+}
 
 // SerenityOS Kernel C++ entry point :^)
 //
@@ -124,7 +131,7 @@ READONLY_AFTER_INIT PhysicalAddress boot_pdpt;
 READONLY_AFTER_INIT PhysicalAddress boot_pd0;
 READONLY_AFTER_INIT PhysicalAddress boot_pd_kernel;
 READONLY_AFTER_INIT PageTableEntry* boot_pd_kernel_pt1023;
-READONLY_AFTER_INIT const char* kernel_cmdline;
+READONLY_AFTER_INIT char const* kernel_cmdline;
 READONLY_AFTER_INIT u32 multiboot_flags;
 READONLY_AFTER_INIT multiboot_memory_map_t* multiboot_memory_map;
 READONLY_AFTER_INIT size_t multiboot_memory_map_count;
@@ -178,7 +185,9 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     CommandLine::early_initialize(kernel_cmdline);
     memcpy(multiboot_copy_boot_modules_array, multiboot_modules, multiboot_modules_count * sizeof(multiboot_module_entry_t));
     multiboot_copy_boot_modules_count = multiboot_modules_count;
-    s_bsp_processor.early_initialize(0);
+
+    new (&bsp_processor()) Processor();
+    bsp_processor().early_initialize(0);
 
     // Invoke the constructors needed for the kernel heap
     for (ctor_func_t* ctor = start_heap_ctors; ctor < end_heap_ctors; ctor++)
@@ -187,7 +196,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 
     load_kernel_symbol_table();
 
-    s_bsp_processor.initialize(0);
+    bsp_processor().initialize(0);
 
     CommandLine::initialize();
     Memory::MemoryManager::initialize(0);
@@ -317,7 +326,7 @@ void init_stage2(void*)
     (void)SerialDevice::must_create(3).leak_ref();
 
     VMWareBackdoor::the(); // don't wait until first mouse packet
-    HIDManagement::initialize();
+    MUST(HIDManagement::initialize());
 
     GraphicsManagement::the().initialize();
     ConsoleManagement::the().initialize();
@@ -346,6 +355,7 @@ void init_stage2(void*)
     (void)ZeroDevice::must_create().leak_ref();
     (void)FullDevice::must_create().leak_ref();
     (void)RandomDevice::must_create().leak_ref();
+    (void)SelfTTYDevice::must_create().leak_ref();
     PTYMultiplexer::initialize();
 
     AudioManagement::the().initialize();
@@ -385,7 +395,7 @@ void init_stage2(void*)
     if (boot_profiling) {
         dbgln("Starting full system boot profiling");
         MutexLocker mutex_locker(Process::current().big_lock());
-        const auto enable_all = ~(u64)0;
+        auto const enable_all = ~(u64)0;
         auto result = Process::current().sys$profiling_enable(-1, reinterpret_cast<FlatPtr>(&enable_all));
         VERIFY(!result.is_error());
     }

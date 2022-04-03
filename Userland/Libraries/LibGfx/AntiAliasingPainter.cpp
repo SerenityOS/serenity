@@ -179,7 +179,7 @@ void Gfx::AntiAliasingPainter::draw_quadratic_bezier_curve(FloatPoint const& con
     });
 }
 
-void Gfx::AntiAliasingPainter::draw_cubic_bezier_curve(const FloatPoint& control_point_0, const FloatPoint& control_point_1, const FloatPoint& p1, const FloatPoint& p2, Color color, float thickness, Painter::LineStyle style)
+void Gfx::AntiAliasingPainter::draw_cubic_bezier_curve(FloatPoint const& control_point_0, FloatPoint const& control_point_1, FloatPoint const& p1, FloatPoint const& p2, Color color, float thickness, Painter::LineStyle style)
 {
     Gfx::Painter::for_each_line_segment_on_cubic_bezier_curve(control_point_0, control_point_1, p1, p2, [&](FloatPoint const& fp1, FloatPoint const& fp2) {
         draw_line(fp1, fp2, color, thickness, style);
@@ -193,13 +193,16 @@ void Gfx::AntiAliasingPainter::draw_circle(IntPoint center, int radius, Color co
     Inline comments are from the paper.
     */
 
+    center *= m_underlying_painter.scale();
+    radius *= m_underlying_painter.scale();
+
     // TODO: Generalize to ellipses (see paper)
 
     // These happen to be the same here, but are treated separately in the paper:
     // intensity is the fill alpha
-    const int intensity = color.alpha();
+    int const intensity = color.alpha();
     // 0 to subpixel_resolution is the range of alpha values for the circle edges
-    const int subpixel_resolution = intensity;
+    int const subpixel_resolution = intensity;
 
     // Note: Variable names below are based off the paper
 
@@ -352,11 +355,11 @@ void Gfx::AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_r
         a_rect.x() + a_rect.width() - top_right_radius,
         a_rect.y() + top_right_radius,
     };
-    IntPoint bottom_right_corner {
+    IntPoint bottom_left_corner {
         a_rect.x() + bottom_left_radius,
         a_rect.y() + a_rect.height() - bottom_right_radius
     };
-    IntPoint bottom_left_corner {
+    IntPoint bottom_right_corner {
         a_rect.x() + a_rect.width() - bottom_left_radius,
         a_rect.y() + a_rect.height() - bottom_left_radius
     };

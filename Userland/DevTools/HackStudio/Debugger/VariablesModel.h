@@ -28,7 +28,7 @@ public:
     Debug::ProcessInspector& inspector() { return m_inspector; }
 
 private:
-    explicit VariablesModel(Debug::ProcessInspector& inspector, NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo>&& variables, const PtraceRegisters& regs)
+    explicit VariablesModel(Debug::ProcessInspector& inspector, NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo>&& variables, PtraceRegisters const& regs)
         : m_variables(move(variables))
         , m_regs(regs)
         , m_inspector(inspector)

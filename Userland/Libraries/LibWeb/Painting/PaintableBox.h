@@ -115,7 +115,9 @@ public:
     virtual void before_children_paint(PaintContext&, PaintPhase) const override;
     virtual void after_children_paint(PaintContext&, PaintPhase) const override;
 
-    virtual HitTestResult hit_test(Gfx::FloatPoint const&, HitTestType) const override;
+    virtual Optional<HitTestResult> hit_test(Gfx::FloatPoint const&, HitTestType) const override;
+
+    void invalidate_stacking_context();
 
 protected:
     explicit PaintableBox(Layout::Box const&);
@@ -124,10 +126,9 @@ protected:
     virtual void paint_background(PaintContext&) const;
     virtual void paint_box_shadow(PaintContext&) const;
 
-private:
-    template<typename Callback>
-    void for_each_child_in_paint_order(Callback) const;
+    virtual Gfx::FloatRect compute_absolute_rect() const;
 
+private:
     Painting::BorderRadiusData normalized_border_radius_data() const;
 
     OwnPtr<Painting::StackingContext> m_stacking_context;
@@ -162,9 +163,9 @@ public:
 
     virtual void paint(PaintContext&, PaintPhase) const override;
     virtual bool wants_mouse_events() const override { return false; }
-    virtual bool handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
+    virtual bool handle_mousewheel(Badge<EventHandler>, Gfx::IntPoint const&, unsigned buttons, unsigned modifiers, int wheel_delta_x, int wheel_delta_y) override;
 
-    virtual HitTestResult hit_test(Gfx::FloatPoint const&, HitTestType) const override;
+    virtual Optional<HitTestResult> hit_test(Gfx::FloatPoint const&, HitTestType) const override;
 
 protected:
     PaintableWithLines(Layout::BlockContainer const&);

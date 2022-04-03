@@ -20,6 +20,8 @@ public:
 
 protected:
     SVGPaintable(Layout::SVGBox const&);
+
+    virtual Gfx::FloatRect compute_absolute_rect() const override;
 };
 
 }

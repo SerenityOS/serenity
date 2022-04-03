@@ -100,7 +100,7 @@ BookmarksBarWidget& BookmarksBarWidget::the()
     return *s_the;
 }
 
-BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enabled)
+BookmarksBarWidget::BookmarksBarWidget(String const& bookmarks_file, bool enabled)
 {
     s_the = this;
     set_layout<GUI::HorizontalBoxLayout>();
@@ -255,7 +255,7 @@ void BookmarksBarWidget::update_content_size()
     }
 }
 
-bool BookmarksBarWidget::contains_bookmark(const String& url)
+bool BookmarksBarWidget::contains_bookmark(String const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
@@ -268,7 +268,7 @@ bool BookmarksBarWidget::contains_bookmark(const String& url)
     return false;
 }
 
-bool BookmarksBarWidget::remove_bookmark(const String& url)
+bool BookmarksBarWidget::remove_bookmark(String const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
@@ -277,7 +277,7 @@ bool BookmarksBarWidget::remove_bookmark(const String& url)
         if (item_url == url) {
             auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
 
-            const auto item_removed = json_model.remove(item_index);
+            auto const item_removed = json_model.remove(item_index);
             if (item_removed)
                 json_model.store();
 
@@ -288,7 +288,7 @@ bool BookmarksBarWidget::remove_bookmark(const String& url)
     return false;
 }
 
-bool BookmarksBarWidget::add_bookmark(const String& url, const String& title)
+bool BookmarksBarWidget::add_bookmark(String const& url, String const& title)
 {
     Vector<JsonValue> values;
     values.append(title);
@@ -302,7 +302,7 @@ bool BookmarksBarWidget::add_bookmark(const String& url, const String& title)
     return false;
 }
 
-bool BookmarksBarWidget::edit_bookmark(const String& url)
+bool BookmarksBarWidget::edit_bookmark(String const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
         auto item_title = model()->index(item_index, 0).data().to_string();

@@ -8,6 +8,7 @@
 
 #include <AK/Format.h>
 #include <LibGfx/AffineTransform.h>
+#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
@@ -18,6 +19,7 @@
 #include <LibGfx/Size.h>
 #include <LibPDF/ColorSpace.h>
 #include <LibPDF/Document.h>
+#include <LibPDF/Fonts/PDFFont.h>
 #include <LibPDF/Object.h>
 
 namespace PDF {
@@ -58,6 +60,7 @@ struct TextState {
     FlyString font_family { "Liberation Serif" };
     String font_variant { "Regular" };
     float font_size { 12.0f };
+    RefPtr<PDFFont> font;
     TextRenderingMode rendering_mode { TextRenderingMode::Fill };
     float rise { 0.0f };
     bool knockout { true };
@@ -86,16 +89,16 @@ private:
 
     PDFErrorOr<void> render();
 
-    PDFErrorOr<void> handle_command(Command const&);
+    PDFErrorOr<void> handle_operator(Operator const&);
 #define V(name, snake_name, symbol) \
     PDFErrorOr<void> handle_##snake_name(Vector<Value> const& args);
-    ENUMERATE_COMMANDS(V)
+    ENUMERATE_OPERATORS(V)
 #undef V
     PDFErrorOr<void> handle_text_next_line_show_string(Vector<Value> const& args);
     PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(Vector<Value> const& args);
 
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
-    // shift is the manual advance given in the TJ command array
+    // shift is the manual advance given in the TJ operator array
     void show_text(String const&, float shift = 0.0f);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space(Value const&);
 
@@ -119,6 +122,7 @@ private:
     RefPtr<Gfx::Bitmap> m_bitmap;
     Page const& m_page;
     Gfx::Painter m_painter;
+    Gfx::AntiAliasingPainter m_anti_aliasing_painter;
 
     Gfx::Path m_current_path;
     Vector<GraphicsState> m_graphics_state_stack;

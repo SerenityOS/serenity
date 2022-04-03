@@ -9,7 +9,9 @@ describe("correct behavior", () => {
         plainYearMonth = new Temporal.PlainYearMonth(2021, 7);
         expect(plainYearMonth.toString()).toBe("2021-07");
         expect(plainYearMonth.toString({ calendarName: "auto" })).toBe("2021-07");
-        expect(plainYearMonth.toString({ calendarName: "always" })).toBe("2021-07[u-ca=iso8601]");
+        expect(plainYearMonth.toString({ calendarName: "always" })).toBe(
+            "2021-07-01[u-ca=iso8601]"
+        );
         expect(plainYearMonth.toString({ calendarName: "never" })).toBe("2021-07");
 
         plainYearMonth = new Temporal.PlainYearMonth(2021, 7, { toString: () => "foo" }, 6);
@@ -19,10 +21,13 @@ describe("correct behavior", () => {
         expect(plainYearMonth.toString({ calendarName: "never" })).toBe("2021-07-06");
 
         plainYearMonth = new Temporal.PlainYearMonth(0, 1);
-        expect(plainYearMonth.toString()).toBe("+000000-01");
+        expect(plainYearMonth.toString()).toBe("0000-01");
 
         plainYearMonth = new Temporal.PlainYearMonth(999, 1);
-        expect(plainYearMonth.toString()).toBe("+000999-01");
+        expect(plainYearMonth.toString()).toBe("0999-01");
+
+        plainYearMonth = new Temporal.PlainYearMonth(9999, 1);
+        expect(plainYearMonth.toString()).toBe("9999-01");
 
         plainYearMonth = new Temporal.PlainYearMonth(12345, 1);
         expect(plainYearMonth.toString()).toBe("+012345-01");

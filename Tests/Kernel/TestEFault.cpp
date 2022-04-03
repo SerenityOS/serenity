@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -17,6 +17,7 @@
 
 #define EXPECT_OK(syscall, address, size)                                                                                         \
     do {                                                                                                                          \
+        errno = 0;                                                                                                                \
         rc = syscall(fd, (void*)(address), (size_t)(size));                                                                       \
         EXPECT(rc >= 0);                                                                                                          \
         if (rc < 0) {                                                                                                             \
@@ -26,17 +27,8 @@
 
 #define EXPECT_EFAULT(syscall, address, size)                                                                                    \
     do {                                                                                                                         \
+        errno = 0;                                                                                                               \
         rc = syscall(fd, (void*)(address), (size_t)(size));                                                                      \
-        EXPECT(rc < 0);                                                                                                          \
-        EXPECT_EQ(errno, EFAULT);                                                                                                \
-        if (rc >= 0 || errno != EFAULT) {                                                                                        \
-            warnln("Expected EFAULT: " #syscall "({:p}, {}), got rc={}, errno={}", (void*)(address), (size_t)(size), rc, errno); \
-        }                                                                                                                        \
-    } while (0)
-
-#define EXPECT_EFAULT_NO_FD(syscall, address, size)                                                                              \
-    do {                                                                                                                         \
-        rc = syscall((address), (size_t)(size));                                                                                 \
         EXPECT(rc < 0);                                                                                                          \
         EXPECT_EQ(errno, EFAULT);                                                                                                \
         if (rc >= 0 || errno != EFAULT) {                                                                                        \
@@ -55,6 +47,9 @@ TEST_CASE(test_efault)
     EXPECT_OK(read, one_page, 4096);
     EXPECT_EFAULT(read, one_page, 4097);
     EXPECT_EFAULT(read, one_page - 1, 4096);
+
+    // Make an unused hole mapping to create some inaccessible distance between our one and two-page mappings.
+    (void)mmap(nullptr, 16384, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
 
     // Test a two-page mapping (8KB)
     u8* two_page = (u8*)mmap(nullptr, 8192, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);

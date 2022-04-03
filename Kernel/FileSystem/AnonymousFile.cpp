@@ -28,7 +28,7 @@ ErrorOr<Memory::Region*> AnonymousFile::mmap(Process& process, OpenFileDescripti
     return process.address_space().allocate_region_with_vmobject(range, m_vmobject, offset, {}, prot, shared);
 }
 
-ErrorOr<NonnullOwnPtr<KString>> AnonymousFile::pseudo_path(const OpenFileDescription&) const
+ErrorOr<NonnullOwnPtr<KString>> AnonymousFile::pseudo_path(OpenFileDescription const&) const
 {
     return KString::try_create(":anonymous-file:"sv);
 }

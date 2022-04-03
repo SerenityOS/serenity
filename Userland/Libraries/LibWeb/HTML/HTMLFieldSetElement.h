@@ -7,17 +7,22 @@
 #pragma once
 
 #include <LibWeb/HTML/FormAssociatedElement.h>
+#include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
 
-class HTMLFieldSetElement final : public FormAssociatedElement {
+class HTMLFieldSetElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLFieldSetElement)
+
 public:
     using WrapperType = Bindings::HTMLFieldSetElementWrapper;
 
     HTMLFieldSetElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLFieldSetElement() override;
 
-    const String& type() const
+    String const& type() const
     {
         static String fieldset = "fieldset";
         return fieldset;

@@ -25,17 +25,13 @@ AppletManager::AppletManager()
     order_vector = order.split(',');
 }
 
-AppletManager::~AppletManager()
-{
-}
-
 AppletManager& AppletManager::the()
 {
     VERIFY(s_the);
     return *s_the;
 }
 
-void AppletManager::set_position(const Gfx::IntPoint& position)
+void AppletManager::set_position(Gfx::IntPoint const& position)
 {
     m_window->move_to(position);
     m_window->set_visible(true);
@@ -173,7 +169,7 @@ void AppletManager::draw()
     }
 }
 
-void AppletManager::draw_applet(const Window& applet)
+void AppletManager::draw_applet(Window const& applet)
 {
     if (!applet.backing_store())
         return;
@@ -185,7 +181,7 @@ void AppletManager::draw_applet(const Window& applet)
     painter.blit(applet.rect_in_applet_area().location(), *applet.backing_store(), applet.backing_store()->rect());
 }
 
-void AppletManager::invalidate_applet(const Window& applet, const Gfx::IntRect&)
+void AppletManager::invalidate_applet(Window const& applet, Gfx::IntRect const&)
 {
     draw_applet(applet);
     draw();

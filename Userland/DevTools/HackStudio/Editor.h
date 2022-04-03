@@ -32,9 +32,9 @@ public:
     Function<void(String)> on_open;
 
     EditorWrapper& wrapper();
-    const EditorWrapper& wrapper() const;
+    EditorWrapper const& wrapper() const;
 
-    const Vector<size_t>& breakpoint_lines() const { return code_document().breakpoint_lines(); }
+    Vector<size_t> const& breakpoint_lines() const { return code_document().breakpoint_lines(); }
     Vector<size_t>& breakpoint_lines() { return code_document().breakpoint_lines(); }
     Optional<size_t> execution_position() const { return code_document().execution_position(); }
     bool is_program_running() const { return execution_position().has_value(); }
@@ -42,7 +42,7 @@ public:
     void clear_execution_position();
     void set_debug_mode(bool);
 
-    const CodeDocument& code_document() const;
+    CodeDocument const& code_document() const;
     CodeDocument& code_document();
 
     virtual void set_document(GUI::TextDocument&) override;
@@ -70,14 +70,14 @@ private:
     virtual void leave_event(Core::Event&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
 
-    void show_documentation_tooltip_if_available(const String&, const Gfx::IntPoint& screen_location);
+    void show_documentation_tooltip_if_available(String const&, Gfx::IntPoint const& screen_location);
     void navigate_to_include_if_available(String);
     void on_navigatable_link_click(const GUI::TextDocumentSpan&);
     void on_identifier_click(const GUI::TextDocumentSpan&);
 
     Gfx::IntRect gutter_icon_rect(size_t line_number) const;
-    static const Gfx::Bitmap& breakpoint_icon_bitmap();
-    static const Gfx::Bitmap& current_position_icon_bitmap();
+    static Gfx::Bitmap const& breakpoint_icon_bitmap();
+    static Gfx::Bitmap const& current_position_icon_bitmap();
 
     struct AutoCompleteRequestData {
         GUI::TextPosition position;
@@ -99,8 +99,8 @@ private:
     Optional<AutoCompleteRequestData> get_autocomplete_request_data();
 
     void flush_file_content_to_langauge_server();
-    void set_syntax_highlighter_for(const CodeDocument&);
-    void set_language_client_for(const CodeDocument&);
+    void set_syntax_highlighter_for(CodeDocument const&);
+    void set_language_client_for(CodeDocument const&);
     void set_autocomplete_provider_for(CodeDocument const&);
     void handle_function_parameters_hint_request();
     void on_token_info_timer_tick();

@@ -85,8 +85,8 @@ public:
     double mandelbrot(double px, double py, i32 max_iterations)
     {
         // Based on https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set
-        const double x0 = px * (m_x_end - m_x_start) / m_bitmap->width() + m_x_start;
-        const double y0 = py * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start;
+        double const x0 = px * (m_x_end - m_x_start) / m_bitmap->width() + m_x_start;
+        double const y0 = py * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start;
         double x = 0;
         double y = 0;
         i32 iteration = 0;
@@ -215,7 +215,7 @@ class Mandelbrot : public GUI::Frame {
         In,
         Out,
     };
-    void zoom(Zoom in_out, const Gfx::IntPoint& center);
+    void zoom(Zoom in_out, Gfx::IntPoint const& center);
 
     void reset();
 
@@ -239,7 +239,7 @@ private:
     MandelbrotSet m_set;
 };
 
-void Mandelbrot::zoom(Zoom in_out, const Gfx::IntPoint& center)
+void Mandelbrot::zoom(Zoom in_out, Gfx::IntPoint const& center)
 {
     static constexpr double zoom_in_multiplier = 0.8;
     static constexpr double zoom_out_multiplier = 1.25;

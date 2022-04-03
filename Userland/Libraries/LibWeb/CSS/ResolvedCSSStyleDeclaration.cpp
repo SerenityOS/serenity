@@ -497,7 +497,9 @@ static NonnullRefPtr<StyleValue> style_value_for_length_percentage(LengthPercent
 {
     if (length_percentage.is_percentage())
         return PercentageStyleValue::create(length_percentage.percentage());
-    return LengthStyleValue::create(length_percentage.length());
+    if (length_percentage.is_length())
+        return LengthStyleValue::create(length_percentage.length());
+    return length_percentage.calculated();
 }
 
 RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout::NodeWithStyle const& layout_node, PropertyID property_id) const
@@ -549,6 +551,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return NumericStyleValue::create_float(layout_node.computed_values().flex_grow());
     case CSS::PropertyID::FlexShrink:
         return NumericStyleValue::create_float(layout_node.computed_values().flex_shrink());
+    case CSS::PropertyID::Order:
+        return NumericStyleValue::create_integer(layout_node.computed_values().order());
     case CSS::PropertyID::Opacity:
         return NumericStyleValue::create_float(layout_node.computed_values().opacity());
     case CSS::PropertyID::ImageRendering:
@@ -560,8 +564,8 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         if (box_shadow_layers.is_empty())
             return {};
 
-        auto make_box_shadow_style_value = [](BoxShadowData const& data) {
-            return BoxShadowStyleValue::create(data.color, data.offset_x, data.offset_y, data.blur_radius, data.spread_distance, data.placement);
+        auto make_box_shadow_style_value = [](ShadowData const& data) {
+            return ShadowStyleValue::create(data.color, data.offset_x, data.offset_y, data.blur_radius, data.spread_distance, data.placement);
         };
 
         if (box_shadow_layers.size() == 1)

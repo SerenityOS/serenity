@@ -1,10 +1,10 @@
 function(add_simple_fuzzer name)
   add_executable(${name} "${name}.cpp")
 
-  if (ENABLE_OSS_FUZZ)
+  if (ENABLE_FUZZERS_OSSFUZZ)
       target_link_libraries(${name}
           PUBLIC ${ARGN} LagomCore)
-  else()
+  elseif (ENABLE_FUZZERS_LIBFUZZER)
     target_compile_options(${name}
       PRIVATE $<$<CXX_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
       )
@@ -12,6 +12,9 @@ function(add_simple_fuzzer name)
       PUBLIC ${ARGN} LagomCore
       PRIVATE $<$<CXX_COMPILER_ID:Clang>:-fsanitize=fuzzer>
       )
+  else()
+    target_sources(${name} PRIVATE "EntryShim.cpp")
+    target_link_libraries(${name} PUBLIC ${ARGN} LagomCore)
   endif()
 endfunction()
 
@@ -63,7 +66,7 @@ add_simple_fuzzer(FuzzWasmParser LagomWasm)
 add_simple_fuzzer(FuzzZip LagomArchive)
 add_simple_fuzzer(FuzzZlibDecompression LagomCompress)
 
-if (NOT ENABLE_OSS_FUZZ)
+if (ENABLE_FUZZERS_LIBFUZZER)
 set(CMAKE_EXE_LINKER_FLAGS "${ORIGINAL_CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 set(CMAKE_SHARED_LINKER_FLAGS "${ORIGINAL_CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
 set(CMAKE_MODULE_LINKER_FLAGS "${ORIGINAL_CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address")

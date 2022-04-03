@@ -18,6 +18,9 @@ public:
     virtual ~HTMLTableRowElement() override;
 
     NonnullRefPtr<DOM::HTMLCollection> cells() const;
+
+    int row_index() const;
+    int section_row_index() const;
 };
 
 }

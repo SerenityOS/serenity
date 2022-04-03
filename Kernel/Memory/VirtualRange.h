@@ -13,8 +13,6 @@
 namespace Kernel::Memory {
 
 class VirtualRange {
-    friend class VirtualRangeAllocator;
-
 public:
     VirtualRange() = delete;
     VirtualRange(VirtualAddress base, size_t size)
@@ -50,6 +48,8 @@ public:
 
     Vector<VirtualRange, 2> carve(VirtualRange const&) const;
     VirtualRange intersect(VirtualRange const&) const;
+
+    bool intersects(VirtualRange const&) const;
 
     static ErrorOr<VirtualRange> expand_to_page_boundaries(FlatPtr address, size_t size);
 

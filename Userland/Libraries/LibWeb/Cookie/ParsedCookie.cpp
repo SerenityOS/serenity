@@ -5,6 +5,7 @@
  */
 
 #include "ParsedCookie.h"
+#include <AK/DateConstants.h>
 #include <AK/Function.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
@@ -26,7 +27,7 @@ static void on_secure_attribute(ParsedCookie& parsed_cookie);
 static void on_http_only_attribute(ParsedCookie& parsed_cookie);
 static Optional<Core::DateTime> parse_date_time(StringView date_string);
 
-Optional<ParsedCookie> parse_cookie(const String& cookie_string)
+Optional<ParsedCookie> parse_cookie(String const& cookie_string)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.2
 
@@ -263,10 +264,8 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
     };
 
     auto parse_month = [&](StringView token) {
-        static const char* months[] { "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec" };
-
         for (unsigned i = 0; i < 12; ++i) {
-            if (token.equals_ignoring_case(months[i])) {
+            if (token.equals_ignoring_case(short_month_names[i])) {
                 month = i + 1;
                 return true;
             }
@@ -294,7 +293,7 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
     bool found_month = false;
     bool found_year = false;
 
-    for (const auto& date_token : date_tokens) {
+    for (auto const& date_token : date_tokens) {
         if (!found_time && parse_time(date_token)) {
             found_time = true;
         } else if (!found_day_of_month && parse_day_of_month(date_token)) {
@@ -334,7 +333,7 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
 
 }
 
-bool IPC::encode(IPC::Encoder& encoder, const Web::Cookie::ParsedCookie& cookie)
+bool IPC::encode(Encoder& encoder, Web::Cookie::ParsedCookie const& cookie)
 {
     encoder << cookie.name;
     encoder << cookie.value;
@@ -348,7 +347,7 @@ bool IPC::encode(IPC::Encoder& encoder, const Web::Cookie::ParsedCookie& cookie)
     return true;
 }
 
-ErrorOr<void> IPC::decode(IPC::Decoder& decoder, Web::Cookie::ParsedCookie& cookie)
+ErrorOr<void> IPC::decode(Decoder& decoder, Web::Cookie::ParsedCookie& cookie)
 {
     TRY(decoder.decode(cookie.name));
     TRY(decoder.decode(cookie.value));

@@ -40,7 +40,7 @@ private:
 
     RTL8168NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<KString>);
 
-    virtual bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(RegisterState const&) override;
     virtual StringView class_name() const override { return "RTL8168NetworkAdapter"sv; }
 
     bool determine_supported_version() const;

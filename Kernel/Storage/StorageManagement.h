@@ -45,7 +45,7 @@ private:
 
     void dump_storage_devices_and_partitions() const;
 
-    OwnPtr<PartitionTable> try_to_initialize_partition_table(const StorageDevice&) const;
+    OwnPtr<PartitionTable> try_to_initialize_partition_table(StorageDevice const&) const;
 
     RefPtr<BlockDevice> boot_block_device() const;
 

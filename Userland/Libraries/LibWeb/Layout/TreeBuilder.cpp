@@ -26,8 +26,32 @@ namespace Web::Layout {
 
 TreeBuilder::TreeBuilder() = default;
 
-// The insertion_parent_for_*() functions maintain the invariant that block-level boxes must have either
-// only block-level children or only inline-level children.
+static bool has_inline_or_in_flow_block_children(Layout::Node const& layout_node)
+{
+    for (auto const* child = layout_node.first_child(); child; child = child->next_sibling()) {
+        if (child->is_inline())
+            return true;
+        if (!child->is_floating() && !child->is_absolutely_positioned())
+            return true;
+    }
+    return false;
+}
+
+static bool has_in_flow_block_children(Layout::Node const& layout_node)
+{
+    if (layout_node.children_are_inline())
+        return false;
+    for (auto const* child = layout_node.first_child(); child; child = child->next_sibling()) {
+        if (child->is_inline())
+            continue;
+        if (!child->is_floating() && !child->is_absolutely_positioned())
+            return true;
+    }
+    return false;
+}
+
+// The insertion_parent_for_*() functions maintain the invariant that the in-flow children of
+// block-level boxes must be either all block-level or all inline-level.
 
 static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& layout_parent)
 {
@@ -38,7 +62,7 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
         layout_parent.append_child(layout_parent.create_anonymous_wrapper());
     }
 
-    if (!layout_parent.has_children() || layout_parent.children_are_inline())
+    if (!has_in_flow_block_children(layout_parent) || layout_parent.children_are_inline())
         return layout_parent;
 
     // Parent has block-level children, insert into an anonymous wrapper block (and create it first if needed)
@@ -48,15 +72,20 @@ static Layout::Node& insertion_parent_for_inline_node(Layout::NodeWithStyle& lay
     return *layout_parent.last_child();
 }
 
-static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent, Layout::Node& layout_node)
+static Layout::Node& insertion_parent_for_block_node(Layout::NodeWithStyle& layout_parent, Layout::Node& layout_node)
 {
-    if (!layout_parent.has_children()) {
+    if (!has_inline_or_in_flow_block_children(layout_parent)) {
         // Parent block has no children, insert this block into parent.
         return layout_parent;
     }
 
     if (!layout_parent.children_are_inline()) {
         // Parent block has block-level children, insert this block into parent.
+        return layout_parent;
+    }
+
+    if (layout_node.is_floating() || layout_node.is_absolutely_positioned()) {
+        // Block is out-of-flow, it can have inline siblings if necessary.
         return layout_parent;
     }
 
@@ -67,7 +96,7 @@ static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent
         layout_parent.remove_child(*child);
         children.append(child.release_nonnull());
     }
-    layout_parent.append_child(adopt_ref(*new BlockContainer(layout_node.document(), nullptr, layout_parent.computed_values().clone_inherited_values())));
+    layout_parent.append_child(layout_parent.create_anonymous_wrapper());
     layout_parent.set_children_are_inline(false);
     for (auto& child : children) {
         layout_parent.last_child()->append_child(child);
@@ -127,7 +156,7 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
             insertion_point.set_children_are_inline(true);
         } else {
             // Non-inlines can't be inserted into an inline parent, so find the nearest non-inline ancestor.
-            auto& nearest_non_inline_ancestor = [&]() -> Layout::Node& {
+            auto& nearest_non_inline_ancestor = [&]() -> Layout::NodeWithStyle& {
                 for (ssize_t i = m_parent_stack.size() - 1; i >= 0; --i) {
                     if (!m_parent_stack[i]->is_inline() || m_parent_stack[i]->is_inline_block())
                         return *m_parent_stack[i];
@@ -139,7 +168,10 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& 
                 insertion_point.prepend_child(*node);
             else
                 insertion_point.append_child(*node);
-            insertion_point.set_children_are_inline(false);
+
+            // After inserting an in-flow block-level box into a parent, mark the parent as having non-inline children.
+            if (!node->is_floating() && !node->is_absolutely_positioned())
+                insertion_point.set_children_are_inline(false);
         }
     };
 
@@ -311,7 +343,7 @@ static bool is_table_track_group(CSS::Display display)
         || display.is_table_column_group();
 }
 
-static bool is_not_proper_table_child(const Node& node)
+static bool is_not_proper_table_child(Node const& node)
 {
     if (!node.has_style())
         return true;
@@ -319,7 +351,7 @@ static bool is_not_proper_table_child(const Node& node)
     return !is_table_track_group(display) && !is_table_track(display) && !display.is_table_caption();
 }
 
-static bool is_not_table_row(const Node& node)
+static bool is_not_table_row(Node const& node)
 {
     if (!node.has_style())
         return true;
@@ -327,7 +359,7 @@ static bool is_not_table_row(const Node& node)
     return !display.is_table_row();
 }
 
-static bool is_not_table_cell(const Node& node)
+static bool is_not_table_cell(Node const& node)
 {
     if (!node.has_style())
         return true;

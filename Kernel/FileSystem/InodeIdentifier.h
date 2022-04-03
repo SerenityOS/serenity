@@ -33,14 +33,14 @@ public:
     InodeIndex index() const { return m_index; }
 
     FileSystem* fs();
-    const FileSystem* fs() const;
+    FileSystem const* fs() const;
 
-    bool operator==(const InodeIdentifier& other) const
+    bool operator==(InodeIdentifier const& other) const
     {
         return m_fsid == other.m_fsid && m_index == other.m_index;
     }
 
-    bool operator!=(const InodeIdentifier& other) const
+    bool operator!=(InodeIdentifier const& other) const
     {
         return m_fsid != other.m_fsid || m_index != other.m_index;
     }

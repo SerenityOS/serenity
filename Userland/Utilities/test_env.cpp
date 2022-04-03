@@ -6,11 +6,12 @@
 
 #include <AK/Assertions.h>
 #include <AK/Format.h>
+#include <LibMain/Main.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static void assert_env(const char* name, const char* value)
+static void assert_env(char const* name, char const* value)
 {
     char* result = getenv(name);
     if (!result) {
@@ -76,7 +77,7 @@ static void test_setenv_overwrite_empty()
     assert_env("EMPTYTEST", "Forcefully overwrite non-existing envvar");
 }
 
-int main(int, char**)
+ErrorOr<int> serenity_main(Main::Arguments)
 {
 #define RUNTEST(x)                   \
     {                                \

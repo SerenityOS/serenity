@@ -18,7 +18,7 @@ namespace IDL {
 class Parser {
 public:
     Parser(String filename, StringView contents, String import_base_path);
-    NonnullOwnPtr<Interface> parse();
+    NonnullRefPtr<Interface> parse();
 
 private:
     // https://webidl.spec.whatwg.org/#dfn-special-operation
@@ -31,15 +31,17 @@ private:
     void assert_specific(char ch);
     void assert_string(StringView expected);
     void consume_whitespace();
-    Optional<NonnullOwnPtr<Interface>> resolve_import(auto path);
+    Optional<NonnullRefPtr<Interface>> resolve_import(auto path);
 
     HashMap<String, String> parse_extended_attributes();
     void parse_attribute(HashMap<String, String>& extended_attributes, Interface&);
     void parse_interface(Interface&);
     void parse_non_interface_entities(bool allow_interface, Interface&);
     void parse_enumeration(Interface&);
+    void parse_typedef(Interface&);
     void parse_interface_mixin(Interface&);
     void parse_dictionary(Interface&);
+    void parse_callback_function(HashMap<String, String>& extended_attributes, Interface&);
     void parse_constructor(Interface&);
     void parse_getter(HashMap<String, String>& extended_attributes, Interface&);
     void parse_setter(HashMap<String, String>& extended_attributes, Interface&);
@@ -51,7 +53,8 @@ private:
     NonnullRefPtr<Type> parse_type();
     void parse_constant(Interface&);
 
-    static HashTable<String> s_all_imported_paths;
+    static HashMap<String, NonnullRefPtr<Interface>> s_resolved_imports;
+    HashTable<String> required_imported_paths;
     String import_base_path;
     String filename;
     StringView input;

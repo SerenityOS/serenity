@@ -6,6 +6,7 @@
 
 #include <AK/Utf8View.h>
 #include <LibPDF/CommonNames.h>
+#include <LibPDF/Fonts/PDFFont.h>
 #include <LibPDF/Renderer.h>
 
 #define RENDERER_HANDLER(name) \
@@ -30,6 +31,7 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
     , m_bitmap(bitmap)
     , m_page(page)
     , m_painter(*bitmap)
+    , m_anti_aliasing_painter(m_painter)
 {
     auto media_box = m_page.media_box;
 
@@ -76,28 +78,28 @@ PDFErrorOr<void> Renderer::render()
         byte_buffer.append(bytes.data(), bytes.size());
     }
 
-    auto commands = TRY(Parser::parse_graphics_commands(byte_buffer));
+    auto operators = TRY(Parser::parse_operators(m_document, byte_buffer));
 
-    for (auto& command : commands)
-        TRY(handle_command(command));
+    for (auto& op : operators)
+        TRY(handle_operator(op));
 
     return {};
 }
 
-PDFErrorOr<void> Renderer::handle_command(Command const& command)
+PDFErrorOr<void> Renderer::handle_operator(Operator const& op)
 {
-    switch (command.command_type()) {
-#define V(name, snake_name, symbol)                    \
-    case CommandType::name:                            \
-        TRY(handle_##snake_name(command.arguments())); \
+    switch (op.type()) {
+#define V(name, snake_name, symbol)               \
+    case OperatorType::name:                      \
+        TRY(handle_##snake_name(op.arguments())); \
         break;
-        ENUMERATE_COMMANDS(V)
+        ENUMERATE_OPERATORS(V)
 #undef V
-    case CommandType::TextNextLineShowString:
-        TRY(handle_text_next_line_show_string(command.arguments()));
+    case OperatorType::TextNextLineShowString:
+        TRY(handle_text_next_line_show_string(op.arguments()));
         break;
-    case CommandType::TextNextLineShowStringSetSpacing:
-        TRY(handle_text_next_line_show_string_set_spacing(command.arguments()));
+    case OperatorType::TextNextLineShowStringSetSpacing:
+        TRY(handle_text_next_line_show_string_set_spacing(op.arguments()));
         break;
     }
 
@@ -206,6 +208,11 @@ RENDERER_HANDLER(path_append_rect)
     auto pos = map(args[0].to_float(), args[1].to_float());
     auto size = map(Gfx::FloatSize { args[2].to_float(), args[3].to_float() });
 
+    // FIXME: Why do we need to flip the y axis of rectangles here? The coordinates
+    //        in the PDF file seem to be correct, with the same flipped-ness as
+    //        everything else in a PDF file.
+    pos.set_y(m_bitmap->height() - pos.y() - size.height());
+
     m_current_path.move_to(pos);
     m_current_path.line_to({ pos.x() + size.width(), pos.y() });
     m_current_path.line_to({ pos.x() + size.width(), pos.y() + size.height() });
@@ -216,7 +223,7 @@ RENDERER_HANDLER(path_append_rect)
 
 RENDERER_HANDLER(path_stroke)
 {
-    m_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
+    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
     m_current_path.clear();
     return {};
 }
@@ -230,7 +237,7 @@ RENDERER_HANDLER(path_close_and_stroke)
 
 RENDERER_HANDLER(path_fill_nonzero)
 {
-    m_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::Nonzero);
+    m_anti_aliasing_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::Nonzero);
     m_current_path.clear();
     return {};
 }
@@ -243,21 +250,21 @@ RENDERER_HANDLER(path_fill_nonzero_deprecated)
 
 RENDERER_HANDLER(path_fill_evenodd)
 {
-    m_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::EvenOdd);
+    m_anti_aliasing_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::EvenOdd);
     m_current_path.clear();
     return {};
 }
 
 RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
-    m_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
+    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
     TRY(handle_path_fill_nonzero(args));
     return {};
 }
 
 RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
-    m_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
+    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
     TRY(handle_path_fill_evenodd(args));
     return {};
 }
@@ -340,9 +347,11 @@ RENDERER_HANDLER(text_set_font)
     auto target_font_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
     auto fonts_dictionary = MUST(m_page.resources->get_dict(m_document, CommonNames::Font));
     auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, target_font_name));
+    auto font = TRY(PDFFont::create(m_document, font_dictionary));
+    text_state().font = font;
 
     // FIXME: We do not yet have the standard 14 fonts, as some of them are not open fonts,
-    // so we just use LiberationSerif for everything
+    //        so we just use LiberationSerif for everything
 
     auto font_name = MUST(font_dictionary->get_name(m_document, CommonNames::BaseFont))->name().to_lowercase();
     auto font_view = font_name.view();
@@ -384,10 +393,8 @@ RENDERER_HANDLER(text_set_rise)
 RENDERER_HANDLER(text_next_line_offset)
 {
     Gfx::AffineTransform transform(1.0f, 0.0f, 0.0f, 1.0f, args[0].to_float(), args[1].to_float());
-    transform.multiply(m_text_line_matrix);
-    m_text_matrix = transform;
-    m_text_line_matrix = transform;
-    m_text_rendering_matrix_is_dirty = true;
+    m_text_line_matrix.multiply(transform);
+    m_text_matrix = m_text_line_matrix;
     return {};
 }
 
@@ -459,14 +466,14 @@ RENDERER_TODO(type3_font_set_glyph_width_and_bbox)
 
 RENDERER_HANDLER(set_stroking_space)
 {
-    state().stroke_color_space = MUST(get_color_space(args[0]));
+    state().stroke_color_space = TRY(get_color_space(args[0]));
     VERIFY(state().stroke_color_space);
     return {};
 }
 
 RENDERER_HANDLER(set_painting_space)
 {
-    state().paint_color_space = MUST(get_color_space(args[0]));
+    state().paint_color_space = TRY(get_color_space(args[0]));
     VERIFY(state().paint_color_space);
     return {};
 }
@@ -477,7 +484,16 @@ RENDERER_HANDLER(set_stroking_color)
     return {};
 }
 
-RENDERER_TODO(set_stroking_color_extended)
+RENDERER_HANDLER(set_stroking_color_extended)
+{
+    // FIXME: Handle Pattern color spaces
+    auto last_arg = args.last();
+    if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>())
+        TODO();
+
+    state().stroke_color = state().stroke_color_space->color(args);
+    return {};
+}
 
 RENDERER_HANDLER(set_painting_color)
 {
@@ -485,7 +501,16 @@ RENDERER_HANDLER(set_painting_color)
     return {};
 }
 
-RENDERER_TODO(set_painting_color_extended)
+RENDERER_HANDLER(set_painting_color_extended)
+{
+    // FIXME: Handle Pattern color spaces
+    auto last_arg = args.last();
+    if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>())
+        TODO();
+
+    state().paint_color = state().paint_color_space->color(args);
+    return {};
+}
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_gray)
 {
@@ -614,12 +639,11 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
 
 void Renderer::show_text(String const& string, float shift)
 {
-    auto utf = Utf8View(string);
-
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
 
-    auto font_size = static_cast<int>(text_rendering_matrix.x_scale() * text_state().font_size);
-    auto font = Gfx::FontDatabase::the().get(text_state().font_family, text_state().font_variant, font_size);
+    auto font_size = text_rendering_matrix.x_scale() * text_state().font_size;
+    auto font_size_int = static_cast<int>(text_rendering_matrix.x_scale() * text_state().font_size);
+    auto font = Gfx::FontDatabase::the().get(text_state().font_family, text_state().font_variant, font_size_int);
     VERIFY(font);
 
     auto glyph_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
@@ -628,11 +652,14 @@ void Renderer::show_text(String const& string, float shift)
 
     auto original_position = glyph_position;
 
-    for (auto code_point : utf) {
+    for (auto char_code : string.bytes()) {
+        auto code_point = text_state().font->char_code_to_code_point(char_code);
+        auto char_width = text_state().font->get_char_width(char_code, font_size);
+
         if (code_point != 0x20)
             m_painter.draw_glyph(glyph_position.to_type<int>(), code_point, *font, state().paint_color);
 
-        auto glyph_width = static_cast<float>(font->glyph_width(code_point));
+        auto glyph_width = char_width * font_size;
         auto tx = (glyph_width - shift / 1000.0f);
         tx += text_state().character_spacing;
 
@@ -647,41 +674,13 @@ void Renderer::show_text(String const& string, float shift)
     // Update text matrix
     auto delta_x = glyph_position.x() - original_position.x();
     m_text_rendering_matrix_is_dirty = true;
-    m_text_matrix = Gfx::AffineTransform(1, 0, 0, 1, delta_x, 0).multiply(m_text_matrix);
+    m_text_matrix.translate(delta_x / text_rendering_matrix.x_scale(), 0.0f);
 }
 
 PDFErrorOr<NonnullRefPtr<ColorSpace>> Renderer::get_color_space(Value const& value)
 {
     auto name = value.get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
-
-    // Simple color spaces with no parameters, which can be specified directly
-    if (name == CommonNames::DeviceGray)
-        return DeviceGrayColorSpace::the();
-    if (name == CommonNames::DeviceRGB)
-        return DeviceRGBColorSpace::the();
-    if (name == CommonNames::DeviceCMYK)
-        return DeviceCMYKColorSpace::the();
-    if (name == CommonNames::Pattern)
-        TODO();
-
-    // The color space is a complex color space with parameters that resides in
-    // the resource dictionary
-    auto color_space_resource_dict = TRY(m_page.resources->get_dict(m_document, CommonNames::ColorSpace));
-    if (!color_space_resource_dict->contains(name))
-        TODO();
-
-    auto color_space_array = TRY(color_space_resource_dict->get_array(m_document, name));
-    name = TRY(color_space_array->get_name_at(m_document, 0))->name();
-
-    Vector<Value> parameters;
-    parameters.ensure_capacity(color_space_array->size() - 1);
-    for (size_t i = 1; i < color_space_array->size(); i++)
-        parameters.unchecked_append(color_space_array->at(i));
-
-    if (name == CommonNames::CalRGB)
-        return TRY(CalRGBColorSpace::create(m_document, move(parameters)));
-
-    TODO();
+    return TRY(ColorSpace::create(m_document, name, m_page));
 }
 
 Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix()

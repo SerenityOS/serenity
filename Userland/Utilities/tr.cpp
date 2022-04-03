@@ -8,6 +8,7 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
+#include <LibMain/Main.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -16,60 +17,62 @@ static bool is_octal(int c)
     return c == '0' || c == '1' || c == '2' || c == '3' || c == '4' || c == '5' || c == '6' || c == '7';
 }
 
-static void generate_character_class(Function<int(int)> oracle, StringBuilder& out)
+static ErrorOr<void> generate_character_class(Function<int(int)> oracle, StringBuilder& out)
 {
     for (int i = 0; i < 128; i++) {
         if (oracle(i))
-            out.append(static_cast<char>(i));
+            TRY(out.try_append(static_cast<char>(i)));
     }
+
+    return {};
 }
 
-static String build_set(StringView specification)
+static ErrorOr<String> build_set(StringView specification)
 {
     StringBuilder out;
     GenericLexer lexer(specification);
 
     while (!lexer.is_eof()) {
         if (lexer.consume_specific("[:alnum:]"sv))
-            generate_character_class(isalnum, out);
+            TRY(generate_character_class(isalnum, out));
         else if (lexer.consume_specific("[:blank:]"sv))
-            generate_character_class(isblank, out);
+            TRY(generate_character_class(isblank, out));
         else if (lexer.consume_specific("[:digit:]"sv))
-            generate_character_class(isdigit, out);
+            TRY(generate_character_class(isdigit, out));
         else if (lexer.consume_specific("[:lower:]"sv))
-            generate_character_class(islower, out);
+            TRY(generate_character_class(islower, out));
         else if (lexer.consume_specific("[:punct:]"sv))
-            generate_character_class(ispunct, out);
+            TRY(generate_character_class(ispunct, out));
         else if (lexer.consume_specific("[:upper:]"sv))
-            generate_character_class(isupper, out);
+            TRY(generate_character_class(isupper, out));
         else if (lexer.consume_specific("[:alpha:]"sv))
-            generate_character_class(isalpha, out);
+            TRY(generate_character_class(isalpha, out));
         else if (lexer.consume_specific("[:cntrl:]"sv))
-            generate_character_class(iscntrl, out);
+            TRY(generate_character_class(iscntrl, out));
         else if (lexer.consume_specific("[:graph:]"sv))
-            generate_character_class(isgraph, out);
+            TRY(generate_character_class(isgraph, out));
         else if (lexer.consume_specific("[:print:]"sv))
-            generate_character_class(isprint, out);
+            TRY(generate_character_class(isprint, out));
         else if (lexer.consume_specific("[:space:]"sv))
-            generate_character_class(isspace, out);
+            TRY(generate_character_class(isspace, out));
         else if (lexer.consume_specific("[:xdigit:]"sv))
-            generate_character_class(isxdigit, out);
+            TRY(generate_character_class(isxdigit, out));
         else if (lexer.consume_specific("\\\\"sv))
-            out.append('\\');
+            TRY(out.try_append('\\'));
         else if (lexer.consume_specific("\\a"sv))
-            out.append('\a');
+            TRY(out.try_append('\a'));
         else if (lexer.consume_specific("\\b"sv))
-            out.append('\b');
+            TRY(out.try_append('\b'));
         else if (lexer.consume_specific("\\f"sv))
-            out.append('\f');
+            TRY(out.try_append('\f'));
         else if (lexer.consume_specific("\\n"sv))
-            out.append('\n');
+            TRY(out.try_append('\n'));
         else if (lexer.consume_specific("\\r"sv))
-            out.append('\r');
+            TRY(out.try_append('\r'));
         else if (lexer.consume_specific("\\t"sv))
-            out.append('\t');
+            TRY(out.try_append('\t'));
         else if (lexer.consume_specific("\\v"sv))
-            out.append('\v');
+            TRY(out.try_append('\v'));
         else if (lexer.next_is('\\') && is_octal(lexer.peek(1))) {
             lexer.consume_specific('\\');
             int max_left_over = 3;
@@ -80,21 +83,21 @@ static String build_set(StringView specification)
             int value = 0;
             for (char ch : octal_digits)
                 value = value * 8 + (ch - '0');
-            out.append(static_cast<char>(value));
+            TRY(out.try_append(static_cast<char>(value)));
         } else
-            out.append(lexer.consume(1));
+            TRY(out.try_append(lexer.consume(1)));
     }
 
     return out.to_string();
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool complement_flag = false;
     bool delete_flag = false;
     bool squeeze_flag = false;
-    const char* from_chars = nullptr;
-    const char* to_chars = nullptr;
+    char const* from_chars = nullptr;
+    char const* to_chars = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(complement_flag, "Take the complement of the first set", "complement", 'c');
@@ -102,40 +105,40 @@ int main(int argc, char** argv)
     args_parser.add_option(squeeze_flag, "Omit repeated characters listed in the last given set from the output", "squeeze-repeats", 's');
     args_parser.add_positional_argument(from_chars, "Set of characters to translate from", "from");
     args_parser.add_positional_argument(to_chars, "Set of characters to translate to", "to", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     bool transform_flag = to_chars && !delete_flag;
 
     if (!transform_flag && !delete_flag && !squeeze_flag) {
         warnln("tr: Missing operand");
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
     if (delete_flag && squeeze_flag && !to_chars) {
         warnln("tr: Combined delete and squeeze operations need two sets of characters");
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
     if (delete_flag && !squeeze_flag && to_chars) {
         warnln("tr: Only one set of characters may be given when deleting without squeezing");
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments.argv[0]);
         return 1;
     }
 
-    String from_str = build_set(from_chars);
+    auto from_str = TRY(build_set(from_chars));
     if (complement_flag) {
         StringBuilder complement_set;
         for (int ch = 0; ch < 256; ch++) {
             if (!from_str.contains(static_cast<char>(ch)))
-                complement_set.append(static_cast<char>(ch));
+                TRY(complement_set.try_append(static_cast<char>(ch)));
         }
         from_str = complement_set.to_string();
     }
 
-    auto to_str = build_set(to_chars);
-    String squeeze_string = build_set(to_chars ? to_chars : from_chars);
+    auto to_str = TRY(build_set(to_chars));
+    auto squeeze_string = TRY(build_set(to_chars ? to_chars : from_chars));
     Optional<char> last_char;
 
     for (;;) {

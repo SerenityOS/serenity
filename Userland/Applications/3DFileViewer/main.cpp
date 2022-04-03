@@ -91,11 +91,13 @@ private:
         glEndList();
     }
 
+    virtual void drop_event(GUI::DropEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
 
 private:
     RefPtr<Mesh> m_mesh;
@@ -122,6 +124,27 @@ private:
     GLint m_mag_filter = GL_NEAREST;
     float m_zoom = 1;
 };
+
+void GLContextWidget::drop_event(GUI::DropEvent& event)
+{
+    if (!event.mime_data().has_urls())
+        return;
+
+    event.accept();
+
+    if (event.mime_data().urls().is_empty())
+        return;
+
+    for (auto& url : event.mime_data().urls()) {
+        if (url.protocol() != "file")
+            continue;
+
+        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), url.path(), Core::OpenMode::ReadOnly);
+        if (response.is_error())
+            return;
+        load_file(response.value());
+    }
+}
 
 void GLContextWidget::paint_event(GUI::PaintEvent& event)
 {
@@ -159,6 +182,14 @@ void GLContextWidget::mousewheel_event(GUI::MouseEvent& event)
         m_zoom /= 1.1f;
     else
         m_zoom *= 1.1f;
+}
+
+void GLContextWidget::keydown_event(GUI::KeyEvent& event)
+{
+    if (event.key() == Key_Escape && window()->is_fullscreen()) {
+        window()->set_fullscreen(false);
+        return;
+    }
 }
 
 void GLContextWidget::timer_event(Core::TimerEvent&)
@@ -299,13 +330,12 @@ bool GLContextWidget::load_file(Core::File& file)
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     } else {
         auto response = FileSystemAccessClient::Client::the().try_request_file(window(), builder.string_view(), Core::OpenMode::ReadOnly);
-        if (response.is_error())
-            return false;
-
-        auto texture_file = response.value();
-        auto bitmap_or_error = Gfx::Bitmap::try_load_from_fd_and_close(texture_file->leak_fd(), texture_file->filename());
-        if (!bitmap_or_error.is_error())
-            texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+        if (!response.is_error()) {
+            auto texture_file = response.value();
+            auto bitmap_or_error = Gfx::Bitmap::try_load_from_fd_and_close(texture_file->leak_fd(), texture_file->filename());
+            if (!bitmap_or_error.is_error())
+                texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
+        }
     }
 
     GLuint tex;
@@ -331,8 +361,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix"));
 
     TRY(Core::System::unveil("/tmp/portal/filesystemaccess", "rw"));
-    TRY(Core::System::unveil("/home/anon/Documents/3D Models/teapot.obj", "r"));
-    TRY(Core::System::unveil("/home/anon/Documents/3D Models/teapot.bmp", "r"));
+    TRY(Core::System::unveil("/home/anon/Documents/3D Models", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

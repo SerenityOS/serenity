@@ -19,7 +19,7 @@ public:
         Heuristic,
     };
 
-    MCTSTree(const Chess::Board& board, MCTSTree* parent = nullptr);
+    MCTSTree(Chess::Board const& board, MCTSTree* parent = nullptr);
 
     MCTSTree& select_leaf();
     MCTSTree& expand();

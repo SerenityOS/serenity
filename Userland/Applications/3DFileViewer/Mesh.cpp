@@ -34,7 +34,7 @@ Mesh::Mesh(Vector<Vertex> vertices, Vector<TexCoord> tex_coords, Vector<Vertex> 
 void Mesh::draw(float uv_scale)
 {
     for (u32 i = 0; i < m_triangle_list.size(); i++) {
-        const auto& triangle = m_triangle_list[i];
+        auto const& triangle = m_triangle_list[i];
 
         const FloatVector3 vertex_a(
             m_vertex_list.at(triangle.a).x,
@@ -51,29 +51,30 @@ void Mesh::draw(float uv_scale)
             m_vertex_list.at(triangle.c).y,
             m_vertex_list.at(triangle.c).z);
 
-        FloatVector3 normal;
+        FloatVector3 normal_a, normal_b, normal_c;
         if (has_normals()) {
-            const FloatVector3 normal_a(
+            normal_a = FloatVector3(
                 m_normal_list.at(triangle.normal_index0).x,
                 m_normal_list.at(triangle.normal_index0).y,
                 m_normal_list.at(triangle.normal_index0).z);
 
-            const FloatVector3 normal_b(
+            normal_b = FloatVector3(
                 m_normal_list.at(triangle.normal_index1).x,
                 m_normal_list.at(triangle.normal_index1).y,
                 m_normal_list.at(triangle.normal_index1).z);
 
-            const FloatVector3 normal_c(
+            normal_c = FloatVector3(
                 m_normal_list.at(triangle.normal_index2).x,
                 m_normal_list.at(triangle.normal_index2).y,
                 m_normal_list.at(triangle.normal_index2).z);
 
-            normal = (normal_a + normal_b + normal_c).normalized();
         } else {
             // Compute the triangle normal
             const FloatVector3 vec_ab = vertex_b - vertex_a;
             const FloatVector3 vec_ac = vertex_c - vertex_a;
-            normal = vec_ab.cross(vec_ac).normalized();
+            normal_a = vec_ab.cross(vec_ac).normalized();
+            normal_b = normal_a;
+            normal_c = normal_a;
         }
 
         glBegin(GL_TRIANGLES);
@@ -81,10 +82,8 @@ void Mesh::draw(float uv_scale)
         if (is_textured())
             glTexCoord2f(m_tex_coords.at(triangle.tex_coord_index0).u * uv_scale, (1.0f - m_tex_coords.at(triangle.tex_coord_index0).v) * uv_scale);
 
-        // Upload the face normal
-        glNormal3f(normal.x(), normal.y(), normal.z());
-
         // Vertex 1
+        glNormal3f(normal_a.x(), normal_a.y(), normal_a.z());
         glVertex3f(
             m_vertex_list.at(triangle.a).x,
             m_vertex_list.at(triangle.a).y,
@@ -94,6 +93,7 @@ void Mesh::draw(float uv_scale)
             glTexCoord2f(m_tex_coords.at(triangle.tex_coord_index1).u * uv_scale, (1.0f - m_tex_coords.at(triangle.tex_coord_index1).v) * uv_scale);
 
         // Vertex 2
+        glNormal3f(normal_b.x(), normal_b.y(), normal_b.z());
         glVertex3f(
             m_vertex_list.at(triangle.b).x,
             m_vertex_list.at(triangle.b).y,
@@ -103,6 +103,7 @@ void Mesh::draw(float uv_scale)
             glTexCoord2f(m_tex_coords.at(triangle.tex_coord_index2).u * uv_scale, (1.0f - m_tex_coords.at(triangle.tex_coord_index2).v) * uv_scale);
 
         // Vertex 3
+        glNormal3f(normal_c.x(), normal_c.y(), normal_c.z());
         glVertex3f(
             m_vertex_list.at(triangle.c).x,
             m_vertex_list.at(triangle.c).y,

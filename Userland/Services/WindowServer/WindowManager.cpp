@@ -68,10 +68,6 @@ WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
     Compositor::the().did_construct_window_manager({});
 }
 
-WindowManager::~WindowManager()
-{
-}
-
 void WindowManager::reload_config()
 {
     m_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
@@ -778,8 +774,8 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
                 dbgln("  [!] The window is still maximized. Not moving yet.");
         }
 
-        const int tiling_deadzone = 10;
-        const int secondary_deadzone = 2;
+        int const tiling_deadzone = 10;
+        int const secondary_deadzone = 2;
         auto& cursor_screen = Screen::closest_to_location(event.position());
         auto desktop = desktop_rect(cursor_screen);
         auto desktop_relative_to_screen = desktop.translated(-cursor_screen.rect().location());
@@ -873,7 +869,7 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
         return false;
 
     if (event.type() == Event::MouseMove) {
-        const int vertical_maximize_deadzone = 5;
+        int const vertical_maximize_deadzone = 5;
         auto& cursor_screen = ScreenInput::the().cursor_location_screen();
         if (&cursor_screen == &Screen::closest_to_rect(m_resize_window->rect())) {
             auto desktop_rect = this->desktop_rect(cursor_screen);
@@ -2093,7 +2089,7 @@ void WindowManager::invalidate_after_theme_or_font_change()
     Compositor::the().invalidate_after_theme_or_font_change();
 }
 
-bool WindowManager::update_theme(String theme_path, String theme_name)
+bool WindowManager::update_theme(String theme_path, String theme_name, bool keep_desktop_background)
 {
     auto new_theme = Gfx::load_system_theme(theme_path);
     if (!new_theme.is_valid())
@@ -2101,7 +2097,8 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
     Gfx::set_system_theme(new_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
     m_config->write_entry("Theme", "Name", theme_name);
-    m_config->remove_entry("Background", "Color");
+    if (!keep_desktop_background)
+        m_config->remove_entry("Background", "Color");
     if (auto result = m_config->sync(); result.is_error()) {
         dbgln("Failed to save config file: {}", result.error());
         return false;
@@ -2229,7 +2226,7 @@ void WindowManager::apply_cursor_theme(String const& theme_name)
     auto cursor_theme_config = cursor_theme_config_or_error.release_value();
 
     auto* current_cursor = Compositor::the().current_cursor();
-    auto reload_cursor = [&](RefPtr<Cursor>& cursor, const String& name) {
+    auto reload_cursor = [&](RefPtr<Cursor>& cursor, String const& name) {
         bool is_current_cursor = current_cursor && current_cursor == cursor.ptr();
 
         static auto const s_default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png";

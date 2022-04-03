@@ -37,7 +37,11 @@ namespace Web::HTML {
     __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(reset, ResetButton)                 \
     __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(button, Button)
 
-class HTMLInputElement final : public FormAssociatedElement {
+class HTMLInputElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLInputElement)
+
 public:
     using WrapperType = Bindings::HTMLInputElementWrapper;
 
@@ -46,7 +50,7 @@ public:
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    enum TypeAttributeState {
+    enum class TypeAttributeState {
 #define __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE(_, state) state,
         ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTES
 #undef __ENUMERATE_HTML_INPUT_TYPE_ATTRIBUTE
@@ -74,8 +78,11 @@ public:
 
     void did_edit_text_node(Badge<BrowsingContext>);
 
-    virtual bool is_focusable() const override;
+    // ^EventTarget
+    // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-input-element
+    virtual bool is_focusable() const override { return m_type != TypeAttributeState::Hidden; }
 
+    // ^HTMLElement
     virtual void parse_attribute(FlyString const&, String const&) override;
     virtual void did_remove_attribute(FlyString const&) override;
 
@@ -92,11 +99,11 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
 
+    virtual void form_associated_element_was_inserted() override;
+
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return type_state() != TypeAttributeState::Hidden; }
-
-    virtual void inserted() override;
 
 private:
     // ^DOM::EventTarget
@@ -119,11 +126,15 @@ private:
     // https://html.spec.whatwg.org/multipage/input.html#concept-input-checked-dirty-flag
     bool m_dirty_checkedness { false };
 
+    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fe-dirty
+    bool m_dirty_value { false };
+
     // https://html.spec.whatwg.org/multipage/input.html#the-input-element:legacy-pre-activation-behavior
     bool m_before_legacy_pre_activation_behavior_checked { false };
     RefPtr<HTMLInputElement> m_legacy_pre_activation_behavior_checked_element_in_group;
 
     TypeAttributeState m_type { TypeAttributeState::Text };
+    String m_value;
 };
 
 }

@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-NonnullRefPtr<ATAPIDiscDevice> ATAPIDiscDevice::create(const ATAController& controller, ATADevice::Address ata_address, u16 capabilities, u64 max_addressable_block)
+NonnullRefPtr<ATAPIDiscDevice> ATAPIDiscDevice::create(ATAController const& controller, ATADevice::Address ata_address, u16 capabilities, u64 max_addressable_block)
 {
     auto minor_device_number = StorageManagement::generate_storage_minor_number();
 
@@ -26,7 +26,7 @@ NonnullRefPtr<ATAPIDiscDevice> ATAPIDiscDevice::create(const ATAController& cont
     return disc_device_or_error.release_value();
 }
 
-ATAPIDiscDevice::ATAPIDiscDevice(const ATAController& controller, ATADevice::Address ata_address, MinorNumber minor_number, u16 capabilities, u64 max_addressable_block, NonnullOwnPtr<KString> early_storage_name)
+ATAPIDiscDevice::ATAPIDiscDevice(ATAController const& controller, ATADevice::Address ata_address, MinorNumber minor_number, u16 capabilities, u64 max_addressable_block, NonnullOwnPtr<KString> early_storage_name)
     : ATADevice(controller, ata_address, minor_number, capabilities, 0, max_addressable_block, move(early_storage_name))
 {
 }

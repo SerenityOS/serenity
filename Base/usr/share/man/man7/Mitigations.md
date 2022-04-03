@@ -41,6 +41,22 @@ Date:   Sun Jan 5 18:00:15 2020 +0100
 Kernel: Start implementing x86 SMAP support
 ```
 
+### UMIP (User Mode Instruction Prevention)
+
+User Mode Instruction Prevention is an x86 CPU security feature which prevents execution of specific privileged
+instructions in user mode (SGDT, SIDT, SLDT, SMSW, STR).
+These instructions let user mode code query the addresses of various kernel structures (the GDT, LDT, IDT, etc),
+meaning that they leak kernel addresses that can be exploited to defeat ASLR.
+
+It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/9c0836ce97ae36165abd8eb5241bb5239af3a756):
+```
+commit 9c0836ce97ae36165abd8eb5241bb5239af3a756
+Author: Andreas Kling <awesomekling@gmail.com>
+Date:   Wed Jan 1 13:02:32 2020 +0100
+
+Kernel: Enable x86 UMIP (User Mode Instruction Prevention) if supported
+```
+
 ### Pledge
 
 [pledge](https://marc.info/?l=openbsd-tech&m=143725996614627&w=2) is a mitigation which originated from OpenBSD.
@@ -308,6 +324,22 @@ Author: Andreas Kling <kling@serenityos.org>
 Date:   Tue Aug 31 16:08:11 2021 +0200
 
 Build: Pass "-z separate-code" to linker
+```
+
+### KASLR (Kernel Address Space Layout Randomization)
+
+The location of the kernel code is randomized at boot time, this ensures that attackers
+can not use a hardcoded kernel addresses when attempting ROP, instead they must first find
+an additional information leak to expose the KASLR offset.
+
+It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/ece5a9a1088012ca9fadfb7e0bc3edd8029d36ad):
+
+```
+commit ece5a9a1088012ca9fadfb7e0bc3edd8029d36ad
+Author Idan Horowitz <idan.horowitz@gmail.com>
+Date:  Mon Mar 21 22:59:48 2022 +0200
+
+Kernel: Add an extremely primitive version of KASLR
 ```
 
 ## See also

@@ -412,7 +412,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
 
 RefPtr<Process> Process::from_pid(ProcessID pid)
 {
-    return all_instances().with([&](const auto& list) -> RefPtr<Process> {
+    return all_instances().with([&](auto const& list) -> RefPtr<Process> {
         for (auto const& process : list) {
             if (process.pid() == pid)
                 return &process;
@@ -421,7 +421,7 @@ RefPtr<Process> Process::from_pid(ProcessID pid)
     });
 }
 
-const Process::OpenFileDescriptionAndFlags* Process::OpenFileDescriptions::get_if_valid(size_t i) const
+Process::OpenFileDescriptionAndFlags const* Process::OpenFileDescriptions::get_if_valid(size_t i) const
 {
     if (m_fds_metadatas.size() <= i)
         return nullptr;
@@ -442,7 +442,7 @@ Process::OpenFileDescriptionAndFlags* Process::OpenFileDescriptions::get_if_vali
     return nullptr;
 }
 
-const Process::OpenFileDescriptionAndFlags& Process::OpenFileDescriptions::at(size_t i) const
+Process::OpenFileDescriptionAndFlags const& Process::OpenFileDescriptions::at(size_t i) const
 {
     VERIFY(m_fds_metadatas[i].is_allocated());
     return m_fds_metadatas[i];
@@ -466,14 +466,14 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> Process::OpenFileDescriptions::open_
     return description.release_nonnull();
 }
 
-void Process::OpenFileDescriptions::enumerate(Function<void(const OpenFileDescriptionAndFlags&)> callback) const
+void Process::OpenFileDescriptions::enumerate(Function<void(OpenFileDescriptionAndFlags const&)> callback) const
 {
     for (auto const& file_description_metadata : m_fds_metadatas) {
         callback(file_description_metadata);
     }
 }
 
-ErrorOr<void> Process::OpenFileDescriptions::try_enumerate(Function<ErrorOr<void>(const OpenFileDescriptionAndFlags&)> callback) const
+ErrorOr<void> Process::OpenFileDescriptions::try_enumerate(Function<ErrorOr<void>(OpenFileDescriptionAndFlags const&)> callback) const
 {
     for (auto const& file_description_metadata : m_fds_metadatas) {
         TRY(callback(file_description_metadata));
@@ -709,7 +709,7 @@ void Process::die()
             dbgln("Failed to add thread {} to coredump due to OOM", thread.tid());
     });
 
-    all_instances().with([&](const auto& list) {
+    all_instances().with([&](auto const& list) {
         for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
@@ -820,7 +820,7 @@ void Process::stop_tracing()
     m_tracer = nullptr;
 }
 
-void Process::tracer_trap(Thread& thread, const RegisterState& regs)
+void Process::tracer_trap(Thread& thread, RegisterState const& regs)
 {
     VERIFY(m_tracer.ptr());
     m_tracer->set_regs(regs);

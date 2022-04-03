@@ -22,7 +22,7 @@ namespace Gfx {
 class GlyphBitmap {
 public:
     GlyphBitmap() = default;
-    GlyphBitmap(const u8* rows, size_t start_index, IntSize size)
+    GlyphBitmap(u8 const* rows, size_t start_index, IntSize size)
         : m_rows(rows)
         , m_start_index(start_index)
         , m_size(size)
@@ -48,14 +48,14 @@ private:
         return { const_cast<u8*>(m_rows) + bytes_per_row() * (m_start_index + y), bytes_per_row() * 8 };
     }
 
-    const u8* m_rows { nullptr };
+    u8 const* m_rows { nullptr };
     size_t m_start_index { 0 };
     IntSize m_size { 0, 0 };
 };
 
 class Glyph {
 public:
-    Glyph(const GlyphBitmap& glyph_bitmap, int left_bearing, int advance, int ascent)
+    Glyph(GlyphBitmap const& glyph_bitmap, int left_bearing, int advance, int ascent)
         : m_glyph_bitmap(glyph_bitmap)
         , m_left_bearing(left_bearing)
         , m_advance(advance)
@@ -86,11 +86,22 @@ private:
     int m_ascent;
 };
 
-struct FontMetrics {
+struct FontPixelMetrics {
     float size { 0 };
     float x_height { 0 };
-    float glyph_width { 0 };
+    float advance_of_ascii_zero { 0 };
     float glyph_spacing { 0 };
+
+    // Number of pixels the font extends above the baseline.
+    float ascent { 0 };
+
+    // Number of pixels the font descends below the baseline.
+    float descent { 0 };
+
+    // Line gap specified by font.
+    float line_gap { 0 };
+
+    float line_spacing() const { return roundf(ascent) + roundf(descent) + roundf(line_gap); }
 };
 
 class Font : public RefCounted<Font> {
@@ -103,9 +114,11 @@ public:
     virtual NonnullRefPtr<Font> clone() const = 0;
     virtual ~Font() {};
 
-    FontMetrics metrics(u32 code_point) const;
+    virtual FontPixelMetrics pixel_metrics() const = 0;
 
     virtual u8 presentation_size() const = 0;
+    virtual int pixel_size() const = 0;
+    virtual float point_size() const = 0;
     virtual u8 slope() const = 0;
 
     virtual u16 weight() const = 0;
@@ -114,6 +127,7 @@ public:
 
     virtual u8 glyph_width(u32 code_point) const = 0;
     virtual int glyph_or_emoji_width(u32 code_point) const = 0;
+    virtual float glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const = 0;
     virtual u8 glyph_height() const = 0;
     virtual int x_height() const = 0;
     virtual int preferred_line_height() const = 0;
@@ -126,8 +140,8 @@ public:
     virtual u8 mean_line() const = 0;
 
     virtual int width(StringView) const = 0;
-    virtual int width(const Utf8View&) const = 0;
-    virtual int width(const Utf32View&) const = 0;
+    virtual int width(Utf8View const&) const = 0;
+    virtual int width(Utf32View const&) const = 0;
 
     virtual String name() const = 0;
 

@@ -11,6 +11,7 @@
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/GenericLexer.h>
+#include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
@@ -22,7 +23,9 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
+#include <LibCore/Timer.h>
 #include <LibLine/Editor.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -152,7 +155,7 @@ String Shell::expand_tilde(StringView expression)
         path.append(expression[i]);
 
     if (login_name.is_empty()) {
-        const char* home = getenv("HOME");
+        char const* home = getenv("HOME");
         if (!home) {
             auto passwd = getpwuid(getuid());
             VERIFY(passwd && passwd->pw_dir);
@@ -382,7 +385,7 @@ RefPtr<AST::Value> Shell::get_argument(size_t index) const
     return nullptr;
 }
 
-String Shell::local_variable_or(StringView name, const String& replacement) const
+String Shell::local_variable_or(StringView name, String const& replacement) const
 {
     auto value = lookup_local_variable(name);
     if (value) {
@@ -393,7 +396,7 @@ String Shell::local_variable_or(StringView name, const String& replacement) cons
     return replacement;
 }
 
-void Shell::set_local_variable(const String& name, RefPtr<AST::Value> value, bool only_in_current_frame)
+void Shell::set_local_variable(String const& name, RefPtr<AST::Value> value, bool only_in_current_frame)
 {
     if (!only_in_current_frame) {
         if (auto* frame = find_frame_containing_local_variable(name)) {
@@ -697,7 +700,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
         return nullptr;
     }
 
-    Vector<const char*> argv;
+    Vector<char const*> argv;
     Vector<String> copy_argv = command.argv;
     argv.ensure_capacity(command.argv.size() + 1);
 
@@ -839,8 +842,16 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     return *job;
 }
 
-void Shell::execute_process(Vector<const char*>&& argv)
+void Shell::execute_process(Vector<char const*>&& argv)
 {
+#ifdef __serenity__
+    for (auto& promise : m_active_promises) {
+        pledge("stdio rpath exec", promise.data.exec_promises.characters());
+        for (auto& item : promise.data.unveils)
+            unveil(item.path.characters(), item.access.characters());
+    }
+#endif
+
     int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
     if (rc < 0) {
         auto parts = StringView { argv[0] }.split_view('/');
@@ -997,7 +1008,7 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
     return spawned_jobs;
 }
 
-bool Shell::run_file(const String& filename, bool explicitly_invoked)
+bool Shell::run_file(String const& filename, bool explicitly_invoked)
 {
     TemporaryChange script_change { current_script, filename };
     TemporaryChange interactive_change { m_is_interactive, false };
@@ -1051,7 +1062,7 @@ void Shell::block_on_pipeline(RefPtr<AST::Pipeline> pipeline)
 
 void Shell::block_on_job(RefPtr<Job> job)
 {
-    TemporaryChange<const Job*> current_job { m_current_job, job.ptr() };
+    TemporaryChange<Job const*> current_job { m_current_job, job.ptr() };
 
     if (!job)
         return;
@@ -1299,7 +1310,7 @@ String Shell::find_in_path(StringView program_name)
     String path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
-        for (const auto& directory : directories) {
+        for (auto const& directory : directories) {
             Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
             while (programs.has_next()) {
                 auto program = programs.next_path();
@@ -1324,7 +1335,7 @@ void Shell::cache_path()
         cached_path.clear_with_capacity();
 
     // Add shell builtins to the cache.
-    for (const auto& builtin_name : builtin_names)
+    for (auto const& builtin_name : builtin_names)
         cached_path.append(escape_token(builtin_name));
 
     // Add functions to the cache.
@@ -1336,7 +1347,7 @@ void Shell::cache_path()
     }
 
     // Add aliases to the cache.
-    for (const auto& alias : m_aliases) {
+    for (auto const& alias : m_aliases) {
         auto name = escape_token(alias.key);
         if (cached_path.contains_slow(name))
             continue;
@@ -1346,7 +1357,7 @@ void Shell::cache_path()
     String path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
-        for (const auto& directory : directories) {
+        for (auto const& directory : directories) {
             Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
             while (programs.has_next()) {
                 auto program = programs.next_path();
@@ -1363,7 +1374,7 @@ void Shell::cache_path()
     quick_sort(cached_path);
 }
 
-void Shell::add_entry_to_cache(const String& entry)
+void Shell::add_entry_to_cache(String const& entry)
 {
     size_t index = 0;
     auto match = binary_search(cached_path.span(), entry, &index);
@@ -1410,7 +1421,7 @@ Vector<Line::CompletionSuggestion> Shell::complete()
     return ast->complete_for_editor(*this, line.length());
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringView part, size_t offset, ExecutableOnly executable_only, EscapeMode escape_mode)
+Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringView part, size_t offset, ExecutableOnly executable_only, AST::Node const* command_node, AST::Node const* node, EscapeMode escape_mode)
 {
     auto token = offset ? part.substring_view(0, offset) : "";
     String path;
@@ -1418,6 +1429,12 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringV
     ssize_t last_slash = token.length() - 1;
     while (last_slash >= 0 && token[last_slash] != '/')
         --last_slash;
+
+    if (command_node) {
+        auto program_results = complete_via_program_itself(offset, command_node, node, escape_mode, {});
+        if (!program_results.is_error())
+            return program_results.release_value();
+    }
 
     StringBuilder path_builder;
     auto init_slash_part = token.substring_view(0, last_slash + 1);
@@ -1502,7 +1519,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(StringView name,
         });
 
     if (!match)
-        return complete_path("", name, offset, ExecutableOnly::Yes, escape_mode);
+        return complete_path("", name, offset, ExecutableOnly::Yes, nullptr, nullptr, escape_mode);
 
     String completion = *match;
     auto token_length = escape_token(name, escape_mode).length();
@@ -1603,8 +1620,14 @@ Vector<Line::CompletionSuggestion> Shell::complete_user(StringView name, size_t 
     return suggestions;
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_option(StringView program_name, StringView option, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_option(StringView program_name, StringView option, size_t offset, AST::Node const* command_node, AST::Node const* node)
 {
+    if (command_node) {
+        auto program_results = complete_via_program_itself(offset, command_node, node, EscapeMode::Bareword, program_name);
+        if (!program_results.is_error())
+            return program_results.release_value();
+    }
+
     size_t start = 0;
     while (start < option.length() && option[start] == '-' && start < 2)
         ++start;
@@ -1614,44 +1637,250 @@ Vector<Line::CompletionSuggestion> Shell::complete_option(StringView program_nam
     if (m_editor)
         m_editor->transform_suggestion_offsets(invariant_offset, static_offset);
 
-    Vector<Line::CompletionSuggestion> suggestions;
-
     dbgln("Shell::complete_option({}, {})", program_name, option_pattern);
+    return {};
+}
 
-    // FIXME: Figure out how to do this stuff.
-    if (has_builtin(program_name)) {
-        // Complete builtins.
-        if (program_name == "setopt") {
-            bool negate = false;
-            if (option_pattern.starts_with("no_")) {
-                negate = true;
-                option_pattern = option_pattern.substring_view(3, option_pattern.length() - 3);
-            }
-            auto maybe_negate = [&](StringView view) {
-                static StringBuilder builder;
-                builder.clear();
-                builder.append("--");
-                if (negate)
-                    builder.append("no_");
-                builder.append(view);
-                return builder.to_string();
-            };
-#define __ENUMERATE_SHELL_OPTION(name, d_, descr_) \
-    if (#name##sv.starts_with(option_pattern))     \
-        suggestions.append(maybe_negate(#name));
+ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(size_t, AST::Node const* command_node, AST::Node const* node, EscapeMode, StringView known_program_name)
+{
+    if (!command_node)
+        return Error::from_string_literal("Cannot complete null command");
 
-            ENUMERATE_SHELL_OPTIONS();
-#undef __ENUMERATE_SHELL_OPTION
+    if (command_node->would_execute())
+        return Error::from_string_literal("Refusing to complete nodes that would execute");
 
-            for (auto& entry : suggestions) {
-                entry.input_offset = offset;
-                entry.invariant_offset = invariant_offset;
-                entry.static_offset = static_offset;
-            }
+    String program_name_storage;
+    if (known_program_name.is_null()) {
+        auto node = command_node->leftmost_trivial_literal();
+        if (!node)
+            return Error::from_string_literal("Cannot complete");
 
-            return suggestions;
-        }
+        program_name_storage = node->run(*this)->resolve_as_string(*this);
+        known_program_name = program_name_storage;
     }
+
+    auto program_name = known_program_name;
+
+    AST::Command completion_command;
+    completion_command.argv.append(program_name);
+    completion_command = expand_aliases({ completion_command }).last();
+
+    auto completion_utility_name = String::formatted("_complete_{}", completion_command.argv[0]);
+    if (binary_search(cached_path, completion_utility_name))
+        completion_command.argv[0] = completion_utility_name;
+    else if (!options.invoke_program_for_autocomplete)
+        return Error::from_string_literal("Refusing to use the program itself as completion source");
+
+    completion_command.argv.extend({ "--complete", "--" });
+
+    struct Visitor : public AST::NodeVisitor {
+        Visitor(Shell& shell, AST::Node const& node)
+            : shell(shell)
+            , completion_position(node.position())
+        {
+            lists.empend();
+        }
+
+        Shell& shell;
+        AST::Position completion_position;
+        Vector<Vector<String>> lists;
+        bool fail { false };
+
+        void push_list() { lists.empend(); }
+        Vector<String> pop_list() { return lists.take_last(); }
+        Vector<String>& list() { return lists.last(); }
+
+        bool should_include(AST::Node const* node) const { return node->position().end_offset <= completion_position.end_offset; }
+
+        virtual void visit(AST::BarewordLiteral const* node) override
+        {
+            if (should_include(node))
+                list().append(node->text());
+        }
+
+        virtual void visit(AST::BraceExpansion const* node) override
+        {
+            if (should_include(node))
+                list().extend(static_cast<AST::Node*>(const_cast<AST::BraceExpansion*>(node))->run(shell)->resolve_as_list(shell));
+        }
+
+        virtual void visit(AST::CommandLiteral const* node) override
+        {
+            if (should_include(node))
+                list().extend(node->command().argv);
+        }
+
+        virtual void visit(AST::DynamicEvaluate const* node) override
+        {
+            if (should_include(node))
+                fail = true;
+        }
+
+        virtual void visit(AST::DoubleQuotedString const* node) override
+        {
+            if (!should_include(node))
+                return;
+
+            push_list();
+            AST::NodeVisitor::visit(node);
+            auto list = pop_list();
+            StringBuilder builder;
+            builder.join("", list);
+            this->list().append(builder.build());
+        }
+
+        virtual void visit(AST::Glob const* node) override
+        {
+            if (should_include(node))
+                list().append(node->text());
+        }
+
+        virtual void visit(AST::Heredoc const* node) override
+        {
+            if (!should_include(node))
+                return;
+
+            push_list();
+            AST::NodeVisitor::visit(node);
+            auto list = pop_list();
+            StringBuilder builder;
+            builder.join("", list);
+            this->list().append(builder.build());
+        }
+
+        virtual void visit(AST::ImmediateExpression const* node) override
+        {
+            if (should_include(node))
+                fail = true;
+        }
+
+        virtual void visit(AST::Range const* node) override
+        {
+            if (!should_include(node))
+                return;
+
+            push_list();
+            node->start()->visit(*this);
+            list().append(pop_list().first());
+        }
+
+        virtual void visit(AST::SimpleVariable const* node) override
+        {
+            if (should_include(node))
+                list().extend(static_cast<AST::Node*>(const_cast<AST::SimpleVariable*>(node))->run(shell)->resolve_as_list(shell));
+        }
+
+        virtual void visit(AST::SpecialVariable const* node) override
+        {
+            if (should_include(node))
+                list().extend(static_cast<AST::Node*>(const_cast<AST::SpecialVariable*>(node))->run(shell)->resolve_as_list(shell));
+        }
+
+        virtual void visit(AST::Juxtaposition const* node) override
+        {
+            if (!should_include(node))
+                return;
+
+            push_list();
+            node->left()->visit(*this);
+            auto left = pop_list();
+
+            push_list();
+            node->right()->visit(*this);
+            auto right = pop_list();
+
+            StringBuilder builder;
+            for (auto& left_entry : left) {
+                for (auto& right_entry : right) {
+                    builder.append(left_entry);
+                    builder.append(right_entry);
+                    list().append(builder.build());
+                    builder.clear();
+                }
+            }
+        }
+
+        virtual void visit(AST::StringLiteral const* node) override
+        {
+            if (should_include(node))
+                list().append(node->text());
+        }
+
+        virtual void visit(AST::Tilde const* node) override
+        {
+            if (should_include(node))
+                list().extend(static_cast<AST::Node*>(const_cast<AST::Tilde*>(node))->run(shell)->resolve_as_list(shell));
+        }
+
+        virtual void visit(AST::PathRedirectionNode const*) override { }
+        virtual void visit(AST::CloseFdRedirection const*) override { }
+        virtual void visit(AST::Fd2FdRedirection const*) override { }
+        virtual void visit(AST::Execute const*) override { }
+        virtual void visit(AST::ReadRedirection const*) override { }
+        virtual void visit(AST::ReadWriteRedirection const*) override { }
+        virtual void visit(AST::WriteAppendRedirection const*) override { }
+        virtual void visit(AST::WriteRedirection const*) override { }
+    } visitor { *this, *node };
+
+    command_node->visit(visitor);
+    if (visitor.fail)
+        return Error::from_string_literal("Cannot complete");
+
+    completion_command.argv.extend(visitor.list());
+
+    completion_command.should_wait = true;
+    completion_command.redirections.append(AST::PathRedirection::create("/dev/null", STDERR_FILENO, AST::PathRedirection::Write));
+    completion_command.redirections.append(AST::PathRedirection::create("/dev/null", STDIN_FILENO, AST::PathRedirection::Read));
+
+    auto execute_node = make_ref_counted<AST::Execute>(
+        AST::Position {},
+        make_ref_counted<AST::CommandLiteral>(AST::Position {}, move(completion_command)),
+        true);
+
+    Vector<Line::CompletionSuggestion> suggestions;
+    auto timer = Core::Timer::create_single_shot(300, [&] {
+        Core::EventLoop::current().quit(1);
+    });
+    timer->start();
+
+    // Restrict the process to effectively readonly access to the FS.
+    auto scoped_promise = promise({
+        .exec_promises = "stdio rpath prot_exec no_error",
+        .unveils = {
+            { "/", "rx" },
+        },
+    });
+    execute_node->for_each_entry(*this, [&](NonnullRefPtr<AST::Value> entry) -> IterationDecision {
+        auto result = entry->resolve_as_string(*this);
+        JsonParser parser(result);
+        auto parsed_result = parser.parse();
+        if (parsed_result.is_error())
+            return IterationDecision::Continue;
+        auto parsed = parsed_result.release_value();
+        if (parsed.is_object()) {
+            auto& object = parsed.as_object();
+            Line::CompletionSuggestion suggestion {
+                object.get("completion").as_string_or(""),
+                object.get("trailing_trivia").as_string_or(""),
+                object.get("display_trivia").as_string_or(""),
+            };
+            suggestion.static_offset = object.get("static_offset").to_u64(0);
+            suggestion.invariant_offset = object.get("invariant_offset").to_u64(0);
+            suggestions.append(move(suggestion));
+        } else {
+            suggestions.append(parsed.to_string());
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    auto pgid = getpgrp();
+    tcsetpgrp(STDOUT_FILENO, pgid);
+    tcsetpgrp(STDIN_FILENO, pgid);
+
+    if (suggestions.is_empty())
+        return Error::from_string_literal("No results");
+
     return suggestions;
 }
 
@@ -1994,7 +2223,7 @@ u64 Shell::find_last_job_id() const
     return job_id;
 }
 
-const Job* Shell::find_job(u64 id, bool is_pid)
+Job const* Shell::find_job(u64 id, bool is_pid)
 {
     for (auto& entry : jobs) {
         if (is_pid) {
@@ -2008,7 +2237,7 @@ const Job* Shell::find_job(u64 id, bool is_pid)
     return nullptr;
 }
 
-void Shell::kill_job(const Job* job, int sig)
+void Shell::kill_job(Job const* job, int sig)
 {
     if (!job)
         return;
@@ -2212,7 +2441,7 @@ void FileDescriptionCollector::add(int fd)
     m_fds.append(fd);
 }
 
-SavedFileDescriptors::SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiring>& intended_rewirings)
+SavedFileDescriptors::SavedFileDescriptors(NonnullRefPtrVector<AST::Rewiring> const& intended_rewirings)
 {
     for (auto& rewiring : intended_rewirings) {
         int new_fd = dup(rewiring.new_fd);

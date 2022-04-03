@@ -69,7 +69,7 @@ ErrorOr<void> Ext2FS::flush_super_block()
     return raw_write_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer);
 }
 
-const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
+ext2_group_desc const& Ext2FS::group_descriptor(GroupIndex group_index) const
 {
     // FIXME: Should this fail gracefully somehow?
     VERIFY(group_index <= m_block_group_count);
@@ -164,7 +164,7 @@ bool Ext2FS::find_block_containing_inode(InodeIndex inode, BlockIndex& block_ind
 Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks) const
 {
     BlockListShape shape;
-    const unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
+    unsigned const entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
     unsigned blocks_remaining = blocks;
 
     shape.direct_blocks = min((unsigned)EXT2_NDIR_BLOCKS, blocks_remaining);
@@ -196,7 +196,7 @@ Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks) const
 
 ErrorOr<void> Ext2FSInode::write_indirect_block(BlockBasedFileSystem::BlockIndex block, Span<BlockBasedFileSystem::BlockIndex> blocks_indices)
 {
-    const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
+    auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     VERIFY(blocks_indices.size() <= entries_per_block);
 
     auto block_contents = TRY(ByteBuffer::create_uninitialized(fs().block_size()));
@@ -213,10 +213,10 @@ ErrorOr<void> Ext2FSInode::write_indirect_block(BlockBasedFileSystem::BlockIndex
 
 ErrorOr<void> Ext2FSInode::grow_doubly_indirect_block(BlockBasedFileSystem::BlockIndex block, size_t old_blocks_length, Span<BlockBasedFileSystem::BlockIndex> blocks_indices, Vector<Ext2FS::BlockIndex>& new_meta_blocks, unsigned& meta_blocks)
 {
-    const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
-    const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
-    const auto old_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_block);
-    const auto new_indirect_blocks_length = ceil_div(blocks_indices.size(), entries_per_block);
+    auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
+    auto const entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
+    auto const old_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_block);
+    auto const new_indirect_blocks_length = ceil_div(blocks_indices.size(), entries_per_block);
     VERIFY(blocks_indices.size() > 0);
     VERIFY(blocks_indices.size() > old_blocks_length);
     VERIFY(blocks_indices.size() <= entries_per_doubly_indirect_block);
@@ -243,7 +243,7 @@ ErrorOr<void> Ext2FSInode::grow_doubly_indirect_block(BlockBasedFileSystem::Bloc
 
     // Write out the indirect blocks.
     for (unsigned i = old_blocks_length / entries_per_block; i < new_indirect_blocks_length; i++) {
-        const auto offset_block = i * entries_per_block;
+        auto const offset_block = i * entries_per_block;
         TRY(write_indirect_block(block_as_pointers[i], blocks_indices.slice(offset_block, min(blocks_indices.size() - offset_block, entries_per_block))));
     }
 
@@ -253,10 +253,10 @@ ErrorOr<void> Ext2FSInode::grow_doubly_indirect_block(BlockBasedFileSystem::Bloc
 
 ErrorOr<void> Ext2FSInode::shrink_doubly_indirect_block(BlockBasedFileSystem::BlockIndex block, size_t old_blocks_length, size_t new_blocks_length, unsigned& meta_blocks)
 {
-    const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
-    const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
-    const auto old_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_block);
-    const auto new_indirect_blocks_length = ceil_div(new_blocks_length, entries_per_block);
+    auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
+    auto const entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
+    auto const old_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_block);
+    auto const new_indirect_blocks_length = ceil_div(new_blocks_length, entries_per_block);
     VERIFY(old_blocks_length > 0);
     VERIFY(old_blocks_length >= new_blocks_length);
     VERIFY(new_blocks_length <= entries_per_doubly_indirect_block);
@@ -285,11 +285,11 @@ ErrorOr<void> Ext2FSInode::shrink_doubly_indirect_block(BlockBasedFileSystem::Bl
 
 ErrorOr<void> Ext2FSInode::grow_triply_indirect_block(BlockBasedFileSystem::BlockIndex block, size_t old_blocks_length, Span<BlockBasedFileSystem::BlockIndex> blocks_indices, Vector<Ext2FS::BlockIndex>& new_meta_blocks, unsigned& meta_blocks)
 {
-    const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
-    const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
-    const auto entries_per_triply_indirect_block = entries_per_block * entries_per_block;
-    const auto old_doubly_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_doubly_indirect_block);
-    const auto new_doubly_indirect_blocks_length = ceil_div(blocks_indices.size(), entries_per_doubly_indirect_block);
+    auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
+    auto const entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
+    auto const entries_per_triply_indirect_block = entries_per_block * entries_per_block;
+    auto const old_doubly_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_doubly_indirect_block);
+    auto const new_doubly_indirect_blocks_length = ceil_div(blocks_indices.size(), entries_per_doubly_indirect_block);
     VERIFY(blocks_indices.size() > 0);
     VERIFY(blocks_indices.size() > old_blocks_length);
     VERIFY(blocks_indices.size() <= entries_per_triply_indirect_block);
@@ -316,9 +316,9 @@ ErrorOr<void> Ext2FSInode::grow_triply_indirect_block(BlockBasedFileSystem::Bloc
 
     // Write out the doubly indirect blocks.
     for (unsigned i = old_blocks_length / entries_per_doubly_indirect_block; i < new_doubly_indirect_blocks_length; i++) {
-        const auto processed_blocks = i * entries_per_doubly_indirect_block;
-        const auto old_doubly_indirect_blocks_length = min(old_blocks_length > processed_blocks ? old_blocks_length - processed_blocks : 0, entries_per_doubly_indirect_block);
-        const auto new_doubly_indirect_blocks_length = min(blocks_indices.size() > processed_blocks ? blocks_indices.size() - processed_blocks : 0, entries_per_doubly_indirect_block);
+        auto const processed_blocks = i * entries_per_doubly_indirect_block;
+        auto const old_doubly_indirect_blocks_length = min(old_blocks_length > processed_blocks ? old_blocks_length - processed_blocks : 0, entries_per_doubly_indirect_block);
+        auto const new_doubly_indirect_blocks_length = min(blocks_indices.size() > processed_blocks ? blocks_indices.size() - processed_blocks : 0, entries_per_doubly_indirect_block);
         TRY(grow_doubly_indirect_block(block_as_pointers[i], old_doubly_indirect_blocks_length, blocks_indices.slice(processed_blocks, new_doubly_indirect_blocks_length), new_meta_blocks, meta_blocks));
     }
 
@@ -328,11 +328,11 @@ ErrorOr<void> Ext2FSInode::grow_triply_indirect_block(BlockBasedFileSystem::Bloc
 
 ErrorOr<void> Ext2FSInode::shrink_triply_indirect_block(BlockBasedFileSystem::BlockIndex block, size_t old_blocks_length, size_t new_blocks_length, unsigned& meta_blocks)
 {
-    const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
-    const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
-    const auto entries_per_triply_indirect_block = entries_per_doubly_indirect_block * entries_per_block;
-    const auto old_triply_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_doubly_indirect_block);
-    const auto new_triply_indirect_blocks_length = new_blocks_length / entries_per_doubly_indirect_block;
+    auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
+    auto const entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
+    auto const entries_per_triply_indirect_block = entries_per_doubly_indirect_block * entries_per_block;
+    auto const old_triply_indirect_blocks_length = ceil_div(old_blocks_length, entries_per_doubly_indirect_block);
+    auto const new_triply_indirect_blocks_length = new_blocks_length / entries_per_doubly_indirect_block;
     VERIFY(old_blocks_length > 0);
     VERIFY(old_blocks_length >= new_blocks_length);
     VERIFY(new_blocks_length <= entries_per_triply_indirect_block);
@@ -344,9 +344,9 @@ ErrorOr<void> Ext2FSInode::shrink_triply_indirect_block(BlockBasedFileSystem::Bl
 
     // Shrink the doubly indirect blocks.
     for (unsigned i = new_triply_indirect_blocks_length; i < old_triply_indirect_blocks_length; i++) {
-        const auto processed_blocks = i * entries_per_doubly_indirect_block;
-        const auto old_doubly_indirect_blocks_length = min(old_blocks_length > processed_blocks ? old_blocks_length - processed_blocks : 0, entries_per_doubly_indirect_block);
-        const auto new_doubly_indirect_blocks_length = min(new_blocks_length > processed_blocks ? new_blocks_length - processed_blocks : 0, entries_per_doubly_indirect_block);
+        auto const processed_blocks = i * entries_per_doubly_indirect_block;
+        auto const old_doubly_indirect_blocks_length = min(old_blocks_length > processed_blocks ? old_blocks_length - processed_blocks : 0, entries_per_doubly_indirect_block);
+        auto const new_doubly_indirect_blocks_length = min(new_blocks_length > processed_blocks ? new_blocks_length - processed_blocks : 0, entries_per_doubly_indirect_block);
         dbgln_if(EXT2_BLOCKLIST_DEBUG, "Ext2FSInode[{}]::shrink_triply_indirect_block(): Shrinking doubly indirect block {} at index {}", identifier(), block_as_pointers[i], i);
         TRY(shrink_doubly_indirect_block(block_as_pointers[i], old_doubly_indirect_blocks_length, new_doubly_indirect_blocks_length, meta_blocks));
     }
@@ -373,10 +373,10 @@ ErrorOr<void> Ext2FSInode::flush_block_list()
     }
 
     // NOTE: There is a mismatch between i_blocks and blocks.size() since i_blocks includes meta blocks and blocks.size() does not.
-    const auto old_block_count = ceil_div(size(), static_cast<u64>(fs().block_size()));
+    auto const old_block_count = ceil_div(size(), static_cast<u64>(fs().block_size()));
 
     auto old_shape = fs().compute_block_list_shape(old_block_count);
-    const auto new_shape = fs().compute_block_list_shape(m_block_list.size());
+    auto const new_shape = fs().compute_block_list_shape(m_block_list.size());
 
     Vector<Ext2FS::BlockIndex> new_meta_blocks;
     if (new_shape.meta_blocks > old_shape.meta_blocks) {
@@ -813,7 +813,7 @@ ErrorOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKernel
     if (is_symlink() && size() < max_inline_symlink_length) {
         VERIFY(offset == 0);
         size_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
-        TRY(buffer.write(((const u8*)m_raw_inode.i_block) + offset, nread));
+        TRY(buffer.write(((u8 const*)m_raw_inode.i_block) + offset, nread));
         return nread;
     }
 
@@ -827,7 +827,7 @@ ErrorOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKernel
 
     bool allow_cache = !description || !description->is_direct();
 
-    const int block_size = fs().block_size();
+    int const block_size = fs().block_size();
 
     BlockBasedFileSystem::BlockIndex first_block_logical_index = offset / block_size;
     BlockBasedFileSystem::BlockIndex last_block_logical_index = (offset + count) / block_size;
@@ -935,7 +935,7 @@ ErrorOr<void> Ext2FSInode::resize(u64 new_size)
     return {};
 }
 
-ErrorOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& data, OpenFileDescription* description)
+ErrorOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& data, OpenFileDescription* description)
 {
     VERIFY(offset >= 0);
 
@@ -960,7 +960,7 @@ ErrorOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const UserO
 
     bool allow_cache = !description || !description->is_direct();
 
-    const auto block_size = fs().block_size();
+    auto const block_size = fs().block_size();
     auto new_size = max(static_cast<u64>(offset) + count, size());
 
     TRY(resize(new_size));
@@ -1003,7 +1003,7 @@ ErrorOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const UserO
     return nwritten;
 }
 
-u8 Ext2FS::internal_file_type_to_directory_entry_type(const DirectoryEntryView& entry) const
+u8 Ext2FS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
 {
     switch (entry.file_type) {
     case EXT2_FT_REG_FILE:
@@ -1219,7 +1219,7 @@ ErrorOr<void> Ext2FS::write_ext2_inode(InodeIndex inode, ext2_inode const& e2ino
     unsigned offset;
     if (!find_block_containing_inode(inode, block_index, offset))
         return EINVAL;
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((const u8*)&e2inode));
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((u8 const*)&e2inode));
     return write_block(block_index, buffer, inode_size(), offset);
 }
 

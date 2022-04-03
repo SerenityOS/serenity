@@ -102,17 +102,20 @@ void VirtualConsole::set_graphical(bool graphical)
     m_graphical = graphical;
 }
 
+ErrorOr<NonnullOwnPtr<KString>> VirtualConsole::pseudo_name() const
+{
+    return KString::formatted("tty:{}", m_index);
+}
+
 UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t index)
 {
-    auto pts_name = MUST(KString::formatted("/dev/tty/{}", index));
-
-    auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index, move(pts_name));
+    auto virtual_console_or_error = DeviceManagement::try_create_device<VirtualConsole>(index);
     // FIXME: Find a way to propagate errors
     VERIFY(!virtual_console_or_error.is_error());
     return virtual_console_or_error.release_value();
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create_with_preset_log(size_t index, const CircularQueue<char, 16384>& log)
+UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create_with_preset_log(size_t index, CircularQueue<char, 16384> const& log)
 {
     auto virtual_console = VirtualConsole::create(index);
     // HACK: We have to go through the TTY layer for correct newline handling.
@@ -176,10 +179,9 @@ void VirtualConsole::refresh_after_resolution_change()
     flush_dirty_lines();
 }
 
-UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index, NonnullOwnPtr<KString> tty_name)
+UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(unsigned const index)
     : TTY(4, index)
     , m_index(index)
-    , m_tty_name(move(tty_name))
     , m_console_impl(*this)
 {
     initialize();
@@ -256,7 +258,7 @@ void VirtualConsole::on_key_pressed(KeyEvent event)
     });
 }
 
-ErrorOr<size_t> VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> VirtualConsole::on_tty_write(UserOrKernelBuffer const& data, size_t size)
 {
     SpinlockLocker global_lock(ConsoleManagement::the().tty_write_lock());
     auto result = data.read_buffered<512>(size, [&](ReadonlyBytes buffer) {
@@ -350,7 +352,7 @@ void VirtualConsole::terminal_history_changed(int)
     // Do nothing, I guess?
 }
 
-void VirtualConsole::emit(const u8* data, size_t size)
+void VirtualConsole::emit(u8 const* data, size_t size)
 {
     for (size_t i = 0; i < size; i++)
         TTY::emit(data[i], true);

@@ -18,7 +18,7 @@ public:
     StackingContext(Layout::Box&, StackingContext* parent);
 
     StackingContext* parent() { return m_parent; }
-    const StackingContext* parent() const { return m_parent; }
+    StackingContext const* parent() const { return m_parent; }
 
     enum class StackingContextPaintPhase {
         BackgroundAndBorders,
@@ -30,7 +30,7 @@ public:
 
     void paint_descendants(PaintContext&, Layout::Node&, StackingContextPaintPhase) const;
     void paint(PaintContext&) const;
-    HitTestResult hit_test(Gfx::FloatPoint const&, HitTestType) const;
+    Optional<HitTestResult> hit_test(Gfx::FloatPoint const&, HitTestType) const;
 
     void dump(int indent = 0) const;
 
@@ -45,6 +45,7 @@ private:
     Gfx::FloatMatrix4x4 get_transformation_matrix(CSS::Transformation const& transformation) const;
     Gfx::FloatMatrix4x4 combine_transformations(Vector<CSS::Transformation> const& transformations) const;
     Gfx::AffineTransform combine_transformations_2d(Vector<CSS::Transformation> const& transformations) const;
+    Gfx::FloatPoint transform_origin() const;
 };
 
 }

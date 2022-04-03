@@ -125,7 +125,7 @@ static ErrorOr<HashMap<String, PnpIdData>> parse_pnp_ids_database(Core::File& pn
     HashMap<String, PnpIdData> pnp_id_data;
 
     for (size_t row_content_offset = 0;;) {
-        static const auto row_start_tag = "<tr class=\""sv;
+        static auto const row_start_tag = "<tr class=\""sv;
         auto row_start = pnp_ids_file_contents.find(row_start_tag, row_content_offset);
         if (!row_start.has_value())
             break;
@@ -134,7 +134,7 @@ static ErrorOr<HashMap<String, PnpIdData>> parse_pnp_ids_database(Core::File& pn
         if (!row_start_tag_end.has_value())
             return Error::from_string_literal("Incomplete row start tag"sv);
 
-        static const auto row_end_tag = "</tr>"sv;
+        static auto const row_end_tag = "</tr>"sv;
         auto row_end = pnp_ids_file_contents.find(row_end_tag, row_start.value());
         if (!row_end.has_value())
             return Error::from_string_literal("No matching row end tag found"sv);
@@ -145,12 +145,12 @@ static ErrorOr<HashMap<String, PnpIdData>> parse_pnp_ids_database(Core::File& pn
         auto row_string = pnp_ids_file_contents.substring_view(row_start_tag_end.value() + 1, row_end.value() - row_start_tag_end.value() - 1);
         Vector<String, (size_t)PnpIdColumns::ColumnCount> columns;
         for (size_t column_row_offset = 0;;) {
-            static const auto column_start_tag = "<td>"sv;
+            static auto const column_start_tag = "<td>"sv;
             auto column_start = row_string.find(column_start_tag, column_row_offset);
             if (!column_start.has_value())
                 break;
 
-            static const auto column_end_tag = "</td>"sv;
+            static auto const column_end_tag = "</td>"sv;
             auto column_end = row_string.find(column_end_tag, column_start.value() + column_start_tag.length());
             if (!column_end.has_value())
                 return Error::from_string_literal("No matching column end tag found"sv);

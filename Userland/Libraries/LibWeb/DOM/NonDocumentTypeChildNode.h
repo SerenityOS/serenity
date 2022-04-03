@@ -51,10 +51,10 @@ public:
         return nullptr;
     }
 
-    const Element* previous_element_sibling() const { return const_cast<NonDocumentTypeChildNode*>(this)->previous_element_sibling(); }
-    const Element* previous_element_in_pre_order() const { return const_cast<NonDocumentTypeChildNode*>(this)->previous_element_in_pre_order(); }
-    const Element* next_element_sibling() const { return const_cast<NonDocumentTypeChildNode*>(this)->next_element_sibling(); }
-    const Element* next_element_in_pre_order() const { return const_cast<NonDocumentTypeChildNode*>(this)->next_element_in_pre_order(); }
+    Element const* previous_element_sibling() const { return const_cast<NonDocumentTypeChildNode*>(this)->previous_element_sibling(); }
+    Element const* previous_element_in_pre_order() const { return const_cast<NonDocumentTypeChildNode*>(this)->previous_element_in_pre_order(); }
+    Element const* next_element_sibling() const { return const_cast<NonDocumentTypeChildNode*>(this)->next_element_sibling(); }
+    Element const* next_element_in_pre_order() const { return const_cast<NonDocumentTypeChildNode*>(this)->next_element_in_pre_order(); }
 
 protected:
     NonDocumentTypeChildNode() = default;

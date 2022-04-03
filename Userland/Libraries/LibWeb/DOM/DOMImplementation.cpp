@@ -20,7 +20,7 @@ DOMImplementation::DOMImplementation(Document& document)
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocument
-ExceptionOr<NonnullRefPtr<Document>> DOMImplementation::create_document(const String& namespace_, const String& qualified_name, RefPtr<DocumentType> doctype) const
+ExceptionOr<NonnullRefPtr<Document>> DOMImplementation::create_document(String const& namespace_, String const& qualified_name, RefPtr<DocumentType> doctype) const
 {
     // FIXME: This should specifically be an XML document.
     auto xml_document = Document::create();
@@ -29,12 +29,8 @@ ExceptionOr<NonnullRefPtr<Document>> DOMImplementation::create_document(const St
 
     RefPtr<Element> element;
 
-    if (!qualified_name.is_empty()) {
-        auto new_element = xml_document->create_element_ns(namespace_, qualified_name /* FIXME: and an empty dictionary */);
-        if (new_element.is_exception())
-            return new_element.exception();
-        element = new_element.release_value();
-    }
+    if (!qualified_name.is_empty())
+        element = TRY(xml_document->create_element_ns(namespace_, qualified_name /* FIXME: and an empty dictionary */));
 
     if (doctype)
         xml_document->append_child(doctype.release_nonnull());
@@ -55,7 +51,7 @@ ExceptionOr<NonnullRefPtr<Document>> DOMImplementation::create_document(const St
 }
 
 // https://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument
-NonnullRefPtr<Document> DOMImplementation::create_html_document(const String& title) const
+NonnullRefPtr<Document> DOMImplementation::create_html_document(String const& title) const
 {
     // FIXME: This should specifically be a HTML document.
     auto html_document = Document::create();
@@ -92,9 +88,7 @@ NonnullRefPtr<Document> DOMImplementation::create_html_document(const String& ti
 // https://dom.spec.whatwg.org/#dom-domimplementation-createdocumenttype
 ExceptionOr<NonnullRefPtr<DocumentType>> DOMImplementation::create_document_type(String const& qualified_name, String const& public_id, String const& system_id)
 {
-    auto result = Document::validate_qualified_name(qualified_name);
-    if (result.is_exception())
-        return result.exception();
+    TRY(Document::validate_qualified_name(qualified_name));
     auto document_type = DocumentType::create(document());
     document_type->set_name(qualified_name);
     document_type->set_public_id(public_id);

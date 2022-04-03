@@ -14,7 +14,7 @@
 
 namespace Desktop {
 
-auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRefPtr<Details>
+auto Launcher::Details::from_details_str(String const& details_str) -> NonnullRefPtr<Details>
 {
     auto details = adopt_ref(*new Details);
     auto json = JsonValue::from_string(details_str).release_value_but_fixme_should_propagate_errors();
@@ -87,12 +87,12 @@ ErrorOr<void> Launcher::seal_allowlist()
     return {};
 }
 
-bool Launcher::open(const URL& url, const String& handler_name)
+bool Launcher::open(const URL& url, String const& handler_name)
 {
     return connection().open_url(url, handler_name);
 }
 
-bool Launcher::open(const URL& url, const Details& details)
+bool Launcher::open(const URL& url, Details const& details)
 {
     VERIFY(details.launcher_type != LauncherType::Application); // Launcher should not be used to execute arbitrary applications
     return open(url, details.executable);

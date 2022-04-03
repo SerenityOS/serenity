@@ -26,7 +26,7 @@ String CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
     auto cookie_list = get_matching_cookies(url, domain.value(), source);
     StringBuilder builder;
 
-    for (const auto& cookie : cookie_list) {
+    for (auto const& cookie : cookie_list) {
         // If there is an unprocessed cookie in the cookie-list, output the characters %x3B and %x20 ("; ")
         if (!builder.is_empty())
             builder.append("; ");
@@ -38,7 +38,7 @@ String CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
     return builder.build();
 }
 
-void CookieJar::set_cookie(const URL& url, const Web::Cookie::ParsedCookie& parsed_cookie, Web::Cookie::Source source)
+void CookieJar::set_cookie(const URL& url, Web::Cookie::ParsedCookie const& parsed_cookie, Web::Cookie::Source source)
 {
     auto domain = canonicalize_domain(url);
     if (!domain.has_value())
@@ -57,7 +57,7 @@ void CookieJar::dump_cookies() const
     StringBuilder builder;
     builder.appendff("{} cookies stored\n", m_cookies.size());
 
-    for (const auto& cookie : m_cookies) {
+    for (auto const& cookie : m_cookies) {
         builder.appendff("{}{}{} - ", key_color, cookie.key.name, no_color);
         builder.appendff("{}{}{} - ", key_color, cookie.key.domain, no_color);
         builder.appendff("{}{}{}\n", key_color, cookie.key.path, no_color);
@@ -96,7 +96,7 @@ Optional<String> CookieJar::canonicalize_domain(const URL& url)
     return url.host().to_lowercase();
 }
 
-bool CookieJar::domain_matches(const String& string, const String& domain_string)
+bool CookieJar::domain_matches(String const& string, String const& domain_string)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.3
 
@@ -120,7 +120,7 @@ bool CookieJar::domain_matches(const String& string, const String& domain_string
     return true;
 }
 
-bool CookieJar::path_matches(const String& request_path, const String& cookie_path)
+bool CookieJar::path_matches(String const& request_path, String const& cookie_path)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.4
 
@@ -165,7 +165,7 @@ String CookieJar::default_path(const URL& url)
     return uri_path.substring(0, last_separator);
 }
 
-void CookieJar::store_cookie(const Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source)
+void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.3
 
@@ -251,7 +251,7 @@ void CookieJar::store_cookie(const Web::Cookie::ParsedCookie& parsed_cookie, con
     m_cookies.set(key, move(cookie));
 }
 
-Vector<Web::Cookie::Cookie&> CookieJar::get_matching_cookies(const URL& url, const String& canonicalized_domain, Web::Cookie::Source source)
+Vector<Web::Cookie::Cookie&> CookieJar::get_matching_cookies(const URL& url, String const& canonicalized_domain, Web::Cookie::Source source)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.4
 
@@ -305,12 +305,12 @@ void CookieJar::purge_expired_cookies()
     time_t now = Core::DateTime::now().timestamp();
     Vector<CookieStorageKey> keys_to_evict;
 
-    for (const auto& cookie : m_cookies) {
+    for (auto const& cookie : m_cookies) {
         if (cookie.value.expiry_time.timestamp() < now)
             keys_to_evict.append(cookie.key);
     }
 
-    for (const auto& key : keys_to_evict)
+    for (auto const& key : keys_to_evict)
         m_cookies.remove(key);
 }
 

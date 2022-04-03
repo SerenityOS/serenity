@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool del = false;
     bool lock = false;
     bool unlock = false;
-    const char* username = nullptr;
+    char const* username = nullptr;
 
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help("Modify an account password.");

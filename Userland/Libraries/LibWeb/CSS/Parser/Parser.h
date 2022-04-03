@@ -89,21 +89,10 @@ public:
     Parser(ParsingContext const&, StringView input, String const& encoding = "utf-8");
     ~Parser() = default;
 
-    // The normal parser entry point, for parsing stylesheets.
-    NonnullRefPtr<CSSStyleSheet> parse_as_stylesheet();
-    // For the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
-    NonnullRefPtrVector<CSSRule> parse_as_list_of_rules();
-    // For use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
-    RefPtr<CSSRule> parse_as_rule();
-    // Used in @supports conditions. [CSS3-CONDITIONAL]
-    Optional<StyleProperty> parse_as_declaration();
-    // For the contents of a style attribute, which parses text into the contents of a single style rule.
-    RefPtr<PropertyOwningCSSStyleDeclaration> parse_as_list_of_declarations();
-    // For things that need to consume a single value, like the parsing rules for attr().
-    Optional<StyleComponentValueRule> parse_as_component_value();
-    // For the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
-    Vector<StyleComponentValueRule> parse_as_list_of_component_values();
-    Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
+    NonnullRefPtr<CSSStyleSheet> parse_as_css_stylesheet(Optional<AK::URL> location);
+    RefPtr<ElementInlineCSSStyleDeclaration> parse_as_style_attribute(DOM::Element&);
+    RefPtr<CSSRule> parse_as_css_rule();
+    Optional<StyleProperty> parse_as_supports_condition();
 
     enum class SelectorParsingMode {
         Standard,
@@ -132,20 +121,41 @@ private:
         SyntaxError,
     };
 
+    // "Parse a stylesheet" is intended to be the normal parser entry point, for parsing stylesheets.
+    struct ParsedStyleSheet {
+        Optional<AK::URL> location;
+        NonnullRefPtrVector<StyleRule> rules;
+    };
     template<typename T>
-    NonnullRefPtr<CSSStyleSheet> parse_a_stylesheet(TokenStream<T>&);
+    ParsedStyleSheet parse_a_stylesheet(TokenStream<T>&, Optional<AK::URL> location);
+
+    // "Parse a list of rules" is intended for the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
     template<typename T>
-    NonnullRefPtrVector<CSSRule> parse_a_list_of_rules(TokenStream<T>&);
+    NonnullRefPtrVector<StyleRule> parse_a_list_of_rules(TokenStream<T>&);
+
+    // "Parse a rule" is intended for use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
     template<typename T>
-    RefPtr<CSSRule> parse_a_rule(TokenStream<T>&);
+    RefPtr<StyleRule> parse_a_rule(TokenStream<T>&);
+
+    // "Parse a declaration" is used in @supports conditions. [CSS3-CONDITIONAL]
     template<typename T>
-    Optional<StyleProperty> parse_a_declaration(TokenStream<T>&);
+    Optional<StyleDeclarationRule> parse_a_declaration(TokenStream<T>&);
+
     template<typename T>
-    RefPtr<PropertyOwningCSSStyleDeclaration> parse_a_list_of_declarations(TokenStream<T>&);
+    Vector<DeclarationOrAtRule> parse_a_style_blocks_contents(TokenStream<T>&);
+
+    // "Parse a list of declarations" is for the contents of a style attribute, which parses text into the contents of a single style rule.
+    template<typename T>
+    Vector<DeclarationOrAtRule> parse_a_list_of_declarations(TokenStream<T>&);
+
+    // "Parse a component value" is for things that need to consume a single value, like the parsing rules for attr().
     template<typename T>
     Optional<StyleComponentValueRule> parse_a_component_value(TokenStream<T>&);
+
+    // "Parse a list of component values" is for the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
     template<typename T>
     Vector<StyleComponentValueRule> parse_a_list_of_component_values(TokenStream<T>&);
+
     template<typename T>
     Vector<Vector<StyleComponentValueRule>> parse_a_comma_separated_list_of_component_values(TokenStream<T>&);
 
@@ -167,28 +177,36 @@ private:
     };
     Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&, AllowTrailingTokens = AllowTrailingTokens::No);
 
+    enum class TopLevel {
+        No,
+        Yes
+    };
     template<typename T>
-    [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(TokenStream<T>&, bool top_level);
+    [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(TokenStream<T>&, TopLevel);
     template<typename T>
     [[nodiscard]] NonnullRefPtr<StyleRule> consume_an_at_rule(TokenStream<T>&);
     template<typename T>
-    [[nodiscard]] RefPtr<StyleRule> consume_a_qualified_rule(TokenStream<T>&);
+    RefPtr<StyleRule> consume_a_qualified_rule(TokenStream<T>&);
+    template<typename T>
+    [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_style_blocks_contents(TokenStream<T>&);
     template<typename T>
     [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_list_of_declarations(TokenStream<T>&);
     template<typename T>
-    [[nodiscard]] Optional<StyleDeclarationRule> consume_a_declaration(TokenStream<T>&);
+    Optional<StyleDeclarationRule> consume_a_declaration(TokenStream<T>&);
     template<typename T>
     [[nodiscard]] StyleComponentValueRule consume_a_component_value(TokenStream<T>&);
     template<typename T>
-    [[nodiscard]] NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
+    NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
     template<typename T>
-    [[nodiscard]] NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
+    NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
 
-    [[nodiscard]] Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<StyleComponentValueRule>&);
+    Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<StyleComponentValueRule>&);
 
-    [[nodiscard]] RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
-    [[nodiscard]] RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
-    [[nodiscard]] Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule const&);
+    RefPtr<CSSRule> parse_font_face_rule(TokenStream<StyleComponentValueRule>&);
+
+    RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
+    RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
+    Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule const&);
 
     class Dimension {
     public:
@@ -287,8 +305,6 @@ private:
     RefPtr<StyleValue> parse_border_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_border_radius_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_border_radius_shorthand_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_box_shadow_value(Vector<StyleComponentValueRule> const&);
-    RefPtr<StyleValue> parse_single_box_shadow_value(TokenStream<StyleComponentValueRule>&);
     RefPtr<StyleValue> parse_content_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_flex_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_flex_flow_value(Vector<StyleComponentValueRule> const&);
@@ -296,8 +312,15 @@ private:
     RefPtr<StyleValue> parse_font_family_value(Vector<StyleComponentValueRule> const&, size_t start_index = 0);
     RefPtr<StyleValue> parse_list_style_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_overflow_value(Vector<StyleComponentValueRule> const&);
+    enum class AllowInsetKeyword {
+        No,
+        Yes,
+    };
+    RefPtr<StyleValue> parse_shadow_value(Vector<StyleComponentValueRule> const&, AllowInsetKeyword);
+    RefPtr<StyleValue> parse_single_shadow_value(TokenStream<StyleComponentValueRule>&, AllowInsetKeyword);
     RefPtr<StyleValue> parse_text_decoration_value(Vector<StyleComponentValueRule> const&);
     RefPtr<StyleValue> parse_transform_value(Vector<StyleComponentValueRule> const&);
+    RefPtr<StyleValue> parse_transform_origin_value(Vector<StyleComponentValueRule> const&);
 
     // calc() parsing, according to https://www.w3.org/TR/css-values-3/#calc-syntax
     OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_sum(TokenStream<StyleComponentValueRule>&);
@@ -315,6 +338,9 @@ private:
     Result<NonnullRefPtr<Selector>, ParsingResult> parse_complex_selector(TokenStream<StyleComponentValueRule>&, SelectorType);
     Result<Selector::CompoundSelector, ParsingResult> parse_compound_selector(TokenStream<StyleComponentValueRule>&);
     Optional<Selector::Combinator> parse_selector_combinator(TokenStream<StyleComponentValueRule>&);
+
+    Result<Selector::SimpleSelector, ParsingResult> parse_attribute_simple_selector(StyleComponentValueRule const&);
+    Result<Selector::SimpleSelector, ParsingResult> parse_pseudo_simple_selector(TokenStream<StyleComponentValueRule>&);
     Result<Selector::SimpleSelector, ParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
 
     NonnullRefPtr<MediaQuery> parse_media_query(TokenStream<StyleComponentValueRule>&);
@@ -329,6 +355,14 @@ private:
     Optional<Supports::Feature> parse_supports_feature(TokenStream<StyleComponentValueRule>&);
 
     static bool has_ignored_vendor_prefix(StringView);
+    static bool is_builtin(StringView);
+
+    struct PropertiesAndCustomProperties {
+        Vector<StyleProperty> properties;
+        HashMap<String, StyleProperty> custom_properties;
+    };
+
+    PropertiesAndCustomProperties extract_properties(Vector<DeclarationOrAtRule> const&);
 
     ParsingContext m_context;
 
@@ -341,15 +375,13 @@ private:
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const&, StringView);
-RefPtr<CSS::PropertyOwningCSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const&, StringView);
+RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::ParsingContext const&, StringView, Optional<AK::URL> location = {});
+RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const&, StringView, DOM::Element&);
 RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
 Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView);
 RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const&, StringView);
 RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const&, StringView);
 NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const&, StringView);
 RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const&, StringView);
-
-RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const&, StringView);
 
 }

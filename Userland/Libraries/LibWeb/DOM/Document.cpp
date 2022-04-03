@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
@@ -307,7 +307,7 @@ Origin Document::origin() const
     return { m_url.protocol(), m_url.host(), m_url.port_or_default() };
 }
 
-void Document::set_origin(const Origin& origin)
+void Document::set_origin(Origin const& origin)
 {
     m_url.set_protocol(origin.protocol());
     m_url.set_host(origin.host());
@@ -328,7 +328,7 @@ void Document::schedule_layout_update()
     m_layout_update_timer->start();
 }
 
-bool Document::is_child_allowed(const Node& node) const
+bool Document::is_child_allowed(Node const& node) const
 {
     switch (node.type()) {
     case NodeType::DOCUMENT_NODE:
@@ -350,7 +350,7 @@ Element* Document::document_element()
     return first_child_of_type<Element>();
 }
 
-const Element* Document::document_element() const
+Element const* Document::document_element() const
 {
     return first_child_of_type<Element>();
 }
@@ -393,9 +393,7 @@ ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
 
     auto* existing_body = body();
     if (existing_body) {
-        auto replace_result = existing_body->parent()->replace_child(*new_body, *existing_body);
-        if (replace_result.is_exception())
-            return replace_result.exception();
+        (void)TRY(existing_body->parent()->replace_child(*new_body, *existing_body));
         return {};
     }
 
@@ -403,9 +401,7 @@ ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
     if (!document_element)
         return DOM::HierarchyRequestError::create("Missing document element");
 
-    auto append_result = document_element->append_child(*new_body);
-    if (append_result.is_exception())
-        return append_result.exception();
+    (void)TRY(document_element->append_child(*new_body));
     return {};
 }
 
@@ -436,7 +432,7 @@ String Document::title() const
     return builder.to_string();
 }
 
-void Document::set_title(const String& title)
+void Document::set_title(String const& title)
 {
     auto* head_element = const_cast<HTML::HTMLHeadElement*>(head());
     if (!head_element)
@@ -493,21 +489,24 @@ void Document::tear_down_layout_tree()
     m_layout_root = nullptr;
 }
 
-Color Document::background_color(const Palette& palette) const
+Color Document::background_color(Gfx::Palette const& palette) const
 {
-    auto default_color = palette.base();
-    auto* body_element = body();
-    if (!body_element)
-        return default_color;
+    // CSS2 says we should use the HTML element's background color unless it's transparent...
+    if (auto* html_element = this->html_element(); html_element && html_element->layout_node()) {
+        auto color = html_element->layout_node()->computed_values().background_color();
+        if (color.alpha())
+            return color;
+    }
 
-    auto* body_layout_node = body_element->layout_node();
-    if (!body_layout_node)
-        return default_color;
+    // ...in which case we use the BODY element's background color.
+    if (auto* body_element = body(); body_element && body_element->layout_node()) {
+        auto color = body_element->layout_node()->computed_values().background_color();
+        if (color.alpha())
+            return color;
+    }
 
-    auto color = body_layout_node->computed_values().background_color();
-    if (!color.alpha())
-        return default_color;
-    return color;
+    // If both HTML and BODY are transparent, we fall back to the system's "base" palette color.
+    return palette.base();
 }
 
 Vector<CSS::BackgroundLayerData> const* Document::background_layers() const
@@ -585,8 +584,6 @@ void Document::update_layout()
     root_formatting_context.run(*m_layout_root, Layout::LayoutMode::Normal);
     formatting_state.commit();
 
-    m_layout_root->build_stacking_context_tree();
-
     browsing_context()->set_needs_display();
 
     if (browsing_context()->is_top_level()) {
@@ -654,9 +651,9 @@ void Document::set_visited_link_color(Color color)
     m_visited_link_color = color;
 }
 
-const Layout::InitialContainingBlock* Document::layout_node() const
+Layout::InitialContainingBlock const* Document::layout_node() const
 {
-    return static_cast<const Layout::InitialContainingBlock*>(Node::layout_node());
+    return static_cast<Layout::InitialContainingBlock const*>(Node::layout_node());
 }
 
 Layout::InitialContainingBlock* Document::layout_node()
@@ -924,16 +921,13 @@ DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element(String const& 
 DOM::ExceptionOr<NonnullRefPtr<Element>> Document::create_element_ns(String const& namespace_, String const& qualified_name)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto result = validate_and_extract(namespace_, qualified_name);
-    if (result.is_exception())
-        return result.exception();
-    auto qname = result.release_value();
+    auto extracted_qualified_name = TRY(validate_and_extract(namespace_, qualified_name));
 
     // FIXME: 2. Let is be null.
     // FIXME: 3. If options is a dictionary and options["is"] exists, then set is to it.
 
     // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
-    return DOM::create_element(*this, qname.local_name(), qname.namespace_(), qname.prefix());
+    return DOM::create_element(*this, extracted_qualified_name.local_name(), extracted_qualified_name.namespace_(), extracted_qualified_name.prefix());
 }
 
 NonnullRefPtr<DocumentFragment> Document::create_document_fragment()
@@ -941,12 +935,12 @@ NonnullRefPtr<DocumentFragment> Document::create_document_fragment()
     return adopt_ref(*new DocumentFragment(*this));
 }
 
-NonnullRefPtr<Text> Document::create_text_node(const String& data)
+NonnullRefPtr<Text> Document::create_text_node(String const& data)
 {
     return adopt_ref(*new Text(*this, data));
 }
 
-NonnullRefPtr<Comment> Document::create_comment(const String& data)
+NonnullRefPtr<Comment> Document::create_comment(String const& data)
 {
     return adopt_ref(*new Comment(*this, data));
 }
@@ -957,7 +951,7 @@ NonnullRefPtr<Range> Document::create_range()
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createevent
-NonnullRefPtr<Event> Document::create_event(const String& interface)
+NonnullRefPtr<Event> Document::create_event(String const& interface)
 {
     auto interface_lowercase = interface.to_lowercase();
     RefPtr<Event> event;
@@ -1107,12 +1101,12 @@ ExceptionOr<NonnullRefPtr<Node>> Document::adopt_node_binding(NonnullRefPtr<Node
     return node;
 }
 
-const DocumentType* Document::doctype() const
+DocumentType const* Document::doctype() const
 {
     return first_child_of_type<DocumentType>();
 }
 
-const String& Document::compat_mode() const
+String const& Document::compat_mode() const
 {
     static String back_compat = "BackCompat";
     static String css1_compat = "CSS1Compat";
@@ -1198,12 +1192,12 @@ Page* Document::page()
     return m_browsing_context ? m_browsing_context->page() : nullptr;
 }
 
-const Page* Document::page() const
+Page const* Document::page() const
 {
     return m_browsing_context ? m_browsing_context->page() : nullptr;
 }
 
-EventTarget* Document::get_parent(const Event& event)
+EventTarget* Document::get_parent(Event const& event)
 {
     if (event.type() == HTML::EventNames::load)
         return nullptr;
@@ -1558,6 +1552,12 @@ void Document::decrement_number_of_things_delaying_the_load_event(Badge<Document
 
     if (auto* page = this->page())
         page->client().page_did_update_resource_count(m_number_of_things_delaying_the_load_event);
+}
+
+void Document::invalidate_stacking_context_tree()
+{
+    if (auto* paint_box = this->paint_box())
+        const_cast<Painting::PaintableBox*>(paint_box)->invalidate_stacking_context();
 }
 
 }

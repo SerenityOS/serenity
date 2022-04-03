@@ -69,12 +69,12 @@ Gfx::IntRect ListView::content_rect(int row) const
     return { 0, row * item_height(), content_width(), item_height() };
 }
 
-Gfx::IntRect ListView::content_rect(const ModelIndex& index) const
+Gfx::IntRect ListView::content_rect(ModelIndex const& index) const
 {
     return content_rect(index.row());
 }
 
-ModelIndex ListView::index_at_event_position(const Gfx::IntPoint& point) const
+ModelIndex ListView::index_at_event_position(Gfx::IntPoint const& point) const
 {
     VERIFY(model());
 
@@ -87,7 +87,7 @@ ModelIndex ListView::index_at_event_position(const Gfx::IntPoint& point) const
     return {};
 }
 
-Gfx::IntPoint ListView::adjusted_position(const Gfx::IntPoint& position) const
+Gfx::IntPoint ListView::adjusted_position(Gfx::IntPoint const& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
@@ -255,7 +255,7 @@ void ListView::move_cursor(CursorMovement movement, SelectionUpdate selection_up
         set_cursor(new_index, selection_update);
 }
 
-void ListView::scroll_into_view(const ModelIndex& index, bool scroll_horizontally, bool scroll_vertically)
+void ListView::scroll_into_view(ModelIndex const& index, bool scroll_horizontally, bool scroll_vertically)
 {
     if (!model())
         return;

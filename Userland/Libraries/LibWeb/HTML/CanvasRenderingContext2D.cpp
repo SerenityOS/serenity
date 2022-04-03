@@ -139,12 +139,10 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
         return {};
 
     // 2. Let usability be the result of checking the usability of image.
-    auto usability = check_usability_of_image(image);
-    if (usability.is_exception())
-        return usability.exception();
+    auto usability = TRY(check_usability_of_image(image));
 
     // 3. If usability is bad, then return (without drawing anything).
-    if (usability.value() == CanvasImageSourceUsability::Bad)
+    if (usability == CanvasImageSourceUsability::Bad)
         return {};
 
     auto const* bitmap = image.visit([](auto const& source) { return source->bitmap(); });
@@ -182,7 +180,7 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
     if (!painter)
         return {};
     auto transformed_destination_rect = m_drawing_state.transform.map(destination_rect);
-    painter->draw_scaled_bitmap(rounded_int_rect(transformed_destination_rect), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+    painter->draw_scaled_bitmap(transformed_destination_rect.to_rounded<int>(), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
 
     // 7. If image is not origin-clean, then set the CanvasRenderingContext2D's origin-clean flag to false.
     if (image_is_not_origin_clean(image))
@@ -209,7 +207,7 @@ void CanvasRenderingContext2D::rotate(float radians)
     m_drawing_state.transform.rotate_radians(radians);
 }
 
-void CanvasRenderingContext2D::did_draw(const Gfx::FloatRect&)
+void CanvasRenderingContext2D::did_draw(Gfx::FloatRect const&)
 {
     // FIXME: Make use of the rect to reduce the invalidated area when possible.
     if (!m_element)
@@ -232,7 +230,7 @@ OwnPtr<Gfx::Painter> CanvasRenderingContext2D::painter()
     return make<Gfx::Painter>(*m_element->bitmap());
 }
 
-void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, Optional<double> max_width)
+void CanvasRenderingContext2D::fill_text(String const& text, float x, float y, Optional<double> max_width)
 {
     if (max_width.has_value() && max_width.value() <= 0)
         return;
@@ -242,7 +240,7 @@ void CanvasRenderingContext2D::fill_text(const String& text, float x, float y, O
         return;
 
     // FIXME: painter only supports integer rects for text right now, so this effectively chops off any fractional position
-    auto text_rect = Gfx::IntRect(x, y, max_width.has_value() ? max_width.value() : painter->font().width(text), painter->font().glyph_height());
+    auto text_rect = Gfx::IntRect(x, y, max_width.has_value() ? max_width.value() : painter->font().width(text), painter->font().pixel_size());
     auto transformed_rect = m_drawing_state.transform.map(text_rect);
     painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, m_drawing_state.fill_style);
     did_draw(transformed_rect.to_type<float>());
@@ -385,7 +383,7 @@ void CanvasRenderingContext2D::fill(Gfx::Painter::WindingRule winding)
     did_draw(m_path.bounding_box());
 }
 
-void CanvasRenderingContext2D::fill(const String& fill_rule)
+void CanvasRenderingContext2D::fill(String const& fill_rule)
 {
     if (fill_rule == "evenodd")
         return fill(Gfx::Painter::WindingRule::EvenOdd);
@@ -441,7 +439,7 @@ DOM::ExceptionOr<RefPtr<ImageData>> CanvasRenderingContext2D::get_image_data(int
     return image_data;
 }
 
-void CanvasRenderingContext2D::put_image_data(const ImageData& image_data, float x, float y)
+void CanvasRenderingContext2D::put_image_data(ImageData const& image_data, float x, float y)
 {
     auto painter = this->painter();
     if (!painter)
@@ -588,7 +586,7 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(St
     // FIXME: Once we have CanvasTextDrawingStyles, add the CSS attributes.
     auto& font = Gfx::FontDatabase::default_font();
     size_t width = 0;
-    size_t height = font.glyph_height();
+    size_t height = font.pixel_size();
     for (auto c : Utf8View { replaced_text }) {
         width += font.glyph_or_emoji_width(c);
     }
@@ -645,7 +643,7 @@ NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_conic_gradient(do
 DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImageSource const& image)
 {
     // 1. Switch on image:
-    auto usability = image.visit(
+    auto usability = TRY(image.visit(
         // HTMLOrSVGImageElement
         [](HTMLImageElement const& image_element) -> DOM::ExceptionOr<Optional<CanvasImageSourceUsability>> {
             // FIXME: If image's current request's state is broken, then throw an "InvalidStateError" DOMException.
@@ -670,11 +668,9 @@ DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImag
             if (canvas_element.width() == 0 || canvas_element.height() == 0)
                 return DOM::InvalidStateError::create("Canvas width or height is zero");
             return Optional<CanvasImageSourceUsability> {};
-        });
-    if (usability.is_exception())
-        return usability.exception();
-    if (usability.value().has_value())
-        return *usability.value();
+        }));
+    if (usability.has_value())
+        return usability.release_value();
 
     // 2. Return good.
     return { CanvasImageSourceUsability::Good };

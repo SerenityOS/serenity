@@ -25,7 +25,7 @@ class ConnectionFromClient final
     C_OBJECT(ConnectionFromClient);
 
 public:
-    ~ConnectionFromClient() override;
+    ~ConnectionFromClient() override = default;
 
     virtual void die() override;
 
@@ -35,7 +35,7 @@ private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
     Web::Page& page();
-    const Web::Page& page() const;
+    Web::Page const& page() const;
 
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;
     virtual void update_system_fonts(String const&, String const&) override;
@@ -61,10 +61,13 @@ private:
     virtual void set_content_filters(Vector<String> const&) override;
     virtual void set_preferred_color_scheme(Web::CSS::PreferredColorScheme const&) override;
     virtual void set_has_focus(bool) override;
+    virtual void set_is_scripting_enabled(bool) override;
 
     virtual void js_console_input(String const&) override;
     virtual void run_javascript(String const&) override;
     virtual void js_console_request_messages(i32) override;
+
+    virtual Messages::WebContentServer::GetLocalStorageEntriesResponse get_local_storage_entries() override;
 
     virtual Messages::WebContentServer::GetSelectedTextResponse get_selected_text() override;
     virtual void select_all() override;

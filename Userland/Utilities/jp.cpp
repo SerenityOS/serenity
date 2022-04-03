@@ -15,7 +15,7 @@
 #include <LibMain/Main.h>
 #include <unistd.h>
 
-static void print(const JsonValue& value, int spaces_per_indent, int indent = 0, bool use_color = true);
+static void print(JsonValue const& value, int spaces_per_indent, int indent = 0, bool use_color = true);
 static void print_indent(int indent, int spaces_per_indent)
 {
     for (int i = 0; i < indent * spaces_per_indent; ++i)
@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-void print(const JsonValue& value, int spaces_per_indent, int indent, bool use_color)
+void print(JsonValue const& value, int spaces_per_indent, int indent, bool use_color)
 {
     if (value.is_object()) {
         size_t printed_members = 0;

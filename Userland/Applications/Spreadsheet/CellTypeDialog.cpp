@@ -29,7 +29,7 @@ REGISTER_WIDGET(Spreadsheet, ConditionsView);
 
 namespace Spreadsheet {
 
-CellTypeDialog::CellTypeDialog(const Vector<Position>& positions, Sheet& sheet, GUI::Window* parent)
+CellTypeDialog::CellTypeDialog(Vector<Position> const& positions, Sheet& sheet, GUI::Window* parent)
     : GUI::Dialog(parent)
 {
     VERIFY(!positions.is_empty());
@@ -62,8 +62,8 @@ CellTypeDialog::CellTypeDialog(const Vector<Position>& positions, Sheet& sheet, 
     ok_button.on_click = [&](auto) { done(ExecOK); };
 }
 
-const Vector<String> g_horizontal_alignments { "Left", "Center", "Right" };
-const Vector<String> g_vertical_alignments { "Top", "Center", "Bottom" };
+Vector<String> const g_horizontal_alignments { "Left", "Center", "Right" };
+Vector<String> const g_vertical_alignments { "Top", "Center", "Bottom" };
 Vector<String> g_types;
 
 constexpr static CellTypeDialog::VerticalAlignment vertical_alignment_from(Gfx::TextAlignment alignment)
@@ -110,7 +110,7 @@ constexpr static CellTypeDialog::HorizontalAlignment horizontal_alignment_from(G
     return CellTypeDialog::HorizontalAlignment::Right;
 }
 
-void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& positions, Sheet& sheet)
+void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& positions, Sheet& sheet)
 {
     g_types.clear();
     for (auto& type_name : CellType::names())

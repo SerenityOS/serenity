@@ -318,8 +318,8 @@
 #cmakedefine01 OCCLUSIONS_DEBUG
 #endif
 
-#ifndef PARSER_DEBUG
-#cmakedefine01 PARSER_DEBUG
+#ifndef HTML_PARSER_DEBUG
+#cmakedefine01 HTML_PARSER_DEBUG
 #endif
 
 #ifndef PATH_DEBUG
@@ -492,4 +492,8 @@
 
 #ifndef WSSCREEN_DEBUG
 #cmakedefine01 WSSCREEN_DEBUG
+#endif
+
+#ifndef XML_PARSER_DEBUG
+#cmakedefine01 XML_PARSER_DEBUG
 #endif

@@ -16,10 +16,11 @@ set(SOURCES
     SoftCPU.cpp
     SoftFPU.cpp
     SoftMMU.cpp
+    SoftVPU.cpp
     main.cpp
 )
 
-add_compile_options(-mmmx)
+add_compile_options(-mmmx -Wno-psabi)
 
 serenity_bin(UserspaceEmulator)
 target_link_libraries(UserspaceEmulator LibX86 LibDebug LibCore LibPthread LibLine)

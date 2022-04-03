@@ -69,8 +69,10 @@ void InlineLevelIterator::exit_node_with_box_model_metrics()
 // This is similar to Layout::Node::next_in_pre_order() but will not descend into inline-block nodes.
 Layout::Node const* InlineLevelIterator::next_inline_node_in_pre_order(Layout::Node const& current, Layout::Node const* stay_within)
 {
-    if (current.first_child() && current.first_child()->is_inline() && !current.is_inline_block())
-        return current.first_child();
+    if (current.first_child() && current.first_child()->is_inline() && !current.is_inline_block()) {
+        if (!current.is_box() || !static_cast<Box const&>(current).is_out_of_flow(m_inline_formatting_context))
+            return current.first_child();
+    }
 
     Layout::Node const* node = &current;
     Layout::Node const* next = nullptr;
@@ -101,12 +103,12 @@ void InlineLevelIterator::compute_next()
         return;
     do {
         m_next_node = next_inline_node_in_pre_order(*m_next_node, &m_container);
-    } while (m_next_node && !m_next_node->is_inline());
+    } while (m_next_node && (!m_next_node->is_inline() && !m_next_node->is_out_of_flow(m_inline_formatting_context)));
 }
 
 void InlineLevelIterator::skip_to_next()
 {
-    if (m_next_node && is<Layout::NodeWithStyleAndBoxModelMetrics>(*m_next_node) && !m_next_node->is_inline_block())
+    if (m_next_node && is<Layout::NodeWithStyleAndBoxModelMetrics>(*m_next_node) && !m_next_node->is_inline_block() && !m_next_node->is_out_of_flow(m_inline_formatting_context))
         enter_node_with_box_model_metrics(static_cast<Layout::NodeWithStyleAndBoxModelMetrics const&>(*m_next_node));
 
     m_current_node = m_next_node;
@@ -121,11 +123,8 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
     if (is<Layout::TextNode>(*m_current_node)) {
         auto& text_node = static_cast<Layout::TextNode const&>(*m_current_node);
 
-        if (!m_text_node_context.has_value()) {
-            auto& line_boxes = m_formatting_state.get(m_container).line_boxes;
-            bool previous_is_empty_or_ends_in_whitespace = line_boxes.is_empty() || line_boxes.last().is_empty_or_ends_in_whitespace();
-            enter_text_node(text_node, previous_is_empty_or_ends_in_whitespace);
-        }
+        if (!m_text_node_context.has_value())
+            enter_text_node(text_node);
 
         auto chunk_opt = m_text_node_context->next_chunk;
         if (!chunk_opt.has_value()) {
@@ -140,13 +139,19 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
 
         auto& chunk = chunk_opt.value();
         float chunk_width = text_node.font().width(chunk.view) + text_node.font().glyph_spacing();
+
+        if (m_text_node_context->do_respect_linebreaks && chunk.has_breaking_newline) {
+            return Item {
+                .type = Item::Type::ForcedBreak,
+            };
+        }
+
         Item item {
             .type = Item::Type::Text,
             .node = &text_node,
             .offset_in_node = chunk.start,
             .length_in_node = chunk.length,
             .width = chunk_width,
-            .should_force_break = m_text_node_context->do_respect_linebreaks && chunk.has_breaking_newline,
             .is_collapsible_whitespace = m_text_node_context->do_collapse && chunk.is_all_whitespace,
         };
 
@@ -159,6 +164,15 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
         skip_to_next();
         return Item {
             .type = Item::Type::AbsolutelyPositionedElement,
+            .node = &node,
+        };
+    }
+
+    if (m_current_node->is_floating()) {
+        auto& node = *m_current_node;
+        skip_to_next();
+        return Item {
+            .type = Item::Type::FloatingElement,
             .node = &node,
         };
     }
@@ -208,7 +222,7 @@ Optional<InlineLevelIterator::Item> InlineLevelIterator::next(float available_wi
     return item;
 }
 
-void InlineLevelIterator::enter_text_node(Layout::TextNode const& text_node, bool previous_is_empty_or_ends_in_whitespace)
+void InlineLevelIterator::enter_text_node(Layout::TextNode const& text_node)
 {
     bool do_collapse = true;
     bool do_wrap_lines = true;
@@ -233,7 +247,7 @@ void InlineLevelIterator::enter_text_node(Layout::TextNode const& text_node, boo
     }
 
     // FIXME: The const_cast here is gross.
-    const_cast<TextNode&>(text_node).compute_text_for_rendering(do_collapse, previous_is_empty_or_ends_in_whitespace);
+    const_cast<TextNode&>(text_node).compute_text_for_rendering(do_collapse);
 
     m_text_node_context = TextNodeContext {
         .do_collapse = do_collapse,

@@ -22,7 +22,7 @@ void* operator new(size_t size)
     return ptr;
 }
 
-void* operator new(size_t size, const std::nothrow_t&) noexcept
+void* operator new(size_t size, std::nothrow_t const&) noexcept
 {
     return malloc(size);
 }
@@ -44,7 +44,7 @@ void* operator new[](size_t size)
     return ptr;
 }
 
-void* operator new[](size_t size, const std::nothrow_t&) noexcept
+void* operator new[](size_t size, std::nothrow_t const&) noexcept
 {
     return malloc(size);
 }

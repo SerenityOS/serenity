@@ -23,7 +23,7 @@ public:
     ALWAYS_INLINE u32 current_page() const { return m_current_page_index; }
     ALWAYS_INLINE void set_current_page(u32 current_page) { m_current_page_index = current_page; }
 
-    ALWAYS_INLINE const RefPtr<PDF::Document>& document() const { return m_document; }
+    ALWAYS_INLINE RefPtr<PDF::Document> const& document() const { return m_document; }
     void set_document(RefPtr<PDF::Document>);
 
     Function<void(u32 new_page)> on_page_change;

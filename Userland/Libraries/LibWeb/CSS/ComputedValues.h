@@ -16,6 +16,7 @@ class InitialValues {
 public:
     static float font_size() { return 10; }
     static int font_weight() { return 400; }
+    static CSS::FontVariant font_variant() { return CSS::FontVariant::Normal; }
     static CSS::Float float_() { return CSS::Float::None; }
     static CSS::Clear clear() { return CSS::Clear::None; }
     static CSS::Cursor cursor() { return CSS::Cursor::Auto; }
@@ -31,6 +32,7 @@ public:
     static Color color() { return Color::Black; }
     static Color background_color() { return Color::Transparent; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
+    static CSS::Visibility visibility() { return CSS::Visibility::Visible; }
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
     static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
     static CSS::ImageRendering image_rendering() { return CSS::ImageRendering::Auto; }
@@ -41,6 +43,7 @@ public:
     static CSS::PointerEvents pointer_events() { return CSS::PointerEvents::Auto; }
     static float flex_grow() { return 0.0f; }
     static float flex_shrink() { return 1.0f; }
+    static int order() { return 0; }
     static float opacity() { return 1.0f; }
     static CSS::Length border_radius() { return Length::make_px(0); }
     static Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align() { return CSS::VerticalAlign::Baseline; }
@@ -71,7 +74,12 @@ public:
 
 struct Transformation {
     CSS::TransformFunction function;
-    Vector<Variant<CSS::Length, float>> values;
+    Vector<Variant<CSS::LengthPercentage, float>> values;
+};
+
+struct TransformOrigin {
+    CSS::LengthPercentage x { Percentage(50) };
+    CSS::LengthPercentage y { Percentage(50) };
 };
 
 struct FlexBasisData {
@@ -81,13 +89,13 @@ struct FlexBasisData {
     bool is_definite() const { return type == CSS::FlexBasis::LengthPercentage; }
 };
 
-struct BoxShadowData {
+struct ShadowData {
     Color color {};
     CSS::Length offset_x { Length::make_px(0) };
     CSS::Length offset_y { Length::make_px(0) };
     CSS::Length blur_radius { Length::make_px(0) };
     CSS::Length spread_distance { Length::make_px(0) };
-    CSS::BoxShadowPlacement placement { CSS::BoxShadowPlacement::Outer };
+    CSS::ShadowPlacement placement { CSS::ShadowPlacement::Outer };
 };
 
 struct ContentData {
@@ -118,6 +126,7 @@ public:
     CSS::TextDecorationStyle text_decoration_style() const { return m_noninherited.text_decoration_style; }
     Color text_decoration_color() const { return m_noninherited.text_decoration_color; }
     CSS::TextTransform text_transform() const { return m_inherited.text_transform; }
+    Vector<ShadowData> const& text_shadow() const { return m_noninherited.text_shadow; }
     CSS::Position position() const { return m_noninherited.position; }
     CSS::WhiteSpace white_space() const { return m_inherited.white_space; }
     CSS::FlexDirection flex_direction() const { return m_noninherited.flex_direction; }
@@ -125,11 +134,13 @@ public:
     FlexBasisData const& flex_basis() const { return m_noninherited.flex_basis; }
     float flex_grow() const { return m_noninherited.flex_grow; }
     float flex_shrink() const { return m_noninherited.flex_shrink; }
+    int order() const { return m_noninherited.order; }
     CSS::AlignItems align_items() const { return m_noninherited.align_items; }
     float opacity() const { return m_noninherited.opacity; }
+    CSS::Visibility visibility() const { return m_inherited.visibility; }
     CSS::ImageRendering image_rendering() const { return m_inherited.image_rendering; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
-    Vector<BoxShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
+    Vector<ShadowData> const& box_shadow() const { return m_noninherited.box_shadow; }
     CSS::BoxSizing box_sizing() const { return m_noninherited.box_sizing; }
     Optional<CSS::LengthPercentage> const& width() const { return m_noninherited.width; }
     Optional<CSS::LengthPercentage> const& min_width() const { return m_noninherited.min_width; }
@@ -139,14 +150,14 @@ public:
     Optional<CSS::LengthPercentage> const& max_height() const { return m_noninherited.max_height; }
     Variant<CSS::VerticalAlign, CSS::LengthPercentage> const& vertical_align() const { return m_noninherited.vertical_align; }
 
-    const CSS::LengthBox& offset() const { return m_noninherited.offset; }
+    CSS::LengthBox const& inset() const { return m_noninherited.inset; }
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
     const CSS::LengthBox& padding() const { return m_noninherited.padding; }
 
-    const BorderData& border_left() const { return m_noninherited.border_left; }
-    const BorderData& border_top() const { return m_noninherited.border_top; }
-    const BorderData& border_right() const { return m_noninherited.border_right; }
-    const BorderData& border_bottom() const { return m_noninherited.border_bottom; }
+    BorderData const& border_left() const { return m_noninherited.border_left; }
+    BorderData const& border_top() const { return m_noninherited.border_top; }
+    BorderData const& border_right() const { return m_noninherited.border_right; }
+    BorderData const& border_bottom() const { return m_noninherited.border_bottom; }
 
     const CSS::LengthPercentage& border_bottom_left_radius() const { return m_noninherited.border_bottom_left_radius; }
     const CSS::LengthPercentage& border_bottom_right_radius() const { return m_noninherited.border_bottom_right_radius; }
@@ -167,9 +178,11 @@ public:
     Optional<LengthPercentage> const& stroke_width() const { return m_inherited.stroke_width; }
 
     Vector<CSS::Transformation> transformations() const { return m_noninherited.transformations; }
+    CSS::TransformOrigin transform_origin() const { return m_noninherited.transform_origin; }
 
     float font_size() const { return m_inherited.font_size; }
     int font_weight() const { return m_inherited.font_weight; }
+    CSS::FontVariant font_variant() const { return m_inherited.font_variant; }
 
     ComputedValues clone_inherited_values() const
     {
@@ -182,6 +195,7 @@ protected:
     struct {
         float font_size { InitialValues::font_size() };
         int font_weight { InitialValues::font_weight() };
+        CSS::FontVariant font_variant { InitialValues::font_variant() };
         Color color { InitialValues::color() };
         CSS::Cursor cursor { InitialValues::cursor() };
         CSS::ImageRendering image_rendering { InitialValues::image_rendering() };
@@ -191,6 +205,7 @@ protected:
         CSS::TextTransform text_transform { InitialValues::text_transform() };
         CSS::WhiteSpace white_space { InitialValues::white_space() };
         CSS::ListStyleType list_style_type { InitialValues::list_style_type() };
+        CSS::Visibility visibility { InitialValues::visibility() };
 
         Optional<Color> fill;
         Optional<Color> stroke;
@@ -206,6 +221,7 @@ protected:
         CSS::LengthPercentage text_decoration_thickness { InitialValues::text_decoration_thickness() };
         CSS::TextDecorationStyle text_decoration_style { InitialValues::text_decoration_style() };
         Color text_decoration_color { InitialValues::color() };
+        Vector<ShadowData> text_shadow {};
         CSS::Position position { InitialValues::position() };
         Optional<CSS::LengthPercentage> width;
         Optional<CSS::LengthPercentage> min_width;
@@ -213,7 +229,7 @@ protected:
         Optional<CSS::LengthPercentage> height;
         Optional<CSS::LengthPercentage> min_height;
         Optional<CSS::LengthPercentage> max_height;
-        CSS::LengthBox offset;
+        CSS::LengthBox inset;
         CSS::LengthBox margin;
         CSS::LengthBox padding;
         BorderData border_left;
@@ -231,13 +247,15 @@ protected:
         CSS::FlexBasisData flex_basis {};
         float flex_grow { InitialValues::flex_grow() };
         float flex_shrink { InitialValues::flex_shrink() };
+        int order { InitialValues::order() };
         CSS::AlignItems align_items { InitialValues::align_items() };
         CSS::JustifyContent justify_content { InitialValues::justify_content() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
         float opacity { InitialValues::opacity() };
-        Vector<BoxShadowData> box_shadow {};
+        Vector<ShadowData> box_shadow {};
         Vector<CSS::Transformation> transformations {};
+        CSS::TransformOrigin transform_origin {};
         CSS::BoxSizing box_sizing { InitialValues::box_sizing() };
         CSS::ContentData content;
         Variant<CSS::VerticalAlign, CSS::LengthPercentage> vertical_align { InitialValues::vertical_align() };
@@ -251,12 +269,13 @@ class MutableComputedValues final : public ComputedValues {
 public:
     void set_font_size(float font_size) { m_inherited.font_size = font_size; }
     void set_font_weight(int font_weight) { m_inherited.font_weight = font_weight; }
-    void set_color(const Color& color) { m_inherited.color = color; }
+    void set_font_variant(CSS::FontVariant font_variant) { m_inherited.font_variant = font_variant; }
+    void set_color(Color const& color) { m_inherited.color = color; }
     void set_content(ContentData const& content) { m_noninherited.content = content; }
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
     void set_image_rendering(CSS::ImageRendering value) { m_inherited.image_rendering = value; }
     void set_pointer_events(CSS::PointerEvents value) { m_inherited.pointer_events = value; }
-    void set_background_color(const Color& color) { m_noninherited.background_color = color; }
+    void set_background_color(Color const& color) { m_noninherited.background_color = color; }
     void set_background_layers(Vector<BackgroundLayerData>&& layers) { m_noninherited.background_layers = move(layers); }
     void set_float(CSS::Float value) { m_noninherited.float_ = value; }
     void set_clear(CSS::Clear value) { m_noninherited.clear = value; }
@@ -268,6 +287,7 @@ public:
     void set_text_decoration_style(CSS::TextDecorationStyle value) { m_noninherited.text_decoration_style = value; }
     void set_text_decoration_color(Color value) { m_noninherited.text_decoration_color = value; }
     void set_text_transform(CSS::TextTransform value) { m_inherited.text_transform = value; }
+    void set_text_shadow(Vector<ShadowData>&& value) { m_noninherited.text_shadow = move(value); }
     void set_position(CSS::Position position) { m_noninherited.position = position; }
     void set_white_space(CSS::WhiteSpace value) { m_inherited.white_space = value; }
     void set_width(CSS::LengthPercentage const& width) { m_noninherited.width = width; }
@@ -276,7 +296,7 @@ public:
     void set_height(CSS::LengthPercentage const& height) { m_noninherited.height = height; }
     void set_min_height(CSS::LengthPercentage const& height) { m_noninherited.min_height = height; }
     void set_max_height(CSS::LengthPercentage const& height) { m_noninherited.max_height = height; }
-    void set_offset(const CSS::LengthBox& offset) { m_noninherited.offset = offset; }
+    void set_inset(CSS::LengthBox const& inset) { m_noninherited.inset = inset; }
     void set_margin(const CSS::LengthBox& margin) { m_noninherited.margin = margin; }
     void set_padding(const CSS::LengthBox& padding) { m_noninherited.padding = padding; }
     void set_overflow_x(CSS::Overflow value) { m_noninherited.overflow_x = value; }
@@ -296,13 +316,16 @@ public:
     void set_flex_basis(FlexBasisData value) { m_noninherited.flex_basis = value; }
     void set_flex_grow(float value) { m_noninherited.flex_grow = value; }
     void set_flex_shrink(float value) { m_noninherited.flex_shrink = value; }
+    void set_order(int value) { m_noninherited.order = value; }
     void set_align_items(CSS::AlignItems value) { m_noninherited.align_items = value; }
     void set_opacity(float value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
-    void set_box_shadow(Vector<BoxShadowData>&& value) { m_noninherited.box_shadow = move(value); }
+    void set_box_shadow(Vector<ShadowData>&& value) { m_noninherited.box_shadow = move(value); }
     void set_transformations(Vector<CSS::Transformation> value) { m_noninherited.transformations = move(value); }
+    void set_transform_origin(CSS::TransformOrigin value) { m_noninherited.transform_origin = value; }
     void set_box_sizing(CSS::BoxSizing value) { m_noninherited.box_sizing = value; }
     void set_vertical_align(Variant<CSS::VerticalAlign, CSS::LengthPercentage> value) { m_noninherited.vertical_align = value; }
+    void set_visibility(CSS::Visibility value) { m_inherited.visibility = value; }
 
     void set_fill(Color value) { m_inherited.fill = value; }
     void set_stroke(Color value) { m_inherited.stroke = value; }

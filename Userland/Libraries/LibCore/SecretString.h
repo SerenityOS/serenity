@@ -21,7 +21,7 @@ public:
 
     [[nodiscard]] bool is_empty() const { return m_secure_buffer.is_empty(); }
     [[nodiscard]] size_t length() const { return m_secure_buffer.size(); }
-    [[nodiscard]] char const* characters() const { return reinterpret_cast<const char*>(m_secure_buffer.data()); }
+    [[nodiscard]] char const* characters() const { return reinterpret_cast<char const*>(m_secure_buffer.data()); }
     [[nodiscard]] StringView view() const { return { characters(), length() }; }
 
     SecretString() = default;

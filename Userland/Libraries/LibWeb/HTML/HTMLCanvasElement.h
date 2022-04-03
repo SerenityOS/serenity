@@ -19,7 +19,7 @@ public:
     HTMLCanvasElement(DOM::Document&, DOM::QualifiedName);
     virtual ~HTMLCanvasElement() override;
 
-    const Gfx::Bitmap* bitmap() const { return m_bitmap; }
+    Gfx::Bitmap const* bitmap() const { return m_bitmap; }
     Gfx::Bitmap* bitmap() { return m_bitmap; }
     bool create_bitmap();
 
@@ -31,7 +31,7 @@ public:
     void set_width(unsigned);
     void set_height(unsigned);
 
-    String to_data_url(const String& type, Optional<double> quality) const;
+    String to_data_url(String const& type, Optional<double> quality) const;
 
 private:
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;

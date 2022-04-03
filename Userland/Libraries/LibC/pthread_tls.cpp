@@ -68,7 +68,7 @@ void* __pthread_getspecific(pthread_key_t key)
 
 void* pthread_getspecific(pthread_key_t) __attribute__((weak, alias("__pthread_getspecific")));
 
-int __pthread_setspecific(pthread_key_t key, const void* value)
+int __pthread_setspecific(pthread_key_t key, void const* value)
 {
     if (key < 0)
         return EINVAL;
@@ -79,7 +79,7 @@ int __pthread_setspecific(pthread_key_t key, const void* value)
     return 0;
 }
 
-int pthread_setspecific(pthread_key_t, const void*) __attribute__((weak, alias("__pthread_setspecific")));
+int pthread_setspecific(pthread_key_t, void const*) __attribute__((weak, alias("__pthread_setspecific")));
 
 void __pthread_key_destroy_for_current_thread()
 {

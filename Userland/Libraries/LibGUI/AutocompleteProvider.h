@@ -45,7 +45,7 @@ public:
         size_t line { 0 };
         size_t column { 0 };
 
-        bool operator==(const ProjectLocation&) const;
+        bool operator==(ProjectLocation const&) const;
     };
 
     enum class DeclarationType {
@@ -64,35 +64,55 @@ public:
         DeclarationType type;
         String scope;
 
-        bool operator==(const Declaration&) const;
+        bool operator==(Declaration const&) const;
     };
 
     virtual void provide_completions(Function<void(Vector<Entry>)>) = 0;
 
+#define FOR_EACH_SEMANTIC_TYPE        \
+    __SEMANTIC(Unknown)               \
+    __SEMANTIC(Regular)               \
+    __SEMANTIC(Keyword)               \
+    __SEMANTIC(Type)                  \
+    __SEMANTIC(Identifier)            \
+    __SEMANTIC(String)                \
+    __SEMANTIC(Number)                \
+    __SEMANTIC(IncludePath)           \
+    __SEMANTIC(PreprocessorStatement) \
+    __SEMANTIC(Comment)               \
+    __SEMANTIC(Whitespace)            \
+    __SEMANTIC(Function)              \
+    __SEMANTIC(Variable)              \
+    __SEMANTIC(CustomType)            \
+    __SEMANTIC(Namespace)             \
+    __SEMANTIC(Member)                \
+    __SEMANTIC(Parameter)             \
+    __SEMANTIC(PreprocessorMacro)
+
     struct TokenInfo {
+
         enum class SemanticType : u32 {
-            Unknown,
-            Regular,
-            Keyword,
-            Type,
-            Identifier,
-            String,
-            Number,
-            IncludePath,
-            PreprocessorStatement,
-            Comment,
-            Whitespace,
-            Function,
-            Variable,
-            CustomType,
-            Namespace,
-            Member,
-            Parameter,
+#define __SEMANTIC(x) x,
+            FOR_EACH_SEMANTIC_TYPE
+#undef __SEMANTIC
+
         } type { SemanticType::Unknown };
         size_t start_line { 0 };
         size_t start_column { 0 };
         size_t end_line { 0 };
         size_t end_column { 0 };
+
+        static constexpr char const* type_to_string(SemanticType t)
+        {
+            switch (t) {
+#define __SEMANTIC(x)     \
+    case SemanticType::x: \
+        return #x;
+                FOR_EACH_SEMANTIC_TYPE
+#undef __SEMANTIC
+            }
+            VERIFY_NOT_REACHED();
+        };
     };
 
     void attach(TextEditor& editor)

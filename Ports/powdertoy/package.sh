@@ -8,6 +8,7 @@ files="https://github.com/The-Powder-Toy/The-Powder-Toy/archive/refs/tags/v${ver
 auth_type=sha256
 workdir="The-Powder-Toy-${version}"
 launcher_name="The Powder Toy"
+icon_file="resources/icon.ico"
 launcher_category="Games"
 launcher_command="/usr/local/bin/powder"
 launcher_run_in_terminal=false

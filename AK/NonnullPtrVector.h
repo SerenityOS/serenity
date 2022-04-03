@@ -22,8 +22,8 @@ public:
         : Base(static_cast<Base&&>(other))
     {
     }
-    NonnullPtrVector(const Vector<PtrType>& other)
-        : Base(static_cast<const Base&>(other))
+    NonnullPtrVector(Vector<PtrType> const& other)
+        : Base(static_cast<Base const&>(other))
     {
     }
 
@@ -48,7 +48,7 @@ public:
     ALWAYS_INLINE constexpr auto in_reverse() const { return ReverseWrapper::in_reverse(*this); }
 
     ALWAYS_INLINE PtrType& ptr_at(size_t index) { return Base::at(index); }
-    ALWAYS_INLINE const PtrType& ptr_at(size_t index) const { return Base::at(index); }
+    ALWAYS_INLINE PtrType const& ptr_at(size_t index) const { return Base::at(index); }
 
     ALWAYS_INLINE T& at(size_t index) { return *Base::at(index); }
     ALWAYS_INLINE const T& at(size_t index) const { return *Base::at(index); }

@@ -53,7 +53,7 @@ void HTMLLinkElement::inserted()
     }
 }
 
-void HTMLLinkElement::parse_attribute(const FlyString& name, const String& value)
+void HTMLLinkElement::parse_attribute(FlyString const& name, String const& value)
 {
     if (name == HTML::AttributeNames::rel) {
         m_relationship = 0;
@@ -97,7 +97,7 @@ void HTMLLinkElement::resource_did_load()
         }
     }
 
-    auto sheet = parse_css(CSS::ParsingContext(document(), resource()->url()), resource()->encoded_data());
+    auto sheet = parse_css_stylesheet(CSS::ParsingContext(document(), resource()->url()), resource()->encoded_data());
     if (!sheet) {
         dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Failed to parse stylesheet: {}", resource()->url());
         return;

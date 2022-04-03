@@ -76,7 +76,7 @@ public:
     static ErrorOr<void, CopyError> copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
 
     static String real_path_for(String const& filename);
-    static String read_link(String const& link_path);
+    static ErrorOr<String> read_link(String const& link_path);
     static ErrorOr<void> link_file(String const& dst_path, String const& src_path);
 
     struct RemoveError : public Error {

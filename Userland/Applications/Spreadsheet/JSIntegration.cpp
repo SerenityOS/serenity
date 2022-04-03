@@ -186,7 +186,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
     if (!position.has_value())
         return vm.throw_completion<JS::TypeError>(global_object, "Invalid cell name");
 
-    const auto* cell = sheet_object->m_sheet.at(position.value());
+    auto const* cell = sheet_object->m_sheet.at(position.value());
     if (!cell)
         return JS::js_undefined();
 

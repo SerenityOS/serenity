@@ -69,9 +69,9 @@ public:
     virtual Optional<StyleProperty> property(PropertyID) const override;
     virtual bool set_property(PropertyID, StringView css_text) override;
 
-    const Vector<StyleProperty>& properties() const { return m_properties; }
-    const HashMap<String, StyleProperty>& custom_properties() const { return m_custom_properties; }
-    Optional<StyleProperty> custom_property(const String& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
+    Vector<StyleProperty> const& properties() const { return m_properties; }
+    HashMap<String, StyleProperty> const& custom_properties() const { return m_custom_properties; }
+    Optional<StyleProperty> custom_property(String const& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
     size_t custom_property_count() const { return m_custom_properties.size(); }
 
     virtual String serialized() const final override;
@@ -86,16 +86,14 @@ private:
 
 class ElementInlineCSSStyleDeclaration final : public PropertyOwningCSSStyleDeclaration {
 public:
-    static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element& element) { return adopt_ref(*new ElementInlineCSSStyleDeclaration(element)); }
-    static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create_and_take_properties_from(DOM::Element& element, PropertyOwningCSSStyleDeclaration& declaration) { return adopt_ref(*new ElementInlineCSSStyleDeclaration(element, declaration)); }
+    static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element& element, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties) { return adopt_ref(*new ElementInlineCSSStyleDeclaration(element, move(properties), move(custom_properties))); }
     virtual ~ElementInlineCSSStyleDeclaration() override = default;
 
     DOM::Element* element() { return m_element.ptr(); }
     const DOM::Element* element() const { return m_element.ptr(); }
 
 private:
-    explicit ElementInlineCSSStyleDeclaration(DOM::Element&);
-    explicit ElementInlineCSSStyleDeclaration(DOM::Element&, PropertyOwningCSSStyleDeclaration&);
+    explicit ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
 
     WeakPtr<DOM::Element> m_element;
 };

@@ -16,7 +16,7 @@ class Text final : public CharacterData {
 public:
     using WrapperType = Bindings::TextWrapper;
 
-    explicit Text(Document&, const String&);
+    explicit Text(Document&, String const&);
     virtual ~Text() override = default;
 
     static NonnullRefPtr<Text> create_with_global_object(Bindings::WindowObject& window, String const& data);
@@ -30,10 +30,15 @@ public:
     void set_owner_input_element(Badge<HTML::HTMLInputElement>, HTML::HTMLInputElement&);
     HTML::HTMLInputElement* owner_input_element() { return m_owner_input_element; }
 
+    ExceptionOr<NonnullRefPtr<Text>> split_text(size_t offset);
+
 private:
     WeakPtr<HTML::HTMLInputElement> m_owner_input_element;
 
     bool m_always_editable { false };
 };
+
+template<>
+inline bool Node::fast_is<Text>() const { return is_text(); }
 
 }

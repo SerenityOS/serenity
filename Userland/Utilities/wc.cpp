@@ -27,7 +27,7 @@ bool g_output_line = false;
 bool g_output_byte = false;
 bool g_output_word = false;
 
-static void wc_out(const Count& count)
+static void wc_out(Count const& count)
 {
     if (g_output_line)
         out("{:7} ", count.lines);
@@ -39,7 +39,7 @@ static void wc_out(const Count& count)
     outln("{:>14}", count.name);
 }
 
-static Count get_count(const String& file_specifier)
+static Count get_count(String const& file_specifier)
 {
     Count count;
     FILE* file_pointer = nullptr;
@@ -74,7 +74,7 @@ static Count get_count(const String& file_specifier)
     return count;
 }
 
-static Count get_total_count(const Vector<Count>& counts)
+static Count get_total_count(Vector<Count> const& counts)
 {
     Count total_count { "total" };
     for (auto& count : counts) {
@@ -90,7 +90,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    Vector<const char*> file_specifiers;
+    Vector<char const*> file_specifiers;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(g_output_line, "Output line count", "lines", 'l');
@@ -103,7 +103,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         g_output_line = g_output_byte = g_output_word = true;
 
     Vector<Count> counts;
-    for (const auto& file_specifier : file_specifiers)
+    for (auto const& file_specifier : file_specifiers)
         counts.append(get_count(file_specifier));
 
     TRY(Core::System::pledge("stdio"));
@@ -113,7 +113,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     else if (file_specifiers.size() > 1)
         counts.append(get_total_count(counts));
 
-    for (const auto& count : counts) {
+    for (auto const& count : counts) {
         if (count.exists)
             wc_out(count);
     }

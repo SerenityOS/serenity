@@ -20,7 +20,7 @@ class ConnectionFromClient;
 class EventLoop {
 public:
     EventLoop();
-    virtual ~EventLoop();
+    virtual ~EventLoop() = default;
 
     int exec() { return m_event_loop.exec(); }
 

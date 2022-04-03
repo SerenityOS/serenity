@@ -141,7 +141,7 @@ static void run_command(String command, bool keep_open)
     }
     endpwent();
 
-    const char* args[5] = { shell.characters(), nullptr, nullptr, nullptr, nullptr };
+    char const* args[5] = { shell.characters(), nullptr, nullptr, nullptr, nullptr };
     if (!command.is_empty()) {
         int arg_index = 1;
         if (keep_open)
@@ -149,7 +149,7 @@ static void run_command(String command, bool keep_open)
         args[arg_index++] = "-c";
         args[arg_index++] = command.characters();
     }
-    const char* envs[] = { "TERM=xterm", "PAGER=more", "PATH=/usr/local/bin:/usr/bin:/bin", nullptr };
+    char const* envs[] = { "TERM=xterm", "PAGER=more", "PATH=/usr/local/bin:/usr/bin:/bin", nullptr };
     int rc = execve(shell.characters(), const_cast<char**>(args), const_cast<char**>(envs));
     if (rc < 0) {
         perror("execve");
@@ -247,7 +247,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domain("Terminal");
 
-    const char* command_to_execute = nullptr;
+    char const* command_to_execute = nullptr;
     bool keep_open = false;
 
     Core::ArgsParser args_parser;

@@ -14,7 +14,11 @@
 
 namespace Web::HTML {
 
-class HTMLSelectElement final : public FormAssociatedElement {
+class HTMLSelectElement final
+    : public HTMLElement
+    , public FormAssociatedElement {
+    FORM_ASSOCIATED_ELEMENT(HTMLElement, HTMLSelectElement)
+
 public:
     using WrapperType = Bindings::HTMLSelectElementWrapper;
 
@@ -23,10 +27,16 @@ public:
 
     RefPtr<HTMLOptionsCollection> const& options();
 
+    DOM::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});
+
     int selected_index() const;
     void set_selected_index(int);
 
     NonnullRefPtrVector<HTMLOptionElement> list_of_options() const;
+
+    // ^EventTarget
+    // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-select-element
+    virtual bool is_focusable() const override { return true; }
 
     // ^FormAssociatedElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-listed

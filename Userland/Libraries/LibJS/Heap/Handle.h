@@ -25,7 +25,7 @@ public:
     ~HandleImpl();
 
     Cell* cell() { return m_cell; }
-    const Cell* cell() const { return m_cell; }
+    Cell const* cell() const { return m_cell; }
 
 private:
     template<class T>
@@ -70,6 +70,8 @@ private:
 template<class T>
 inline Handle<T> make_handle(T* cell)
 {
+    if (!cell)
+        return Handle<T> {};
     return Handle<T>::create(cell);
 }
 

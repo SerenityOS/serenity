@@ -129,7 +129,7 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     // parallelisation as we could also end up with different filter modes per pixel.
 
     // Note: scale_factor approximates texels per pixel. This means a scale factor less than 1 indicates texture magnification.
-    if (scale_factor[0] < 1)
+    if (scale_factor[0] <= 1.f)
         return sample_2d_lod(uv, expand4(base_level), m_config.texture_mag_filter);
 
     if (m_config.mipmap_filter == MipMapFilter::None)

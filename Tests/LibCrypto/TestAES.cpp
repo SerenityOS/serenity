@@ -10,7 +10,7 @@
 #include <LibTest/TestCase.h>
 #include <cstring>
 
-static ReadonlyBytes operator""_b(const char* string, size_t length)
+static ReadonlyBytes operator""_b(char const* string, size_t length)
 {
     return ReadonlyBytes(string, length);
 }

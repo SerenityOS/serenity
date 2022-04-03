@@ -379,16 +379,7 @@ void GLContext::gl_end()
         VERIFY_NOT_REACHED();
     }
 
-    // Set up normals transform by taking the upper left 3x3 elements from the model view matrix
-    // See section 2.11.3 of the OpenGL 1.5 spec
-    auto const& mv_elements = m_model_view_matrix.elements();
-    auto const model_view_transposed = FloatMatrix3x3(
-        mv_elements[0][0], mv_elements[1][0], mv_elements[2][0],
-        mv_elements[0][1], mv_elements[1][1], mv_elements[2][1],
-        mv_elements[0][2], mv_elements[1][2], mv_elements[2][2]);
-    auto const& normal_transform = model_view_transposed.inverse();
-
-    m_rasterizer.draw_primitives(primitive_type, m_model_view_matrix, normal_transform, m_projection_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
+    m_rasterizer.draw_primitives(primitive_type, m_model_view_matrix, m_projection_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
 
     m_vertex_list.clear_with_capacity();
 }
@@ -480,7 +471,7 @@ void GLContext::gl_load_identity()
     *m_current_matrix = FloatMatrix4x4::identity();
 }
 
-void GLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
+void GLContext::gl_load_matrix(FloatMatrix4x4 const& matrix)
 {
     APPEND_TO_CALL_LIST_WITH_ARG_AND_RETURN_IF_NEEDED(gl_load_matrix, matrix);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
@@ -868,7 +859,7 @@ void GLContext::gl_gen_textures(GLsizei n, GLuint* textures)
     }
 }
 
-void GLContext::gl_delete_textures(GLsizei n, const GLuint* textures)
+void GLContext::gl_delete_textures(GLsizei n, GLuint const* textures)
 {
     RETURN_WITH_ERROR_IF(n < 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
@@ -1079,8 +1070,7 @@ void GLContext::invoke_list(size_t list_index)
     for (auto& entry : listing.entries) {
         entry.function.visit([&](auto& function) {
             entry.arguments.visit([&](auto& arguments) {
-                auto apply = [&]<typename... Args>(Args && ... args)
-                {
+                auto apply = [&]<typename... Args>(Args&&... args) {
                     if constexpr (requires { (this->*function)(forward<Args>(args)...); })
                         (this->*function)(forward<Args>(args)...);
                 };
@@ -1996,7 +1986,7 @@ void GLContext::gl_client_active_texture(GLenum target)
     m_client_active_texture = target - GL_TEXTURE0;
 }
 
-void GLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
+void GLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(!(size == 2 || size == 3 || size == 4), GL_INVALID_VALUE);
@@ -2006,7 +1996,7 @@ void GLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const
     m_client_vertex_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
 }
 
-void GLContext::gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
+void GLContext::gl_color_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(!(size == 3 || size == 4), GL_INVALID_VALUE);
@@ -2024,7 +2014,7 @@ void GLContext::gl_color_pointer(GLint size, GLenum type, GLsizei stride, const 
     m_client_color_pointer = { .size = size, .type = type, .stride = stride, .pointer = pointer };
 }
 
-void GLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
+void GLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, void const* pointer)
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(!(size == 1 || size == 2 || size == 3 || size == 4), GL_INVALID_VALUE);
@@ -2101,32 +2091,32 @@ void GLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
     for (int i = first; i < last; i++) {
         if (m_client_side_color_array_enabled) {
             float color[4] { 0, 0, 0, 1 };
-            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
+            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color);
             gl_color(color[0], color[1], color[2], color[3]);
         }
 
         for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
             if (m_client_side_texture_coord_array_enabled[t]) {
                 float tex_coords[4] { 0, 0, 0, 0 };
-                read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords, false);
+                read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords);
                 gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
             }
         }
 
         if (m_client_side_normal_array_enabled) {
             float normal[3];
-            read_from_vertex_attribute_pointer(m_client_normal_pointer, i, normal, false);
+            read_from_vertex_attribute_pointer(m_client_normal_pointer, i, normal);
             gl_normal(normal[0], normal[1], normal[2]);
         }
 
         float vertex[4] { 0, 0, 0, 1 };
-        read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex, false);
+        read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
         gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
     }
     gl_end();
 }
 
-void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices)
+void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, void const* indices)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_elements, mode, count, type, indices);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
@@ -2156,44 +2146,44 @@ void GLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const 
         int i = 0;
         switch (type) {
         case GL_UNSIGNED_BYTE:
-            i = reinterpret_cast<const GLubyte*>(indices)[index];
+            i = reinterpret_cast<GLubyte const*>(indices)[index];
             break;
         case GL_UNSIGNED_SHORT:
-            i = reinterpret_cast<const GLushort*>(indices)[index];
+            i = reinterpret_cast<GLushort const*>(indices)[index];
             break;
         case GL_UNSIGNED_INT:
-            i = reinterpret_cast<const GLuint*>(indices)[index];
+            i = reinterpret_cast<GLuint const*>(indices)[index];
             break;
         }
 
         if (m_client_side_color_array_enabled) {
             float color[4] { 0, 0, 0, 1 };
-            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
+            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color);
             gl_color(color[0], color[1], color[2], color[3]);
         }
 
         for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
             if (m_client_side_texture_coord_array_enabled[t]) {
                 float tex_coords[4] { 0, 0, 0, 0 };
-                read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords, false);
+                read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords);
                 gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
             }
         }
 
         if (m_client_side_normal_array_enabled) {
             float normal[3];
-            read_from_vertex_attribute_pointer(m_client_normal_pointer, i, normal, false);
+            read_from_vertex_attribute_pointer(m_client_normal_pointer, i, normal);
             gl_normal(normal[0], normal[1], normal[2]);
         }
 
         float vertex[4] { 0, 0, 0, 1 };
-        read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex, false);
+        read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
         gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
     }
     gl_end();
 }
 
-void GLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const void* data)
+void GLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLenum type, void const* data)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_pixels, width, height, format, type, data);
 
@@ -2342,9 +2332,10 @@ void GLContext::gl_depth_func(GLenum func)
 }
 
 // General helper function to read arbitrary vertex attribute data into a float array
-void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& attrib, int index, float* elements, bool normalize)
+void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& attrib, int index, float* elements)
 {
-    auto byte_ptr = reinterpret_cast<const char*>(attrib.pointer);
+    auto byte_ptr = reinterpret_cast<char const*>(attrib.pointer);
+    auto normalize = attrib.normalize;
     size_t stride = attrib.stride;
 
     switch (attrib.type) {
@@ -2353,7 +2344,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLbyte) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLbyte*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLbyte const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0x80;
         }
@@ -2364,7 +2355,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLubyte) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLubyte*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLubyte const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0xff;
         }
@@ -2375,7 +2366,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLshort) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLshort*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLshort const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0x8000;
         }
@@ -2386,7 +2377,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLushort) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLushort*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLushort const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0xffff;
         }
@@ -2397,7 +2388,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLint) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLint*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLint const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0x80000000;
         }
@@ -2408,7 +2399,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLuint) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++) {
-            elements[i] = *(reinterpret_cast<const GLuint*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLuint const*>(byte_ptr + stride * index) + i);
             if (normalize)
                 elements[i] /= 0xffffffff;
         }
@@ -2419,7 +2410,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLfloat) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++)
-            elements[i] = *(reinterpret_cast<const GLfloat*>(byte_ptr + stride * index) + i);
+            elements[i] = *(reinterpret_cast<GLfloat const*>(byte_ptr + stride * index) + i);
         break;
     }
     case GL_DOUBLE: {
@@ -2427,7 +2418,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
             stride = sizeof(GLdouble) * attrib.size;
 
         for (int i = 0; i < attrib.size; i++)
-            elements[i] = static_cast<float>(*(reinterpret_cast<const GLdouble*>(byte_ptr + stride * index) + i));
+            elements[i] = static_cast<float>(*(reinterpret_cast<GLdouble const*>(byte_ptr + stride * index) + i));
         break;
     }
     }
@@ -2724,36 +2715,38 @@ void GLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GL
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_light_model, pname, x, y, z, w);
 
-    RETURN_WITH_ERROR_IF(pname != GL_LIGHT_MODEL_LOCAL_VIEWER
-            && pname != GL_LIGHT_MODEL_TWO_SIDE
-            && pname != GL_LIGHT_MODEL_AMBIENT,
+    RETURN_WITH_ERROR_IF(pname != GL_LIGHT_MODEL_AMBIENT
+            && pname != GL_LIGHT_MODEL_COLOR_CONTROL
+            && pname != GL_LIGHT_MODEL_LOCAL_VIEWER
+            && pname != GL_LIGHT_MODEL_TWO_SIDE,
         GL_INVALID_ENUM);
 
     auto lighting_params = m_rasterizer.light_model();
-    bool update_lighting_model = false;
 
     switch (pname) {
     case GL_LIGHT_MODEL_AMBIENT:
         lighting_params.scene_ambient_color = { x, y, z, w };
-        update_lighting_model = true;
         break;
-    case GL_LIGHT_MODEL_TWO_SIDE:
-        VERIFY(y == 0.0f && z == 0.0f && w == 0.0f);
-        lighting_params.two_sided_lighting = x;
-        update_lighting_model = true;
+    case GL_LIGHT_MODEL_COLOR_CONTROL: {
+        GLenum color_control = static_cast<GLenum>(x);
+        RETURN_WITH_ERROR_IF(color_control != GL_SINGLE_COLOR && color_control != GL_SEPARATE_SPECULAR_COLOR, GL_INVALID_ENUM);
+        lighting_params.color_control = (color_control == GL_SINGLE_COLOR) ? SoftGPU::ColorControl::SingleColor : SoftGPU::ColorControl::SeparateSpecularColor;
         break;
+    }
     case GL_LIGHT_MODEL_LOCAL_VIEWER:
         // 0 means the viewer is at infinity
         // 1 means they're in local (eye) space
         lighting_params.viewer_at_infinity = (x != 1.0f);
-        update_lighting_model = true;
+        break;
+    case GL_LIGHT_MODEL_TWO_SIDE:
+        VERIFY(y == 0.0f && z == 0.0f && w == 0.0f);
+        lighting_params.two_sided_lighting = x;
         break;
     default:
         VERIFY_NOT_REACHED();
     }
 
-    if (update_lighting_model)
-        m_rasterizer.set_light_model_params(lighting_params);
+    m_rasterizer.set_light_model_params(lighting_params);
 }
 
 void GLContext::gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap)

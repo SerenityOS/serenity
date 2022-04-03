@@ -44,7 +44,7 @@ enum class AHCIResetMode {
 class CommandLine {
 
 public:
-    static void early_initialize(const char* cmd_line);
+    static void early_initialize(char const* cmd_line);
     static void initialize();
     static bool was_initialized();
 
@@ -96,13 +96,13 @@ public:
 private:
     CommandLine(StringView);
 
-    void add_arguments(const Vector<StringView>& args);
+    void add_arguments(Vector<StringView> const& args);
     static NonnullOwnPtr<KString> build_commandline(StringView cmdline_from_bootloader);
 
     NonnullOwnPtr<KString> m_string;
     HashMap<StringView, StringView> m_params;
 };
 
-const CommandLine& kernel_command_line();
+CommandLine const& kernel_command_line();
 
 }

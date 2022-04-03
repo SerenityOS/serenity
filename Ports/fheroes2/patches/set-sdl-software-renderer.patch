@@ -1,0 +1,17 @@
+diff --git a/src/engine/screen.cpp b/src/engine/screen.cpp
+index 6083cb82..844ffb72 100644
+--- a/src/engine/screen.cpp
++++ b/src/engine/screen.cpp
+@@ -1003,10 +1003,10 @@ namespace
+         int renderFlags() const
+         {
+             if ( _isVSyncEnabled ) {
+-                return ( SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC );
++                return ( SDL_RENDERER_SOFTWARE | SDL_RENDERER_PRESENTVSYNC );
+             }
+ 
+-            return SDL_RENDERER_ACCELERATED;
++            return SDL_RENDERER_SOFTWARE;
+         }
+ 
+         void _createPalette()

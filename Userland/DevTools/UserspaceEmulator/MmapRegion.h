@@ -51,7 +51,7 @@ public:
     MallocRegionMetadata* malloc_metadata() { return m_malloc_metadata; }
     void set_malloc_metadata(Badge<MallocTracer>, NonnullOwnPtr<MallocRegionMetadata> metadata) { m_malloc_metadata = move(metadata); }
 
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
     String lib_name() const
     {
         if (m_name.contains("Loader.so"sv))

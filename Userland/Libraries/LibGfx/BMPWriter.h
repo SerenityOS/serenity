@@ -27,7 +27,7 @@ public:
         V4 = 108,
     };
 
-    ByteBuffer dump(const RefPtr<Bitmap>, DibHeader dib_header = DibHeader::V4);
+    ByteBuffer dump(RefPtr<Bitmap> const, DibHeader dib_header = DibHeader::V4);
 
     inline void set_compression(Compression compression) { m_compression = compression; }
 

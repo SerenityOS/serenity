@@ -58,7 +58,7 @@ public:
     virtual int integer() const = 0;
     virtual String string() const = 0;
     virtual Type type() const = 0;
-    virtual ~Expression() { }
+    virtual ~Expression() = default;
 };
 
 class ValueExpression : public Expression {
@@ -75,7 +75,7 @@ public:
     {
     }
 
-    virtual ~ValueExpression() { }
+    virtual ~ValueExpression() {};
 
 private:
     virtual bool truth() const override
@@ -388,7 +388,7 @@ private:
 
         VERIFY_NOT_REACHED();
     }
-    static auto safe_substring(const String& str, int start, int length)
+    static auto safe_substring(String const& str, int start, int length)
     {
         if (start < 1 || (size_t)start > str.length())
             fail("Index out of range");

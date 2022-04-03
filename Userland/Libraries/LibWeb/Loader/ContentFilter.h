@@ -16,7 +16,7 @@ public:
     static ContentFilter& the();
 
     bool is_filtered(const AK::URL&) const;
-    void add_pattern(const String&);
+    void add_pattern(String const&);
 
 private:
     ContentFilter();

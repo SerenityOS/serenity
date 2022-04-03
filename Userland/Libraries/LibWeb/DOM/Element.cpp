@@ -27,6 +27,7 @@
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/BlockContainer.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/InlineNode.h>
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/TableBox.h>
@@ -50,7 +51,7 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
 Element::~Element() = default;
 
 // https://dom.spec.whatwg.org/#dom-element-getattribute
-String Element::get_attribute(const FlyString& name) const
+String Element::get_attribute(FlyString const& name) const
 {
     // 1. Let attr be the result of getting an attribute given qualifiedName and this.
     auto const* attribute = m_attributes->get_attribute(name);
@@ -64,7 +65,7 @@ String Element::get_attribute(const FlyString& name) const
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattribute
-ExceptionOr<void> Element::set_attribute(const FlyString& name, const String& value)
+ExceptionOr<void> Element::set_attribute(FlyString const& name, String const& value)
 {
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
@@ -107,8 +108,7 @@ ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString 
         namespace_ = {};
 
     // 2. Validate qualifiedName.
-    if (auto result = Document::validate_qualified_name(qualified_name); result.is_exception())
-        return result.exception();
+    TRY(Document::validate_qualified_name(qualified_name));
 
     // 3. Let prefix be null.
     FlyString prefix = {};
@@ -147,18 +147,16 @@ ExceptionOr<QualifiedName> validate_and_extract(FlyString namespace_, FlyString 
 ExceptionOr<void> Element::set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, String const& value)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
-    auto result = validate_and_extract(namespace_, qualified_name);
-    if (result.is_exception())
-        return result.exception();
+    auto extracted_qualified_name = TRY(validate_and_extract(namespace_, qualified_name));
 
     // FIXME: 2. Set an attribute value for this using localName, value, and also prefix and namespace.
 
     // FIXME: Don't just call through to setAttribute() here.
-    return set_attribute(result.value().local_name(), value);
+    return set_attribute(extracted_qualified_name.local_name(), value);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-removeattribute
-void Element::remove_attribute(const FlyString& name)
+void Element::remove_attribute(FlyString const& name)
 {
     m_attributes->remove_attribute(name);
 
@@ -169,9 +167,57 @@ void Element::remove_attribute(const FlyString& name)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
-bool Element::has_attribute(const FlyString& name) const
+bool Element::has_attribute(FlyString const& name) const
 {
     return m_attributes->get_attribute(name) != nullptr;
+}
+
+// https://dom.spec.whatwg.org/#dom-element-toggleattribute
+DOM::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optional<bool> force)
+{
+    // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
+    // FIXME: Proper name validation
+    if (name.is_empty())
+        return InvalidCharacterError::create("Attribute name must not be empty");
+
+    // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
+    // FIXME: Handle the second condition, assume it is an HTML document for now.
+    bool insert_as_lowercase = namespace_uri() == Namespace::HTML;
+
+    // 3. Let attribute be the first attribute in this’s attribute list whose qualified name is qualifiedName, and null otherwise.
+    auto* attribute = m_attributes->get_attribute(name);
+
+    // 4. If attribute is null, then:
+    if (!attribute) {
+        // 1. If force is not given or is true, create an attribute whose local name is qualifiedName, value is the empty string, and node document is this’s node document, then append this attribute to this, and then return true.
+        if (!force.has_value() || force.value()) {
+            auto new_attribute = Attribute::create(document(), insert_as_lowercase ? name.to_lowercase() : name, "");
+            m_attributes->append_attribute(new_attribute);
+
+            parse_attribute(new_attribute->local_name(), "");
+
+            // FIXME: Invalidate less.
+            document().invalidate_style();
+
+            return true;
+        }
+
+        // 2. Return false.
+        return false;
+    }
+
+    // 5. Otherwise, if force is not given or is false, remove an attribute given qualifiedName and this, and then return false.
+    if (!force.has_value() || !force.value()) {
+        m_attributes->remove_attribute(name);
+
+        did_remove_attribute(name);
+
+        // FIXME: Invalidate less.
+        document().invalidate_style();
+    }
+
+    // 6. Return true.
+    return true;
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattributenames
@@ -186,7 +232,7 @@ Vector<String> Element::get_attribute_names() const
     return names;
 }
 
-bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensitivity) const
+bool Element::has_class(FlyString const& class_name, CaseSensitivity case_sensitivity) const
 {
     return any_of(m_classes, [&](auto& it) {
         return case_sensitivity == CaseSensitivity::CaseSensitive
@@ -245,7 +291,7 @@ RefPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document&
     TODO();
 }
 
-void Element::parse_attribute(const FlyString& name, const String& value)
+void Element::parse_attribute(FlyString const& name, String const& value)
 {
     if (name == HTML::AttributeNames::class_) {
         auto new_classes = value.split_view(is_ascii_space);
@@ -257,11 +303,8 @@ void Element::parse_attribute(const FlyString& name, const String& value)
         if (m_class_list)
             m_class_list->associated_attribute_changed(value);
     } else if (name == HTML::AttributeNames::style) {
-        auto parsed_style = parse_css_declaration(CSS::ParsingContext(document()), value);
-        if (!parsed_style.is_null()) {
-            m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create_and_take_properties_from(*this, parsed_style.release_nonnull());
-            set_needs_style_update(true);
-        }
+        m_inline_style = parse_css_style_attribute(CSS::ParsingContext(document()), value, *this);
+        set_needs_style_update(true);
     }
 }
 
@@ -278,12 +321,14 @@ void Element::did_remove_attribute(FlyString const& name)
 enum class RequiredInvalidation {
     None,
     RepaintOnly,
+    RebuildStackingContextTree,
     Relayout,
 };
 
 static RequiredInvalidation compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
 {
     bool requires_repaint = false;
+    bool requires_stacking_context_tree_rebuild = false;
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
         auto property_id = static_cast<CSS::PropertyID>(i);
         auto const& old_value = old_style.properties()[i];
@@ -296,8 +341,12 @@ static RequiredInvalidation compute_required_invalidation(CSS::StyleProperties c
             continue;
         if (CSS::property_affects_layout(property_id))
             return RequiredInvalidation::Relayout;
+        if (CSS::property_affects_stacking_context(property_id))
+            requires_stacking_context_tree_rebuild = true;
         requires_repaint = true;
     }
+    if (requires_stacking_context_tree_rebuild)
+        return RequiredInvalidation::RebuildStackingContextTree;
     if (requires_repaint)
         return RequiredInvalidation::RepaintOnly;
     return RequiredInvalidation::None;
@@ -321,6 +370,13 @@ Element::NeedsRelayout Element::recompute_style()
 
     if (required_invalidation == RequiredInvalidation::RepaintOnly && layout_node()) {
         layout_node()->apply_style(*m_computed_css_values);
+        layout_node()->set_needs_display();
+        return NeedsRelayout::No;
+    }
+
+    if (required_invalidation == RequiredInvalidation::RebuildStackingContextTree && layout_node()) {
+        layout_node()->apply_style(*m_computed_css_values);
+        document().invalidate_stacking_context_tree();
         layout_node()->set_needs_display();
         return NeedsRelayout::No;
     }
@@ -394,9 +450,7 @@ DOM::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) con
 
 ExceptionOr<void> Element::set_inner_html(String const& markup)
 {
-    auto result = DOMParsing::inner_html_setter(*this, markup);
-    if (result.is_exception())
-        return result.exception();
+    TRY(DOMParsing::inner_html_setter(*this, markup));
 
     set_needs_style_update(true);
 
@@ -443,7 +497,7 @@ void Element::set_shadow_root(RefPtr<ShadowRoot> shadow_root)
 NonnullRefPtr<CSS::CSSStyleDeclaration> Element::style_for_bindings()
 {
     if (!m_inline_style)
-        m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this);
+        m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this, {}, {});
     return *m_inline_style;
 }
 

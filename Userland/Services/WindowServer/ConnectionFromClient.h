@@ -53,7 +53,7 @@ public:
             return nullptr;
         return menu.value();
     }
-    const Menu* find_menu_by_id(int menu_id) const
+    Menu const* find_menu_by_id(int menu_id) const
     {
         auto menu = m_menus.get(menu_id);
         if (!menu.has_value())
@@ -140,7 +140,7 @@ private:
     virtual void dismiss_menu(i32) override;
     virtual void set_window_icon_bitmap(i32, Gfx::ShareableBitmap const&) override;
     virtual Messages::WindowServer::StartDragResponse start_drag(String const&, HashMap<String, ByteBuffer> const&, Gfx::ShareableBitmap const&) override;
-    virtual Messages::WindowServer::SetSystemThemeResponse set_system_theme(String const&, String const&) override;
+    virtual Messages::WindowServer::SetSystemThemeResponse set_system_theme(String const&, String const&, bool keep_desktop_background) override;
     virtual Messages::WindowServer::GetSystemThemeResponse get_system_theme() override;
     virtual void apply_cursor_theme(String const&) override;
     virtual Messages::WindowServer::GetCursorThemeResponse get_cursor_theme() override;

@@ -23,14 +23,8 @@ String PropertyOwningCSSStyleDeclaration::item(size_t index) const
     return CSS::string_from_property_id(m_properties[index].property_id);
 }
 
-ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element& element)
-    : PropertyOwningCSSStyleDeclaration({}, {})
-    , m_element(element.make_weak_ptr<DOM::Element>())
-{
-}
-
-ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element& element, PropertyOwningCSSStyleDeclaration& declaration)
-    : PropertyOwningCSSStyleDeclaration(move(declaration.m_properties), move(declaration.m_custom_properties))
+ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element& element, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties)
+    : PropertyOwningCSSStyleDeclaration(move(properties), move(custom_properties))
     , m_element(element.make_weak_ptr<DOM::Element>())
 {
 }

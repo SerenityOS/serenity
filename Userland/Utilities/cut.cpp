@@ -17,12 +17,12 @@ struct Range {
     size_t m_from { 1 };
     size_t m_to { SIZE_MAX };
 
-    [[nodiscard]] bool intersects(const Range& other) const
+    [[nodiscard]] bool intersects(Range const& other) const
     {
         return !(other.m_from > m_to || other.m_to < m_from);
     }
 
-    void merge(const Range& other)
+    void merge(Range const& other)
     {
         // Can't merge two ranges that are disjoint.
         VERIFY(intersects(other));
@@ -120,7 +120,7 @@ static bool expand_list(String& list, Vector<Range>& ranges)
     return true;
 }
 
-static void process_line_bytes(char* line, size_t length, const Vector<Range>& ranges)
+static void process_line_bytes(char* line, size_t length, Vector<Range> const& ranges)
 {
     for (auto& i : ranges) {
         if (i.m_from >= length)
@@ -133,7 +133,7 @@ static void process_line_bytes(char* line, size_t length, const Vector<Range>& r
     outln();
 }
 
-static void process_line_fields(char* line, size_t length, const Vector<Range>& ranges, char delimiter)
+static void process_line_fields(char* line, size_t length, Vector<Range> const& ranges, char delimiter)
 {
     auto string_split = String(line, length).split(delimiter);
     Vector<String> output_fields;

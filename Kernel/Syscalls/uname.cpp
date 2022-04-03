@@ -23,7 +23,7 @@ ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
     memcpy(buf.machine, "x86_64", 7);
 #endif
 
-    hostname().with_shared([&](const auto& name) {
+    hostname().with_shared([&](auto const& name) {
         auto length = min(name->length(), UTSNAME_ENTRY_LEN - 1);
         memcpy(buf.nodename, name->characters(), length);
         buf.nodename[length] = '\0';

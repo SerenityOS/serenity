@@ -264,8 +264,8 @@ public:
     bool operator==(std::nullptr_t) const { return is_null(); }
     bool operator!=(std::nullptr_t) const { return !is_null(); }
 
-    bool operator==(const RefPtr& other) const { return as_ptr() == other.as_ptr(); }
-    bool operator!=(const RefPtr& other) const { return as_ptr() != other.as_ptr(); }
+    bool operator==(RefPtr const& other) const { return as_ptr() == other.as_ptr(); }
+    bool operator!=(RefPtr const& other) const { return as_ptr() != other.as_ptr(); }
 
     bool operator==(RefPtr& other) { return as_ptr() == other.as_ptr(); }
     bool operator!=(RefPtr& other) { return as_ptr() != other.as_ptr(); }
@@ -305,18 +305,18 @@ template<typename T>
 struct Traits<RefPtr<T>> : public GenericTraits<RefPtr<T>> {
     using PeekType = T*;
     using ConstPeekType = const T*;
-    static unsigned hash(const RefPtr<T>& p) { return ptr_hash(p.ptr()); }
-    static bool equals(const RefPtr<T>& a, const RefPtr<T>& b) { return a.ptr() == b.ptr(); }
+    static unsigned hash(RefPtr<T> const& p) { return ptr_hash(p.ptr()); }
+    static bool equals(RefPtr<T> const& a, RefPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };
 
 template<typename T, typename U>
-inline NonnullRefPtr<T> static_ptr_cast(const NonnullRefPtr<U>& ptr)
+inline NonnullRefPtr<T> static_ptr_cast(NonnullRefPtr<U> const& ptr)
 {
     return NonnullRefPtr<T>(static_cast<const T&>(*ptr));
 }
 
 template<typename T, typename U, typename PtrTraits = RefPtrTraits<T>>
-inline RefPtr<T> static_ptr_cast(const RefPtr<U>& ptr)
+inline RefPtr<T> static_ptr_cast(RefPtr<U> const& ptr)
 {
     return RefPtr<T, PtrTraits>(static_cast<const T*>(ptr.ptr()));
 }

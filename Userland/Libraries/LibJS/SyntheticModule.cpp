@@ -23,14 +23,14 @@ SyntheticModule::SyntheticModule(Vector<FlyString> export_names, SyntheticModule
 }
 
 // 1.2.3.1 GetExportedNames( exportStarSet ), https://tc39.es/proposal-json-modules/#sec-smr-getexportednames
-ThrowCompletionOr<Vector<FlyString>> JS::SyntheticModule::get_exported_names(VM&, Vector<Module*>)
+ThrowCompletionOr<Vector<FlyString>> SyntheticModule::get_exported_names(VM&, Vector<Module*>)
 {
     // 1. Return module.[[ExportNames]].
     return m_export_names;
 }
 
 // 1.2.3.2 ResolveExport( exportName, resolveSet ), https://tc39.es/proposal-json-modules/#sec-smr-resolveexport
-ThrowCompletionOr<ResolvedBinding> JS::SyntheticModule::resolve_export(VM&, FlyString const& export_name, Vector<ResolvedBinding>)
+ThrowCompletionOr<ResolvedBinding> SyntheticModule::resolve_export(VM&, FlyString const& export_name, Vector<ResolvedBinding>)
 {
     // 1. If module.[[ExportNames]] does not contain exportName, return null.
     if (!m_export_names.contains_slow(export_name))
@@ -41,7 +41,7 @@ ThrowCompletionOr<ResolvedBinding> JS::SyntheticModule::resolve_export(VM&, FlyS
 }
 
 // 1.2.3.3 Link ( ), https://tc39.es/proposal-json-modules/#sec-smr-instantiate
-ThrowCompletionOr<void> JS::SyntheticModule::link(VM& vm)
+ThrowCompletionOr<void> SyntheticModule::link(VM& vm)
 {
     // Note: Has some changes from PR: https://github.com/tc39/proposal-json-modules/pull/13.
     //       Which includes renaming it from Instantiate ( ) to Link ( ).
@@ -73,7 +73,7 @@ ThrowCompletionOr<void> JS::SyntheticModule::link(VM& vm)
 }
 
 // 1.2.3.4 Evaluate ( ), https://tc39.es/proposal-json-modules/#sec-smr-Evaluate
-ThrowCompletionOr<Promise*> JS::SyntheticModule::evaluate(VM& vm)
+ThrowCompletionOr<Promise*> SyntheticModule::evaluate(VM& vm)
 {
     // Note: Has some changes from PR: https://github.com/tc39/proposal-json-modules/pull/13.
     // 1. Suspend the currently running execution context.

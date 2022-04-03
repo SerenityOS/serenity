@@ -17,13 +17,13 @@ public:
 
     Engine(StringView command);
 
-    Engine(const Engine&) = delete;
-    Engine& operator=(const Engine&) = delete;
+    Engine(Engine const&) = delete;
+    Engine& operator=(Engine const&) = delete;
 
-    virtual void handle_bestmove(const Chess::UCI::BestMoveCommand&) override;
+    virtual void handle_bestmove(Chess::UCI::BestMoveCommand const&) override;
 
     template<typename Callback>
-    void get_best_move(const Chess::Board& board, int time_limit, Callback&& callback)
+    void get_best_move(Chess::Board const& board, int time_limit, Callback&& callback)
     {
         send_command(Chess::UCI::PositionCommand({}, board.moves()));
         Chess::UCI::GoCommand go_command;

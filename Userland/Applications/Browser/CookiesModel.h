@@ -17,10 +17,10 @@ namespace Browser {
 class CookiesModel final : public GUI::Model {
 public:
     enum Column {
-        Name,
-        Value,
         Domain,
         Path,
+        Name,
+        Value,
         ExpiryTime,
         __Count,
     };

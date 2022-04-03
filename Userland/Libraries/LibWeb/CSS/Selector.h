@@ -21,7 +21,6 @@ using SelectorList = NonnullRefPtrVector<class Selector>;
 class Selector : public RefCounted<Selector> {
 public:
     enum class PseudoElement {
-        None,
         Before,
         After,
         FirstLine,
@@ -32,7 +31,6 @@ public:
 
     struct SimpleSelector {
         enum class Type {
-            Invalid,
             Universal,
             TagName,
             Id,
@@ -41,7 +39,6 @@ public:
             PseudoClass,
             PseudoElement,
         };
-        Type type { Type::Invalid };
 
         struct ANPlusBPattern {
             int step_size { 0 }; // "A"
@@ -55,7 +52,6 @@ public:
 
         struct PseudoClass {
             enum class Type {
-                None,
                 Link,
                 Visited,
                 Hover,
@@ -82,25 +78,20 @@ public:
                 Active,
                 Lang,
             };
-            Type type { Type::None };
+            Type type;
 
             // FIXME: We don't need this field on every single SimpleSelector, but it's also annoying to malloc it somewhere.
             // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
-            ANPlusBPattern nth_child_pattern;
+            ANPlusBPattern nth_child_pattern {};
 
             SelectorList argument_selector_list {};
 
             // Used for :lang(en-gb,dk)
-            Vector<FlyString> languages;
+            Vector<FlyString> languages {};
         };
-        PseudoClass pseudo_class {};
-        PseudoElement pseudo_element { PseudoElement::None };
-
-        FlyString value {};
 
         struct Attribute {
             enum class MatchType {
-                None,
                 HasAttribute,
                 ExactValueMatch,
                 ContainsWord,      // [att~=val]
@@ -109,11 +100,28 @@ public:
                 StartsWithString,  // [att^=val]
                 EndsWithString,    // [att$=val]
             };
-            MatchType match_type { MatchType::None };
+            enum class CaseType {
+                DefaultMatch,
+                CaseSensitiveMatch,
+                CaseInsensitiveMatch,
+            };
+            MatchType match_type;
             FlyString name {};
             String value {};
+            CaseType case_type;
         };
-        Attribute attribute {};
+
+        Type type;
+        Variant<Empty, Attribute, PseudoClass, PseudoElement, FlyString> value {};
+
+        Attribute const& attribute() const { return value.get<Attribute>(); }
+        Attribute& attribute() { return value.get<Attribute>(); }
+        PseudoClass const& pseudo_class() const { return value.get<PseudoClass>(); }
+        PseudoClass& pseudo_class() { return value.get<PseudoClass>(); }
+        PseudoElement const& pseudo_element() const { return value.get<PseudoElement>(); }
+        PseudoElement& pseudo_element() { return value.get<PseudoElement>(); }
+        FlyString const& name() const { return value.get<FlyString>(); }
+        FlyString& name() { return value.get<FlyString>(); }
 
         String serialize() const;
     };
@@ -167,8 +175,6 @@ constexpr StringView pseudo_element_name(Selector::PseudoElement pseudo_element)
         return "first-letter"sv;
     case Selector::PseudoElement::Marker:
         return "marker"sv;
-    case Selector::PseudoElement::None:
-        break;
     }
     VERIFY_NOT_REACHED();
 }
@@ -228,8 +234,6 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "where"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Lang:
         return "lang"sv;
-    case Selector::SimpleSelector::PseudoClass::Type::None:
-        break;
     }
     VERIFY_NOT_REACHED();
 }

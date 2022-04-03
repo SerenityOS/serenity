@@ -7,6 +7,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/ShadowPainting.h>
@@ -28,6 +29,11 @@ PaintableBox::~PaintableBox()
 {
 }
 
+void PaintableBox::invalidate_stacking_context()
+{
+    m_stacking_context = nullptr;
+}
+
 PaintableWithLines::PaintableWithLines(Layout::BlockContainer const& layout_box)
     : PaintableBox(layout_box)
 {
@@ -37,7 +43,7 @@ PaintableWithLines::~PaintableWithLines()
 {
 }
 
-void PaintableBox::set_offset(const Gfx::FloatPoint& offset)
+void PaintableBox::set_offset(Gfx::FloatPoint const& offset)
 {
     m_offset = offset;
     // FIXME: This const_cast is gross.
@@ -53,21 +59,32 @@ void PaintableBox::set_content_size(Gfx::FloatSize const& size)
 
 Gfx::FloatPoint PaintableBox::effective_offset() const
 {
+    Gfx::FloatPoint offset;
     if (m_containing_line_box_fragment.has_value()) {
         auto const& fragment = containing_block()->paint_box()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
-        return fragment.offset();
+        offset = fragment.offset();
+    } else {
+        offset = m_offset;
     }
-    return m_offset;
+    if (layout_box().computed_values().position() == CSS::Position::Relative) {
+        auto const& inset = layout_box().box_model().inset;
+        offset.translate_by(inset.left, inset.top);
+    }
+    return offset;
+}
+
+Gfx::FloatRect PaintableBox::compute_absolute_rect() const
+{
+    Gfx::FloatRect rect { effective_offset(), content_size() };
+    for (auto const* block = containing_block(); block && block->paintable(); block = block->paintable()->containing_block())
+        rect.translate_by(block->paint_box()->effective_offset());
+    return rect;
 }
 
 Gfx::FloatRect PaintableBox::absolute_rect() const
 {
-    if (!m_absolute_rect.has_value()) {
-        Gfx::FloatRect rect { effective_offset(), content_size() };
-        for (auto const* block = containing_block(); block && block->paintable(); block = block->paintable()->containing_block())
-            rect.translate_by(block->paint_box()->effective_offset());
-        m_absolute_rect = rect;
-    }
+    if (!m_absolute_rect.has_value())
+        m_absolute_rect = compute_absolute_rect();
     return *m_absolute_rect;
 }
 
@@ -126,6 +143,8 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         paint_inspector_rect(border_rect, Color::Green);
         paint_inspector_rect(content_rect, Color::Magenta);
 
+        auto& font = Gfx::FontDatabase::default_font();
+
         StringBuilder builder;
         if (layout_box().dom_node())
             builder.append(layout_box().dom_node()->debug_description());
@@ -136,15 +155,17 @@ void PaintableBox::paint(PaintContext& context, PaintPhase phase) const
         auto size_text_rect = border_rect;
         size_text_rect.set_y(border_rect.y() + border_rect.height());
         size_text_rect.set_top(size_text_rect.top());
-        size_text_rect.set_width((float)context.painter().font().width(size_text) + 4);
-        size_text_rect.set_height(context.painter().font().glyph_height() + 4);
+        size_text_rect.set_width((float)font.width(size_text) + 4);
+        size_text_rect.set_height(font.pixel_size() + 4);
         context.painter().fill_rect(enclosing_int_rect(size_text_rect), context.palette().color(Gfx::ColorRole::Tooltip));
         context.painter().draw_rect(enclosing_int_rect(size_text_rect), context.palette().threed_shadow1());
-        context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text, Gfx::TextAlignment::Center, context.palette().color(Gfx::ColorRole::TooltipText));
+        context.painter().draw_text(enclosing_int_rect(size_text_rect), size_text, font, Gfx::TextAlignment::Center, context.palette().color(Gfx::ColorRole::TooltipText));
     }
 
     if (phase == PaintPhase::FocusOutline && layout_box().dom_node() && layout_box().dom_node()->is_element() && verify_cast<DOM::Element>(*layout_box().dom_node()).is_focused()) {
-        context.painter().draw_rect(enclosing_int_rect(absolute_rect()), context.palette().focus_outline());
+        // FIXME: Implement this as `outline` using :focus-visible in the default UA stylesheet to make it possible to override/disable.
+        auto focus_outline_rect = enclosing_int_rect(absolute_border_box_rect()).inflated(4, 4);
+        context.painter().draw_focus_rect(focus_outline_rect, context.palette().focus_outline());
     }
 }
 
@@ -165,13 +186,13 @@ void PaintableBox::paint_background(PaintContext& context) const
     if (layout_box().is_body() && document().html_element()->should_use_body_background_properties())
         return;
 
-    Gfx::IntRect background_rect;
+    Gfx::FloatRect background_rect;
     Color background_color = computed_values().background_color();
     auto* background_layers = &computed_values().background_layers();
 
     if (layout_box().is_root_element()) {
         // CSS 2.1 Appendix E.2: If the element is a root element, paint the background over the entire canvas.
-        background_rect = context.viewport_rect();
+        background_rect = context.viewport_rect().to_type<float>();
 
         // Section 2.11.2: If the computed value of background-image on the root element is none and its background-color is transparent,
         // user agents must instead propagate the computed values of the background properties from that element’s first HTML BODY child element.
@@ -180,13 +201,13 @@ void PaintableBox::paint_background(PaintContext& context) const
             background_color = document().background_color(context.palette());
         }
     } else {
-        background_rect = enclosing_int_rect(absolute_padding_box_rect());
+        background_rect = absolute_padding_box_rect();
     }
 
     // HACK: If the Box has a border, use the bordered_rect to paint the background.
     //       This way if we have a border-radius there will be no gap between the filling and actual border.
     if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
-        background_rect = enclosing_int_rect(absolute_border_box_rect());
+        background_rect = absolute_border_box_rect();
 
     Painting::paint_background(context, layout_box(), background_rect, background_color, background_layers, normalized_border_radius_data());
 }
@@ -197,7 +218,7 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
     if (box_shadow_data.is_empty())
         return;
 
-    Vector<BoxShadowData> resolved_box_shadow_data;
+    Vector<ShadowData> resolved_box_shadow_data;
     resolved_box_shadow_data.ensure_capacity(box_shadow_data.size());
     for (auto const& layer : box_shadow_data) {
         resolved_box_shadow_data.empend(
@@ -206,7 +227,7 @@ void PaintableBox::paint_box_shadow(PaintContext& context) const
             static_cast<int>(layer.offset_y.to_px(layout_box())),
             static_cast<int>(layer.blur_radius.to_px(layout_box())),
             static_cast<int>(layer.spread_distance.to_px(layout_box())),
-            layer.placement == CSS::BoxShadowPlacement::Outer ? BoxShadowPlacement::Outer : BoxShadowPlacement::Inner);
+            layer.placement == CSS::ShadowPlacement::Outer ? ShadowPlacement::Outer : ShadowPlacement::Inner);
     }
     Painting::paint_box_shadow(context, enclosing_int_rect(absolute_border_box_rect()), resolved_box_shadow_data);
 }
@@ -273,7 +294,7 @@ static void paint_text_decoration(Gfx::Painter& painter, Layout::Node const& tex
 
     auto& font = fragment.layout_node().font();
     auto fragment_box = enclosing_int_rect(fragment.absolute_rect());
-    auto glyph_height = font.glyph_height();
+    auto glyph_height = font.pixel_size();
     auto baseline = fragment_box.height() / 2 - (glyph_height + 4) / 2 + glyph_height;
 
     switch (text_node.computed_values().text_decoration_line()) {
@@ -350,8 +371,6 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
     if (phase == Painting::PaintPhase::Foreground) {
         auto fragment_absolute_rect = fragment.absolute_rect();
 
-        painter.set_font(text_node.font());
-
         if (text_node.document().inspected_node() == &text_node.dom_node())
             context.painter().draw_rect(enclosing_int_rect(fragment_absolute_rect), Color::Magenta);
 
@@ -363,17 +382,17 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         if (text_transform == CSS::TextTransform::Lowercase)
             text = text_node.text_for_rendering().to_lowercase();
 
-        // FIXME: This is a hack to prevent text clipping when painting a bitmap font into a too-small box.
-        auto draw_rect = enclosing_int_rect(fragment_absolute_rect);
-        draw_rect.set_height(max(draw_rect.height(), text_node.font().glyph_height()));
-        painter.draw_text(draw_rect, text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, text_node.computed_values().color());
+        Gfx::FloatPoint baseline_start { fragment_absolute_rect.x(), fragment_absolute_rect.y() + fragment.baseline() };
+        Utf8View view { text.substring_view(fragment.start(), fragment.length()) };
+
+        painter.draw_text_run(baseline_start, view, fragment.layout_node().font(), text_node.computed_values().color());
 
         auto selection_rect = fragment.selection_rect(text_node.font());
         if (!selection_rect.is_empty()) {
             painter.fill_rect(enclosing_int_rect(selection_rect), context.palette().selection());
             Gfx::PainterStateSaver saver(painter);
             painter.add_clip_rect(enclosing_int_rect(selection_rect));
-            painter.draw_text(enclosing_int_rect(fragment_absolute_rect), text.substring_view(fragment.start(), fragment.length()), Gfx::TextAlignment::CenterLeft, context.palette().selection_text());
+            painter.draw_text_run(baseline_start, view, fragment.layout_node().font(), context.palette().selection_text());
         }
 
         paint_text_decoration(painter, text_node, fragment);
@@ -401,10 +420,44 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
         context.painter().translate(-scroll_offset.to_type<int>());
     }
 
+    // Text shadows
+    // This is yet another loop, but done here because all shadows should appear under all text.
+    // So, we paint the shadows before painting any text.
+    // FIXME: Find a smarter way to do this?
+    if (phase == PaintPhase::Foreground) {
+        for (auto& line_box : m_line_boxes) {
+            for (auto& fragment : line_box.fragments()) {
+                if (is<Layout::TextNode>(fragment.layout_node())) {
+                    auto& text_shadow = fragment.layout_node().computed_values().text_shadow();
+                    if (!text_shadow.is_empty()) {
+                        Vector<ShadowData> resolved_shadow_data;
+                        resolved_shadow_data.ensure_capacity(text_shadow.size());
+                        for (auto const& layer : text_shadow) {
+                            resolved_shadow_data.empend(
+                                layer.color,
+                                static_cast<int>(layer.offset_x.to_px(layout_box())),
+                                static_cast<int>(layer.offset_y.to_px(layout_box())),
+                                static_cast<int>(layer.blur_radius.to_px(layout_box())),
+                                static_cast<int>(layer.spread_distance.to_px(layout_box())),
+                                ShadowPlacement::Outer);
+                        }
+                        context.painter().set_font(fragment.layout_node().font());
+                        Painting::paint_text_shadow(context, fragment, resolved_shadow_data);
+                    }
+                }
+            }
+        }
+    }
+
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
-            if (context.should_show_line_box_borders())
-                context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Green);
+            if (context.should_show_line_box_borders()) {
+                auto fragment_absolute_rect = fragment.absolute_rect();
+                context.painter().draw_rect(enclosing_int_rect(fragment_absolute_rect), Color::Green);
+                context.painter().draw_line(
+                    fragment_absolute_rect.top_left().translated(0, fragment.baseline()).to_rounded<int>(),
+                    fragment_absolute_rect.top_right().translated(0, fragment.baseline()).to_rounded<int>(), Color::Red);
+            }
             if (is<Layout::TextNode>(fragment.layout_node()))
                 paint_text_fragment(context, static_cast<Layout::TextNode const&>(fragment.layout_node()), fragment, phase);
         }
@@ -424,8 +477,11 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
                 auto* parent = node->parent_element();
                 if (!parent)
                     continue;
-                if (parent->is_focused())
-                    context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), context.palette().focus_outline());
+                if (parent->is_focused()) {
+                    // FIXME: Implement this as `outline` using :focus-visible in the default UA stylesheet to make it possible to override/disable.
+                    auto focus_outline_rect = enclosing_int_rect(fragment.absolute_rect()).inflated(4, 4);
+                    context.painter().draw_focus_rect(focus_outline_rect, context.palette().focus_outline());
+                }
             }
         }
     }
@@ -456,111 +512,47 @@ void PaintableBox::set_stacking_context(NonnullOwnPtr<StackingContext> stacking_
     m_stacking_context = move(stacking_context);
 }
 
-template<typename Callback>
-void PaintableBox::for_each_child_in_paint_order(Callback callback) const
+Optional<HitTestResult> PaintableBox::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
-    // Element traversal using the order defined in https://www.w3.org/TR/CSS2/zindex.html#painting-order.
-    // Note: Some steps are skipped because they are not relevant to node traversal.
+    if (!is_visible())
+        return {};
 
-    // 3. Stacking contexts formed by positioned descendants with negative z-indices (excluding 0) in z-index order
-    //    (most negative first) then tree order.
-    // FIXME: This does not retrieve elements in the z-index order.
-    layout_box().for_each_child([&](auto& child) {
-        if (!child.is_positioned() || !is<Layout::Box>(child))
-            return;
-
-        auto& box_child = verify_cast<Layout::Box>(child);
-        auto* stacking_context = box_child.paint_box()->stacking_context();
-        if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() < 0)
-            callback(child);
-    });
-
-    // 4. For all its in-flow, non-positioned, block-level descendants in tree order: If the element is a block, list-item,
-    //    or other block equivalent:
-    layout_box().for_each_child([&](auto& child) {
-        if (is<Layout::Box>(child) && verify_cast<Layout::Box>(child).paint_box()->stacking_context())
-            return;
-        if (!child.is_positioned())
-            callback(child);
-    });
-
-    // 5. All non-positioned floating descendants, in tree order. For each one of these, treat the element as if it created
-    //    a new stacking context, but any positioned descendants and descendants which actually create a new stacking context
-    //    should be considered part of the parent stacking context, not this new one.
-    layout_box().for_each_child([&](auto& child) {
-        if (is<Layout::Box>(child) && verify_cast<Layout::Box>(child).paint_box()->stacking_context())
-            return;
-        if (child.is_positioned())
-            callback(child);
-    });
-
-    // 8. All positioned descendants with 'z-index: auto' or 'z-index: 0', in tree order. For those with 'z-index: auto', treat
-    //    the element as if it created a new stacking context, but any positioned descendants and descendants which actually
-    //    create a new stacking context should be considered part of the parent stacking context, not this new one. For those
-    //    with 'z-index: 0', treat the stacking context generated atomically.
-    layout_box().for_each_child([&](auto& child) {
-        if (!child.is_positioned() || !is<Layout::Box>(child))
-            return;
-
-        auto& box_child = verify_cast<Layout::Box>(child);
-        auto* stacking_context = box_child.paint_box()->stacking_context();
-        if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() == 0)
-            callback(child);
-    });
-
-    // 9. Stacking contexts formed by positioned descendants with z-indices greater than or equal to 1 in z-index order
-    //    (smallest first) then tree order.
-    // FIXME: This does not retrieve elements in the z-index order.
-    layout_box().for_each_child([&](auto& child) {
-        if (!child.is_positioned() || !is<Layout::Box>(child))
-            return;
-
-        auto& box_child = verify_cast<Layout::Box>(child);
-        auto* stacking_context = box_child.paint_box()->stacking_context();
-        if (stacking_context && box_child.computed_values().z_index().has_value() && box_child.computed_values().z_index().value() > 0)
-            callback(child);
-    });
-}
-
-HitTestResult PaintableBox::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
-{
-    if (layout_box().is_initial_containing_block_box())
+    if (layout_box().is_initial_containing_block_box()) {
+        const_cast<Layout::InitialContainingBlock&>(static_cast<Layout::InitialContainingBlock const&>(layout_box())).build_stacking_context_tree_if_needed();
         return stacking_context()->hit_test(position, type);
+    }
 
-    HitTestResult result { absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
-    for_each_child_in_paint_order([&](auto& child) {
-        if (child.paintable()) {
-            auto child_result = child.paintable()->hit_test(position, type);
-            if (child_result.paintable)
-                result = child_result;
-        }
-    });
-    return result;
+    if (absolute_border_box_rect().contains(position.x(), position.y()))
+        return HitTestResult { *this };
+    return {};
 }
 
-HitTestResult PaintableWithLines::hit_test(const Gfx::FloatPoint& position, HitTestType type) const
+Optional<HitTestResult> PaintableWithLines::hit_test(Gfx::FloatPoint const& position, HitTestType type) const
 {
     if (!layout_box().children_are_inline())
         return PaintableBox::hit_test(position, type);
 
-    HitTestResult last_good_candidate;
+    Optional<HitTestResult> last_good_candidate;
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
             if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paint_box()->stacking_context())
                 continue;
-            if (fragment.absolute_rect().contains(position)) {
+            auto fragment_absolute_rect = fragment.absolute_rect();
+            if (fragment_absolute_rect.contains(position)) {
                 if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
                     return fragment.layout_node().paintable()->hit_test(position, type);
-                return { fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
+                return HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
             }
-            if (fragment.absolute_rect().top() <= position.y())
-                last_good_candidate = { fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
+            if (fragment_absolute_rect.top() <= position.y())
+                last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
         }
     }
 
-    if (type == HitTestType::TextCursor && last_good_candidate.paintable)
+    if (type == HitTestType::TextCursor && last_good_candidate.has_value())
         return last_good_candidate;
-    return { absolute_border_box_rect().contains(position.x(), position.y()) ? this : nullptr };
+    if (is_visible() && absolute_border_box_rect().contains(position.x(), position.y()))
+        return HitTestResult { *this };
+    return {};
 }
 
 }

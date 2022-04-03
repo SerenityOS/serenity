@@ -19,10 +19,13 @@ describe("correct behavior", () => {
         expect(plainDate.toString({ calendarName: "never" })).toBe("2021-07-06");
 
         plainDate = new Temporal.PlainDate(0, 1, 1);
-        expect(plainDate.toString()).toBe("+000000-01-01");
+        expect(plainDate.toString()).toBe("0000-01-01");
 
         plainDate = new Temporal.PlainDate(999, 1, 1);
-        expect(plainDate.toString()).toBe("+000999-01-01");
+        expect(plainDate.toString()).toBe("0999-01-01");
+
+        plainDate = new Temporal.PlainDate(9999, 1, 1);
+        expect(plainDate.toString()).toBe("9999-01-01");
 
         plainDate = new Temporal.PlainDate(12345, 1, 1);
         expect(plainDate.toString()).toBe("+012345-01-01");

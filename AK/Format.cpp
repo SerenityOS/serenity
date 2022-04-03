@@ -51,8 +51,8 @@ static constexpr size_t convert_unsigned_to_string(u64 value, Array<u8, 128>& bu
 {
     VERIFY(base >= 2 && base <= 16);
 
-    constexpr const char* lowercase_lookup = "0123456789abcdef";
-    constexpr const char* uppercase_lookup = "0123456789ABCDEF";
+    constexpr char const* lowercase_lookup = "0123456789abcdef";
+    constexpr char const* uppercase_lookup = "0123456789ABCDEF";
 
     if (value == 0) {
         buffer[0] = '0';
@@ -77,7 +77,7 @@ static constexpr size_t convert_unsigned_to_string(u64 value, Array<u8, 128>& bu
 
 ErrorOr<void> vformat_impl(TypeErasedFormatParams& params, FormatBuilder& builder, FormatParser& parser)
 {
-    const auto literal = parser.consume_literal();
+    auto const literal = parser.consume_literal();
     TRY(builder.put_literal(literal));
 
     FormatParser::FormatSpecifier specifier;
@@ -105,7 +105,7 @@ FormatParser::FormatParser(StringView input)
 }
 StringView FormatParser::consume_literal()
 {
-    const auto begin = tell();
+    auto const begin = tell();
 
     while (!is_eof()) {
         if (consume_specific("{{"))
@@ -146,7 +146,7 @@ bool FormatParser::consume_specifier(FormatSpecifier& specifier)
         specifier.index = use_next_index;
 
     if (consume_specific(':')) {
-        const auto begin = tell();
+        auto const begin = tell();
 
         size_t level = 1;
         while (level > 0) {
@@ -212,8 +212,8 @@ ErrorOr<void> FormatBuilder::put_string(
     size_t max_width,
     char fill)
 {
-    const auto used_by_string = min(max_width, value.length());
-    const auto used_by_padding = max(min_width, used_by_string) - used_by_string;
+    auto const used_by_string = min(max_width, value.length());
+    auto const used_by_padding = max(min_width, used_by_string) - used_by_string;
 
     if (used_by_string < value.length())
         value = value.substring_view(0, used_by_string);
@@ -222,8 +222,8 @@ ErrorOr<void> FormatBuilder::put_string(
         TRY(m_builder.try_append(value));
         TRY(put_padding(fill, used_by_padding));
     } else if (align == Align::Center) {
-        const auto used_by_left_padding = used_by_padding / 2;
-        const auto used_by_right_padding = ceil_div<size_t, size_t>(used_by_padding, 2);
+        auto const used_by_left_padding = used_by_padding / 2;
+        auto const used_by_right_padding = ceil_div<size_t, size_t>(used_by_padding, 2);
 
         TRY(put_padding(fill, used_by_left_padding));
         TRY(m_builder.try_append(value));
@@ -252,7 +252,7 @@ ErrorOr<void> FormatBuilder::put_u64(
 
     Array<u8, 128> buffer;
 
-    const auto used_by_digits = convert_unsigned_to_string(value, buffer, base, upper_case);
+    auto const used_by_digits = convert_unsigned_to_string(value, buffer, base, upper_case);
 
     size_t used_by_prefix = 0;
     if (align == Align::Right && zero_pad) {
@@ -273,10 +273,10 @@ ErrorOr<void> FormatBuilder::put_u64(
         }
     }
 
-    const auto used_by_field = used_by_prefix + used_by_digits;
-    const auto used_by_padding = max(used_by_field, min_width) - used_by_field;
+    auto const used_by_field = used_by_prefix + used_by_digits;
+    auto const used_by_padding = max(used_by_field, min_width) - used_by_field;
 
-    const auto put_prefix = [&]() -> ErrorOr<void> {
+    auto const put_prefix = [&]() -> ErrorOr<void> {
         if (is_negative)
             TRY(m_builder.try_append('-'));
         else if (sign_mode == SignMode::Always)
@@ -302,28 +302,28 @@ ErrorOr<void> FormatBuilder::put_u64(
         return {};
     };
 
-    const auto put_digits = [&]() -> ErrorOr<void> {
+    auto const put_digits = [&]() -> ErrorOr<void> {
         for (size_t i = 0; i < used_by_digits; ++i)
             TRY(m_builder.try_append(buffer[i]));
         return {};
     };
 
     if (align == Align::Left) {
-        const auto used_by_right_padding = used_by_padding;
+        auto const used_by_right_padding = used_by_padding;
 
         TRY(put_prefix());
         TRY(put_digits());
         TRY(put_padding(fill, used_by_right_padding));
     } else if (align == Align::Center) {
-        const auto used_by_left_padding = used_by_padding / 2;
-        const auto used_by_right_padding = ceil_div<size_t, size_t>(used_by_padding, 2);
+        auto const used_by_left_padding = used_by_padding / 2;
+        auto const used_by_right_padding = ceil_div<size_t, size_t>(used_by_padding, 2);
 
         TRY(put_padding(fill, used_by_left_padding));
         TRY(put_prefix());
         TRY(put_digits());
         TRY(put_padding(fill, used_by_right_padding));
     } else if (align == Align::Right) {
-        const auto used_by_left_padding = used_by_padding;
+        auto const used_by_left_padding = used_by_padding;
 
         if (zero_pad) {
             TRY(put_prefix());
@@ -349,7 +349,7 @@ ErrorOr<void> FormatBuilder::put_i64(
     char fill,
     SignMode sign_mode)
 {
-    const auto is_negative = value < 0;
+    auto const is_negative = value < 0;
     value = is_negative ? -value : value;
 
     TRY(put_u64(static_cast<u64>(value), base, prefix, upper_case, zero_pad, align, min_width, fill, sign_mode, is_negative));
@@ -702,7 +702,7 @@ ErrorOr<void> Formatter<T>::format(FormatBuilder& builder, T value)
         m_mode = Mode::String;
 
         Formatter<StringView> formatter { *this };
-        return formatter.format(builder, StringView { reinterpret_cast<const char*>(&value), 1 });
+        return formatter.format(builder, StringView { reinterpret_cast<char const*>(&value), 1 });
     }
 
     if (m_precision.has_value())
@@ -854,8 +854,8 @@ void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams& params, bool ne
     if (newline)
         builder.append('\n');
 
-    const auto string = builder.string_view();
-    const auto retval = ::fwrite(string.characters_without_null_termination(), 1, string.length(), file);
+    auto const string = builder.string_view();
+    auto const retval = ::fwrite(string.characters_without_null_termination(), 1, string.length(), file);
     if (static_cast<size_t>(retval) != string.length()) {
         auto error = ferror(file);
         dbgln("vout() failed ({} written out of {}), error was {} ({})", retval, string.length(), error, strerror(error));
@@ -912,7 +912,7 @@ void vdbgln(StringView fmtstr, TypeErasedFormatParams& params)
     MUST(vformat(builder, fmtstr, params));
     builder.append('\n');
 
-    const auto string = builder.string_view();
+    auto const string = builder.string_view();
 
 #ifdef __serenity__
 #    ifdef KERNEL
@@ -949,7 +949,7 @@ void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
     MUST(vformat(builder, fmtstr, params));
     builder.append('\n');
 
-    const auto string = builder.string_view();
+    auto const string = builder.string_view();
     kernelputstr(string.characters_without_null_termination(), string.length());
 }
 
@@ -971,7 +971,7 @@ void v_critical_dmesgln(StringView fmtstr, TypeErasedFormatParams& params)
     MUST(vformat(builder, fmtstr, params));
     builder.append('\n');
 
-    const auto string = builder.string_view();
+    auto const string = builder.string_view();
     kernelcriticalputstr(string.characters_without_null_termination(), string.length());
 }
 

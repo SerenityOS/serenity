@@ -8,7 +8,7 @@
 #include <langinfo.h>
 
 // Values taken from glibc's en_US locale files.
-static const char* __nl_langinfo(nl_item item)
+static char const* __nl_langinfo(nl_item item)
 {
     switch (item) {
     case CODESET:

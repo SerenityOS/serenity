@@ -10,6 +10,7 @@ set(SOURCES
     AbstractTableView.cpp
     AbstractView.cpp
     AbstractZoomPanWidget.cpp
+    AbstractThemePreview.cpp
     Action.cpp
     ActionGroup.cpp
     Application.cpp
@@ -111,8 +112,8 @@ set(SOURCES
     VimEditingEngine.cpp
     Widget.cpp
     Window.cpp
-        ConnectionToWindowServer.cpp
-        ConnectionToWindowMangerServer.cpp
+    ConnectionToWindowServer.cpp
+    ConnectionToWindowMangerServer.cpp
     Wizards/WizardDialog.cpp
     Wizards/AbstractWizardPage.cpp
     Wizards/CoverWizardPage.cpp

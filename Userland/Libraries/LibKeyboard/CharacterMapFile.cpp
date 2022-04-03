@@ -11,7 +11,7 @@
 
 namespace Keyboard {
 
-ErrorOr<CharacterMapData> CharacterMapFile::load_from_file(const String& filename)
+ErrorOr<CharacterMapData> CharacterMapFile::load_from_file(String const& filename)
 {
     auto path = filename;
     if (!path.ends_with(".json")) {
@@ -25,7 +25,7 @@ ErrorOr<CharacterMapData> CharacterMapFile::load_from_file(const String& filenam
     auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
     auto file_contents = file->read_all();
     auto json_result = TRY(JsonValue::from_string(file_contents));
-    const auto& json = json_result.as_object();
+    auto const& json = json_result.as_object();
 
     Vector<u32> map = read_map(json, "map");
     Vector<u32> shift_map = read_map(json, "shift_map");
@@ -55,7 +55,7 @@ ErrorOr<CharacterMapData> CharacterMapFile::load_from_file(const String& filenam
     return character_map;
 }
 
-Vector<u32> CharacterMapFile::read_map(const JsonObject& json, const String& name)
+Vector<u32> CharacterMapFile::read_map(JsonObject const& json, String const& name)
 {
     if (!json.has(name))
         return {};

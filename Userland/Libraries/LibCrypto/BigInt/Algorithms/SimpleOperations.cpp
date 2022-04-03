@@ -17,8 +17,8 @@ void UnsignedBigIntegerAlgorithms::add_without_allocation(
     UnsignedBigInteger const& right,
     UnsignedBigInteger& output)
 {
-    const UnsignedBigInteger* const longer = (left.length() > right.length()) ? &left : &right;
-    const UnsignedBigInteger* const shorter = (longer == &right) ? &left : &right;
+    UnsignedBigInteger const* const longer = (left.length() > right.length()) ? &left : &right;
+    UnsignedBigInteger const* const shorter = (longer == &right) ? &left : &right;
 
     output.set_to(*longer);
     add_into_accumulator_without_allocation(output, *shorter);

@@ -125,7 +125,7 @@ enum KeyCode : u8 {
         Key_Shift
     = Key_LeftShift,
 };
-const int key_code_count = Key_Menu;
+int const key_code_count = Key_Menu;
 
 enum KeyModifier {
     Mod_None = 0x00,
@@ -155,7 +155,7 @@ struct KeyEvent {
     bool is_press() const { return flags & Is_Press; }
 };
 
-inline const char* key_code_to_string(KeyCode key)
+inline char const* key_code_to_string(KeyCode key)
 {
     switch (key) {
 #define __ENUMERATE_KEY_CODE(name, ui_name) \

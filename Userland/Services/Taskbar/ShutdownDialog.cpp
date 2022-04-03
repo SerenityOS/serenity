@@ -23,7 +23,7 @@ struct Option {
     bool default_action;
 };
 
-static const Vector<Option> options = {
+static Vector<Option> const options = {
     { "Power off computer", { "/bin/shutdown", "--now", nullptr }, true, true },
     { "Reboot", { "/bin/reboot", nullptr }, true, false },
     { "Log out", { "/bin/logout", nullptr }, true, false },
@@ -116,8 +116,4 @@ ShutdownDialog::ShutdownDialog()
 
     // Request WindowServer to re-update us on the current theme as we might've not been alive for the last notification.
     refresh_system_theme();
-}
-
-ShutdownDialog::~ShutdownDialog()
-{
 }

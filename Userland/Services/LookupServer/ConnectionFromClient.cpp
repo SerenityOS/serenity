@@ -19,10 +19,6 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSock
     s_connections.set(client_id, *this);
 }
 
-ConnectionFromClient::~ConnectionFromClient()
-{
-}
-
 void ConnectionFromClient::die()
 {
     s_connections.remove(client_id());
@@ -32,7 +28,7 @@ Messages::LookupServer::LookupNameResponse ConnectionFromClient::lookup_name(Str
 {
     auto maybe_answers = LookupServer::the().lookup(name, DNSRecordType::A);
     if (maybe_answers.is_error()) {
-        dbgln("LookupServer: Failed to lookup PTR record: {}", maybe_answers.error());
+        dbgln("LookupServer: Failed to lookup A record: {}", maybe_answers.error());
         return { 1, {} };
     }
 
@@ -48,7 +44,7 @@ Messages::LookupServer::LookupAddressResponse ConnectionFromClient::lookup_addre
 {
     if (address.length() != 4)
         return { 1, String() };
-    IPv4Address ip_address { (const u8*)address.characters() };
+    IPv4Address ip_address { (u8 const*)address.characters() };
     auto name = String::formatted("{}.{}.{}.{}.in-addr.arpa",
         ip_address[3],
         ip_address[2],

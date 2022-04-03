@@ -9,7 +9,7 @@
 namespace Prekernel {
 
 // FIXME: to be replaced by real implementation from AK/Format.h
-void dbgln(const char* text);
-void warnln(const char* text);
+void dbgln(char const* text);
+void warnln(char const* text);
 
 }

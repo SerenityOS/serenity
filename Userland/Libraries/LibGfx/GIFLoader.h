@@ -16,7 +16,7 @@ struct GIFLoadingContext;
 class GIFImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     virtual ~GIFImageDecoderPlugin() override;
-    GIFImageDecoderPlugin(const u8*, size_t);
+    GIFImageDecoderPlugin(u8 const*, size_t);
 
     virtual IntSize size() override;
     virtual void set_volatile() override;

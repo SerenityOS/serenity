@@ -10,6 +10,11 @@
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
+#include <LibGUI/Widget.h>
+
+REGISTER_WIDGET(SystemMonitor, ProcessUnveiledPathsWidget)
+
+namespace SystemMonitor {
 
 ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget()
 {
@@ -31,4 +36,6 @@ void ProcessUnveiledPathsWidget::set_pid(pid_t pid)
         return;
     m_pid = pid;
     m_model->set_json_path(String::formatted("/proc/{}/unveil", m_pid));
+}
+
 }

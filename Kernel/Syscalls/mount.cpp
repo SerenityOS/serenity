@@ -18,7 +18,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_no_promises());
@@ -114,7 +114,7 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> u
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$umount(Userspace<const char*> user_mountpoint, size_t mountpoint_length)
+ErrorOr<FlatPtr> Process::sys$umount(Userspace<char const*> user_mountpoint, size_t mountpoint_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (!is_superuser())

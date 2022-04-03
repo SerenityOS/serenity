@@ -32,6 +32,8 @@ public:
 
     Vector<String> supported_property_names() const;
 
+    auto const& map() const { return m_map; }
+
     void dump() const;
 
 private:

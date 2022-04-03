@@ -27,7 +27,7 @@ namespace Kernel {
 
 RecursiveSpinlock g_scheduler_lock;
 
-static u32 time_slice_for(const Thread& thread)
+static u32 time_slice_for(Thread const& thread)
 {
     // One time slice unit == 4ms (assuming 250 ticks/second)
     if (thread.is_idle_thread())
@@ -282,7 +282,7 @@ void Scheduler::context_switch(Thread* thread)
         from_thread->set_state(Thread::State::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-    const auto msg = "Scheduler[{}]: {} -> {} [prio={}] {:#04x}:{:p}";
+    auto const msg = "Scheduler[{}]: {} -> {} [prio={}] {:#04x}:{:p}";
 
     dbgln(msg,
         Processor::current_id(), from_thread->tid().value(),
@@ -359,7 +359,7 @@ void Scheduler::prepare_after_exec()
 void Scheduler::prepare_for_idle_loop()
 {
     // This is called when the CPU finished setting up the idle loop
-    // and is about to run it. We need to acquire he scheduler lock
+    // and is about to run it. We need to acquire the scheduler lock
     VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
     g_scheduler_lock.lock();
 
@@ -438,7 +438,7 @@ void Scheduler::add_time_scheduled(u64 time_to_add, bool is_kernel)
     });
 }
 
-void Scheduler::timer_tick(const RegisterState& regs)
+void Scheduler::timer_tick(RegisterState const& regs)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(Processor::current_in_irq());

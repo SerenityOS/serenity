@@ -37,6 +37,16 @@ public:
     bool has_focus() const { return m_focus; }
     void set_has_focus(bool focus) { m_focus = focus; }
 
+    PaintContext clone() const
+    {
+        auto clone = PaintContext(m_painter, m_palette, m_scroll_offset);
+        clone.m_viewport_rect = m_viewport_rect;
+        clone.m_should_show_line_box_borders = m_should_show_line_box_borders;
+        clone.m_focus = m_focus;
+        clone.m_svg_context = m_svg_context;
+        return clone;
+    }
+
 private:
     Gfx::Painter& m_painter;
     Palette m_palette;

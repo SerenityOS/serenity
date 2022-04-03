@@ -378,6 +378,22 @@ private:
     Optional<EnvironmentCoordinate> mutable m_cached_environment_coordinate;
 };
 
+class DeleteVariable final : public Instruction {
+public:
+    explicit DeleteVariable(IdentifierTableIndex identifier)
+        : Instruction(Type::DeleteVariable)
+        , m_identifier(identifier)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
+    IdentifierTableIndex m_identifier;
+};
+
 class GetById final : public Instruction {
 public:
     explicit GetById(IdentifierTableIndex property)
@@ -394,12 +410,21 @@ private:
     IdentifierTableIndex m_property;
 };
 
+enum class PropertyKind {
+    Getter,
+    Setter,
+    KeyValue,
+    Spread,
+    ProtoSetter,
+};
+
 class PutById final : public Instruction {
 public:
-    explicit PutById(Register base, IdentifierTableIndex property)
+    explicit PutById(Register base, IdentifierTableIndex property, PropertyKind kind = PropertyKind::KeyValue)
         : Instruction(Type::PutById)
         , m_base(base)
         , m_property(property)
+        , m_kind(kind)
     {
     }
 
@@ -409,6 +434,23 @@ public:
 
 private:
     Register m_base;
+    IdentifierTableIndex m_property;
+    PropertyKind m_kind;
+};
+
+class DeleteById final : public Instruction {
+public:
+    explicit DeleteById(IdentifierTableIndex property)
+        : Instruction(Type::DeleteById)
+        , m_property(property)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
     IdentifierTableIndex m_property;
 };
 
@@ -430,10 +472,11 @@ private:
 
 class PutByValue final : public Instruction {
 public:
-    PutByValue(Register base, Register property)
+    PutByValue(Register base, Register property, PropertyKind kind = PropertyKind::KeyValue)
         : Instruction(Type::PutByValue)
         , m_base(base)
         , m_property(property)
+        , m_kind(kind)
     {
     }
 
@@ -444,6 +487,23 @@ public:
 private:
     Register m_base;
     Register m_property;
+    PropertyKind m_kind;
+};
+
+class DeleteByValue final : public Instruction {
+public:
+    DeleteByValue(Register base)
+        : Instruction(Type::DeleteByValue)
+        , m_base(base)
+    {
+    }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
+    Register m_base;
 };
 
 class Jump : public Instruction {

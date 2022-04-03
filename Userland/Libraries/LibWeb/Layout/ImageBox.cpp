@@ -12,7 +12,7 @@
 
 namespace Web::Layout {
 
-ImageBox::ImageBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style, const ImageLoader& image_loader)
+ImageBox::ImageBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style, ImageLoader const& image_loader)
     : ReplacedBox(document, element, move(style))
     , m_image_loader(image_loader)
 {
@@ -61,7 +61,7 @@ void ImageBox::prepare_for_replaced_layout()
         if (alt.is_empty())
             alt = image_element.src();
         set_intrinsic_width(font.width(alt) + 16);
-        set_intrinsic_height(font.glyph_height() + 16);
+        set_intrinsic_height(font.pixel_size() + 16);
     }
 
     if (!has_intrinsic_width() && !has_intrinsic_height()) {

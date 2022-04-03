@@ -8,7 +8,7 @@
 #include <LibTest/TestCase.h>
 #include <time.h>
 
-const auto expected_epoch = "Thu Jan  1 00:00:00 1970\n"sv;
+auto const expected_epoch = "Thu Jan  1 00:00:00 1970\n"sv;
 
 class TimeZoneGuard {
 public:

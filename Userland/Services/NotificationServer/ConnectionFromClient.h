@@ -18,7 +18,7 @@ namespace NotificationServer {
 class ConnectionFromClient final : public IPC::ConnectionFromClient<NotificationClientEndpoint, NotificationServerEndpoint> {
     C_OBJECT(ConnectionFromClient)
 public:
-    ~ConnectionFromClient() override;
+    ~ConnectionFromClient() override = default;
 
     virtual void die() override;
 

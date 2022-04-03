@@ -16,6 +16,7 @@ public:
     LineBox() = default;
 
     float width() const { return m_width; }
+    float height() const { return m_height; }
     float bottom() const { return m_bottom; }
     float baseline() const { return m_baseline; }
 
@@ -36,6 +37,7 @@ private:
 
     Vector<LineBoxFragment> m_fragments;
     float m_width { 0 };
+    float m_height { 0 };
     float m_bottom { 0 };
     float m_baseline { 0 };
 };

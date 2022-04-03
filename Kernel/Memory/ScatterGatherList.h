@@ -19,7 +19,7 @@ namespace Kernel::Memory {
 class ScatterGatherList : public RefCounted<ScatterGatherList> {
 public:
     static RefPtr<ScatterGatherList> try_create(AsyncBlockDeviceRequest&, Span<NonnullRefPtr<PhysicalPage>> allocated_pages, size_t device_block_size);
-    const VMObject& vmobject() const { return m_vm_object; }
+    VMObject const& vmobject() const { return m_vm_object; }
     VirtualAddress dma_region() const { return m_dma_region->vaddr(); }
     size_t scatters_count() const { return m_vm_object->physical_pages().size(); }
 

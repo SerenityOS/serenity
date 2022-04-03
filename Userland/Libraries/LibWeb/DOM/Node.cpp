@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -95,7 +95,7 @@ const HTML::HTMLElement* Node::enclosing_html_element() const
     return first_ancestor_of_type<HTML::HTMLElement>();
 }
 
-const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(const FlyString& attribute) const
+const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(FlyString const& attribute) const
 {
     for (auto* node = this; node; node = node->parent()) {
         if (is<HTML::HTMLElement>(*node) && verify_cast<HTML::HTMLElement>(*node).has_attribute(attribute))
@@ -162,7 +162,7 @@ String Node::node_value() const
 }
 
 // https://dom.spec.whatwg.org/#ref-for-dom-node-nodevalue%E2%91%A0
-void Node::set_node_value(const String& value)
+void Node::set_node_value(String const& value)
 {
 
     if (is<Attribute>(this)) {
@@ -249,7 +249,7 @@ Element* Node::parent_element()
     return verify_cast<Element>(parent());
 }
 
-const Element* Node::parent_element() const
+Element const* Node::parent_element() const
 {
     if (!parent() || !is<Element>(parent()))
         return nullptr;
@@ -313,9 +313,19 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
         // FIXME: Queue a tree mutation record for node with « », nodes, null, and null.
     }
 
+    // 5. If child is non-null, then:
     if (child) {
-        // FIXME: For each live range whose start node is parent and start offset is greater than child’s index, increase its start offset by count.
-        // FIXME: For each live range whose end node is parent and end offset is greater than child’s index, increase its end offset by count.
+        // 1. For each live range whose start node is parent and start offset is greater than child’s index, increase its start offset by count.
+        for (auto& range : Range::live_ranges()) {
+            if (range->start_container() == this && range->start_offset() > child->index())
+                range->set_start(*range->start_container(), range->start_offset() + count);
+        }
+
+        // 2. For each live range whose end node is parent and end offset is greater than child’s index, increase its end offset by count.
+        for (auto& range : Range::live_ranges()) {
+            if (range->end_container() == this && range->end_offset() > child->index())
+                range->set_end(*range->end_container(), range->end_offset() + count);
+        }
     }
 
     // FIXME: Let previousSibling be child’s previous sibling or parent’s last child if child is null. (Currently unused so not included)
@@ -358,9 +368,7 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
 // https://dom.spec.whatwg.org/#concept-node-pre-insert
 ExceptionOr<NonnullRefPtr<Node>> Node::pre_insert(NonnullRefPtr<Node> node, RefPtr<Node> child)
 {
-    auto validity_result = ensure_pre_insertion_validity(node, child);
-    if (validity_result.is_exception())
-        return validity_result.exception();
+    TRY(ensure_pre_insertion_validity(node, child));
 
     auto reference_child = child;
     if (reference_child == node)
@@ -399,12 +407,32 @@ void Node::remove(bool suppress_observers)
     auto* parent = TreeNode<Node>::parent();
     VERIFY(parent);
 
-    // FIXME: Let index be node’s index. (Currently unused so not included)
+    // 3. Let index be node’s index.
+    auto index = this->index();
 
-    // FIXME: For each live range whose start node is an inclusive descendant of node, set its start to (parent, index).
-    // FIXME: For each live range whose end node is an inclusive descendant of node, set its end to (parent, index).
-    // FIXME: For each live range whose start node is parent and start offset is greater than index, decrease its start offset by 1.
-    // FIXME: For each live range whose end node is parent and end offset is greater than index, decrease its end offset by 1.
+    // 4. For each live range whose start node is an inclusive descendant of node, set its start to (parent, index).
+    for (auto& range : Range::live_ranges()) {
+        if (range->start_container()->is_inclusive_descendant_of(*this))
+            range->set_start(*parent, index);
+    }
+
+    // 5. For each live range whose end node is an inclusive descendant of node, set its end to (parent, index).
+    for (auto& range : Range::live_ranges()) {
+        if (range->end_container()->is_inclusive_descendant_of(*this))
+            range->set_end(*parent, index);
+    }
+
+    // 6. For each live range whose start node is parent and start offset is greater than index, decrease its start offset by 1.
+    for (auto& range : Range::live_ranges()) {
+        if (range->start_container() == parent && range->start_offset() > index)
+            range->set_start(*range->start_container(), range->start_offset() - 1);
+    }
+
+    // 7. For each live range whose end node is parent and end offset is greater than index, decrease its end offset by 1.
+    for (auto& range : Range::live_ranges()) {
+        if (range->end_container() == parent && range->end_offset() > index)
+            range->set_end(*range->end_container(), range->end_offset() - 1);
+    }
 
     // For each NodeIterator object iterator whose root’s node document is node’s node document, run the NodeIterator pre-removing steps given node and iterator.
     document().for_each_node_iterator([&](NodeIterator& node_iterator) {
@@ -622,7 +650,7 @@ void Node::set_layout_node(Badge<Layout::Node>, Layout::Node* layout_node) const
         m_layout_node = nullptr;
 }
 
-EventTarget* Node::get_parent(const Event&)
+EventTarget* Node::get_parent(Event const&)
 {
     // FIXME: returns the node’s assigned slot, if node is assigned, and node’s parent otherwise.
     return parent();
@@ -718,7 +746,7 @@ u16 Node::compare_document_position(RefPtr<Node> other)
 }
 
 // https://dom.spec.whatwg.org/#concept-tree-host-including-inclusive-ancestor
-bool Node::is_host_including_inclusive_ancestor_of(const Node& other) const
+bool Node::is_host_including_inclusive_ancestor_of(Node const& other) const
 {
     if (is_inclusive_ancestor_of(other))
         return true;
@@ -815,11 +843,18 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
     }
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#concept-n-script
+bool Node::is_scripting_enabled() const
+{
+    // Scripting is enabled for a node node if node's node document's browsing context is non-null, and scripting is enabled for node's relevant settings object.
+    return document().browsing_context() && const_cast<Document&>(document()).relevant_settings_object().is_scripting_enabled();
+}
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#concept-n-noscript
 bool Node::is_scripting_disabled() const
 {
-    // FIXME: or when scripting is disabled for its relevant settings object.
-    return !document().browsing_context();
+    // Scripting is disabled for a node when scripting is not enabled, i.e., when its node document's browsing context is null or when scripting is disabled for its relevant settings object.
+    return !is_scripting_enabled();
 }
 
 // https://dom.spec.whatwg.org/#dom-node-contains

@@ -48,8 +48,8 @@ public:
             return 0;
 
         size_t count;
-        const u8* first = &m_data[start / 8];
-        const u8* last = &m_data[(start + len) / 8];
+        u8 const* first = &m_data[start / 8];
+        u8 const* last = &m_data[(start + len) / 8];
         u8 byte = *first;
         byte &= bitmask_first_byte[start % 8];
         if (first == last) {
@@ -64,19 +64,19 @@ public:
                 count += popcount(byte);
             }
             if (++first < last) {
-                const size_t* ptr_large = (const size_t*)(((FlatPtr)first + sizeof(size_t) - 1) & ~(sizeof(size_t) - 1));
-                if ((const u8*)ptr_large > last)
-                    ptr_large = (const size_t*)last;
-                while (first < (const u8*)ptr_large) {
+                size_t const* ptr_large = (size_t const*)(((FlatPtr)first + sizeof(size_t) - 1) & ~(sizeof(size_t) - 1));
+                if ((u8 const*)ptr_large > last)
+                    ptr_large = (size_t const*)last;
+                while (first < (u8 const*)ptr_large) {
                     count += popcount(*first);
                     first++;
                 }
-                const size_t* last_large = (const size_t*)((FlatPtr)last & ~(sizeof(size_t) - 1));
+                size_t const* last_large = (size_t const*)((FlatPtr)last & ~(sizeof(size_t) - 1));
                 while (ptr_large < last_large) {
                     count += popcount(*ptr_large);
                     ptr_large++;
                 }
-                for (first = (const u8*)ptr_large; first < last; first++)
+                for (first = (u8 const*)ptr_large; first < last; first++)
                     count += popcount(*first);
             }
         }
@@ -88,24 +88,24 @@ public:
 
     [[nodiscard]] bool is_null() const { return m_data == nullptr; }
 
-    [[nodiscard]] const u8* data() const { return m_data; }
+    [[nodiscard]] u8 const* data() const { return m_data; }
 
     template<bool VALUE>
     Optional<size_t> find_one_anywhere(size_t hint = 0) const
     {
         VERIFY(hint < m_size);
-        const u8* end = &m_data[m_size / 8];
+        u8 const* end = &m_data[m_size / 8];
 
         for (;;) {
             // We will use hint as what it is: a hint. Because we try to
             // scan over entire 32 bit words, we may start searching before
             // the hint!
-            const size_t* ptr_large = (const size_t*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(size_t) - 1));
-            if ((const u8*)ptr_large < &m_data[0]) {
+            size_t const* ptr_large = (size_t const*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(size_t) - 1));
+            if ((u8 const*)ptr_large < &m_data[0]) {
                 ptr_large++;
 
                 // m_data isn't aligned, check first bytes
-                size_t start_ptr_large = (const u8*)ptr_large - &m_data[0];
+                size_t start_ptr_large = (u8 const*)ptr_large - &m_data[0];
                 size_t i = 0;
                 u8 byte = VALUE ? 0x00 : 0xff;
                 while (i < start_ptr_large && m_data[i] == byte)
@@ -120,14 +120,14 @@ public:
             }
 
             size_t val_large = VALUE ? 0x0 : NumericLimits<size_t>::max();
-            const size_t* end_large = (const size_t*)((FlatPtr)end & ~(sizeof(size_t) - 1));
+            size_t const* end_large = (size_t const*)((FlatPtr)end & ~(sizeof(size_t) - 1));
             while (ptr_large < end_large && *ptr_large == val_large)
                 ptr_large++;
 
             if (ptr_large == end_large) {
                 // We didn't find anything, check the remaining few bytes (if any)
                 u8 byte = VALUE ? 0x00 : 0xff;
-                size_t i = (const u8*)ptr_large - &m_data[0];
+                size_t i = (u8 const*)ptr_large - &m_data[0];
                 size_t byte_count = m_size / 8;
                 VERIFY(i <= byte_count);
                 while (i < byte_count && m_data[i] == byte)
@@ -137,7 +137,7 @@ public:
                         return {}; // We already checked from the beginning
 
                     // Try scanning before the hint
-                    end = (const u8*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(size_t) - 1));
+                    end = (u8 const*)((FlatPtr)&m_data[hint / 8] & ~(sizeof(size_t) - 1));
                     hint = 0;
                     continue;
                 }
@@ -154,7 +154,7 @@ public:
             if constexpr (!VALUE)
                 val_large = ~val_large;
             VERIFY(val_large != 0);
-            return ((const u8*)ptr_large - &m_data[0]) * 8 + bit_scan_forward(val_large) - 1;
+            return ((u8 const*)ptr_large - &m_data[0]) * 8 + bit_scan_forward(val_large) - 1;
         }
     }
 

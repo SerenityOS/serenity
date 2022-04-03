@@ -78,7 +78,7 @@ public:
                         nread += 8;
                         m_current_byte.clear();
                     } else {
-                        const auto bit = (m_current_byte.value() >> (7 - m_bit_offset)) & 1;
+                        auto const bit = (m_current_byte.value() >> (7 - m_bit_offset)) & 1;
                         result <<= 1;
                         result |= bit;
                         ++nread;
@@ -87,7 +87,7 @@ public:
                     }
                 } else {
                     // Always take this branch for booleans or u8: there's no purpose in reading more than a single bit
-                    const auto bit = (m_current_byte.value() >> (7 - m_bit_offset)) & 1;
+                    auto const bit = (m_current_byte.value() >> (7 - m_bit_offset)) & 1;
                     if constexpr (IsSame<bool, T>)
                         result = bit;
                     else {

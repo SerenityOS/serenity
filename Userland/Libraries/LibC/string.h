@@ -17,50 +17,50 @@ __BEGIN_DECLS
 // do the same here to maintain compatibility
 #include <strings.h>
 
-size_t strlen(const char*);
-size_t strnlen(const char*, size_t maxlen);
+size_t strlen(char const*);
+size_t strnlen(char const*, size_t maxlen);
 
-int strcmp(const char*, const char*);
-int strncmp(const char*, const char*, size_t);
+int strcmp(char const*, char const*);
+int strncmp(char const*, char const*, size_t);
 
-int memcmp(const void*, const void*, size_t);
-int timingsafe_memcmp(const void*, const void*, size_t);
-void* memcpy(void*, const void*, size_t);
-void* memmove(void*, const void*, size_t);
-void* memchr(const void*, int c, size_t);
-const void* memmem(const void* haystack, size_t, const void* needle, size_t);
+int memcmp(void const*, void const*, size_t);
+int timingsafe_memcmp(void const*, void const*, size_t);
+void* memcpy(void*, void const*, size_t);
+void* memmove(void*, void const*, size_t);
+void* memchr(void const*, int c, size_t);
+void const* memmem(void const* haystack, size_t, void const* needle, size_t);
 
 void* memset(void*, int, size_t);
 void explicit_bzero(void*, size_t) __attribute__((nonnull(1)));
 
-__attribute__((malloc)) char* strdup(const char*);
-__attribute__((malloc)) char* strndup(const char*, size_t);
+__attribute__((malloc)) char* strdup(char const*);
+__attribute__((malloc)) char* strndup(char const*, size_t);
 
-char* strcpy(char* dest, const char* src);
-char* strncpy(char* dest, const char* src, size_t);
-__attribute__((warn_unused_result)) size_t strlcpy(char* dest, const char* src, size_t);
+char* strcpy(char* dest, char const* src);
+char* strncpy(char* dest, char const* src, size_t);
+__attribute__((warn_unused_result)) size_t strlcpy(char* dest, char const* src, size_t);
 
-char* strchr(const char*, int c);
-char* strchrnul(const char*, int c);
-char* strstr(const char* haystack, const char* needle);
-char* strrchr(const char*, int c);
+char* strchr(char const*, int c);
+char* strchrnul(char const*, int c);
+char* strstr(char const* haystack, char const* needle);
+char* strrchr(char const*, int c);
 
-char* index(const char* str, int ch);
-char* rindex(const char* str, int ch);
+char* index(char const* str, int ch);
+char* rindex(char const* str, int ch);
 
-char* strcat(char* dest, const char* src);
-char* strncat(char* dest, const char* src, size_t);
+char* strcat(char* dest, char const* src);
+char* strncat(char* dest, char const* src, size_t);
 
-size_t strspn(const char*, const char* accept);
-size_t strcspn(const char*, const char* reject);
+size_t strspn(char const*, char const* accept);
+size_t strcspn(char const*, char const* reject);
 int strerror_r(int, char*, size_t);
 char* strerror(int errnum);
 char* strsignal(int signum);
-char* strpbrk(const char*, const char* accept);
-char* strtok_r(char* str, const char* delim, char** saved_str);
-char* strtok(char* str, const char* delim);
-int strcoll(const char* s1, const char* s2);
-size_t strxfrm(char* dest, const char* src, size_t n);
+char* strpbrk(char const*, char const* accept);
+char* strtok_r(char* str, char const* delim, char** saved_str);
+char* strtok(char* str, char const* delim);
+int strcoll(char const* s1, char const* s2);
+size_t strxfrm(char* dest, char const* src, size_t n);
 char* strsep(char** str, char const* delim);
 
 __END_DECLS

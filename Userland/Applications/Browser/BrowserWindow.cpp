@@ -64,7 +64,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     auto app_icon = GUI::Icon::default_icon("app-browser");
     m_bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), true);
 
-    resize(640, 480);
+    resize(730, 560);
     set_icon(app_icon.bitmap_for_size(16));
     set_title("Browser");
 
@@ -113,6 +113,15 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     m_window_actions.on_previous_tab = [this] {
         m_tab_widget->activate_previous_tab();
     };
+
+    for (int i = 0; i <= 7; ++i) {
+        m_window_actions.on_tabs.append([this, i] {
+            m_tab_widget->set_tab_index(i);
+        });
+    }
+    m_window_actions.on_tabs.append([this] {
+        m_tab_widget->activate_last_tab();
+    });
 
     m_window_actions.on_about = [this] {
         auto app_icon = GUI::Icon::default_icon("app-browser");
@@ -378,6 +387,14 @@ void BrowserWindow::build_menus()
     m_user_agent_spoof_actions.add_action(custom_user_agent);
 
     debug_menu.add_separator();
+    auto scripting_enabled_action = GUI::Action::create_checkable(
+        "Enable Scripting", [this](auto& action) {
+            active_tab().m_web_content_view->debug_request("scripting", action.is_checked() ? "on" : "off");
+        },
+        this);
+    scripting_enabled_action->set_checked(true);
+    debug_menu.add_action(scripting_enabled_action);
+
     auto same_origin_policy_action = GUI::Action::create_checkable(
         "Enable Same Origin &Policy", [this](auto& action) {
             active_tab().m_web_content_view->debug_request("same-origin-policy", action.is_checked() ? "on" : "off");
@@ -536,6 +553,10 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
 
     new_tab.on_want_cookies = [this]() {
         return m_cookie_jar.get_all_cookies();
+    };
+
+    new_tab.on_get_local_storage_entries = [this]() {
+        return active_tab().m_web_content_view->get_local_storage_entries();
     };
 
     new_tab.load(url);

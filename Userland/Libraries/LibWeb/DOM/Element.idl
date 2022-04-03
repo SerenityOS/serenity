@@ -16,6 +16,7 @@ interface Element : Node {
     undefined setAttribute(DOMString qualifiedName, DOMString value);
     [CEReactions] undefined setAttributeNS(DOMString? namespace , DOMString qualifiedName , DOMString value);
     undefined removeAttribute(DOMString qualifiedName);
+    [CEReactions] boolean toggleAttribute(DOMString qualifiedName, optional boolean force);
     boolean hasAttribute(DOMString qualifiedName);
     boolean hasAttributes();
     [SameObject] readonly attribute NamedNodeMap attributes;

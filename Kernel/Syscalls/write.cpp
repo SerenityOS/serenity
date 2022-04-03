@@ -51,7 +51,7 @@ ErrorOr<FlatPtr> Process::sys$writev(int fd, Userspace<const struct iovec*> iov,
     return nwritten;
 }
 
-ErrorOr<FlatPtr> Process::do_write(OpenFileDescription& description, const UserOrKernelBuffer& data, size_t data_size)
+ErrorOr<FlatPtr> Process::do_write(OpenFileDescription& description, UserOrKernelBuffer const& data, size_t data_size)
 {
     size_t total_nwritten = 0;
 
@@ -87,7 +87,7 @@ ErrorOr<FlatPtr> Process::do_write(OpenFileDescription& description, const UserO
     return total_nwritten;
 }
 
-ErrorOr<FlatPtr> Process::sys$write(int fd, Userspace<const u8*> data, size_t size)
+ErrorOr<FlatPtr> Process::sys$write(int fd, Userspace<u8 const*> data, size_t size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::stdio));

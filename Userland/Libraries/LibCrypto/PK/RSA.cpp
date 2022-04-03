@@ -56,7 +56,7 @@ RSA::KeyPairType RSA::parse_rsa_key(ReadonlyBytes der)
 
     bool has_read_error = false;
 
-    const auto check_if_pkcs8_rsa_key = [&] {
+    auto const check_if_pkcs8_rsa_key = [&] {
         // see if it's a sequence:
         auto tag_result = decoder.peek();
         if (tag_result.is_error()) {

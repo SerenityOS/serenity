@@ -1,6 +1,6 @@
 ## Name
 
-A brief description of Core::Object and how it relates to GML
+A brief description of Core::Object and how it relates to GML.
 
 ## Description
 

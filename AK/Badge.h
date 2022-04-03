@@ -17,8 +17,8 @@ private:
     friend T;
     constexpr Badge() = default;
 
-    Badge(const Badge&) = delete;
-    Badge& operator=(const Badge&) = delete;
+    Badge(Badge const&) = delete;
+    Badge& operator=(Badge const&) = delete;
 
     Badge(Badge&&) = delete;
     Badge& operator=(Badge&&) = delete;

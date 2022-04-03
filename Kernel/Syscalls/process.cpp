@@ -34,7 +34,7 @@ ErrorOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t b
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length)
+ErrorOr<FlatPtr> Process::sys$set_process_name(Userspace<char const*> user_name, size_t user_name_length)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     TRY(require_promise(Pledge::proc));
@@ -48,7 +48,7 @@ ErrorOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_name,
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*> user_params)
+ErrorOr<FlatPtr> Process::sys$set_coredump_metadata(Userspace<Syscall::SC_set_coredump_metadata_params const*> user_params)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto params = TRY(copy_typed_from_user(user_params));

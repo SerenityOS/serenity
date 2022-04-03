@@ -16,7 +16,7 @@ class LoginWindow final : public GUI::Window {
     C_OBJECT(LoginWindow);
 
 public:
-    virtual ~LoginWindow() override { }
+    virtual ~LoginWindow() override = default;
 
     Function<void()> on_submit;
 

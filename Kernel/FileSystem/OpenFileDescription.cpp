@@ -175,7 +175,7 @@ ErrorOr<size_t> OpenFileDescription::read(UserOrKernelBuffer& buffer, size_t cou
     return nread;
 }
 
-ErrorOr<size_t> OpenFileDescription::write(const UserOrKernelBuffer& data, size_t size)
+ErrorOr<size_t> OpenFileDescription::write(UserOrKernelBuffer const& data, size_t size)
 {
     auto offset = TRY(m_state.with([&](auto& state) -> ErrorOr<off_t> {
         if (Checked<off_t>::addition_would_overflow(state.current_offset, size))
@@ -275,11 +275,11 @@ bool OpenFileDescription::is_device() const
     return m_file->is_device();
 }
 
-const Device* OpenFileDescription::device() const
+Device const* OpenFileDescription::device() const
 {
     if (!is_device())
         return nullptr;
-    return static_cast<const Device*>(m_file.ptr());
+    return static_cast<Device const*>(m_file.ptr());
 }
 
 Device* OpenFileDescription::device()
@@ -313,11 +313,11 @@ bool OpenFileDescription::is_inode_watcher() const
     return m_file->is_inode_watcher();
 }
 
-const InodeWatcher* OpenFileDescription::inode_watcher() const
+InodeWatcher const* OpenFileDescription::inode_watcher() const
 {
     if (!is_inode_watcher())
         return nullptr;
-    return static_cast<const InodeWatcher*>(m_file.ptr());
+    return static_cast<InodeWatcher const*>(m_file.ptr());
 }
 
 InodeWatcher* OpenFileDescription::inode_watcher()
@@ -332,11 +332,11 @@ bool OpenFileDescription::is_master_pty() const
     return m_file->is_master_pty();
 }
 
-const MasterPTY* OpenFileDescription::master_pty() const
+MasterPTY const* OpenFileDescription::master_pty() const
 {
     if (!is_master_pty())
         return nullptr;
-    return static_cast<const MasterPTY*>(m_file.ptr());
+    return static_cast<MasterPTY const*>(m_file.ptr());
 }
 
 MasterPTY* OpenFileDescription::master_pty()
@@ -413,11 +413,11 @@ Socket* OpenFileDescription::socket()
     return static_cast<Socket*>(m_file.ptr());
 }
 
-const Socket* OpenFileDescription::socket() const
+Socket const* OpenFileDescription::socket() const
 {
     if (!is_socket())
         return nullptr;
-    return static_cast<const Socket*>(m_file.ptr());
+    return static_cast<Socket const*>(m_file.ptr());
 }
 
 void OpenFileDescription::set_file_flags(u32 flags)

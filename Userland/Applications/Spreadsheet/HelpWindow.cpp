@@ -39,7 +39,7 @@ public:
 
     String key(const GUI::ModelIndex& index) const { return m_keys[index.row()]; }
 
-    void set_from(const JsonObject& object)
+    void set_from(JsonObject const& object)
     {
         m_keys.clear();
         object.for_each_member([this](auto& name, auto&) {

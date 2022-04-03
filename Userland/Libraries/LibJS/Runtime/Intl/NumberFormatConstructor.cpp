@@ -336,7 +336,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_obje
             return vm.throw_completion<TypeError>(global_object, ErrorType::IntlOptionUndefined, "currency"sv, "style"sv, style);
     }
     // 7. Else,
-    //     a. If the result of IsWellFormedCurrencyCode(currency) is false, throw a RangeError exception.
+    //     a. If ! IsWellFormedCurrencyCode(currency) is false, throw a RangeError exception.
     else if (!is_well_formed_currency_code(currency.as_string().string()))
         return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, currency, "currency"sv);
 
@@ -356,7 +356,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_obje
             return vm.throw_completion<TypeError>(global_object, ErrorType::IntlOptionUndefined, "unit"sv, "style"sv, style);
     }
     // 12. Else,
-    //     a. If the result of IsWellFormedUnitIdentifier(unit) is false, throw a RangeError exception.
+    //     a. If ! IsWellFormedUnitIdentifier(unit) is false, throw a RangeError exception.
     else if (!is_well_formed_unit_identifier(unit.as_string().string()))
         return vm.throw_completion<RangeError>(global_object, ErrorType::OptionIsNotValidValue, unit, "unit"sv);
 
@@ -365,8 +365,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(GlobalObject& global_obje
 
     // 14. If style is "currency", then
     if (intl_object.style() == NumberFormat::Style::Currency) {
-        // a. Let currency be the result of converting currency to upper case as specified in 6.1.
-        // b. Set intlObj.[[Currency]] to currency.
+        // a. Set intlObj.[[Currency]] to the ASCII-uppercase of currency.
         intl_object.set_currency(currency.as_string().string().to_uppercase());
 
         // c. Set intlObj.[[CurrencyDisplay]] to currencyDisplay.

@@ -28,7 +28,7 @@ int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timev
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/pselect.html
-int pselect(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const timespec* timeout, const sigset_t* sigmask)
+int pselect(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timespec const* timeout, sigset_t const* sigmask)
 {
     Vector<pollfd, FD_SETSIZE> fds;
 

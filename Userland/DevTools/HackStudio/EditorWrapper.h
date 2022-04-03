@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Debugger/BreakpointCallback.h"
+#include "FindWidget.h"
 #include "Git/GitRepo.h"
 #include "LanguageClient.h"
 #include <AK/Function.h>
@@ -28,7 +29,7 @@ public:
     virtual ~EditorWrapper() override = default;
 
     Editor& editor() { return *m_editor; }
-    const Editor& editor() const { return *m_editor; }
+    Editor const& editor() const { return *m_editor; }
 
     void save();
 
@@ -37,8 +38,8 @@ public:
     void set_mode_displayable();
     void set_mode_non_displayable();
     void set_debug_mode(bool);
-    void set_filename(const String&);
-    const String& filename() const { return m_filename; }
+    void set_filename(String const&);
+    String const& filename() const { return m_filename; }
     String const& filename_title() const { return m_filename_title; }
 
     Optional<String> const& project_root() const { return m_project_root; }
@@ -52,6 +53,9 @@ public:
     Function<void()> on_change;
     Function<void(EditorWrapper&)> on_tab_close_request;
 
+    void search_action();
+    FindWidget const& find_widget() const { return *m_find_widget; }
+
 private:
     static constexpr auto untitled_label = "(Untitled)";
 
@@ -62,6 +66,7 @@ private:
     String m_filename;
     String m_filename_title;
     RefPtr<Editor> m_editor;
+    RefPtr<FindWidget> m_find_widget;
 
     Optional<String> m_project_root;
     RefPtr<GitRepo> m_git_repo;

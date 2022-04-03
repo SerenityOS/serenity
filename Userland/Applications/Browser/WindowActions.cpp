@@ -48,6 +48,23 @@ WindowActions::WindowActions(GUI::Window& window)
         &window);
     m_previous_tab_action->set_status_tip("Switch to the previous tab");
 
+    for (auto i = 0; i <= 7; ++i) {
+        m_tab_actions.append(GUI::Action::create(
+            String::formatted("Tab {}", i + 1), { Mod_Ctrl, static_cast<KeyCode>(Key_1 + i) }, [this, i](auto&) {
+                if (on_tabs[i])
+                    on_tabs[i]();
+            },
+            &window));
+        m_tab_actions.last().set_status_tip(String::formatted("Switch to tab {}", i + 1));
+    }
+    m_tab_actions.append(GUI::Action::create(
+        "Last tab", { Mod_Ctrl, Key_9 }, [this](auto&) {
+            if (on_tabs[8])
+                on_tabs[8]();
+        },
+        &window));
+    m_tab_actions.last().set_status_tip("Switch to last tab");
+
     m_about_action = GUI::Action::create(
         "&About Browser", GUI::Icon::default_icon("app-browser").bitmap_for_size(16), [this](const GUI::Action&) {
             if (on_about)

@@ -65,7 +65,7 @@ void Label::handle_mousemove_on_label(Badge<Painting::TextPaintable>, Gfx::IntPo
     }
 }
 
-bool Label::is_inside_associated_label(LabelableNode const& control, const Gfx::IntPoint& position)
+bool Label::is_inside_associated_label(LabelableNode const& control, Gfx::IntPoint const& position)
 {
     if (auto* label = label_for_control_node(control); label)
         return enclosing_int_rect(label->paint_box()->absolute_rect()).contains(position);

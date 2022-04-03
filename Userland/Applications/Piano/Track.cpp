@@ -16,7 +16,7 @@
 #include <LibDSP/Music.h>
 #include <math.h>
 
-Track::Track(const u32& time)
+Track::Track(u32 const& time)
     : m_time(time)
     , m_temporary_transport(LibDSP::Transport::construct(120, 4))
     , m_delay(make_ref_counted<LibDSP::Effects::Delay>(m_temporary_transport))

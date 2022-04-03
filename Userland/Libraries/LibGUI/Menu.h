@@ -26,9 +26,9 @@ public:
     static Menu* from_menu_id(int);
     int menu_id() const { return m_menu_id; }
 
-    const String& name() const { return m_name; }
-    const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
-    void set_icon(const Gfx::Bitmap*);
+    String const& name() const { return m_name; }
+    Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
+    void set_icon(Gfx::Bitmap const*);
 
     Action* action_at(size_t);
 
@@ -41,7 +41,7 @@ public:
     Menu& add_submenu(String name);
     void remove_all_actions();
 
-    void popup(const Gfx::IntPoint& screen_position, const RefPtr<Action>& default_action = nullptr);
+    void popup(Gfx::IntPoint const& screen_position, RefPtr<Action> const& default_action = nullptr);
     void dismiss();
 
     void visibility_did_change(Badge<ConnectionToWindowServer>, bool visible);
@@ -61,7 +61,7 @@ private:
 
     int realize_menu(RefPtr<Action> default_action = nullptr);
     void unrealize_menu();
-    void realize_if_needed(const RefPtr<Action>& default_action);
+    void realize_if_needed(RefPtr<Action> const& default_action);
 
     void realize_menu_item(MenuItem&, int item_id);
 

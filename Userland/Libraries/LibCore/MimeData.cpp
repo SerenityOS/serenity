@@ -31,7 +31,7 @@ Vector<URL> MimeData::urls() const
     return urls;
 }
 
-void MimeData::set_urls(const Vector<URL>& urls)
+void MimeData::set_urls(Vector<URL> const& urls)
 {
     StringBuilder builder;
     for (auto& url : urls) {
@@ -46,7 +46,7 @@ String MimeData::text() const
     return String::copy(m_data.get("text/plain").value_or({}));
 }
 
-void MimeData::set_text(const String& text)
+void MimeData::set_text(String const& text)
 {
     set_data("text/plain", text.to_byte_buffer());
 }

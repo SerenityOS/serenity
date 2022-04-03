@@ -15,7 +15,7 @@ namespace Desktop {
 
 class AppFile : public RefCounted<AppFile> {
 public:
-    static constexpr const char* APP_FILES_DIRECTORY = "/res/apps";
+    static constexpr char const* APP_FILES_DIRECTORY = "/res/apps";
     static NonnullRefPtr<AppFile> get_for_app(StringView app_name);
     static NonnullRefPtr<AppFile> open(StringView path);
     static void for_each(Function<void(NonnullRefPtr<AppFile>)>, StringView directory = APP_FILES_DIRECTORY);

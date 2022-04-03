@@ -20,12 +20,12 @@ JsonValue::JsonValue(Type type)
 {
 }
 
-JsonValue::JsonValue(const JsonValue& other)
+JsonValue::JsonValue(JsonValue const& other)
 {
     copy_from(other);
 }
 
-JsonValue& JsonValue::operator=(const JsonValue& other)
+JsonValue& JsonValue::operator=(JsonValue const& other)
 {
     if (this != &other) {
         clear();
@@ -34,7 +34,7 @@ JsonValue& JsonValue::operator=(const JsonValue& other)
     return *this;
 }
 
-void JsonValue::copy_from(const JsonValue& other)
+void JsonValue::copy_from(JsonValue const& other)
 {
     m_type = other.m_type;
     switch (m_type) {
@@ -71,7 +71,7 @@ JsonValue& JsonValue::operator=(JsonValue&& other)
     return *this;
 }
 
-bool JsonValue::equals(const JsonValue& other) const
+bool JsonValue::equals(JsonValue const& other) const
 {
     if (is_null() && other.is_null())
         return true;
@@ -155,7 +155,7 @@ JsonValue::JsonValue(long long unsigned value)
     m_value.as_u64 = value;
 }
 
-JsonValue::JsonValue(const char* cstring)
+JsonValue::JsonValue(char const* cstring)
     : JsonValue(String(cstring))
 {
 }
@@ -174,7 +174,7 @@ JsonValue::JsonValue(bool value)
     m_value.as_bool = value;
 }
 
-JsonValue::JsonValue(const String& value)
+JsonValue::JsonValue(String const& value)
 {
     if (value.is_null()) {
         m_type = Type::Null;
@@ -190,13 +190,13 @@ JsonValue::JsonValue(StringView value)
 {
 }
 
-JsonValue::JsonValue(const JsonObject& value)
+JsonValue::JsonValue(JsonObject const& value)
     : m_type(Type::Object)
 {
     m_value.as_object = new JsonObject(value);
 }
 
-JsonValue::JsonValue(const JsonArray& value)
+JsonValue::JsonValue(JsonArray const& value)
     : m_type(Type::Array)
 {
     m_value.as_array = new JsonArray(value);

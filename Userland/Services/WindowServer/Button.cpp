@@ -20,9 +20,7 @@ Button::Button(WindowFrame& frame, Function<void(Button&)>&& on_click_handler)
 {
 }
 
-Button::~Button()
-{
-}
+Button::~Button() = default;
 
 void Button::paint(Screen& screen, Gfx::Painter& painter)
 {
@@ -40,7 +38,7 @@ void Button::paint(Screen& screen, Gfx::Painter& painter)
     }
 }
 
-void Button::on_mouse_event(const MouseEvent& event)
+void Button::on_mouse_event(MouseEvent const& event)
 {
     auto interesting_button = false;
 

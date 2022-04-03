@@ -404,7 +404,7 @@ template<typename TreeType, typename ElementType>
 class RedBlackTreeIterator {
 public:
     RedBlackTreeIterator() = default;
-    bool operator!=(const RedBlackTreeIterator& other) const { return m_node != other.m_node; }
+    bool operator!=(RedBlackTreeIterator const& other) const { return m_node != other.m_node; }
     RedBlackTreeIterator& operator++()
     {
         if (!m_node)

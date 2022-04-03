@@ -57,25 +57,25 @@ public:
 #endif
     }
 
-    NonnullOwnPtr(const NonnullOwnPtr&) = delete;
+    NonnullOwnPtr(NonnullOwnPtr const&) = delete;
     template<typename U>
-    NonnullOwnPtr(const NonnullOwnPtr<U>&) = delete;
-    NonnullOwnPtr& operator=(const NonnullOwnPtr&) = delete;
+    NonnullOwnPtr(NonnullOwnPtr<U> const&) = delete;
+    NonnullOwnPtr& operator=(NonnullOwnPtr const&) = delete;
     template<typename U>
-    NonnullOwnPtr& operator=(const NonnullOwnPtr<U>&) = delete;
+    NonnullOwnPtr& operator=(NonnullOwnPtr<U> const&) = delete;
 
     template<typename U, typename PtrTraits = RefPtrTraits<U>>
-    NonnullOwnPtr(const RefPtr<U, PtrTraits>&) = delete;
+    NonnullOwnPtr(RefPtr<U, PtrTraits> const&) = delete;
     template<typename U>
-    NonnullOwnPtr(const NonnullRefPtr<U>&) = delete;
+    NonnullOwnPtr(NonnullRefPtr<U> const&) = delete;
     template<typename U>
-    NonnullOwnPtr(const WeakPtr<U>&) = delete;
+    NonnullOwnPtr(WeakPtr<U> const&) = delete;
     template<typename U, typename PtrTraits = RefPtrTraits<U>>
-    NonnullOwnPtr& operator=(const RefPtr<U, PtrTraits>&) = delete;
+    NonnullOwnPtr& operator=(RefPtr<U, PtrTraits> const&) = delete;
     template<typename U>
-    NonnullOwnPtr& operator=(const NonnullRefPtr<U>&) = delete;
+    NonnullOwnPtr& operator=(NonnullRefPtr<U> const&) = delete;
     template<typename U>
-    NonnullOwnPtr& operator=(const WeakPtr<U>&) = delete;
+    NonnullOwnPtr& operator=(WeakPtr<U> const&) = delete;
 
     NonnullOwnPtr& operator=(NonnullOwnPtr&& other)
     {
@@ -178,8 +178,8 @@ template<typename T>
 struct Traits<NonnullOwnPtr<T>> : public GenericTraits<NonnullOwnPtr<T>> {
     using PeekType = T*;
     using ConstPeekType = const T*;
-    static unsigned hash(const NonnullOwnPtr<T>& p) { return ptr_hash((FlatPtr)p.ptr()); }
-    static bool equals(const NonnullOwnPtr<T>& a, const NonnullOwnPtr<T>& b) { return a.ptr() == b.ptr(); }
+    static unsigned hash(NonnullOwnPtr<T> const& p) { return ptr_hash((FlatPtr)p.ptr()); }
+    static bool equals(NonnullOwnPtr<T> const& a, NonnullOwnPtr<T> const& b) { return a.ptr() == b.ptr(); }
 };
 
 template<typename T, typename U>

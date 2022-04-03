@@ -14,6 +14,6 @@
 
 namespace Web::Painting {
 
-void paint_background(PaintContext&, Layout::NodeWithStyleAndBoxModelMetrics const&, Gfx::IntRect const&, Color background_color, Vector<CSS::BackgroundLayerData> const*, BorderRadiusData const&);
+void paint_background(PaintContext&, Layout::NodeWithStyleAndBoxModelMetrics const&, Gfx::FloatRect const&, Color background_color, Vector<CSS::BackgroundLayerData> const*, BorderRadiusData const&);
 
 }

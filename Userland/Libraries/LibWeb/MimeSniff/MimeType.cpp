@@ -26,8 +26,8 @@ static bool contains_only_http_quoted_string_token_code_points(StringView string
 }
 
 MimeType::MimeType(String type, String subtype)
-    : m_type(type)
-    , m_subtype(subtype)
+    : m_type(move(type))
+    , m_subtype(move(subtype))
 {
     // https://mimesniff.spec.whatwg.org/#parameters
     // A MIME type’s parameters is an ordered map whose keys are ASCII strings and values are strings limited to HTTP quoted-string token code points.
@@ -56,7 +56,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
     // https://fetch.spec.whatwg.org/#http-whitespace
     // HTTP whitespace is U+000A LF, U+000D CR, or an HTTP tab or space.
     // An HTTP tab or space is U+0009 TAB or U+0020 SPACE.
-    constexpr const char* http_whitespace = "\n\r\t ";
+    constexpr char const* http_whitespace = "\n\r\t ";
 
     // 1. Remove any leading and trailing HTTP whitespace from input.
     auto trimmed_string = string.trim(http_whitespace, TrimMode::Both);

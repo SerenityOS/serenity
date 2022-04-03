@@ -62,6 +62,7 @@ set(KERNEL_SOURCES
     Devices/PCISerialDevice.cpp
     Devices/PCSpeaker.cpp
     Devices/RandomDevice.cpp
+    Devices/SelfTTYDevice.cpp
     Devices/SerialDevice.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
@@ -169,13 +170,13 @@ set(KERNEL_SOURCES
     Memory/PhysicalZone.cpp
     Memory/PrivateInodeVMObject.cpp
     Memory/Region.cpp
+    Memory/RegionTree.cpp
     Memory/RingBuffer.cpp
     Memory/ScatterGatherList.cpp
     Memory/ScopedAddressSpaceSwitcher.cpp
     Memory/SharedInodeVMObject.cpp
     Memory/VMObject.cpp
     Memory/VirtualRange.cpp
-    Memory/VirtualRangeAllocator.cpp
     MiniStdLib.cpp
     Locking/LockRank.cpp
     Locking/Mutex.cpp
@@ -267,7 +268,6 @@ set(KERNEL_SOURCES
     Syscalls/sysconf.cpp
     Syscalls/thread.cpp
     Syscalls/times.cpp
-    Syscalls/ttyname.cpp
     Syscalls/umask.cpp
     Syscalls/uname.cpp
     Syscalls/unlink.cpp
@@ -320,9 +320,13 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
 
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
+        
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CrashHandler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPUID.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/PageDirectory.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ProcessorInfo.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/SafeMem.cpp
@@ -386,15 +390,21 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     )
 else()
     set(SOURCES
+        ${AK_SOURCES}
+
         Arch/aarch64/BootPPMParser.cpp
+        Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/GPIO.cpp
         Arch/aarch64/Framebuffer.cpp
         Arch/aarch64/Mailbox.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/MMIO.cpp
+        Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/Timer.cpp
         Arch/aarch64/UART.cpp
         Arch/aarch64/Utils.cpp
+
+        Arch/aarch64/dummy.cpp
 
         # Preload specific
         Arch/aarch64/init.cpp
@@ -411,6 +421,25 @@ else()
         Arch/aarch64/ScopedCritical.cpp
         MiniStdLib.cpp
         Prekernel/UBSanitizer.cpp
+
+        Heap/kmalloc.cpp
+
+        Memory/AddressSpace.cpp
+        Memory/AnonymousVMObject.cpp
+        Memory/InodeVMObject.cpp
+        Memory/PhysicalRegion.cpp
+        Memory/PhysicalPage.cpp
+        Memory/PhysicalZone.cpp
+        Memory/PageDirectory.cpp
+        Memory/MemoryManager.cpp
+        Memory/PrivateInodeVMObject.cpp
+        Memory/Region.cpp
+        Memory/RegionTree.cpp
+        Memory/RingBuffer.cpp
+        Memory/SharedInodeVMObject.cpp
+        Memory/ScatterGatherList.cpp
+        Memory/VirtualRange.cpp
+        Memory/VMObject.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'

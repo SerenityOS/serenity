@@ -28,8 +28,8 @@
 
 namespace WindowServer {
 
-const int double_click_speed_max = 900;
-const int double_click_speed_min = 100;
+int const double_click_speed_max = 900;
+int const double_click_speed_min = 100;
 
 class Screen;
 class MouseEvent;
@@ -69,7 +69,7 @@ public:
 
     static WindowManager& the();
 
-    virtual ~WindowManager() override;
+    virtual ~WindowManager() override = default;
 
     Palette palette() const { return Palette(*m_palette); }
 
@@ -213,7 +213,7 @@ public:
         return nullptr;
     }
 
-    bool update_theme(String theme_path, String theme_name);
+    bool update_theme(String theme_path, String theme_name, bool keep_desktop_background);
     void invalidate_after_theme_or_font_change();
 
     bool set_hovered_window(Window*);

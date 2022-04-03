@@ -102,6 +102,16 @@ void FILE::purge()
     m_buffer.drop();
 }
 
+size_t FILE::pending()
+{
+    if (m_mode & O_RDONLY) {
+        return 0;
+    }
+
+    // FIXME: Check if our buffer is a write buffer, and only count those bytes.
+    return m_buffer.buffered_size();
+}
+
 ssize_t FILE::do_read(u8* data, size_t size)
 {
     int nread = ::read(m_fd, data, size);
@@ -114,7 +124,7 @@ ssize_t FILE::do_read(u8* data, size_t size)
     return nread;
 }
 
-ssize_t FILE::do_write(const u8* data, size_t size)
+ssize_t FILE::do_write(u8 const* data, size_t size)
 {
     int nwritten = ::write(m_fd, data, size);
 
@@ -144,7 +154,7 @@ bool FILE::read_into_buffer()
 bool FILE::write_from_buffer()
 {
     size_t size;
-    const u8* data = m_buffer.begin_dequeue(size);
+    u8 const* data = m_buffer.begin_dequeue(size);
     // If we want to write, the buffer must have something in it!
     VERIFY(size);
 
@@ -170,7 +180,7 @@ size_t FILE::read(u8* data, size_t size)
         if (m_buffer.may_use()) {
             // Let's see if the buffer has something queued for us.
             size_t queued_size;
-            const u8* queued_data = m_buffer.begin_dequeue(queued_size);
+            u8 const* queued_data = m_buffer.begin_dequeue(queued_size);
             if (queued_size == 0) {
                 // Nothing buffered; we're going to have to read some.
                 bool read_some_more = read_into_buffer();
@@ -199,7 +209,7 @@ size_t FILE::read(u8* data, size_t size)
     return total_read;
 }
 
-size_t FILE::write(const u8* data, size_t size)
+size_t FILE::write(u8 const* data, size_t size)
 {
     size_t total_written = 0;
 
@@ -359,6 +369,16 @@ void FILE::reopen(int fd, int mode)
     m_eof = false;
 }
 
+u8 const* FILE::readptr(size_t& available_size)
+{
+    return m_buffer.begin_dequeue(available_size);
+}
+
+void FILE::readptr_increase(size_t increment)
+{
+    m_buffer.did_dequeue(increment);
+}
+
 FILE::Buffer::~Buffer()
 {
     if (m_data_is_malloced)
@@ -416,7 +436,7 @@ size_t FILE::Buffer::buffered_size() const
         return m_capacity - (m_begin - m_end);
 }
 
-const u8* FILE::Buffer::begin_dequeue(size_t& available_size) const
+u8 const* FILE::Buffer::begin_dequeue(size_t& available_size) const
 {
     if (m_ungotten != 0u) {
         auto available_bytes = count_trailing_zeroes(m_ungotten) + 1;
@@ -733,19 +753,19 @@ int putchar(int ch)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fputs.html
-int fputs(const char* s, FILE* stream)
+int fputs(char const* s, FILE* stream)
 {
     VERIFY(stream);
     size_t len = strlen(s);
     ScopedFileLock lock(stream);
-    size_t nwritten = stream->write(reinterpret_cast<const u8*>(s), len);
+    size_t nwritten = stream->write(reinterpret_cast<u8 const*>(s), len);
     if (nwritten < len)
         return EOF;
     return 1;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/puts.html
-int puts(const char* s)
+int puts(char const* s)
 {
     int rc = fputs(s, stdout);
     if (rc == EOF)
@@ -789,13 +809,13 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fwrite.html
-size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
+size_t fwrite(void const* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     VERIFY(stream);
     VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
 
     ScopedFileLock lock(stream);
-    size_t nwritten = stream->write(reinterpret_cast<const u8*>(ptr), size * nmemb);
+    size_t nwritten = stream->write(reinterpret_cast<u8 const*>(ptr), size * nmemb);
     if (!nwritten)
         return 0;
     return nwritten / size;
@@ -849,7 +869,7 @@ int fgetpos(FILE* stream, fpos_t* pos)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fsetpos.html
-int fsetpos(FILE* stream, const fpos_t* pos)
+int fsetpos(FILE* stream, fpos_t const* pos)
 {
     VERIFY(stream);
     VERIFY(pos);
@@ -871,13 +891,13 @@ ALWAYS_INLINE void stdout_putch(char*&, char ch)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/vfprintf.html
-int vfprintf(FILE* stream, const char* fmt, va_list ap)
+int vfprintf(FILE* stream, char const* fmt, va_list ap)
 {
     return printf_internal([stream](auto, char ch) { fputc(ch, stream); }, nullptr, fmt, ap);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fprintf.html
-int fprintf(FILE* stream, const char* fmt, ...)
+int fprintf(FILE* stream, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -887,13 +907,13 @@ int fprintf(FILE* stream, const char* fmt, ...)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/vprintf.html
-int vprintf(const char* fmt, va_list ap)
+int vprintf(char const* fmt, va_list ap)
 {
     return printf_internal(stdout_putch, nullptr, fmt, ap);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/printf.html
-int printf(const char* fmt, ...)
+int printf(char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -903,7 +923,7 @@ int printf(const char* fmt, ...)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/vasprintf.html
-int vasprintf(char** strp, const char* fmt, va_list ap)
+int vasprintf(char** strp, char const* fmt, va_list ap)
 {
     StringBuilder builder;
     builder.appendvf(fmt, ap);
@@ -914,7 +934,7 @@ int vasprintf(char** strp, const char* fmt, va_list ap)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/asprintf.html
-int asprintf(char** strp, const char* fmt, ...)
+int asprintf(char** strp, char const* fmt, ...)
 {
     StringBuilder builder;
     va_list ap;
@@ -933,7 +953,7 @@ static void buffer_putch(char*& bufptr, char ch)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/vsprintf.html
-int vsprintf(char* buffer, const char* fmt, va_list ap)
+int vsprintf(char* buffer, char const* fmt, va_list ap)
 {
     int ret = printf_internal(buffer_putch, buffer, fmt, ap);
     buffer[ret] = '\0';
@@ -941,7 +961,7 @@ int vsprintf(char* buffer, const char* fmt, va_list ap)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sprintf.html
-int sprintf(char* buffer, const char* fmt, ...)
+int sprintf(char* buffer, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -951,7 +971,7 @@ int sprintf(char* buffer, const char* fmt, ...)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/vsnprintf.html
-int vsnprintf(char* buffer, size_t size, const char* fmt, va_list ap)
+int vsnprintf(char* buffer, size_t size, char const* fmt, va_list ap)
 {
     size_t space_remaining = 0;
     if (size) {
@@ -975,7 +995,7 @@ int vsnprintf(char* buffer, size_t size, const char* fmt, va_list ap)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/snprintf.html
-int snprintf(char* buffer, size_t size, const char* fmt, ...)
+int snprintf(char* buffer, size_t size, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -985,14 +1005,14 @@ int snprintf(char* buffer, size_t size, const char* fmt, ...)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/perror.html
-void perror(const char* s)
+void perror(char const* s)
 {
     int saved_errno = errno;
     dbgln("perror(): {}: {}", s, strerror(saved_errno));
     warnln("{}: {}", s, strerror(saved_errno));
 }
 
-static int parse_mode(const char* mode)
+static int parse_mode(char const* mode)
 {
     int flags = 0;
 
@@ -1030,7 +1050,7 @@ static int parse_mode(const char* mode)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fopen.html
-FILE* fopen(const char* pathname, const char* mode)
+FILE* fopen(char const* pathname, char const* mode)
 {
     int flags = parse_mode(mode);
     int fd = open(pathname, flags, 0666);
@@ -1040,7 +1060,7 @@ FILE* fopen(const char* pathname, const char* mode)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/freopen.html
-FILE* freopen(const char* pathname, const char* mode, FILE* stream)
+FILE* freopen(char const* pathname, char const* mode, FILE* stream)
 {
     VERIFY(stream);
     if (!pathname) {
@@ -1058,7 +1078,7 @@ FILE* freopen(const char* pathname, const char* mode, FILE* stream)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fdopen.html
-FILE* fdopen(int fd, const char* mode)
+FILE* fdopen(int fd, char const* mode)
 {
     int flags = parse_mode(mode);
     // FIXME: Verify that the mode matches how fd is already open.
@@ -1068,7 +1088,7 @@ FILE* fdopen(int fd, const char* mode)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fmemopen.html
-FILE* fmemopen(void*, size_t, const char*)
+FILE* fmemopen(void*, size_t, char const*)
 {
     // FIXME: Implement me :^)
     TODO();
@@ -1103,7 +1123,7 @@ int fclose(FILE* stream)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/rename.html
-int rename(const char* oldpath, const char* newpath)
+int rename(char const* oldpath, char const* newpath)
 {
     if (!oldpath || !newpath) {
         errno = EFAULT;
@@ -1114,7 +1134,7 @@ int rename(const char* oldpath, const char* newpath)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-void dbgputstr(const char* characters, size_t length)
+void dbgputstr(char const* characters, size_t length)
 {
     syscall(SC_dbgputstr, characters, length);
 }
@@ -1127,7 +1147,7 @@ char* tmpnam(char*)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/popen.html
-FILE* popen(const char* command, const char* type)
+FILE* popen(char const* command, char const* type)
 {
     if (!type || (*type != 'r' && *type != 'w')) {
         errno = EINVAL;
@@ -1198,7 +1218,7 @@ int pclose(FILE* stream)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/remove.html
-int remove(const char* pathname)
+int remove(char const* pathname)
 {
     if (unlink(pathname) < 0) {
         if (errno == EISDIR)
@@ -1209,7 +1229,7 @@ int remove(const char* pathname)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/scanf.html
-int scanf(const char* fmt, ...)
+int scanf(char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -1219,7 +1239,7 @@ int scanf(const char* fmt, ...)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fscanf.html
-int fscanf(FILE* stream, const char* fmt, ...)
+int fscanf(FILE* stream, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -1229,7 +1249,7 @@ int fscanf(FILE* stream, const char* fmt, ...)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sscanf.html
-int sscanf(const char* buffer, const char* fmt, ...)
+int sscanf(char const* buffer, char const* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -1239,7 +1259,7 @@ int sscanf(const char* buffer, const char* fmt, ...)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/vfscanf.html
-int vfscanf(FILE* stream, const char* fmt, va_list ap)
+int vfscanf(FILE* stream, char const* fmt, va_list ap)
 {
     char buffer[BUFSIZ];
     if (!fgets(buffer, sizeof(buffer) - 1, stream))
@@ -1248,7 +1268,7 @@ int vfscanf(FILE* stream, const char* fmt, va_list ap)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/vscanf.html
-int vscanf(const char* fmt, va_list ap)
+int vscanf(char const* fmt, va_list ap)
 {
     return vfscanf(stdin, fmt, ap);
 }
@@ -1279,6 +1299,12 @@ FILE* tmpfile()
     return fdopen(fd, "rw");
 }
 
+size_t __fpending(FILE* stream)
+{
+    ScopedFileLock lock(stream);
+    return stream->pending();
+}
+
 int __freading(FILE* stream)
 {
     ScopedFileLock lock(stream);
@@ -1305,6 +1331,49 @@ void __fpurge(FILE* stream)
 {
     ScopedFileLock lock(stream);
     stream->purge();
+}
+
+size_t __freadahead(FILE* stream)
+{
+    VERIFY(stream);
+
+    ScopedFileLock lock(stream);
+
+    size_t available_size;
+    stream->readptr(available_size);
+    return available_size;
+}
+
+char const* __freadptr(FILE* stream, size_t* sizep)
+{
+    VERIFY(stream);
+    VERIFY(sizep);
+
+    ScopedFileLock lock(stream);
+
+    size_t available_size;
+    u8 const* ptr = stream->readptr(available_size);
+
+    if (available_size == 0)
+        return nullptr;
+
+    *sizep = available_size;
+    return reinterpret_cast<char const*>(ptr);
+}
+
+void __freadptrinc(FILE* stream, size_t increment)
+{
+    VERIFY(stream);
+
+    ScopedFileLock lock(stream);
+
+    stream->readptr_increase(increment);
+}
+
+void __fseterr(FILE* stream)
+{
+    ScopedFileLock lock(stream);
+    stream->set_err();
 }
 }
 

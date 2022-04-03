@@ -82,7 +82,7 @@ static ThrowCompletionOr<TypedArrayBase*> validate_typed_array_from_this(GlobalO
     return typed_array;
 }
 
-static ThrowCompletionOr<FunctionObject*> callback_from_args(GlobalObject& global_object, const String& name)
+static ThrowCompletionOr<FunctionObject*> callback_from_args(GlobalObject& global_object, String const& name)
 {
     auto& vm = global_object.vm();
     if (vm.argument_count() < 1)
@@ -93,7 +93,7 @@ static ThrowCompletionOr<FunctionObject*> callback_from_args(GlobalObject& globa
     return &callback.as_function();
 }
 
-static ThrowCompletionOr<void> for_each_item(VM& vm, GlobalObject& global_object, const String& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
+static ThrowCompletionOr<void> for_each_item(VM& vm, GlobalObject& global_object, String const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
     auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 
@@ -115,7 +115,7 @@ static ThrowCompletionOr<void> for_each_item(VM& vm, GlobalObject& global_object
     return {};
 }
 
-static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, GlobalObject& global_object, const String& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
+static ThrowCompletionOr<void> for_each_item_from_last(VM& vm, GlobalObject& global_object, String const& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
     auto* typed_array = TRY(validate_typed_array_from_this(global_object));
 

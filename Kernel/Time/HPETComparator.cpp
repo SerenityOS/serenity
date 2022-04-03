@@ -53,7 +53,7 @@ void HPETComparator::set_non_periodic()
     HPET::the().disable_periodic_interrupt(*this);
 }
 
-bool HPETComparator::handle_irq(const RegisterState& regs)
+bool HPETComparator::handle_irq(RegisterState const& regs)
 {
     auto result = HardwareTimer::handle_irq(regs);
     if (!is_periodic())

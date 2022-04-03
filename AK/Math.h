@@ -107,6 +107,40 @@ constexpr T sqrt(T x)
 }
 
 template<FloatingPoint T>
+constexpr T rsqrt(T x)
+{
+    return (T)1. / sqrt(x);
+}
+
+#ifdef __SSE__
+template<>
+constexpr float sqrt(float x)
+{
+    if (is_constant_evaluated())
+        return __builtin_sqrtf(x);
+
+    float res;
+    asm("sqrtss %1, %0"
+        : "=x"(res)
+        : "x"(x));
+    return res;
+}
+
+template<>
+constexpr float rsqrt(float x)
+{
+    if (is_constant_evaluated())
+        return 1.f / __builtin_sqrtf(x);
+
+    float res;
+    asm("rsqrtss %1, %0"
+        : "=x"(res)
+        : "x"(x));
+    return res;
+}
+#endif
+
+template<FloatingPoint T>
 constexpr T cbrt(T x)
 {
     CONSTEXPR_STATE(cbrt, x);
@@ -211,10 +245,14 @@ constexpr void sincos(T angle, T& sin_val, T& cos_val)
         cos_val = cos(angle);
         return;
     }
+#if ARCH(I386) || ARCH(X86_64)
     asm(
         "fsincos"
         : "=t"(cos_val), "=u"(sin_val)
         : "0"(angle));
+#else
+    __builtin_sincosf(angle, sin_val, cos_val);
+#endif
 }
 
 template<FloatingPoint T>

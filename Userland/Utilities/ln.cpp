@@ -16,8 +16,8 @@ ErrorOr<int> serenity_main(Main::Arguments argmuments)
 
     bool force = false;
     bool symbolic = false;
-    const char* target = nullptr;
-    const char* path = nullptr;
+    char const* target = nullptr;
+    char const* path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(force, "Force the creation", "force", 'f');

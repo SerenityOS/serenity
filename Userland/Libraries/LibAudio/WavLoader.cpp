@@ -36,7 +36,7 @@ MaybeLoaderError WavLoaderPlugin::initialize()
     return {};
 }
 
-WavLoaderPlugin::WavLoaderPlugin(const Bytes& buffer)
+WavLoaderPlugin::WavLoaderPlugin(Bytes const& buffer)
 {
     m_stream = make<InputMemoryStream>(buffer);
     if (!m_stream) {
@@ -91,7 +91,7 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_in
     return buffer.release_value();
 }
 
-MaybeLoaderError WavLoaderPlugin::seek(const int sample_index)
+MaybeLoaderError WavLoaderPlugin::seek(int const sample_index)
 {
     dbgln_if(AWAVLOADER_DEBUG, "seek sample_index {}", sample_index);
     if (sample_index < 0 || sample_index >= m_total_samples)

@@ -20,8 +20,8 @@ public:
         String path;
     };
 
-    static void load_from_json(const String& json_path);
-    static const Vector<CommonLocation>& common_locations();
+    static void load_from_json(String const& json_path);
+    static Vector<CommonLocation> const& common_locations();
 };
 
 }

@@ -63,8 +63,8 @@ public:
     void target_did_realloc(Badge<Emulator>, FlatPtr address, size_t);
     void target_did_change_chunk_size(Badge<Emulator>, FlatPtr, size_t);
 
-    void audit_read(const Region&, FlatPtr address, size_t);
-    void audit_write(const Region&, FlatPtr address, size_t);
+    void audit_read(Region const&, FlatPtr address, size_t);
+    void audit_write(Region const&, FlatPtr address, size_t);
 
     void dump_leak_report();
 
@@ -72,7 +72,7 @@ private:
     template<typename Callback>
     void for_each_mallocation(Callback callback) const;
 
-    Mallocation* find_mallocation(const Region&, FlatPtr);
+    Mallocation* find_mallocation(Region const&, FlatPtr);
     Mallocation* find_mallocation(FlatPtr);
     Mallocation* find_mallocation_before(FlatPtr);
     Mallocation* find_mallocation_after(FlatPtr);
@@ -89,11 +89,11 @@ private:
     bool m_auditing_enabled { true };
 };
 
-ALWAYS_INLINE Mallocation* MallocTracer::find_mallocation(const Region& region, FlatPtr address)
+ALWAYS_INLINE Mallocation* MallocTracer::find_mallocation(Region const& region, FlatPtr address)
 {
     if (!is<MmapRegion>(region))
         return nullptr;
-    if (!static_cast<const MmapRegion&>(region).is_malloc_block())
+    if (!static_cast<MmapRegion const&>(region).is_malloc_block())
         return nullptr;
     auto* malloc_data = static_cast<MmapRegion&>(const_cast<Region&>(region)).malloc_metadata();
     if (!malloc_data)

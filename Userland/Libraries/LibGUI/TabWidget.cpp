@@ -41,9 +41,9 @@ TabWidget::TabWidget()
         });
 }
 
-ErrorOr<void> TabWidget::try_add_widget(String title, Widget& widget)
+ErrorOr<void> TabWidget::try_add_widget(Widget& widget)
 {
-    m_tabs.append({ move(title), nullptr, &widget });
+    m_tabs.append({ widget.title(), nullptr, &widget });
     add_child(widget);
     update_focus_policy();
     if (on_tab_count_change)
@@ -51,9 +51,9 @@ ErrorOr<void> TabWidget::try_add_widget(String title, Widget& widget)
     return {};
 }
 
-void TabWidget::add_widget(String title, Widget& widget)
+void TabWidget::add_widget(Widget& widget)
 {
-    MUST(try_add_widget(move(title), widget));
+    MUST(try_add_widget(widget));
 }
 
 void TabWidget::remove_widget(Widget& widget)
@@ -141,7 +141,7 @@ void TabWidget::resize_event(ResizeEvent& event)
     m_active_widget->set_relative_rect(child_rect_for_size(event.size()));
 }
 
-Gfx::IntRect TabWidget::child_rect_for_size(const Gfx::IntSize& size) const
+Gfx::IntRect TabWidget::child_rect_for_size(Gfx::IntSize const& size) const
 {
     Gfx::IntRect rect;
     switch (m_tab_position) {
@@ -401,7 +401,7 @@ Gfx::IntRect TabWidget::close_button_rect(size_t index) const
     return close_button_rect;
 }
 
-int TabWidget::TabData::width(const Gfx::Font& font) const
+int TabWidget::TabData::width(Gfx::Font const& font) const
 {
     auto width = 16 + font.width(title) + (icon ? (16 + 4) : 0);
     // NOTE: This needs to always be an odd number, because the button rect
@@ -553,7 +553,7 @@ void TabWidget::set_tab_title(Widget& tab, StringView title)
     }
 }
 
-void TabWidget::set_tab_icon(Widget& tab, const Gfx::Bitmap* icon)
+void TabWidget::set_tab_icon(Widget& tab, Gfx::Bitmap const* icon)
 {
     for (auto& t : m_tabs) {
         if (t.widget == &tab) {
@@ -590,6 +590,14 @@ void TabWidget::activate_previous_tab()
     else
         previous_index = index.value() - 1;
     set_active_widget(m_tabs.at(previous_index).widget);
+}
+
+void TabWidget::activate_last_tab()
+{
+    size_t number_of_tabs = m_tabs.size();
+    if (number_of_tabs == 0)
+        return;
+    set_active_widget(m_tabs.at(number_of_tabs - 1).widget);
 }
 
 void TabWidget::keydown_event(KeyEvent& event)

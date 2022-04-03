@@ -7,24 +7,26 @@
 #pragma once
 
 #include <LibGfx/Color.h>
+#include <LibWeb/Forward.h>
 #include <LibWeb/Painting/PaintContext.h>
 
 namespace Web::Painting {
 
-enum class BoxShadowPlacement {
+enum class ShadowPlacement {
     Outer,
     Inner,
 };
 
-struct BoxShadowData {
+struct ShadowData {
     Gfx::Color color;
     int offset_x;
     int offset_y;
     int blur_radius;
     int spread_distance;
-    BoxShadowPlacement placement;
+    ShadowPlacement placement;
 };
 
-void paint_box_shadow(PaintContext&, Gfx::IntRect const&, Vector<BoxShadowData> const&);
+void paint_box_shadow(PaintContext&, Gfx::IntRect const&, Vector<ShadowData> const&);
+void paint_text_shadow(PaintContext&, Layout::LineBoxFragment const&, Vector<ShadowData> const&);
 
 }

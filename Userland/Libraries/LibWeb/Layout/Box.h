@@ -21,8 +21,6 @@ class Box : public NodeWithStyleAndBoxModelMetrics {
 public:
     Painting::PaintableBox const* paint_box() const;
 
-    bool is_out_of_flow(FormattingContext const&) const;
-
     virtual void set_needs_display() override;
 
     bool is_body() const;

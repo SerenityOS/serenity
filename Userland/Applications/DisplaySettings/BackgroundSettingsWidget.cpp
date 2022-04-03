@@ -31,7 +31,8 @@
 
 namespace DisplaySettings {
 
-BackgroundSettingsWidget::BackgroundSettingsWidget()
+BackgroundSettingsWidget::BackgroundSettingsWidget(bool& background_settings_changed)
+    : m_background_settings_changed { background_settings_changed }
 {
     m_modes.append("tile");
     m_modes.append("center");
@@ -86,20 +87,27 @@ void BackgroundSettingsWidget::create_frame()
             return;
         m_wallpaper_view->selection().clear();
         m_monitor_widget->set_wallpaper(path.value());
+        m_background_settings_changed = true;
     };
 
     m_mode_combo = *find_descendant_of_type_named<GUI::ComboBox>("mode_combo");
     m_mode_combo->set_only_allow_values_from_model(true);
     m_mode_combo->set_model(*GUI::ItemListModel<String>::create(m_modes));
-    m_mode_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
+    bool first_mode_change = true;
+    m_mode_combo->on_change = [this, first_mode_change](auto&, const GUI::ModelIndex& index) mutable {
         m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
+        m_background_settings_changed = !first_mode_change;
+        first_mode_change = false;
     };
 
     m_color_input = *find_descendant_of_type_named<GUI::ColorInput>("color_input");
     m_color_input->set_color_has_alpha_channel(false);
     m_color_input->set_color_picker_title("Select color for desktop");
-    m_color_input->on_change = [this] {
+    bool first_color_change = true;
+    m_color_input->on_change = [this, first_color_change]() mutable {
         m_monitor_widget->set_background_color(m_color_input->color());
+        m_background_settings_changed = !first_color_change;
+        first_color_change = false;
     };
 }
 
@@ -133,6 +141,7 @@ void BackgroundSettingsWidget::load_current_settings()
 
     m_color_input->set_color(palette_desktop_color);
     m_monitor_widget->set_background_color(palette_desktop_color);
+    m_background_settings_changed = false;
 }
 
 void BackgroundSettingsWidget::apply_settings()

@@ -57,7 +57,7 @@ ErrorOr<void> Process::traverse_stacks_directory(FileSystemID fsid, Function<Err
     });
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& procfs, StringView name) const
+ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS const& procfs, StringView name) const
 {
     auto maybe_needle = name.to_uint();
     if (!maybe_needle.has_value())
@@ -65,7 +65,7 @@ ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& pro
     auto needle = maybe_needle.release_value();
 
     ErrorOr<NonnullRefPtr<ProcFSProcessPropertyInode>> thread_stack_inode { ENOENT };
-    for_each_thread([&](const Thread& thread) {
+    for_each_thread([&](Thread const& thread) {
         int tid = thread.tid().value();
         VERIFY(!(tid < 0));
         if (needle == (unsigned)tid) {
@@ -110,7 +110,7 @@ ErrorOr<void> Process::traverse_file_descriptions_directory(FileSystemID fsid, F
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(const ProcFS& procfs, StringView name) const
+ErrorOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(ProcFS const& procfs, StringView name) const
 {
     auto maybe_index = name.to_uint();
     if (!maybe_index.has_value())
@@ -234,31 +234,31 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
     {
         SpinlockLocker lock(address_space().get_lock());
         for (auto const& region : address_space().regions()) {
-            if (!region->is_user() && !Process::current().is_superuser())
+            if (!region.is_user() && !Process::current().is_superuser())
                 continue;
             auto region_object = TRY(array.add_object());
-            TRY(region_object.add("readable", region->is_readable()));
-            TRY(region_object.add("writable", region->is_writable()));
-            TRY(region_object.add("executable", region->is_executable()));
-            TRY(region_object.add("stack", region->is_stack()));
-            TRY(region_object.add("shared", region->is_shared()));
-            TRY(region_object.add("syscall", region->is_syscall_region()));
-            TRY(region_object.add("purgeable", region->vmobject().is_anonymous()));
-            if (region->vmobject().is_anonymous()) {
-                TRY(region_object.add("volatile", static_cast<Memory::AnonymousVMObject const&>(region->vmobject()).is_volatile()));
+            TRY(region_object.add("readable", region.is_readable()));
+            TRY(region_object.add("writable", region.is_writable()));
+            TRY(region_object.add("executable", region.is_executable()));
+            TRY(region_object.add("stack", region.is_stack()));
+            TRY(region_object.add("shared", region.is_shared()));
+            TRY(region_object.add("syscall", region.is_syscall_region()));
+            TRY(region_object.add("purgeable", region.vmobject().is_anonymous()));
+            if (region.vmobject().is_anonymous()) {
+                TRY(region_object.add("volatile", static_cast<Memory::AnonymousVMObject const&>(region.vmobject()).is_volatile()));
             }
-            TRY(region_object.add("cacheable", region->is_cacheable()));
-            TRY(region_object.add("address", region->vaddr().get()));
-            TRY(region_object.add("size", region->size()));
-            TRY(region_object.add("amount_resident", region->amount_resident()));
-            TRY(region_object.add("amount_dirty", region->amount_dirty()));
-            TRY(region_object.add("cow_pages", region->cow_pages()));
-            TRY(region_object.add("name", region->name()));
-            TRY(region_object.add("vmobject", region->vmobject().class_name()));
+            TRY(region_object.add("cacheable", region.is_cacheable()));
+            TRY(region_object.add("address", region.vaddr().get()));
+            TRY(region_object.add("size", region.size()));
+            TRY(region_object.add("amount_resident", region.amount_resident()));
+            TRY(region_object.add("amount_dirty", region.amount_dirty()));
+            TRY(region_object.add("cow_pages", region.cow_pages()));
+            TRY(region_object.add("name", region.name()));
+            TRY(region_object.add("vmobject", region.vmobject().class_name()));
 
             StringBuilder pagemap_builder;
-            for (size_t i = 0; i < region->page_count(); ++i) {
-                auto const* page = region->physical_page(i);
+            for (size_t i = 0; i < region.page_count(); ++i) {
+                auto const* page = region.physical_page(i);
                 if (!page)
                     pagemap_builder.append('N');
                 else if (page->is_shared_zero_page() || page->is_lazy_committed_page())
@@ -292,13 +292,6 @@ ErrorOr<void> Process::procfs_get_binary_link(KBufferBuilder& builder) const
     if (!custody)
         return Error::from_errno(ENOEXEC);
     return builder.append(TRY(custody->try_serialize_absolute_path())->view());
-}
-
-ErrorOr<void> Process::procfs_get_tty_link(KBufferBuilder& builder) const
-{
-    if (m_tty.is_null())
-        return Error::from_errno(ENOENT);
-    return builder.append(m_tty->tty_name().view());
 }
 
 }

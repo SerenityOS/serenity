@@ -147,7 +147,7 @@ private:
     explicit AC97(PCI::DeviceIdentifier const&);
 
     // ^IRQHandler
-    virtual bool handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(RegisterState const&) override;
 
     AC97Channel channel(StringView name, NativeAudioBusChannel channel) { return AC97Channel(*this, name, m_io_bus_base.offset(channel)); }
     ErrorOr<void> initialize();

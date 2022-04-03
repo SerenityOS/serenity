@@ -37,14 +37,14 @@ UNMAP_AFTER_INIT static u8 parse_hex_digit(char nibble)
 FlatPtr address_for_kernel_symbol(StringView name)
 {
     for (size_t i = 0; i < s_symbol_count; ++i) {
-        const auto& symbol = s_symbols[i];
+        auto const& symbol = s_symbols[i];
         if (name == symbol.name)
             return symbol.address;
     }
     return 0;
 }
 
-const KernelSymbol* symbolicate_kernel_address(FlatPtr address)
+KernelSymbol const* symbolicate_kernel_address(FlatPtr address)
 {
     if (address < g_lowest_kernel_symbol_address || address > g_highest_kernel_symbol_address)
         return nullptr;
@@ -116,7 +116,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
 
     struct RecognizedSymbol {
         FlatPtr address;
-        const KernelSymbol* symbol { nullptr };
+        KernelSymbol const* symbol { nullptr };
     };
     constexpr size_t max_recognized_symbol_count = 256;
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];

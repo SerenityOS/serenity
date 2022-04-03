@@ -16,15 +16,17 @@ public:
     virtual ~BrowsingContextContainer() override;
 
     BrowsingContext* nested_browsing_context() { return m_nested_browsing_context; }
-    const BrowsingContext* nested_browsing_context() const { return m_nested_browsing_context; }
+    BrowsingContext const* nested_browsing_context() const { return m_nested_browsing_context; }
 
     const DOM::Document* content_document() const;
     DOM::Document const* content_document_without_origin_check() const;
 
-    virtual void inserted() override;
-    virtual void removed_from(Node*) override;
+    DOM::Document const* get_svg_document() const;
 
 protected:
+    void create_new_nested_browsing_context();
+    void discard_nested_browsing_context();
+
     RefPtr<BrowsingContext> m_nested_browsing_context;
 
 private:
