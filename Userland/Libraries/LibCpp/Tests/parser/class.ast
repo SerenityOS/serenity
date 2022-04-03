@@ -1,6 +1,7 @@
 TranslationUnit[0:0->10:1]
   StructOrClassDeclaration[0:6->10:1]
   A
+
     C'tor
       (
       Parameter[1:6->1:10]
