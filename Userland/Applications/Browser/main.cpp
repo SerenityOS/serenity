@@ -9,6 +9,7 @@
 #include <AK/StringBuilder.h>
 #include <Applications/Browser/Browser.h>
 #include <Applications/Browser/BrowserWindow.h>
+#include <Applications/Browser/ConnectionToServer.h>
 #include <Applications/Browser/CookieJar.h>
 #include <Applications/Browser/Tab.h>
 #include <Applications/Browser/WindowActions.h>
@@ -57,18 +58,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath proc exec"));
+    TRY(Core::System::pledge("stdio recvfd sendfd unix fattr cpath rpath wpath proc exec"));
 
     char const* specified_url = nullptr;
+    String webdriver_ipc_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
+    args_parser.add_option(webdriver_ipc_path, "Path to WebDriver IPC", "webdriver", 0, "path", false);
     args_parser.parse(arguments);
 
     auto app = GUI::Application::construct(arguments);
 
     Config::pledge_domain("Browser");
     Config::monitor_domain("Browser");
+
+    if (!webdriver_ipc_path.is_null()) {
+        TRY(Browser::ConnectionToServer::connect_to_webdriver(app, webdriver_ipc_path));
+        specified_url = "about:blank";
+    }
 
     // Connect to LaunchServer immediately and let it know that we won't ask for anything other than opening
     // the user's downloads directory.

@@ -5,6 +5,9 @@ serenity_component(
     DEPENDS ImageDecoder RequestServer WebContent WebSocket
 )
 
+compile_ipc(WebDriverSessionServer.ipc WebDriverSessionServerEndpoint.h)
+compile_ipc(WebDriverSessionClient.ipc WebDriverSessionClientEndpoint.h)
+
 compile_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)
 compile_gml(CookiesTab.gml CookiesTabGML.h cookies_tab_gml)
 compile_gml(EditBookmark.gml EditBookmarkGML.h edit_bookmark_gml)
@@ -15,6 +18,7 @@ set(SOURCES
     BookmarksBarWidget.cpp
     BrowserWindow.cpp
     BrowserWindowGML.h
+    ConnectionToServer.cpp
     ConsoleWidget.cpp
     CookieJar.cpp
     CookiesModel.cpp
@@ -30,6 +34,8 @@ set(SOURCES
     StorageWidgetGML.h
     Tab.cpp
     TabGML.h
+    WebDriverSessionClientEndpoint.h
+    WebDriverSessionServerEndpoint.h
     WindowActions.cpp
     main.cpp
 )
