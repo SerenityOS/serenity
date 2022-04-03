@@ -74,7 +74,7 @@ ErrorOr<VirtualRange> RegionTree::allocate_range_anywhere(size_t size, size_t al
             return maybe_range.release_value();
     }
 
-    dmesgln("VirtualRangeAllocator: Failed to allocate anywhere: size={}, alignment={}", size, alignment);
+    dmesgln("RegionTree: Failed to allocate anywhere: size={}, alignment={}", size, alignment);
     return ENOMEM;
 }
 
