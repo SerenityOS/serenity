@@ -491,7 +491,7 @@ package_install_state() {
 installdepends() {
     for depend in "${depends[@]}"; do
         if [ -z "$(package_install_state $depend)" ]; then
-            (cd "$(dirname $(grep -E port=${depend} ../*/package.sh))" && ./package.sh --auto)
+            (cd "../$depend" && ./package.sh --auto)
         fi
     done
 }
