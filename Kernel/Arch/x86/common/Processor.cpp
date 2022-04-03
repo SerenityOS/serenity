@@ -596,22 +596,6 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
 #endif
 }
 
-NonnullOwnPtr<KString> Processor::features_string() const
-{
-    StringBuilder builder;
-    bool first = true;
-    for (auto feature = CPUFeature::Type(1u); feature != CPUFeature::__End; feature <<= 1u) {
-        if (has_feature(feature)) {
-            if (first)
-                first = false;
-            else
-                MUST(builder.try_append(' '));
-            MUST(builder.try_append(cpu_feature_to_string_view(feature)));
-        }
-    }
-    return KString::must_create(builder.string_view());
-}
-
 UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
 {
     m_self = this;
@@ -651,7 +635,9 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
     VERIFY(m_self == this);
     VERIFY(&current() == this); // sanity check
 
-    dmesgln("CPU[{}]: Supported features: {}", current_id(), features_string());
+    m_info = new ProcessorInfo(*this);
+
+    dmesgln("CPU[{}]: Supported features: {}", current_id(), m_info->features_string());
     if (!has_feature(CPUFeature::RDRAND))
         dmesgln("CPU[{}]: No RDRAND support detected, randomness will be poor", current_id());
     dmesgln("CPU[{}]: Physical address bit width: {}", current_id(), m_physical_address_bit_width);
@@ -679,8 +665,6 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
         if (has_feature(CPUFeature::HYPERVISOR))
             detect_hypervisor();
     }
-
-    m_info = new ProcessorInfo(*this);
 
     {
         // We need to prevent races between APs starting up at the same time

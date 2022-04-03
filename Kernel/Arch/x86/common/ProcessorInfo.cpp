@@ -15,7 +15,7 @@ namespace Kernel {
 ProcessorInfo::ProcessorInfo(Processor const& processor)
     : m_vendor_id_string(build_vendor_id_string())
     , m_brand_string(build_brand_string())
-    , m_features_string(processor.features_string())
+    , m_features_string(build_features_string(processor))
 {
     CPUID cpuid(1);
     m_stepping = cpuid.eax() & 0xf;
@@ -73,6 +73,22 @@ NonnullOwnPtr<KString> ProcessorInfo::build_brand_string()
     copy_brand_string_part_to_buffer(1);
     copy_brand_string_part_to_buffer(2);
     return KString::must_create(buffer);
+}
+
+NonnullOwnPtr<KString> ProcessorInfo::build_features_string(Processor const& processor)
+{
+    StringBuilder builder;
+    bool first = true;
+    for (auto feature = CPUFeature::Type(1u); feature != CPUFeature::__End; feature <<= 1u) {
+        if (processor.has_feature(feature)) {
+            if (first)
+                first = false;
+            else
+                MUST(builder.try_append(' '));
+            MUST(builder.try_append(cpu_feature_to_string_view(feature)));
+        }
+    }
+    return KString::must_create(builder.string_view());
 }
 
 }
