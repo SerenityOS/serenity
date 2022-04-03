@@ -338,7 +338,7 @@ if (BUILD_LAGOM)
         LIBS LagomTLS
     )
 
-    # GFX
+    # Gfx
     file(GLOB LIBGFX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/*.cpp")
     file(GLOB LIBGFX_TTF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/TrueTypeFont/*.cpp")
     lagom_lib(Gfx gfx
@@ -619,6 +619,12 @@ if (BUILD_LAGOM)
         foreach(source ${LIBTLS_TESTS})
             lagom_test(${source} LIBS LagomTLS
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTLS)
+        endforeach()
+
+        # TTF
+        file(GLOB LIBTTF_TESTS CONFIGURE_DEPENDS "../../Tests/LibTTF/*.cpp")
+        foreach(source ${LIBTTF_TESTS})
+            lagom_test(${source} LIBS LagomGfx)
         endforeach()
 
         # TimeZone
