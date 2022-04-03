@@ -12,7 +12,9 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLLinkElement.h>
+#include <LibWeb/ImageDecoding.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
 
@@ -50,7 +52,16 @@ void HTMLLinkElement::inserted()
         ResourceLoader::the().prefetch_dns(document().parse_url(attribute(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Preconnect) {
         ResourceLoader::the().preconnect(document().parse_url(attribute(HTML::AttributeNames::href)));
+    } else if (m_relationship & Relationship::Icon) {
+        auto favicon_url = document().parse_url(href());
+        auto favicon_request = LoadRequest::create_for_url_on_page(favicon_url, document().page());
+        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, favicon_request));
     }
+}
+
+bool HTMLLinkElement::has_loaded_icon() const
+{
+    return m_relationship & Relationship::Icon && resource() && resource()->is_loaded() && resource()->has_encoded_data();
 }
 
 void HTMLLinkElement::parse_attribute(FlyString const& name, String const& value)
@@ -91,7 +102,17 @@ void HTMLLinkElement::resource_did_fail()
 void HTMLLinkElement::resource_did_load()
 {
     VERIFY(resource());
+    VERIFY(m_relationship & (Relationship::Stylesheet | Relationship::Icon));
 
+    if (m_relationship & Relationship::Stylesheet)
+        resource_did_load_stylesheet();
+    if (m_relationship & Relationship::Icon)
+        resource_did_load_favicon();
+}
+
+void HTMLLinkElement::resource_did_load_stylesheet()
+{
+    VERIFY(m_relationship & Relationship::Stylesheet);
     m_document_load_event_delayer.clear();
 
     if (!resource()->has_encoded_data()) {
@@ -113,6 +134,47 @@ void HTMLLinkElement::resource_did_load()
 
     sheet->set_owner_node(this);
     document().style_sheets().add_sheet(sheet.release_nonnull());
+}
+
+void HTMLLinkElement::resource_did_load_favicon()
+{
+    VERIFY(m_relationship & (Relationship::Icon));
+    if (!resource()->has_encoded_data()) {
+        dbgln_if(SPAM_DEBUG, "Favicon downloaded, no encoded data");
+        return;
+    }
+
+    dbgln_if(SPAM_DEBUG, "Favicon downloaded, {} bytes from {}", resource()->encoded_data().size(), resource()->url());
+
+    document().check_favicon_after_loading_link_resource();
+}
+
+bool HTMLLinkElement::load_favicon_and_use_if_window_is_active()
+{
+    if (!has_loaded_icon())
+        return false;
+
+    RefPtr<Gfx::Bitmap> favicon_bitmap;
+    auto decoded_image = Web::image_decoder_client().decode_image(resource()->encoded_data());
+    if (!decoded_image.has_value() || decoded_image->frames.is_empty()) {
+        dbgln("Could not decode favicon {}", resource()->url());
+        return false;
+    }
+
+    favicon_bitmap = decoded_image->frames[0].bitmap;
+    dbgln_if(IMAGE_DECODER_DEBUG, "Decoded favicon, {}", favicon_bitmap->size());
+
+    auto* page = document().page();
+    if (!page)
+        return favicon_bitmap;
+
+    if (document().browsing_context() == &page->top_level_browsing_context())
+        if (favicon_bitmap) {
+            page->client().page_did_change_favicon(*favicon_bitmap);
+            return true;
+        }
+
+    return false;
 }
 
 }
