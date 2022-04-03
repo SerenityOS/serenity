@@ -90,7 +90,7 @@ ErrorOr<VirtualRange> RegionTree::allocate_range_specific(VirtualAddress base, s
     if (!m_total_range.contains(range))
         return ENOMEM;
 
-    auto* region = m_regions.find_largest_not_above(base.get());
+    auto* region = m_regions.find_largest_not_above(base.offset(size).get());
     if (!region) {
         // The range can be accommodated below the current lowest range.
         return range;
