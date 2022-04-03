@@ -456,8 +456,9 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
 
     // Allocate a virtual address range for our array
     // This looks awkward, but it basically creates a dummy region to occupy the address range permanently.
-    auto range = MUST(m_region_tree.try_allocate_anywhere(physical_page_array_pages * PAGE_SIZE));
-    MUST(m_region_tree.place_specifically(*MUST(Region::create_unbacked()).leak_ptr(), range));
+    auto& region = *MUST(Region::create_unbacked()).leak_ptr();
+    MUST(m_region_tree.place_anywhere(region, physical_page_array_pages * PAGE_SIZE));
+    auto range = region.range();
 
     // Now that we have our special m_physical_pages_region region with enough pages to hold the entire array
     // try to map the entire region into kernel space so we always have it
