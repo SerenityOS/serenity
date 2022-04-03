@@ -434,11 +434,11 @@ else()
         Memory/MemoryManager.cpp
         Memory/PrivateInodeVMObject.cpp
         Memory/Region.cpp
+        Memory/RegionTree.cpp
         Memory/RingBuffer.cpp
         Memory/SharedInodeVMObject.cpp
         Memory/ScatterGatherList.cpp
         Memory/VirtualRange.cpp
-        Memory/VirtualRangeAllocator.cpp
         Memory/VMObject.cpp
     )
 
