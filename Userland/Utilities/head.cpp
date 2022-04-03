@@ -18,7 +18,7 @@ int head(String const& filename, bool print_filename, ssize_t line_count, ssize_
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    TRY(Core::System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::pledge("stdio rpath"));
 
     int line_count = -1;
     int byte_count = -1;

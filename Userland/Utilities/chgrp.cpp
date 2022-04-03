@@ -13,7 +13,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath chown", nullptr));
+    TRY(Core::System::pledge("stdio rpath chown"));
 
     char const* gid_arg = nullptr;
     char const* path = nullptr;
