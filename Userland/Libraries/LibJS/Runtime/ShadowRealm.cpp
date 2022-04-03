@@ -109,7 +109,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(GlobalObject& global_object, 
     // b. If script is a List of errors, throw a SyntaxError exception.
     if (parser.has_errors()) {
         auto& error = parser.errors()[0];
-        return vm.throw_completion<JS::SyntaxError>(global_object, error.to_string());
+        return vm.throw_completion<SyntaxError>(global_object, error.to_string());
     }
 
     // c. If script Contains ScriptBody is false, return undefined.

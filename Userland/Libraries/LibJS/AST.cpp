@@ -3023,7 +3023,7 @@ Completion ObjectExpression::execute(Interpreter& interpreter, GlobalObject& glo
             object->define_direct_accessor(property_key, nullptr, &value.as_function(), Attribute::Configurable | Attribute::Enumerable);
             break;
         case ObjectProperty::Type::KeyValue:
-            object->define_direct_property(property_key, value, JS::default_attributes);
+            object->define_direct_property(property_key, value, default_attributes);
             break;
         case ObjectProperty::Type::Spread:
         default:
@@ -3104,7 +3104,7 @@ void OptionalChain::dump(int indent) const
     }
 }
 
-ThrowCompletionOr<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_and_value(JS::Interpreter& interpreter, JS::GlobalObject& global_object) const
+ThrowCompletionOr<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_and_value(Interpreter& interpreter, GlobalObject& global_object) const
 {
     auto base_reference = TRY(m_base->to_reference(interpreter, global_object));
     auto base = base_reference.is_unresolvable()

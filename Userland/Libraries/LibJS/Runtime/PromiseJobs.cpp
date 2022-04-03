@@ -77,14 +77,14 @@ static ThrowCompletionOr<Value> run_reaction_job(GlobalObject& global_object, Pr
         // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
         auto* reject_function = promise_capability.value().reject;
         dbgln_if(PROMISE_DEBUG, "run_reaction_job: Calling PromiseCapability's reject function @ {}", reject_function);
-        return JS::call(global_object, *reject_function, js_undefined(), *handler_result.value());
+        return call(global_object, *reject_function, js_undefined(), *handler_result.value());
     }
     // i. Else,
     else {
         // i. Let status be Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
         auto* resolve_function = promise_capability.value().resolve;
         dbgln_if(PROMISE_DEBUG, "[PromiseReactionJob]: Calling PromiseCapability's resolve function @ {}", resolve_function);
-        return JS::call(global_object, *resolve_function, js_undefined(), *handler_result.value());
+        return call(global_object, *resolve_function, js_undefined(), *handler_result.value());
     }
 
     // j. Return Completion(status).
@@ -95,7 +95,7 @@ PromiseJob create_promise_reaction_job(GlobalObject& global_object, PromiseReact
 {
     // 1. Let job be a new Job Abstract Closure with no parameters that captures reaction and argument and performs the following steps when called:
     //    See run_reaction_job for "the following steps".
-    auto job = [global_object = JS::make_handle(&global_object), reaction = JS::make_handle(&reaction), argument = JS::make_handle(argument)]() mutable {
+    auto job = [global_object = make_handle(&global_object), reaction = make_handle(&reaction), argument = make_handle(argument)]() mutable {
         return run_reaction_job(*global_object.cell(), *reaction.cell(), argument.value());
     };
 
@@ -142,7 +142,7 @@ static ThrowCompletionOr<Value> run_resolve_thenable_job(GlobalObject& global_ob
     if (then_call_result.is_error()) {
         // i. Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
         dbgln_if(PROMISE_DEBUG, "run_resolve_thenable_job: then_call_result is an abrupt completion, calling reject function with value {}", *then_call_result.throw_completion().value());
-        auto status = JS::call(global_object, &reject_function, js_undefined(), *then_call_result.throw_completion().value());
+        auto status = call(global_object, &reject_function, js_undefined(), *then_call_result.throw_completion().value());
 
         // ii. Return Completion(status).
         return status;
@@ -174,7 +174,7 @@ PromiseJob create_promise_resolve_thenable_job(GlobalObject& global_object, Prom
     // 1. Let job be a new Job Abstract Closure with no parameters that captures promiseToResolve, thenable, and then and performs the following steps when called:
     //    See PromiseResolveThenableJob::call() for "the following steps".
     //    NOTE: This is done out of order, since `then` is moved into the lambda and `then` would be invalid if it was done at the start.
-    auto job = [global_object = JS::make_handle(&global_object), promise_to_resolve = JS::make_handle(&promise_to_resolve), thenable = JS::make_handle(thenable), then = move(then)]() mutable {
+    auto job = [global_object = make_handle(&global_object), promise_to_resolve = make_handle(&promise_to_resolve), thenable = make_handle(thenable), then = move(then)]() mutable {
         return run_resolve_thenable_job(*global_object.cell(), *promise_to_resolve.cell(), thenable.value(), then);
     };
 

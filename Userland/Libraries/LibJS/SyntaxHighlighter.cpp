@@ -12,24 +12,24 @@
 
 namespace JS {
 
-static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, JS::TokenType type)
+static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, TokenType type)
 {
-    switch (JS::Token::category(type)) {
-    case JS::TokenCategory::Invalid:
+    switch (Token::category(type)) {
+    case TokenCategory::Invalid:
         return { palette.syntax_comment() };
-    case JS::TokenCategory::Number:
+    case TokenCategory::Number:
         return { palette.syntax_number() };
-    case JS::TokenCategory::String:
+    case TokenCategory::String:
         return { palette.syntax_string() };
-    case JS::TokenCategory::Punctuation:
+    case TokenCategory::Punctuation:
         return { palette.syntax_punctuation() };
-    case JS::TokenCategory::Operator:
+    case TokenCategory::Operator:
         return { palette.syntax_operator() };
-    case JS::TokenCategory::Keyword:
+    case TokenCategory::Keyword:
         return { palette.syntax_keyword(), true };
-    case JS::TokenCategory::ControlKeyword:
+    case TokenCategory::ControlKeyword:
         return { palette.syntax_control_keyword(), true };
-    case JS::TokenCategory::Identifier:
+    case TokenCategory::Identifier:
         return { palette.syntax_identifier() };
     default:
         return { palette.base_text() };
@@ -38,8 +38,8 @@ static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, JS::T
 
 bool SyntaxHighlighter::is_identifier(u64 token) const
 {
-    auto js_token = static_cast<JS::TokenType>(static_cast<size_t>(token));
-    return js_token == JS::TokenType::Identifier;
+    auto js_token = static_cast<TokenType>(static_cast<size_t>(token));
+    return js_token == TokenType::Identifier;
 }
 
 bool SyntaxHighlighter::is_navigatable([[maybe_unused]] u64 token) const
@@ -51,7 +51,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
 
-    JS::Lexer lexer(text);
+    Lexer lexer(text);
 
     Vector<GUI::TextDocumentSpan> spans;
     GUI::TextPosition position { 0, 0 };
@@ -65,7 +65,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
             position.set_column(position.column() + 1);
     };
 
-    auto append_token = [&](StringView str, const JS::Token& token, bool is_trivia) {
+    auto append_token = [&](StringView str, Token const& token, bool is_trivia) {
         if (str.is_empty())
             return;
 
@@ -76,7 +76,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         GUI::TextDocumentSpan span;
         span.range.set_start(start);
         span.range.set_end({ position.line(), position.column() });
-        auto type = is_trivia ? JS::TokenType::Invalid : token.type();
+        auto type = is_trivia ? TokenType::Invalid : token.type();
         auto style = style_for_token_type(palette, type);
         span.attributes.color = style.color;
         span.attributes.bold = style.bold;
@@ -97,7 +97,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         append_token(token.trivia(), token, true);
         append_token(token.value(), token, false);
 
-        if (token.type() == JS::TokenType::Eof)
+        if (token.type() == TokenType::Eof)
             was_eof = true;
     }
 
@@ -113,15 +113,16 @@ Vector<Syntax::Highlighter::MatchingTokenPair> SyntaxHighlighter::matching_token
 {
     static Vector<Syntax::Highlighter::MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
-        pairs.append({ static_cast<u64>(JS::TokenType::CurlyOpen), static_cast<u64>(JS::TokenType::CurlyClose) });
-        pairs.append({ static_cast<u64>(JS::TokenType::ParenOpen), static_cast<u64>(JS::TokenType::ParenClose) });
-        pairs.append({ static_cast<u64>(JS::TokenType::BracketOpen), static_cast<u64>(JS::TokenType::BracketClose) });
+        pairs.append({ static_cast<u64>(TokenType::CurlyOpen), static_cast<u64>(TokenType::CurlyClose) });
+        pairs.append({ static_cast<u64>(TokenType::ParenOpen), static_cast<u64>(TokenType::ParenClose) });
+        pairs.append({ static_cast<u64>(TokenType::BracketOpen), static_cast<u64>(TokenType::BracketClose) });
     }
     return pairs;
 }
 
 bool SyntaxHighlighter::token_types_equal(u64 token1, u64 token2) const
 {
-    return static_cast<JS::TokenType>(token1) == static_cast<JS::TokenType>(token2);
+    return static_cast<TokenType>(token1) == static_cast<TokenType>(token2);
 }
+
 }

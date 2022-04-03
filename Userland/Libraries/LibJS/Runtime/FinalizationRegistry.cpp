@@ -9,10 +9,10 @@
 
 namespace JS {
 
-FinalizationRegistry::FinalizationRegistry(Realm& realm, JS::JobCallback cleanup_callback, Object& prototype)
+FinalizationRegistry::FinalizationRegistry(Realm& realm, JobCallback cleanup_callback, Object& prototype)
     : Object(prototype)
     , WeakContainer(heap())
-    , m_realm(JS::make_handle(realm))
+    , m_realm(make_handle(realm))
     , m_cleanup_callback(move(cleanup_callback))
 {
 }

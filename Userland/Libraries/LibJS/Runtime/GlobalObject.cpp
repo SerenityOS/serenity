@@ -488,7 +488,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
 }
 
 // 19.2.6.1.1 Encode ( string, unescapedSet ), https://tc39.es/ecma262/#sec-encode
-static ThrowCompletionOr<String> encode([[maybe_unused]] JS::GlobalObject& global_object, String const& string, StringView unescaped_set)
+static ThrowCompletionOr<String> encode(GlobalObject& global_object, String const& string, StringView unescaped_set)
 {
     auto& vm = global_object.vm();
     auto utf16_string = Utf16String(string);
@@ -544,7 +544,7 @@ static ThrowCompletionOr<String> encode([[maybe_unused]] JS::GlobalObject& globa
 }
 
 // 19.2.6.1.2 Decode ( string, reservedSet ), https://tc39.es/ecma262/#sec-decode
-static ThrowCompletionOr<String> decode(JS::GlobalObject& global_object, String const& string, StringView reserved_set)
+static ThrowCompletionOr<String> decode(GlobalObject& global_object, String const& string, StringView reserved_set)
 {
     StringBuilder decoded_builder;
     auto code_point_start_offset = 0u;

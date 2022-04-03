@@ -431,7 +431,7 @@ Object* JSONObject::parse_json_object(GlobalObject& global_object, JsonObject co
 {
     auto* object = Object::create(global_object, global_object.object_prototype());
     json_object.for_each_member([&](auto& key, auto& value) {
-        object->define_direct_property(key, parse_json_value(global_object, value), JS::default_attributes);
+        object->define_direct_property(key, parse_json_value(global_object, value), default_attributes);
     });
     return object;
 }
@@ -441,7 +441,7 @@ Array* JSONObject::parse_json_array(GlobalObject& global_object, JsonArray const
     auto* array = MUST(Array::create(global_object, 0));
     size_t index = 0;
     json_array.for_each([&](auto& value) {
-        array->define_direct_property(index++, parse_json_value(global_object, value), JS::default_attributes);
+        array->define_direct_property(index++, parse_json_value(global_object, value), default_attributes);
     });
     return array;
 }

@@ -69,7 +69,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(GlobalObject& global_objec
     auto region = TRY(get_string_option(global_object, options, vm.names.region, Unicode::is_unicode_region_subtag));
 
     // 10. Set tag to ! CanonicalizeUnicodeLocaleId(tag).
-    auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
+    auto canonicalized_tag = Intl::canonicalize_unicode_locale_id(*locale_id);
 
     // 11. Assert: tag matches the unicode_locale_id production.
     locale_id = Unicode::parse_unicode_locale_id(canonicalized_tag);

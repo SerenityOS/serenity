@@ -580,13 +580,13 @@ ThrowCompletionOr<Value> perform_eval(Value x, GlobalObject& caller_realm, Calle
     Optional<Value> eval_result;
 
     if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
-        auto executable_result = JS::Bytecode::Generator::generate(program);
+        auto executable_result = Bytecode::Generator::generate(program);
         if (executable_result.is_error())
             return vm.throw_completion<InternalError>(bytecode_interpreter->global_object(), ErrorType::NotImplemented, executable_result.error().to_string());
 
         auto executable = executable_result.release_value();
         executable->name = "eval"sv;
-        if (JS::Bytecode::g_dump_bytecode)
+        if (Bytecode::g_dump_bytecode)
             executable->dump();
         eval_result = TRY(bytecode_interpreter->run(*executable));
         // Turn potentially empty JS::Value from the bytecode interpreter into an empty Optional
@@ -1009,7 +1009,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
             // 3. Perform map.[[DefineOwnProperty]](! ToString(𝔽(index)), PropertyDescriptor { [[Set]]: p, [[Get]]: g, [[Enumerable]]: false, [[Configurable]]: true }).
             object->parameter_map().define_native_accessor(
                 PropertyKey { index },
-                [&environment, name](VM&, GlobalObject& global_object_getter) -> JS::ThrowCompletionOr<Value> {
+                [&environment, name](VM&, GlobalObject& global_object_getter) -> ThrowCompletionOr<Value> {
                     return MUST(environment.get_binding_value(global_object_getter, name, false));
                 },
                 [&environment, name](VM& vm, GlobalObject& global_object_setter) {
