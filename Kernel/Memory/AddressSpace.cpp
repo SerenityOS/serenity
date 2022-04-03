@@ -271,7 +271,7 @@ ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange co
     auto* found_region = m_region_tree.regions().find_largest_not_above(range.base().get());
     if (!found_region)
         return regions;
-    for (auto iter = m_region_tree.regions().begin_from((*found_region).vaddr().get()); !iter.is_end(); ++iter) {
+    for (auto iter = m_region_tree.regions().begin_from(*found_region); !iter.is_end(); ++iter) {
         auto const& iter_range = (*iter).range();
         if (iter_range.base() < range.end() && iter_range.end() > range.base()) {
             TRY(regions.try_append(&*iter));
