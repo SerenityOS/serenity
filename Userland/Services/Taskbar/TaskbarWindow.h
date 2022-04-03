@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "ClockWidget.h"
 #include "WindowList.h"
 #include <LibConfig/Listener.h>
 #include <LibDesktop/AppFile.h>
@@ -14,7 +15,8 @@
 #include <LibGfx/ShareableBitmap.h>
 #include <Services/WindowServer/ScreenLayout.h>
 
-class TaskbarWindow final : public GUI::Window {
+class TaskbarWindow final : public GUI::Window
+    , public Config::Listener {
     C_OBJECT(TaskbarWindow);
 
 public:
@@ -22,6 +24,8 @@ public:
 
     static int taskbar_height() { return 27; }
     static int taskbar_icon_size() { return 16; }
+
+    virtual void config_string_did_change(String const&, String const&, String const&, String const&) override;
 
 private:
     explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu);
@@ -53,6 +57,7 @@ private:
     RefPtr<GUI::Frame> m_applet_area_container;
     RefPtr<GUI::Button> m_start_button;
     RefPtr<GUI::Button> m_show_desktop_button;
+    RefPtr<Taskbar::ClockWidget> m_clock_widget;
 
     RefPtr<Desktop::AppFile> m_assistant_app_file;
 
