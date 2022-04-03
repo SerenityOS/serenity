@@ -705,9 +705,13 @@ public:
     NonnullRefPtrVector<Declaration> const& members() const { return m_members; }
     void set_members(NonnullRefPtrVector<Declaration>&& members) { m_members = move(members); }
 
+    NonnullRefPtrVector<Name> const& baseclasses() const { return m_baseclasses; }
+    void set_baseclasses(NonnullRefPtrVector<Name>&& baseclasses) { m_baseclasses = move(baseclasses); }
+
 private:
     StructOrClassDeclaration::Type m_type;
     NonnullRefPtrVector<Declaration> m_members;
+    NonnullRefPtrVector<Name> m_baseclasses;
 };
 
 enum class UnaryOp {
