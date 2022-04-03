@@ -85,7 +85,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     m_applet_area_container->set_frame_shape(Gfx::FrameShape::Box);
     m_applet_area_container->set_frame_shadow(Gfx::FrameShadow::Sunken);
 
-    main_widget.add<Taskbar::ClockWidget>();
+    m_clock_widget = main_widget.add<Taskbar::ClockWidget>();
 
     m_show_desktop_button = GUI::Button::construct();
     m_show_desktop_button->set_tooltip("Show Desktop");
@@ -97,6 +97,15 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 
     auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, "Assistant.af");
     m_assistant_app_file = Desktop::AppFile::open(af_path);
+}
+
+void TaskbarWindow::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
+{
+    VERIFY(domain == "Taskbar");
+    if (group == "Clock" && key == "TimeFormat") {
+        m_clock_widget->update_format(value);
+        update_applet_area();
+    }
 }
 
 void TaskbarWindow::show_desktop_button_clicked(unsigned)

@@ -5,6 +5,8 @@
  */
 
 #include "ClockSettingsWidget.h"
+#include "TimeZoneSettingsWidget.h"
+#include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -17,6 +19,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
+    Config::pledge_domain("Taskbar");
     TRY(Core::System::pledge("stdio rpath recvfd sendfd proc exec"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/timezone", "x"));
@@ -27,6 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::SettingsWindow::create("Clock Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     (void)TRY(window->add_tab<ClockSettingsWidget>("Clock"));
+    (void)TRY(window->add_tab<TimeZoneSettingsWidget>("Time Zone"));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(540, 570);
 

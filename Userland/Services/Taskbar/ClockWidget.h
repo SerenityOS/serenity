@@ -24,6 +24,8 @@ class ClockWidget final : public GUI::Frame {
 public:
     virtual ~ClockWidget() override = default;
 
+    void update_format(String const&);
+
 private:
     ClockWidget();
 
@@ -42,6 +44,7 @@ private:
     void position_calendar_window();
     void jump_to_current_date();
 
+    String m_time_format;
     RefPtr<GUI::Window> m_calendar_window;
     RefPtr<GUI::Calendar> m_calendar;
     RefPtr<GUI::Button> m_next_date;
