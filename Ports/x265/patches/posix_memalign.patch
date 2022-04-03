@@ -1,0 +1,20 @@
+commit 6af9baa25febbaecab3373bab809b5822fec6a22
+Author: Simon Danner <danner.simon@gmail.com>
+Date:   Sun Apr 3 19:04:20 2022 +0200
+
+    Serenity: Use _aligned_malloc instead of posix_memalign
+
+diff --git a/source/common/common.cpp b/source/common/common.cpp
+index b332487..e32840c 100644
+--- a/source/common/common.cpp
++++ b/source/common/common.cpp
+@@ -56,7 +56,7 @@ int64_t x265_mdate(void)
+ 
+ #define X265_ALIGNBYTES 64
+ 
+-#if _WIN32
++#if _WIN32 || __serenity__
+ #if defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
+ #define _aligned_malloc __mingw_aligned_malloc
+ #define _aligned_free   __mingw_aligned_free
+
