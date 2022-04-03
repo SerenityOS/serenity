@@ -115,7 +115,7 @@ int posix_spawn(pid_t* out_pid, char const* path, posix_spawn_file_actions_t con
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawnp.html
-int posix_spawnp(pid_t* out_pid, char const* path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const argv[], char* const envp[])
+int posix_spawnp(pid_t* out_pid, char const* file, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const argv[], char* const envp[])
 {
     pid_t child_pid = fork();
     if (child_pid < 0)
@@ -126,7 +126,7 @@ int posix_spawnp(pid_t* out_pid, char const* path, posix_spawn_file_actions_t co
         return 0;
     }
 
-    posix_spawn_child(path, file_actions, attr, argv, envp, execvpe);
+    posix_spawn_child(file, file_actions, attr, argv, envp, execvpe);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn_file_actions_addchdir.html
