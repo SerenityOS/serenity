@@ -411,22 +411,38 @@ static String normalize_header_value(String const& header_value)
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
-DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& header, String const& value)
+DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& name, String const& value)
 {
+    // 1. If this’s state is not opened, then throw an "InvalidStateError" DOMException.
     if (m_ready_state != ReadyState::Opened)
         return DOM::InvalidStateError::create("XHR readyState is not OPENED");
 
+    // 2. If this’s send() flag is set, then throw an "InvalidStateError" DOMException.
     if (m_send)
         return DOM::InvalidStateError::create("XHR send() flag is already set");
 
-    // FIXME: Check if name matches the name production.
-    // FIXME: Check if value matches the value production.
+    // 3. Normalize value.
+    auto normalized_value = normalize_header_value(value);
 
-    if (is_forbidden_header_name(header))
+    // FIXME: 4. If name is not a header name or value is not a header value,
+    //           then throw a "SyntaxError" DOMException.
+
+    // 5. If name is a forbidden header name, then return.
+    if (is_forbidden_header_name(name))
         return {};
 
-    // FIXME: Combine
-    m_request_headers.set(header, normalize_header_value(value));
+    // 6. Combine (name, value) in this’s author request headers.
+    // FIXME: The header name look-up should be case-insensitive.
+    if (m_request_headers.contains(name)) {
+        // 1. If list contains name, then set the value of the first such header to its value,
+        //    followed by 0x2C 0x20, followed by value.
+        auto maybe_header_value = m_request_headers.get(name);
+        m_request_headers.set(name, String::formatted("{}, {}", maybe_header_value.release_value(), normalized_value));
+    } else {
+        // 2. Otherwise, append (name, value) to list.
+        m_request_headers.set(name, normalized_value);
+    }
+
     return {};
 }
 
