@@ -6,6 +6,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/CharacterTypes.h>
 #include <AK/Format.h>
 #include <AK/Utf8View.h>
 
@@ -100,9 +101,9 @@ bool Utf8View::validate(size_t& valid_bytes) const
 {
     valid_bytes = 0;
     for (auto ptr = begin_ptr(); ptr < end_ptr(); ptr++) {
-        size_t code_point_length_in_bytes;
-        u32 value;
-        bool first_byte_makes_sense = decode_first_byte(*ptr, code_point_length_in_bytes, value);
+        size_t code_point_length_in_bytes = 0;
+        u32 code_point = 0;
+        bool first_byte_makes_sense = decode_first_byte(*ptr, code_point_length_in_bytes, code_point);
         if (!first_byte_makes_sense)
             return false;
 
@@ -112,7 +113,13 @@ bool Utf8View::validate(size_t& valid_bytes) const
                 return false;
             if (*ptr >> 6 != 2)
                 return false;
+
+            code_point <<= 6;
+            code_point |= *ptr & 63;
         }
+
+        if (!is_unicode(code_point))
+            return false;
 
         valid_bytes += code_point_length_in_bytes;
     }
