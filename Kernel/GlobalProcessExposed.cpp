@@ -582,14 +582,15 @@ private:
                 auto& info = proc.info();
                 auto obj = TRY(array.add_object());
                 TRY(obj.add("processor", proc.id()));
-                TRY(obj.add("cpuid", info.cpuid()));
+                // FIXME: Rename this to use the same name everywhere.
+                TRY(obj.add("cpuid", info.vendor_id_string()));
                 TRY(obj.add("family", info.display_family()));
 
                 auto features_array = TRY(obj.add_array("features"));
                 auto keep_empty = false;
 
                 ErrorOr<void> result; // FIXME: Make this nicer
-                info.features().for_each_split_view(' ', keep_empty, [&](StringView feature) {
+                info.features_string().for_each_split_view(' ', keep_empty, [&](StringView feature) {
                     if (result.is_error())
                         return;
                     result = features_array.add(feature);
@@ -601,7 +602,7 @@ private:
                 TRY(obj.add("model", info.display_model()));
                 TRY(obj.add("stepping", info.stepping()));
                 TRY(obj.add("type", info.type()));
-                TRY(obj.add("brand", info.brand()));
+                TRY(obj.add("brand", info.brand_string()));
 
                 TRY(obj.finish());
                 return {};

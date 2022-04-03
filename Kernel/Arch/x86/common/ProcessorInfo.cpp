@@ -13,9 +13,9 @@
 namespace Kernel {
 
 ProcessorInfo::ProcessorInfo(Processor const& processor)
-    : m_cpuid(query_processor_cpuid())
-    , m_brand(query_processor_brand())
-    , m_features(processor.features_string())
+    : m_vendor_id_string(build_vendor_id_string())
+    , m_brand_string(build_brand_string())
+    , m_features_string(processor.features_string())
 {
     CPUID cpuid(1);
     m_stepping = cpuid.eax() & 0xf;
@@ -36,7 +36,7 @@ ProcessorInfo::ProcessorInfo(Processor const& processor)
     }
 }
 
-NonnullOwnPtr<KString> ProcessorInfo::query_processor_cpuid()
+NonnullOwnPtr<KString> ProcessorInfo::build_vendor_id_string()
 {
     CPUID cpuid(0);
     StringBuilder builder;
@@ -53,7 +53,7 @@ NonnullOwnPtr<KString> ProcessorInfo::query_processor_cpuid()
     return KString::must_create(builder.string_view());
 }
 
-NonnullOwnPtr<KString> ProcessorInfo::query_processor_brand()
+NonnullOwnPtr<KString> ProcessorInfo::build_brand_string()
 {
     u32 max_extended_leaf = CPUID(0x80000000).eax();
 
