@@ -217,6 +217,10 @@ void HTMLObjectElement::run_object_representation_handler_steps(Optional<String>
         if (!m_nested_browsing_context)
             create_new_nested_browsing_context();
 
+        // NOTE: Creating a new nested browsing context can fail if the document is not attached to a browsing context
+        if (!m_nested_browsing_context)
+            return;
+
         // If the URL of the given resource does not match about:blank, then navigate the element's nested browsing context to that resource, with historyHandling set to "replace" and the source browsing context set to the object element's node document's browsing context. (The data attribute of the object element doesn't get updated if the browsing context gets further navigated to other locations.)
         if (auto const& url = resource()->url(); url != "about:blank"sv)
             m_nested_browsing_context->loader().load(url, FrameLoader::Type::IFrame);
