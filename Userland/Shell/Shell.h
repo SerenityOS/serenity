@@ -241,6 +241,7 @@ public:
 
     String get_history_path();
     void print_path(StringView path);
+    void cache_path();
 
     bool read_single_line();
 
@@ -343,7 +344,6 @@ private:
     void bring_cursor_to_beginning_of_a_line() const;
 
     Optional<int> resolve_job_spec(StringView);
-    void cache_path();
     void add_entry_to_cache(String const&);
     void remove_entry_from_cache(StringView);
     void stop_all_jobs();

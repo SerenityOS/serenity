@@ -225,6 +225,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
         run_rc_file(Shell::Shell::global_init_file_path);
         run_rc_file(Shell::Shell::local_init_file_path);
+        shell->cache_path();
     }
 
     {
