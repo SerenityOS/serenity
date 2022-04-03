@@ -676,18 +676,10 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
 UNMAP_AFTER_INIT void Processor::detect_hypervisor()
 {
     CPUID hypervisor_leaf_range(0x40000000);
+    auto hypervisor_vendor_id_string = m_info->hypervisor_vendor_id_string();
+    dmesgln("CPU[{}]: CPUID hypervisor signature '{}' ({:#x} {:#x} {:#x}), max leaf {:#x}", current_id(), hypervisor_vendor_id_string, hypervisor_leaf_range.ebx(), hypervisor_leaf_range.ecx(), hypervisor_leaf_range.edx(), hypervisor_leaf_range.eax());
 
-    // Get signature of hypervisor.
-    alignas(sizeof(u32)) char hypervisor_signature_buffer[13];
-    *reinterpret_cast<u32*>(hypervisor_signature_buffer) = hypervisor_leaf_range.ebx();
-    *reinterpret_cast<u32*>(hypervisor_signature_buffer + 4) = hypervisor_leaf_range.ecx();
-    *reinterpret_cast<u32*>(hypervisor_signature_buffer + 8) = hypervisor_leaf_range.edx();
-    hypervisor_signature_buffer[12] = '\0';
-    StringView hypervisor_signature(hypervisor_signature_buffer);
-
-    dmesgln("CPU[{}]: CPUID hypervisor signature '{}' ({:#x} {:#x} {:#x}), max leaf {:#x}", current_id(), hypervisor_signature, hypervisor_leaf_range.ebx(), hypervisor_leaf_range.ecx(), hypervisor_leaf_range.edx(), hypervisor_leaf_range.eax());
-
-    if (hypervisor_signature == "Microsoft Hv"sv)
+    if (hypervisor_vendor_id_string == "Microsoft Hv"sv)
         detect_hypervisor_hyperv(hypervisor_leaf_range);
 }
 

@@ -21,6 +21,7 @@ public:
     ProcessorInfo(Processor const& processor);
 
     StringView vendor_id_string() const { return m_vendor_id_string->view(); }
+    StringView hypervisor_vendor_id_string() const { return m_hypervisor_vendor_id_string->view(); }
     StringView brand_string() const { return m_brand_string->view(); }
     StringView features_string() const { return m_features_string->view(); }
     u32 display_model() const { return m_display_model; }
@@ -33,10 +34,12 @@ public:
 
 private:
     static NonnullOwnPtr<KString> build_vendor_id_string();
+    static NonnullOwnPtr<KString> build_hypervisor_vendor_id_string(Processor const&);
     static NonnullOwnPtr<KString> build_brand_string();
     static NonnullOwnPtr<KString> build_features_string(Processor const&);
 
     NonnullOwnPtr<KString> m_vendor_id_string;
+    NonnullOwnPtr<KString> m_hypervisor_vendor_id_string;
     NonnullOwnPtr<KString> m_brand_string;
     NonnullOwnPtr<KString> m_features_string;
     u32 m_display_model { 0 };
