@@ -193,7 +193,6 @@ def get_port_properties(port):
         dict: keys are values from PORT_PROPERTIES, values are from the package.sh file
     """
 
-    props = {}
     package_sh_command = f"./package.sh showproperty {' '.join(PORT_PROPERTIES)}"
     res = subprocess.run(f"cd {port}; exec {package_sh_command}", shell=True, capture_output=True)
     if res.returncode == 0:
@@ -224,6 +223,11 @@ def check_package_files(ports):
         if not os.path.exists(package_file):
             continue
         props = ports[port]
+
+        if props['port'] != port:
+            print(f"Ports/{port} should use '{port}' for 'port' but is using '{props['port']}' instead")
+            all_good = False
+
         if not props['auth_type'] in ('sha256', 'sig', ''):
             print(f"Ports/{port} uses invalid signature algorithm '{props['auth_type']}' for 'auth_type'")
             all_good = False
