@@ -17,15 +17,6 @@ namespace Kernel {
 class Processor;
 
 class ProcessorInfo {
-    NonnullOwnPtr<KString> m_cpuid;
-    NonnullOwnPtr<KString> m_brand;
-    NonnullOwnPtr<KString> m_features;
-    u32 m_display_model { 0 };
-    u32 m_display_family { 0 };
-    u32 m_stepping { 0 };
-    u32 m_type { 0 };
-    u32 m_apic_id { 0 };
-
 public:
     ProcessorInfo(Processor const& processor);
 
@@ -42,6 +33,16 @@ public:
     u32 apic_id() const { return m_apic_id; }
 
     void set_apic_id(u32 apic_id) { m_apic_id = apic_id; }
+
+private:
+    NonnullOwnPtr<KString> m_cpuid;
+    NonnullOwnPtr<KString> m_brand;
+    NonnullOwnPtr<KString> m_features;
+    u32 m_display_model { 0 };
+    u32 m_display_family { 0 };
+    u32 m_stepping { 0 };
+    u32 m_type { 0 };
+    u32 m_apic_id { 0 };
 };
 
 }
