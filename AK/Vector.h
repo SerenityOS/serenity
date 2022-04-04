@@ -174,6 +174,17 @@ public:
     }
 
     template<typename TUnaryPredicate>
+    Optional<VisibleType const&> first_matching(TUnaryPredicate predicate) const requires(!contains_reference)
+    {
+        for (size_t i = 0; i < size(); ++i) {
+            if (predicate(at(i))) {
+                return Optional<VisibleType const&>(at(i));
+            }
+        }
+        return {};
+    }
+
+    template<typename TUnaryPredicate>
     Optional<VisibleType&> last_matching(TUnaryPredicate predicate) requires(!contains_reference)
     {
         for (ssize_t i = size() - 1; i >= 0; --i) {
