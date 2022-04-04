@@ -5,6 +5,7 @@
 ```console
 sudo dnf install texinfo binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch ccache rsync @"C Development Tools and Libraries" @Virtualization
 ```
+Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
 
 ## openSUSE
 
@@ -64,4 +65,4 @@ doas pkg_add bash cmake g++ gcc git gmake gmp ninja ccache rsync coreutils qemu 
 ```console
 pkg install qemu bash cmake coreutils e2fsprogs fusefs-ext2 gcc11 git gmake ninja sudo gmp mpc mpfr ccache rsync
 ```
-
+Optional: `fusefs-ext2` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
