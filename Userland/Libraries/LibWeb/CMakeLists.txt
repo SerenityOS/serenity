@@ -13,6 +13,7 @@ set(SOURCES
     Bindings/MainThreadVM.cpp
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapperFactory.cpp
+    Bindings/OptionConstructor.cpp
     Bindings/WindowObject.cpp
     Bindings/WindowProxy.cpp
     Bindings/Wrappable.cpp

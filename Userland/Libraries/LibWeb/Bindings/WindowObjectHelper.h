@@ -244,6 +244,7 @@
 #include <LibWeb/Bindings/NodeListConstructor.h>
 #include <LibWeb/Bindings/NodeListPrototype.h>
 #include <LibWeb/Bindings/NodePrototype.h>
+#include <LibWeb/Bindings/OptionConstructor.h>
 #include <LibWeb/Bindings/PageTransitionEventConstructor.h>
 #include <LibWeb/Bindings/PageTransitionEventPrototype.h>
 #include <LibWeb/Bindings/PerformanceConstructor.h>
@@ -498,4 +499,5 @@
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequestEventTarget)                                          \
     ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Audio, AudioConstructor, HTMLAudioElementPrototype) \
-    ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Image, ImageConstructor, HTMLImageElementPrototype)
+    ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Image, ImageConstructor, HTMLImageElementPrototype) \
+    ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Option, OptionConstructor, HTMLOptionElementPrototype)

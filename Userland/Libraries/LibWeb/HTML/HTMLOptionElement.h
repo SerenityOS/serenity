@@ -22,6 +22,7 @@ public:
     void set_selected(bool);
 
 private:
+    friend class Bindings::OptionConstructor;
     friend class HTMLSelectElement;
 
     void parse_attribute(FlyString const& name, String const& value) override;

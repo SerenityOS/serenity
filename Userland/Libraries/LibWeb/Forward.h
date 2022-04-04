@@ -501,6 +501,7 @@ class NodeFilterWrapper;
 class NodeIteratorWrapper;
 class NodeListWrapper;
 class NodeWrapper;
+class OptionConstructor;
 class PageTransitionEventWrapper;
 class PerformanceTimingWrapper;
 class PerformanceWrapper;
