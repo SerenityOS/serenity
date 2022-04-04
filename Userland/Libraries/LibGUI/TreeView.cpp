@@ -6,6 +6,7 @@
  */
 
 #include <AK/Debug.h>
+#include <LibCore/Object.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
@@ -35,6 +36,7 @@ TreeView::MetadataForIndex& TreeView::ensure_metadata_for_index(ModelIndex const
 
 TreeView::TreeView()
 {
+    REGISTER_BOOL_PROPERTY("should_fill_selected_rows", should_fill_selected_rows, set_should_fill_selected_rows);
     set_selection_behavior(SelectionBehavior::SelectItems);
     set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
