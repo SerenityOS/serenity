@@ -25,12 +25,12 @@ struct TreeView::MetadataForIndex {
 TreeView::MetadataForIndex& TreeView::ensure_metadata_for_index(ModelIndex const& index) const
 {
     VERIFY(index.is_valid());
-    auto it = m_view_metadata.find(index.internal_data());
+    auto it = m_view_metadata.find(index);
     if (it != m_view_metadata.end())
         return *it->value;
     auto new_metadata = make<MetadataForIndex>();
     auto& new_metadata_ref = *new_metadata;
-    m_view_metadata.set(index.internal_data(), move(new_metadata));
+    m_view_metadata.set(index, move(new_metadata));
     return new_metadata_ref;
 }
 
