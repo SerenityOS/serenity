@@ -21,6 +21,7 @@ public:
     enum Column {
         Icon = 0,
         PID,
+        TID,
         Name,
         CPU,
         State,
@@ -35,7 +36,6 @@ public:
         Veil,
         Processor,
         Priority,
-        TID,
         PPID,
         PGID,
         SID,
