@@ -47,6 +47,15 @@ public:
     ALWAYS_INLINE constexpr auto in_reverse() { return ReverseWrapper::in_reverse(*this); }
     ALWAYS_INLINE constexpr auto in_reverse() const { return ReverseWrapper::in_reverse(*this); }
 
+    Optional<size_t> find_first_index(T const& value) const
+    {
+        if (auto const index = AK::find_index(begin(), end(), value);
+            index < size()) {
+            return index;
+        }
+        return {};
+    }
+
     ALWAYS_INLINE PtrType& ptr_at(size_t index) { return Base::at(index); }
     ALWAYS_INLINE PtrType const& ptr_at(size_t index) const { return Base::at(index); }
 
