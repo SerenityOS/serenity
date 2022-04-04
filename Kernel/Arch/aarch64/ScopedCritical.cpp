@@ -15,15 +15,23 @@ ScopedCritical::~ScopedCritical() = default;
 
 ScopedCritical::ScopedCritical(ScopedCritical&& /*from*/)
 {
+    VERIFY_NOT_REACHED();
 }
 
 ScopedCritical& ScopedCritical::operator=(ScopedCritical&& /*from*/)
 {
+    VERIFY_NOT_REACHED();
     return *this;
 }
 
-void ScopedCritical::leave() { }
+void ScopedCritical::leave()
+{
+    VERIFY_NOT_REACHED();
+}
 
-void ScopedCritical::enter() { }
+void ScopedCritical::enter()
+{
+    VERIFY_NOT_REACHED();
+}
 
 }
