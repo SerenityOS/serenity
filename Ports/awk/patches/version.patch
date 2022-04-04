@@ -1,0 +1,11 @@
+--- a/main.c
++++ b/main.c
+@@ -22,7 +22,7 @@
+ THIS SOFTWARE.
+ ****************************************************************/
+ 
+-const char	*version = "version 20211208";
++const char	*version = "version 20220122";
+ 
+ #define DEBUG
+ #include <stdio.h>
