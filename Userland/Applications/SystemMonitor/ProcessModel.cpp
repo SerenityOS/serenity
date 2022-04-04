@@ -8,10 +8,15 @@
 #include "ProcessModel.h"
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/NumberFormat.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/FileIconProvider.h>
+#include <LibGUI/Icon.h>
+#include <LibGUI/ModelIndex.h>
+#include <LibGUI/ModelRole.h>
+#include <unistd.h>
 
 static ProcessModel* s_the;
 
@@ -44,9 +49,20 @@ ProcessModel::ProcessModel()
     m_kernel_process_icon = GUI::Icon::default_icon("gear");
 }
 
-int ProcessModel::row_count(GUI::ModelIndex const&) const
+int ProcessModel::row_count(GUI::ModelIndex const& index) const
 {
-    return m_tids.size();
+    if (!index.is_valid())
+        return m_processes.size();
+    // Anything in the second level (threads of processes) doesn't have children.
+    // This way, we don't get infinitely recursing main threads without having to handle that special case elsewhere.
+    if (index.parent().is_valid())
+        return 0;
+    auto const& thread = *static_cast<Thread const*>(index.internal_data());
+    // Only the main thread has the other threads as its children.
+    // Also, if there's not more than one thread, we won't draw that.
+    if (thread.is_main_thread() && thread.current_state.process.threads.size() > 1)
+        return thread.current_state.process.threads.size() - 1;
+    return 0;
 }
 
 int ProcessModel::column_count(GUI::ModelIndex const&) const
@@ -165,8 +181,7 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         }
     }
 
-    auto it = m_threads.find(m_tids[index.row()]);
-    auto& thread = *(*it).value;
+    auto const& thread = *static_cast<Thread const*>(index.internal_data());
 
     if (role == GUI::ModelRole::Sort) {
         switch (index.column()) {
@@ -236,11 +251,8 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
 
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
-        case Column::Icon: {
-            if (thread.current_state.kernel)
-                return m_kernel_process_icon;
-            return GUI::FileIconProvider::icon_for_executable(thread.current_state.executable);
-        }
+        case Column::Icon:
+            return icon_for(thread);
         case Column::PID:
             return thread.current_state.pid;
         case Column::TID:
@@ -304,19 +316,78 @@ GUI::Variant ProcessModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
         }
     }
 
+    if (role == GUI::ModelRole::Icon)
+        return icon_for(thread);
+
+    if (role == GUI::ModelRole::IconOpacity) {
+        if (thread.current_state.uid != getuid())
+            return 0.5f;
+        return {};
+    }
+
     return {};
+}
+
+GUI::Icon ProcessModel::icon_for(Thread const& thread) const
+{
+    if (thread.current_state.kernel)
+        return m_kernel_process_icon;
+    return GUI::FileIconProvider::icon_for_executable(thread.current_state.executable);
+}
+
+GUI::ModelIndex ProcessModel::index(int row, int column, GUI::ModelIndex const& parent) const
+{
+    if (row < 0 || column < 0)
+        return {};
+    // Process index; we display the main thread here.
+    if (!parent.is_valid()) {
+        if (row >= static_cast<int>(m_processes.size()))
+            return {};
+        auto corresponding_thread = m_processes[row].main_thread();
+        return create_index(row, column, corresponding_thread.ptr());
+    }
+    // Thread under process.
+    auto const& parent_thread = *static_cast<Thread const*>(parent.internal_data());
+    auto const& process = parent_thread.current_state.process;
+    // dbgln("Getting thread model index in process {} for col {} row {}", process.pid, column, row);
+    if (row >= static_cast<int>(process.threads.size()))
+        return {};
+    return create_index(row, column, &process.non_main_thread(row));
+}
+
+int ProcessModel::thread_model_row(Thread const& thread) const
+{
+    auto const& process = thread.current_state.process;
+    // A process's main thread uses the global process index.
+    if (process.pid == thread.current_state.pid)
+        return m_processes.find_first_index(process).value_or(0);
+
+    return process.threads.find_first_index(thread).value_or(0);
+}
+
+GUI::ModelIndex ProcessModel::parent_index(GUI::ModelIndex const& index) const
+{
+    if (!index.is_valid())
+        return {};
+    auto const& thread = *static_cast<Thread*>(index.internal_data());
+    // There's no parent for the main thread.
+    if (thread.current_state.pid == thread.current_state.tid)
+        return {};
+    // FIXME: We can't use first_matching here (not even a const version) because Optional cannot contain references.
+    auto const& parent = thread.current_state.process;
+
+    return create_index(m_processes.find_first_index(parent).release_value(), index.column(), parent.main_thread().ptr());
 }
 
 Vector<GUI::ModelIndex> ProcessModel::matches(StringView searching, unsigned flags, GUI::ModelIndex const&)
 {
     Vector<GUI::ModelIndex> found_indices;
 
-    for (auto& thread : m_threads) {
+    for (auto const& thread : m_threads) {
         if (string_matches(thread.value->current_state.name, searching, flags)) {
-            auto maybe_tid_index = m_tids.find_first_index(thread.key);
-            if (!maybe_tid_index.has_value())
-                continue;
-            found_indices.append(create_index(maybe_tid_index.value(), Column::Name));
+            auto tid_row = thread_model_row(thread.value);
+
+            found_indices.append(create_index(tid_row, Column::Name, reinterpret_cast<void const*>(thread.value.ptr())));
             if (flags & FirstMatchOnly)
                 break;
         }
@@ -327,7 +398,7 @@ Vector<GUI::ModelIndex> ProcessModel::matches(StringView searching, unsigned fla
 
 void ProcessModel::update()
 {
-    auto previous_tid_count = m_tids.size();
+    auto previous_tid_count = m_threads.size();
     auto all_processes = Core::ProcessStatisticsReader::get_all(m_proc_all);
 
     HashTable<int> live_tids;
@@ -340,14 +411,46 @@ void ProcessModel::update()
         m_total_time_scheduled_kernel = all_processes->total_time_scheduled_kernel;
         m_has_total_scheduled_time = true;
 
-        for (auto& process : all_processes.value().processes) {
+        for (size_t i = 0; i < all_processes->processes.size(); ++i) {
+            auto const& process = all_processes->processes[i];
+            NonnullOwnPtr<Process>* process_state = nullptr;
+            for (size_t i = 0; i < m_processes.size(); ++i) {
+                auto* other_process = &m_processes.ptr_at(i);
+                if ((*other_process)->pid == process.pid) {
+                    process_state = other_process;
+                    break;
+                }
+            }
+            if (!process_state) {
+                m_processes.append(make<Process>());
+                process_state = &m_processes.ptr_at(m_processes.size() - 1);
+            }
+            (*process_state)->pid = process.pid;
             for (auto& thread : process.threads) {
-                ThreadState state;
-                state.kernel = process.kernel;
+                ThreadState state(**process_state);
+                state.tid = thread.tid;
                 state.pid = process.pid;
+                state.ppid = process.ppid;
+                state.pgid = process.pgid;
+                state.sid = process.sid;
+                state.time_user = thread.time_user;
+                state.time_kernel = thread.time_kernel;
+                state.kernel = process.kernel;
+                state.executable = process.executable;
+                state.name = thread.name;
+                state.uid = process.uid;
+                state.state = thread.state;
                 state.user = process.username;
                 state.pledge = process.pledge;
                 state.veil = process.veil;
+                state.cpu = thread.cpu;
+                state.priority = thread.priority;
+                state.amount_virtual = process.amount_virtual;
+                state.amount_resident = process.amount_resident;
+                state.amount_dirty_private = process.amount_dirty_private;
+                state.amount_clean_inode = process.amount_clean_inode;
+                state.amount_purgeable_volatile = process.amount_purgeable_volatile;
+                state.amount_purgeable_nonvolatile = process.amount_purgeable_nonvolatile;
                 state.syscall_count = thread.syscall_count;
                 state.inode_faults = thread.inode_faults;
                 state.zero_faults = thread.zero_faults;
@@ -358,36 +461,22 @@ void ProcessModel::update()
                 state.ipv4_socket_write_bytes = thread.ipv4_socket_write_bytes;
                 state.file_read_bytes = thread.file_read_bytes;
                 state.file_write_bytes = thread.file_write_bytes;
-                state.amount_virtual = process.amount_virtual;
-                state.amount_resident = process.amount_resident;
-                state.amount_dirty_private = process.amount_dirty_private;
-                state.amount_clean_inode = process.amount_clean_inode;
-                state.amount_purgeable_volatile = process.amount_purgeable_volatile;
-                state.amount_purgeable_nonvolatile = process.amount_purgeable_nonvolatile;
-
-                state.name = thread.name;
-                state.executable = process.executable;
-
-                state.ppid = process.ppid;
-                state.tid = thread.tid;
-                state.pgid = process.pgid;
-                state.sid = process.sid;
-                state.time_user = thread.time_user;
-                state.time_kernel = thread.time_kernel;
-                state.cpu = thread.cpu;
                 state.cpu_percent = 0;
-                state.priority = thread.priority;
-                state.state = thread.state;
-                auto& thread_data = *m_threads.ensure(thread.tid, [] { return make<Thread>(); });
-                thread_data.previous_state = move(thread_data.current_state);
-                thread_data.current_state = move(state);
+
+                auto thread_data = m_threads.ensure(thread.tid, [&] { return make_ref_counted<Thread>(**process_state); });
+                thread_data->previous_state = move(thread_data->current_state);
+                thread_data->current_state = move(state);
+                if (auto maybe_thread_index = (*process_state)->threads.find_first_index(thread_data); maybe_thread_index.has_value()) {
+                    (*process_state)->threads.ptr_at(maybe_thread_index.value()) = thread_data;
+                } else {
+                    (*process_state)->threads.append(thread_data);
+                }
 
                 live_tids.set(thread.tid);
             }
         }
     }
 
-    m_tids.clear();
     for (auto& c : m_cpus) {
         c.total_cpu_percent = 0.0;
         c.total_cpu_percent_kernel = 0.0;
@@ -409,12 +498,21 @@ void ProcessModel::update()
             auto& cpu_info = m_cpus[thread.current_state.cpu];
             cpu_info.total_cpu_percent += thread.current_state.cpu_percent;
             cpu_info.total_cpu_percent_kernel += thread.current_state.cpu_percent_kernel;
-            m_tids.append(it.key);
         }
     }
 
-    for (auto tid : tids_to_remove)
+    // FIXME: Also remove dead threads from processes
+    for (auto tid : tids_to_remove) {
         m_threads.remove(tid);
+        for (size_t i = 0; i < m_processes.size(); ++i) {
+            auto& process = m_processes[i];
+            process.threads.remove_all_matching([&](auto const& thread) { return thread->current_state.tid == tid; });
+            if (process.threads.size() == 0) {
+                m_processes.remove(i);
+                --i;
+            }
+        }
+    }
 
     if (on_cpu_info_change)
         on_cpu_info_change(m_cpus);
@@ -424,5 +522,5 @@ void ProcessModel::update()
 
     // FIXME: This is a rather hackish way of invalidating indices.
     //        It would be good if GUI::Model had a way to orchestrate removal/insertion while preserving indices.
-    did_update(previous_tid_count == m_tids.size() ? GUI::Model::UpdateFlag::DontInvalidateIndices : GUI::Model::UpdateFlag::InvalidateAllIndices);
+    did_update(previous_tid_count == m_threads.size() ? GUI::Model::UpdateFlag::DontInvalidateIndices : GUI::Model::UpdateFlag::InvalidateAllIndices);
 }

@@ -7,8 +7,6 @@
  */
 
 #include "GraphWidget.h"
-#include "LibCore/EventLoop.h"
-#include "LibCore/Object.h"
 #include "MemoryStatsWidget.h"
 #include "NetworkStatisticsWidget.h"
 #include "ProcessFileDescriptorMapWidget.h"
@@ -22,6 +20,8 @@
 #include <Applications/SystemMonitor/SystemMonitorGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/Object.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
@@ -43,7 +43,7 @@
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
-#include <LibGUI/TableView.h>
+#include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
@@ -385,12 +385,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& performance_widget = *tabwidget.find_descendant_of_type_named<GUI::Widget>("performance");
     build_performance_tab(performance_widget);
 
-    auto& process_table_view = *process_table_container.find_child_of_type_named<GUI::TableView>("process_table");
+    auto& process_table_view = *process_table_container.find_child_of_type_named<GUI::TreeView>("process_table");
     process_table_view.set_model(TRY(GUI::SortingProxyModel::create(process_model)));
     for (auto column = 0; column < ProcessModel::Column::__Count; ++column)
         process_table_view.set_column_visible(column, false);
-    process_table_view.set_column_visible(ProcessModel::Column::Icon, true);
     process_table_view.set_column_visible(ProcessModel::Column::PID, true);
+    process_table_view.set_column_visible(ProcessModel::Column::TID, true);
     process_table_view.set_column_visible(ProcessModel::Column::Name, true);
     process_table_view.set_column_visible(ProcessModel::Column::CPU, true);
     process_table_view.set_column_visible(ProcessModel::Column::User, true);
