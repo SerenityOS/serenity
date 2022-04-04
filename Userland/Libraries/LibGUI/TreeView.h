@@ -21,6 +21,7 @@ public:
 
     virtual int item_count() const override;
     virtual void toggle_index(ModelIndex const&) override;
+    bool is_toggled(ModelIndex const& index);
 
     void expand_tree(ModelIndex const& root = {});
     void collapse_tree(ModelIndex const& root = {});
