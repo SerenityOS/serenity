@@ -382,6 +382,12 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
             return PageFaultResponse::Continue;
         }
         dbgln("BUG! Unexpected NP fault at {}", fault.vaddr());
+        dbgln("     - Physical page slot pointer: {:p}", page_slot.ptr());
+        if (page_slot) {
+            dbgln("     - Physical page: {}", page_slot->paddr());
+            dbgln("     - Lazy committed: {}", page_slot->is_lazy_committed_page());
+            dbgln("     - Shared zero: {}", page_slot->is_shared_zero_page());
+        }
         return PageFaultResponse::ShouldCrash;
     }
     VERIFY(fault.type() == PageFault::Type::ProtectionViolation);
