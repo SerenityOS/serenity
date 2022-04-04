@@ -158,6 +158,18 @@ void TreeView::toggle_index(ModelIndex const& index)
     update();
 }
 
+bool TreeView::is_toggled(ModelIndex const& index)
+{
+    if (model()->row_count(index) == 0) {
+        if (model()->parent_index(index).is_valid())
+            return is_toggled(model()->parent_index(index));
+        return false;
+    }
+
+    auto& metadata = ensure_metadata_for_index(index);
+    return metadata.open;
+}
+
 template<typename Callback>
 void TreeView::traverse_in_paint_order(Callback callback) const
 {
