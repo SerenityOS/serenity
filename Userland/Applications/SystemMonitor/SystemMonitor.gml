@@ -23,9 +23,11 @@
                     spacing: 0
                 }
 
-                @GUI::TableView {
+                @GUI::TreeView {
                     name: "process_table"
                     column_headers_visible: true
+                    should_fill_selected_rows: true
+                    selection_behavior: "SelectRows"
                 }
             }
 
