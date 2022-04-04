@@ -73,7 +73,7 @@ Region::~Region()
             // If the region is "PROT_NONE", we didn't map it in the first place.
         } else {
             SpinlockLocker mm_locker(s_mm_lock);
-            unmap_with_locks_held(ShouldDeallocateVirtualRange::Yes, ShouldFlushTLB::Yes, pd_locker, mm_locker);
+            unmap_with_locks_held(ShouldFlushTLB::Yes, pd_locker, mm_locker);
             VERIFY(!m_page_directory);
         }
     }
@@ -266,16 +266,16 @@ bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
     return success;
 }
 
-void Region::unmap(ShouldDeallocateVirtualRange should_deallocate_range, ShouldFlushTLB should_flush_tlb)
+void Region::unmap(ShouldFlushTLB should_flush_tlb)
 {
     if (!m_page_directory)
         return;
     SpinlockLocker pd_locker(m_page_directory->get_lock());
     SpinlockLocker mm_locker(s_mm_lock);
-    unmap_with_locks_held(should_deallocate_range, should_flush_tlb, pd_locker, mm_locker);
+    unmap_with_locks_held(should_flush_tlb, pd_locker, mm_locker);
 }
 
-void Region::unmap_with_locks_held(ShouldDeallocateVirtualRange, ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&, SpinlockLocker<RecursiveSpinlock>&)
+void Region::unmap_with_locks_held(ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&, SpinlockLocker<RecursiveSpinlock>&)
 {
     if (!m_page_directory)
         return;

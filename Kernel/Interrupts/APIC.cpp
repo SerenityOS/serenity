@@ -431,7 +431,7 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
 
     // NOTE: Since this region is identity-mapped, we have to unmap it manually to prevent the virtual
     //       address range from leaking into the general virtual range allocator.
-    m_ap_boot_environment->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
+    m_ap_boot_environment->unmap();
     m_ap_boot_environment = nullptr;
     // When the APs signal that they finished their initialization they have already switched over to their
     // idle thread's stack, so the temporary boot stack can be deallocated

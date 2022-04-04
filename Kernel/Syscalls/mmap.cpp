@@ -290,11 +290,9 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
             TRY(validate_inode_mmap_prot(prot, static_cast<Memory::InodeVMObject const&>(old_region->vmobject()).inode(), old_region->is_shared()));
 
         // Remove the old region from our regions tree, since were going to add another region
-        // with the exact same start address, but do not deallocate it yet
+        // with the exact same start address.
         auto region = address_space().take_region(*old_region);
-
-        // Unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
+        region->unmap();
 
         // This vector is the region(s) adjacent to our range.
         // We need to allocate a new region for the range we wanted to change permission bits on.
@@ -346,11 +344,9 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
                 continue;
             }
             // Remove the old region from our regions tree, since were going to add another region
-            // with the exact same start address, but dont deallocate it yet
+            // with the exact same start address.
             auto region = address_space().take_region(*old_region);
-
-            // Unmap the old region here, specifying that we *don't* want the VM deallocated.
-            region->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
+            region->unmap();
 
             // This vector is the region(s) adjacent to our range.
             // We need to allocate a new region for the range we wanted to change permission bits on.
@@ -467,8 +463,7 @@ ErrorOr<FlatPtr> Process::sys$mremap(Userspace<Syscall::SC_mremap_params const*>
         auto new_vmobject = TRY(Memory::PrivateInodeVMObject::try_create_with_inode(inode));
         auto old_name = old_region->take_name();
 
-        // Unmap without deallocating the VM range since we're going to reuse it.
-        old_region->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
+        old_region->unmap();
         address_space().deallocate_region(*old_region);
 
         auto* new_region = TRY(address_space().allocate_region_with_vmobject(range, move(new_vmobject), old_offset, old_name->view(), old_prot, false));

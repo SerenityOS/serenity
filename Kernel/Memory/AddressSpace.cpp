@@ -71,11 +71,9 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
             return EPERM;
 
         // Remove the old region from our regions tree, since were going to add another region
-        // with the exact same start address, but don't deallocate it yet.
+        // with the exact same start address.
         auto region = take_region(*old_region);
-
-        // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Region::ShouldDeallocateVirtualRange::No);
+        region->unmap();
 
         auto new_regions = TRY(try_split_region_around_range(*region, range_to_unmap));
 
@@ -113,11 +111,9 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         }
 
         // Remove the old region from our regions tree, since were going to add another region
-        // with the exact same start address, but don't deallocate it yet.
+        // with the exact same start address.
         auto region = take_region(*old_region);
-
-        // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Region::ShouldDeallocateVirtualRange::No);
+        region->unmap();
 
         // Otherwise, split the regions and collect them for future mapping.
         auto split_regions = TRY(try_split_region_around_range(*region, range_to_unmap));
@@ -339,7 +335,7 @@ void AddressSpace::remove_all_regions(Badge<Process>)
         SpinlockLocker pd_locker(m_page_directory->get_lock());
         SpinlockLocker mm_locker(s_mm_lock);
         for (auto& region : m_region_tree.regions())
-            region.unmap_with_locks_held(Region::ShouldDeallocateVirtualRange::No, ShouldFlushTLB::No, pd_locker, mm_locker);
+            region.unmap_with_locks_held(ShouldFlushTLB::No, pd_locker, mm_locker);
     }
 
     m_region_tree.delete_all_regions_assuming_they_are_unmapped();

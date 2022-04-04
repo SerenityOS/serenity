@@ -182,12 +182,8 @@ public:
 
     void set_page_directory(PageDirectory&);
     ErrorOr<void> map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
-    enum class ShouldDeallocateVirtualRange {
-        No,
-        Yes,
-    };
-    void unmap(ShouldDeallocateVirtualRange, ShouldFlushTLB = ShouldFlushTLB::Yes);
-    void unmap_with_locks_held(ShouldDeallocateVirtualRange, ShouldFlushTLB, SpinlockLocker<RecursiveSpinlock>& pd_locker, SpinlockLocker<RecursiveSpinlock>& mm_locker);
+    void unmap(ShouldFlushTLB = ShouldFlushTLB::Yes);
+    void unmap_with_locks_held(ShouldFlushTLB, SpinlockLocker<RecursiveSpinlock>& pd_locker, SpinlockLocker<RecursiveSpinlock>& mm_locker);
 
     void remap();
 
