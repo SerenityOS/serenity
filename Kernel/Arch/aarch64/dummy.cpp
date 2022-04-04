@@ -43,7 +43,10 @@ void __panic(char const*, unsigned int, char const*)
 // Random
 namespace Kernel {
 
-void get_fast_random_bytes(Bytes) { }
+void get_fast_random_bytes(Bytes)
+{
+    VERIFY_NOT_REACHED();
+}
 
 }
 
@@ -54,20 +57,24 @@ static Singleton<SpinlockProtected<Inode::AllInstancesList>> s_all_instances;
 
 SpinlockProtected<Inode::AllInstancesList>& Inode::all_instances()
 {
+    VERIFY_NOT_REACHED();
     return s_all_instances;
 }
 
 RefPtr<Memory::SharedInodeVMObject> Inode::shared_vmobject() const
 {
+    VERIFY_NOT_REACHED();
     return RefPtr<Memory::SharedInodeVMObject>(nullptr);
 }
 
 void Inode::will_be_destroyed()
 {
+    VERIFY_NOT_REACHED();
 }
 
 ErrorOr<void> Inode::set_shared_vmobject(Memory::SharedInodeVMObject&)
 {
+    VERIFY_NOT_REACHED();
     return {};
 }
 
@@ -78,11 +85,13 @@ namespace Kernel {
 
 ErrorOr<void> UserOrKernelBuffer::write(void const*, size_t, size_t)
 {
+    VERIFY_NOT_REACHED();
     return {};
 }
 
 ErrorOr<void> UserOrKernelBuffer::read(void*, size_t, size_t) const
 {
+    VERIFY_NOT_REACHED();
     return {};
 }
 
@@ -127,37 +136,83 @@ bool g_kernel_symbols_available = false;
 
 namespace Kernel {
 
-void dump_backtrace(PrintToScreen) { }
+void dump_backtrace(PrintToScreen)
+{
+    VERIFY_NOT_REACHED();
+}
 
 // KString.cpp
-ErrorOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t, char*&) { return ENOMEM; }
-ErrorOr<NonnullOwnPtr<KString>> KString::try_create(StringView) { return ENOMEM; }
-void KString::operator delete(void*) { }
+ErrorOr<NonnullOwnPtr<KString>> KString::try_create_uninitialized(size_t, char*&)
+{
+    VERIFY_NOT_REACHED();
+    return ENOMEM;
+}
+ErrorOr<NonnullOwnPtr<KString>> KString::try_create(StringView)
+{
+    VERIFY_NOT_REACHED();
+    return ENOMEM;
+}
+void KString::operator delete(void*)
+{
+    VERIFY_NOT_REACHED();
+}
 
 // SafeMem.h
 bool safe_memset(void*, int, size_t, void*&);
-bool safe_memset(void*, int, size_t, void*&) { return false; }
+bool safe_memset(void*, int, size_t, void*&)
+{
+    VERIFY_NOT_REACHED();
+    return false;
+}
 
 ssize_t safe_strnlen(char const*, unsigned long, void*&);
-ssize_t safe_strnlen(char const*, unsigned long, void*&) { return 0; }
+ssize_t safe_strnlen(char const*, unsigned long, void*&)
+{
+    VERIFY_NOT_REACHED();
+    return 0;
+}
 
 bool safe_memcpy(void*, void const*, unsigned long, void*&);
-bool safe_memcpy(void*, void const*, unsigned long, void*&) { return false; }
+bool safe_memcpy(void*, void const*, unsigned long, void*&)
+{
+    VERIFY_NOT_REACHED();
+    return false;
+}
 
 Optional<bool> safe_atomic_compare_exchange_relaxed(u32 volatile*, u32&, u32);
-Optional<bool> safe_atomic_compare_exchange_relaxed(u32 volatile*, u32&, u32) { return {}; }
+Optional<bool> safe_atomic_compare_exchange_relaxed(u32 volatile*, u32&, u32)
+{
+    VERIFY_NOT_REACHED();
+    return {};
+}
 
 Optional<u32> safe_atomic_load_relaxed(u32 volatile*);
-Optional<u32> safe_atomic_load_relaxed(u32 volatile*) { return {}; }
+Optional<u32> safe_atomic_load_relaxed(u32 volatile*)
+{
+    VERIFY_NOT_REACHED();
+    return {};
+}
 
 Optional<u32> safe_atomic_fetch_add_relaxed(u32 volatile*, u32);
-Optional<u32> safe_atomic_fetch_add_relaxed(u32 volatile*, u32) { return {}; }
+Optional<u32> safe_atomic_fetch_add_relaxed(u32 volatile*, u32)
+{
+    VERIFY_NOT_REACHED();
+    return {};
+}
 
 Optional<u32> safe_atomic_exchange_relaxed(u32 volatile*, u32);
-Optional<u32> safe_atomic_exchange_relaxed(u32 volatile*, u32) { return {}; }
+Optional<u32> safe_atomic_exchange_relaxed(u32 volatile*, u32)
+{
+    VERIFY_NOT_REACHED();
+    return {};
+}
 
 bool safe_atomic_store_relaxed(u32 volatile*, u32);
-bool safe_atomic_store_relaxed(u32 volatile*, u32) { return {}; }
+bool safe_atomic_store_relaxed(u32 volatile*, u32)
+{
+    VERIFY_NOT_REACHED();
+    return {};
+}
 
 }
 
@@ -166,11 +221,20 @@ extern "C" {
 FlatPtr kernel_mapping_base;
 
 void kernelputstr(char const*, size_t);
-void kernelputstr(char const*, size_t) { }
+void kernelputstr(char const*, size_t)
+{
+    VERIFY_NOT_REACHED();
+}
 
 void kernelcriticalputstr(char const*, size_t);
-void kernelcriticalputstr(char const*, size_t) { }
+void kernelcriticalputstr(char const*, size_t)
+{
+    VERIFY_NOT_REACHED();
+}
 
 void kernelearlyputstr(char const*, size_t);
-void kernelearlyputstr(char const*, size_t) { }
+void kernelearlyputstr(char const*, size_t)
+{
+    VERIFY_NOT_REACHED();
+}
 }
