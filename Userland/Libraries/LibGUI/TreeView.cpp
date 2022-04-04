@@ -344,7 +344,9 @@ void TreeView::paint_event(PaintEvent& event)
                         }
                     }
                 }
-                draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::CenterLeft, Gfx::TextElision::Right);
+                auto display_data = index.data();
+                if (display_data.is_string() || display_data.is_u32() || display_data.is_i32() || display_data.is_u64() || display_data.is_i64() || display_data.is_bool() || display_data.is_float())
+                    draw_item_text(painter, index, is_selected_row, text_rect, display_data.to_string(), font_for_index(index), Gfx::TextAlignment::CenterLeft, Gfx::TextElision::Right);
 
                 if (selection_behavior() == SelectionBehavior::SelectItems && is_focused() && index == cursor_index()) {
                     painter.draw_rect(background_rect, palette().color(background_role()));
