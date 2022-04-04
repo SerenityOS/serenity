@@ -19,6 +19,8 @@
 
 namespace Web::XHR {
 
+static constexpr Array<u8, 4> http_whitespace_bytes = { '\t', '\n', '\r', ' ' };
+
 class XMLHttpRequest final
     : public RefCounted<XMLHttpRequest>
     , public Weakable<XMLHttpRequest>
