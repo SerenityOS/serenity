@@ -406,8 +406,7 @@ static String normalize_method(String const& method)
 // https://fetch.spec.whatwg.org/#concept-header-value-normalize
 static String normalize_header_value(String const& header_value)
 {
-    // FIXME: I'm not sure if this is the right trim, it should only be HTML whitespace bytes.
-    return header_value.trim_whitespace();
+    return header_value.trim(StringView { http_whitespace_bytes });
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
