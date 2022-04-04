@@ -189,11 +189,6 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_create_user_accessible(VirtualRange c
     return adopt_nonnull_own_or_enomem(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
 }
 
-ErrorOr<NonnullOwnPtr<Region>> Region::try_create_kernel_only(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable)
-{
-    return adopt_nonnull_own_or_enomem(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, false));
-}
-
 bool Region::should_cow(size_t page_index) const
 {
     if (!vmobject().is_anonymous())
