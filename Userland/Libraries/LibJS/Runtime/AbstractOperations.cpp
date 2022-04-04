@@ -1131,8 +1131,8 @@ ThrowCompletionOr<String> get_substitution(GlobalObject& global_object, Utf16Vie
         } else if (is_ascii_digit(next)) {
             bool is_two_digits = (i + 2 < replace_view.length_in_code_units()) && is_ascii_digit(replace_view.code_unit_at(i + 2));
 
-            auto capture_postition_string = replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8();
-            auto capture_position = capture_postition_string.to_uint();
+            auto capture_position_string = replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8();
+            auto capture_position = capture_position_string.to_uint();
 
             if (capture_position.has_value() && (*capture_position > 0) && (*capture_position <= captures.size())) {
                 auto& value = captures[*capture_position - 1];
