@@ -664,6 +664,8 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
         return nullptr;
 
     SpinlockLocker lock(s_mm_lock);
+    SpinlockLocker tree_locker(MM.m_region_tree.get_lock());
+
     auto* region = MM.m_region_tree.regions().find_largest_not_above(vaddr.get());
     if (!region || !region->contains(vaddr))
         return nullptr;
@@ -1167,6 +1169,7 @@ void MemoryManager::unregister_kernel_region(Region& region)
 {
     VERIFY(region.is_kernel());
     SpinlockLocker lock(s_mm_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
     m_region_tree.regions().remove(region.vaddr().get());
 }
 
@@ -1181,6 +1184,7 @@ void MemoryManager::dump_kernel_regions()
     dbgln("BEGIN{}         END{}        SIZE{}       ACCESS NAME",
         addr_padding, addr_padding, addr_padding);
     SpinlockLocker lock(s_mm_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
     for (auto const& region : m_region_tree.regions()) {
         dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}",
             region.vaddr().get(),

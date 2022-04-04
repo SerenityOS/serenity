@@ -49,12 +49,15 @@ public:
 
     void delete_all_regions_assuming_they_are_unmapped();
 
+    // FIXME: Access the region tree through a SpinlockProtected or similar.
+    RecursiveSpinlock& get_lock() const { return m_lock; }
+
 private:
     ErrorOr<VirtualRange> allocate_range_anywhere(size_t size, size_t alignment = PAGE_SIZE);
     ErrorOr<VirtualRange> allocate_range_specific(VirtualAddress base, size_t size);
     ErrorOr<VirtualRange> allocate_range_randomized(size_t size, size_t alignment = PAGE_SIZE);
 
-    Spinlock m_lock;
+    RecursiveSpinlock mutable m_lock;
 
     IntrusiveRedBlackTree<&Region::m_tree_node> m_regions;
     VirtualRange const m_total_range;
