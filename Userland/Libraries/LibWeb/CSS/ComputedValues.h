@@ -25,7 +25,7 @@ public:
     static CSS::TextJustify text_justify() { return CSS::TextJustify::Auto; }
     static CSS::Position position() { return CSS::Position::Static; }
     static CSS::TextDecorationLine text_decoration_line() { return CSS::TextDecorationLine::None; }
-    static CSS::Length text_decoration_thickness() { return Length::make_px(1); }
+    static CSS::Length text_decoration_thickness() { return Length::make_auto(); }
     static CSS::TextDecorationStyle text_decoration_style() { return CSS::TextDecorationStyle::Solid; }
     static CSS::TextTransform text_transform() { return CSS::TextTransform::None; }
     static CSS::Display display() { return CSS::Display { CSS::Display::Outside::Inline, CSS::Display::Inside::Flow }; }
