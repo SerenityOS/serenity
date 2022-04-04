@@ -416,14 +416,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto selected_id = [&](ProcessModel::Column column) -> pid_t {
         if (process_table_view.selection().is_empty())
             return -1;
-        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column);
+        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column, process_table_view.selection().first().parent());
         return pid_index.data().to_i32();
     };
 
     auto selected_name = [&](ProcessModel::Column column) -> String {
         if (process_table_view.selection().is_empty())
             return {};
-        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column);
+        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column, process_table_view.selection().first().parent());
         return pid_index.data().to_string();
     };
 
