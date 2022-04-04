@@ -122,7 +122,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::compare)
     auto* one = TRY(to_temporal_date_time(global_object, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalDateTime(two).
-    auto two = TRY(to_temporal_date_time(global_object, vm.argument(1)));
+    auto* two = TRY(to_temporal_date_time(global_object, vm.argument(1)));
 
     // 3. Return 𝔽(! CompareISODateTime(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], one.[[ISOHour]], one.[[ISOMinute]], one.[[ISOSecond]], one.[[ISOMillisecond]], one.[[ISOMicrosecond]], one.[[ISONanosecond]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]], two.[[ISOHour]], two.[[ISOMinute]], two.[[ISOSecond]], two.[[ISOMillisecond]], two.[[ISOMicrosecond]], two.[[ISONanosecond]])).
     return Value(compare_iso_date_time(one->iso_year(), one->iso_month(), one->iso_day(), one->iso_hour(), one->iso_minute(), one->iso_second(), one->iso_millisecond(), one->iso_microsecond(), one->iso_nanosecond(), two->iso_year(), two->iso_month(), two->iso_day(), two->iso_hour(), two->iso_minute(), two->iso_second(), two->iso_millisecond(), two->iso_microsecond(), two->iso_nanosecond()));
