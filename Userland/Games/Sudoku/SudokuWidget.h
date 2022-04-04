@@ -32,4 +32,5 @@ private:
     Board* m_board { nullptr };
     Square* m_active_square { nullptr };
     Square* mouse_to_square(GUI::MouseEvent& event);
+    void move_active_square(int x, int y);
 };

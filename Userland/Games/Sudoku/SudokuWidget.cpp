@@ -108,10 +108,35 @@ void SudokuWidget::keydown_event(GUI::KeyEvent& event)
         update();
         return;
     }
-    if (event.key() == KeyCode::Key_Delete || event.key() == KeyCode::Key_Backspace) {
+
+    switch (event.key()) {
+    case KeyCode::Key_Delete:
+    case KeyCode::Key_Backspace:
         m_active_square->set_value(0);
         update();
-        return;
+        break;
+    case KeyCode::Key_A:
+    case KeyCode::Key_Left:
+        move_active_square(-1, 0);
+        update();
+        break;
+    case KeyCode::Key_D:
+    case KeyCode::Key_Right:
+        move_active_square(1, 0);
+        update();
+        break;
+    case KeyCode::Key_W:
+    case KeyCode::Key_Up:
+        move_active_square(0, -1);
+        update();
+        break;
+    case KeyCode::Key_S:
+    case KeyCode::Key_Down:
+        move_active_square(0, 1);
+        update();
+        break;
+    default:
+        break;
     }
 }
 
@@ -158,4 +183,22 @@ Square* SudokuWidget::mouse_to_square(GUI::MouseEvent& event)
     }
 
     return m_board->get_square(x, y);
+}
+
+void SudokuWidget::move_active_square(int x, int y)
+{
+    if (!m_active_square) {
+        m_active_square = m_board->get_square(0, 0);
+        return;
+    }
+    auto current_x = m_active_square->get_x();
+    auto current_y = m_active_square->get_y();
+
+    auto new_x = current_x + x;
+    auto new_y = current_y + y;
+
+    if (new_x < 0 || new_y < 0 || new_x > 8 || new_y > 8) {
+        return;
+    }
+    m_active_square = m_board->get_square(new_x, new_y);
 }

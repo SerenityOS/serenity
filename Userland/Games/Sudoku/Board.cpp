@@ -40,10 +40,13 @@ void Board::new_game()
 bool Board::try_create_board()
 {
     Vector<Vector<Square>> squares;
-
     squares.resize(m_dimension);
     for (size_t x = 0; x < m_dimension; x++) {
-        squares[x].resize(m_dimension);
+        squares[x].ensure_capacity(m_dimension);
+        for (size_t y = 0; y < m_dimension; y++) {
+            Square new_square = Square(x, y);
+            squares[x].append(new_square);
+        }
     }
 
     // Randomly 17 numbers to the board - the lowest number to provide a unique
