@@ -54,7 +54,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
                 auto const& name = function_declaration.name();
                 auto index = generator.intern_identifier(name);
                 generator.emit<Bytecode::Op::NewFunction>(function_declaration);
-                generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::Initialize);
+                generator.emit<Bytecode::Op::SetVariable>(index, Bytecode::Op::SetVariable::InitializationMode::InitializeOrSet);
             }
 
             return {};
