@@ -36,7 +36,7 @@ For WSL users: If you have the image on your native WSL drive (recommended), thi
 - Setup OpenSSH server on your host.
 For windows: Google is your friend (https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse)
 For linux: Google is your friend.
-- Ensure that you already have a working SerenityOS working build.
+- Ensure that you already have a working SerenityOS build.
 ```console
 $ Meta/serenity.sh rebuild-world
 ```
@@ -89,3 +89,21 @@ Connected to 192.168.0.11
 - The most often used (simplified) sftp commands are ` ls `, ` cd `, ` put [filename] `, ` get [filename] `, and ` quit `. I said simplified since the actual commands have many more options. 
 - Be aware that there will be a time you would think that nothing is happening since the cursor just stares back at you. It is always waiting for your next instruction. Typing ` quit ` or ` bye ` will close the program.
 - Congratulations. Pat yourself at the back.
+
+## Method 5: Enable OpenSSH on host and use Serenity's cat+ssh command
+
+- Setup OpenSSH server on your host.
+- This one is quick and leverages on the built-in cat command plus ssh.
+- This doesn't have the luxury of transferring multiple files but hey,
+at least it works! :^)
+
+```console
+$ cat [filename] | ssh user@ip-address-of-ssh-server "cat >> [filename]"
+```
+
+Example:
+
+```console
+courage:~ $ cat Program1.cpp | ssh user1@192.168.0.11 "cat >> Program1.cpp"
+```
+You can now find the file Program1.cpp on C:\Users\user1\ home directory.
