@@ -554,7 +554,7 @@ catdog_widget.on_click = [&] {
 
 ### Overriding Virtual Methods
 
-The declaration of a virtual method inside a class must be declared with the `virtual` keyword. All subclasses of that class must either specify the `override` keyword when overriding the virtual method or the `final` keyword when overriding the virtual method and requiring that no further subclasses can override it.
+The declaration of a virtual method inside a class must be declared with the `virtual` keyword. All subclasses of that class must also specify either the `override` keyword when overriding the virtual method, or the `final` keyword when overriding the virtual method and requiring that no further subclasses can override it.
 
 ###### Right:
 
@@ -566,7 +566,7 @@ public:
 
 class Student : public Person {
 public:
-    virtual String description() override { ... }; // This is correct because it only contains the "override" keyword to indicate that the method is overridden.
+    virtual String description() override { ... }; // This is correct because it contains both the "virtual" and "override" keywords to indicate that the method is overridden.
 }
 
 ```
@@ -579,7 +579,7 @@ public:
 
 class Student : public Person {
 public:
-    virtual String description() final { ... }; // This is correct because it only contains the "final" keyword to indicate that the method is overridden and that no subclasses of "Student" can override "description".
+    virtual String description() final { ... }; // This is correct because it contains both the "override" and "final" keywords to indicate that the method is overridden and that no subclasses of "Student" can override "description".
 }
 
 ```
@@ -594,7 +594,7 @@ public:
 
 class Student : public Person {
 public:
-    String description() override { ... }; // This is incorrect because it uses only the "override" keywords to indicate that the method is virtual. Instead, it should use both the "virtual" and "override" keywords.
+    String description() override { ... }; // This is incorrect because it uses only the "override" keyword to indicate that the method is virtual. Instead, it should use both the "virtual" and "override" keywords.
 }
 ```
 
@@ -606,7 +606,7 @@ public:
 
 class Student : public Person {
 public:
-    String description() final { ... }; // This is incorrect because it uses only the "final" keywords to indicate that the method is virtual and final. Instead, it should use both the "virtual" and "final" keywords.
+    String description() final { ... }; // This is incorrect because it uses only the "final" keyword to indicate that the method is virtual and final. Instead, it should use both the "virtual" and "final" keywords.
 }
 ```
 
@@ -618,7 +618,7 @@ public:
 
 class Student : public Person {
 public:
-    virtual String description() { ... }; // This is incorrect because it uses the "virtual" keyword to indicate that the method is overridden.
+    virtual String description() { ... }; // This is incorrect because it uses only the "virtual" keyword to indicate that the method is overridden.
 }
 ```
 
