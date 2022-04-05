@@ -658,18 +658,12 @@ UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
     }
 }
 
-Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
+Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress address)
 {
-    if (is_user_address(vaddr))
+    if (is_user_address(address))
         return nullptr;
 
-    SpinlockLocker lock(s_mm_lock);
-    SpinlockLocker tree_locker(MM.m_region_tree.get_lock());
-
-    auto* region = MM.m_region_tree.regions().find_largest_not_above(vaddr.get());
-    if (!region || !region->contains(vaddr))
-        return nullptr;
-    return region;
+    return MM.region_tree().find_region_containing(address);
 }
 
 Region* MemoryManager::find_user_region_from_vaddr_no_lock(AddressSpace& space, VirtualAddress vaddr)

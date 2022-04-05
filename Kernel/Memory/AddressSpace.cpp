@@ -250,12 +250,7 @@ Region* AddressSpace::find_region_from_range(VirtualRange const& range)
 
 Region* AddressSpace::find_region_containing(VirtualRange const& range)
 {
-    SpinlockLocker lock(m_lock);
-    SpinlockLocker tree_locker(m_region_tree.get_lock());
-    auto* candidate = m_region_tree.regions().find_largest_not_above(range.base().get());
-    if (!candidate)
-        return nullptr;
-    return (*candidate).range().contains(range) ? candidate : nullptr;
+    return m_region_tree.find_region_containing(range);
 }
 
 ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange const& range)

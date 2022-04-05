@@ -54,6 +54,9 @@ public:
 
     bool remove(Region&);
 
+    Region* find_region_containing(VirtualAddress);
+    Region* find_region_containing(VirtualRange);
+
 private:
     ErrorOr<VirtualRange> allocate_range_anywhere(size_t size, size_t alignment = PAGE_SIZE);
     ErrorOr<VirtualRange> allocate_range_specific(VirtualAddress base, size_t size);

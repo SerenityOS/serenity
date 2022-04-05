@@ -170,4 +170,22 @@ bool RegionTree::remove(Region& region)
     return m_regions.remove(region.range().base().get());
 }
 
+Region* RegionTree::find_region_containing(VirtualAddress address)
+{
+    SpinlockLocker locker(m_lock);
+    auto* region = m_regions.find_largest_not_above(address.get());
+    if (!region || !region->contains(address))
+        return nullptr;
+    return region;
+}
+
+Region* RegionTree::find_region_containing(VirtualRange range)
+{
+    SpinlockLocker lock(m_lock);
+    auto* region = m_regions.find_largest_not_above(range.base().get());
+    if (!region || !region->contains(range))
+        return nullptr;
+    return region;
+}
+
 }
