@@ -681,7 +681,7 @@ public:
     virtual void CVTSI2SS_xmm1_rm32(Instruction const&) = 0;
     virtual void MOVNTPS_xmm1m128_xmm2(Instruction const&) = 0;
     virtual void CVTPS2PI_xmm1_mm2m64(Instruction const&) = 0;
-    virtual void CVTSS2SI_xmm1_rm32(Instruction const&) = 0;
+    virtual void CVTSS2SI_r32_xmm2m32(Instruction const&) = 0;
     virtual void UCOMISS_xmm1_xmm2m32(Instruction const&) = 0;
     virtual void COMISS_xmm1_xmm2m32(Instruction const&) = 0;
     virtual void MOVMSKPS_reg_xmm(Instruction const&) = 0;
