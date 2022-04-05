@@ -47,6 +47,22 @@ bool Stream::read_or_error(Bytes buffer)
     return true;
 }
 
+ErrorOr<ByteBuffer> Stream::read_all()
+{
+    ByteBuffer output;
+    u8 buffer_raw[4096];
+    Bytes buffer { buffer_raw, 4096 };
+
+    while (true) {
+        Bytes read_bytes = TRY(read(buffer));
+        if (read_bytes.is_empty())
+            break;
+        output.append(read_bytes);
+    }
+
+    return output;
+}
+
 bool Stream::write_or_error(ReadonlyBytes buffer)
 {
     VERIFY(buffer.size());
