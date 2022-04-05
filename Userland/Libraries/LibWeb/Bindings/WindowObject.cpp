@@ -35,6 +35,7 @@
 #include <LibWeb/Bindings/StorageWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/Bindings/WindowObjectHelper.h>
+#include <LibWeb/Bindings/WindowPrototype.h>
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
@@ -59,7 +60,7 @@ void WindowObject::initialize_global_object()
 {
     Base::initialize_global_object();
 
-    Object::set_prototype(&ensure_web_prototype<EventTargetPrototype>("EventTarget"));
+    Object::set_prototype(&ensure_web_prototype<WindowPrototype>("Window"));
 
     // FIXME: These should be native accessors, not properties
     define_direct_property("window", this, JS::Attribute::Enumerable);
