@@ -44,6 +44,7 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Storage.h>
+#include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/Timer.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
@@ -915,6 +916,13 @@ WebIDL::ExceptionOr<void> Window::post_message_impl(JS::Value message, String co
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/structured-data.html#dom-structuredclone
+WebIDL::ExceptionOr<JS::Value> Window::structured_clone_impl(JS::VM& vm, JS::Value message)
+{
+    auto serialized = TRY(structured_serialize(vm, message));
+    return MUST(structured_deserialize(vm, serialized, *vm.current_realm(), {}));
+}
+
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-name
 String Window::name() const
 {
@@ -1100,6 +1108,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     define_native_function(realm, "getSelection", get_selection, 0, attr);
 
     define_native_function(realm, "postMessage", post_message, 1, attr);
+    define_native_function(realm, "structuredClone", structured_clone, 1, attr);
 
     define_native_function(realm, "fetch", Bindings::fetch, 1, attr);
 
@@ -1822,6 +1831,14 @@ JS_DEFINE_NATIVE_FUNCTION(Window::post_message)
         return impl->post_message_impl(vm.argument(0), target_origin);
     }));
     return JS::js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(Window::structured_clone)
+{
+    auto* impl = TRY(impl_from(vm));
+    return TRY(Bindings::throw_dom_exception_if_needed(vm, [&] {
+        return impl->structured_clone_impl(vm, vm.argument(0));
+    }));
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-origin

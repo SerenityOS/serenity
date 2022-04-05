@@ -119,6 +119,7 @@ public:
     WindowProxy* parent();
 
     WebIDL::ExceptionOr<void> post_message_impl(JS::Value, String const& target_origin);
+    WebIDL::ExceptionOr<JS::Value> structured_clone_impl(JS::VM& vm, JS::Value);
 
     String name() const;
     void set_name(String const&);
@@ -241,6 +242,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(outer_height_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(post_message);
+    JS_DECLARE_NATIVE_FUNCTION(structured_clone);
 
     JS_DECLARE_NATIVE_FUNCTION(local_storage_getter);
     JS_DECLARE_NATIVE_FUNCTION(session_storage_getter);
