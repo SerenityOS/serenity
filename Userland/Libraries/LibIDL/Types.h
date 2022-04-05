@@ -176,6 +176,7 @@ struct Constant {
 };
 
 struct Attribute {
+    bool inherit { false };
     bool readonly { false };
     NonnullRefPtr<Type> type;
     String name;
