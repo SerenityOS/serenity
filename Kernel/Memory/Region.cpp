@@ -64,9 +64,6 @@ Region::~Region()
 
     m_vmobject->remove_region(*this);
 
-    if (is_kernel())
-        MM.unregister_kernel_region(*this);
-
     if (m_page_directory) {
         SpinlockLocker pd_locker(m_page_directory->get_lock());
         if (!is_readable() && !is_writable() && !is_executable()) {
@@ -77,6 +74,9 @@ Region::~Region()
             VERIFY(!m_page_directory);
         }
     }
+
+    if (is_kernel())
+        MM.unregister_kernel_region(*this);
 }
 
 ErrorOr<NonnullOwnPtr<Region>> Region::create_unbacked()
