@@ -147,5 +147,4 @@ void AnalogClock::set_show_window_frame(bool show)
     auto& w = *window();
     w.set_frameless(!m_show_window_frame);
     w.set_has_alpha_channel(!m_show_window_frame);
-    w.set_alpha_hit_threshold(m_show_window_frame ? 0 : 1);
 }
