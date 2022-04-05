@@ -154,16 +154,6 @@ ErrorOr<void> RegionTree::place_specifically(Region& region, VirtualRange const&
     return {};
 }
 
-ErrorOr<NonnullOwnPtr<Memory::Region>> RegionTree::create_identity_mapped_region(PhysicalAddress paddr, size_t size)
-{
-    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(paddr, size));
-    auto region = TRY(Memory::Region::create_unplaced(move(vmobject), 0, {}, Memory::Region::Access::ReadWriteExecute));
-    Memory::VirtualRange range { VirtualAddress { (FlatPtr)paddr.get() }, size };
-    region->m_range = range;
-    TRY(region->map(MM.kernel_page_directory()));
-    return region;
-}
-
 bool RegionTree::remove(Region& region)
 {
     SpinlockLocker locker(m_lock);
