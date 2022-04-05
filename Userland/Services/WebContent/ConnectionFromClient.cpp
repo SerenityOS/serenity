@@ -109,6 +109,7 @@ void ConnectionFromClient::add_backing_store(i32 backing_store_id, Gfx::Shareabl
 void ConnectionFromClient::remove_backing_store(i32 backing_store_id)
 {
     m_backing_stores.remove(backing_store_id);
+    m_pending_paint_requests.remove_all_matching([backing_store_id](auto& pending_repaint_request) { return pending_repaint_request.bitmap_id == backing_store_id; });
 }
 
 void ConnectionFromClient::paint(Gfx::IntRect const& content_rect, i32 backing_store_id)
