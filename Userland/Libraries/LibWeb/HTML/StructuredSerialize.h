@@ -10,7 +10,6 @@
 #include <AK/Types.h>
 #include <AK/Result.h>
 #include <LibJS/Forward.h>
-#include <LibWeb/DOM/ExceptionOr.h>
 
 // Structured serialize is an entirely different format from IPC because:
 // - It contains representation of type information

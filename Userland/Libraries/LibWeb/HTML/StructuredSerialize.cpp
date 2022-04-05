@@ -61,7 +61,7 @@ class Serializer {
             return m_serialized;
         else
             // TODO: Replace with the proper DataCloneError DOM exception
-            return m_global_object.vm().throw_completion<Bindings::DOMExceptionWrapper>(m_global_object, DOM::DataCloneError::create("Unsupported type"));
+            return m_global_object.vm().throw_completion<Bindings::DOMExceptionWrapper>(m_global_object, DOM::DataCloneError::create(m_error));
     }
 
 
