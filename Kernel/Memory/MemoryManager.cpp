@@ -663,7 +663,7 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress address)
     if (is_user_address(address))
         return nullptr;
 
-    return MM.region_tree().find_region_containing(address);
+    return MM.m_region_tree.find_region_containing(address);
 }
 
 Region* MemoryManager::find_user_region_from_vaddr_no_lock(AddressSpace& space, VirtualAddress vaddr)

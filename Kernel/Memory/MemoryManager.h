@@ -248,8 +248,6 @@ public:
 
     IterationDecision for_each_physical_memory_range(Function<IterationDecision(PhysicalMemoryRange const&)>);
 
-    auto& region_tree() { return m_region_tree; }
-
 private:
     MemoryManager();
     ~MemoryManager();
