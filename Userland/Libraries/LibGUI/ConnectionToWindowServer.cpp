@@ -372,10 +372,10 @@ void ConnectionToWindowServer::drag_cancelled()
     Application::the()->notify_drag_cancelled({});
 }
 
-void ConnectionToWindowServer::window_state_changed(i32 window_id, bool minimized, bool occluded)
+void ConnectionToWindowServer::window_state_changed(i32 window_id, bool minimized, bool maximized, bool occluded)
 {
     if (auto* window = Window::from_window_id(window_id))
-        window->notify_state_changed({}, minimized, occluded);
+        window->notify_state_changed({}, minimized, maximized, occluded);
 }
 
 void ConnectionToWindowServer::display_link_notification()

@@ -625,7 +625,7 @@ void WindowManager::notify_minimization_state_changed(Window& window)
     tell_wms_window_state_changed(window);
 
     if (window.client())
-        window.client()->async_window_state_changed(window.window_id(), window.is_minimized(), window.is_occluded());
+        window.client()->async_window_state_changed(window.window_id(), window.is_minimized(), window.is_maximized(), window.is_occluded());
 
     if (window.is_active() && window.is_minimized())
         pick_new_active_window(&window);
@@ -634,7 +634,7 @@ void WindowManager::notify_minimization_state_changed(Window& window)
 void WindowManager::notify_occlusion_state_changed(Window& window)
 {
     if (window.client())
-        window.client()->async_window_state_changed(window.window_id(), window.is_minimized(), window.is_occluded());
+        window.client()->async_window_state_changed(window.window_id(), window.is_minimized(), window.is_maximized(), window.is_occluded());
 }
 
 void WindowManager::notify_progress_changed(Window& window)
