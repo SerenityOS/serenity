@@ -1,11 +1,7 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
 set(UCD_VERSION 14.0.0)
-set(CLDR_VERSION 40.0.0-updated)
-
-# FIXME: When the CLDR is bumped to version 41, we can remove this. A bugfix to the CLDR was released with the same
-#        version number, so the CLDR_VERSION number above is a fake number to force a redownload.
-set(CLDR_REAL_VERSION 40.0.0)
+set(CLDR_VERSION 41.0.0)
 
 set(UCD_PATH "${CMAKE_BINARY_DIR}/UCD" CACHE PATH "Download location for UCD files")
 set(CLDR_PATH "${CMAKE_BINARY_DIR}/CLDR" CACHE PATH "Download location for CLDR files")
@@ -67,7 +63,7 @@ set(WORD_BREAK_PROP_PATH "${UCD_PATH}/${WORD_BREAK_PROP_SOURCE}")
 set(SENTENCE_BREAK_PROP_SOURCE "auxiliary/SentenceBreakProperty.txt")
 set(SENTENCE_BREAK_PROP_PATH "${UCD_PATH}/${SENTENCE_BREAK_PROP_SOURCE}")
 
-set(CLDR_ZIP_URL "https://github.com/unicode-org/cldr-json/releases/download/${CLDR_REAL_VERSION}/cldr-${CLDR_REAL_VERSION}-json-modern.zip")
+set(CLDR_ZIP_URL "https://github.com/unicode-org/cldr-json/releases/download/${CLDR_VERSION}/cldr-${CLDR_VERSION}-json-modern.zip")
 set(CLDR_ZIP_PATH "${CLDR_PATH}/cldr.zip")
 
 set(CLDR_BCP47_SOURCE cldr-bcp47)
