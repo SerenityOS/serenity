@@ -29,7 +29,6 @@ private:
 
     ConnectionFromClient& m_client;
     WeakPtr<JS::Interpreter> m_interpreter;
-    JS::Handle<ConsoleGlobalObject> m_console_global_object;
 
     void clear_output();
     void print_html(String const& line);

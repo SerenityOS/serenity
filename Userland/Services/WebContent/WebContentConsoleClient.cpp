@@ -35,7 +35,7 @@ WebContentConsoleClient::WebContentConsoleClient(JS::Console& console, WeakPtr<J
     console_global_object->initialize_global_object();
     vm.pop_execution_context();
 
-    m_console_global_object = JS::make_handle(console_global_object);
+    m_interpreter->realm().set_global_object(*console_global_object);
 }
 
 void WebContentConsoleClient::handle_input(String const& js_source)
