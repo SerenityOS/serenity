@@ -218,7 +218,7 @@ void SoftVPU::CVTTSS2SI_r32_xmm2m32(X86::Instruction const& insn)
     m_cpu.gpr32(insn.reg32()) = ValueWithShadow<u32>::create_initialized((u32)lround(value));
 }
 void SoftVPU::CVTPS2PI_xmm1_mm2m64(X86::Instruction const&) { TODO(); }
-void SoftVPU::CVTSS2SI_xmm1_rm32(X86::Instruction const& insn)
+void SoftVPU::CVTSS2SI_r32_xmm2m32(X86::Instruction const& insn)
 {
     // FIXME: Raise Invalid, Precision
     insn.modrm().write32(m_cpu, insn,
