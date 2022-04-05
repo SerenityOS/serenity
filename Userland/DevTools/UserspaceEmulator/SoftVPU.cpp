@@ -215,7 +215,7 @@ void SoftVPU::CVTTSS2SI_r32_xmm2m32(X86::Instruction const& insn)
     else
         value = bit_cast<float>(insn.modrm().read32(m_cpu, insn).value());
 
-    m_cpu.gpr32(insn.reg32()) = ValueWithShadow<u32>::create_initialized((u32)lround(value));
+    m_cpu.gpr32(insn.reg32()) = ValueWithShadow<u32>::create_initialized((u32)(i32)truncf(value));
 }
 void SoftVPU::CVTPS2PI_xmm1_mm2m64(X86::Instruction const&) { TODO(); }
 void SoftVPU::CVTSS2SI_r32_xmm2m32(X86::Instruction const& insn)
