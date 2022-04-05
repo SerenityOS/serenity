@@ -104,6 +104,9 @@ enum InstructionFormat {
     OP_RM32_reg32_imm8,
     OP_RM16_reg16_CL,
     OP_RM32_reg32_CL,
+    // SSE instructions mutate on some prefixes, so we have to mark them
+    // for further parsing
+    __SSE,
     OP_mm1_rm32,
     OP_rm32_mm2,
     OP_mm1_mm2m64,
@@ -115,9 +118,6 @@ enum InstructionFormat {
     OP_reg_mm1_imm8,
     OP_mm1_r32m16_imm8,
 
-    // SSE instructions mutate on some prefixes, so we have to mark them
-    // for further parsing
-    __SSE,
     OP_xmm1_xmm2m32,
     OP_xmm1_xmm2m64,
     OP_xmm1_xmm2m128,
