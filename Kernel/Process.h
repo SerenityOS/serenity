@@ -809,7 +809,7 @@ private:
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
 
-    Mutex m_big_lock { "Process" };
+    Mutex m_big_lock { "Process", Mutex::MutexBehavior::BigLock };
     Mutex m_ptrace_lock { "ptrace" };
 
     RefPtr<Timer> m_alarm_timer;
