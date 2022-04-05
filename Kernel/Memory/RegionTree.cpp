@@ -164,4 +164,10 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> RegionTree::create_identity_mapped_region
     return region;
 }
 
+bool RegionTree::remove(Region& region)
+{
+    SpinlockLocker locker(m_lock);
+    return m_regions.remove(region.range().base().get());
+}
+
 }

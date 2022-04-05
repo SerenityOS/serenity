@@ -229,9 +229,7 @@ void AddressSpace::deallocate_region(Region& region)
 
 NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 {
-    SpinlockLocker lock(m_lock);
-    SpinlockLocker tree_locker(m_region_tree.get_lock());
-    auto did_remove = m_region_tree.regions().remove(region.vaddr().get());
+    auto did_remove = m_region_tree.remove(region);
     VERIFY(did_remove);
     return NonnullOwnPtr { NonnullOwnPtr<Region>::Adopt, region };
 }

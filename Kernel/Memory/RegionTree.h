@@ -52,6 +52,8 @@ public:
     // FIXME: Access the region tree through a SpinlockProtected or similar.
     RecursiveSpinlock& get_lock() const { return m_lock; }
 
+    bool remove(Region&);
+
 private:
     ErrorOr<VirtualRange> allocate_range_anywhere(size_t size, size_t alignment = PAGE_SIZE);
     ErrorOr<VirtualRange> allocate_range_specific(VirtualAddress base, size_t size);

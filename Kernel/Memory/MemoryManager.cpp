@@ -1168,9 +1168,7 @@ bool MemoryManager::validate_user_stack(AddressSpace& space, VirtualAddress vadd
 void MemoryManager::unregister_kernel_region(Region& region)
 {
     VERIFY(region.is_kernel());
-    SpinlockLocker lock(s_mm_lock);
-    SpinlockLocker tree_locker(m_region_tree.get_lock());
-    m_region_tree.regions().remove(region.vaddr().get());
+    m_region_tree.remove(region);
 }
 
 void MemoryManager::dump_kernel_regions()
