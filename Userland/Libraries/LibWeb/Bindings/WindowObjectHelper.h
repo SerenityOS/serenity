@@ -228,6 +228,8 @@
 #include <LibWeb/Bindings/IntersectionObserverPrototype.h>
 #include <LibWeb/Bindings/KeyboardEventConstructor.h>
 #include <LibWeb/Bindings/KeyboardEventPrototype.h>
+#include <LibWeb/Bindings/LocationConstructor.h>
+#include <LibWeb/Bindings/LocationPrototype.h>
 #include <LibWeb/Bindings/MediaQueryListConstructor.h>
 #include <LibWeb/Bindings/MediaQueryListEventConstructor.h>
 #include <LibWeb/Bindings/MediaQueryListEventPrototype.h>
@@ -238,6 +240,8 @@
 #include <LibWeb/Bindings/MessageEventPrototype.h>
 #include <LibWeb/Bindings/MouseEventConstructor.h>
 #include <LibWeb/Bindings/MouseEventPrototype.h>
+#include <LibWeb/Bindings/NavigatorConstructor.h>
+#include <LibWeb/Bindings/NavigatorPrototype.h>
 #include <LibWeb/Bindings/NodeConstructor.h>
 #include <LibWeb/Bindings/NodeIteratorConstructor.h>
 #include <LibWeb/Bindings/NodeIteratorPrototype.h>
@@ -321,6 +325,8 @@
 #include <LibWeb/Bindings/URLSearchParamsPrototype.h>
 #include <LibWeb/Bindings/WebSocketConstructor.h>
 #include <LibWeb/Bindings/WebSocketPrototype.h>
+#include <LibWeb/Bindings/WindowConstructor.h>
+#include <LibWeb/Bindings/WindowPrototype.h>
 #include <LibWeb/Bindings/WorkerConstructor.h>
 #include <LibWeb/Bindings/WorkerPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
@@ -449,11 +455,13 @@
     ADD_WINDOW_OBJECT_INTERFACE(ImageData)                                                          \
     ADD_WINDOW_OBJECT_INTERFACE(IntersectionObserver)                                               \
     ADD_WINDOW_OBJECT_INTERFACE(KeyboardEvent)                                                      \
+    ADD_WINDOW_OBJECT_INTERFACE(Location)                                                           \
     ADD_WINDOW_OBJECT_INTERFACE(MediaQueryList)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(MediaQueryListEvent)                                                \
     ADD_WINDOW_OBJECT_INTERFACE(MessageChannel)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(MessageEvent)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(MouseEvent)                                                         \
+    ADD_WINDOW_OBJECT_INTERFACE(Navigator)                                                          \
     ADD_WINDOW_OBJECT_INTERFACE(Node)                                                               \
     ADD_WINDOW_OBJECT_INTERFACE(NodeIterator)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(NodeList)                                                           \
@@ -498,6 +506,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(Worker)                                                             \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)                                                     \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequestEventTarget)                                          \
+    ADD_WINDOW_OBJECT_INTERFACE(Window)                                                             \
     ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Audio, AudioConstructor, HTMLAudioElementPrototype) \
     ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Image, ImageConstructor, HTMLImageElementPrototype) \
     ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Option, OptionConstructor, HTMLOptionElementPrototype)

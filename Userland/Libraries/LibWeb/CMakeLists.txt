@@ -9,11 +9,14 @@ set(SOURCES
     Bindings/EventWrapperFactory.cpp
     Bindings/IDLAbstractOperations.cpp
     Bindings/ImageConstructor.cpp
+    Bindings/LocationConstructor.cpp
     Bindings/LocationObject.cpp
     Bindings/MainThreadVM.cpp
+    Bindings/NavigatorConstructor.cpp
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapperFactory.cpp
     Bindings/OptionConstructor.cpp
+    Bindings/WindowConstructor.cpp
     Bindings/WindowObject.cpp
     Bindings/WindowProxy.cpp
     Bindings/Wrappable.cpp

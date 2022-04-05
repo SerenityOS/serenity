@@ -14,6 +14,7 @@
 #include <LibWeb/Bindings/CrossOriginAbstractOperations.h>
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/Bindings/LocationObject.h>
+#include <LibWeb/Bindings/LocationPrototype.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
@@ -23,7 +24,7 @@ namespace Web::Bindings {
 
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface
 LocationObject::LocationObject(JS::GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : Object(static_cast<WindowObject&>(global_object).ensure_web_prototype<LocationPrototype>("Location"))
     , m_default_properties(heap())
 {
 }
