@@ -354,7 +354,7 @@ struct KmallocGlobalData {
     void enable_expansion()
     {
         // FIXME: This range can be much bigger on 64-bit, but we need to figure something out for 32-bit.
-        auto reserved_region = MUST(MM.region_tree().allocate_unbacked_anywhere(64 * MiB, 1 * MiB));
+        auto reserved_region = MUST(MM.allocate_unbacked_region_anywhere(64 * MiB, 1 * MiB));
 
         expansion_data = KmallocGlobalData::ExpansionData {
             .virtual_range = reserved_region->range(),

@@ -1242,4 +1242,11 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::create_identity_mapped_reg
     return region;
 }
 
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_unbacked_region_anywhere(size_t size, size_t alignment)
+{
+    auto region = TRY(Region::create_unbacked());
+    TRY(m_region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size, alignment));
+    return region;
+}
+
 }

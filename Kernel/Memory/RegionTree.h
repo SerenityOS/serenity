@@ -40,8 +40,6 @@ public:
 
     VirtualRange total_range() const { return m_total_range; }
 
-    ErrorOr<NonnullOwnPtr<Region>> allocate_unbacked_anywhere(size_t size, size_t alignment = PAGE_SIZE);
-
     ErrorOr<void> place_anywhere(Region&, RandomizeVirtualAddress, size_t size, size_t alignment = PAGE_SIZE);
     ErrorOr<void> place_specifically(Region&, VirtualRange const&);
 

@@ -188,6 +188,7 @@ public:
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(size_t, StringView name, Region::Access access, AllocationStrategy strategy = AllocationStrategy::Reserve, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region_with_vmobject(VMObject&, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
+    ErrorOr<NonnullOwnPtr<Region>> allocate_unbacked_region_anywhere(size_t size, size_t alignment);
     ErrorOr<NonnullOwnPtr<Region>> create_identity_mapped_region(PhysicalAddress, size_t);
 
     struct SystemMemoryInfo {

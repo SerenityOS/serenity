@@ -129,13 +129,6 @@ ErrorOr<VirtualRange> RegionTree::allocate_range_randomized(size_t size, size_t 
     return allocate_range_anywhere(size, alignment);
 }
 
-ErrorOr<NonnullOwnPtr<Region>> RegionTree::allocate_unbacked_anywhere(size_t size, size_t alignment)
-{
-    auto region = TRY(Region::create_unbacked());
-    TRY(place_anywhere(*region, RandomizeVirtualAddress::No, size, alignment));
-    return region;
-}
-
 ErrorOr<void> RegionTree::place_anywhere(Region& region, RandomizeVirtualAddress randomize_virtual_address, size_t size, size_t alignment)
 {
     SpinlockLocker locker(m_lock);
