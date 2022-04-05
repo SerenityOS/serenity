@@ -218,6 +218,7 @@ set(SOURCES
     HTML/Scripting/Script.cpp
     HTML/Scripting/WindowEnvironmentSettingsObject.cpp
     HTML/Storage.cpp
+    HTML/StructuredSerialize.cpp
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/TextMetrics.cpp

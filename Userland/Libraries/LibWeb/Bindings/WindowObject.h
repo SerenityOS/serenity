@@ -108,6 +108,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(screen_top_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(post_message);
+    JS_DECLARE_NATIVE_FUNCTION(structured_clone);
 
     JS_DECLARE_NATIVE_FUNCTION(local_storage_getter);
     JS_DECLARE_NATIVE_FUNCTION(session_storage_getter);

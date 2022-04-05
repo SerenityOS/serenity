@@ -23,6 +23,7 @@
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Storage.h>
+#include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/Timer.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
@@ -634,6 +635,13 @@ DOM::ExceptionOr<void> Window::post_message(JS::Value message, String const&)
         strong_this->dispatch_event(HTML::MessageEvent::create(HTML::EventNames::message, event_init));
     });
     return {};
+}
+
+// https://html.spec.whatwg.org/multipage/structured-data.html#structured-cloning
+JS::ThrowCompletionOr<JS::Value> Window::structured_clone(JS::GlobalObject& global_object, JS::Value message)
+{
+    auto serialized = TRY(structured_serialize(global_object, message));
+    return MUST(structured_deserialize(global_object, serialized));
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-name

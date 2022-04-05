@@ -113,6 +113,7 @@ public:
     Window* parent();
 
     DOM::ExceptionOr<void> post_message(JS::Value, String const& target_origin);
+    JS::ThrowCompletionOr<JS::Value> structured_clone(JS::GlobalObject& global_object, JS::Value);
 
     String name() const;
     void set_name(String const&);
