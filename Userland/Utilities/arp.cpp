@@ -31,8 +31,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     static bool flag_set;
     static bool flag_delete;
-    char const* value_ipv4_address = nullptr;
-    char const* value_hw_address = nullptr;
+    StringView value_ipv4_address;
+    StringView value_hw_address;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display or modify the system ARP cache");
@@ -121,7 +121,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (flag_set || flag_delete) {
-        if (!value_ipv4_address || !value_hw_address) {
+        if (value_ipv4_address.is_empty() || value_hw_address.is_empty()) {
             warnln("No protocol address or hardware address specified.");
             return 1;
         }
@@ -138,11 +138,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
-        int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
-        if (fd < 0) {
-            perror("socket");
-            return 1;
-        }
+        int fd = TRY(Core::System::socket(AF_INET, SOCK_DGRAM, IPPROTO_IP));
 
         struct arpreq arp_req;
         memset(&arp_req, 0, sizeof(arp_req));
@@ -152,19 +148,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         *(MACAddress*)&arp_req.arp_ha.sa_data[0] = hw_address.value();
 
-        int rc = 0;
         if (flag_set)
-            rc = ioctl(fd, SIOCSARP, &arp_req);
-        if (flag_delete) {
-            int rc2 = ioctl(fd, SIOCDARP, &arp_req);
-            if (!rc2)
-                rc = rc2;
-        }
-
-        if (rc < 0) {
-            perror("ioctl");
-            return 1;
-        }
+            TRY(Core::System::ioctl(fd, SIOCSARP, &arp_req));
+        if (flag_delete)
+            TRY(Core::System::ioctl(fd, SIOCDARP, &arp_req));
     }
 
     return 0;
