@@ -65,7 +65,6 @@ if [ -z "$SERENITY_QEMU_BIN" ]; then
                 die "Could not determine where QEMU for Windows is installed. Please make sure QEMU is installed or set SERENITY_QEMU_BIN if it is already installed."
             fi
         else
-            KVM_SUPPORT="0"
             QEMU_BINARY_PREFIX="$(wslpath -- "${QEMU_INSTALL_DIR}" | tr -d '\r\n')/"
             QEMU_BINARY_SUFFIX=".exe"
         fi
@@ -79,7 +78,6 @@ if [ -z "$SERENITY_QEMU_BIN" ]; then
     fi
 fi
 
-[ "$KVM_SUPPORT" -eq "1" ] && SERENITY_VIRT_TECH_ARG="-enable-kvm"
 
 # For default values, see Kernel/CommandLine.cpp
 [ -z "$SERENITY_KERNEL_CMDLINE" ] && SERENITY_KERNEL_CMDLINE="hello"
@@ -124,11 +122,14 @@ if command -v wslpath >/dev/null; then
     case "$SERENITY_QEMU_BIN" in
         /mnt/?/*)
             if [ -z "$SERENITY_VIRT_TECH_ARG" ]; then
-                if [ "$installed_major_version" -gt 5 ]; then
-                    SERENITY_VIRT_TECH_ARG="-accel whpx,kernel-irqchip=off -accel tcg"
-                else
-                    SERENITY_VIRT_TECH_ARG="-accel whpx -accel tcg"
+                if [ "$KVM_SUPPORT" -eq "1" ]; then
+                    if [ "$installed_major_version" -gt 5 ]; then
+                        SERENITY_VIRT_TECH_ARG="-accel whpx,kernel-irqchip=off"
+                    else
+                        SERENITY_VIRT_TECH_ARG="-accel whpx"
+                    fi
                 fi
+                SERENITY_VIRT_TECH_ARG="$SERENITY_VIRT_TECH_ARG -accel tcg"
             fi
             [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max,vmx=off"
             SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE disable_virtio"
@@ -136,6 +137,8 @@ if command -v wslpath >/dev/null; then
             ;;
     esac
 fi
+
+[ "$KVM_SUPPORT" -eq "1" ] && [ "$NATIVE_WINDOWS_QEMU" -ne "1" ] && SERENITY_VIRT_TECH_ARG="-enable-kvm"
 
 [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max"
 
