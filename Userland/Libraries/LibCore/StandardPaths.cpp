@@ -49,6 +49,14 @@ String StandardPaths::config_directory()
     return LexicalPath::canonicalized_path(builder.to_string());
 }
 
+String StandardPaths::history_directory()
+{
+    StringBuilder builder;
+    builder.append(home_directory());
+    builder.append("/.history");
+    return LexicalPath::canonicalized_path(builder.to_string());
+}
+
 String StandardPaths::tempfile_directory()
 {
     return "/tmp";
