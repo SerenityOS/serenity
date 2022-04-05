@@ -206,16 +206,21 @@ void Mutex::block(Thread& current_thread, Mode mode, SpinlockLocker<Spinlock>& l
 {
     if constexpr (LOCK_IN_CRITICAL_DEBUG)
         VERIFY_INTERRUPTS_ENABLED();
-    auto& blocked_thread_list = thread_list_for_mode(mode);
-    VERIFY(!blocked_thread_list.contains(current_thread));
-    blocked_thread_list.append(current_thread);
+    m_blocked_thread_lists.with([&](auto& lists) {
+        auto& list = lists.list_for_mode(mode);
+        VERIFY(!list.contains(current_thread));
+        list.append(current_thread);
+    });
 
     dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}) waiting...", this, m_name);
     current_thread.block(*this, lock, requested_locks);
     dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}) waited", this, m_name);
 
-    VERIFY(blocked_thread_list.contains(current_thread));
-    blocked_thread_list.remove(current_thread);
+    m_blocked_thread_lists.with([&](auto& lists) {
+        auto& list = lists.list_for_mode(mode);
+        VERIFY(list.contains(current_thread));
+        list.remove(current_thread);
+    });
 }
 
 void Mutex::unblock_waiters(Mode previous_mode)
@@ -223,41 +228,43 @@ void Mutex::unblock_waiters(Mode previous_mode)
     VERIFY(m_times_locked == 0);
     VERIFY(m_mode == Mode::Unlocked);
 
-    if (m_blocked_threads_list_exclusive.is_empty() && m_blocked_threads_list_shared.is_empty())
-        return;
+    m_blocked_thread_lists.with([&](auto& lists) {
+        if (lists.exclusive.is_empty() && lists.shared.is_empty())
+            return;
 
-    auto unblock_shared = [&]() {
-        if (m_blocked_threads_list_shared.is_empty())
-            return false;
-        m_mode = Mode::Shared;
-        for (auto& thread : m_blocked_threads_list_shared) {
-            auto requested_locks = thread.unblock_from_mutex(*this);
-            m_shared_holders += requested_locks;
+        auto unblock_shared = [&]() {
+            if (lists.shared.is_empty())
+                return false;
+            m_mode = Mode::Shared;
+            for (auto& thread : lists.shared) {
+                auto requested_locks = thread.unblock_from_mutex(*this);
+                m_shared_holders += requested_locks;
 #if LOCK_SHARED_UPGRADE_DEBUG
-            auto set_result = m_shared_holders_map.set(&thread, requested_locks);
-            VERIFY(set_result == AK::HashSetResult::InsertedNewEntry);
+                auto set_result = m_shared_holders_map.set(&thread, requested_locks);
+                VERIFY(set_result == AK::HashSetResult::InsertedNewEntry);
 #endif
-            m_times_locked += requested_locks;
-        }
-        return true;
-    };
-    auto unblock_exclusive = [&]() {
-        if (auto* next_exclusive_thread = m_blocked_threads_list_exclusive.first()) {
-            m_mode = Mode::Exclusive;
-            m_times_locked = next_exclusive_thread->unblock_from_mutex(*this);
-            m_holder = next_exclusive_thread;
+                m_times_locked += requested_locks;
+            }
             return true;
-        }
-        return false;
-    };
+        };
+        auto unblock_exclusive = [&]() {
+            if (auto* next_exclusive_thread = lists.exclusive.first()) {
+                m_mode = Mode::Exclusive;
+                m_times_locked = next_exclusive_thread->unblock_from_mutex(*this);
+                m_holder = next_exclusive_thread;
+                return true;
+            }
+            return false;
+        };
 
-    if (previous_mode == Mode::Exclusive) {
-        if (!unblock_shared())
-            unblock_exclusive();
-    } else {
-        if (!unblock_exclusive())
-            unblock_shared();
-    }
+        if (previous_mode == Mode::Exclusive) {
+            if (!unblock_shared())
+                unblock_exclusive();
+        } else {
+            if (!unblock_exclusive())
+                unblock_shared();
+        }
+    });
 }
 
 auto Mutex::force_unlock_exclusive_if_locked(u32& lock_count_to_restore) -> Mode

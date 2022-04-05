@@ -72,12 +72,6 @@ public:
 private:
     using BlockedThreadList = IntrusiveList<&Thread::m_blocked_threads_list_node>;
 
-    ALWAYS_INLINE BlockedThreadList& thread_list_for_mode(Mode mode)
-    {
-        VERIFY(mode == Mode::Exclusive || mode == Mode::Shared);
-        return mode == Mode::Exclusive ? m_blocked_threads_list_exclusive : m_blocked_threads_list_shared;
-    }
-
     void block(Thread&, Mode, SpinlockLocker<Spinlock>&, u32);
     void unblock_waiters(Mode);
 
@@ -96,8 +90,17 @@ private:
     RefPtr<Thread> m_holder;
     size_t m_shared_holders { 0 };
 
-    BlockedThreadList m_blocked_threads_list_exclusive;
-    BlockedThreadList m_blocked_threads_list_shared;
+    struct BlockedThreadLists {
+        BlockedThreadList exclusive;
+        BlockedThreadList shared;
+
+        ALWAYS_INLINE BlockedThreadList& list_for_mode(Mode mode)
+        {
+            VERIFY(mode == Mode::Exclusive || mode == Mode::Shared);
+            return mode == Mode::Exclusive ? exclusive : shared;
+        }
+    };
+    SpinlockProtected<BlockedThreadLists> m_blocked_thread_lists;
 
     mutable Spinlock m_lock;
 
