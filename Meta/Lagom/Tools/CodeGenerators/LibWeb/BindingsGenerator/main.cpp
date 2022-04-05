@@ -111,7 +111,8 @@ int main(int argc, char** argv)
     if constexpr (BINDINGS_GENERATOR_DEBUG) {
         dbgln("Attributes:");
         for (auto& attribute : interface.attributes) {
-            dbgln("  {}{}{} {}",
+            dbgln("  {}{}{}{} {}",
+                attribute.inherit ? "inherit " : "",
                 attribute.readonly ? "readonly " : "",
                 attribute.type->name(),
                 attribute.type->is_nullable() ? "?" : "",

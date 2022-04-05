@@ -217,6 +217,10 @@ NonnullRefPtr<Type> Parser::parse_type()
 
 void Parser::parse_attribute(HashMap<String, String>& extended_attributes, Interface& interface)
 {
+    bool inherit = lexer.consume_specific("inherit");
+    if (inherit)
+        consume_whitespace();
+
     bool readonly = lexer.consume_specific("readonly");
     if (readonly)
         consume_whitespace();
@@ -236,6 +240,7 @@ void Parser::parse_attribute(HashMap<String, String>& extended_attributes, Inter
     auto setter_callback_name = String::formatted("{}_setter", name_as_string.to_snakecase());
 
     Attribute attribute {
+        inherit,
         readonly,
         move(type),
         move(name_as_string),
@@ -361,7 +366,7 @@ void Parser::parse_stringifier(HashMap<String, String>& extended_attributes, Int
     assert_string("stringifier"sv);
     consume_whitespace();
     interface.has_stringifier = true;
-    if (lexer.next_is("readonly"sv) || lexer.next_is("attribute"sv)) {
+    if (lexer.next_is("attribute"sv) || lexer.next_is("inherit"sv) || lexer.next_is("readonly"sv)) {
         parse_attribute(extended_attributes, interface);
         interface.stringifier_attribute = interface.attributes.last().name;
     } else {
@@ -547,7 +552,7 @@ void Parser::parse_interface(Interface& interface)
             continue;
         }
 
-        if (lexer.next_is("readonly") || lexer.next_is("attribute")) {
+        if (lexer.next_is("inherit") || lexer.next_is("readonly") || lexer.next_is("attribute")) {
             parse_attribute(extended_attributes, interface);
             continue;
         }
