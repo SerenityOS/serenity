@@ -27,8 +27,15 @@ class Mutex {
 public:
     using Mode = LockMode;
 
-    Mutex(StringView name = {})
+    // FIXME: remove this after annihilating Process::m_big_lock
+    enum class MutexBehavior {
+        Regular,
+        BigLock,
+    };
+
+    Mutex(StringView name = {}, MutexBehavior behavior = MutexBehavior::Regular)
         : m_name(name)
+        , m_behavior(behavior)
     {
     }
     ~Mutex() = default;
@@ -72,11 +79,17 @@ public:
 private:
     using BlockedThreadList = IntrusiveList<&Thread::m_blocked_threads_list_node>;
 
+    // FIXME: remove this after annihilating Process::m_big_lock
+    using BigLockBlockedThreadList = IntrusiveList<&Thread::m_big_lock_blocked_threads_list_node>;
+
     void block(Thread&, Mode, SpinlockLocker<Spinlock>&, u32);
     void unblock_waiters(Mode);
 
     StringView m_name;
     Mode m_mode { Mode::Unlocked };
+
+    // FIXME: remove this after annihilating Process::m_big_lock
+    MutexBehavior m_behavior;
 
     // When locked exclusively, only the thread already holding the lock can
     // lock it again. When locked in shared mode, any thread can do that.
@@ -93,6 +106,9 @@ private:
     struct BlockedThreadLists {
         BlockedThreadList exclusive;
         BlockedThreadList shared;
+
+        // FIXME: remove this after annihilating Process::m_big_lock
+        BigLockBlockedThreadList exclusive_big_lock;
 
         ALWAYS_INLINE BlockedThreadList& list_for_mode(Mode mode)
         {
