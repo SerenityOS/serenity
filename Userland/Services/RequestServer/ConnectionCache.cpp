@@ -6,11 +6,12 @@
 
 #include "ConnectionCache.h"
 #include <AK/Debug.h>
+#include <AK/Find.h>
 #include <LibCore/EventLoop.h>
 
 namespace RequestServer::ConnectionCache {
 
-HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<Core::Stream::TCPSocket>>>> g_tcp_connection_cache {};
+HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<Core::Stream::TCPSocket, Core::Stream::Socket>>>> g_tcp_connection_cache {};
 HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<TLS::TLSv12>>>> g_tls_connection_cache {};
 
 void request_did_finish(URL const& url, Core::Stream::Socket const* socket)
@@ -22,9 +23,9 @@ void request_did_finish(URL const& url, Core::Stream::Socket const* socket)
 
     dbgln_if(REQUESTSERVER_DEBUG, "Request for {} finished", url);
 
-    ConnectionKey key { url.host(), url.port_or_default() };
+    ConnectionKey partial_key { url.host(), url.port_or_default() };
     auto fire_off_next_job = [&](auto& cache) {
-        auto it = cache.find(key);
+        auto it = find_if(cache.begin(), cache.end(), [&](auto& connection) { return connection.key.hostname == partial_key.hostname && connection.key.port == partial_key.port; });
         if (it == cache.end()) {
             dbgln("Request for URL {} finished, but we don't own that!", url);
             return;
@@ -72,7 +73,7 @@ void request_did_finish(URL const& url, Core::Stream::Socket const* socket)
 
     if (is<Core::Stream::BufferedSocket<TLS::TLSv12>>(socket))
         fire_off_next_job(g_tls_connection_cache);
-    else if (is<Core::Stream::BufferedSocket<Core::Stream::TCPSocket>>(socket))
+    else if (is<Core::Stream::BufferedSocket<Core::Stream::Socket>>(socket))
         fire_off_next_job(g_tcp_connection_cache);
     else
         dbgln("Unknown socket {} finished for URL {}", socket, url);
