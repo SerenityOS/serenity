@@ -18,14 +18,14 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    auto app = TRY(GUI::Application::try_create(arguments));
+
     StringView path;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "Keyboard character mapping file.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     TRY(Core::System::pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd unix"));
-
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
 
     TRY(Core::System::pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd"));
 
