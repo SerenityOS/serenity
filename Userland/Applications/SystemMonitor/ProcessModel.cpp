@@ -344,7 +344,9 @@ GUI::ModelIndex ProcessModel::index(int row, int column, GUI::ModelIndex const& 
         if (row >= static_cast<int>(m_processes.size()))
             return {};
         auto corresponding_thread = m_processes[row].main_thread();
-        return create_index(row, column, corresponding_thread.ptr());
+        if (!corresponding_thread.has_value())
+            return {};
+        return create_index(row, column, corresponding_thread.release_value().ptr());
     }
     // Thread under process.
     auto const& parent_thread = *static_cast<Thread const*>(parent.internal_data());
@@ -375,8 +377,10 @@ GUI::ModelIndex ProcessModel::parent_index(GUI::ModelIndex const& index) const
         return {};
     // FIXME: We can't use first_matching here (not even a const version) because Optional cannot contain references.
     auto const& parent = thread.current_state.process;
+    if (!parent.main_thread().has_value())
+        return {};
 
-    return create_index(m_processes.find_first_index(parent).release_value(), index.column(), parent.main_thread().ptr());
+    return create_index(m_processes.find_first_index(parent).release_value(), index.column(), parent.main_thread().value().ptr());
 }
 
 Vector<GUI::ModelIndex> ProcessModel::matches(StringView searching, unsigned flags, GUI::ModelIndex const&)
