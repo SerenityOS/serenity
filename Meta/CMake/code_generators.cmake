@@ -62,3 +62,27 @@ function(generate_state_machine source header)
         add_dependencies(all_generated ${target_name})
     endif()
 endfunction()
+
+function(generate_config_reader source output)
+    set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
+    add_custom_command(
+        OUTPUT ${output}.h
+        COMMAND $<TARGET_FILE:Lagom::ConfigReaderGenerator> -m header ${source} > ${output}.h.tmp
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${output}.h.tmp ${output}.h
+        COMMAND "${CMAKE_COMMAND}" -E remove ${output}.h.tmp
+        VERBATIM
+        DEPENDS Lagom::ConfigReaderGenerator
+        MAIN_DEPENDENCY ${source}
+    )
+    add_custom_command(
+        OUTPUT ${output}.cpp
+        COMMAND $<TARGET_FILE:Lagom::ConfigReaderGenerator> -m source ${source} > ${output}.cpp.tmp
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${output}.cpp.tmp ${output}.cpp
+        COMMAND "${CMAKE_COMMAND}" -E remove ${output}.cpp.tmp
+        VERBATIM
+        DEPENDS Lagom::ConfigReaderGenerator
+        MAIN_DEPENDENCY ${source}
+    )
+    add_custom_target(generate_${output} DEPENDS ${output}.h ${output}.cpp)
+    add_dependencies(all_generated generate_${output})
+endfunction()

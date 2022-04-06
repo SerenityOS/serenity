@@ -1,3 +1,4 @@
+add_subdirectory(ConfigReaderGenerator)
 add_subdirectory(IPCCompiler)
 add_subdirectory(LibEDID)
 add_subdirectory(LibTimeZone)
