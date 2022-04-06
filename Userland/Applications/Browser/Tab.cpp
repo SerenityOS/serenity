@@ -189,7 +189,7 @@ Tab::Tab(BrowserWindow& window)
         },
         this);
 
-    hooks().on_load_start = [this](auto& url) {
+    view().on_load_start = [this](auto& url) {
         m_navigating_url = url;
         m_loaded = false;
 
@@ -213,7 +213,7 @@ Tab::Tab(BrowserWindow& window)
             m_console_widget->reset();
     };
 
-    hooks().on_load_finish = [this](auto&) {
+    view().on_load_finish = [this](auto&) {
         m_navigating_url = {};
         m_loaded = true;
 
@@ -223,7 +223,7 @@ Tab::Tab(BrowserWindow& window)
             m_web_content_view->inspect_dom_tree();
     };
 
-    hooks().on_link_click = [this](auto& url, auto& target, unsigned modifiers) {
+    view().on_link_click = [this](auto& url, auto& target, unsigned modifiers) {
         if (target == "_blank" || modifiers == Mod_Ctrl) {
             on_tab_open_request(url);
         } else {
@@ -231,18 +231,18 @@ Tab::Tab(BrowserWindow& window)
         }
     };
 
-    hooks().on_resource_status_change = [this](auto count_waiting) {
+    view().on_resource_status_change = [this](auto count_waiting) {
         update_status({}, count_waiting);
     };
 
     m_link_context_menu = GUI::Menu::construct();
     auto link_default_action = GUI::Action::create("&Open", [this](auto&) {
-        hooks().on_link_click(m_link_context_menu_url, "", 0);
+        view().on_link_click(m_link_context_menu_url, "", 0);
     });
     m_link_context_menu->add_action(link_default_action);
     m_link_context_menu_default_action = link_default_action;
     m_link_context_menu->add_action(GUI::Action::create("Open in New &Tab", [this](auto&) {
-        hooks().on_link_click(m_link_context_menu_url, "_blank", 0);
+        view().on_link_click(m_link_context_menu_url, "_blank", 0);
     }));
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(GUI::Action::create("&Copy URL", [this](auto&) {
@@ -255,17 +255,17 @@ Tab::Tab(BrowserWindow& window)
     m_link_context_menu->add_separator();
     m_link_context_menu->add_action(window.inspect_dom_node_action());
 
-    hooks().on_link_context_menu_request = [this](auto& url, auto& screen_position) {
+    view().on_link_context_menu_request = [this](auto& url, auto& screen_position) {
         m_link_context_menu_url = url;
         m_link_context_menu->popup(screen_position, m_link_context_menu_default_action);
     };
 
     m_image_context_menu = GUI::Menu::construct();
     m_image_context_menu->add_action(GUI::Action::create("&Open Image", [this](auto&) {
-        hooks().on_link_click(m_image_context_menu_url, "", 0);
+        view().on_link_click(m_image_context_menu_url, "", 0);
     }));
     m_image_context_menu->add_action(GUI::Action::create("Open Image in New &Tab", [this](auto&) {
-        hooks().on_link_click(m_image_context_menu_url, "_blank", 0);
+        view().on_link_click(m_image_context_menu_url, "_blank", 0);
     }));
     m_image_context_menu->add_separator();
     m_image_context_menu->add_action(GUI::Action::create("&Copy Image", [this](auto&) {
@@ -282,17 +282,17 @@ Tab::Tab(BrowserWindow& window)
     m_image_context_menu->add_separator();
     m_image_context_menu->add_action(window.inspect_dom_node_action());
 
-    hooks().on_image_context_menu_request = [this](auto& image_url, auto& screen_position, Gfx::ShareableBitmap const& shareable_bitmap) {
+    view().on_image_context_menu_request = [this](auto& image_url, auto& screen_position, Gfx::ShareableBitmap const& shareable_bitmap) {
         m_image_context_menu_url = image_url;
         m_image_context_menu_bitmap = shareable_bitmap;
         m_image_context_menu->popup(screen_position);
     };
 
-    hooks().on_link_middle_click = [this](auto& href, auto&, auto) {
-        hooks().on_link_click(href, "_blank", 0);
+    view().on_link_middle_click = [this](auto& href, auto&, auto) {
+        view().on_link_click(href, "_blank", 0);
     };
 
-    hooks().on_title_change = [this](auto& title) {
+    view().on_title_change = [this](auto& title) {
         if (title.is_null()) {
             m_history.update_title(url().to_string());
             m_title = url().to_string();
@@ -304,43 +304,43 @@ Tab::Tab(BrowserWindow& window)
             on_title_change(m_title);
     };
 
-    hooks().on_favicon_change = [this](auto& icon) {
+    view().on_favicon_change = [this](auto& icon) {
         m_icon = icon;
         m_location_box->set_icon(&icon);
         if (on_favicon_change)
             on_favicon_change(icon);
     };
 
-    hooks().on_get_cookie = [this](auto& url, auto source) -> String {
+    view().on_get_cookie = [this](auto& url, auto source) -> String {
         if (on_get_cookie)
             return on_get_cookie(url, source);
         return {};
     };
 
-    hooks().on_set_cookie = [this](auto& url, auto& cookie, auto source) {
+    view().on_set_cookie = [this](auto& url, auto& cookie, auto source) {
         if (on_set_cookie)
             on_set_cookie(url, cookie, source);
     };
 
-    hooks().on_get_source = [this](auto& url, auto& source) {
+    view().on_get_source = [this](auto& url, auto& source) {
         view_source(url, source);
     };
 
-    hooks().on_get_dom_tree = [this](auto& dom_tree) {
+    view().on_get_dom_tree = [this](auto& dom_tree) {
         if (m_dom_inspector_widget)
             m_dom_inspector_widget->set_dom_json(dom_tree);
     };
 
-    hooks().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties, auto& node_box_sizing) {
+    view().on_get_dom_node_properties = [this](auto node_id, auto& specified, auto& computed, auto& custom_properties, auto& node_box_sizing) {
         m_dom_inspector_widget->set_dom_node_properties_json({ node_id }, specified, computed, custom_properties, node_box_sizing);
     };
 
-    hooks().on_js_console_new_message = [this](auto message_index) {
+    view().on_js_console_new_message = [this](auto message_index) {
         if (m_console_widget)
             m_console_widget->notify_about_new_console_message(message_index);
     };
 
-    hooks().on_get_js_console_messages = [this](auto start_index, auto& message_types, auto& messages) {
+    view().on_get_js_console_messages = [this](auto start_index, auto& message_types, auto& messages) {
         if (m_console_widget)
             m_console_widget->handle_console_messages(start_index, message_types, messages);
     };
@@ -354,14 +354,14 @@ Tab::Tab(BrowserWindow& window)
 
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
-    hooks().on_link_hover = [this](auto& url) {
+    view().on_link_hover = [this](auto& url) {
         if (url.is_valid())
             update_status(url.to_string());
         else
             update_status();
     };
 
-    hooks().on_url_drop = [this](auto& url) {
+    view().on_url_drop = [this](auto& url) {
         load(url);
     };
 
@@ -390,7 +390,7 @@ Tab::Tab(BrowserWindow& window)
     m_page_context_menu->add_action(window.view_source_action());
     m_page_context_menu->add_action(window.inspect_dom_tree_action());
     m_page_context_menu->add_action(window.inspect_dom_node_action());
-    hooks().on_context_menu_request = [&](auto& screen_position) {
+    view().on_context_menu_request = [&](auto& screen_position) {
         m_page_context_menu->popup(screen_position);
     };
 }
@@ -514,16 +514,6 @@ void Tab::content_filters_changed()
         m_web_content_view->set_content_filters(g_content_filters);
     else
         m_web_content_view->set_content_filters({});
-}
-
-GUI::AbstractScrollableWidget& Tab::view()
-{
-    return *m_web_content_view;
-}
-
-Web::WebViewHooks& Tab::hooks()
-{
-    return *m_web_content_view;
 }
 
 void Tab::action_entered(GUI::Action& action)
