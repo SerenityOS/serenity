@@ -5,6 +5,7 @@ set(SOURCES
     ASN1/DER.cpp
     ASN1/PEM.cpp
     Authentication/GHash.cpp
+    Authentication/Poly1305.cpp
     BigInt/Algorithms/BitwiseOperations.cpp
     BigInt/Algorithms/Division.cpp
     BigInt/Algorithms/GCD.cpp
