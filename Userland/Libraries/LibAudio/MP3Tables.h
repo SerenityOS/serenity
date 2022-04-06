@@ -115,7 +115,7 @@ constexpr auto MakeMixedScaleFactorBandArray()
     Array<ScaleFactorBand, N> result {};
 
     constexpr auto long_bands = MakeLongScaleFactorBandArray<sizes_long>();
-    constexpr auto short_bands = MakeShortScaleFactorBandArray<sizes_short, long_bands.back().end + 1>();
+    constexpr auto short_bands = MakeShortScaleFactorBandArray<sizes_short, long_bands.last().end + 1>();
 
     for (size_t i = 0; i < long_bands.size(); i++) {
         result[i] = long_bands[i];
