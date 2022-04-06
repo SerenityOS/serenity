@@ -233,7 +233,6 @@ set(SOURCES
     HTML/WorkerLocation.cpp
     HighResolutionTime/Performance.cpp
     ImageDecoding.cpp
-    InProcessWebView.cpp
     IntersectionObserver/IntersectionObserver.cpp
     Layout/BlockContainer.cpp
     Layout/BlockFormattingContext.cpp

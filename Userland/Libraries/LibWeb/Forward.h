@@ -346,7 +346,6 @@ namespace Web {
 class EditEventHandler;
 class EventHandler;
 class FrameLoader;
-class InProcessWebView;
 class LoadRequest;
 class Origin;
 class OutOfProcessWebView;
