@@ -118,14 +118,6 @@ static bool is_html_integration_point(DOM::Element const& element)
     return false;
 }
 
-RefPtr<DOM::Document> parse_html_document(StringView data, const AK::URL& url, String const& encoding)
-{
-    auto document = DOM::Document::create(url);
-    auto parser = HTMLParser::create(document, data, encoding);
-    parser->run(url);
-    return document;
-}
-
 HTMLParser::HTMLParser(DOM::Document& document, StringView input, String const& encoding)
     : m_tokenizer(input, encoding)
     , m_document(document)
