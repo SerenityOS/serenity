@@ -328,16 +328,8 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
             main_event_loop = this;
             s_pid = getpid();
             s_event_loop_stack->append(*this);
-
-#ifdef __serenity__
-            if (getuid() != 0
-                && make_inspectable == MakeInspectable::Yes
-                // FIXME: Deadlock potential; though the main loop and inspector server connection are rarely used in conjunction
-                && !s_inspector_server_connection.with_locked([](auto inspector_server_connection) { return inspector_server_connection; })) {
-                if (!connect_to_inspector_server())
-                    dbgln("Core::EventLoop: Failed to connect to InspectorServer");
-            }
-#endif
+            if (make_inspectable == MakeInspectable::Yes)
+                EventLoop::make_inspectable();
         }
     });
 
@@ -355,6 +347,18 @@ EventLoop::~EventLoop()
             main_event_loop = nullptr;
         }
     });
+}
+
+void EventLoop::make_inspectable()
+{
+#ifdef __serenity__
+    if (getuid() != 0
+        // FIXME: Deadlock potential; though the main loop and inspector server connection are rarely used in conjunction
+        && !s_inspector_server_connection.with_locked([](auto inspector_server_connection) { return inspector_server_connection; })) {
+        if (!connect_to_inspector_server())
+            dbgln("Core::EventLoop: Failed to connect to InspectorServer");
+    }
+#endif
 }
 
 bool connect_to_inspector_server()

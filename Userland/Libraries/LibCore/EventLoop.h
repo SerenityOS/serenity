@@ -44,6 +44,8 @@ public:
     ~EventLoop();
     static void initialize_wake_pipes();
 
+    static void make_inspectable();
+
     int exec();
 
     enum class WaitMode {
