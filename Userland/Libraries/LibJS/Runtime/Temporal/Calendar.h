@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,7 +36,7 @@ ThrowCompletionOr<Calendar*> get_builtin_calendar(GlobalObject&, String const& i
 Calendar* get_iso8601_calendar(GlobalObject&);
 ThrowCompletionOr<Vector<String>> calendar_fields(GlobalObject&, Object& calendar, Vector<StringView> const& field_names);
 ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject&, Object& calendar, Object& fields, Object& additional_fields);
-ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject&, Object& calendar, Value date, Duration&, Object* options, FunctionObject* date_add = nullptr);
+ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject&, Object& calendar, Value date, Duration&, Object* options = nullptr, FunctionObject* date_add = nullptr);
 ThrowCompletionOr<Duration*> calendar_date_until(GlobalObject&, Object& calendar, Value one, Value two, Object& options, FunctionObject* date_until = nullptr);
 ThrowCompletionOr<double> calendar_year(GlobalObject&, Object& calendar, Object& date_like);
 ThrowCompletionOr<double> calendar_month(GlobalObject&, Object& calendar, Object& date_like);
@@ -57,7 +57,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar_with_iso_default(GlobalObject&, 
 ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(GlobalObject&, Object&);
 ThrowCompletionOr<PlainDate*> date_from_fields(GlobalObject&, Object& calendar, Object const& fields, Object const* options = nullptr);
 ThrowCompletionOr<PlainYearMonth*> year_month_from_fields(GlobalObject&, Object& calendar, Object const& fields, Object const* options = nullptr);
-ThrowCompletionOr<PlainMonthDay*> month_day_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options = nullptr);
+ThrowCompletionOr<PlainMonthDay*> month_day_from_fields(GlobalObject&, Object& calendar, Object const& fields, Object const* options = nullptr);
 String format_calendar_annotation(StringView id, StringView show_calendar);
 ThrowCompletionOr<bool> calendar_equals(GlobalObject&, Object& one, Object& two);
 ThrowCompletionOr<Object*> consolidate_calendars(GlobalObject&, Object& one, Object& two);

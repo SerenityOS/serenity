@@ -207,7 +207,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 7. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY(to_temporal_overflow(global_object, *options));
+    auto overflow = TRY(to_temporal_overflow(global_object, options));
 
     // 8. If partialTime.[[Hour]] is not undefined, then
     //      a. Let hour be partialTime.[[Hour]].
