@@ -54,7 +54,6 @@ public:
     void set_needs_display(Gfx::IntRect const&);
 
     Gfx::IntPoint const& viewport_scroll_offset() const { return m_viewport_scroll_offset; }
-    void set_viewport_scroll_offset(Gfx::IntPoint const&);
     Gfx::IntRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
     void set_viewport_rect(Gfx::IntRect const&);
 
@@ -64,6 +63,7 @@ public:
     Web::EventHandler& event_handler() { return m_event_handler; }
     Web::EventHandler const& event_handler() const { return m_event_handler; }
 
+    void scroll_to(Gfx::IntPoint const&);
     void scroll_to_anchor(String const&);
 
     BrowsingContext& top_level_browsing_context()

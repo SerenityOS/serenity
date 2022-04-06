@@ -344,7 +344,7 @@ void FrameLoader::resource_did_load()
     if (!url.fragment().is_empty())
         browsing_context().scroll_to_anchor(url.fragment());
     else
-        browsing_context().set_viewport_scroll_offset({ 0, 0 });
+        browsing_context().scroll_to({ 0, 0 });
 
     if (auto* page = browsing_context().page())
         page->client().page_did_finish_loading(url);
