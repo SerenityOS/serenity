@@ -11,6 +11,7 @@
 #include <AK/Array.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
+#include <Applications/FontEditor/FontEditorConfig.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
@@ -221,20 +222,20 @@ FontEditorWidget::FontEditorWidget()
     m_open_preview_action->set_checked(false);
     m_open_preview_action->set_status_tip("Preview the current font");
 
-    bool show_metadata = Config::read_bool("FontEditor", "Layout", "ShowMetadata", true);
+    bool show_metadata = FontEditor::Config::Layout::show_metadata();
     set_show_font_metadata(show_metadata);
     m_show_metadata_action = GUI::Action::create_checkable("Font &Metadata", { Mod_Ctrl, Key_M }, [&](auto& action) {
         set_show_font_metadata(action.is_checked());
-        Config::write_bool("FontEditor", "Layout", "ShowMetadata", action.is_checked());
+        FontEditor::Config::Layout::set_show_metadata(action.is_checked());
     });
     m_show_metadata_action->set_checked(show_metadata);
     m_show_metadata_action->set_status_tip("Show or hide metadata about the current font");
 
-    bool show_unicode_blocks = Config::read_bool("FontEditor", "Layout", "ShowUnicodeBlocks", true);
+    bool show_unicode_blocks = FontEditor::Config::Layout::show_unicode_blocks();
     set_show_unicode_blocks(show_unicode_blocks);
     m_show_unicode_blocks_action = GUI::Action::create_checkable("&Unicode Blocks", { Mod_Ctrl, Key_U }, [&](auto& action) {
         set_show_unicode_blocks(action.is_checked());
-        Config::write_bool("FontEditor", "Layout", "ShowUnicodeBlocks", action.is_checked());
+        FontEditor::Config::Layout::set_show_unicode_blocks(action.is_checked());
     });
     m_show_unicode_blocks_action->set_checked(show_unicode_blocks);
     m_show_unicode_blocks_action->set_status_tip("Show or hide the Unicode block list");
@@ -280,7 +281,7 @@ FontEditorWidget::FontEditorWidget()
     toolbar.add_action(*m_next_glyph_action);
     toolbar.add_action(*m_go_to_glyph_action);
 
-    i32 scale = Config::read_i32("FontEditor", "GlyphEditor", "Scale", 10);
+    i32 scale = FontEditor::Config::GlyphEditor::scale();
 
     m_scale_five_action = GUI::Action::create_checkable("500%", { Mod_Ctrl, Key_1 }, [this](auto&) {
         set_scale_and_save(5);
@@ -882,7 +883,7 @@ void FontEditorWidget::set_scale(i32 scale)
 void FontEditorWidget::set_scale_and_save(i32 scale)
 {
     set_scale(scale);
-    Config::write_i32("FontEditor", "GlyphEditor", "Scale", scale);
+    FontEditor::Config::GlyphEditor::set_scale(scale);
     did_resize_glyph_editor();
 }
 
