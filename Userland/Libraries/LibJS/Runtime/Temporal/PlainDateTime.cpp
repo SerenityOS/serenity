@@ -108,7 +108,7 @@ ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(GlobalObject&
     auto unregulated_time_result = TRY(to_temporal_time_record(global_object, fields));
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY(to_temporal_overflow(global_object, options));
+    auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
     // 3. Let temporalDate be ? DateFromFields(calendar, fields, options).
     auto* temporal_date = TRY(date_from_fields(global_object, calendar, fields, &options));
@@ -135,14 +135,13 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_obj
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
-    if (!options)
-        options = Object::create(global_object, nullptr);
+    // 1. If options is not present, set options to undefined.
+    // 2. Assert: Type(options) is Object or Undefined.
 
     Object* calendar;
     ISODateTime result;
 
-    // 2. If Type(item) is Object, then
+    // 3. If Type(item) is Object, then
     if (item.is_object()) {
         auto& item_object = item.as_object();
 
@@ -183,10 +182,10 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_obj
         // g. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
         result = TRY(interpret_temporal_date_time_fields(global_object, *calendar, *fields, *options));
     }
-    // 3. Else,
+    // 4. Else,
     else {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY(to_temporal_overflow(global_object, *options));
+        (void)TRY(to_temporal_overflow(global_object, options));
 
         // b. Let string be ? ToString(item).
         auto string = TRY(item.to_string(global_object));
@@ -204,7 +203,7 @@ ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_obj
         calendar = TRY(to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, *result.calendar) : js_undefined()));
     }
 
-    // 4. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
+    // 5. Return ? CreateTemporalDateTime(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], calendar).
     return create_temporal_date_time(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, *calendar);
 }
 
@@ -353,23 +352,26 @@ ISODateTime round_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute, 
 // 5.5.11 DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-differenceisodatetime
 ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_object, i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2, Object& calendar, StringView largest_unit, Object* options)
 {
-    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
+    // 1. If options is not present, set options to undefined.
+    // 2. Assert: Type(options) is Object or Undefined.
+
+    // FIXME: `options` is being passed to MergeLargestUnitOption unconditionally, which expects it to not be undefined (spec issue: https://github.com/tc39/proposal-temporal/issues/2132).
     if (!options)
         options = Object::create(global_object, nullptr);
 
-    // 2. Let timeDifference be ! DifferenceTime(h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2).
+    // 3. Let timeDifference be ! DifferenceTime(h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2).
     auto time_difference = difference_time(hour1, minute1, second1, millisecond1, microsecond1, nanosecond1, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2);
 
-    // 3. Let timeSign be ! DurationSign(0, 0, 0, timeDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
+    // 4. Let timeSign be ! DurationSign(0, 0, 0, timeDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]]).
     auto time_sign = duration_sign(0, 0, 0, time_difference.days, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, time_difference.nanoseconds);
 
-    // 4. Let dateSign be ! CompareISODate(y2, mon2, d2, y1, mon1, d1).
+    // 5. Let dateSign be ! CompareISODate(y2, mon2, d2, y1, mon1, d1).
     auto date_sign = compare_iso_date(year2, month2, day2, year1, month1, day1);
 
-    // 5. Let adjustedDate be ! BalanceISODate(y1, mon1, d1 + timeDifference.[[Days]]).
+    // 6. Let adjustedDate be ! BalanceISODate(y1, mon1, d1 + timeDifference.[[Days]]).
     auto adjusted_date = balance_iso_date(year1, month1, day1 + time_difference.days);
 
-    // 6. If timeSign is -dateSign, then
+    // 7. If timeSign is -dateSign, then
     if (time_sign == -date_sign) {
         // a. Set adjustedDate to ! BalanceISODate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]] - timeSign).
         adjusted_date = balance_iso_date(adjusted_date.year, adjusted_date.month, adjusted_date.day - time_sign);
@@ -378,25 +380,25 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
         time_difference = TRY(balance_duration(global_object, -time_sign, time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, Crypto::SignedBigInteger { (i32)time_difference.nanoseconds }, largest_unit));
     }
 
-    // 7. Let date1 be ? CreateTemporalDate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]], calendar).
+    // 8. Let date1 be ? CreateTemporalDate(adjustedDate.[[Year]], adjustedDate.[[Month]], adjustedDate.[[Day]], calendar).
     auto* date1 = TRY(create_temporal_date(global_object, adjusted_date.year, adjusted_date.month, adjusted_date.day, calendar));
 
-    // 8. Let date2 be ? CreateTemporalDate(y2, mon2, d2, calendar).
+    // 9. Let date2 be ? CreateTemporalDate(y2, mon2, d2, calendar).
     auto* date2 = TRY(create_temporal_date(global_object, year2, month2, day2, calendar));
 
-    // 9. Let dateLargestUnit be ! LargerOfTwoTemporalUnits("day", largestUnit).
+    // 10. Let dateLargestUnit be ! LargerOfTwoTemporalUnits("day", largestUnit).
     auto date_largest_unit = larger_of_two_temporal_units("day"sv, largest_unit);
 
-    // 10. Let untilOptions be ? MergeLargestUnitOption(options, dateLargestUnit).
+    // 11. Let untilOptions be ? MergeLargestUnitOption(options, dateLargestUnit).
     auto* until_options = TRY(merge_largest_unit_option(global_object, *options, date_largest_unit));
 
-    // 11. Let dateDifference be ? CalendarDateUntil(calendar, date1, date2, untilOptions).
+    // 12. Let dateDifference be ? CalendarDateUntil(calendar, date1, date2, untilOptions).
     auto* date_difference = TRY(calendar_date_until(global_object, calendar, date1, date2, *until_options));
 
-    // 12. Let balanceResult be ? BalanceDuration(dateDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
+    // 13. Let balanceResult be ? BalanceDuration(dateDifference.[[Days]], timeDifference.[[Hours]], timeDifference.[[Minutes]], timeDifference.[[Seconds]], timeDifference.[[Milliseconds]], timeDifference.[[Microseconds]], timeDifference.[[Nanoseconds]], largestUnit).
     auto balance_result = TRY(balance_duration(global_object, date_difference->days(), time_difference.hours, time_difference.minutes, time_difference.seconds, time_difference.milliseconds, time_difference.microseconds, Crypto::SignedBigInteger { (i32)time_difference.nanoseconds }, largest_unit));
 
-    // 13. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]]).
+    // 14. Return ! CreateDurationRecord(dateDifference.[[Years]], dateDifference.[[Months]], dateDifference.[[Weeks]], balanceResult.[[Days]], balanceResult.[[Hours]], balanceResult.[[Minutes]], balanceResult.[[Seconds]], balanceResult.[[Milliseconds]], balanceResult.[[Microseconds]], balanceResult.[[Nanoseconds]]).
     return create_duration_record(date_difference->years(), date_difference->months(), date_difference->weeks(), balance_result.days, balance_result.hours, balance_result.minutes, balance_result.seconds, balance_result.milliseconds, balance_result.microseconds, balance_result.nanoseconds);
 }
 

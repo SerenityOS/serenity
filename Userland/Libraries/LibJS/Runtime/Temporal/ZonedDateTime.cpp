@@ -118,14 +118,13 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
-    if (!options)
-        options = Object::create(global_object, nullptr);
+    // 1. If options is not present, set options to undefined.
+    // 2. Assert: Type(options) is Object or Undefined.
 
-    // 2. Let offsetBehaviour be option.
+    // 3. Let offsetBehaviour be option.
     auto offset_behavior = OffsetBehavior::Option;
 
-    // 3. Let matchBehaviour be match exactly.
+    // 4. Let matchBehaviour be match exactly.
     auto match_behavior = MatchBehavior::MatchExactly;
 
     Object* calendar = nullptr;
@@ -133,7 +132,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
     Optional<String> offset_string;
     ISODateTime result;
 
-    // 4. If Type(item) is Object, then
+    // 5. If Type(item) is Object, then
     if (item.is_object()) {
         auto& item_object = item.as_object();
 
@@ -181,10 +180,10 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         // l. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
         result = TRY(interpret_temporal_date_time_fields(global_object, *calendar, *fields, *options));
     }
-    // 5. Else,
+    // 6. Else,
     else {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY(to_temporal_overflow(global_object, *options));
+        (void)TRY(to_temporal_overflow(global_object, options));
 
         // b. Let string be ? ToString(item).
         auto string = TRY(item.to_string(global_object));
@@ -241,25 +240,25 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& glob
         result = move(parsed_result.date_time);
     }
 
-    // 6. Let offsetNanoseconds be 0.
+    // 7. Let offsetNanoseconds be 0.
     double offset_nanoseconds = 0;
 
-    // 7. If offsetBehaviour is option, then
+    // 8. If offsetBehaviour is option, then
     if (offset_behavior == OffsetBehavior::Option) {
         // a. Set offsetNanoseconds to ? ParseTimeZoneOffsetString(offsetString).
         offset_nanoseconds = TRY(parse_time_zone_offset_string(global_object, *offset_string));
     }
 
-    // 8. Let disambiguation be ? ToTemporalDisambiguation(options).
-    auto disambiguation = TRY(to_temporal_disambiguation(global_object, *options));
+    // 9. Let disambiguation be ? ToTemporalDisambiguation(options).
+    auto disambiguation = TRY(to_temporal_disambiguation(global_object, options));
 
-    // 9. Let offsetOption be ? ToTemporalOffset(options, "reject").
-    auto offset_option = TRY(to_temporal_offset(global_object, *options, "reject"));
+    // 10. Let offsetOption be ? ToTemporalOffset(options, "reject").
+    auto offset_option = TRY(to_temporal_offset(global_object, options, "reject"));
 
-    // 10. Let epochNanoseconds be ? InterpretISODateTimeOffset(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], offsetBehaviour, offsetNanoseconds, timeZone, disambiguation, offsetOption, matchBehaviour).
+    // 11. Let epochNanoseconds be ? InterpretISODateTimeOffset(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], offsetBehaviour, offsetNanoseconds, timeZone, disambiguation, offsetOption, matchBehaviour).
     auto* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(global_object, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, offset_behavior, offset_nanoseconds, time_zone, disambiguation, offset_option, match_behavior));
 
-    // 11. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
+    // 12. Return ! CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar).
     return MUST(create_temporal_zoned_date_time(global_object, *epoch_nanoseconds, *time_zone, *calendar));
 }
 
@@ -367,38 +366,37 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(GlobalObject& globa
 // 6.5.5 AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-addzoneddatetime
 ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigInt const& epoch_nanoseconds, Value time_zone, Object& calendar, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object* options)
 {
-    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
-    if (!options)
-        options = Object::create(global_object, nullptr);
+    // 1. If options is not present, set options to undefined.
+    // 2. Assert: Type(options) is Object or Undefined.
 
-    // 2. If all of years, months, weeks, and days are 0, then
+    // 3. If all of years, months, weeks, and days are 0, then
     if (years == 0 && months == 0 && weeks == 0 && days == 0) {
         // a. Return ! AddInstant(epochNanoseconds, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
         return MUST(add_instant(global_object, epoch_nanoseconds, hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
     }
 
-    // 3. Let instant be ! CreateTemporalInstant(epochNanoseconds).
+    // 4. Let instant be ! CreateTemporalInstant(epochNanoseconds).
     auto* instant = MUST(create_temporal_instant(global_object, epoch_nanoseconds));
 
-    // 4. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
+    // 5. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
     auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, calendar));
 
-    // 5. Let datePart be ? CreateTemporalDate(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], calendar).
+    // 6. Let datePart be ? CreateTemporalDate(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], calendar).
     auto* date_part = TRY(create_temporal_date(global_object, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), calendar));
 
-    // 6. Let dateDuration be ! CreateTemporalDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
+    // 7. Let dateDuration be ! CreateTemporalDuration(years, months, weeks, days, 0, 0, 0, 0, 0, 0).
     auto* date_duration = MUST(create_temporal_duration(global_object, years, months, weeks, days, 0, 0, 0, 0, 0, 0));
 
-    // 7. Let addedDate be ? CalendarDateAdd(calendar, datePart, dateDuration, options).
+    // 8. Let addedDate be ? CalendarDateAdd(calendar, datePart, dateDuration, options).
     auto* added_date = TRY(calendar_date_add(global_object, calendar, date_part, *date_duration, options));
 
-    // 8. Let intermediateDateTime be ? CreateTemporalDateTime(addedDate.[[ISOYear]], addedDate.[[ISOMonth]], addedDate.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], calendar).
+    // 9. Let intermediateDateTime be ? CreateTemporalDateTime(addedDate.[[ISOYear]], addedDate.[[ISOMonth]], addedDate.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], calendar).
     auto* intermediate_date_time = TRY(create_temporal_date_time(global_object, added_date->iso_year(), added_date->iso_month(), added_date->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), calendar));
 
-    // 9. Let intermediateInstant be ? BuiltinTimeZoneGetInstantFor(timeZone, intermediateDateTime, "compatible").
+    // 10. Let intermediateInstant be ? BuiltinTimeZoneGetInstantFor(timeZone, intermediateDateTime, "compatible").
     auto* intermediate_instant = TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *intermediate_date_time, "compatible"sv));
 
-    // 10. Return ! AddInstant(intermediateInstant.[[Nanoseconds]], hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
+    // 11. Return ! AddInstant(intermediateInstant.[[Nanoseconds]], hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
     return MUST(add_instant(global_object, intermediate_instant->nanoseconds(), hours, minutes, seconds, milliseconds, microseconds, nanoseconds));
 }
 

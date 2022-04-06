@@ -119,7 +119,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_instant_for)
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let disambiguation be ? ToTemporalDisambiguation(options).
-    auto disambiguation = TRY(to_temporal_disambiguation(global_object, *options));
+    auto disambiguation = TRY(to_temporal_disambiguation(global_object, options));
 
     // 6. Return ? BuiltinTimeZoneGetInstantFor(timeZone, dateTime, disambiguation).
     return TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *date_time, disambiguation));

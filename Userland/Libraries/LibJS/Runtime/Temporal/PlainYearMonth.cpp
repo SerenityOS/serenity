@@ -35,11 +35,8 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
-    if (!options)
-        options = Object::create(global_object, nullptr);
-
-    // 2. Assert: Type(options) is Object.
+    // 1. If options is not present, set options to undefined.
+    // 2. Assert: Type(options) is Object or Undefined.
 
     // 3. If Type(item) is Object, then
     if (item.is_object()) {
@@ -65,7 +62,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
-    (void)TRY(to_temporal_overflow(global_object, *options));
+    (void)TRY(to_temporal_overflow(global_object, options));
 
     // 5. Let string be ? ToString(item).
     auto string = TRY(item.to_string(global_object));
@@ -79,11 +76,9 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_o
     // 8. Set result to ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[Day]]).
     auto* creation_result = TRY(create_temporal_year_month(global_object, result.year, result.month, *calendar, result.day));
 
-    // 9. Let canonicalYearMonthOptions be OrdinaryObjectCreate(null).
-    auto* canonical_year_month_options = Object::create(global_object, nullptr);
-
-    // 10. Return ? YearMonthFromFields(calendar, result, canonicalYearMonthOptions).
-    return year_month_from_fields(global_object, *calendar, *creation_result, canonical_year_month_options);
+    // 9. NOTE: The following operation is called without options, in order for the calendar to store a canonical value in the [[ISODay]] internal slot of the result.
+    // 10. Return ? YearMonthFromFields(calendar, result).
+    return year_month_from_fields(global_object, *calendar, *creation_result);
 }
 
 // 9.5.2 RegulateISOYearMonth ( year, month, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisoyearmonth

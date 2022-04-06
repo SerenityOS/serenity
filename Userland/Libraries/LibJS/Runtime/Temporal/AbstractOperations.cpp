@@ -191,25 +191,33 @@ ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(Globa
     return value.as_string().string();
 }
 
-// 13.5 ToTemporalOverflow ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
-ThrowCompletionOr<String> to_temporal_overflow(GlobalObject& global_object, Object const& normalized_options)
+// 13.5 ToTemporalOverflow ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
+ThrowCompletionOr<String> to_temporal_overflow(GlobalObject& global_object, Object const* options)
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ? GetOption(normalizedOptions, "overflow", « String », « "constrain", "reject" », "constrain").
-    auto option = TRY(get_option(global_object, normalized_options, vm.names.overflow, { OptionType::String }, { "constrain"sv, "reject"sv }, js_string(vm, "constrain")));
+    // 1. If options is undefined, return "constrain".
+    if (options == nullptr)
+        return "constrain"sv;
+
+    // 2. Return ? GetOption(options, "overflow", « String », « "constrain", "reject" », "constrain").
+    auto option = TRY(get_option(global_object, *options, vm.names.overflow, { OptionType::String }, { "constrain"sv, "reject"sv }, js_string(vm, "constrain")));
 
     VERIFY(option.is_string());
     return option.as_string().string();
 }
 
-// 13.6 ToTemporalDisambiguation ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldisambiguation
-ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject& global_object, Object const& normalized_options)
+// 13.6 ToTemporalDisambiguation ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldisambiguation
+ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject& global_object, Object const* options)
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ? GetOption(normalizedOptions, "disambiguation", « String », « "compatible", "earlier", "later", "reject" », "compatible").
-    auto option = TRY(get_option(global_object, normalized_options, vm.names.disambiguation, { OptionType::String }, { "compatible"sv, "earlier"sv, "later"sv, "reject"sv }, js_string(vm, "compatible")));
+    // 1. If options is undefined, return "compatible".
+    if (options == nullptr)
+        return "compatible"sv;
+
+    // 2. Return ? GetOption(options, "disambiguation", « String », « "compatible", "earlier", "later", "reject" », "compatible").
+    auto option = TRY(get_option(global_object, *options, vm.names.disambiguation, { OptionType::String }, { "compatible"sv, "earlier"sv, "later"sv, "reject"sv }, js_string(vm, "compatible")));
 
     VERIFY(option.is_string());
     return option.as_string().string();
@@ -242,13 +250,17 @@ StringView negate_temporal_rounding_mode(String const& rounding_mode)
     return rounding_mode;
 }
 
-// 13.9 ToTemporalOffset ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloffset
-ThrowCompletionOr<String> to_temporal_offset(GlobalObject& global_object, Object const& normalized_options, String const& fallback)
+// 13.9 ToTemporalOffset ( options, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloffset
+ThrowCompletionOr<String> to_temporal_offset(GlobalObject& global_object, Object const* options, String const& fallback)
 {
     auto& vm = global_object.vm();
 
-    // 1. Return ? GetOption(normalizedOptions, "offset", « String », « "prefer", "use", "ignore", "reject" », fallback).
-    auto option = TRY(get_option(global_object, normalized_options, vm.names.offset, { OptionType::String }, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, js_string(vm, fallback)));
+    // 1. If options is undefined, return fallback.
+    if (options == nullptr)
+        return fallback;
+
+    // 2. Return ? GetOption(options, "offset", « String », « "prefer", "use", "ignore", "reject" », fallback).
+    auto option = TRY(get_option(global_object, *options, vm.names.offset, { OptionType::String }, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, js_string(vm, fallback)));
 
     VERIFY(option.is_string());
     return option.as_string().string();

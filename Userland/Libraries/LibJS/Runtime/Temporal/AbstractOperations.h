@@ -102,11 +102,11 @@ ThrowCompletionOr<Object*> get_options_object(GlobalObject&, Value options);
 ThrowCompletionOr<Value> get_option(GlobalObject&, Object const& options, PropertyKey const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback);
 template<typename NumberType>
 ThrowCompletionOr<Variant<String, NumberType>> get_string_or_number_option(GlobalObject&, Object const& options, PropertyKey const& property, Vector<StringView> const& string_values, NumberType minimum, NumberType maximum, Value fallback);
-ThrowCompletionOr<String> to_temporal_overflow(GlobalObject&, Object const& normalized_options);
-ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject&, Object const& normalized_options);
+ThrowCompletionOr<String> to_temporal_overflow(GlobalObject&, Object const* options);
+ThrowCompletionOr<String> to_temporal_disambiguation(GlobalObject&, Object const* options);
 ThrowCompletionOr<String> to_temporal_rounding_mode(GlobalObject&, Object const& normalized_options, String const& fallback);
 StringView negate_temporal_rounding_mode(String const& rounding_mode);
-ThrowCompletionOr<String> to_temporal_offset(GlobalObject&, Object const& normalized_options, String const& fallback);
+ThrowCompletionOr<String> to_temporal_offset(GlobalObject&, Object const* options, String const& fallback);
 ThrowCompletionOr<String> to_show_calendar_option(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<String> to_show_time_zone_name_option(GlobalObject&, Object const& normalized_options);
 ThrowCompletionOr<String> to_show_offset_option(GlobalObject&, Object const& normalized_options);
