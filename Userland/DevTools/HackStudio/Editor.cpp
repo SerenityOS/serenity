@@ -7,7 +7,6 @@
 
 #include "Editor.h"
 #include "Debugger/Debugger.h"
-#include "Debugger/EvaluateExpressionDialog.h"
 #include "EditorWrapper.h"
 #include "HackStudio.h"
 #include "Language.h"
@@ -56,11 +55,6 @@ Editor::Editor()
     create_tokens_info_timer();
 
     set_document(CodeDocument::create());
-    m_evaluate_expression_action = GUI::Action::create("Evaluate expression", { Mod_Ctrl, Key_E }, [this](auto&) {
-        VERIFY(is_program_running());
-        auto dialog = EvaluateExpressionDialog::construct(window());
-        dialog->exec();
-    });
     m_move_execution_to_line_action = GUI::Action::create("Set execution point to line", [this](auto&) {
         VERIFY(is_program_running());
         auto success = Debugger::the().set_execution_position(currently_open_file(), cursor().line());
@@ -73,7 +67,6 @@ Editor::Editor()
 
     set_debug_mode(false);
 
-    add_custom_context_menu_action(*m_evaluate_expression_action);
     add_custom_context_menu_action(*m_move_execution_to_line_action);
 
     set_gutter_visible(true);
@@ -722,7 +715,6 @@ void Editor::handle_function_parameters_hint_request()
 
 void Editor::set_debug_mode(bool enabled)
 {
-    m_evaluate_expression_action->set_enabled(enabled);
     m_move_execution_to_line_action->set_enabled(enabled);
 }
 
