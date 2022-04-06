@@ -6,6 +6,7 @@
 
 #include "InspectableProcess.h"
 #include <AK/JsonObject.h>
+#include <LibCore/EventLoop.h>
 
 namespace InspectorServer {
 
@@ -27,7 +28,7 @@ InspectableProcess::InspectableProcess(pid_t pid, NonnullOwnPtr<Core::Stream::Lo
         char c;
         [[maybe_unused]] auto buffer = m_socket->read({ &c, 1 });
         if (m_socket->is_eof()) {
-            g_processes.remove(m_pid);
+            Core::deferred_invoke([pid = this->m_pid] { g_processes.remove(pid); });
             return;
         }
     };
