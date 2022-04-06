@@ -1037,7 +1037,6 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sup)
 // 19.1.1 String.prototype.localeCompare ( that [ , locales [ , options ] ] ), https://tc39.es/ecma402/#sup-String.prototype.localeCompare
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::locale_compare)
 {
-    // FIXME: This can throw (spec issue)
     // 1. Let O be ? RequireObjectCoercible(this value).
     auto object = TRY(require_object_coercible(global_object, vm.this_value(global_object)));
 
