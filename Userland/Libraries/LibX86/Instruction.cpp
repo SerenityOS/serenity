@@ -153,6 +153,8 @@ static void build(InstructionDescriptor* table, u8 op, char const* mnemonic, Ins
     case OP_CR_reg32:
     case OP_reg16_RM8:
     case OP_reg32_RM8:
+    case OP_reg:
+    case OP_m64:
     case OP_mm1_rm32:
     case OP_rm32_mm2:
     case OP_mm1_mm2m64:
@@ -1120,6 +1122,16 @@ static void build_sse_66_slash(u8 op, u8 slash, char const* mnemonic, Instructio
     build_sse_66(0xC5, "PEXTRW", OP_reg_xmm1_imm8, &Interpreter::PEXTRW_reg_xmm1_imm8);
     build_sse_np(0xC6, "SHUFPS", OP_xmm1_xmm2m128_imm8, &Interpreter::SHUFPS_xmm1_xmm2m128_imm8);
     build_sse_66(0xC6, "SHUFPD", OP_xmm1_xmm2m128_imm8, &Interpreter::SHUFPD_xmm1_xmm2m128_imm8);
+
+    build_0f_slash(0xC7, 1, "CMPXCHG8B", OP_m64, &Interpreter::CMPXCHG8B_m64);
+    // FIXME: NP 0f c7 /2 XRSTORS[64] mem
+    // FIXME: NP 0F C7 / 4 XSAVEC mem
+    // FIXME: NP 0F C7 /5 XSAVES mem
+    // FIXME: VMPTRLD, VMPTRST, VMCLR, VMXON
+    // This is technically NFx prefixed
+    // FIXME: f3 0f c7 /7 RDPID
+    build_0f_slash(0xC7, 6, "RDRAND", OP_reg, &Interpreter::RDRAND_reg);
+    build_0f_slash(0xC7, 7, "RDSEED", OP_reg, &Interpreter::RDSEED_reg);
 
     for (u8 i = 0xc8; i <= 0xcf; ++i)
         build_0f(i, "BSWAP", OP_reg32, &Interpreter::BSWAP_reg32);
@@ -2130,6 +2142,17 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         append(", ");
         append_reg32();
         append(", cl");
+        break;
+    case OP_reg:
+        append_mnemonic_space();
+        if (m_o32)
+            append_reg32();
+        else
+            append_reg16();
+        break;
+    case OP_m64:
+        append_mnemonic_space();
+        append_rm64();
         break;
     case OP_mm1_imm8:
         append_mnemonic_space();

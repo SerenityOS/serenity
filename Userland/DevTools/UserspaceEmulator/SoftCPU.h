@@ -1109,6 +1109,10 @@ private:
     virtual void MOVQ_rm64_mm2(const X86::Instruction&) override; // long mode
     virtual void EMMS(const X86::Instruction&) override;
 
+    virtual void CMPXCHG8B_m64(X86::Instruction const&) override;
+    virtual void RDRAND_reg(X86::Instruction const&) override;
+    virtual void RDSEED_reg(X86::Instruction const&) override;
+
     virtual void PREFETCHTNTA(X86::Instruction const&) override;
     virtual void PREFETCHT0(X86::Instruction const&) override;
     virtual void PREFETCHT1(X86::Instruction const&) override;
