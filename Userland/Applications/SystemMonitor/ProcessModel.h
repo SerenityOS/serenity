@@ -210,9 +210,9 @@ private:
             return this->pid == other.pid;
         }
 
-        NonnullRefPtr<Thread> main_thread() const
+        Optional<NonnullRefPtr<Thread>> main_thread() const
         {
-            return *threads.first_matching([this](auto const thread) { return thread->current_state.tid == pid; }).value();
+            return threads.first_matching([this](auto const thread) { return thread->current_state.tid == pid; });
         }
 
         // Return anything but the main thread; therefore, valid indices are anything up to threads.size()-1 exclusive.
