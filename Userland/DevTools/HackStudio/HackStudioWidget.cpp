@@ -700,7 +700,9 @@ void HackStudioWidget::add_new_editor_tab_widget(GUI::Widget& parent)
 
     tab_widget->on_middle_click = [](auto& widget) {
         auto& wrapper = static_cast<EditorWrapper&>(widget);
-        wrapper.on_tab_close_request(wrapper);
+        if (static_cast<GUI::TabWidget*>(widget.parent())->close_button_enabled()) {
+            wrapper.on_tab_close_request(wrapper);
+        }
     };
 
     tab_widget->on_tab_close_click = [](auto& widget) {
