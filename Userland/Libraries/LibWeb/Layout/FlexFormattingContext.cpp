@@ -915,7 +915,6 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
         FormattingState throwaway_state(&m_state);
         auto& box_state = throwaway_state.get_mutable(item.box);
 
-        // Item has definite main size, layout with that as the used main size.
         auto independent_formatting_context = create_independent_formatting_context_if_needed(throwaway_state, item.box);
         // NOTE: Flex items should always create an independent formatting context!
         VERIFY(independent_formatting_context);
