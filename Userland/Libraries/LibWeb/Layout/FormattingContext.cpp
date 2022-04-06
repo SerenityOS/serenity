@@ -822,7 +822,7 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
             cached_box_sizes.max_content_size = { box_state.content_width, box_state.content_height };
         } else {
             cached_box_sizes.max_content_size.set_width(independent_formatting_context->greatest_child_width(box));
-            cached_box_sizes.max_content_size.set_height(compute_intrinsic_height(throwaway_state, box));
+            cached_box_sizes.max_content_size.set_height(calculate_auto_height(throwaway_state, box));
         }
     }
 
@@ -839,7 +839,7 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
             cached_box_sizes.min_content_size = { box_state.content_width, box_state.content_height };
         } else {
             cached_box_sizes.min_content_size.set_width(independent_formatting_context->greatest_child_width(box));
-            cached_box_sizes.min_content_size.set_height(compute_intrinsic_height(throwaway_state, box));
+            cached_box_sizes.min_content_size.set_height(calculate_auto_height(throwaway_state, box));
         }
     }
 
@@ -900,7 +900,7 @@ float FormattingContext::calculate_fit_content_height(Layout::Box const& box, Op
     return calculate_fit_content_size(min_content_size, max_content_size, available_space);
 }
 
-float FormattingContext::compute_intrinsic_height(FormattingState const& state, Box const& box)
+float FormattingContext::calculate_auto_height(FormattingState const& state, Box const& box)
 {
     if (is<ReplacedBox>(box)) {
         return compute_height_for_replaced_element(state, verify_cast<ReplacedBox>(box));
