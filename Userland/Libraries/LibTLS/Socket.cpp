@@ -95,7 +95,7 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(String const& host, u16 port, Opt
 
 ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(String const& host, Core::Stream::Socket& underlying_stream, Options options)
 {
-    StreamVariantType socket { &underlying_stream };
+    TRY(underlying_stream.set_blocking(false));
     auto tls_socket = make<TLSv12>(&underlying_stream, move(options));
     tls_socket->set_sni(host);
     Core::EventLoop loop;
