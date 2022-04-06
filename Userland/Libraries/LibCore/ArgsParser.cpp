@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/Version.h>
 #include <getopt.h>
 #include <limits.h>
@@ -558,6 +559,25 @@ void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, cha
             return parsed_all_values;
         },
         hide_mode
+    };
+
+    add_option(move(option));
+}
+
+void ArgsParser::add_inspector_server_connection_option()
+{
+    Option option {
+        false,
+        "Make application inspectable",
+        "inspectable",
+        0,
+        nullptr,
+        [](char const* value) {
+            VERIFY(value == nullptr);
+            EventLoop::make_inspectable();
+            return true;
+        },
+        OptionHideMode::Markdown,
     };
 
     add_option(move(option));

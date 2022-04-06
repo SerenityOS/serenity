@@ -90,6 +90,8 @@ public:
     void add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     void add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator = ',', OptionHideMode hide_mode = OptionHideMode::None);
 
+    void add_inspector_server_connection_option();
+
     void add_positional_argument(Arg&&);
     void add_positional_argument(char const*& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(String& value, char const* help_string, char const* name, Required required = Required::Yes);
