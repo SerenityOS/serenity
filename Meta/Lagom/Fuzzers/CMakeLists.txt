@@ -19,6 +19,7 @@ function(add_simple_fuzzer name)
 endfunction()
 
 add_simple_fuzzer(FuzzBMPLoader LagomGfx)
+add_simple_fuzzer(FuzzBrotli LagomCompress)
 add_simple_fuzzer(FuzzCyrillicDecoder LagomTextCodec)
 add_simple_fuzzer(FuzzDeflateCompression LagomCompress)
 add_simple_fuzzer(FuzzDeflateDecompression LagomCompress)
