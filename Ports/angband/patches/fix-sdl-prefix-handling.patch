@@ -1,0 +1,59 @@
+diff -ur a/configure b/configure
+--- a/configure	2022-02-21 23:23:13.000000000 +0100
++++ b/configure	2022-04-06 02:12:48.027633543 +0200
+@@ -5863,14 +5863,14 @@
+   if test "$SDL2_CONFIG" = "no" ; then
+     no_sdl2=yes
+   else
+-    SDL2_CFLAGS=`$SDL2_CONFIG $sdl2conf_args --cflags`
+-    SDL2_LIBS=`$SDL2_CONFIG $sdl2conf_args --libs`
++    SDL2_CFLAGS=`$SDL2_CONFIG $sdl2_args --cflags`
++    SDL2_LIBS=`$SDL2_CONFIG $sdl2_args --libs`
+ 
+     sdl2_major_version=`$SDL2_CONFIG $sdl2_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
+     sdl2_minor_version=`$SDL2_CONFIG $sdl2_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
+-    sdl2_micro_version=`$SDL2_CONFIG $sdl2_config_args --version | \
++    sdl2_micro_version=`$SDL2_CONFIG $sdl2_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
+     if test "x$enable_sdl2test" = "xyes" ; then
+       ac_save_CFLAGS="$CFLAGS"
+@@ -6024,9 +6024,7 @@
+ 	if test "$SDL2_CONFIG" != "no"; then
+ 		hold_CPPFLAGS="${CPPFLAGS}"
+ 		hold_LIBS="${LIBS}"
+-		SDL2_CFLAGS=`${SDL2_CONFIG} --cflags`
+ 		CPPFLAGS="${CPPFLAGS} ${SDL2_CFLAGS}"
+-		SDL2_LIBS=`${SDL2_CONFIG} --libs`
+ 		LIBS="${LIBS} ${SDL2_LIBS}"
+ 		if test "$enable_sdl2" = "yes"; then
+ 			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_LoadPNG_RW in -lSDL2_image" >&5
+@@ -6278,14 +6276,14 @@
+   if test "$SDL_CONFIG" = "no" ; then
+     no_sdl=yes
+   else
+-    SDL_CFLAGS=`$SDL_CONFIG $sdlconf_args --cflags`
+-    SDL_LIBS=`$SDL_CONFIG $sdlconf_args --libs`
++    SDL_CFLAGS=`$SDL_CONFIG $sdl_args --cflags`
++    SDL_LIBS=`$SDL_CONFIG $sdl_args --libs`
+ 
+     sdl_major_version=`$SDL_CONFIG $sdl_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\1/'`
+     sdl_minor_version=`$SDL_CONFIG $sdl_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\2/'`
+-    sdl_micro_version=`$SDL_CONFIG $sdl_config_args --version | \
++    sdl_micro_version=`$SDL_CONFIG $sdl_args --version | \
+            sed 's/\([0-9]*\).\([0-9]*\).\([0-9]*\)/\3/'`
+     if test "x$enable_sdltest" = "xyes" ; then
+       ac_save_CFLAGS="$CFLAGS"
+@@ -6439,9 +6437,7 @@
+ 	if test "$SDL_CONFIG" != "no"; then
+ 		hold_CPPFLAGS="${CPPFLAGS}"
+ 		hold_LIBS="${LIBS}"
+-		SDL_CFLAGS=`${SDL_CONFIG} --cflags`
+ 		CPPFLAGS="${CPPFLAGS} ${SDL_CFLAGS}"
+-		SDL_LIBS=`${SDL_CONFIG} --libs`
+ 		LIBS="${LIBS} ${SDL_LIBS}"
+ 		if test "$enable_sdl" = "yes"; then
+ 			{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for IMG_LoadPNG_RW in -lSDL_image" >&5

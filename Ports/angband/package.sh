@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=angband
-version=4.2.3
+version=4.2.4
 workdir="Angband-${version}"
 useconfigure=true
 use_fresh_config_sub=true
-files="https://github.com/angband/angband/releases/download/${version}/Angband-${version}.tar.gz Angband-${version}.tar.gz 833c4f8cff2aee61ad015f9346fceaa4a8c739fe2dbe5bd1acd580c91818e6bb"
+files="https://github.com/angband/angband/releases/download/${version}/Angband-${version}.tar.gz Angband-${version}.tar.gz a07c78c1dd05e48ddbe4d8ef5d1880fcdeab55fd05f1336d9cba5dd110b15ff3"
 auth_type=sha256
 depends=("ncurses" "SDL2" "SDL2_image" "SDL2_ttf" "SDL2_mixer")
 configopts=(
