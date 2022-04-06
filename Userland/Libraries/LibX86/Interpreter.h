@@ -657,7 +657,13 @@ public:
     virtual void wrap_0xD3_16(Instruction const&) = 0;
     virtual void wrap_0xD3_32(Instruction const&) = 0;
 
-    virtual void PREFETCHTNTA(Instruction const&) = 0;
+    virtual void CMPXCHG8B_m64(Instruction const&) = 0;
+    virtual void RDRAND_reg(Instruction const&) = 0;
+    virtual void RDSEED_reg(Instruction const&) = 0;
+
+    virtual void
+    PREFETCHTNTA(Instruction const&)
+        = 0;
     virtual void PREFETCHT0(Instruction const&) = 0;
     virtual void PREFETCHT1(Instruction const&) = 0;
     virtual void PREFETCHT2(Instruction const&) = 0;
