@@ -1304,6 +1304,7 @@ void SoftFPU::FNSETPM(const X86::Instruction&) { TODO_INSN(); }
 // MMX
 // helpers
 #define LOAD_MM_MM64M()                                                                \
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */                       \
     MMX mm;                                                                            \
     MMX mm64m;                                                                         \
     if (insn.modrm().mod() == 0b11) { /* 0b11 signals a register */                    \
@@ -1560,6 +1561,7 @@ void SoftFPU::PSLLW_mm1_mm2m64(const X86::Instruction& insn)
 }
 void SoftFPU::PSLLW_mm1_imm8(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); // SSE2
     u8 imm = insn.imm8();
     MMX mm = mmx_get(insn.modrm().reg());
 
@@ -1579,6 +1581,7 @@ void SoftFPU::PSLLD_mm1_mm2m64(const X86::Instruction& insn)
 }
 void SoftFPU::PSLLD_mm1_imm8(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */
     u8 imm = insn.imm8();
     MMX mm = mmx_get(insn.modrm().reg());
 
@@ -1598,6 +1601,7 @@ void SoftFPU::PSLLQ_mm1_mm2m64(const X86::Instruction& insn)
 }
 void SoftFPU::PSLLQ_mm1_imm8(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */
     u8 imm = insn.imm8();
     MMX mm = mmx_get(insn.modrm().reg());
 
@@ -1617,6 +1621,7 @@ void SoftFPU::PSRAW_mm1_mm2m64(const X86::Instruction& insn)
 }
 void SoftFPU::PSRAW_mm1_imm8(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */
     u8 imm = insn.imm8();
     MMX mm = mmx_get(insn.modrm().reg());
 
@@ -1636,6 +1641,7 @@ void SoftFPU::PSRAD_mm1_mm2m64(const X86::Instruction& insn)
 }
 void SoftFPU::PSRAD_mm1_imm8(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */
     u8 imm = insn.imm8();
     MMX mm = mmx_get(insn.modrm().reg());
 
@@ -1655,6 +1661,7 @@ void SoftFPU::PSRLW_mm1_mm2m64(const X86::Instruction& insn)
 }
 void SoftFPU::PSRLW_mm1_imm8(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */
     u8 imm = insn.imm8();
     MMX mm = mmx_get(insn.modrm().reg());
 
@@ -1674,6 +1681,7 @@ void SoftFPU::PSRLD_mm1_mm2m64(const X86::Instruction& insn)
 }
 void SoftFPU::PSRLD_mm1_imm8(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */
     u8 imm = insn.imm8();
     MMX mm = mmx_get(insn.modrm().reg());
 
@@ -1693,6 +1701,7 @@ void SoftFPU::PSRLQ_mm1_mm2m64(const X86::Instruction& insn)
 }
 void SoftFPU::PSRLQ_mm1_imm8(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */
     u8 imm = insn.imm8();
     MMX mm = mmx_get(insn.modrm().reg());
 
@@ -1705,6 +1714,7 @@ void SoftFPU::PSRLQ_mm1_imm8(const X86::Instruction& insn)
 // DATA TRANSFER
 void SoftFPU::MOVD_mm1_rm32(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */
     u8 mmx_index = insn.modrm().reg();
     // FIXME:: Shadow Value
     // upper half is zeroed out
@@ -1713,6 +1723,7 @@ void SoftFPU::MOVD_mm1_rm32(const X86::Instruction& insn)
 };
 void SoftFPU::MOVD_rm32_mm2(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */
     u8 mmx_index = insn.modrm().reg();
     // FIXME:: Shadow Value
     insn.modrm().write32(m_cpu, insn,
@@ -1722,6 +1733,7 @@ void SoftFPU::MOVD_rm32_mm2(const X86::Instruction& insn)
 
 void SoftFPU::MOVQ_mm1_mm2m64(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */
     // FIXME: Shadow Value
     if (insn.modrm().mod() == 0b11) {
         // instruction
@@ -1735,6 +1747,7 @@ void SoftFPU::MOVQ_mm1_mm2m64(const X86::Instruction& insn)
 }
 void SoftFPU::MOVQ_mm1m64_mm2(const X86::Instruction& insn)
 {
+    VERIFY(!insn.has_operand_size_override_prefix()); /* SSE2 */
     if (insn.modrm().mod() == 0b11) {
         // instruction
         mmx_set(insn.modrm().rm(),
