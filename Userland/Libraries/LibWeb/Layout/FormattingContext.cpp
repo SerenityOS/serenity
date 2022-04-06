@@ -816,8 +816,14 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
         VERIFY(independent_formatting_context);
 
         independent_formatting_context->run(box, LayoutMode::MaxContent);
-        cached_box_sizes.max_content_size.set_width(independent_formatting_context->greatest_child_width(box));
-        cached_box_sizes.max_content_size.set_height(compute_intrinsic_height(throwaway_state, box));
+
+        if (independent_formatting_context->type() == FormattingContext::Type::Flex) {
+            auto const& box_state = throwaway_state.get(box);
+            cached_box_sizes.max_content_size = { box_state.content_width, box_state.content_height };
+        } else {
+            cached_box_sizes.max_content_size.set_width(independent_formatting_context->greatest_child_width(box));
+            cached_box_sizes.max_content_size.set_height(compute_intrinsic_height(throwaway_state, box));
+        }
     }
 
     {
@@ -828,8 +834,13 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
         auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
         VERIFY(independent_formatting_context);
         independent_formatting_context->run(box, LayoutMode::MinContent);
-        cached_box_sizes.min_content_size.set_width(independent_formatting_context->greatest_child_width(box));
-        cached_box_sizes.min_content_size.set_height(compute_intrinsic_height(throwaway_state, box));
+        if (independent_formatting_context->type() == FormattingContext::Type::Flex) {
+            auto const& box_state = throwaway_state.get(box);
+            cached_box_sizes.min_content_size = { box_state.content_width, box_state.content_height };
+        } else {
+            cached_box_sizes.min_content_size.set_width(independent_formatting_context->greatest_child_width(box));
+            cached_box_sizes.min_content_size.set_height(compute_intrinsic_height(throwaway_state, box));
+        }
     }
 
     if (cached_box_sizes.min_content_size.width() > cached_box_sizes.max_content_size.width()) {
