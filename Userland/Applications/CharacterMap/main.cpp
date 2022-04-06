@@ -48,12 +48,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/CharacterMap.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     String query;
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.add_option(query, "Search character names using this query, and print them as a list.", "search", 's', "query");
     args_parser.parse(arguments);
 

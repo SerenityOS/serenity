@@ -161,11 +161,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath unix"));
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     char const* file_to_edit = nullptr;
 
     Core::ArgsParser parser;
+    parser.add_inspector_server_connection_option();
     parser.add_positional_argument(file_to_edit, "Theme file to edit", "file", Core::ArgsParser::Required::No);
     parser.parse(arguments);
 

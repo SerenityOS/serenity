@@ -22,6 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView path;
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.add_positional_argument(path, "Keyboard character mapping file.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 

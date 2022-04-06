@@ -47,6 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     char const* path = nullptr;
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.add_positional_argument(path, "The image file to be displayed.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 

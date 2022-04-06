@@ -26,7 +26,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int grid_rows = -1;
     int grid_columns = -1;
 
+    auto app = TRY(GUI::Application::try_create(arguments));
+
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.add_option(num_eyes, "Number of eyes", "num-eyes", 'n', "number");
     args_parser.add_option(max_in_row, "Maximum number of eyes in a row", "max-in-row", 'm', "number");
     args_parser.add_option(grid_rows, "Number of rows in grid (incompatible with --number)", "grid-rows", 'r', "number");
@@ -34,8 +37,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix cpath wpath thread"));
-
-    auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/portal/launch", "rw"));

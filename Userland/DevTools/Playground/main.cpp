@@ -70,10 +70,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/Playground.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
-    TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath"));
-
     char const* path = nullptr;
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.add_positional_argument(path, "GML file to edit", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 

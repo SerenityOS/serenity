@@ -25,12 +25,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/usr/share/man", "r"));
     TRY(Core::System::unveil("/tmp/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/portal/webcontent", "rw"));
+    TRY(Core::System::unveil("/tmp/portal/inspectables", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     char const* start_page = nullptr;
     unsigned section = 0;
 
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     // FIXME: These custom Args are a hack. What we want to do is have an optional int arg, then an optional string.
     // However, when only a string is provided, it gets forwarded to the int argument since that is first, and
     // parsing fails. This hack instead forwards it to the start_page in that case.

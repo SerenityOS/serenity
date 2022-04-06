@@ -28,11 +28,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd rpath fattr unix cpath wpath thread"));
 
-    auto app = GUI::Application::construct(arguments);
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     char const* filename = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.add_positional_argument(filename, "File to read from", "file", Core::ArgsParser::Required::No);
 
     args_parser.parse(arguments);

@@ -331,7 +331,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio thread proc recvfd sendfd rpath exec unix"));
 
-    auto app = TRY(GUI::Application::try_create(arguments, Core::EventLoop::MakeInspectable::Yes));
+    auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domain("SystemMonitor");
 
@@ -355,10 +355,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/bin/Profiler", "rx"));
     TRY(Core::System::unveil("/bin/Inspector", "rx"));
+    TRY(Core::System::unveil("/tmp/portal/inspectables", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     StringView args_tab = "processes"sv;
     Core::ArgsParser parser;
+    parser.add_inspector_server_connection_option();
     parser.add_option(args_tab, "Tab, one of 'processes', 'graphs', 'fs', 'hardware', or 'network'", "open-tab", 't', "tab");
     parser.parse(arguments);
     StringView args_tab_view = args_tab;

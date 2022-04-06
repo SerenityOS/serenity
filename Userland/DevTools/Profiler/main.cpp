@@ -45,9 +45,12 @@ static bool generate_profile(pid_t& pid);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    auto app = TRY(GUI::Application::try_create(arguments));
+
     int pid = 0;
     char const* perfcore_file_arg = nullptr;
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.add_option(pid, "PID to profile", "pid", 'p', "PID");
     args_parser.add_positional_argument(perfcore_file_arg, "Path of perfcore file", "perfcore-file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -57,7 +60,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-profiler"));
 
     String perfcore_file;

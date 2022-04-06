@@ -18,12 +18,14 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    auto app = TRY(GUI::Application::try_create(arguments));
+
     char const* file_path = nullptr;
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.add_positional_argument(file_path, "PDF file to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = GUI::Icon::default_icon("app-pdf-viewer");
 
     Config::pledge_domain("PDFViewer");

@@ -74,7 +74,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     act.sa_handler = SIG_IGN;
     TRY(Core::System::sigaction(SIGCHLD, &act, nullptr));
 
+    auto app = TRY(GUI::Application::try_create(arguments));
+
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     bool is_desktop_mode { false };
     bool is_selection_mode { false };
     bool ignore_path_resolution { false };
@@ -84,8 +87,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(ignore_path_resolution, "Use raw path, do not resolve real path", "raw", 'r');
     args_parser.add_positional_argument(initial_location, "Path to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
-
-    auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath fattr proc exec unix"));
 

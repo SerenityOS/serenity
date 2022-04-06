@@ -29,10 +29,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::seal_allowlist());
 
     Config::pledge_domain("FontEditor");
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath"));
 
     char const* path = nullptr;
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.add_positional_argument(path, "The font file for editing.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 

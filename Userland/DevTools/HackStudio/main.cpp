@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd tty rpath cpath wpath proc exec unix fattr thread ptrace"));
 
-    auto app = GUI::Application::construct(arguments.argc, arguments.argv);
+    auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domains({ "HackStudio", "Terminal" });
 
     auto window = GUI::Window::construct();
@@ -54,6 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     char const* path_argument = nullptr;
     bool mode_coredump = false;
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.add_positional_argument(path_argument, "Path to a workspace or a file", "path", Core::ArgsParser::Required::No);
     args_parser.add_option(mode_coredump, "Debug a coredump in HackStudio", "coredump", 'c');
     args_parser.parse(arguments);

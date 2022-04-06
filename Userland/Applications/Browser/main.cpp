@@ -59,13 +59,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd unix cpath rpath wpath proc exec"));
 
+    auto app = TRY(GUI::Application::try_create(arguments));
+
     char const* specified_url = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.add_positional_argument(specified_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
-
-    auto app = GUI::Application::construct(arguments);
 
     Config::pledge_domain("Browser");
     Config::monitor_domain("Browser");

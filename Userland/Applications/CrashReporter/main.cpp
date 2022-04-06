@@ -140,6 +140,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool unlink_on_exit = false;
 
     Core::ArgsParser args_parser;
+    args_parser.add_inspector_server_connection_option();
     args_parser.set_general_help("Show information from an application crash coredump.");
     args_parser.add_positional_argument(coredump_path, "Coredump path", "coredump-path");
     args_parser.add_option(unlink_on_exit, "Delete the coredump after its parsed", "unlink", 0);
