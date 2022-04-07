@@ -151,6 +151,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool save_at_provided_name = false;
     bool should_follow_url = false;
     char const* data = nullptr;
+    StringView proxy_spec;
     String method = "GET";
     HashMap<String, String, CaseInsensitiveStringTraits> request_headers;
 
@@ -175,6 +176,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             request_headers.set(header.substring_view(0, split.value()), header.substring_view(split.value() + 1));
             return true;
         } });
+    args_parser.add_option(proxy_spec, "Specify a proxy server to use for this request (proto://ip:port)", "proxy", 'p', "proxy");
     args_parser.add_positional_argument(url_str, "URL to download from", "url");
     args_parser.parse(arguments);
 
@@ -188,6 +190,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         warnln("'{}' is not a valid URL", url_str);
         return 1;
     }
+
+    Core::ProxyData proxy_data = TRY(Core::ProxyData::parse_url(proxy_spec));
 
     Core::EventLoop loop;
     bool received_actual_headers = false;
@@ -287,7 +291,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
                     Core::deferred_invoke([&, was_following_url, url = location.value()] {
                         warnln("{}Following to {}", was_following_url ? "" : "\n", url);
-                        request = protocol_client->start_request(method, url, request_headers, ReadonlyBytes {});
+                        request = protocol_client->start_request(method, url, request_headers, ReadonlyBytes {}, proxy_data);
                         setup_request();
                     });
                 }
@@ -309,7 +313,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         request->stream_into(output_stream);
     };
 
-    request = protocol_client->start_request(method, url, request_headers, data ? StringView { data }.bytes() : ReadonlyBytes {});
+    request = protocol_client->start_request(method, url, request_headers, data ? StringView { data }.bytes() : ReadonlyBytes {}, proxy_data);
     setup_request();
 
     dbgln("started request with id {}", request->id());
