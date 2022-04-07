@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=composer
-version="2.1.3"
-files="https://getcomposer.org/download/${version}/composer.phar composer.phar f8a72e98dec8da736d8dac66761ca0a8fbde913753e9a43f34112367f5174d11"
+version="2.3.4"
+files="https://getcomposer.org/download/${version}/composer.phar composer.phar 1fc8fc5b43f081fe76fa85eb5a213412e55f54a60bae4880bc96521ae482d6c3"
 auth_type=sha256
 depends=("php")
 
