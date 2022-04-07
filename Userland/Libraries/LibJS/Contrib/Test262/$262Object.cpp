@@ -62,17 +62,14 @@ JS_DEFINE_NATIVE_FUNCTION($262Object::create_realm)
     return Value(realm->$262());
 }
 
-// 25.1.2.3 DetachArrayBuffer, https://tc39.es/ecma262/#sec-detacharraybuffer
 JS_DEFINE_NATIVE_FUNCTION($262Object::detach_array_buffer)
 {
     auto array_buffer = vm.argument(0);
     if (!array_buffer.is_object() || !is<ArrayBuffer>(array_buffer.as_object()))
         return vm.throw_completion<TypeError>(global_object);
+
     auto& array_buffer_object = static_cast<ArrayBuffer&>(array_buffer.as_object());
-    if (!same_value(array_buffer_object.detach_key(), vm.argument(1)))
-        return vm.throw_completion<TypeError>(global_object);
-    array_buffer_object.detach_buffer();
-    return js_null();
+    return JS::detach_array_buffer(global_object, array_buffer_object, vm.argument(1));
 }
 
 JS_DEFINE_NATIVE_FUNCTION($262Object::eval_script)
