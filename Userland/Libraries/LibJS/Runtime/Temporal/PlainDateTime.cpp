@@ -355,10 +355,6 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
     // 1. If options is not present, set options to undefined.
     // 2. Assert: Type(options) is Object or Undefined.
 
-    // FIXME: `options` is being passed to MergeLargestUnitOption unconditionally, which expects it to not be undefined (spec issue: https://github.com/tc39/proposal-temporal/issues/2132).
-    if (!options)
-        options = Object::create(global_object, nullptr);
-
     // 3. Let timeDifference be ! DifferenceTime(h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2).
     auto time_difference = difference_time(hour1, minute1, second1, millisecond1, microsecond1, nanosecond1, hour2, minute2, second2, millisecond2, microsecond2, nanosecond2);
 
@@ -390,7 +386,7 @@ ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_
     auto date_largest_unit = larger_of_two_temporal_units("day"sv, largest_unit);
 
     // 11. Let untilOptions be ? MergeLargestUnitOption(options, dateLargestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, date_largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, options, date_largest_unit));
 
     // 12. Let dateDifference be ? CalendarDateUntil(calendar, date1, date2, untilOptions).
     auto* date_difference = TRY(calendar_date_until(global_object, calendar, date1, date2, *until_options));
