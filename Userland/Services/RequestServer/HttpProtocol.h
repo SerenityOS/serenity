@@ -27,7 +27,7 @@ public:
     HttpProtocol();
     ~HttpProtocol() override = default;
 
-    virtual OwnPtr<Request> start_request(ConnectionFromClient&, String const& method, const URL&, HashMap<String, String> const& headers, ReadonlyBytes body) override;
+    virtual OwnPtr<Request> start_request(ConnectionFromClient&, String const& method, const URL&, HashMap<String, String> const& headers, ReadonlyBytes body, Core::ProxyData proxy_data = {}) override;
 };
 
 }

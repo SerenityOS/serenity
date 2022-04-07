@@ -7,6 +7,8 @@
 #pragma once
 
 #include <AK/HashMap.h>
+// Need to include this before RequestClientEndpoint.h as that one includes LibIPC/(De En)coder.h, which would bomb if included before this.
+#include <LibCore/Proxy.h>
 #include <LibIPC/ConnectionFromClient.h>
 #include <RequestServer/Forward.h>
 #include <RequestServer/RequestClientEndpoint.h>
@@ -32,7 +34,7 @@ private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
     virtual Messages::RequestServer::IsSupportedProtocolResponse is_supported_protocol(String const&) override;
-    virtual Messages::RequestServer::StartRequestResponse start_request(String const&, URL const&, IPC::Dictionary const&, ByteBuffer const&) override;
+    virtual Messages::RequestServer::StartRequestResponse start_request(String const&, URL const&, IPC::Dictionary const&, ByteBuffer const&, Core::ProxyData const&) override;
     virtual Messages::RequestServer::StopRequestResponse stop_request(i32) override;
     virtual Messages::RequestServer::SetCertificateResponse set_certificate(i32, String const&, String const&) override;
     virtual void ensure_connection(URL const& url, ::RequestServer::CacheLevel const& cache_level) override;
