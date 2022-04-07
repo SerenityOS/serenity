@@ -114,7 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         home = home_path;
 
     if (create_home_dir) {
-        auto mkdir_error = Core::System::mkdir(home, 0700);
+        auto mkdir_error = Core::System::mkdir(home, 0700, Core::System::TreatExistingDirectoryAsError::Yes, Core::System::CreateParentDirectories::No);
         if (mkdir_error.is_error()) {
             int code = mkdir_error.release_error().code();
             warnln("Failed to create directory {}: {}", home, strerror(code));

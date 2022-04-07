@@ -161,11 +161,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     break;
                 }
                 case Archive::TarFileType::Directory: {
-                    MUST(Core::Directory::create(parent_path, Core::Directory::CreateDirectories::Yes));
-
-                    auto result_or_error = Core::System::mkdir(absolute_path, header.mode());
-                    if (result_or_error.is_error() && result_or_error.error().code() != EEXIST)
-                        return result_or_error.error();
+                    TRY(Core::System::mkdir(absolute_path, header.mode(), Core::System::TreatExistingDirectoryAsError::No, Core::System::CreateParentDirectories::Yes));
                     break;
                 }
                 default:

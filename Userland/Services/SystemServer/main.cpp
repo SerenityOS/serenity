@@ -392,7 +392,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     TRY(Core::System::mount(-1, "/sys", "sys", 0));
     TRY(Core::System::mount(-1, "/dev", "dev", 0));
 
-    TRY(Core::System::mkdir("/dev/audio", 0755));
+    TRY(Core::System::mkdir("/dev/audio", 0755, Core::System::TreatExistingDirectoryAsError::Yes, Core::System::CreateParentDirectories::No));
 
     TRY(Core::System::symlink("/proc/self/fd/0", "/dev/stdin"));
     TRY(Core::System::symlink("/proc/self/fd/1", "/dev/stdout"));
@@ -400,7 +400,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
 
     populate_devtmpfs();
 
-    TRY(Core::System::mkdir("/dev/pts", 0755));
+    TRY(Core::System::mkdir("/dev/pts", 0755, Core::System::TreatExistingDirectoryAsError::Yes, Core::System::CreateParentDirectories::No));
 
     TRY(Core::System::mount(-1, "/dev/pts", "devpts", 0));
 
@@ -464,7 +464,7 @@ static ErrorOr<void> create_tmp_coredump_directory()
     dbgln("Creating /tmp/coredump directory");
     auto old_umask = umask(0);
     // FIXME: the coredump directory should be made read-only once CrashDaemon is no longer responsible for compressing coredumps
-    TRY(Core::System::mkdir("/tmp/coredump", 0777));
+    TRY(Core::System::mkdir("/tmp/coredump", 0777, Core::System::TreatExistingDirectoryAsError::Yes, Core::System::CreateParentDirectories::No));
     umask(old_umask);
     return {};
 }

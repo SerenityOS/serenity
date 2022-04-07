@@ -114,7 +114,16 @@ ErrorOr<pid_t> setsid();
 ErrorOr<void> drop_privileges();
 ErrorOr<bool> isatty(int fd);
 ErrorOr<void> symlink(StringView target, StringView link_path);
-ErrorOr<void> mkdir(StringView path, mode_t);
+
+enum class TreatExistingDirectoryAsError {
+    No,
+    Yes
+};
+enum class CreateParentDirectories {
+    No,
+    Yes
+};
+ErrorOr<void> mkdir(StringView path, mode_t, TreatExistingDirectoryAsError, CreateParentDirectories);
 ErrorOr<void> chdir(StringView path);
 ErrorOr<void> rmdir(StringView path);
 ErrorOr<pid_t> fork();

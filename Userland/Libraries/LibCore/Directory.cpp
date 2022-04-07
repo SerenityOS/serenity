@@ -64,14 +64,7 @@ ErrorOr<void> Directory::ensure_directory(LexicalPath const& path)
     if (path.basename() == "/")
         return {};
 
-    TRY(ensure_directory(path.parent()));
-
-    auto return_value = System::mkdir(path.string(), 0755);
-    // We don't care if the directory already exists.
-    if (return_value.is_error() && return_value.error().code() != EEXIST)
-        return return_value;
-
-    return {};
+    return System::mkdir(path.string(), 0755, System::TreatExistingDirectoryAsError::No, System::CreateParentDirectories::Yes);
 }
 
 ErrorOr<LexicalPath> Directory::path() const

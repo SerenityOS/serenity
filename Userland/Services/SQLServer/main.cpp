@@ -9,18 +9,11 @@
 #include <LibIPC/MultiServer.h>
 #include <LibMain/Main.h>
 #include <SQLServer/ConnectionFromClient.h>
-#include <stdio.h>
-#include <sys/stat.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio accept unix rpath wpath cpath"));
-
-    if (mkdir("/home/anon/sql", 0700) < 0 && errno != EEXIST) {
-        perror("mkdir");
-        return 1;
-    }
-
+    TRY(Core::System::mkdir("/home/anon/sql", 0700, Core::System::TreatExistingDirectoryAsError::No, Core::System::CreateParentDirectories::No));
     TRY(Core::System::unveil("/home/anon/sql", "rwc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

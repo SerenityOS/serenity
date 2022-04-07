@@ -262,8 +262,7 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
         case WorkItem::Type::CreateDirectory: {
             outln("MKDIR {}", item.destination);
             // FIXME: Support deduplication like open_destination_file() when the directory already exists.
-            if (mkdir(item.destination.characters(), 0755) < 0 && errno != EEXIST)
-                return Error::from_syscall("mkdir", -errno);
+            TRY(Core::System::mkdir(item.destination.characters(), 0755, Core::System::TreatExistingDirectoryAsError::No, Core::System::CreateParentDirectories::Yes));
             break;
         }
 

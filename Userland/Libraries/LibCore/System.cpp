@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Kenneth Myhra <kennethmyhra@gmail.com>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Matthias Zimmerman <matthias291999@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -764,19 +765,38 @@ ErrorOr<void> symlink(StringView target, StringView link_path)
 #endif
 }
 
-ErrorOr<void> mkdir(StringView path, mode_t mode)
+ErrorOr<void> mkdir(StringView path, mode_t mode, TreatExistingDirectoryAsError treat_existing_directory_as_error, CreateParentDirectories create_parent_directories)
 {
     if (path.is_null())
         return Error::from_errno(EFAULT);
+
+    auto do_mkdir = [&](StringView path) -> int {
 #ifdef __serenity__
-    int rc = syscall(SC_mkdir, path.characters_without_null_termination(), path.length(), mode);
-    HANDLE_SYSCALL_RETURN_VALUE("mkdir"sv, rc, {});
+        return syscall(SC_mkdir, path.characters_without_null_termination(), path.length(), mode);
 #else
-    String path_string = path;
-    if (::mkdir(path_string.characters(), mode) < 0)
-        return Error::from_syscall("mkdir"sv, -errno);
-    return {};
+        String path_string = path;
+        int rc = ::mkdir(path_string.characters(), mode);
+        if (rc < 0)
+            return -errno;
+        return 0;
 #endif
+    };
+
+    int rc = do_mkdir(path);
+    if (rc == -EEXIST && treat_existing_directory_as_error == TreatExistingDirectoryAsError::No)
+        return {};
+    if (rc == -ENOENT && create_parent_directories == CreateParentDirectories::Yes) {
+        // Recursively attempt to mkdir parent directories.
+        auto parent_path = LexicalPath::dirname(path);
+        TRY(mkdir(parent_path, mode, TreatExistingDirectoryAsError::No, CreateParentDirectories::Yes));
+
+        // Then, try this path again.
+        rc = do_mkdir(path);
+        if (rc == -EEXIST && treat_existing_directory_as_error == TreatExistingDirectoryAsError::No)
+            return {};
+    }
+
+    HANDLE_SYSCALL_RETURN_VALUE("mkdir"sv, rc, {});
 }
 
 ErrorOr<void> chdir(StringView path)

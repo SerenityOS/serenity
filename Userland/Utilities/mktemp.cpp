@@ -39,7 +39,7 @@ static ErrorOr<String> make_temp(String const& pattern, bool directory, bool dry
             if (stat_or_error.is_error() && stat_or_error.error().code() == ENOENT)
                 return path;
         } else if (directory) {
-            TRY(Core::System::mkdir(path.view(), 0700));
+            TRY(Core::System::mkdir(path.view(), 0700, Core::System::TreatExistingDirectoryAsError::Yes, Core::System::CreateParentDirectories::No));
             return path;
         } else {
             auto fd_or_error = Core::System::open(path.view(), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
