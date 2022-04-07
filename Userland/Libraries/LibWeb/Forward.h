@@ -89,6 +89,7 @@ class Time;
 class TimePercentage;
 class TimeStyleValue;
 class TransformationStyleValue;
+class UnicodeRange;
 class UnresolvedStyleValue;
 class UnsetStyleValue;
 }
