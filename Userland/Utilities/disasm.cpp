@@ -130,7 +130,26 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             is_first_symbol = false;
         }
 
-        outln("{:p}  {}", virtual_offset, insn.value().to_string(virtual_offset, symbol_provider));
+        size_t length = insn.value().length();
+        StringBuilder builder;
+        builder.appendff("{: 8x}:\t", virtual_offset);
+        for (size_t i = 0; i < 7; i++) {
+            if (i < length)
+                builder.appendff("{:02x} ", asm_data[offset + i]);
+            else
+                builder.append("   "sv);
+        }
+        builder.append("\t"sv);
+        builder.append(insn.value().to_string(virtual_offset, symbol_provider));
+        outln("{}", builder.string_view());
+
+        for (size_t bytes_printed = 7; bytes_printed < length; bytes_printed += 7) {
+            builder.clear();
+            builder.appendff("{:p} ", virtual_offset + bytes_printed);
+            for (size_t i = bytes_printed; i < bytes_printed + 7 && i < length; i++)
+                builder.appendff(" {:02x}", asm_data[offset + i]);
+            outln("{}", builder.string_view());
+        }
     }
     return 0;
 }
