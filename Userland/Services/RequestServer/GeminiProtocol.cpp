@@ -17,7 +17,7 @@ GeminiProtocol::GeminiProtocol()
 {
 }
 
-OwnPtr<Request> GeminiProtocol::start_request(ConnectionFromClient& client, String const&, const URL& url, HashMap<String, String> const&, ReadonlyBytes)
+OwnPtr<Request> GeminiProtocol::start_request(ConnectionFromClient& client, String const&, const URL& url, HashMap<String, String> const&, ReadonlyBytes, Core::ProxyData proxy_data)
 {
     Gemini::GeminiRequest request;
     request.set_url(url);
@@ -31,7 +31,7 @@ OwnPtr<Request> GeminiProtocol::start_request(ConnectionFromClient& client, Stri
     auto protocol_request = GeminiRequest::create_with_job({}, client, *job, move(output_stream));
     protocol_request->set_request_fd(pipe_result.value().read_fd);
 
-    ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, *job);
+    ConnectionCache::get_or_create_connection(ConnectionCache::g_tls_connection_cache, url, *job, proxy_data);
 
     return protocol_request;
 }

@@ -6,6 +6,7 @@
 
 #include <AK/Badge.h>
 #include <AK/NonnullOwnPtr.h>
+#include <LibCore/Proxy.h>
 #include <RequestServer/ConnectionFromClient.h>
 #include <RequestServer/Protocol.h>
 #include <RequestServer/Request.h>
@@ -35,7 +36,7 @@ Messages::RequestServer::IsSupportedProtocolResponse ConnectionFromClient::is_su
     return supported;
 }
 
-Messages::RequestServer::StartRequestResponse ConnectionFromClient::start_request(String const& method, URL const& url, IPC::Dictionary const& request_headers, ByteBuffer const& request_body)
+Messages::RequestServer::StartRequestResponse ConnectionFromClient::start_request(String const& method, URL const& url, IPC::Dictionary const& request_headers, ByteBuffer const& request_body, Core::ProxyData const& proxy_data)
 {
     if (!url.is_valid()) {
         dbgln("StartRequest: Invalid URL requested: '{}'", url);
@@ -46,7 +47,7 @@ Messages::RequestServer::StartRequestResponse ConnectionFromClient::start_reques
         dbgln("StartRequest: No protocol handler for URL: '{}'", url);
         return { -1, Optional<IPC::File> {} };
     }
-    auto request = protocol->start_request(*this, method, url, request_headers.entries(), request_body);
+    auto request = protocol->start_request(*this, method, url, request_headers.entries(), request_body, proxy_data);
     if (!request) {
         dbgln("StartRequest: Protocol handler failed to start request: '{}'", url);
         return { -1, Optional<IPC::File> {} };
