@@ -124,7 +124,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                     outln();
                 ++current_symbol;
                 current_instruction_is_in_symbol = true;
-                outln("{} ({:p}-{:p}):", current_symbol->name, current_symbol->address(), current_symbol->address_end());
+                outln("{:08x} <{}>:", current_symbol->address(), current_symbol->name);
             }
 
             is_first_symbol = false;
