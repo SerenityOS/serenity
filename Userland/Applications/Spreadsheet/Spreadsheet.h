@@ -22,6 +22,20 @@
 
 namespace Spreadsheet {
 
+class CellChange {
+public:
+    CellChange(Cell&, String const&);
+
+    auto& cell() { return m_cell; }
+    auto& previous_data() { return m_previous_data; }
+    auto& new_data() { return m_new_data; }
+
+private:
+    Cell& m_cell;
+    String m_previous_data;
+    String m_new_data;
+};
+
 class Sheet : public Core::Object {
     C_OBJECT(Sheet);
 

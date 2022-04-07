@@ -751,4 +751,11 @@ URL Position::to_url(Sheet const& sheet) const
     return url;
 }
 
+CellChange::CellChange(Cell& cell, String const& previous_data)
+    : m_cell(cell)
+    , m_previous_data(previous_data)
+{
+    m_new_data = cell.data();
+}
+
 }

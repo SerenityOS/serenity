@@ -40,4 +40,16 @@ private:
     NonnullRefPtr<Sheet> m_sheet;
 };
 
+class CellsUndoCommand : public GUI::Command {
+public:
+    CellsUndoCommand(Cell&, String const&);
+    CellsUndoCommand(Vector<CellChange>);
+
+    virtual void undo() override;
+    virtual void redo() override;
+
+private:
+    Vector<CellChange> m_cell_changes;
+};
+
 }
