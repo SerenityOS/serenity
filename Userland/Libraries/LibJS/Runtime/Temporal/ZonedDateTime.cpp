@@ -114,7 +114,7 @@ ThrowCompletionOr<BigInt const*> interpret_iso_date_time_offset(GlobalObject& gl
 }
 
 // 6.5.2 ToTemporalZonedDateTime ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalzoneddatetime
-ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& global_object, Value item, Object* options)
+ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(GlobalObject& global_object, Value item, Object const* options)
 {
     auto& vm = global_object.vm();
 
@@ -401,7 +401,7 @@ ThrowCompletionOr<BigInt*> add_zoned_date_time(GlobalObject& global_object, BigI
 }
 
 // 6.5.6 DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-differencezoneddatetime
-ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& global_object, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object* options)
+ThrowCompletionOr<DurationRecord> difference_zoned_date_time(GlobalObject& global_object, BigInt const& nanoseconds1, BigInt const& nanoseconds2, Object& time_zone, Object& calendar, StringView largest_unit, Object const* options)
 {
     // 1. Assert: Type(ns1) is BigInt.
     // 2. Assert: Type(ns2) is BigInt.

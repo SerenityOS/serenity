@@ -525,7 +525,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::until)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let smallestUnit be ? ToSmallestTemporalUnit(options, « », "nanosecond").
     auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, {}, "nanosecond"sv));
@@ -579,7 +579,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::since)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let smallestUnit be ? ToSmallestTemporalUnit(options, « », "nanosecond").
     auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, {}, "nanosecond"sv));

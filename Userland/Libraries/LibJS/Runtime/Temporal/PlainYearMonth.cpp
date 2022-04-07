@@ -31,7 +31,7 @@ void PlainYearMonth::visit_edges(Visitor& visitor)
 }
 
 // 9.5.1 ToTemporalYearMonth ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalyearmonth
-ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_object, Value item, Object* options)
+ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(GlobalObject& global_object, Value item, Object const* options)
 {
     auto& vm = global_object.vm();
 

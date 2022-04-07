@@ -69,7 +69,7 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(GlobalObject& global_object, 
 }
 
 // 3.5.2 ToTemporalDate ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldate
-ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Value item, Object* options)
+ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Value item, Object const* options)
 {
     auto& vm = global_object.vm();
 

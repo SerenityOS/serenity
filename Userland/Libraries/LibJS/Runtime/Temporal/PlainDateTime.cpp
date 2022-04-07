@@ -102,7 +102,7 @@ bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, u8 month
 }
 
 // 5.5.3 InterpretTemporalDateTimeFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-interprettemporaldatetimefields
-ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object& options)
+ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object const& options)
 {
     // 1. Let timeResult be ? ToTemporalTimeRecord(fields).
     auto unregulated_time_result = TRY(to_temporal_time_record(global_object, fields));
@@ -131,7 +131,7 @@ ThrowCompletionOr<ISODateTime> interpret_temporal_date_time_fields(GlobalObject&
 }
 
 // 5.5.4 ToTemporalDateTime ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldatetime
-ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_object, Value item, Object* options)
+ThrowCompletionOr<PlainDateTime*> to_temporal_date_time(GlobalObject& global_object, Value item, Object const* options)
 {
     auto& vm = global_object.vm();
 
@@ -350,7 +350,7 @@ ISODateTime round_iso_date_time(i32 year, u8 month, u8 day, u8 hour, u8 minute, 
 }
 
 // 5.5.11 DifferenceISODateTime ( y1, mon1, d1, h1, min1, s1, ms1, mus1, ns1, y2, mon2, d2, h2, min2, s2, ms2, mus2, ns2, calendar, largestUnit [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-differenceisodatetime
-ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_object, i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2, Object& calendar, StringView largest_unit, Object* options)
+ThrowCompletionOr<DurationRecord> difference_iso_date_time(GlobalObject& global_object, i32 year1, u8 month1, u8 day1, u8 hour1, u8 minute1, u8 second1, u16 millisecond1, u16 microsecond1, u16 nanosecond1, i32 year2, u8 month2, u8 day2, u8 hour2, u8 minute2, u8 second2, u16 millisecond2, u16 microsecond2, u16 nanosecond2, Object& calendar, StringView largest_unit, Object const* options)
 {
     // 1. If options is not present, set options to undefined.
     // 2. Assert: Type(options) is Object or Undefined.

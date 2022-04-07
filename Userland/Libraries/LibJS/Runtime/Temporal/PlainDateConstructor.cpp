@@ -77,7 +77,7 @@ ThrowCompletionOr<Object*> PlainDateConstructor::construct(FunctionObject& new_t
 JS_DEFINE_NATIVE_FUNCTION(PlainDateConstructor::from)
 {
     // 1. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     auto item = vm.argument(0);
     // 2. If Type(item) is Object and item has an [[InitializedTemporalDate]] internal slot, then

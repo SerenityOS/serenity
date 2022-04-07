@@ -88,7 +88,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayConstructor::from)
     auto item = vm.argument(0);
 
     // 1. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 2. If Type(item) is Object and item has an [[InitializedTemporalMonthDay]] internal slot, then
     if (item.is_object() && is<PlainMonthDay>(item.as_object())) {
