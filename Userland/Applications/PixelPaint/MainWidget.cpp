@@ -191,6 +191,19 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                     GUI::MessageBox::show_error(&window, String::formatted("Export to PNG failed: {}", result.error()));
             }));
 
+    m_export_submenu->add_action(
+        GUI::Action::create(
+            "As &QOI", [&](auto&) {
+                auto* editor = current_image_editor();
+                VERIFY(editor);
+                auto response = FileSystemAccessClient::Client::the().try_save_file(&window, "untitled", "qoi");
+                if (response.is_error())
+                    return;
+                auto result = editor->image().export_qoi_to_file(response.value());
+                if (result.is_error())
+                    GUI::MessageBox::show_error(&window, String::formatted("Export to QOI failed: {}", result.error()));
+            }));
+
     m_export_submenu->set_icon(g_icon_bag.file_export);
 
     file_menu.add_separator();
