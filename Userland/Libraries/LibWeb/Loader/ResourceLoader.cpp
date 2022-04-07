@@ -14,6 +14,7 @@
 #include <LibProtocol/RequestClient.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/LoadRequest.h>
+#include <LibWeb/Loader/ProxyMappings.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <serenity.h>
@@ -213,6 +214,9 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
     }
 
     if (url.protocol() == "http" || url.protocol() == "https" || url.protocol() == "gemini") {
+        auto proxy = ProxyMappings::the().proxy_for_url(url);
+        dbgln("Proxy for {} is {}", url, proxy.type == decltype(proxy.type)::SOCKS5 ? IPv4Address(proxy.host_ipv4).to_string() : "(direct)");
+
         HashMap<String, String> headers;
         headers.set("User-Agent", m_user_agent);
         headers.set("Accept-Encoding", "gzip, deflate");
@@ -221,7 +225,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             headers.set(it.key, it.value);
         }
 
-        auto protocol_request = protocol_client().start_request(request.method(), url, headers, request.body());
+        auto protocol_request = protocol_client().start_request(request.method(), url, headers, request.body(), proxy);
         if (!protocol_request) {
             auto start_request_failure_msg = "Failed to initiate load"sv;
             log_failure(request, start_request_failure_msg);
