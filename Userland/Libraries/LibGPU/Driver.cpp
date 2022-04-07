@@ -20,7 +20,7 @@ namespace GPU {
 static HashMap<String, String> const s_driver_path_map
 {
 #if defined(__serenity__)
-    { "softgpu", "/usr/lib/libsoftgpu.so" },
+    { "softgpu", "libsoftgpu.so" },
 #elif defined(__APPLE__)
     { "softgpu", "./liblagom-softgpu.dylib" },
 #else
