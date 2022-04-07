@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,6 +26,7 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/Supports.h>
+#include <LibWeb/CSS/UnicodeRange.h>
 
 namespace Web::CSS {
 
@@ -276,6 +277,8 @@ private:
     Optional<Color> parse_color(ComponentValue const&);
     Optional<Length> parse_length(ComponentValue const&);
     Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);
+    Optional<UnicodeRange> parse_unicode_range(TokenStream<ComponentValue>&);
+    Optional<UnicodeRange> create_unicode_range_from_tokens(TokenStream<ComponentValue>&, int start_position, int end_position);
 
     enum class AllowedDataUrlType {
         None,

@@ -9,6 +9,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <AK/GenericLexer.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
@@ -2705,6 +2706,266 @@ Optional<Ratio> Parser::parse_ratio(TokenStream<ComponentValue>& tokens)
     // Single-value ratio
     tokens.rewind_to_position(position_after_first_number);
     return Ratio { static_cast<float>(first_number.token().number_value()) };
+}
+
+// https://www.w3.org/TR/css-syntax-3/#urange-syntax
+Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& tokens)
+{
+    tokens.skip_whitespace();
+    auto position = tokens.position();
+
+    auto error = [&]() -> Optional<UnicodeRange> {
+        tokens.rewind_to_position(position);
+        return {};
+    };
+
+    // <urange> =
+    //  u '+' <ident-token> '?'* |
+    //  u <dimension-token> '?'* |
+    //  u <number-token> '?'* |
+    //  u <number-token> <dimension-token> |
+    //  u <number-token> <number-token> |
+    //  u '+' '?'+
+    // (All with no whitespace in between tokens.)
+
+    // NOTE: Parsing this is different from usual. We take these steps:
+    // 1. Match the grammar above against the tokens.
+    // 2. Convert the matching tokens back into a string using their original representation.
+    // 3. Then, parse that string according to the spec algorithm.
+
+    auto is_question_mark = [](ComponentValue const& component_value) {
+        return component_value.is(Token::Type::Delim) && component_value.token().delim() == '?';
+    };
+
+    auto is_ending_token = [](ComponentValue const& component_value) {
+        return component_value.is(Token::Type::EndOfFile)
+            || component_value.is(Token::Type::Comma)
+            || component_value.is(Token::Type::Semicolon)
+            || component_value.is(Token::Type::Whitespace);
+    };
+
+    // All options start with 'u'/'U'.
+    auto& u = tokens.next_token();
+    if (!(u.is(Token::Type::Ident) && u.token().ident().equals_ignoring_case("u"))) {
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> does not start with 'u'");
+        return error();
+    }
+
+    auto& second_token = tokens.next_token();
+    auto after_second_token = tokens.position();
+
+    //  u '+' <ident-token> '?'* |
+    //  u '+' '?'+
+    if (second_token.is(Token::Type::Delim) && second_token.token().delim() == '+') {
+        auto& third_token = tokens.next_token();
+        if (third_token.is(Token::Type::Ident) || is_question_mark(third_token)) {
+            while (is_question_mark(tokens.peek_token()))
+                tokens.next_token();
+            if (is_ending_token(tokens.peek_token()))
+                return create_unicode_range_from_tokens(tokens, position, tokens.position());
+        }
+
+        tokens.rewind_to_position(after_second_token);
+    }
+
+    //  u <dimension-token> '?'*
+    if (second_token.is(Token::Type::Dimension)) {
+        while (is_question_mark(tokens.peek_token()))
+            tokens.next_token();
+        if (is_ending_token(tokens.peek_token()))
+            return create_unicode_range_from_tokens(tokens, position, tokens.position());
+
+        tokens.rewind_to_position(after_second_token);
+    }
+
+    //  u <number-token> '?'* |
+    //  u <number-token> <dimension-token> |
+    //  u <number-token> <number-token>
+    if (second_token.is(Token::Type::Number)) {
+        if (is_ending_token(tokens.peek_token()))
+            return create_unicode_range_from_tokens(tokens, position, tokens.position());
+
+        auto& third_token = tokens.next_token();
+        if (is_question_mark(third_token)) {
+            while (is_question_mark(tokens.peek_token()))
+                tokens.next_token();
+            if (is_ending_token(tokens.peek_token()))
+                return create_unicode_range_from_tokens(tokens, position, tokens.position());
+        } else if (third_token.is(Token::Type::Dimension)) {
+            if (is_ending_token(tokens.peek_token()))
+                return create_unicode_range_from_tokens(tokens, position, tokens.position());
+        } else if (third_token.is(Token::Type::Number)) {
+            if (is_ending_token(tokens.peek_token()))
+                return create_unicode_range_from_tokens(tokens, position, tokens.position());
+        }
+
+        tokens.rewind_to_position(after_second_token);
+    }
+
+    if constexpr (CSS_PARSER_DEBUG) {
+        dbgln("CSSParser: Tokens did not match <urange> grammar.");
+        tokens.dump_all_tokens();
+    }
+    return error();
+}
+
+Optional<UnicodeRange> Parser::create_unicode_range_from_tokens(TokenStream<ComponentValue>& tokens, int start_position, int end_position)
+{
+    auto error = [&]() -> Optional<UnicodeRange> {
+        tokens.rewind_to_position(start_position);
+        return {};
+    };
+
+    auto make_valid_unicode_range = [&](u32 start_value, u32 end_value) -> Optional<UnicodeRange> {
+        // https://www.w3.org/TR/css-syntax-3/#maximum-allowed-code-point
+        constexpr u32 maximum_allowed_code_point = 0x10FFFF;
+
+        // To determine what codepoints the <urange> represents:
+        // 1. If end value is greater than the maximum allowed code point,
+        //    the <urange> is invalid and a syntax error.
+        if (end_value > maximum_allowed_code_point) {
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Invalid <urange>: end_value ({}) > maximum ({})", end_value, maximum_allowed_code_point);
+            return error();
+        }
+
+        // 2. If start value is greater than end value, the <urange> is invalid and a syntax error.
+        if (start_value > end_value) {
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Invalid <urange>: start_value ({}) > end_value ({})", start_value, end_value);
+            return error();
+        }
+
+        // 3. Otherwise, the <urange> represents a contiguous range of codepoints from start value to end value, inclusive.
+        return UnicodeRange { start_value, end_value };
+    };
+
+    // 1. Skipping the first u token, concatenate the representations of all the tokens in the production together.
+    //    Let this be text.
+    StringBuilder text_builder;
+    tokens.rewind_to_position(start_position);
+    (void)tokens.next_token(); // Skip the 'u'
+    while (tokens.position() != end_position) {
+        // FIXME: This should use the "representation", that is, the original text that produced the token.
+        //        See: https://www.w3.org/TR/css-syntax-3/#representation
+        //        We don't have a way to get that, so instead, we're relying on Token::to_string(), and
+        //        handling specific cases where that's not enough.
+        auto& token = tokens.next_token();
+        // Integers like `+34` get serialized as `34`, so manually include the `+` sign.
+        if (token.is(Token::Type::Number) && token.token().number().is_integer_with_explicit_sign()) {
+            auto int_value = token.token().number().integer_value();
+            if (int_value >= 0)
+                text_builder.append('+');
+            text_builder.append(String::number(int_value));
+        } else {
+            text_builder.append(token.to_string());
+        }
+    }
+    auto text = text_builder.string_view();
+    GenericLexer lexer { text };
+
+    // 2. If the first character of text is U+002B PLUS SIGN, consume it.
+    //    Otherwise, this is an invalid <urange>, and this algorithm must exit.
+    if (lexer.next_is('+')) {
+        lexer.consume();
+    } else {
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Second character of <urange> was not '+'; got: '{}'", lexer.consume());
+        return error();
+    }
+
+    // 3. Consume as many hex digits from text as possible.
+    //    then consume as many U+003F QUESTION MARK (?) code points as possible.
+    auto hex_digits = lexer.consume_while(is_ascii_hex_digit);
+    auto question_marks = lexer.consume_while([](auto it) { return it == '?'; });
+    //    If zero code points were consumed, or more than six code points were consumed,
+    //    this is an invalid <urange>, and this algorithm must exit.
+    size_t consumed_code_points = hex_digits.length() + question_marks.length();
+    if (consumed_code_points == 0 || consumed_code_points > 6) {
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> start value had {} digits/?s, expected between 1 and 6.", consumed_code_points);
+        return error();
+    }
+    StringView start_value_code_points { hex_digits.characters_without_null_termination(), consumed_code_points };
+
+    //    If any U+003F QUESTION MARK (?) code points were consumed, then:
+    if (question_marks.length() > 0) {
+        // 1. If there are any code points left in text, this is an invalid <urange>,
+        //    and this algorithm must exit.
+        if (lexer.tell_remaining() != 0) {
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> invalid; had {} code points left over.", lexer.tell_remaining());
+            return error();
+        }
+
+        // 2. Interpret the consumed code points as a hexadecimal number,
+        //    with the U+003F QUESTION MARK (?) code points replaced by U+0030 DIGIT ZERO (0) code points.
+        //    This is the start value.
+        auto start_value_string = start_value_code_points.replace("?", "0", true);
+        auto maybe_start_value = AK::StringUtils::convert_to_uint_from_hex<u32>(start_value_string);
+        if (!maybe_start_value.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> ?-converted start value did not parse as hex number.");
+            return error();
+        }
+        u32 start_value = maybe_start_value.release_value();
+
+        // 3. Interpret the consumed code points as a hexadecimal number again,
+        //    with the U+003F QUESTION MARK (?) code points replaced by U+0046 LATIN CAPITAL LETTER F (F) code points.
+        //    This is the end value.
+        auto end_value_string = start_value_code_points.replace("?", "F", true);
+        auto maybe_end_value = AK::StringUtils::convert_to_uint_from_hex<u32>(end_value_string);
+        if (!maybe_end_value.has_value()) {
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> ?-converted end value did not parse as hex number.");
+            return error();
+        }
+        u32 end_value = maybe_end_value.release_value();
+
+        // 4. Exit this algorithm.
+        return make_valid_unicode_range(start_value, end_value);
+    }
+    //   Otherwise, interpret the consumed code points as a hexadecimal number. This is the start value.
+    auto maybe_start_value = AK::StringUtils::convert_to_uint_from_hex<u32>(start_value_code_points);
+    if (!maybe_start_value.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> start value did not parse as hex number.");
+        return error();
+    }
+    u32 start_value = maybe_start_value.release_value();
+
+    // 4. If there are no code points left in text, The end value is the same as the start value.
+    //    Exit this algorithm.
+    if (lexer.tell_remaining() == 0)
+        return make_valid_unicode_range(start_value, start_value);
+
+    // 5. If the next code point in text is U+002D HYPHEN-MINUS (-), consume it.
+    if (lexer.next_is('-')) {
+        lexer.consume();
+    }
+    //    Otherwise, this is an invalid <urange>, and this algorithm must exit.
+    else {
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> start and end values not separated by '-'.");
+        return error();
+    }
+
+    // 6. Consume as many hex digits as possible from text.
+    auto end_hex_digits = lexer.consume_while(is_ascii_hex_digit);
+
+    //   If zero hex digits were consumed, or more than 6 hex digits were consumed,
+    //   this is an invalid <urange>, and this algorithm must exit.
+    if (end_hex_digits.length() == 0 || end_hex_digits.length() > 6) {
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> end value had {} digits, expected between 1 and 6.", end_hex_digits.length());
+        return error();
+    }
+
+    //   If there are any code points left in text, this is an invalid <urange>, and this algorithm must exit.
+    if (lexer.tell_remaining() != 0) {
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> invalid; had {} code points left over.", lexer.tell_remaining());
+        return error();
+    }
+
+    // 7. Interpret the consumed code points as a hexadecimal number. This is the end value.
+    auto maybe_end_value = AK::StringUtils::convert_to_uint_from_hex<u32>(end_hex_digits);
+    if (!maybe_end_value.has_value()) {
+        dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> end value did not parse as hex number.");
+        return error();
+    }
+    u32 end_value = maybe_end_value.release_value();
+
+    return make_valid_unicode_range(start_value, end_value);
 }
 
 RefPtr<StyleValue> Parser::parse_dimension_value(ComponentValue const& component_value)
