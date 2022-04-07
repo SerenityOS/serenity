@@ -281,7 +281,7 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
     for (auto& sheet : new_sheets) {
         auto& new_view = m_tab_widget->add_tab<SpreadsheetView>(sheet.name(), sheet);
         new_view.model()->on_cell_data_change = [&](auto& cell, auto& previous_data) {
-            undo_stack().push(make<CellUndoCommand>(cell, previous_data));
+            undo_stack().push(make<CellsUndoCommand>(cell, previous_data));
             window()->set_modified(true);
         };
         new_view.on_selection_changed = [&](Vector<Position>&& selection) {

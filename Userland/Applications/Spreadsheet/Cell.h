@@ -121,17 +121,4 @@ private:
     Format m_evaluated_formats;
 };
 
-class CellUndoCommand : public GUI::Command {
-public:
-    CellUndoCommand(Cell&, String const&);
-
-    virtual void undo() override;
-    virtual void redo() override;
-
-private:
-    Cell& m_cell;
-    String m_current_data;
-    String m_previous_data;
-};
-
 }
