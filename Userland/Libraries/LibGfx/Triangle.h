@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Shannon Booth <shannon.ml.booth@gmail.com>
+ * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,38 +12,39 @@
 
 namespace Gfx {
 
+template<typename T>
 class Triangle {
 public:
-    Triangle(IntPoint a, IntPoint b, IntPoint c)
+    Triangle(Point<T> a, Point<T> b, Point<T> c)
         : m_a(a)
         , m_b(b)
         , m_c(c)
     {
-        m_det = (m_b.x() - m_a.x()) * (m_c.y() - m_a.y()) - (m_b.y() - m_a.y()) * (m_c.x() - m_a.x());
+        m_determinant = (m_b.x() - m_a.x()) * (m_c.y() - m_a.y()) - (m_b.y() - m_a.y()) * (m_c.x() - m_a.x());
     }
 
-    IntPoint a() const { return m_a; }
-    IntPoint b() const { return m_b; }
-    IntPoint c() const { return m_c; }
+    Point<T> a() const { return m_a; }
+    Point<T> b() const { return m_b; }
+    Point<T> c() const { return m_c; }
 
-    bool contains(IntPoint p) const
+    bool contains(Point<T> p) const
     {
-        int x = p.x();
-        int y = p.y();
+        auto x = p.x();
+        auto y = p.y();
 
-        int ax = m_a.x();
-        int bx = m_b.x();
-        int cx = m_c.x();
+        auto ax = m_a.x();
+        auto bx = m_b.x();
+        auto cx = m_c.x();
 
-        int ay = m_a.y();
-        int by = m_b.y();
-        int cy = m_c.y();
+        auto ay = m_a.y();
+        auto by = m_b.y();
+        auto cy = m_c.y();
 
-        if (m_det * ((bx - ax) * (y - ay) - (by - ay) * (x - ax)) <= 0)
+        if (m_determinant * ((bx - ax) * (y - ay) - (by - ay) * (x - ax)) <= 0)
             return false;
-        if (m_det * ((cx - bx) * (y - by) - (cy - by) * (x - bx)) <= 0)
+        if (m_determinant * ((cx - bx) * (y - by) - (cy - by) * (x - bx)) <= 0)
             return false;
-        if (m_det * ((ax - cx) * (y - cy) - (ay - cy) * (x - cx)) <= 0)
+        if (m_determinant * ((ax - cx) * (y - cy) - (ay - cy) * (x - cx)) <= 0)
             return false;
         return true;
     }
@@ -50,10 +52,10 @@ public:
     String to_string() const;
 
 private:
-    int m_det;
-    IntPoint m_a;
-    IntPoint m_b;
-    IntPoint m_c;
+    T m_determinant { 0 };
+    Point<T> m_a;
+    Point<T> m_b;
+    Point<T> m_c;
 };
 
 }

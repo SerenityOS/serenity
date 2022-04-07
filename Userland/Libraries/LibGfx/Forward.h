@@ -28,6 +28,8 @@ class Path;
 class ShareableBitmap;
 class StylePainter;
 struct SystemTheme;
+
+template<typename T>
 class Triangle;
 
 template<typename T>
