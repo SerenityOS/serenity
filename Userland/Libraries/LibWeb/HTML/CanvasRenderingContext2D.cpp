@@ -102,9 +102,10 @@ static void default_source_size(CanvasImageSource const& image, float& source_wi
         if (source->bitmap()) {
             source_width = source->bitmap()->width();
             source_height = source->bitmap()->height();
+        } else {
+            source_width = source->width();
+            source_height = source->height();
         }
-        source_width = source->width();
-        source_height = source->height();
     });
 }
 
