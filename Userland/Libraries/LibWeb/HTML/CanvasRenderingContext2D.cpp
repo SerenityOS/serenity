@@ -9,6 +9,7 @@
 #include <AK/ExtraMathConstants.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Painter.h>
+#include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -179,8 +180,58 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
     auto painter = this->painter();
     if (!painter)
         return {};
-    auto transformed_destination_rect = m_drawing_state.transform.map(destination_rect);
-    painter->draw_scaled_bitmap(transformed_destination_rect.to_rounded<int>(), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+
+    if (m_drawing_state.transform.is_identity()) {
+        // There's no affine transformation to worry about, we can just call Gfx::Painter.
+        painter->draw_scaled_bitmap(destination_rect.to_rounded<int>(), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+    } else {
+        // The context has an affine transform, we have to draw through it!
+
+        // FIXME: This is *super* inefficient.
+        // What we currently do, roughly:
+        // - Map the destination rect through the context's transform.
+        // - Compute the bounding rect of the destination quad.
+        // - For each point in the computed bounding rect, reverse-map it to a point in the source image.
+        //   - Sample the source image at the computed point.
+        //   - Set or blend (depending on alpha values) one pixel in the canvas.
+        //   - Loop.
+
+        // FIXME: Gfx::Painter should have an affine transform as part of its state and handle all of this instead.
+
+        auto inverse_transform = m_drawing_state.transform.inverse();
+        if (!inverse_transform.has_value())
+            return {};
+
+        auto destination_quad = m_drawing_state.transform.map_to_quad(destination_rect);
+        auto destination_bounding_rect = destination_quad.bounding_rect().to_rounded<int>();
+
+        Gfx::AffineTransform source_transform;
+        source_transform.translate(source_x, source_y);
+        source_transform.scale(source_width / destination_width, source_height / destination_height);
+        source_transform.translate(-destination_x, -destination_y);
+
+        for (int y = destination_bounding_rect.y(); y <= destination_bounding_rect.bottom(); ++y) {
+            for (int x = destination_bounding_rect.x(); x <= destination_bounding_rect.right(); ++x) {
+                auto destination_point = Gfx::IntPoint { x, y };
+                if (!painter->clip_rect().contains(destination_point))
+                    continue;
+                if (!destination_quad.contains(destination_point.to_type<float>()))
+                    continue;
+                auto source_point = source_transform.map(inverse_transform->map(destination_point)).to_rounded<int>();
+                if (!bitmap->rect().contains(source_point))
+                    continue;
+                auto source_color = bitmap->get_pixel(source_point);
+                if (source_color.alpha() == 0)
+                    continue;
+                if (source_color.alpha() == 255) {
+                    painter->set_pixel(destination_point, source_color);
+                    continue;
+                }
+                auto dst_color = painter->target()->get_pixel(destination_point);
+                painter->set_pixel(destination_point, dst_color.blend(source_color));
+            }
+        }
+    }
 
     // 7. If image is not origin-clean, then set the CanvasRenderingContext2D's origin-clean flag to false.
     if (image_is_not_origin_clean(image))
