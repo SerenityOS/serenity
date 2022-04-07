@@ -30,6 +30,8 @@ void InitialContainingBlock::build_stacking_context_tree()
     const_cast<Painting::PaintableWithLines*>(paint_box())->set_stacking_context(make<Painting::StackingContext>(*this, nullptr));
 
     for_each_in_subtree_of_type<Box>([&](Box& box) {
+        if (!box.paint_box())
+            return IterationDecision::Continue;
         const_cast<Painting::PaintableBox*>(box.paint_box())->invalidate_stacking_context();
         if (!box.establishes_stacking_context()) {
             VERIFY(!box.paint_box()->stacking_context());
