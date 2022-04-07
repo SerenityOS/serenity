@@ -270,7 +270,8 @@ constexpr void sincos(T angle, T& sin_val, T& cos_val)
         : "=t"(cos_val), "=u"(sin_val)
         : "0"(angle));
 #else
-    __builtin_sincosf(angle, sin_val, cos_val);
+    sin_val = sin(angle);
+    cos_val = cos(angle);
 #endif
 }
 
