@@ -341,6 +341,8 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     if (!m_box.children_are_inline()) {
         m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
             if (!box.is_absolutely_positioned() && !box.is_floating()) {
+                if (!box.paint_box())
+                    return IterationDecision::Continue;
                 if (auto candidate = box.paint_box()->hit_test(transformed_position, type); candidate.has_value())
                     result = move(candidate);
             }
