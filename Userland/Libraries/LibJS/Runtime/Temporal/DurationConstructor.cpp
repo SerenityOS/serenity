@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::compare)
     auto* two = TRY(to_temporal_duration(global_object, vm.argument(1)));
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(2)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(2)));
 
     // 4. Let relativeTo be ? ToRelativeTemporalObject(options).
     auto relative_to = TRY(to_relative_temporal_object(global_object, *options));

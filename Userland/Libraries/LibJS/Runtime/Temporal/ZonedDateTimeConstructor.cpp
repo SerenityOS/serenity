@@ -74,7 +74,7 @@ ThrowCompletionOr<Object*> ZonedDateTimeConstructor::construct(FunctionObject& n
 JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimeConstructor::from)
 {
     // 1. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     auto item = vm.argument(0);
 

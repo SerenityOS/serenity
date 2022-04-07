@@ -302,7 +302,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::add)
     auto other = TRY(to_temporal_duration_record(global_object, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let relativeTo be ? ToRelativeTemporalObject(options).
     auto relative_to = TRY(to_relative_temporal_object(global_object, *options));
@@ -325,7 +325,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::subtract)
     auto other = TRY(to_temporal_duration_record(global_object, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let relativeTo be ? ToRelativeTemporalObject(options).
     auto relative_to = TRY(to_relative_temporal_object(global_object, *options));
@@ -583,7 +583,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::to_string)
     auto* duration = TRY(typed_this_object(global_object));
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let precision be ? ToSecondsStringPrecision(options).
     auto precision = TRY(to_seconds_string_precision(global_object, *options));

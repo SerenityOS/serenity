@@ -90,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISODateFromFields(fields, options).
     auto result = TRY(iso_date_from_fields(global_object, fields.as_object(), *options));
@@ -116,7 +116,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISOYearMonthFromFields(fields, options).
     auto result = TRY(iso_year_month_from_fields(global_object, fields.as_object(), *options));
@@ -142,7 +142,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let result be ? ISOMonthDayFromFields(fields, options).
     auto result = TRY(iso_month_day_from_fields(global_object, fields.as_object(), *options));
@@ -169,7 +169,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
     auto* duration = TRY(to_temporal_duration(global_object, vm.argument(1)));
 
     // 6. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(2)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(2)));
 
     // 7. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(global_object, options));
@@ -203,7 +203,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_until)
     auto* two = TRY(to_temporal_date(global_object, vm.argument(1)));
 
     // 6. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(2)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(2)));
 
     // 7. Let largestUnit be ? ToLargestTemporalUnit(options, « "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" », "auto", "day").
     auto largest_unit = TRY(to_largest_temporal_unit(global_object, *options, { "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv }, "auto"sv, "day"sv));

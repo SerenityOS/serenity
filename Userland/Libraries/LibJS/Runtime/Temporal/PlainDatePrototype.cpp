@@ -407,7 +407,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::with)
     auto* partial_date = TRY(prepare_partial_temporal_fields(global_object, temporal_date_like.as_object(), field_names));
 
     // 8. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 9. Let fields be ? PrepareTemporalFields(temporalDate, fieldNames, «»).
     auto* fields = TRY(prepare_temporal_fields(global_object, *temporal_date, field_names, {}));
@@ -453,7 +453,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::until)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let disallowedUnits be « "hour", "minute", "second", "millisecond", "microsecond", "nanosecond" ».
     Vector<StringView> disallowed_units { "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv };
