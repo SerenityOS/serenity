@@ -575,15 +575,34 @@ void BrowserWindow::content_filters_changed()
     });
 }
 
+void BrowserWindow::proxy_mappings_changed()
+{
+    tab_widget().for_each_child_of_type<Browser::Tab>([](auto& tab) {
+        tab.proxy_mappings_changed();
+        return IterationDecision::Continue;
+    });
+}
+
 void BrowserWindow::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
 {
-    if (domain != "Browser" || group != "Preferences")
+    if (domain != "Browser")
         return;
 
-    if (key == "SearchEngine")
-        Browser::g_search_engine = value;
-    else if (key == "Home")
-        Browser::g_home_url = value;
+    if (group == "Preferences") {
+        if (key == "SearchEngine")
+            Browser::g_search_engine = value;
+        else if (key == "Home")
+            Browser::g_home_url = value;
+    } else if (group.starts_with("Proxy:")) {
+        dbgln("Proxy mapping changed: {}/{} = {}", group, key, value);
+        auto proxy_spec = group.substring_view(6);
+        auto existing_proxy = Browser::g_proxies.find(proxy_spec);
+        if (existing_proxy.is_end())
+            Browser::g_proxies.append(proxy_spec);
+
+        Browser::g_proxy_mappings.set(key, existing_proxy.index());
+        proxy_mappings_changed();
+    }
 
     // TODO: ColorScheme
 }

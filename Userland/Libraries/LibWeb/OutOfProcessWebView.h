@@ -55,6 +55,7 @@ public:
     OrderedHashMap<String, String> get_local_storage_entries();
 
     void set_content_filters(Vector<String>);
+    void set_proxy_mappings(Vector<String> proxies, HashMap<String, size_t> mappings);
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
     Function<void(Gfx::IntPoint const& screen_position)> on_context_menu_request;
