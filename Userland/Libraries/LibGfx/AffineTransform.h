@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,6 +36,8 @@ public:
 
     template<typename T>
     Rect<T> map(Rect<T> const&) const;
+
+    Quad<float> map_to_quad(Rect<float> const&) const;
 
     [[nodiscard]] ALWAYS_INLINE float a() const { return m_values[0]; }
     [[nodiscard]] ALWAYS_INLINE float b() const { return m_values[1]; }

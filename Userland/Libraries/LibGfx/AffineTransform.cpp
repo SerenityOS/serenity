@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Optional.h>
 #include <LibGfx/AffineTransform.h>
+#include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
 
 namespace Gfx {
@@ -209,6 +210,16 @@ template<>
 IntRect AffineTransform::map(IntRect const& rect) const
 {
     return enclosing_int_rect(map(FloatRect(rect)));
+}
+
+Quad<float> AffineTransform::map_to_quad(Rect<float> const& rect) const
+{
+    return {
+        map(rect.top_left()),
+        map(rect.top_right()),
+        map(rect.bottom_right()),
+        map(rect.bottom_left()),
+    };
 }
 
 }
