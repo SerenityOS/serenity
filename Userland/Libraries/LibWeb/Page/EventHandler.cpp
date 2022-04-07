@@ -232,8 +232,14 @@ bool EventHandler::handle_mouseup(Gfx::IntPoint const& position, unsigned button
                         page->client().page_did_request_link_context_menu(m_browsing_context.to_top_level_position(position), url, link->target(), modifiers);
                 }
             } else if (button == GUI::MouseButton::Secondary) {
-                if (auto* page = m_browsing_context.page())
+                if (is<HTML::HTMLImageElement>(*node)) {
+                    auto& image_element = verify_cast<HTML::HTMLImageElement>(*node);
+                    auto image_url = image_element.document().parse_url(image_element.src());
+                    if (auto* page = m_browsing_context.page())
+                        page->client().page_did_request_image_context_menu(m_browsing_context.to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
+                } else if (auto* page = m_browsing_context.page()) {
                     page->client().page_did_request_context_menu(m_browsing_context.to_top_level_position(position));
+                }
             }
 
             if (node.ptr() == m_mousedown_target && button == GUI::MouseButton::Primary) {
@@ -305,14 +311,6 @@ bool EventHandler::handle_mousedown(Gfx::IntPoint const& position, unsigned butt
     // NOTE: Dispatching an event may have disturbed the world.
     if (!paint_root() || paint_root() != node->document().paint_box())
         return true;
-
-    if (button == GUI::MouseButton::Secondary && is<HTML::HTMLImageElement>(*node)) {
-        auto& image_element = verify_cast<HTML::HTMLImageElement>(*node);
-        auto image_url = image_element.document().parse_url(image_element.src());
-        if (auto* page = m_browsing_context.page())
-            page->client().page_did_request_image_context_menu(m_browsing_context.to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
-        return true;
-    }
 
     if (button == GUI::MouseButton::Primary) {
         if (auto result = paint_root()->hit_test(position.to_type<float>(), Painting::HitTestType::TextCursor); result.has_value()) {
