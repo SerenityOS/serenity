@@ -661,9 +661,7 @@ public:
     virtual void RDRAND_reg(Instruction const&) = 0;
     virtual void RDSEED_reg(Instruction const&) = 0;
 
-    virtual void
-    PREFETCHTNTA(Instruction const&)
-        = 0;
+    virtual void PREFETCHTNTA(Instruction const&) = 0;
     virtual void PREFETCHT0(Instruction const&) = 0;
     virtual void PREFETCHT1(Instruction const&) = 0;
     virtual void PREFETCHT2(Instruction const&) = 0;
