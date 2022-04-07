@@ -1490,7 +1490,7 @@ String MemoryOrRegisterReference::to_string_a32() const
         break;
     case 5:
         if (mod() == 0)
-            base = String::formatted("{:#08x}", m_displacement32);
+            base = String::formatted("{:x}", m_displacement32);
         else
             base = "ebp";
         break;
@@ -1513,18 +1513,18 @@ String MemoryOrRegisterReference::to_string_a32() const
 static String relative_address(u32 origin, bool x32, i8 imm)
 {
     if (x32)
-        return String::formatted("{:#08x}", origin + imm);
+        return String::formatted("{:x}", origin + imm);
     u16 w = origin & 0xffff;
-    return String::formatted("{:#04x}", w + imm);
+    return String::formatted("{:x}", w + imm);
 }
 
 static String relative_address(u32 origin, bool x32, i32 imm)
 {
     if (x32)
-        return String::formatted("{:#08x}", origin + imm);
+        return String::formatted("{:x}", origin + imm);
     u16 w = origin & 0xffff;
     i16 si = imm;
-    return String::formatted("{:#04x}", w + si);
+    return String::formatted("{:x}", w + si);
 }
 
 String Instruction::to_string(u32 origin, SymbolProvider const* symbol_provider, bool x32) const
@@ -1556,10 +1556,8 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     String mnemonic = String(m_descriptor->mnemonic).to_lowercase();
 
     auto append_mnemonic = [&] { builder.append(mnemonic); };
-    auto append_mnemonic_space = [&] {
-        builder.append(mnemonic);
-        builder.append(' ');
-    };
+
+    auto append_mnemonic_space = [&] { builder.appendff("{: <6} ", mnemonic); };
 
     auto formatted_address = [&](FlatPtr origin, bool x32, auto offset) {
         builder.append(relative_address(origin, x32, offset));
@@ -1569,7 +1567,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
             builder.append(" <");
             builder.append(symbol);
             if (symbol_offset)
-                builder.appendff("+{}", symbol_offset);
+                builder.appendff("+{:#x}", symbol_offset);
             builder.append('>');
         }
     };
@@ -1586,13 +1584,13 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     auto append_fpu_rm32 = [&] { builder.append(m_modrm.to_string_fpu32(*this)); };
     auto append_fpu_rm64 = [&] { builder.append(m_modrm.to_string_fpu64(*this)); };
     auto append_fpu_rm80 = [&] { builder.append(m_modrm.to_string_fpu80(*this)); };
-    auto append_imm8 = [&] { builder.appendff("{:#02x}", imm8()); };
-    auto append_imm8_2 = [&] { builder.appendff("{:#02x}", imm8_2()); };
-    auto append_imm16 = [&] { builder.appendff("{:#04x}", imm16()); };
-    auto append_imm16_1 = [&] { builder.appendff("{:#04x}", imm16_1()); };
-    auto append_imm16_2 = [&] { builder.appendff("{:#04x}", imm16_2()); };
-    auto append_imm32 = [&] { builder.appendff("{:#08x}", imm32()); };
-    auto append_imm32_2 = [&] { builder.appendff("{:#08x}", imm32_2()); };
+    auto append_imm8 = [&] { builder.appendff("{:#x}", imm8()); };
+    auto append_imm8_2 = [&] { builder.appendff("{:#x}", imm8_2()); };
+    auto append_imm16 = [&] { builder.appendff("{:#x}", imm16()); };
+    auto append_imm16_1 = [&] { builder.appendff("{:#x}", imm16_1()); };
+    auto append_imm16_2 = [&] { builder.appendff("{:#x}", imm16_2()); };
+    auto append_imm32 = [&] { builder.appendff("{:#x}", imm32()); };
+    auto append_imm32_2 = [&] { builder.appendff("{:#x}", imm32_2()); };
     auto append_reg8 = [&] { builder.append(reg8_name()); };
     auto append_reg16 = [&] { builder.append(reg16_name()); };
     auto append_reg32 = [&] { builder.append(reg32_name()); };
@@ -1643,40 +1641,40 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_RM8_imm8:
         append_mnemonic_space();
         append_rm8();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_RM16_imm8:
         append_mnemonic_space();
         append_rm16();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_RM32_imm8:
         append_mnemonic_space();
         append_rm32();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_reg16_RM16_imm8:
         append_mnemonic_space();
         append_reg16();
-        append(", ");
+        append(",");
         append_rm16();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_reg32_RM32_imm8:
         append_mnemonic_space();
         append_reg32();
-        append(", ");
+        append(",");
         append_rm32();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_AL_imm8:
         append_mnemonic_space();
-        append("al, ");
+        append("al,");
         append_imm8();
         break;
     case OP_imm8:
@@ -1686,37 +1684,37 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_reg8_imm8:
         append_mnemonic_space();
         append_reg8();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_AX_imm8:
         append_mnemonic_space();
-        append("ax, ");
+        append("ax,");
         append_imm8();
         break;
     case OP_EAX_imm8:
         append_mnemonic_space();
-        append("eax, ");
+        append("eax,");
         append_imm8();
         break;
     case OP_imm8_AL:
         append_mnemonic_space();
         append_imm8();
-        append(", al");
+        append(",al");
         break;
     case OP_imm8_AX:
         append_mnemonic_space();
         append_imm8();
-        append(", ax");
+        append(",ax");
         break;
     case OP_imm8_EAX:
         append_mnemonic_space();
         append_imm8();
-        append(", eax");
+        append(",eax");
         break;
     case OP_AX_imm16:
         append_mnemonic_space();
-        append("ax, ");
+        append("ax,");
         append_imm16();
         break;
     case OP_imm16:
@@ -1726,23 +1724,23 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_reg16_imm16:
         append_mnemonic_space();
         append_reg16();
-        append(", ");
+        append(",");
         append_imm16();
         break;
     case OP_reg16_RM16_imm16:
         append_mnemonic_space();
         append_reg16();
-        append(", ");
+        append(",");
         append_rm16();
-        append(", ");
+        append(",");
         append_imm16();
         break;
     case OP_reg32_RM32_imm32:
         append_mnemonic_space();
         append_reg32();
-        append(", ");
+        append(",");
         append_rm32();
-        append(", ");
+        append(",");
         append_imm32();
         break;
     case OP_imm32:
@@ -1751,7 +1749,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         break;
     case OP_EAX_imm32:
         append_mnemonic_space();
-        append("eax, ");
+        append("eax,");
         append_imm32();
         break;
     case OP_CS:
@@ -1779,7 +1777,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         append("gs");
         break;
     case OP:
-        append_mnemonic_space();
+        append_mnemonic();
         break;
     case OP_reg32:
         append_mnemonic_space();
@@ -1788,37 +1786,37 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_imm16_imm8:
         append_mnemonic_space();
         append_imm16_1();
-        append(", ");
+        append(",");
         append_imm8_2();
         break;
     case OP_moff8_AL:
         append_mnemonic_space();
         append_moff();
-        append(", al");
+        append(",al");
         break;
     case OP_moff16_AX:
         append_mnemonic_space();
         append_moff();
-        append(", ax");
+        append(",ax");
         break;
     case OP_moff32_EAX:
         append_mnemonic_space();
         append_moff();
-        append(", eax");
+        append(",eax");
         break;
     case OP_AL_moff8:
         append_mnemonic_space();
-        append("al, ");
+        append("al,");
         append_moff();
         break;
     case OP_AX_moff16:
         append_mnemonic_space();
-        append("ax, ");
+        append("ax,");
         append_moff();
         break;
     case OP_EAX_moff32:
         append_mnemonic_space();
-        append("eax, ");
+        append("eax,");
         append_moff();
         break;
     case OP_imm16_imm16:
@@ -1836,38 +1834,38 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_reg32_imm32:
         append_mnemonic_space();
         append_reg32();
-        append(", ");
+        append(",");
         append_imm32();
         break;
     case OP_RM8_1:
         append_mnemonic_space();
         append_rm8();
-        append(", 0x01");
+        append(",0x01");
         break;
     case OP_RM16_1:
         append_mnemonic_space();
         append_rm16();
-        append(", 0x01");
+        append(",0x01");
         break;
     case OP_RM32_1:
         append_mnemonic_space();
         append_rm32();
-        append(", 0x01");
+        append(",0x01");
         break;
     case OP_RM8_CL:
         append_mnemonic_space();
         append_rm8();
-        append(", cl");
+        append(",cl");
         break;
     case OP_RM16_CL:
         append_mnemonic_space();
         append_rm16();
-        append(", cl");
+        append(",cl");
         break;
     case OP_RM32_CL:
         append_mnemonic_space();
         append_rm32();
-        append(", cl");
+        append(",cl");
         break;
     case OP_reg16:
         append_mnemonic_space();
@@ -1875,12 +1873,12 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         break;
     case OP_AX_reg16:
         append_mnemonic_space();
-        append("ax, ");
+        append("ax,");
         append_reg16();
         break;
     case OP_EAX_reg32:
         append_mnemonic_space();
-        append("eax, ");
+        append("eax,");
         append_reg32();
         break;
     case OP_3:
@@ -1889,32 +1887,32 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
         break;
     case OP_AL_DX:
         append_mnemonic_space();
-        append("al, dx");
+        append("al,dx");
         break;
     case OP_AX_DX:
         append_mnemonic_space();
-        append("ax, dx");
+        append("ax,dx");
         break;
     case OP_EAX_DX:
         append_mnemonic_space();
-        append("eax, dx");
+        append("eax,dx");
         break;
     case OP_DX_AL:
         append_mnemonic_space();
-        append("dx, al");
+        append("dx,al");
         break;
     case OP_DX_AX:
         append_mnemonic_space();
-        append("dx, ax");
+        append("dx,ax");
         break;
     case OP_DX_EAX:
         append_mnemonic_space();
-        append("dx, eax");
+        append("dx,eax");
         break;
     case OP_reg8_CL:
         append_mnemonic_space();
         append_reg8();
-        append(", cl");
+        append(",cl");
         break;
     case OP_RM8:
         append_mnemonic_space();
@@ -1962,103 +1960,103 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_RM8_reg8:
         append_mnemonic_space();
         append_rm8();
-        append(", ");
+        append(",");
         append_reg8();
         break;
     case OP_RM16_reg16:
         append_mnemonic_space();
         append_rm16();
-        append(", ");
+        append(",");
         append_reg16();
         break;
     case OP_RM32_reg32:
         append_mnemonic_space();
         append_rm32();
-        append(", ");
+        append(",");
         append_reg32();
         break;
     case OP_reg8_RM8:
         append_mnemonic_space();
         append_reg8();
-        append(", ");
+        append(",");
         append_rm8();
         break;
     case OP_reg16_RM16:
         append_mnemonic_space();
         append_reg16();
-        append(", ");
+        append(",");
         append_rm16();
         break;
     case OP_reg32_RM32:
         append_mnemonic_space();
         append_reg32();
-        append(", ");
+        append(",");
         append_rm32();
         break;
     case OP_reg32_RM16:
         append_mnemonic_space();
         append_reg32();
-        append(", ");
+        append(",");
         append_rm16();
         break;
     case OP_reg16_RM8:
         append_mnemonic_space();
         append_reg16();
-        append(", ");
+        append(",");
         append_rm8();
         break;
     case OP_reg32_RM8:
         append_mnemonic_space();
         append_reg32();
-        append(", ");
+        append(",");
         append_rm8();
         break;
     case OP_RM16_imm16:
         append_mnemonic_space();
         append_rm16();
-        append(", ");
+        append(",");
         append_imm16();
         break;
     case OP_RM32_imm32:
         append_mnemonic_space();
         append_rm32();
-        append(", ");
+        append(",");
         append_imm32();
         break;
     case OP_RM16_seg:
         append_mnemonic_space();
         append_rm16();
-        append(", ");
+        append(",");
         append_seg();
         break;
     case OP_RM32_seg:
         append_mnemonic_space();
         append_rm32();
-        append(", ");
+        append(",");
         append_seg();
         break;
     case OP_seg_RM16:
         append_mnemonic_space();
         append_seg();
-        append(", ");
+        append(",");
         append_rm16();
         break;
     case OP_seg_RM32:
         append_mnemonic_space();
         append_seg();
-        append(", ");
+        append(",");
         append_rm32();
         break;
     case OP_reg16_mem16:
         append_mnemonic_space();
         append_reg16();
-        append(", ");
+        append(",");
         append_rm16();
         break;
     case OP_reg32_mem32:
         append_mnemonic_space();
         append_reg32();
-        append(", ");
+        append(",");
         append_rm32();
         break;
     case OP_FAR_mem16:
@@ -2074,25 +2072,25 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_reg32_CR:
         append_mnemonic_space();
         builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
-        append(", ");
+        append(",");
         append_creg();
         break;
     case OP_CR_reg32:
         append_mnemonic_space();
         append_creg();
-        append(", ");
+        append(",");
         builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
         break;
     case OP_reg32_DR:
         append_mnemonic_space();
         builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
-        append(", ");
+        append(",");
         append_dreg();
         break;
     case OP_DR_reg32:
         append_mnemonic_space();
         append_dreg();
-        append(", ");
+        append(",");
         builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
         break;
     case OP_short_imm8:
@@ -2116,32 +2114,32 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_RM16_reg16_imm8:
         append_mnemonic_space();
         append_rm16();
-        append(", ");
+        append(",");
         append_reg16();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_RM32_reg32_imm8:
         append_mnemonic_space();
         append_rm32();
-        append(", ");
+        append(",");
         append_reg32();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_RM16_reg16_CL:
         append_mnemonic_space();
         append_rm16();
-        append(", ");
+        append(",");
         append_reg16();
         append(", cl");
         break;
     case OP_RM32_reg32_CL:
         append_mnemonic_space();
         append_rm32();
-        append(", ");
+        append(",");
         append_reg32();
-        append(", cl");
+        append(",cl");
         break;
     case OP_reg:
         append_mnemonic_space();
@@ -2157,66 +2155,66 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_mm1_imm8:
         append_mnemonic_space();
         append_mm_or_xmm();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_mm1_mm2m32:
         append_mnemonic_space();
         append_mm_or_xmm();
-        append(", ");
+        append(",");
         append_mm_or_xmm_or_mem();
         break;
     case OP_mm1_rm32:
         append_mnemonic_space();
         append_mm_or_xmm();
-        append(", ");
+        append(",");
         append_rm32();
         break;
     case OP_rm32_mm2:
         append_mnemonic_space();
         append_rm32();
-        append(", ");
+        append(",");
         append_mm_or_xmm();
         break;
     case OP_mm1_mm2m64:
         append_mnemonic_space();
         append_mm_or_xmm();
-        append(", ");
+        append(",");
         append_mm_or_xmm_or_mem();
         break;
     case OP_mm1m64_mm2:
         append_mnemonic_space();
         append_mm_or_xmm_or_mem();
-        append(", ");
+        append(",");
         append_mm_or_xmm();
         break;
     case OP_mm1_mm2m64_imm8:
         append_mnemonic_space();
         append_mm_or_xmm();
-        append(", ");
+        append(",");
         append_mm_or_xmm_or_mem();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_reg_mm1:
         append_mnemonic_space();
         append_rm32();
-        append(", ");
+        append(",");
         append_mm_or_xmm();
         break;
     case OP_reg_mm1_imm8:
         append_mnemonic_space();
         append_reg32();
-        append(", ");
+        append(",");
         append_mm_or_xmm_or_mem();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_mm1_r32m16_imm8:
         append_mnemonic_space();
         append_mm_or_xmm();
         append_rm32(); // FIXME: r32m16
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case __SSE:
@@ -2224,150 +2222,150 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, SymbolP
     case OP_xmm_mm:
         append_mnemonic_space();
         append_xmm();
-        append(", ");
+        append(",");
         append_mmrm32(); // FIXME: No Memmory
         break;
     case OP_mm1_xmm2m128:
     case OP_mm_xmm:
         append_mnemonic_space();
         append_mm();
-        append(", ");
+        append(",");
         append_xmmrm32(); // FIXME: No Memmory
         break;
     case OP_xmm1_imm8:
         append_mnemonic_space();
         append_xmm();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_xmm1_xmm2m32:
         append_mnemonic_space();
         append_xmm();
-        append(", ");
+        append(",");
         append_xmmrm32();
         break;
     case OP_xmm1_xmm2m64:
         append_mnemonic_space();
         append_xmm();
-        append(", ");
+        append(",");
         append_xmmrm64();
         break;
     case OP_xmm1_xmm2m128:
         append_mnemonic_space();
         append_xmm();
-        append(", ");
+        append(",");
         append_xmmrm128();
         break;
     case OP_xmm1_xmm2m32_imm8:
         append_mnemonic_space();
         append_xmm();
-        append(", ");
+        append(",");
         append_xmmrm32();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_xmm1_xmm2m128_imm8:
         append_mnemonic_space();
         append_xmm();
-        append(", ");
+        append(",");
         append_xmmrm32();
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_xmm1m32_xmm2:
         append_mnemonic_space();
         append_xmmrm32();
-        append(", ");
+        append(",");
         append_xmm();
         break;
     case OP_xmm1m64_xmm2:
         append_mnemonic_space();
         append_xmmrm64();
-        append(", ");
+        append(",");
         append_xmm();
         break;
     case OP_xmm1m128_xmm2:
         append_mnemonic_space();
         append_xmmrm128();
-        append(", ");
+        append(",");
         append_xmm();
         break;
     case OP_reg_xmm1:
     case OP_r32_xmm2m64:
         append_mnemonic_space();
         append_reg32();
-        append(", ");
+        append(",");
         append_xmmrm128(); // second entry in the rm byte
         break;
     case OP_rm32_xmm2:
         append_mnemonic_space();
         append_rm32();
-        append(", ");
+        append(",");
         append_xmm();
         break;
     case OP_reg_xmm1_imm8:
         append_mnemonic_space();
         append_reg32();
-        append(", ");
+        append(",");
         append_xmmrm128(); // second entry in the rm byte
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case OP_xmm1_rm32:
         append_mnemonic_space();
         append_xmm();
-        append(", ");
+        append(",");
         append_rm32(); // second entry in the rm byte
         break;
     case OP_xmm1_m64:
         append_mnemonic_space();
         append_xmm();
-        append(", ");
+        append(",");
         append_rm64(); // second entry in the rm byte
         break;
 
     case OP_m64_xmm2:
         append_mnemonic_space();
         append_rm64(); // second entry in the rm byte
-        append(", ");
+        append(",");
         append_xmm();
         break;
     case OP_rm8_xmm2m32:
         append_mnemonic_space();
         append_rm8();
-        append(", ");
+        append(",");
         append_xmmrm32();
         break;
     case OP_xmm1_mm2m64:
         append_mnemonic_space();
         append_xmm();
-        append(", ");
+        append(",");
         append_mmrm64();
         break;
     case OP_mm1m64_xmm2:
         append_mnemonic_space();
         append_mmrm64();
-        append(", ");
+        append(",");
         append_xmm();
         break;
     case OP_mm1_xmm2m64:
         append_mnemonic_space();
         append_mm();
-        append(", ");
+        append(",");
         append_xmmrm64();
         break;
     case OP_r32_xmm2m32:
         append_mnemonic_space();
         append_reg32();
-        append(", ");
+        append(",");
         append_xmmrm32();
         break;
     case OP_xmm1_r32m16_imm8:
         append_mnemonic_space();
         append_xmm();
-        append(", ");
+        append(",");
         append_rm32(); // FIXME: r32m16
-        append(", ");
+        append(",");
         append_imm8();
         break;
     case InstructionPrefix:
