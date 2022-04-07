@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Ali Chraghi <chraghiali1@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,6 +21,7 @@
 #include <LibDesktop/AppFile.h>
 #include <LibDesktop/Launcher.h>
 #include <LibELF/Core.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -28,6 +30,7 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/LinkLabel.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextEditor.h>
@@ -138,6 +141,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     char const* coredump_path = nullptr;
     bool unlink_on_exit = false;
+    StringBuilder full_backtrace;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Show information from an application crash coredump.");
@@ -270,6 +274,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
+    auto& save_backtrace_button = *widget->find_descendant_of_type_named<GUI::Button>("save_backtrace_button");
+    save_backtrace_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png")));
+    save_backtrace_button.on_click = [&](auto) {
+        if (full_backtrace.is_empty()) {
+            GUI::MessageBox::show(window, "Backtrace has not been generated yet. Please wait...", "Empty Backtrace", GUI::MessageBox::Type::Error);
+            return;
+        }
+
+        LexicalPath lexical_path(String::formatted("{}_{}_backtrace.txt", pid, app_name));
+        auto file_or_error = FileSystemAccessClient::Client::the().try_save_file(window, lexical_path.title(), lexical_path.extension());
+        if (file_or_error.is_error()) {
+            GUI::MessageBox::show(window, String::formatted("Couldn't save file: {}.", file_or_error.error()), "Saving backtrace failed", GUI::MessageBox::Type::Error);
+            return;
+        }
+
+        auto file = file_or_error.value();
+        file->write(full_backtrace.to_string());
+    };
+
     (void)Threading::BackgroundAction<ThreadBacktracesAndCpuRegisters>::construct(
         [&, coredump = move(coredump)](auto&) {
             ThreadBacktracesAndCpuRegisters results;
@@ -301,6 +324,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 backtrace_text_editor->set_text(backtrace.text);
                 backtrace_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
                 backtrace_text_editor->set_should_hide_unnecessary_scrollbars(true);
+                full_backtrace.appendff("==== {} ====\n{}\n", backtrace.title, backtrace.text);
             }
 
             for (auto& cpu_registers : results.thread_cpu_registers) {
