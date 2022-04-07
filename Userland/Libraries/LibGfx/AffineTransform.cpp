@@ -142,8 +142,8 @@ Optional<AffineTransform> AffineTransform::inverse() const
 
 void AffineTransform::map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const
 {
-    mapped_x = a() * unmapped_x + b() * unmapped_y + m_values[4];
-    mapped_y = c() * unmapped_x + d() * unmapped_y + m_values[5];
+    mapped_x = a() * unmapped_x + c() * unmapped_y + e();
+    mapped_y = b() * unmapped_x + d() * unmapped_y + f();
 }
 
 template<>
