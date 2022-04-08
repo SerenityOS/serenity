@@ -262,7 +262,7 @@ void StackingContext::paint(PaintContext& context) const
             return;
         auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         Gfx::Painter painter(bitmap);
-        auto paint_context = context.clone();
+        auto paint_context = context.clone(painter);
         paint_internal(paint_context);
 
         auto transform_origin = this->transform_origin();
