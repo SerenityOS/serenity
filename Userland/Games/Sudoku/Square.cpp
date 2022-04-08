@@ -7,9 +7,9 @@
 #include "Square.h"
 
 Square::Square(int x, int y)
+    : m_x { x }
+    , m_y { y }
 {
-    m_x = x;
-    m_y = y;
 }
 
 void Square::set_value(int value)

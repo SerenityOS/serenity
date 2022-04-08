@@ -19,9 +19,9 @@ public:
     bool is_correct();
 
 private:
+    int m_x;
+    int m_y;
     bool m_fixed { false };
     int m_value { 0 };
     int m_answer;
-    int m_x;
-    int m_y;
 };
