@@ -10,6 +10,11 @@
 
 namespace Kernel::IntelGraphics {
 
+enum class Generation {
+    Gen4,
+    Gen9,
+};
+
 struct PLLSettings;
 
 struct PLLParameterLimit {
