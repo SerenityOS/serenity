@@ -59,7 +59,7 @@ bool Board::try_create_board()
             y = rand() % m_dimension;
         }
 
-        auto value = generate_random_value(squares, x, y);
+        auto value = generate_random_value(&squares, x, y);
         if (value == 0)
             return false;
         squares[x][y].set_value(value);
@@ -75,7 +75,7 @@ bool Board::is_solveable(Vector<Vector<Square>> squares)
             if (squares[x][y].get_value() == 0) {
                 Vector<int> tried;
                 while (tried.size() < m_dimension) {
-                    int value = generate_random_value(squares, x, y, tried);
+                    int value = generate_random_value(&squares, x, y, tried);
                     if (value == 0)
                         return false;
                     tried.append(value);
@@ -90,14 +90,14 @@ bool Board::is_solveable(Vector<Vector<Square>> squares)
     return true;
 }
 
-bool Board::is_valid(Vector<Vector<Square>> squares, int x, int y, int value)
+bool Board::is_valid(Vector<Vector<Square>>* squares, int x, int y, int value)
 {
     for (size_t i = 0; i < m_dimension; i++) {
-        int row_value = squares[x][i].get_value();
+        int row_value = squares->at(x)[i].get_value();
         if (value == row_value)
             return false;
 
-        int column_value = squares[i][y].get_value();
+        int column_value = squares->at(i)[y].get_value();
         if (value == column_value)
             return false;
     }
@@ -106,7 +106,7 @@ bool Board::is_valid(Vector<Vector<Square>> squares, int x, int y, int value)
     return !sub_square_values.contains_slow(value);
 }
 
-Vector<int> Board::get_sub_square(Vector<Vector<Square>> squares, int x,
+Vector<int> Board::get_sub_square(Vector<Vector<Square>>* squares, int x,
     int y)
 {
     // Traverse the 3x3 square that contains the position x,y and return all none
@@ -115,7 +115,7 @@ Vector<int> Board::get_sub_square(Vector<Vector<Square>> squares, int x,
     int start_x = x - (x % 3);
     int start_y = y - (y % 3);
     for (size_t i = 0; i < m_dimension; i++) {
-        int value = squares[start_x][start_y].get_value();
+        int value = squares->at(start_x)[start_y].get_value();
         if (value != 0)
             values.append(value);
         start_x++;
@@ -127,7 +127,7 @@ Vector<int> Board::get_sub_square(Vector<Vector<Square>> squares, int x,
     return values;
 }
 
-int Board::generate_random_value(Vector<Vector<Square>> squares, int x, int y,
+int Board::generate_random_value(Vector<Vector<Square>>* squares, int x, int y,
     Vector<int> invalid)
 {
     // A vector respresenting whether the index value is a valid option.
@@ -139,8 +139,8 @@ int Board::generate_random_value(Vector<Vector<Square>> squares, int x, int y,
     Vector<bool> options = { true, true, true, true, true, true, true, true, true };
 
     for (size_t i = 0; i < m_dimension; i++) {
-        int row_value = squares[x][i].get_value();
-        int column_value = squares[i][y].get_value();
+        int row_value = squares->at(x)[i].get_value();
+        int column_value = squares->at(i)[y].get_value();
         if (row_value != 0)
             options[row_value - 1] = false;
         if (column_value != 0)

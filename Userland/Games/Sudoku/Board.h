@@ -21,11 +21,11 @@ public:
 private:
     size_t m_dimension { 9 };
     Vector<Vector<Square>> m_squares;
-    bool is_valid(Vector<Vector<Square>> squares, int x, int y, int value);
-    int generate_random_value(Vector<Vector<Square>> squares, int x, int y,
+    bool is_valid(Vector<Vector<Square>>* squares, int x, int y, int value);
+    int generate_random_value(Vector<Vector<Square>>* squares, int x, int y,
         Vector<int> invalid = {});
     bool try_create_board();
     bool is_solveable(Vector<Vector<Square>> squares);
     int m_number_provided { 45 };
-    Vector<int> get_sub_square(Vector<Vector<Square>> squares, int x, int y);
+    Vector<int> get_sub_square(Vector<Vector<Square>>* squares, int x, int y);
 };
