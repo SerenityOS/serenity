@@ -2,12 +2,14 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mițca Dumitru <dumitru0mitca@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Leon Albrecht <leon.a@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/ExtraMathConstants.h>
+#include <AK/FPControl.h>
 #include <AK/Math.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
@@ -459,7 +461,7 @@ float truncf(float x) NOEXCEPT
 
 long double rintl(long double value)
 {
-    double res;
+    long double res;
     asm(
         "frndint\n"
         : "=t"(res)
@@ -477,7 +479,7 @@ double rint(double value)
 }
 float rintf(float value)
 {
-    double res;
+    float res;
     asm(
         "frndint\n"
         : "=t"(res)
@@ -628,6 +630,8 @@ long double frexpl(long double x, int* exp) NOEXCEPT
     return scalbnl(x, -(*exp));
 }
 
+#if !(ARCH(I386) || ARCH(X86_64))
+
 double round(double value) NOEXCEPT
 {
     return internal_to_integer(value, RoundingMode::ToEven);
@@ -702,6 +706,117 @@ long double ceill(long double value) NOEXCEPT
 {
     return internal_to_integer(value, RoundingMode::Up);
 }
+
+#else
+
+double round(double x) NOEXCEPT
+{
+    // Note: This is break-tie-away-from-zero, so not the hw's understanding of
+    //       "nearest", which would be towards even.
+    if (x == 0.)
+        return x;
+    if (x > 0.)
+        return floor(x + .5);
+    return ceil(x - .5);
+}
+
+float roundf(float x) NOEXCEPT
+{
+    if (x == 0.f)
+        return x;
+    if (x > 0.f)
+        return floorf(x + .5f);
+    return ceilf(x - .5f);
+}
+
+long double roundl(long double x) NOEXCEPT
+{
+    if (x == 0.L)
+        return x;
+    if (x > 0.L)
+        return floorl(x + .5L);
+    return ceill(x - .5L);
+}
+
+long lroundf(float value) NOEXCEPT
+{
+    return static_cast<long>(roundf(value));
+}
+
+long lround(double value) NOEXCEPT
+{
+    return static_cast<long>(round(value));
+}
+
+long lroundl(long double value) NOEXCEPT
+{
+    return static_cast<long>(roundl(value));
+}
+
+long long llroundf(float value) NOEXCEPT
+{
+    return static_cast<long long>(roundf(value));
+}
+
+long long llround(double value) NOEXCEPT
+{
+    return static_cast<long long>(round(value));
+}
+
+long long llroundd(long double value) NOEXCEPT
+{
+    return static_cast<long long>(roundl(value));
+}
+
+float floorf(float value) NOEXCEPT
+{
+    AK::X87RoundingModeScope scope { AK::RoundingMode::DOWN };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+}
+
+double floor(double value) NOEXCEPT
+{
+    AK::X87RoundingModeScope scope { AK::RoundingMode::DOWN };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+}
+
+long double floorl(long double value) NOEXCEPT
+{
+    AK::X87RoundingModeScope scope { AK::RoundingMode::DOWN };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+}
+
+float ceilf(float value) NOEXCEPT
+{
+    AK::X87RoundingModeScope scope { AK::RoundingMode::UP };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+}
+
+double ceil(double value) NOEXCEPT
+{
+    AK::X87RoundingModeScope scope { AK::RoundingMode::UP };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+}
+
+long double ceill(long double value) NOEXCEPT
+{
+    AK::X87RoundingModeScope scope { AK::RoundingMode::UP };
+    asm("frndint"
+        : "+t"(value));
+    return value;
+}
+
+#endif
 
 long double modfl(long double x, long double* intpart) NOEXCEPT
 {
