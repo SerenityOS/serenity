@@ -174,8 +174,9 @@ Square* SudokuWidget::mouse_to_square(GUI::MouseEvent& event)
 
     auto x = ((event.x() - widget_offset_x) / m_cell_size);
     auto y = ((event.y() - widget_offset_y) / m_cell_size);
+    auto dimension = (int)m_board->dimension();
 
-    if (x > 8 || x < 0 || y > 8 || y < 0)
+    if (x >= dimension || x < 0 || y >= dimension || y < 0)
         return nullptr;
 
     return m_board->get_square(x, y);
@@ -192,8 +193,9 @@ void SudokuWidget::move_active_square(int x, int y)
 
     auto new_x = current_x + x;
     auto new_y = current_y + y;
+    auto dimension = (int)m_board->dimension();
 
-    if (new_x < 0 || new_y < 0 || new_x > 8 || new_y > 8)
+    if (new_x < 0 || new_y < 0 || new_x >= dimension || new_y >= dimension)
         return;
 
     m_active_square = m_board->get_square(new_x, new_y);
