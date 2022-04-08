@@ -130,6 +130,21 @@ constexpr float sqrt(float x)
     return res;
 }
 
+#    ifdef __SSE2__
+template<>
+constexpr double sqrt(double x)
+{
+    if (is_constant_evaluated())
+        return __builtin_sqrt(x);
+
+    double res;
+    asm("sqrtsd %1, %0"
+        : "=x"(res)
+        : "x"(x));
+    return res;
+}
+#    endif
+
 template<>
 constexpr float rsqrt(float x)
 {
