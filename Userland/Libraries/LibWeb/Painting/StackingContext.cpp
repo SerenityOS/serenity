@@ -154,7 +154,7 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
             });
     };
 
-    auto reference_box = m_box.paint_box()->absolute_rect();
+    auto reference_box = paintable().absolute_rect();
     auto width = CSS::Length::make_px(reference_box.width());
     auto height = CSS::Length::make_px(reference_box.height());
 
@@ -266,7 +266,7 @@ void StackingContext::paint(PaintContext& context) const
         paint_internal(paint_context);
 
         auto transform_origin = this->transform_origin();
-        auto source_rect = m_box.paint_box()->absolute_border_box_rect().translated(-transform_origin);
+        auto source_rect = paintable().absolute_border_box_rect().translated(-transform_origin);
 
         auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
         source_rect.translate_by(transform_origin);
@@ -280,7 +280,7 @@ Gfx::FloatPoint StackingContext::transform_origin() const
 {
     auto style_value = m_box.computed_values().transform_origin();
     // FIXME: respect transform-box property
-    auto reference_box = m_box.paint_box()->absolute_border_box_rect();
+    auto reference_box = paintable().absolute_border_box_rect();
     auto x = reference_box.left() + style_value.x.resolved(m_box, CSS::Length::make_px(reference_box.width())).to_px(m_box);
     auto y = reference_box.top() + style_value.y.resolved(m_box, CSS::Length::make_px(reference_box.height())).to_px(m_box);
     return { x, y };
@@ -309,9 +309,10 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
 
     Optional<HitTestResult> result;
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
-    m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
-        if (box.is_positioned() && !box.paint_box()->stacking_context()) {
-            if (auto candidate = box.paint_box()->hit_test(transformed_position, type); candidate.has_value())
+    paintable().for_each_in_subtree_of_type<PaintableBox>([&](auto& paint_box) {
+        auto& layout_box = paint_box.layout_box();
+        if (layout_box.is_positioned() && !paint_box.stacking_context()) {
+            if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value())
                 result = move(candidate);
         }
         return IterationDecision::Continue;
@@ -321,15 +322,16 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     if (m_box.children_are_inline() && is<Layout::BlockContainer>(m_box)) {
-        auto result = m_box.paint_box()->hit_test(transformed_position, type);
+        auto result = paintable().hit_test(transformed_position, type);
         if (result.has_value())
             return result;
     }
 
     // 4. the non-positioned floats.
-    m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
-        if (box.is_floating()) {
-            if (auto candidate = box.paint_box()->hit_test(transformed_position, type); candidate.has_value())
+    paintable().for_each_in_subtree_of_type<PaintableBox>([&](auto const& paint_box) {
+        auto& layout_box = paint_box.layout_box();
+        if (layout_box.is_floating()) {
+            if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value())
                 result = move(candidate);
         }
         return IterationDecision::Continue;
@@ -339,11 +341,10 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
 
     // 3. the in-flow, non-inline-level, non-positioned descendants.
     if (!m_box.children_are_inline()) {
-        m_box.for_each_in_subtree_of_type<Layout::Box>([&](Layout::Box const& box) {
-            if (!box.is_absolutely_positioned() && !box.is_floating()) {
-                if (!box.paint_box())
-                    return IterationDecision::Continue;
-                if (auto candidate = box.paint_box()->hit_test(transformed_position, type); candidate.has_value())
+        paintable().for_each_in_subtree_of_type<PaintableBox>([&](auto const& paint_box) {
+            auto& layout_box = paint_box.layout_box();
+            if (!layout_box.is_absolutely_positioned() && !layout_box.is_floating()) {
+                if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value())
                     result = move(candidate);
             }
             return IterationDecision::Continue;
@@ -365,9 +366,9 @@ Optional<HitTestResult> StackingContext::hit_test(Gfx::FloatPoint const& positio
     }
 
     // 1. the background and borders of the element forming the stacking context.
-    if (m_box.paint_box()->absolute_border_box_rect().contains(transformed_position)) {
+    if (paintable().absolute_border_box_rect().contains(transformed_position)) {
         return HitTestResult {
-            .paintable = *m_box.paintable(),
+            .paintable = paintable(),
         };
     }
 
@@ -379,7 +380,7 @@ void StackingContext::dump(int indent) const
     StringBuilder builder;
     for (int i = 0; i < indent; ++i)
         builder.append(' ');
-    builder.appendff("SC for {} {} [children: {}] (z-index: ", m_box.debug_description(), m_box.paint_box()->absolute_rect(), m_children.size());
+    builder.appendff("SC for {} {} [children: {}] (z-index: ", m_box.debug_description(), paintable().absolute_rect(), m_children.size());
     if (m_box.computed_values().z_index().has_value())
         builder.appendff("{}", m_box.computed_values().z_index().value());
     else
