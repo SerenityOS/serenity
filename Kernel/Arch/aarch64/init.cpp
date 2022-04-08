@@ -10,13 +10,13 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Arch/aarch64/Aarch64_asm_utils.h>
 #include <Kernel/Arch/aarch64/BootPPMParser.h>
-#include <Kernel/Arch/aarch64/Framebuffer.h>
-#include <Kernel/Arch/aarch64/Mailbox.h>
-#include <Kernel/Arch/aarch64/Prekernel.h>
-#include <Kernel/Arch/aarch64/Timer.h>
-#include <Kernel/Arch/aarch64/UART.h>
+#include <Kernel/Arch/aarch64/Prekernel/Aarch64_asm_utils.h>
+#include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
+#include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
+#include <Kernel/Arch/aarch64/RPi/Mailbox.h>
+#include <Kernel/Arch/aarch64/RPi/Timer.h>
+#include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Utils.h>
 
 static void draw_logo();

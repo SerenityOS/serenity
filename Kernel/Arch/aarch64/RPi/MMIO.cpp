@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/aarch64/MMIO.h>
 #include <Kernel/Arch/aarch64/MainIdRegister.h>
+#include <Kernel/Arch/aarch64/RPi/MMIO.h>
 
 namespace Prekernel {
 
