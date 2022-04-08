@@ -123,32 +123,32 @@ ALWAYS_INLINE void SoftFPU::fpu_set_exception(FPU_Exception ex)
         break;
     case FPU_Exception::InvalidOperation:
         m_fpu_error_invalid = 1;
-        if (!m_fpu_mask_invalid)
+        if (!m_fpu_cw.mask_invalid)
             break;
         return;
     case FPU_Exception::DenormalizedOperand:
         m_fpu_error_denorm = 1;
-        if (!m_fpu_mask_denorm)
+        if (!m_fpu_cw.mask_denorm)
             break;
         return;
     case FPU_Exception::ZeroDivide:
         m_fpu_error_zero_div = 1;
-        if (!m_fpu_mask_zero_div)
+        if (!m_fpu_cw.mask_zero_div)
             break;
         return;
     case FPU_Exception::Overflow:
         m_fpu_error_overflow = 1;
-        if (!m_fpu_mask_overflow)
+        if (!m_fpu_cw.mask_overflow)
             break;
         return;
     case FPU_Exception::Underflow:
         m_fpu_error_underflow = 1;
-        if (!m_fpu_mask_underflow)
+        if (!m_fpu_cw.mask_underflow)
             break;
         return;
     case FPU_Exception::Precision:
         m_fpu_error_precision = 1;
-        if (!m_fpu_mask_precision)
+        if (!m_fpu_cw.mask_precision)
             break;
         return;
     }
@@ -168,27 +168,9 @@ ALWAYS_INLINE void SoftFPU::fpu_set_exception(FPU_Exception ex)
 }
 
 template<Arithmetic T>
-ALWAYS_INLINE T SoftFPU::fpu_round(long double value) const
+ALWAYS_INLINE T SoftFPU::round_checked(long double value)
 {
-    // FIXME: may need to set indefinite values manually
-    switch (fpu_get_round_mode()) {
-    case RoundingMode::NEAREST:
-        return static_cast<T>(roundl(value));
-    case RoundingMode::DOWN:
-        return static_cast<T>(floorl(value));
-    case RoundingMode::UP:
-        return static_cast<T>(ceill(value));
-    case RoundingMode::TRUNC:
-        return static_cast<T>(truncl(value));
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
-template<Arithmetic T>
-ALWAYS_INLINE T SoftFPU::fpu_round_checked(long double value)
-{
-    T result = fpu_round<T>(value);
+    T result = static_cast<T>(rintl(value));
     if (result != value)
         fpu_set_exception(FPU_Exception::Precision);
     if (result > value)
@@ -199,15 +181,9 @@ ALWAYS_INLINE T SoftFPU::fpu_round_checked(long double value)
 }
 
 template<FloatingPoint T>
-ALWAYS_INLINE T SoftFPU::fpu_convert(long double value) const
+ALWAYS_INLINE T SoftFPU::convert_checked(long double value)
 {
-    // FIXME: actually round the right way
-    return static_cast<T>(value);
-}
-template<FloatingPoint T>
-ALWAYS_INLINE T SoftFPU::fpu_convert_checked(long double value)
-{
-    T result = fpu_convert<T>(value);
+    T result = static_cast<T>(value);
     if (auto rnd = value - result) {
         if (rnd > 0)
             set_c1(1);
@@ -254,7 +230,7 @@ void SoftFPU::FLD_RM80(const X86::Instruction& insn)
 void SoftFPU::FST_RM32(const X86::Instruction& insn)
 {
     VERIFY(!insn.modrm().is_register());
-    float f32 = fpu_convert_checked<float>(fpu_get(0));
+    float f32 = convert_checked<float>(fpu_get(0));
 
     if (fpu_is_set(0))
         insn.modrm().write32(m_cpu, insn, shadow_wrap_as_initialized(bit_cast<u32>(f32)));
@@ -266,7 +242,7 @@ void SoftFPU::FST_RM64(const X86::Instruction& insn)
     if (insn.modrm().is_register()) {
         fpu_set(insn.modrm().register_index(), fpu_get(0));
     } else {
-        double f64 = fpu_convert_checked<double>(fpu_get(0));
+        double f64 = convert_checked<double>(fpu_get(0));
         if (fpu_is_set(0))
             insn.modrm().write64(m_cpu, insn, shadow_wrap_as_initialized(bit_cast<u64>(f64)));
         else
@@ -335,7 +311,7 @@ void SoftFPU::FIST_RM16(const X86::Instruction& insn)
     VERIFY(!insn.modrm().is_register());
     auto f = fpu_get(0);
     set_c1(0);
-    auto int16 = fpu_round_checked<i16>(f);
+    auto int16 = round_checked<i16>(f);
 
     // FIXME: Respect shadow values
     insn.modrm().write16(m_cpu, insn, shadow_wrap_as_initialized(bit_cast<u16>(int16)));
@@ -345,7 +321,7 @@ void SoftFPU::FIST_RM32(const X86::Instruction& insn)
     VERIFY(!insn.modrm().is_register());
     auto f = fpu_get(0);
     set_c1(0);
-    auto int32 = fpu_round_checked<i32>(f);
+    auto int32 = round_checked<i32>(f);
     // FIXME: Respect shadow values
     insn.modrm().write32(m_cpu, insn, shadow_wrap_as_initialized(bit_cast<u32>(int32)));
 }
@@ -365,7 +341,7 @@ void SoftFPU::FISTP_RM64(const X86::Instruction& insn)
     VERIFY(!insn.modrm().is_register());
     auto f = fpu_pop();
     set_c1(0);
-    auto i64 = fpu_round_checked<int64_t>(f);
+    auto i64 = round_checked<int64_t>(f);
     // FIXME: Respect shadow values
     insn.modrm().write64(m_cpu, insn, shadow_wrap_as_initialized(bit_cast<u64>(i64)));
 }
@@ -787,7 +763,7 @@ void SoftFPU::FCHS(const X86::Instruction&)
 void SoftFPU::FRNDINT(const X86::Instruction&)
 {
     // FIXME: Raise #IA #D
-    auto res = fpu_round_checked<long double>(fpu_get(0));
+    auto res = round_checked<long double>(fpu_get(0));
     fpu_set(0, res);
 }
 
@@ -818,7 +794,7 @@ void SoftFPU::FCOMPP(const X86::Instruction&)
 {
     if (fpu_isnan(0) || fpu_isnan(1)) {
         fpu_set_exception(FPU_Exception::InvalidOperation);
-        if (m_fpu_mask_invalid)
+        if (m_fpu_cw.mask_invalid)
             fpu_set_unordered();
     } else {
         set_c2(0);
@@ -1146,7 +1122,7 @@ void SoftFPU::FFREEP(const X86::Instruction& insn)
 
 void SoftFPU::FNINIT(const X86::Instruction&)
 {
-    m_fpu_cw = 0x037F;
+    m_fpu_cw.cw = 0x037F;
     m_fpu_sw = 0;
     m_fpu_tw = 0xFFFF;
 
@@ -1172,11 +1148,23 @@ void SoftFPU::FNCLEX(const X86::Instruction&)
 
 void SoftFPU::FNSTCW(const X86::Instruction& insn)
 {
-    insn.modrm().write16(m_cpu, insn, shadow_wrap_as_initialized(m_fpu_cw));
+    insn.modrm().write16(m_cpu, insn, shadow_wrap_as_initialized(m_fpu_cw.cw));
 }
 void SoftFPU::FLDCW(const X86::Instruction& insn)
 {
-    m_fpu_cw = insn.modrm().read16(m_cpu, insn).value();
+    m_fpu_cw.cw = insn.modrm().read16(m_cpu, insn).value();
+
+    // Just let the host's x87 handle the rounding for us
+    // We do not want to accedentally raise an FP-Exception on the host, so we
+    // mask all exceptions
+    AK::X87ControlWord temp = m_fpu_cw;
+    temp.mask_invalid = 1;
+    temp.mask_denorm = 1;
+    temp.mask_zero_div = 1;
+    temp.mask_overflow = 1;
+    temp.mask_underflow = 1;
+    temp.mask_precision = 1;
+    AK::set_cw_x87(temp);
 }
 
 void SoftFPU::FNSTENV(const X86::Instruction& insn)
@@ -1204,7 +1192,7 @@ void SoftFPU::FNSTENV(const X86::Instruction& insn)
 
     auto address = insn.modrm().resolve(m_cpu, insn);
 
-    m_cpu.write_memory16(address, shadow_wrap_as_initialized(m_fpu_cw));
+    m_cpu.write_memory16(address, shadow_wrap_as_initialized(m_fpu_cw.cw));
     address.set_offset(address.offset() + 4);
     m_cpu.write_memory16(address, shadow_wrap_as_initialized(m_fpu_sw));
     address.set_offset(address.offset() + 4);
@@ -1227,7 +1215,17 @@ void SoftFPU::FLDENV(const X86::Instruction& insn)
     auto address = insn.modrm().resolve(m_cpu, insn);
 
     // FIXME: Shadow Values
-    m_fpu_cw = m_cpu.read_memory16(address).value();
+    m_fpu_cw.cw = m_cpu.read_memory16(address).value();
+    // See note in FLDCW
+    AK::X87ControlWord temp = m_fpu_cw;
+    temp.mask_invalid = 1;
+    temp.mask_denorm = 1;
+    temp.mask_zero_div = 1;
+    temp.mask_overflow = 1;
+    temp.mask_underflow = 1;
+    temp.mask_precision = 1;
+    AK::set_cw_x87(temp);
+
     address.set_offset(address.offset() + 4);
     m_fpu_sw = m_cpu.read_memory16(address).value();
     address.set_offset(address.offset() + 4);
