@@ -22,4 +22,4 @@ void Square::set_value(int value)
 
 void Square::set_answer(int value) { m_answer = value; };
 
-bool Square::is_correct() { return (m_value == m_answer); }
+bool Square::is_correct() { return m_value == m_answer; }

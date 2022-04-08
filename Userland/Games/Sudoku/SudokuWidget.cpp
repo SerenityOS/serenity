@@ -6,7 +6,7 @@
 
 #include "SudokuWidget.h"
 #include "Board.h"
-#include "Kernel/API/KeyCode.h"
+#include <Kernel/API/KeyCode.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Color.h>
@@ -55,16 +55,14 @@ void SudokuWidget::paint_event(GUI::PaintEvent& event)
                 Gfx::IntRect tile_rect = { tile_location, tile_size };
                 Square* square = m_board->get_square(x, y);
                 Color square_color = Color::White;
-                if (square == m_active_square) {
+                if (square == m_active_square)
                     square_color = Color::LightGray;
-                }
                 painter.fill_rect(tile_rect, square_color);
 
                 Color text_color = Color::WarmGray;
                 if (square->get_value()) {
-                    if (square->is_fixed()) {
+                    if (square->is_fixed())
                         text_color = Color::Black;
-                    }
                     painter.draw_text(tile_rect, String::number(square->get_value()),
                         font(), Gfx::TextAlignment::Center, text_color);
                 }
@@ -84,16 +82,15 @@ void SudokuWidget::resize_event(GUI::ResizeEvent&)
 
 void SudokuWidget::mousedown_event(GUI::MouseEvent& event)
 {
-
     if (!frame_inner_rect().contains(event.position()))
         return;
 
     Square* square = mouse_to_square(event);
-    if (m_active_square == square) {
+    if (m_active_square == square)
         m_active_square = nullptr;
-    } else {
+    else
         m_active_square = square;
-    }
+
     update();
 }
 
@@ -102,9 +99,9 @@ void SudokuWidget::keydown_event(GUI::KeyEvent& event)
     if (event.code_point() >= '1' && event.code_point() <= '9') {
         u32 digit = event.code_point() - '0';
         m_active_square->set_value(digit);
-        if (m_board->is_board_solved()) {
+        if (m_board->is_board_solved())
             on_win();
-        };
+
         update();
         return;
     }
@@ -178,9 +175,8 @@ Square* SudokuWidget::mouse_to_square(GUI::MouseEvent& event)
     auto x = ((event.x() - widget_offset_x) / m_cell_size);
     auto y = ((event.y() - widget_offset_y) / m_cell_size);
 
-    if (x > 8 || x < 0 || y > 8 || y < 0) {
+    if (x > 8 || x < 0 || y > 8 || y < 0)
         return nullptr;
-    }
 
     return m_board->get_square(x, y);
 }
@@ -197,8 +193,8 @@ void SudokuWidget::move_active_square(int x, int y)
     auto new_x = current_x + x;
     auto new_y = current_y + y;
 
-    if (new_x < 0 || new_y < 0 || new_x > 8 || new_y > 8) {
+    if (new_x < 0 || new_y < 0 || new_x > 8 || new_y > 8)
         return;
-    }
+
     m_active_square = m_board->get_square(new_x, new_y);
 }

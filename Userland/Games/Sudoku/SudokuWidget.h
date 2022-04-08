@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Board.h"
-#include "LibGUI/Event.h"
+#include <LibGUI/Event.h>
 #include <LibGUI/Frame.h>
 
 class SudokuWidget final : public GUI::Frame {
