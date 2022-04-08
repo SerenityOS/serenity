@@ -13,8 +13,6 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 
-SudokuWidget::SudokuWidget() { }
-
 void SudokuWidget::paint_event(GUI::PaintEvent& event)
 {
     auto const min_size = min(width(), height());

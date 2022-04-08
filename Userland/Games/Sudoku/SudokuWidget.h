@@ -25,7 +25,7 @@ public:
     void set_board(Board* board);
 
 private:
-    SudokuWidget();
+    SudokuWidget() = default;
     void pick_font();
     float m_min_cell_size { 0 };
     float m_cell_size { 0 };
