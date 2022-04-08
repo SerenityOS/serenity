@@ -60,9 +60,11 @@ bool Board::try_create_board()
             y = get_random<size_t>() % m_dimension;
         }
 
-        auto value = generate_random_value(&squares, x, y);
-        if (value == 0)
+        auto possible_values = generate_possible_values(&squares, x, y);
+        if (possible_values.size() == 0)
             return false;
+        size_t index = get_random<size_t>() % possible_values.size();
+        int value = possible_values[index];
         squares[x][y].set_value(value);
         squares[x][y].set_fixed(true);
     }
@@ -74,14 +76,13 @@ bool Board::is_solveable(Vector<Vector<Square>>* squares)
     for (size_t x = 0; x < m_dimension; x++) {
         for (size_t y = 0; y < m_dimension; y++) {
             if (squares->at(x)[y].get_value() == 0) {
-                Vector<int> tried;
-                while (tried.size() < m_dimension) {
-                    int value = generate_random_value(squares, x, y, tried);
+                Vector<int> possible_values = generate_possible_values(squares, x, y);
+                while (possible_values.size() > 0) {
+                    int value = possible_values.take_first();
                     if (value == 0) {
                         squares->at(x)[y].set_value(0);
                         return false;
                     }
-                    tried.append(value);
                     squares->at(x)[y].set_value(value);
                     if (is_solveable(squares))
                         return true;
@@ -132,15 +133,8 @@ Vector<int> Board::get_sub_square(Vector<Vector<Square>>* squares, int x,
     return values;
 }
 
-int Board::generate_random_value(Vector<Vector<Square>>* squares, int x, int y,
-    Vector<int> invalid)
+Vector<int> Board::generate_possible_values(Vector<Vector<Square>>* squares, int x, int y)
 {
-    // A vector respresenting whether the index value is a valid option.
-    // Faster than storing a Vector of 1...9 then searching for and removing
-    // options
-
-    // FIXME: This section could do with performance improvements, it's the
-    // slowest part of generating a new board due to copying
     Vector<bool> options = { true, true, true, true, true, true, true, true, true };
 
     for (size_t i = 0; i < m_dimension; i++) {
@@ -156,20 +150,12 @@ int Board::generate_random_value(Vector<Vector<Square>>* squares, int x, int y,
         options[i - 1] = false;
     }
 
-    for (int i : invalid) {
-        options[i - 1] = false;
-    }
-
     Vector<int> valid_options;
     for (size_t i = 0; i < options.size(); i++) {
         if (options[i])
             valid_options.append((int)i + 1);
     }
-    if (valid_options.size() > 0) {
-        size_t index = get_random<size_t>() % valid_options.size();
-        return valid_options[index];
-    }
-    return 0;
+    return valid_options;
 }
 
 bool Board::is_board_solved()
