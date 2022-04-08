@@ -5,6 +5,7 @@
  */
 
 #include "Board.h"
+#include <AK/Random.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
@@ -17,12 +18,12 @@ void Board::new_game()
     while (!try_create_board()) { }
     // Fix extra numbers if needed
     for (auto i = 0; i < m_number_provided - 17; i++) {
-        auto x = rand() % m_dimension;
-        auto y = rand() % m_dimension;
+        auto x = get_random<size_t>() % m_dimension;
+        auto y = get_random<size_t>() % m_dimension;
         // Find a random square that isn't already fixed
         while (m_squares[x][y].is_fixed()) {
-            x = rand() % m_dimension;
-            y = rand() % m_dimension;
+            x = get_random<size_t>() % m_dimension;
+            y = get_random<size_t>() % m_dimension;
         }
         m_squares[x][y].set_fixed(true);
     }
@@ -51,12 +52,12 @@ bool Board::try_create_board()
     // Randomly 17 numbers to the board - the lowest number to provide a unique
     // solution - https://arxiv.org/pdf/1201.0749.pdf
     for (auto i = 0; i < 17; i++) {
-        auto x = rand() % m_dimension;
-        auto y = rand() % m_dimension;
+        auto x = get_random<size_t>() % m_dimension;
+        auto y = get_random<size_t>() % m_dimension;
         // Find a random square that doesn't already have a value set
         while (squares[x][y].get_value()) {
-            x = rand() % m_dimension;
-            y = rand() % m_dimension;
+            x = get_random<size_t>() % m_dimension;
+            y = get_random<size_t>() % m_dimension;
         }
 
         auto value = generate_random_value(&squares, x, y);
@@ -161,7 +162,7 @@ int Board::generate_random_value(Vector<Vector<Square>>* squares, int x, int y,
             valid_options.append((int)i + 1);
     }
     if (valid_options.size() > 0) {
-        int index = rand() % valid_options.size();
+        size_t index = get_random<size_t>() % valid_options.size();
         return valid_options[index];
     }
     return 0;
