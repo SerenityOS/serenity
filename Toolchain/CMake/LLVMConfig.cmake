@@ -30,6 +30,7 @@ foreach(target i686-pc-serenity;x86_64-pc-serenity;aarch64-pc-serenity)
 
     set(RUNTIMES_${target}_CMAKE_BUILD_TYPE Release CACHE STRING "")
     set(RUNTIMES_${target}_CMAKE_SYSROOT ${SERENITY_${target}_SYSROOT} CACHE PATH "")
+    # Prevent configure checks from trying to link to the not-yet-built startup files & libunwind.
     set(RUNTIMES_${target}_CMAKE_C_FLAGS ${compiler_flags} CACHE STRING "")
     set(RUNTIMES_${target}_CMAKE_CXX_FLAGS ${compiler_flags} CACHE STRING "")
     set(RUNTIMES_${target}_COMPILER_RT_BUILD_CRT ON CACHE BOOL "")
@@ -44,6 +45,9 @@ foreach(target i686-pc-serenity;x86_64-pc-serenity;aarch64-pc-serenity)
 
     set(BUILTINS_${target}_CMAKE_BUILD_TYPE Release CACHE STRING "")
     set(BUILTINS_${target}_CMAKE_SYSROOT ${SERENITY_${target}_SYSROOT} CACHE PATH "")
+    # Explicitly set these so that host CFLAGS/CXXFLAGS don't get passed to the cross compiler.
+    set(BUILTINS_${target}_CMAKE_C_FLAGS "" CACHE STRING "")
+    set(BUILTINS_${target}_CMAKE_CXX_FLAGS "" CACHE STRING "")
     set(BUILTINS_${target}_COMPILER_RT_EXCLUDE_ATOMIC_BUILTIN OFF CACHE BOOL "")
     set(BUILTINS_${target}_CMAKE_SYSTEM_NAME SerenityOS CACHE STRING "")
     set(BUILTINS_${target}_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} CACHE STRING "")
