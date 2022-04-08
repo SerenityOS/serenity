@@ -27,10 +27,8 @@ static ErrorOr<NonnullRefPtr<Object>> parse_gml_object(Queue<Token>& tokens)
         return tokens.head().m_type;
     };
 
-    while (peek() == Token::Type::Comment) {
-        dbgln("found comment {}", tokens.head().m_view);
+    while (peek() == Token::Type::Comment)
         TRY(object->add_property_child(TRY(Node::from_token<Comment>(tokens.dequeue()))));
-    }
 
     if (peek() != Token::Type::ClassMarker)
         return Error::from_string_literal("Expected class marker"sv);
