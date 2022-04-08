@@ -594,6 +594,14 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
     MSR sfmask_msr(MSR_SFMASK);
     sfmask_msr.set(rflags_mask);
 #endif
+
+    // Query OS-enabled CPUID features again, and set the flags if needed.
+    CPUID processor_info(0x1);
+    if (processor_info.ecx() & (1 << 27))
+        m_features |= CPUFeature::OSXSAVE;
+    CPUID extended_features(0x7);
+    if (extended_features.ecx() & (1 << 4))
+        m_features |= CPUFeature::OSPKE;
 }
 
 UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
