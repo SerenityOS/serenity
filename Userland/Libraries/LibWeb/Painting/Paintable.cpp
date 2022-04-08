@@ -46,4 +46,20 @@ Optional<HitTestResult> Paintable::hit_test(Gfx::FloatPoint const&, HitTestType)
     return {};
 }
 
+Paintable const* Paintable::first_child() const
+{
+    auto* layout_child = m_layout_node.first_child();
+    for (; layout_child && !layout_child->paintable(); layout_child = layout_child->next_sibling())
+        ;
+    return layout_child ? layout_child->paintable() : nullptr;
+}
+
+Paintable const* Paintable::next_sibling() const
+{
+    auto* layout_node = m_layout_node.next_sibling();
+    for (; layout_node && !layout_node->paintable(); layout_node = layout_node->next_sibling())
+        ;
+    return layout_node ? layout_node->paintable() : nullptr;
+}
+
 }

@@ -96,6 +96,30 @@ ThrowCompletionOr<ArrayBuffer*> allocate_array_buffer(GlobalObject& global_objec
     return obj;
 }
 
+// 25.1.2.3 DetachArrayBuffer ( arrayBuffer [ , key ] ), https://tc39.es/ecma262/#sec-detacharraybuffer
+ThrowCompletionOr<Value> detach_array_buffer(GlobalObject& global_object, ArrayBuffer& array_buffer, Optional<Value> key)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
+    // FIXME: Check for shared buffer
+
+    // 2. If key is not present, set key to undefined.
+    if (!key.has_value())
+        key = js_undefined();
+
+    // 3. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
+    if (!same_value(array_buffer.detach_key(), *key))
+        return vm.throw_completion<TypeError>(global_object, ErrorType::DetachKeyMismatch, *key, array_buffer.detach_key());
+
+    // 4. Set arrayBuffer.[[ArrayBufferData]] to null.
+    // 5. Set arrayBuffer.[[ArrayBufferByteLength]] to 0.
+    array_buffer.detach_buffer();
+
+    // 6. Return unused.
+    return js_null();
+}
+
 // 25.1.2.4 CloneArrayBuffer ( srcBuffer, srcByteOffset, srcLength, cloneConstructor ), https://tc39.es/ecma262/#sec-clonearraybuffer
 ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(GlobalObject& global_object, ArrayBuffer& source_buffer, size_t source_byte_offset, size_t source_length, FunctionObject& clone_constructor)
 {

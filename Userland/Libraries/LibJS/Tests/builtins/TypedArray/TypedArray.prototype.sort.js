@@ -51,3 +51,21 @@ test("basic functionality", () => {
         expect(typedArray[2]).toBe(1n);
     });
 });
+
+test("detached buffer", () => {
+    TYPED_ARRAYS.forEach(T => {
+        const typedArray = new T(3);
+        typedArray[0] = 3;
+        typedArray[1] = 1;
+        typedArray[2] = 2;
+
+        typedArray.sort((a, b) => {
+            detachArrayBuffer(typedArray.buffer);
+            return a - b;
+        });
+
+        expect(typedArray[0]).toBeUndefined();
+        expect(typedArray[1]).toBeUndefined();
+        expect(typedArray[2]).toBeUndefined();
+    });
+});

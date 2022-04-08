@@ -395,19 +395,19 @@ constexpr bool code_point_is_in_percent_encode_set(u32 code_point, URL::PercentE
     }
 }
 
-void URL::append_percent_encoded_if_necessary(StringBuilder& builder, u32 code_point, URL::PercentEncodeSet set, StringView reserved_chars)
+void URL::append_percent_encoded_if_necessary(StringBuilder& builder, u32 code_point, URL::PercentEncodeSet set)
 {
-    if (code_point_is_in_percent_encode_set(code_point, set) || (!reserved_chars.is_null() && reserved_chars.contains(code_point)))
+    if (code_point_is_in_percent_encode_set(code_point, set))
         append_percent_encoded(builder, code_point);
     else
         builder.append_code_point(code_point);
 }
 
-String URL::percent_encode(StringView input, URL::PercentEncodeSet set, StringView reserved_chars)
+String URL::percent_encode(StringView input, URL::PercentEncodeSet set)
 {
     StringBuilder builder;
     for (auto code_point : Utf8View(input)) {
-        append_percent_encoded_if_necessary(builder, code_point, set, reserved_chars);
+        append_percent_encoded_if_necessary(builder, code_point, set);
     }
     return builder.to_string();
 }

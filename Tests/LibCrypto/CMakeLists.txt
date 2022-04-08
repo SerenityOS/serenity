@@ -5,6 +5,7 @@ set(TEST_SOURCES
     TestCurves.cpp
     TestHash.cpp
     TestHMAC.cpp
+    TestPoly1305.cpp
     TestRSA.cpp
 )
 
