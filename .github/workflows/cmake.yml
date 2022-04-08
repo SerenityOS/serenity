@@ -21,13 +21,16 @@ jobs:
       matrix:
         debug-options: ['ALL_DEBUG', 'NORMAL_DEBUG']
         os: [ubuntu-20.04]
-        arch: ['i686', 'x86_64']
+        arch: ['i686', 'x86_64', 'aarch64']
         # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
         ccache-mark: [0]
         exclude:
           # We currently manually disable the ALL_DEBUG build on x86_64 for sake of saving CI time, as it is not our main target right now
           - debug-options: 'ALL_DEBUG'
             arch: 'x86_64'
+          # We currently manually disable the ALL_DEBUG build on aarch64 for sake of saving CI time, as it is not our main target right now
+          - debug-options: 'ALL_DEBUG'
+            arch: 'aarch64'
 
     steps:
       - uses: actions/checkout@v2

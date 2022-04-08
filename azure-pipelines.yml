@@ -40,3 +40,7 @@ stages:
       - template: Meta/Azure/Serenity.yml
         parameters:
           arch: 'x86_64'
+
+      - template: Meta/Azure/Serenity.yml
+        parameters:
+          arch: 'aarch64'
