@@ -25,7 +25,7 @@ private:
     int generate_random_value(Vector<Vector<Square>>* squares, int x, int y,
         Vector<int> invalid = {});
     bool try_create_board();
-    bool is_solveable(Vector<Vector<Square>> squares);
+    bool is_solveable(Vector<Vector<Square>>* squares);
     int m_number_provided { 45 };
     Vector<int> get_sub_square(Vector<Vector<Square>>* squares, int x, int y);
 };

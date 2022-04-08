@@ -66,28 +66,32 @@ bool Board::try_create_board()
         squares[x][y].set_value(value);
         squares[x][y].set_fixed(true);
     }
-    return is_solveable(squares);
+    return is_solveable(&squares);
 }
 
-bool Board::is_solveable(Vector<Vector<Square>> squares)
+bool Board::is_solveable(Vector<Vector<Square>>* squares)
 {
     for (size_t x = 0; x < m_dimension; x++) {
         for (size_t y = 0; y < m_dimension; y++) {
-            if (squares[x][y].get_value() == 0) {
+            if (squares->at(x)[y].get_value() == 0) {
                 Vector<int> tried;
                 while (tried.size() < m_dimension) {
-                    int value = generate_random_value(&squares, x, y, tried);
-                    if (value == 0)
+                    int value = generate_random_value(squares, x, y, tried);
+                    if (value == 0) {
+                        squares->at(x)[y].set_value(0);
                         return false;
+                    }
                     tried.append(value);
-                    squares[x][y].set_value(value);
-                    return is_solveable(squares);
+                    squares->at(x)[y].set_value(value);
+                    if (is_solveable(squares))
+                        return true;
                 }
+                squares->at(x)[y].set_value(0);
                 return false;
             }
         }
     }
-    m_squares = squares;
+    m_squares = *squares;
     return true;
 }
 
