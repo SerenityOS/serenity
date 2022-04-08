@@ -1,8 +1,11 @@
 #pragma once
 #include <AK/FixedArray.h>
 #include <LibJVM/Forward.h>
+#include <LibJVM/StackMapFrame.h>
+#include <LibJVM/Verification.h>
 
 namespace JVM {
+
 
 struct Exception {
     short start_pc;
@@ -25,9 +28,6 @@ struct Code {
     AK::FixedArray<AttributeInfo> attributes;
 };
 
-struct StackMapTable {
-
-};
 
 enum class AttributeKind {
     ConstantValue,
@@ -73,7 +73,7 @@ private:
     union {
         short constantvalue_index;
         Code code;
-        StackMapTable sm_table;
+        AK::FixedArray<StackMapFrame> sm_table;
         Exceptions exceptions;
 
     } m_value;
