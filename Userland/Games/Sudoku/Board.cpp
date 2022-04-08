@@ -44,7 +44,7 @@ bool Board::try_create_board()
         squares[x].ensure_capacity(m_dimension);
         for (size_t y = 0; y < m_dimension; y++) {
             Square new_square = Square(x, y);
-            squares[x].append(new_square);
+            squares[x].unchecked_append(new_square);
         }
     }
 
