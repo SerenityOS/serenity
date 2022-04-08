@@ -95,20 +95,23 @@ void SudokuWidget::mousedown_event(GUI::MouseEvent& event)
 void SudokuWidget::keydown_event(GUI::KeyEvent& event)
 {
     if (event.code_point() >= '1' && event.code_point() <= '9') {
-        u32 digit = event.code_point() - '0';
-        m_active_square->set_value(digit);
-        if (m_board->is_board_solved())
-            on_win();
-
-        update();
+        if (m_active_square) {
+            u32 digit = event.code_point() - '0';
+            m_active_square->set_value(digit);
+            if (m_board->is_board_solved())
+                on_win();
+            update();
+        }
         return;
     }
 
     switch (event.key()) {
     case KeyCode::Key_Delete:
     case KeyCode::Key_Backspace:
-        m_active_square->set_value(0);
-        update();
+        if (m_active_square) {
+            m_active_square->set_value(0);
+            update();
+        }
         break;
     case KeyCode::Key_A:
     case KeyCode::Key_Left:
