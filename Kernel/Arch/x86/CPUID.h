@@ -142,7 +142,7 @@ AK_MAKE_ARBITRARY_SIZED_ENUM(CPUFeature, u256,
     AVX512_VBMI = CPUFeature(1u) << 97u,              // AVX-512 Vector Bit Manipulation Instructions
     UMIP = CPUFeature(1u) << 98u,                     // UMIP
     PKU = CPUFeature(1u) << 99u,                      // Memory Protection Keys for User-mode pages
-    OSPKU = CPUFeature(1u) << 100u,                   // PKU enabled by OS
+    OSPKE = CPUFeature(1u) << 100u,                   // PKU enabled by OS
     WAITPKG = CPUFeature(1u) << 101u,                 // Timed pause and user-level monitor/wait
     AVX512_VBMI2 = CPUFeature(1u) << 102u,            // AVX-512 Vector Bit Manipulation Instructions 2
     CET_SS = CPUFeature(1u) << 103u,                  // Control Flow Enforcement (CET) Shadow Stack

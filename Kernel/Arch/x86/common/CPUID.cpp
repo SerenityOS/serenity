@@ -206,8 +206,8 @@ StringView cpu_feature_to_string_view(CPUFeature::Type const& feature)
         return "umip"sv;
     if (feature == CPUFeature::PKU)
         return "pku"sv;
-    if (feature == CPUFeature::OSPKU)
-        return "ospku"sv;
+    if (feature == CPUFeature::OSPKE)
+        return "ospke"sv;
     if (feature == CPUFeature::WAITPKG)
         return "waitpkg"sv;
     if (feature == CPUFeature::AVX512_VBMI2)
