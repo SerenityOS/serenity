@@ -176,7 +176,10 @@ ErrorOr<void> Client::send_response(InputStream& response, HTTP::HttpRequest con
     builder.append("X-Frame-Options: SAMEORIGIN\r\n");
     builder.append("X-Content-Type-Options: nosniff\r\n");
     builder.append("Pragma: no-cache\r\n");
-    builder.appendff("Content-Type: {}\r\n", content_info.type);
+    if (content_info.type == "text/plain")
+        builder.appendff("Content-Type: {}; charset=utf-8\r\n", content_info.type);
+    else
+        builder.appendff("Content-Type: {}\r\n", content_info.type);
     builder.appendff("Content-Length: {}\r\n", content_info.length);
     builder.append("\r\n");
 
