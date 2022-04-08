@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -90,6 +91,10 @@ static ErrorOr<NonnullRefPtr<Object>> parse_gml_object(Queue<Token>& tokens)
             return Error::from_string_literal("Expected child, property, comment, or }}"sv);
         }
     }
+
+    // Insert any left-over comments as sub object children, as these will be serialized last
+    while (!pending_comments.is_empty())
+        TRY(object->add_sub_object_child(pending_comments.take_first()));
 
     if (peek() != Token::Type::RightCurly)
         return Error::from_string_literal("Expected }}"sv);
