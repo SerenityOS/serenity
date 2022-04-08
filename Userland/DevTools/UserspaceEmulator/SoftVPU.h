@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <AK/FPControl.h>
 #include <AK/SIMD.h>
 #include <AK/Types.h>
 #include <LibX86/Instruction.h>
 #include <math.h>
 
 namespace UserspaceEmulator {
+using AK::RoundingMode;
 using namespace AK::SIMD;
 class Emulator;
 class SoftCPU;
@@ -57,51 +59,17 @@ public:
         // FIXME: More with VEX prefix
     };
 
-    i32 lround(float value) const
-    {
-        // FIXME: This is not yet 100% correct
-        using enum RoundingMode;
-        switch ((RoundingMode)rounding_control) {
-        case NEAREST:
-            return ::lroundf(value);
-        case DOWN:
-            return floorf(value);
-        case UP:
-            return ceilf(value);
-        case TRUNC:
-            return truncf(value);
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    }
-
 private:
     friend SoftCPU;
     Emulator& m_emulator;
     SoftCPU& m_cpu;
 
     XMM m_xmm[8];
-    union {
-        u32 m_mxcsr;
-        struct {
-            u32 invalid_operation_flag : 1;  // IE
-            u32 denormal_operation_flag : 1; // DE
-            u32 divide_by_zero_flag : 1;     // ZE
-            u32 overflow_flag : 1;           // OE
-            u32 underflow_flag : 1;          // UE
-            u32 precision_flag : 1;          // PE
-            u32 denormals_are_zero : 1;      // FIXME: DAZ
-            u32 invalid_operation_mask : 1;  // IM
-            u32 denormal_operation_mask : 1; // DM
-            u32 devide_by_zero_mask : 1;     // ZM
-            u32 overflow_mask : 1;           // OM
-            u32 underflow_mask : 1;          // UM
-            u32 precision_mask : 1;          // PM
-            u32 rounding_control : 2;        // FIXME: RC
-            u32 flush_to_zero : 1;           // FIXME: FTZ
-            u32 __reserved : 16;
-        };
-    };
+
+    // FIXME: Maybe unimplemented features:
+    // * DAZ
+    // * FTZ
+    AK::MXCSR m_mxcsr;
 
     void PREFETCHTNTA(X86::Instruction const&);
     void PREFETCHT0(X86::Instruction const&);

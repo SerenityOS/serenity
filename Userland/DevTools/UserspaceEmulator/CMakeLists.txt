@@ -20,7 +20,7 @@ set(SOURCES
     main.cpp
 )
 
-add_compile_options(-mmmx -Wno-psabi)
+add_compile_options(-mmmx -Wno-psabi -frounding-math)
 
 serenity_bin(UserspaceEmulator)
 target_link_libraries(UserspaceEmulator LibX86 LibDebug LibCore LibPthread LibLine)
