@@ -1,0 +1,153 @@
+From fae5030852da34db641d636ad4c599e56b92ccdf Mon Sep 17 00:00:00 2001
+From: Daniel Bertalan <dani@danielbertalan.dev>
+Date: Thu, 14 Apr 2022 10:17:13 +0200
+Subject: [PATCH 5/8] [libc++] Add support for SerenityOS
+
+This commit teaches libc++ about what features are available in our
+LibC, namely:
+* We do not have locale support, so no-op shims should be used in place
+  of the C locale API.
+* The number of errno constants defined by us is given by the value of
+  the `ELAST` macro.
+* Multithreading is implemented though the pthread library.
+* Aligned memory allocation is provided by the MSVCRT-like
+  `_aligned_{malloc,free}` functions.
+
+Adds a hack for a header not found error when including
+`<initializer_list>` inside the SerenityOS kernel.
+
+Makes libc++ use its builtin character type table instead of the one
+provided by LibC as it is incomplete.
+---
+ libcxx/include/__config                   | 6 ++++--
+ libcxx/include/__locale                   | 2 +-
+ libcxx/include/__support/newlib/xlocale.h | 4 ++--
+ libcxx/include/initializer_list           | 2 ++
+ libcxx/include/locale                     | 2 +-
+ libcxx/include/new                        | 4 ++--
+ libcxx/src/include/config_elast.h         | 2 ++
+ 7 files changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/libcxx/include/__config b/libcxx/include/__config
+index 458d0c1b8..69f627294 100644
+--- a/libcxx/include/__config
++++ b/libcxx/include/__config
+@@ -1146,7 +1146,8 @@ extern "C" _LIBCPP_FUNC_VIS void __sanitizer_annotate_contiguous_container(
+       defined(__APPLE__) || \
+       defined(__sun__) || \
+       defined(__MVS__) || \
+-      defined(_AIX)
++      defined(_AIX) || \
++      defined(__serenity__)
+ #    define _LIBCPP_HAS_THREAD_API_PTHREAD
+ #  elif defined(__Fuchsia__)
+      // TODO(44575): Switch to C11 thread API when possible.
+@@ -1225,7 +1226,8 @@ extern "C" _LIBCPP_FUNC_VIS void __sanitizer_annotate_contiguous_container(
+ 
+ #if defined(__BIONIC__) || defined(__NuttX__) ||           \
+     defined(__Fuchsia__) || defined(__wasi__) ||           \
+-    defined(_LIBCPP_HAS_MUSL_LIBC) || defined(__OpenBSD__)
++    defined(_LIBCPP_HAS_MUSL_LIBC) || defined(__OpenBSD__) || \
++    defined(__serenity__)
+ #define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE
+ #endif
+ 
+diff --git a/libcxx/include/__locale b/libcxx/include/__locale
+index 51f35eece..4bc91ecb5 100644
+--- a/libcxx/include/__locale
++++ b/libcxx/include/__locale
+@@ -30,7 +30,7 @@
+ #elif defined(__sun__)
+ # include <xlocale.h>
+ # include <__support/solaris/xlocale.h>
+-#elif defined(_NEWLIB_VERSION)
++#elif defined(_NEWLIB_VERSION) || defined(__serenity__)
+ # include <__support/newlib/xlocale.h>
+ #elif defined(__OpenBSD__)
+ # include <__support/openbsd/xlocale.h>
+diff --git a/libcxx/include/__support/newlib/xlocale.h b/libcxx/include/__support/newlib/xlocale.h
+index b75f9263a..f5ffb9003 100644
+--- a/libcxx/include/__support/newlib/xlocale.h
++++ b/libcxx/include/__support/newlib/xlocale.h
+@@ -9,7 +9,7 @@
+ #ifndef _LIBCPP_SUPPORT_NEWLIB_XLOCALE_H
+ #define _LIBCPP_SUPPORT_NEWLIB_XLOCALE_H
+ 
+-#if defined(_NEWLIB_VERSION)
++#if defined(_NEWLIB_VERSION) || defined(__serenity__)
+ 
+ #include <cstdlib>
+ #include <clocale>
+@@ -22,6 +22,6 @@
+ #include <__support/xlocale/__strtonum_fallback.h>
+ #endif
+ 
+-#endif // _NEWLIB_VERSION
++#endif // _NEWLIB_VERSION || __serenity__
+ 
+ #endif
+diff --git a/libcxx/include/initializer_list b/libcxx/include/initializer_list
+index fefaf8cf8..c388bc246 100644
+--- a/libcxx/include/initializer_list
++++ b/libcxx/include/initializer_list
+@@ -43,7 +43,9 @@ template<class E> const E* end(initializer_list<E> il) noexcept; // constexpr in
+ */
+ 
+ #include <__config>
++#if !defined(__serenity__) || !defined(KERNEL)
+ #include <cstddef>
++#endif
+ 
+ #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+ #pragma GCC system_header
+diff --git a/libcxx/include/locale b/libcxx/include/locale
+index 7c2d2361f..229ca7258 100644
+--- a/libcxx/include/locale
++++ b/libcxx/include/locale
+@@ -206,7 +206,7 @@ template <class charT> class messages_byname;
+ 
+ #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+ // Most unix variants have catopen.  These are the specific ones that don't.
+-#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION)
++#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__serenity__)
+ #    define _LIBCPP_HAS_CATOPEN 1
+ #    include <nl_types.h>
+ #  endif
+diff --git a/libcxx/include/new b/libcxx/include/new
+index be0d972f4..d212bae46 100644
+--- a/libcxx/include/new
++++ b/libcxx/include/new
+@@ -320,7 +320,7 @@ inline _LIBCPP_INLINE_VISIBILITY void __libcpp_deallocate_unsized(void* __ptr, s
+ // Returns the allocated memory, or `nullptr` on failure.
+ inline _LIBCPP_INLINE_VISIBILITY
+ void* __libcpp_aligned_alloc(std::size_t __alignment, std::size_t __size) {
+-#if defined(_LIBCPP_MSVCRT_LIKE)
++#if defined(_LIBCPP_MSVCRT_LIKE) || (defined(__serenity__) && !defined(KERNEL))
+   return ::_aligned_malloc(__size, __alignment);
+ #else
+   void* __result = nullptr;
+@@ -332,7 +332,7 @@ void* __libcpp_aligned_alloc(std::size_t __alignment, std::size_t __size) {
+ 
+ inline _LIBCPP_INLINE_VISIBILITY
+ void __libcpp_aligned_free(void* __ptr) {
+-#if defined(_LIBCPP_MSVCRT_LIKE)
++#if defined(_LIBCPP_MSVCRT_LIKE) || (defined(__serenity__) && !defined(KERNEL))
+   ::_aligned_free(__ptr);
+ #else
+   ::free(__ptr);
+diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
+index 0ed53a3b2..7fffd937e 100644
+--- a/libcxx/src/include/config_elast.h
++++ b/libcxx/src/include/config_elast.h
+@@ -33,6 +33,8 @@
+ #define _LIBCPP_ELAST 4095
+ #elif defined(__APPLE__)
+ // No _LIBCPP_ELAST needed on Apple
++#elif defined(__serenity__)
++// No _LIBCPP_ELAST needed on SerenityOS
+ #elif defined(__sun__)
+ #define _LIBCPP_ELAST ESTALE
+ #elif defined(__MVS__)
+-- 
+2.35.3
+

@@ -70,8 +70,8 @@ echo PREFIX is "$PREFIX"
 
 mkdir -p "$DIR/Tarballs"
 
-LLVM_VERSION="13.0.0"
-LLVM_MD5SUM="bfc5191cbe87954952d25c6884596ccb"
+LLVM_VERSION="14.0.1"
+LLVM_MD5SUM="47a50c31659488a6ae562475b41d2c32"
 LLVM_NAME="llvm-project-$LLVM_VERSION.src"
 LLVM_PKG="$LLVM_NAME.tar.xz"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-$LLVM_VERSION/$LLVM_PKG"
@@ -142,6 +142,25 @@ else
     buildstep dependencies echo "LLD not found. Using the default linker."
 fi
 
+buildstep setup echo "Determining if LLVM should be built with -march=native..."
+if [ "$ci" = "1" ]; then
+    # The toolchain cache is shared among all runners, which might have different CPUs.
+    buildstep setup echo "On a CI runner. Using the default compiler settings."
+elif [ -z "${CFLAGS+x}" ] && [ -z "${CXXFLAGS+x}" ]; then
+    if ${CXX:-c++} -o /dev/null -march=native -xc - >/dev/null 2>/dev/null << 'PROGRAM'
+int main() {}
+PROGRAM
+    then
+        export CFLAGS="-march=native"
+        export CXXFLAGS="-march=native"
+        buildstep setup echo "Using -march=native for compiling LLVM."
+    else
+        buildstep setup echo "-march=native is not supported by the compiler. Using the default settings."
+    fi
+else
+    buildstep setup echo "Using user-provided CFLAGS/CXXFLAGS."
+fi
+
 # === CHECK CACHE AND REUSE ===
 
 pushd "$DIR"
@@ -195,28 +214,35 @@ pushd "$DIR/Tarballs"
         echo "Skipped downloading LLVM"
     fi
 
-    if [ -d "$LLVM_NAME" ]; then
-        # Drop the previously patched extracted dir
-        rm -rf "${LLVM_NAME}"
-        # Also drop the build dir
-        rm -rf "$DIR/Build/clang"
-    fi
-    echo "Extracting LLVM..."
-    tar -xJf "$LLVM_PKG"
+    patch_md5="$($MD5SUM "$DIR"/Patches/llvm/*.patch)"
 
-    pushd "$LLVM_NAME"
-        if [ "$dev" = "1" ]; then
-            git init > /dev/null
-            git add . > /dev/null
-            git commit -am "BASE" > /dev/null
-            git am "$DIR"/Patches/llvm-backport-objcopy-update-section.patch > /dev/null
-            git apply "$DIR"/Patches/llvm.patch > /dev/null
-        else
-            patch -p1 < "$DIR/Patches/llvm.patch" > /dev/null
-            patch -p1 < "$DIR/Patches/llvm-backport-objcopy-update-section.patch" > /dev/null
+    if [ ! -d "$LLVM_NAME" ] || [ "$(cat $LLVM_NAME/.patch.applied)" != "$patch_md5" ]; then
+        if [ -d "$LLVM_NAME" ]; then
+            # Drop the previously patched extracted dir
+            rm -rf "${LLVM_NAME}"
         fi
-        $MD5SUM "$DIR/Patches/llvm.patch" "$DIR/Patches/llvm-backport-objcopy-update-section.patch" > .patch.applied
-    popd
+
+        rm -rf "$DIR/Build/clang"
+
+        echo "Extracting LLVM..."
+        tar -xJf "$LLVM_PKG"
+
+        pushd "$LLVM_NAME"
+            if [ "$dev" = "1" ]; then
+                git init > /dev/null
+                git add . > /dev/null
+                git commit -am "BASE" > /dev/null
+                git am "$DIR"/Patches/llvm/*.patch > /dev/null
+            else
+                for patch in "$DIR"/Patches/llvm/*.patch; do
+                    patch -p1 < "$patch" > /dev/null
+                done
+            fi
+            echo "$patch_md5" > .patch.applied
+        popd
+    else
+        echo "Using existing LLVM source directory"
+    fi
 popd
 
 # === COPY HEADERS ===
@@ -273,7 +299,7 @@ pushd "$DIR/Build/clang"
             ${ci:+"-DLLVM_CCACHE_MAXSIZE=$LLVM_CCACHE_MAXSIZE"}
 
         buildstep_ninja "llvm/build" ninja -j "$MAKEJOBS"
-        buildstep "llvm/install" ninja install/strip
+        buildstep_ninja "llvm/install" ninja install/strip
     popd
 
     for arch in $ARCHS; do
@@ -288,8 +314,8 @@ pushd "$DIR/Build/clang"
                 -DCMAKE_INSTALL_PREFIX="$PREFIX" \
                 -C "$DIR/CMake/LLVMRuntimesConfig.cmake"
 
-            buildstep "runtimes/$arch/build" ninja -j "$MAKEJOBS"
-            buildstep "runtimes/$arch/install" ninja install
+            buildstep_ninja "runtimes/$arch/build" ninja -j "$MAKEJOBS"
+            buildstep_ninja "runtimes/$arch/install" ninja install
         popd
     done
 popd
