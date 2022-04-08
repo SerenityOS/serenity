@@ -287,7 +287,7 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
     if (extended_features.ecx() & (1 << 3))
         m_features |= CPUFeature::PKU;
     if (extended_features.ecx() & (1 << 4))
-        m_features |= CPUFeature::OSPKU;
+        m_features |= CPUFeature::OSPKE;
     if (extended_features.ecx() & (1 << 5))
         m_features |= CPUFeature::WAITPKG;
     if (extended_features.ecx() & (1 << 6))
