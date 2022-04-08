@@ -6,12 +6,12 @@
 
 #include <AK/Types.h>
 
-#include <Kernel/Arch/aarch64/Prekernel.h>
+#include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
 
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Arch/aarch64/MMIO.h>
+#include <Kernel/Arch/aarch64/RPi/MMIO.h>
+#include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Registers.h>
-#include <Kernel/Arch/aarch64/UART.h>
 
 // Documentation here for Aarch64 Address Translations
 // https://documentation-service.arm.com/static/5efa1d23dbdee951c1ccdec5?token=

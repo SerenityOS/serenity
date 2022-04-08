@@ -5,8 +5,8 @@
  */
 
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Arch/aarch64/Aarch64_asm_utils.h>
-#include <Kernel/Arch/aarch64/Prekernel.h>
+#include <Kernel/Arch/aarch64/Prekernel/Aarch64_asm_utils.h>
+#include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 
 extern "C" void enter_el2_from_el3();
