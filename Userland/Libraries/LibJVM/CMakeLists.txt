@@ -1,7 +1,6 @@
 set(SOURCES
-    Attributes.cpp
     Class.cpp
-    ConstantPool.cpp
+    Instructions.cpp
     JVM.cpp
     Thread.cpp
     Value.cpp)
