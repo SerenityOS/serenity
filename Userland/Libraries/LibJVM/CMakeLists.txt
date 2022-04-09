@@ -6,4 +6,4 @@ set(SOURCES
     Value.cpp)
 
 serenity_lib(LibJVM jvm)
-target_link_libraries(LibJVM LibCore)
+target_link_libraries(LibJVM LibCore LibJS)
