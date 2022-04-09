@@ -395,7 +395,7 @@ bool HTMLElement::fire_a_synthetic_pointer_event(FlyString const& type, DOM::Ele
     // 1. Let event be the result of creating an event using PointerEvent.
     // 2. Initialize event's type attribute to e.
     // FIXME: Actually create a PointerEvent!
-    auto event = UIEvents::MouseEvent::create(type, 0.0, 0.0, 0.0, 0.0);
+    auto event = UIEvents::MouseEvent::create(type);
 
     // 3. Initialize event's bubbles and cancelable attributes to true.
     event->set_bubbles(true);
