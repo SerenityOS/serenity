@@ -11,6 +11,7 @@
 #include <AK/StringBuilder.h>
 #include <ctype.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -288,4 +289,39 @@ TEST_CASE(float_values)
     v.i = 0x7f800000;
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", v.f, 6, LITERAL("| inf|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", -v.f, 6, LITERAL("|-inf|\0") }));
+}
+
+TEST_CASE(truncation)
+{
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxxx"), "|%d|", INT_MAX, 12, LITERAL("|2147483647|\0") }));
+    EXPECT(test_single<int>({ LITERAL("xxxxxxxxxxxxxx"), "|%d|", INT_MIN, 13, LITERAL("|-2147483648|\0") }));
+
+    if constexpr (sizeof(long int) == 8) {
+        EXPECT(test_single<long int>({ LITERAL("xxxxxxxxxxxxxxxxxxxxxx"), "|%ld|", LONG_MAX, 21, LITERAL("|9223372036854775807|\0") }));
+        EXPECT(test_single<long int>({ LITERAL("xxxxxxxxxxxxxxxxxxxxxxx"), "|%ld|", LONG_MIN + 1, 22, LITERAL("|-9223372036854775807|\0") }));
+    } else {
+        EXPECT(test_single<long int>({ LITERAL("xxxxxxxxxxxxx"), "|%ld|", LONG_MAX, 12, LITERAL("|2147483647|\0") }));
+        EXPECT(test_single<long int>({ LITERAL("xxxxxxxxxxxxxx"), "|%ld|", LONG_MIN, 13, LITERAL("|-2147483648|\0") }));
+    }
+
+    EXPECT(test_single<long long int>({ LITERAL("xxxxxxxxxxxxxxxxxxxxxx"), "|%lld|", LLONG_MAX, 21, LITERAL("|9223372036854775807|\0") }));
+    EXPECT(test_single<long long int>({ LITERAL("xxxxxxxxxxxxxxxxxxxxxxx"), "|%lld|", LLONG_MIN + 1, 22, LITERAL("|-9223372036854775807|\0") }));
+
+    EXPECT(test_single<unsigned int>({ LITERAL("xxxxxxxxxxxxx"), "|%u|", UINT_MAX, 12, LITERAL("|4294967295|\0") }));
+    EXPECT(test_single<unsigned int>({ LITERAL("xxxxxxxxxxx"), "|%x|", UINT_MAX, 10, LITERAL("|ffffffff|\0") }));
+    EXPECT(test_single<unsigned int>({ LITERAL("xxxxxxxxxxx"), "|%X|", UINT_MAX, 10, LITERAL("|FFFFFFFF|\0") }));
+
+    if constexpr (sizeof(unsigned long int) == 8) {
+        EXPECT(test_single<unsigned long int>({ LITERAL("xxxxxxxxxxxxxxxxxxxxxxx"), "|%lu|", ULONG_MAX, 22, LITERAL("|18446744073709551615|\0") }));
+        EXPECT(test_single<unsigned long int>({ LITERAL("xxxxxxxxxxxxxxxxxxx"), "|%lx|", ULONG_MAX, 18, LITERAL("|ffffffffffffffff|\0") }));
+        EXPECT(test_single<unsigned long int>({ LITERAL("xxxxxxxxxxxxxxxxxxx"), "|%lX|", ULONG_MAX, 18, LITERAL("|FFFFFFFFFFFFFFFF|\0") }));
+    } else {
+        EXPECT(test_single<unsigned long int>({ LITERAL("xxxxxxxxxxxxx"), "|%lu|", ULONG_MAX, 12, LITERAL("|4294967295|\0") }));
+        EXPECT(test_single<unsigned long int>({ LITERAL("xxxxxxxxxxx"), "|%lx|", ULONG_MAX, 10, LITERAL("|ffffffff|\0") }));
+        EXPECT(test_single<unsigned long int>({ LITERAL("xxxxxxxxxxx"), "|%lX|", ULONG_MAX, 10, LITERAL("|FFFFFFFF|\0") }));
+    }
+
+    EXPECT(test_single<unsigned long long int>({ LITERAL("xxxxxxxxxxxxxxxxxxxxxxx"), "|%llu|", ULLONG_MAX, 22, LITERAL("|18446744073709551615|\0") }));
+    EXPECT(test_single<unsigned long long int>({ LITERAL("xxxxxxxxxxxxxxxxxxx"), "|%llx|", ULLONG_MAX, 18, LITERAL("|ffffffffffffffff|\0") }));
+    EXPECT(test_single<unsigned long long int>({ LITERAL("xxxxxxxxxxxxxxxxxxx"), "|%llX|", ULLONG_MAX, 18, LITERAL("|FFFFFFFFFFFFFFFF|\0") }));
 }
