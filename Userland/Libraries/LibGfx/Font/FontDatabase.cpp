@@ -12,6 +12,7 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/TrueType/Font.h>
 #include <LibGfx/Font/Typeface.h>
+#include <LibGfx/Font/WOFF/Font.h>
 #include <stdlib.h>
 
 namespace Gfx {
@@ -109,8 +110,14 @@ FontDatabase::FontDatabase()
                 typeface->add_bitmap_font(font);
             }
         } else if (path.ends_with(".ttf"sv)) {
-            // FIXME: What about .otf and .woff
+            // FIXME: What about .otf
             if (auto font_or_error = TTF::Font::try_load_from_file(path); !font_or_error.is_error()) {
+                auto font = font_or_error.release_value();
+                auto typeface = get_or_create_typeface(font->family(), font->variant());
+                typeface->set_vector_font(move(font));
+            }
+        } else if (path.ends_with(".woff"sv)) {
+            if (auto font_or_error = WOFF::Font::try_load_from_file(path); !font_or_error.is_error()) {
                 auto font = font_or_error.release_value();
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->set_vector_font(move(font));
