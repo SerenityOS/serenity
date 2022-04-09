@@ -38,8 +38,13 @@ public:
 public:
     static ErrorOr<NonnullOwnPtr<IntelDisplayPlane>> create_with_physical_address(PhysicalAddress plane_registers_start_address);
 
-    virtual ErrorOr<void> set_plane_settings(Badge<IntelDisplayConnectorGroup>, PhysicalAddress aperture_start, PipeSelect, size_t horizontal_active_pixels_count) = 0;
-    ErrorOr<void> enable(Badge<IntelDisplayConnectorGroup>);
+    ErrorOr<void> set_horizontal_active_pixels_count(Badge<IntelDisplayConnectorGroup>, size_t horizontal_active_pixels_count);
+    ErrorOr<void> set_vertical_active_pixels_count(Badge<IntelDisplayConnectorGroup>, size_t vertical_active_pixels_count);
+    ErrorOr<void> set_horizontal_stride(Badge<IntelDisplayConnectorGroup>, size_t horizontal_stride);
+    ErrorOr<void> set_aperture_base(Badge<IntelDisplayConnectorGroup>, PhysicalAddress aperture_start);
+    ErrorOr<void> set_pipe(Badge<IntelDisplayConnectorGroup>, PipeSelect);
+
+    virtual ErrorOr<void> enable(Badge<IntelDisplayConnectorGroup>) = 0;
     bool is_enabled(Badge<IntelDisplayConnectorGroup>);
     ErrorOr<void> disable(Badge<IntelDisplayConnectorGroup>);
 
@@ -60,5 +65,13 @@ protected:
     mutable Spinlock<LockRank::None> m_access_lock;
     ShadowRegisters m_shadow_registers {};
     Memory::TypedMapping<PlaneRegisters volatile> m_plane_registers;
+
+    // Note: The PipeSelect value is used only in planes until Skylake graphics.
+    PipeSelect m_pipe_select { PipeSelect::PipeA };
+
+    PhysicalAddress m_aperture_start;
+    size_t m_horizontal_stride { 0 };
+    size_t m_horizontal_active_pixels_count { 0 };
+    size_t m_vertical_active_pixels_count { 0 };
 };
 }
