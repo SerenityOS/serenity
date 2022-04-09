@@ -388,17 +388,19 @@ struct PrintfImpl {
     {
         return print_octal_number(m_putch, m_bufptr, NextArgument<u32>()(ap), state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
     }
-    ALWAYS_INLINE int format_x(ModifierState const& state, ArgumentListRefT ap) const
+    ALWAYS_INLINE int format_unsigned_hex(ModifierState const& state, ArgumentListRefT ap, bool uppercase) const
     {
         if (state.long_qualifiers >= 2)
-            return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
-        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), false, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
+            return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), uppercase, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
+        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), uppercase, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
+    }
+    ALWAYS_INLINE int format_x(ModifierState const& state, ArgumentListRefT ap) const
+    {
+        return format_unsigned_hex(state, ap, false);
     }
     ALWAYS_INLINE int format_X(ModifierState const& state, ArgumentListRefT ap) const
     {
-        if (state.long_qualifiers >= 2)
-            return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), true, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
-        return print_hex(m_putch, m_bufptr, NextArgument<u32>()(ap), true, state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
+        return format_unsigned_hex(state, ap, true);
     }
     ALWAYS_INLINE int format_n(ModifierState const&, ArgumentListRefT ap) const
     {
