@@ -143,7 +143,7 @@ enum class NeedsBigProcessLock {
     S(recvfd, NeedsBigProcessLock::No)                      \
     S(recvmsg, NeedsBigProcessLock::Yes)                    \
     S(rename, NeedsBigProcessLock::Yes)                     \
-    S(rmdir, NeedsBigProcessLock::Yes)                      \
+    S(rmdir, NeedsBigProcessLock::No)                       \
     S(sched_getparam, NeedsBigProcessLock::No)              \
     S(sched_setparam, NeedsBigProcessLock::No)              \
     S(sendfd, NeedsBigProcessLock::No)                      \
