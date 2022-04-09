@@ -525,8 +525,9 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
         return {};
     }));
 
-    for (auto& property : m_coredump_properties)
+    m_coredump_properties.for_each([](auto& property) {
         property = {};
+    });
 
     auto* current_thread = Thread::current();
     current_thread->reset_signals_for_exec();

@@ -148,7 +148,7 @@ enum class NeedsBigProcessLock {
     S(sched_setparam, NeedsBigProcessLock::No)              \
     S(sendfd, NeedsBigProcessLock::No)                      \
     S(sendmsg, NeedsBigProcessLock::Yes)                    \
-    S(set_coredump_metadata, NeedsBigProcessLock::Yes)      \
+    S(set_coredump_metadata, NeedsBigProcessLock::No)       \
     S(set_mmap_name, NeedsBigProcessLock::Yes)              \
     S(set_process_name, NeedsBigProcessLock::Yes)           \
     S(set_thread_name, NeedsBigProcessLock::Yes)            \
