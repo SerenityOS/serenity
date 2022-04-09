@@ -7,4 +7,18 @@ interface MouseEvent : UIEvent {
     readonly attribute double x;
     readonly attribute double y;
 
+    readonly attribute short button;
+
+};
+
+dictionary MouseEventInit : EventModifierInit {
+
+    // FIXME: offsetX and offsetY shouldn't be here.
+    double offsetX = 0;
+    double offsetY = 0;
+    double clientX = 0;
+    double clientY = 0;
+
+    short button = 0;
+
 };
