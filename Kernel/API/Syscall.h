@@ -176,7 +176,7 @@ enum class NeedsBigProcessLock {
     S(socketpair, NeedsBigProcessLock::Yes)                 \
     S(stat, NeedsBigProcessLock::No)                        \
     S(statvfs, NeedsBigProcessLock::Yes)                    \
-    S(symlink, NeedsBigProcessLock::Yes)                    \
+    S(symlink, NeedsBigProcessLock::No)                     \
     S(sync, NeedsBigProcessLock::No)                        \
     S(sysconf, NeedsBigProcessLock::No)                     \
     S(times, NeedsBigProcessLock::Yes)                      \
