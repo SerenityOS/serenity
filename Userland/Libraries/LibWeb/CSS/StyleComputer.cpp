@@ -14,6 +14,7 @@
 #include <LibGfx/Font/FontStyleMapping.h>
 #include <LibGfx/Font/ScaledFont.h>
 #include <LibGfx/Font/TrueType/Font.h>
+#include <LibGfx/Font/VectorFont.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
@@ -54,7 +55,7 @@ public:
         auto result = TTF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
         if (result.is_error())
             return;
-        m_ttf_font = result.release_value();
+        m_vector_font = result.release_value();
         m_style_computer.did_load_font(m_family_name);
     }
 
@@ -64,15 +65,15 @@ public:
 
     RefPtr<Gfx::Font> font_with_point_size(float point_size) const
     {
-        if (!m_ttf_font)
+        if (!m_vector_font)
             return nullptr;
-        return adopt_ref(*new Gfx::ScaledFont(*m_ttf_font, point_size, point_size));
+        return adopt_ref(*new Gfx::ScaledFont(*m_vector_font, point_size, point_size));
     }
 
 private:
     StyleComputer& m_style_computer;
     FlyString m_family_name;
-    RefPtr<TTF::Font> m_ttf_font;
+    RefPtr<Gfx::VectorFont> m_vector_font;
 };
 
 static StyleSheet& default_stylesheet()
