@@ -74,6 +74,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "&New Game", { Mod_None, Key_F2 },
         TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png")),
         [&](auto&) { widget->new_game(); })));
+
+    widget->set_show_errors(false);
+    auto toggle_show_errors_action = GUI::Action::create_checkable("&Show-Errors", { Mod_None, Key_F3 }, [&](auto& action) {
+        auto checked = action.is_checked();
+        widget->set_show_errors(checked);
+    });
+    toggle_show_errors_action->set_checked(false);
+    TRY(game_menu->try_add_action(toggle_show_errors_action));
+
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action(
         [](auto&) { GUI::Application::the()->quit(); })));
 

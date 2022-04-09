@@ -23,6 +23,7 @@ public:
     virtual void keydown_event(GUI::KeyEvent&) override;
     void new_game();
     void set_board(Board* board);
+    void set_show_errors(bool value);
 
 private:
     SudokuWidget() = default;
@@ -33,4 +34,5 @@ private:
     Square* m_active_square { nullptr };
     Square* mouse_to_square(GUI::MouseEvent& event);
     void move_active_square(int x, int y);
+    bool m_show_errors { false };
 };

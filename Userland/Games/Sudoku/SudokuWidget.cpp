@@ -53,8 +53,11 @@ void SudokuWidget::paint_event(GUI::PaintEvent& event)
                 Gfx::IntRect tile_rect = { tile_location, tile_size };
                 Square* square = m_board->get_square(x, y);
                 Color square_color = Color::White;
+
                 if (square == m_active_square)
                     square_color = Color::LightGray;
+                else if (m_show_errors && !square->is_correct())
+                    square_color = Color::Red;
                 painter.fill_rect(tile_rect, square_color);
 
                 Color text_color = Color::WarmGray;
@@ -200,4 +203,10 @@ void SudokuWidget::move_active_square(int x, int y)
         return;
 
     m_active_square = m_board->get_square(new_x, new_y);
+}
+
+void SudokuWidget::set_show_errors(bool value)
+{
+    m_show_errors = value;
+    update();
 }
