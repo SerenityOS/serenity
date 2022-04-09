@@ -156,8 +156,21 @@ struct ArgvNextArgument<unsigned, V> {
 };
 
 template<typename V>
-struct ArgvNextArgument<i64, V> {
-    ALWAYS_INLINE i64 operator()(V arg) const
+struct ArgvNextArgument<long int, V> {
+    ALWAYS_INLINE long int operator()(V arg) const
+    {
+        if (arg.argc == 0)
+            return 0;
+
+        auto result = *arg.argv++;
+        --arg.argc;
+        return strtol(result, nullptr, 10);
+    }
+};
+
+template<typename V>
+struct ArgvNextArgument<long long int, V> {
+    ALWAYS_INLINE long long int operator()(V arg) const
     {
         if (arg.argc == 0)
             return 0;
@@ -169,8 +182,21 @@ struct ArgvNextArgument<i64, V> {
 };
 
 template<typename V>
-struct ArgvNextArgument<u64, V> {
-    ALWAYS_INLINE u64 operator()(V arg) const
+struct ArgvNextArgument<unsigned long int, V> {
+    ALWAYS_INLINE unsigned long int operator()(V arg) const
+    {
+        if (arg.argc == 0)
+            return 0;
+
+        auto result = *arg.argv++;
+        --arg.argc;
+        return strtoul(result, nullptr, 10);
+    }
+};
+
+template<typename V>
+struct ArgvNextArgument<unsigned long long int, V> {
+    ALWAYS_INLINE unsigned long long int operator()(V arg) const
     {
         if (arg.argc == 0)
             return 0;
