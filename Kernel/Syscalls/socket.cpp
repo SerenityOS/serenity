@@ -158,7 +158,7 @@ ErrorOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<sockaddr const*> use
 
 ErrorOr<FlatPtr> Process::sys$shutdown(int sockfd, int how)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     TRY(require_promise(Pledge::stdio));
     if (how & ~SHUT_RDWR)
         return EINVAL;
