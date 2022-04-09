@@ -242,9 +242,6 @@ void Mutex::unblock_waiters(Mode previous_mode)
     VERIFY(m_mode == Mode::Unlocked);
 
     m_blocked_thread_lists.with([&](auto& lists) {
-        if (lists.exclusive.is_empty() && lists.shared.is_empty())
-            return;
-
         auto unblock_shared = [&]() {
             if (lists.shared.is_empty())
                 return false;
