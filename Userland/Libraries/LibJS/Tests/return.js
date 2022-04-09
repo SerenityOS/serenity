@@ -51,3 +51,31 @@ describe("returning from loops", () => {
         expect(foo()).toBe(10);
     });
 });
+
+test("cannot use return in eval", () => {
+    const indirect = eval;
+
+    expect(() => {
+        eval("return 1;");
+    }).toThrowWithMessage(SyntaxError, "'return' not allowed outside of a function");
+
+    expect(() => {
+        indirect("return 1;");
+    }).toThrowWithMessage(SyntaxError, "'return' not allowed outside of a function");
+
+    function foo() {
+        eval("return 1;");
+    }
+
+    expect(() => {
+        foo();
+    }).toThrowWithMessage(SyntaxError, "'return' not allowed outside of a function");
+
+    function bar() {
+        indirect("return 1;");
+    }
+
+    expect(() => {
+        bar();
+    }).toThrowWithMessage(SyntaxError, "'return' not allowed outside of a function");
+});

@@ -199,3 +199,253 @@ test("Issue #8574, super property access before super() call", () => {
     }).toThrowWithMessage(ReferenceError, "|this| has not been initialized");
     expect(hit).toBeTrue();
 });
+
+test("can access super via direct eval", () => {
+    let superCalled = false;
+    const aObject = { a: 1 };
+    const bObject = { b: 2 };
+
+    class A {
+        constructor() {
+            superCalled = true;
+        }
+
+        foo() {
+            return aObject;
+        }
+
+        bar() {
+            return bObject;
+        }
+    }
+
+    class B extends A {
+        constructor() {
+            eval("super()");
+        }
+    }
+
+    expect(() => {
+        new B();
+    }).not.toThrow();
+
+    expect(superCalled).toBeTrue();
+    superCalled = false;
+
+    class C extends A {
+        constructor() {
+            eval("super()");
+            return eval("super.foo()");
+        }
+    }
+
+    expect(() => {
+        new C();
+    }).not.toThrow();
+
+    expect(superCalled).toBeTrue();
+    superCalled = false;
+
+    expect(new C()).toBe(aObject);
+
+    expect(superCalled).toBeTrue();
+    superCalled = false;
+
+    class D extends A {
+        constructor() {
+            eval("super()");
+            return eval("super['bar']()");
+        }
+    }
+
+    expect(() => {
+        new D();
+    }).not.toThrow();
+
+    expect(superCalled).toBeTrue();
+    superCalled = false;
+
+    expect(new D()).toBe(bObject);
+
+    expect(superCalled).toBeTrue();
+});
+
+test("cannot access super via indirect eval", () => {
+    const indirect = eval;
+    let superCalled = false;
+
+    const aObject = { a: 1 };
+    const bObject = { b: 1 };
+
+    class A {
+        constructor() {
+            superCalled = true;
+            this.a = aObject;
+            this.c = bObject;
+        }
+    }
+
+    class B extends A {
+        constructor() {
+            indirect("super()");
+        }
+    }
+
+    expect(() => {
+        new B();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    expect(superCalled).toBeFalse();
+
+    class C extends A {
+        constructor() {
+            super();
+            return indirect("super.a");
+        }
+    }
+
+    expect(() => {
+        new C();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    expect(superCalled).toBeTrue();
+    superCalled = false;
+
+    class D extends A {
+        constructor() {
+            super();
+            return indirect("super['b']");
+        }
+    }
+
+    expect(() => {
+        new D();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    expect(superCalled).toBeTrue();
+});
+
+test("super outside of derived class fails to parse", () => {
+    expect("super").not.toEval();
+    expect("super()").not.toEval();
+    expect("super.a").not.toEval();
+    expect("super['b']").not.toEval();
+    expect("function a() { super }").not.toEval();
+    expect("function a() { super() }").not.toEval();
+    expect("function a() { super.a }").not.toEval();
+    expect("function a() { super['b'] }").not.toEval();
+    expect("() => { super }").not.toEval();
+    expect("() => { super() }").not.toEval();
+    expect("() => { super.a }").not.toEval();
+    expect("() => { super['b'] }").not.toEval();
+    expect("class A { constructor() { super } }").not.toEval();
+    expect("class A { constructor() { super() } }").not.toEval();
+
+    expect(() => {
+        eval("super");
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    expect(() => {
+        eval("super()");
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    expect(() => {
+        eval("super.a");
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    expect(() => {
+        eval("super['b']");
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    function a() {
+        eval("super");
+    }
+
+    expect(() => {
+        a();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    expect(() => {
+        new a();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    function b() {
+        eval("super()");
+    }
+
+    expect(() => {
+        b();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    expect(() => {
+        new b();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    function c() {
+        eval("super.a");
+    }
+
+    expect(() => {
+        c();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    expect(() => {
+        new c();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    function d() {
+        eval("super['b']");
+    }
+
+    expect(() => {
+        d();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    expect(() => {
+        new d();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    const e = () => eval("super");
+
+    expect(() => {
+        e();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    const f = () => eval("super()");
+
+    expect(() => {
+        f();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    const g = () => eval("super.a");
+
+    expect(() => {
+        g();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    const h = () => eval("super['b']");
+
+    expect(() => {
+        h();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    class I {
+        constructor() {
+            eval("super");
+        }
+    }
+
+    expect(() => {
+        new I();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+
+    class J {
+        constructor() {
+            eval("super()");
+        }
+    }
+
+    expect(() => {
+        new J();
+    }).toThrowWithMessage(SyntaxError, "'super' keyword unexpected here");
+});
