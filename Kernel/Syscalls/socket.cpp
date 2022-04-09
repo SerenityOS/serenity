@@ -347,7 +347,7 @@ ErrorOr<FlatPtr> Process::sys$getsockopt(Userspace<Syscall::SC_getsockopt_params
 
 ErrorOr<FlatPtr> Process::sys$setsockopt(Userspace<Syscall::SC_setsockopt_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     auto params = TRY(copy_typed_from_user(user_params));
 
     Userspace<void const*> user_value((FlatPtr)params.value);
