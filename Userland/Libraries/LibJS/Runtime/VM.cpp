@@ -131,6 +131,17 @@ VM::VM(OwnPtr<CustomData> custom_data)
         return HostResizeArrayBufferResult::Unhandled;
     };
 
+    // 19.2.1.2 HostEnsureCanCompileStrings ( callerRealm, calleeRealm ), https://tc39.es/ecma262/#sec-hostensurecancompilestrings
+    host_ensure_can_compile_strings = [](Realm&, Realm&) -> ThrowCompletionOr<void> {
+        // The host-defined abstract operation HostEnsureCanCompileStrings takes arguments callerRealm (a Realm Record) and calleeRealm (a Realm Record)
+        // and returns either a normal completion containing unused or an abrupt completion.
+        // It allows host environments to block certain ECMAScript functions which allow developers to compile strings into ECMAScript code.
+        // An implementation of HostEnsureCanCompileStrings must conform to the following requirements:
+        //   - If the returned Completion Record is a normal completion, it must be a normal completion containing unused.
+        // The default implementation of HostEnsureCanCompileStrings is to return NormalCompletion(unused).
+        return {};
+    };
+
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     m_well_known_symbol_##snake_name = js_symbol(*this, "Symbol." #SymbolName, false);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
