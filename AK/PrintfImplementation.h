@@ -211,12 +211,6 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
 }
 
 template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_i64(PutChFunc putch, CharType*& bufptr, i64 number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
-{
-    return print_decimal(putch, bufptr, (number < 0) ? 0 - number : number, number < 0, always_sign, left_pad, zero_pad, field_width, has_precision, precision);
-}
-
-template<typename PutChFunc, typename CharType>
 ALWAYS_INLINE int print_octal_number(PutChFunc putch, CharType*& bufptr, u64 number, bool alternate_form, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
 {
     u32 divisor = 134217728;
@@ -307,8 +301,9 @@ ALWAYS_INLINE int print_string(PutChFunc putch, CharType*& bufptr, T str, size_t
 }
 
 template<typename PutChFunc, typename CharType>
-ALWAYS_INLINE int print_signed_number(PutChFunc putch, CharType*& bufptr, int number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
+ALWAYS_INLINE int print_signed_number(PutChFunc putch, CharType*& bufptr, i64 number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
 {
+    // FIXME: `0 - number` overflows if we are trying to negate the smallest possible value.
     return print_decimal(putch, bufptr, (number < 0) ? 0 - number : number, number < 0, always_sign, left_pad, zero_pad, field_width, has_precision, precision);
 }
 
@@ -359,7 +354,7 @@ struct PrintfImpl {
     ALWAYS_INLINE int format_d(ModifierState const& state, ArgumentListRefT ap) const
     {
         if (state.long_qualifiers >= 2)
-            return print_i64(m_putch, m_bufptr, NextArgument<i64>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
+            return print_signed_number(m_putch, m_bufptr, NextArgument<i64>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
 
         return print_signed_number(m_putch, m_bufptr, NextArgument<int>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);
     }
