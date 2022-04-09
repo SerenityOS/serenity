@@ -342,7 +342,14 @@ bool IntelDisplayConnectorGroup::set_crt_resolution(DisplayConnector::ModeSettin
 
     VERIFY(!m_transcoders[0]->pipe_enabled({}));
     MUST(m_transcoders[0]->enable_pipe({}));
-    MUST(m_planes[0]->set_plane_settings({}, m_mmio_second_region.pci_bar_paddr, IntelDisplayPlane::PipeSelect::PipeA, mode_setting.horizontal_active));
+
+    MUST(m_planes[0]->set_aperture_base({}, m_mmio_second_region.pci_bar_paddr));
+    MUST(m_planes[0]->set_pipe({}, IntelDisplayPlane::PipeSelect::PipeA));
+    MUST(m_planes[0]->set_horizontal_stride({}, mode_setting.horizontal_active * 4));
+    MUST(m_planes[0]->set_horizontal_active_pixels_count({}, mode_setting.horizontal_active));
+    // Note: This doesn't affect anything on the plane settings for Gen4, but we still
+    // do it for the sake of "completeness".
+    MUST(m_planes[0]->set_vertical_active_pixels_count({}, mode_setting.vertical_active));
     MUST(m_planes[0]->enable({}));
     enable_dac_output();
 
