@@ -12,7 +12,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Font/Font.h>
-#include <LibGfx/Font/TrueType/Font.h>
+#include <LibGfx/Font/VectorFont.h>
 
 namespace Gfx {
 
@@ -34,7 +34,7 @@ public:
     void for_each_fixed_size_font(Function<void(Font const&)>) const;
 
     void add_bitmap_font(RefPtr<BitmapFont>);
-    void set_ttf_font(RefPtr<TTF::Font>);
+    void set_vector_font(RefPtr<VectorFont>);
 
     RefPtr<Font> get_font(float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No) const;
 
@@ -43,7 +43,7 @@ private:
     FlyString m_variant;
 
     Vector<RefPtr<BitmapFont>> m_bitmap_fonts;
-    RefPtr<TTF::Font> m_ttf_font;
+    RefPtr<VectorFont> m_vector_font;
 };
 
 }
