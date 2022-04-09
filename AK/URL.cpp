@@ -367,7 +367,7 @@ void URL::append_percent_encoded(StringBuilder& builder, u32 code_point)
 }
 
 // https://url.spec.whatwg.org/#c0-control-percent-encode-set
-constexpr bool code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet set)
+bool URL::code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet set)
 {
     switch (set) {
     case URL::PercentEncodeSet::C0Control:

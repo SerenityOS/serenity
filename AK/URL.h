@@ -113,6 +113,8 @@ public:
 
     bool operator==(URL const& other) const { return equals(other, ExcludeFragment::No); }
 
+    static bool code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet);
+
 private:
     URL(String&& data_mime_type, String&& data_payload, bool payload_is_base64)
         : m_valid(true)
