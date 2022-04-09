@@ -9,7 +9,7 @@
 #include <LibGUI/Window.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGUI/Wizards/WizardPage.h>
-#include <LibGfx/BitmapFont.h>
+#include <LibGfx/Font/BitmapFont.h>
 
 class NewFontDialog final : public GUI::WizardDialog {
     C_OBJECT(NewFontDialog);

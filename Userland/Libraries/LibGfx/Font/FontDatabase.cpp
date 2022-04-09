@@ -8,10 +8,10 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/Font.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/TrueType/Font.h>
-#include <LibGfx/Typeface.h>
+#include <LibGfx/Font/Typeface.h>
 #include <stdlib.h>
 
 namespace Gfx {

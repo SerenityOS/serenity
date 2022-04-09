@@ -28,7 +28,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
 #include <LibVT/TerminalWidget.h>

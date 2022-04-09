@@ -3,7 +3,6 @@ set(SOURCES
     AntiAliasingPainter.cpp
     Bitmap.cpp
     BitmapMixer.cpp
-    BitmapFont.cpp
     BMPLoader.cpp
     BMPWriter.cpp
     ClassicStylePainter.cpp
@@ -12,11 +11,16 @@ set(SOURCES
     CursorParams.cpp
     DDSLoader.cpp
     DisjointRectSet.cpp
-    Emoji.cpp
     Filters/ColorBlindnessFilter.cpp
     Filters/FastBoxBlurFilter.cpp
     Filters/LumaFilter.cpp
-    FontDatabase.cpp
+    Font/BitmapFont.cpp
+    Font/Emoji.cpp
+    Font/FontDatabase.cpp
+    Font/TrueType/Font.cpp
+    Font/TrueType/Glyf.cpp
+    Font/TrueType/Cmap.cpp
+    Font/Typeface.cpp
     GIFLoader.cpp
     ICOLoader.cpp
     ImageDecoder.cpp
@@ -29,22 +33,18 @@ set(SOURCES
     PNGLoader.cpp
     PNGWriter.cpp
     PPMLoader.cpp
-        Point.cpp
-        QOILoader.cpp
-        Rect.cpp
-        ShareableBitmap.cpp
-        Size.cpp
-        StylePainter.cpp
-        SystemTheme.cpp
-        TextDirection.cpp
-        TextLayout.cpp
-        Triangle.cpp
-        Font/TrueType/Font.cpp
-        Font/TrueType/Glyf.cpp
-        Font/TrueType/Cmap.cpp
-        Typeface.cpp
-        WindowTheme.cpp
-        )
+    Point.cpp
+    QOILoader.cpp
+    Rect.cpp
+    ShareableBitmap.cpp
+    Size.cpp
+    StylePainter.cpp
+    SystemTheme.cpp
+    TextDirection.cpp
+    TextLayout.cpp
+    Triangle.cpp
+    WindowTheme.cpp
+)
 
 serenity_lib(LibGfx gfx)
 target_link_libraries(LibGfx LibM LibCompress LibCore LibTextCodec LibIPC)

@@ -8,7 +8,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 
 namespace Hearts {
 

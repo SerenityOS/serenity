@@ -10,8 +10,8 @@
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/Font.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <WindowServer/Cursor.h>

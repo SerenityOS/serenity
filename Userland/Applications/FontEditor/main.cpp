@@ -15,8 +15,8 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/BitmapFont.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/BitmapFont.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

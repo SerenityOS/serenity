@@ -12,9 +12,9 @@
 
 #include "Painter.h"
 #include "Bitmap.h"
-#include "Emoji.h"
-#include "Font.h"
-#include "FontDatabase.h"
+#include "Font/Emoji.h"
+#include "Font/Font.h"
+#include "Font/FontDatabase.h"
 #include "Gamma.h"
 #include <AK/Assertions.h>
 #include <AK/Debug.h>

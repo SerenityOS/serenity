@@ -10,8 +10,8 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/FileStream.h>
-#include <LibGfx/FontDatabase.h>
-#include <LibGfx/FontStyleMapping.h>
+#include <LibGfx/Font/FontDatabase.h>
+#include <LibGfx/Font/FontStyleMapping.h>
 #include <string.h>
 
 namespace Gfx {

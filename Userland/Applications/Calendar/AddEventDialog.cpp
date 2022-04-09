@@ -17,7 +17,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 
 AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     : Dialog(parent_window)

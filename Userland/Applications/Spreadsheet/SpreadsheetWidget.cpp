@@ -21,7 +21,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <string.h>
 
 namespace Spreadsheet {

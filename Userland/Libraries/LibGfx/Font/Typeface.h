@@ -10,8 +10,8 @@
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
-#include <LibGfx/BitmapFont.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/BitmapFont.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/TrueType/Font.h>
 
 namespace Gfx {

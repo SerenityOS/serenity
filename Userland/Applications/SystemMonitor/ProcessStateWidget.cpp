@@ -13,7 +13,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
 REGISTER_WIDGET(SystemMonitor, ProcessStateWidget)
