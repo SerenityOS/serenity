@@ -113,7 +113,7 @@ FontDatabase::FontDatabase()
             if (auto font_or_error = TTF::Font::try_load_from_file(path); !font_or_error.is_error()) {
                 auto font = font_or_error.release_value();
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
-                typeface->set_ttf_font(move(font));
+                typeface->set_vector_font(move(font));
             }
         }
     }

@@ -11,32 +11,32 @@ namespace Gfx {
 
 unsigned Typeface::weight() const
 {
-    VERIFY(m_ttf_font || m_bitmap_fonts.size() > 0);
+    VERIFY(m_vector_font || m_bitmap_fonts.size() > 0);
 
     if (is_fixed_size())
         return m_bitmap_fonts[0]->weight();
 
-    return m_ttf_font->weight();
+    return m_vector_font->weight();
 }
 
 u8 Typeface::slope() const
 {
-    VERIFY(m_ttf_font || m_bitmap_fonts.size() > 0);
+    VERIFY(m_vector_font || m_bitmap_fonts.size() > 0);
 
     if (is_fixed_size())
         return m_bitmap_fonts[0]->slope();
 
-    return m_ttf_font->slope();
+    return m_vector_font->slope();
 }
 
 bool Typeface::is_fixed_width() const
 {
-    VERIFY(m_ttf_font || m_bitmap_fonts.size() > 0);
+    VERIFY(m_vector_font || m_bitmap_fonts.size() > 0);
 
     if (is_fixed_size())
         return m_bitmap_fonts[0]->is_fixed_width();
 
-    return m_ttf_font->is_fixed_width();
+    return m_vector_font->is_fixed_width();
 }
 
 void Typeface::add_bitmap_font(RefPtr<BitmapFont> font)
@@ -44,17 +44,17 @@ void Typeface::add_bitmap_font(RefPtr<BitmapFont> font)
     m_bitmap_fonts.append(font);
 }
 
-void Typeface::set_ttf_font(RefPtr<TTF::Font> font)
+void Typeface::set_vector_font(RefPtr<VectorFont> font)
 {
-    m_ttf_font = move(font);
+    m_vector_font = move(font);
 }
 
 RefPtr<Font> Typeface::get_font(float point_size, Font::AllowInexactSizeMatch allow_inexact_size_match) const
 {
     VERIFY(point_size > 0);
 
-    if (m_ttf_font)
-        return adopt_ref(*new Gfx::ScaledFont(*m_ttf_font, point_size, point_size));
+    if (m_vector_font)
+        return adopt_ref(*new Gfx::ScaledFont(*m_vector_font, point_size, point_size));
 
     RefPtr<BitmapFont> best_match;
     int size = roundf(point_size);
