@@ -2,7 +2,7 @@
 
 When contributing to SerenityOS, make sure that the changes you wish to make are in line with the project direction. If you are not sure about this, open an issue first, so we can discuss it.
 
-**For your first couple of PR's, start with something small to get familiar with the project and its development processes. Please do not start by adding a new application, library or other large component.**
+**For your first couple of PRs, start with something small to get familiar with the project and its development processes. Please do not start by adding a new application, library or other large component.**
 
 Everyone is welcome to work on the project, and while we have lots of fun, it's a serious kind of fun. :^)
 
@@ -72,7 +72,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 
 ### I've submitted a PR and it passes CI. When can I expect to get some review feedback?
 
-While unadvertised PR's may get randomly merged by curious maintainers, you will have a much smoother time if you engage with the community on Discord.
+While unadvertised PRs may get randomly merged by curious maintainers, you will have a much smoother time if you engage with the community on Discord.
 
 ### If my PR isn't getting attention, how long should I wait before pinging one of the project maintainers?
 
@@ -86,7 +86,7 @@ Maintainership is by invitation only and does not correlate with any particular 
 
 ### Is there a policy for branches/PRs that haven't been touched in X days? Should they be closed?
 
-Yes, we have a "stalebot" that will mark untouched PR's as "stale" after 21 days, and close them after another 7 days if nothing happens.
+Yes, we have a "stalebot" that will mark untouched PRs as "stale" after 21 days, and close them after another 7 days if nothing happens.
 
 ### Are there specific people to reach out to for different subsystems (e.g. Kernel, Browser, GUI, etc)?
 
@@ -111,7 +111,7 @@ To enable these hooks firstly follow the installation instructions available at 
 
 ## On abandoned pull requests
 
-Sometimes good PR's get abandoned by the author for one reason or another. If the PR is fundamentally good, but the author is not responding to requests, the PR may be manually integrated with minor changes to code and commit messages.
+Sometimes good PRs get abandoned by the author for one reason or another. If the PR is fundamentally good, but the author is not responding to requests, the PR may be manually integrated with minor changes to code and commit messages.
 
 To make this easier, we do appreciate it if folks enable the "Allow edits from maintainers" flag on their pull requests.
 
