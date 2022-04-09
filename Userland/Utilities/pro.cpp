@@ -191,7 +191,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    Core::ProxyData proxy_data = TRY(Core::ProxyData::parse_url(proxy_spec));
+    Core::ProxyData proxy_data {};
+    if (!proxy_spec.is_empty())
+        proxy_data = TRY(Core::ProxyData::parse_url(proxy_spec));
 
     Core::EventLoop loop;
     bool received_actual_headers = false;
