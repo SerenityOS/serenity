@@ -22,6 +22,7 @@ set(SOURCES
     Font/TrueType/Glyf.cpp
     Font/TrueType/Cmap.cpp
     Font/Typeface.cpp
+    Font/WOFF/Font.cpp
     GIFLoader.cpp
     ICOLoader.cpp
     ImageDecoder.cpp
