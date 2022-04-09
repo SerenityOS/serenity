@@ -18,6 +18,14 @@
 
 namespace Web::Layout {
 
+// NOTE: We use a custom clamping function here instead of AK::clamp(), since the AK version
+//       will VERIFY(max >= min) and CSS explicitly allows that (see css-values-4.)
+template<typename T>
+constexpr T css_clamp(T const& value, T const& min, T const& max)
+{
+    return ::max(min, ::min(value, max));
+}
+
 static float get_pixel_size(FormattingState const& state, Box const& box, Optional<CSS::LengthPercentage> const& length_percentage)
 {
     if (!length_percentage.has_value())
@@ -605,7 +613,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
     // The hypothetical main size is the item’s flex base size clamped according to its used min and max main sizes (and flooring the content box size at zero).
     auto clamp_min = has_main_min_size(child_box) ? specified_main_min_size(child_box) : determine_min_main_size_of_child(child_box);
     auto clamp_max = has_main_max_size(child_box) ? specified_main_max_size(child_box) : NumericLimits<float>::max();
-    flex_item.hypothetical_main_size = clamp(flex_item.flex_base_size, clamp_min, clamp_max);
+    flex_item.hypothetical_main_size = css_clamp(flex_item.flex_base_size, clamp_min, clamp_max);
 }
 
 float FlexFormattingContext::determine_min_main_size_of_child(Box const& box)
@@ -651,7 +659,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
             }
             result += flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + flex_item.borders.main_before + flex_item.borders.main_after + flex_item.padding.main_before + flex_item.padding.main_after + product;
         }
-        m_available_space->main = clamp(result, main_min_size, main_max_size);
+        m_available_space->main = css_clamp(result, main_min_size, main_max_size);
     }
     set_main_size(flex_container(), m_available_space->main.value_or(NumericLimits<float>::max()));
 }
@@ -962,7 +970,7 @@ void FlexFormattingContext::calculate_cross_size_of_each_flex_line(float const c
     // If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
     // Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically.
     if (is_single_line())
-        clamp(m_flex_lines[0].cross_size, cross_min_size, cross_max_size);
+        css_clamp(m_flex_lines[0].cross_size, cross_min_size, cross_max_size);
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-stretch
@@ -1117,7 +1125,7 @@ void FlexFormattingContext::determine_flex_container_used_cross_size(float const
             cross_size = cross_size_value->resolved(flex_container(), CSS::Length::make_px(specified_cross_size(*flex_container().containing_block()))).to_px(flex_container());
         }
     }
-    set_cross_size(flex_container(), clamp(cross_size, cross_min_size, cross_max_size));
+    set_cross_size(flex_container(), css_clamp(cross_size, cross_min_size, cross_max_size));
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-line-align
