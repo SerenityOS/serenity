@@ -9,7 +9,7 @@
 #include <AK/NumberFormat.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Painter.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <WindowServer/WindowManager.h>
 
 REGISTER_WIDGET(SpaceAnalyzer, TreeMapWidget)

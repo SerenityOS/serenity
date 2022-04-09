@@ -8,7 +8,7 @@
 
 #include <LibGUI/Command.h>
 #include <LibGUI/UndoStack.h>
-#include <LibGfx/BitmapFont.h>
+#include <LibGfx/Font/BitmapFont.h>
 
 class UndoSelection : public RefCounted<UndoSelection> {
 public:

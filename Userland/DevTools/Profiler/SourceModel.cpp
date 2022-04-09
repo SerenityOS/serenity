@@ -9,7 +9,7 @@
 #include "Profile.h"
 #include <LibCore/File.h>
 #include <LibDebug/DebugInfo.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibSymbolication/Symbolication.h>
 #include <stdio.h>
 

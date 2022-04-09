@@ -12,7 +12,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/ShareableBitmap.h>
 
 namespace NotificationServer {

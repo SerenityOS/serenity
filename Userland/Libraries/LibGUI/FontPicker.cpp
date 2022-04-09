@@ -14,7 +14,7 @@
 #include <LibGUI/ListView.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 
 namespace GUI {
 

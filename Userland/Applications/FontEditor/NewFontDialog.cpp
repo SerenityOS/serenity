@@ -19,8 +19,8 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Wizards/WizardDialog.h>
-#include <LibGfx/BitmapFont.h>
-#include <LibGfx/FontStyleMapping.h>
+#include <LibGfx/Font/BitmapFont.h>
+#include <LibGfx/Font/FontStyleMapping.h>
 #include <LibGfx/Palette.h>
 
 namespace GUI {

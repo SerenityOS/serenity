@@ -7,7 +7,7 @@
 
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Painter.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 

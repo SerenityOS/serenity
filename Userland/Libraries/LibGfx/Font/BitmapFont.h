@@ -13,7 +13,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/MappedFile.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Size.h>
 
 namespace Gfx {

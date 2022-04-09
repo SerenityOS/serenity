@@ -13,8 +13,8 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/Font.h>
+#include <LibGfx/Font/FontDatabase.h>
 
 struct Option {
     String title;

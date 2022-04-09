@@ -7,7 +7,7 @@
 
 #include <LibGUI/Painter.h>
 #include <LibGUI/Tray.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
 

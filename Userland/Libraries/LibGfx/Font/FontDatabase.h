@@ -10,8 +10,8 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <LibGfx/Font/Typeface.h>
 #include <LibGfx/Forward.h>
-#include <LibGfx/Typeface.h>
 
 namespace Gfx {
 

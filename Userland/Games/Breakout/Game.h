@@ -8,7 +8,7 @@
 #pragma once
 
 #include <LibGUI/Widget.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 
 namespace Breakout {
 

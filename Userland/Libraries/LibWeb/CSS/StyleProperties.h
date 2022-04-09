@@ -8,7 +8,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/LengthBox.h>

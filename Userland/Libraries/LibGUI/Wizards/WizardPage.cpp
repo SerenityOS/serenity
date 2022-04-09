@@ -9,7 +9,7 @@
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Wizards/WizardPage.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/SystemTheme.h>
 
 namespace GUI {

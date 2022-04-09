@@ -64,7 +64,7 @@
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibThreading/Mutex.h>
 #include <LibThreading/Thread.h>

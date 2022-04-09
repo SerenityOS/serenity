@@ -9,7 +9,7 @@
 #include "KeyButton.h"
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Palette.h>
 
 void KeyButton::paint_event(GUI::PaintEvent& event)

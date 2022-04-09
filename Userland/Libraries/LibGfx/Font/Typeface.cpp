@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Typeface.h>
+#include <LibGfx/Font/Typeface.h>
 
 namespace Gfx {
 

@@ -10,7 +10,7 @@
 #include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Emoji.h>
+#include <LibGfx/Font/Emoji.h>
 
 namespace Gfx {
 

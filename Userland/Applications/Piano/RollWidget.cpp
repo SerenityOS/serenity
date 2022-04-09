@@ -12,8 +12,8 @@
 #include <AK/IntegralMath.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/Font.h>
+#include <LibGfx/Font/FontDatabase.h>
 
 constexpr int note_height = 20;
 constexpr int max_note_width = note_height * 2;

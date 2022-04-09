@@ -9,7 +9,7 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibThreading/BackgroundAction.h>
 
 REGISTER_WIDGET(DisplaySettings, MonitorWidget)
