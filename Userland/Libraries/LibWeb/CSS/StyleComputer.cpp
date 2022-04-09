@@ -15,6 +15,7 @@
 #include <LibGfx/Font/ScaledFont.h>
 #include <LibGfx/Font/TrueType/Font.h>
 #include <LibGfx/Font/VectorFont.h>
+#include <LibGfx/Font/WOFF/Font.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
@@ -52,7 +53,7 @@ public:
 
     virtual void resource_did_load() override
     {
-        auto result = TTF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+        auto result = try_load_font();
         if (result.is_error())
             return;
         m_vector_font = result.release_value();
@@ -71,6 +72,23 @@ public:
     }
 
 private:
+    ErrorOr<NonnullRefPtr<Gfx::VectorFont>> try_load_font()
+    {
+        // FIXME: This could maybe use the format() provided in @font-face as well, since often the mime type is just application/octet-stream and we have to try every format
+        auto mime_type = resource()->mime_type();
+        if (mime_type == "font/ttf"sv || mime_type == "application/x-font-ttf"sv)
+            return TRY(TTF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
+        if (mime_type == "font/woff"sv)
+            return TRY(WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
+        auto ttf = TTF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+        if (!ttf.is_error())
+            return ttf.release_value();
+        auto woff = WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+        if (!woff.is_error())
+            return woff.release_value();
+        return ttf.release_error();
+    }
+
     StyleComputer& m_style_computer;
     FlyString m_family_name;
     RefPtr<Gfx::VectorFont> m_vector_font;

@@ -4488,7 +4488,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
     // Format-name table: https://www.w3.org/TR/css-fonts-4/#font-format-definitions
     auto font_format_is_supported = [](StringView name) {
         // The spec requires us to treat opentype and truetype as synonymous.
-        if (name.is_one_of_ignoring_case("opentype"sv, "truetype"sv))
+        if (name.is_one_of_ignoring_case("opentype"sv, "truetype"sv, "woff"sv))
             return true;
         return false;
     };
