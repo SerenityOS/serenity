@@ -163,7 +163,7 @@ enum class NeedsBigProcessLock {
     S(setresuid, NeedsBigProcessLock::Yes)                  \
     S(setreuid, NeedsBigProcessLock::Yes)                   \
     S(setsid, NeedsBigProcessLock::Yes)                     \
-    S(setsockopt, NeedsBigProcessLock::Yes)                 \
+    S(setsockopt, NeedsBigProcessLock::No)                  \
     S(setuid, NeedsBigProcessLock::Yes)                     \
     S(shutdown, NeedsBigProcessLock::No)                    \
     S(sigaction, NeedsBigProcessLock::Yes)                  \
