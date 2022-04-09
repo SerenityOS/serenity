@@ -55,7 +55,7 @@ enum class NeedsBigProcessLock {
     S(clock_nanosleep, NeedsBigProcessLock::No)             \
     S(clock_settime, NeedsBigProcessLock::No)               \
     S(close, NeedsBigProcessLock::No)                       \
-    S(connect, NeedsBigProcessLock::Yes)                    \
+    S(connect, NeedsBigProcessLock::No)                     \
     S(create_inode_watcher, NeedsBigProcessLock::Yes)       \
     S(create_thread, NeedsBigProcessLock::Yes)              \
     S(dbgputstr, NeedsBigProcessLock::No)                   \
