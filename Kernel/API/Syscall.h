@@ -40,7 +40,7 @@ enum class NeedsBigProcessLock {
 //   - VERIFY_NO_PROCESS_BIG_LOCK(this)
 //
 #define ENUMERATE_SYSCALLS(S)                               \
-    S(accept4, NeedsBigProcessLock::Yes)                    \
+    S(accept4, NeedsBigProcessLock::No)                     \
     S(access, NeedsBigProcessLock::Yes)                     \
     S(adjtime, NeedsBigProcessLock::No)                     \
     S(alarm, NeedsBigProcessLock::Yes)                      \

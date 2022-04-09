@@ -78,7 +78,7 @@ ErrorOr<FlatPtr> Process::sys$listen(int sockfd, int backlog)
 
 ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     TRY(require_promise(Pledge::accept));
     auto params = TRY(copy_typed_from_user(user_params));
 
@@ -88,9 +88,8 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
     int flags = params.flags;
 
     socklen_t address_size = 0;
-    if (user_address) {
+    if (user_address)
         TRY(copy_from_user(&address_size, static_ptr_cast<socklen_t const*>(user_address_size)));
-    }
 
     ScopedDescriptionAllocation fd_allocation;
     RefPtr<OpenFileDescription> accepting_socket_description;
@@ -104,17 +103,17 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
         return ENOTSOCK;
     auto& socket = *accepting_socket_description->socket();
 
-    if (!socket.can_accept()) {
-        if (accepting_socket_description->is_blocking()) {
-            auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
-            if (Thread::current()->block<Thread::AcceptBlocker>({}, *accepting_socket_description, unblock_flags).was_interrupted())
-                return EINTR;
-        } else {
+    RefPtr<Socket> accepted_socket;
+    for (;;) {
+        accepted_socket = socket.accept();
+        if (accepted_socket)
+            break;
+        if (!accepting_socket_description->is_blocking())
             return EAGAIN;
-        }
+        auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
+        if (Thread::current()->block<Thread::AcceptBlocker>({}, *accepting_socket_description, unblock_flags).was_interrupted())
+            return EINTR;
     }
-    auto accepted_socket = socket.accept();
-    VERIFY(accepted_socket);
 
     if (user_address) {
         sockaddr_un address_buffer {};
