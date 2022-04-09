@@ -12,6 +12,7 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/FontStyleMapping.h>
+#include <LibGfx/Font/ScaledFont.h>
 #include <LibGfx/Font/TrueType/Font.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
@@ -65,7 +66,7 @@ public:
     {
         if (!m_ttf_font)
             return nullptr;
-        return adopt_ref(*new TTF::ScaledFont(*m_ttf_font, point_size, point_size));
+        return adopt_ref(*new Gfx::ScaledFont(*m_ttf_font, point_size, point_size));
     }
 
 private:

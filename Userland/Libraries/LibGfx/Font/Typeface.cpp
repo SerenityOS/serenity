@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Font/ScaledFont.h>
 #include <LibGfx/Font/Typeface.h>
 
 namespace Gfx {
@@ -53,7 +54,7 @@ RefPtr<Font> Typeface::get_font(float point_size, Font::AllowInexactSizeMatch al
     VERIFY(point_size > 0);
 
     if (m_ttf_font)
-        return adopt_ref(*new TTF::ScaledFont(*m_ttf_font, point_size, point_size));
+        return adopt_ref(*new Gfx::ScaledFont(*m_ttf_font, point_size, point_size));
 
     RefPtr<BitmapFont> best_match;
     int size = roundf(point_size);

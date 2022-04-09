@@ -17,6 +17,7 @@ set(SOURCES
     Font/BitmapFont.cpp
     Font/Emoji.cpp
     Font/FontDatabase.cpp
+    Font/ScaledFont.cpp
     Font/TrueType/Font.cpp
     Font/TrueType/Glyf.cpp
     Font/TrueType/Cmap.cpp
