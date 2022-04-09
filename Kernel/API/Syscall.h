@@ -99,7 +99,7 @@ enum class NeedsBigProcessLock {
     S(getrusage, NeedsBigProcessLock::Yes)                  \
     S(getsid, NeedsBigProcessLock::Yes)                     \
     S(getsockname, NeedsBigProcessLock::Yes)                \
-    S(getsockopt, NeedsBigProcessLock::Yes)                 \
+    S(getsockopt, NeedsBigProcessLock::No)                  \
     S(gettid, NeedsBigProcessLock::No)                      \
     S(getuid, NeedsBigProcessLock::Yes)                     \
     S(inode_watcher_add_watch, NeedsBigProcessLock::Yes)    \
