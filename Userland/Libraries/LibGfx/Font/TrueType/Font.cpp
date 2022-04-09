@@ -11,10 +11,10 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/MappedFile.h>
-#include <LibGfx/TrueTypeFont/Cmap.h>
-#include <LibGfx/TrueTypeFont/Font.h>
-#include <LibGfx/TrueTypeFont/Glyf.h>
-#include <LibGfx/TrueTypeFont/Tables.h>
+#include <LibGfx/Font/TrueType/Cmap.h>
+#include <LibGfx/Font/TrueType/Font.h>
+#include <LibGfx/Font/TrueType/Glyf.h>
+#include <LibGfx/Font/TrueType/Tables.h>
 #include <LibTextCodec/Decoder.h>
 #include <math.h>
 #include <sys/mman.h>
