@@ -6,23 +6,28 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/System.h>
 #include <pwd.h>
+#include <sys/types.h>
 
 namespace Core {
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_lib(String const& lib_name, AllowWriting allow_altering)
 {
-    String directory = StandardPaths::config_directory();
-    auto path = String::formatted("{}/lib/{}.ini", directory, lib_name);
+    String directory = String::formatted("{}/lib", StandardPaths::config_directory());
+    TRY(ConfigFile::ensure_directory(directory));
+    auto path = String::formatted("{}/{}.ini", directory, lib_name);
     return ConfigFile::open(path, allow_altering);
 }
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_app(String const& app_name, AllowWriting allow_altering)
 {
     String directory = StandardPaths::config_directory();
+    TRY(ConfigFile::ensure_directory(directory));
     auto path = String::formatted("{}/{}.ini", directory, app_name);
     return ConfigFile::open(path, allow_altering);
 }
@@ -60,6 +65,27 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(String const& filename, int 
     auto config_file = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, move(buffered_file))));
     TRY(config_file->reparse());
     return config_file;
+}
+
+ErrorOr<void> ConfigFile::ensure_directory(String directory)
+{
+    LexicalPath path(move(directory));
+    return ensure_directory(path);
+}
+
+ErrorOr<void> ConfigFile::ensure_directory(LexicalPath const& path)
+{
+    if (path.basename() == "/")
+        return {};
+
+    TRY(ensure_directory(path.parent()));
+
+    auto return_value = System::mkdir(path.string(), 0755);
+    // We don't care if the directory already exists.
+    if (return_value.is_error() && return_value.error().code() != EEXIST)
+        return return_value;
+
+    return {};
 }
 
 ConfigFile::ConfigFile(String const& filename, OwnPtr<Stream::BufferedFile> open_file)

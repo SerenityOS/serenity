@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -64,6 +65,9 @@ private:
     ConfigFile(String const& filename, OwnPtr<Stream::BufferedFile> open_file);
 
     ErrorOr<void> reparse();
+
+    static ErrorOr<void> ensure_directory(String);
+    static ErrorOr<void> ensure_directory(LexicalPath const&);
 
     String m_filename;
     OwnPtr<Stream::BufferedFile> m_file;
