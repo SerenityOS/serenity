@@ -16,9 +16,7 @@ Core::ProxyData Web::ProxyMappings::proxy_for_url(AK::URL const& url) const
 {
     auto url_string = url.to_string();
     for (auto& it : m_mappings) {
-        dbgln("Checking {} against {}...", url, it.key);
         if (url_string.matches(it.key)) {
-            dbgln("Matched!");
             auto result = Core::ProxyData::parse_url(m_proxies[it.value]);
             if (result.is_error()) {
                 dbgln("Failed to parse proxy URL: {}", m_proxies[it.value]);
@@ -28,7 +26,6 @@ Core::ProxyData Web::ProxyMappings::proxy_for_url(AK::URL const& url) const
         }
     }
 
-    dbgln("No luck!");
     return {};
 }
 

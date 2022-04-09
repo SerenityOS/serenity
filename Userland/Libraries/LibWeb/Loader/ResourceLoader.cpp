@@ -215,7 +215,6 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
     if (url.protocol() == "http" || url.protocol() == "https" || url.protocol() == "gemini") {
         auto proxy = ProxyMappings::the().proxy_for_url(url);
-        dbgln("Proxy for {} is {}", url, proxy.type == decltype(proxy.type)::SOCKS5 ? IPv4Address(proxy.host_ipv4).to_string() : "(direct)");
 
         HashMap<String, String> headers;
         headers.set("User-Agent", m_user_agent);
