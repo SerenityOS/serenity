@@ -12,7 +12,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$link(Userspace<Syscall::SC_link_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     TRY(require_promise(Pledge::cpath));
     auto params = TRY(copy_typed_from_user(user_params));
     auto old_path = TRY(try_copy_kstring_from_user(params.old_path));

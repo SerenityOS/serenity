@@ -109,7 +109,7 @@ enum class NeedsBigProcessLock {
     S(kill, NeedsBigProcessLock::Yes)                       \
     S(kill_thread, NeedsBigProcessLock::Yes)                \
     S(killpg, NeedsBigProcessLock::Yes)                     \
-    S(link, NeedsBigProcessLock::Yes)                       \
+    S(link, NeedsBigProcessLock::No)                        \
     S(listen, NeedsBigProcessLock::No)                      \
     S(lseek, NeedsBigProcessLock::No)                       \
     S(madvise, NeedsBigProcessLock::Yes)                    \
