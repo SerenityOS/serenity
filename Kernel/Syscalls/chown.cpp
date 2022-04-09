@@ -13,7 +13,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$fchown(int fd, UserID uid, GroupID gid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::chown));
     auto description = TRY(open_file_description(fd));
     TRY(description->chown(uid, gid));
