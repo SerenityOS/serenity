@@ -69,7 +69,7 @@ ErrorOr<void> Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
     MutexLocker locker(mutex());
     if (m_pending.size() >= m_backlog)
         return set_so_error(ECONNREFUSED);
-    SOCKET_TRY(m_pending.try_append(peer));
+    SOCKET_TRY(m_pending.try_append(move(peer)));
     evaluate_block_conditions();
     return {};
 }
