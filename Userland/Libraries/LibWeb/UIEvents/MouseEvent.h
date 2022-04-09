@@ -45,6 +45,8 @@ public:
 
     i16 button() const { return m_button; }
 
+    virtual u32 which() const override { return m_button + 1; }
+
 private:
     MouseEvent(FlyString const& event_name, MouseEventInit const& event_init);
 
