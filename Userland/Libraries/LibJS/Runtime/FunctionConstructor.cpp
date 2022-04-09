@@ -44,12 +44,16 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     VERIFY(vm.execution_context_stack().size() >= 2);
 
     // 2. Let callerContext be the second to top element of the execution context stack.
+    auto& caller_context = *vm.execution_context_stack().at(vm.execution_context_stack().size() - 2);
+
     // 3. Let callerRealm be callerContext's Realm.
+    auto& caller_realm = *caller_context.realm;
+
     // 4. Let calleeRealm be the current Realm Record.
-    // NOTE: All of these are only needed for the next step.
+    auto& callee_realm = *vm.running_execution_context().realm;
 
     // 5. Perform ? HostEnsureCanCompileStrings(callerRealm, calleeRealm).
-    // NOTE: We don't have this yet.
+    TRY(vm.host_ensure_can_compile_strings(caller_realm, callee_realm));
 
     // 6. If newTarget is undefined, set newTarget to constructor.
     if (new_target == nullptr)
