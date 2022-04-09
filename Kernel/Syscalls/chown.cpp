@@ -22,7 +22,7 @@ ErrorOr<FlatPtr> Process::sys$fchown(int fd, UserID uid, GroupID gid)
 
 ErrorOr<FlatPtr> Process::sys$chown(Userspace<Syscall::SC_chown_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::chown));
     auto params = TRY(copy_typed_from_user(user_params));
     auto path = TRY(get_syscall_path_argument(params.path));
