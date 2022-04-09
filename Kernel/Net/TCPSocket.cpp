@@ -150,16 +150,16 @@ ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create_client(IPv4Address const
 void TCPSocket::release_to_originator()
 {
     VERIFY(!!m_originator);
-    m_originator.strong_ref()->release_for_accept(this);
+    m_originator.strong_ref()->release_for_accept(*this);
     m_originator.clear();
 }
 
-void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
+void TCPSocket::release_for_accept(NonnullRefPtr<TCPSocket> socket)
 {
     VERIFY(m_pending_release_for_accept.contains(socket->tuple()));
     m_pending_release_for_accept.remove(socket->tuple());
     // FIXME: Should we observe this error somehow?
-    [[maybe_unused]] auto rc = queue_connection_from(*socket);
+    [[maybe_unused]] auto rc = queue_connection_from(move(socket));
 }
 
 TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer)
