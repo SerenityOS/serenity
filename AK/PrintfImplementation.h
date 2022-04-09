@@ -9,9 +9,12 @@
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
-#include <math.h>
 #include <stdarg.h>
 #include <wchar.h>
+
+#ifndef KERNEL
+#    include <math.h>
+#endif
 
 #ifdef __serenity__
 extern "C" size_t strlen(char const*);
@@ -159,7 +162,7 @@ ALWAYS_INLINE int print_decimal(PutChFunc putch, CharType*& bufptr, u64 number, 
 
     return field_width;
 }
-
+#ifndef KERNEL
 template<typename PutChFunc, typename CharType>
 ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number, bool always_sign, bool left_pad, bool zero_pad, u32 field_width, u32 precision)
 {
@@ -209,7 +212,7 @@ ALWAYS_INLINE int print_double(PutChFunc putch, CharType*& bufptr, double number
 
     return length;
 }
-
+#endif
 template<typename PutChFunc, typename CharType>
 ALWAYS_INLINE int print_octal_number(PutChFunc putch, CharType*& bufptr, u64 number, bool alternate_form, bool left_pad, bool zero_pad, u32 field_width, bool has_precision, u32 precision)
 {
@@ -387,6 +390,7 @@ struct PrintfImpl {
     {
         return print_hex(m_putch, m_bufptr, NextArgument<u64>()(ap), false, false, state.left_pad, state.zero_pad, 16, false, 1);
     }
+#ifndef KERNEL
     ALWAYS_INLINE int format_g(ModifierState const& state, ArgumentListRefT ap) const
     {
         return format_f(state, ap);
@@ -395,6 +399,7 @@ struct PrintfImpl {
     {
         return print_double(m_putch, m_bufptr, NextArgument<double>()(ap), state.always_sign, state.left_pad, state.zero_pad, state.field_width, state.precision);
     }
+#endif
     ALWAYS_INLINE int format_o(ModifierState const& state, ArgumentListRefT ap) const
     {
         return print_octal_number(m_putch, m_bufptr, NextArgument<u32>()(ap), state.alternate_form, state.left_pad, state.zero_pad, state.field_width, state.has_precision, state.precision);

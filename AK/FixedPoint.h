@@ -9,9 +9,12 @@
 #include <AK/Concepts.h>
 #include <AK/Format.h>
 #include <AK/IntegralMath.h>
-#include <AK/Math.h>
 #include <AK/NumericLimits.h>
 #include <AK/Types.h>
+
+#ifndef KERNEL
+#    include <AK/Math.h>
+#endif
 
 namespace AK {
 
@@ -45,11 +48,14 @@ public:
     {
     }
 
+#ifndef KERNEL
     template<FloatingPoint F>
     explicit ALWAYS_INLINE operator F() const
     {
         return (F)m_value * pow<F>(0.5, precision);
     }
+#endif
+
     template<Integral I>
     explicit constexpr operator I() const
     {
