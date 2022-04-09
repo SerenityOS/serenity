@@ -282,9 +282,11 @@ void Mutex::unblock_waiters(Mode previous_mode)
 
 auto Mutex::force_unlock_exclusive_if_locked(u32& lock_count_to_restore) -> Mode
 {
+    VERIFY(m_behavior == MutexBehavior::BigLock);
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
     VERIFY(!Processor::current_in_irq());
+
     auto* current_thread = Thread::current();
     SpinlockLocker lock(m_lock);
     auto current_mode = m_mode;
@@ -319,8 +321,10 @@ auto Mutex::force_unlock_exclusive_if_locked(u32& lock_count_to_restore) -> Mode
 
 void Mutex::restore_exclusive_lock(u32 lock_count, [[maybe_unused]] LockLocation const& location)
 {
+    VERIFY(m_behavior == MutexBehavior::BigLock);
     VERIFY(lock_count > 0);
     VERIFY(!Processor::current_in_irq());
+
     auto* current_thread = Thread::current();
     bool did_block = false;
     SpinlockLocker lock(m_lock);
