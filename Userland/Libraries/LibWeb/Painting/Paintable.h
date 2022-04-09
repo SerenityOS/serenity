@@ -49,6 +49,33 @@ class Paintable : public RefCounted<Paintable> {
 public:
     virtual ~Paintable() = default;
 
+    Paintable const* first_child() const;
+    Paintable const* next_sibling() const;
+
+    template<typename U, typename Callback>
+    IterationDecision for_each_in_inclusive_subtree_of_type(Callback callback) const
+    {
+        if (is<U>(*this)) {
+            if (callback(static_cast<const U&>(*this)) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename U, typename Callback>
+    IterationDecision for_each_in_subtree_of_type(Callback callback) const
+    {
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->template for_each_in_inclusive_subtree_of_type<U>(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
     virtual void paint(PaintContext&, PaintPhase) const { }
     virtual void before_children_paint(PaintContext&, PaintPhase) const { }
     virtual void after_children_paint(PaintContext&, PaintPhase) const { }
@@ -91,6 +118,9 @@ public:
         return *m_containing_block;
     }
 
+    template<typename T>
+    bool fast_is() const = delete;
+
 protected:
     explicit Paintable(Layout::Node const& layout_node)
         : m_layout_node(layout_node)
@@ -111,5 +141,8 @@ inline DOM::Node const* HitTestResult::dom_node() const
 {
     return paintable->dom_node();
 }
+
+template<>
+inline bool Paintable::fast_is<PaintableBox>() const { return m_layout_node.is_box(); }
 
 }

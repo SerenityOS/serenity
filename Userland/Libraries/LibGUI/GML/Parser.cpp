@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,10 +28,8 @@ static ErrorOr<NonnullRefPtr<Object>> parse_gml_object(Queue<Token>& tokens)
         return tokens.head().m_type;
     };
 
-    while (peek() == Token::Type::Comment) {
-        dbgln("found comment {}", tokens.head().m_view);
+    while (peek() == Token::Type::Comment)
         TRY(object->add_property_child(TRY(Node::from_token<Comment>(tokens.dequeue()))));
-    }
 
     if (peek() != Token::Type::ClassMarker)
         return Error::from_string_literal("Expected class marker"sv);
@@ -59,14 +58,14 @@ static ErrorOr<NonnullRefPtr<Object>> parse_gml_object(Queue<Token>& tokens)
             // It's a child object.
 
             while (!pending_comments.is_empty())
-                TRY(object->add_sub_object_child(pending_comments.take_last()));
+                TRY(object->add_sub_object_child(pending_comments.take_first()));
 
             TRY(object->add_sub_object_child(TRY(parse_gml_object(tokens))));
         } else if (peek() == Token::Type::Identifier) {
             // It's a property.
 
             while (!pending_comments.is_empty())
-                TRY(object->add_property_child(pending_comments.take_last()));
+                TRY(object->add_property_child(pending_comments.take_first()));
 
             auto property_name = tokens.dequeue();
 
@@ -92,6 +91,10 @@ static ErrorOr<NonnullRefPtr<Object>> parse_gml_object(Queue<Token>& tokens)
             return Error::from_string_literal("Expected child, property, comment, or }}"sv);
         }
     }
+
+    // Insert any left-over comments as sub object children, as these will be serialized last
+    while (!pending_comments.is_empty())
+        TRY(object->add_sub_object_child(pending_comments.take_first()));
 
     if (peek() != Token::Type::RightCurly)
         return Error::from_string_literal("Expected }}"sv);

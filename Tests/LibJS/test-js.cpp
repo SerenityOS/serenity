@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibTest/JavaScriptTestRunner.h>
 
 TEST_ROOT("Userland/Libraries/LibJS/Tests");
@@ -74,6 +75,16 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
     TRY(reference.delete_(global_object));
 
     return JS::js_undefined();
+}
+
+TESTJS_GLOBAL_FUNCTION(detach_array_buffer, detachArrayBuffer)
+{
+    auto array_buffer = vm.argument(0);
+    if (!array_buffer.is_object() || !is<JS::ArrayBuffer>(array_buffer.as_object()))
+        return vm.throw_completion<JS::TypeError>(global_object, JS::ErrorType::NotAnObjectOfType, "ArrayBuffer");
+
+    auto& array_buffer_object = static_cast<JS::ArrayBuffer&>(array_buffer.as_object());
+    return JS::detach_array_buffer(global_object, array_buffer_object, vm.argument(1));
 }
 
 TESTJS_RUN_FILE_FUNCTION(String const& test_file, JS::Interpreter& interpreter, JS::ExecutionContext&)

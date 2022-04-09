@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/aarch64/GPIO.h>
-#include <Kernel/Arch/aarch64/MMIO.h>
-#include <Kernel/Arch/aarch64/Timer.h>
-#include <Kernel/Arch/aarch64/UART.h>
+#include <Kernel/Arch/aarch64/RPi/GPIO.h>
+#include <Kernel/Arch/aarch64/RPi/MMIO.h>
+#include <Kernel/Arch/aarch64/RPi/Timer.h>
+#include <Kernel/Arch/aarch64/RPi/UART.h>
 
 namespace Prekernel {
 

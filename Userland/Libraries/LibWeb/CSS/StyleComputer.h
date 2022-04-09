@@ -74,6 +74,8 @@ public:
 
     void did_load_font(FlyString const& family_name);
 
+    void load_fonts_from_sheet(CSSStyleSheet const&);
+
 private:
     void compute_cascaded_values(StyleProperties&, DOM::Element&, Optional<CSS::Selector::PseudoElement>) const;
     void compute_font(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
@@ -112,8 +114,6 @@ private:
         Vector<MatchingRule> other_rules;
     };
     OwnPtr<RuleCache> m_rule_cache;
-
-    void load_fonts_if_needed() const;
 
     class FontLoader;
     HashMap<String, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
