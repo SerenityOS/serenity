@@ -18,7 +18,6 @@ public:
     bool is_degenerate() const;
 
     String to_string() const;
-    auto operator<=>(Ratio const& other) const;
 
 private:
     float m_first_value { 0 };
