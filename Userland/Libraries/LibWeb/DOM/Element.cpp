@@ -327,6 +327,8 @@ enum class RequiredInvalidation {
 
 static RequiredInvalidation compute_required_invalidation(CSS::StyleProperties const& old_style, CSS::StyleProperties const& new_style)
 {
+    if (&old_style.computed_font() != &new_style.computed_font())
+        return RequiredInvalidation::Relayout;
     bool requires_repaint = false;
     bool requires_stacking_context_tree_rebuild = false;
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
