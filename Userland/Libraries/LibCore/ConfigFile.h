@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
