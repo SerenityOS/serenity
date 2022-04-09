@@ -12,7 +12,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/FontStyleMapping.h>
-#include <LibGfx/TrueTypeFont/Font.h>
+#include <LibGfx/Font/TrueType/Font.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>

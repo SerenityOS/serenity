@@ -29,22 +29,22 @@ set(SOURCES
     PNGLoader.cpp
     PNGWriter.cpp
     PPMLoader.cpp
-    Point.cpp
-    QOILoader.cpp
-    Rect.cpp
-    ShareableBitmap.cpp
-    Size.cpp
-    StylePainter.cpp
-    SystemTheme.cpp
-    TextDirection.cpp
-    TextLayout.cpp
-    Triangle.cpp
-    TrueTypeFont/Font.cpp
-    TrueTypeFont/Glyf.cpp
-    TrueTypeFont/Cmap.cpp
-    Typeface.cpp
-    WindowTheme.cpp
-)
+        Point.cpp
+        QOILoader.cpp
+        Rect.cpp
+        ShareableBitmap.cpp
+        Size.cpp
+        StylePainter.cpp
+        SystemTheme.cpp
+        TextDirection.cpp
+        TextLayout.cpp
+        Triangle.cpp
+        Font/TrueType/Font.cpp
+        Font/TrueType/Glyf.cpp
+        Font/TrueType/Cmap.cpp
+        Typeface.cpp
+        WindowTheme.cpp
+        )
 
 serenity_lib(LibGfx gfx)
 target_link_libraries(LibGfx LibM LibCompress LibCore LibTextCodec LibIPC)

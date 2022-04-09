@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Font/TrueType/Glyf.h>
 #include <LibGfx/Path.h>
 #include <LibGfx/Point.h>
-#include <LibGfx/TrueTypeFont/Glyf.h>
 
 namespace TTF {
 
