@@ -20,15 +20,15 @@ IntelG33DisplayPlane::IntelG33DisplayPlane(Memory::TypedMapping<PlaneRegisters v
 {
 }
 
-ErrorOr<void> IntelG33DisplayPlane::set_plane_settings(Badge<IntelDisplayConnectorGroup>, PhysicalAddress aperture_start, PipeSelect pipe_select, size_t horizontal_active_pixels_count)
+ErrorOr<void> IntelG33DisplayPlane::enable(Badge<IntelDisplayConnectorGroup>)
 {
     SpinlockLocker locker(m_access_lock);
-    VERIFY(((horizontal_active_pixels_count * 4) % 64 == 0));
-    VERIFY(aperture_start < PhysicalAddress(0x1'0000'0000));
+    VERIFY(((m_horizontal_active_pixels_count * 4) % 64 == 0));
+    VERIFY(((m_horizontal_stride) % 64 == 0));
 
     u32 control_value = 0;
 
-    switch (pipe_select) {
+    switch (m_pipe_select) {
     case PipeSelect::PipeA:
         control_value |= (0b00 << 24);
         break;
@@ -44,14 +44,15 @@ ErrorOr<void> IntelG33DisplayPlane::set_plane_settings(Badge<IntelDisplayConnect
     }
 
     // Note: Set the plane to work with 32 bit BGRX (Ignore Alpha channel).
-    control_value |= (0b0110 << 26);
+    // Note: Bit 31 is set to turn on the plane.
+    control_value |= (0b0110 << 26) | (1 << 31);
 
-    m_plane_registers->stride = horizontal_active_pixels_count * 4;
-    m_shadow_registers.stride = horizontal_active_pixels_count * 4;
+    m_plane_registers->stride = m_horizontal_stride;
+    m_shadow_registers.stride = m_horizontal_stride;
     m_plane_registers->linear_offset = 0;
     m_shadow_registers.linear_offset = 0;
-    m_plane_registers->surface_base = aperture_start.get();
-    m_shadow_registers.surface_base = aperture_start.get();
+    m_plane_registers->surface_base = m_aperture_start.get();
+    m_shadow_registers.surface_base = m_aperture_start.get();
     m_plane_registers->control = control_value;
     m_shadow_registers.control = control_value;
     return {};
