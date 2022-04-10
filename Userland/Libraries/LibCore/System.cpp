@@ -328,22 +328,23 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
     return fd;
 }
 
-ErrorOr<int> open(StringView path, int options, ...)
+ErrorOr<int> open(StringView path, int options, mode_t mode)
+{
+    return openat(AT_FDCWD, path, options, mode);
+}
+
+ErrorOr<int> openat(int fd, StringView path, int options, mode_t mode)
 {
     if (!path.characters_without_null_termination())
         return Error::from_syscall("open"sv, -EFAULT);
-    va_list ap;
-    va_start(ap, options);
-    auto mode = (mode_t)va_arg(ap, unsigned);
-    va_end(ap);
 #ifdef __serenity__
-    Syscall::SC_open_params params { AT_FDCWD, { path.characters_without_null_termination(), path.length() }, options, mode };
+    Syscall::SC_open_params params { fd, { path.characters_without_null_termination(), path.length() }, options, mode };
     int rc = syscall(SC_open, &params);
     HANDLE_SYSCALL_RETURN_VALUE("open"sv, rc, rc);
 #else
     // NOTE: We have to ensure that the path is null-terminated.
     String path_string = path;
-    int rc = ::open(path_string.characters(), options, mode);
+    int rc = ::openat(fd, path_string.characters(), options, mode);
     if (rc < 0)
         return Error::from_syscall("open"sv, -errno);
     return rc;
