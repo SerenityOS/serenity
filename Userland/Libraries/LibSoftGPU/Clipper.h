@@ -29,8 +29,7 @@ public:
     void clip_triangle_against_frustum(Vector<GPU::Vertex>& input_vecs);
 
 private:
-    Vector<GPU::Vertex> list_a;
-    Vector<GPU::Vertex> list_b;
+    Vector<GPU::Vertex> m_vertex_buffer;
 };
 
 }
