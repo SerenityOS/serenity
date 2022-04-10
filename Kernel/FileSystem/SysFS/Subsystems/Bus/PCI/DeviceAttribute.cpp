@@ -90,6 +90,6 @@ ErrorOr<NonnullOwnPtr<KBuffer>> PCIDeviceAttributeSysFSComponent::try_to_generat
         VERIFY_NOT_REACHED();
     }
 
-    return KBuffer::try_create_with_bytes(value->view().bytes());
+    return KBuffer::try_create_with_bytes("PCIDeviceAttributeSysFSComponent: Device address"sv, value->view().bytes());
 }
 }

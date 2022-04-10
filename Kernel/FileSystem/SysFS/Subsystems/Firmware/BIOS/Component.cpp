@@ -56,6 +56,6 @@ StringView BIOSSysFSComponent::name() const
 ErrorOr<NonnullOwnPtr<KBuffer>> BIOSSysFSComponent::try_to_generate_buffer() const
 {
     auto blob = TRY(Memory::map_typed<u8>((m_blob_paddr), m_blob_length));
-    return KBuffer::try_create_with_bytes(Span<u8> { blob.ptr(), m_blob_length });
+    return KBuffer::try_create_with_bytes("BIOSSysFSComponent: Blob"sv, Span<u8> { blob.ptr(), m_blob_length });
 }
 }

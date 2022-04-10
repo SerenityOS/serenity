@@ -133,7 +133,7 @@ ErrorOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, UserOrKernelB
             // FIXME: Fix this so that no memcpy() is necessary, and we can just grow the
             //        KBuffer and it will add physical pages as needed while keeping the
             //        existing ones.
-            auto tmp = TRY(KBuffer::try_create_with_size(new_size * 2));
+            auto tmp = TRY(KBuffer::try_create_with_size("TmpFSInode: Content"sv, new_size * 2));
             tmp->set_size(new_size);
             if (m_content)
                 memcpy(tmp->data(), m_content->data(), old_size);
@@ -285,7 +285,7 @@ ErrorOr<void> TmpFSInode::truncate(u64 size)
     if (size == 0)
         m_content.clear();
     else if (!m_content) {
-        m_content = TRY(KBuffer::try_create_with_size(size));
+        m_content = TRY(KBuffer::try_create_with_size("TmpFSInode: Content"sv, size));
     } else if (static_cast<size_t>(size) < m_content->capacity()) {
         size_t prev_size = m_metadata.size;
         m_content->set_size(size);
@@ -293,7 +293,7 @@ ErrorOr<void> TmpFSInode::truncate(u64 size)
             memset(m_content->data() + prev_size, 0, size - prev_size);
     } else {
         size_t prev_size = m_metadata.size;
-        auto tmp = TRY(KBuffer::try_create_with_size(size));
+        auto tmp = TRY(KBuffer::try_create_with_size("TmpFSInode: Content"sv, size));
         memcpy(tmp->data(), m_content->data(), prev_size);
         m_content = move(tmp);
     }

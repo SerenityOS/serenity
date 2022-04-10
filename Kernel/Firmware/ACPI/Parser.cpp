@@ -57,7 +57,7 @@ ErrorOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, UserO
 ErrorOr<NonnullOwnPtr<KBuffer>> ACPISysFSComponent::try_to_generate_buffer() const
 {
     auto acpi_blob = TRY(Memory::map_typed<u8>((m_paddr), m_length));
-    return KBuffer::try_create_with_bytes(Span<u8> { acpi_blob.ptr(), m_length });
+    return KBuffer::try_create_with_bytes("ACPISysFSComponent: Blob"sv, Span<u8> { acpi_blob.ptr(), m_length });
 }
 
 UNMAP_AFTER_INIT ACPISysFSComponent::ACPISysFSComponent(NonnullOwnPtr<KString> table_name, PhysicalAddress paddr, size_t table_size)

@@ -45,8 +45,8 @@ ErrorOr<void> LocalSocket::try_for_each(Function<ErrorOr<void>(LocalSocket const
 
 ErrorOr<NonnullRefPtr<LocalSocket>> LocalSocket::try_create(int type)
 {
-    auto client_buffer = TRY(DoubleBuffer::try_create());
-    auto server_buffer = TRY(DoubleBuffer::try_create());
+    auto client_buffer = TRY(DoubleBuffer::try_create("LocalSocket: Client buffer"sv));
+    auto server_buffer = TRY(DoubleBuffer::try_create("LocalSocket: Server buffer"sv));
     return adopt_nonnull_ref_or_enomem(new (nothrow) LocalSocket(type, move(client_buffer), move(server_buffer)));
 }
 

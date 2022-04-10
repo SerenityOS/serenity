@@ -115,7 +115,7 @@ RefPtr<PacketWithTimestamp> NetworkAdapter::acquire_packet_buffer(size_t size)
 {
     InterruptDisabler disabler;
     if (m_unused_packets.is_empty()) {
-        auto buffer_or_error = KBuffer::try_create_with_size(size, Memory::Region::Access::ReadWrite, "Packet Buffer", AllocationStrategy::AllocateNow);
+        auto buffer_or_error = KBuffer::try_create_with_size("NetworkAdapter: Packet buffer"sv, size, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
         if (buffer_or_error.is_error())
             return {};
         auto buffer = buffer_or_error.release_value();
@@ -133,7 +133,7 @@ RefPtr<PacketWithTimestamp> NetworkAdapter::acquire_packet_buffer(size_t size)
         return packet;
     }
 
-    auto buffer_or_error = KBuffer::try_create_with_size(size, Memory::Region::Access::ReadWrite, "Packet Buffer", AllocationStrategy::AllocateNow);
+    auto buffer_or_error = KBuffer::try_create_with_size("NetworkAdapter: Packet buffer"sv, size, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
     if (buffer_or_error.is_error())
         return {};
     packet = adopt_ref_if_nonnull(new (nothrow) PacketWithTimestamp { buffer_or_error.release_value(), kgettimeofday() });

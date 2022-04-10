@@ -37,7 +37,7 @@ MutexProtected<IPv4Socket::List>& IPv4Socket::all_sockets()
 
 ErrorOr<NonnullOwnPtr<DoubleBuffer>> IPv4Socket::try_create_receive_buffer()
 {
-    return DoubleBuffer::try_create(256 * KiB);
+    return DoubleBuffer::try_create("IPv4Socket: Receive buffer"sv, 256 * KiB);
 }
 
 ErrorOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
@@ -444,7 +444,7 @@ bool IPv4Socket::did_receive(IPv4Address const& source_address, u16 source_port,
             dbgln("IPv4Socket({}): did_receive refusing packet since queue is full.", this);
             return false;
         }
-        auto data_or_error = KBuffer::try_create_with_bytes(packet);
+        auto data_or_error = KBuffer::try_create_with_bytes("IPv4Socket: Packet buffer"sv, packet);
         if (data_or_error.is_error()) {
             dbgln("IPv4Socket: did_receive unable to allocate storage for incoming packet.");
             return false;

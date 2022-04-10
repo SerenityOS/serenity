@@ -325,7 +325,7 @@ ErrorOr<void> PerformanceEventBuffer::to_json(KBufferBuilder& builder) const
 
 OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size_t buffer_size)
 {
-    auto buffer_or_error = KBuffer::try_create_with_size(buffer_size, Memory::Region::Access::ReadWrite, "Performance events", AllocationStrategy::AllocateNow);
+    auto buffer_or_error = KBuffer::try_create_with_size("Performance events"sv, buffer_size, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
     if (buffer_or_error.is_error())
         return {};
     return adopt_own_if_nonnull(new (nothrow) PerformanceEventBuffer(buffer_or_error.release_value()));
