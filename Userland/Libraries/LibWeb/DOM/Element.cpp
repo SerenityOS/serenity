@@ -539,6 +539,9 @@ bool Element::serializes_as_void() const
 // https://drafts.csswg.org/cssom-view/#dom-element-getboundingclientrect
 NonnullRefPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
 {
+    // // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
     // FIXME: Support inline layout nodes as well.
     auto* paint_box = this->paint_box();
     if (!paint_box)
