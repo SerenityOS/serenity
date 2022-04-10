@@ -23,6 +23,10 @@ $ chown anon:anon file
 
 # Change 'file' owner to 'root', leave group unchanged:
 # chown root file
+
+# Change 'file1' and 'file2' owner and group to 'anon':
+$ chown anon:anon file1 file2
+
 ```
 
 ## See also
