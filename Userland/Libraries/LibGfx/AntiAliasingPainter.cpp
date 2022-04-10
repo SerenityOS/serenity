@@ -16,8 +16,8 @@
 
 // Base algorithm from https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm,
 // because there seems to be no other known method for drawing AA'd lines (?)
-template<Gfx::AntiAliasingPainter::AntiAliasPolicy policy, typename TransformPoint>
-void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color, TransformPoint transform_point)
+template<Gfx::AntiAliasingPainter::AntiAliasPolicy policy, bool apply_transform>
+void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color)
 {
     // FIXME: Implement this :P
     VERIFY(style == Painter::LineStyle::Solid);
@@ -25,8 +25,10 @@ void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_f
     auto corrected_thickness = thickness > 1 ? thickness - 1 : thickness;
     auto size = IntSize(corrected_thickness, corrected_thickness);
     auto plot = [&](int x, int y, float c) {
-        transform_point(x, y, m_transform);
-        m_underlying_painter.fill_rect(IntRect::centered_on({ x, y }, size), color.with_alpha(color.alpha() * c));
+        Gfx::IntPoint center { x, y };
+        if constexpr (apply_transform)
+            center = m_transform.map(center);
+        m_underlying_painter.fill_rect(IntRect::centered_on(center, size), color.with_alpha(color.alpha() * c));
     };
 
     auto integer_part = [](float x) { return floorf(x); };
@@ -116,25 +118,14 @@ void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_f
     draw_line(actual_from.x(), actual_from.y(), actual_to.x(), actual_to.y());
 }
 
-static ALWAYS_INLINE void no_transform(int&, int&, Gfx::AffineTransform const&)
-{
-}
-
-static ALWAYS_INLINE void full_transform(int& x, int& y, Gfx::AffineTransform const& transform)
-{
-    auto mapped = transform.map(Gfx::IntPoint { x, y });
-    x = mapped.x();
-    y = mapped.y();
-}
-
 void Gfx::AntiAliasingPainter::draw_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color alternate_color)
 {
     if (m_transform.is_identity_or_translation()) {
         m_underlying_painter.translate(m_transform.e(), m_transform.f());
-        draw_anti_aliased_line<AntiAliasPolicy::OnlyEnds>(actual_from, actual_to, color, thickness, style, alternate_color, no_transform);
+        draw_anti_aliased_line<AntiAliasPolicy::OnlyEnds, false>(actual_from, actual_to, color, thickness, style, alternate_color);
         m_underlying_painter.translate(-m_transform.e(), -m_transform.f());
     } else {
-        draw_anti_aliased_line<AntiAliasPolicy::OnlyEnds>(actual_from, actual_to, color, thickness, style, alternate_color, full_transform);
+        draw_anti_aliased_line<AntiAliasPolicy::OnlyEnds, true>(actual_from, actual_to, color, thickness, style, alternate_color);
     }
 }
 
@@ -142,10 +133,10 @@ void Gfx::AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoi
 {
     if (m_transform.is_identity_or_translation()) {
         m_underlying_painter.translate(m_transform.e(), m_transform.f());
-        draw_anti_aliased_line<AntiAliasPolicy::Full>(actual_from, actual_to, color, thickness, style, alternate_color, no_transform);
+        draw_anti_aliased_line<AntiAliasPolicy::Full, false>(actual_from, actual_to, color, thickness, style, alternate_color);
         m_underlying_painter.translate(-m_transform.e(), -m_transform.f());
     } else {
-        draw_anti_aliased_line<AntiAliasPolicy::Full>(actual_from, actual_to, color, thickness, style, alternate_color, full_transform);
+        draw_anti_aliased_line<AntiAliasPolicy::Full, true>(actual_from, actual_to, color, thickness, style, alternate_color);
     }
 }
 
