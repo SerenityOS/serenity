@@ -104,10 +104,16 @@ public:
     static u16 default_port_for_scheme(StringView);
     static bool is_special_scheme(StringView);
 
-    static String percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo);
+    enum class SpaceAsPlus {
+        No,
+        Yes,
+    };
+    static String percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo, SpaceAsPlus = SpaceAsPlus::No);
     static String percent_decode(StringView input);
 
     bool operator==(URL const& other) const { return equals(other, ExcludeFragment::No); }
+
+    static bool code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet);
 
 private:
     URL(String&& data_mime_type, String&& data_payload, bool payload_is_base64)

@@ -42,25 +42,6 @@ ResourceLoader::ResourceLoader(NonnullRefPtr<Protocol::RequestClient> protocol_c
 {
 }
 
-void ResourceLoader::load_sync(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
-{
-    Core::EventLoop loop;
-
-    load(
-        request,
-        [&](auto data, auto& response_headers, auto status_code) {
-            success_callback(data, response_headers, status_code);
-            loop.quit(0);
-        },
-        [&](auto& string, auto status_code) {
-            if (error_callback)
-                error_callback(string, status_code);
-            loop.quit(0);
-        });
-
-    loop.exec();
-}
-
 void ResourceLoader::prefetch_dns(AK::URL const& url)
 {
     m_protocol_client->ensure_connection(url, RequestServer::CacheLevel::ResolveOnly);

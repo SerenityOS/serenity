@@ -367,7 +367,7 @@ void URL::append_percent_encoded(StringBuilder& builder, u32 code_point)
 }
 
 // https://url.spec.whatwg.org/#c0-control-percent-encode-set
-constexpr bool code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet set)
+bool URL::code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet set)
 {
     switch (set) {
     case URL::PercentEncodeSet::C0Control:
@@ -403,11 +403,14 @@ void URL::append_percent_encoded_if_necessary(StringBuilder& builder, u32 code_p
         builder.append_code_point(code_point);
 }
 
-String URL::percent_encode(StringView input, URL::PercentEncodeSet set)
+String URL::percent_encode(StringView input, URL::PercentEncodeSet set, SpaceAsPlus space_as_plus)
 {
     StringBuilder builder;
     for (auto code_point : Utf8View(input)) {
-        append_percent_encoded_if_necessary(builder, code_point, set);
+        if (space_as_plus == SpaceAsPlus::Yes && code_point == ' ')
+            builder.append('+');
+        else
+            append_percent_encoded_if_necessary(builder, code_point, set);
     }
     return builder.to_string();
 }
