@@ -10,6 +10,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/Random.h>
+#include <AK/ScopeGuard.h>
 #include <AK/Try.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
@@ -39,6 +40,8 @@ static bool send(InterfaceDescriptor const& iface, DHCPv4Packet const& packet, C
         dbgln("ERROR: socket :: {}", strerror(errno));
         return false;
     }
+
+    ScopeGuard socket_close_guard = [&] { close(fd); };
 
     if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, iface.ifname.characters(), IFNAMSIZ) < 0) {
         dbgln("ERROR: setsockopt(SO_BINDTODEVICE) :: {}", strerror(errno));
