@@ -37,8 +37,8 @@ private:
         OnlyEnds,
         Full,
     };
-    template<AntiAliasPolicy policy>
-    void draw_anti_aliased_line(FloatPoint const&, FloatPoint const&, Color, float thickness, Painter::LineStyle style, Color alternate_color);
+    template<AntiAliasPolicy policy, typename TransformPoint>
+    void draw_anti_aliased_line(FloatPoint const&, FloatPoint const&, Color, float thickness, Painter::LineStyle style, Color alternate_color, TransformPoint);
 
     Painter& m_underlying_painter;
     AffineTransform m_transform;
