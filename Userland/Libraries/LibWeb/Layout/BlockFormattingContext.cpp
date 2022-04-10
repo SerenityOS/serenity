@@ -559,6 +559,24 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_horizontal
     box_state.offset = Gfx::FloatPoint { x, box_state.offset.y() };
 }
 
+static void measure_scrollable_overflow(FormattingState const& state, Box const& box, float& bottom_edge, float& right_edge)
+{
+    auto const& child_state = state.get(box);
+    auto child_rect = absolute_content_rect(box, state);
+    child_rect.inflate(child_state.border_box_top(), child_state.border_box_right(), child_state.border_box_bottom(), child_state.border_box_left());
+
+    bottom_edge = max(bottom_edge, child_rect.bottom());
+    right_edge = max(right_edge, child_rect.right());
+
+    if (box.computed_values().overflow_x() == CSS::Overflow::Hidden && box.computed_values().overflow_y() == CSS::Overflow::Hidden)
+        return;
+
+    box.for_each_child_of_type<Box>([&](Box const& child) {
+        measure_scrollable_overflow(state, child, bottom_edge, right_edge);
+        return IterationDecision::Continue;
+    });
+}
+
 void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_mode)
 {
     auto viewport_rect = root().browsing_context().viewport_rect();
@@ -571,17 +589,9 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
     else
         layout_block_level_children(root(), layout_mode);
 
-    // Compute scrollable overflow.
     float bottom_edge = 0;
     float right_edge = 0;
-    icb.for_each_in_subtree_of_type<Box>([&](Box const& child) {
-        auto const& child_state = m_state.get(child);
-        auto child_rect = absolute_content_rect(child, m_state);
-        child_rect.inflate(child_state.border_box_top(), child_state.border_box_right(), child_state.border_box_bottom(), child_state.border_box_left());
-        bottom_edge = max(bottom_edge, child_rect.bottom());
-        right_edge = max(right_edge, child_rect.right());
-        return IterationDecision::Continue;
-    });
+    measure_scrollable_overflow(m_state, icb, bottom_edge, right_edge);
 
     if (bottom_edge >= viewport_rect.height() || right_edge >= viewport_rect.width()) {
         // FIXME: Move overflow data to FormattingState!
