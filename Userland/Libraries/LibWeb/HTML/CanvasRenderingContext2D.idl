@@ -58,5 +58,6 @@ interface CanvasRenderingContext2D {
     // FIXME: All these `double`s should be `unrestricted double`
     undefined transform(double a, double b, double c, double d, double e, double f);
     undefined setTransform(double a, double b, double c, double d, double e, double f);
+    undefined resetTransform();
 
 };

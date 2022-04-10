@@ -100,6 +100,7 @@ public:
 
     void transform(double a, double b, double c, double d, double e, double f);
     void set_transform(double a, double b, double c, double d, double e, double f);
+    void reset_transform();
 
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
