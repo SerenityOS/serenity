@@ -60,4 +60,9 @@ interface CanvasRenderingContext2D {
     undefined setTransform(double a, double b, double c, double d, double e, double f);
     undefined resetTransform();
 
+    // undefined clip(optional CanvasFillRule fillRule = "nonzero");
+    // undefined clip(Path2D path, optional CanvasFillRule fillRule = "nonzero");
+    // FIXME: Replace this with the two definitions above.
+    undefined clip();
+
 };
