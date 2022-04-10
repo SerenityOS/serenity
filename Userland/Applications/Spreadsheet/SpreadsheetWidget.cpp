@@ -210,6 +210,10 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         redo();
     });
 
+    m_copy_cell_above_action = GUI::Action::create("Copy above cell (Ctrl+D)", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle-2x.png").release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        copy_cell_above();
+    });
+
     m_undo_stack.on_state_change = [this] {
         m_undo_action->set_enabled(m_undo_stack.can_undo());
         m_redo_action->set_enabled(m_undo_stack.can_redo());
@@ -261,6 +265,23 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         m_tab_context_menu_sheet_view = static_cast<SpreadsheetView&>(widget);
         m_rename_action->activate();
     };
+}
+
+void SpreadsheetWidget::copy_cell_above()
+{
+    auto view = current_view();
+    if (view == nullptr) {
+        return;
+    }
+    auto model = view->model();
+
+    auto current_active_cell = *view->cursor();
+    int row_index = current_active_cell.row();
+    if (row_index > 0) {
+        auto above_cell_index = model->index(row_index - 1, current_active_cell.column());
+        auto above_cell_content = model->data(above_cell_index, GUI::ModelRole::Display);
+        model->set_data(current_active_cell, above_cell_content);
+    }
 }
 
 void SpreadsheetWidget::resize_event(GUI::ResizeEvent& event)
@@ -559,6 +580,8 @@ void SpreadsheetWidget::initialize_menubar(GUI::Window& window)
     edit_menu.add_action(*m_cut_action);
     edit_menu.add_action(*m_copy_action);
     edit_menu.add_action(*m_paste_action);
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_copy_cell_above_action);
 
     auto& help_menu = window.add_menu("&Help");
     help_menu.add_action(*m_functions_help_action);

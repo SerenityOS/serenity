@@ -46,7 +46,7 @@ public:
     }
 
     void initialize_menubar(GUI::Window&);
-
+    void copy_cell_above();
     void undo();
     void redo();
     auto& undo_stack() { return m_undo_stack; }
@@ -88,6 +88,7 @@ private:
     RefPtr<GUI::Action> m_paste_action;
     RefPtr<GUI::Action> m_undo_action;
     RefPtr<GUI::Action> m_redo_action;
+    RefPtr<GUI::Action> m_copy_cell_above_action;
 
     RefPtr<GUI::Action> m_functions_help_action;
     RefPtr<GUI::Action> m_about_action;
