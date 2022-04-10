@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/File.h>
+#include <LibCore/Directory.h>
 #include <LibCore/LockFile.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -16,7 +16,7 @@ namespace Core {
 LockFile::LockFile(char const* filename, Type type)
     : m_filename(filename)
 {
-    if (!Core::File::ensure_parent_directories(m_filename))
+    if (Core::Directory::create(LexicalPath(m_filename).parent(), Core::Directory::CreateDirectories::Yes).is_error())
         return;
 
     m_fd = open(filename, O_RDONLY | O_CREAT | O_CLOEXEC, 0666);

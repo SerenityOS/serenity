@@ -16,6 +16,11 @@ bool AffineTransform::is_identity() const
     return m_values[0] == 1 && m_values[1] == 0 && m_values[2] == 0 && m_values[3] == 1 && m_values[4] == 0 && m_values[5] == 0;
 }
 
+bool AffineTransform::is_identity_or_translation() const
+{
+    return a() == 1 && b() == 0 && c() == 0 && d() == 1;
+}
+
 static float hypotenuse(float x, float y)
 {
     // FIXME: This won't handle overflow :(

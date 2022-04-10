@@ -296,6 +296,7 @@ class ResizeObserver;
 namespace Web::SVG {
 class SVGAnimatedLength;
 class SVGCircleElement;
+class SVGClipPathElement;
 class SVGElement;
 class SVGEllipseElement;
 class SVGGeometryElement;
@@ -522,6 +523,7 @@ class SubmitEventWrapper;
 class SubtleCryptoWrapper;
 class SVGAnimatedLengthWrapper;
 class SVGCircleElementWrapper;
+class SVGClipPathElementWrapper;
 class SVGElementWrapper;
 class SVGEllipseElementWrapper;
 class SVGGeometryElementWrapper;

@@ -5,6 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#if defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC optimize("O3")
+#endif
+
 #include "FillPathImplementation.h"
 #include <AK/Function.h>
 #include <LibGfx/AntiAliasingPainter.h>
@@ -12,7 +16,7 @@
 
 // Base algorithm from https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm,
 // because there seems to be no other known method for drawing AA'd lines (?)
-template<Gfx::AntiAliasingPainter::AntiAliasPolicy policy>
+template<Gfx::AntiAliasingPainter::AntiAliasPolicy policy, bool apply_transform>
 void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color)
 {
     // FIXME: Implement this :P
@@ -21,7 +25,9 @@ void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_f
     auto corrected_thickness = thickness > 1 ? thickness - 1 : thickness;
     auto size = IntSize(corrected_thickness, corrected_thickness);
     auto plot = [&](int x, int y, float c) {
-        auto center = m_transform.map(Gfx::IntPoint(x, y)).to_type<int>();
+        Gfx::IntPoint center { x, y };
+        if constexpr (apply_transform)
+            center = m_transform.map(center);
         m_underlying_painter.fill_rect(IntRect::centered_on(center, size), color.with_alpha(color.alpha() * c));
     };
 
@@ -114,12 +120,24 @@ void Gfx::AntiAliasingPainter::draw_anti_aliased_line(FloatPoint const& actual_f
 
 void Gfx::AntiAliasingPainter::draw_aliased_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color alternate_color)
 {
-    draw_anti_aliased_line<AntiAliasPolicy::OnlyEnds>(actual_from, actual_to, color, thickness, style, alternate_color);
+    if (m_transform.is_identity_or_translation()) {
+        m_underlying_painter.translate(m_transform.e(), m_transform.f());
+        draw_anti_aliased_line<AntiAliasPolicy::OnlyEnds, false>(actual_from, actual_to, color, thickness, style, alternate_color);
+        m_underlying_painter.translate(-m_transform.e(), -m_transform.f());
+    } else {
+        draw_anti_aliased_line<AntiAliasPolicy::OnlyEnds, true>(actual_from, actual_to, color, thickness, style, alternate_color);
+    }
 }
 
 void Gfx::AntiAliasingPainter::draw_line(FloatPoint const& actual_from, FloatPoint const& actual_to, Color color, float thickness, Gfx::Painter::LineStyle style, Color alternate_color)
 {
-    draw_anti_aliased_line<AntiAliasPolicy::Full>(actual_from, actual_to, color, thickness, style, alternate_color);
+    if (m_transform.is_identity_or_translation()) {
+        m_underlying_painter.translate(m_transform.e(), m_transform.f());
+        draw_anti_aliased_line<AntiAliasPolicy::Full, false>(actual_from, actual_to, color, thickness, style, alternate_color);
+        m_underlying_painter.translate(-m_transform.e(), -m_transform.f());
+    } else {
+        draw_anti_aliased_line<AntiAliasPolicy::Full, true>(actual_from, actual_to, color, thickness, style, alternate_color);
+    }
 }
 
 void Gfx::AntiAliasingPainter::fill_path(Path& path, Color color, Painter::WindingRule rule)

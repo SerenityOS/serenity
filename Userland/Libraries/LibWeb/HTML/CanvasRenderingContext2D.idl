@@ -55,4 +55,14 @@ interface CanvasRenderingContext2D {
     CanvasGradient createLinearGradient(double x0, double y0, double x1, double y1);
     CanvasGradient createConicGradient(double startAngle, double x, double y);
 
+    // FIXME: All these `double`s should be `unrestricted double`
+    undefined transform(double a, double b, double c, double d, double e, double f);
+    undefined setTransform(double a, double b, double c, double d, double e, double f);
+    undefined resetTransform();
+
+    // undefined clip(optional CanvasFillRule fillRule = "nonzero");
+    // undefined clip(Path2D path, optional CanvasFillRule fillRule = "nonzero");
+    // FIXME: Replace this with the two definitions above.
+    undefined clip();
+
 };

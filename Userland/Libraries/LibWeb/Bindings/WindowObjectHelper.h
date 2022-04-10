@@ -267,6 +267,8 @@
 #include <LibWeb/Bindings/ResizeObserverPrototype.h>
 #include <LibWeb/Bindings/SVGCircleElementConstructor.h>
 #include <LibWeb/Bindings/SVGCircleElementPrototype.h>
+#include <LibWeb/Bindings/SVGClipPathElementConstructor.h>
+#include <LibWeb/Bindings/SVGClipPathElementPrototype.h>
 #include <LibWeb/Bindings/SVGElementConstructor.h>
 #include <LibWeb/Bindings/SVGElementPrototype.h>
 #include <LibWeb/Bindings/SVGEllipseElementConstructor.h>
@@ -484,6 +486,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(SubtleCrypto)                                                       \
     ADD_WINDOW_OBJECT_INTERFACE(SVGElement)                                                         \
     ADD_WINDOW_OBJECT_INTERFACE(SVGCircleElement)                                                   \
+    ADD_WINDOW_OBJECT_INTERFACE(SVGClipPathElement)                                                 \
     ADD_WINDOW_OBJECT_INTERFACE(SVGEllipseElement)                                                  \
     ADD_WINDOW_OBJECT_INTERFACE(SVGGeometryElement)                                                 \
     ADD_WINDOW_OBJECT_INTERFACE(SVGGraphicsElement)                                                 \

@@ -317,6 +317,8 @@ set(SOURCES
     SVG/AttributeNames.cpp
     SVG/AttributeParser.cpp
     SVG/SVGAnimatedLength.cpp
+    SVG/SVGClipPathElement.cpp
+    SVG/SVGElement.cpp
     SVG/SVGElement.cpp
     SVG/SVGGElement.cpp
     SVG/SVGGeometryElement.cpp
@@ -581,6 +583,7 @@ libweb_js_wrapper(NavigationTiming/PerformanceTiming)
 libweb_js_wrapper(RequestIdleCallback/IdleDeadline)
 libweb_js_wrapper(ResizeObserver/ResizeObserver)
 libweb_js_wrapper(SVG/SVGAnimatedLength)
+libweb_js_wrapper(SVG/SVGClipPathElement)
 libweb_js_wrapper(SVG/SVGElement)
 libweb_js_wrapper(SVG/SVGGeometryElement)
 libweb_js_wrapper(SVG/SVGGraphicsElement)

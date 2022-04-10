@@ -77,6 +77,7 @@
 #include <LibWeb/HTML/HTMLUnknownElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/SVG/SVGCircleElement.h>
+#include <LibWeb/SVG/SVGClipPathElement.h>
 #include <LibWeb/SVG/SVGEllipseElement.h>
 #include <LibWeb/SVG/SVGGElement.h>
 #include <LibWeb/SVG/SVGLineElement.h>
@@ -260,6 +261,9 @@ NonnullRefPtr<Element> create_element(Document& document, FlyString local_name, 
         return adopt_ref(*new HTML::HTMLElement(document, move(qualified_name)));
     if (lowercase_tag_name == SVG::TagNames::svg)
         return adopt_ref(*new SVG::SVGSVGElement(document, move(qualified_name)));
+    // FIXME: Support SVG's mixedCase tag names properly.
+    if (lowercase_tag_name.equals_ignoring_case(SVG::TagNames::clipPath))
+        return adopt_ref(*new SVG::SVGClipPathElement(document, move(qualified_name)));
     if (lowercase_tag_name == SVG::TagNames::circle)
         return adopt_ref(*new SVG::SVGCircleElement(document, move(qualified_name)));
     if (lowercase_tag_name == SVG::TagNames::ellipse)
