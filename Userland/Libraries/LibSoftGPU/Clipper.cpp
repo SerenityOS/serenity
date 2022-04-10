@@ -16,19 +16,18 @@ namespace SoftGPU {
 template<Clipper::ClipPlane plane>
 static constexpr bool point_within_clip_plane(FloatVector4 const& vertex)
 {
-    if constexpr (plane == Clipper::ClipPlane::LEFT) {
+    if constexpr (plane == Clipper::ClipPlane::LEFT)
         return vertex.x() >= -vertex.w();
-    } else if constexpr (plane == Clipper::ClipPlane::RIGHT) {
+    else if constexpr (plane == Clipper::ClipPlane::RIGHT)
         return vertex.x() <= vertex.w();
-    } else if constexpr (plane == Clipper::ClipPlane::TOP) {
+    else if constexpr (plane == Clipper::ClipPlane::TOP)
         return vertex.y() <= vertex.w();
-    } else if constexpr (plane == Clipper::ClipPlane::BOTTOM) {
+    else if constexpr (plane == Clipper::ClipPlane::BOTTOM)
         return vertex.y() >= -vertex.w();
-    } else if constexpr (plane == Clipper::ClipPlane::NEAR) {
+    else if constexpr (plane == Clipper::ClipPlane::NEAR)
         return vertex.z() >= -vertex.w();
-    } else if constexpr (plane == Clipper::ClipPlane::FAR) {
+    else if constexpr (plane == Clipper::ClipPlane::FAR)
         return vertex.z() <= vertex.w();
-    }
     return false;
 }
 
