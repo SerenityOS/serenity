@@ -65,43 +65,41 @@ static constexpr GPU::Vertex clip_intersection_point(GPU::Vertex const& p1, GPU:
 }
 
 template<Clipper::ClipPlane plane>
-FLATTEN static constexpr void clip_plane(Vector<GPU::Vertex>& read_list, Vector<GPU::Vertex>& write_list)
+FLATTEN static constexpr void clip_plane(Vector<GPU::Vertex>& input_list, Vector<GPU::Vertex>& output_list)
 {
-    auto read_from = &read_list;
-    auto write_to = &write_list;
+    output_list.clear_with_capacity();
 
-    write_to->clear_with_capacity();
-    for (size_t i = 0; i < read_from->size(); i++) {
-        auto const& curr_vec = read_from->at((i + 1) % read_from->size());
-        auto const& prev_vec = read_from->at(i);
+    auto input_list_size = input_list.size();
+    if (input_list_size == 0)
+        return;
 
-        bool const is_curr_point_within_clip_plane = point_within_clip_plane<plane>(curr_vec.clip_coordinates);
-        bool const is_prev_point_within_clip_plane = point_within_clip_plane<plane>(prev_vec.clip_coordinates);
-        if (is_curr_point_within_clip_plane != is_prev_point_within_clip_plane) {
-            auto const intersect = clip_intersection_point<plane>(prev_vec, curr_vec);
-            write_to->append(intersect);
-        }
+    auto const* prev_vec = &input_list.data()[0];
+    auto is_prev_point_within_clip_plane = point_within_clip_plane<plane>(prev_vec->clip_coordinates);
+
+    for (size_t i = 1; i <= input_list_size; i++) {
+        auto const& curr_vec = input_list[i % input_list_size];
+        auto const is_curr_point_within_clip_plane = point_within_clip_plane<plane>(curr_vec.clip_coordinates);
+
+        if (is_curr_point_within_clip_plane != is_prev_point_within_clip_plane)
+            output_list.append(clip_intersection_point<plane>(*prev_vec, curr_vec));
 
         if (is_curr_point_within_clip_plane)
-            write_to->append(curr_vec);
+            output_list.append(curr_vec);
+
+        prev_vec = &curr_vec;
+        is_prev_point_within_clip_plane = is_curr_point_within_clip_plane;
     }
-    swap(write_list, read_list);
 }
 
 void Clipper::clip_triangle_against_frustum(Vector<GPU::Vertex>& input_verts)
 {
-    list_a = input_verts;
-    list_b.clear_with_capacity();
-
     // FIXME C++23. Static reflection will provide looping over all enum values.
-    clip_plane<ClipPlane::LEFT>(list_a, list_b);
-    clip_plane<ClipPlane::RIGHT>(list_a, list_b);
-    clip_plane<ClipPlane::TOP>(list_a, list_b);
-    clip_plane<ClipPlane::BOTTOM>(list_a, list_b);
-    clip_plane<ClipPlane::NEAR>(list_a, list_b);
-    clip_plane<ClipPlane::FAR>(list_a, list_b);
-
-    input_verts = list_a;
+    clip_plane<ClipPlane::LEFT>(input_verts, m_vertex_buffer);
+    clip_plane<ClipPlane::RIGHT>(m_vertex_buffer, input_verts);
+    clip_plane<ClipPlane::TOP>(input_verts, m_vertex_buffer);
+    clip_plane<ClipPlane::BOTTOM>(m_vertex_buffer, input_verts);
+    clip_plane<ClipPlane::NEAR>(input_verts, m_vertex_buffer);
+    clip_plane<ClipPlane::FAR>(m_vertex_buffer, input_verts);
 }
 
 }
