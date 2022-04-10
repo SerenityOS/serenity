@@ -25,6 +25,8 @@
 #include <LibWeb/Geometry/DOMRectList.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
+#include <LibWeb/HTML/HTMLBodyElement.h>
+#include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -586,18 +588,50 @@ int Element::client_left() const
     return 0;
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-clientwidth
 int Element::client_width() const
 {
-    if (auto* paint_box = this->paint_box())
-        return paint_box->absolute_rect().width();
-    return 0;
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
+    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
+    if (!paint_box())
+        return 0;
+
+    // 2. If the element is the root element and the element’s node document is not in quirks mode,
+    //    or if the element is the HTML body element and the element’s node document is in quirks mode,
+    //    return the viewport width excluding the size of a rendered scroll bar (if any).
+    if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
+        || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
+        return document().browsing_context()->viewport_rect().width();
+    }
+
+    // 3. Return the width of the padding edge excluding the width of any rendered scrollbar between the padding edge and the border edge,
+    // ignoring any transforms that apply to the element and its ancestors.
+    return paint_box()->absolute_padding_box_rect().width();
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-clientheight
 int Element::client_height() const
 {
-    if (auto* paint_box = this->paint_box())
-        return paint_box->absolute_rect().height();
-    return 0;
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    const_cast<Document&>(document()).update_layout();
+
+    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
+    if (!paint_box())
+        return 0;
+
+    // 2. If the element is the root element and the element’s node document is not in quirks mode,
+    //    or if the element is the HTML body element and the element’s node document is in quirks mode,
+    //    return the viewport height excluding the size of a rendered scroll bar (if any).
+    if ((is<HTML::HTMLHtmlElement>(*this) && !document().in_quirks_mode())
+        || (is<HTML::HTMLBodyElement>(*this) && document().in_quirks_mode())) {
+        return document().browsing_context()->viewport_rect().height();
+    }
+
+    // 3. Return the height of the padding edge excluding the height of any rendered scrollbar between the padding edge and the border edge,
+    //    ignoring any transforms that apply to the element and its ancestors.
+    return paint_box()->absolute_padding_box_rect().height();
 }
 
 void Element::children_changed()
