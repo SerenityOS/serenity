@@ -10,6 +10,7 @@
 
 #include <AK/Error.h>
 #include <AK/StringView.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <grp.h>
 #include <pwd.h>
@@ -68,7 +69,8 @@ ErrorOr<int> fcntl(int fd, int command, ...);
 ErrorOr<void*> mmap(void* address, size_t, int protection, int flags, int fd, off_t, size_t alignment = 0, StringView name = {});
 ErrorOr<void> munmap(void* address, size_t);
 ErrorOr<int> anon_create(size_t size, int options);
-ErrorOr<int> open(StringView path, int options, ...);
+ErrorOr<int> open(StringView path, int options, mode_t mode = 0);
+ErrorOr<int> openat(int fd, StringView path, int options, mode_t mode = 0);
 ErrorOr<void> close(int fd);
 ErrorOr<void> ftruncate(int fd, off_t length);
 ErrorOr<struct stat> stat(StringView path);
