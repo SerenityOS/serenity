@@ -87,7 +87,7 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
         // FIXME: This const_cast is gross.
         const_cast<ReplacedBox&>(replaced).prepare_for_replaced_layout();
         compute_width_for_block_level_replaced_element_in_normal_flow(replaced);
-        return;
+        // NOTE: We don't return here.
     }
 
     if (box.is_floating()) {
@@ -232,7 +232,10 @@ void BlockFormattingContext::compute_width(Box const& box, LayoutMode layout_mod
     }
 
     auto& box_state = m_state.get_mutable(box);
-    box_state.content_width = used_width.to_px(box);
+
+    if (!is<ReplacedBox>(box))
+        box_state.content_width = used_width.to_px(box);
+
     box_state.margin_left = margin_left.to_px(box);
     box_state.margin_right = margin_right.to_px(box);
     box_state.border_left = computed_values.border_left().width;
