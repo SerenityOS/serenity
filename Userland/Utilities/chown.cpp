@@ -5,6 +5,7 @@
  */
 
 #include <AK/String.h>
+#include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -16,19 +17,30 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+static ErrorOr<int> change_owner(String path, uid_t new_uid, gid_t new_gid, bool dont_follow_symlinks)
+{
+    if (dont_follow_symlinks) {
+        TRY(Core::System::lchown(path, new_uid, new_gid));
+    } else {
+        TRY(Core::System::chown(path, new_uid, new_gid));
+    }
+
+    return 0;
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath chown"));
 
     String spec;
-    String path;
+    Vector<StringView> paths;
     bool dont_follow_symlinks = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Change the ownership of a file or directory.");
     args_parser.add_option(dont_follow_symlinks, "Don't follow symlinks", "no-dereference", 'h');
     args_parser.add_positional_argument(spec, "User and group IDs", "USER[:GROUP]");
-    args_parser.add_positional_argument(path, "Path to file", "PATH");
+    args_parser.add_positional_argument(paths, "Path to files", "PATH");
     args_parser.parse(arguments);
 
     uid_t new_uid = -1;
@@ -66,10 +78,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    if (dont_follow_symlinks) {
-        TRY(Core::System::lchown(path, new_uid, new_gid));
-    } else {
-        TRY(Core::System::chown(path, new_uid, new_gid));
+    for (auto& p : paths) {
+        auto e = change_owner(p, new_uid, new_gid, dont_follow_symlinks);
+        if (e.is_error()) {
+            warnln("error while changing ownership of '{}'", p);
+            return e;
+        }
     }
 
     return 0;
