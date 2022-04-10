@@ -579,16 +579,27 @@ NonnullRefPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
 int Element::client_top() const
 {
-    if (auto* paint_box = this->paint_box())
-        return paint_box->absolute_rect().top();
-    return 0;
+    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
+    if (!layout_node() || !layout_node()->is_box())
+        return 0;
+
+    // 2. Return the computed value of the border-top-width property
+    //    plus the height of any scrollbar rendered between the top padding edge and the top border edge,
+    //    ignoring any transforms that apply to the element and its ancestors.
+    return static_cast<Layout::Box const&>(*layout_node()).computed_values().border_top().width;
 }
 
+// https://drafts.csswg.org/cssom-view/#dom-element-clientleft
 int Element::client_left() const
 {
-    if (auto* paint_box = this->paint_box())
-        return paint_box->absolute_rect().left();
-    return 0;
+    // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
+    if (!layout_node() || !layout_node()->is_box())
+        return 0;
+
+    // 2. Return the computed value of the border-left-width property
+    //    plus the width of any scrollbar rendered between the left padding edge and the left border edge,
+    //    ignoring any transforms that apply to the element and its ancestors.
+    return static_cast<Layout::Box const&>(*layout_node()).computed_values().border_left().width;
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-clientwidth
