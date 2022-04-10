@@ -256,6 +256,30 @@ TEST_CASE(non_trivial_type_table)
     EXPECT_EQ(table.remove_all_matching([&](auto&) { return true; }), false);
 }
 
+TEST_CASE(floats)
+{
+    HashTable<float> table;
+    table.set(0);
+    table.set(1.0f);
+    table.set(2.0f);
+    EXPECT_EQ(table.size(), 3u);
+    EXPECT(table.contains(0));
+    EXPECT(table.contains(1.0f));
+    EXPECT(table.contains(2.0f));
+}
+
+TEST_CASE(doubles)
+{
+    HashTable<double> table;
+    table.set(0);
+    table.set(1.0);
+    table.set(2.0);
+    EXPECT_EQ(table.size(), 3u);
+    EXPECT(table.contains(0));
+    EXPECT(table.contains(1.0));
+    EXPECT(table.contains(2.0));
+}
+
 // Inserting and removing a bunch of elements will "thrash" the table, leading to a lot of "deleted" markers.
 BENCHMARK_CASE(benchmark_thrashing)
 {
