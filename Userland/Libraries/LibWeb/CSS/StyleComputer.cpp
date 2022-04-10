@@ -68,7 +68,19 @@ public:
     {
         if (!m_vector_font)
             return nullptr;
-        return adopt_ref(*new Gfx::ScaledFont(*m_vector_font, point_size, point_size));
+
+        if (auto it = m_cached_fonts.find(point_size); it != m_cached_fonts.end())
+            return it->value;
+
+        // FIXME: It might be nicer to have a global cap on the number of fonts we cache
+        //        instead of doing it at the per-font level like this.
+        constexpr size_t max_cached_font_size_count = 64;
+        if (m_cached_fonts.size() > max_cached_font_size_count)
+            m_cached_fonts.remove(m_cached_fonts.begin());
+
+        auto font = adopt_ref(*new Gfx::ScaledFont(*m_vector_font, point_size, point_size));
+        m_cached_fonts.set(point_size, font);
+        return font;
     }
 
 private:
@@ -92,6 +104,8 @@ private:
     StyleComputer& m_style_computer;
     FlyString m_family_name;
     RefPtr<Gfx::VectorFont> m_vector_font;
+
+    HashMap<float, NonnullRefPtr<Gfx::ScaledFont>> mutable m_cached_fonts;
 };
 
 static StyleSheet& default_stylesheet()
