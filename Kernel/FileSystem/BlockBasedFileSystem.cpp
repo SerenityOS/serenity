@@ -119,8 +119,8 @@ BlockBasedFileSystem::~BlockBasedFileSystem() = default;
 ErrorOr<void> BlockBasedFileSystem::initialize()
 {
     VERIFY(block_size() != 0);
-    auto cached_block_data = TRY(KBuffer::try_create_with_size(DiskCache::EntryCount * block_size()));
-    auto entries_data = TRY(KBuffer::try_create_with_size(DiskCache::EntryCount * sizeof(CacheEntry)));
+    auto cached_block_data = TRY(KBuffer::try_create_with_size("BlockBasedFS: Cache blocks"sv, DiskCache::EntryCount * block_size()));
+    auto entries_data = TRY(KBuffer::try_create_with_size("BlockBasedFS: Cache entries"sv, DiskCache::EntryCount * sizeof(CacheEntry)));
     auto disk_cache = TRY(adopt_nonnull_own_or_enomem(new (nothrow) DiskCache(*this, move(cached_block_data), move(entries_data))));
 
     m_cache.with_exclusive([&](auto& cache) {

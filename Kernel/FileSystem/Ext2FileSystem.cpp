@@ -122,7 +122,7 @@ ErrorOr<void> Ext2FS::initialize()
 
     auto blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
     BlockIndex first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
-    m_cached_group_descriptor_table = TRY(KBuffer::try_create_with_size(block_size() * blocks_to_read, Memory::Region::Access::ReadWrite, "Ext2FS: Block group descriptors"));
+    m_cached_group_descriptor_table = TRY(KBuffer::try_create_with_size("Ext2FS: Block group descriptors"sv, block_size() * blocks_to_read, Memory::Region::Access::ReadWrite));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_group_descriptor_table->data());
     TRY(read_blocks(first_block_of_bgdt, blocks_to_read, buffer));
 
@@ -1415,7 +1415,7 @@ ErrorOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_block_
             return cached_bitmap.ptr();
     }
 
-    auto block = TRY(KBuffer::try_create_with_size(block_size(), Memory::Region::Access::ReadWrite, "Ext2FS: Cached bitmap block"));
+    auto block = TRY(KBuffer::try_create_with_size("Ext2FS: Cached bitmap block"sv, block_size(), Memory::Region::Access::ReadWrite));
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
     TRY(read_block(bitmap_block_index, &buffer, block_size()));
     auto new_bitmap = TRY(adopt_nonnull_own_or_enomem(new (nothrow) CachedBitmap(bitmap_block_index, move(block))));

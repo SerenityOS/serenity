@@ -18,7 +18,7 @@ static Atomic<int> s_next_fifo_id = 1;
 
 ErrorOr<NonnullRefPtr<FIFO>> FIFO::try_create(UserID uid)
 {
-    auto buffer = TRY(DoubleBuffer::try_create());
+    auto buffer = TRY(DoubleBuffer::try_create("FIFO: Buffer"sv));
     return adopt_nonnull_ref_or_enomem(new (nothrow) FIFO(uid, move(buffer)));
 }
 

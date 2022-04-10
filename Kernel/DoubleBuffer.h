@@ -16,7 +16,7 @@ namespace Kernel {
 
 class DoubleBuffer {
 public:
-    static ErrorOr<NonnullOwnPtr<DoubleBuffer>> try_create(size_t capacity = 65536);
+    static ErrorOr<NonnullOwnPtr<DoubleBuffer>> try_create(StringView name, size_t capacity = 65536);
     ErrorOr<size_t> write(UserOrKernelBuffer const&, size_t);
     ErrorOr<size_t> write(u8 const* data, size_t size)
     {

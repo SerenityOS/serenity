@@ -24,16 +24,16 @@ namespace Kernel {
 
 class [[nodiscard]] KBuffer {
 public:
-    static ErrorOr<NonnullOwnPtr<KBuffer>> try_create_with_size(size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
+    static ErrorOr<NonnullOwnPtr<KBuffer>> try_create_with_size(StringView name, size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto rounded_size = TRY(Memory::page_round_up(size));
         auto region = TRY(MM.allocate_kernel_region(rounded_size, name, access, strategy));
         return TRY(adopt_nonnull_own_or_enomem(new (nothrow) KBuffer { size, move(region) }));
     }
 
-    static ErrorOr<NonnullOwnPtr<KBuffer>> try_create_with_bytes(ReadonlyBytes bytes, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
+    static ErrorOr<NonnullOwnPtr<KBuffer>> try_create_with_bytes(StringView name, ReadonlyBytes bytes, Memory::Region::Access access = Memory::Region::Access::ReadWrite, AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
-        auto buffer = TRY(try_create_with_size(bytes.size(), access, name, strategy));
+        auto buffer = TRY(try_create_with_size(name, bytes.size(), access, strategy));
         memcpy(buffer->data(), bytes.data(), bytes.size());
         return buffer;
     }

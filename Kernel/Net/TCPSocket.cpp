@@ -178,7 +178,7 @@ TCPSocket::~TCPSocket()
 ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
     // Note: Scratch buffer is only used for SOCK_STREAM sockets.
-    auto scratch_buffer = TRY(KBuffer::try_create_with_size(65536));
+    auto scratch_buffer = TRY(KBuffer::try_create_with_size("TCPSocket: Scratch buffer"sv, 65536));
     return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
 }
 
