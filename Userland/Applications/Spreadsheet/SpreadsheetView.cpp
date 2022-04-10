@@ -281,6 +281,22 @@ void InfinitelyScrollableTableView::drop_event(GUI::DropEvent& event)
     }
 }
 
+void InfinitelyScrollableTableView::keydown_event(GUI::KeyEvent& event) {
+    if ( event.key() == Key_D && event.modifiers() & Mod_Ctrl ) {
+        auto active_cell_index = cursor_index();
+        int row_index = active_cell_index.row();
+        if ( row_index > 0 ) {
+            auto above_cell_index = model()->index(row_index - 1, active_cell_index.column());
+            auto above_cell = model()->data(above_cell_index);
+            model()->set_data(active_cell_index, above_cell);
+        }
+        event.accept();
+        return;
+    }
+
+    GUI::TableView::keydown_event(event);
+}
+
 void SpreadsheetView::update_with_model()
 {
     m_sheet_model->update();
