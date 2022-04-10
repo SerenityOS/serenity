@@ -15,6 +15,7 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FileIconProvider.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <serenity.h>
@@ -93,14 +94,19 @@ QuickLaunchWidget::QuickLaunchWidget()
     set_fixed_height(24);
 
     m_context_menu = GUI::Menu::construct();
-    m_context_menu_default_action = GUI::Action::create("&Remove", [this](auto&) {
+    m_context_menu->add_action(GUI::Action::create("&Remove Launcher", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/trash-can.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         Config::remove_key("Taskbar", quick_launch, m_context_menu_app_name);
         auto button = find_child_of_type_named<GUI::Button>(m_context_menu_app_name);
         if (button) {
             remove_child(*button);
         }
-    });
-    m_context_menu->add_action(*m_context_menu_default_action);
+    }));
+
+    m_context_menu->add_action(GUI::Action::create("&Add Launcher", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/plus.png").release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+        auto open_path = GUI::FilePicker::get_open_filepath(window());
+        if (!open_path.has_value())
+            return;
+    }));
 
     auto keys = Config::list_keys("Taskbar", quick_launch);
     for (auto& name : keys) {
