@@ -719,6 +719,13 @@ void CanvasRenderingContext2D::set_transform(double a, double b, double c, doubl
     transform(a, b, c, d, e, f);
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-resettransform
+void CanvasRenderingContext2D::reset_transform()
+{
+    // The resetTransform() method, when invoked, must reset the current transformation matrix to the identity matrix.
+    m_drawing_state.transform = {};
+}
+
 // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument
 DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImageSource const& image)
 {
