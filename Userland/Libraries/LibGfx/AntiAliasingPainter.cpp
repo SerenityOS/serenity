@@ -5,6 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#if defined(__GNUC__) && !defined(__clang__)
+#    pragma GCC optimize("O3")
+#endif
+
 #include "FillPathImplementation.h"
 #include <AK/Function.h>
 #include <LibGfx/AntiAliasingPainter.h>
