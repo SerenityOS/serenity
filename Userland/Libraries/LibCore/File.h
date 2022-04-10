@@ -37,8 +37,6 @@ public:
 
     static bool exists(String const& filename);
     static ErrorOr<size_t> size(String const& filename);
-    static bool ensure_parent_directories(String const& path);
-    static bool ensure_directories(String const& path);
     static String current_working_directory();
     static String absolute_path(String const& path);
 

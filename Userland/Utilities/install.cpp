@@ -7,6 +7,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Directory.h>
 #include <LibCore/File.h>
 #include <LibCore/FilePermissionsMask.h>
 #include <LibCore/System.h>
@@ -35,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (create_leading_dest_components) {
         String destination_dir_absolute = Core::File::absolute_path(destination_dir);
-        Core::File::ensure_directories(destination_dir_absolute);
+        MUST(Core::Directory::create(destination_dir_absolute, Core::Directory::CreateDirectories::Yes));
     }
 
     for (auto const& source : sources) {

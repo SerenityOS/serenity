@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "LibCore/Directory.h"
 #include <AK/Assertions.h>
 #include <AK/LexicalPath.h>
 #include <AK/Span.h>
@@ -136,11 +137,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 Archive::TarFileStream file_stream = tar_stream.file_contents();
 
                 String absolute_path = Core::File::absolute_path(filename);
+                auto parent_path = LexicalPath(absolute_path).parent();
 
                 switch (header.type_flag()) {
                 case Archive::TarFileType::NormalFile:
                 case Archive::TarFileType::AlternateNormalFile: {
-                    Core::File::ensure_parent_directories(absolute_path);
+                    MUST(Core::Directory::create(parent_path, Core::Directory::CreateDirectories::Yes));
 
                     int fd = TRY(Core::System::open(absolute_path, O_CREAT | O_WRONLY, header.mode()));
 
@@ -153,13 +155,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     break;
                 }
                 case Archive::TarFileType::SymLink: {
-                    Core::File::ensure_parent_directories(absolute_path);
+                    MUST(Core::Directory::create(parent_path, Core::Directory::CreateDirectories::Yes));
 
                     TRY(Core::System::symlink(header.link_name(), absolute_path));
                     break;
                 }
                 case Archive::TarFileType::Directory: {
-                    Core::File::ensure_parent_directories(absolute_path);
+                    MUST(Core::Directory::create(parent_path, Core::Directory::CreateDirectories::Yes));
 
                     auto result_or_error = Core::System::mkdir(absolute_path, header.mode());
                     if (result_or_error.is_error() && result_or_error.error().code() != EEXIST)

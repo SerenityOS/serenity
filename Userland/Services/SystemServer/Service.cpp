@@ -11,6 +11,7 @@
 #include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/Directory.h>
 #include <LibCore/File.h>
 #include <LibCore/SocketAddress.h>
 #include <LibCore/System.h>
@@ -34,8 +35,7 @@ void Service::setup_socket(SocketDescriptor& socket)
 {
     VERIFY(socket.fd == -1);
 
-    auto ok = Core::File::ensure_parent_directories(socket.path);
-    VERIFY(ok);
+    MUST(Core::Directory::create(LexicalPath(socket.path).parent(), Core::Directory::CreateDirectories::Yes));
 
     // Note: we use SOCK_CLOEXEC here to make sure we don't leak every socket to
     // all the clients. We'll make the one we do need to pass down !CLOEXEC later
