@@ -799,6 +799,17 @@ void FormattingContext::compute_inset(Box const& box)
 
 FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Layout::Box const& box) const
 {
+    // FIXME: This should handle replaced elements with "native" intrinsic size properly!
+
+    if (box.has_intrinsic_width() && box.has_intrinsic_height()) {
+        auto const& replaced_box = static_cast<ReplacedBox const&>(box);
+        Gfx::FloatSize size { replaced_box.intrinsic_width().value_or(0), replaced_box.intrinsic_height().value_or(0) };
+        return FormattingState::IntrinsicSizes {
+            .min_content_size = size,
+            .max_content_size = size,
+        };
+    }
+
     auto& root_state = m_state.m_root;
 
     // If we have cached intrinsic sizes for this box, use them.
@@ -807,7 +818,6 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
         return it->value;
 
     // Nothing cached, perform two throwaway layouts to determine the intrinsic sizes.
-    // FIXME: This should handle replaced elements with "native" intrinsic size properly!
 
     FormattingState::IntrinsicSizes cached_box_sizes;
     auto const& containing_block = *box.containing_block();
