@@ -705,6 +705,20 @@ void CanvasRenderingContext2D::transform(double a, double b, double c, double d,
     m_drawing_state.transform.multiply({ static_cast<float>(a), static_cast<float>(b), static_cast<float>(c), static_cast<float>(d), static_cast<float>(e), static_cast<float>(f) });
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-settransform
+void CanvasRenderingContext2D::set_transform(double a, double b, double c, double d, double e, double f)
+{
+    // 1. If any of the arguments are infinite or NaN, then return.
+    if (!isfinite(a) || !isfinite(b) || !isfinite(c) || !isfinite(d) || !isfinite(e) || !isfinite(f))
+        return;
+
+    // 2. Reset the current transformation matrix to the identity matrix.
+    m_drawing_state.transform = {};
+
+    // 3. Invoke the transform(a, b, c, d, e, f) method with the same arguments.
+    transform(a, b, c, d, e, f);
+}
+
 // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument
 DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImageSource const& image)
 {
