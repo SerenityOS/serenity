@@ -529,14 +529,8 @@ void Editor::edit_in_external_editor()
     }
 
     {
-        auto* fp = fdopen(fd, "rw");
-        if (!fp) {
-            perror("fdopen");
-            return;
-        }
-
-        OutputFileStream stream { fp };
-
+        auto write_fd = dup(fd);
+        OutputFileStream stream { write_fd };
         StringBuilder builder;
         builder.append(Utf32View { m_buffer.data(), m_buffer.size() });
         auto bytes = builder.string_view().bytes();
@@ -544,6 +538,7 @@ void Editor::edit_in_external_editor()
             auto nwritten = stream.write(bytes);
             bytes = bytes.slice(nwritten);
         }
+        lseek(fd, 0, SEEK_SET);
     }
 
     ScopeGuard remove_temp_file_guard {
