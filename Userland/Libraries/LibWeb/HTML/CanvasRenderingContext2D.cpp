@@ -726,6 +726,11 @@ void CanvasRenderingContext2D::reset_transform()
     m_drawing_state.transform = {};
 }
 
+void CanvasRenderingContext2D::clip()
+{
+    // FIXME: Implement.
+}
+
 // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument
 DOM::ExceptionOr<CanvasImageSourceUsability> check_usability_of_image(CanvasImageSource const& image)
 {
