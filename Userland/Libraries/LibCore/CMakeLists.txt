@@ -5,6 +5,7 @@ set(SOURCES
     ConfigFile.cpp
     Command.cpp
     DateTime.cpp
+    Directory.cpp
     DirIterator.cpp
     ElapsedTimer.cpp
     Event.cpp
