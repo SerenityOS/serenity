@@ -26,9 +26,12 @@ else
 fi
 
 if (( ${#files[@]} )); then
+    TOOLCHAIN_DIR=Toolchain/Local/clang/bin
     CLANG_FORMAT=false
     if command -v clang-format-14 >/dev/null 2>&1 ; then
         CLANG_FORMAT=clang-format-14
+    elif command -v $TOOLCHAIN_DIR/clang-format >/dev/null 2>&1 && $TOOLCHAIN_DIR/clang-format --version | grep -qF ' 14.' ; then
+        CLANG_FORMAT=$TOOLCHAIN_DIR/clang-format
     elif command -v clang-format >/dev/null 2>&1 ; then
         CLANG_FORMAT=clang-format
         if ! "${CLANG_FORMAT}" --version | awk '{ if (substr($NF, 1, index($NF, ".") - 1) < 14) exit 1; }'; then
