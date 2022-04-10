@@ -98,6 +98,8 @@ public:
     NonnullRefPtr<CanvasGradient> create_linear_gradient(double x0, double y0, double x1, double y1);
     NonnullRefPtr<CanvasGradient> create_conic_gradient(double start_angle, double x, double y);
 
+    void transform(double a, double b, double c, double d, double e, double f);
+
 private:
     explicit CanvasRenderingContext2D(HTMLCanvasElement&);
 
