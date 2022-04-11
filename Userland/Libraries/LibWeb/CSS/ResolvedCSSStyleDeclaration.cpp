@@ -800,9 +800,18 @@ Optional<StyleProperty> ResolvedCSSStyleDeclaration::property(PropertyID propert
     };
 }
 
-bool ResolvedCSSStyleDeclaration::set_property(PropertyID, StringView)
+// https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-setproperty
+DOM::ExceptionOr<void> ResolvedCSSStyleDeclaration::set_property(PropertyID, StringView, StringView)
 {
-    return false;
+    // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
+    return DOM::NoModificationAllowedError::create("Cannot modify properties in result of getComputedStyle()");
+}
+
+// https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-removeproperty
+DOM::ExceptionOr<String> ResolvedCSSStyleDeclaration::remove_property(PropertyID)
+{
+    // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
+    return DOM::NoModificationAllowedError::create("Cannot remove properties from result of getComputedStyle()");
 }
 
 String ResolvedCSSStyleDeclaration::serialized() const

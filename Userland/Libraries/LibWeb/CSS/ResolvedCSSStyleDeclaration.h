@@ -22,7 +22,8 @@ public:
     virtual size_t length() const override;
     virtual String item(size_t index) const override;
     virtual Optional<StyleProperty> property(PropertyID) const override;
-    virtual bool set_property(PropertyID, StringView css_text) override;
+    virtual DOM::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority) override;
+    virtual DOM::ExceptionOr<String> remove_property(PropertyID) override;
 
     virtual String serialized() const override;
 

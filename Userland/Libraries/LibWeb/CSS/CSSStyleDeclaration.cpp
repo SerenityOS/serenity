@@ -43,35 +43,113 @@ Optional<StyleProperty> PropertyOwningCSSStyleDeclaration::property(PropertyID p
     return {};
 }
 
-bool PropertyOwningCSSStyleDeclaration::set_property(PropertyID property_id, StringView css_text)
+// https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-setproperty
+DOM::ExceptionOr<void> PropertyOwningCSSStyleDeclaration::set_property(PropertyID property_id, StringView value, StringView priority)
 {
-    auto new_value = parse_css_value(CSS::ParsingContext {}, css_text, property_id);
-    if (!new_value) {
-        m_properties.remove_all_matching([&](auto& entry) {
-            return entry.property_id == property_id;
-        });
-        return false;
+    // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
+    // NOTE: This is handled by the virtual override in ResolvedCSSStyleDeclaration.
+
+    // FIXME: 2. If property is not a custom property, follow these substeps:
+    // FIXME:    1. Let property be property converted to ASCII lowercase.
+    // FIXME:    2. If property is not a case-sensitive match for a supported CSS property, then return.
+    // NOTE: This must be handled before we've turned the property string into a PropertyID.
+
+    // 3. If value is the empty string, invoke removeProperty() with property as argument and return.
+    if (value.is_empty()) {
+        MUST(remove_property(property_id));
+        return {};
     }
 
-    ScopeGuard style_invalidation_guard = [&] {
-        auto& declaration = verify_cast<CSS::ElementInlineCSSStyleDeclaration>(*this);
-        if (auto* element = declaration.element())
-            element->invalidate_style();
-    };
+    // 4. If priority is not the empty string and is not an ASCII case-insensitive match for the string "important", then return.
+    if (!priority.is_empty() && !priority.equals_ignoring_case("important"sv))
+        return {};
 
-    // FIXME: I don't think '!important' is being handled correctly here..
+    // 5. Let component value list be the result of parsing value for property property.
+    auto component_value_list = parse_css_value(CSS::ParsingContext {}, value, property_id);
+
+    // 6. If component value list is null, then return.
+    if (!component_value_list)
+        return {};
+
+    // 7. Let updated be false.
+    bool updated = false;
+
+    // FIXME: 8. If property is a shorthand property, then for each longhand property longhand that property maps to, in canonical order, follow these substeps:
+    // FIXME:    1. Let longhand result be the result of set the CSS declaration longhand with the appropriate value(s) from component value list,
+    //              with the important flag set if priority is not the empty string, and unset otherwise, and with the list of declarations being the declarations.
+    // FIXME:    2. If longhand result is true, let updated be true.
+
+    // 9. Otherwise, let updated be the result of set the CSS declaration property with value component value list,
+    //    with the important flag set if priority is not the empty string, and unset otherwise,
+    //    and with the list of declarations being the declarations.
+    updated = set_a_css_declaration(property_id, component_value_list.release_nonnull(), !priority.is_empty() ? Important::Yes : Important::No);
+
+    // 10. If updated is true, update style attribute for the CSS declaration block.
+    if (updated)
+        update_style_attribute();
+
+    return {};
+}
+
+// https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-removeproperty
+DOM::ExceptionOr<String> PropertyOwningCSSStyleDeclaration::remove_property(PropertyID property_id)
+{
+    // 1. If the computed flag is set, then throw a NoModificationAllowedError exception.
+    // NOTE: This is handled by the virtual override in ResolvedCSSStyleDeclaration.
+
+    // 2. If property is not a custom property, let property be property converted to ASCII lowercase.
+    // NOTE: We've already converted it to a PropertyID enum value.
+
+    // 3. Let value be the return value of invoking getPropertyValue() with property as argument.
+    // FIXME: The trip through string_from_property_id() here is silly.
+    auto value = get_property_value(string_from_property_id(property_id));
+
+    // 4. Let removed be false.
+    bool removed = false;
+
+    // FIXME: 5. If property is a shorthand property, for each longhand property longhand that property maps to:
+    //           1. If longhand is not a property name of a CSS declaration in the declarations, continue.
+    //           2. Remove that CSS declaration and let removed be true.
+
+    // 6. Otherwise, if property is a case-sensitive match for a property name of a CSS declaration in the declarations, remove that CSS declaration and let removed be true.
+    removed = m_properties.remove_first_matching([&](auto& entry) { return entry.property_id == property_id; });
+
+    // 7. If removed is true, Update style attribute for the CSS declaration block.
+    if (removed)
+        update_style_attribute();
+
+    // 8. Return value.
+    return value;
+}
+
+// https://drafts.csswg.org/cssom/#update-style-attribute-for
+void ElementInlineCSSStyleDeclaration::update_style_attribute()
+{
+    if (!m_element)
+        return;
+
+    m_element->set_attribute(HTML::AttributeNames::style, serialized());
+}
+
+// https://drafts.csswg.org/cssom/#set-a-css-declaration
+bool PropertyOwningCSSStyleDeclaration::set_a_css_declaration(PropertyID property_id, NonnullRefPtr<StyleValue> value, Important important)
+{
+    // FIXME: Handle logical property groups.
 
     for (auto& property : m_properties) {
         if (property.property_id == property_id) {
-            property.value = new_value.release_nonnull();
+            if (property.important == important && *property.value == *value)
+                return false;
+            property.value = move(value);
+            property.important = important;
             return true;
         }
     }
 
     m_properties.append(CSS::StyleProperty {
-        .important = Important::No,
+        .important = important,
         .property_id = property_id,
-        .value = new_value.release_nonnull(),
+        .value = move(value),
     });
     return true;
 }
@@ -87,12 +165,20 @@ String CSSStyleDeclaration::get_property_value(StringView property_name) const
     return maybe_property->value->to_string();
 }
 
-void CSSStyleDeclaration::set_property(StringView property_name, StringView css_text)
+DOM::ExceptionOr<void> CSSStyleDeclaration::set_property(StringView property_name, StringView css_text, StringView priority)
 {
     auto property_id = property_id_from_string(property_name);
     if (property_id == CSS::PropertyID::Invalid)
-        return;
-    set_property(property_id, css_text);
+        return {};
+    return set_property(property_id, css_text, priority);
+}
+
+DOM::ExceptionOr<String> CSSStyleDeclaration::remove_property(StringView property_name)
+{
+    auto property_id = property_id_from_string(property_name);
+    if (property_id == CSS::PropertyID::Invalid)
+        return String::empty();
+    return remove_property(property_id);
 }
 
 String CSSStyleDeclaration::css_text() const

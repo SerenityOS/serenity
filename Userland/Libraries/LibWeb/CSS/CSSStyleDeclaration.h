@@ -37,9 +37,12 @@ public:
     virtual String item(size_t index) const = 0;
 
     virtual Optional<StyleProperty> property(PropertyID) const = 0;
-    virtual bool set_property(PropertyID, StringView css_text) = 0;
 
-    void set_property(StringView property_name, StringView css_text);
+    virtual DOM::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority = "") = 0;
+    virtual DOM::ExceptionOr<String> remove_property(PropertyID) = 0;
+
+    DOM::ExceptionOr<void> set_property(StringView property_name, StringView css_text, StringView priority);
+    DOM::ExceptionOr<String> remove_property(StringView property_name);
 
     String get_property_value(StringView property) const;
 
@@ -67,7 +70,9 @@ public:
     virtual String item(size_t index) const override;
 
     virtual Optional<StyleProperty> property(PropertyID) const override;
-    virtual bool set_property(PropertyID, StringView css_text) override;
+
+    virtual DOM::ExceptionOr<void> set_property(PropertyID, StringView css_text, StringView priority) override;
+    virtual DOM::ExceptionOr<String> remove_property(PropertyID) override;
 
     Vector<StyleProperty> const& properties() const { return m_properties; }
     HashMap<String, StyleProperty> const& custom_properties() const { return m_custom_properties; }
@@ -79,7 +84,11 @@ public:
 protected:
     explicit PropertyOwningCSSStyleDeclaration(Vector<StyleProperty>, HashMap<String, StyleProperty>);
 
+    virtual void update_style_attribute() { }
+
 private:
+    bool set_a_css_declaration(PropertyID, NonnullRefPtr<StyleValue>, Important);
+
     Vector<StyleProperty> m_properties;
     HashMap<String, StyleProperty> m_custom_properties;
 };
@@ -94,6 +103,8 @@ public:
 
 private:
     explicit ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
+
+    virtual void update_style_attribute() override;
 
     WeakPtr<DOM::Element> m_element;
 };

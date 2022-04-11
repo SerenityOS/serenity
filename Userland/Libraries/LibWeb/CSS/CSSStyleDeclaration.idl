@@ -6,6 +6,7 @@ interface CSSStyleDeclaration {
 
     CSSOMString getPropertyValue(CSSOMString property);
 
-    [CEReactions] undefined setProperty(CSSOMString property, [LegacyNullToEmptyString] CSSOMString value);
+    [CEReactions] undefined setProperty(CSSOMString property, [LegacyNullToEmptyString] CSSOMString value, [LegacyNullToEmptyString] optional CSSOMString priority = "");
+    [CEReactions] CSSOMString removeProperty(CSSOMString property);
 
 };
