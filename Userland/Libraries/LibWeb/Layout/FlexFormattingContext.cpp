@@ -129,8 +129,8 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
     // AD-HOC: Layout the inside of all flex items.
     copy_dimensions_from_flex_items_to_boxes();
     for (auto& flex_item : m_flex_items) {
-        auto independent_formatting_context = layout_inside(flex_item.box, LayoutMode::Normal);
-        independent_formatting_context->parent_context_did_dimension_child_root_box();
+        if (auto independent_formatting_context = layout_inside(flex_item.box, LayoutMode::Normal))
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
     }
 
     // FIXME: We run the "copy dimensions" step *again* here, in order to override any sizes

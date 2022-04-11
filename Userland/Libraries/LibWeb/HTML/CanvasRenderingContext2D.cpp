@@ -182,9 +182,10 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
     if (!painter)
         return {};
 
-    if (m_drawing_state.transform.is_identity()) {
-        // There's no affine transformation to worry about, we can just call Gfx::Painter.
+    if (m_drawing_state.transform.is_identity_or_translation()) {
+        painter->translate(m_drawing_state.transform.e(), m_drawing_state.transform.f());
         painter->draw_scaled_bitmap(destination_rect.to_rounded<int>(), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+        painter->translate(-m_drawing_state.transform.e(), -m_drawing_state.transform.f());
     } else {
         // The context has an affine transform, we have to draw through it!
 

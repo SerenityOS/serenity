@@ -37,7 +37,7 @@ private:
         OnlyEnds,
         Full,
     };
-    template<AntiAliasPolicy policy, bool apply_transform>
+    template<AntiAliasPolicy policy>
     void draw_anti_aliased_line(FloatPoint const&, FloatPoint const&, Color, float thickness, Painter::LineStyle style, Color alternate_color);
 
     Painter& m_underlying_painter;

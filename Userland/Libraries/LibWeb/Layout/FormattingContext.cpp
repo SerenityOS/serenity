@@ -75,6 +75,22 @@ bool FormattingContext::creates_block_formatting_context(Box const& box)
 
 OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_context_if_needed(FormattingState& state, Box const& child_box)
 {
+    if (child_box.is_replaced_box() && !child_box.can_have_children()) {
+        // NOTE: This is a bit strange.
+        //       Basically, we create a pretend formatting context for replaced elements that does nothing.
+        //       This allows other formatting contexts to treat them like elements that actually need inside layout
+        //       without having separate code to handle replaced elements.
+        // FIXME: Find a better abstraction for this.
+        struct ReplacedFormattingContext : public FormattingContext {
+            ReplacedFormattingContext(FormattingState& state, Box const& box)
+                : FormattingContext(Type::Block, state, box)
+            {
+            }
+            virtual void run(Box const&, LayoutMode) override { }
+        };
+        return make<ReplacedFormattingContext>(state, child_box);
+    }
+
     if (!child_box.can_have_children())
         return {};
 
