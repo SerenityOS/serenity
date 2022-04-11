@@ -138,4 +138,9 @@ ErrorOr<void> Device::enumerate_device()
     return {};
 }
 
+ErrorOr<size_t> Device::control_transfer(u8 request_type, u8 request, u16 value, u16 index, u16 length, void* data)
+{
+    return TRY(m_default_pipe->control_transfer(request_type, request, value, index, length, data));
+}
+
 }
