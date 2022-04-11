@@ -135,7 +135,7 @@ public:
         Cut
     };
 
-    void copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to = {}, CopyOperation copy_operation = CopyOperation::Copy);
+    Vector<CellChange> copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to = {}, CopyOperation copy_operation = CopyOperation::Copy);
 
     /// Gives the bottom-right corner of the smallest bounding box containing all the written data, optionally limited to the given column.
     Position written_data_bounds(Optional<size_t> column_index = {}) const;

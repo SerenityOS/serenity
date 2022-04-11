@@ -220,6 +220,7 @@ void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
         Vector<Position> from;
         Position position { (size_t)m_target_cell.column(), (size_t)m_target_cell.row() };
         from.append(position);
+        Vector<CellChange> cell_changes;
         selection().for_each_index([&](auto& index) {
             if (index == m_starting_selection_index)
                 return;
@@ -227,8 +228,11 @@ void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
             Vector<Position> to;
             Position position { (size_t)index.column(), (size_t)index.row() };
             to.append(position);
-            sheet.copy_cells(from, to);
+            auto cell_change = sheet.copy_cells(from, to);
+            cell_changes.extend(cell_change);
         });
+        if (static_cast<SheetModel&>(*this->model()).on_cells_data_change)
+            static_cast<SheetModel&>(*this->model()).on_cells_data_change(cell_changes);
         update();
     }
 
@@ -425,7 +429,9 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
                 return;
 
             auto first_position = source_positions.take_first();
-            m_sheet->copy_cells(move(source_positions), move(target_positions), first_position, Spreadsheet::Sheet::CopyOperation::Cut);
+            auto cell_changes = m_sheet->copy_cells(move(source_positions), move(target_positions), first_position, Spreadsheet::Sheet::CopyOperation::Cut);
+            if (model()->on_cells_data_change)
+                model()->on_cells_data_change(cell_changes);
 
             return;
         }
