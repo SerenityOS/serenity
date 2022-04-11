@@ -297,6 +297,7 @@ namespace Web::SVG {
 class SVGAnimatedLength;
 class SVGCircleElement;
 class SVGClipPathElement;
+class SVGDefsElement;
 class SVGElement;
 class SVGEllipseElement;
 class SVGGeometryElement;
@@ -523,6 +524,7 @@ class SubmitEventWrapper;
 class SubtleCryptoWrapper;
 class SVGAnimatedLengthWrapper;
 class SVGCircleElementWrapper;
+class SVGDefsElementWrapper;
 class SVGClipPathElementWrapper;
 class SVGElementWrapper;
 class SVGEllipseElementWrapper;
