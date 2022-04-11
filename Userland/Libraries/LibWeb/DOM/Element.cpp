@@ -293,6 +293,11 @@ RefPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document&
     TODO();
 }
 
+CSS::CSSStyleDeclaration const* Element::inline_style() const
+{
+    return m_inline_style;
+}
+
 void Element::parse_attribute(FlyString const& name, String const& value)
 {
     if (name == HTML::AttributeNames::class_) {
@@ -305,6 +310,9 @@ void Element::parse_attribute(FlyString const& name, String const& value)
         if (m_class_list)
             m_class_list->associated_attribute_changed(value);
     } else if (name == HTML::AttributeNames::style) {
+        // https://drafts.csswg.org/cssom/#ref-for-cssstyledeclaration-updating-flag
+        if (m_inline_style && m_inline_style->is_updating())
+            return;
         m_inline_style = parse_css_style_attribute(CSS::ParsingContext(document()), value, *this);
         set_needs_style_update(true);
     }

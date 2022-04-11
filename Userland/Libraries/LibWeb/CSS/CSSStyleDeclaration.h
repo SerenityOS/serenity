@@ -101,12 +101,17 @@ public:
     DOM::Element* element() { return m_element.ptr(); }
     const DOM::Element* element() const { return m_element.ptr(); }
 
+    bool is_updating() const { return m_updating; }
+
 private:
     explicit ElementInlineCSSStyleDeclaration(DOM::Element&, Vector<StyleProperty> properties, HashMap<String, StyleProperty> custom_properties);
 
     virtual void update_style_attribute() override;
 
     WeakPtr<DOM::Element> m_element;
+
+    // https://drafts.csswg.org/cssom/#cssstyledeclaration-updating-flag
+    bool m_updating { false };
 };
 
 }

@@ -125,10 +125,22 @@ DOM::ExceptionOr<String> PropertyOwningCSSStyleDeclaration::remove_property(Prop
 // https://drafts.csswg.org/cssom/#update-style-attribute-for
 void ElementInlineCSSStyleDeclaration::update_style_attribute()
 {
+    // 1. Assert: declaration block’s computed flag is unset.
+    // NOTE: Unnecessary, only relevant for ResolvedCSSStyleDeclaration.
+
+    // 2. Let owner node be declaration block’s owner node.
+    // 3. If owner node is null, then return.
     if (!m_element)
         return;
 
+    // 4. Set declaration block’s updating flag.
+    m_updating = true;
+
+    // 5. Set an attribute value for owner node using "style" and the result of serializing declaration block.
     m_element->set_attribute(HTML::AttributeNames::style, serialized());
+
+    // 6. Unset declaration block’s updating flag.
+    m_updating = false;
 }
 
 // https://drafts.csswg.org/cssom/#set-a-css-declaration
