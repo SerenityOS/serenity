@@ -177,6 +177,18 @@ String CSSStyleDeclaration::get_property_value(StringView property_name) const
     return maybe_property->value->to_string();
 }
 
+// https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-getpropertypriority
+String CSSStyleDeclaration::get_property_priority(StringView property_name) const
+{
+    auto property_id = property_id_from_string(property_name);
+    if (property_id == CSS::PropertyID::Invalid)
+        return {};
+    auto maybe_property = property(property_id);
+    if (!maybe_property.has_value())
+        return {};
+    return maybe_property->important == Important::Yes ? "important" : "";
+}
+
 DOM::ExceptionOr<void> CSSStyleDeclaration::set_property(StringView property_name, StringView css_text, StringView priority)
 {
     auto property_id = property_id_from_string(property_name);

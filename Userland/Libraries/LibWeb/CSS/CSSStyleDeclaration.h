@@ -45,6 +45,7 @@ public:
     DOM::ExceptionOr<String> remove_property(StringView property_name);
 
     String get_property_value(StringView property) const;
+    String get_property_priority(StringView property) const;
 
     String css_text() const;
     void set_css_text(StringView);
