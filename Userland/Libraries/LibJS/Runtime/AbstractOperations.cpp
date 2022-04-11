@@ -8,7 +8,6 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Function.h>
 #include <AK/Optional.h>
-#include <AK/TemporaryChange.h>
 #include <AK/Utf16View.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
