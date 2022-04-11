@@ -16,6 +16,7 @@
 #include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/Stream.h>
+#include <LibCore/System.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -68,7 +69,7 @@ LookupServer::LookupServer()
 
     if (config->read_bool_entry("DNS", "EnableServer")) {
         m_dns_server = DNSServer::construct(this);
-        // TODO: drop root privileges here.
+        MUST(Core::System::drop_privileges());
     }
     m_mdns = MulticastDNS::construct(this);
 
