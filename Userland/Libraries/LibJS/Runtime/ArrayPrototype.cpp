@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2020, Marcin Gasperowicz <xnooga@gmail.com>
  * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
  *
@@ -381,11 +381,18 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
 // 23.1.3.31 Array.prototype.toString ( ), https://tc39.es/ecma262/#sec-array.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
 {
-    auto* this_object = TRY(vm.this_value(global_object).to_object(global_object));
-    auto join_function = TRY(this_object->get(vm.names.join));
-    if (!join_function.is_function())
-        return ObjectPrototype::to_string(vm, global_object);
-    return TRY(call(global_object, join_function.as_function(), this_object));
+    // 1. Let array be ? ToObject(this value).
+    auto* array = TRY(vm.this_value(global_object).to_object(global_object));
+
+    // 2. Let func be ? Get(array, "join").
+    auto func = TRY(array->get(vm.names.join));
+
+    // 3. If IsCallable(func) is false, set func to the intrinsic function %Object.prototype.toString%.
+    if (!func.is_function())
+        func = global_object.object_prototype_to_string_function();
+
+    // 4. Return ? Call(func, array).
+    return TRY(call(global_object, func.as_function(), array));
 }
 
 // 19.5.1 Array.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sup-array.prototype.tolocalestring
