@@ -10,8 +10,8 @@ if command -v wslpath >/dev/null; then
     # the Windows installation of QEMU adds the install directory of itself
     # to the registry, we use powershell to get the install directory
 
-    # Use full path to powershell, just in case it is not on the path already
-    QEMU_INSTALL_DIR=$(/mnt/c/Windows/System32/WindowsPowershell/v1.0/powershell.exe -Command Get-ItemPropertyValue 'HKLM:\SOFTWARE\QEMU' -Name Install_Dir)
+    # System32 and cohorts must be on the PATH for the build to work anyways so using powershell without full path is fine
+    QEMU_INSTALL_DIR=$(PowerShell.exe -Command Get-ItemPropertyValue 'HKLM:\SOFTWARE\QEMU' -Name Install_Dir)
 
     if [ -z "$QEMU_INSTALL_DIR" ]; then
         if [ "$KVM_SUPPORT" -eq "0" ]; then
