@@ -292,12 +292,13 @@ Position Sheet::offset_relative_to(Position const& base, Position const& offset,
     return { new_column, new_row };
 }
 
-void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to, CopyOperation copy_operation)
+Vector<CellChange> Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Position> resolve_relative_to, CopyOperation copy_operation)
 {
+    Vector<CellChange> cell_changes;
     // Disallow misaligned copies.
     if (to.size() > 1 && from.size() != to.size()) {
         dbgln("Cannot copy {} cells to {} cells", from.size(), to.size());
-        return;
+        return cell_changes;
     }
 
     Vector<Position> target_cells;
@@ -307,16 +308,20 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
     auto copy_to = [&](auto& source_position, Position target_position) {
         auto& target_cell = ensure(target_position);
         auto* source_cell = at(source_position);
+        auto previous_data = target_cell.data();
 
         if (!source_cell) {
             target_cell.set_data("");
+            cell_changes.append(CellChange(target_cell, previous_data));
             return;
         }
 
         target_cell.copy_from(*source_cell);
-        if (copy_operation == CopyOperation::Cut)
-            if (!target_cells.contains_slow(source_position))
-                source_cell->set_data("");
+        cell_changes.append(CellChange(target_cell, previous_data));
+        if (copy_operation == CopyOperation::Cut && !target_cells.contains_slow(source_position)) {
+            cell_changes.append(CellChange(*source_cell, source_cell->data()));
+            source_cell->set_data("");
+        }
     };
 
     // Resolve each index as relative to the first index offset from the selection.
@@ -359,6 +364,8 @@ void Sheet::copy_cells(Vector<Position> from, Vector<Position> to, Optional<Posi
         dbgln_if(COPY_DEBUG, "Paste from '{}' to '{}'", position.to_url(*this), target.to_url(*this));
         copy_to(position, resolve_relative_to.has_value() ? offset_relative_to(target, position, resolve_relative_to.value()) : target);
     }
+
+    return cell_changes;
 }
 
 RefPtr<Sheet> Sheet::from_json(JsonObject const& object, Workbook& workbook)

@@ -193,7 +193,8 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
                 return;
 
             auto first_position = source_positions.take_first();
-            sheet.copy_cells(move(source_positions), move(target_positions), first_position, action == "cut" ? Spreadsheet::Sheet::CopyOperation::Cut : Spreadsheet::Sheet::CopyOperation::Copy);
+            auto cell_changes = sheet.copy_cells(move(source_positions), move(target_positions), first_position, action == "cut" ? Spreadsheet::Sheet::CopyOperation::Cut : Spreadsheet::Sheet::CopyOperation::Copy);
+            undo_stack().push(make<CellsUndoCommand>(cell_changes));
         } else {
             for (auto& cell : sheet.selected_cells())
                 sheet.ensure(cell).set_data(StringView { data.data.data(), data.data.size() });
@@ -282,6 +283,10 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
         auto& new_view = m_tab_widget->add_tab<SpreadsheetView>(sheet.name(), sheet);
         new_view.model()->on_cell_data_change = [&](auto& cell, auto& previous_data) {
             undo_stack().push(make<CellsUndoCommand>(cell, previous_data));
+            window()->set_modified(true);
+        };
+        new_view.model()->on_cells_data_change = [&](Vector<CellChange> cell_changes) {
+            undo_stack().push(make<CellsUndoCommand>(cell_changes));
             window()->set_modified(true);
         };
         new_view.on_selection_changed = [&](Vector<Position>&& selection) {

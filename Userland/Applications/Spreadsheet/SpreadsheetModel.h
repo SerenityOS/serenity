@@ -30,6 +30,7 @@ public:
     void update();
 
     Function<void(Cell&, String&)> on_cell_data_change;
+    Function<void(Vector<CellChange>)> on_cells_data_change;
 
 private:
     explicit SheetModel(Sheet& sheet)
