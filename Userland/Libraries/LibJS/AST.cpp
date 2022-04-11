@@ -473,7 +473,8 @@ Completion SuperCall::execute(Interpreter& interpreter, GlobalObject& global_obj
     TRY(this_er.bind_this_value(global_object, result));
 
     // 9. Let F be thisER.[[FunctionObject]].
-    // 10. Assert: F is an ECMAScript function object. (NOTE: This is implied by the strong C++ type.)
+    // 10. Assert: F is an ECMAScript function object.
+    // NOTE: This is implied by the strong C++ type.
     [[maybe_unused]] auto& f = this_er.function_object();
 
     // 11. Perform ? InitializeInstanceElements(result, F).

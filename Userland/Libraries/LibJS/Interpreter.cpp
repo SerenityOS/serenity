@@ -52,7 +52,8 @@ ThrowCompletionOr<Value> Interpreter::run(Script& script_record)
     // 2. Let scriptContext be a new ECMAScript code execution context.
     ExecutionContext script_context(vm.heap());
 
-    // 3. Set the Function of scriptContext to null. (This was done in the construction of script_context)
+    // 3. Set the Function of scriptContext to null.
+    // NOTE: This was done during execution context construction.
 
     // 4. Set the Realm of scriptContext to scriptRecord.[[Realm]].
     script_context.realm = &script_record.realm();

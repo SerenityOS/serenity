@@ -627,7 +627,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(Exec
     TRY(vm.push_execution_context(callee_context, global_object()));
 
     // 13. NOTE: Any exception objects produced after this point are associated with calleeRealm.
-    // 14. Return calleeContext. (See NOTE above about how contexts are allocated on the C++ stack.)
+    // 14. Return calleeContext.
+    // NOTE: See the comment after step 2 above about how contexts are allocated on the C++ stack.
     return {};
 }
 
