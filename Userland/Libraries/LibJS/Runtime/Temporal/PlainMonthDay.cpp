@@ -38,14 +38,13 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
-    if (!options)
-        options = Object::create(global_object, nullptr);
+    // 1. If options is not present, set options to undefined.
+    // 2. Assert: Type(options) is Object or Undefined.
 
-    // 2. Let referenceISOYear be 1972 (the first leap year after the Unix epoch).
+    // 3. Let referenceISOYear be 1972 (the first leap year after the Unix epoch).
     i32 reference_iso_year = 1972;
 
-    // 3. If Type(item) is Object, then
+    // 4. If Type(item) is Object, then
     if (item.is_object()) {
         auto& item_object = item.as_object();
 
@@ -118,32 +117,30 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(GlobalObject& global_obj
         return month_day_from_fields(global_object, *calendar, *fields, options);
     }
 
-    // 4. Perform ? ToTemporalOverflow(options).
-    (void)TRY(to_temporal_overflow(global_object, *options));
+    // 5. Perform ? ToTemporalOverflow(options).
+    (void)TRY(to_temporal_overflow(global_object, options));
 
-    // 5. Let string be ? ToString(item).
+    // 6. Let string be ? ToString(item).
     auto string = TRY(item.to_string(global_object));
 
-    // 6. Let result be ? ParseTemporalMonthDayString(string).
+    // 7. Let result be ? ParseTemporalMonthDayString(string).
     auto result = TRY(parse_temporal_month_day_string(global_object, string));
 
-    // 7. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
+    // 8. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
     auto* calendar = TRY(to_temporal_calendar_with_iso_default(global_object, result.calendar.has_value() ? js_string(vm, move(*result.calendar)) : js_undefined()));
 
-    // 8. If result.[[Year]] is undefined, then
+    // 9. If result.[[Year]] is undefined, then
     if (!result.year.has_value()) {
         // a. Return ? CreateTemporalMonthDay(result.[[Month]], result.[[Day]], calendar, referenceISOYear).
         return TRY(create_temporal_month_day(global_object, result.month, result.day, *calendar, reference_iso_year));
     }
 
-    // 9. Set result to ? CreateTemporalMonthDay(result.[[Month]], result.[[Day]], calendar, referenceISOYear).
+    // 10. Set result to ? CreateTemporalMonthDay(result.[[Month]], result.[[Day]], calendar, referenceISOYear).
     auto* plain_month_day = TRY(create_temporal_month_day(global_object, result.month, result.day, *calendar, reference_iso_year));
 
-    // 10. Let canonicalMonthDayOptions be OrdinaryObjectCreate(null).
-    auto* canonical_month_day_options = Object::create(global_object, nullptr);
-
-    // 11. Return ? MonthDayFromFields(calendar, result, canonicalMonthDayOptions).
-    return TRY(month_day_from_fields(global_object, *calendar, *plain_month_day, canonical_month_day_options));
+    // 11. NOTE: The following operation is called without options, in order for the calendar to store a canonical value in the [[ISOYear]] internal slot of the result.
+    // 12. Return ? MonthDayFromFields(calendar, result).
+    return TRY(month_day_from_fields(global_object, *calendar, *plain_month_day));
 }
 
 // 10.5.2 CreateTemporalMonthDay ( isoMonth, isoDay, calendar, referenceISOYear [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalmonthday

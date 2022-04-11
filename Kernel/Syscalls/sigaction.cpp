@@ -156,11 +156,9 @@ ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
             return EINVAL;
 
         // Remove the old region from our regions tree, since were going to add another region
-        // with the exact same start address, but do not deallocate it yet
+        // with the exact same start address.
         auto region = address_space().take_region(*old_region);
-
-        // Unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
+        region->unmap();
 
         // This vector is the region(s) adjacent to our range.
         // We need to allocate a new region for the range we wanted to change permission bits on.
@@ -214,11 +212,9 @@ ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
                 continue;
             }
             // Remove the old region from our regions tree, since were going to add another region
-            // with the exact same start address, but dont deallocate it yet
+            // with the exact same start address.
             auto region = address_space().take_region(*old_region);
-
-            // Unmap the old region here, specifying that we *don't* want the VM deallocated.
-            region->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
+            region->unmap();
 
             // This vector is the region(s) adjacent to our range.
             // We need to allocate a new region for the range we wanted to change permission bits on.

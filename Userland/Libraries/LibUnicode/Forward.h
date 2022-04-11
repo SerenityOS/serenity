@@ -23,7 +23,7 @@ enum class Era : u8;
 enum class GeneralCategory : u8;
 enum class GraphemeBreakProperty : u8;
 enum class HourCycle : u8;
-enum class HourCycleRegion : u8;
+enum class HourCycleRegion : u16;
 enum class Key : u8;
 enum class KeywordCalendar : u8;
 enum class KeywordColCaseFirst : u8;

@@ -8,7 +8,7 @@
 #include <LibCpp/Lexer.h>
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibGUI/TextEditor.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Palette.h>
 
 namespace Cpp {

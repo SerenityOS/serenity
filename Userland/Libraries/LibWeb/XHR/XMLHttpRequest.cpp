@@ -387,6 +387,13 @@ static bool is_forbidden_method(String const& method)
     return lowercase_method.is_one_of("connect", "trace", "track");
 }
 
+// https://fetch.spec.whatwg.org/#concept-method
+static bool is_method(String const& method)
+{
+    Regex<ECMA262Parser> regex { R"~~~(^.*["(),\/:;<=>?@\\[\]{}]+.*$)~~~" };
+    return !regex.has_match(method);
+}
+
 // https://fetch.spec.whatwg.org/#concept-method-normalize
 static String normalize_method(String const& method)
 {
@@ -426,48 +433,75 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(String const& header, 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-open
 DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& url)
 {
-    // FIXME: Let settingsObject be this’s relevant settings object.
+    return open(method, url, true, {}, {});
+}
 
-    // FIXME: If settingsObject has a responsible document and it is not fully active, then throw an "InvalidStateError" DOMException.
+DOM::ExceptionOr<void> XMLHttpRequest::open(String const& method, String const& url, bool async, String const& username, String const& password)
+{
+    // FIXME: 1. Let settingsObject be this’s relevant settings object.
 
-    // FIXME: Check that the method matches the method token production. https://tools.ietf.org/html/rfc7230#section-3.1.1
+    // FIXME: 2. If settingsObject has a responsible document and it is not fully active, then throw an "InvalidStateError" DOMException.
 
+    // 3. If method is not a method, then throw a "SyntaxError" DOMException.
+    if (!is_method(method))
+        return DOM::SyntaxError::create("An invalid or illegal string was specified.");
+
+    // 4. If method is a forbidden method, then throw a "SecurityError" DOMException.
     if (is_forbidden_method(method))
         return DOM::SecurityError::create("Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
 
+    // 5. Normalize method.
     auto normalized_method = normalize_method(method);
 
+    // 6. Let parsedURL be the result of parsing url with settingsObject’s API base URL and settingsObject’s API URL character encoding.
+    // FIXME: Should use relevant settings object and not assume it's the Window object
     auto parsed_url = m_window->associated_document().parse_url(url);
+    // 7. If parsedURL is failure, then throw a "SyntaxError" DOMException.
     if (!parsed_url.is_valid())
         return DOM::SyntaxError::create("Invalid URL");
 
+    // FIXME: 8. If the async argument is omitted, set async to true, and set username and password to null.
+
+    // 9. If parsedURL’s host is non-null, then:
     if (!parsed_url.host().is_null()) {
-        // FIXME: If the username argument is not null, set the username given parsedURL and username.
-        // FIXME: If the password argument is not null, set the password given parsedURL and password.
+        // 1. If the username argument is not null, set the username given parsedURL and username.
+        if (!username.is_null())
+            parsed_url.set_username(username);
+        // 2. If the password argument is not null, set the password given parsedURL and password.
+        if (!password.is_null())
+            parsed_url.set_password(password);
     }
 
-    // FIXME: If async is false, the current global object is a Window object, and either this’s timeout is
+    // FIXME: 10. If async is false, the current global object is a Window object, and either this’s timeout is
     //        not 0 or this’s response type is not the empty string, then throw an "InvalidAccessError" DOMException.
 
-    // FIXME: If the async argument is omitted, set async to true, and set username and password to null.
+    // FIXME: 11. Terminate the ongoing fetch operated by the XMLHttpRequest object.
 
-    // FIXME: Terminate the ongoing fetch operated by the XMLHttpRequest object.
-
+    // 12. Set variables associated with the object as follows:
+    // Unset this’s send() flag.
     m_send = false;
+    // Unset this’s upload listener flag.
     m_upload_listener = false;
+    // Set this’s request method to method.
     m_method = normalized_method;
+    // Set this’s request URL to parsedURL.
     m_url = parsed_url;
-    // FIXME: Set this’s synchronous flag if async is false; otherwise unset this’s synchronous flag.
-    //        (We're currently defaulting to async)
-    m_synchronous = false;
+    // Set this’s synchronous flag if async is false; otherwise unset this’s synchronous flag.
+    m_synchronous = !async;
+    // Empty this’s author request headers.
     m_request_headers.clear();
-
     // FIXME: Set this’s response to a network error.
-    // FIXME: Set this’s received bytes to the empty byte sequence.
+    // Set this’s received bytes to the empty byte sequence.
+    m_received_bytes = {};
+    // Set this’s response object to null.
     m_response_object = {};
 
-    if (m_ready_state != ReadyState::Opened)
+    // 13. If this’s state is not opened, then:
+    if (m_ready_state != ReadyState::Opened) {
+        // 1. Set this’s state to opened.
+        // 2. Fire an event named readystatechange at this.
         set_ready_state(ReadyState::Opened);
+    }
     return {};
 }
 

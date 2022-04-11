@@ -117,32 +117,37 @@ ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode)
     return file;
 }
 
-ErrorOr<void> File::open_path(StringView filename, mode_t permissions)
+int File::open_mode_to_options(OpenMode mode)
 {
-    VERIFY(m_fd == -1);
-
     int flags = 0;
-    if (has_flag(m_mode, OpenMode::ReadWrite)) {
+    if (has_flag(mode, OpenMode::ReadWrite)) {
         flags |= O_RDWR | O_CREAT;
-    } else if (has_flag(m_mode, OpenMode::Read)) {
+    } else if (has_flag(mode, OpenMode::Read)) {
         flags |= O_RDONLY;
-    } else if (has_flag(m_mode, OpenMode::Write)) {
+    } else if (has_flag(mode, OpenMode::Write)) {
         flags |= O_WRONLY | O_CREAT;
-        bool should_truncate = !has_any_flag(m_mode, OpenMode::Append | OpenMode::MustBeNew);
+        bool should_truncate = !has_any_flag(mode, OpenMode::Append | OpenMode::MustBeNew);
         if (should_truncate)
             flags |= O_TRUNC;
     }
 
-    if (has_flag(m_mode, OpenMode::Append))
+    if (has_flag(mode, OpenMode::Append))
         flags |= O_APPEND;
-    if (has_flag(m_mode, OpenMode::Truncate))
+    if (has_flag(mode, OpenMode::Truncate))
         flags |= O_TRUNC;
-    if (has_flag(m_mode, OpenMode::MustBeNew))
+    if (has_flag(mode, OpenMode::MustBeNew))
         flags |= O_EXCL;
-    if (!has_flag(m_mode, OpenMode::KeepOnExec))
+    if (!has_flag(mode, OpenMode::KeepOnExec))
         flags |= O_CLOEXEC;
-    if (!has_flag(m_mode, OpenMode::Nonblocking))
+    if (!has_flag(mode, OpenMode::Nonblocking))
         flags |= O_NONBLOCK;
+    return flags;
+}
+
+ErrorOr<void> File::open_path(StringView filename, mode_t permissions)
+{
+    VERIFY(m_fd == -1);
+    auto flags = open_mode_to_options(m_mode);
 
     m_fd = TRY(System::open(filename.characters_without_null_termination(), flags, permissions));
     return {};

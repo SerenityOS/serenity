@@ -18,6 +18,14 @@
 
 namespace Web::Layout {
 
+// NOTE: We use a custom clamping function here instead of AK::clamp(), since the AK version
+//       will VERIFY(max >= min) and CSS explicitly allows that (see css-values-4.)
+template<typename T>
+constexpr T css_clamp(T const& value, T const& min, T const& max)
+{
+    return ::max(min, ::min(value, max));
+}
+
 static float get_pixel_size(FormattingState const& state, Box const& box, Optional<CSS::LengthPercentage> const& length_percentage)
 {
     if (!length_percentage.has_value())
@@ -42,7 +50,7 @@ FlexFormattingContext::FlexFormattingContext(FormattingState& state, Box const& 
 
 FlexFormattingContext::~FlexFormattingContext() = default;
 
-void FlexFormattingContext::run(Box const& run_box, LayoutMode)
+void FlexFormattingContext::run(Box const& run_box, LayoutMode layout_mode)
 {
     VERIFY(&run_box == &flex_container());
 
@@ -63,6 +71,16 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
     // 3. Determine the flex base size and hypothetical main size of each item
     for (auto& flex_item : m_flex_items) {
         determine_flex_base_size_and_hypothetical_main_size(flex_item);
+    }
+
+    if (layout_mode == LayoutMode::MinContent || layout_mode == LayoutMode::MaxContent) {
+        // We're computing intrinsic size for the flex container.
+        determine_intrinsic_size_of_flex_container(layout_mode);
+
+        // Our caller is only interested in the content-width and content-height results,
+        // which have now been set on m_flex_container_state, so there's no need to continue
+        // the main layout algorithm after this point.
+        return;
     }
 
     // 4. Determine the main size of the flex container
@@ -111,8 +129,8 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode)
     // AD-HOC: Layout the inside of all flex items.
     copy_dimensions_from_flex_items_to_boxes();
     for (auto& flex_item : m_flex_items) {
-        auto independent_formatting_context = layout_inside(flex_item.box, LayoutMode::Normal);
-        independent_formatting_context->parent_context_did_dimension_child_root_box();
+        if (auto independent_formatting_context = layout_inside(flex_item.box, LayoutMode::Normal))
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
     }
 
     // FIXME: We run the "copy dimensions" step *again* here, in order to override any sizes
@@ -595,7 +613,7 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
     // The hypothetical main size is the item’s flex base size clamped according to its used min and max main sizes (and flooring the content box size at zero).
     auto clamp_min = has_main_min_size(child_box) ? specified_main_min_size(child_box) : determine_min_main_size_of_child(child_box);
     auto clamp_max = has_main_max_size(child_box) ? specified_main_max_size(child_box) : NumericLimits<float>::max();
-    flex_item.hypothetical_main_size = clamp(flex_item.flex_base_size, clamp_min, clamp_max);
+    flex_item.hypothetical_main_size = css_clamp(flex_item.flex_base_size, clamp_min, clamp_max);
 }
 
 float FlexFormattingContext::determine_min_main_size_of_child(Box const& box)
@@ -606,6 +624,9 @@ float FlexFormattingContext::determine_min_main_size_of_child(Box const& box)
 // https://www.w3.org/TR/css-flexbox-1/#algo-main-container
 void FlexFormattingContext::determine_main_size_of_flex_container(bool const main_is_constrained, float const main_min_size, float const main_max_size)
 {
+    // FIXME: This function should make use of our ability to calculate the flex container's
+    //        intrinsic max-content sizes via LayoutMode::MaxContent.
+
     if (!main_is_constrained || !m_available_space->main.has_value()) {
         // Uses https://www.w3.org/TR/css-flexbox-1/#intrinsic-main-sizes
         // 9.9.1
@@ -638,7 +659,7 @@ void FlexFormattingContext::determine_main_size_of_flex_container(bool const mai
             }
             result += flex_item.flex_base_size + flex_item.margins.main_before + flex_item.margins.main_after + flex_item.borders.main_before + flex_item.borders.main_after + flex_item.padding.main_before + flex_item.padding.main_after + product;
         }
-        m_available_space->main = clamp(result, main_min_size, main_max_size);
+        m_available_space->main = css_clamp(result, main_min_size, main_max_size);
     }
     set_main_size(flex_container(), m_available_space->main.value_or(NumericLimits<float>::max()));
 }
@@ -902,7 +923,6 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
         FormattingState throwaway_state(&m_state);
         auto& box_state = throwaway_state.get_mutable(item.box);
 
-        // Item has definite main size, layout with that as the used main size.
         auto independent_formatting_context = create_independent_formatting_context_if_needed(throwaway_state, item.box);
         // NOTE: Flex items should always create an independent formatting context!
         VERIFY(independent_formatting_context);
@@ -950,7 +970,7 @@ void FlexFormattingContext::calculate_cross_size_of_each_flex_line(float const c
     // If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
     // Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically.
     if (is_single_line())
-        clamp(m_flex_lines[0].cross_size, cross_min_size, cross_max_size);
+        css_clamp(m_flex_lines[0].cross_size, cross_min_size, cross_max_size);
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-stretch
@@ -1105,7 +1125,7 @@ void FlexFormattingContext::determine_flex_container_used_cross_size(float const
             cross_size = cross_size_value->resolved(flex_container(), CSS::Length::make_px(specified_cross_size(*flex_container().containing_block()))).to_px(flex_container());
         }
     }
-    set_cross_size(flex_container(), clamp(cross_size, cross_min_size, cross_max_size));
+    set_cross_size(flex_container(), css_clamp(cross_size, cross_min_size, cross_max_size));
 }
 
 // https://www.w3.org/TR/css-flexbox-1/#algo-line-align
@@ -1149,4 +1169,171 @@ void FlexFormattingContext::copy_dimensions_from_flex_items_to_boxes()
         set_offset(box, flex_item.main_offset, flex_item.cross_offset);
     }
 }
+
+// https://drafts.csswg.org/css-flexbox-1/#intrinsic-sizes
+void FlexFormattingContext::determine_intrinsic_size_of_flex_container(LayoutMode layout_mode)
+{
+    VERIFY(layout_mode != LayoutMode::Normal);
+
+    float main_size = calculate_intrinsic_main_size_of_flex_container(layout_mode);
+    float cross_size = calculate_intrinsic_cross_size_of_flex_container(layout_mode);
+    if (is_row_layout()) {
+        m_flex_container_state.content_width = main_size;
+        m_flex_container_state.content_height = cross_size;
+    } else {
+        m_flex_container_state.content_height = main_size;
+        m_flex_container_state.content_width = cross_size;
+    }
+}
+
+// https://drafts.csswg.org/css-flexbox-1/#intrinsic-main-sizes
+float FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container(LayoutMode layout_mode)
+{
+    VERIFY(layout_mode != LayoutMode::Normal);
+
+    // The min-content main size of a single-line flex container is calculated identically to the max-content main size,
+    // except that the flex items’ min-content contributions are used instead of their max-content contributions.
+    // However, for a multi-line container, it is simply the largest min-content contribution of all the non-collapsed flex items in the flex container.
+    if (!is_single_line() && layout_mode == LayoutMode::MinContent) {
+        float largest_contribution = 0;
+        for (auto const& flex_item : m_flex_items) {
+            // FIXME: Skip collapsed flex items.
+            largest_contribution = max(largest_contribution, calculate_main_min_content_contribution(flex_item));
+        }
+        return largest_contribution;
+    }
+
+    // The max-content main size of a flex container is, fundamentally, the smallest size the flex container
+    // can take such that when flex layout is run with that container size, each flex item ends up at least
+    // as large as its max-content contribution, to the extent allowed by the items’ flexibility.
+    // It is calculated, considering only non-collapsed flex items, by:
+
+    // 1. For each flex item, subtract its outer flex base size from its max-content contribution size.
+    //    If that result is positive, divide by its flex grow factor floored at 1;
+    //    if negative, divide by its scaled flex shrink factor having floored the flex shrink factor at 1.
+    //    This is the item’s max-content flex fraction.
+    for (auto& flex_item : m_flex_items) {
+        float contribution;
+        if (layout_mode == LayoutMode::MinContent)
+            contribution = calculate_main_min_content_contribution(flex_item);
+        else
+            contribution = calculate_main_max_content_contribution(flex_item);
+
+        float flex_fraction = contribution - flex_item.flex_base_size;
+        if (flex_fraction >= 0)
+            flex_fraction /= max(flex_item.box.computed_values().flex_grow(), 1.0f);
+        else
+            flex_fraction /= max(flex_item.box.computed_values().flex_shrink(), 1.0f) * flex_item.flex_base_size;
+
+        // FIXME: The name max_content_flex_fraction here is misleading, since we also use this code path for min-content sizing.
+        flex_item.max_content_flex_fraction = flex_fraction;
+    }
+
+    // 2. Place all flex items into lines of infinite length.
+    m_flex_lines.clear();
+    if (!m_flex_items.is_empty())
+        m_flex_lines.append(FlexLine {});
+    for (auto& flex_item : m_flex_items) {
+        // FIXME: Honor breaking requests.
+        m_flex_lines.last().items.append(&flex_item);
+    }
+
+    // 3. Within each line, find the largest max-content flex fraction among all the flex items.
+    //    Add each item’s flex base size to the product of its flex grow factor
+    //    (or scaled flex shrink factor, if the chosen max-content flex fraction was negative)
+    //    and the chosen max-content flex fraction, then clamp that result by the max main size floored by the min main size.
+    float largest_sum = 0;
+    for (auto& flex_line : m_flex_lines) {
+        float largest_flex_fraction = 0;
+        for (auto& flex_item : flex_line.items) {
+            // FIXME: The name max_content_flex_fraction here is misleading, since we also use this code path for min-content sizing.
+            largest_flex_fraction = max(largest_flex_fraction, flex_item->max_content_flex_fraction);
+        }
+
+        float sum = 0;
+        for (auto& flex_item : flex_line.items) {
+            auto product = 0;
+            if (flex_item->max_content_flex_fraction >= 0) {
+                product = largest_flex_fraction * flex_item->box.computed_values().flex_grow();
+            } else {
+                product = largest_flex_fraction * max(flex_item->box.computed_values().flex_shrink(), 1.0f) * flex_item->flex_base_size;
+            }
+            sum += flex_item->flex_base_size + flex_item->margins.main_before + flex_item->margins.main_after + flex_item->borders.main_before + flex_item->borders.main_after + flex_item->padding.main_before + flex_item->padding.main_after + product;
+        }
+
+        largest_sum = max(largest_sum, sum);
+    }
+
+    // 4. The flex container’s max-content size is the largest sum of the afore-calculated sizes of all items within a single line.
+    return largest_sum;
+}
+
+// https://drafts.csswg.org/css-flexbox-1/#intrinsic-cross-sizes
+float FlexFormattingContext::calculate_intrinsic_cross_size_of_flex_container(LayoutMode layout_mode)
+{
+    VERIFY(layout_mode != LayoutMode::Normal);
+
+    // The min-content/max-content cross size of a single-line flex container
+    // is the largest min-content contribution/max-content contribution (respectively) of its flex items.
+    if (is_single_line()) {
+        float largest_contribution = 0;
+        for (auto& flex_item : m_flex_items) {
+            float contribution;
+            if (layout_mode == LayoutMode::MinContent)
+                contribution = calculate_cross_min_content_contribution(flex_item);
+            else if (layout_mode == LayoutMode::MaxContent)
+                contribution = calculate_cross_max_content_contribution(flex_item);
+            largest_contribution = max(largest_contribution, contribution);
+        }
+        return largest_contribution;
+    }
+
+    // For a multi-line flex container, the min-content/max-content cross size is the sum of the flex line cross sizes
+    // resulting from sizing the flex container under a cross-axis min-content constraint/max-content constraint (respectively).
+    // FIXME: However, if the flex container is flex-flow: column wrap;, then it’s sized by first finding the largest
+    //        min-content/max-content cross-size contribution among the flex items (respectively), then using that size
+    //        as the available space in the cross axis for each of the flex items during layout.
+    float sum_of_flex_line_cross_sizes = 0;
+    for (auto& flex_line : m_flex_lines) {
+        sum_of_flex_line_cross_sizes += flex_line.cross_size;
+    }
+    return sum_of_flex_line_cross_sizes;
+}
+
+float FlexFormattingContext::calculate_main_min_content_contribution(FlexItem const& flex_item) const
+{
+    auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(flex_item.box);
+    auto const& box_state = m_state.get(flex_item.box);
+    if (is_row_layout())
+        return box_state.margin_box_left() + intrinsic_sizes.min_content_size.width() + box_state.margin_box_right();
+    return box_state.margin_box_top() + intrinsic_sizes.min_content_size.height() + box_state.margin_box_bottom();
+}
+
+float FlexFormattingContext::calculate_main_max_content_contribution(FlexItem const& flex_item) const
+{
+    auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(flex_item.box);
+    auto const& box_state = m_state.get(flex_item.box);
+    if (is_row_layout())
+        return box_state.margin_box_left() + intrinsic_sizes.max_content_size.width() + box_state.margin_box_right();
+    return box_state.margin_box_top() + intrinsic_sizes.max_content_size.height() + box_state.margin_box_bottom();
+}
+
+float FlexFormattingContext::calculate_cross_min_content_contribution(FlexItem const& flex_item) const
+{
+    auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(flex_item.box);
+    auto const& box_state = m_state.get(flex_item.box);
+    if (is_row_layout())
+        return box_state.margin_box_top() + intrinsic_sizes.min_content_size.height() + box_state.margin_box_bottom();
+    return box_state.margin_box_left() + intrinsic_sizes.min_content_size.width() + box_state.margin_box_right();
+}
+
+float FlexFormattingContext::calculate_cross_max_content_contribution(FlexItem const& flex_item) const
+{
+    auto intrinsic_sizes = FormattingContext::calculate_intrinsic_sizes(flex_item.box);
+    auto const& box_state = m_state.get(flex_item.box);
+    if (is_row_layout())
+        return box_state.margin_box_top() + intrinsic_sizes.max_content_size.height() + box_state.margin_box_bottom();
+    return box_state.margin_box_left() + intrinsic_sizes.max_content_size.width() + box_state.margin_box_right();
+}
+
 }

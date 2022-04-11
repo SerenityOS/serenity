@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/BitCast.h>
 #include <AK/Concepts.h>
 #include <AK/Forward.h>
 #include <AK/HashFunctions.h>
@@ -16,8 +17,8 @@ namespace AK {
 
 template<typename T>
 struct GenericTraits {
-    using PeekType = T;
-    using ConstPeekType = T;
+    using PeekType = T&;
+    using ConstPeekType = T const&;
     static constexpr bool is_trivial() { return false; }
     static constexpr bool equals(const T& a, const T& b) { return a == b; }
     template<Concepts::HashCompatible<T> U>
@@ -39,6 +40,20 @@ requires(IsIntegral<T>) struct Traits<T> : public GenericTraits<T> {
             return u64_hash(value);
     }
 };
+
+#ifndef KERNEL
+template<typename T>
+requires(IsFloatingPoint<T>) struct Traits<T> : public GenericTraits<T> {
+    static constexpr bool is_trivial() { return true; }
+    static constexpr unsigned hash(T value)
+    {
+        if constexpr (sizeof(T) < 8)
+            return int_hash(bit_cast<u32>(value));
+        else
+            return u64_hash(bit_cast<u64>(value));
+    }
+};
+#endif
 
 template<typename T>
 requires(IsPointer<T> && !Detail::IsPointerOfType<char, T>) struct Traits<T> : public GenericTraits<T> {

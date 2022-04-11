@@ -7,13 +7,14 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
+#include <LibWeb/Bindings/NavigatorPrototype.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web {
 namespace Bindings {
 
 NavigatorObject::NavigatorObject(JS::GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+    : Object(static_cast<WindowObject&>(global_object).ensure_web_prototype<NavigatorPrototype>("Navigator"))
 {
 }
 

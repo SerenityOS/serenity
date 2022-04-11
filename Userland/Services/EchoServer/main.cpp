@@ -15,7 +15,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio unix inet id accept", nullptr));
+    TRY(Core::System::pledge("stdio unix inet id accept"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     int port = 7;

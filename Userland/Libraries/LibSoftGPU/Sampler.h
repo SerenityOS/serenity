@@ -8,60 +8,24 @@
 
 #include <AK/RefPtr.h>
 #include <AK/SIMD.h>
+#include <LibGPU/SamplerConfig.h>
 #include <LibGfx/Vector2.h>
 #include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Image.h>
 
 namespace SoftGPU {
 
-enum class TextureFilter {
-    Nearest,
-    Linear,
-};
-
-enum class MipMapFilter {
-    None,
-    Nearest,
-    Linear,
-};
-
-enum class TextureWrapMode {
-    Repeat,
-    MirroredRepeat,
-    Clamp,
-    ClampToBorder,
-    ClampToEdge,
-};
-
-enum class TextureEnvMode {
-    Modulate,
-    Replace,
-    Decal,
-};
-
-struct SamplerConfig final {
-    RefPtr<Image> bound_image;
-    MipMapFilter mipmap_filter { MipMapFilter::Nearest };
-    TextureFilter texture_mag_filter { TextureFilter::Linear };
-    TextureFilter texture_min_filter { TextureFilter::Linear };
-    TextureWrapMode texture_wrap_u { TextureWrapMode::Repeat };
-    TextureWrapMode texture_wrap_v { TextureWrapMode::Repeat };
-    TextureWrapMode texture_wrap_w { TextureWrapMode::Repeat };
-    FloatVector4 border_color { 0, 0, 0, 1 };
-    TextureEnvMode fixed_function_texture_env_mode { TextureEnvMode::Modulate };
-};
-
 class Sampler final {
 public:
     Vector4<AK::SIMD::f32x4> sample_2d(Vector2<AK::SIMD::f32x4> const& uv) const;
 
-    void set_config(SamplerConfig const& config) { m_config = config; }
-    SamplerConfig const& config() const { return m_config; }
+    void set_config(GPU::SamplerConfig const& config) { m_config = config; }
+    GPU::SamplerConfig const& config() const { return m_config; }
 
 private:
-    Vector4<AK::SIMD::f32x4> sample_2d_lod(Vector2<AK::SIMD::f32x4> const& uv, AK::SIMD::u32x4 level, TextureFilter) const;
+    Vector4<AK::SIMD::f32x4> sample_2d_lod(Vector2<AK::SIMD::f32x4> const& uv, AK::SIMD::u32x4 level, GPU::TextureFilter) const;
 
-    SamplerConfig m_config;
+    GPU::SamplerConfig m_config;
 };
 
 }

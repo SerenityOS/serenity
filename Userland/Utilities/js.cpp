@@ -71,6 +71,7 @@
 #include <LibJS/SourceTextModule.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
+#include <LibTextCodec/Decoder.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -1050,7 +1051,11 @@ static bool parse_and_run(JS::Interpreter& interpreter, StringView source, Strin
 
             if (s_run_bytecode) {
                 JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object(), interpreter.realm());
-                result = bytecode_interpreter.run(*executable);
+                auto result_or_error = bytecode_interpreter.run_and_return_frame(*executable, nullptr);
+                if (result_or_error.value.is_error())
+                    result = result_or_error.value.release_error();
+                else
+                    result = result_or_error.frame->registers[0];
             } else {
                 return ReturnEarly::Yes;
             }
@@ -1653,7 +1658,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
                 auto file_contents = file->read_all();
                 auto source = StringView { file_contents };
-                builder.append(source);
+
+                if (Utf8View { file_contents }.validate()) {
+                    builder.append(source);
+                } else {
+                    auto* decoder = TextCodec::decoder_for("windows-1252");
+                    VERIFY(decoder);
+
+                    auto utf8_source = TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, source);
+                    builder.append(utf8_source);
+                }
             }
 
             source_name = script_paths[0];

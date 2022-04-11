@@ -9,7 +9,7 @@
 
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
-#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
+#include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/Token.h>
 
 namespace Web::CSS {
@@ -19,7 +19,7 @@ class StyleBlockRule : public RefCounted<StyleBlockRule> {
 
 public:
     StyleBlockRule();
-    explicit StyleBlockRule(Token token, Vector<StyleComponentValueRule>&& values)
+    explicit StyleBlockRule(Token token, Vector<ComponentValue>&& values)
         : m_token(move(token))
         , m_values(move(values))
     {
@@ -32,12 +32,12 @@ public:
 
     Token const& token() const { return m_token; }
 
-    Vector<StyleComponentValueRule> const& values() const { return m_values; }
+    Vector<ComponentValue> const& values() const { return m_values; }
 
     String to_string() const;
 
 private:
     Token m_token;
-    Vector<StyleComponentValueRule> m_values;
+    Vector<ComponentValue> m_values;
 };
 }

@@ -461,7 +461,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::until)
     auto* this_date = TRY(date_from_fields(global_object, calendar, *this_fields, options));
 
     // 20. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, *largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
 
     // 21. Let result be ? CalendarDateUntil(calendar, thisDate, otherDate, untilOptions).
     auto* result = TRY(calendar_date_until(global_object, calendar, this_date, other_date, *until_options));
@@ -544,7 +544,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::since)
     auto* this_date = TRY(date_from_fields(global_object, calendar, *this_fields, options));
 
     // 21. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, *largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
 
     // 22. Let result be ? CalendarDateUntil(calendar, thisDate, otherDate, untilOptions).
     auto* result = TRY(calendar_date_until(global_object, calendar, this_date, other_date, *until_options));

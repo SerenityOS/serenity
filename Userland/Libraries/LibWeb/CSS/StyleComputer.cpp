@@ -9,10 +9,13 @@
 #include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
-#include <LibGfx/FontStyleMapping.h>
-#include <LibGfx/TrueTypeFont/Font.h>
+#include <LibGfx/Font/Font.h>
+#include <LibGfx/Font/FontDatabase.h>
+#include <LibGfx/Font/FontStyleMapping.h>
+#include <LibGfx/Font/ScaledFont.h>
+#include <LibGfx/Font/TrueType/Font.h>
+#include <LibGfx/Font/VectorFont.h>
+#include <LibGfx/Font/WOFF/Font.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
@@ -50,10 +53,10 @@ public:
 
     virtual void resource_did_load() override
     {
-        auto result = TTF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+        auto result = try_load_font();
         if (result.is_error())
             return;
-        m_ttf_font = result.release_value();
+        m_vector_font = result.release_value();
         m_style_computer.did_load_font(m_family_name);
     }
 
@@ -63,15 +66,46 @@ public:
 
     RefPtr<Gfx::Font> font_with_point_size(float point_size) const
     {
-        if (!m_ttf_font)
+        if (!m_vector_font)
             return nullptr;
-        return adopt_ref(*new TTF::ScaledFont(*m_ttf_font, point_size, point_size));
+
+        if (auto it = m_cached_fonts.find(point_size); it != m_cached_fonts.end())
+            return it->value;
+
+        // FIXME: It might be nicer to have a global cap on the number of fonts we cache
+        //        instead of doing it at the per-font level like this.
+        constexpr size_t max_cached_font_size_count = 64;
+        if (m_cached_fonts.size() > max_cached_font_size_count)
+            m_cached_fonts.remove(m_cached_fonts.begin());
+
+        auto font = adopt_ref(*new Gfx::ScaledFont(*m_vector_font, point_size, point_size));
+        m_cached_fonts.set(point_size, font);
+        return font;
     }
 
 private:
+    ErrorOr<NonnullRefPtr<Gfx::VectorFont>> try_load_font()
+    {
+        // FIXME: This could maybe use the format() provided in @font-face as well, since often the mime type is just application/octet-stream and we have to try every format
+        auto mime_type = resource()->mime_type();
+        if (mime_type == "font/ttf"sv || mime_type == "application/x-font-ttf"sv)
+            return TRY(TTF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
+        if (mime_type == "font/woff"sv)
+            return TRY(WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
+        auto ttf = TTF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+        if (!ttf.is_error())
+            return ttf.release_value();
+        auto woff = WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
+        if (!woff.is_error())
+            return woff.release_value();
+        return ttf.release_error();
+    }
+
     StyleComputer& m_style_computer;
     FlyString m_family_name;
-    RefPtr<TTF::Font> m_ttf_font;
+    RefPtr<Gfx::VectorFont> m_vector_font;
+
+    HashMap<float, NonnullRefPtr<Gfx::ScaledFont>> mutable m_cached_fonts;
 };
 
 static StyleSheet& default_stylesheet()
@@ -492,7 +526,7 @@ static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, FlySt
     return nullptr;
 }
 
-bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index) const
+bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<ComponentValue> const& source, Vector<ComponentValue>& dest, size_t source_start_index) const
 {
     // FIXME: Do this better!
     // We build a copy of the tree of StyleComponentValueRules, with all var()s and attr()s replaced with their contents.
@@ -585,7 +619,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
             }
 
             auto const& source_function = value.function();
-            Vector<StyleComponentValueRule> function_values;
+            Vector<ComponentValue> function_values;
             if (!expand_unresolved_values(element, property_name, dependencies, source_function.values(), function_values, 0))
                 return false;
             NonnullRefPtr<StyleFunctionRule> function = adopt_ref(*new StyleFunctionRule(source_function.name(), move(function_values)));
@@ -594,7 +628,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
         }
         if (value.is_block()) {
             auto const& source_block = value.block();
-            Vector<StyleComponentValueRule> block_values;
+            Vector<ComponentValue> block_values;
             if (!expand_unresolved_values(element, property_name, dependencies, source_block.values(), block_values, 0))
                 return false;
             NonnullRefPtr<StyleBlockRule> block = adopt_ref(*new StyleBlockRule(source_block.token(), move(block_values)));
@@ -613,7 +647,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     // to produce a different StyleValue from it.
     VERIFY(unresolved.contains_var_or_attr());
 
-    Vector<StyleComponentValueRule> expanded_values;
+    Vector<ComponentValue> expanded_values;
     HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
     if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values, 0))
         return {};
@@ -1120,7 +1154,6 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
 
 NonnullRefPtr<StyleProperties> StyleComputer::compute_style(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
-    load_fonts_if_needed();
     build_rule_cache_if_needed();
 
     auto style = StyleProperties::create();
@@ -1268,23 +1301,22 @@ void StyleComputer::did_load_font([[maybe_unused]] FlyString const& family_name)
     document().invalidate_style();
 }
 
-void StyleComputer::load_fonts_if_needed() const
+void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
 {
-    for_each_stylesheet(CascadeOrigin::Author, [&](StyleSheet const& sheet) {
-        for (auto const& rule : static_cast<CSSStyleSheet const&>(sheet).rules()) {
-            if (!is<CSSFontFaceRule>(rule))
-                continue;
-            auto const& font_face = static_cast<CSSFontFaceRule const&>(rule).font_face();
-            if (font_face.sources().is_empty())
-                continue;
-            if (m_loaded_fonts.contains(font_face.font_family()))
-                continue;
+    for (auto const& rule : static_cast<CSSStyleSheet const&>(sheet).rules()) {
+        if (!is<CSSFontFaceRule>(rule))
+            continue;
+        auto const& font_face = static_cast<CSSFontFaceRule const&>(rule).font_face();
+        if (font_face.sources().is_empty())
+            continue;
+        if (m_loaded_fonts.contains(font_face.font_family()))
+            continue;
 
-            LoadRequest request;
-            auto url = m_document.parse_url(font_face.sources().first().url.to_string());
-            auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(url));
-            const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_face.font_family(), move(loader));
-        }
-    });
+        LoadRequest request;
+        auto url = m_document.parse_url(font_face.sources().first().url.to_string());
+        auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(url));
+        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_face.font_family(), move(loader));
+    }
 }
+
 }

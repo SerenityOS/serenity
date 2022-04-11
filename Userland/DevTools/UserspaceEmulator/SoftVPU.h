@@ -127,7 +127,7 @@ private:
     void CVTTPS2PI_mm1_xmm2m64(X86::Instruction const&);
     void CVTTSS2SI_r32_xmm2m32(X86::Instruction const&);
     void CVTPS2PI_xmm1_mm2m64(X86::Instruction const&);
-    void CVTSS2SI_xmm1_rm32(X86::Instruction const&);
+    void CVTSS2SI_r32_xmm2m32(X86::Instruction const&);
     void UCOMISS_xmm1_xmm2m32(X86::Instruction const&);
     void COMISS_xmm1_xmm2m32(X86::Instruction const&);
     void MOVMSKPS_reg_xmm(X86::Instruction const&);

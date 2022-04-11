@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=openttd-opensfx
-version=1.0.1
+version=1.0.3
 workdir=.
-files="https://cdn.openttd.org/opensfx-releases/${version}/opensfx-${version}-all.zip opensfx-${version}-all.zip 37b825426f1d690960313414423342733520d08916f512f30f7aaf30910a36c5"
+files="https://cdn.openttd.org/opensfx-releases/${version}/opensfx-${version}-all.zip opensfx-${version}-all.zip e0a218b7dd9438e701503b0f84c25a97c1c11b7c2f025323fb19d6db16ef3759"
 auth_type=sha256
 
 build() {

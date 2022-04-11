@@ -198,15 +198,14 @@ String FileSystemModel::Node::full_path() const
 
 ModelIndex FileSystemModel::index(String path, int column) const
 {
-    Node const* node = node_for_path(move(path));
-    if (node != nullptr) {
+    auto node = node_for_path(move(path));
+    if (node.has_value())
         return node->index(column);
-    }
 
     return {};
 }
 
-FileSystemModel::Node const* FileSystemModel::node_for_path(String const& path) const
+Optional<FileSystemModel::Node const&> FileSystemModel::node_for_path(String const& path) const
 {
     String resolved_path;
     if (path == m_root_path)
@@ -219,7 +218,7 @@ FileSystemModel::Node const* FileSystemModel::node_for_path(String const& path) 
 
     Node const* node = m_root->m_parent_of_root ? &m_root->m_children.first() : m_root;
     if (lexical_path.string() == "/")
-        return node;
+        return *node;
 
     auto& parts = lexical_path.parts_view();
     for (size_t i = 0; i < parts.size(); ++i) {
@@ -231,14 +230,14 @@ FileSystemModel::Node const* FileSystemModel::node_for_path(String const& path) 
                 node = &child;
                 found = true;
                 if (i == parts.size() - 1)
-                    return node;
+                    return *node;
                 break;
             }
         }
         if (!found)
-            return nullptr;
+            return {};
     }
-    return nullptr;
+    return {};
 }
 
 String FileSystemModel::full_path(ModelIndex const& index) const
@@ -372,10 +371,10 @@ void FileSystemModel::invalidate()
 void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
 {
     if (event.type == Core::FileWatcherEvent::Type::ChildCreated) {
-        if (node_for_path(event.event_path) != nullptr)
+        if (node_for_path(event.event_path).has_value())
             return;
     } else {
-        if (node_for_path(event.event_path) == nullptr)
+        if (!node_for_path(event.event_path).has_value())
             return;
     }
 
@@ -386,31 +385,32 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
         StringView child_name = parts.last();
 
         auto parent_name = path.parent().string();
-        Node* parent = const_cast<Node*>(node_for_path(parent_name));
-        if (parent == nullptr) {
+        auto parent = node_for_path(parent_name);
+        if (!parent.has_value()) {
             dbgln("Got a ChildCreated on '{}' but that path does not exist?!", parent_name);
             break;
         }
 
         int child_count = parent->m_children.size();
 
-        auto maybe_child = parent->create_child(child_name);
+        auto& mutable_parent = const_cast<Node&>(*parent);
+        auto maybe_child = mutable_parent.create_child(child_name);
         if (!maybe_child)
             break;
 
         begin_insert_rows(parent->index(0), child_count, child_count);
 
         auto child = maybe_child.release_nonnull();
-        parent->total_size += child->size;
-        parent->m_children.append(move(child));
+        mutable_parent.total_size += child->size;
+        mutable_parent.m_children.append(move(child));
 
         end_insert_rows();
         break;
     }
     case Core::FileWatcherEvent::Type::Deleted:
     case Core::FileWatcherEvent::Type::ChildDeleted: {
-        Node* child = const_cast<Node*>(node_for_path(event.event_path));
-        if (child == nullptr) {
+        auto child = node_for_path(event.event_path);
+        if (!child.has_value()) {
             dbgln("Got a ChildDeleted/Deleted on '{}' but the child does not exist?! (already gone?)", event.event_path);
             break;
         }

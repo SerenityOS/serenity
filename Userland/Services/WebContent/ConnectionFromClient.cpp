@@ -7,8 +7,9 @@
 
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
+#include <AK/QuickSort.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/Heap.h>
@@ -24,6 +25,7 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ContentFilter.h>
+#include <LibWeb/Loader/ProxyMappings.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
@@ -109,6 +111,7 @@ void ConnectionFromClient::add_backing_store(i32 backing_store_id, Gfx::Shareabl
 void ConnectionFromClient::remove_backing_store(i32 backing_store_id)
 {
     m_backing_stores.remove(backing_store_id);
+    m_pending_paint_requests.remove_all_matching([backing_store_id](auto& pending_repaint_request) { return pending_repaint_request.bitmap_id == backing_store_id; });
 }
 
 void ConnectionFromClient::paint(Gfx::IntRect const& content_rect, i32 backing_store_id)
@@ -451,6 +454,22 @@ void ConnectionFromClient::set_content_filters(Vector<String> const& filters)
 {
     for (auto& filter : filters)
         Web::ContentFilter::the().add_pattern(filter);
+}
+
+void ConnectionFromClient::set_proxy_mappings(Vector<String> const& proxies, HashMap<String, size_t> const& mappings)
+{
+    auto keys = mappings.keys();
+    quick_sort(keys, [&](auto& a, auto& b) { return a.length() < b.length(); });
+
+    OrderedHashMap<String, size_t> sorted_mappings;
+    for (auto& key : keys) {
+        auto value = *mappings.get(key);
+        if (value >= proxies.size())
+            continue;
+        sorted_mappings.set(key, value);
+    }
+
+    Web::ProxyMappings::the().set_mappings(proxies, move(sorted_mappings));
 }
 
 void ConnectionFromClient::set_preferred_color_scheme(Web::CSS::PreferredColorScheme const& color_scheme)

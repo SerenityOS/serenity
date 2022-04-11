@@ -8,7 +8,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
-#include <LibSoftGPU/Image.h>
+#include <LibGPU/Image.h>
 
 namespace GL {
 
@@ -21,11 +21,11 @@ public:
     virtual bool is_texture_3d() const { return false; }
     virtual bool is_cube_map() const { return false; }
 
-    RefPtr<SoftGPU::Image> device_image() { return m_device_image; }
-    void set_device_image(RefPtr<SoftGPU::Image> image) { m_device_image = image; }
+    RefPtr<GPU::Image> device_image() { return m_device_image; }
+    void set_device_image(RefPtr<GPU::Image> image) { m_device_image = image; }
 
 private:
-    RefPtr<SoftGPU::Image> m_device_image;
+    RefPtr<GPU::Image> m_device_image;
 };
 
 }

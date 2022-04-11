@@ -27,6 +27,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
     attribute XMLHttpRequestResponseType responseType;
 
     undefined open(DOMString method, DOMString url);
+    undefined open(ByteString method, USVString url, boolean async, optional USVString? username = {}, optional USVString? password = {});
     undefined setRequestHeader(DOMString name, DOMString value);
     undefined send(optional USVString body = {});
 

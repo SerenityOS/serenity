@@ -340,10 +340,19 @@ if (BUILD_LAGOM)
 
     # Gfx
     file(GLOB LIBGFX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/*.cpp")
-    file(GLOB LIBGFX_TTF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/TrueTypeFont/*.cpp")
+    file(GLOB LIBGFX_FONT_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Font/*.cpp")
+    file(GLOB LIBGFX_TTF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Font/TrueType/*.cpp")
+    file(GLOB LIBGFX_WOFF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/Font/WOFF/*.cpp")
     lagom_lib(Gfx gfx
-        SOURCES ${LIBGFX_SOURCES} ${LIBGFX_TTF_SOURCES}
-        LIBS m LagomCompress LagomTextCodec LagomIPC
+            SOURCES ${LIBGFX_SOURCES} ${LIBGFX_FONT_SOURCES} ${LIBGFX_TTF_SOURCES} ${LIBGFX_WOFF_SOURCES}
+            LIBS m LagomCompress LagomTextCodec LagomIPC
+            )
+
+    # GPU
+    file(GLOB LIBGPU_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGPU/*.cpp")
+    lagom_lib(GPU gpu
+        SOURCES ${LIBGPU_SOURCES}
+        LIBS dl
     )
 
     # GL
@@ -351,7 +360,7 @@ if (BUILD_LAGOM)
     file(GLOB LIBGL_TEX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGL/Tex/*.cpp")
     lagom_lib(GL gl
         SOURCES ${LIBGL_SOURCES} ${LIBGL_TEX_SOURCES}
-        LIBS m LagomGfx LagomSoftGPU)
+        LIBS m LagomGfx LagomGPU)
 
     # GUI-GML
     file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML/*.cpp")
@@ -388,7 +397,7 @@ if (BUILD_LAGOM)
     list(REMOVE_ITEM LIBJS_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibJS/SyntaxHighlighter.cpp")
     lagom_lib(JS js
         SOURCES ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBJS_SUBSUBDIR_SOURCES}
-        LIBS m LagomCrypto LagomRegex LagomUnicode
+        LIBS m LagomCrypto LagomRegex LagomUnicode LagomTextCodec
     )
 
     # Line

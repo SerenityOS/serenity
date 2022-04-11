@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include "FindDialog.h"
 #include "GoToOffsetDialog.h"
 #include "SearchResultsModel.h"
+#include "ValueInspectorModel.h"
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
@@ -44,6 +46,17 @@ HexEditorWidget::HexEditorWidget()
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     m_search_results = *find_descendant_of_type_named<GUI::TableView>("search_results");
     m_search_results_container = *find_descendant_of_type_named<GUI::Widget>("search_results_container");
+    m_side_panel_container = *find_descendant_of_type_named<GUI::Widget>("side_panel_container");
+    m_value_inspector_container = *find_descendant_of_type_named<GUI::Widget>("value_inspector_container");
+    m_value_inspector = *find_descendant_of_type_named<GUI::TableView>("value_inspector");
+
+    m_value_inspector->on_activation = [this](GUI::ModelIndex const& index) {
+        if (!index.is_valid())
+            return;
+        m_selecting_from_inspector = true;
+        m_editor->set_selection(m_editor->selection_start_offset(), index.data(GUI::ModelRole::Custom).as_i32());
+        m_editor->update();
+    };
 
     m_editor->on_status_change = [this](int position, HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
         m_statusbar->set_text(0, String::formatted("Offset: {:#08X}", position));
@@ -57,6 +70,11 @@ HexEditorWidget::HexEditorWidget()
         m_copy_text_action->set_enabled(has_selection);
         m_copy_as_c_code_action->set_enabled(has_selection);
         m_fill_selection_action->set_enabled(has_selection);
+
+        if (m_value_inspector_container->is_visible() && !m_selecting_from_inspector) {
+            update_inspector_values(selection_start);
+        }
+        m_selecting_from_inspector = false;
     };
 
     m_editor->on_change = [this] {
@@ -213,6 +231,10 @@ HexEditorWidget::HexEditorWidget()
     });
     m_fill_selection_action->set_enabled(false);
 
+    m_layout_value_inspector_action = GUI::Action::create_checkable("&Value Inspector", [&](auto& action) {
+        set_value_inspector_visible(action.is_checked());
+    });
+
     m_toolbar->add_action(*m_new_action);
     m_toolbar->add_action(*m_open_action);
     m_toolbar->add_action(*m_save_action);
@@ -224,6 +246,94 @@ HexEditorWidget::HexEditorWidget()
     m_statusbar->segment(0).set_action(*m_goto_offset_action);
 
     m_editor->set_focus(true);
+}
+
+void HexEditorWidget::update_inspector_values(size_t position)
+{
+    // build out primitive types like u8, i8, u16, etc
+    size_t byte_read_count = 0;
+    u64 unsigned_64_bit_int = 0;
+    for (int i = 0; i < 8; ++i) {
+        Optional<u8> read_result = m_editor->get_byte(position + i);
+        u8 current_byte = 0;
+        if (!read_result.has_value())
+            break;
+
+        current_byte = read_result.release_value();
+        if (m_value_inspector_little_endian)
+            unsigned_64_bit_int = ((u64)current_byte << (8 * byte_read_count)) + unsigned_64_bit_int;
+        else
+            unsigned_64_bit_int = (unsigned_64_bit_int << 8) + current_byte;
+
+        ++byte_read_count;
+    }
+
+    if (!m_value_inspector_little_endian) {
+        // if we didn't read far enough, lets finish shifting the bytes so the code below works
+        size_t bytes_left_to_read = 8 - byte_read_count;
+        unsigned_64_bit_int = (unsigned_64_bit_int << (8 * bytes_left_to_read));
+    }
+
+    // Populate the model
+    NonnullRefPtr<ValueInspectorModel> value_inspector_model = make_ref_counted<ValueInspectorModel>();
+    if (byte_read_count >= 1) {
+        u8 unsigned_byte_value = 0;
+        if (m_value_inspector_little_endian)
+            unsigned_byte_value = (unsigned_64_bit_int & 0xFF);
+        else
+            unsigned_byte_value = (unsigned_64_bit_int >> (64 - 8)) & 0xFF;
+
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, String::number(static_cast<i8>(unsigned_byte_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, String::number(unsigned_byte_value));
+    } else {
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedByte, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedByte, "");
+    }
+
+    if (byte_read_count >= 2) {
+        u16 unsigned_short_value = 0;
+        if (m_value_inspector_little_endian)
+            unsigned_short_value = (unsigned_64_bit_int & 0xFFFF);
+        else
+            unsigned_short_value = (unsigned_64_bit_int >> (64 - 16)) & 0xFFFF;
+
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedShort, String::number(static_cast<i16>(unsigned_short_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedShort, String::number(unsigned_short_value));
+    } else {
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedShort, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedShort, "");
+    }
+
+    if (byte_read_count >= 4) {
+        u32 unsigned_int_value = 0;
+        if (m_value_inspector_little_endian)
+            unsigned_int_value = (unsigned_64_bit_int & 0xFFFFFFFF);
+        else
+            unsigned_int_value = (unsigned_64_bit_int >> 32) & 0xFFFFFFFF;
+
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedInt, String::number(static_cast<i32>(unsigned_int_value)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedInt, String::number(unsigned_int_value));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Float, String::number(bit_cast<float>(unsigned_int_value)));
+    } else {
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedInt, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedInt, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Float, "");
+    }
+
+    if (byte_read_count >= 8) {
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedLong, String::number(static_cast<i64>(unsigned_64_bit_int)));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedLong, String::number(unsigned_64_bit_int));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Double, String::number(bit_cast<double>(unsigned_64_bit_int)));
+    } else {
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::SignedLong, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UnsignedLong, "");
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Double, "");
+    }
+
+    // FIXME: Parse as other values like ASCII, UTF8, UTF16, Timestamp etc
+
+    m_value_inspector->set_model(value_inspector_model);
+    m_value_inspector->update();
 }
 
 void HexEditorWidget::initialize_menubar(GUI::Window& window)
@@ -291,6 +401,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
     m_toolbar_container->set_visible(show_toolbar);
     view_menu.add_action(*m_layout_toolbar_action);
     view_menu.add_action(*m_layout_search_results_action);
+    view_menu.add_action(*m_layout_value_inspector_action);
     view_menu.add_separator();
 
     auto bytes_per_row = Config::read_i32("HexEditor", "Layout", "BytesPerRow", 16);
@@ -310,6 +421,25 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
         if (i == bytes_per_row)
             action->set_checked(true);
     }
+
+    m_value_inspector_mode_actions.set_exclusive(true);
+    auto& inspector_mode_menu = view_menu.add_submenu("Value Inspector &Mode");
+    auto little_endian_mode = GUI::Action::create_checkable("&Little Endian", [&](auto& action) {
+        m_value_inspector_little_endian = action.is_checked();
+        update_inspector_values(m_editor->selection_start_offset());
+    });
+    m_value_inspector_mode_actions.add_action(little_endian_mode);
+    inspector_mode_menu.add_action(little_endian_mode);
+
+    auto big_endian_mode = GUI::Action::create_checkable("&Big Endian", [this](auto& action) {
+        m_value_inspector_little_endian = !action.is_checked();
+        update_inspector_values(m_editor->selection_start_offset());
+    });
+    m_value_inspector_mode_actions.add_action(big_endian_mode);
+    inspector_mode_menu.add_action(big_endian_mode);
+
+    // Default to little endian mode
+    little_endian_mode->set_checked(true);
 
     auto& help_menu = window.add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("app-hex-editor"), &window));
@@ -365,6 +495,21 @@ void HexEditorWidget::set_search_results_visible(bool visible)
 {
     m_layout_search_results_action->set_checked(visible);
     m_search_results_container->set_visible(visible);
+
+    // Ensure side panel container is visible if either search result or value inspector are turned on
+    m_side_panel_container->set_visible(visible || m_value_inspector_container->is_visible());
+}
+
+void HexEditorWidget::set_value_inspector_visible(bool visible)
+{
+    if (visible)
+        update_inspector_values(m_editor->selection_start_offset());
+
+    m_layout_value_inspector_action->set_checked(visible);
+    m_value_inspector_container->set_visible(visible);
+
+    // Ensure side panel container is visible if either search result or value inspector are turned on
+    m_side_panel_container->set_visible(visible || m_search_results_container->is_visible());
 }
 
 void HexEditorWidget::drop_event(GUI::DropEvent& event)

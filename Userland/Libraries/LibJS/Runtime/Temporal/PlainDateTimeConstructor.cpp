@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -105,7 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::from)
         auto& plain_date_time = static_cast<PlainDateTime&>(item.as_object());
 
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY(to_temporal_overflow(global_object, *options));
+        (void)TRY(to_temporal_overflow(global_object, options));
 
         // b. Return ? CreateTemporalDateTime(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], item.[[ISOHour]], item.[[ISOMinute]], item.[[ISOSecond]], item.[[ISOMillisecond]], item.[[ISOMicrosecond]], item.[[ISONanosecond]], item.[[Calendar]]).
         return TRY(create_temporal_date_time(global_object, plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond(), plain_date_time.calendar()));
@@ -122,7 +122,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimeConstructor::compare)
     auto* one = TRY(to_temporal_date_time(global_object, vm.argument(0)));
 
     // 2. Set two to ? ToTemporalDateTime(two).
-    auto two = TRY(to_temporal_date_time(global_object, vm.argument(1)));
+    auto* two = TRY(to_temporal_date_time(global_object, vm.argument(1)));
 
     // 3. Return 𝔽(! CompareISODateTime(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], one.[[ISOHour]], one.[[ISOMinute]], one.[[ISOSecond]], one.[[ISOMillisecond]], one.[[ISOMicrosecond]], one.[[ISONanosecond]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]], two.[[ISOHour]], two.[[ISOMinute]], two.[[ISOSecond]], two.[[ISOMillisecond]], two.[[ISOMicrosecond]], two.[[ISONanosecond]])).
     return Value(compare_iso_date_time(one->iso_year(), one->iso_month(), one->iso_day(), one->iso_hour(), one->iso_minute(), one->iso_second(), one->iso_millisecond(), one->iso_microsecond(), one->iso_nanosecond(), two->iso_year(), two->iso_month(), two->iso_day(), two->iso_hour(), two->iso_minute(), two->iso_second(), two->iso_millisecond(), two->iso_microsecond(), two->iso_nanosecond()));

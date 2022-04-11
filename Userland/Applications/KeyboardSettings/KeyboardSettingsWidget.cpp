@@ -23,7 +23,7 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibKeyboard/CharacterMap.h>
 #include <spawn.h>
 

@@ -169,7 +169,7 @@ void Window::show()
         return IterationDecision::Continue;
     });
 
-    set_maximized(m_maximized_when_windowless);
+    set_maximized(m_maximized);
     reified_windows->set(m_window_id, this);
     Application::the()->did_create_window({});
     update();
@@ -1019,17 +1019,9 @@ void Window::set_forced_shadow(bool shadow)
     ConnectionToWindowServer::the().async_set_forced_shadow(m_window_id, shadow);
 }
 
-bool Window::is_maximized() const
-{
-    if (!is_visible())
-        return m_maximized_when_windowless;
-
-    return ConnectionToWindowServer::the().is_maximized(m_window_id);
-}
-
 void Window::set_maximized(bool maximized)
 {
-    m_maximized_when_windowless = maximized;
+    m_maximized = maximized;
     if (!is_visible())
         return;
 
@@ -1069,9 +1061,11 @@ void Window::update_all_windows(Badge<ConnectionToWindowServer>)
     }
 }
 
-void Window::notify_state_changed(Badge<ConnectionToWindowServer>, bool minimized, bool occluded)
+void Window::notify_state_changed(Badge<ConnectionToWindowServer>, bool minimized, bool maximized, bool occluded)
 {
     m_visible_for_timer_purposes = !minimized && !occluded;
+
+    m_maximized = maximized;
 
     // When double buffering is enabled, minimization/occlusion means we can mark the front bitmap volatile (in addition to the back bitmap.)
     // When double buffering is disabled, there is only the back bitmap (which we can now mark volatile!)

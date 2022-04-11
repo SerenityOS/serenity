@@ -121,6 +121,15 @@ private:
     bool is_direction_reverse() const { return m_flex_direction == CSS::FlexDirection::ColumnReverse || m_flex_direction == CSS::FlexDirection::RowReverse; }
     void populate_specified_margins(FlexItem&, CSS::FlexDirection) const;
 
+    void determine_intrinsic_size_of_flex_container(LayoutMode);
+    [[nodiscard]] float calculate_intrinsic_main_size_of_flex_container(LayoutMode);
+    [[nodiscard]] float calculate_intrinsic_cross_size_of_flex_container(LayoutMode);
+
+    [[nodiscard]] float calculate_cross_min_content_contribution(FlexItem const&) const;
+    [[nodiscard]] float calculate_cross_max_content_contribution(FlexItem const&) const;
+    [[nodiscard]] float calculate_main_min_content_contribution(FlexItem const&) const;
+    [[nodiscard]] float calculate_main_max_content_contribution(FlexItem const&) const;
+
     FormattingState::NodeState& m_flex_container_state;
 
     Vector<FlexLine> m_flex_lines;

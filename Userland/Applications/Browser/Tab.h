@@ -18,7 +18,6 @@
 
 namespace Web {
 class OutOfProcessWebView;
-class WebViewHooks;
 }
 
 namespace Browser {
@@ -52,6 +51,7 @@ public:
     void did_become_active();
     void context_menu_requested(Gfx::IntPoint const& screen_position);
     void content_filters_changed();
+    void proxy_mappings_changed();
 
     void action_entered(GUI::Action&);
     void action_left(GUI::Action&);
@@ -79,7 +79,7 @@ public:
     String const& title() const { return m_title; }
     Gfx::Bitmap const* icon() const { return m_icon; }
 
-    GUI::AbstractScrollableWidget& view();
+    Web::OutOfProcessWebView& view() { return *m_web_content_view; }
 
 private:
     explicit Tab(BrowserWindow&);
@@ -87,7 +87,6 @@ private:
     BrowserWindow const& window() const;
     BrowserWindow& window();
 
-    Web::WebViewHooks& hooks();
     void update_actions();
     void bookmark_current_url();
     void update_bookmark_button(String const& url);

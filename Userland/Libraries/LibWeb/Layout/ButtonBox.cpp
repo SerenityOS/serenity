@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Painting/ButtonPaintable.h>

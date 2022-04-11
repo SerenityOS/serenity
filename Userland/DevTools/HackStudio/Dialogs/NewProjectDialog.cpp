@@ -12,6 +12,7 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
+#include <LibCore/Directory.h>
 #include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -200,8 +201,8 @@ void NewProjectDialog::do_create_project()
         if (result != GUI::MessageBox::ExecResult::ExecYes)
             return;
 
-        auto created = Core::File::ensure_parent_directories(maybe_project_full_path.value());
-        if (!created) {
+        auto created = Core::Directory::create(maybe_project_full_path.value(), Core::Directory::CreateDirectories::Yes);
+        if (!created.is_error()) {
             GUI::MessageBox::show_error(this, String::formatted("Could not create directory {}", create_in));
             return;
         }

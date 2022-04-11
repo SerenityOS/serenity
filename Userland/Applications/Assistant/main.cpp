@@ -193,7 +193,7 @@ static constexpr size_t MAX_SEARCH_RESULTS = 6;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath unix proc exec thread", nullptr));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath unix proc exec thread"));
 
     Core::LockFile lockfile("/tmp/lock/assistant.lock");
 

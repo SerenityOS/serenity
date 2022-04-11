@@ -6,37 +6,42 @@
     }
 
     @GUI::GroupBox {
-        title: "Time Zone Settings"
+        title: "Time Format"
+        shrink_to_fit: false
+        fixed_height: 160
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 8, 8]
-            spacing: 16
         }
 
         @GUI::Label {
-            text: "Change the system's time zone used for the clock and other applications."
+            text: "Set the date/time format used by the taskbar clock."
             text_alignment: "TopLeft"
         }
 
         @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {
+            shrink_to_fit: true
+            layout: @GUI::VerticalBoxLayout {
                 spacing: 4
             }
 
-            @GUI::Label {
-                text: "Time Zone:"
-                fixed_width: 80
-                name: "time_zone_label"
-                text_alignment: "CenterLeft"
+            @GUI::RadioButton {
+                name: "24hour_radio"
+                text: "24-hour (12:34:56)"
             }
 
-            @GUI::ComboBox {
-                name: "time_zone_input"
+            @GUI::RadioButton {
+                name: "12hour_radio"
+                text: "12-hour (12:34 a.m)"
             }
-        }
 
-        @GUI::ImageWidget {
-            name: "time_zone_map"
-            auto_resize: true
+            @GUI::RadioButton {
+                name: "custom_radio"
+                text: "Custom:"
+            }
+
+            @GUI::TextBox {
+                name: "custom_format_input"
+            }
         }
     }
 }

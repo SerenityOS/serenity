@@ -36,9 +36,9 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/BitmapFont.h>
-#include <LibGfx/Emoji.h>
-#include <LibGfx/FontStyleMapping.h>
+#include <LibGfx/Font/BitmapFont.h>
+#include <LibGfx/Font/Emoji.h>
+#include <LibGfx/Font/FontStyleMapping.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/TextDirection.h>
 #include <LibUnicode/CharacterTypes.h>

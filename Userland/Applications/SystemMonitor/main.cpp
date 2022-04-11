@@ -7,8 +7,6 @@
  */
 
 #include "GraphWidget.h"
-#include "LibCore/EventLoop.h"
-#include "LibCore/Object.h"
 #include "MemoryStatsWidget.h"
 #include "NetworkStatisticsWidget.h"
 #include "ProcessFileDescriptorMapWidget.h"
@@ -22,6 +20,8 @@
 #include <Applications/SystemMonitor/SystemMonitorGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/Object.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
@@ -43,10 +43,10 @@
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
-#include <LibGUI/TableView.h>
+#include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
 #include <LibPCIDB/Database.h>
@@ -385,12 +385,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& performance_widget = *tabwidget.find_descendant_of_type_named<GUI::Widget>("performance");
     build_performance_tab(performance_widget);
 
-    auto& process_table_view = *process_table_container.find_child_of_type_named<GUI::TableView>("process_table");
+    auto& process_table_view = *process_table_container.find_child_of_type_named<GUI::TreeView>("process_table");
     process_table_view.set_model(TRY(GUI::SortingProxyModel::create(process_model)));
     for (auto column = 0; column < ProcessModel::Column::__Count; ++column)
         process_table_view.set_column_visible(column, false);
-    process_table_view.set_column_visible(ProcessModel::Column::Icon, true);
     process_table_view.set_column_visible(ProcessModel::Column::PID, true);
+    process_table_view.set_column_visible(ProcessModel::Column::TID, true);
     process_table_view.set_column_visible(ProcessModel::Column::Name, true);
     process_table_view.set_column_visible(ProcessModel::Column::CPU, true);
     process_table_view.set_column_visible(ProcessModel::Column::User, true);
@@ -408,7 +408,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto& refresh_timer = window->add<Core::Timer>(
         frequency * 1000, [&] {
+            // FIXME: remove the primitive re-toggling code once persistent model indices work.
+            auto toggled_indices = process_table_view.selection().indices();
+            toggled_indices.remove_all_matching([&](auto const& index) { return !process_table_view.is_toggled(index); });
             process_model->update();
+            if (!process_table_view.selection().is_empty())
+                process_table_view.selection().for_each_index([&](auto& selection) {
+                    if (toggled_indices.contains_slow(selection))
+                        process_table_view.expand_all_parents_of(selection);
+                });
+
             if (auto* memory_stats_widget = SystemMonitor::MemoryStatsWidget::the())
                 memory_stats_widget->refresh();
         });
@@ -416,14 +425,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto selected_id = [&](ProcessModel::Column column) -> pid_t {
         if (process_table_view.selection().is_empty())
             return -1;
-        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column);
+        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column, process_table_view.selection().first().parent());
         return pid_index.data().to_i32();
     };
 
     auto selected_name = [&](ProcessModel::Column column) -> String {
         if (process_table_view.selection().is_empty())
             return {};
-        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column);
+        auto pid_index = process_table_view.model()->index(process_table_view.selection().first().row(), column, process_table_view.selection().first().parent());
         return pid_index.data().to_string();
     };
 

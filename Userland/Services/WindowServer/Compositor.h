@@ -11,7 +11,7 @@
 #include <LibCore/Object.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/DisjointRectSet.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <WindowServer/Overlays.h>
 
 namespace WindowServer {

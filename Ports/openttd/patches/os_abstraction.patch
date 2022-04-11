@@ -1,0 +1,11 @@
+--- openttd-12.1/src/network/core/os_abstraction_original.cpp	2022-03-31 15:13:24.270873422 +0200
++++ openttd-12.1/src/network/core/os_abstraction.cpp	2022-03-31 15:14:01.978511406 +0200
+@@ -172,7 +172,7 @@
+ 	return setsockopt(d, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse_port, sizeof(reuse_port)) == 0;
+ #else
+ 	int reuse_port = 1;
+-	return setsockopt(d, SOL_SOCKET, SO_REUSEPORT, &reuse_port, sizeof(reuse_port)) == 0;
++	return setsockopt(d, SOL_SOCKET, SO_REUSEADDR, (const char *)&reuse_port, sizeof(reuse_port)) == 0;
+ #endif
+ }
+ 

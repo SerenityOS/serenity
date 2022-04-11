@@ -115,6 +115,41 @@ constexpr bool is_double_dot_path_segment(StringView input)
     return input == ".."sv || input.equals_ignoring_case(".%2e"sv) || input.equals_ignoring_case("%2e."sv) || input.equals_ignoring_case("%2e%2e"sv);
 }
 
+// https://url.spec.whatwg.org/#string-percent-encode-after-encoding
+static String percent_encode_after_encoding(StringView input, URL::PercentEncodeSet percent_encode_set, bool space_as_plus = false)
+{
+    // NOTE: This is written somewhat ad-hoc since we don't yet implement the Encoding spec.
+
+    StringBuilder output;
+
+    // 3. For each byte of encodeOutput converted to a byte sequence:
+    for (auto byte : input) {
+        // 1. If spaceAsPlus is true and byte is 0x20 (SP), then append U+002B (+) to output and continue.
+        if (space_as_plus && byte == ' ') {
+            output.append('+');
+            continue;
+        }
+
+        // 2. Let isomorph be a code point whose value is byte’s value.
+        u32 isomorph = byte;
+
+        // 3. Assert: percentEncodeSet includes all non-ASCII code points.
+
+        // 4. If isomorphic is not in percentEncodeSet, then append isomorph to output.
+        if (!URL::code_point_is_in_percent_encode_set(isomorph, percent_encode_set)) {
+            output.append_code_point(isomorph);
+        }
+
+        // 5. Otherwise, percent-encode byte and append the result to output.
+        else {
+            output.appendff("%{:02X}", byte);
+        }
+    }
+
+    // 6. Return output.
+    return output.to_string();
+}
+
 // https://fetch.spec.whatwg.org/#data-urls
 // FIXME: This only loosely follows the spec, as we use the same class for "regular" and data URLs, unlike the spec.
 Optional<URL> URLParser::parse_data_url(StringView raw_input)
@@ -635,11 +670,11 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
             }
             break;
         case State::Query:
+            // https://url.spec.whatwg.org/#query-state
             if (code_point == end_of_file || code_point == '#') {
                 VERIFY(url->m_query == "");
                 auto query_percent_encode_set = url->is_special() ? URL::PercentEncodeSet::SpecialQuery : URL::PercentEncodeSet::Query;
-                // NOTE: This is has to be encoded and then decoded because the original sequence could contain already percent-encoded sequences.
-                url->m_query = URL::percent_decode(URL::percent_encode(buffer.string_view(), query_percent_encode_set));
+                url->m_query = percent_encode_after_encoding(buffer.string_view(), query_percent_encode_set);
                 buffer.clear();
                 if (code_point == '#') {
                     url->m_fragment = "";

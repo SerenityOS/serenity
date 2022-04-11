@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -88,12 +88,12 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayConstructor::from)
     auto item = vm.argument(0);
 
     // 1. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 2. If Type(item) is Object and item has an [[InitializedTemporalMonthDay]] internal slot, then
     if (item.is_object() && is<PlainMonthDay>(item.as_object())) {
         // a. Perform ? ToTemporalOverflow(options).
-        (void)TRY(to_temporal_overflow(global_object, *options));
+        (void)TRY(to_temporal_overflow(global_object, options));
 
         auto& plain_month_day_object = static_cast<PlainMonthDay&>(item.as_object());
 

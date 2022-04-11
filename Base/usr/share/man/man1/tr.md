@@ -10,9 +10,6 @@ $ tr [--complement] [--delete] [--squeeze-repeats] <from> [to]
 
 ## Options:
 
-* `--help`: Display help message and exit
-* `--version`: Print version
-* `--complete`: Perform autocompletion
 * `-c`, `--complement`: Take the complement of the first set
 * `-d`, `--delete`: Delete characters instead of replacing
 * `-s`, `--squeeze-repeats`: Omit repeated characters listed in the last given set from the output

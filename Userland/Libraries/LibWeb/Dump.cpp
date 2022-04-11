@@ -578,7 +578,14 @@ void dump_font_face_rule(StringBuilder& builder, CSS::CSSFontFaceRule const& rul
     builder.append("sources:\n");
     for (auto const& source : font_face.sources()) {
         indent(builder, indent_levels + 2);
-        builder.appendff("{}\n", source.url);
+        builder.appendff("url={}, format={}\n", source.url, source.format.value_or("???"));
+    }
+
+    indent(builder, indent_levels + 1);
+    builder.append("unicode-ranges:\n");
+    for (auto const& unicode_range : font_face.unicode_ranges()) {
+        indent(builder, indent_levels + 2);
+        builder.appendff("{}\n", unicode_range.to_string());
     }
 }
 

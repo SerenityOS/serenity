@@ -70,6 +70,16 @@ TEST_CASE(validate_invalid_ut8)
     Utf8View utf8_4 { StringView { invalid_utf8_4 } };
     EXPECT(!utf8_4.validate(valid_bytes));
     EXPECT(valid_bytes == 0);
+
+    char invalid_utf8_5[] = { (char)0xf4, (char)0x8f, (char)0xbf, (char)0xc0, 0 }; // U+110000
+    Utf8View utf8_5 { StringView { invalid_utf8_5 } };
+    EXPECT(!utf8_5.validate(valid_bytes));
+    EXPECT(valid_bytes == 0);
+
+    char invalid_utf8_6[] = { (char)0xf4, (char)0xa1, (char)0xb0, (char)0xbd, 0 }; // U+121c3d
+    Utf8View utf8_6 { StringView { invalid_utf8_6 } };
+    EXPECT(!utf8_6.validate(valid_bytes));
+    EXPECT(valid_bytes == 0);
 }
 
 TEST_CASE(iterate_utf8)

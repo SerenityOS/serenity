@@ -1228,6 +1228,9 @@ private:
     LockRank m_lock_rank_mask { LockRank::None };
     bool m_allocation_enabled { true };
 
+    // FIXME: remove this after annihilating Process::m_big_lock
+    IntrusiveListNode<Thread> m_big_lock_blocked_threads_list_node;
+
 #if LOCK_DEBUG
     struct HoldingLockInfo {
         Mutex* lock;

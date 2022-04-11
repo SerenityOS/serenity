@@ -10,7 +10,7 @@
 #include <AK/String.h>
 #include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/SystemTheme.h>
 
 namespace GUI {

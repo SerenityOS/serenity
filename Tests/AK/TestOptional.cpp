@@ -211,3 +211,61 @@ TEST_CASE(test_copy_ctor_and_dtor_called)
     static_assert(!IsDestructible<Optional<NonDestructible>>);
 #endif
 }
+
+TEST_CASE(basic_optional_reference)
+{
+    Optional<int&> x;
+    EXPECT_EQ(x.has_value(), false);
+    int a = 3;
+    x = a;
+    EXPECT_EQ(x.has_value(), true);
+    EXPECT_EQ(x.value(), 3);
+    EXPECT_EQ(&x.value(), &a);
+
+    Optional<int const&> y;
+    EXPECT_EQ(y.has_value(), false);
+    int b = 3;
+    y = b;
+    EXPECT_EQ(y.has_value(), true);
+    EXPECT_EQ(y.value(), 3);
+    EXPECT_EQ(&y.value(), &b);
+    static_assert(IsConst<RemoveReference<decltype(y.value())>>);
+}
+
+TEST_CASE(move_optional_reference)
+{
+    Optional<int&> x;
+    EXPECT_EQ(x.has_value(), false);
+    int b = 3;
+    x = b;
+    EXPECT_EQ(x.has_value(), true);
+    EXPECT_EQ(x.value(), 3);
+
+    Optional<int&> y;
+    y = move(x);
+    EXPECT_EQ(y.has_value(), true);
+    EXPECT_EQ(y.value(), 3);
+    EXPECT_EQ(x.has_value(), false);
+}
+
+TEST_CASE(short_notation_reference)
+{
+    StringView test = "foo";
+    Optional<StringView&> value = test;
+
+    EXPECT_EQ(value->length(), 3u);
+    EXPECT_EQ(*value, "foo");
+}
+
+TEST_CASE(comparison_reference)
+{
+    StringView test = "foo";
+    Optional<StringView&> opt0;
+    Optional<StringView const&> opt1 = test;
+    Optional<String> opt2 = "foo";
+    Optional<StringView> opt3 = "bar";
+
+    EXPECT_NE(opt0, opt1);
+    EXPECT_EQ(opt1, opt2);
+    EXPECT_NE(opt1, opt3);
+}

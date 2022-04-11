@@ -110,7 +110,7 @@ static int run_command(Vector<char const*> const& command)
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::signal(SIGINT, handle_signal));
-    TRY(Core::System::pledge("stdio proc exec rpath", nullptr));
+    TRY(Core::System::pledge("stdio proc exec rpath"));
 
     Vector<String> files_to_watch;
     Vector<char const*> command;
@@ -184,7 +184,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
     } else {
-        TRY(Core::System::pledge("stdio proc exec", nullptr));
+        TRY(Core::System::pledge("stdio proc exec"));
 
         struct timeval interval;
         if (opt_interval <= 0) {

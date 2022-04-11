@@ -151,7 +151,7 @@ private:
     String name_for_uid(uid_t) const;
     String name_for_gid(gid_t) const;
 
-    Node const* node_for_path(String const&) const;
+    Optional<Node const&> node_for_path(String const&) const;
 
     HashMap<uid_t, String> m_user_names;
     HashMap<gid_t, String> m_group_names;

@@ -69,15 +69,12 @@ ThrowCompletionOr<PlainDate*> create_temporal_date(GlobalObject& global_object, 
 }
 
 // 3.5.2 ToTemporalDate ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldate
-ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Value item, Object* options)
+ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Value item, Object const* options)
 {
     auto& vm = global_object.vm();
 
-    // 1. If options is not present, set options to OrdinaryObjectCreate(null).
-    if (!options)
-        options = Object::create(global_object, nullptr);
-
-    // 2. Assert: Type(options) is Object.
+    // 1. If options is not present, set options to undefined.
+    // 2. Assert: Type(options) is Object or Undefined.
 
     // 3. If Type(item) is Object, then
     if (item.is_object()) {
@@ -123,7 +120,7 @@ ThrowCompletionOr<PlainDate*> to_temporal_date(GlobalObject& global_object, Valu
     }
 
     // 4. Perform ? ToTemporalOverflow(options).
-    (void)TRY(to_temporal_overflow(global_object, *options));
+    (void)TRY(to_temporal_overflow(global_object, options));
 
     // 5. Let string be ? ToString(item).
     auto string = TRY(item.to_string(global_object));

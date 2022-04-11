@@ -13,9 +13,10 @@ void StyleSheetList::add_sheet(NonnullRefPtr<CSSStyleSheet> sheet)
 {
     VERIFY(!m_sheets.contains_slow(sheet));
     sheet->set_style_sheet_list({}, this);
-    m_sheets.append(move(sheet));
+    m_sheets.append(sheet);
 
     m_document.style_computer().invalidate_rule_cache();
+    m_document.style_computer().load_fonts_from_sheet(*sheet);
     m_document.invalidate_style();
 }
 

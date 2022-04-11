@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
 
 #ifdef __serenity__
-    TRY(Core::System::pledge("stdio rpath wpath cpath proc exec tty sigaction unix fattr", nullptr));
+    TRY(Core::System::pledge("stdio rpath wpath cpath proc exec tty sigaction unix fattr"));
 #endif
 
     RefPtr<::Shell::Shell> shell;

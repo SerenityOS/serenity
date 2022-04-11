@@ -17,14 +17,15 @@
 #include <LibGL/Tex/NameAllocator.h>
 #include <LibGL/Tex/Texture.h>
 #include <LibGL/Tex/TextureUnit.h>
+#include <LibGPU/Device.h>
+#include <LibGPU/DeviceInfo.h>
+#include <LibGPU/Driver.h>
+#include <LibGPU/Light.h>
+#include <LibGPU/Vertex.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector3.h>
-#include <LibSoftGPU/Clipper.h>
-#include <LibSoftGPU/Device.h>
-#include <LibSoftGPU/Light/Light.h>
-#include <LibSoftGPU/Vertex.h>
 
 namespace GL {
 
@@ -48,7 +49,7 @@ enum Face {
 
 class GLContext final {
 public:
-    GLContext(Gfx::Bitmap&);
+    GLContext(RefPtr<GPU::Driver> driver, NonnullOwnPtr<GPU::Device>, Gfx::Bitmap&);
     ~GLContext();
 
     void gl_begin(GLenum mode);
@@ -100,6 +101,7 @@ public:
     void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLvoid const* data);
     void gl_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* data);
     void gl_tex_parameter(GLenum target, GLenum pname, GLfloat param);
+    void gl_tex_parameterfv(GLenum target, GLenum pname, GLfloat const* params);
     void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q);
     void gl_multi_tex_coord(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
     void gl_tex_env(GLenum target, GLenum pname, GLfloat param);
@@ -155,6 +157,9 @@ public:
     void gl_color_material(GLenum face, GLenum mode);
     void gl_get_light(GLenum light, GLenum pname, void* params, GLenum type);
     void gl_get_material(GLenum face, GLenum pname, void* params, GLenum type);
+    void gl_clip_plane(GLenum plane, GLdouble const* equation);
+    void gl_array_element(GLint i);
+    void gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
     void present();
 
 private:
@@ -218,7 +223,7 @@ private:
     Vector<FloatVector4> m_current_vertex_tex_coord;
     FloatVector3 m_current_vertex_normal { 0.0f, 0.0f, 1.0f };
 
-    Vector<SoftGPU::Vertex> m_vertex_list;
+    Vector<GPU::Vertex> m_vertex_list;
 
     GLenum m_error = GL_NO_ERROR;
     bool m_in_draw_state = false;
@@ -303,8 +308,9 @@ private:
         return m_texture_coordinate_generation[texture_unit][capability - GL_TEXTURE_GEN_S];
     }
 
-    SoftGPU::Device m_rasterizer;
-    SoftGPU::DeviceInfo const m_device_info;
+    RefPtr<GPU::Driver> m_driver;
+    NonnullOwnPtr<GPU::Device> m_rasterizer;
+    GPU::DeviceInfo const m_device_info;
     bool m_sampler_config_is_dirty { true };
     bool m_light_state_is_dirty { true };
 
@@ -363,6 +369,7 @@ private:
             decltype(&GLContext::gl_hint),
             decltype(&GLContext::gl_read_buffer),
             decltype(&GLContext::gl_tex_parameter),
+            decltype(&GLContext::gl_tex_parameterfv),
             decltype(&GLContext::gl_depth_mask),
             decltype(&GLContext::gl_draw_arrays),
             decltype(&GLContext::gl_draw_elements),
@@ -394,7 +401,10 @@ private:
             decltype(&GLContext::gl_materialfv),
             decltype(&GLContext::gl_materialiv),
             decltype(&GLContext::gl_color_material),
-            decltype(&GLContext::gl_get_light)>;
+            decltype(&GLContext::gl_get_light),
+            decltype(&GLContext::gl_clip_plane),
+            decltype(&GLContext::gl_array_element),
+            decltype(&GLContext::gl_copy_tex_sub_image_2d)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
@@ -437,8 +447,8 @@ private:
 
     // Lighting configuration
     bool m_lighting_enabled { false };
-    Vector<SoftGPU::Light> m_light_states;
-    Array<SoftGPU::Material, 2u> m_material_states;
+    Vector<GPU::Light> m_light_states;
+    Array<GPU::Material, 2u> m_material_states;
 
     // Color material
     bool m_color_material_enabled { false };

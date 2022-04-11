@@ -18,7 +18,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath", nullptr));
+    TRY(Core::System::pledge("stdio rpath"));
 
     String file1_path, file2_path;
     bool suppress_col1 { false };

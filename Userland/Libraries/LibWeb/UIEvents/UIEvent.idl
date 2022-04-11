@@ -7,6 +7,8 @@ interface UIEvent : Event {
 
     // NOTE: This is "deprecated, but supported for backwards-compatibility with widely-deployed implementations."
     [ImplementedAs=init_ui_event] undefined initUIEvent(DOMString typeArg, optional boolean bubblesArg = false, optional boolean cancelableArg = false, optional Window? viewArg = null, optional long detailArg = 0);
+
+    readonly attribute unsigned long which;
 };
 
 dictionary UIEventInit : EventInit {

@@ -1475,7 +1475,7 @@ static Optional<String> generate_arguments_match_check_for_count(Vector<IDL::Par
     Vector<String> conditions;
     for (auto i = 0u; i < argument_count; ++i) {
         auto const& parameter = parameters[i];
-        if (parameter.type->is_string() || parameter.type->is_numeric())
+        if (parameter.type->is_string() || parameter.type->is_primitive())
             continue;
         auto argument = String::formatted("arg{}", i);
         StringBuilder condition;
@@ -1530,10 +1530,11 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
     auto fetched_arguments = 0u;
     for (auto i = 0u; i < overloaded_functions.size(); ++i) {
         auto const& overloaded_function = overloaded_functions[i];
-        auto argument_count = overloaded_function.length();
+        auto argument_count = overloaded_function.parameters.size();
 
         function_generator.set("argument_count", String::number(argument_count));
-        function_generator.set("arguments_match_check", generate_arguments_match_check(overloaded_function));
+        auto arguments_match_check = generate_arguments_match_check(overloaded_function);
+        function_generator.set("arguments_match_check", arguments_match_check);
         function_generator.set("overload_suffix", String::number(i));
 
         if (argument_count > fetched_arguments) {
@@ -1553,10 +1554,16 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 )~~~");
         }
 
-        function_generator.append(R"~~~(
+        if (arguments_match_check.is_empty()) {
+            function_generator.append(R"~~~(
+    return @function.name:snakecase@@overload_suffix@(vm, global_object);
+)~~~");
+        } else {
+            function_generator.append(R"~~~(
     if (@arguments_match_check@)
         return @function.name:snakecase@@overload_suffix@(vm, global_object);
 )~~~");
+        }
 
         if (!is_last) {
             function_generator.append(R"~~~(

@@ -332,7 +332,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     constexpr u64 apic_startup_region_base = 0x8000;
     auto apic_startup_region_size = Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(FlatPtr))).release_value_but_fixme_should_propagate_errors();
     VERIFY(apic_startup_region_size < USER_RANGE_BASE);
-    auto apic_startup_region = MUST(MM.region_tree().create_identity_mapped_region(PhysicalAddress(apic_startup_region_base), apic_startup_region_size));
+    auto apic_startup_region = MUST(MM.create_identity_mapped_region(PhysicalAddress(apic_startup_region_base), apic_startup_region_size));
     u8* apic_startup_region_ptr = apic_startup_region->vaddr().as_ptr();
     memcpy(apic_startup_region_ptr, reinterpret_cast<void const*>(apic_ap_start), apic_ap_start_size);
 
@@ -431,7 +431,7 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
 
     // NOTE: Since this region is identity-mapped, we have to unmap it manually to prevent the virtual
     //       address range from leaking into the general virtual range allocator.
-    m_ap_boot_environment->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
+    m_ap_boot_environment->unmap();
     m_ap_boot_environment = nullptr;
     // When the APs signal that they finished their initialization they have already switched over to their
     // idle thread's stack, so the temporary boot stack can be deallocated

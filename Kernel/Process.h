@@ -500,11 +500,14 @@ public:
     template<typename Callback>
     ErrorOr<void> for_each_coredump_property(Callback callback) const
     {
-        for (auto const& property : m_coredump_properties) {
-            if (property.key && property.value)
-                TRY(callback(*property.key, *property.value));
-        }
-        return {};
+        return m_coredump_properties.with([&](auto const& coredump_properties) -> ErrorOr<void> {
+            for (auto const& property : coredump_properties) {
+                if (property.key && property.value)
+                    TRY(callback(*property.key, *property.value));
+            }
+
+            return {};
+        });
     }
 
     ErrorOr<void> set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value);
@@ -809,7 +812,7 @@ private:
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
 
-    Mutex m_big_lock { "Process" };
+    Mutex m_big_lock { "Process", Mutex::MutexBehavior::BigLock };
     Mutex m_ptrace_lock { "ptrace" };
 
     RefPtr<Timer> m_alarm_timer;
@@ -833,7 +836,7 @@ private:
         OwnPtr<KString> value;
     };
 
-    Array<CoredumpProperty, 4> m_coredump_properties;
+    SpinlockProtected<Array<CoredumpProperty, 4>> m_coredump_properties;
     NonnullRefPtrVector<Thread> m_threads_for_coredump;
 
     mutable RefPtr<ProcessProcFSTraits> m_procfs_traits;

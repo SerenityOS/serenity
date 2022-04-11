@@ -21,6 +21,7 @@ public:
 
     virtual ~SortingProxyModel() override;
 
+    virtual int tree_column() const override { return m_source->tree_column(); }
     virtual int row_count(ModelIndex const& = ModelIndex()) const override;
     virtual int column_count(ModelIndex const& = ModelIndex()) const override;
     virtual String column_name(int) const override;

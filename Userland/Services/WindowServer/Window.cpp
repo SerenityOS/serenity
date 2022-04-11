@@ -497,6 +497,8 @@ void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
     m_frame.did_set_maximized({}, maximized);
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
     set_default_positioned(false);
+
+    WindowManager::the().notify_minimization_state_changed(*this);
 }
 
 void Window::set_always_on_top(bool always_on_top)

@@ -154,7 +154,7 @@ public:
     void set_originator(TCPSocket& originator) { m_originator = originator; }
     bool has_originator() { return !!m_originator; }
     void release_to_originator();
-    void release_for_accept(RefPtr<TCPSocket>);
+    void release_for_accept(NonnullRefPtr<TCPSocket>);
 
     void retransmit_packets();
 

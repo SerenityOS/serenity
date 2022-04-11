@@ -134,27 +134,29 @@ ThrowCompletionOr<Object*> calendar_merge_fields(GlobalObject& global_object, Ob
     return &result.as_object();
 }
 
-// 12.1.7 CalendarDateAdd ( calendar, date, duration, options [ , dateAdd ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateadd
+// 12.1.7 CalendarDateAdd ( calendar, date, duration [ , options [ , dateAdd ] ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateadd
 ThrowCompletionOr<PlainDate*> calendar_date_add(GlobalObject& global_object, Object& calendar, Value date, Duration& duration, Object* options, FunctionObject* date_add)
 {
     // NOTE: `date` is a `Value` because we sometimes need to pass a PlainDate, sometimes a PlainDateTime, and sometimes undefined.
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(calendar) is Object.
+    // 2. If options is not present, set options to undefined.
+    // 3. Assert: Type(options) is Object or Undefined.
 
-    // 2. If dateAdd is not present, set dateAdd to ? GetMethod(calendar, "dateAdd").
+    // 4. If dateAdd is not present, set dateAdd to ? GetMethod(calendar, "dateAdd").
     if (!date_add)
         date_add = TRY(Value(&calendar).get_method(global_object, vm.names.dateAdd));
 
-    // 3. Let addedDate be ? Call(dateAdd, calendar, « date, duration, options »).
+    // 5. Let addedDate be ? Call(dateAdd, calendar, « date, duration, options »).
     auto added_date = TRY(call(global_object, date_add ?: js_undefined(), &calendar, date, &duration, options ?: js_undefined()));
 
-    // 4. Perform ? RequireInternalSlot(addedDate, [[InitializedTemporalDate]]).
+    // 6. Perform ? RequireInternalSlot(addedDate, [[InitializedTemporalDate]]).
     auto* added_date_object = TRY(added_date.to_object(global_object));
     if (!is<PlainDate>(added_date_object))
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
 
-    // 5. Return addedDate.
+    // 7. Return addedDate.
     return static_cast<PlainDate*>(added_date_object);
 }
 
@@ -456,23 +458,25 @@ ThrowCompletionOr<Object*> get_temporal_calendar_with_iso_default(GlobalObject& 
     return to_temporal_calendar_with_iso_default(global_object, calendar_like);
 }
 
-// 12.1.24 DateFromFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-datefromfields
+// 12.1.24 DateFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-datefromfields
 ThrowCompletionOr<PlainDate*> date_from_fields(GlobalObject& global_object, Object& calendar, Object const& fields, Object const* options)
 {
     auto& vm = global_object.vm();
 
     // 1. Assert: Type(calendar) is Object.
     // 2. Assert: Type(fields) is Object.
+    // 3. If options is not present, set options to undefined.
+    // 4. Assert: Type(options) is Object or Undefined.
 
-    // 3. Let date be ? Invoke(calendar, "dateFromFields", « fields, options »).
+    // 5. Let date be ? Invoke(calendar, "dateFromFields", « fields, options »).
     auto date = TRY(Value(&calendar).invoke(global_object, vm.names.dateFromFields, &fields, options ?: js_undefined()));
 
-    // 4. Perform ? RequireInternalSlot(date, [[InitializedTemporalDate]]).
+    // 6. Perform ? RequireInternalSlot(date, [[InitializedTemporalDate]]).
     auto* date_object = TRY(date.to_object(global_object));
     if (!is<PlainDate>(date_object))
         return vm.throw_completion<TypeError>(global_object, ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
 
-    // 5. Return date.
+    // 7. Return date.
     return static_cast<PlainDate*>(date_object);
 }
 
@@ -483,10 +487,8 @@ ThrowCompletionOr<PlainYearMonth*> year_month_from_fields(GlobalObject& global_o
 
     // 1. Assert: Type(calendar) is Object.
     // 2. Assert: Type(fields) is Object.
-    // 3. If options is not present, then
-    //     a. Set options to undefined.
-    // 4. Else,
-    //     a. Assert: Type(options) is Object.
+    // 3. If options is not present, set options to undefined.
+    // 4. Assert: Type(options) is Object or Undefined.
 
     // 5. Let yearMonth be ? Invoke(calendar, "yearMonthFromFields", « fields, options »).
     auto year_month = TRY(Value(&calendar).invoke(global_object, vm.names.yearMonthFromFields, &fields, options ?: js_undefined()));
@@ -507,10 +509,8 @@ ThrowCompletionOr<PlainMonthDay*> month_day_from_fields(GlobalObject& global_obj
 
     // 1. Assert: Type(calendar) is Object.
     // 2. Assert: Type(fields) is Object.
-    // 3. If options is not present, then
-    //     a. Set options to undefined.
-    // 4. Else,
-    //     a. Assert: Type(options) is Object.
+    // 3. If options is not present, set options to undefined.
+    // 4. Assert: Type(options) is Object or Undefined.
 
     // 5. Let monthDay be ? Invoke(calendar, "monthDayFromFields", « fields, options »).
     auto month_day = TRY(Value(&calendar).invoke(global_object, vm.names.monthDayFromFields, &fields, options ?: js_undefined()));
@@ -794,7 +794,7 @@ ThrowCompletionOr<ISODate> iso_date_from_fields(GlobalObject& global_object, Obj
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY(to_temporal_overflow(global_object, options));
+    auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
     auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, {}));
@@ -828,7 +828,7 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY(to_temporal_overflow(global_object, options));
+    auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », «»).
     auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {}));
@@ -858,7 +858,7 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_ob
     // 1. Assert: Type(fields) is Object.
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY(to_temporal_overflow(global_object, options));
+    auto overflow = TRY(to_temporal_overflow(global_object, &options));
 
     // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
     auto* prepared_fields = TRY(prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, {}));

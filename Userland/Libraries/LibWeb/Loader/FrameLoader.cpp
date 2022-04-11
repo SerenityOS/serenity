@@ -187,6 +187,10 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     if (type == Type::IFrame)
         return true;
 
+    auto* document = browsing_context().active_document();
+    if (document && document->has_active_favicon())
+        return true;
+
     if (url.protocol() == "http" || url.protocol() == "https") {
         AK::URL favicon_url;
         favicon_url.set_protocol(url.protocol());
@@ -197,6 +201,10 @@ bool FrameLoader::load(LoadRequest& request, Type type)
         ResourceLoader::the().load(
             favicon_url,
             [this, favicon_url](auto data, auto&, auto) {
+                // Always fetch the current document
+                auto* document = this->browsing_context().active_document();
+                if (document && document->has_active_favicon())
+                    return;
                 dbgln_if(SPAM_DEBUG, "Favicon downloaded, {} bytes from {}", data.size(), favicon_url);
                 if (data.is_empty())
                     return;
@@ -211,6 +219,11 @@ bool FrameLoader::load(LoadRequest& request, Type type)
                 load_favicon(favicon_bitmap);
             },
             [this](auto&, auto) {
+                // Always fetch the current document
+                auto* document = this->browsing_context().active_document();
+                if (document && document->has_active_favicon())
+                    return;
+
                 load_favicon();
             });
     } else {
@@ -256,9 +269,7 @@ void FrameLoader::load_error_page(const AK::URL& failed_url, String const& error
             generator.set("failed_url", escape_html_entities(failed_url.to_string()));
             generator.set("error", escape_html_entities(error));
             generator.append(data);
-            auto document = HTML::parse_html_document(generator.as_string_view(), failed_url, "utf-8");
-            VERIFY(document);
-            browsing_context().set_active_document(document);
+            load_html(generator.as_string_view(), failed_url);
         },
         [](auto& error, auto) {
             dbgln("Failed to load error page: {}", error);
@@ -346,7 +357,7 @@ void FrameLoader::resource_did_load()
     if (!url.fragment().is_empty())
         browsing_context().scroll_to_anchor(url.fragment());
     else
-        browsing_context().set_viewport_scroll_offset({ 0, 0 });
+        browsing_context().scroll_to({ 0, 0 });
 
     if (auto* page = browsing_context().page())
         page->client().page_did_finish_loading(url);

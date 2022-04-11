@@ -129,13 +129,6 @@ ErrorOr<VirtualRange> RegionTree::allocate_range_randomized(size_t size, size_t 
     return allocate_range_anywhere(size, alignment);
 }
 
-ErrorOr<NonnullOwnPtr<Region>> RegionTree::allocate_unbacked_anywhere(size_t size, size_t alignment)
-{
-    auto region = TRY(Region::create_unbacked());
-    TRY(place_anywhere(*region, RandomizeVirtualAddress::No, size, alignment));
-    return region;
-}
-
 ErrorOr<void> RegionTree::place_anywhere(Region& region, RandomizeVirtualAddress randomize_virtual_address, size_t size, size_t alignment)
 {
     SpinlockLocker locker(m_lock);
@@ -154,13 +147,27 @@ ErrorOr<void> RegionTree::place_specifically(Region& region, VirtualRange const&
     return {};
 }
 
-ErrorOr<NonnullOwnPtr<Memory::Region>> RegionTree::create_identity_mapped_region(PhysicalAddress paddr, size_t size)
+bool RegionTree::remove(Region& region)
 {
-    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(paddr, size));
-    auto region = TRY(Memory::Region::create_unplaced(move(vmobject), 0, {}, Memory::Region::Access::ReadWriteExecute));
-    Memory::VirtualRange range { VirtualAddress { (FlatPtr)paddr.get() }, size };
-    region->m_range = range;
-    TRY(region->map(MM.kernel_page_directory()));
+    SpinlockLocker locker(m_lock);
+    return m_regions.remove(region.range().base().get());
+}
+
+Region* RegionTree::find_region_containing(VirtualAddress address)
+{
+    SpinlockLocker locker(m_lock);
+    auto* region = m_regions.find_largest_not_above(address.get());
+    if (!region || !region->contains(address))
+        return nullptr;
+    return region;
+}
+
+Region* RegionTree::find_region_containing(VirtualRange range)
+{
+    SpinlockLocker lock(m_lock);
+    auto* region = m_regions.find_largest_not_above(range.base().get());
+    if (!region || !region->contains(range))
+        return nullptr;
     return region;
 }
 

@@ -13,7 +13,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/TextBox.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/SyntaxHighlighter.h>
 

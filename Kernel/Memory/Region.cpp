@@ -64,19 +64,19 @@ Region::~Region()
 
     m_vmobject->remove_region(*this);
 
-    if (is_kernel())
-        MM.unregister_kernel_region(*this);
-
     if (m_page_directory) {
         SpinlockLocker pd_locker(m_page_directory->get_lock());
         if (!is_readable() && !is_writable() && !is_executable()) {
             // If the region is "PROT_NONE", we didn't map it in the first place.
         } else {
             SpinlockLocker mm_locker(s_mm_lock);
-            unmap_with_locks_held(ShouldDeallocateVirtualRange::Yes, ShouldFlushTLB::Yes, pd_locker, mm_locker);
+            unmap_with_locks_held(ShouldFlushTLB::Yes, pd_locker, mm_locker);
             VERIFY(!m_page_directory);
         }
     }
+
+    if (is_kernel())
+        MM.unregister_kernel_region(*this);
 }
 
 ErrorOr<NonnullOwnPtr<Region>> Region::create_unbacked()
@@ -189,11 +189,6 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_create_user_accessible(VirtualRange c
     return adopt_nonnull_own_or_enomem(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
 }
 
-ErrorOr<NonnullOwnPtr<Region>> Region::try_create_kernel_only(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable)
-{
-    return adopt_nonnull_own_or_enomem(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, false));
-}
-
 bool Region::should_cow(size_t page_index) const
 {
     if (!vmobject().is_anonymous())
@@ -271,16 +266,16 @@ bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
     return success;
 }
 
-void Region::unmap(ShouldDeallocateVirtualRange should_deallocate_range, ShouldFlushTLB should_flush_tlb)
+void Region::unmap(ShouldFlushTLB should_flush_tlb)
 {
     if (!m_page_directory)
         return;
     SpinlockLocker pd_locker(m_page_directory->get_lock());
     SpinlockLocker mm_locker(s_mm_lock);
-    unmap_with_locks_held(should_deallocate_range, should_flush_tlb, pd_locker, mm_locker);
+    unmap_with_locks_held(should_flush_tlb, pd_locker, mm_locker);
 }
 
-void Region::unmap_with_locks_held(ShouldDeallocateVirtualRange, ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&, SpinlockLocker<RecursiveSpinlock>&)
+void Region::unmap_with_locks_held(ShouldFlushTLB should_flush_tlb, SpinlockLocker<RecursiveSpinlock>&, SpinlockLocker<RecursiveSpinlock>&)
 {
     if (!m_page_directory)
         return;
@@ -387,6 +382,12 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
             return PageFaultResponse::Continue;
         }
         dbgln("BUG! Unexpected NP fault at {}", fault.vaddr());
+        dbgln("     - Physical page slot pointer: {:p}", page_slot.ptr());
+        if (page_slot) {
+            dbgln("     - Physical page: {}", page_slot->paddr());
+            dbgln("     - Lazy committed: {}", page_slot->is_lazy_committed_page());
+            dbgln("     - Shared zero: {}", page_slot->is_shared_zero_page());
+        }
         return PageFaultResponse::ShouldCrash;
     }
     VERIFY(fault.type() == PageFault::Type::ProtectionViolation);

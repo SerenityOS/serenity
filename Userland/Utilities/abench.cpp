@@ -30,7 +30,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     TRY(Core::System::unveil(Core::File::absolute_path(path), "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
-    TRY(Core::System::pledge("stdio recvfd rpath", nullptr));
+    TRY(Core::System::pledge("stdio recvfd rpath"));
 
     auto maybe_loader = Audio::Loader::create(path);
     if (maybe_loader.is_error()) {

@@ -3,7 +3,6 @@ set(SOURCES
     AntiAliasingPainter.cpp
     Bitmap.cpp
     BitmapMixer.cpp
-    BitmapFont.cpp
     BMPLoader.cpp
     BMPWriter.cpp
     ClassicStylePainter.cpp
@@ -12,11 +11,18 @@ set(SOURCES
     CursorParams.cpp
     DDSLoader.cpp
     DisjointRectSet.cpp
-    Emoji.cpp
     Filters/ColorBlindnessFilter.cpp
     Filters/FastBoxBlurFilter.cpp
     Filters/LumaFilter.cpp
-    FontDatabase.cpp
+    Font/BitmapFont.cpp
+    Font/Emoji.cpp
+    Font/FontDatabase.cpp
+    Font/ScaledFont.cpp
+    Font/TrueType/Font.cpp
+    Font/TrueType/Glyf.cpp
+    Font/TrueType/Cmap.cpp
+    Font/Typeface.cpp
+    Font/WOFF/Font.cpp
     GIFLoader.cpp
     ICOLoader.cpp
     ImageDecoder.cpp
@@ -39,10 +45,6 @@ set(SOURCES
     TextDirection.cpp
     TextLayout.cpp
     Triangle.cpp
-    TrueTypeFont/Font.cpp
-    TrueTypeFont/Glyf.cpp
-    TrueTypeFont/Cmap.cpp
-    Typeface.cpp
     WindowTheme.cpp
 )
 

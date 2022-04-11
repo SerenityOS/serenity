@@ -451,6 +451,7 @@ extern "C" {
 #define GL_REFLECTION_MAP 0x8512
 
 // Texture gen parameters
+#define GL_TEXTURE_BORDER_COLOR 0x1004
 #define GL_TEXTURE_GEN_MODE 0x2500
 #define GL_OBJECT_PLANE 0x2501
 #define GL_EYE_PLANE 0x2502
@@ -474,6 +475,16 @@ extern "C" {
 // OpenGL State & GLGet
 #define GL_MODELVIEW_MATRIX 0x0BA6
 #define GL_PROJECTION_MATRIX 0x0BA7
+
+#define GL_ADD 0x0104
+
+// User clipping planes
+#define GL_CLIP_PLANE0 0x3000
+#define GL_CLIP_PLANE1 0x3001
+#define GL_CLIP_PLANE2 0x3002
+#define GL_CLIP_PLANE3 0x3003
+#define GL_CLIP_PLANE4 0x3004
+#define GL_CLIP_PLANE5 0x3005
 
 GLAPI void glBegin(GLenum mode);
 GLAPI void glClear(GLbitfield mask);
@@ -668,6 +679,9 @@ GLAPI void glRectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
 GLAPI void glRecti(GLint x1, GLint y1, GLint x2, GLint y2);
 GLAPI void glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint* params);
 GLAPI void glPointSize(GLfloat size);
+GLAPI void glClipPlane(GLenum plane, GLdouble const* equation);
+GLAPI void glArrayElement(GLint i);
+GLAPI void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
 
 #ifdef __cplusplus
 }

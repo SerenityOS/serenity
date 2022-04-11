@@ -751,10 +751,10 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with)
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 10. Let disambiguation be ? ToTemporalDisambiguation(options).
-    auto disambiguation = TRY(to_temporal_disambiguation(global_object, *options));
+    auto disambiguation = TRY(to_temporal_disambiguation(global_object, options));
 
     // 11. Let offset be ? ToTemporalOffset(options, "prefer").
-    auto offset = TRY(to_temporal_offset(global_object, *options, "prefer"sv));
+    auto offset = TRY(to_temporal_offset(global_object, options, "prefer"sv));
 
     // 12. Let timeZone be zonedDateTime.[[TimeZone]].
     auto& time_zone = zoned_date_time->time_zone();
@@ -1003,7 +1003,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::until)
     }
 
     // 15. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, *largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
 
     // 16. Let difference be ? DifferenceZonedDateTime(zonedDateTime.[[Nanoseconds]], other.[[Nanoseconds]], zonedDateTime.[[TimeZone]], zonedDateTime.[[Calendar]], largestUnit, untilOptions).
     auto difference = TRY(difference_zoned_date_time(global_object, zoned_date_time->nanoseconds(), other->nanoseconds(), zoned_date_time->time_zone(), zoned_date_time->calendar(), *largest_unit, until_options));
@@ -1080,7 +1080,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::since)
     }
 
     // 16. Let untilOptions be ? MergeLargestUnitOption(options, largestUnit).
-    auto* until_options = TRY(merge_largest_unit_option(global_object, *options, *largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(global_object, options, *largest_unit));
 
     // 17. Let difference be ? DifferenceZonedDateTime(zonedDateTime.[[Nanoseconds]], other.[[Nanoseconds]], zonedDateTime.[[TimeZone]], zonedDateTime.[[Calendar]], largestUnit, untilOptions).
     auto difference = TRY(difference_zoned_date_time(global_object, zoned_date_time->nanoseconds(), other->nanoseconds(), zoned_date_time->time_zone(), zoned_date_time->calendar(), *largest_unit, until_options));

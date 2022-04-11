@@ -12,7 +12,7 @@
 #include <LibGL/GLContext.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <fcntl.h>
 #include <unistd.h>
 

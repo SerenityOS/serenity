@@ -11,23 +11,28 @@ namespace Kernel::Memory {
 
 void PageDirectory::register_page_directory(PageDirectory*)
 {
+    VERIFY_NOT_REACHED();
 }
 
 void PageDirectory::deregister_page_directory(PageDirectory*)
 {
+    VERIFY_NOT_REACHED();
 }
 
 RefPtr<PageDirectory> PageDirectory::find_current()
 {
+    VERIFY_NOT_REACHED();
     return nullptr;
 }
 
 void activate_kernel_page_directory(PageDirectory const&)
 {
+    VERIFY_NOT_REACHED();
 }
 
 void activate_page_directory(PageDirectory const&, Thread*)
 {
+    VERIFY_NOT_REACHED();
 }
 
 }

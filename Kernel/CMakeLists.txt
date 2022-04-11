@@ -389,40 +389,42 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
         ${CRYPTO_SOURCES}
     )
 else()
+    set(PREKERNEL_SOURCES
+        Arch/aarch64/Prekernel/PrekernelMMU.cpp
+        Arch/aarch64/Prekernel/PrekernelExceptions.cpp
+        Arch/aarch64/Prekernel/PrekernelCommon.cpp
+        Arch/aarch64/Prekernel/boot.S
+        Arch/aarch64/Prekernel/Aarch64_asm_utils.S
+
+        Prekernel/UBSanitizer.cpp
+    )
+    set(RPI_SOURCES
+        Arch/aarch64/RPi/GPIO.cpp
+        Arch/aarch64/RPi/Framebuffer.cpp
+        Arch/aarch64/RPi/Mailbox.cpp
+        Arch/aarch64/RPi/Timer.cpp
+        Arch/aarch64/RPi/UART.cpp
+        Arch/aarch64/RPi/MMIO.cpp
+    )
     set(SOURCES
         ${AK_SOURCES}
+        ${PREKERNEL_SOURCES}
+        ${RPI_SOURCES}
 
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CrashHandler.cpp
-        Arch/aarch64/GPIO.cpp
-        Arch/aarch64/Framebuffer.cpp
-        Arch/aarch64/Mailbox.cpp
+        Arch/aarch64/Dummy.cpp
         Arch/aarch64/MainIdRegister.cpp
-        Arch/aarch64/MMIO.cpp
         Arch/aarch64/PageDirectory.cpp
-        Arch/aarch64/Timer.cpp
-        Arch/aarch64/UART.cpp
+        Arch/aarch64/ScopedCritical.cpp
+        Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/Utils.cpp
-
-        Arch/aarch64/dummy.cpp
-
-        # Preload specific
         Arch/aarch64/init.cpp
-        Arch/aarch64/PrekernelMMU.cpp
-        Arch/aarch64/PrekernelExceptions.cpp
-        Arch/aarch64/PrekernelCommon.cpp
-
-        # Assembly
-        Arch/aarch64/boot.S
-        Arch/aarch64/Aarch64_asm_utils.S
         Arch/aarch64/vector_table.S
 
-        Arch/aarch64/SmapDisabler.cpp
-        Arch/aarch64/ScopedCritical.cpp
-        MiniStdLib.cpp
-        Prekernel/UBSanitizer.cpp
-
+        # Files from base Kernel
         Heap/kmalloc.cpp
+        MiniStdLib.cpp
 
         Memory/AddressSpace.cpp
         Memory/AnonymousVMObject.cpp

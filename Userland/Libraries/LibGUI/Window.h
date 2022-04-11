@@ -39,7 +39,7 @@ public:
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
 
-    bool is_maximized() const;
+    bool is_maximized() const { return m_maximized; }
     void set_maximized(bool);
 
     bool is_frameless() const { return m_frameless; }
@@ -192,7 +192,7 @@ public:
 
     static void for_each_window(Badge<ConnectionToWindowServer>, Function<void(Window&)>);
     static void update_all_windows(Badge<ConnectionToWindowServer>);
-    void notify_state_changed(Badge<ConnectionToWindowServer>, bool minimized, bool occluded);
+    void notify_state_changed(Badge<ConnectionToWindowServer>, bool minimized, bool maximized, bool occluded);
 
     virtual bool is_visible_for_timer_purposes() const override { return m_visible_for_timer_purposes; }
 
@@ -290,7 +290,7 @@ private:
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
     bool m_minimizable { true };
     bool m_closeable { true };
-    bool m_maximized_when_windowless { false };
+    bool m_maximized { false };
     bool m_fullscreen { false };
     bool m_frameless { false };
     bool m_forced_shadow { false };

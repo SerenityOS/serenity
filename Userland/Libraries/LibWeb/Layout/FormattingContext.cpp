@@ -75,6 +75,22 @@ bool FormattingContext::creates_block_formatting_context(Box const& box)
 
 OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_context_if_needed(FormattingState& state, Box const& child_box)
 {
+    if (child_box.is_replaced_box() && !child_box.can_have_children()) {
+        // NOTE: This is a bit strange.
+        //       Basically, we create a pretend formatting context for replaced elements that does nothing.
+        //       This allows other formatting contexts to treat them like elements that actually need inside layout
+        //       without having separate code to handle replaced elements.
+        // FIXME: Find a better abstraction for this.
+        struct ReplacedFormattingContext : public FormattingContext {
+            ReplacedFormattingContext(FormattingState& state, Box const& box)
+                : FormattingContext(Type::Block, state, box)
+            {
+            }
+            virtual void run(Box const&, LayoutMode) override { }
+        };
+        return make<ReplacedFormattingContext>(state, child_box);
+    }
+
     if (!child_box.can_have_children())
         return {};
 
@@ -203,6 +219,10 @@ float FormattingContext::compute_auto_height_for_block_level_element(FormattingS
         return compute_auto_height_for_block_formatting_context_root(state, verify_cast<BlockContainer>(box));
 
     auto const& box_state = state.get(box);
+
+    auto display = box.computed_values().display();
+    if (display.is_flex_inside())
+        return box_state.content_height;
 
     // https://www.w3.org/TR/CSS22/visudet.html#normal-block
     // 10.6.3 Block-level non-replaced elements in normal flow when 'overflow' computes to 'visible'
@@ -795,6 +815,17 @@ void FormattingContext::compute_inset(Box const& box)
 
 FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Layout::Box const& box) const
 {
+    // FIXME: This should handle replaced elements with "native" intrinsic size properly!
+
+    if (box.has_intrinsic_width() && box.has_intrinsic_height()) {
+        auto const& replaced_box = static_cast<ReplacedBox const&>(box);
+        Gfx::FloatSize size { replaced_box.intrinsic_width().value_or(0), replaced_box.intrinsic_height().value_or(0) };
+        return FormattingState::IntrinsicSizes {
+            .min_content_size = size,
+            .max_content_size = size,
+        };
+    }
+
     auto& root_state = m_state.m_root;
 
     // If we have cached intrinsic sizes for this box, use them.
@@ -803,7 +834,6 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
         return it->value;
 
     // Nothing cached, perform two throwaway layouts to determine the intrinsic sizes.
-    // FIXME: This should handle replaced elements with "native" intrinsic size properly!
 
     FormattingState::IntrinsicSizes cached_box_sizes;
     auto const& containing_block = *box.containing_block();
@@ -816,8 +846,14 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
         VERIFY(independent_formatting_context);
 
         independent_formatting_context->run(box, LayoutMode::MaxContent);
-        cached_box_sizes.max_content_size.set_width(independent_formatting_context->greatest_child_width(box));
-        cached_box_sizes.max_content_size.set_height(compute_intrinsic_height(throwaway_state, box));
+
+        if (independent_formatting_context->type() == FormattingContext::Type::Flex) {
+            auto const& box_state = throwaway_state.get(box);
+            cached_box_sizes.max_content_size = { box_state.content_width, box_state.content_height };
+        } else {
+            cached_box_sizes.max_content_size.set_width(independent_formatting_context->greatest_child_width(box));
+            cached_box_sizes.max_content_size.set_height(calculate_auto_height(throwaway_state, box));
+        }
     }
 
     {
@@ -828,8 +864,13 @@ FormattingState::IntrinsicSizes FormattingContext::calculate_intrinsic_sizes(Lay
         auto independent_formatting_context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
         VERIFY(independent_formatting_context);
         independent_formatting_context->run(box, LayoutMode::MinContent);
-        cached_box_sizes.min_content_size.set_width(independent_formatting_context->greatest_child_width(box));
-        cached_box_sizes.min_content_size.set_height(compute_intrinsic_height(throwaway_state, box));
+        if (independent_formatting_context->type() == FormattingContext::Type::Flex) {
+            auto const& box_state = throwaway_state.get(box);
+            cached_box_sizes.min_content_size = { box_state.content_width, box_state.content_height };
+        } else {
+            cached_box_sizes.min_content_size.set_width(independent_formatting_context->greatest_child_width(box));
+            cached_box_sizes.min_content_size.set_height(calculate_auto_height(throwaway_state, box));
+        }
     }
 
     if (cached_box_sizes.min_content_size.width() > cached_box_sizes.max_content_size.width()) {
@@ -889,7 +930,7 @@ float FormattingContext::calculate_fit_content_height(Layout::Box const& box, Op
     return calculate_fit_content_size(min_content_size, max_content_size, available_space);
 }
 
-float FormattingContext::compute_intrinsic_height(FormattingState const& state, Box const& box)
+float FormattingContext::calculate_auto_height(FormattingState const& state, Box const& box)
 {
     if (is<ReplacedBox>(box)) {
         return compute_height_for_replaced_element(state, verify_cast<ReplacedBox>(box));

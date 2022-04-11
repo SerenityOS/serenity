@@ -5,6 +5,7 @@ set(SOURCES
     ConfigFile.cpp
     Command.cpp
     DateTime.cpp
+    Directory.cpp
     DirIterator.cpp
     ElapsedTimer.cpp
     Event.cpp
@@ -26,6 +27,7 @@ set(SOURCES
     ProcessStatisticsReader.cpp
     Property.cpp
     SecretString.cpp
+    SOCKSProxyClient.cpp
     Stream.cpp
     StandardPaths.cpp
     System.cpp

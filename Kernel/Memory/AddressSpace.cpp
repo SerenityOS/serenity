@@ -71,11 +71,9 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
             return EPERM;
 
         // Remove the old region from our regions tree, since were going to add another region
-        // with the exact same start address, but don't deallocate it yet.
+        // with the exact same start address.
         auto region = take_region(*old_region);
-
-        // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Region::ShouldDeallocateVirtualRange::No);
+        region->unmap();
 
         auto new_regions = TRY(try_split_region_around_range(*region, range_to_unmap));
 
@@ -113,11 +111,9 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         }
 
         // Remove the old region from our regions tree, since were going to add another region
-        // with the exact same start address, but don't deallocate it yet.
+        // with the exact same start address.
         auto region = take_region(*old_region);
-
-        // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Region::ShouldDeallocateVirtualRange::No);
+        region->unmap();
 
         // Otherwise, split the regions and collect them for future mapping.
         auto split_regions = TRY(try_split_region_around_range(*region, range_to_unmap));
@@ -233,8 +229,7 @@ void AddressSpace::deallocate_region(Region& region)
 
 NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 {
-    SpinlockLocker lock(m_lock);
-    auto did_remove = m_region_tree.regions().remove(region.vaddr().get());
+    auto did_remove = m_region_tree.remove(region);
     VERIFY(did_remove);
     return NonnullOwnPtr { NonnullOwnPtr<Region>::Adopt, region };
 }
@@ -242,6 +237,7 @@ NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 Region* AddressSpace::find_region_from_range(VirtualRange const& range)
 {
     SpinlockLocker lock(m_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
     auto* found_region = m_region_tree.regions().find(range.base().get());
     if (!found_region)
         return nullptr;
@@ -254,11 +250,7 @@ Region* AddressSpace::find_region_from_range(VirtualRange const& range)
 
 Region* AddressSpace::find_region_containing(VirtualRange const& range)
 {
-    SpinlockLocker lock(m_lock);
-    auto* candidate = m_region_tree.regions().find_largest_not_above(range.base().get());
-    if (!candidate)
-        return nullptr;
-    return (*candidate).range().contains(range) ? candidate : nullptr;
+    return m_region_tree.find_region_containing(range);
 }
 
 ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange const& range)
@@ -267,6 +259,7 @@ ErrorOr<Vector<Region*>> AddressSpace::find_regions_intersecting(VirtualRange co
     size_t total_size_collected = 0;
 
     SpinlockLocker lock(m_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
 
     auto* found_region = m_region_tree.regions().find_largest_not_above(range.base().get());
     if (!found_region)
@@ -317,6 +310,7 @@ void AddressSpace::dump_regions()
         addr_padding, addr_padding, addr_padding);
 
     SpinlockLocker lock(m_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
 
     for (auto const& region : m_region_tree.regions()) {
         dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}", region.vaddr().get(), region.vaddr().offset(region.size() - 1).get(), region.size(),
@@ -338,8 +332,9 @@ void AddressSpace::remove_all_regions(Badge<Process>)
     {
         SpinlockLocker pd_locker(m_page_directory->get_lock());
         SpinlockLocker mm_locker(s_mm_lock);
+        SpinlockLocker tree_locker(m_region_tree.get_lock());
         for (auto& region : m_region_tree.regions())
-            region.unmap_with_locks_held(Region::ShouldDeallocateVirtualRange::No, ShouldFlushTLB::No, pd_locker, mm_locker);
+            region.unmap_with_locks_held(ShouldFlushTLB::No, pd_locker, mm_locker);
     }
 
     m_region_tree.delete_all_regions_assuming_they_are_unmapped();
@@ -348,6 +343,7 @@ void AddressSpace::remove_all_regions(Badge<Process>)
 size_t AddressSpace::amount_dirty_private() const
 {
     SpinlockLocker lock(m_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
     // FIXME: This gets a bit more complicated for Regions sharing the same underlying VMObject.
     //        The main issue I'm thinking of is when the VMObject has physical pages that none of the Regions are mapping.
     //        That's probably a situation that needs to be looked at in general.
@@ -362,6 +358,7 @@ size_t AddressSpace::amount_dirty_private() const
 ErrorOr<size_t> AddressSpace::amount_clean_inode() const
 {
     SpinlockLocker lock(m_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
     HashTable<InodeVMObject const*> vmobjects;
     for (auto const& region : m_region_tree.regions()) {
         if (region.vmobject().is_inode())
@@ -376,6 +373,7 @@ ErrorOr<size_t> AddressSpace::amount_clean_inode() const
 size_t AddressSpace::amount_virtual() const
 {
     SpinlockLocker lock(m_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
     size_t amount = 0;
     for (auto const& region : m_region_tree.regions()) {
         amount += region.size();
@@ -386,6 +384,7 @@ size_t AddressSpace::amount_virtual() const
 size_t AddressSpace::amount_resident() const
 {
     SpinlockLocker lock(m_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
     // FIXME: This will double count if multiple regions use the same physical page.
     size_t amount = 0;
     for (auto const& region : m_region_tree.regions()) {
@@ -397,6 +396,7 @@ size_t AddressSpace::amount_resident() const
 size_t AddressSpace::amount_shared() const
 {
     SpinlockLocker lock(m_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
     // FIXME: This will double count if multiple regions use the same physical page.
     // FIXME: It doesn't work at the moment, since it relies on PhysicalPage ref counts,
     //        and each PhysicalPage is only reffed by its VMObject. This needs to be refactored
@@ -411,6 +411,7 @@ size_t AddressSpace::amount_shared() const
 size_t AddressSpace::amount_purgeable_volatile() const
 {
     SpinlockLocker lock(m_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
     size_t amount = 0;
     for (auto const& region : m_region_tree.regions()) {
         if (!region.vmobject().is_anonymous())
@@ -425,6 +426,7 @@ size_t AddressSpace::amount_purgeable_volatile() const
 size_t AddressSpace::amount_purgeable_nonvolatile() const
 {
     SpinlockLocker lock(m_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
     size_t amount = 0;
     for (auto const& region : m_region_tree.regions()) {
         if (!region.vmobject().is_anonymous())

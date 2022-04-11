@@ -10,9 +10,6 @@ $ gzip [--keep] [--stdout] [--decompress] <FILES...>
 
 ## Options:
 
-* `--help`: Display help message and exit
-* `--version`: Print version
-* `--complete`: Perform autocompletion
 * `-k`, `--keep`: Keep (don't delete) input files
 * `-c`, `--stdout`: Write to stdout, keep original files unchanged
 * `-d`, `--decompress`: Decompress

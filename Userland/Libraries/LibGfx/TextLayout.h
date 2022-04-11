@@ -13,7 +13,7 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
-#include <LibGfx/Font.h>
+#include <LibGfx/Font/Font.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/TextElision.h>
 #include <LibGfx/TextWrapping.h>

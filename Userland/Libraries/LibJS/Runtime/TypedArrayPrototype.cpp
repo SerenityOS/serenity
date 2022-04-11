@@ -952,9 +952,6 @@ static ThrowCompletionOr<void> typed_array_merge_sort(GlobalObject& global_objec
 
             auto value = TRY(result.to_number(global_object));
 
-            if (buffer.is_detached())
-                return vm.throw_completion<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
-
             if (value.is_nan())
                 comparison_result = 0;
             else

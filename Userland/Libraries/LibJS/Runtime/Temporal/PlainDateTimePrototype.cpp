@@ -525,7 +525,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::until)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let smallestUnit be ? ToSmallestTemporalUnit(options, « », "nanosecond").
     auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, {}, "nanosecond"sv));
@@ -579,7 +579,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::since)
         return vm.throw_completion<RangeError>(global_object, ErrorType::TemporalDifferentCalendars);
 
     // 5. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 6. Let smallestUnit be ? ToSmallestTemporalUnit(options, « », "nanosecond").
     auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, {}, "nanosecond"sv));
@@ -766,7 +766,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_zoned_date_time)
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let disambiguation be ? ToTemporalDisambiguation(options).
-    auto disambiguation = TRY(to_temporal_disambiguation(global_object, *options));
+    auto disambiguation = TRY(to_temporal_disambiguation(global_object, options));
 
     // 6. Let instant be ? BuiltinTimeZoneGetInstantFor(timeZone, dateTime, disambiguation).
     auto* instant = TRY(builtin_time_zone_get_instant_for(global_object, time_zone, *date_time, disambiguation));

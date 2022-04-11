@@ -94,10 +94,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         flag_colorize = true;
     }
 
-    if (pledge("stdio rpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
+    TRY(Core::System::pledge("stdio rpath"));
 
     Vector<StringView> paths;
 

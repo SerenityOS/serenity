@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/TrueTypeFont/Cmap.h>
+#include <LibGfx/Font/TrueType/Cmap.h>
 #include <LibTest/TestCase.h>
 
 TEST_CASE(test_cmap_format_4)

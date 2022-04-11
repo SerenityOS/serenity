@@ -10,6 +10,7 @@
 #include "PDFViewer.h"
 #include "SidebarWidget.h"
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 
@@ -22,11 +23,12 @@ public:
     ~PDFViewerWidget() override = default;
 
     void initialize_menubar(GUI::Window&);
-    void create_toolbar();
     void open_file(Core::File&);
 
 private:
     PDFViewerWidget();
+
+    void initialize_toolbar(GUI::Toolbar&);
 
     RefPtr<PDFViewer> m_viewer;
     RefPtr<SidebarWidget> m_sidebar;
@@ -40,6 +42,9 @@ private:
     RefPtr<GUI::Action> m_reset_zoom_action;
     RefPtr<GUI::Action> m_rotate_counterclockwise_action;
     RefPtr<GUI::Action> m_rotate_clockwise_action;
+    GUI::ActionGroup m_page_view_action_group;
+    RefPtr<GUI::Action> m_page_view_mode_single;
+    RefPtr<GUI::Action> m_page_view_mode_multiple;
 
     bool m_sidebar_open { false };
     ByteBuffer m_buffer;

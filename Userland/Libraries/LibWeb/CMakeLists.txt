@@ -9,10 +9,14 @@ set(SOURCES
     Bindings/EventWrapperFactory.cpp
     Bindings/IDLAbstractOperations.cpp
     Bindings/ImageConstructor.cpp
+    Bindings/LocationConstructor.cpp
     Bindings/LocationObject.cpp
     Bindings/MainThreadVM.cpp
+    Bindings/NavigatorConstructor.cpp
     Bindings/NavigatorObject.cpp
     Bindings/NodeWrapperFactory.cpp
+    Bindings/OptionConstructor.cpp
+    Bindings/WindowConstructor.cpp
     Bindings/WindowObject.cpp
     Bindings/WindowProxy.cpp
     Bindings/Wrappable.cpp
@@ -229,7 +233,6 @@ set(SOURCES
     HTML/WorkerLocation.cpp
     HighResolutionTime/Performance.cpp
     ImageDecoding.cpp
-    InProcessWebView.cpp
     IntersectionObserver/IntersectionObserver.cpp
     Layout/BlockContainer.cpp
     Layout/BlockFormattingContext.cpp
@@ -277,6 +280,7 @@ set(SOURCES
     Loader/ImageLoader.cpp
     Loader/ImageResource.cpp
     Loader/LoadRequest.cpp
+    Loader/ProxyMappings.cpp
     Loader/Resource.cpp
     Loader/ResourceLoader.cpp
     MimeSniff/MimeType.cpp
@@ -313,6 +317,8 @@ set(SOURCES
     SVG/AttributeNames.cpp
     SVG/AttributeParser.cpp
     SVG/SVGAnimatedLength.cpp
+    SVG/SVGClipPathElement.cpp
+    SVG/SVGElement.cpp
     SVG/SVGElement.cpp
     SVG/SVGGElement.cpp
     SVG/SVGGeometryElement.cpp
@@ -577,6 +583,7 @@ libweb_js_wrapper(NavigationTiming/PerformanceTiming)
 libweb_js_wrapper(RequestIdleCallback/IdleDeadline)
 libweb_js_wrapper(ResizeObserver/ResizeObserver)
 libweb_js_wrapper(SVG/SVGAnimatedLength)
+libweb_js_wrapper(SVG/SVGClipPathElement)
 libweb_js_wrapper(SVG/SVGElement)
 libweb_js_wrapper(SVG/SVGGeometryElement)
 libweb_js_wrapper(SVG/SVGGraphicsElement)

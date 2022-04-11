@@ -1,12 +1,12 @@
 diff -Naur openttd-1.11.0/cmake/CompileFlags.cmake openttd-1.11.0.serenity/cmake/CompileFlags.cmake
 --- openttd-1.11.0/cmake/CompileFlags.cmake	2021-04-01 14:33:44.000000000 +0200
 +++ openttd-1.11.0.serenity/cmake/CompileFlags.cmake	2021-04-19 19:30:33.457232215 +0200
-@@ -154,7 +154,7 @@
+@@ -158,7 +158,7 @@
          message(FATAL_ERROR "No warning flags are set for this compiler yet; please consider creating a Pull Request to add support for this compiler.")
      endif()
  
--    if(NOT WIN32)
-+    if(NOT WIN32 AND NOT SERENITYOS)
+-    if(NOT WIN32 AND NOT HAIKU)
++    if(NOT WIN32 AND NOT HAIKU AND NOT SERENITYOS)
          # rdynamic is used to get useful stack traces from crash reports.
          set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
      endif()

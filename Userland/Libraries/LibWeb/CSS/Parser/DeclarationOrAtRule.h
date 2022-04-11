@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/CSS/Parser/StyleDeclarationRule.h>
+#include <LibWeb/CSS/Parser/Declaration.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
 
 namespace Web::CSS {
@@ -16,7 +16,7 @@ class DeclarationOrAtRule {
 
 public:
     explicit DeclarationOrAtRule(RefPtr<StyleRule> at);
-    explicit DeclarationOrAtRule(StyleDeclarationRule declaration);
+    explicit DeclarationOrAtRule(Declaration declaration);
     ~DeclarationOrAtRule();
 
     enum class DeclarationType {
@@ -33,7 +33,7 @@ public:
         return *m_at;
     }
 
-    StyleDeclarationRule const& declaration() const
+    Declaration const& declaration() const
     {
         VERIFY(is_declaration());
         return m_declaration;
@@ -44,7 +44,7 @@ public:
 private:
     DeclarationType m_type;
     RefPtr<StyleRule> m_at;
-    StyleDeclarationRule m_declaration;
+    Declaration m_declaration;
 };
 
 }

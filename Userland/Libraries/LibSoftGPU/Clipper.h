@@ -8,8 +8,8 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <LibGPU/Vertex.h>
 #include <LibGfx/Vector4.h>
-#include <LibSoftGPU/Vertex.h>
 
 namespace SoftGPU {
 
@@ -26,11 +26,11 @@ public:
 
     Clipper() = default;
 
-    void clip_triangle_against_frustum(Vector<Vertex>& input_vecs);
+    void clip_triangle_against_frustum(Vector<GPU::Vertex>& input_vecs);
 
 private:
-    Vector<Vertex> list_a;
-    Vector<Vertex> list_b;
+    Vector<GPU::Vertex> list_a;
+    Vector<GPU::Vertex> list_b;
 };
 
 }

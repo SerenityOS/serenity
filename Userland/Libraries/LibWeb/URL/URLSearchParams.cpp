@@ -16,9 +16,9 @@ String url_encode(Vector<QueryParam> const& pairs, AK::URL::PercentEncodeSet per
 {
     StringBuilder builder;
     for (size_t i = 0; i < pairs.size(); ++i) {
-        builder.append(AK::URL::percent_encode(pairs[i].name, percent_encode_set));
+        builder.append(AK::URL::percent_encode(pairs[i].name, percent_encode_set, AK::URL::SpaceAsPlus::Yes));
         builder.append('=');
-        builder.append(AK::URL::percent_encode(pairs[i].value, percent_encode_set));
+        builder.append(AK::URL::percent_encode(pairs[i].value, percent_encode_set, AK::URL::SpaceAsPlus::Yes));
         if (i != pairs.size() - 1)
             builder.append('&');
     }

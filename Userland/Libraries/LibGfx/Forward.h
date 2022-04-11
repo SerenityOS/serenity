@@ -28,6 +28,8 @@ class Path;
 class ShareableBitmap;
 class StylePainter;
 struct SystemTheme;
+
+template<typename T>
 class Triangle;
 
 template<typename T>
@@ -38,6 +40,9 @@ class Size;
 
 template<typename T>
 class Rect;
+
+template<typename T>
+class Quad;
 
 using IntLine = Line<int>;
 using FloatLine = Line<float>;
@@ -50,6 +55,8 @@ using FloatPoint = Point<float>;
 
 using IntSize = Size<int>;
 using FloatSize = Size<float>;
+
+using FloatQuad = Quad<float>;
 
 enum class BitmapFormat;
 enum class ColorRole;

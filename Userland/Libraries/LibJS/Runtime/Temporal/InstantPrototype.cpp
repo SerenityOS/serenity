@@ -166,7 +166,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::until)
     auto* other = TRY(to_temporal_instant(global_object, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
     auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
@@ -210,7 +210,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::since)
     auto* other = TRY(to_temporal_instant(global_object, vm.argument(0)));
 
     // 4. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(1)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 5. Let smallestUnit be ? ToSmallestTemporalUnit(options, « "year", "month", "week", "day" », "nanosecond").
     auto smallest_unit = TRY(to_smallest_temporal_unit(global_object, *options, { "year"sv, "month"sv, "week"sv, "day"sv }, "nanosecond"sv));
@@ -357,7 +357,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::to_string)
     auto* instant = TRY(typed_this_object(global_object));
 
     // 3. Set options to ? GetOptionsObject(options).
-    auto* options = TRY(get_options_object(global_object, vm.argument(0)));
+    auto const* options = TRY(get_options_object(global_object, vm.argument(0)));
 
     // 4. Let timeZone be ? Get(options, "timeZone").
     auto time_zone = TRY(options->get(vm.names.timeZone));

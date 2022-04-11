@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Optional.h>
 #include <LibGfx/AffineTransform.h>
+#include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
 
 namespace Gfx {
@@ -13,6 +14,11 @@ namespace Gfx {
 bool AffineTransform::is_identity() const
 {
     return m_values[0] == 1 && m_values[1] == 0 && m_values[2] == 0 && m_values[3] == 1 && m_values[4] == 0 && m_values[5] == 0;
+}
+
+bool AffineTransform::is_identity_or_translation() const
+{
+    return a() == 1 && b() == 0 && c() == 0 && d() == 1;
 }
 
 static float hypotenuse(float x, float y)
@@ -142,8 +148,8 @@ Optional<AffineTransform> AffineTransform::inverse() const
 
 void AffineTransform::map(float unmapped_x, float unmapped_y, float& mapped_x, float& mapped_y) const
 {
-    mapped_x = a() * unmapped_x + b() * unmapped_y + m_values[4];
-    mapped_y = c() * unmapped_x + d() * unmapped_y + m_values[5];
+    mapped_x = a() * unmapped_x + c() * unmapped_y + e();
+    mapped_y = b() * unmapped_x + d() * unmapped_y + f();
 }
 
 template<>
@@ -209,6 +215,16 @@ template<>
 IntRect AffineTransform::map(IntRect const& rect) const
 {
     return enclosing_int_rect(map(FloatRect(rect)));
+}
+
+Quad<float> AffineTransform::map_to_quad(Rect<float> const& rect) const
+{
+    return {
+        map(rect.top_left()),
+        map(rect.top_right()),
+        map(rect.bottom_right()),
+        map(rect.bottom_left()),
+    };
 }
 
 }

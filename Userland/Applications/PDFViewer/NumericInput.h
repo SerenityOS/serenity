@@ -18,7 +18,7 @@ public:
 
     void set_min_number(i32 number);
     void set_max_number(i32 number);
-    void set_current_number(i32 number, bool call_change_handler = true);
+    void set_current_number(i32 number, GUI::AllowCallback allow_callback = GUI::AllowCallback::Yes);
 
 private:
     NumericInput();

@@ -26,8 +26,6 @@ public:
     PageDirectory& page_directory() { return *m_page_directory; }
     PageDirectory const& page_directory() const { return *m_page_directory; }
 
-    size_t region_count() const { return m_region_tree.regions().size(); }
-
     auto& regions() { return m_region_tree.regions(); }
     auto const& regions() const { return m_region_tree.regions(); }
 

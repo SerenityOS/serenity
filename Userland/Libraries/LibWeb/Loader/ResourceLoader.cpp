@@ -14,6 +14,7 @@
 #include <LibProtocol/RequestClient.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/LoadRequest.h>
+#include <LibWeb/Loader/ProxyMappings.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <serenity.h>
@@ -39,25 +40,6 @@ ResourceLoader::ResourceLoader(NonnullRefPtr<Protocol::RequestClient> protocol_c
     : m_protocol_client(move(protocol_client))
     , m_user_agent(default_user_agent)
 {
-}
-
-void ResourceLoader::load_sync(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<String, String, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(String const&, Optional<u32> status_code)> error_callback)
-{
-    Core::EventLoop loop;
-
-    load(
-        request,
-        [&](auto data, auto& response_headers, auto status_code) {
-            success_callback(data, response_headers, status_code);
-            loop.quit(0);
-        },
-        [&](auto& string, auto status_code) {
-            if (error_callback)
-                error_callback(string, status_code);
-            loop.quit(0);
-        });
-
-    loop.exec();
 }
 
 void ResourceLoader::prefetch_dns(AK::URL const& url)
@@ -213,6 +195,8 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
     }
 
     if (url.protocol() == "http" || url.protocol() == "https" || url.protocol() == "gemini") {
+        auto proxy = ProxyMappings::the().proxy_for_url(url);
+
         HashMap<String, String> headers;
         headers.set("User-Agent", m_user_agent);
         headers.set("Accept-Encoding", "gzip, deflate");
@@ -221,7 +205,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             headers.set(it.key, it.value);
         }
 
-        auto protocol_request = protocol_client().start_request(request.method(), url, headers, request.body());
+        auto protocol_request = protocol_client().start_request(request.method(), url, headers, request.body(), proxy);
         if (!protocol_request) {
             auto start_request_failure_msg = "Failed to initiate load"sv;
             log_failure(request, start_request_failure_msg);

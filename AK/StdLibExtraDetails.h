@@ -26,6 +26,24 @@ template<class T>
 using AddConst = const T;
 
 template<class T>
+struct __AddConstToReferencedType {
+    using Type = T;
+};
+
+template<class T>
+struct __AddConstToReferencedType<T&> {
+    using Type = AddConst<T>&;
+};
+
+template<class T>
+struct __AddConstToReferencedType<T&&> {
+    using Type = AddConst<T>&&;
+};
+
+template<class T>
+using AddConstToReferencedType = typename __AddConstToReferencedType<T>::Type;
+
+template<class T>
 struct __RemoveConst {
     using Type = T;
 };
@@ -577,6 +595,7 @@ inline constexpr bool IsOneOf = (IsSame<T, Ts> || ...);
 
 }
 using AK::Detail::AddConst;
+using AK::Detail::AddConstToReferencedType;
 using AK::Detail::AddLvalueReference;
 using AK::Detail::AddRvalueReference;
 using AK::Detail::AssertSize;

@@ -39,8 +39,6 @@ namespace Web::HTML {
     __ENUMERATE_INSERTION_MODE(AfterAfterBody)  \
     __ENUMERATE_INSERTION_MODE(AfterAfterFrameset)
 
-RefPtr<DOM::Document> parse_html_document(StringView, const AK::URL&, String const& encoding);
-
 class HTMLParser : public RefCounted<HTMLParser> {
     friend class HTMLTokenizer;
 

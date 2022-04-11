@@ -658,16 +658,12 @@ UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
     }
 }
 
-Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
+Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress address)
 {
-    if (is_user_address(vaddr))
+    if (is_user_address(address))
         return nullptr;
 
-    SpinlockLocker lock(s_mm_lock);
-    auto* region = MM.m_region_tree.regions().find_largest_not_above(vaddr.get());
-    if (!region || !region->contains(vaddr))
-        return nullptr;
-    return region;
+    return MM.m_region_tree.find_region_containing(address);
 }
 
 Region* MemoryManager::find_user_region_from_vaddr_no_lock(AddressSpace& space, VirtualAddress vaddr)
@@ -1166,8 +1162,7 @@ bool MemoryManager::validate_user_stack(AddressSpace& space, VirtualAddress vadd
 void MemoryManager::unregister_kernel_region(Region& region)
 {
     VERIFY(region.is_kernel());
-    SpinlockLocker lock(s_mm_lock);
-    m_region_tree.regions().remove(region.vaddr().get());
+    m_region_tree.remove(region);
 }
 
 void MemoryManager::dump_kernel_regions()
@@ -1181,6 +1176,7 @@ void MemoryManager::dump_kernel_regions()
     dbgln("BEGIN{}         END{}        SIZE{}       ACCESS NAME",
         addr_padding, addr_padding, addr_padding);
     SpinlockLocker lock(s_mm_lock);
+    SpinlockLocker tree_locker(m_region_tree.get_lock());
     for (auto const& region : m_region_tree.regions()) {
         dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}",
             region.vaddr().get(),
@@ -1234,6 +1230,23 @@ void MemoryManager::copy_physical_page(PhysicalPage& physical_page, u8 page_buff
     auto* quickmapped_page = quickmap_page(physical_page);
     memcpy(page_buffer, quickmapped_page, PAGE_SIZE);
     unquickmap_page();
+}
+
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::create_identity_mapped_region(PhysicalAddress address, size_t size)
+{
+    auto vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(address, size));
+    auto region = TRY(Memory::Region::create_unplaced(move(vmobject), 0, {}, Memory::Region::Access::ReadWriteExecute));
+    Memory::VirtualRange range { VirtualAddress { (FlatPtr)address.get() }, size };
+    region->m_range = range;
+    TRY(region->map(MM.kernel_page_directory()));
+    return region;
+}
+
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_unbacked_region_anywhere(size_t size, size_t alignment)
+{
+    auto region = TRY(Region::create_unbacked());
+    TRY(m_region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size, alignment));
+    return region;
 }
 
 }

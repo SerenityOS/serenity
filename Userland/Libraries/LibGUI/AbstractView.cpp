@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
+#include <LibCore/Object.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/DragOperation.h>
@@ -24,6 +25,21 @@ AbstractView::AbstractView()
     , m_selection(*this)
 {
     REGISTER_BOOL_PROPERTY("activates_on_selection", activates_on_selection, set_activates_on_selection);
+    REGISTER_BOOL_PROPERTY("editable", is_editable, set_editable);
+    REGISTER_BOOL_PROPERTY("searchable", is_searchable, set_searchable);
+    REGISTER_ENUM_PROPERTY("selection_behavior", selection_behavior, set_selection_behavior, SelectionBehavior,
+        { SelectionBehavior::SelectItems, "SelectItems" },
+        { SelectionBehavior::SelectRows, "SelectRows" });
+    REGISTER_ENUM_PROPERTY("selection_mode", selection_mode, set_selection_mode, SelectionMode,
+        { SelectionMode::SingleSelection, "SingleSelection" },
+        { SelectionMode::MultiSelection, "MultiSeleciton" },
+        { SelectionMode::NoSelection, "NoSelection" });
+    REGISTER_INT_PROPERTY("key_column", key_column, set_key_column);
+    REGISTER_ENUM_PROPERTY("sort_order", sort_order, set_sort_order, SortOrder,
+        { SortOrder::Ascending, "Ascending" },
+        { SortOrder::Descending, "Descending" });
+    REGISTER_BOOL_PROPERTY("tab_key_navigation_enabled", is_tab_key_navigation_enabled, set_tab_key_navigation_enabled);
+    REGISTER_BOOL_PROPERTY("draw_item_text_with_shadow", does_draw_item_text_with_shadow, set_draw_item_text_with_shadow);
 
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 }

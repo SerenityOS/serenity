@@ -148,7 +148,22 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 ------------------------
 
 🏴󠁣󠁡󠁱󠁣󠁿 - U+1F3F4 U+E0063 U+E0061 U+E0071 U+E0063 U+E007F CA-QC Quebec
+🏴󠁤󠁥󠁢󠁢󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0062 U+E0062 U+E007F DE-BB Brandenburg
+🏴󠁤󠁥󠁢󠁥󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0062 U+E0065 U+E007F DE-BE Berlin
+🏴󠁤󠁥󠁢󠁷󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0062 U+E0077 U+E007F DE-BW Baden-Württemberg
+🏴󠁤󠁥󠁢󠁹󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0062 U+E0079 U+E007F DE-BY Bavaria
+🏴󠁤󠁥󠁨󠁢󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0068 U+E0062 U+E007F DE-HB Bremen
 🏴󠁤󠁥󠁨󠁥󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0068 U+E0065 U+E007F DE-HE Hesse
+🏴󠁤󠁥󠁨󠁨󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0068 U+E0068 U+E007F DE-HH Hamburg
+🏴󠁤󠁥󠁭󠁶󠁿 - U+1F3F4 U+E0064 U+E0065 U+E006D U+E0076 U+E007F DE-MV Mecklenburg-Vorpommern
+🏴󠁤󠁥󠁮󠁩󠁿 - U+1F3F4 U+E0064 U+E0065 U+E006E U+E0069 U+E007F DE-NI Lower Saxony
+🏴󠁤󠁥󠁮󠁷󠁿 - U+1F3F4 U+E0064 U+E0065 U+E006E U+E0077 U+E007F DE-NW North Rhine-Westphalia
+🏴󠁤󠁥󠁲󠁰󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0072 U+E0070 U+E007F DE-RP Rhineland-Palatinate
+🏴󠁤󠁥󠁳󠁨󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0073 U+E0068 U+E007F DE-SH Schleswig-Holstein
+🏴󠁤󠁥󠁳󠁬󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0073 U+E006C U+E007F DE-SL Saarland
+🏴󠁤󠁥󠁳󠁮󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0073 U+E006E U+E007F DE-SN Saxony
+🏴󠁤󠁥󠁳󠁴󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0073 U+E0074 U+E007F DE-ST Saxony-Anhalt
+🏴󠁤󠁥󠁴󠁨󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0074 U+E0068 U+E007F DE-TH Thuringia
 🏴󠁥󠁳󠁣󠁴󠁿 - U+1F3F4 U+E0065 U+E0073 U+E0063 U+E0074 U+E007F ES-CT Catalonia
 🏴󠁥󠁳󠁰󠁶󠁿 - U+1F3F4 U+E0065 U+E0073 U+E0070 U+E0076 U+E007F ES-PV Basque Country
 🏴󠁦󠁩󠀰󠀳󠁿 - U+1F3F4 U+E0066 U+E0069 U+E0030 U+E0033 U+E007F FI-03 South Ostrobothnia

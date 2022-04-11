@@ -13,7 +13,7 @@
 #include <AK/OwnPtr.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
-#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
+#include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/Forward.h>
@@ -74,6 +74,8 @@ public:
 
     void did_load_font(FlyString const& family_name);
 
+    void load_fonts_from_sheet(CSSStyleSheet const&);
+
 private:
     void compute_cascaded_values(StyleProperties&, DOM::Element&, Optional<CSS::Selector::PseudoElement>) const;
     void compute_font(StyleProperties&, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
@@ -84,7 +86,7 @@ private:
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID, Optional<CSS::Selector::PseudoElement>) const;
 
     RefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, PropertyID, UnresolvedStyleValue const&) const;
-    bool expand_unresolved_values(DOM::Element&, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<StyleComponentValueRule> const& source, Vector<StyleComponentValueRule>& dest, size_t source_start_index) const;
+    bool expand_unresolved_values(DOM::Element&, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Vector<ComponentValue> const& source, Vector<ComponentValue>& dest, size_t source_start_index) const;
 
     template<typename Callback>
     void for_each_stylesheet(CascadeOrigin, Callback) const;
@@ -112,8 +114,6 @@ private:
         Vector<MatchingRule> other_rules;
     };
     OwnPtr<RuleCache> m_rule_cache;
-
-    void load_fonts_if_needed() const;
 
     class FontLoader;
     HashMap<String, NonnullOwnPtr<FontLoader>> m_loaded_fonts;

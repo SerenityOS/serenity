@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     sa.sa_handler = handle_sigint;
     sigaction(SIGINT, &sa, nullptr);
 
-    TRY(Core::System::pledge("stdio sigaction", nullptr));
+    TRY(Core::System::pledge("stdio sigaction"));
 
     double whole_seconds = static_cast<time_t>(secs);
     double fraction = secs - whole_seconds;

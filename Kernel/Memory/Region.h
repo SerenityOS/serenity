@@ -55,7 +55,6 @@ public:
     };
 
     static ErrorOr<NonnullOwnPtr<Region>> try_create_user_accessible(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
-    static ErrorOr<NonnullOwnPtr<Region>> try_create_kernel_only(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
     static ErrorOr<NonnullOwnPtr<Region>> create_unbacked();
     static ErrorOr<NonnullOwnPtr<Region>> create_unplaced(NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes, bool shared = false);
 
@@ -183,12 +182,8 @@ public:
 
     void set_page_directory(PageDirectory&);
     ErrorOr<void> map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
-    enum class ShouldDeallocateVirtualRange {
-        No,
-        Yes,
-    };
-    void unmap(ShouldDeallocateVirtualRange, ShouldFlushTLB = ShouldFlushTLB::Yes);
-    void unmap_with_locks_held(ShouldDeallocateVirtualRange, ShouldFlushTLB, SpinlockLocker<RecursiveSpinlock>& pd_locker, SpinlockLocker<RecursiveSpinlock>& mm_locker);
+    void unmap(ShouldFlushTLB = ShouldFlushTLB::Yes);
+    void unmap_with_locks_held(ShouldFlushTLB, SpinlockLocker<RecursiveSpinlock>& pd_locker, SpinlockLocker<RecursiveSpinlock>& mm_locker);
 
     void remap();
 

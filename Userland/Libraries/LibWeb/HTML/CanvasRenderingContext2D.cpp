@@ -9,6 +9,7 @@
 #include <AK/ExtraMathConstants.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Painter.h>
+#include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DWrapper.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -101,9 +102,10 @@ static void default_source_size(CanvasImageSource const& image, float& source_wi
         if (source->bitmap()) {
             source_width = source->bitmap()->width();
             source_height = source->bitmap()->height();
+        } else {
+            source_width = source->width();
+            source_height = source->height();
         }
-        source_width = source->width();
-        source_height = source->height();
     });
 }
 
@@ -179,8 +181,59 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::draw_image(CanvasImageSource co
     auto painter = this->painter();
     if (!painter)
         return {};
-    auto transformed_destination_rect = m_drawing_state.transform.map(destination_rect);
-    painter->draw_scaled_bitmap(transformed_destination_rect.to_rounded<int>(), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+
+    if (m_drawing_state.transform.is_identity_or_translation()) {
+        painter->translate(m_drawing_state.transform.e(), m_drawing_state.transform.f());
+        painter->draw_scaled_bitmap(destination_rect.to_rounded<int>(), *bitmap, source_rect, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+        painter->translate(-m_drawing_state.transform.e(), -m_drawing_state.transform.f());
+    } else {
+        // The context has an affine transform, we have to draw through it!
+
+        // FIXME: This is *super* inefficient.
+        // What we currently do, roughly:
+        // - Map the destination rect through the context's transform.
+        // - Compute the bounding rect of the destination quad.
+        // - For each point in the computed bounding rect, reverse-map it to a point in the source image.
+        //   - Sample the source image at the computed point.
+        //   - Set or blend (depending on alpha values) one pixel in the canvas.
+        //   - Loop.
+
+        // FIXME: Gfx::Painter should have an affine transform as part of its state and handle all of this instead.
+
+        auto inverse_transform = m_drawing_state.transform.inverse();
+        if (!inverse_transform.has_value())
+            return {};
+
+        auto destination_quad = m_drawing_state.transform.map_to_quad(destination_rect);
+        auto destination_bounding_rect = destination_quad.bounding_rect().to_rounded<int>();
+
+        Gfx::AffineTransform source_transform;
+        source_transform.translate(source_x, source_y);
+        source_transform.scale(source_width / destination_width, source_height / destination_height);
+        source_transform.translate(-destination_x, -destination_y);
+
+        for (int y = destination_bounding_rect.y(); y <= destination_bounding_rect.bottom(); ++y) {
+            for (int x = destination_bounding_rect.x(); x <= destination_bounding_rect.right(); ++x) {
+                auto destination_point = Gfx::IntPoint { x, y };
+                if (!painter->clip_rect().contains(destination_point))
+                    continue;
+                if (!destination_quad.contains(destination_point.to_type<float>()))
+                    continue;
+                auto source_point = source_transform.map(inverse_transform->map(destination_point)).to_rounded<int>();
+                if (!bitmap->rect().contains(source_point))
+                    continue;
+                auto source_color = bitmap->get_pixel(source_point);
+                if (source_color.alpha() == 0)
+                    continue;
+                if (source_color.alpha() == 255) {
+                    painter->set_pixel(destination_point, source_color);
+                    continue;
+                }
+                auto dst_color = painter->target()->get_pixel(destination_point);
+                painter->set_pixel(destination_point, dst_color.blend(source_color));
+            }
+        }
+    }
 
     // 7. If image is not origin-clean, then set the CanvasRenderingContext2D's origin-clean flag to false.
     if (image_is_not_origin_clean(image))
@@ -637,6 +690,46 @@ NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_linear_gradient(d
 NonnullRefPtr<CanvasGradient> CanvasRenderingContext2D::create_conic_gradient(double start_angle, double x, double y)
 {
     return CanvasGradient::create_conic(start_angle, x, y);
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-transform
+void CanvasRenderingContext2D::transform(double a, double b, double c, double d, double e, double f)
+{
+    // 1. If any of the arguments are infinite or NaN, then return.
+    if (!isfinite(a) || !isfinite(b) || !isfinite(c) || !isfinite(d) || !isfinite(e) || !isfinite(f))
+        return;
+
+    // 2. Replace the current transformation matrix with the result of multiplying the current transformation matrix with the matrix described by:
+    //    a c e
+    //    b d f
+    //    0 0 1
+    m_drawing_state.transform.multiply({ static_cast<float>(a), static_cast<float>(b), static_cast<float>(c), static_cast<float>(d), static_cast<float>(e), static_cast<float>(f) });
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-settransform
+void CanvasRenderingContext2D::set_transform(double a, double b, double c, double d, double e, double f)
+{
+    // 1. If any of the arguments are infinite or NaN, then return.
+    if (!isfinite(a) || !isfinite(b) || !isfinite(c) || !isfinite(d) || !isfinite(e) || !isfinite(f))
+        return;
+
+    // 2. Reset the current transformation matrix to the identity matrix.
+    m_drawing_state.transform = {};
+
+    // 3. Invoke the transform(a, b, c, d, e, f) method with the same arguments.
+    transform(a, b, c, d, e, f);
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-resettransform
+void CanvasRenderingContext2D::reset_transform()
+{
+    // The resetTransform() method, when invoked, must reset the current transformation matrix to the identity matrix.
+    m_drawing_state.transform = {};
+}
+
+void CanvasRenderingContext2D::clip()
+{
+    // FIXME: Implement.
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#check-the-usability-of-the-image-argument

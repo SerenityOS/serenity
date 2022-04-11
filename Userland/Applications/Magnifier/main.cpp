@@ -17,10 +17,10 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd unix", nullptr));
+    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd unix"));
     auto app = GUI::Application::construct(arguments);
 
-    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd", nullptr));
+    TRY(Core::System::pledge("stdio cpath rpath recvfd sendfd"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

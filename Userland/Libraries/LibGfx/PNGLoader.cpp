@@ -61,7 +61,7 @@ struct [[gnu::packed]] Triplet {
 };
 
 template<typename T>
-struct [[gnu::packed]] Quad {
+struct [[gnu::packed]] Quartet {
     T r;
     T g;
     T b;
@@ -401,13 +401,13 @@ NEVER_INLINE FLATTEN static ErrorOr<void> unfilter(PNGLoadingContext& context)
             }
         } else if (context.bit_depth == 16) {
             for (int y = 0; y < context.height; ++y) {
-                auto* triplets = reinterpret_cast<Quad<u16> const*>(context.scanlines[y].data.data());
+                auto* quartets = reinterpret_cast<Quartet<u16> const*>(context.scanlines[y].data.data());
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
-                    pixel.r = triplets[i].r & 0xFF;
-                    pixel.g = triplets[i].g & 0xFF;
-                    pixel.b = triplets[i].b & 0xFF;
-                    pixel.a = triplets[i].a & 0xFF;
+                    pixel.r = quartets[i].r & 0xFF;
+                    pixel.g = quartets[i].g & 0xFF;
+                    pixel.b = quartets[i].b & 0xFF;
+                    pixel.a = quartets[i].a & 0xFF;
                 }
             }
         } else {

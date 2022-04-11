@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/Object.h>
 #include <LibGUI/AbstractTableView.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Button.h>
@@ -19,6 +20,8 @@ namespace GUI {
 
 AbstractTableView::AbstractTableView()
 {
+    REGISTER_BOOL_PROPERTY("column_headers_visible", column_headers_visible, set_column_headers_visible);
+
     set_selection_behavior(SelectionBehavior::SelectRows);
     m_corner_button = add<Button>();
     m_corner_button->move_to_back();
@@ -385,6 +388,11 @@ void AbstractTableView::set_column_visible(int column, bool visible)
 void AbstractTableView::set_column_headers_visible(bool visible)
 {
     column_header().set_visible(visible);
+}
+
+bool AbstractTableView::column_headers_visible() const
+{
+    return column_header().is_visible();
 }
 
 void AbstractTableView::did_scroll()

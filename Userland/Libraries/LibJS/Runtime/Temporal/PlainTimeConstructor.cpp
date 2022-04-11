@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -85,7 +85,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimeConstructor::from)
     auto* options = TRY(get_options_object(global_object, vm.argument(1)));
 
     // 2. Let overflow be ? ToTemporalOverflow(options).
-    auto overflow = TRY(to_temporal_overflow(global_object, *options));
+    auto overflow = TRY(to_temporal_overflow(global_object, options));
 
     auto item = vm.argument(0);
 

@@ -5,7 +5,7 @@
  */
 
 #include "OutlineModel.h"
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 
 NonnullRefPtr<OutlineModel> OutlineModel::create(NonnullRefPtr<PDF::OutlineDict> const& outline)
 {

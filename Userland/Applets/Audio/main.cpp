@@ -20,7 +20,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/FontDatabase.h>
+#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
 
@@ -199,7 +199,7 @@ private:
     Gfx::Bitmap& choose_bitmap_from_volume()
     {
         if (m_audio_muted)
-            return *m_volume_level_bitmaps.back().bitmap;
+            return *m_volume_level_bitmaps.last().bitmap;
 
         for (auto& pair : m_volume_level_bitmaps) {
             if (m_audio_volume >= pair.volume_threshold)

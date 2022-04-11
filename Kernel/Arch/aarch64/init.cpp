@@ -10,13 +10,13 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Arch/aarch64/Aarch64_asm_utils.h>
 #include <Kernel/Arch/aarch64/BootPPMParser.h>
-#include <Kernel/Arch/aarch64/Framebuffer.h>
-#include <Kernel/Arch/aarch64/Mailbox.h>
-#include <Kernel/Arch/aarch64/Prekernel.h>
-#include <Kernel/Arch/aarch64/Timer.h>
-#include <Kernel/Arch/aarch64/UART.h>
+#include <Kernel/Arch/aarch64/Prekernel/Aarch64_asm_utils.h>
+#include <Kernel/Arch/aarch64/Prekernel/Prekernel.h>
+#include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
+#include <Kernel/Arch/aarch64/RPi/Mailbox.h>
+#include <Kernel/Arch/aarch64/RPi/Timer.h>
+#include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Utils.h>
 
 static void draw_logo();
@@ -93,8 +93,21 @@ void __stack_chk_fail()
     Prekernel::halt();
 }
 
-[[noreturn]] void __assertion_failed(char const*, char const*, unsigned int, char const*)
+[[noreturn]] void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func)
 {
+    auto& uart = Prekernel::UART::the();
+
+    uart.print_str("\r\n\r\nASSERTION FAILED: ");
+    uart.print_str(msg);
+
+    uart.print_str("\r\n");
+    uart.print_str(file);
+    uart.print_str(":");
+    uart.print_num(line);
+
+    uart.print_str(" in ");
+    uart.print_str(func);
+
     Prekernel::halt();
 }
 

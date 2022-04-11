@@ -195,18 +195,18 @@ void BrowserWindow::build_menus()
 
     m_copy_selection_action = GUI::CommonActions::make_copy_action([this](auto&) {
         auto& tab = active_tab();
-        auto selected_text = tab.m_web_content_view->selected_text();
+        auto selected_text = tab.view().selected_text();
         if (!selected_text.is_empty())
             GUI::Clipboard::the().set_plain_text(selected_text);
     });
 
     m_select_all_action = GUI::CommonActions::make_select_all_action([this](auto&) {
-        active_tab().m_web_content_view->select_all();
+        active_tab().view().select_all();
     });
 
     m_view_source_action = GUI::Action::create(
         "View &Source", { Mod_Ctrl, Key_U }, g_icon_bag.code, [this](auto&) {
-            active_tab().m_web_content_view->get_source();
+            active_tab().view().get_source();
         },
         this);
     m_view_source_action->set_status_tip("View source code of the current page");
@@ -278,7 +278,7 @@ void BrowserWindow::build_menus()
             auto action = GUI::Action::create_checkable(
                 name, [=, this](auto&) {
                     Config::write_string("Browser", "Preferences", "ColorScheme", Web::CSS::preferred_color_scheme_to_string(preference_value));
-                    active_tab().m_web_content_view->set_preferred_color_scheme(preference_value);
+                    active_tab().view().set_preferred_color_scheme(preference_value);
                 },
                 this);
             if (current_setting == preference_value)
@@ -302,22 +302,22 @@ void BrowserWindow::build_menus()
     auto& debug_menu = add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
         "Dump &DOM Tree", g_icon_bag.dom_tree, [this](auto&) {
-            active_tab().m_web_content_view->debug_request("dump-dom-tree");
+            active_tab().view().debug_request("dump-dom-tree");
         },
         this));
     debug_menu.add_action(GUI::Action::create(
         "Dump &Layout Tree", g_icon_bag.layout, [this](auto&) {
-            active_tab().m_web_content_view->debug_request("dump-layout-tree");
+            active_tab().view().debug_request("dump-layout-tree");
         },
         this));
     debug_menu.add_action(GUI::Action::create(
         "Dump S&tacking Context Tree", g_icon_bag.layers, [this](auto&) {
-            active_tab().m_web_content_view->debug_request("dump-stacking-context-tree");
+            active_tab().view().debug_request("dump-stacking-context-tree");
         },
         this));
     debug_menu.add_action(GUI::Action::create(
         "Dump &Style Sheets", g_icon_bag.filetype_css, [this](auto&) {
-            active_tab().m_web_content_view->debug_request("dump-style-sheets");
+            active_tab().view().debug_request("dump-style-sheets");
         },
         this));
     debug_menu.add_action(GUI::Action::create("Dump &History", { Mod_Ctrl, Key_H }, g_icon_bag.history, [this](auto&) {
@@ -329,12 +329,12 @@ void BrowserWindow::build_menus()
             tab.on_dump_cookies();
     }));
     debug_menu.add_action(GUI::Action::create("Dump Loc&al Storage", g_icon_bag.local_storage, [this](auto&) {
-        active_tab().m_web_content_view->debug_request("dump-local-storage");
+        active_tab().view().debug_request("dump-local-storage");
     }));
     debug_menu.add_separator();
     auto line_box_borders_action = GUI::Action::create_checkable(
         "Line &Box Borders", [this](auto& action) {
-            active_tab().m_web_content_view->debug_request("set-line-box-borders", action.is_checked() ? "on" : "off");
+            active_tab().view().debug_request("set-line-box-borders", action.is_checked() ? "on" : "off");
         },
         this);
     line_box_borders_action->set_checked(false);
@@ -342,16 +342,16 @@ void BrowserWindow::build_menus()
 
     debug_menu.add_separator();
     debug_menu.add_action(GUI::Action::create("Collect &Garbage", { Mod_Ctrl | Mod_Shift, Key_G }, g_icon_bag.trash_can, [this](auto&) {
-        active_tab().m_web_content_view->debug_request("collect-garbage");
+        active_tab().view().debug_request("collect-garbage");
     }));
     debug_menu.add_action(GUI::Action::create("Clear &Cache", { Mod_Ctrl | Mod_Shift, Key_C }, g_icon_bag.clear_cache, [this](auto&) {
-        active_tab().m_web_content_view->debug_request("clear-cache");
+        active_tab().view().debug_request("clear-cache");
     }));
 
     m_user_agent_spoof_actions.set_exclusive(true);
     auto& spoof_user_agent_menu = debug_menu.add_submenu("Spoof &User Agent");
     m_disable_user_agent_spoofing = GUI::Action::create_checkable("Disabled", [this](auto&) {
-        active_tab().m_web_content_view->debug_request("spoof-user-agent", Web::default_user_agent);
+        active_tab().view().debug_request("spoof-user-agent", Web::default_user_agent);
     });
     m_disable_user_agent_spoofing->set_status_tip(Web::default_user_agent);
     spoof_user_agent_menu.add_action(*m_disable_user_agent_spoofing);
@@ -361,7 +361,7 @@ void BrowserWindow::build_menus()
 
     auto add_user_agent = [this, &spoof_user_agent_menu](auto& name, auto& user_agent) {
         auto action = GUI::Action::create_checkable(name, [this, user_agent](auto&) {
-            active_tab().m_web_content_view->debug_request("spoof-user-agent", user_agent);
+            active_tab().view().debug_request("spoof-user-agent", user_agent);
         });
         action->set_status_tip(user_agent);
         spoof_user_agent_menu.add_action(action);
@@ -380,7 +380,7 @@ void BrowserWindow::build_menus()
             m_disable_user_agent_spoofing->activate();
             return;
         }
-        active_tab().m_web_content_view->debug_request("spoof-user-agent", user_agent);
+        active_tab().view().debug_request("spoof-user-agent", user_agent);
         action.set_status_tip(user_agent);
     });
     spoof_user_agent_menu.add_action(custom_user_agent);
@@ -389,7 +389,7 @@ void BrowserWindow::build_menus()
     debug_menu.add_separator();
     auto scripting_enabled_action = GUI::Action::create_checkable(
         "Enable Scripting", [this](auto& action) {
-            active_tab().m_web_content_view->debug_request("scripting", action.is_checked() ? "on" : "off");
+            active_tab().view().debug_request("scripting", action.is_checked() ? "on" : "off");
         },
         this);
     scripting_enabled_action->set_checked(true);
@@ -397,7 +397,7 @@ void BrowserWindow::build_menus()
 
     auto same_origin_policy_action = GUI::Action::create_checkable(
         "Enable Same Origin &Policy", [this](auto& action) {
-            active_tab().m_web_content_view->debug_request("same-origin-policy", action.is_checked() ? "on" : "off");
+            active_tab().view().debug_request("same-origin-policy", action.is_checked() ? "on" : "off");
         },
         this);
     same_origin_policy_action->set_checked(false);
@@ -556,7 +556,7 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
     };
 
     new_tab.on_get_local_storage_entries = [this]() {
-        return active_tab().m_web_content_view->get_local_storage_entries();
+        return active_tab().view().get_local_storage_entries();
     };
 
     new_tab.load(url);
@@ -575,15 +575,34 @@ void BrowserWindow::content_filters_changed()
     });
 }
 
+void BrowserWindow::proxy_mappings_changed()
+{
+    tab_widget().for_each_child_of_type<Browser::Tab>([](auto& tab) {
+        tab.proxy_mappings_changed();
+        return IterationDecision::Continue;
+    });
+}
+
 void BrowserWindow::config_string_did_change(String const& domain, String const& group, String const& key, String const& value)
 {
-    if (domain != "Browser" || group != "Preferences")
+    if (domain != "Browser")
         return;
 
-    if (key == "SearchEngine")
-        Browser::g_search_engine = value;
-    else if (key == "Home")
-        Browser::g_home_url = value;
+    if (group == "Preferences") {
+        if (key == "SearchEngine")
+            Browser::g_search_engine = value;
+        else if (key == "Home")
+            Browser::g_home_url = value;
+    } else if (group.starts_with("Proxy:")) {
+        dbgln("Proxy mapping changed: {}/{} = {}", group, key, value);
+        auto proxy_spec = group.substring_view(6);
+        auto existing_proxy = Browser::g_proxies.find(proxy_spec);
+        if (existing_proxy.is_end())
+            Browser::g_proxies.append(proxy_spec);
+
+        Browser::g_proxy_mappings.set(key, existing_proxy.index());
+        proxy_mappings_changed();
+    }
 
     // TODO: ColorScheme
 }

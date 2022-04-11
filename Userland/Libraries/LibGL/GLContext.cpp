@@ -15,12 +15,12 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGL/GLContext.h>
+#include <LibGPU/Device.h>
+#include <LibGPU/Enums.h>
+#include <LibGPU/ImageFormat.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
-#include <LibSoftGPU/Device.h>
-#include <LibSoftGPU/Enums.h>
-#include <LibSoftGPU/ImageFormat.h>
 
 __attribute__((visibility("hidden"))) GL::GLContext* g_gl_context;
 
@@ -61,11 +61,12 @@ static constexpr size_t TEXTURE_MATRIX_STACK_LIMIT = 8;
         return return_value;                                       \
     }
 
-GLContext::GLContext(Gfx::Bitmap& frontbuffer)
-    : m_viewport(frontbuffer.rect())
-    , m_frontbuffer(frontbuffer)
-    , m_rasterizer(frontbuffer.size())
-    , m_device_info(m_rasterizer.info())
+GLContext::GLContext(RefPtr<GPU::Driver> driver, NonnullOwnPtr<GPU::Device> device, Gfx::Bitmap& frontbuffer)
+    : m_viewport { frontbuffer.rect() }
+    , m_frontbuffer { frontbuffer }
+    , m_driver { driver }
+    , m_rasterizer { move(device) }
+    , m_device_info { m_rasterizer->info() }
 {
     m_texture_units.resize(m_device_info.num_texture_units);
     m_active_texture_unit = &m_texture_units[0];
@@ -151,7 +152,7 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
     case GL_DOUBLEBUFFER:
         return ContextParameter { .type = GL_BOOL, .value = { .boolean_value = true } };
     case GL_FOG: {
-        auto fog_enabled = m_rasterizer.options().fog_enabled;
+        auto fog_enabled = m_rasterizer->options().fog_enabled;
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = fog_enabled } };
     }
     case GL_GREEN_BITS:
@@ -191,7 +192,7 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
     case GL_RED_BITS:
         return ContextParameter { .type = GL_INT, .value = { .integer_value = sizeof(float) * 8 } };
     case GL_SCISSOR_BOX: {
-        auto scissor_box = m_rasterizer.options().scissor_box;
+        auto scissor_box = m_rasterizer->options().scissor_box;
         return ContextParameter {
             .type = GL_INT,
             .count = 4,
@@ -205,7 +206,7 @@ Optional<ContextParameter> GLContext::get_context_parameter(GLenum name)
         };
     } break;
     case GL_SCISSOR_TEST: {
-        auto scissor_enabled = m_rasterizer.options().scissor_enabled;
+        auto scissor_enabled = m_rasterizer->options().scissor_enabled;
         return ContextParameter { .type = GL_BOOL, .is_capability = true, .value = { .boolean_value = scissor_enabled } };
     }
     case GL_STENCIL_BITS:
@@ -280,13 +281,13 @@ void GLContext::gl_clear(GLbitfield mask)
     RETURN_WITH_ERROR_IF(mask & ~(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT), GL_INVALID_ENUM);
 
     if (mask & GL_COLOR_BUFFER_BIT)
-        m_rasterizer.clear_color(m_clear_color);
+        m_rasterizer->clear_color(m_clear_color);
 
     if (mask & GL_DEPTH_BUFFER_BIT)
-        m_rasterizer.clear_depth(m_clear_depth);
+        m_rasterizer->clear_depth(m_clear_depth);
 
     if (mask & GL_STENCIL_BUFFER_BIT)
-        m_rasterizer.clear_stencil(m_clear_stencil);
+        m_rasterizer->clear_stencil(m_clear_stencil);
 }
 
 void GLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
@@ -359,27 +360,27 @@ void GLContext::gl_end()
 
     sync_device_config();
 
-    SoftGPU::PrimitiveType primitive_type;
+    GPU::PrimitiveType primitive_type;
     switch (m_current_draw_mode) {
     case GL_TRIANGLES:
-        primitive_type = SoftGPU::PrimitiveType::Triangles;
+        primitive_type = GPU::PrimitiveType::Triangles;
         break;
     case GL_TRIANGLE_STRIP:
     case GL_QUAD_STRIP:
-        primitive_type = SoftGPU::PrimitiveType::TriangleStrip;
+        primitive_type = GPU::PrimitiveType::TriangleStrip;
         break;
     case GL_TRIANGLE_FAN:
     case GL_POLYGON:
-        primitive_type = SoftGPU::PrimitiveType::TriangleFan;
+        primitive_type = GPU::PrimitiveType::TriangleFan;
         break;
     case GL_QUADS:
-        primitive_type = SoftGPU::PrimitiveType::Quads;
+        primitive_type = GPU::PrimitiveType::Quads;
         break;
     default:
         VERIFY_NOT_REACHED();
     }
 
-    m_rasterizer.draw_primitives(primitive_type, m_model_view_matrix, m_projection_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
+    m_rasterizer->draw_primitives(primitive_type, m_model_view_matrix, m_projection_matrix, m_texture_matrix, m_vertex_list, enabled_texture_units);
 
     m_vertex_list.clear_with_capacity();
 }
@@ -577,7 +578,7 @@ void GLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_vertex, x, y, z, w);
 
-    SoftGPU::Vertex vertex;
+    GPU::Vertex vertex;
 
     vertex.position = { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), static_cast<float>(w) };
     vertex.color = m_current_vertex_color;
@@ -613,9 +614,9 @@ void GLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
     m_viewport = { x, y, width, height };
 
-    auto rasterizer_options = m_rasterizer.options();
+    auto rasterizer_options = m_rasterizer->options();
     rasterizer_options.viewport = m_viewport;
-    m_rasterizer.set_options(rasterizer_options);
+    m_rasterizer->set_options(rasterizer_options);
 }
 
 void GLContext::gl_enable(GLenum capability)
@@ -624,7 +625,7 @@ void GLContext::gl_enable(GLenum capability)
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    auto rasterizer_options = m_rasterizer.options();
+    auto rasterizer_options = m_rasterizer->options();
     bool update_rasterizer_options = false;
 
     switch (capability) {
@@ -722,7 +723,7 @@ void GLContext::gl_enable(GLenum capability)
     }
 
     if (update_rasterizer_options)
-        m_rasterizer.set_options(rasterizer_options);
+        m_rasterizer->set_options(rasterizer_options);
 }
 
 void GLContext::gl_disable(GLenum capability)
@@ -731,7 +732,7 @@ void GLContext::gl_disable(GLenum capability)
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    auto rasterizer_options = m_rasterizer.options();
+    auto rasterizer_options = m_rasterizer->options();
     bool update_rasterizer_options = false;
 
     switch (capability) {
@@ -829,7 +830,7 @@ void GLContext::gl_disable(GLenum capability)
     }
 
     if (update_rasterizer_options)
-        m_rasterizer.set_options(rasterizer_options);
+        m_rasterizer->set_options(rasterizer_options);
 }
 
 GLboolean GLContext::gl_is_enabled(GLenum capability)
@@ -927,7 +928,7 @@ void GLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_forma
         // that constructing GL textures in any but the default mipmap order, going from level 0 upwards will cause mip levels to stay uninitialized.
         // To be spec compliant we should create the device image once the texture has become complete and is used for rendering the first time.
         // All images that were attached before the device image was created need to be stored somewhere to be used to initialize the device image once complete.
-        texture_2d->set_device_image(m_rasterizer.create_image(SoftGPU::ImageFormat::BGRA8888, width, height, 1, 999, 1));
+        texture_2d->set_device_image(m_rasterizer->create_image(GPU::ImageFormat::BGRA8888, width, height, 1, 999, 1));
         m_sampler_config_is_dirty = true;
     }
 
@@ -1027,6 +1028,33 @@ void GLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
     m_sampler_config_is_dirty = true;
 }
 
+void GLContext::gl_tex_parameterfv(GLenum target, GLenum pname, GLfloat const* params)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_parameterfv, target, pname, params);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: We currently only support GL_TETXURE_2D targets. 1D, 3D and CUBE should also be supported (https://docs.gl/gl2/glTexParameter)
+    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
+
+    // FIXME: implement the remaining parameters. (https://docs.gl/gl2/glTexParameter)
+    RETURN_WITH_ERROR_IF(!(pname == GL_TEXTURE_BORDER_COLOR), GL_INVALID_ENUM);
+
+    // We assume GL_TEXTURE_2D (see above)
+    auto texture_2d = m_active_texture_unit->texture_2d_target_texture();
+    RETURN_WITH_ERROR_IF(texture_2d.is_null(), GL_INVALID_OPERATION);
+
+    switch (pname) {
+    case GL_TEXTURE_BORDER_COLOR:
+        texture_2d->sampler().set_border_color(params[0], params[1], params[2], params[3]);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    m_sampler_config_is_dirty = true;
+}
+
 void GLContext::gl_front_face(GLenum face)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_front_face, face);
@@ -1035,9 +1063,9 @@ void GLContext::gl_front_face(GLenum face)
 
     m_front_face = face;
 
-    auto rasterizer_options = m_rasterizer.options();
-    rasterizer_options.front_face = (face == GL_CW) ? SoftGPU::WindingOrder::Clockwise : SoftGPU::WindingOrder::CounterClockwise;
-    m_rasterizer.set_options(rasterizer_options);
+    auto rasterizer_options = m_rasterizer->options();
+    rasterizer_options.front_face = (face == GL_CW) ? GPU::WindingOrder::Clockwise : GPU::WindingOrder::CounterClockwise;
+    m_rasterizer->set_options(rasterizer_options);
 }
 
 void GLContext::gl_cull_face(GLenum cull_mode)
@@ -1048,10 +1076,10 @@ void GLContext::gl_cull_face(GLenum cull_mode)
 
     m_culled_sides = cull_mode;
 
-    auto rasterizer_options = m_rasterizer.options();
+    auto rasterizer_options = m_rasterizer->options();
     rasterizer_options.cull_back = cull_mode == GL_BACK || cull_mode == GL_FRONT_AND_BACK;
     rasterizer_options.cull_front = cull_mode == GL_FRONT || cull_mode == GL_FRONT_AND_BACK;
-    m_rasterizer.set_options(rasterizer_options);
+    m_rasterizer->set_options(rasterizer_options);
 }
 
 GLuint GLContext::gl_gen_lists(GLsizei range)
@@ -1266,36 +1294,36 @@ void GLContext::gl_blend_func(GLenum src_factor, GLenum dst_factor)
     {
         switch (factor) {
         case GL_ZERO:
-            return SoftGPU::BlendFactor::Zero;
+            return GPU::BlendFactor::Zero;
         case GL_ONE:
-            return SoftGPU::BlendFactor::One;
+            return GPU::BlendFactor::One;
         case GL_SRC_ALPHA:
-            return SoftGPU::BlendFactor::SrcAlpha;
+            return GPU::BlendFactor::SrcAlpha;
         case GL_ONE_MINUS_SRC_ALPHA:
-            return SoftGPU::BlendFactor::OneMinusSrcAlpha;
+            return GPU::BlendFactor::OneMinusSrcAlpha;
         case GL_SRC_COLOR:
-            return SoftGPU::BlendFactor::SrcColor;
+            return GPU::BlendFactor::SrcColor;
         case GL_ONE_MINUS_SRC_COLOR:
-            return SoftGPU::BlendFactor::OneMinusSrcColor;
+            return GPU::BlendFactor::OneMinusSrcColor;
         case GL_DST_ALPHA:
-            return SoftGPU::BlendFactor::DstAlpha;
+            return GPU::BlendFactor::DstAlpha;
         case GL_ONE_MINUS_DST_ALPHA:
-            return SoftGPU::BlendFactor::OneMinusDstAlpha;
+            return GPU::BlendFactor::OneMinusDstAlpha;
         case GL_DST_COLOR:
-            return SoftGPU::BlendFactor::DstColor;
+            return GPU::BlendFactor::DstColor;
         case GL_ONE_MINUS_DST_COLOR:
-            return SoftGPU::BlendFactor::OneMinusDstColor;
+            return GPU::BlendFactor::OneMinusDstColor;
         case GL_SRC_ALPHA_SATURATE:
-            return SoftGPU::BlendFactor::SrcAlphaSaturate;
+            return GPU::BlendFactor::SrcAlphaSaturate;
         default:
             VERIFY_NOT_REACHED();
         }
     };
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
     options.blend_source_factor = map_gl_blend_factor_to_device(m_blend_source_factor);
     options.blend_destination_factor = map_gl_blend_factor_to_device(m_blend_destination_factor);
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_shade_model(GLenum mode)
@@ -1305,9 +1333,9 @@ void GLContext::gl_shade_model(GLenum mode)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(mode != GL_FLAT && mode != GL_SMOOTH, GL_INVALID_ENUM);
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
     options.shade_smooth = (mode == GL_SMOOTH);
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_alpha_func(GLenum func, GLclampf ref)
@@ -1320,39 +1348,39 @@ void GLContext::gl_alpha_func(GLenum func, GLclampf ref)
     m_alpha_test_func = func;
     m_alpha_test_ref_value = ref;
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
 
     switch (func) {
     case GL_NEVER:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::Never;
+        options.alpha_test_func = GPU::AlphaTestFunction::Never;
         break;
     case GL_ALWAYS:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::Always;
+        options.alpha_test_func = GPU::AlphaTestFunction::Always;
         break;
     case GL_LESS:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::Less;
+        options.alpha_test_func = GPU::AlphaTestFunction::Less;
         break;
     case GL_LEQUAL:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::LessOrEqual;
+        options.alpha_test_func = GPU::AlphaTestFunction::LessOrEqual;
         break;
     case GL_EQUAL:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::Equal;
+        options.alpha_test_func = GPU::AlphaTestFunction::Equal;
         break;
     case GL_NOTEQUAL:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::NotEqual;
+        options.alpha_test_func = GPU::AlphaTestFunction::NotEqual;
         break;
     case GL_GEQUAL:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::GreaterOrEqual;
+        options.alpha_test_func = GPU::AlphaTestFunction::GreaterOrEqual;
         break;
     case GL_GREATER:
-        options.alpha_test_func = SoftGPU::AlphaTestFunction::Greater;
+        options.alpha_test_func = GPU::AlphaTestFunction::Greater;
         break;
     default:
         VERIFY_NOT_REACHED();
     }
 
     options.alpha_test_ref_value = m_alpha_test_ref_value;
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_hint(GLenum target, GLenum mode)
@@ -1447,11 +1475,11 @@ void GLContext::gl_draw_buffer(GLenum buffer)
 
     m_current_draw_buffer = buffer;
 
-    auto rasterizer_options = m_rasterizer.options();
+    auto rasterizer_options = m_rasterizer->options();
     // FIXME: We only have a single draw buffer in SoftGPU at the moment,
     // so we simply disable color writes if GL_NONE is selected
     rasterizer_options.enable_color_write = m_current_draw_buffer != GL_NONE;
-    m_rasterizer.set_options(rasterizer_options);
+    m_rasterizer->set_options(rasterizer_options);
 }
 
 void GLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels)
@@ -1550,7 +1578,7 @@ void GLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, 
         // Read from depth buffer
         for (GLsizei i = 0; i < height; ++i) {
             for (GLsizei j = 0; j < width; ++j) {
-                float depth = m_rasterizer.get_depthbuffer_value(x + j, y + i);
+                float depth = m_rasterizer->get_depthbuffer_value(x + j, y + i);
                 auto char_ptr = reinterpret_cast<char*>(pixels) + i * row_stride + j * component_size;
 
                 switch (type) {
@@ -1651,7 +1679,7 @@ void GLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, 
                 else
                     color = m_frontbuffer->scanline(y + i)[x + j];
             } else {
-                color = m_rasterizer.get_color_buffer_pixel(x + j, y + i);
+                color = m_rasterizer->get_color_buffer_pixel(x + j, y + i);
             }
 
             float red = ((color >> 24) & 0xff) / 255.0f;
@@ -1930,9 +1958,19 @@ void GLContext::gl_depth_mask(GLboolean flag)
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
     options.enable_depth_write = (flag != GL_FALSE);
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
+}
+
+void GLContext::gl_clip_plane(GLenum plane, [[maybe_unused]] GLdouble const* equation)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_clip_plane, plane, equation);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF((plane < GL_CLIP_PLANE0) || (plane > GL_CLIP_PLANE5), GL_INVALID_ENUM);
+
+    dbgln_if(GL_DEBUG, "GLContext FIXME: implement gl_clip_plane() (equation = [{} {} {} {}])", equation[0], equation[1], equation[2], equation[3]);
 }
 
 void GLContext::gl_enable_client_state(GLenum cap)
@@ -2056,6 +2094,7 @@ void GLContext::gl_tex_env(GLenum target, GLenum pname, GLfloat param)
     case GL_MODULATE:
     case GL_REPLACE:
     case GL_DECAL:
+    case GL_ADD:
         m_active_texture_unit->set_env_mode(param_enum);
         m_sampler_config_is_dirty = true;
         break;
@@ -2249,7 +2288,7 @@ void GLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLe
             for (int x = 0; x < width; ++x)
                 bitmap->set_pixel(x, y, Color::from_argb(*(pixel_data++)));
 
-        m_rasterizer.blit_to_color_buffer_at_raster_position(bitmap);
+        m_rasterizer->blit_to_color_buffer_at_raster_position(bitmap);
     } else if (format == GL_DEPTH_COMPONENT) {
         Vector<float> depth_values;
         depth_values.ensure_capacity(width * height);
@@ -2263,10 +2302,45 @@ void GLContext::gl_draw_pixels(GLsizei width, GLsizei height, GLenum format, GLe
             }
         }
 
-        m_rasterizer.blit_to_depth_buffer_at_raster_position(depth_values, width, height);
+        m_rasterizer->blit_to_depth_buffer_at_raster_position(depth_values, width, height);
     } else {
         VERIFY_NOT_REACHED();
     }
+}
+
+void GLContext::gl_array_element(GLint i)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_array_element, i);
+    RETURN_WITH_ERROR_IF(i < 0, GL_INVALID_VALUE);
+
+    // This is effectively the same as `gl_draw_elements`, except we only output a single
+    // vertex (this is done between a `gl_begin/end` call) that is to be rendered.
+    if (!m_client_side_vertex_array_enabled)
+        return;
+
+    if (m_client_side_color_array_enabled) {
+        float color[4] { 0, 0, 0, 1 };
+        read_from_vertex_attribute_pointer(m_client_color_pointer, i, color);
+        gl_color(color[0], color[1], color[2], color[3]);
+    }
+
+    for (size_t t = 0; t < m_client_tex_coord_pointer.size(); ++t) {
+        if (m_client_side_texture_coord_array_enabled[t]) {
+            float tex_coords[4] { 0, 0, 0, 0 };
+            read_from_vertex_attribute_pointer(m_client_tex_coord_pointer[t], i, tex_coords);
+            gl_multi_tex_coord(GL_TEXTURE0 + t, tex_coords[0], tex_coords[1], tex_coords[2], tex_coords[3]);
+        }
+    }
+
+    if (m_client_side_normal_array_enabled) {
+        float normal[3];
+        read_from_vertex_attribute_pointer(m_client_normal_pointer, i, normal);
+        gl_normal(normal[0], normal[1], normal[2]);
+    }
+
+    float vertex[4] { 0, 0, 0, 1 };
+    read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex);
+    gl_vertex(vertex[0], vertex[1], vertex[2], vertex[3]);
 }
 
 void GLContext::gl_depth_range(GLdouble min, GLdouble max)
@@ -2275,10 +2349,10 @@ void GLContext::gl_depth_range(GLdouble min, GLdouble max)
 
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
     options.depth_min = clamp<float>(min, 0.f, 1.f);
     options.depth_max = clamp<float>(max, 0.f, 1.f);
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_depth_func(GLenum func)
@@ -2297,38 +2371,38 @@ void GLContext::gl_depth_func(GLenum func)
                              || func == GL_ALWAYS),
         GL_INVALID_ENUM);
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
 
     switch (func) {
     case GL_NEVER:
-        options.depth_func = SoftGPU::DepthTestFunction::Never;
+        options.depth_func = GPU::DepthTestFunction::Never;
         break;
     case GL_ALWAYS:
-        options.depth_func = SoftGPU::DepthTestFunction::Always;
+        options.depth_func = GPU::DepthTestFunction::Always;
         break;
     case GL_LESS:
-        options.depth_func = SoftGPU::DepthTestFunction::Less;
+        options.depth_func = GPU::DepthTestFunction::Less;
         break;
     case GL_LEQUAL:
-        options.depth_func = SoftGPU::DepthTestFunction::LessOrEqual;
+        options.depth_func = GPU::DepthTestFunction::LessOrEqual;
         break;
     case GL_EQUAL:
-        options.depth_func = SoftGPU::DepthTestFunction::Equal;
+        options.depth_func = GPU::DepthTestFunction::Equal;
         break;
     case GL_NOTEQUAL:
-        options.depth_func = SoftGPU::DepthTestFunction::NotEqual;
+        options.depth_func = GPU::DepthTestFunction::NotEqual;
         break;
     case GL_GEQUAL:
-        options.depth_func = SoftGPU::DepthTestFunction::GreaterOrEqual;
+        options.depth_func = GPU::DepthTestFunction::GreaterOrEqual;
         break;
     case GL_GREATER:
-        options.depth_func = SoftGPU::DepthTestFunction::Greater;
+        options.depth_func = GPU::DepthTestFunction::Greater;
         break;
     default:
         VERIFY_NOT_REACHED();
     }
 
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 // General helper function to read arbitrary vertex attribute data into a float array
@@ -2426,7 +2500,7 @@ void GLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& at
 
 void GLContext::gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
 {
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
     auto mask = options.color_mask;
 
     if (!red)
@@ -2450,7 +2524,7 @@ void GLContext::gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GL
         mask |= 0xff000000;
 
     options.color_mask = mask;
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_polygon_mode(GLenum face, GLenum mode)
@@ -2459,7 +2533,7 @@ void GLContext::gl_polygon_mode(GLenum face, GLenum mode)
     RETURN_WITH_ERROR_IF(!(mode == GL_POINT || mode == GL_LINE || mode == GL_FILL), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
 
     // FIXME: This must support different polygon modes for front- and backside
     if (face == GL_BACK) {
@@ -2467,21 +2541,21 @@ void GLContext::gl_polygon_mode(GLenum face, GLenum mode)
         return;
     }
 
-    auto map_mode = [](GLenum mode) -> SoftGPU::PolygonMode {
+    auto map_mode = [](GLenum mode) -> GPU::PolygonMode {
         switch (mode) {
         case GL_FILL:
-            return SoftGPU::PolygonMode::Fill;
+            return GPU::PolygonMode::Fill;
         case GL_LINE:
-            return SoftGPU::PolygonMode::Line;
+            return GPU::PolygonMode::Line;
         case GL_POINT:
-            return SoftGPU::PolygonMode::Point;
+            return GPU::PolygonMode::Point;
         default:
             VERIFY_NOT_REACHED();
         }
     };
 
     options.polygon_mode = map_mode(mode);
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_polygon_offset(GLfloat factor, GLfloat units)
@@ -2489,10 +2563,10 @@ void GLContext::gl_polygon_offset(GLfloat factor, GLfloat units)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_polygon_offset, factor, units);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    auto rasterizer_options = m_rasterizer.options();
+    auto rasterizer_options = m_rasterizer->options();
     rasterizer_options.depth_offset_factor = factor;
     rasterizer_options.depth_offset_constant = units;
-    m_rasterizer.set_options(rasterizer_options);
+    m_rasterizer->set_options(rasterizer_options);
 }
 
 void GLContext::gl_fogfv(GLenum pname, GLfloat* params)
@@ -2500,7 +2574,7 @@ void GLContext::gl_fogfv(GLenum pname, GLfloat* params)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_fogfv, pname, params);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
 
     switch (pname) {
     case GL_FOG_COLOR:
@@ -2510,7 +2584,7 @@ void GLContext::gl_fogfv(GLenum pname, GLfloat* params)
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_fogf(GLenum pname, GLfloat param)
@@ -2519,7 +2593,7 @@ void GLContext::gl_fogf(GLenum pname, GLfloat param)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(param < 0.0f, GL_INVALID_VALUE);
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
 
     switch (pname) {
     case GL_FOG_DENSITY:
@@ -2535,7 +2609,7 @@ void GLContext::gl_fogf(GLenum pname, GLfloat param)
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_fogi(GLenum pname, GLint param)
@@ -2544,19 +2618,19 @@ void GLContext::gl_fogi(GLenum pname, GLint param)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
     RETURN_WITH_ERROR_IF(param != GL_LINEAR && param != GL_EXP && param != GL_EXP2, GL_INVALID_ENUM);
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
 
     switch (pname) {
     case GL_FOG_MODE:
         switch (param) {
         case GL_LINEAR:
-            options.fog_mode = SoftGPU::FogMode::Linear;
+            options.fog_mode = GPU::FogMode::Linear;
             break;
         case GL_EXP:
-            options.fog_mode = SoftGPU::FogMode::Exp;
+            options.fog_mode = GPU::FogMode::Exp;
             break;
         case GL_EXP2:
-            options.fog_mode = SoftGPU::FogMode::Exp2;
+            options.fog_mode = GPU::FogMode::Exp2;
             break;
         }
         break;
@@ -2564,7 +2638,7 @@ void GLContext::gl_fogi(GLenum pname, GLint param)
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
 
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_pixel_storei(GLenum pname, GLint param)
@@ -2594,9 +2668,9 @@ void GLContext::gl_scissor(GLint x, GLint y, GLsizei width, GLsizei height)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_scissor, x, y, width, height);
     RETURN_WITH_ERROR_IF(width < 0 || height < 0, GL_INVALID_VALUE);
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
     options.scissor_box = { x, y, width, height };
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::gl_stencil_func_separate(GLenum face, GLenum func, GLint ref, GLuint mask)
@@ -2681,7 +2755,7 @@ void GLContext::gl_raster_pos(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_raster_pos, x, y, z, w);
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    m_rasterizer.set_raster_position({ x, y, z, w }, m_model_view_matrix, m_projection_matrix);
+    m_rasterizer->set_raster_position({ x, y, z, w }, m_model_view_matrix, m_projection_matrix);
 }
 
 void GLContext::gl_line_width(GLfloat width)
@@ -2721,7 +2795,7 @@ void GLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GL
             && pname != GL_LIGHT_MODEL_TWO_SIDE,
         GL_INVALID_ENUM);
 
-    auto lighting_params = m_rasterizer.light_model();
+    auto lighting_params = m_rasterizer->light_model();
 
     switch (pname) {
     case GL_LIGHT_MODEL_AMBIENT:
@@ -2730,7 +2804,7 @@ void GLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GL
     case GL_LIGHT_MODEL_COLOR_CONTROL: {
         GLenum color_control = static_cast<GLenum>(x);
         RETURN_WITH_ERROR_IF(color_control != GL_SINGLE_COLOR && color_control != GL_SEPARATE_SPECULAR_COLOR, GL_INVALID_ENUM);
-        lighting_params.color_control = (color_control == GL_SINGLE_COLOR) ? SoftGPU::ColorControl::SingleColor : SoftGPU::ColorControl::SeparateSpecularColor;
+        lighting_params.color_control = (color_control == GL_SINGLE_COLOR) ? GPU::ColorControl::SingleColor : GPU::ColorControl::SeparateSpecularColor;
         break;
     }
     case GL_LIGHT_MODEL_LOCAL_VIEWER:
@@ -2746,7 +2820,7 @@ void GLContext::gl_light_model(GLenum pname, GLfloat x, GLfloat y, GLfloat z, GL
         VERIFY_NOT_REACHED();
     }
 
-    m_rasterizer.set_light_model_params(lighting_params);
+    m_rasterizer->set_light_model_params(lighting_params);
 }
 
 void GLContext::gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap)
@@ -2759,9 +2833,9 @@ void GLContext::gl_bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat 
         dbgln_if(GL_DEBUG, "gl_bitmap({}, {}, {}, {}, {}, {}, {}): unimplemented", width, height, xorig, yorig, xmove, ymove, bitmap);
     }
 
-    auto raster_position = m_rasterizer.raster_position();
+    auto raster_position = m_rasterizer->raster_position();
     raster_position.window_coordinates += { xmove, ymove, 0.f, 0.f };
-    m_rasterizer.set_raster_position(raster_position);
+    m_rasterizer->set_raster_position(raster_position);
 }
 
 void GLContext::gl_copy_tex_image_2d(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
@@ -2885,7 +2959,7 @@ void GLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* par
 
 void GLContext::present()
 {
-    m_rasterizer.blit_color_buffer_to(*m_frontbuffer);
+    m_rasterizer->blit_color_buffer_to(*m_frontbuffer);
 }
 
 void GLContext::sync_device_config()
@@ -2909,12 +2983,12 @@ void GLContext::sync_device_sampler_config()
         if (!texture_unit.texture_2d_enabled())
             continue;
 
-        SoftGPU::SamplerConfig config;
+        GPU::SamplerConfig config;
 
         auto texture_2d = texture_unit.texture_2d_target_texture();
         if (texture_2d.is_null()) {
             config.bound_image = nullptr;
-            m_rasterizer.set_sampler_config(i, config);
+            m_rasterizer->set_sampler_config(i, config);
             continue;
         }
 
@@ -2924,28 +2998,28 @@ void GLContext::sync_device_sampler_config()
 
         switch (sampler.min_filter()) {
         case GL_NEAREST:
-            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
-            config.mipmap_filter = SoftGPU::MipMapFilter::None;
+            config.texture_min_filter = GPU::TextureFilter::Nearest;
+            config.mipmap_filter = GPU::MipMapFilter::None;
             break;
         case GL_LINEAR:
-            config.texture_min_filter = SoftGPU::TextureFilter::Linear;
-            config.mipmap_filter = SoftGPU::MipMapFilter::None;
+            config.texture_min_filter = GPU::TextureFilter::Linear;
+            config.mipmap_filter = GPU::MipMapFilter::None;
             break;
         case GL_NEAREST_MIPMAP_NEAREST:
-            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
-            config.mipmap_filter = SoftGPU::MipMapFilter::Nearest;
+            config.texture_min_filter = GPU::TextureFilter::Nearest;
+            config.mipmap_filter = GPU::MipMapFilter::Nearest;
             break;
         case GL_LINEAR_MIPMAP_NEAREST:
-            config.texture_min_filter = SoftGPU::TextureFilter::Linear;
-            config.mipmap_filter = SoftGPU::MipMapFilter::Nearest;
+            config.texture_min_filter = GPU::TextureFilter::Linear;
+            config.mipmap_filter = GPU::MipMapFilter::Nearest;
             break;
         case GL_NEAREST_MIPMAP_LINEAR:
-            config.texture_min_filter = SoftGPU::TextureFilter::Nearest;
-            config.mipmap_filter = SoftGPU::MipMapFilter::Linear;
+            config.texture_min_filter = GPU::TextureFilter::Nearest;
+            config.mipmap_filter = GPU::MipMapFilter::Linear;
             break;
         case GL_LINEAR_MIPMAP_LINEAR:
-            config.texture_min_filter = SoftGPU::TextureFilter::Linear;
-            config.mipmap_filter = SoftGPU::MipMapFilter::Linear;
+            config.texture_min_filter = GPU::TextureFilter::Linear;
+            config.mipmap_filter = GPU::MipMapFilter::Linear;
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -2953,10 +3027,10 @@ void GLContext::sync_device_sampler_config()
 
         switch (sampler.mag_filter()) {
         case GL_NEAREST:
-            config.texture_mag_filter = SoftGPU::TextureFilter::Nearest;
+            config.texture_mag_filter = GPU::TextureFilter::Nearest;
             break;
         case GL_LINEAR:
-            config.texture_mag_filter = SoftGPU::TextureFilter::Linear;
+            config.texture_mag_filter = GPU::TextureFilter::Linear;
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -2964,19 +3038,19 @@ void GLContext::sync_device_sampler_config()
 
         switch (sampler.wrap_s_mode()) {
         case GL_CLAMP:
-            config.texture_wrap_u = SoftGPU::TextureWrapMode::Clamp;
+            config.texture_wrap_u = GPU::TextureWrapMode::Clamp;
             break;
         case GL_CLAMP_TO_BORDER:
-            config.texture_wrap_u = SoftGPU::TextureWrapMode::ClampToBorder;
+            config.texture_wrap_u = GPU::TextureWrapMode::ClampToBorder;
             break;
         case GL_CLAMP_TO_EDGE:
-            config.texture_wrap_u = SoftGPU::TextureWrapMode::ClampToEdge;
+            config.texture_wrap_u = GPU::TextureWrapMode::ClampToEdge;
             break;
         case GL_REPEAT:
-            config.texture_wrap_u = SoftGPU::TextureWrapMode::Repeat;
+            config.texture_wrap_u = GPU::TextureWrapMode::Repeat;
             break;
         case GL_MIRRORED_REPEAT:
-            config.texture_wrap_u = SoftGPU::TextureWrapMode::MirroredRepeat;
+            config.texture_wrap_u = GPU::TextureWrapMode::MirroredRepeat;
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -2984,19 +3058,19 @@ void GLContext::sync_device_sampler_config()
 
         switch (sampler.wrap_t_mode()) {
         case GL_CLAMP:
-            config.texture_wrap_v = SoftGPU::TextureWrapMode::Clamp;
+            config.texture_wrap_v = GPU::TextureWrapMode::Clamp;
             break;
         case GL_CLAMP_TO_BORDER:
-            config.texture_wrap_v = SoftGPU::TextureWrapMode::ClampToBorder;
+            config.texture_wrap_v = GPU::TextureWrapMode::ClampToBorder;
             break;
         case GL_CLAMP_TO_EDGE:
-            config.texture_wrap_v = SoftGPU::TextureWrapMode::ClampToEdge;
+            config.texture_wrap_v = GPU::TextureWrapMode::ClampToEdge;
             break;
         case GL_REPEAT:
-            config.texture_wrap_v = SoftGPU::TextureWrapMode::Repeat;
+            config.texture_wrap_v = GPU::TextureWrapMode::Repeat;
             break;
         case GL_MIRRORED_REPEAT:
-            config.texture_wrap_v = SoftGPU::TextureWrapMode::MirroredRepeat;
+            config.texture_wrap_v = GPU::TextureWrapMode::MirroredRepeat;
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -3004,19 +3078,23 @@ void GLContext::sync_device_sampler_config()
 
         switch (texture_unit.env_mode()) {
         case GL_MODULATE:
-            config.fixed_function_texture_env_mode = SoftGPU::TextureEnvMode::Modulate;
+            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Modulate;
             break;
         case GL_REPLACE:
-            config.fixed_function_texture_env_mode = SoftGPU::TextureEnvMode::Replace;
+            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Replace;
             break;
         case GL_DECAL:
-            config.fixed_function_texture_env_mode = SoftGPU::TextureEnvMode::Decal;
+            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Decal;
+            break;
+        case GL_ADD:
+            config.fixed_function_texture_env_mode = GPU::TextureEnvMode::Add;
             break;
         default:
             VERIFY_NOT_REACHED();
         }
 
-        m_rasterizer.set_sampler_config(i, config);
+        config.border_color = sampler.border_color();
+        m_rasterizer->set_sampler_config(i, config);
     }
 }
 
@@ -3027,50 +3105,50 @@ void GLContext::sync_light_state()
 
     m_light_state_is_dirty = false;
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
     options.color_material_enabled = m_color_material_enabled;
     switch (m_color_material_face) {
     case GL_BACK:
-        options.color_material_face = SoftGPU::ColorMaterialFace::Back;
+        options.color_material_face = GPU::ColorMaterialFace::Back;
         break;
     case GL_FRONT:
-        options.color_material_face = SoftGPU::ColorMaterialFace::Front;
+        options.color_material_face = GPU::ColorMaterialFace::Front;
         break;
     case GL_FRONT_AND_BACK:
-        options.color_material_face = SoftGPU::ColorMaterialFace::FrontAndBack;
+        options.color_material_face = GPU::ColorMaterialFace::FrontAndBack;
         break;
     default:
         VERIFY_NOT_REACHED();
     }
     switch (m_color_material_mode) {
     case GL_AMBIENT:
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Ambient;
+        options.color_material_mode = GPU::ColorMaterialMode::Ambient;
         break;
     case GL_AMBIENT_AND_DIFFUSE:
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Ambient;
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Diffuse;
+        options.color_material_mode = GPU::ColorMaterialMode::Ambient;
+        options.color_material_mode = GPU::ColorMaterialMode::Diffuse;
         break;
     case GL_DIFFUSE:
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Diffuse;
+        options.color_material_mode = GPU::ColorMaterialMode::Diffuse;
         break;
     case GL_EMISSION:
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Emissive;
+        options.color_material_mode = GPU::ColorMaterialMode::Emissive;
         break;
     case GL_SPECULAR:
-        options.color_material_mode = SoftGPU::ColorMaterialMode::Specular;
+        options.color_material_mode = GPU::ColorMaterialMode::Specular;
         break;
     default:
         VERIFY_NOT_REACHED();
     }
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 
-    for (auto light_id = 0u; light_id < SoftGPU::NUM_LIGHTS; light_id++) {
+    for (auto light_id = 0u; light_id < m_device_info.num_lights; light_id++) {
         auto const& current_light_state = m_light_states.at(light_id);
-        m_rasterizer.set_light_state(light_id, current_light_state);
+        m_rasterizer->set_light_state(light_id, current_light_state);
     }
 
-    m_rasterizer.set_material_state(SoftGPU::Face::Front, m_material_states[Face::Front]);
-    m_rasterizer.set_material_state(SoftGPU::Face::Back, m_material_states[Face::Back]);
+    m_rasterizer->set_material_state(GPU::Face::Front, m_material_states[Face::Front]);
+    m_rasterizer->set_material_state(GPU::Face::Back, m_material_states[Face::Back]);
 }
 
 void GLContext::sync_device_texcoord_config()
@@ -3079,32 +3157,32 @@ void GLContext::sync_device_texcoord_config()
         return;
     m_texcoord_generation_dirty = false;
 
-    auto options = m_rasterizer.options();
+    auto options = m_rasterizer->options();
 
     for (size_t i = 0; i < m_device_info.num_texture_units; ++i) {
 
-        u8 enabled_coordinates = SoftGPU::TexCoordGenerationCoordinate::None;
+        u8 enabled_coordinates = GPU::TexCoordGenerationCoordinate::None;
         for (GLenum capability = GL_TEXTURE_GEN_S; capability <= GL_TEXTURE_GEN_Q; ++capability) {
             auto const context_coordinate_config = texture_coordinate_generation(i, capability);
             if (!context_coordinate_config.enabled)
                 continue;
 
-            SoftGPU::TexCoordGenerationConfig* texcoord_generation_config;
+            GPU::TexCoordGenerationConfig* texcoord_generation_config;
             switch (capability) {
             case GL_TEXTURE_GEN_S:
-                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::S;
+                enabled_coordinates |= GPU::TexCoordGenerationCoordinate::S;
                 texcoord_generation_config = &options.texcoord_generation_config[i][0];
                 break;
             case GL_TEXTURE_GEN_T:
-                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::T;
+                enabled_coordinates |= GPU::TexCoordGenerationCoordinate::T;
                 texcoord_generation_config = &options.texcoord_generation_config[i][1];
                 break;
             case GL_TEXTURE_GEN_R:
-                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::R;
+                enabled_coordinates |= GPU::TexCoordGenerationCoordinate::R;
                 texcoord_generation_config = &options.texcoord_generation_config[i][2];
                 break;
             case GL_TEXTURE_GEN_Q:
-                enabled_coordinates |= SoftGPU::TexCoordGenerationCoordinate::Q;
+                enabled_coordinates |= GPU::TexCoordGenerationCoordinate::Q;
                 texcoord_generation_config = &options.texcoord_generation_config[i][3];
                 break;
             default:
@@ -3113,28 +3191,28 @@ void GLContext::sync_device_texcoord_config()
 
             switch (context_coordinate_config.generation_mode) {
             case GL_OBJECT_LINEAR:
-                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::ObjectLinear;
+                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::ObjectLinear;
                 texcoord_generation_config->coefficients = context_coordinate_config.object_plane_coefficients;
                 break;
             case GL_EYE_LINEAR:
-                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::EyeLinear;
+                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::EyeLinear;
                 texcoord_generation_config->coefficients = context_coordinate_config.eye_plane_coefficients;
                 break;
             case GL_SPHERE_MAP:
-                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::SphereMap;
+                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::SphereMap;
                 break;
             case GL_REFLECTION_MAP:
-                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::ReflectionMap;
+                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::ReflectionMap;
                 break;
             case GL_NORMAL_MAP:
-                texcoord_generation_config->mode = SoftGPU::TexCoordGenerationMode::NormalMap;
+                texcoord_generation_config->mode = GPU::TexCoordGenerationMode::NormalMap;
                 break;
             }
         }
         options.texcoord_generation_enabled_coordinates[i] = enabled_coordinates;
     }
 
-    m_rasterizer.set_options(options);
+    m_rasterizer->set_options(options);
 }
 
 void GLContext::sync_stencil_configuration()
@@ -3143,28 +3221,28 @@ void GLContext::sync_stencil_configuration()
         return;
     m_stencil_configuration_dirty = false;
 
-    auto set_device_stencil = [&](SoftGPU::Face face, StencilFunctionOptions func, StencilOperationOptions op) {
-        SoftGPU::StencilConfiguration device_configuration;
+    auto set_device_stencil = [&](GPU::Face face, StencilFunctionOptions func, StencilOperationOptions op) {
+        GPU::StencilConfiguration device_configuration;
 
         // Stencil test function
-        auto map_func = [](GLenum func) -> SoftGPU::StencilTestFunction {
+        auto map_func = [](GLenum func) -> GPU::StencilTestFunction {
             switch (func) {
             case GL_ALWAYS:
-                return SoftGPU::StencilTestFunction::Always;
+                return GPU::StencilTestFunction::Always;
             case GL_EQUAL:
-                return SoftGPU::StencilTestFunction::Equal;
+                return GPU::StencilTestFunction::Equal;
             case GL_GEQUAL:
-                return SoftGPU::StencilTestFunction::GreaterOrEqual;
+                return GPU::StencilTestFunction::GreaterOrEqual;
             case GL_GREATER:
-                return SoftGPU::StencilTestFunction::Greater;
+                return GPU::StencilTestFunction::Greater;
             case GL_LESS:
-                return SoftGPU::StencilTestFunction::Less;
+                return GPU::StencilTestFunction::Less;
             case GL_LEQUAL:
-                return SoftGPU::StencilTestFunction::LessOrEqual;
+                return GPU::StencilTestFunction::LessOrEqual;
             case GL_NEVER:
-                return SoftGPU::StencilTestFunction::Never;
+                return GPU::StencilTestFunction::Never;
             case GL_NOTEQUAL:
-                return SoftGPU::StencilTestFunction::NotEqual;
+                return GPU::StencilTestFunction::NotEqual;
             }
             VERIFY_NOT_REACHED();
         };
@@ -3173,24 +3251,24 @@ void GLContext::sync_stencil_configuration()
         device_configuration.test_mask = func.mask;
 
         // Stencil operation
-        auto map_operation = [](GLenum operation) -> SoftGPU::StencilOperation {
+        auto map_operation = [](GLenum operation) -> GPU::StencilOperation {
             switch (operation) {
             case GL_DECR:
-                return SoftGPU::StencilOperation::Decrement;
+                return GPU::StencilOperation::Decrement;
             case GL_DECR_WRAP:
-                return SoftGPU::StencilOperation::DecrementWrap;
+                return GPU::StencilOperation::DecrementWrap;
             case GL_INCR:
-                return SoftGPU::StencilOperation::Increment;
+                return GPU::StencilOperation::Increment;
             case GL_INCR_WRAP:
-                return SoftGPU::StencilOperation::IncrementWrap;
+                return GPU::StencilOperation::IncrementWrap;
             case GL_INVERT:
-                return SoftGPU::StencilOperation::Invert;
+                return GPU::StencilOperation::Invert;
             case GL_KEEP:
-                return SoftGPU::StencilOperation::Keep;
+                return GPU::StencilOperation::Keep;
             case GL_REPLACE:
-                return SoftGPU::StencilOperation::Replace;
+                return GPU::StencilOperation::Replace;
             case GL_ZERO:
-                return SoftGPU::StencilOperation::Zero;
+                return GPU::StencilOperation::Zero;
             }
             VERIFY_NOT_REACHED();
         };
@@ -3199,10 +3277,10 @@ void GLContext::sync_stencil_configuration()
         device_configuration.on_pass = map_operation(op.op_pass);
         device_configuration.write_mask = op.write_mask;
 
-        m_rasterizer.set_stencil_configuration(face, device_configuration);
+        m_rasterizer->set_stencil_configuration(face, device_configuration);
     };
-    set_device_stencil(SoftGPU::Face::Front, m_stencil_function[Face::Front], m_stencil_operation[Face::Front]);
-    set_device_stencil(SoftGPU::Face::Back, m_stencil_function[Face::Back], m_stencil_operation[Face::Back]);
+    set_device_stencil(GPU::Face::Front, m_stencil_function[Face::Front], m_stencil_operation[Face::Front]);
+    set_device_stencil(GPU::Face::Back, m_stencil_function[Face::Back], m_stencil_operation[Face::Back]);
 }
 
 void GLContext::build_extension_string()
@@ -3413,7 +3491,7 @@ void GLContext::gl_materialfv(GLenum face, GLenum pname, GLfloat const* params)
     RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_EMISSION || pname == GL_SHININESS || pname == GL_AMBIENT_AND_DIFFUSE), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF((pname == GL_SHININESS && *params > 128.0f), GL_INVALID_VALUE);
 
-    auto update_material = [](SoftGPU::Material& material, GLenum pname, GLfloat const* params) {
+    auto update_material = [](GPU::Material& material, GLenum pname, GLfloat const* params) {
         switch (pname) {
         case GL_AMBIENT:
             material.ambient = { params[0], params[1], params[2], params[3] };
@@ -3460,7 +3538,7 @@ void GLContext::gl_materialiv(GLenum face, GLenum pname, GLint const* params)
     RETURN_WITH_ERROR_IF(!(pname == GL_AMBIENT || pname == GL_DIFFUSE || pname == GL_SPECULAR || pname == GL_EMISSION || pname == GL_SHININESS || pname == GL_AMBIENT_AND_DIFFUSE), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF((pname == GL_SHININESS && *params > 128), GL_INVALID_VALUE);
 
-    auto update_material = [](SoftGPU::Material& material, GLenum pname, GLint const* params) {
+    auto update_material = [](GPU::Material& material, GLenum pname, GLint const* params) {
         switch (pname) {
         case GL_AMBIENT:
             material.ambient = { static_cast<float>(params[0]), static_cast<float>(params[1]), static_cast<float>(params[2]), static_cast<float>(params[3]) };
@@ -3643,9 +3721,24 @@ void GLContext::get_material_param(Face face, GLenum pname, T* params)
     }
 }
 
+void GLContext::gl_copy_tex_sub_image_2d(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_copy_tex_sub_image_2d, target, level, xoffset, yoffset, x, y, width, height);
+    RETURN_WITH_ERROR_IF(!(target == GL_TEXTURE_2D || target == GL_TEXTURE_1D_ARRAY), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(level < 0, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: implement
+    dbgln_if(GL_DEBUG, "GLContext FIXME: implement gl_copy_tex_sub_image_2d({:#x}, {}, {}, {}, {}, {}, {}, {})",
+        target, level, xoffset, yoffset, x, y, width, height);
+}
+
 NonnullOwnPtr<GLContext> create_context(Gfx::Bitmap& bitmap)
 {
-    auto context = make<GLContext>(bitmap);
+    // FIXME: Make driver selectable. This is currently hardcoded to LibSoftGPU
+    auto driver = MUST(GPU::Driver::try_create("softgpu"));
+    auto device = MUST(driver->try_create_device(bitmap.size()));
+    auto context = make<GLContext>(driver, move(device), bitmap);
     dbgln_if(GL_DEBUG, "GL::create_context({}) -> {:p}", bitmap.size(), context.ptr());
 
     if (!g_gl_context)

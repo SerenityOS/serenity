@@ -149,16 +149,6 @@ void BrowsingContext::set_size(Gfx::IntSize const& size)
     HTML::main_thread_event_loop().schedule();
 }
 
-void BrowsingContext::set_viewport_scroll_offset(Gfx::IntPoint const& offset)
-{
-    if (m_viewport_scroll_offset == offset)
-        return;
-    m_viewport_scroll_offset = offset;
-
-    for (auto* client : m_viewport_clients)
-        client->browsing_context_did_set_viewport_rect(viewport_rect());
-}
-
 void BrowsingContext::set_needs_display()
 {
     set_needs_display(viewport_rect());
@@ -177,6 +167,15 @@ void BrowsingContext::set_needs_display(Gfx::IntRect const& rect)
 
     if (container() && container()->layout_node())
         container()->layout_node()->set_needs_display();
+}
+
+void BrowsingContext::scroll_to(Gfx::IntPoint const& position)
+{
+    if (active_document())
+        active_document()->force_layout();
+
+    if (m_page)
+        m_page->client().page_did_request_scroll_to(position);
 }
 
 void BrowsingContext::scroll_to_anchor(String const& fragment)
