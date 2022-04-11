@@ -94,7 +94,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateConstructor::from)
     return TRY(to_temporal_date(global_object, item, options));
 }
 
-// 3.2.3 Temporal.PlainDate.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-plaindate-constructor
+// 3.2.3 Temporal.PlainDate.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.compare
 JS_DEFINE_NATIVE_FUNCTION(PlainDateConstructor::compare)
 {
     // 1. Set one to ? ToTemporalDate(one).
