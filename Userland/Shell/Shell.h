@@ -12,6 +12,7 @@
 #include <AK/CircularQueue.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/StackInfo.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -223,6 +224,7 @@ public:
 
     void highlight(Line::Editor&) const;
     Vector<Line::CompletionSuggestion> complete();
+    Vector<Line::CompletionSuggestion> complete(StringView);
     Vector<Line::CompletionSuggestion> complete_program_name(StringView, size_t offset, EscapeMode = EscapeMode::Bareword);
     Vector<Line::CompletionSuggestion> complete_variable(StringView, size_t offset);
     Vector<Line::CompletionSuggestion> complete_user(StringView, size_t offset);
@@ -419,6 +421,8 @@ private:
     mutable bool m_last_continuation_state { false }; // false == not needed.
 
     Optional<size_t> m_history_autosave_time;
+
+    StackInfo m_completion_stack_info;
 };
 
 [[maybe_unused]] static constexpr bool is_word_character(char c)
