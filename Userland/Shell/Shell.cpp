@@ -1409,8 +1409,12 @@ void Shell::highlight(Line::Editor& editor) const
 
 Vector<Line::CompletionSuggestion> Shell::complete()
 {
-    auto line = m_editor->line(m_editor->cursor());
+    m_completion_stack_info = {};
+    return complete(m_editor->line(m_editor->cursor()));
+}
 
+Vector<Line::CompletionSuggestion> Shell::complete(StringView line)
+{
     Parser parser(line, m_is_interactive);
 
     auto ast = parser.parse();
@@ -1850,29 +1854,53 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             { "/", "rx" },
         },
     });
-    execute_node->for_each_entry(*this, [&](NonnullRefPtr<AST::Value> entry) -> IterationDecision {
-        auto result = entry->resolve_as_string(*this);
-        JsonParser parser(result);
-        auto parsed_result = parser.parse();
-        if (parsed_result.is_error())
-            return IterationDecision::Continue;
-        auto parsed = parsed_result.release_value();
-        if (parsed.is_object()) {
-            auto& object = parsed.as_object();
-            Line::CompletionSuggestion suggestion {
-                object.get("completion").as_string_or(""),
-                object.get("trailing_trivia").as_string_or(""),
-                object.get("display_trivia").as_string_or(""),
-            };
-            suggestion.static_offset = object.get("static_offset").to_u64(0);
-            suggestion.invariant_offset = object.get("invariant_offset").to_u64(0);
-            suggestions.append(move(suggestion));
-        } else {
-            suggestions.append(parsed.to_string());
-        }
+    {
+        TemporaryChange change(m_is_interactive, false);
+        execute_node->for_each_entry(*this, [&](NonnullRefPtr<AST::Value> entry) -> IterationDecision {
+            auto result = entry->resolve_as_string(*this);
+            JsonParser parser(result);
+            auto parsed_result = parser.parse();
+            if (parsed_result.is_error())
+                return IterationDecision::Continue;
+            auto parsed = parsed_result.release_value();
+            if (parsed.is_object()) {
+                auto& object = parsed.as_object();
+                auto kind = object.get("kind").as_string_or("plain");
+                if (kind == "path") {
+                    auto base = object.get("base").as_string_or("");
+                    auto part = object.get("part").as_string_or("");
+                    auto executable_only = object.get("executable_only").to_bool(false) ? ExecutableOnly::Yes : ExecutableOnly::No;
+                    suggestions.extend(complete_path(base, part, part.length(), executable_only, nullptr, nullptr));
+                } else if (kind == "program") {
+                    auto name = object.get("name").as_string_or("");
+                    suggestions.extend(complete_program_name(name, name.length()));
+                } else if (kind == "proxy") {
+                    if (m_completion_stack_info.size_free() < 4 * KiB) {
+                        dbgln("Not enough stack space, recursion?");
+                        return IterationDecision::Continue;
+                    }
+                    auto argv = object.get("argv").as_string_or("");
+                    dbgln("Proxy completion for {}", argv);
+                    suggestions.extend(complete(argv));
+                } else if (kind == "plain") {
+                    Line::CompletionSuggestion suggestion {
+                        object.get("completion").as_string_or(""),
+                        object.get("trailing_trivia").as_string_or(""),
+                        object.get("display_trivia").as_string_or(""),
+                    };
+                    suggestion.static_offset = object.get("static_offset").to_u64(0);
+                    suggestion.invariant_offset = object.get("invariant_offset").to_u64(0);
+                    suggestions.append(move(suggestion));
+                } else {
+                    dbgln("LibLine: Unhandled completion kind: {}", kind);
+                }
+            } else {
+                suggestions.append(parsed.to_string());
+            }
 
-        return IterationDecision::Continue;
-    });
+            return IterationDecision::Continue;
+        });
+    }
 
     auto pgid = getpgrp();
     tcsetpgrp(STDOUT_FILENO, pgid);
