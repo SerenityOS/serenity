@@ -563,8 +563,6 @@ void dump_rule(StringBuilder& builder, CSS::CSSRule const& rule, int indent_leve
     case CSS::CSSRule::Type::Supports:
         dump_supports_rule(builder, verify_cast<CSS::CSSSupportsRule const>(rule), indent_levels);
         break;
-    case CSS::CSSRule::Type::__Count:
-        VERIFY_NOT_REACHED();
     }
 }
 
