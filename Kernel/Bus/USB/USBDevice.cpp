@@ -115,6 +115,26 @@ ErrorOr<void> Device::enumerate_device()
     dbgln_if(USB_DEBUG, "USB Device: Set address to {}", m_address);
 
     memcpy(&m_device_descriptor, &dev_descriptor, sizeof(USBDeviceDescriptor));
+
+    // Fetch the configuration descriptors from the device
+    m_configurations.ensure_capacity(m_device_descriptor.num_configurations);
+    for (auto configuration = 0u; configuration < m_device_descriptor.num_configurations; configuration++) {
+        USBConfigurationDescriptor configuration_descriptor;
+        transfer_length = TRY(m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_CONFIGURATION << 8u) | configuration, 0, sizeof(USBConfigurationDescriptor), &configuration_descriptor));
+
+        if constexpr (USB_DEBUG) {
+            dbgln("USB Configuration Descriptor {}", configuration);
+            dbgln("Total Length: {}", configuration_descriptor.total_length);
+            dbgln("Number of interfaces: {}", configuration_descriptor.number_of_interfaces);
+            dbgln("Configuration Value: {}", configuration_descriptor.configuration_value);
+            dbgln("Attributes Bitmap: {:08b}", configuration_descriptor.attributes_bitmap);
+            dbgln("Maximum Power: {}mA", configuration_descriptor.max_power_in_ma * 2u); // This value is in 2mA steps
+        }
+
+        USBConfiguration device_configuration(*this, configuration_descriptor);
+        m_configurations.append(device_configuration);
+    }
+
     return {};
 }
 
