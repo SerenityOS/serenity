@@ -43,3 +43,5 @@ export HISTORY_AUTOSAVE_TIME_MS=10000
 export TMPDIR=/tmp
 
 PROGRAMS_ALLOWED_TO_MODIFY_DEFAULT_TERMIOS=(stty)
+
+for /usr/share/shell/completion/*.sh { source $it }
