@@ -38,11 +38,17 @@ unsigned HTMLCanvasElement::height() const
 void HTMLCanvasElement::set_width(unsigned value)
 {
     set_attribute(HTML::AttributeNames::width, String::number(value));
+    m_bitmap = nullptr;
+    if (m_context)
+        m_context->reset_to_default_state();
 }
 
 void HTMLCanvasElement::set_height(unsigned value)
 {
     set_attribute(HTML::AttributeNames::height, String::number(value));
+    m_bitmap = nullptr;
+    if (m_context)
+        m_context->reset_to_default_state();
 }
 
 RefPtr<Layout::Node> HTMLCanvasElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
