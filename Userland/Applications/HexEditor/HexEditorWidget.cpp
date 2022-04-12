@@ -12,6 +12,7 @@
 #include "GoToOffsetDialog.h"
 #include "SearchResultsModel.h"
 #include "ValueInspectorModel.h"
+#include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
@@ -341,7 +342,19 @@ void HexEditorWidget::update_inspector_values(size_t position)
     else
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, utf8_view.unicode_substring_view(0, 1).as_string());
 
-    // FIXME: Parse as other values like UTF16, Timestamp etc
+    if (byte_read_count % 2 == 0) {
+        Utf16View utf16_view { Span<u16 const> { reinterpret_cast<u16 const*>(&unsigned_64_bit_int), 4 } };
+        size_t valid_code_units;
+        utf8_view.validate(valid_code_units);
+        if (valid_code_units == 0)
+            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
+        else
+            value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, utf16_view.unicode_substring_view(0, 1).to_utf8());
+    } else {
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
+    }
+
+    // FIXME: Parse as other values like Timestamp etc
 
     m_value_inspector->set_model(value_inspector_model);
     m_value_inspector->update();
