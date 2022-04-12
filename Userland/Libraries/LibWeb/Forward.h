@@ -105,7 +105,7 @@ class Declaration;
 class DeclarationOrAtRule;
 class Function;
 class Parser;
-class StyleRule;
+class Rule;
 class Token;
 class Tokenizer;
 }

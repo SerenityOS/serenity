@@ -9,7 +9,7 @@
 
 namespace Web::CSS::Parser {
 
-DeclarationOrAtRule::DeclarationOrAtRule(RefPtr<StyleRule> at)
+DeclarationOrAtRule::DeclarationOrAtRule(RefPtr<Rule> at)
     : m_type(DeclarationType::At)
     , m_at(move(at))
 {

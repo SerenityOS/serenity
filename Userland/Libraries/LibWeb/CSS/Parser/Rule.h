@@ -15,24 +15,24 @@
 
 namespace Web::CSS::Parser {
 
-class StyleRule : public RefCounted<StyleRule> {
+class Rule : public RefCounted<Rule> {
 public:
     enum class Type {
         At,
         Qualified,
     };
 
-    static NonnullRefPtr<StyleRule> make_at_rule(FlyString name, Vector<ComponentValue> prelude, RefPtr<Block> block)
+    static NonnullRefPtr<Rule> make_at_rule(FlyString name, Vector<ComponentValue> prelude, RefPtr<Block> block)
     {
-        return adopt_ref(*new StyleRule(Type::At, move(name), move(prelude), move(block)));
+        return adopt_ref(*new Rule(Type::At, move(name), move(prelude), move(block)));
     }
 
-    static NonnullRefPtr<StyleRule> make_qualified_rule(Vector<ComponentValue> prelude, RefPtr<Block> block)
+    static NonnullRefPtr<Rule> make_qualified_rule(Vector<ComponentValue> prelude, RefPtr<Block> block)
     {
-        return adopt_ref(*new StyleRule(Type::Qualified, {}, move(prelude), move(block)));
+        return adopt_ref(*new Rule(Type::Qualified, {}, move(prelude), move(block)));
     }
 
-    ~StyleRule();
+    ~Rule();
 
     bool is_qualified_rule() const { return m_type == Type::Qualified; }
     bool is_at_rule() const { return m_type == Type::At; }
@@ -44,7 +44,7 @@ public:
     String to_string() const;
 
 private:
-    StyleRule(Type, FlyString name, Vector<ComponentValue> prelude, RefPtr<Block>);
+    Rule(Type, FlyString name, Vector<ComponentValue> prelude, RefPtr<Block>);
 
     Type const m_type;
     FlyString m_at_rule_name;
