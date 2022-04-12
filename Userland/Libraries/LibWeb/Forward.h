@@ -92,6 +92,10 @@ class TransformationStyleValue;
 class UnicodeRange;
 class UnresolvedStyleValue;
 class UnsetStyleValue;
+
+enum class MediaFeatureID;
+enum class PropertyID;
+enum class ValueID;
 }
 
 namespace Web::DOM {
