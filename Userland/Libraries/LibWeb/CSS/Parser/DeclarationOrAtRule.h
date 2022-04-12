@@ -12,8 +12,6 @@
 namespace Web::CSS::Parser {
 
 class DeclarationOrAtRule {
-    friend class Parser;
-
 public:
     explicit DeclarationOrAtRule(RefPtr<StyleRule> at);
     explicit DeclarationOrAtRule(Declaration declaration);
