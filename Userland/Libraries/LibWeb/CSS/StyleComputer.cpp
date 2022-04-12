@@ -557,7 +557,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                     return false;
 
                 auto const& custom_property_name_token = var_contents.first();
-                if (!custom_property_name_token.is(Token::Type::Ident))
+                if (!custom_property_name_token.is(Parser::Token::Type::Ident))
                     return false;
                 auto custom_property_name = custom_property_name_token.token().ident();
                 if (!custom_property_name.starts_with("--"))
@@ -582,7 +582,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 }
 
                 // Use the provided fallback value, if any.
-                if (var_contents.size() > 2 && var_contents[1].is(Token::Type::Comma)) {
+                if (var_contents.size() > 2 && var_contents[1].is(Parser::Token::Type::Comma)) {
                     if (!expand_unresolved_values(element, property_name, dependencies, var_contents, dest, 2))
                         return false;
                     continue;
@@ -594,7 +594,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                     return false;
 
                 auto const& attr_name_token = attr_contents.first();
-                if (!attr_name_token.is(Token::Type::Ident))
+                if (!attr_name_token.is(Parser::Token::Type::Ident))
                     return false;
                 auto attr_name = attr_name_token.token().ident();
 
@@ -602,13 +602,13 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 // 1. If the attr() function has a substitution value, replace the attr() function by the substitution value.
                 if (!attr_value.is_null()) {
                     // FIXME: attr() should also accept an optional type argument, not just strings.
-                    dest.empend(Token::of_string(attr_value));
+                    dest.empend(Parser::Token::of_string(attr_value));
                     continue;
                 }
 
                 // 2. Otherwise, if the attr() function has a fallback value as its last argument, replace the attr() function by the fallback value.
                 //    If there are any var() or attr() references in the fallback, substitute them as well.
-                if (attr_contents.size() > 2 && attr_contents[1].is(Token::Type::Comma)) {
+                if (attr_contents.size() > 2 && attr_contents[1].is(Parser::Token::Type::Comma)) {
                     if (!expand_unresolved_values(element, property_name, dependencies, attr_contents, dest, 2))
                         return false;
                     continue;
