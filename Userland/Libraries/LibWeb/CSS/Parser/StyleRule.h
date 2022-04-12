@@ -15,7 +15,7 @@
 namespace Web::CSS {
 
 class StyleRule : public RefCounted<StyleRule> {
-    friend class Parser;
+    friend class Parser::Parser;
 
 public:
     enum class Type {

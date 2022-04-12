@@ -312,7 +312,7 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
     static bool initialized = false;
     if (!initialized) {
         initialized = true;
-        ParsingContext parsing_context;
+        Parser::ParsingContext parsing_context;
 )~~~");
 
     // NOTE: Parsing a shorthand property requires that its longhands are already available here.
@@ -334,7 +334,7 @@ NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
         member_generator.set("initial_value_string", initial_value_string);
         member_generator.append(R"~~~(
         {
-            auto parsed_value = Parser(parsing_context, "@initial_value_string@").parse_as_css_value(PropertyID::@name:titlecase@);
+            auto parsed_value = parse_css_value(parsing_context, "@initial_value_string@", PropertyID::@name:titlecase@);
             VERIFY(!parsed_value.is_null());
             initial_values[to_underlying(PropertyID::@name:titlecase@)] = parsed_value.release_nonnull();
         }

@@ -114,7 +114,7 @@ static StyleSheet& default_stylesheet()
     if (!sheet) {
         extern char const default_stylesheet_source[];
         String css = default_stylesheet_source;
-        sheet = parse_css_stylesheet(CSS::ParsingContext(), css).leak_ref();
+        sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(), css).leak_ref();
     }
     return *sheet;
 }
@@ -125,7 +125,7 @@ static StyleSheet& quirks_mode_stylesheet()
     if (!sheet) {
         extern char const quirks_mode_stylesheet_source[];
         String css = quirks_mode_stylesheet_source;
-        sheet = parse_css_stylesheet(CSS::ParsingContext(), css).leak_ref();
+        sheet = parse_css_stylesheet(CSS::Parser::ParsingContext(), css).leak_ref();
     }
     return *sheet;
 }
@@ -652,7 +652,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     if (!expand_unresolved_values(element, string_from_property_id(property_id), dependencies, unresolved.values(), expanded_values, 0))
         return {};
 
-    if (auto parsed_value = Parser::parse_css_value({}, ParsingContext { document() }, property_id, expanded_values))
+    if (auto parsed_value = Parser::Parser::parse_css_value({}, Parser::ParsingContext { document() }, property_id, expanded_values))
         return parsed_value.release_nonnull();
 
     return {};

@@ -30,7 +30,7 @@
 #include <LibWeb/CSS/UnicodeRange.h>
 #include <LibWeb/Forward.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
 class ParsingContext {
 public:
@@ -375,13 +375,13 @@ private:
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::ParsingContext const&, StringView, Optional<AK::URL> location = {});
-RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::ParsingContext const&, StringView, DOM::Element&);
-RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
-Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView);
-RefPtr<CSS::CSSRule> parse_css_rule(CSS::ParsingContext const&, StringView);
-RefPtr<CSS::MediaQuery> parse_media_query(CSS::ParsingContext const&, StringView);
-NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::ParsingContext const&, StringView);
-RefPtr<CSS::Supports> parse_css_supports(CSS::ParsingContext const&, StringView);
+RefPtr<CSS::CSSStyleSheet> parse_css_stylesheet(CSS::Parser::ParsingContext const&, StringView, Optional<AK::URL> location = {});
+RefPtr<CSS::ElementInlineCSSStyleDeclaration> parse_css_style_attribute(CSS::Parser::ParsingContext const&, StringView, DOM::Element&);
+RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const&, StringView, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
+Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const&, StringView);
+RefPtr<CSS::CSSRule> parse_css_rule(CSS::Parser::ParsingContext const&, StringView);
+RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const&, StringView);
+NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::Parser::ParsingContext const&, StringView);
+RefPtr<CSS::Supports> parse_css_supports(CSS::Parser::ParsingContext const&, StringView);
 
 }

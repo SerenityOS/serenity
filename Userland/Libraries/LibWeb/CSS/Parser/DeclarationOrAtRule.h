@@ -12,7 +12,7 @@
 namespace Web::CSS {
 
 class DeclarationOrAtRule {
-    friend class Parser;
+    friend class Parser::Parser;
 
 public:
     explicit DeclarationOrAtRule(RefPtr<StyleRule> at);

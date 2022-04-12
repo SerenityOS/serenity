@@ -98,6 +98,10 @@ enum class PropertyID;
 enum class ValueID;
 }
 
+namespace Web::CSS::Parser {
+class Parser;
+}
+
 namespace Web::DOM {
 class AbstractRange;
 class AbortController;
