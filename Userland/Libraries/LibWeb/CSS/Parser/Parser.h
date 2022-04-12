@@ -21,7 +21,7 @@
 #include <LibWeb/CSS/Parser/Declaration.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Function.h>
-#include <LibWeb/CSS/Parser/StyleRule.h>
+#include <LibWeb/CSS/Parser/Rule.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
 #include <LibWeb/CSS/Ratio.h>
 #include <LibWeb/CSS/Selector.h>
@@ -121,18 +121,18 @@ private:
     // "Parse a stylesheet" is intended to be the normal parser entry point, for parsing stylesheets.
     struct ParsedStyleSheet {
         Optional<AK::URL> location;
-        NonnullRefPtrVector<StyleRule> rules;
+        NonnullRefPtrVector<Rule> rules;
     };
     template<typename T>
     ParsedStyleSheet parse_a_stylesheet(TokenStream<T>&, Optional<AK::URL> location);
 
     // "Parse a list of rules" is intended for the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
     template<typename T>
-    NonnullRefPtrVector<StyleRule> parse_a_list_of_rules(TokenStream<T>&);
+    NonnullRefPtrVector<Rule> parse_a_list_of_rules(TokenStream<T>&);
 
     // "Parse a rule" is intended for use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
     template<typename T>
-    RefPtr<StyleRule> parse_a_rule(TokenStream<T>&);
+    RefPtr<Rule> parse_a_rule(TokenStream<T>&);
 
     // "Parse a declaration" is used in @supports conditions. [CSS3-CONDITIONAL]
     template<typename T>
@@ -179,11 +179,11 @@ private:
         Yes
     };
     template<typename T>
-    [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(TokenStream<T>&, TopLevel);
+    [[nodiscard]] NonnullRefPtrVector<Rule> consume_a_list_of_rules(TokenStream<T>&, TopLevel);
     template<typename T>
-    [[nodiscard]] NonnullRefPtr<StyleRule> consume_an_at_rule(TokenStream<T>&);
+    [[nodiscard]] NonnullRefPtr<Rule> consume_an_at_rule(TokenStream<T>&);
     template<typename T>
-    RefPtr<StyleRule> consume_a_qualified_rule(TokenStream<T>&);
+    RefPtr<Rule> consume_a_qualified_rule(TokenStream<T>&);
     template<typename T>
     [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_style_blocks_contents(TokenStream<T>&);
     template<typename T>
@@ -202,7 +202,7 @@ private:
     RefPtr<CSSRule> parse_font_face_rule(TokenStream<ComponentValue>&);
     Vector<FontFace::Source> parse_font_face_src(TokenStream<ComponentValue>&);
 
-    RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
+    RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<Rule>);
     RefPtr<PropertyOwningCSSStyleDeclaration> convert_to_style_declaration(Vector<DeclarationOrAtRule> declarations);
     Optional<StyleProperty> convert_to_style_property(Declaration const&);
 

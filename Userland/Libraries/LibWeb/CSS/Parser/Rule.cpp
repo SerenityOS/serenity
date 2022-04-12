@@ -5,12 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/CSS/Parser/StyleRule.h>
+#include <LibWeb/CSS/Parser/Rule.h>
 #include <LibWeb/CSS/Serialize.h>
 
 namespace Web::CSS::Parser {
 
-StyleRule::StyleRule(StyleRule::Type type, FlyString name, Vector<ComponentValue> prelude, RefPtr<Block> block)
+Rule::Rule(Rule::Type type, FlyString name, Vector<ComponentValue> prelude, RefPtr<Block> block)
     : m_type(type)
     , m_at_rule_name(move(name))
     , m_prelude(move(prelude))
@@ -18,9 +18,9 @@ StyleRule::StyleRule(StyleRule::Type type, FlyString name, Vector<ComponentValue
 {
 }
 
-StyleRule::~StyleRule() = default;
+Rule::~Rule() = default;
 
-String StyleRule::to_string() const
+String Rule::to_string() const
 {
     StringBuilder builder;
 

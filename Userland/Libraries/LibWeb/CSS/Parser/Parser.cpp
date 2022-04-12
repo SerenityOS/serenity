@@ -24,7 +24,7 @@
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Function.h>
 #include <LibWeb/CSS/Parser/Parser.h>
-#include <LibWeb/CSS/Parser/StyleRule.h>
+#include <LibWeb/CSS/Parser/Rule.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
@@ -1520,12 +1520,12 @@ Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<ComponentVa
 // 5.4.1. Consume a list of rules
 // https://www.w3.org/TR/css-syntax-3/#consume-list-of-rules
 template<typename T>
-NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& tokens, TopLevel top_level)
+NonnullRefPtrVector<Rule> Parser::consume_a_list_of_rules(TokenStream<T>& tokens, TopLevel top_level)
 {
     // To consume a list of rules, given a top-level flag:
 
     // Create an initially empty list of rules.
-    NonnullRefPtrVector<StyleRule> rules;
+    NonnullRefPtrVector<Rule> rules;
 
     // Repeatedly consume the next input token:
     for (;;) {
@@ -1588,7 +1588,7 @@ NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& t
 // 5.4.2. Consume an at-rule
 // https://www.w3.org/TR/css-syntax-3/#consume-at-rule
 template<typename T>
-NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
+NonnullRefPtr<Rule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 {
     // To consume an at-rule:
 
@@ -1597,7 +1597,7 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
     VERIFY(name_ident.is(Token::Type::AtKeyword));
 
     // Create a new at-rule with its name set to the value of the current input token, its prelude initially set to an empty list, and its value initially set to nothing.
-    // NOTE: We create the StyleRule fully initialized when we return it instead.
+    // NOTE: We create the Rule fully initialized when we return it instead.
     FlyString at_rule_name = ((Token)name_ident).at_keyword();
     Vector<ComponentValue> prelude;
     RefPtr<Block> block;
@@ -1609,21 +1609,21 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
         // <semicolon-token>
         if (token.is(Token::Type::Semicolon)) {
             // Return the at-rule.
-            return StyleRule::make_at_rule(move(at_rule_name), move(prelude), move(block));
+            return Rule::make_at_rule(move(at_rule_name), move(prelude), move(block));
         }
 
         // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
             // This is a parse error. Return the at-rule.
             log_parse_error();
-            return StyleRule::make_at_rule(move(at_rule_name), move(prelude), move(block));
+            return Rule::make_at_rule(move(at_rule_name), move(prelude), move(block));
         }
 
         // <{-token>
         if (token.is(Token::Type::OpenCurly)) {
             // Consume a simple block and assign it to the at-rule’s block. Return the at-rule.
             block = consume_a_simple_block(tokens);
-            return StyleRule::make_at_rule(move(at_rule_name), move(prelude), move(block));
+            return Rule::make_at_rule(move(at_rule_name), move(prelude), move(block));
         }
 
         // simple block with an associated token of <{-token>
@@ -1632,7 +1632,7 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
             if (component_value.is_block() && component_value.block().is_curly()) {
                 // Assign the block to the at-rule’s block. Return the at-rule.
                 block = component_value.block();
-                return StyleRule::make_at_rule(move(at_rule_name), move(prelude), move(block));
+                return Rule::make_at_rule(move(at_rule_name), move(prelude), move(block));
             }
         }
 
@@ -1649,12 +1649,12 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 // 5.4.3. Consume a qualified rule
 // https://www.w3.org/TR/css-syntax-3/#consume-qualified-rule
 template<typename T>
-RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
+RefPtr<Rule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
 {
     // To consume a qualified rule:
 
     // Create a new qualified rule with its prelude initially set to an empty list, and its value initially set to nothing.
-    // NOTE: We create the StyleRule fully initialized when we return it instead.
+    // NOTE: We create the Rule fully initialized when we return it instead.
     Vector<ComponentValue> prelude;
     RefPtr<Block> block;
 
@@ -1673,7 +1673,7 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
         if (token.is(Token::Type::OpenCurly)) {
             // Consume a simple block and assign it to the qualified rule’s block. Return the qualified rule.
             block = consume_a_simple_block(tokens);
-            return StyleRule::make_qualified_rule(move(prelude), move(block));
+            return Rule::make_qualified_rule(move(prelude), move(block));
         }
 
         // simple block with an associated token of <{-token>
@@ -1682,7 +1682,7 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
             if (component_value.is_block() && component_value.block().is_curly()) {
                 // Assign the block to the qualified rule’s block. Return the qualified rule.
                 block = component_value.block();
-                return StyleRule::make_qualified_rule(move(prelude), move(block));
+                return Rule::make_qualified_rule(move(prelude), move(block));
             }
         }
 
@@ -2112,10 +2112,10 @@ RefPtr<CSSRule> Parser::parse_as_css_rule()
 // 5.3.5. Parse a rule
 // https://www.w3.org/TR/css-syntax-3/#parse-rule
 template<typename T>
-RefPtr<StyleRule> Parser::parse_a_rule(TokenStream<T>& tokens)
+RefPtr<Rule> Parser::parse_a_rule(TokenStream<T>& tokens)
 {
     // To parse a rule from input:
-    RefPtr<StyleRule> rule;
+    RefPtr<Rule> rule;
 
     // 1. Normalize input, and set input to the result.
     // Note: This is done when initializing the Parser.
@@ -2153,7 +2153,7 @@ RefPtr<StyleRule> Parser::parse_a_rule(TokenStream<T>& tokens)
 // 5.3.4. Parse a list of rules
 // https://www.w3.org/TR/css-syntax-3/#parse-list-of-rules
 template<typename T>
-NonnullRefPtrVector<StyleRule> Parser::parse_a_list_of_rules(TokenStream<T>& tokens)
+NonnullRefPtrVector<Rule> Parser::parse_a_list_of_rules(TokenStream<T>& tokens)
 {
     // To parse a list of rules from input:
 
@@ -2373,7 +2373,7 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
     return {};
 }
 
-RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
+RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
 {
     if (rule->is_at_rule()) {
         if (has_ignored_vendor_prefix(rule->at_rule_name())) {
