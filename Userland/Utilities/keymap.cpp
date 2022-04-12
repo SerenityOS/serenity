@@ -10,6 +10,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/System.h>
 #include <LibKeyboard/CharacterMap.h>
+#include <LibKeyboard/Keymap.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
 
@@ -36,7 +37,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio setkeymap getkeymap rpath wpath cpath"));
     TRY(Core::System::unveil("/res/keymaps", "r"));
-    TRY(Core::System::unveil("/etc/Keyboard.ini", "rwc"));
+    TRY(Core::System::unveil(Keyboard::Keymap::config_file_path(), "rwc"));
 
     String mapping;
     String mappings;
@@ -53,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto mapper_config = TRY(Core::ConfigFile::open("/etc/Keyboard.ini", Core::ConfigFile::AllowWriting::Yes));
+    auto mapper_config = TRY(Core::ConfigFile::open(Keyboard::Keymap::config_file_path(), Core::ConfigFile::AllowWriting::Yes));
 
     int rc = 0;
 
