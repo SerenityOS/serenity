@@ -82,7 +82,6 @@ PORTS_MISSING_DESCRIPTIONS = {
     'mandoc',
     'mbedtls',
     'milkytracker',
-    'mrsh',
     'mruby',
     'nano',
     'ncurses',
