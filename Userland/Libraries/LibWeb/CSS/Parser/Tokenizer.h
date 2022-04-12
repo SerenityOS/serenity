@@ -14,7 +14,7 @@
 #include <LibWeb/CSS/Parser/Token.h>
 #include <LibWeb/Forward.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
 class U32Twin {
 public:

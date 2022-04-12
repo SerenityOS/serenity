@@ -12,7 +12,7 @@
 #include <AK/Utf8View.h>
 #include <LibWeb/CSS/Number.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
 class Token {
     friend class Tokenizer;

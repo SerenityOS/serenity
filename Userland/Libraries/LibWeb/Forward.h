@@ -106,6 +106,8 @@ class DeclarationOrAtRule;
 class Function;
 class Parser;
 class StyleRule;
+class Token;
+class Tokenizer;
 }
 
 namespace Web::DOM {
