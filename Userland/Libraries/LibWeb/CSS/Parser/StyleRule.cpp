@@ -8,7 +8,7 @@
 #include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Serialize.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
 StyleRule::StyleRule(StyleRule::Type type)
     : m_type(type)
