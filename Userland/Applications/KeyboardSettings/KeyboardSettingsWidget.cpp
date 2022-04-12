@@ -25,6 +25,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibKeyboard/CharacterMap.h>
+#include <LibKeyboard/Keymap.h>
 #include <spawn.h>
 
 class KeymapSelectionDialog final : public GUI::Dialog {
@@ -163,10 +164,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     m_initial_active_keymap = keymap_object.get("keymap").to_string();
     dbgln("KeyboardSettings thinks the current keymap is: {}", m_initial_active_keymap);
 
-    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini").release_value_but_fixme_should_propagate_errors());
-    auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
-
-    auto keymaps_vector = keymaps.split(',');
+    auto keymaps_vector = Keyboard::Keymap::read_all().release_value_but_fixme_should_propagate_errors();
 
     m_selected_keymaps_listview = find_descendant_of_type_named<GUI::ListView>("selected_keymaps");
     m_selected_keymaps_listview->horizontal_scrollbar().set_visible(false);
@@ -174,8 +172,8 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     auto& keymaps_list_model = static_cast<KeymapModel&>(*m_selected_keymaps_listview->model());
 
     for (auto& keymap : keymaps_vector) {
-        m_initial_keymap_list.append(keymap);
-        keymaps_list_model.add_keymap(keymap);
+        m_initial_keymap_list.append(keymap.name());
+        keymaps_list_model.add_keymap(keymap.name());
     }
 
     keymaps_list_model.set_active_keymap(m_initial_active_keymap);

@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "KeyboardSettingsWidget.h"
 #include <LibCore/System.h>
+#include <LibKeyboard/Keymap.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/SettingsWindow.h>
 #include <LibMain/Main.h>
@@ -24,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/keymap", "x"));
     TRY(Core::System::unveil("/proc/keymap", "r"));
-    TRY(Core::System::unveil("/etc/Keyboard.ini", "r"));
+    TRY(Core::System::unveil(Keyboard::Keymap::config_file_path(), "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-keyboard-settings");
