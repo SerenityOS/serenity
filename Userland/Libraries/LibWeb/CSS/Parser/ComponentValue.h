@@ -44,3 +44,11 @@ private:
     Variant<Token, NonnullRefPtr<StyleFunctionRule>, NonnullRefPtr<StyleBlockRule>> m_value;
 };
 }
+
+template<>
+struct AK::Formatter<Web::CSS::Parser::ComponentValue> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Parser::ComponentValue const& component_value)
+    {
+        return Formatter<StringView>::format(builder, component_value.to_string());
+    }
+};
