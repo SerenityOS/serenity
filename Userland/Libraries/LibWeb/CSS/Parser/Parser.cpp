@@ -1834,8 +1834,9 @@ NonnullRefPtr<Block> Parser::consume_a_simple_block(TokenStream<T>& tokens)
 
     // Create a simple block with its associated token set to the current input token
     // and with its value initially set to an empty list.
-    auto block = make_ref_counted<Block>();
-    block->m_token = tokens.current_token();
+    // NOTE: We create the Block fully initialized when we return it instead.
+    Token block_token = tokens.current_token();
+    Vector<ComponentValue> block_values;
 
     // Repeatedly consume the next input token and process it as follows:
     for (;;) {
@@ -1844,13 +1845,13 @@ NonnullRefPtr<Block> Parser::consume_a_simple_block(TokenStream<T>& tokens)
         // ending token
         if (token.is(ending_token)) {
             // Return the block.
-            return block;
+            return Block::create(move(block_token), move(block_values));
         }
         // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
             // This is a parse error. Return the block.
             log_parse_error();
-            return block;
+            return Block::create(move(block_token), move(block_values));
         }
 
         // anything else
@@ -1859,7 +1860,7 @@ NonnullRefPtr<Block> Parser::consume_a_simple_block(TokenStream<T>& tokens)
             tokens.reconsume_current_input_token();
 
             // Consume a component value and append it to the value of the block.
-            block->m_values.append(consume_a_component_value(tokens));
+            block_values.empend(consume_a_component_value(tokens));
         }
     }
 }

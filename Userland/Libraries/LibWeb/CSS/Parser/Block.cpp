@@ -9,12 +9,12 @@
 
 namespace Web::CSS::Parser {
 
-Block::Block() = default;
 Block::Block(Token token, Vector<ComponentValue>&& values)
     : m_token(move(token))
     , m_values(move(values))
 {
 }
+
 Block::~Block() = default;
 
 String Block::to_string() const

@@ -631,7 +631,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
             Vector<Parser::ComponentValue> block_values;
             if (!expand_unresolved_values(element, property_name, dependencies, source_block.values(), block_values, 0))
                 return false;
-            NonnullRefPtr<Parser::Block> block = adopt_ref(*new Parser::Block(source_block.token(), move(block_values)));
+            NonnullRefPtr<Parser::Block> block = Parser::Block::create(source_block.token(), move(block_values));
             dest.empend(move(block));
             continue;
         }
