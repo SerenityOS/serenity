@@ -622,7 +622,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
             Vector<Parser::ComponentValue> function_values;
             if (!expand_unresolved_values(element, property_name, dependencies, source_function.values(), function_values, 0))
                 return false;
-            NonnullRefPtr<StyleFunctionRule> function = adopt_ref(*new StyleFunctionRule(source_function.name(), move(function_values)));
+            NonnullRefPtr<Parser::Function> function = adopt_ref(*new Parser::Function(source_function.name(), move(function_values)));
             dest.empend(function);
             continue;
         }

@@ -19,8 +19,8 @@
 #include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/Declaration.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
+#include <LibWeb/CSS/Parser/Function.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
-#include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 #include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
 #include <LibWeb/CSS/Ratio.h>
@@ -195,7 +195,7 @@ private:
     template<typename T>
     NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
     template<typename T>
-    NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
+    NonnullRefPtr<Function> consume_a_function(TokenStream<T>&);
 
     Optional<GeneralEnclosed> parse_general_enclosed(TokenStream<ComponentValue>&);
 

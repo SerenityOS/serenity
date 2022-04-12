@@ -6,8 +6,8 @@
  */
 
 #include <LibWeb/CSS/Parser/ComponentValue.h>
+#include <LibWeb/CSS/Parser/Function.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
-#include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 
 namespace Web::CSS::Parser {
 
@@ -15,7 +15,7 @@ ComponentValue::ComponentValue(Token token)
     : m_value(token)
 {
 }
-ComponentValue::ComponentValue(NonnullRefPtr<StyleFunctionRule> function)
+ComponentValue::ComponentValue(NonnullRefPtr<Function> function)
     : m_value(function)
 {
 }
@@ -31,7 +31,7 @@ String ComponentValue::to_string() const
     return m_value.visit(
         [](Token const& token) { return token.to_string(); },
         [](NonnullRefPtr<StyleBlockRule> const& block) { return block->to_string(); },
-        [](NonnullRefPtr<StyleFunctionRule> const& function) { return function->to_string(); });
+        [](NonnullRefPtr<Function> const& function) { return function->to_string(); });
 }
 
 String ComponentValue::to_debug_string() const
@@ -43,7 +43,7 @@ String ComponentValue::to_debug_string() const
         [](NonnullRefPtr<StyleBlockRule> const& block) {
             return String::formatted("Function: {}", block->to_string());
         },
-        [](NonnullRefPtr<StyleFunctionRule> const& function) {
+        [](NonnullRefPtr<Function> const& function) {
             return String::formatted("Block: {}", function->to_string());
         });
 }
