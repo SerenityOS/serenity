@@ -152,28 +152,38 @@ public:
         return m_value.as_u64;
     }
 
-    template<typename T>
+    template<Integral T>
     T to_integer() const
     {
-        if (is_i32())
-            return as_i32();
-        if (is_i64())
-            return as_i64();
+#define HANDLE_INTEGER(type)                                                                    \
+    if (is_##type()) {                                                                          \
+        if constexpr (IsSigned<type>) {                                                         \
+            if constexpr (IsSigned<T>) {                                                        \
+                VERIFY(as_##type() >= NumericLimits<T>::min());                                 \
+            } else {                                                                            \
+                VERIFY(as_##type() >= 0);                                                       \
+            } /* HACK: Cast up to the largest primitive to make the compiler shut up.*/         \
+            VERIFY(static_cast<u64>(as_##type()) <= static_cast<u64>(NumericLimits<T>::max())); \
+        } else {                                                                                \
+            VERIFY(as_##type() <= NumericLimits<T>::max());                                     \
+        }                                                                                       \
+        return static_cast<T>(as_##type());                                                     \
+    }
+
+        HANDLE_INTEGER(i32)
+        HANDLE_INTEGER(u32)
+        HANDLE_INTEGER(i64)
+        HANDLE_INTEGER(u64)
+
         if (is_bool())
             return as_bool() ? 1 : 0;
         if (is_float())
-            return (int)as_float();
-        if (is_u32()) {
-            VERIFY(as_u32() <= INT32_MAX);
-            return static_cast<i32>(as_u32());
-        }
-        if (is_u64()) {
-            VERIFY(as_u64() <= INT64_MAX);
-            return static_cast<i64>(as_u64());
-        }
+            return static_cast<T>(as_float());
         if (is_string())
             return as_string().to_int().value_or(0);
         return 0;
+
+#undef HANDLE_INTEGER
     }
 
     i32 to_i32() const
@@ -349,5 +359,4 @@ private:
 };
 
 char const* to_string(Variant::Type);
-
 }
