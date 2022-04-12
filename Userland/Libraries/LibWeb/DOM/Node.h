@@ -113,6 +113,8 @@ public:
 
     virtual FlyString node_name() const = 0;
 
+    String base_uri() const;
+
     String descendant_text_content() const;
     String text_content() const;
     void set_text_content(String const&);
