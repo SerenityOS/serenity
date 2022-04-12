@@ -332,7 +332,16 @@ void HexEditorWidget::update_inspector_values(size_t position)
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::Double, "");
     }
 
-    // FIXME: Parse as other values like ASCII, UTF8, UTF16, Timestamp etc
+    // FIXME: This probably doesn't honour endianness correctly.
+    Utf8View utf8_view { ReadonlyBytes { reinterpret_cast<u8 const*>(&unsigned_64_bit_int), 4 } };
+    size_t valid_bytes;
+    utf8_view.validate(valid_bytes);
+    if (valid_bytes == 0)
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, "");
+    else
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, utf8_view.unicode_substring_view(0, 1).as_string());
+
+    // FIXME: Parse as other values like UTF16, Timestamp etc
 
     m_value_inspector->set_model(value_inspector_model);
     m_value_inspector->update();
