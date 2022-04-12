@@ -1597,8 +1597,10 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
     VERIFY(name_ident.is(Token::Type::AtKeyword));
 
     // Create a new at-rule with its name set to the value of the current input token, its prelude initially set to an empty list, and its value initially set to nothing.
-    auto rule = make_ref_counted<StyleRule>(StyleRule::Type::At);
-    rule->m_at_rule_name = ((Token)name_ident).at_keyword();
+    // NOTE: We create the StyleRule fully initialized when we return it instead.
+    FlyString at_rule_name = ((Token)name_ident).at_keyword();
+    Vector<ComponentValue> prelude;
+    RefPtr<Block> block;
 
     // Repeatedly consume the next input token:
     for (;;) {
@@ -1607,21 +1609,21 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
         // <semicolon-token>
         if (token.is(Token::Type::Semicolon)) {
             // Return the at-rule.
-            return rule;
+            return StyleRule::make_at_rule(move(at_rule_name), move(prelude), move(block));
         }
 
         // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
             // This is a parse error. Return the at-rule.
             log_parse_error();
-            return rule;
+            return StyleRule::make_at_rule(move(at_rule_name), move(prelude), move(block));
         }
 
         // <{-token>
         if (token.is(Token::Type::OpenCurly)) {
             // Consume a simple block and assign it to the at-rule’s block. Return the at-rule.
-            rule->m_block = consume_a_simple_block(tokens);
-            return rule;
+            block = consume_a_simple_block(tokens);
+            return StyleRule::make_at_rule(move(at_rule_name), move(prelude), move(block));
         }
 
         // simple block with an associated token of <{-token>
@@ -1629,8 +1631,8 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
             ComponentValue const& component_value = token;
             if (component_value.is_block() && component_value.block().is_curly()) {
                 // Assign the block to the at-rule’s block. Return the at-rule.
-                rule->m_block = component_value.block();
-                return rule;
+                block = component_value.block();
+                return StyleRule::make_at_rule(move(at_rule_name), move(prelude), move(block));
             }
         }
 
@@ -1639,7 +1641,7 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
             // Reconsume the current input token.
             tokens.reconsume_current_input_token();
             // Consume a component value. Append the returned value to the at-rule’s prelude.
-            rule->m_prelude.append(consume_a_component_value(tokens));
+            prelude.append(consume_a_component_value(tokens));
         }
     }
 }
@@ -1652,7 +1654,9 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
     // To consume a qualified rule:
 
     // Create a new qualified rule with its prelude initially set to an empty list, and its value initially set to nothing.
-    auto rule = make_ref_counted<StyleRule>(StyleRule::Type::Qualified);
+    // NOTE: We create the StyleRule fully initialized when we return it instead.
+    Vector<ComponentValue> prelude;
+    RefPtr<Block> block;
 
     // Repeatedly consume the next input token:
     for (;;) {
@@ -1668,8 +1672,8 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
         // <{-token>
         if (token.is(Token::Type::OpenCurly)) {
             // Consume a simple block and assign it to the qualified rule’s block. Return the qualified rule.
-            rule->m_block = consume_a_simple_block(tokens);
-            return rule;
+            block = consume_a_simple_block(tokens);
+            return StyleRule::make_qualified_rule(move(prelude), move(block));
         }
 
         // simple block with an associated token of <{-token>
@@ -1677,8 +1681,8 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
             ComponentValue const& component_value = token;
             if (component_value.is_block() && component_value.block().is_curly()) {
                 // Assign the block to the qualified rule’s block. Return the qualified rule.
-                rule->m_block = component_value.block();
-                return rule;
+                block = component_value.block();
+                return StyleRule::make_qualified_rule(move(prelude), move(block));
             }
         }
 
@@ -1688,11 +1692,9 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
             tokens.reconsume_current_input_token();
 
             // Consume a component value. Append the returned value to the qualified rule’s prelude.
-            rule->m_prelude.append(consume_a_component_value(tokens));
+            prelude.append(consume_a_component_value(tokens));
         }
     }
-
-    return rule;
 }
 
 // 5.4.4. Consume a style block’s contents

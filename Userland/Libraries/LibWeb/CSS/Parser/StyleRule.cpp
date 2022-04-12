@@ -10,10 +10,14 @@
 
 namespace Web::CSS::Parser {
 
-StyleRule::StyleRule(StyleRule::Type type)
+StyleRule::StyleRule(StyleRule::Type type, FlyString name, Vector<ComponentValue> prelude, RefPtr<Block> block)
     : m_type(type)
+    , m_at_rule_name(move(name))
+    , m_prelude(move(prelude))
+    , m_block(move(block))
 {
 }
+
 StyleRule::~StyleRule() = default;
 
 String StyleRule::to_string() const
