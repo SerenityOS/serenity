@@ -29,6 +29,9 @@ interface Document : Node {
 
     readonly attribute DOMImplementation implementation;
 
+    [ImplementedAs=url_string] readonly attribute USVString URL;
+    readonly attribute USVString documentURI;
+
     readonly attribute DOMString characterSet;
     readonly attribute DOMString charset;
     readonly attribute DOMString inputEncoding;
