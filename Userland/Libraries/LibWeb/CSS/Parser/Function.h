@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -19,17 +20,17 @@ class Function : public RefCounted<Function> {
     friend class Parser;
 
 public:
-    explicit Function(String name);
-    Function(String name, Vector<ComponentValue>&& values);
+    explicit Function(FlyString name);
+    Function(FlyString name, Vector<ComponentValue>&& values);
     ~Function();
 
-    String const& name() const { return m_name; }
+    StringView name() const { return m_name; }
     Vector<ComponentValue> const& values() const { return m_values; }
 
     String to_string() const;
 
 private:
-    String m_name;
+    FlyString m_name;
     Vector<ComponentValue> m_values;
 };
 }

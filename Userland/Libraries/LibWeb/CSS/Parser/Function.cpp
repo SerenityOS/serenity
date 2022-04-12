@@ -10,12 +10,12 @@
 
 namespace Web::CSS::Parser {
 
-Function::Function(String name)
+Function::Function(FlyString name)
     : m_name(move(name))
 {
 }
 
-Function::Function(String name, Vector<ComponentValue>&& values)
+Function::Function(FlyString name, Vector<ComponentValue>&& values)
     : m_name(move(name))
     , m_values(move(values))
 {
