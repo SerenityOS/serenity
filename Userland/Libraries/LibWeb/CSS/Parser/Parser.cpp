@@ -1878,7 +1878,9 @@ NonnullRefPtr<Function> Parser::consume_a_function(TokenStream<T>& tokens)
 
     // Create a function with its name equal to the value of the current input token
     // and with its value initially set to an empty list.
-    auto function = make_ref_counted<Function>(((Token)name_ident).function());
+    // NOTE: We create the Function fully initialized when we return it instead.
+    FlyString function_name = ((Token)name_ident).function();
+    Vector<ComponentValue> function_values;
 
     // Repeatedly consume the next input token and process it as follows:
     for (;;) {
@@ -1887,14 +1889,14 @@ NonnullRefPtr<Function> Parser::consume_a_function(TokenStream<T>& tokens)
         // <)-token>
         if (token.is(Token::Type::CloseParen)) {
             // Return the function.
-            return function;
+            return Function::create(move(function_name), move(function_values));
         }
 
         // <EOF-token>
         if (token.is(Token::Type::EndOfFile)) {
             // This is a parse error. Return the function.
             log_parse_error();
-            return function;
+            return Function::create(move(function_name), move(function_values));
         }
 
         // anything else
@@ -1903,7 +1905,7 @@ NonnullRefPtr<Function> Parser::consume_a_function(TokenStream<T>& tokens)
             tokens.reconsume_current_input_token();
 
             // Consume a component value and append the returned value to the function’s value.
-            function->m_values.append(consume_a_component_value(tokens));
+            function_values.append(consume_a_component_value(tokens));
         }
     }
 }

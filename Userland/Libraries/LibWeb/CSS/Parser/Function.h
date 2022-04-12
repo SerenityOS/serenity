@@ -17,11 +17,12 @@
 namespace Web::CSS::Parser {
 
 class Function : public RefCounted<Function> {
-    friend class Parser;
-
 public:
-    explicit Function(FlyString name);
-    Function(FlyString name, Vector<ComponentValue>&& values);
+    static NonnullRefPtr<Function> create(FlyString name, Vector<ComponentValue>&& values)
+    {
+        return adopt_ref(*new Function(move(name), move(values)));
+    }
+
     ~Function();
 
     StringView name() const { return m_name; }
@@ -30,6 +31,8 @@ public:
     String to_string() const;
 
 private:
+    Function(FlyString name, Vector<ComponentValue>&& values);
+
     FlyString m_name;
     Vector<ComponentValue> m_values;
 };
