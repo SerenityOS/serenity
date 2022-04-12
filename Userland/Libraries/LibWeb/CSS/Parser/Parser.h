@@ -28,14 +28,9 @@
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/Supports.h>
 #include <LibWeb/CSS/UnicodeRange.h>
+#include <LibWeb/Forward.h>
 
 namespace Web::CSS {
-
-class CSSStyleSheet;
-class CSSRule;
-class CSSStyleRule;
-struct StyleProperty;
-enum class PropertyID;
 
 class ParsingContext {
 public:
