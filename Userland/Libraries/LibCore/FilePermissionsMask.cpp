@@ -58,13 +58,13 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringV
         case State::Classes: {
             // zero or more [ugoa] terminated by one operator [+-=]
             if (ch == 'u')
-                classes |= ClassFlag::User;
+                classes |= ClassFlag::User; //100
             else if (ch == 'g')
-                classes |= ClassFlag::Group;
+                classes |= ClassFlag::Group; //10
             else if (ch == 'o')
-                classes |= ClassFlag::Other;
+                classes |= ClassFlag::Other; //1
             else if (ch == 'a')
-                classes = ClassFlag::All;
+                classes = ClassFlag::All; //111
             else {
                 if (ch == '+')
                     operation = Operation::Add;
@@ -105,8 +105,21 @@ ErrorOr<FilePermissionsMask> FilePermissionsMask::from_symbolic_notation(StringV
                 write_bits = 2;
             else if (ch == 'x')
                 write_bits = 1;
+            else if (ch == 't' && (classes & 01)) {
+                //if the class bits represent other/all
+                classes = 8; // 1000
+                write_bits = 1;
+            }
+            else if (ch == 's' && (classes % 2 == 0)) {
+                //if the class bits represent user/group
+                write_bits = classes;
+                classes = 8;
+            }
             else
-                return Error::from_string_literal("invalid symbolic permission: expected 'r', 'w' or 'x'"sv);
+                if (classes % 2)
+                    return Error::from_string_literal("invalid symbolic permission: expected 'r', 'w', 'x' or 't'"sv);
+                else
+                    return Error::from_string_literal("invalid symbolic permission: expected 'r', 'w', 'x', or 's'"sv);
 
             mode_t clear_bits = operation == Operation::Assign ? 7 : write_bits;
 
