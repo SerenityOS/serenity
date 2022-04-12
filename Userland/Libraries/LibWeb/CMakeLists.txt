@@ -46,6 +46,7 @@ set(SOURCES
     CSS/MediaQueryList.cpp
     CSS/Parser/ComponentValue.cpp
     CSS/Parser/Parser.cpp
+    CSS/Parser/StyleFunctionRule.cpp
     CSS/Parser/StyleRules.cpp
     CSS/Parser/Token.cpp
     CSS/Parser/Tokenizer.cpp
