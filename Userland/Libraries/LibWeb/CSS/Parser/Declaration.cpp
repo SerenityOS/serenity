@@ -8,7 +8,7 @@
 #include <LibWeb/CSS/Parser/Declaration.h>
 #include <LibWeb/CSS/Serialize.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
 Declaration::Declaration() = default;
 Declaration::~Declaration() = default;

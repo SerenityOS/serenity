@@ -101,6 +101,8 @@ enum class ValueID;
 namespace Web::CSS::Parser {
 class Block;
 class ComponentValue;
+class Declaration;
+class DeclarationOrAtRule;
 class Function;
 class Parser;
 }

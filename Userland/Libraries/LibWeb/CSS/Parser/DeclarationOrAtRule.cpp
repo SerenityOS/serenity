@@ -7,7 +7,7 @@
 
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 
-namespace Web::CSS {
+namespace Web::CSS::Parser {
 
 DeclarationOrAtRule::DeclarationOrAtRule(RefPtr<StyleRule> at)
     : m_type(DeclarationType::At)
