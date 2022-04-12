@@ -6,17 +6,20 @@
 
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
+#include <LibCore/Directory.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ComboBox.h>
 #include <LibGUI/CommonLocationsProvider.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FilePickerDialogGML.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
@@ -70,6 +73,10 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     , m_model(FileSystemModel::create(path))
     , m_mode(mode)
 {
+    auto maybe_history_load_err = load_history();
+    if (maybe_history_load_err.is_error())
+        dbgln("Couldn't load history: {}", maybe_history_load_err.error());
+
     switch (m_mode) {
     case Mode::Open:
     case Mode::OpenMultiple:
@@ -88,11 +95,20 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     if (!widget.load_from_gml(file_picker_dialog_gml))
         VERIFY_NOT_REACHED();
 
+    if (m_mode == Mode::OpenFolder) {
+        auto& target_label = *widget.find_descendant_of_type_named<GUI::Label>("target_label");
+        target_label.set_text("Folder:");
+    }
+
     auto& toolbar = *widget.find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     toolbar.set_has_frame(false);
 
     m_location_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("location_textbox");
     m_location_textbox->set_text(path);
+    m_location_textbox->set_icon(FileIconProvider::icon_for_path(path).bitmap_for_size(16));
+    m_location_textbox->on_return_pressed = [this] {
+        set_path(m_location_textbox->text());
+    };
 
     m_view = *widget.find_descendant_of_type_named<GUI::MultiView>("view");
     m_view->set_selection_mode(m_mode == Mode::OpenMultiple ? GUI::AbstractView::SelectionMode::MultiSelection : GUI::AbstractView::SelectionMode::SingleSelection);
@@ -151,13 +167,14 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     toolbar.add_action(m_view->view_as_table_action());
     toolbar.add_action(m_view->view_as_columns_action());
 
-    m_filename_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("filename_textbox");
-    m_filename_textbox->set_focus(true);
+    m_filename_combobox = *widget.find_descendant_of_type_named<GUI::ComboBox>("filename_combobox");
+    m_filename_combobox->set_model(GUI::ItemListModel<String>::create(m_history));
+    m_filename_combobox->set_focus(true);
     if (m_mode == Mode::Save) {
-        m_filename_textbox->set_text(filename);
-        m_filename_textbox->select_all();
+        m_filename_combobox->set_text(filename);
+        m_filename_combobox->select_all();
     }
-    m_filename_textbox->on_return_pressed = [&] {
+    m_filename_combobox->on_return_pressed = [&] {
         on_file_return();
     };
 
@@ -180,7 +197,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     ok_button.on_click = [this](auto) {
         on_file_return();
     };
-    ok_button.set_enabled(m_mode == Mode::OpenFolder || !m_filename_textbox->text().is_empty());
+    ok_button.set_enabled(m_mode == Mode::OpenFolder || !m_filename_combobox->text().is_empty());
 
     auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
     cancel_button.set_text("Cancel");
@@ -188,8 +205,8 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
         done(ExecCancel);
     };
 
-    m_filename_textbox->on_change = [&] {
-        ok_button.set_enabled(m_mode == Mode::OpenFolder || !m_filename_textbox->text().is_empty());
+    m_filename_combobox->on_change = [&] {
+        ok_button.set_enabled(m_mode == Mode::OpenFolder || !m_filename_combobox->text().is_empty());
     };
 
     m_view->on_selection_change = [this] {
@@ -200,9 +217,9 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
 
         auto should_open_folder = m_mode == Mode::OpenFolder;
         if (should_open_folder == node.is_directory()) {
-            m_filename_textbox->set_text(node.name);
+            m_filename_combobox->set_text(node.name);
         } else if (m_mode != Mode::Save) {
-            m_filename_textbox->clear();
+            m_filename_combobox->clear();
         }
     };
 
@@ -264,7 +281,7 @@ void FilePicker::model_did_update(unsigned)
 
 void FilePicker::on_file_return()
 {
-    auto path = m_filename_textbox->text();
+    auto path = m_filename_combobox->text();
     if (!path.starts_with('/')) {
         path = LexicalPath::join(m_model->root_path(), path).string();
     }
@@ -272,7 +289,7 @@ void FilePicker::on_file_return()
     bool file_exists = Core::File::exists(path);
 
     if (!file_exists && (m_mode == Mode::Open || m_mode == Mode::OpenFolder)) {
-        MessageBox::show(this, String::formatted("No such file or directory: {}", m_filename_textbox->text()), "File not found", MessageBox::Type::Error, MessageBox::InputType::OK);
+        MessageBox::show(this, String::formatted("No such file or directory: {}", m_filename_combobox->text()), "File not found", MessageBox::Type::Error, MessageBox::InputType::OK);
         return;
     }
 
@@ -283,6 +300,16 @@ void FilePicker::on_file_return()
     }
 
     m_selected_file = path;
+
+    if (m_mode == Mode::Open || m_mode == Mode::OpenFolder) {
+        m_history.remove_all_matching([&](String const& v) { return v == m_selected_file; });
+        m_history.prepend(m_selected_file);
+        auto save_history_err = save_history();
+        if (save_history_err.is_error()) {
+            dbgln("Couldn't save history: {}", save_history_err.error());
+        }
+    }
+
     done(ExecOK);
 }
 
@@ -299,6 +326,36 @@ void FilePicker::set_path(String const& path)
     auto new_path = LexicalPath(path).string();
     m_location_textbox->set_icon(FileIconProvider::icon_for_path(new_path).bitmap_for_size(16));
     m_model->set_root_path(new_path);
+}
+
+String FilePicker::history_file_path() const
+{
+    return LexicalPath::canonicalized_path(String::formatted("{}/FilePicker-{}.txt", Core::StandardPaths::history_directory(), m_mode == Mode::OpenFolder ? "OpenFolder" : "Open"));
+}
+
+ErrorOr<void> FilePicker::load_history()
+{
+    m_history.clear();
+    auto file = TRY(Core::File::open(history_file_path(), Core::OpenMode::ReadOnly));
+
+    while (!file->eof()) {
+        auto line = file->read_line();
+        if (!line.is_empty() && !line.is_whitespace())
+            m_history.append(line);
+    }
+
+    return {};
+}
+
+ErrorOr<void> FilePicker::save_history()
+{
+    auto directory = TRY(Core::Directory::create(Core::StandardPaths::history_directory(), Core::Directory::CreateDirectories::Yes));
+    auto file = TRY(directory.open(history_file_path(), Core::Stream::OpenMode::Write));
+
+    for (size_t i = 0; i < min<size_t>(m_history.size(), 25); i++)
+        TRY(file->write(String::formatted("{}\n", m_history[i]).to_byte_buffer()));
+
+    return {};
 }
 
 }

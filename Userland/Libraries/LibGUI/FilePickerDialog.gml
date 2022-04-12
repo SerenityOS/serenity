@@ -23,6 +23,7 @@
         }
 
         @GUI::Label {
+            name: "target_label"
             text: "Filename:"
             text_alignment: "CenterRight"
             fixed_height: 24
@@ -61,8 +62,9 @@
                 fixed_height: 22
                 layout: @GUI::HorizontalBoxLayout {}
 
-                @GUI::TextBox {
-                    name: "filename_textbox"
+                @GUI::ComboBox {
+                    name: "filename_combobox"
+                    max_rows: 5
                 }
 
                 @GUI::Widget {

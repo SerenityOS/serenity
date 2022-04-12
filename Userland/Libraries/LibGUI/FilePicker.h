@@ -40,6 +40,10 @@ private:
 
     void set_path(String const&);
 
+    String history_file_path() const;
+    ErrorOr<void> load_history();
+    ErrorOr<void> save_history();
+
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
 
@@ -64,13 +68,14 @@ private:
         size_t tray_item_index { 0 };
     };
 
+    Vector<String> m_history;
     RefPtr<MultiView> m_view;
     NonnullRefPtr<FileSystemModel> m_model;
     String m_selected_file;
 
     RefPtr<GUI::Label> m_error_label;
 
-    RefPtr<TextBox> m_filename_textbox;
+    RefPtr<ComboBox> m_filename_combobox;
     RefPtr<TextBox> m_location_textbox;
     Vector<CommonLocationButton> m_common_location_buttons;
     RefPtr<Menu> m_context_menu;
