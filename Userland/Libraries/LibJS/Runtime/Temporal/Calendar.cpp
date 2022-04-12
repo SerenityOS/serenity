@@ -723,6 +723,8 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
 // 12.1.36 BuildISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-buildisomonthcode
 String build_iso_month_code(u8 month)
 {
+    // 1. Let numberPart be ToZeroPaddedDecimalString(month, 2).
+    // 2. Return the string-concatenation of "M" and numberPart.
     return String::formatted("M{:02}", month);
 }
 

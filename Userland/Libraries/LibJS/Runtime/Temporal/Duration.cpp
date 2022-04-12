@@ -1661,7 +1661,7 @@ String temporal_duration_to_string(double years, double months, double weeks, do
         // a. Let fraction be abs(milliseconds) × 10^6 + abs(microseconds) × 10^3 + abs(nanoseconds).
         auto fraction = fabs(milliseconds) * 1'000'000 + fabs(microseconds) * 1'000 + fabs(nanoseconds);
 
-        // b. Let decimalPart be fraction formatted as a nine-digit decimal number, padded to the left with zeroes if necessary.
+        // b. Let decimalPart be ToZeroPaddedDecimalString(fraction, 9).
         // NOTE: padding with zeros leads to weird results when applied to a double. Not sure if that's a bug in AK/Format.h or if I'm doing this wrong.
         auto decimal_part = String::formatted("{:09}", (u64)fraction);
 

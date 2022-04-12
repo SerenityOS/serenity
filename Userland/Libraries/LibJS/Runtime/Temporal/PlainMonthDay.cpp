@@ -176,8 +176,8 @@ ThrowCompletionOr<String> temporal_month_day_to_string(GlobalObject& global_obje
     // 1. Assert: Type(monthDay) is Object.
     // 2. Assert: monthDay has an [[InitializedTemporalMonthDay]] internal slot.
 
-    // 3. Let month be monthDay.[[ISOMonth]] formatted as a two-digit decimal number, padded to the left with a zero if necessary.
-    // 4. Let day be monthDay.[[ISODay]] formatted as a two-digit decimal number, padded to the left with a zero if necessary.
+    // 3. Let month be ToZeroPaddedDecimalString(temporalDate.[[ISOMonth]], 2).
+    // 4. Let day be ToZeroPaddedDecimalString(temporalDate.[[ISODay]], 2).
     // 5. Let result be the string-concatenation of month, the code unit 0x002D (HYPHEN-MINUS), and day.
     auto result = String::formatted("{:02}-{:02}", month_day.iso_month(), month_day.iso_day());
 
